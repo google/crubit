@@ -1000,6 +1000,7 @@ std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
 
 bool IsKnownAttr(const clang::Attr& attr) {
   return clang::isa<clang::AlignedAttr>(attr) ||
+         clang::isa<clang::EmptyBasesAttr>(attr) ||
          clang::isa<clang::FinalAttr>(attr) ||
          clang::isa<clang::OwnerAttr>(attr) ||
          clang::isa<clang::PointerAttr>(attr) ||

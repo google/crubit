@@ -3900,6 +3900,39 @@ fn test_record_with_virtual_bases() -> Result<()> {
     Ok(())
 }
 
+/// `__declspec(empty_bases)` only changes the record layout, which Crubit
+/// takes from Clang.  libc++ uses it for `std::optional`, `std::variant` and
+/// `std::tuple` (see `_LIBCPP_DECLSPEC_EMPTY_BASES`).
+#[gtest]
+fn test_record_with_empty_bases_attr() -> Result<()> {
+    if !test_platform().uses_msvc_cxx_abi() {
+        // `__declspec(empty_bases)` is only supported in the Microsoft C++ ABI.
+        return Ok(());
+    }
+    let proto = ir_proto_from_cc(
+        r#"
+            struct Empty1 {};
+            struct Empty2 {};
+            struct __declspec(empty_bases) S : Empty1, Empty2 { int field; }; "#,
+    )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
+    // Without `__declspec(empty_bases)` the size would be 8, because the
+    // Microsoft C++ ABI would only apply the empty base optimization to
+    // `Empty1`.
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "S", ...
+                unknown_attr: None, ...
+                size_align: SizeAlign { size: 4, alignment: 4, }, ...
+            }
+        }
+    );
+    Ok(())
+}
+
 #[gtest]
 fn test_do_not_import_static_member_functions_when_record_not_supported_yet() {
     // only using __attribute__((packed)) as an example of a record we cannot import yet.
