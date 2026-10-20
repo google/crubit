@@ -67,3 +67,19 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+crubit_test_cc_library(
+    name = "virtual_base_ctor_dtor",
+    srcs = ["virtual_base_ctor_dtor.cc"],
+    hdrs = ["virtual_base_ctor_dtor.h"],
+)
+
+crubit_rust_test(
+    name = "virtual_base_ctor_dtor_test",
+    srcs = ["virtual_base_ctor_dtor_test.rs"],
+    cc_deps = [":virtual_base_ctor_dtor"],
+    deps = [
+        "//support:ctor",
+        "@crate_index//:googletest",
+    ],
+)

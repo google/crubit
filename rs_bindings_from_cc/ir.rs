@@ -2599,6 +2599,10 @@ derive_debug_partialeq_eq_hash! {
             self.proto.is_derived_class()
         }
 
+        pub fn has_virtual_bases(&self) -> bool {
+            self.proto.has_virtual_bases()
+        }
+
         pub fn override_alignment(&self) -> bool {
             self.proto.override_alignment()
         }

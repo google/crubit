@@ -67,6 +67,21 @@ pub fn can_skip_cc_thunk<'a>(db: &BindingsGenerator<'a>, func: &Func<'a>) -> boo
     {
         return false;
     }
+    // ## Constructors and destructors of classes with virtual bases
+    //
+    // In the Microsoft C++ ABI, such constructors take an extra, hidden
+    // `is_most_derived` parameter, and normally only the callers emit the
+    // complete destructor ("vbase dtor").  A thunk lets the C++ compiler handle
+    // this.  Thunks are used on all target platforms, so that the generated
+    // bindings do not depend on the target platform.
+    if (func.cc_name().is_constructor() || func.cc_name().is_destructor())
+        && func
+            .enclosing_item_id()
+            .and_then(|id| db.find_decl::<Rc<Record>>(id).ok())
+            .is_some_and(|record| record.has_virtual_bases())
+    {
+        return false;
+    }
     // ## Custom calling convention requires a thunk.
     //
     // The thunk has the "C" calling convention, and internally can call the

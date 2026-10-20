@@ -448,6 +448,51 @@ fn test_record_instance_methods_deref_this_in_thunk() -> Result<()> {
     Ok(())
 }
 
+/// Constructors and destructors of classes with virtual bases need a C++
+/// thunk, even when they are not inline (see `can_skip_cc_thunk`).
+#[gtest]
+fn test_ctor_and_dtor_of_class_with_virtual_base_use_thunks() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct Base {};
+        struct Derived : virtual Base {
+            explicit Derived(int value);
+            [[clang::annotate("crubit_rust_name", "renamed_constructor")]]
+            Derived(int x, int y);
+            ~Derived();
+        }; "#,
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" void ...(struct Derived * __this, int value) {
+                crubit::construct_at(__this, value);
+            }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" void ...(struct Derived * __this, int x, int y) {
+                crubit::construct_at(__this, x, y);
+            }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" void ...(struct Derived * __this) {
+                std::destroy_at(__this);
+            }
+        }
+    );
+    Ok(())
+}
+
 #[gtest]
 fn test_ptr_func() -> Result<()> {
     let proto = ir_proto_from_cc(r#" inline int* Deref(int*const* p) { return *p; } "#)?;

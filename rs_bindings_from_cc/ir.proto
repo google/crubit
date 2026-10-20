@@ -669,6 +669,8 @@ message Record {
   // than written by the user. Constructors of such records are not annotated
   // with how they relate to that lifetime, so it has to be inferred.
   bool has_template_argument_lifetime = 44;
+  // Whether this record has virtual base classes (direct or indirect).
+  bool has_virtual_bases = 45;
 }
 
 // A forward-declared record (e.g. `struct Foo;`)

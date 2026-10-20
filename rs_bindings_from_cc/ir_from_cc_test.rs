@@ -3854,6 +3854,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
                   alignment: 4,
               }, ...
               is_derived_class: true,
+              has_virtual_bases: false,
               override_alignment: true,
               ...
            }
@@ -3869,6 +3870,32 @@ fn test_record_with_unsupported_base() -> Result<()> {
                 name: "IllegalBaseClass", ...
            }
         }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_record_with_virtual_bases() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+            struct Base {};
+            struct NonVirtualDerived : Base {};
+            struct VirtualDerived : virtual Base {};
+            struct IndirectlyVirtualDerived : VirtualDerived {}; "#,
+    )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(
+        ir,
+        quote! { Record { rs_name: "NonVirtualDerived", ... has_virtual_bases: false, ... } }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! { Record { rs_name: "VirtualDerived", ... has_virtual_bases: true, ... } }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! { Record { rs_name: "IndirectlyVirtualDerived", ... has_virtual_bases: true, ... } }
     );
     Ok(())
 }

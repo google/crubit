@@ -1524,6 +1524,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
       layout.getAlignment().getQuantity());
   trait_derives->WriteToProto(*record->mutable_trait_derives());
   record->set_is_derived_class(is_derived_class);
+  record->set_has_virtual_bases(record_decl->getNumVBases() != 0);
   record->set_override_alignment(override_alignment);
   record->set_safety_annotation(*safety_annotation);
   record->set_copy_constructor(
