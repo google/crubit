@@ -70,6 +70,8 @@ GeneratedBindingsInfo = provider(
         "cc_file": "The generated C++ source file.",
         "rust_file": "The generated Rust source file.",
         "namespaces_file": "The generated namespace hierarchy in JSON format.",
+        "error_report_file": ("The generated error report in JSON format, or None if error " +
+                              "reports are disabled (see the `generate_error_report` flag)."),
     },
 )
 

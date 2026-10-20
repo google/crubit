@@ -96,27 +96,27 @@ pub fn generate_doc_comment(
         }
     };
 
-    // If a safety doc is provided, append a "# Safety" section to `comment`.
-    let comment = if let Some(safety) = safety {
-        let safety_comment = format!("# Safety\n\n{}", safety.trim());
-        if let Some(comment) = comment {
-            Some(format!("{comment}\n\n{safety_comment}"))
-        } else {
-            Some(safety_comment)
-        }
-    } else {
-        comment.map(|s| s.to_owned())
-    };
+    if comment.is_none() && safety.is_none() && source_loc.is_none() {
+        return None;
+    }
 
-    let (comment, sep, source_loc) = match (comment, source_loc) {
-        (None, None) => return None,
-        (None, Some(source_loc)) => (String::new(), "", source_loc),
-        (Some(comment), Some(source_loc)) => (comment, "\n\n", source_loc),
-        (Some(comment), None) => (comment, "", ""),
-    };
+    // The doc comment is made of the sections that are present, separated by blank lines.
     // token_stream_printer (and rustfmt) don't put a space between /// and the doc
-    // comment, let's add it here so our comments are pretty.
-    Some(DocCommentAttr(format!(" {comment}{sep}{source_loc}").replace('\n', "\n ").into()))
+    // comment, so start with one to make our comments pretty.
+    let mut doc = String::from(" ");
+    let mut separator = "";
+    if let Some(comment) = comment {
+        doc.push_str(comment);
+        separator = "\n\n";
+    }
+    if let Some(safety) = safety {
+        write!(doc, "{separator}# Safety\n\n{}", safety.trim()).unwrap();
+        separator = "\n\n";
+    }
+    if let Some(source_loc) = source_loc {
+        write!(doc, "{separator}{source_loc}").unwrap();
+    }
+    Some(DocCommentAttr(doc.replace('\n', "\n ").into()))
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.

@@ -319,6 +319,7 @@ def generate_and_compile_bindings(
             cc_file = cc_output,
             rust_file = rs_output,
             namespaces_file = namespaces_output,
+            error_report_file = error_report_output,
         ),
         OutputGroupInfo(
             out = depset([x for x in [
