@@ -3500,3 +3500,154 @@ fn test_template_argument_lifetime_is_constrained() -> Result<()> {
     );
     Ok(())
 }
+#[gtest]
+fn test_function_with_unsafe_template_param_std_vector() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename T>
+        class allocator {};
+        template <typename T, typename Alloc = allocator<T>>
+        class vector final {};
+        }
+        void AcceptVectorOfPointers(std::vector<int*> vec);
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("unsafe_template_params"))?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub unsafe fn AcceptVectorOfPointers(vec: ::cc_std::std::vector::<*mut ::ffi_11::c_int>) {
+                ...
+            }
+        }
+    );
+    let doc = rs_api.to_string();
+    assert!(doc.contains(
+        "The caller must ensure that the following unsafe arguments are not misused by the function"
+    ));
+    assert!(doc.contains("`vec`: template parameter is unsafe: raw pointer"));
+    Ok(())
+}
+
+#[gtest]
+fn test_function_with_unsafe_template_param_disabled_by_default() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename T>
+        class allocator {};
+        template <typename T, typename Alloc = allocator<T>>
+        class vector final {};
+        }
+        void AcceptVectorOfPointers(std::vector<int*> vec);
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub fn AcceptVectorOfPointers(vec: ::cc_std::std::vector::<*mut ::ffi_11::c_int>) {
+                ...
+            }
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { pub unsafe fn AcceptVectorOfPointers });
+    Ok(())
+}
+
+#[gtest]
+fn test_function_with_safe_template_param_std_vector() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename T>
+        class allocator {};
+        template <typename T, typename Alloc = allocator<T>>
+        class vector final {};
+        }
+        void AcceptVectorOfInts(std::vector<int> vec);
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("unsafe_template_params"))?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub fn AcceptVectorOfInts(vec: ::cc_std::std::vector::<::ffi_11::c_int>) {
+                ...
+            }
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { pub unsafe fn AcceptVectorOfInts });
+    Ok(())
+}
+
+#[gtest]
+fn test_function_with_unsafe_template_param_std_optional() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename T>
+        class optional final {};
+        }
+        void AcceptOptionalOfPointers(std::optional<const int*> opt);
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("unsafe_template_params"))?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub unsafe fn AcceptOptionalOfPointers(
+                opt: ::core::option::Option<*const ::ffi_11::c_int>
+            ) {
+                ...
+            }
+        }
+    );
+    let doc = rs_api.to_string();
+    assert!(doc.contains(
+        "The caller must ensure that the following unsafe arguments are not misused by the function"
+    ));
+    assert!(doc.contains("`opt`: template parameter is unsafe: raw pointer"));
+    Ok(())
+}
+
+#[gtest]
+fn test_function_with_unsafe_template_param_existing_rust_type() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace crubit::rust_type {
+        template <typename...>
+        struct Args {};
+        }
+        template <typename T>
+        struct [[clang::annotate("crubit_internal_rust_type", "RustContainer<{}>", crubit::rust_type::Args<T>())]] Container final {};
+        void AcceptContainerOfPointers(Container<int*> c);
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("unsafe_template_params"))?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub unsafe fn AcceptContainerOfPointers(c: crate::RustContainer<*mut ::ffi_11::c_int>) {
+                ...
+            }
+        }
+    );
+    let doc = rs_api.to_string();
+    assert!(doc.contains(
+        "The caller must ensure that the following unsafe arguments are not misused by the function"
+    ));
+    assert!(doc.contains("`c`: template parameter is unsafe: raw pointer"));
+    Ok(())
+}

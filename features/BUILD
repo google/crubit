@@ -339,6 +339,15 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set where parameter types with unsafe template arguments are treated as unsafe.
+#
+# See b/573613918
+crubit_feature_hint(
+    name = "unsafe_template_params",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["unsafe_template_params"],
+    visibility = ["//visibility:public"],
+)
 # Implementation details follow.
 
 bzl_library(

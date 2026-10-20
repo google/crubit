@@ -18,8 +18,9 @@ use database::code_snippet::{
 use database::db::{BindingsGenerator, CodegenFunctions, Interner};
 use database::intern;
 use database::rs_snippet::{
-    resolve_bridge_rust_name, BackingType, BridgeRsTypeKind, Callable, FnTrait, LifetimeOptions,
-    Mutability, PassingConvention, RsTypeKind, RustPtrKind, UnsafeReason,
+    resolve_bridge_rust_name, BackingType, BridgeRsTypeKind, Callable, CustomizeMethodsKind,
+    FnTrait, LifetimeOptions, Mutability, PassingConvention, RsTypeKind, RustPtrKind,
+    UniformReprTemplateType, UnsafeReason,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -801,18 +802,24 @@ fn rs_type_kind_safety<'a>(
             // type.
             None
         }
-        RsTypeKind::Enum { .. }
-        | RsTypeKind::Primitive(..)
-        | RsTypeKind::ExistingRustType { .. } => None,
+        RsTypeKind::Enum { .. } | RsTypeKind::Primitive(..) => None,
+        RsTypeKind::ExistingRustType { type_args, .. } => {
+            template_params_safety(db, type_args.iter().cloned())
+        }
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             // TODO(b/390621592): Should bridge types just delegate to the underlying type?
-            BridgeRsTypeKind::Bridge { .. } => record_safety(db, original_type.clone())
-                // Full unsafe reason is not shown here, it's documented on the type instead.
-                .map(|_reason| UnsafeReason(intern!(db.interner(), "unsafe bridge type"))),
+            BridgeRsTypeKind::Bridge { generic_types, .. } => {
+                if let Some(reason) = record_safety(db, original_type.clone())
+                    .map(|_reason| UnsafeReason(intern!(db.interner(), "unsafe bridge type")))
+                {
+                    return Some(reason);
+                }
+                template_params_safety(db, generic_types.iter().cloned())
+            }
             BridgeRsTypeKind::ProtoMessageBridge { .. } => record_safety(db, original_type.clone())
                 // Full unsafe reason is not shown here, it's documented on the type instead.
                 .map(|_reason| UnsafeReason(intern!(db.interner(), "unsafe proto message type"))),
-            BridgeRsTypeKind::StdOptional(t) => db.rs_type_kind_safety(t.as_ref().clone()),
+            BridgeRsTypeKind::StdOptional(t) => template_params_safety(db, [t.as_ref().clone()]),
             BridgeRsTypeKind::StdPair(t1, t2) => {
                 let s1 = db.rs_type_kind_safety(t1.as_ref().clone());
                 let s2 = db.rs_type_kind_safety(t2.as_ref().clone());
@@ -838,7 +845,13 @@ fn rs_type_kind_safety<'a>(
                 db.rs_type_kind_safety(result_type.as_ref().clone())
             }
         },
-        RsTypeKind::Record { record, lifetimes, .. } => {
+        RsTypeKind::Record {
+            record,
+            lifetimes,
+            uniform_repr_template_type,
+            customize_methods,
+            ..
+        } => {
             if !record.is_raw_string_view()
                 && db
                     .ir()
@@ -865,10 +878,132 @@ fn rs_type_kind_safety<'a>(
                 }
             }
 
+            if record.safety_annotation() == SafetyAnnotation::DisableUnsafe {
+                return None;
+            }
+
             // Full unsafe reason is not shown here, it's documented on the type instead.
-            record_safety(db, record.clone())
+            if let Some(reason) = record_safety(db, record.clone())
                 .map(|_reason| UnsafeReason(intern!(db.interner(), "unsafe struct or union")))
+            {
+                return Some(reason);
+            }
+
+            record_template_params_safety(
+                db,
+                record.as_ref(),
+                uniform_repr_template_type.as_deref(),
+                customize_methods.as_deref(),
+            )
         }
+    }
+}
+
+/// Helper function for `rs_type_kind_safety`.
+/// Returns whether any template parameter is unsafe.
+fn template_params_safety<'a>(
+    db: &BindingsGenerator<'a>,
+    template_params: impl IntoIterator<Item = RsTypeKind<'a>>,
+) -> Option<UnsafeReason> {
+    if !db
+        .ir()
+        .target_crubit_features(db.ir().current_target())
+        .contains(crubit_feature::CrubitFeature::UnsafeTemplateParams)
+    {
+        return None;
+    }
+
+    let reasons: Vec<String> = template_params
+        .into_iter()
+        .filter_map(|param| {
+            let reason = db.rs_type_kind_safety(param)?;
+            Some(format!("template parameter is unsafe: {reason}"))
+        })
+        .collect();
+
+    if reasons.is_empty() {
+        None
+    } else {
+        Some(UnsafeReason(intern!(db.interner(), "{}", reasons.join("; "))))
+    }
+}
+
+/// Helper function to extract template parameters of a `Record`.
+fn record_template_params<'a>(
+    db: &BindingsGenerator<'a>,
+    record: &Record<'a>,
+    uniform_repr_template_type: Option<&UniformReprTemplateType<'a>>,
+    customize_methods: Option<&CustomizeMethodsKind<'a>>,
+) -> Result<Vec<RsTypeKind<'a>>> {
+    if let Some(uniform_repr) = uniform_repr_template_type {
+        return Ok(match uniform_repr {
+            UniformReprTemplateType::StdVector { element_type }
+            | UniformReprTemplateType::StdOptional { element_type }
+            | UniformReprTemplateType::StdUniquePtr { element_type, .. }
+            | UniformReprTemplateType::StdAtomic { element_type, .. }
+            | UniformReprTemplateType::StdSharedPtr { element_type, .. }
+            | UniformReprTemplateType::AbslSpan { element_type, .. } => {
+                vec![element_type.clone()]
+            }
+            UniformReprTemplateType::StdStringView { .. } => vec![],
+        });
+    }
+
+    if let Some(customize) = customize_methods {
+        return Ok(match customize {
+            CustomizeMethodsKind::AbslFlatHashMap { key_type, value_type } => {
+                vec![key_type.clone(), value_type.clone()]
+            }
+        });
+    }
+
+    if let Some(ts) = record.template_specialization() {
+        return match ts.kind() {
+            TemplateSpecializationKind::StdVector { raw_element_type }
+            | TemplateSpecializationKind::StdOptional { raw_element_type }
+            | TemplateSpecializationKind::StdSharedPtr { raw_element_type }
+            | TemplateSpecializationKind::StdUniquePtr { raw_element_type }
+            | TemplateSpecializationKind::C9Co { raw_element_type }
+            | TemplateSpecializationKind::StdAtomic { raw_element_type }
+            | TemplateSpecializationKind::AbslSpan { raw_element_type }
+            | TemplateSpecializationKind::AbslFlatHashSet { raw_element_type } => {
+                let ty = db.rs_type_kind(raw_element_type.clone())?;
+                Ok(vec![ty])
+            }
+            TemplateSpecializationKind::AbslFlatHashMap { raw_key_type, raw_value_type } => {
+                let key_ty = db.rs_type_kind(raw_key_type.clone())?;
+                let val_ty = db.rs_type_kind(raw_value_type.clone())?;
+                Ok(vec![key_ty, val_ty])
+            }
+            TemplateSpecializationKind::StdStringView
+            | TemplateSpecializationKind::StdWStringView
+            | TemplateSpecializationKind::NonSpecial => Ok(vec![]),
+        };
+    }
+
+    Ok(vec![])
+}
+
+fn record_template_params_safety<'a>(
+    db: &BindingsGenerator<'a>,
+    record: &Record<'a>,
+    uniform_repr_template_type: Option<&UniformReprTemplateType<'a>>,
+    customize_methods: Option<&CustomizeMethodsKind<'a>>,
+) -> Option<UnsafeReason> {
+    if !db
+        .ir()
+        .target_crubit_features(db.ir().current_target())
+        .contains(crubit_feature::CrubitFeature::UnsafeTemplateParams)
+    {
+        return None;
+    }
+
+    match record_template_params(db, record, uniform_repr_template_type, customize_methods) {
+        Ok(params) => template_params_safety(db, params),
+        Err(err) => Some(UnsafeReason(intern!(
+            db.interner(),
+            "template parameter is unsafe: Rust type is unknown: {err}"
+        ))),
     }
 }
 

@@ -125,6 +125,9 @@ flagset::flags! {
         /// Generate bindings for operators that are hidden friends of base classes (e.g. defined by
         /// CRTP mixins), as if they were hidden friends of the derived class.
         InheritedFriendOperators,
+
+        /// Treat parameter types with unsafe template arguments as unsafe.
+        UnsafeTemplateParams,
     }
 }
 
@@ -169,6 +172,7 @@ impl CrubitFeature {
             Self::InferSendSync => "infer_send_sync",
             Self::IteratorItemReferences => "iterator_item_references",
             Self::InheritedFriendOperators => "inherited_friend_operators",
+            Self::UnsafeTemplateParams => "unsafe_template_params",
         }
     }
 
@@ -220,6 +224,7 @@ impl CrubitFeature {
             Self::InheritedFriendOperators => {
                 "//features:inherited_friend_operators"
             }
+            Self::UnsafeTemplateParams => "//features:unsafe_template_params",
         }
     }
 }
@@ -248,6 +253,8 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::InferSendSync
                 // Out of `all` until callers expecting pointers from iterators are migrated.
                 - CrubitFeature::IteratorItemReferences
+                // Standalone opt-in: treats parameter types with unsafe template arguments as unsafe.
+                - CrubitFeature::UnsafeTemplateParams
         }
         // `supported` automatically implies `types` and `impl_cxx_extern_type`.
         b"supported" => {
@@ -285,6 +292,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"infer_send_sync" => CrubitFeature::InferSendSync.into(),
         b"iterator_item_references" => CrubitFeature::IteratorItemReferences.into(),
         b"inherited_friend_operators" => CrubitFeature::InheritedFriendOperators.into(),
+        b"unsafe_template_params" => CrubitFeature::UnsafeTemplateParams.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -451,6 +459,13 @@ mod tests {
         let SerializedCrubitFeature(features) =
             serde_json::from_str("\"iterator_item_references\"").unwrap();
         assert_eq!(features, CrubitFeature::IteratorItemReferences);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_unsafe_template_params() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"unsafe_template_params\"").unwrap();
+        assert_eq!(features, CrubitFeature::UnsafeTemplateParams);
     }
 
     #[gtest]
