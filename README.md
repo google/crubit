@@ -1,5 +1,8 @@
+<!-- ANCHOR: main -->
+
 # Crubit: C++/Rust Bidirectional Interop Tool
 
+[![Docs](https://img.shields.io/badge/docs-crubit.rs-blue)](https://crubit.rs)
 [![rust workflow](https://github.com/google/crubit/actions/workflows/rust.yml/badge.svg)](https://github.com/google/crubit/actions/workflows/rust.yml)
 [![GitHub](https://img.shields.io/badge/github-google%2Fcrubit-blue?logo=github)](https://github.com/google/crubit)
 
@@ -150,6 +153,12 @@ copy-pastable examples that include snapshots of the generated bindings:
     [Rust Bindings for C++ Libraries](http://crubit.rs/cpp) walkthrough and
     [`examples/cpp/`](https://github.com/google/crubit/tree/main/examples/cpp).
 
+<!-- ANCHOR_END: main -->
+See the full documentation at [crubit.rs](https://crubit.rs) for additional
+reference material.
+
+<!-- ANCHOR: test_matrix -->
+
 ## Test Matrix
 
 |Nightly|Stable|
@@ -161,5 +170,7 @@ copy-pastable examples that include snapshots of the generated bindings:
 | [![nightly-4](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/nightly-4.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) | |
 | [![nightly-5](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/nightly-5.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) | |
 | [![nightly-6](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/google/crubit/test-matrix/nightly-6.json)](https://github.com/google/crubit/actions/workflows/nightly.yaml) | |
+
+<!-- ANCHOR_END: test_matrix -->
 
 
