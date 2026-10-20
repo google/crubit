@@ -221,13 +221,16 @@ function(_crubit_ensure_std)
 
   list(JOIN all_headers "\",\"" json_headers)
   set(label "//support/cc_std:cc_std")
+  set(target_args
+    "{\"t\":\"${label}\",\"h\":[\"${json_headers}\"],\"f\":[\"all\",\"no_impl_cxx_extern_type\"],\"c\":\"cc_std\"}")
+  # Every other bindings crate needs this entry too.
+  set_property(GLOBAL PROPERTY _CRUBIT_STD_TARGET_ARGS "${target_args}")
   _crubit_generate(
     CRATE cc_std
     LABEL "${label}"
     CLANG_ARGS ${compile_args}
     PUBLIC_HEADERS ${public_headers}
-    TARGET_ARGS_JSON
-      "{\"t\":\"${label}\",\"h\":[\"${json_headers}\"],\"f\":[\"all\",\"no_impl_cxx_extern_type\"],\"c\":\"cc_std\"}"
+    TARGET_ARGS_JSON "${target_args}"
     EXTRA_RS_SRCS
       "${impl}/lossy_utf8.rs"
       "${impl}/slice_ptr.rs"
