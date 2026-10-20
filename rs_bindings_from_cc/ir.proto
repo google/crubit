@@ -21,6 +21,35 @@ message LifetimeName {
   int32 id = 2;
 }
 
+// A line in a source file.
+message SourceLocation {
+  // The path of the file, relative to the workspace root (e.g.
+  // `path/to/header.h`).
+  string path = 1;
+  // The 1-based line number.
+  uint32 line = 2;
+}
+
+// Where a declaration is in the source code.
+message DeclLocation {
+  // A range of byte offsets in a file.
+  message ByteRange {
+    uint32 begin = 1;
+    uint32 end = 2;
+  }
+
+  // Where the declaration is spelled. For a declaration produced by a macro
+  // expansion, this is inside the macro definition. Unset if unknown.
+  SourceLocation spelling = 1;
+  // For a declaration produced by a macro expansion, where the macro is
+  // expanded. Unset otherwise, or if unknown.
+  SourceLocation expansion = 2;
+  // The byte offsets of the declaration's name in the `spelling` file, for
+  // Kythe. Only set when generating Kythe annotations; both offsets are 0 if
+  // the name's range is unknown.
+  ByteRange name_range = 3;
+}
+
 // An error that stores its format string as well as the formatted message.
 message FormattedError {
   // The format string that produced the error message, if available. This is
@@ -295,6 +324,8 @@ message Func {
   // Whether the function or method should have `pub(crate)` visibility.
   bool is_pub_crate = 32;
   bool is_always_inline = 33;
+  // Where the item is declared.
+  DeclLocation decl_loc = 34;
 }
 
 // Access specifier for a member or base class.
@@ -505,6 +536,8 @@ message Constant {
   bool must_bind = 11;
   string deprecated = 12;
   string doc_comment = 13;
+  // Where the item is declared.
+  DeclLocation decl_loc = 16;
 }
 
 // A template specialization for a template record, containing information
@@ -673,6 +706,8 @@ message Record {
   bool has_virtual_bases = 45;
   // The value, in bytes, to use for packing.
   int64 pack = 46;
+  // Where the item is declared.
+  DeclLocation decl_loc = 47;
 }
 
 // A forward-declared record (e.g. `struct Foo;`)
@@ -714,6 +749,8 @@ message Enum {
   string doc_comment = 15;
   string mangled_cc_name = 16;
   bool is_incomplete = 17;
+  // Where the item is declared.
+  DeclLocation decl_loc = 18;
 }
 
 message GlobalVar {
@@ -730,6 +767,8 @@ message GlobalVar {
   bool must_bind = 11;
   string deprecated = 12;
   string doc_comment = 13;
+  // Where the item is declared.
+  DeclLocation decl_loc = 14;
 }
 
 // A type alias (defined either using `typedef` or `using`).
@@ -748,6 +787,8 @@ message TypeAlias {
   string deprecated = 12;
   // Lifetime variable names bound by this type alias.
   repeated string lifetime_inputs = 13;
+  // Where the item is declared.
+  DeclLocation decl_loc = 14;
 }
 
 // A placeholder for an item that we can't generate bindings for (yet)
@@ -782,6 +823,8 @@ message UnsupportedItem {
   bool must_bind = 8;
   string defining_target = 9;
   string inline_cpp_source_text = 10;
+  // Where the item is declared.
+  DeclLocation decl_loc = 11;
 }
 
 message Comment {

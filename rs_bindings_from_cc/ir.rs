@@ -9,11 +9,11 @@ use arc_anyhow::{anyhow, bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
 use ir_rust_proto::{
-    BaseClassView, CommentView, ConstantView, EnumView, EnumeratorView, ExistingRustTypeView,
-    FieldView, FuncParamView, FuncView, GlobalVarView, HeaderNameView, IdentifierView,
-    IncompleteRecordView, InstanceMethodMetadataView, IntegerConstantView, NamespaceView,
-    OwnedPtrConfigView, RecordView, SizeAlignView, StatusOrOptionalStringView, TypeAliasView,
-    UseModView,
+    BaseClassView, CommentView, ConstantView, DeclLocationView, EnumView, EnumeratorView,
+    ExistingRustTypeView, FieldView, FuncParamView, FuncView, GlobalVarView, HeaderNameView,
+    IdentifierView, IncompleteRecordView, InstanceMethodMetadataView, IntegerConstantView,
+    NamespaceView, OwnedPtrConfigView, RecordView, SizeAlignView, SourceLocationView,
+    StatusOrOptionalStringView, TypeAliasView, UseModView,
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -171,6 +171,11 @@ pub trait GenericItem<'pb> {
     /// The recorded source location, or None if none is present.
     fn source_loc(&self) -> Option<&'pb str>;
 
+    /// Where the item is declared, or None if unknown.
+    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+        None
+    }
+
     /// A human-readable list of unknown attributes, or None if all attributes
     /// were understood.
     fn unknown_attr(&self) -> Option<&'pb str>;
@@ -202,6 +207,9 @@ where
     }
     fn source_loc(&self) -> Option<&'pb str> {
         (**self).source_loc()
+    }
+    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+        (**self).decl_loc()
     }
     fn unknown_attr(&self) -> Option<&'pb str> {
         (**self).unknown_attr()
@@ -397,6 +405,132 @@ macro_rules! derive_debug_partialeq_eq_hash {
             }
         }
     };
+}
+
+/// A line in a source file.
+///
+/// Displays as `path/to/header.h;l=12`.
+#[derive(Clone, Copy)]
+pub struct SourceLocation<'pb> {
+    proto: SourceLocationView<'pb>,
+}
+
+impl<'pb> ProtoToIr for SourceLocationView<'pb> {
+    type IrType = SourceLocation<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.path().validate()
+    }
+
+    fn to_ir(self) -> SourceLocation<'pb> {
+        SourceLocation { proto: self }
+    }
+}
+
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> SourceLocation<'pb> {
+        /// The path of the file, relative to the workspace root (e.g. `path/to/header.h`).
+        pub fn path(&self) -> &'pb str {
+            self.proto.path().to_ir()
+        }
+
+        /// The 1-based line number.
+        pub fn line(&self) -> u32 {
+            self.proto.line()
+        }
+    }
+}
+
+impl Display for SourceLocation<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{};l={}", self.path(), self.line())
+    }
+}
+
+/// Where a declaration is in the source code.
+///
+/// Displays as the source location in generated doc comments, e.g.
+/// `Generated from: path/to/header.h;l=12`, followed by an `Expanded at:` line for macro
+/// expansions.
+#[derive(Clone, Copy)]
+pub struct DeclLocation<'pb> {
+    proto: DeclLocationView<'pb>,
+}
+
+impl<'pb> ProtoToIr for DeclLocationView<'pb> {
+    type IrType = DeclLocation<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.spelling_opt().into_option().validate()?;
+        self.expansion_opt().into_option().validate()
+    }
+
+    fn to_ir(self) -> DeclLocation<'pb> {
+        DeclLocation { proto: self }
+    }
+}
+
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> DeclLocation<'pb> {
+        /// Where the declaration is spelled, or None if unknown. For a declaration produced by a
+        /// macro expansion, this is inside the macro definition.
+        pub fn spelling(&self) -> Option<SourceLocation<'pb>> {
+            self.proto.spelling_opt().into_option().to_ir()
+        }
+
+        /// For a declaration produced by a macro expansion, where the macro is expanded. None
+        /// otherwise, or if unknown.
+        pub fn expansion(&self) -> Option<SourceLocation<'pb>> {
+            self.proto.expansion_opt().into_option().to_ir()
+        }
+
+        /// The `[begin, end)` byte offsets of the declaration's name in the `spelling()` file, for
+        /// Kythe. Only set when generating Kythe annotations; both offsets are 0 if unknown.
+        pub fn name_range(&self) -> Option<(u32, u32)> {
+            self.proto.name_range_opt().into_option().map(|range| (range.begin(), range.end()))
+        }
+    }
+}
+
+impl Display for DeclLocation<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        /// Writes one line, e.g. `Generated from: path/to/header.h;l=12`.
+        fn write_line(
+            f: &mut fmt::Formatter<'_>,
+            label: &str,
+            location: Option<SourceLocation<'_>>,
+            name_range: Option<(u32, u32)>,
+        ) -> fmt::Result {
+            let Some(location) = location else {
+                return f.write_str("<unknown location>");
+            };
+            let _ = name_range;
+            write!(f, "{label}: {location}")
+        }
+
+        write_line(f, "Generated from", self.spelling(), self.name_range())?;
+        if let Some(expansion) = self.expansion() {
+            f.write_str("\n")?;
+            // The name isn't at the expansion location, so its range is written as `[0,0]` when
+            // generating Kythe annotations.
+            let expansion_name_range = self.name_range().map(|_| (0, 0));
+            write_line(f, "Expanded at", Some(expansion), expansion_name_range)?;
+        }
+        Ok(())
+    }
+}
+
+/// Displays an `Option<DeclLocation>`, falling back to `<unknown location>` when `None`.
+#[derive(Clone, Copy)]
+pub struct DeclLocationOrUnknown<'pb>(pub Option<DeclLocation<'pb>>);
+
+impl Display for DeclLocationOrUnknown<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.0 {
+            Some(decl_loc) => write!(f, "{decl_loc}"),
+            None => f.write_str("<unknown location>"),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -1567,6 +1701,7 @@ impl<'pb> ProtoToIr for FuncView<'pb> {
         self.unknown_attr_opt().into_option().validate()?;
         self.safety_annotation().validate()?;
         self.source_loc().validate()?;
+        self.decl_loc_opt().into_option().validate()?;
         for s in self.lifetime_inputs().iter() {
             s.validate()?;
         }
@@ -1715,6 +1850,10 @@ derive_debug_partialeq_eq_hash! {
             self.proto.source_loc().to_ir()
         }
 
+        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+            self.proto.decl_loc_opt().into_option().to_ir()
+        }
+
         pub fn id(&self) -> ItemId {
             ItemId(self.proto.id() as usize)
         }
@@ -1785,6 +1924,9 @@ impl<'pb> GenericItem<'pb> for Func<'pb> {
     }
     fn source_loc(&self) -> Option<&'pb str> {
         Some(self.source_loc())
+    }
+    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+        Self::decl_loc(self)
     }
     fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr()
@@ -2444,6 +2586,7 @@ impl<'pb> ProtoToIr for RecordView<'pb> {
         }
         self.owned_ptr_config_opt().into_option().validate()?;
         self.source_loc().validate()?;
+        self.decl_loc_opt().into_option().validate()?;
         for base in self.unambiguous_public_bases().iter() {
             base.validate()?;
         }
@@ -2573,6 +2716,10 @@ derive_debug_partialeq_eq_hash! {
 
         pub fn source_loc(&self) -> &'pb str {
             self.proto.source_loc().to_ir()
+        }
+
+        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+            self.proto.decl_loc_opt().into_option().to_ir()
         }
 
         pub fn unambiguous_public_bases(&self) -> &[BaseClass] {
@@ -2733,6 +2880,9 @@ impl<'pb> GenericItem<'pb> for Record<'pb> {
     }
     fn source_loc(&self) -> Option<&'pb str> {
         Some(self.source_loc())
+    }
+    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+        Self::decl_loc(self)
     }
     fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr()
@@ -2929,6 +3079,7 @@ impl<'pb> ProtoToIr for ConstantView<'pb> {
         self.unique_name().validate()?;
         self.owning_target().validate()?;
         self.source_loc().validate()?;
+        self.decl_loc_opt().into_option().validate()?;
         match self.kind() {
             ::ir_rust_proto::constant::KindOneof::Value(value) => {
                 value.validate()?;
@@ -2999,6 +3150,10 @@ derive_debug_partialeq_eq_hash! {
             self.proto.source_loc().to_ir()
         }
 
+        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+            self.proto.decl_loc_opt().into_option().to_ir()
+        }
+
         pub fn unknown_attr(&self) -> Option<&'pb str> {
             self.proto.unknown_attr_opt().into_option().to_ir()
         }
@@ -3043,6 +3198,9 @@ impl<'pb> GenericItem<'pb> for Constant<'pb> {
     fn source_loc(&self) -> Option<&'pb str> {
         Some(self.source_loc())
     }
+    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+        Self::decl_loc(self)
+    }
     fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr()
     }
@@ -3070,6 +3228,7 @@ impl<'pb> ProtoToIr for GlobalVarView<'pb> {
         self.unique_name().validate()?;
         self.owning_target().validate()?;
         self.source_loc().validate()?;
+        self.decl_loc_opt().into_option().validate()?;
         self.unknown_attr_opt().into_option().validate()?;
         self.mangled_name_opt().into_option().validate()?;
         let _ = CcType::try_from(self.r#type())?;
@@ -3109,6 +3268,10 @@ derive_debug_partialeq_eq_hash! {
 
         pub fn source_loc(&self) -> &'pb str {
             self.proto.source_loc().to_ir()
+        }
+
+        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+            self.proto.decl_loc_opt().into_option().to_ir()
         }
 
         /// A human-readable list of attributes that Crubit doesn't understand.
@@ -3160,6 +3323,9 @@ impl<'pb> GenericItem<'pb> for GlobalVar<'pb> {
     fn source_loc(&self) -> Option<&'pb str> {
         Some(self.source_loc())
     }
+    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+        Self::decl_loc(self)
+    }
     fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr()
     }
@@ -3189,6 +3355,7 @@ impl<'pb> ProtoToIr for EnumView<'pb> {
         self.mangled_cc_name().validate()?;
         self.owning_target().validate()?;
         self.source_loc().validate()?;
+        self.decl_loc_opt().into_option().validate()?;
         let _ = CcType::try_from(self.underlying_type())?;
         if !self.is_incomplete() {
             for enumerator in self.enumerators().iter() {
@@ -3239,6 +3406,10 @@ derive_debug_partialeq_eq_hash! {
 
         pub fn source_loc(&self) -> &'pb str {
             self.proto.source_loc().to_ir()
+        }
+
+        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+            self.proto.decl_loc_opt().into_option().to_ir()
         }
 
         pub fn underlying_type(&self) -> &CcType {
@@ -3304,6 +3475,9 @@ impl<'pb> GenericItem<'pb> for Enum<'pb> {
     }
     fn source_loc(&self) -> Option<&'pb str> {
         Some(self.source_loc())
+    }
+    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+        Self::decl_loc(self)
     }
     fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr()
@@ -3385,6 +3559,7 @@ impl<'pb> ProtoToIr for TypeAliasView<'pb> {
         self.unknown_attr_opt().into_option().validate()?;
         let _ = CcType::try_from(self.underlying_type())?;
         self.source_loc().validate()?;
+        self.decl_loc_opt().into_option().validate()?;
         self.deprecated_opt().into_option().validate()?;
         for lifetime in self.lifetime_inputs().iter() {
             lifetime.validate()?;
@@ -3440,6 +3615,10 @@ derive_debug_partialeq_eq_hash! {
             self.proto.source_loc().to_ir()
         }
 
+        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+            self.proto.decl_loc_opt().into_option().to_ir()
+        }
+
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
             self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
         }
@@ -3486,6 +3665,9 @@ impl<'pb> GenericItem<'pb> for TypeAlias<'pb> {
     fn source_loc(&self) -> Option<&'pb str> {
         Some(self.source_loc())
     }
+    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+        Self::decl_loc(self)
+    }
     fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr()
     }
@@ -3499,7 +3681,13 @@ impl<'pb> GenericItem<'pb> for TypeAlias<'pb> {
 
 impl Display for TypeAlias<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} ({}, {})", self.rs_name(), self.owning_target(), self.source_loc())
+        write!(
+            f,
+            "{} ({}, {})",
+            self.rs_name(),
+            self.owning_target(),
+            DeclLocationOrUnknown(self.decl_loc())
+        )
     }
 }
 
@@ -3648,6 +3836,7 @@ pub struct UnsupportedItem<'pb> {
     pub(crate) path: Option<UnsupportedItemPath<'pb>>,
     pub(crate) errors: Vec<Rc<FormattedError>>,
     pub(crate) source_loc: Option<&'pb str>,
+    pub(crate) decl_loc: Option<DeclLocation<'pb>>,
     pub(crate) id: ItemId,
     pub(crate) must_bind: bool,
     pub(crate) defining_target: Option<BazelLabel>,
@@ -3668,6 +3857,7 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::UnsupportedItemView<'pb> {
             e.validate()?;
         }
         self.source_loc_opt().into_option().validate()?;
+        self.decl_loc_opt().into_option().validate()?;
         self.defining_target_opt().into_option().validate()?;
         self.inline_cpp_source_text_opt().into_option().validate()
     }
@@ -3679,6 +3869,7 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::UnsupportedItemView<'pb> {
         let path = self.path_opt().into_option().map(|p| p.to_ir());
         let errors = self.errors().iter().map(|e| Rc::new(e.to_ir())).collect();
         let source_loc = self.source_loc_opt().into_option().to_ir();
+        let decl_loc = self.decl_loc_opt().into_option().to_ir();
         let id = ItemId(self.id() as usize);
         let must_bind = self.must_bind();
         let defining_target =
@@ -3693,6 +3884,7 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::UnsupportedItemView<'pb> {
             path,
             errors,
             source_loc,
+            decl_loc,
             id,
             must_bind,
             defining_target,
@@ -3728,6 +3920,10 @@ derive_debug_partialeq_eq_hash! {
 
         pub fn source_loc(&self) -> Option<&'pb str> {
             self.source_loc
+        }
+
+        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+            self.decl_loc
         }
 
         pub fn inline_cpp_source_text(&self) -> Option<&str> {
@@ -3774,6 +3970,9 @@ impl<'pb> GenericItem<'pb> for UnsupportedItem<'pb> {
     fn source_loc(&self) -> Option<&'pb str> {
         self.source_loc()
     }
+    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+        UnsupportedItem::decl_loc(self)
+    }
     fn unknown_attr(&self) -> Option<&'pb str> {
         None
     }
@@ -3790,6 +3989,7 @@ impl<'pb> UnsupportedItem<'pb> {
         kind: UnsupportedItemKind,
         id: ItemId,
         source_loc: Option<&'pb str>,
+        decl_loc: Option<DeclLocation<'pb>>,
         defining_target: Option<BazelLabel>,
         must_bind: bool,
         path: Option<UnsupportedItemPath<'pb>>,
@@ -3802,6 +4002,7 @@ impl<'pb> UnsupportedItem<'pb> {
             kind,
             path,
             source_loc,
+            decl_loc,
             id,
             must_bind,
             defining_target,
@@ -4253,6 +4454,13 @@ impl<'pb> GenericItem<'pb> for Item<'pb> {
         forward_item! {
             match self {
                 _(x) => x.source_loc()
+            }
+        }
+    }
+    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+        forward_item! {
+            match self {
+                _(x) => x.decl_loc()
             }
         }
     }

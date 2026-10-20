@@ -640,6 +640,7 @@ impl<'db> BindingsGenerator<'db> {
             item.unsupported_kind(),
             item.id(),
             item.source_loc(),
+            item.decl_loc(),
             self.defining_target(item.id()),
             must_bind,
             path,

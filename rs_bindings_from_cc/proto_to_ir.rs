@@ -24,6 +24,14 @@ impl<'pb> TryFrom<::ir_rust_proto::HeaderNameView<'pb>> for HeaderName<'pb> {
     }
 }
 
+impl<'pb> TryFrom<::ir_rust_proto::DeclLocationView<'pb>> for DeclLocation<'pb> {
+    type Error = Error;
+    fn try_from(proto: ::ir_rust_proto::DeclLocationView<'pb>) -> Result<Self> {
+        proto.validate()?;
+        Ok(proto.to_ir())
+    }
+}
+
 impl<'pb> TryFrom<::ir_rust_proto::IdentifierView<'pb>> for Identifier<'pb> {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::IdentifierView<'pb>) -> Result<Self> {
