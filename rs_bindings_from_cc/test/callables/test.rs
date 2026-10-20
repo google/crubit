@@ -15,8 +15,10 @@ fn test_invoke_once() {
     let state = Arc::new(Mutex::new(0));
     {
         let state = Arc::clone(&state);
+        // Capture a `!Sync` `Cell` to verify that `FnOnce` callbacks do not require `Sync`.
+        let non_sync_cell = std::cell::Cell::new(42);
         invoke_once(Box::new(move || {
-            *state.lock().unwrap() = 42;
+            *state.lock().unwrap() = non_sync_cell.get();
         }));
     }
 
