@@ -35,7 +35,8 @@ use crate::format_type::{
     format_top_level_ns_for_crate, BridgedBuiltin,
 };
 use crate::generate_ctor::{
-    copy_ctor_and_assignment_operator_codegen_style, has_default_ctor, is_cpp_move_constructible,
+    copy_ctor_and_assignment_operator_codegen_style, has_default_ctor,
+    is_cpp_constexpr_move_constructible, is_cpp_move_constructible,
     move_ctor_and_assignment_operator_codegen_style,
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
@@ -383,6 +384,7 @@ pub fn new_database<'db>(
         copy_ctor_and_assignment_operator_codegen_style,
         move_ctor_and_assignment_operator_codegen_style,
         is_cpp_move_constructible,
+        is_cpp_constexpr_move_constructible,
         generate_item,
         generate_function,
         adt_needs_bindings,

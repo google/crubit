@@ -13,7 +13,8 @@ use quote::quote;
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
 use rustc_span::symbol::Symbol;
 use test_helpers::{
-    bindings_db_for_tests, bindings_db_for_tests_with_ignore_symbols_from_files, test_format_item,
+    bindings_db_for_tests, bindings_db_for_tests_with_features,
+    bindings_db_for_tests_with_ignore_symbols_from_files, test_format_item,
     test_format_item_with_features, test_generated_bindings,
     test_generated_bindings_with_namespace,
 };
@@ -2735,6 +2736,63 @@ fn test_is_cpp_move_constructible() {
         // C++-movable
         assert!(db.is_cpp_move_constructible(find_ty("MovableStatusOr")));
         assert!(!db.is_cpp_move_constructible(find_ty("NonMovableStatusOr")));
+    });
+}
+
+#[test]
+fn test_is_cpp_constexpr_move_constructible() {
+    let test_src = r#"
+        #![allow(dead_code)]
+
+        pub struct AggregateStruct {
+            pub x: i32,
+        }
+
+        pub struct NonAggregateStruct {
+            x: i32,
+        }
+
+        #[derive(Default)]
+        pub struct StructWithDrop {
+            pub x: i32,
+        }
+        impl Drop for StructWithDrop {
+            fn drop(&mut self) {}
+        }
+
+        pub enum TrivialEnum {
+            A(i32),
+            B(AggregateStruct),
+        }
+
+        pub enum EnumWithDrop {
+            None,
+            Some(StructWithDrop),
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Experimental
+                | crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::EnumApiV2,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let find_ty = |name: &str| {
+            let local_def_id = find_def_id_by_name(tcx, name);
+            tcx.type_of(local_def_id).instantiate_identity().skip_normalization()
+        };
+
+        assert!(db.is_cpp_constexpr_move_constructible(tcx.types.i32));
+        assert!(db.is_cpp_constexpr_move_constructible(find_ty("AggregateStruct")));
+        assert!(!db.is_cpp_constexpr_move_constructible(find_ty("NonAggregateStruct")));
+        assert!(!db.is_cpp_constexpr_move_constructible(find_ty("StructWithDrop")));
+        assert!(db.is_cpp_constexpr_move_constructible(find_ty("TrivialEnum")));
+        assert!(!db.is_cpp_constexpr_move_constructible(find_ty("EnumWithDrop")));
+
+        let db_without_v2 = bindings_db_for_tests(tcx);
+        assert!(!db_without_v2.is_cpp_constexpr_move_constructible(find_ty("TrivialEnum")));
     });
 }
 

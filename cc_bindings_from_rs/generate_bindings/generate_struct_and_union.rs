@@ -1947,64 +1947,6 @@ pub fn generate_adt<'tcx>(
     let default_ctor_snippets =
         if is_aggregate { ApiSnippets::default() } else { generate_default_ctor(db, &core) };
 
-    let destructor_snippets = if is_aggregate {
-        if !adt_core_bindings_needs_drop(&core, tcx) {
-            let cc_details = CcSnippet::with_include(
-                quote! { static_assert(::std::is_trivially_destructible_v<#cc_fully_qualified_name>); },
-                CcInclude::type_traits(),
-            );
-            ApiSnippets { cc_details, ..Default::default() }
-        } else {
-            ApiSnippets::default()
-        }
-    } else if adt_core_bindings_needs_drop(&core, tcx) {
-        let drop_trait_id =
-            tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
-        let TraitThunks {
-            method_name_to_cc_thunk_name,
-            cc_thunk_decls,
-            rs_thunk_impls: rs_details,
-        } = generate_trait_thunks(
-            db,
-            drop_trait_id,
-            &[],
-            core.common.self_ty,
-            core.def_id,
-            core.rs_fully_qualified_name.clone(),
-            /* is_constructor= */ false,
-            /* within_template= */ false,
-        )
-        .expect("`generate_adt_core` should have already validated `Drop` support");
-        let drop_thunk_name = method_name_to_cc_thunk_name
-            .into_values()
-            .exactly_one()
-            .expect("Expecting a single `drop` method");
-        let main_api = CcSnippet::new(quote! {
-            __NEWLINE__ __COMMENT__ "Drop::drop"
-            ~#adt_cc_name(); __NEWLINE__
-            __NEWLINE__
-        });
-        let cc_details = cc_thunk_decls.map_snippets(|cc_thunk_decls| {
-            quote! {
-                #cc_thunk_decls
-                inline #cc_fully_qualified_name::~#adt_cc_name() {
-                    __crubit_internal::#drop_thunk_name(*this);
-                }
-            }
-        });
-        ApiSnippets { main_api, cc_details, rs_details }
-    } else {
-        let main_api = CcSnippet::new(quote! {
-            __NEWLINE__ __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
-            ~#adt_cc_name() = default; __NEWLINE__
-        });
-        let cc_details = CcSnippet::with_include(
-            quote! { static_assert(::std::is_trivially_destructible_v<#cc_fully_qualified_name>); },
-            CcInclude::type_traits(),
-        );
-        ApiSnippets { main_api, cc_details, ..Default::default() }
-    };
-
     let copy_ctor_and_assignment_snippets = if is_aggregate {
         if is_copy(tcx, core.common.self_ty) {
             let qualified_adt_name = &core.common.cc_fully_qualified_name;
@@ -2102,10 +2044,100 @@ pub fn generate_adt<'tcx>(
 
     // With `EnumApiV2`, variants are constructed with `V::Make` instead of `MakeV`.
     let enum_layout = generate_enum::analyze_enum(db, &core, &member_function_names);
-    let adt_based_ctors = if is_aggregate || matches!(enum_layout, Ok(Some(_))) {
+    let is_enum_api_v2 = matches!(enum_layout, Ok(Some(_)));
+    let adt_based_ctors = if is_aggregate || is_enum_api_v2 {
         ApiSnippets::default()
     } else {
         generate_adt_based_ctors(db, core.clone(), &mut member_function_names)
+    };
+
+    let destructor_snippets = if is_aggregate {
+        if !adt_core_bindings_needs_drop(&core, tcx) {
+            let cc_details = CcSnippet::with_include(
+                quote! { static_assert(::std::is_trivially_destructible_v<#cc_fully_qualified_name>); },
+                CcInclude::type_traits(),
+            );
+            ApiSnippets { cc_details, ..Default::default() }
+        } else {
+            ApiSnippets::default()
+        }
+    } else if adt_core_bindings_needs_drop(&core, tcx) {
+        let drop_trait_id =
+            tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
+        let TraitThunks {
+            method_name_to_cc_thunk_name,
+            cc_thunk_decls,
+            rs_thunk_impls: rs_details,
+        } = generate_trait_thunks(
+            db,
+            drop_trait_id,
+            &[],
+            core.common.self_ty,
+            core.def_id,
+            core.rs_fully_qualified_name.clone(),
+            /* is_constructor= */ false,
+            /* within_template= */ false,
+        )
+        .expect("`generate_adt_core` should have already validated `Drop` support");
+        let drop_thunk_name = method_name_to_cc_thunk_name
+            .into_values()
+            .exactly_one()
+            .expect("Expecting a single `drop` method");
+        // An `EnumApiV2` enum with drop glue (but no `Drop` impl of its own) gets a `constexpr`
+        // destructor that skips the Rust drop during constant evaluation: `VariadicUnionStorage`
+        // only lets trivially destructible variants be constructed at compile time, so the skipped
+        // drop never skips anything. See `VariadicUnionStorage` in
+        // `support/rs_std/internal/enum.h`.
+        let is_constexpr_enum_dtor = is_enum_api_v2
+            && core
+                .common
+                .self_ty
+                .ty_adt_def()
+                .is_some_and(|adt_def| adt_def.destructor(tcx).is_none());
+        if is_constexpr_enum_dtor {
+            let main_api = CcSnippet::new(quote! {
+                __NEWLINE__ __COMMENT__ "Drop::drop"
+                constexpr ~#adt_cc_name(); __NEWLINE__
+                __NEWLINE__
+            });
+            let mut cc_details = cc_thunk_decls.map_snippets(|cc_thunk_decls| {
+                quote! {
+                    #cc_thunk_decls
+                    constexpr #cc_fully_qualified_name::~#adt_cc_name() {
+                        if (!::std::is_constant_evaluated()) {
+                            __crubit_internal::#drop_thunk_name(*this);
+                        }
+                    }
+                }
+            });
+            cc_details.prereqs.includes.insert(CcInclude::type_traits());
+            ApiSnippets { main_api, cc_details, rs_details }
+        } else {
+            let main_api = CcSnippet::new(quote! {
+                __NEWLINE__ __COMMENT__ "Drop::drop"
+                ~#adt_cc_name(); __NEWLINE__
+                __NEWLINE__
+            });
+            let cc_details = cc_thunk_decls.map_snippets(|cc_thunk_decls| {
+                quote! {
+                    #cc_thunk_decls
+                    inline #cc_fully_qualified_name::~#adt_cc_name() {
+                        __crubit_internal::#drop_thunk_name(*this);
+                    }
+                }
+            });
+            ApiSnippets { main_api, cc_details, rs_details }
+        }
+    } else {
+        let main_api = CcSnippet::new(quote! {
+            __NEWLINE__ __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+            ~#adt_cc_name() = default; __NEWLINE__
+        });
+        let cc_details = CcSnippet::with_include(
+            quote! { static_assert(::std::is_trivially_destructible_v<#cc_fully_qualified_name>); },
+            CcInclude::type_traits(),
+        );
+        ApiSnippets { main_api, cc_details, ..Default::default() }
     };
     let into_operator_snippets = generate_into_impls(db, core.as_ref());
     let trait_operator_snippets = generate_trait_operator_impls(db, core.as_ref());

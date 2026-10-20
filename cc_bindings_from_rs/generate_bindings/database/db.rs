@@ -265,6 +265,12 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:is_cpp_move_constructible
       fn is_cpp_move_constructible(&self, ty: Ty<'tcx>) -> bool;
 
+      /// Returns true if the type is a C++20 literal type with a `constexpr` move constructor, so
+      /// a `constexpr` C++ constructor can take it by value and move-initialize a member with it.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:is_cpp_constexpr_move_constructible
+      fn is_cpp_constexpr_move_constructible(&self, ty: Ty<'tcx>) -> bool;
+
       /// Generates bindings for a HIR item idenfied by `def_id`.  Returns `None` if
       /// the item can be ignored. Returns an `Err` if the bindings could not be
       /// generated.

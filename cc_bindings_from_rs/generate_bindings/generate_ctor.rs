@@ -9,7 +9,8 @@
 use crate::generate_function_thunk::{
     generate_ctor_thunk_call, generate_trait_thunks, TraitThunks,
 };
-use crate::thunk_qualifier;
+use crate::generate_struct_and_union::is_struct_aggregate;
+use crate::{normalize_ty, thunk_qualifier};
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, RsSnippet};
@@ -305,6 +306,71 @@ pub(crate) fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
         // Arrays: element type must be move-constructible.
         ty::Array(elem_ty, _) => db.is_cpp_move_constructible(elem_ty),
 
+        _ => false,
+    }
+}
+
+/// Returns true if the type is a C++20 literal type with a `constexpr` move constructor, so
+/// a `constexpr` C++ constructor can take it by value and move-initialize a member with it.
+///
+/// A non-template constructor declared `constexpr` in C++20 requires every parameter type to be a
+/// literal type (`[dcl.constexpr]/3`) and every member initializer to call a `constexpr`
+/// constructor (`-Winvalid-constexpr`).
+pub(crate) fn is_cpp_constexpr_move_constructible<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+) -> bool {
+    let tcx = db.tcx();
+    let typing_env = ty::TypingEnv::fully_monomorphized();
+    if ty.needs_drop(tcx, typing_env) {
+        return false;
+    }
+    match *ty.kind() {
+        ty::Bool
+        | ty::Char
+        | ty::Int(_)
+        | ty::Uint(_)
+        | ty::Float(_)
+        | ty::RawPtr(..)
+        | ty::FnPtr(..)
+        | ty::Ref(..) => true,
+        ty::Array(elem_ty, _) => db.is_cpp_constexpr_move_constructible(elem_ty),
+        ty::Adt(adt_def, substs) => {
+            if is_std_ptr_non_null(tcx, adt_def.did()) || adt_def.is_pin() {
+                return true;
+            }
+            let attrs = crubit_attr::get_attrs(tcx, adt_def.did()).unwrap_or_default();
+            if attrs.cpp_type.is_some() || attrs.get_bridging_attrs().ok().flatten().is_some() {
+                return false;
+            }
+            if attrs.cpp_enum.is_some() {
+                return true;
+            }
+            match adt_def.adt_kind() {
+                ty::AdtKind::Struct => {
+                    is_struct_aggregate(db, Some(adt_def.did()), ty).is_ok()
+                        && adt_def.non_enum_variant().fields.iter().all(|f| {
+                            let field_ty = f.ty(tcx, substs);
+                            let field_ty = normalize_ty(tcx, tcx.param_env(f.did), field_ty);
+                            db.is_cpp_constexpr_move_constructible(field_ty)
+                        })
+                }
+                ty::AdtKind::Enum => {
+                    !adt_def.repr().c()
+                        && db
+                            .crate_features(adt_def.did().krate)
+                            .contains(crubit_feature::CrubitFeature::EnumApiV2)
+                        && adt_def.variants().iter().any(|variant| {
+                            variant.fields.iter().all(|f| {
+                                let field_ty = f.ty(tcx, substs);
+                                let field_ty = normalize_ty(tcx, tcx.param_env(f.did), field_ty);
+                                db.is_cpp_constexpr_move_constructible(field_ty)
+                            })
+                        })
+                }
+                ty::AdtKind::Union => false,
+            }
+        }
         _ => false,
     }
 }

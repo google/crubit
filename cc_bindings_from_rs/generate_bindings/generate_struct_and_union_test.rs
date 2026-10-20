@@ -2424,15 +2424,196 @@ fn test_format_item_enum_api_v2_uninhabited_variant_direct() {
     );
 }
 
+/// Non-`Copy` `Clone` enums without drop glue delegate copy to Rust (`Clone::clone`) while
+/// keeping `= default` move and destructor. Variants keep their private, defaulted copy and move
+/// operations; `VariadicUnionStorage` checks copy and move triviality separately, so the storage
+/// stays trivially movable even when a variant's copy is non-trivial.
+#[test]
+fn test_format_item_enum_api_v2_clone() {
+    let test_src = r#"
+        #[derive(Clone)]
+        pub enum CloneOnly {
+            Empty,
+            Value(i32),
+        }
+    "#;
+    test_format_item_with_features(
+        test_src,
+        "CloneOnly",
+        enum_api_v2_features(),
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    struct ... CloneOnly final {
+                        public:
+                        ...
+                        ~CloneOnly() = default;
+                        ...
+                        CloneOnly(CloneOnly&&) = default;
+                        CloneOnly& operator=(CloneOnly&&) = default;
+                        ...
+                        CloneOnly(const CloneOnly&) noexcept;
+                        ...
+                        ::rust_out::CloneOnly& operator=(const CloneOnly&) noexcept;
+                        ...
+                        struct Empty : public ::crubit::internal::Variant<
+                            Empty, ::rust_out::CloneOnly, 0> {
+                            public:
+                            constexpr explicit Empty(::crubit::internal::VariantKey) {}
+                            private:
+                            ...
+                            template <typename...>
+                            friend union ::crubit::internal::VariadicUnion;
+                            Empty(const Empty&) = default;
+                            Empty(Empty&&) = default;
+                            Empty& operator=(const Empty&) = default;
+                            Empty& operator=(Empty&&) = default;
+                            ...
+                        };
+                        ...
+                        ::crubit::internal::VariadicUnionStorage<
+                            ::crubit::internal::tag_encoding::Direct<::std::uint32_t, 0>,
+                            Empty, Value> storage_;
+                        ...
+                    };
+                }
+            );
+        },
+    );
+}
+
+/// Enums with drop glue (but no `Drop` impl of their own) get a `constexpr` destructor that skips
+/// the Rust drop thunk during constant evaluation.
+#[test]
+fn test_format_item_enum_api_v2_drop_glue() {
+    let test_src = r#"
+        pub struct Payload(pub i32);
+        impl Drop for Payload {
+            fn drop(&mut self) {}
+        }
+        impl Default for Payload {
+            fn default() -> Self { Self(0) }
+        }
+
+        #[derive(Default)]
+        pub enum MaybePayload {
+            #[default]
+            Empty,
+            Some(Payload),
+        }
+    "#;
+    test_format_item_with_features(
+        test_src,
+        "MaybePayload",
+        enum_api_v2_features(),
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    struct ... MaybePayload final {
+                        public:
+                        ...
+                        constexpr ~MaybePayload();
+                        ...
+                        struct Empty : public ::crubit::internal::Variant<
+                            Empty, ::rust_out::MaybePayload, 0> {
+                            public:
+                            constexpr explicit Empty(::crubit::internal::VariantKey) {}
+                            ...
+                        };
+                        struct Some : public ::crubit::internal::Variant<
+                            Some, ::rust_out::MaybePayload, 1> {
+                            public:
+                            explicit Some(::crubit::internal::VariantKey, ::rust_out::Payload __field0)
+                                : __field0(::std::move(__field0)) {}
+                            ...
+                        };
+                        ...
+                        ::crubit::internal::VariadicUnionStorage<...> storage_;
+                        ...
+                    };
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    ...
+                    constexpr ::rust_out::MaybePayload::~MaybePayload() {
+                        if (!::std::is_constant_evaluated()) {
+                            __crubit_internal::__crubit_thunk_Drop_udrop_uMaybePayload(*this);
+                        }
+                    }
+                    ...
+                }
+            );
+        },
+    );
+}
+
+/// Enums with an explicit `Drop` impl of their own keep a non-`constexpr` destructor, since even
+/// trivially-destructible variants run `<Self as Drop>::drop`.
+#[test]
+fn test_format_item_enum_api_v2_custom_drop() {
+    let test_src = r#"
+        pub enum CustomDrop {
+            A,
+            B(i32),
+        }
+        impl Drop for CustomDrop {
+            fn drop(&mut self) {}
+        }
+    "#;
+    test_format_item_with_features(
+        test_src,
+        "CustomDrop",
+        enum_api_v2_features(),
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    struct ... CustomDrop final {
+                        public:
+                        ...
+                        __COMMENT__ "Drop::drop"
+                        ~CustomDrop();
+                        ...
+                        ::crubit::internal::VariadicUnionStorage<...> storage_;
+                        ...
+                    };
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    ...
+                    inline ::rust_out::CustomDrop::~CustomDrop() {
+                        __crubit_internal::__crubit_thunk_Drop_udrop_uCustomDrop(*this);
+                    }
+                    ...
+                }
+            );
+        },
+    );
+}
+
 /// Enums that `enum_api_v2` doesn't support yet keep the opaque blob of bytes, and say why.
 #[test]
 fn test_format_item_enum_api_v2_fallback() {
     let cases = [
         (
-            "pub enum NotCopy { A, B(i32) }",
-            "NotCopy",
-            "Not using the `enum_api_v2` bindings for this enum: Only `Copy` enums are supported \
-             so far",
+            "pub struct NonMovable(pub i32); \
+             impl Drop for NonMovable { fn drop(&mut self) {} } \
+             pub enum HasNonMovableField { A, B(NonMovable) }",
+            "HasNonMovableField",
+            "Not using the `enum_api_v2` bindings for this enum: Variant `B`: Field `0` is not \
+             movable in C++",
         ),
         (
             "#[derive(Clone, Copy)] pub enum Collides { Discriminant, B(i32) }",

@@ -524,36 +524,40 @@ class VariadicUnionStorage {
     }
   }
 
-  // Copy and move are trivial when every variant is trivially copyable (a Rust
-  // `Copy` enum), and otherwise unavailable. These must be spelled out: the
-  // implicit ones would, e.g., leave a variant with only a custom destructor
-  // copyable.
+  // Copy and move are trivial when `vs_` (`VariadicUnion<Vs...>`) can be
+  // trivially copied or moved and every variant is trivially destructible, and
+  // otherwise unavailable. These must be spelled out: the implicit ones would,
+  // e.g., leave a variant with only a custom destructor copyable.
   //
-  // The condition is `is_trivially_copyable` rather than, e.g.,
-  // `is_trivially_copy_constructible`, because variants declare their copy and
-  // move private (see `Variant`). The latter traits ask whether *anyone* may
-  // copy, and would say no; `is_trivially_copyable` asks only whether the
-  // copies that exist are trivial, which is what makes copying the bytes of the
-  // whole union correct.
-  static constexpr bool kTriviallyCopyable =
-      (std::is_trivially_copyable_v<Vs> && ...);
+  // The traits are evaluated on `VariadicUnion<Vs...>` rather than on `Vs`
+  // directly: variants declare their copy and move private and befriend
+  // `VariadicUnion` (see `Variant`), so `VariadicUnion` is the class that has
+  // access to them, and checking copy and move separately keeps a non-`Copy`
+  // enum without drop glue (e.g. `Clone` or move-only) trivially movable even
+  // when a variant's copy is non-trivial or deleted.
+  static constexpr bool kTriviallyDestructible =
+      (std::is_trivially_destructible_v<Vs> && ...);
 
   constexpr VariadicUnionStorage(const VariadicUnionStorage&)
-    requires kTriviallyCopyable
+    requires(kTriviallyDestructible &&
+             std::is_trivially_copy_constructible_v<VariadicUnion<Vs...>>)
   = default;
   constexpr VariadicUnionStorage& operator=(const VariadicUnionStorage&)
-    requires kTriviallyCopyable
+    requires(kTriviallyDestructible &&
+             std::is_trivially_copy_assignable_v<VariadicUnion<Vs...>>)
   = default;
   constexpr VariadicUnionStorage(VariadicUnionStorage&&)
-    requires kTriviallyCopyable
+    requires(kTriviallyDestructible &&
+             std::is_trivially_move_constructible_v<VariadicUnion<Vs...>>)
   = default;
   constexpr VariadicUnionStorage& operator=(VariadicUnionStorage&&)
-    requires kTriviallyCopyable
+    requires(kTriviallyDestructible &&
+             std::is_trivially_move_assignable_v<VariadicUnion<Vs...>>)
   = default;
 
   // Trivial destructor
   constexpr ~VariadicUnionStorage()
-    requires(std::is_trivially_destructible_v<Vs> && ...)
+    requires kTriviallyDestructible
   = default;
 
   // No-op when any variant has a non-trivial destructor: the enclosing enum's

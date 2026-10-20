@@ -76,6 +76,27 @@ struct TrivialMoveOnlyVariant {
   constexpr ~TrivialMoveOnlyVariant() = default;
 };
 
+// Mirrors a variant holding a Rust type that implements `Clone` (non-trivial
+// C++ copy constructor/assignment) without drop glue (trivial C++ move and
+// destructor), with private special members befriending `VariadicUnion`.
+struct CloneFieldVariant {
+  static constexpr uint32_t kDiscriminant = 7;
+  uint32_t tag = 7;
+  int val = 0;
+  constexpr CloneFieldVariant(VariantKey, int val) : val(val) {}
+
+ private:
+  template <typename...>
+  friend union crubit::internal::VariadicUnion;
+  CloneFieldVariant(const CloneFieldVariant& other) noexcept : val(other.val) {}
+  CloneFieldVariant& operator=(const CloneFieldVariant& other) noexcept {
+    val = other.val;
+    return *this;
+  }
+  constexpr CloneFieldVariant(CloneFieldVariant&&) = default;
+  constexpr CloneFieldVariant& operator=(CloneFieldVariant&&) = default;
+};
+
 struct MoveOnlyVariant {
   static constexpr uint32_t kDiscriminant = 5;
   uint32_t tag = 5;
@@ -108,6 +129,8 @@ struct CountedVariant {
 using TrivialTU = VariadicUnionStorage<Direct<uint32_t, 0>, VariantA, VariantC>;
 using TrivialMoveOnlyTU =
     VariadicUnionStorage<Direct<uint32_t, 0>, VariantA, TrivialMoveOnlyVariant>;
+using CloneFieldTU =
+    VariadicUnionStorage<Direct<uint32_t, 0>, VariantA, CloneFieldVariant>;
 using NonTrivialTU =
     VariadicUnionStorage<Direct<uint32_t, 0>, VariantA, VariantB, VariantC>;
 using CustomDtorTU = VariadicUnionStorage<Direct<uint32_t, 0>, CustomDtorOnly>;
@@ -124,6 +147,7 @@ static_assert(std::is_nothrow_default_constructible_v<MoveOnlyTU>);
 
 static_assert(std::is_trivially_destructible_v<TrivialTU>);
 static_assert(std::is_trivially_destructible_v<TrivialMoveOnlyTU>);
+static_assert(std::is_trivially_destructible_v<CloneFieldTU>);
 static_assert(!std::is_trivially_destructible_v<NonTrivialTU>);
 static_assert(!std::is_trivially_destructible_v<CustomDtorTU>);
 static_assert(!std::is_trivially_destructible_v<MoveOnlyTU>);
@@ -134,11 +158,18 @@ static_assert(std::is_trivially_move_constructible_v<TrivialTU>);
 static_assert(std::is_trivially_copy_assignable_v<TrivialTU>);
 static_assert(std::is_trivially_move_assignable_v<TrivialTU>);
 
-// TrivialMoveOnlyTU preserves trivial move while deleting copy.
+// TrivialMoveOnlyTU and CloneFieldTU preserve trivial move while disabling
+// storage-level copy (the enclosing enum either deletes copy or delegates it
+// to Rust's `Clone`).
 static_assert(!std::is_copy_constructible_v<TrivialMoveOnlyTU>);
 static_assert(!std::is_copy_assignable_v<TrivialMoveOnlyTU>);
 static_assert(std::is_trivially_move_constructible_v<TrivialMoveOnlyTU>);
 static_assert(std::is_trivially_move_assignable_v<TrivialMoveOnlyTU>);
+
+static_assert(!std::is_copy_constructible_v<CloneFieldTU>);
+static_assert(!std::is_copy_assignable_v<CloneFieldTU>);
+static_assert(std::is_trivially_move_constructible_v<CloneFieldTU>);
+static_assert(std::is_trivially_move_assignable_v<CloneFieldTU>);
 
 // Non-trivial copy and move are delegated to Rust on the enclosing enum class,
 // so VariadicUnionStorage itself is neither copyable nor movable when any

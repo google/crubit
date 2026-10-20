@@ -23,7 +23,7 @@ use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::{get_layout, is_copy};
+use query_compiler::get_layout;
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
 use rustc_abi::LayoutData;
@@ -160,6 +160,10 @@ struct EnumField<'tcx> {
     cpp_type: CcSnippet<'tcx>,
     offset: u64,
     size: u64,
+    /// Whether the field's C++ type is a literal type with a `constexpr` move constructor, so
+    /// a variant constructor taking it by value and move-initializing the member can be
+    /// `constexpr`.
+    is_constexpr_constructible: bool,
     doc_comment: TokenStream,
     attributes: Vec<TokenStream>,
 }
@@ -190,9 +194,6 @@ pub(crate) fn analyze_enum<'tcx>(
     let tcx = db.tcx();
     let self_ty = core.common.self_ty;
     let def_id = adt_def.did();
-
-    // TODO(b/489126000): Support enums with drop glue and non-`Copy` enums.
-    ensure!(is_copy(tcx, self_ty), "Only `Copy` enums are supported so far");
 
     let layout = get_layout(tcx, self_ty)?;
     let (discriminant_ty, tag_encoding) = match layout.variants() {
@@ -348,6 +349,7 @@ fn analyze_field<'tcx>(
     );
     let cpp_type =
         db.format_ty_for_cc(ty, TypeLocation::Field).with_context(|| format!("Field `{name}`"))?;
+    ensure!(db.is_cpp_move_constructible(ty), "Field `{name}` is not movable in C++");
 
     // Tuple variants' fields are named `0`, `1`, ..., which aren't C++ identifiers.
     let cc_name = if name.starts_with(|c: char| c.is_ascii_digit()) {
@@ -366,6 +368,10 @@ fn analyze_field<'tcx>(
         cpp_type,
         offset: field_shape.offset(field_index.as_usize()).bytes(),
         size,
+        // Stricter than the `is_cpp_move_constructible` check above: a field can be movable in
+        // C++ (e.g. via a non-`constexpr` `MemSwap` move constructor, or as a non-literal type)
+        // without being usable in a `constexpr` constructor.
+        is_constexpr_constructible: db.is_cpp_constexpr_move_constructible(ty),
         doc_comment: generate_doc_comment(db, field_def.did),
         attributes,
     })
@@ -640,12 +646,18 @@ fn generate_variant<'tcx>(
         }
     }
 
+    let constexpr = if variant.fields.iter().all(|f| f.is_constexpr_constructible) {
+        quote! { constexpr }
+    } else {
+        quote! {}
+    };
+
     quote! {
         __NEWLINE__ #doc_comment
         struct #attributes #name : public ::crubit::internal::Variant<
             #name, #enum_cc_fully_qualified_name, #discriminant> {
             public: __NEWLINE__
-            constexpr explicit #name(::crubit::internal::VariantKey #(, #params)*)
+            #constexpr explicit #name(::crubit::internal::VariantKey #(, #params)*)
                 #initializer_list {}
             __NEWLINE__
             private: __NEWLINE__

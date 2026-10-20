@@ -143,3 +143,115 @@ pub fn read_maybe_ref(r: MaybeRef) -> i32 {
         MaybeRef::Some(&x) => x,
     }
 }
+
+/// `Clone` without `Copy` and without drop glue: copy calls into Rust (`Clone::clone`), while
+/// move and destruction stay trivial.
+pub struct CloneCounter {
+    pub value: i32,
+    clones: i32,
+}
+
+impl Clone for CloneCounter {
+    fn clone(&self) -> Self {
+        Self { value: self.value, clones: self.clones + 1 }
+    }
+}
+
+#[derive(Clone)]
+pub enum ClonedEnum {
+    Empty,
+    Tracked(CloneCounter),
+}
+
+pub fn make_cloned_tracked(value: i32) -> ClonedEnum {
+    ClonedEnum::Tracked(CloneCounter { value, clones: 0 })
+}
+
+pub fn read_cloned_enum(e: &ClonedEnum) -> i32 {
+    match e {
+        ClonedEnum::Empty => -1,
+        ClonedEnum::Tracked(c) => c.value * 100 + c.clones,
+    }
+}
+
+/// Move-only enum with no drop glue, holding a `Clone` (non-`Copy`) inner enum.
+pub enum MoveOnlyOuter {
+    Empty,
+    Nested(ClonedEnum),
+}
+
+pub fn consume_move_only_outer(outer: MoveOnlyOuter) -> i32 {
+    match outer {
+        MoveOnlyOuter::Empty => -1,
+        MoveOnlyOuter::Nested(inner) => read_cloned_enum(&inner),
+    }
+}
+
+use std::rc::Rc;
+
+/// Counts the live `TrackedPayload`s it created: each holds a clone of the tracker's `Rc`, so
+/// the number of live payloads is the `Rc`'s number of owners other than the tracker itself.
+#[derive(Default)]
+pub struct PayloadTracker {
+    owners: Rc<()>,
+}
+
+impl PayloadTracker {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn track(&self, id: i32) -> TrackedPayload {
+        TrackedPayload { id, _owner: Rc::clone(&self.owners) }
+    }
+
+    pub fn live_payloads(&self) -> i32 {
+        (Rc::strong_count(&self.owners) - 1) as i32
+    }
+}
+
+/// A payload with drop glue (from its `Rc`) but no `Drop` impl of its own.
+#[derive(Clone, Default)]
+pub struct TrackedPayload {
+    pub id: i32,
+    /// Never read: only held so that `PayloadTracker` can count live payloads.
+    _owner: Rc<()>,
+}
+
+/// Enum with drop glue (from `TrackedPayload`), `Clone`, and `Default`, but no `Drop` impl of its
+/// own: its destructor is `constexpr`, so `None` can be constructed in constant expressions.
+#[derive(Clone, Default)]
+pub enum MaybeTracked {
+    #[default]
+    None,
+    Some(TrackedPayload),
+}
+
+pub fn make_some_tracked(tracker: &PayloadTracker, id: i32) -> MaybeTracked {
+    MaybeTracked::Some(tracker.track(id))
+}
+
+pub fn consume_maybe_tracked(m: MaybeTracked) -> i32 {
+    match m {
+        MaybeTracked::None => -1,
+        MaybeTracked::Some(ref p) => p.id,
+    }
+}
+
+/// Outer enum wrapping `MaybeTracked` to test that a variant holding a non-trivially-destructible
+/// type with a `constexpr` destructor (`MaybeTracked`) cannot be constructed at compile time.
+pub enum NestedMaybeTracked {
+    OuterNone,
+    OuterSome(MaybeTracked),
+}
+
+/// Enum with an (empty) `Drop` impl of its own: Rust runs `Drop::drop` even on `Empty`, so its
+/// destructor is not `constexpr`.
+pub enum CustomDropEnum {
+    Empty,
+    Value(i32),
+}
+
+impl Drop for CustomDropEnum {
+    fn drop(&mut self) {}
+}
