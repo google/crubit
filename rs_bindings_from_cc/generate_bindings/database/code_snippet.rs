@@ -314,9 +314,13 @@ pub enum NoBindingsReason {
     MissingRequiredFeatures {
         missing_features: Vec<Error>,
     },
+    /// The item named `type_name` cannot be bound because something it depends on cannot be
+    /// bound.
     DependencyFailed {
-        type_name: String,
-        reason: String,
+        /// The name of the item that cannot be bound.
+        type_name: Rc<str>,
+        /// Why the dependency cannot be bound.
+        source: Error,
     },
     LeadingDunder {
         name: String,
@@ -361,8 +365,8 @@ impl From<NoBindingsReason> for Error {
                     missing_features.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n");
                 anyhow!(message)
             }
-            NoBindingsReason::DependencyFailed { type_name, reason } => {
-                anyhow!("depends on `{type_name}` which cannot be bound because {reason}")
+            NoBindingsReason::DependencyFailed { type_name, source } => {
+                anyhow!("depends on `{type_name}` which cannot be bound because {source}")
             }
             NoBindingsReason::LeadingDunder { name } => {
                 anyhow!("Skipping generating bindings for '{name}' because it has a leading `__`")

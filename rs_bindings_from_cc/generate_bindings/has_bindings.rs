@@ -31,8 +31,8 @@ fn cc_type_has_bindings<'a>(
                 cc_type_has_bindings(db, inner_alias.underlying_type(), alias_id)?;
             } else if let Err(no_bindings) = db.has_bindings(underlying_item.clone()) {
                 return Err(NoBindingsReason::DependencyFailed {
-                    type_name: db.debug_name(alias_id).to_string(),
-                    reason: no_bindings.to_string(),
+                    type_name: db.debug_name(alias_id),
+                    source: no_bindings.into(),
                 });
             }
             if let Some(args) = template_args {
@@ -79,8 +79,8 @@ pub fn has_bindings<'a>(
 
         if let Err(no_parent_bindings) = db.has_bindings(parent.clone()) {
             return Err(NoBindingsReason::DependencyFailed {
-                type_name: db.debug_name(item.id()).to_string(),
-                reason: no_parent_bindings.to_string(),
+                type_name: db.debug_name(item.id()),
+                source: no_parent_bindings.into(),
             });
         }
 
@@ -165,8 +165,8 @@ pub fn has_bindings<'a>(
         // Not even forward declarations help. You just can't do `enum Foo: Something<Foo>;`.
         if let Err(error) = db.rs_type_kind(enum_.underlying_type().clone()) {
             return Err(NoBindingsReason::DependencyFailed {
-                type_name: db.debug_name(enum_.id()).to_string(),
-                reason: error.to_string(),
+                type_name: db.debug_name(enum_.id()),
+                source: error,
             });
         }
     }
@@ -175,8 +175,8 @@ pub fn has_bindings<'a>(
         && let Err(error) = db.rs_type_kind(constant.type_().clone())
     {
         return Err(NoBindingsReason::DependencyFailed {
-            type_name: db.debug_name(constant.id()).to_string(),
-            reason: error.to_string(),
+            type_name: db.debug_name(constant.id()),
+            source: error,
         });
     }
 
@@ -230,8 +230,8 @@ pub fn has_bindings<'a>(
                     Ok(BindingsInfo { visibility })
                 }
                 Err(error) => Err(NoBindingsReason::DependencyFailed {
-                    type_name: db.debug_name(item.id()).to_string(),
-                    reason: error.to_string(),
+                    type_name: db.debug_name(item.id()),
+                    source: error,
                 }),
             }
         }
@@ -242,8 +242,8 @@ pub fn has_bindings<'a>(
                 Ok(BindingsInfo { visibility })
             }
             Err(error) => Err(NoBindingsReason::DependencyFailed {
-                type_name: db.debug_name(item.id()).to_string(),
-                reason: error.to_string(),
+                type_name: db.debug_name(item.id()),
+                source: error,
             }),
         },
         // Other items are public.
