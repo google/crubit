@@ -4,6 +4,8 @@
 
 #![feature(rustc_private)]
 
+extern crate rustc_middle;
+
 use code_gen_utils::format_cc_includes;
 use database::{BindingsGenerator, TypeLocation};
 use generate_bindings::format_type::is_bridged_type;

@@ -5,6 +5,7 @@
 #![feature(rustc_private)]
 
 extern crate rustc_middle;
+extern crate rustc_span;
 
 use code_gen_utils::NamespaceQualifier;
 use generate_bindings::format_namespace_bound_cc_tokens;
