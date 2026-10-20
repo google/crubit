@@ -23,6 +23,7 @@ include_guard(GLOBAL)
 cmake_policy(VERSION 3.16...3.31)
 
 include("${CMAKE_CURRENT_LIST_DIR}/internal/CrubitToolchain.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/internal/CrubitClangArgs.cmake")
 
 # Sets `out_var` to the root of the Crubit source tree.
 function(_crubit_source_dir out_var)

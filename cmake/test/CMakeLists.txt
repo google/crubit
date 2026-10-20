@@ -73,3 +73,4 @@ endfunction()
 
 crubit_add_fixture(configure_ok)
 crubit_add_fixture(not_libcxx LINUX_ONLY FAIL_REGEX "Crubit requires libc\\+\\+")
+crubit_add_fixture(clang_args)
