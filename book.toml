@@ -13,3 +13,8 @@ title = "Crubit Documentation"
 git-repository-url = "https://github.com/google/crubit"
 additional-css = ["theme/tabs.css"]
 additional-js = ["theme/tabs.js"]
+
+[output.linkcheck]
+optional = true
+follow-web-links = false
+warning-policy = "error"

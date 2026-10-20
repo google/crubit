@@ -34,10 +34,8 @@ help alleviate the disadvantages above.
 Crubit can take a Rust crate and create a C++ library which exposes Rust
 functions and types to C++ callers.
 
-Let's walk through the
-[`cc_bindings_from_rs_basics`](../../../examples/cc_bindings_from_rs_basics/README.md)
-example. In the example, Bazel is instructed to provide C++ bindings for a Rust
-library:
+Let's walk through an example. In the example, Bazel is instructed to provide
+C++ bindings for a Rust library:
 
 ```
 load(
@@ -148,5 +146,5 @@ bindings that Crubit generates:
 
 TODO: Help users make an informed decision when to use Crubit rather than other
 FFI tools. (This probably should become a separate sub-chapter of the overview.
-Some raw information can be currently found in the [design.md](../../design.md)
-doc.)
+Some raw information can be currently found in the
+[design.md](../design/design.md) doc.)

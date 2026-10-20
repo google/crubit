@@ -23,6 +23,7 @@
         *   [Cheat Sheet](/docs/types/non_rust_movable/cheat_sheet.md)
 
 *   [Errors](/docs/errors/)
+    *   [Visibility](/docs/errors/visibility.md)
 
 *   Rust Bindings for C++ Libraries
 
