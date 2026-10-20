@@ -105,6 +105,7 @@ bzl_library(
     name = "providers_bzl",
     srcs = ["providers.bzl"],
     visibility = [
+        "//bazel:__pkg__",
         "//cc_bindings_from_rs/bazel_support:__pkg__",
         "//rs_bindings_from_cc/test:__subpackages__",
     ],
@@ -144,9 +145,11 @@ bzl_library(
 bzl_library(
     name = "additional_rust_srcs_for_crubit_bindings_aspect_hint_bzl",
     srcs = ["additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl"],
+    visibility = ["//bazel:__pkg__"],
     deps = [
         ":providers_bzl",
         ":rust_bindings_from_cc_aspect",
+        "//bazel:additional_rust_srcs_for_crubit_bindings_allowlist_bzl",
         "//features:crubit_feature_hint_bzl",
         "@bazel_skylib//lib:collections",
         "@rules_cc//cc/common",
@@ -221,4 +224,11 @@ string_list_flag(
     name = "legacy_mangling_allowlist",
     build_setting_default = [],
     visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "toolchain_bzl",
+    srcs = ["toolchain.bzl"],
+    visibility = ["//bazel:__pkg__"],
+    deps = [":providers_bzl"],
 )
