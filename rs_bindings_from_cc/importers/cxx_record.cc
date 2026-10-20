@@ -1420,6 +1420,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   }
 
   std::vector<std::string> lifetime_inputs;
+  bool has_template_argument_lifetime = false;
   if (ictx_.AreAssumedLifetimesEnabledForTarget(
           ictx_.GetOwningTarget(*record_decl))) {
     auto lifetime_inputs_or_err =
@@ -1434,6 +1435,15 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
                         [](absl::string_view lifetime_view) {
                           return std::string(lifetime_view);
                         });
+    }
+    if (const auto* specialization_decl =
+            clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
+                record_decl)) {
+      if (std::optional<std::string> lifetime =
+              ictx_.GetTemplateArgumentLifetimeParam(*specialization_decl)) {
+        lifetime_inputs.push_back(*std::move(lifetime));
+        has_template_argument_lifetime = true;
+      }
     }
   }
 
@@ -1544,6 +1554,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   record->set_impl_debug(impl_debug);
   record->set_has_private_pointer_or_reference_fields(
       has_private_pointer_or_reference_fields);
+  record->set_has_template_argument_lifetime(has_template_argument_lifetime);
   record->set_is_thread_safe(*is_thread_safe);
   for (const auto& lifetime_input : lifetime_inputs) {
     record->add_lifetime_inputs(lifetime_input);

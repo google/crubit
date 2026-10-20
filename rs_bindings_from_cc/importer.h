@@ -109,6 +109,9 @@ class Importer final : public ImportContext {
   bool IsCrubitEnabledForTarget(const BazelLabel& label) const override;
   bool AreAssumedLifetimesEnabledForTarget(
       const BazelLabel& label) const override;
+  std::optional<std::string> GetTemplateArgumentLifetimeParam(
+      const clang::ClassTemplateSpecializationDecl& specialization_decl)
+      const override;
   bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const override;
   bool IsRecordImplDebugEnabledForTarget(
       const BazelLabel& label) const override;
@@ -181,6 +184,15 @@ class Importer final : public ImportContext {
   bool IsAlwaysInstantiate(
       const clang::ClassTemplateSpecializationDecl& spec_decl) const;
 
+  // Returns the number of lifetimes that `type` carries: one for each pointer
+  // or reference (other than to a function), plus those of the pointee, and
+  // the lifetime parameters of a record. Returns `std::nullopt` if a record's
+  // lifetime parameters are malformed.
+  //
+  // Lifetime parameters that the bindings generator infers for a record (e.g.
+  // from a `[[clang::lifetimebound]]` constructor parameter) are not counted.
+  std::optional<size_t> CountLifetimes(clang::QualType type) const;
+
   absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
       always_instantiate_specs_;
 
@@ -208,6 +220,15 @@ class Importer final : public ImportContext {
       const clang::Type& type,
       const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
       bool nullable, bool assume_lifetimes);
+  // Adds the lifetime parameter that a specialization takes for its template
+  // argument (see `GetTemplateArgumentLifetimeParam`) to `cpp_type`, the
+  // conversion of `type`: either bound to the lifetime written on the
+  // argument, if `type` is a use of the specialization, or unbound, if `type`
+  // is the template parameter inside it. `has_written_lifetimes` is whether
+  // `type` itself was written with lifetimes.
+  absl::Status AddTemplateArgumentLifetime(const clang::Type& type,
+                                           bool has_written_lifetimes,
+                                           CcType& cpp_type);
   CcType ConvertTypeDecl(clang::NamedDecl* absl_nonnull decl);
 
   // Converts `type` into a CcType, after first importing the Record behind

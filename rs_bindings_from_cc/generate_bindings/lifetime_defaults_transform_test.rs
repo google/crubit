@@ -1785,8 +1785,7 @@ fn test_as_written_template_arg_lifetime_kept_for_output() -> Result<()> {
     Ok(())
 }
 
-/// Correct behaviour; control for
-/// `test_lifetime_on_class_template_argument_incorrectly_not_bound`. With the
+/// Correct behaviour; control for `test_lifetime_on_class_template_argument_is_bound`. With the
 /// borrow spelled out on a non-template record, the returned view is tied to
 /// `x` and the function binds `'a`.
 #[gtest]
@@ -1823,19 +1822,11 @@ fn test_lifetime_on_nontemplate_record_is_bound() -> Result<()> {
     Ok(())
 }
 
-/// INCORRECT BEHAVIOR, pinned so that the fix trips this test.
-///
-/// Expected: either `make` binds `'a` and ties the returned `View` to `x` (as
-/// the non-template control above does), or an error is reported because the
-/// hand-written `$a` cannot be honoured.
-/// Actual: `lifetime_inputs: []`. The returned `View` has no relationship to
-/// `x`, and nothing is reported.
-///
-/// TODO(zarko): `$a` is written on the template *argument* of `View<int* $a>`.
-/// The importer keeps it on the use site (`template_args`), but because `View`
-/// declares no lifetime parameters the transform never binds it.
+/// `$a` is written on the template *argument* of `View<int* $a>`. `View<int*>` takes a lifetime
+/// parameter on behalf of its argument, which this use binds to `$a`, so `make` behaves like the
+/// non-template control above.
 #[gtest]
-fn test_lifetime_on_class_template_argument_incorrectly_not_bound() -> Result<()> {
+fn test_lifetime_on_class_template_argument_is_bound() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
@@ -1866,10 +1857,210 @@ fn test_lifetime_on_class_template_argument_incorrectly_not_bound() -> Result<()
                         ]),
                     },
                     ...
-                    explicit_lifetimes: [],
+                    explicit_lifetimes: ["a"],
                 }, ...
-                // WRONG: should be `["a"]` (or an error).
-                lifetime_inputs: [], ...
+                lifetime_inputs: ["a"], ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                rs_name: "__CcTemplateInst4ViewIPiE", ...
+                lifetime_inputs: ["T"], ...
+            }
+        }
+    );
+    Ok(())
+}
+
+/// A constructor of a specialization with a lifetime parameter for its template argument must not
+/// take a lifetime-carrying input that isn't tied to that lifetime parameter: otherwise callers
+/// could pick any lifetime for it. Raw pointers may carry a lifetime too.
+#[gtest]
+fn test_unconstrained_ctors_of_class_template_with_argument_lifetime_are_rejected() -> Result<()> {
+    for (ctor, param) in [("Box(int& other);", "other"), ("explicit Box(int* p);", "p")] {
+        let proto = ir_proto_from_assumed_lifetimes_cc(&format!(
+            r#"
+          template <class T>
+          struct Box {{
+            {ctor}
+            T value;
+          }};
+          Box<int& $a> make(int& $a x);
+          "#
+        ))?;
+        let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+        let factory = TestDbFactory::new(ir);
+        let error_message = lifetime_defaults_transform(&factory.make_db())
+            .expect_err("Expected an error")
+            .to_string();
+        assert_that!(
+            error_message,
+            contains_substring(format!(
+                "constructor parameter `{param}` of `Box<int &>` may carry a lifetime"
+            ))
+        );
+    }
+    Ok(())
+}
+
+/// Constructors that take the template argument (directly or by reference), that take
+/// [[lifetimebound]] or lifetime-free inputs, and copy/move constructors are allowed on a
+/// specialization with a lifetime parameter for its template argument.
+#[gtest]
+fn test_constrained_ctors_of_class_template_with_argument_lifetime_are_accepted() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      template <class T>
+      struct Box {
+        Box();
+        explicit Box(T t, int i);
+        explicit Box(const T& t);
+        Box(int& i [[clang::lifetimebound]], long l);
+        Box(void (*f)(), char c);
+        Box(const Box&);
+        Box(Box&&);
+        T value;
+      };
+      Box<int& $a> make(int& $a x);
+      "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    lifetime_defaults_transform(&factory.make_db())?;
+    Ok(())
+}
+
+/// Copy constructors, assignment operators, and `swap`-like member and friend functions of a
+/// specialization with a lifetime parameter for its template argument preserve that lifetime,
+/// rather than converting between (or exchanging values of) arbitrary lifetimes. Returned
+/// references to the specialization have it too.
+#[gtest]
+fn test_self_types_of_class_template_with_argument_lifetime_are_tied() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      template <class T>
+      struct [[clang::annotate("crubit_always_instantiate")]] Box {
+        Box(const Box& other);
+        Box& operator=(const Box& other);
+        void swap(Box& other);
+        friend void swap(Box& a, Box& b) {}
+        T value;
+      };
+      Box<int& $a> make(int& $a x);
+      "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: Constructor, ...
+                params: [
+                    FuncParam { ... identifier: "__this", ... },
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                ...
+                                pointee_type: CcType { ... explicit_lifetimes: ["T"] ... },
+                                ...
+                            }),
+                            ...
+                        },
+                        identifier: "other", ...
+                    },
+                ], ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                ...
+                return_type: CcType {
+                    variant: Pointer(PointerType {
+                        ...
+                        pointee_type: CcType { ... explicit_lifetimes: ["T"] ... },
+                        ...
+                    }),
+                    ...
+                }, ...
+                params: [
+                    FuncParam { ... identifier: "__this", ... },
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                ...
+                                pointee_type: CcType { ... explicit_lifetimes: ["T"] ... },
+                                ...
+                            }),
+                            ...
+                        },
+                        identifier: "other", ...
+                    },
+                ], ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "swap", ...
+                params: [
+                    FuncParam { ... identifier: "__this", ... },
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                ...
+                                pointee_type: CcType { ... explicit_lifetimes: ["T"] ... },
+                                ...
+                            }),
+                            ...
+                        },
+                        identifier: "other", ...
+                    },
+                ], ...
+            }
+        }
+    );
+    // A friend function isn't a member, so it gets its own lifetime parameter, shared by both
+    // uses of the record.
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "swap", ...
+                params: [
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                ...
+                                pointee_type: CcType { ... explicit_lifetimes: ["T"] ... },
+                                ...
+                            }),
+                            ...
+                        },
+                        identifier: "a", ...
+                    },
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                ...
+                                pointee_type: CcType { ... explicit_lifetimes: ["T"] ... },
+                                ...
+                            }),
+                            ...
+                        },
+                        identifier: "b", ...
+                    },
+                ], ...
+                lifetime_inputs: ["T", ...], ...
             }
         }
     );
