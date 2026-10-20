@@ -540,6 +540,7 @@ pub fn generated_items_to_tokens<'db>(
                     deprecated_attr,
                     cfi_encoding_attr,
                     align,
+                    pack,
                     internally_mutable_unknown_fields,
                     crubit_annotations,
                     visibility,
@@ -576,10 +577,19 @@ pub fn generated_items_to_tokens<'db>(
                     quote! {}
                 };
 
-                let repr_attrs = std::iter::once(quote! { C }).chain(align.map(|align| {
-                    let align = Literal::usize_unsuffixed(align);
-                    quote! { align(#align) }
-                }));
+                let repr_attrs = std::iter::once(quote! { C })
+                    .chain(pack.map(|pack| {
+                        if pack == 1 {
+                            quote! { packed }
+                        } else {
+                            let pack = Literal::usize_unsuffixed(pack);
+                            quote! { packed(#pack) }
+                        }
+                    }))
+                    .chain(align.map(|align| {
+                        let align = Literal::usize_unsuffixed(align);
+                        quote! { align(#align) }
+                    }));
 
                 // For thread-safe types, generate an opaque UnsafeCell body instead of
                 // individual fields. This enables interior mutability, allowing non-const
@@ -1087,6 +1097,7 @@ pub struct Record {
     pub deprecated_attr: Option<DeprecatedAttr>,
     pub cfi_encoding_attr: CfiEncodingAttr,
     pub align: Option<usize>,
+    pub pack: Option<usize>,
     pub internally_mutable_unknown_fields: bool,
     pub crubit_annotations: Vec<DocCommentAttr>,
     pub visibility: Visibility,

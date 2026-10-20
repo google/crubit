@@ -2601,6 +2601,10 @@ derive_debug_partialeq_eq_hash! {
             self.proto.override_alignment()
         }
 
+        pub fn pack(&self) -> Option<usize> {
+            self.proto.pack_opt().into_option().map(|x| x as usize)
+        }
+
         pub fn safety_annotation(&self) -> SafetyAnnotation {
             self.proto.safety_annotation().to_ir()
         }
@@ -2736,6 +2740,10 @@ impl<'pb> GenericItem<'pb> for Record<'pb> {
 }
 
 impl<'pb> Record<'pb> {
+    pub fn is_packed(&self) -> bool {
+        self.pack().is_some()
+    }
+
     pub fn set_rs_name(&mut self, rs_name: Identifier<'pb>) {
         self.rs_name = rs_name;
     }
