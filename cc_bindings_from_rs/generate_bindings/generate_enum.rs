@@ -14,10 +14,8 @@ extern crate rustc_abi;
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use crate::{
-    can_be_made_layout_compatible, format_cc_ident, generate_deprecated_tag, generate_doc_comment,
-    get_layout, is_copy,
-};
+use crate::format_type::{can_be_made_layout_compatible, format_cc_ident};
+use crate::{generate_deprecated_tag, generate_doc_comment};
 use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
 use crubit_feature::CrubitFeature;
@@ -25,6 +23,7 @@ use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, TokenStream};
+use query_compiler::{get_layout, is_copy};
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
 use rustc_abi::LayoutData;

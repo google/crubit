@@ -3,31 +3,30 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::format_type::{
-    check_fn_sig, format_cc_ident, has_elided_region, is_thunk_required, region_is_elided,
-    CallableInfo, CallableKind, CcParamTy,
+    check_fn_sig, format_cc_ident, format_param_types_for_cc_api, format_region_as_cc_lifetime,
+    format_ret_ty_for_cc, format_top_level_ns_for_crate, has_elided_region, is_bridged_type,
+    is_thunk_required, region_is_elided, BridgedType, BridgedTypeConversionInfo, CallableInfo,
+    CallableKind, CcParamTy,
 };
-use crate::generate_doc_comment;
 use crate::generate_function_thunk::{
     classify_param_abi, classify_value_abi, fn_arg_idents, function_symbol_name,
     generate_thunk_decl, generate_thunk_impl, get_async_future_output_ty, make_thunk_name,
     ParamAbi, ThunkKind, ValueAbi,
 };
 use crate::get_generic_args::GenericClausesExt;
-use crate::{
-    format_param_types_for_cc_api, format_region_as_cc_lifetime, format_ret_ty_for_cc,
-    format_top_level_ns_for_crate, generate_deprecated_tag, is_bridged_type,
-    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedType,
-    BridgedTypeConversionInfo, CcType, RsSnippet,
-};
+use crate::{generate_deprecated_tag, generate_doc_comment, CcType};
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
-use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
+use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, RsSnippet};
 use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::{as_ref_or_pinned_ref, does_type_implement_trait, get_layout, is_copy};
+use query_compiler::{
+    as_ref_or_pinned_ref, does_type_implement_trait, get_layout, is_c_abi_compatible_by_value,
+    is_copy, liberate_and_deanonymize_late_bound_regions,
+};
 use quote::quote;
 #[rustversion::since(2026-09-27)]
 use rustc_attr_ir::{find_attr, Attribute, AttributeKind};

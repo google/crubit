@@ -3,24 +3,24 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::format_type::{
-    alias_ty_as_opaque_def_id, format_ty_for_closure_param_rs, replace_all_regions_with_static,
-    ty_as_alias_ty, CallableInfo, CallableKind,
+    alias_ty_as_opaque_def_id, format_cc_ident, format_param_types_for_cc_thunk,
+    format_ty_for_closure_param_rs, is_bridged_type, replace_all_regions_with_static,
+    ty_as_alias_ty, BridgedType, BridgedTypeConversionInfo, CallableInfo, CallableKind,
 };
-use crate::{
-    does_type_implement_trait, format_cc_ident, format_param_types_for_cc_thunk, is_bridged_type,
-    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedType,
-    BridgedTypeConversionInfo, CcType, RsSnippet, TypeLocation,
-};
+use crate::CcType;
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiTypeToRustExprTokens;
-use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
-use database::{AdtCoreBindings, BindingsGenerator};
+use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
+use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
-use query_compiler::try_normalize;
+use query_compiler::{
+    does_type_implement_trait, is_c_abi_compatible_by_value,
+    liberate_and_deanonymize_late_bound_regions, try_normalize,
+};
 use quote::format_ident;
 use quote::quote;
 use rustc_hir::def::DefKind;

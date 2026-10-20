@@ -13,8 +13,7 @@ extern crate rustc_span;
 extern crate rustc_type_ir;
 
 use crate::{
-    check_feature_enabled_on_self_and_all_deps, check_slice_layout, get_layout,
-    matches_qualified_name, CcType,
+    check_feature_enabled_on_self_and_all_deps, check_slice_layout, matches_qualified_name, CcType,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
@@ -28,7 +27,7 @@ use database::BindingsGenerator;
 use database::{rename_c_stdlib_functions, rename_clang_builtin_macros, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::{is_c_abi_compatible_by_value, is_std_ptr_non_null};
+use query_compiler::{get_layout, is_c_abi_compatible_by_value, is_std_ptr_non_null};
 use quote::{format_ident, quote};
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
 #[rustversion::since(2026-09-27)]

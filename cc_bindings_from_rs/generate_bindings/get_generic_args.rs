@@ -2,9 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::{liberate_and_deanonymize_late_bound_regions, matches_qualified_name};
+use crate::matches_qualified_name;
 use arc_anyhow::{anyhow, bail, ensure, Result};
 use database::BindingsGenerator;
+use query_compiler::liberate_and_deanonymize_late_bound_regions;
 use rustc_infer::infer::InferCtxt;
 use rustc_infer::traits::{Obligation, ObligationCause};
 #[cfg_accessible(rustc_middle::ty::TraitClause)]

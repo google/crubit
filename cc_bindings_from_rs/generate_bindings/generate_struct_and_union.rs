@@ -8,8 +8,10 @@ extern crate rustc_middle;
 extern crate rustc_span;
 
 use crate::avoid_colliding_types::{AvoidCollidingTypes, TypeCollisionRisk};
-use crate::format_cc_ident;
-use crate::format_type::{get_cc_template_args, replace_all_regions_with_static, CcParamTy};
+use crate::format_type::{
+    can_be_made_layout_compatible, format_cc_ident, get_cc_template_args,
+    replace_all_regions_with_static, BridgedBuiltin, CcParamTy,
+};
 use crate::generate_ctor::{
     generate_copy_ctor_and_assignment_operator, generate_default_ctor,
     generate_move_ctor_and_assignment_operator,
@@ -20,18 +22,18 @@ use crate::generate_function::{
     bool_constraint_template_prefix, cc_param_to_c_abi, format_variant_ctor_cc_name,
     generate_thunk_call, Param, ThunkSelfParameter,
 };
-use crate::generate_function_thunk::{generate_ctor_thunk_call, trait_method_thunk_name};
+use crate::generate_function_thunk::{
+    generate_ctor_thunk_call, generate_trait_thunks, trait_method_thunk_name, TraitThunks,
+};
 use crate::{
-    can_be_made_layout_compatible, does_type_implement_trait, generate_deprecated_tag,
-    generate_doc_comment, generate_must_use_tag, generate_trait_thunks,
-    generate_unsupported_def_with_args, get_layout, get_tag_size_with_padding, is_copy,
-    matches_qualified_name, normalize_ty, BridgedBuiltin, RsSnippet, SortedByDef, TraitThunks,
+    generate_deprecated_tag, generate_doc_comment, generate_must_use_tag,
+    generate_unsupported_def_with_args, matches_qualified_name, normalize_ty, SortedByDef,
 };
 
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, CcInclude};
 use database::code_snippet::{
-    ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, StdHashTemplateSpecialization,
+    ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, RsSnippet, StdHashTemplateSpecialization,
     TemplateSpecialization, TraitImplTemplateSpecialization,
 };
 use database::{
@@ -41,8 +43,8 @@ use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
-    as_ref_or_pinned_ref, is_std_ptr_non_null, liberate_and_deanonymize_late_bound_regions,
-    try_normalize,
+    as_ref_or_pinned_ref, does_type_implement_trait, get_layout, get_tag_size_with_padding,
+    is_copy, is_std_ptr_non_null,
 };
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]

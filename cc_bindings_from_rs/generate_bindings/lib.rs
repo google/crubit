@@ -31,17 +31,14 @@ mod generate_template_specialization;
 mod get_generic_args;
 
 use crate::format_type::{
-    can_be_made_layout_compatible, crubit_abi_type_from_ty, format_cc_ident,
-    format_cc_ident_symbol, format_param_types_for_cc_api, format_param_types_for_cc_thunk,
-    format_region_as_cc_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
-    is_bridged_type, BridgedBuiltin, BridgedType, BridgedTypeConversionInfo,
+    crubit_abi_type_from_ty, format_cc_ident, format_cc_ident_symbol,
+    format_top_level_ns_for_crate, BridgedBuiltin,
 };
 use crate::generate_ctor::{
     copy_ctor_and_assignment_operator_codegen_style, has_default_ctor, is_cpp_move_constructible,
     move_ctor_and_assignment_operator_codegen_style,
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
-use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, create_type_alias_with_rs_type,
     from_trait_impls_by_argument, generate_adt, generate_adt_core, generate_const,
@@ -64,10 +61,6 @@ pub use database::{
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
-use query_compiler::{
-    does_type_implement_trait, get_layout, get_tag_size_with_padding, is_c_abi_compatible_by_value,
-    is_copy, liberate_and_deanonymize_late_bound_regions,
-};
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
 use rustc_hir::def::{DefKind, Res};
