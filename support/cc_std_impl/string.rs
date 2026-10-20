@@ -390,7 +390,7 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
 ///
 /// ```
 /// use cpp_std::string;
-/// use ctor::{emplace, CtorNew};
+/// use ctor::{copy, emplace, CtorNew};
 ///
 /// // Create a string using emplace! and CtorNew:
 /// let my_string = emplace!(string::ctor_new("Hello, C++!"));
@@ -398,8 +398,13 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
 /// // Access it as a slice:
 /// assert_eq!(my_string.as_slice(), b"Hello, C++!");
 ///
-/// // Convert to Rust str (if valid UTF-8):
+/// // Convert to Rust str or String (if valid UTF-8):
 /// assert_eq!(my_string.to_str().unwrap(), "Hello, C++!");
+/// assert_eq!(my_string.to_string().unwrap(), String::from("Hello, C++!"));
+///
+/// // Copy-construct another cpp_std::string in place:
+/// let cloned_in_place = emplace!(copy(&*my_string));
+/// assert_eq!(&*cloned_in_place, "Hello, C++!");
 /// ```
 #[crubit_annotate::cpp_layout_equivalent(cpp_type = "::std::string", include_path = "<string>")]
 #[cfg_attr(target_pointer_width = "64", repr(C, align(8)))]
@@ -655,6 +660,21 @@ impl PartialEq<[u8]> for string {
 impl<'a> PartialEq<&'a [u8]> for string {
     fn eq(&self, other: &&'a [u8]) -> bool {
         self.as_slice() == *other
+    }
+}
+
+#[diagnostic::on_unimplemented(
+    message = "`cpp_std::string` cannot implement `Clone` because it is `!Unpin` (non-Rust-movable)",
+    note = "consider `ctor::emplace!(ctor::copy(s))`"
+)]
+trait CannotCloneNonRustMovableCppString {}
+
+impl Clone for string
+where
+    for<'error> &'error (): CannotCloneNonRustMovableCppString,
+{
+    fn clone(&self) -> Self {
+        unreachable!()
     }
 }
 
