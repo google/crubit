@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
@@ -30,6 +31,11 @@ crubit_test_cc_library(
     deps = [":other_pub_crate_types"],
 )
 
+rust_api_from_cpp(
+    name = "pub_crate_types_rust",
+    cpp_target = ":pub_crate_types",
+)
+
 additional_rust_srcs_for_crubit_bindings(
     name = "pub_crate_types_extra",
     srcs = ["pub_crate_types_extra.rs"],
@@ -38,11 +44,11 @@ additional_rust_srcs_for_crubit_bindings(
 crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
-    cc_deps = [":pub_crate_types"],
     proc_macro_deps = [
         "//common:item_exists",
     ],
     deps = [
+        ":pub_crate_types_rust",
         "@crate_index//:googletest",
     ],
 )

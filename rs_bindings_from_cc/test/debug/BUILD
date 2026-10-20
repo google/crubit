@@ -4,6 +4,7 @@ load(
     "//bazel:cpp_api_from_rust.bzl",
     "cpp_api_from_rust",
 )
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
@@ -40,13 +41,16 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "debuggables_rust",
+    cpp_target = ":debuggables",
+)
+
 crubit_rust_test(
     name = "debuggables_test",
     srcs = ["debuggables_test.rs"],
-    cc_deps = [
-        ":debuggables",
-    ],
     deps = [
+        ":debuggables_rust",
         ":existing_rust_debuggable",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
@@ -65,16 +69,19 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "derived_debuggables_rust",
+    cpp_target = ":derived_debuggables",
+)
+
 crubit_rust_test(
     name = "derived_debuggables_test",
     srcs = ["derived_debuggables_test.rs"],
     aspect_hints = [
         "//features:experimental",
     ],
-    cc_deps = [
-        ":derived_debuggables",
-    ],
     deps = [
+        ":derived_debuggables_rust",
         "@crate_index//:googletest",
     ],
 )

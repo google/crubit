@@ -1,5 +1,6 @@
 """End-to-end test for constructors."""
 
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -17,12 +18,22 @@ crubit_test_cc_library(
     aspect_hints = ["//features:experimental"],
 )
 
+rust_api_from_cpp(
+    name = "constructors_rust",
+    cpp_target = ":constructors",
+)
+
 crubit_test_cc_library(
     name = "span_constructors",
     hdrs = ["span_constructors.h"],
     # operator lifetime inference and ctor
     aspect_hints = ["//features:experimental"],
     deps = ["@abseil-cpp//absl/types:span"],
+)
+
+rust_api_from_cpp(
+    name = "span_constructors_rust",
+    cpp_target = ":span_constructors",
 )
 
 golden_test(
@@ -36,11 +47,9 @@ golden_test(
 crubit_rust_test(
     name = "constructors_test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":constructors",
-        ":span_constructors",
-    ],
     deps = [
+        ":constructors_rust",
+        ":span_constructors_rust",
         "//support:ctor",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1

@@ -1,6 +1,7 @@
 """End-to-end example of using a simple references function."""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
@@ -17,6 +18,11 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "references_rust",
+    cpp_target = ":references",
+)
+
 golden_test(
     name = "references_golden_test",
     basename = "references",
@@ -28,8 +34,8 @@ golden_test(
 crubit_rust_test(
     name = "references_test",
     srcs = ["references_test.rs"],
-    cc_deps = [":references"],
     deps = [
+        ":references_rust",
         "@crate_index//:googletest",
     ],
 )

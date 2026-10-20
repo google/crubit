@@ -1,6 +1,7 @@
 """End-to-end example of using simple functions."""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
@@ -17,6 +18,11 @@ cc_library(
     deps = ["//support:annotations"],
 )
 
+rust_api_from_cpp(
+    name = "simple_rust",
+    cpp_target = ":simple",
+)
+
 golden_test(
     name = "simple_golden_test",
     basename = "simple",
@@ -28,8 +34,8 @@ golden_test(
 crubit_rust_test(
     name = "simple_test",
     srcs = ["simple_test.rs"],
-    cc_deps = [":simple"],
     deps = [
+        ":simple_rust",
         "@crate_index//:googletest",
     ],
 )

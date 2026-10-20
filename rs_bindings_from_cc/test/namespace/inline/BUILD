@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
@@ -13,6 +14,11 @@ cc_library(
     aspect_hints = ["//features:supported"],
 )
 
+rust_api_from_cpp(
+    name = "inline_rust",
+    cpp_target = ":inline",
+)
+
 golden_test(
     name = "inline_golden_test",
     basename = "inline",
@@ -24,8 +30,8 @@ golden_test(
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [":inline"],
     deps = [
+        ":inline_rust",
         "@crate_index//:googletest",
     ],
 )

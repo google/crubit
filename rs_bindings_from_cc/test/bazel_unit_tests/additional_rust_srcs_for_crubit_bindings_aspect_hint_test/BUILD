@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
@@ -23,13 +24,16 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "empty_cc_lib_with_additional_rust_srcs_rust",
+    cpp_target = ":empty_cc_lib_with_additional_rust_srcs",
+)
+
 crubit_rust_test(
     name = "additional_rust_srcs_test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":empty_cc_lib_with_additional_rust_srcs",
-    ],
     deps = [
+        ":empty_cc_lib_with_additional_rust_srcs_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -56,13 +60,16 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "cc_lib_with_additional_rust_srcs_with_namespace_path_rust",
+    cpp_target = ":cc_lib_with_additional_rust_srcs_with_namespace_path",
+)
+
 crubit_rust_test(
     name = "additional_rust_srcs_with_namespace_path_test",
     srcs = ["additional_rust_srcs_with_namespace_path_test.rs"],
-    cc_deps = [
-        ":cc_lib_with_additional_rust_srcs_with_namespace_path",
-    ],
     deps = [
+        ":cc_lib_with_additional_rust_srcs_with_namespace_path_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -84,13 +91,16 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "cc_lib_with_additional_rust_srcs_try_trait_rust",
+    cpp_target = ":cc_lib_with_additional_rust_srcs_try_trait",
+)
+
 crubit_rust_test(
     name = "additional_rust_srcs_try_trait_test",
     srcs = ["try_trait_test.rs"],
-    cc_deps = [
-        ":cc_lib_with_additional_rust_srcs_try_trait",
-    ],
     deps = [
+        ":cc_lib_with_additional_rust_srcs_try_trait_rust",
         "@crate_index//:googletest",
     ],
 )

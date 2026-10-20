@@ -28,8 +28,8 @@ cc_library(
 rust_library(
     name = "rust_lib",
     srcs = ["rust_lib.rs"],
-    cc_deps = [":cc_lib"],
     edition = "2024",
+    deps = [":cc_lib"],
 )
 
 cpp_api_from_rust(

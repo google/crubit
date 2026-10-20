@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
@@ -24,6 +25,11 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "either_rust",
+    cpp_target = ":either",
+)
+
 additional_rust_srcs_for_crubit_bindings(
     name = "additional_either_src",
     srcs = ["additional_either_src.rs"],
@@ -40,14 +46,17 @@ cc_library(
     deps = [":either"],
 )
 
+rust_api_from_cpp(
+    name = "int_or_bool_rust",
+    cpp_target = ":int_or_bool",
+)
+
 crubit_rust_test(
     name = "rust_int_or_bool_test",
     srcs = ["rust_int_or_bool_test.rs"],
-    cc_deps = [
-        ":either",
-        ":int_or_bool",
-    ],
     deps = [
+        ":either_rust",
+        ":int_or_bool_rust",
         "@crate_index//:googletest",
     ],
 )

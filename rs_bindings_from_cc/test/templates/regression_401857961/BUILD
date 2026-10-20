@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
@@ -13,6 +14,11 @@ cc_library(
     aspect_hints = ["//features:supported"],
 )
 
+rust_api_from_cpp(
+    name = "repro_rust",
+    cpp_target = ":repro",
+)
+
 golden_test(
     name = "repro_golden_test",
     basename = "repro",
@@ -24,5 +30,5 @@ golden_test(
 crubit_rust_test(
     name = "builds",
     srcs = ["builds.rs"],
-    cc_deps = [":repro"],
+    deps = [":repro_rust"],
 )

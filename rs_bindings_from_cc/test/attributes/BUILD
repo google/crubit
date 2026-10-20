@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 licenses(["notice"])
@@ -13,11 +14,16 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "annotalysis_rust",
+    cpp_target = ":annotalysis",
+)
+
 crubit_rust_test(
     name = "annotalysis_test",
     srcs = ["annotalysis_test.rs"],
-    cc_deps = [":annotalysis"],
     deps = [
+        ":annotalysis_rust",
         "@crate_index//:googletest",
     ],
 )

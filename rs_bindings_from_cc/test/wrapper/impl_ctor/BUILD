@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
@@ -20,6 +21,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "impl_ctor_rust",
+    cpp_target = ":impl_ctor",
+)
+
 additional_rust_srcs_for_crubit_bindings(
     name = "impl_ctor_extra",
     srcs = ["impl_ctor_extra.rs"],
@@ -28,8 +34,8 @@ additional_rust_srcs_for_crubit_bindings(
 crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
-    cc_deps = [":impl_ctor"],
     deps = [
+        ":impl_ctor_rust",
         "@crate_index//:googletest",
     ],
 )

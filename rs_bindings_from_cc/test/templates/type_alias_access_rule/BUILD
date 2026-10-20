@@ -2,6 +2,7 @@
 instantiation references a private type.
 """
 
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -17,6 +18,11 @@ crubit_test_cc_library(
     aspect_hints = ["//features:experimental"],
 )
 
+rust_api_from_cpp(
+    name = "type_alias_access_rule_rust",
+    cpp_target = ":type_alias_access_rule",
+)
+
 golden_test(
     name = "type_alias_access_rule_golden_test",
     basename = "type_alias_access_rule",
@@ -27,7 +33,7 @@ golden_test(
 crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":type_alias_access_rule",
+    deps = [
+        ":type_alias_access_rule_rust",
     ],
 )

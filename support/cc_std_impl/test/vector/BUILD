@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
@@ -20,6 +21,12 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "cc_helper_functions_rust",
+    testonly = True,
+    cpp_target = ":cc_helper_functions",
+)
+
 cc_library(
     name = "cc_movable_types",
     testonly = True,
@@ -29,15 +36,19 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "cc_movable_types_rust",
+    testonly = True,
+    cpp_target = ":cc_movable_types",
+)
+
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":cc_helper_functions",
-        ":cc_movable_types",
-        "//support/cc_std",
-    ],
     deps = [
+        ":cc_helper_functions_rust",
+        ":cc_movable_types_rust",
+        "//support/cc_std",
         "//support/ffi_11",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1

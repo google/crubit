@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
@@ -14,19 +15,27 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "common_rust",
+    cpp_target = ":common",
+)
+
 cc_library(
     name = "crubit_disabled",
     hdrs = ["crubit_disabled.h"],
 )
 
+rust_api_from_cpp(
+    name = "span_rust",
+    cpp_target = "@abseil-cpp//absl/types:span",
+)
+
 crubit_rust_test(
     name = "span_test",
     srcs = ["span_test.rs"],
-    cc_deps = [
-        ":span_lib",
-        "@abseil-cpp//absl/types:span",
-    ],
     deps = [
+        ":span_lib_rust",
+        ":span_rust",
         "//support:ctor",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
@@ -46,6 +55,11 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "span_lib_rust",
+    cpp_target = ":span_lib",
+)
+
 cc_library(
     name = "unique_ptr_lib",
     hdrs = ["unique_ptr_lib.h"],
@@ -59,18 +73,21 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "unique_ptr_lib_rust",
+    cpp_target = ":unique_ptr_lib",
+)
+
 crubit_rust_test(
     name = "unique_ptr_test",
     srcs = ["unique_ptr_test.rs"],
-    cc_deps = [
-        ":common",
-        ":unique_ptr_lib",
-        "//support/cc_std",
-    ],
     proc_macro_deps = [
         "//common:item_exists",
     ],
     deps = [
+        ":common_rust",
+        ":unique_ptr_lib_rust",
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )
@@ -83,13 +100,16 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "atomic_lib_rust",
+    cpp_target = ":atomic_lib",
+)
+
 crubit_rust_test(
     name = "atomic_test",
     srcs = ["atomic_test.rs"],
-    cc_deps = [
-        ":atomic_lib",
-    ],
     deps = [
+        ":atomic_lib_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -120,18 +140,21 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "vector_lib_rust",
+    cpp_target = ":vector_lib",
+)
+
 crubit_rust_test(
     name = "vector_test",
     srcs = ["vector_test.rs"],
-    cc_deps = [
-        ":common",
-        ":vector_lib",
-        "//support/cc_std",
-    ],
     proc_macro_deps = [
         "//common:item_exists",
     ],
     deps = [
+        ":common_rust",
+        ":vector_lib_rust",
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )
@@ -149,18 +172,21 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "vector_experimental_lib_rust",
+    cpp_target = ":vector_experimental_lib",
+)
+
 crubit_rust_test(
     name = "vector_experimental_test",
     srcs = ["vector_experimental_test.rs"],
-    cc_deps = [
-        ":common",
-        ":vector_experimental_lib",
-        "//support/cc_std",
-    ],
     proc_macro_deps = [
         "//common:item_exists",
     ],
     deps = [
+        ":common_rust",
+        ":vector_experimental_lib_rust",
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )
@@ -184,15 +210,18 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "nonnull_smart_pointer_lib_rust",
+    cpp_target = ":nonnull_smart_pointer_lib",
+)
+
 crubit_rust_test(
     name = "nonnull_smart_pointer_test",
     srcs = ["nonnull_smart_pointer_test.rs"],
-    cc_deps = [
-        ":common",
-        ":nonnull_smart_pointer_lib",
-        "//support/cc_std",
-    ],
     deps = [
+        ":common_rust",
+        ":nonnull_smart_pointer_lib_rust",
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )
@@ -209,15 +238,18 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "optional_lib_rust",
+    cpp_target = ":optional_lib",
+)
+
 crubit_rust_test(
     name = "optional_test",
     srcs = ["optional_test.rs"],
-    cc_deps = [
-        ":optional_lib",
-        "//support/cc_std",
-    ],
     deps = [
+        ":optional_lib_rust",
         "//support:ctor",
+        "//support/cc_std",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
     ],

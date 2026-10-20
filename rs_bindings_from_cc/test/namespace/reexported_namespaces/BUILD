@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_cli_flag_aspect_hint.bzl",
@@ -25,6 +26,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "reexported_namespaces_rust",
+    cpp_target = ":reexported_namespaces",
+)
+
 golden_test(
     name = "reexported_namespaces_golden_test",
     basename = "reexported_namespaces",
@@ -36,10 +42,8 @@ golden_test(
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":reexported_namespaces",
-    ],
     deps = [
+        ":reexported_namespaces_rust",
         "@crate_index//:googletest",
     ],
 )

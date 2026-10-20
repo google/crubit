@@ -1,5 +1,9 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_rust_test",
+)
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
@@ -14,11 +18,16 @@ crubit_test_cc_library(
     aspect_hints = ["//features:oo_casting"],
 )
 
+rust_api_from_cpp(
+    name = "upcast_rust",
+    cpp_target = ":upcast",
+)
+
 crubit_rust_test(
     name = "upcast_test",
     srcs = ["upcast_test.rs"],
-    cc_deps = [":upcast"],
     deps = [
+        ":upcast_rust",
         "//support:ctor",
         "//support:oops",
         "@crate_index//:googletest",
@@ -37,6 +46,11 @@ crubit_test_cc_library(
     deps = [":not_crubit_enabled"],
 )
 
+rust_api_from_cpp(
+    name = "inherited_methods_rust",
+    cpp_target = ":inherited_methods",
+)
+
 golden_test(
     name = "inherited_methods_golden_test",
     basename = "inherited_methods",
@@ -47,8 +61,8 @@ golden_test(
 crubit_rust_test(
     name = "inherited_methods_test",
     srcs = ["inherited_methods_test.rs"],
-    cc_deps = [":inherited_methods"],
     deps = [
+        ":inherited_methods_rust",
         "//support:oops",
         "@crate_index//:googletest",
     ],

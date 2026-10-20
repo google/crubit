@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
@@ -25,6 +26,11 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "displayables_rust",
+    cpp_target = ":displayables",
+)
+
 additional_rust_srcs_for_crubit_bindings(
     name = "displayables_rs",
     srcs = ["displayables.rs"],
@@ -33,11 +39,9 @@ additional_rust_srcs_for_crubit_bindings(
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":displayables",
-        "//support/cc_std",
-    ],
     deps = [
+        ":displayables_rust",
+        "//support/cc_std",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
     ],

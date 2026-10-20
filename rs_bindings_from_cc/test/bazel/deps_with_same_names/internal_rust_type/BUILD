@@ -8,6 +8,7 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 
 package(
     default_testonly = 1,
@@ -47,12 +48,18 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "client_cc_rust",
+    cpp_target = ":client_cc",
+    tags = _tags,
+)
+
 rust_library(
     name = "client_rust",
     srcs = ["client.rs"],
-    cc_deps = [":client_cc"],
     edition = "2024",
     tags = _tags,
+    deps = [":client_cc_rust"],
 )
 
 build_test(

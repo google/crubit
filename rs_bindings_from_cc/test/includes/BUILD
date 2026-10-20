@@ -1,5 +1,6 @@
 """End-to-end example of using `includes` attribute in `cc_library`."""
 
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -15,11 +16,16 @@ crubit_test_cc_library(
     includes = ["includes_dir/"],
 )
 
+rust_api_from_cpp(
+    name = "using_includes_rust",
+    cpp_target = ":using_includes",
+)
+
 crubit_rust_test(
     name = "includes_test",
     srcs = ["includes_test.rs"],
-    cc_deps = [":using_includes"],
     deps = [
+        ":using_includes_rust",
         "@crate_index//:googletest",
     ],
 )

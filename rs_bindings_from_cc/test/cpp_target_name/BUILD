@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -37,10 +38,8 @@ cc_library(
 crubit_rust_test(
     name = "test_with_cc_library_with_invalid_character_in_transitive_deps",
     srcs = ["test_with_cc_library_with_invalid_character_in_transitive_deps.rs"],
-    cc_deps = [
-        ":crubit_disabled_cc_library_with_invalid_character_in_transitive_deps",
-    ],
     deps = [
+        ":crubit_disabled_cc_library_with_invalid_character_in_transitive_deps",
         "@crate_index//:googletest",
     ],
 )
@@ -55,10 +54,8 @@ crubit_test_cc_library(
 crubit_rust_test(
     name = "test_with_crubit_enabled_cc_library_with_invalid_character_in_transitive_deps",
     srcs = ["test_with_crubit_enabled_cc_library_with_invalid_character_in_transitive_deps.rs"],
-    cc_deps = [
-        ":crubit_enabled_cc_library_with_invalid_character_in_transitive_deps",
-    ],
     deps = [
+        ":crubit_enabled_cc_library_with_invalid_character_in_transitive_deps",
         "@crate_index//:googletest",
     ],
 )
@@ -68,13 +65,16 @@ crubit_test_cc_library(
     hdrs = ["header.h"],
 )
 
+rust_api_from_cpp(
+    name = "crubit_enabled_cc_library_with_invalid_character_rust",
+    cpp_target = ":crubit_enabled_cc_library_with_!./%-@^#$&()*-+,;<=>?[]{|}~",
+)
+
 crubit_rust_test(
     name = "test_crubit_enabled_cc_library_with_invalid_character",
     srcs = ["test_with_crubit_enabled_cc_library_with_invalid_character.rs"],
-    cc_deps = [
-        ":crubit_enabled_cc_library_with_!./%-@^#$&()*-+,;<=>?[]{|}~",
-    ],
     deps = [
+        ":crubit_enabled_cc_library_with_invalid_character_rust",
         "@crate_index//:googletest",
     ],
 )

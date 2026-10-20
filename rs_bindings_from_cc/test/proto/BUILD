@@ -2,6 +2,7 @@ load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
 load("@protobuf//rust:defs.bzl", "rust_proto_library")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
@@ -41,6 +42,11 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "my_proto_api_rust",
+    cpp_target = ":my_proto_api",
+)
+
 golden_test(
     name = "golden_test",
     cc_library = "my_proto_api",
@@ -51,10 +57,8 @@ golden_test(
 crubit_rust_test(
     name = "my_test",
     srcs = ["my_test.rs"],
-    cc_deps = [
-        ":my_proto_api",
-    ],
     deps = [
+        ":my_proto_api_rust",
         ":my_rust_proto",
         "//support:forward_declare",
         "@crate_index//:googletest",

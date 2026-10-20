@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load("//rs_bindings_from_cc/test/golden:golden_test.bzl", "golden_test")
@@ -13,13 +14,16 @@ crubit_test_cc_library(
     hdrs = ["operators_index.h"],
 )
 
+rust_api_from_cpp(
+    name = "operators_index_rust",
+    cpp_target = ":operators_index",
+)
+
 crubit_rust_test(
     name = "operators_index_test",
     srcs = ["operators_index_test.rs"],
-    cc_deps = [
-        ":operators_index",
-    ],
     deps = [
+        ":operators_index_rust",
         "//support:ctor",
         "//support:operator",
         "@crate_index//:googletest",

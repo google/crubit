@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -16,6 +17,11 @@ crubit_test_cc_library(
     deps = ["@abseil-cpp//absl/strings:string_view"],
 )
 
+rust_api_from_cpp(
+    name = "global_rust",
+    cpp_target = ":global",
+)
+
 golden_test(
     name = "global_golden_test",
     basename = "global",
@@ -27,10 +33,8 @@ golden_test(
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":global",
-    ],
     deps = [
+        ":global_rust",
         "//support/ffi_11",
         "@crate_index//:googletest",
     ],

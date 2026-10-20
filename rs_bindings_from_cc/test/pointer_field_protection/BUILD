@@ -1,5 +1,6 @@
 """End-to-end test of Rust moves of C++ types that use pointer field protection (PFP)."""
 
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -33,10 +34,14 @@ crubit_test_cc_library(
     features = ["-use_header_modules"],
 )
 
+rust_api_from_cpp(
+    name = "pointer_field_protection_rust",
+    cpp_target = ":pointer_field_protection",
+)
+
 crubit_rust_test(
     name = "pointer_field_protection_test",
     srcs = ["pointer_field_protection_test.rs"],
-    cc_deps = [":pointer_field_protection"],
 
     # TODO(b/565847600): Remove `tags = ["manual"]` after fixing the bug / UB.
     #
@@ -50,6 +55,7 @@ crubit_rust_test(
     # `clang/docs/StructureProtection.md`), and the test passes.
     tags = ["manual"],
     deps = [
+        ":pointer_field_protection_rust",
         "@crate_index//:googletest",
     ],
 )

@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
@@ -20,6 +21,11 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "original_library_rust",
+    cpp_target = ":original_library",
+)
+
 cc_library(
     name = "other_library",
     hdrs = ["external_dependency.h"],
@@ -36,8 +42,8 @@ additional_rust_srcs_for_crubit_bindings(
 crubit_rust_test(
     name = "cycle_test",
     srcs = ["cycle_test.rs"],
-    cc_deps = [":original_library"],
     deps = [
+        ":original_library_rust",
         "@crate_index//:googletest",
     ],
 )

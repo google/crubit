@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -14,6 +15,11 @@ crubit_test_cc_library(
     deps = ["//support:annotations"],
 )
 
+rust_api_from_cpp(
+    name = "types_only_rust",
+    cpp_target = ":types_only",
+)
+
 crubit_test_cc_library(
     name = "functions_using_types",
     hdrs = ["functions_using_types.h"],
@@ -21,6 +27,11 @@ crubit_test_cc_library(
     deps = [
         ":types_only",
     ],
+)
+
+rust_api_from_cpp(
+    name = "functions_using_types_rust",
+    cpp_target = ":functions_using_types",
 )
 
 golden_test(
@@ -34,11 +45,9 @@ golden_test(
 crubit_rust_test(
     name = "types_only_test",
     srcs = ["types_only_test.rs"],
-    cc_deps = [
-        ":functions_using_types",
-        ":types_only",
-    ],
     deps = [
+        ":functions_using_types_rust",
+        ":types_only_rust",
         "//support:ctor",
         "@crate_index//:googletest",
     ],

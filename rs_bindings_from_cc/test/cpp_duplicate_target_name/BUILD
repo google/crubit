@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -14,13 +15,20 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "header_rust",
+    cpp_target = ":header",
+    tags = [
+        "manual",
+        "nobuilder",
+        "notap",
+    ],
+)
+
 crubit_rust_test(
     name = "test",
     srcs = [
         "test.rs",
-    ],
-    cc_deps = [
-        ":header",
     ],
     tags = [
         # b/312679890: It currently fails to build: multiple candidates for `rmeta` dependency `A` found
@@ -29,6 +37,7 @@ crubit_rust_test(
         "nobuilder",
     ],
     deps = [
+        ":header_rust",
         "@crate_index//:googletest",
     ],
 )

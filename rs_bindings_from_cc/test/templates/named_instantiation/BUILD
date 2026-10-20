@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -17,6 +18,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "named_instantiation_rust",
+    cpp_target = ":named_instantiation",
+)
+
 golden_test(
     name = "named_instantiation_golden_test",
     basename = "named_instantiation",
@@ -28,10 +34,8 @@ golden_test(
 crubit_rust_test(
     name = "named_instantiation_test",
     srcs = ["named_instantiation_test.rs"],
-    cc_deps = [
-        ":named_instantiation",
-    ],
     deps = [
+        ":named_instantiation_rust",
         "//support:cref",
         "@crate_index//:googletest",
     ],

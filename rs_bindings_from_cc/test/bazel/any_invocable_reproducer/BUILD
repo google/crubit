@@ -18,6 +18,7 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
@@ -62,12 +63,18 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "any_invocable_usage_cc_rust",
+    cpp_target = ":any_invocable_usage_cc",
+    tags = _tags,
+)
+
 rust_library(
     name = "any_invocable_usage_rust",
     srcs = ["any_invocable_usage.rs"],
-    cc_deps = [":any_invocable_usage_cc"],
     edition = "2024",
     tags = _tags,
+    deps = [":any_invocable_usage_cc_rust"],
 )
 
 build_test(

@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -29,16 +30,19 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "definition_rust",
+    cpp_target = ":definition",
+)
+
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":definition",
-    ],
     proc_macro_deps = [
         "//common:item_exists",
     ],
     deps = [
+        ":definition_rust",
         "@crate_index//:googletest",
     ],
 )

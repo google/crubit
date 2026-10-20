@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
@@ -21,11 +22,16 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "calls_back_to_rust_rust",
+    cpp_target = ":calls_back_to_rust",
+)
+
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [":calls_back_to_rust"],
     deps = [
+        ":calls_back_to_rust_rust",
         "@crate_index//:googletest",
     ],
 )

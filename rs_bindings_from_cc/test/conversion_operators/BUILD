@@ -2,6 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -13,6 +14,11 @@ crubit_test_cc_library(
     aspect_hints = ["//features:supported"],
 )
 
+rust_api_from_cpp(
+    name = "foreign_type_rust",
+    cpp_target = ":foreign_type",
+)
+
 crubit_test_cc_library(
     name = "conversion_operators",
     srcs = ["conversion_operators.cc"],
@@ -21,14 +27,17 @@ crubit_test_cc_library(
     deps = [":foreign_type"],
 )
 
+rust_api_from_cpp(
+    name = "conversion_operators_rust",
+    cpp_target = ":conversion_operators",
+)
+
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":conversion_operators",
-        ":foreign_type",
-    ],
     deps = [
+        ":conversion_operators_rust",
+        ":foreign_type_rust",
         "//support:cref",
         "//support:ctor",
         "@crate_index//:googletest",

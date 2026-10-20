@@ -78,6 +78,7 @@ load(
 visibility([
     # <internal link> start
     "//cc_bindings_from_rs/...",
+    "//common/...",
     "//examples/...",
     "//rs_bindings_from_cc/...",
     "//support/...",

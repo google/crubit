@@ -8,6 +8,7 @@
 #include "rs_bindings_from_cc/test/bazel/deps_with_same_names/bridge_types/deps/A_cc_library/a.h"
 #include "rs_bindings_from_cc/test/bazel/deps_with_same_names/bridge_types/deps/B_cc_library/a.h"
 #include "support/annotations.h"
+#include "support/bridge.h"
 
 // We bridge BridgeA to a::TypeA defined in A_cc_library's Rust crate.
 // The hint prefix 'a' will be replaced by the mangled crate name of
@@ -28,6 +29,11 @@ struct CRUBIT_BRIDGE("::a::TypeB", "::a::TypeBAbi", "::a::TypeBAbi",
     BridgeB {
   B_Struct b;
 };
+
+namespace a {
+using TypeAAbi = ::crubit::TransmuteAbi<::BridgeA>;
+using TypeBAbi = ::crubit::TransmuteAbi<::BridgeB>;
+}  // namespace a
 
 inline BridgeA make_bridge_a(A_Struct a) { return {a}; }
 inline BridgeB make_bridge_b(B_Struct b) { return {b}; }

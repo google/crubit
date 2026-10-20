@@ -4,6 +4,7 @@ load(
     "//bazel:cpp_api_from_rust.bzl",
     "cpp_api_from_rust",
 )
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
@@ -32,12 +33,17 @@ cc_library(
     deps = [":nonmovable_cc"],
 )
 
+rust_api_from_cpp(
+    name = "takes_nonmovable_rust",
+    cpp_target = ":takes_nonmovable",
+)
+
 crubit_rust_test(
     name = "takes_nonmovable_test",
     srcs = ["takes_nonmovable_test.rs"],
-    cc_deps = [":takes_nonmovable"],
     deps = [
         ":nonmovable",
+        ":takes_nonmovable_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -49,11 +55,16 @@ cc_library(
     deps = [":nonmovable_cc"],
 )
 
+rust_api_from_cpp(
+    name = "ctor_takes_nonmovable_rust",
+    cpp_target = ":ctor_takes_nonmovable",
+)
+
 crubit_rust_test(
     name = "ctor_takes_nonmovable_test",
     srcs = ["ctor_takes_nonmovable_test.rs"],
-    cc_deps = [":ctor_takes_nonmovable"],
     deps = [
+        ":ctor_takes_nonmovable_rust",
         ":nonmovable",
         "//support:ctor",
         "@crate_index//:googletest",

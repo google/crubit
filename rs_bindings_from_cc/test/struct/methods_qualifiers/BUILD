@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
@@ -16,6 +17,11 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "methods_qualifiers_rust",
+    cpp_target = ":methods_qualifiers",
+)
+
 golden_test(
     name = "methods_qualifiers_golden_test",
     basename = "methods_qualifiers",
@@ -27,8 +33,8 @@ golden_test(
 crubit_rust_test(
     name = "methods_qualifiers_test",
     srcs = ["methods_qualifiers_test.rs"],
-    cc_deps = [":methods_qualifiers"],
     deps = [
+        ":methods_qualifiers_rust",
         "//support:ctor",
         "@crate_index//:googletest",
     ],

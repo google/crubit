@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl", "additional_rust_srcs_for_crubit_bindings")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
@@ -17,6 +18,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "do_not_bind_rust",
+    cpp_target = ":do_not_bind",
+)
+
 golden_test(
     name = "do_not_bind_golden_test",
     basename = "do_not_bind",
@@ -28,10 +34,8 @@ golden_test(
 crubit_rust_test(
     name = "do_not_bind_test",
     srcs = ["do_not_bind_test.rs"],
-    cc_deps = [
-        ":do_not_bind",
-    ],
     deps = [
+        ":do_not_bind_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -47,13 +51,16 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "ignore_attr_rust",
+    cpp_target = ":ignore_attr",
+)
+
 crubit_rust_test(
     name = "ignore_attr_test",
     srcs = ["ignore_attr_test.rs"],
-    cc_deps = [
-        ":ignore_attr",
-    ],
     deps = [
+        ":ignore_attr_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -75,11 +82,16 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "must_bind_rust",
+    cpp_target = ":must_bind",
+)
+
 crubit_rust_test(
     name = "must_bind_test",
     srcs = ["must_bind_test.rs"],
-    cc_deps = [
-        ":must_bind",
+    deps = [
+        ":must_bind_rust",
     ],
 )
 
@@ -101,6 +113,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "owned_ptr_rust",
+    cpp_target = ":owned_ptr",
+)
+
 crubit_test_cc_library(
     name = "owned_ptr_user",
     srcs = ["owned_ptr_user.cc"],
@@ -112,14 +129,17 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "owned_ptr_user_rust",
+    cpp_target = ":owned_ptr_user",
+)
+
 crubit_rust_test(
     name = "owned_ptr_test",
     srcs = ["owned_ptr_test.rs"],
-    cc_deps = [
-        ":owned_ptr",
-        ":owned_ptr_user",
-    ],
     deps = [
+        ":owned_ptr_rust",
+        ":owned_ptr_user_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -149,6 +169,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "rust_name_rust",
+    cpp_target = ":rust_name",
+)
+
 golden_test(
     name = "rust_name_golden_test",
     basename = "rust_name",
@@ -160,10 +185,8 @@ golden_test(
 crubit_rust_test(
     name = "rust_name_test",
     srcs = ["rust_name_test.rs"],
-    cc_deps = [
-        ":rust_name",
-    ],
     deps = [
+        ":rust_name_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -176,13 +199,16 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "thread_safe_rust",
+    cpp_target = ":thread_safe",
+)
+
 crubit_rust_test(
     name = "thread_safe_test",
     srcs = ["thread_safe_test.rs"],
-    cc_deps = [
-        ":thread_safe",
-    ],
     deps = [
+        ":thread_safe_rust",
         "//support:ctor",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1

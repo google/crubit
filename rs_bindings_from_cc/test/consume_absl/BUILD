@@ -1,5 +1,6 @@
 """Consume some simple types and functions from //third_party/absl."""
 
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -9,10 +10,15 @@ load(
 
 package(default_applicable_licenses = ["//:license"])
 
+rust_api_from_cpp(
+    name = "time_rust",
+    cpp_target = "@abseil-cpp//absl/time",
+)
+
 crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
-    cc_deps = ["@abseil-cpp//absl/time"],
+    deps = [":time_rust"],
 )
 
 crubit_test_cc_library(
@@ -45,14 +51,22 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "uses_anyinvocable_rust",
+    cpp_target = ":uses_anyinvocable",
+)
+
+rust_api_from_cpp(
+    name = "any_invocable_rust",
+    cpp_target = "@abseil-cpp//absl/functional:any_invocable",
+)
+
 crubit_rust_test(
     name = "uses_anyinvocable_test",
     srcs = ["uses_anyinvocable_test.rs"],
-    cc_deps = [
-        ":uses_anyinvocable",
-        "@abseil-cpp//absl/functional:any_invocable",
-    ],
     deps = [
+        ":any_invocable_rust",
+        ":uses_anyinvocable_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -77,24 +91,30 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "uses_any_invocable_alias_rust",
+    cpp_target = ":uses_any_invocable_alias",
+)
+
 crubit_rust_test(
     name = "uses_any_invocable_alias_test",
     srcs = ["uses_any_invocable_alias_test.rs"],
-    cc_deps = [
-        ":uses_any_invocable_alias",
-    ],
     deps = [
+        ":uses_any_invocable_alias_rust",
         "@crate_index//:googletest",
     ],
+)
+
+rust_api_from_cpp(
+    name = "int128_rust",
+    cpp_target = "@abseil-cpp//absl/numeric:int128",
 )
 
 crubit_rust_test(
     name = "int128_test",
     srcs = ["int128_test.rs"],
-    cc_deps = [
-        "@abseil-cpp//absl/numeric:int128",
-    ],
     deps = [
+        ":int128_rust",
         "@crate_index//:googletest",
     ],
 )

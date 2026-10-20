@@ -1,6 +1,7 @@
 """End-to-end example of using type aliases to fully-instantiated templates."""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
@@ -17,6 +18,11 @@ cc_library(
         "//features:template_instantiation",
     ],
     deps = ["//support:annotations"],
+)
+
+rust_api_from_cpp(
+    name = "type_alias_rust",
+    cpp_target = ":type_alias",
 )
 
 golden_test(
@@ -37,14 +43,17 @@ cc_library(
     deps = [":type_alias"],
 )
 
+rust_api_from_cpp(
+    name = "type_alias_in_different_target_rust",
+    cpp_target = ":type_alias_in_different_target",
+)
+
 crubit_rust_test(
     name = "test",
     srcs = ["type_alias_test.rs"],
-    cc_deps = [
-        ":type_alias",
-        ":type_alias_in_different_target",
-    ],
     deps = [
+        ":type_alias_in_different_target_rust",
+        ":type_alias_rust",
         "//support:cref",
         "//support:forward_declare",
         "@crate_index//:googletest",

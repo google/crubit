@@ -20,6 +20,11 @@ crubit_test_cc_library(
     hdrs = ["dep_lib.h"],
 )
 
+rust_api_from_cpp(
+    name = "dep_lib_rust",
+    cpp_target = ":dep_lib",
+)
+
 crubit_test_cc_library(
     name = "fno_modules_lib",
     srcs = ["fno_modules_lib.cc"],
@@ -31,6 +36,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "fno_modules_lib_rust",
+    cpp_target = ":fno_modules_lib",
+)
+
 # `-fno-modules` without `-use_header_modules`. The target itself has no srcs, but the generated
 # `_rust_api_impl.cc` is compiled with `-fno-modules` and must not load `.pcm` files.
 crubit_test_cc_library(
@@ -40,11 +50,21 @@ crubit_test_cc_library(
     deps = [":dep_lib"],
 )
 
+rust_api_from_cpp(
+    name = "fno_modules_only_lib_rust",
+    cpp_target = ":fno_modules_only_lib",
+)
+
 crubit_test_cc_library(
     name = "no_use_header_modules_lib",
     hdrs = ["no_use_header_modules_lib.h"],
     features = ["-use_header_modules"],
     deps = [":dep_lib"],
+)
+
+rust_api_from_cpp(
+    name = "no_use_header_modules_lib_rust",
+    cpp_target = ":no_use_header_modules_lib",
 )
 
 crubit_test_cc_library(
@@ -54,11 +74,21 @@ crubit_test_cc_library(
     deps = [":dep_lib"],
 )
 
+rust_api_from_cpp(
+    name = "no_module_maps_lib_rust",
+    cpp_target = ":no_module_maps_lib",
+)
+
 crubit_test_cc_library(
     name = "no_header_modules_lib",
     hdrs = ["no_header_modules_lib.h"],
     features = ["-header_modules"],
     deps = [":dep_lib"],
+)
+
+rust_api_from_cpp(
+    name = "no_header_modules_lib_rust",
+    cpp_target = ":no_header_modules_lib",
 )
 
 crubit_test_cc_library(
@@ -70,19 +100,22 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "uses_fno_modules_lib_rust",
+    cpp_target = ":uses_fno_modules_lib",
+)
+
 crubit_rust_test(
     name = "modules_off_test",
     srcs = ["modules_off_test.rs"],
-    cc_deps = [
-        ":dep_lib",
-        ":fno_modules_lib",
-        ":fno_modules_only_lib",
-        ":no_header_modules_lib",
-        ":no_module_maps_lib",
-        ":no_use_header_modules_lib",
-        ":uses_fno_modules_lib",
-    ],
     deps = [
+        ":dep_lib_rust",
+        ":fno_modules_lib_rust",
+        ":fno_modules_only_lib_rust",
+        ":no_header_modules_lib_rust",
+        ":no_module_maps_lib_rust",
+        ":no_use_header_modules_lib_rust",
+        ":uses_fno_modules_lib_rust",
         "@crate_index//:googletest",
     ],
 )

@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -20,13 +21,16 @@ crubit_test_cc_library(
     deps = [":defines_macro_that_uses_macro"],
 )
 
+rust_api_from_cpp(
+    name = "uses_macro_rust",
+    cpp_target = ":uses_macro",
+)
+
 crubit_rust_test(
     name = "uses_struct_and_function_from_macro",
     srcs = ["uses_struct_and_function_from_macro.rs"],
-    cc_deps = [
-        ":uses_macro",
-    ],
     deps = [
+        ":uses_macro_rust",
         "@crate_index//:googletest",
     ],
 )

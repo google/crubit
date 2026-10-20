@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -20,6 +21,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "allowlist_specific_instance_rust",
+    cpp_target = ":allowlist_specific_instance",
+)
+
 golden_test(
     name = "allowlist_specific_instance_golden_test",
     basename = "allowlist_specific_instance",
@@ -31,10 +37,8 @@ golden_test(
 crubit_rust_test(
     name = "allowlist_specific_instance_test",
     srcs = ["allowlist_specific_instance_test.rs"],
-    cc_deps = [
-        ":allowlist_specific_instance",
-    ],
     deps = [
+        ":allowlist_specific_instance_rust",
         "//support:cref",
         "@crate_index//:googletest",
     ],
@@ -53,6 +57,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "allowlist_specific_template_rust",
+    cpp_target = ":allowlist_specific_template",
+)
+
 golden_test(
     name = "allowlist_specific_template_golden_test",
     basename = "allowlist_specific_template",
@@ -64,10 +73,8 @@ golden_test(
 crubit_rust_test(
     name = "allowlist_specific_template_test",
     srcs = ["allowlist_specific_template_test.rs"],
-    cc_deps = [
-        ":allowlist_specific_template",
-    ],
     deps = [
+        ":allowlist_specific_template_rust",
         "//support:cref",
         "@crate_index//:googletest",
     ],

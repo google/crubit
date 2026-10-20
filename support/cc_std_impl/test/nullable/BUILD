@@ -9,10 +9,8 @@ package(default_applicable_licenses = ["//:license"])
 crubit_rust_test(
     name = "nullable_test",
     srcs = ["nullable_test.rs"],
-    cc_deps = [
-        "//support/cc_std",
-    ],
     deps = [
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )

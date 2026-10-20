@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load("//rs_bindings_from_cc/test/bazel/fission_build:enable_fission.bzl", "enable_fission_test")
@@ -12,11 +13,16 @@ crubit_test_cc_library(
     copts = ["-g0"],
 )
 
+rust_api_from_cpp(
+    name = "empty_rust",
+    cpp_target = ":empty",
+)
+
 crubit_rust_test(
     name = "rust_test",
     srcs = ["empty.rs"],
-    cc_deps = [
-        ":empty",
+    deps = [
+        ":empty_rust",
     ],
 )
 

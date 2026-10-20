@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -9,13 +10,16 @@ crubit_test_cc_library(
     aspect_hints = ["//features:experimental"],
 )
 
+rust_api_from_cpp(
+    name = "sfinae_rust",
+    cpp_target = ":sfinae",
+)
+
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":sfinae",
-    ],
     deps = [
+        ":sfinae_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -26,13 +30,16 @@ crubit_test_cc_library(
     aspect_hints = ["//features:template_instantiation"],
 )
 
+rust_api_from_cpp(
+    name = "atomic_regression_cc_rust",
+    cpp_target = ":atomic_regression_cc",
+)
+
 crubit_rust_test(
     name = "atomic_regression_test",
     srcs = ["atomic_regression.rs"],
-    cc_deps = [
-        ":atomic_regression_cc",
-    ],
     deps = [
+        ":atomic_regression_cc_rust",
         "@crate_index//:googletest",
     ],
 )

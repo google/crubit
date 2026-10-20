@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -13,6 +14,11 @@ crubit_test_cc_library(
     deps = ["//support:annotations"],
 )
 
+rust_api_from_cpp(
+    name = "nested_items_rust",
+    cpp_target = ":nested_items",
+)
+
 golden_test(
     name = "nested_items_golden_test",
     basename = "nested_items",
@@ -24,10 +30,8 @@ golden_test(
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":nested_items",
-    ],
     deps = [
+        ":nested_items_rust",
         "@crate_index//:googletest",
     ],
 )

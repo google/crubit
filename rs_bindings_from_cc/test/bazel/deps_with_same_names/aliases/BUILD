@@ -70,14 +70,19 @@ additional_rust_srcs_for_crubit_bindings(
     ],
 )
 
+rust_api_from_cpp(
+    name = "key2_cc_rust",
+    cpp_target = ":key2_cc",
+)
+
 rust_library(
     name = "key2_client",
     srcs = ["key2_client.rs"],
     aliases = {
-        ":key2_cc": "key2_cc_rust",
+        ":key2_cc_rust": "key2_cc_rust",
     },
-    cc_deps = [":key2_cc"],
     edition = "2024",
+    deps = [":key2_cc_rust"],
 )
 
 build_test(

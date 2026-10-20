@@ -1,5 +1,6 @@
 """End-to-end example of explicit template specialization working."""
 
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -11,13 +12,16 @@ crubit_test_cc_library(
     aspect_hints = ["//features:experimental"],
 )
 
+rust_api_from_cpp(
+    name = "explicit_specialization_rust",
+    cpp_target = ":explicit_specialization",
+)
+
 crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":explicit_specialization",
-    ],
     deps = [
+        ":explicit_specialization_rust",
         "@crate_index//:googletest",
     ],
 )

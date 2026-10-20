@@ -1,6 +1,7 @@
 """End-to-end example of using a simple inline function."""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
@@ -18,6 +19,11 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "semantic_import_upcast_rust",
+    cpp_target = ":semantic_import_upcast",
+)
+
 cc_library(
     name = "semantic_import",
     hdrs = ["semantic_import.h"],
@@ -25,6 +31,11 @@ cc_library(
         "//features:supported",
         "//features:thunkless_accessors",
     ],
+)
+
+rust_api_from_cpp(
+    name = "semantic_import_rust",
+    cpp_target = ":semantic_import",
 )
 
 golden_test(
@@ -46,8 +57,8 @@ golden_test(
 crubit_rust_test(
     name = "semantic_import_upcast_test",
     srcs = ["semantic_import_upcast_test.rs"],
-    cc_deps = [":semantic_import_upcast"],
     deps = [
+        ":semantic_import_upcast_rust",
         "//support:ctor",
         "@crate_index//:googletest",
     ],
@@ -56,9 +67,9 @@ crubit_rust_test(
 crubit_rust_test(
     name = "semantic_import_test",
     srcs = ["semantic_import_test.rs"],
-    cc_deps = [":semantic_import"],
     proc_macro_deps = ["//common:item_exists"],
     deps = [
+        ":semantic_import_rust",
         "//support:ctor",
         "@crate_index//:googletest",
     ],

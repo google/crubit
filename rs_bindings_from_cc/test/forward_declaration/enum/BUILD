@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -12,13 +13,16 @@ crubit_test_cc_library(
     aspect_hints = ["//features:experimental"],
 )
 
+rust_api_from_cpp(
+    name = "forward_declaration_rust",
+    cpp_target = ":forward_declaration",
+)
+
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":forward_declaration",
-    ],
     deps = [
+        ":forward_declaration_rust",
         "@crate_index//:googletest",
     ],
 )

@@ -8,6 +8,7 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 
 package(
     default_testonly = 1,
@@ -24,6 +25,7 @@ cc_library(
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/bridge_types/deps/A_cc_library:a",
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/bridge_types/deps/B_cc_library:a",
         "//support:annotations",
+        "//support:bridge_cpp",
     ],
 )
 
@@ -38,11 +40,16 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "client_cc_rust",
+    cpp_target = ":client_cc",
+)
+
 rust_library(
     name = "client_rust",
     srcs = ["client.rs"],
-    cc_deps = [":client_cc"],
     edition = "2024",
+    deps = [":client_cc_rust"],
 )
 
 build_test(

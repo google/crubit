@@ -1,5 +1,6 @@
 """End-to-end example of using generated headers."""
 
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -17,11 +18,16 @@ crubit_test_cc_library(
     hdrs = ["generated_header.h"],
 )
 
+rust_api_from_cpp(
+    name = "generated_header_rust",
+    cpp_target = ":generated_header",
+)
+
 crubit_rust_test(
     name = "generated_header_test",
     srcs = ["generated_header_test.rs"],
-    cc_deps = [":generated_header"],
     deps = [
+        ":generated_header_rust",
         "@crate_index//:googletest",
     ],
 )

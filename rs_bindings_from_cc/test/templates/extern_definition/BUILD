@@ -1,5 +1,6 @@
 """End-to-end example of using type aliases to fully-instantiated templates."""
 
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -12,6 +13,11 @@ crubit_test_cc_library(
     deps = ["//support:annotations"],
 )
 
+rust_api_from_cpp(
+    name = "extern_definition_rust",
+    cpp_target = ":extern_definition",
+)
+
 crubit_test_cc_library(
     name = "actual_instantiation",
     hdrs = ["actual_instantiation.h"],
@@ -19,14 +25,17 @@ crubit_test_cc_library(
     deps = [":extern_definition"],
 )
 
+rust_api_from_cpp(
+    name = "actual_instantiation_rust",
+    cpp_target = ":actual_instantiation",
+)
+
 crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":actual_instantiation",
-        ":extern_definition",
-    ],
     deps = [
+        ":actual_instantiation_rust",
+        ":extern_definition_rust",
         "//support:cref",
         "@crate_index//:googletest",
     ],

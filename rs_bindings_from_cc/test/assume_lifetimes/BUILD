@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -23,6 +24,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "free_function_rust",
+    cpp_target = ":free_function",
+)
+
 golden_test(
     name = "free_function_golden_test",
     basename = "free_function",
@@ -34,10 +40,8 @@ golden_test(
 crubit_rust_test(
     name = "free_function_test",
     srcs = ["free_function_test.rs"],
-    cc_deps = [
-        ":free_function",
-    ],
     deps = [
+        ":free_function_rust",
         "//support:cref",
         "@crate_index//:googletest",
     ],
@@ -53,6 +57,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "member_function_rust",
+    cpp_target = ":member_function",
+)
+
 golden_test(
     name = "member_function_golden_test",
     basename = "member_function",
@@ -64,10 +73,8 @@ golden_test(
 crubit_rust_test(
     name = "member_function_test",
     srcs = ["member_function_test.rs"],
-    cc_deps = [
-        ":member_function",
-    ],
     deps = [
+        ":member_function_rust",
         "//support:cref",
         "@crate_index//:googletest",
     ],
@@ -83,6 +90,11 @@ crubit_test_cc_library(
     deps = [":test_annotations"],
 )
 
+rust_api_from_cpp(
+    name = "simple_string_view_rust",
+    cpp_target = ":simple_string_view",
+)
+
 golden_test(
     name = "simple_string_view_golden_test",
     basename = "simple_string_view",
@@ -94,10 +106,8 @@ golden_test(
 crubit_rust_test(
     name = "simple_string_view_test",
     srcs = ["simple_string_view_test.rs"],
-    cc_deps = [
-        ":simple_string_view",
-    ],
     deps = [
+        ":simple_string_view_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -111,6 +121,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "crefs_rust",
+    cpp_target = ":crefs",
+)
+
 golden_test(
     name = "crefs_golden_test",
     basename = "crefs",
@@ -122,10 +137,8 @@ golden_test(
 crubit_rust_test(
     name = "crefs_test",
     srcs = ["crefs_test.rs"],
-    cc_deps = [
-        ":crefs",
-    ],
     deps = [
+        ":crefs_rust",
         "//support:cref",
         "@crate_index//:googletest",
     ],
@@ -141,16 +154,24 @@ crubit_test_cc_library(
     deps = ["@abseil-cpp//absl/types:span"],
 )
 
+rust_api_from_cpp(
+    name = "assumed_span_rust",
+    cpp_target = ":assumed_span",
+)
+
+rust_api_from_cpp(
+    name = "span_rust",
+    cpp_target = "@abseil-cpp//absl/types:span",
+)
+
 crubit_rust_test(
     name = "assumed_span_test",
     srcs = ["assumed_span_test.rs"],
-    cc_deps = [
-        ":assumed_span",
-        "//support/cc_std",
-        "@abseil-cpp//absl/types:span",
-    ],
     deps = [
+        ":assumed_span_rust",
+        ":span_rust",
         "//support:cref",
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )
@@ -165,6 +186,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "string_view_rust",
+    cpp_target = ":string_view",
+)
+
 golden_test(
     name = "string_view_golden_test",
     basename = "string_view",
@@ -176,11 +202,9 @@ golden_test(
 crubit_rust_test(
     name = "string_view_test",
     srcs = ["string_view_test.rs"],
-    cc_deps = [
-        ":string_view",
-        "//support/cc_std",
-    ],
     deps = [
+        ":string_view_rust",
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )
@@ -195,6 +219,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "struct_with_lifetimebound_rust",
+    cpp_target = ":struct_with_lifetimebound",
+)
+
 golden_test(
     name = "struct_with_lifetimebound_golden_test",
     basename = "struct_with_lifetimebound",
@@ -206,13 +235,11 @@ golden_test(
 crubit_rust_test(
     name = "struct_with_lifetimebound_test",
     srcs = ["struct_with_lifetimebound_test.rs"],
-    cc_deps = [
-        ":struct_with_lifetimebound",
-        "//support/cc_std",
-    ],
     deps = [
+        ":struct_with_lifetimebound_rust",
         "//support:cref",
         "//support:ctor",
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )
@@ -227,6 +254,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "view_struct_with_lifetimebound_rust",
+    cpp_target = ":view_struct_with_lifetimebound",
+)
+
 golden_test(
     name = "view_struct_with_lifetimebound_golden_test",
     basename = "view_struct_with_lifetimebound",
@@ -238,13 +270,11 @@ golden_test(
 crubit_rust_test(
     name = "view_struct_with_lifetimebound_test",
     srcs = ["view_struct_with_lifetimebound_test.rs"],
-    cc_deps = [
-        ":view_struct_with_lifetimebound",
-        "//support/cc_std",
-    ],
     deps = [
+        ":view_struct_with_lifetimebound_rust",
         "//support:cref",
         "//support:ctor",
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )
@@ -271,6 +301,11 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "type_alias_rust",
+    cpp_target = ":type_alias",
+)
+
 golden_test(
     name = "type_alias_golden_test",
     basename = "type_alias",
@@ -282,12 +317,10 @@ golden_test(
 crubit_rust_test(
     name = "type_alias_test",
     srcs = ["type_alias_test.rs"],
-    cc_deps = [
-        ":type_alias",
-        "//support/cc_std",
-    ],
     deps = [
+        ":type_alias_rust",
         "//support:ctor",
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )

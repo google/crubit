@@ -1,16 +1,20 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
 
+rust_api_from_cpp(
+    name = "subdir2_rust",
+    cpp_target = "//rs_bindings_from_cc/test/cpp_reserved_target_name/subdir2",
+)
+
 # Tests that it's OK to include a Crubit-disabled cc_library named 'core' in transitive deps.
 crubit_rust_test(
     name = "test_crubit_disabled_cc_library_named_core_in_transitive_deps",
     srcs = ["test_crubit_disabled_cc_library_named_core_in_transitive_deps.rs"],
-    cc_deps = [
-        "//rs_bindings_from_cc/test/cpp_reserved_target_name/subdir2",
-    ],
     deps = [
+        ":subdir2_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -21,16 +25,19 @@ crubit_test_cc_library(
     hdrs = ["core.h"],
 )
 
+rust_api_from_cpp(
+    name = "core_rust",
+    cpp_target = ":core",
+)
+
 crubit_rust_test(
     name = "test_map_crubit_enabled_cc_library_named_core",
     srcs = ["test_map_crubit_enabled_cc_library_named_core.rs"],
-    cc_deps = [
-        ":core",
-    ],
     proc_macro_deps = [
         "//common:item_exists",
     ],
     deps = [
+        ":core_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -45,13 +52,16 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "core_user_rust",
+    cpp_target = ":core_user",
+)
+
 crubit_rust_test(
     name = "test_crubit_enabled_cc_library_named_core_in_transitive_deps",
     srcs = ["test_crubit_enabled_cc_library_named_core_in_transitive_deps.rs"],
-    cc_deps = [
-        ":core_user",
-    ],
     deps = [
+        ":core_user_rust",
         "@crate_index//:googletest",
     ],
 )

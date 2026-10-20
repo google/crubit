@@ -33,11 +33,16 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "lib_direct_rust",
+    cpp_target = ":lib_direct",
+)
+
 rust_library(
     name = "lib_with_two_direct_deps_with_same_name",
     srcs = ["direct.rs"],
-    cc_deps = [":lib_direct"],
     edition = "2024",
+    deps = [":lib_direct_rust"],
 )
 
 # Indirect dependency collision test
@@ -56,11 +61,16 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "lib_indirect_rust",
+    cpp_target = ":lib_indirect",
+)
+
 rust_library(
     name = "lib_with_indirect_deps_with_same_names",
     srcs = ["indirect.rs"],
-    cc_deps = [":lib_indirect"],
     edition = "2024",
+    deps = [":lib_indirect_rust"],
 )
 
 # Proto dependency collision test
@@ -73,11 +83,16 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "lib_proto_deps_rust",
+    cpp_target = ":lib_proto_deps",
+)
+
 rust_library(
     name = "lib_with_proto_deps_with_same_names",
     srcs = ["proto_deps.rs"],
-    cc_deps = [":lib_proto_deps"],
     edition = "2024",
+    deps = [":lib_proto_deps_rust"],
 )
 
 # Mixed dependency collision test (additional_rust_srcs + regular C++ deps)
@@ -90,11 +105,16 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "lib_mixed_deps_rust",
+    cpp_target = ":lib_mixed_deps",
+)
+
 rust_library(
     name = "lib_with_mixed_deps",
     srcs = ["mixed_deps.rs"],
-    cc_deps = [":lib_mixed_deps"],
     edition = "2024",
+    deps = [":lib_mixed_deps_rust"],
 )
 
 # Aspect hint dep test (cc_deps in aspect hint matches one of client's deps)
@@ -111,6 +131,11 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "lib_aspect_hint_dep_rust",
+    cpp_target = ":lib_aspect_hint_dep",
+)
+
 additional_rust_srcs_for_crubit_bindings(
     name = "aspect_hint_dep_extra_srcs",
     srcs = ["aspect_hint_dep_extra.rs"],
@@ -122,8 +147,8 @@ additional_rust_srcs_for_crubit_bindings(
 rust_library(
     name = "lib_with_aspect_hint_dep",
     srcs = ["aspect_hint_dep.rs"],
-    cc_deps = [":lib_aspect_hint_dep"],
     edition = "2024",
+    deps = [":lib_aspect_hint_dep_rust"],
 )
 
 # rust_api_from_cpp test: we have pair of a client and dep cc libraries,

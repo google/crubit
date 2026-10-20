@@ -1,6 +1,10 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_rust_test",
+)
 load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
@@ -174,10 +178,15 @@ NON_BUILDABLE_TEST = [
 
 BUILDABLE_TESTS = [name for name in TESTS if name not in NON_BUILDABLE_TEST]
 
+[rust_api_from_cpp(
+    name = name + "_cc_rust",
+    cpp_target = ":%s_cc" % name,
+) for name in BUILDABLE_TESTS]
+
 [crubit_rust_test(
     name = name + "_rs_test",
     srcs = ["empty_rs_test.rs"],
-    cc_deps = ["%s_cc" % name],
+    deps = [":%s_cc_rust" % name],
 ) for name in BUILDABLE_TESTS]
 
 cc_library(

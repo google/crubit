@@ -1,5 +1,6 @@
 """End-to-end test for default member functions."""
 
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -15,6 +16,11 @@ crubit_test_cc_library(
     hdrs = ["default_member_functions.h"],
 )
 
+rust_api_from_cpp(
+    name = "default_member_functions_rust",
+    cpp_target = ":default_member_functions",
+)
+
 golden_test(
     name = "default_member_functions_golden_test",
     basename = "default_member_functions",
@@ -26,10 +32,8 @@ golden_test(
 crubit_rust_test(
     name = "default_member_functions_test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":default_member_functions",
-    ],
     deps = [
+        ":default_member_functions_rust",
         "//support:ctor",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1

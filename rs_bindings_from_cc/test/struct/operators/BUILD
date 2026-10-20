@@ -1,6 +1,7 @@
 """End-to-end test for operators."""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -13,11 +14,16 @@ crubit_test_cc_library(
     aspect_hints = ["//features:experimental"],
 )
 
+rust_api_from_cpp(
+    name = "add_rust",
+    cpp_target = ":add",
+)
+
 crubit_rust_test(
     name = "add_test",
     srcs = ["add_test.rs"],
-    cc_deps = [":add"],
     deps = [
+        ":add_rust",
         "//support:ctor",
         "@crate_index//:googletest",
     ],
@@ -30,11 +36,16 @@ crubit_test_cc_library(
     aspect_hints = ["//features:experimental"],
 )
 
+rust_api_from_cpp(
+    name = "add_assign_rust",
+    cpp_target = ":add_assign",
+)
+
 crubit_rust_test(
     name = "add_assign_test",
     srcs = ["add_assign_test.rs"],
-    cc_deps = [":add_assign"],
     deps = [
+        ":add_assign_rust",
         "//support:ctor",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
@@ -48,11 +59,16 @@ crubit_test_cc_library(
     deps = ["//support:annotations"],
 )
 
+rust_api_from_cpp(
+    name = "rename_rust",
+    cpp_target = ":rename",
+)
+
 crubit_rust_test(
     name = "rename_test",
     srcs = ["rename_test.rs"],
-    cc_deps = [":rename"],
     deps = [
+        ":rename_rust",
         "//support:ctor",
         "@crate_index//:googletest",
     ],
@@ -64,6 +80,11 @@ crubit_test_cc_library(
     aspect_hints = ["//features:experimental"],
 )
 
+rust_api_from_cpp(
+    name = "foreign_lib_rust",
+    cpp_target = ":foreign_lib",
+)
+
 crubit_test_cc_library(
     name = "operators",
     srcs = ["operators.cc"],
@@ -72,14 +93,17 @@ crubit_test_cc_library(
     deps = [":foreign_lib"],
 )
 
+rust_api_from_cpp(
+    name = "operators_rust",
+    cpp_target = ":operators",
+)
+
 crubit_rust_test(
     name = "operators_test",
     srcs = ["operators_test.rs"],
-    cc_deps = [
-        ":foreign_lib",
-        ":operators",
-    ],
     deps = [
+        ":foreign_lib_rust",
+        ":operators_rust",
         "//support:ctor",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
@@ -99,11 +123,16 @@ crubit_test_cc_library(
     deps = [":operator_mixins"],
 )
 
+rust_api_from_cpp(
+    name = "inherited_operators_rust",
+    cpp_target = ":inherited_operators",
+)
+
 crubit_rust_test(
     name = "inherited_operators_test",
     srcs = ["inherited_operators_test.rs"],
-    cc_deps = [":inherited_operators"],
     deps = [
+        ":inherited_operators_rust",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
     ],

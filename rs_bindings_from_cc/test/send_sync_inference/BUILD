@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -18,13 +19,16 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "send_sync_inference_rust",
+    cpp_target = ":send_sync_inference",
+)
+
 crubit_rust_test(
     name = "send_sync_inference_test",
     srcs = ["send_sync_inference_test.rs"],
-    cc_deps = [
-        ":send_sync_inference",
-    ],
     deps = [
+        ":send_sync_inference_rust",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
     ],

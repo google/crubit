@@ -1,3 +1,4 @@
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -9,6 +10,11 @@ crubit_test_cc_library(
     aspect_hints = ["//features:experimental"],
 )
 
+rust_api_from_cpp(
+    name = "forward_declaration_rust",
+    cpp_target = ":forward_declaration",
+)
+
 crubit_test_cc_library(
     name = "definition",
     hdrs = [
@@ -18,6 +24,11 @@ crubit_test_cc_library(
     deps = [
         ":forward_declaration",
     ],
+)
+
+rust_api_from_cpp(
+    name = "definition_rust",
+    cpp_target = ":definition",
 )
 
 crubit_cc_test(
@@ -36,11 +47,9 @@ crubit_cc_test(
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [
-        ":definition",
-        ":forward_declaration",
-    ],
     deps = [
+        ":definition_rust",
+        ":forward_declaration_rust",
         "@crate_index//:googletest",
     ],
 )
@@ -61,10 +70,8 @@ crubit_test_cc_library(
 crubit_rust_test(
     name = "test_with_crubit_disabled",
     srcs = ["test_with_crubit_disabled.rs"],
-    cc_deps = [
-        ":definition_with_crubit_disabled",
-    ],
     deps = [
+        ":definition_with_crubit_disabled",
         "@crate_index//:googletest",
     ],
 )
@@ -85,13 +92,16 @@ crubit_test_cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "definition_with_crubit_disabled_in_deps_rust",
+    cpp_target = ":definition_with_crubit_disabled_in_deps",
+)
+
 crubit_rust_test(
     name = "test_with_crubit_disabled_in_deps",
     srcs = ["test_with_crubit_disabled_in_deps.rs"],
-    cc_deps = [
-        ":definition_with_crubit_disabled_in_deps",
-    ],
     deps = [
+        ":definition_with_crubit_disabled_in_deps_rust",
         "@crate_index//:googletest",
     ],
 )
