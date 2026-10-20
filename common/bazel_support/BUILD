@@ -18,6 +18,12 @@ bzl_library(
     visibility = ["//:__subpackages__"],
 )
 
+bzl_library(
+    name = "external_binaries_bzl",
+    srcs = ["external_binaries.bzl"],
+    visibility = ["//visibility:private"],
+)
+
 # FLAGS
 # =====
 #
