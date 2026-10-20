@@ -652,6 +652,9 @@ private_common_attrs = {
     "_globally_enabled_features": attr.label(
         default = "//common/bazel_support:globally_enabled_features",
     ),
+    "_globally_disabled_features": attr.label(
+        default = "//common/bazel_support:globally_disabled_features",
+    ),
     "_verbose_log_targets": attr.label(
         default = "//common/bazel_support:verbose_log_targets",
     ),
@@ -813,7 +816,7 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
         # namespaces.
         config = config,
         label = ctx.label,
-        features = [],
+        features = list(ctx.attr._globally_enabled_features[BuildSettingInfo].value),
         cli_flags = [],
         crate_name = crate_name,
         basename = basename,
@@ -823,6 +826,7 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
         proto_crate_renames = {},
         self_rmeta = None,
         is_golden_test_override = False,
+        target_denied_features = list(ctx.attr._globally_disabled_features[BuildSettingInfo].value),
     )
 
     dep_variant_info = _compile_rs_out_file(ctx, ctx.attr, bindings_info.rust_file, crate_name, [])

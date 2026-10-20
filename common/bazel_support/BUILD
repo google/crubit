@@ -42,6 +42,12 @@ string_list_flag(
 )
 
 string_list_flag(
+    name = "globally_disabled_features",
+    build_setting_default = [],
+    visibility = ["//visibility:public"],
+)
+
+string_list_flag(
     name = "template_blocklist_path_regex",
     build_setting_default = [],
     visibility = ["//visibility:public"],

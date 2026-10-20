@@ -85,6 +85,41 @@ def _denied_features_test_impl(ctx):
         denied_features_for_test(lbl, [_hint("some/other/package", "feature_a")], denylists),
     )
 
+    # `globally_enabled_features` overrides both `denylists` and `globally_disabled_features`.
+    asserts.equals(
+        env,
+        set(["feature_b"]),
+        denied_features_for_test(
+            lbl,
+            [],
+            denylists,
+            globally_enabled_features = ["feature_a"],
+            globally_disabled_features = ["feature_a"],
+        ),
+    )
+
+    # `globally_disabled_features` denies features on any target unless explicitly opted in.
+    asserts.equals(
+        env,
+        set(["feature_c"]),
+        denied_features_for_test(
+            other,
+            [],
+            denylists,
+            globally_disabled_features = ["feature_c"],
+        ),
+    )
+    asserts.equals(
+        env,
+        set(),
+        denied_features_for_test(
+            other,
+            [_hint("features", "feature_c")],
+            denylists,
+            globally_disabled_features = ["feature_c"],
+        ),
+    )
+
     return unittest.end(env)
 
 denied_features_test = unittest.make(_denied_features_test_impl)

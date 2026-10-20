@@ -397,6 +397,9 @@ bindings_attrs = {
     "_globally_enabled_features": attr.label(
         default = "//common/bazel_support:globally_enabled_features",
     ),
+    "_globally_disabled_features": attr.label(
+        default = "//common/bazel_support:globally_disabled_features",
+    ),
     "_template_blocklist_path_regex": attr.label(
         default = "//common/bazel_support:template_blocklist_path_regex",
     ),
