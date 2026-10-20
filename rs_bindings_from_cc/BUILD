@@ -621,6 +621,7 @@ multiplatform_rust_test(
     name = "ir_from_cc_test",
     timeout = "long",
     srcs = ["ir_from_cc_test.rs"],
+    shard_count = 4,
     tags = [
         "not_run:arm",
         "not_run:mac",
