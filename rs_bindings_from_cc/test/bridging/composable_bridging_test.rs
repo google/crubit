@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use composable_bridging_lib::*;
-use googletest::matchers::{eq, ok};
-use googletest::{assert_that, expect_eq, expect_false, expect_that, expect_true, gtest};
+use googletest::prelude::*;
 
 #[gtest]
 fn test_vec3() {
@@ -90,10 +89,7 @@ fn test_return_slice_ref_string_view() {
 #[gtest]
 fn test_status_of_pointer_is_bridged() {
     let result = AcceptsVoidPtrAndReturnsStatusErrorIfNull(core::ptr::null_mut());
-    expect_that!(
-        result,
-        status_rs_matchers::status_is(status::absl::StatusCodeError::INVALID_ARGUMENT)
-    );
+    expect_that!(result, status_is(status::absl::StatusCodeError::INVALID_ARGUMENT));
 
     let mut thing = true;
     let void_ptr: *mut core::ffi::c_void = &raw mut thing as *mut _;
@@ -105,10 +101,7 @@ fn test_status_of_pointer_is_bridged() {
 fn test_status_of_slice_ref_is_bridged_as_slice_ptr() {
     let empty_slice: &[core::ffi::c_int] = &[];
     let result = AcceptsSliceAndReturnsStatusErrorIfEmpty(empty_slice as *const _);
-    expect_that!(
-        result,
-        status_rs_matchers::status_is(status::absl::StatusCodeError::INVALID_ARGUMENT)
-    );
+    expect_that!(result, status_is(status::absl::StatusCodeError::INVALID_ARGUMENT));
 
     let non_empty_slice: &[core::ffi::c_int] = &[1, 2, 3];
     let result = AcceptsSliceAndReturnsStatusErrorIfEmpty(non_empty_slice as *const _);
