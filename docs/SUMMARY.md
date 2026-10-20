@@ -14,10 +14,6 @@
 -   [`absl::Status`](./types/absl_status.md)
 -   [Protobuf](./types/protobuf.md)
 
---------------------------------------------------------------------------------
-
--   [Visibility](./types/visibility.md)
-
 ## C++ Bindings for Rust Libraries
 
 -   [Overview](./rust/index.md)
