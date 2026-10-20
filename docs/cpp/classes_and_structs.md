@@ -173,7 +173,7 @@ To get inherited methods, add `//features:oo_casting` to the
     `//support:oops`.
 
 The tests in
-[`rs_bindings_from_cc/test/struct/inheritance/`](/rs_bindings_from_cc/test/struct/inheritance/)
+[`rs_bindings_from_cc/test/struct/inheritance/`](http://rs_bindings_from_cc/test/struct/inheritance/)
 show both.
 
 Without `oo_casting`, add a method to the derived class in C++ that forwards to
@@ -203,7 +203,7 @@ it doesn't override are [inherited methods](#inherited_methods).
 Overriding a C++ virtual method in Rust, or otherwise implementing a C++
 interface in Rust, is not supported. The workaround is a C++ subclass that
 forwards to a Rust type; see
-[`examples/cpp/virtual/`](/examples/cpp/virtual/).
+[`examples/cpp/virtual/`](https://github.com/google/crubit/tree/main/examples/cpp/virtual/).
 
 ## Attributes {#attributes}
 

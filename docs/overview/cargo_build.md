@@ -10,7 +10,7 @@ the same `rustc` that compiles the crates it generates bindings for. See
 [Toolchain requirements](build_systems.md#toolchain-requirements) for supported
 toolchains and setup instructions.
 
-## cc_bindings_from_rs
+## cc_bindings_from_rs {#cc_bindings_from_rs}
 
 In a Crubit checkout, `rustup` automatically selects the nightly toolchain from
 `rust-toolchain.toml`, and you can build `cc_bindings_from_rs` with Cargo:

@@ -241,7 +241,7 @@ both languages, especially on multiplatform codebases.
 : to               :     :                       :                                  :
 : monomorphization :     :                       :                                  :
 : time.            :     :                       :                                  :
-| Instantiate      | x   | [Medium](#mediun){.😑} | [**Confidence:                   |
+| Instantiate      | x   | [Medium](#medium){.😑} | [**Confidence:                   |
 : generic Rust     :     :                       : Uncertain**](#uncertain){.🙁}     :
 : types and        :     :                       :                                  :
 : functions from   :     :                       :                                  :

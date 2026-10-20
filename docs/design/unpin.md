@@ -49,7 +49,7 @@ the overloaded C++ assignment operator or constructor.
 Note that not every object with an `Unpin` type is actually safe to hold in a
 mutable reference. Objects with live aliases still must not be used with `&mut`,
 and "potentially overlapping objects" can produce unexpected behavior in Rust.
-(See [Reference Safety](#reference_safety).)
+(See [Reference Safety](#reference-safety).)
 
 ## Rust-movable types
 

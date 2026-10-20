@@ -7,6 +7,7 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
+  pull_request:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -30,6 +31,7 @@ jobs:
     env:
       MDBOOK_VERSION: 0.5.2
       MDBOOK_TABS_VERSION: 0.3.4
+      MDBOOK_LINKCHECK_VERSION: 0.7.7
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -40,18 +42,28 @@ jobs:
           rustup update
           cargo install --version ${MDBOOK_VERSION} mdbook
           cargo install --version ${MDBOOK_TABS_VERSION} mdbook-tabs
+          cargo install --version ${MDBOOK_LINKCHECK_VERSION} mdbook-linkcheck
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - name: Build with mdBook
-        run: mdbook build
+        id: build
+        run: |
+          mdbook build
+          if [ -d ./book/html ]; then
+            echo "book_path=./book/html" >> "$GITHUB_OUTPUT"
+          else
+            echo "book_path=./book" >> "$GITHUB_OUTPUT"
+          fi
       - name: Upload artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
-          path: ./book
+          path: ${{ steps.build.outputs.book_path }}
 
   # Deployment job
   deploy:
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
