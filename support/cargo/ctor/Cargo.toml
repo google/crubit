@@ -1,0 +1,25 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "ctor"
+version = "0.1.0"
+description = "In-place construction of C++ objects from Rust."
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+path = "../../ctor.rs"
+
+[dependencies]
+ctor_proc_macros = { path = "../ctor_proc_macros" }
+
+[features]
+default = ["same_abi"]
+same_abi = []
+
+[dev-dependencies]
+googletest.workspace = true
