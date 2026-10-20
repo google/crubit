@@ -672,6 +672,7 @@ pub fn generated_items_to_tokens<'db>(
                     delete,
                     owned_ptr_config,
                     member_methods,
+                    trait_impls,
                     free_functions,
                     lifetime_params,
                     is_thread_safe,
@@ -876,6 +877,8 @@ pub fn generated_items_to_tokens<'db>(
                     #associated_consts_impl
 
                     #member_methods_impl
+
+                    #( #trait_impls )*
 
                     #owned_type_def
 
@@ -1292,6 +1295,7 @@ pub struct Record {
     /// CRUBIT_OWNED_POINTEE.
     pub owned_ptr_config: Option<OwnedPtrConfig>,
     pub member_methods: Vec<TokenStream>,
+    pub trait_impls: Vec<TokenStream>,
     pub free_functions: Vec<TokenStream>,
     pub lifetime_params: Vec<syn::Lifetime>,
     /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
