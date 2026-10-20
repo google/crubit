@@ -68,7 +68,12 @@ def compile_cc(
     # TODO(b/468327990): Make this portable in OSS.
     backrefs_flag = []
     if "linux" in cc_toolchain.target_gnu_system_name:
-        backrefs_flag.append("-Wl,--warn-backrefs-exclude=*/{package}/lib{target}-*".format(package = ctx.label.package, target = escape_cpp_target_name(ctx.label.package, ctx.label.name)))
+        target = escape_cpp_target_name(ctx.label.package, ctx.label.name)
+        backrefs_flag.append("-Wl,--warn-backrefs-exclude=*/{package}/lib{target}-*".format(package = ctx.label.package, target = target))
+
+        # With ThinLTO, the crate is linked as a bare object (`{target}-{hash}.o`, or
+        # `{target}-{hash}.indexing.o` during LTO indexing) rather than as an rlib.
+        backrefs_flag.append("-Wl,--warn-backrefs-exclude=*/{package}/{target}-*".format(package = ctx.label.package, target = target))
 
     (linking_context, _) = cc_common.create_linking_context_from_compilation_outputs(
         name = src.basename,

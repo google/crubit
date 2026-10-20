@@ -273,7 +273,6 @@ def generate_and_compile_bindings(
         # the .dat file with the underlying cc_library. Once bazel supports baseline_coverage.dat
         # for aspects, we can remove this option.
         include_coverage = False,
-        allow_lto = False,
         aliases = aliases,
         remap_path_prefix = remap_paths,
         extra_named_deps = extra_named_deps,
