@@ -2398,6 +2398,35 @@ fn test_infer_send_sync_honors_explicit_annotations() -> Result<()> {
 }
 
 #[gtest]
+fn test_raw_string_view_is_send_sync() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename T> struct char_traits {};
+        template <typename T, typename Traits = char_traits<T>>
+        struct basic_string_view;
+        using string_view = basic_string_view<char>;
+        template <typename T, typename Traits>
+        struct [[clang::preferred_name(string_view)]] basic_string_view {};
+        template struct basic_string_view<char>;
+        }
+    "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    assert_rs_matches!(rs_api, quote! { unsafe impl Send for raw_string_view {} });
+    assert_rs_matches!(rs_api, quote! { unsafe impl Sync for raw_string_view {} });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            static_assertions::assert_impl_all!(crate::std::raw_string_view: Copy, Clone, Send, Sync);
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_impl_debug() -> Result<()> {
     let proto = ir_proto_from_record_impl_debug_cc("struct S { int x; };")?;
     let ir = make_test_ir(&proto)?;

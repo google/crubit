@@ -39,6 +39,11 @@ pub struct string_view<'a> {
     phantom_data: core::marker::PhantomData<&'a ()>,
 }
 
+// SAFETY: `string_view<'a>` is live and immutable for `'a` (semantically equivalent to `&'a [u8]`),
+// so it is safe to send and share across threads.
+unsafe impl Send for string_view<'_> {}
+unsafe impl Sync for string_view<'_> {}
+
 impl<'a> string_view<'a> {
     pub fn as_raw(&self) -> &raw_string_view {
         &self.raw

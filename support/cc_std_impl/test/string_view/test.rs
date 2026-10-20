@@ -12,6 +12,12 @@ use string_view_cc_apis::crubit_string_view::GetHelloWorld;
 use string_view_cc_apis::crubit_string_view::GetInvalidUTF;
 use string_view_cc_apis::crubit_string_view::Identity;
 
+const _: () = {
+    const fn assert_send_sync<T: Send + Sync>() {}
+    assert_send_sync::<string_view<'_>>();
+    assert_send_sync::<raw_string_view>();
+};
+
 /// Converts a raw_string_view to a &'static str.
 ///
 /// SAFETY: Behavior is undefined if the raw_string_view has an invalid pointer,
@@ -119,16 +125,9 @@ fn test_len_livetype() {
 static TEST_LITERAL: &'static str = "static string";
 
 fn get_static_string_view() -> &'static raw_string_view {
-    struct SendSyncStringView(raw_string_view);
-    // SAFETY: only used to share a specific string_view, which
-    // can be safely shared across threads because it's immutable.
-    unsafe impl Send for SendSyncStringView {}
-    unsafe impl Sync for SendSyncStringView {}
+    static STATIC_STRING: LazyLock<raw_string_view> = LazyLock::new(|| TEST_LITERAL.into());
 
-    static STATIC_STRING: LazyLock<SendSyncStringView> =
-        LazyLock::new(|| SendSyncStringView(TEST_LITERAL.into()));
-
-    &STATIC_STRING.0
+    &STATIC_STRING
 }
 
 #[gtest]

@@ -372,14 +372,17 @@ fn field_definition<'a>(
 /// Returns the `Send` or `Sync` impl to emit for a record, given the polarity from its C++
 /// annotations.
 ///
-/// Explicit annotations are always honored. Without one, the trait is negatively implemented,
-/// unless `infer_send_sync` is enabled, in which case no impl is emitted and rustc infers the trait
-/// from the fields.
+/// Explicit annotations are always honored. Without one, `raw_string_view` is positively
+/// implemented (it is a read-only byte slice view whose bytes can only be accessed via `unsafe`),
+/// and other records are negatively implemented unless `infer_send_sync` is enabled, in which case
+/// no impl is emitted and rustc infers the trait from the fields.
 fn send_sync_impl_polarity(
+    record: &Record,
     annotated: TraitImplPolarity,
     infer_send_sync: bool,
 ) -> TraitImplPolarity {
     match annotated {
+        TraitImplPolarity::None if record.is_raw_string_view() => TraitImplPolarity::Positive,
         TraitImplPolarity::None if !infer_send_sync => TraitImplPolarity::Negative,
         other => other,
     }
@@ -910,8 +913,8 @@ pub fn generate_record<'a>(
         head_padding,
         head_padding_do_not_auto_impl_send_sync,
         field_definitions,
-        send: send_sync_impl_polarity(record.trait_derives().send, infer_send_sync),
-        sync: send_sync_impl_polarity(record.trait_derives().sync, infer_send_sync),
+        send: send_sync_impl_polarity(&record, record.trait_derives().send, infer_send_sync),
+        sync: send_sync_impl_polarity(&record, record.trait_derives().sync, infer_send_sync),
         cxx_impl,
         incomplete_definition,
         upcast_impls,
@@ -951,7 +954,11 @@ pub fn generate_record<'a>(
         } else {
             assert_not_impls |= AssertableTrait::Drop;
         }
-        // Assert `Send`/`Sync` when they are explicitly annotated, rather than inferred.
+        // Assert `Send`/`Sync` when they are explicitly annotated (or special-cased for
+        // `raw_string_view`), rather than inferred.
+        if record.is_raw_string_view() {
+            assert_impls |= AssertableTrait::Send | AssertableTrait::Sync;
+        }
         for (polarity, assertable) in [
             (record.trait_derives().send, AssertableTrait::Send),
             (record.trait_derives().sync, AssertableTrait::Sync),
