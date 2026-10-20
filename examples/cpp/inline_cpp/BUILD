@@ -30,6 +30,7 @@ rust_library_with_embedded_cpp(
         "@abseil-cpp//absl/strings",
         "//support/rs_std:str_ref",
     ],
+    deps = ["//support:ctor"],
 )
 
 rust_library_with_embedded_cpp(

@@ -45,6 +45,13 @@ SUPPORTED_FEATURE_DENYLISTS = {
         "//rs_bindings_from_cc/test/templates/allowlist/...",
         "//support/cc_std_impl/test/string_view/...",
     ],
+    "layout_compat_string": [
+        # buildifier: keep sorted <internal link>
+        "//rs_bindings_from_cc/test/bridging:composable_bridging_lib",
+        "//rs_bindings_from_cc/test/bridging:string_test_lib",
+        "//rs_bindings_from_cc/test/wrapper/fallback_bridge_types:wrapper_library",
+        "//support/cc_std_impl/test/string:test_helpers",
+    ],
     "always_specialize_generics_in_cpp_api_from_rust": [
         "//cc_bindings_from_rs/test/bridging/composable:composable_bridging",
     ],
