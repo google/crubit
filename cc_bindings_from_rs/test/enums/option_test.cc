@@ -318,4 +318,24 @@ TEST(OptionTest, EqualityComparison) {
   EXPECT_NE(none_u8, 42);
 }
 
+TEST(OptionTest, ExplicitOperatorBoolAndImplicitNullopt) {
+  const rs_std::Option<uint8_t> some_42(uint8_t{42});
+  const rs_std::Option<uint8_t> none_u8 = std::nullopt;
+
+  EXPECT_TRUE(static_cast<bool>(some_42));
+  EXPECT_FALSE(static_cast<bool>(none_u8));
+  if (some_42) {
+    // Expected.
+  } else {
+    FAIL() << "some_42 should be truthy";
+  }
+  if (none_u8) {
+    FAIL() << "none_u8 should be falsy";
+  }
+
+  bool cond = false;
+  rs_std::Option<uint8_t> ternary_opt = cond ? some_42 : std::nullopt;
+  EXPECT_FALSE(ternary_opt.has_value());
+}
+
 }  // namespace

@@ -55,9 +55,10 @@ class OptionBase {
   using value_type = T;
 
   constexpr OptionBase() noexcept { derived().set_none_tag(); }
-  explicit constexpr OptionBase(::std::nullopt_t) noexcept {
-    derived().set_none_tag();
-  }
+  // Intentionally implicit to support `return std::nullopt;` and ternary
+  // expressions (`cond ? opt : std::nullopt`), mirroring `std::optional<T>`.
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  constexpr OptionBase(::std::nullopt_t) noexcept { derived().set_none_tag(); }
   constexpr OptionBase& operator=(::std::nullopt_t) noexcept {
     reset();
     derived().set_none_tag();
@@ -166,6 +167,7 @@ class OptionBase {
   }
 
   bool has_value() const noexcept { return !derived().is_none(); }
+  explicit operator bool() const noexcept { return has_value(); }
   void check_has_value() const {
     CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Option";
   }
