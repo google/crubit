@@ -79,20 +79,35 @@ def _has_explicit_opt_in(aspect_hints, features):
             return True
     return False
 
-def _denied_features(label, aspect_hints, denylists):
-    return set([
+def _denied_features(
+        label,
+        aspect_hints,
+        denylists,
+        globally_enabled_features = [],
+        globally_disabled_features = []):
+    denied = [
         feature
         for feature, patterns in denylists.items()
-        if _matches_any_pattern(label, patterns) and not _has_explicit_opt_in(aspect_hints, (feature,))
-    ])
+        if feature not in globally_enabled_features and
+           _matches_any_pattern(label, patterns) and
+           not _has_explicit_opt_in(aspect_hints, (feature,))
+    ] + [
+        feature
+        for feature in globally_disabled_features
+        if feature not in globally_enabled_features and
+           not _has_explicit_opt_in(aspect_hints, (feature,))
+    ]
+    return set(denied)
 
 denied_features_for_test = _denied_features
 
 def find_denied_crubit_features(target, aspect_ctx):
-    """Returns the features in `SUPPORTED_FEATURE_DENYLISTS` which are denied for a target.
+    """Returns the features which are denied for a target.
 
-    A feature is denied if the target matches one of the feature's denylist patterns, and the
-    target doesn't explicitly opt in to the feature with the feature's own aspect hint.
+    A feature is denied if the target matches one of the feature's denylist patterns in
+    `SUPPORTED_FEATURE_DENYLISTS` (or the feature is in `globally_disabled_features`), the feature
+    is not in `globally_enabled_features`, and the target doesn't explicitly opt in to the feature
+    with the feature's own aspect hint.
 
     Args:
         target: The target, as seen in aspect_hint.
@@ -101,7 +116,13 @@ def find_denied_crubit_features(target, aspect_ctx):
     Returns:
         A set of feature strings.
     """
-    return _denied_features(target.label, aspect_ctx.rule.attr.aspect_hints, SUPPORTED_FEATURE_DENYLISTS)
+    return _denied_features(
+        target.label,
+        aspect_ctx.rule.attr.aspect_hints,
+        SUPPORTED_FEATURE_DENYLISTS,
+        aspect_ctx.attr._globally_enabled_features[BuildSettingInfo].value,
+        aspect_ctx.attr._globally_disabled_features[BuildSettingInfo].value,
+    )
 
 def find_crubit_features(target, aspect_ctx):
     """Returns the set of Crubit features enabled on a target.
@@ -113,10 +134,18 @@ def find_crubit_features(target, aspect_ctx):
     Returns:
         A list of feature strings.
     """
-    features = list(aspect_ctx.attr._globally_enabled_features[BuildSettingInfo].value)
+    features = []
     _add_features(features, target)
     for hint in aspect_ctx.rule.attr.aspect_hints:
         _add_features(features, hint)
+    globally_enabled = aspect_ctx.attr._globally_enabled_features[BuildSettingInfo].value
+    if features or aspect_ctx.rule.kind.startswith("rust_") or any([
+        f in globally_enabled
+        for f in ("supported", "types", "experimental", "all")
+    ]):
+        for feature in globally_enabled:
+            if feature not in features:
+                features.append(feature)
     denied = find_denied_crubit_features(target, aspect_ctx)
     features = [f for f in features if f not in denied]
     return sorted(features)
