@@ -212,14 +212,25 @@ fn generate_constant<'a>(
     constant: &Constant<'a>,
 ) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Constant);
-    // For array constants, this is the innermost element type.
-    let type_ = db.rs_type_kind(constant.type_().clone())?;
-    let type_tokens = type_.to_token_stream(db);
     let type_and_value = match constant.value() {
         ConstantValue::Integer(value) => {
+            let type_ = db.rs_type_kind(constant.type_().unwrap().clone())?;
+            let type_tokens = type_.to_token_stream(db);
             integer_constant_to_token_stream(db, value, &type_).map(|value| (type_tokens, value))
         }
-        ConstantValue::Array(array) => array_value_to_tokens(db, array, &type_, &type_tokens),
+        ConstantValue::Array(array) => {
+            // For array constants, `type_` is the innermost element type.
+            let type_ = db.rs_type_kind(constant.type_().unwrap().clone())?;
+            let type_tokens = type_.to_token_stream(db);
+            array_value_to_tokens(db, array, &type_, &type_tokens)
+        }
+        ConstantValue::StringView(bytes) => match core::str::from_utf8(bytes) {
+            Ok(s) => Ok((quote! { &'static str }, quote! { #s })),
+            Err(_) => {
+                let literal = proc_macro2::Literal::byte_string(bytes);
+                Ok((quote! { &'static [u8] }, quote! { #literal }))
+            }
+        },
     };
     let (type_tokens, value) = match type_and_value {
         Ok(type_and_value) => type_and_value,

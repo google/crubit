@@ -486,6 +486,8 @@ message Constant {
     IntegerConstant value = 1;
     // A C-style array of integer or boolean values.
     ArrayValue array_value = 14;
+    // A string view value (`std::string_view` or `absl::string_view`).
+    bytes string_view_value = 15;
   }
   Identifier cc_name = 2;
   Identifier rs_name = 3;
@@ -493,8 +495,10 @@ message Constant {
   uint64 id = 5;
   string owning_target = 6;
   string source_loc = 7;
-  // The type of the constant. For array constants (`array_value`), this is
-  // the innermost element type of the array.
+  // The type of the constant. Set for `value` (the scalar type) and
+  // `array_value` (the innermost element type); unset for
+  // `string_view_value`, whose Rust type is determined from the bytes
+  // (`&'static str` if valid UTF-8, otherwise `&'static [u8]`).
   CcType type = 8;
   string unknown_attr = 9;
   uint64 enclosing_item_id = 10;

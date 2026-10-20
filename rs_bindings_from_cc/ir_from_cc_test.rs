@@ -6904,6 +6904,178 @@ fn test_top_level_constexpr_array_with_unrepresentable_element() {
     );
 }
 
+const MOCK_STD_STRING_VIEW: &str = r#"
+    namespace std {
+    template <typename T>
+    struct char_traits {};
+
+    template <typename T, typename Traits = char_traits<T>>
+    class basic_string_view {
+     public:
+      constexpr basic_string_view() : data_(nullptr), size_(0) {}
+      constexpr basic_string_view(const T* s)
+          : data_(s), size_(__builtin_strlen(s)) {}
+      constexpr basic_string_view(const T* s, unsigned long count)
+          : data_(s), size_(count) {}
+      constexpr basic_string_view substr(unsigned long pos, unsigned long count) const {
+        return basic_string_view(data_ + pos, count);
+      }
+      constexpr const T* data() const { return data_; }
+      constexpr unsigned long size() const { return size_; }
+
+     private:
+      const T* data_;
+      unsigned long size_;
+    };
+
+    using string_view = basic_string_view<char>;
+    using wstring_view = basic_string_view<wchar_t>;
+    }  // namespace std
+"#;
+
+#[gtest]
+fn test_top_level_constexpr_std_string_view() {
+    let proto = ir_proto_from_cc(&format!(
+        r#"
+        {MOCK_STD_STRING_VIEW}
+        constexpr std::string_view kHello = "hello";
+        constexpr std::string_view kDefaultEmpty;
+        constexpr std::string_view kWithEmbeddedNul("a\0b", 3);
+        constexpr std::string_view kSubstring = kHello.substr(1, 3);
+        constexpr char kCharArray[] = "world";
+        constexpr std::string_view kFromCharArray = kCharArray;
+        constexpr std::string_view kNonUtf8 = "\xff";
+        struct HasCharArray {{ char chars[4]; }};
+        constexpr HasCharArray kHasCharArray = {{"abc"}};
+        constexpr std::string_view kFromMemberArray(kHasCharArray.chars + 1, 2);
+        "#
+    ))
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let string_views: Vec<(&str, &[u8])> = ir
+        .constants()
+        .filter_map(|c| match c.value() {
+            ir::ConstantValue::StringView(bytes) => Some((c.cc_name().as_str(), bytes)),
+            _ => None,
+        })
+        .collect();
+    expect_eq!(
+        string_views,
+        vec![
+            ("kHello", &b"hello"[..]),
+            ("kDefaultEmpty", &b""[..]),
+            ("kWithEmbeddedNul", &b"a\0b"[..]),
+            ("kSubstring", &b"ell"[..]),
+            ("kFromCharArray", &b"world"[..]),
+            ("kNonUtf8", &b"\xff"[..]),
+            ("kFromMemberArray", &b"bc"[..]),
+        ]
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_standalone_absl_string_view() {
+    // The contents are read through `data()` and `size()`, so the private layout doesn't matter.
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace absl {
+        inline namespace lts_1 {
+        class string_view {
+         public:
+          constexpr string_view(const char* s)
+              : size_(__builtin_strlen(s)), ptr_(s) {}
+          constexpr const char* data() const { return ptr_; }
+          constexpr unsigned long size() const { return size_; }
+
+         private:
+          unsigned long size_;
+          const char* ptr_;
+        };
+        }  // namespace lts_1
+        }  // namespace absl
+
+        constexpr absl::string_view x = "absl";
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let constant = expect_constant(&ir);
+    expect_eq!(constant.cc_name(), "x");
+    expect_eq!(constant.value(), ir::ConstantValue::StringView(b"absl"));
+}
+
+#[gtest]
+fn test_top_level_constexpr_wstring_view_is_unsupported() {
+    let proto = ir_proto_from_cc(&format!(
+        r#"
+        {MOCK_STD_STRING_VIEW}
+        constexpr std::wstring_view x(L"wide", 4);
+        "#
+    ))
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    expect_eq!(ir.constants().count(), 0);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "x", ...
+            errors: [FormattedError {
+                ... message: "only boolean, integer, and string_view constexpr variables are supported", ...
+            }], ...
+        }}
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_string_view_array_is_unsupported() {
+    let proto = ir_proto_from_cc(&format!(
+        r#"
+        {MOCK_STD_STRING_VIEW}
+        constexpr std::string_view x[] = {{"a", "b"}};
+        "#
+    ))
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    expect_eq!(ir.constants().count(), 0);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "x", ...
+            errors: [FormattedError {
+                ... message: "only C-style arrays of boolean and integer elements are supported", ...
+            }], ...
+        }}
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_string_view_from_mutable_array_is_unsupported() {
+    let proto = ir_proto_from_cc(&format!(
+        r#"
+        {MOCK_STD_STRING_VIEW}
+        char mutable_buf[] = "hello";
+        constexpr std::string_view x(mutable_buf, 5);
+        "#
+    ))
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    expect_eq!(ir.constants().count(), 0);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "x", ...
+            errors: [FormattedError {
+                ... message: "string_view constant does not refer to constant characters", ...
+            }], ...
+        }}
+    );
+}
+
 #[gtest]
 fn test_anonymous_enum() {
     let proto = ir_proto_from_cc("enum { kFoo = 1, kBar = 2 };").unwrap();

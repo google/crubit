@@ -96,6 +96,7 @@ cc_library(
         "@abseil-cpp//absl/types:span",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
+        "@llvm-project//clang:sema",
         "@llvm-project//llvm:Support",
     ],
 )

@@ -19,6 +19,7 @@
 #include "absl/types/span.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/ast_util.h"
+#include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/APValue.h"
 #include "clang/AST/ASTContext.h"
@@ -26,9 +27,16 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/DeclarationName.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/TypeBase.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/Specifiers.h"
+#include "clang/Sema/DeclSpec.h"
+#include "clang/Sema/Ownership.h"
+#include "clang/Sema/Sema.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 
 namespace crubit {
@@ -189,6 +197,91 @@ absl::Status ConvertArrayValue(const clang::APValue& value,
         ConvertIntegerElement(*filler, *elements->mutable_filler()));
   }
   return absl::OkStatus();
+}
+
+// Returns true if `type` is `std::string_view`
+// (`std::basic_string_view<char, std::char_traits<char>>`) or
+// `absl::string_view` (including when `ABSL_USES_STD_STRING_VIEW` is 0).
+bool IsStringViewType(const clang::ASTContext& ast_context,
+                      clang::QualType type) {
+  const clang::CXXRecordDecl* record_decl = type->getAsCXXRecordDecl();
+  if (record_decl == nullptr) {
+    return false;
+  }
+  std::optional<llvm::StringRef> top_level_namespace =
+      AsTopLevelNamespace(record_decl->getDeclContext());
+  if (const auto* specialization =
+          llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(record_decl)) {
+    if (top_level_namespace != "std" ||
+        specialization->getName() != "basic_string_view") {
+      return false;
+    }
+    absl::StatusOr<clang::QualType> char_type = ParameterizedByTAndStdTraitT(
+        ast_context, specialization, "char_traits");
+    // Unlike `TemplateSpecialization::StdStringView`, only plain `char` (not
+    // `signed char` or `unsigned char`) is treated as text.
+    return char_type.ok() && IsPlainChar(*char_type);
+  }
+  return top_level_namespace == "absl" &&
+         record_decl->getName() == "string_view";
+}
+
+// Returns the contents of `var_decl`, a constant `std::string_view` or
+// `absl::string_view`, by constant-evaluating `var_decl.data()` and
+// `var_decl.size()`.
+//
+// This is how Clang evaluates user-generated `static_assert` messages (see
+// `Sema::EvaluateAsString`), except that failures are returned as errors
+// instead of being diagnosed. Using the public `data()` and `size()` API keeps
+// this independent of the standard library's private layout, and the constant
+// evaluator accepts any constant characters (string literals, `constexpr`
+// arrays, substrings, ...) and rejects anything else.
+absl::StatusOr<std::string> EvaluateStringViewContents(
+    ImportContext& ictx, clang::VarDecl& var_decl) {
+  clang::Sema& sema = ictx.sema_;
+  clang::ASTContext& ast_context = ictx.ctx_;
+  const clang::SourceLocation loc = var_decl.getLocation();
+  FakeTUScope tu_scope(ictx);
+  // Errors while building the calls below (e.g. a missing or inaccessible
+  // member) are trapped here instead of being reported to the user.
+  clang::Sema::SFINAETrap trap(sema);
+
+  clang::Expr* string_view_ref =
+      sema.BuildDeclRefExpr(&var_decl, var_decl.getType().getNonReferenceType(),
+                            clang::VK_LValue, loc);
+  auto build_member_call = [&](llvm::StringRef name) -> clang::Expr* {
+    clang::CXXScopeSpec scope_spec;
+    clang::ExprResult member = sema.BuildMemberReferenceExpr(
+        string_view_ref, string_view_ref->getType(), loc, /*IsArrow=*/false,
+        scope_spec, /*TemplateKWLoc=*/clang::SourceLocation(),
+        /*FirstQualifierInScope=*/nullptr,
+        clang::DeclarationNameInfo(&ast_context.Idents.get(name), loc),
+        /*TemplateArgs=*/nullptr, /*S=*/nullptr);
+    if (member.isInvalid()) {
+      return nullptr;
+    }
+    clang::ExprResult call =
+        sema.BuildCallExpr(/*S=*/nullptr, member.get(), loc, {}, loc);
+    return call.isInvalid() ? nullptr : call.get();
+  };
+  clang::Expr* data_call = build_member_call("data");
+  clang::Expr* size_call = build_member_call("size");
+  if (trap.hasErrorOccurred() || data_call == nullptr || size_call == nullptr ||
+      !data_call->getType()->isPointerType() ||
+      !IsPlainChar(data_call->getType()->getPointeeType()) ||
+      !size_call->getType()->isIntegerType()) {
+    return absl::InvalidArgumentError(
+        "string_view constant has no usable `data()` and `size()`");
+  }
+
+  std::string contents;
+  clang::Expr::EvalResult eval_result;
+  if (!string_view_ref->EvaluateCharRangeAsString(
+          contents, size_call, data_call, ast_context, eval_result)) {
+    return absl::InvalidArgumentError(
+        "string_view constant does not refer to constant characters");
+  }
+  return contents;
 }
 
 }  // namespace
@@ -371,15 +464,17 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
     value_type = array_type->getElementType();
   }
   bool is_array = !dimensions.empty();
-  if (!value_type->isBooleanType() && !value_type->isIntegerType()) {
+  bool is_string_view = IsStringViewType(ictx_.ctx_, var_decl->getType());
+  if (!value_type->isBooleanType() && !value_type->isIntegerType() &&
+      !is_string_view) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
         {is_array ? FormattedError::Static(
                         "only C-style arrays of boolean and integer elements "
                         "are supported")
                   : FormattedError::Static(
-                        "only boolean and integer constexpr variables "
-                        "are supported")});
+                        "only boolean, integer, and string_view constexpr "
+                        "variables are supported")});
   }
 
   const clang::APValue* value = var_decl->evaluateValue();
@@ -408,7 +503,16 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
 
   auto item = std::make_unique<ir_proto::Item>();
   auto* constant = item->mutable_constant();
-  if (!is_array) {
+  if (is_string_view) {
+    absl::StatusOr<std::string> string_view_value =
+        EvaluateStringViewContents(ictx_, *var_decl);
+    if (!string_view_value.ok()) {
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          {FormattedError::FromStatus(std::move(string_view_value.status()))});
+    }
+    constant->set_string_view_value(*std::move(string_view_value));
+  } else if (!is_array) {
     if (!value->isInt()) {
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
@@ -438,9 +542,13 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
     }
   }
 
-  CcType type = ictx_.ConvertQualType(value_type, nullptr, /*nullable=*/true,
-                                      ictx_.AreAssumedLifetimesEnabledForTarget(
-                                          ictx_.GetOwningTarget(*var_decl)));
+  if (!is_string_view) {
+    CcType type =
+        ictx_.ConvertQualType(value_type, nullptr, /*nullable=*/true,
+                              ictx_.AreAssumedLifetimesEnabledForTarget(
+                                  ictx_.GetOwningTarget(*var_decl)));
+    type.WriteToProto(*constant->mutable_type());
+  }
 
   ictx_.MarkAsSuccessfullyImported(*var_decl);
   constant->mutable_cc_name()->set_identifier(var_name.cc_identifier.Ident());
@@ -450,7 +558,6 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
   constant->set_owning_target(ictx_.GetOwningTarget(*var_decl).value());
   constant->set_source_loc(
       ictx_.ConvertSourceLocation(var_decl->getBeginLoc(), nullptr));
-  type.WriteToProto(*constant->mutable_type());
   if (unknown_attr.has_value()) {
     constant->set_unknown_attr(std::move(*unknown_attr));
   }

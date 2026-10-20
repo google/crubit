@@ -967,6 +967,8 @@ pub enum ConstantValue<'pb> {
     Integer(IntegerConstant),
     /// A (possibly multidimensional) C-style array of integers or booleans.
     Array(ArrayValue<'pb>),
+    /// A scalar `std::string_view` or `absl::string_view` value.
+    StringView(&'pb [u8]),
 }
 
 /// A (possibly multidimensional) C-style array of integers or booleans.
@@ -2903,7 +2905,7 @@ impl<'pb> Record<'pb> {
 pub struct Constant<'pb> {
     proto: ConstantView<'pb>,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) type_: CcType,
+    pub(crate) type_: Option<CcType>,
 }
 
 impl<'pb> ProtoToIr for ConstantView<'pb> {
@@ -2916,22 +2918,30 @@ impl<'pb> ProtoToIr for ConstantView<'pb> {
         self.owning_target().validate()?;
         self.source_loc().validate()?;
         match self.kind() {
-            ::ir_rust_proto::constant::KindOneof::Value(value) => value.validate()?,
+            ::ir_rust_proto::constant::KindOneof::Value(value) => {
+                value.validate()?;
+                let _ = CcType::try_from(self.r#type())?;
+            }
             ::ir_rust_proto::constant::KindOneof::ArrayValue(array_value) => {
-                array_value.validate()?
+                array_value.validate()?;
+                let _ = CcType::try_from(self.r#type())?;
+            }
+            ::ir_rust_proto::constant::KindOneof::StringViewValue(_) => {
+                ensure!(!self.has_type(), "StringViewValue Constant should not have a CcType");
             }
             _ => bail!("unmapped Constant KindOneof: {:?}", self.kind()),
         }
         self.unknown_attr_opt().into_option().validate()?;
-        let _ = CcType::try_from(self.r#type())?;
         self.deprecated_opt().into_option().validate()?;
         self.doc_comment_opt().into_option().validate()
     }
 
     fn to_ir(self) -> Constant<'pb> {
         let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let type_ = CcType::try_from(self.r#type())
-            .expect("`type` should have been validated by `ConstantView::validate`");
+        let type_ = self.r#type_opt().into_option().map(|t| {
+            CcType::try_from(t)
+                .expect("`type` should have been validated by `ConstantView::validate`")
+        });
         Constant { proto: self, owning_target, type_ }
     }
 }
@@ -2945,6 +2955,9 @@ derive_debug_partialeq_eq_hash! {
                 }
                 ::ir_rust_proto::constant::KindOneof::ArrayValue(array_value) => {
                     ConstantValue::Array(array_value.to_ir())
+                }
+                ::ir_rust_proto::constant::KindOneof::StringViewValue(bytes) => {
+                    ConstantValue::StringView(bytes)
                 }
                 _ => unreachable!("`kind` should have been validated by `ConstantView::validate`"),
             }
@@ -2982,8 +2995,8 @@ derive_debug_partialeq_eq_hash! {
             self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
         }
 
-        pub fn type_(&self) -> &CcType {
-            &self.type_
+        pub fn type_(&self) -> Option<&CcType> {
+            self.type_.as_ref()
         }
 
         pub fn must_bind(&self) -> bool {

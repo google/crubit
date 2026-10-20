@@ -5,6 +5,10 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_BASIC_EXTERN_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_BASIC_EXTERN_H_
 
+#include <string_view>
+
+#include "absl/strings/string_view.h"
+
 extern int extern_int;
 extern const int kExternConstInt;
 extern thread_local int thread_local_int;
@@ -41,6 +45,16 @@ constexpr char kCharArray[] = "NOOP";
 constexpr char kMultidimensionalCharArray[3][8] = {"NOOP", "DROP"};
 constexpr char kMixedCharArray[2][4] = {"ab", {'c', 'd', 'e', 'f'}};
 
+// `std::string_view` and `absl::string_view` constants are bound as
+// `&'static str` when valid UTF-8, and `&'static [u8]` otherwise.
+constexpr std::string_view kStringView = "hello";
+inline constexpr absl::string_view kAbslStringView = "world";
+constexpr std::string_view kStringViewWithEmbeddedNul("a\0b", 3);
+constexpr std::string_view kNonUtf8StringView = "\xff";
+namespace foo {
+constexpr absl::string_view kNamespacedStringView = "namespaced";
+}  // namespace foo
+
 // Also make sure we don't choke on templated variables.
 template <typename T>
 T templated_variable = {};
@@ -68,6 +82,7 @@ struct StructWithStaticMembers {
   static const int kStaticConstInt = 11;
   static constexpr int kStaticConstexprInt = 12;
   static constexpr int kStaticConstexprIntArray[] = {1, 2, 3};
+  static constexpr absl::string_view kStaticConstexprStringView = "static";
   static inline int static_inline_int = 13;
 
   // Private members should not receive bindings.

@@ -69,6 +69,21 @@ fn test_constexpr_char_arrays() {
 }
 
 #[gtest]
+fn test_constexpr_string_views() {
+    // These are `const`s, not `let`s, to check that the bindings are Rust constants.
+    const S: &str = global::kStringView;
+    expect_eq!(S, "hello");
+    const ABSL_S: &str = global::kAbslStringView;
+    expect_eq!(ABSL_S, "world");
+    const WITH_NUL: &str = global::kStringViewWithEmbeddedNul;
+    expect_eq!(WITH_NUL, "a\0b");
+    const NON_UTF8: &[u8] = global::kNonUtf8StringView;
+    expect_eq!(NON_UTF8, b"\xff");
+    const NAMESPACED: &str = global::foo::kNamespacedStringView;
+    expect_eq!(NAMESPACED, "namespaced");
+}
+
+#[gtest]
 fn test_anonymous_enum_constants() {
     expect_eq!(global::kAnonEnumConst, 123);
     expect_eq!(global::foo::kAnonEnumNamespacedConst, 456);
@@ -89,6 +104,7 @@ fn test_static_data_members() {
     expect_eq!(StructWithStaticMembers::kStaticConstInt, 11);
     expect_eq!(StructWithStaticMembers::kStaticConstexprInt, 12);
     expect_eq!(StructWithStaticMembers::kStaticConstexprIntArray, [1, 2, 3]);
+    expect_eq!(StructWithStaticMembers::kStaticConstexprStringView, "static");
     expect_eq!(StructWithStaticMembers::static_inline_int, 13);
     expect_eq!(global::GetStaticInlineIntVal(), 13);
 }

@@ -13,6 +13,7 @@ crubit_test_cc_library(
         "global.cc",
     ],
     hdrs = ["global.h"],
+    deps = ["@abseil-cpp//absl/strings:string_view"],
 )
 
 golden_test(

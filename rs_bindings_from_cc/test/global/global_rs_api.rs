@@ -82,6 +82,16 @@ pub const kMixedCharArray: [[::ffi_11::c_char; 4]; 2] = [
     ],
 ];
 
+pub const kStringView: &'static str = "hello";
+
+pub const kAbslStringView: &'static str = "world";
+
+pub const kStringViewWithEmbeddedNul: &'static str = "a\0b";
+
+pub const kNonUtf8StringView: &'static [u8] = b"\xFF";
+
+// namespace foo
+
 // error: global variable `templated_variable` could not be bound
 //   templated variables are not supported
 
@@ -128,6 +138,8 @@ pub mod foo {
     pub const inline_long_long_namespaced: ::ffi_11::c_longlong = ::ffi_11::new_c_longlong(24);
 
     pub const inline_bool_namespaced: bool = true;
+
+    pub const kNamespacedStringView: &'static str = "namespaced";
 
     pub const kAnonEnumNamespacedConst: ::ffi_11::c_uint = ::ffi_11::new_c_uint(456);
 }
@@ -193,6 +205,8 @@ impl StructWithStaticMembers {
 
     pub const kStaticConstexprIntArray: [::ffi_11::c_int; 3] =
         [::ffi_11::new_c_int(1), ::ffi_11::new_c_int(2), ::ffi_11::new_c_int(3)];
+
+    pub const kStaticConstexprStringView: &'static str = "static";
 
     pub const static_inline_int: ::ffi_11::c_int = ::ffi_11::new_c_int(13);
 }

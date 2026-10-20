@@ -172,7 +172,8 @@ pub fn has_bindings<'a>(
     }
     // Require that the underlying type exists. Otherwise, the constant can't.
     if let Item::Constant(constant) = &item
-        && let Err(error) = db.rs_type_kind(constant.type_().clone())
+        && let Some(type_) = constant.type_()
+        && let Err(error) = db.rs_type_kind(type_.clone())
     {
         return Err(NoBindingsReason::DependencyFailed {
             type_name: db.debug_name(constant.id()),
