@@ -78,6 +78,8 @@ crubit_rust_test(
 crubit_rust_test(
     name = "generate_bindings_test",
     srcs = ["generate_bindings_test.rs"],
+    # Each test runs rustc on a snippet (~0.5s each), so shard the ~85 tests.
+    shard_count = 8,
     deps = [
         ":generate_bindings",
         ":test_helpers",
@@ -88,6 +90,7 @@ crubit_rust_test(
         "//common:error_report",
         "//common:token_stream_matchers",
         "//common:token_stream_printer",
+        "@crate_index//:googletest",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
     ],

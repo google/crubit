@@ -42,6 +42,7 @@ code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
 token_stream_matchers = { path = "../../../../cargo/common/token_stream_matchers"}
 token_stream_printer = { path = "../../../../cargo/common/token_stream_printer"}
 rustversion = { path = "../../../../cargo/cc_bindings_from_rs/rustversion", package = "cc_bindings_from_rs_rustversion"}
+googletest.workspace = true
 proc-macro2.workspace = true
 quote.workspace = true
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}

@@ -9,6 +9,7 @@ extern crate rustc_span;
 
 use code_gen_utils::NamespaceQualifier;
 use generate_bindings::format_namespace_bound_cc_tokens;
+use googletest::gtest;
 use proc_macro2::{Ident, TokenStream, TokenTree};
 use quote::quote;
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
@@ -31,7 +32,7 @@ use token_stream_printer::cc_tokens_to_formatted_string_for_tests;
 /// `GenerateBindings::new`. Additional coverage of how functions are
 /// formatted is provided by `test_format_item_..._fn_...` tests (which
 /// work at the `generate_function` level).
-#[test]
+#[gtest]
 fn test_generated_bindings_fn_no_mangle_extern_c() {
     let test_src = r#"
             #[unsafe(no_mangle)]
@@ -54,7 +55,7 @@ fn test_generated_bindings_fn_no_mangle_extern_c() {
 }
 
 /// Tests that `toposort` is used to reorder item bindings.
-#[test]
+#[gtest]
 fn test_generated_bindings_prereq_defs_field_deps_require_reordering() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -88,7 +89,7 @@ fn test_generated_bindings_prereq_defs_field_deps_require_reordering() {
 //  Because the source location of both calls to the proc macro are the same,
 //  "span" will be the same, which means that without a stable sort for items
 //  where the span is equivalent, the output will be non-deterministic.
-#[test]
+#[gtest]
 fn test_generated_bindings_have_stable_order() {
     fn idents_in_stream(stream: TokenStream, idents: &mut Vec<Ident>) {
         for tree in stream {
@@ -159,7 +160,7 @@ fn test_generated_bindings_have_stable_order() {
 /// Tests that a forward declaration is present when it is required to
 /// preserve the original source order.  In this test the
 /// `CcPrerequisites::fwd_decls` dependency comes from a pointer parameter.
-#[test]
+#[gtest]
 fn test_generated_bindings_prereq_fwd_decls_for_ptr_param() {
     let test_src = r#"
             #![allow(dead_code, non_snake_case)]
@@ -196,7 +197,7 @@ fn test_generated_bindings_prereq_fwd_decls_for_ptr_param() {
 /// preserve the original source order.  In this test the
 /// `CcPrerequisites::fwd_decls` dependency comes from a
 /// function declaration that has a parameter that takes a struct by value.
-#[test]
+#[gtest]
 fn test_generated_bindings_prereq_fwd_decls_for_cpp_fn_decl() {
     let test_src = r#"
             #[unsafe(no_mangle)]
@@ -235,7 +236,7 @@ fn test_generated_bindings_prereq_fwd_decls_for_cpp_fn_decl() {
 /// This test verifies that a forward declaration for a given ADT is only
 /// emitted once (and not once for every API item that requires the
 /// forward declaration as a prerequisite).
-#[test]
+#[gtest]
 fn test_generated_bindings_prereq_fwd_decls_no_duplication() {
     let test_src = r#"
             #![allow(dead_code, non_camel_case_types)]
@@ -265,7 +266,7 @@ fn test_generated_bindings_prereq_fwd_decls_no_duplication() {
 /// much, but it definitely shouldn't change every time
 /// `cc_bindings_from_rs` is invoked again.  The current order preserves
 /// the original source order of the Rust API items.
-#[test]
+#[gtest]
 fn test_generated_bindings_prereq_fwd_decls_deterministic_order() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -319,7 +320,7 @@ fn test_generated_bindings_prereq_fwd_decls_deterministic_order() {
 
 /// This test verifies that a method declaration doesn't ask for a forward
 /// declaration to the struct.
-#[test]
+#[gtest]
 fn test_generated_bindings_prereq_fwd_decls_not_needed_inside_struct_definition() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -347,7 +348,7 @@ fn test_generated_bindings_prereq_fwd_decls_not_needed_inside_struct_definition(
     });
 }
 
-#[test]
+#[gtest]
 fn test_generated_bindings_module_basics() {
     let test_src = r#"
             pub mod some_module {
@@ -380,7 +381,7 @@ fn test_generated_bindings_module_basics() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generated_bindings_module_name_is_cpp_reserved_keyword() {
     let test_src = r#"
             pub mod reinterpret_cast {
@@ -409,7 +410,7 @@ fn test_generated_bindings_module_name_is_cpp_reserved_keyword() {
 
 /// `test_generated_bindings_non_pub_items` verifies that non-public items
 /// are not present/propagated into the generated bindings.
-#[test]
+#[gtest]
 fn test_generated_bindings_non_pub_items() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -457,7 +458,7 @@ fn test_generated_bindings_non_pub_items() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generated_bindings_top_level_items() {
     let test_src = "pub fn public_function() {}";
     test_generated_bindings(test_src, |bindings| {
@@ -486,7 +487,7 @@ fn test_generated_bindings_top_level_items() {
     })
 }
 
-#[test]
+#[gtest]
 fn test_format_item_reexport_private_type() {
     let test_src = r#"
         #![allow(dead_code)]
@@ -537,7 +538,7 @@ fn test_format_item_reexport_private_type() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generic_adt_pub_use_preserves_doc_deprecated_and_kythe() {
     let test_src = r#"
         #![allow(deprecated)]
@@ -595,7 +596,7 @@ fn test_generic_adt_pub_use_preserves_doc_deprecated_and_kythe() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generated_bindings_module_deprecated_no_args() {
     let test_src = r#"
             #[deprecated]
@@ -618,7 +619,7 @@ fn test_generated_bindings_module_deprecated_no_args() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generated_bindings_module_deprecated_with_message() {
     let test_src = r#"
             #[deprecated = "Use other_module instead"]
@@ -643,7 +644,7 @@ fn test_generated_bindings_module_deprecated_with_message() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generated_bindings_module_deprecated_named_args() {
     let test_src = r#"
             #[deprecated(since = "3.14", note = "Use other_module instead")]
@@ -668,7 +669,7 @@ fn test_generated_bindings_module_deprecated_named_args() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_bridged_type_pointer_like_errors() {
     let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: cpp_type=const CppType*"]
@@ -712,7 +713,7 @@ fn test_format_bridged_type_pointer_like_errors() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_brided_type_deduplicate_extern_c_decls() {
     let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: cpp_type=CppType*"]
@@ -750,7 +751,7 @@ fn test_format_brided_type_deduplicate_extern_c_decls() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_bridged_type_unsupported() {
     let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: cpp_type=cpp_ns::CppType"]
@@ -819,7 +820,7 @@ fn test_bridged_type_unsupported() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_slice() {
     let test_src = r#"
             pub fn foo(_a: *const [u32], _b: *const [u8], _c: *mut [i16], _d: *mut [bool]) { todo!() }
@@ -842,7 +843,7 @@ fn test_format_item_slice() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_slice_of_const_pointers() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -878,7 +879,7 @@ fn test_format_item_slice_of_const_pointers() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_slice_of_mut_pointers() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -900,7 +901,7 @@ fn test_format_item_slice_of_mut_pointers() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_static_method() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -954,7 +955,7 @@ fn test_format_item_static_method() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_static_method_with_generic_type_parameters() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -996,7 +997,7 @@ fn test_format_item_static_method_with_generic_type_parameters() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -1050,7 +1051,7 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level()
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_static_method_with_generic_lifetime_parameters_at_impl_level() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -1129,7 +1130,7 @@ fn test_format_item_method_taking_self_by_value(test_src: &str) {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_method_taking_self_by_value_implicit_type() {
     let test_src = r#"
             pub struct SomeStruct(pub f32);
@@ -1147,7 +1148,7 @@ fn test_format_item_method_taking_self_by_value_implicit_type() {
 /// `test_format_item_method_taking_self_by_value_implicit_type` is that
 /// `fn_sig.decl.implicit_self` is `ImplicitSelfKind::None` here (vs
 /// `ImplicitSelfKind::Imm` in the other test).
-#[test]
+#[gtest]
 fn test_format_item_method_taking_self_by_value_explicit_type() {
     let test_src = r#"
             pub struct SomeStruct(pub f32);
@@ -1202,7 +1203,7 @@ fn test_format_item_method_taking_self_by_const_ref(test_src: &str) {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_method_taking_self_by_const_ref_implicit_type() {
     let test_src = r#"
             pub struct SomeStruct(pub f32);
@@ -1216,7 +1217,7 @@ fn test_format_item_method_taking_self_by_const_ref_implicit_type() {
     test_format_item_method_taking_self_by_const_ref(test_src);
 }
 
-#[test]
+#[gtest]
 fn test_format_item_method_taking_self_by_const_ref_explicit_type() {
     let test_src = r#"
             pub struct SomeStruct(pub f32);
@@ -1274,7 +1275,7 @@ fn test_format_item_method_taking_self_by_mutable_ref(test_src: &str) {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_method_taking_self_by_mutable_ref_implicit_type() {
     let test_src = r#"
             pub struct SomeStruct(pub f32);
@@ -1288,7 +1289,7 @@ fn test_format_item_method_taking_self_by_mutable_ref_implicit_type() {
     test_format_item_method_taking_self_by_mutable_ref(test_src);
 }
 
-#[test]
+#[gtest]
 fn test_format_item_method_taking_self_by_mutable_ref_explicit_type() {
     let test_src = r#"
             pub struct SomeStruct(pub f32);
@@ -1302,7 +1303,7 @@ fn test_format_item_method_taking_self_by_mutable_ref_explicit_type() {
     test_format_item_method_taking_self_by_mutable_ref(test_src);
 }
 
-#[test]
+#[gtest]
 fn test_format_item_method_taking_self_by_arc() {
     let test_src = r#"
             use std::sync::Arc;
@@ -1339,7 +1340,7 @@ fn test_format_item_method_taking_self_by_arc() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_method_taking_self_by_pinned_mut_ref() {
     let test_src = r#"
             use core::pin::Pin;
@@ -1447,7 +1448,7 @@ fn test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src: &
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_struct_with_custom_drop_impl_and_no_default_and_clone() {
     let test_src = r#"
             #[derive(Clone)]
@@ -1467,7 +1468,7 @@ fn test_format_item_struct_with_custom_drop_impl_and_no_default_and_clone() {
     test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src);
 }
 
-#[test]
+#[gtest]
 fn test_format_item_struct_with_custom_drop_glue_and_no_default_and_clone() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -1494,7 +1495,7 @@ fn test_format_item_struct_with_custom_drop_glue_and_no_default_and_clone() {
     test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src);
 }
 
-#[test]
+#[gtest]
 fn test_format_item_source_loc_macro_rules() {
     let test_src = r#"
         #![allow(dead_code)]
@@ -1525,7 +1526,7 @@ fn test_format_item_source_loc_macro_rules() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_source_loc_with_no_doc_comment() {
     let test_src = r#"
         #![allow(dead_code)]
@@ -1547,7 +1548,7 @@ fn test_format_item_source_loc_with_no_doc_comment() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_unsupported_static_value() {
     let test_src = r#"
             #[unsafe(no_mangle)]
@@ -1559,7 +1560,7 @@ fn test_format_item_unsupported_static_value() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generate_bindings_use_list_items() {
     let test_src = r#"
         pub mod test_mod {
@@ -1617,7 +1618,7 @@ fn test_generate_bindings_use_list_items() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generate_bindings_use_glob() {
     let test_src = r#"
         pub mod test_mod {
@@ -1673,7 +1674,7 @@ fn test_generate_bindings_use_glob() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generate_bindings_use_external_crate_exports_header() {
     let test_src = r#"
         pub use std::string::String;
@@ -1697,7 +1698,7 @@ fn test_generate_bindings_use_external_crate_exports_header() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_type_alias() {
     let test_src = r#"
             pub type TypeAlias = i32;
@@ -1715,7 +1716,7 @@ fn test_format_item_type_alias() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_type_alias_with_kythe_annotations() {
     let test_src = r#"
             pub type TypeAlias = i32;
@@ -1742,7 +1743,7 @@ fn test_format_item_type_alias_with_kythe_annotations() {
     );
 }
 
-#[test]
+#[gtest]
 fn test_format_item_type_alias_should_give_underlying_type() {
     let test_src = r#"
             pub type TypeAlias1 = i32;
@@ -1761,7 +1762,7 @@ fn test_format_item_type_alias_should_give_underlying_type() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_private_type_alias_wont_generate_bindings() {
     let test_src = r#"
         #[allow(dead_code)]
@@ -1773,7 +1774,7 @@ fn test_format_item_private_type_alias_wont_generate_bindings() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_pub_type_alias_on_private_type_wont_generate_bindings() {
     let test_src = r#"
         #![allow(private_interfaces)]
@@ -1785,7 +1786,7 @@ fn test_format_item_pub_type_alias_on_private_type_wont_generate_bindings() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_unsupported_generic_type_alias() {
     let test_src = r#"
         pub type TypeAlias<T> = T;
@@ -1799,7 +1800,7 @@ fn test_format_item_unsupported_generic_type_alias() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_unsupported_type_without_direct_existence() {
     #[rustversion::before(2026-05-10)]
     fn f(test_src: &str) {
@@ -1829,7 +1830,7 @@ fn test_format_item_unsupported_type_without_direct_existence() {
         "#);
 }
 
-#[test]
+#[gtest]
 fn test_format_item_type_alias_deprecated() {
     let test_src = r#"
             #[deprecated = "Use `OtherTypeAlias` instead"]
@@ -1851,7 +1852,7 @@ fn test_format_item_type_alias_deprecated() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_item_generate_bindings_for_top_level_type_alias() {
     let test_src = r#"
         #![feature(inherent_associated_types)]
@@ -1879,7 +1880,7 @@ fn test_format_item_generate_bindings_for_top_level_type_alias() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_format_namespace_bound_cc_tokens() {
     run_compiler_for_testing("", |tcx| {
         let db = bindings_db_for_tests(tcx);
@@ -1922,7 +1923,7 @@ fn test_format_namespace_bound_cc_tokens() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_multiple_attributes() {
     let test_src = r#"
     #[must_use = "Must use"]
@@ -1945,7 +1946,7 @@ fn test_multiple_attributes() {
     })
 }
 
-#[test]
+#[gtest]
 fn test_trait_impl_for_std_iter_iterator_trait() {
     let test_src = r#"
             #![allow(unused)]
@@ -1981,7 +1982,7 @@ fn test_trait_impl_for_std_iter_iterator_trait() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_trait_impl_for_unpin_trait() {
     let test_src = r#"
             #![allow(unused)]
@@ -2014,7 +2015,7 @@ fn test_trait_impl_for_unpin_trait() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_trait_impl_for_std_future_future_trait() {
     let test_src = r#"
             #![allow(unused)]
@@ -2049,7 +2050,7 @@ fn test_trait_impl_for_std_future_future_trait() {
         );
     });
 }
-#[test]
+#[gtest]
 fn test_const_generic_array() {
     let test_src = r#"
             pub type Arr<const N: usize> = [u8; N];
@@ -2063,7 +2064,7 @@ fn test_const_generic_array() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generate_bindings_c_stdlib_conflict_module() {
     let test_src = r#"
         pub mod remove {
@@ -2085,7 +2086,7 @@ fn test_generate_bindings_c_stdlib_conflict_module() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generate_bindings_c_stdlib_conflict_top_level() {
     let test_src = r#"
         pub fn public_function() {}
@@ -2106,7 +2107,7 @@ fn test_generate_bindings_c_stdlib_conflict_top_level() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generate_bindings_c_stdlib_conflict_top_level_submod() {
     let test_src = r#"
         pub fn public_function() {}
@@ -2127,7 +2128,7 @@ fn test_generate_bindings_c_stdlib_conflict_top_level_submod() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_trait_impl_for_mapped_cpp_type() {
     let test_src = r#"
             #![allow(unused)]
@@ -2167,7 +2168,7 @@ fn test_trait_impl_for_mapped_cpp_type() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_trait_impl_for_generic_mapped_cpp_type_does_not_panic() {
     // Regression test for b/557521397: implementing a trait for a generic mapped C++ type
     // (such as `cc_std::std::shared_ptr<T>`) should be skipped rather than panicking in
@@ -2214,7 +2215,7 @@ fn test_trait_impl_for_generic_mapped_cpp_type_does_not_panic() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_into_iterator_with_generic_into_iter_does_not_panic() {
     // Implementing `IntoIterator` with a concrete specialization of a generic iterator type
     // should gracefully report unsupported rather than panicking in `generate_function`.
@@ -2262,7 +2263,7 @@ fn test_into_iterator_with_generic_into_iter_does_not_panic() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generic_mapped_cpp_type_with_derived_trait() {
     let test_src = r#"
             #![allow(unused)]
@@ -2307,7 +2308,7 @@ fn test_generic_mapped_cpp_type_with_derived_trait() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_generated_bindings_hash_trait() {
     let test_src = r#"
         #[derive(Hash)]
@@ -2358,7 +2359,7 @@ fn test_generated_bindings_hash_trait() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_const_simple_struct() {
     let test_src = r#"
         pub struct Point {
@@ -2379,7 +2380,7 @@ fn test_const_simple_struct() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_const_tuple_struct() {
     let test_src = r#"
         pub struct TupleStruct(pub i32, pub u32);
@@ -2397,7 +2398,7 @@ fn test_const_tuple_struct() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_const_nested_struct() {
     let test_src = r#"
         pub struct Inner {
@@ -2427,7 +2428,7 @@ fn test_const_nested_struct() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_const_array() {
     let test_src = r#"
         pub const ARR: [i32; 3] = [1, 2, 3];
@@ -2444,7 +2445,7 @@ fn test_const_array() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_const_non_aggregate_struct_fails() {
     let test_src = r#"
         #[allow(dead_code)]
@@ -2468,7 +2469,7 @@ fn test_const_non_aggregate_struct_fails() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_unbindable_types_warning() {
     let test_src = r#"
             pub struct SomeStruct {
@@ -2502,7 +2503,7 @@ fn test_unbindable_types_warning() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_ignore_symbols_from_files_as_param() {
     let test_src = r#"
         pub struct IgnoredStruct {
@@ -2521,7 +2522,7 @@ fn test_ignore_symbols_from_files_as_param() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_should_receive_bindings_ignored_file() {
     let test_src = r#"
         pub struct IgnoredStruct {
@@ -2555,7 +2556,7 @@ fn test_should_receive_bindings_ignored_file() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_should_receive_bindings_do_not_bind() {
     let test_src = r#"
         #[doc="CRUBIT_ANNOTATE: do_not_bind="]
@@ -2575,7 +2576,7 @@ fn test_should_receive_bindings_do_not_bind() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_allow_unbindable_type_suppresses_warning() {
     let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
@@ -2608,7 +2609,7 @@ fn test_allow_unbindable_type_suppresses_warning() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_unbindable_types_warning_on_private_defs() {
     let test_src = r#"
             #![allow(dead_code)]
@@ -2650,7 +2651,7 @@ fn test_unbindable_types_warning_on_private_defs() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_is_cpp_move_constructible() {
     let test_src = r#"
         #![allow(dead_code)]
@@ -2800,7 +2801,7 @@ fn test_is_cpp_constexpr_move_constructible() {
 /// Verifies that generating bindings for types implementing operator traits (like
 /// `#[derive(PartialEq)]` or `bitflags!` on `Source` in `libs/input/rust`) when `--crate-header`
 /// for `core` is not provided gracefully emits an unsupported comment instead of panicking.
-#[test]
+#[gtest]
 fn test_trait_operator_without_core_crate_header_returns_error() {
     let test_src = r#"
         #[derive(PartialEq)]
@@ -2817,7 +2818,7 @@ fn test_trait_operator_without_core_crate_header_returns_error() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_method_returning_self_in_tuple() {
     let test_src = r#"
         pub struct Foo {
@@ -2872,7 +2873,7 @@ fn test_method_returning_self_in_tuple() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_error_scope_with_generic_args_reports_distinct_specializations() {
     let test_src = r#"
         pub struct Point<T> {
@@ -3036,7 +3037,7 @@ fn test_error_scope_with_generic_args_reports_distinct_specializations() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_error_scope_with_only_lifetime_args_omits_lifetimes() {
     let test_src = r#"
         pub struct Borrowed<'a> {
@@ -3161,7 +3162,7 @@ fn test_error_scope_with_only_lifetime_args_omits_lifetimes() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_error_scope_with_lifetime_and_non_lifetime_args_reports_distinct_specializations() {
     let test_src = r#"
         pub struct BorrowedPoint<'a, T> {
@@ -3341,7 +3342,7 @@ fn test_error_scope_with_lifetime_and_non_lifetime_args_reports_distinct_special
     });
 }
 
-#[test]
+#[gtest]
 fn test_no_std_crate() {
     let test_src = r#"
         #![no_std]
@@ -3457,7 +3458,7 @@ fn test_into_constructor_and_operator_share_single_thunk() {
     });
 }
 
-#[test]
+#[gtest]
 fn test_iterator_item_references() {
     let test_src = r#"
         pub type MyRefAlias<'a> = &'a i32;

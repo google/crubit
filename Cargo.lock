@@ -252,6 +252,7 @@ dependencies = [
  "dyn_format",
  "error_report",
  "flagset",
+ "googletest",
  "itertools",
  "proc-macro2",
  "quote",
