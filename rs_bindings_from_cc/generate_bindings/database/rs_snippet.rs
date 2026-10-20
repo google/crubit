@@ -1114,7 +1114,7 @@ impl<'a> BridgeRsTypeKind<'a> {
             }
             BridgeType::StdString => {
                 let in_cc_std = db.ir().is_current_target(record.owning_target())
-                    && record.owning_target().target_name_escaped() == "cc_std";
+                    && record.owning_target().is_cc_std();
                 let layout_compatible = options.requires_layout_compatible
                     || db
                         .ir()
@@ -1422,7 +1422,7 @@ impl<'a> RsTypeKind<'a> {
         ));
 
         let in_cc_std = db.ir().is_current_target(record.as_ref().owning_target())
-            && record.as_ref().owning_target().target_name_escaped() == "cc_std";
+            && record.as_ref().owning_target().is_cc_std();
 
         let uniform_repr_template_type = UniformReprTemplateType::new(
             db,
