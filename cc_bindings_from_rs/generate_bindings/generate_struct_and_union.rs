@@ -44,7 +44,7 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
     as_ref_or_pinned_ref, does_type_implement_trait, get_layout, get_tag_size_with_padding,
-    is_copy, is_std_ptr_non_null,
+    get_validated_layout, is_copy, is_std_ptr_non_null,
 };
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
@@ -57,7 +57,7 @@ use rustc_middle::mir::Mutability;
 use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
-use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags, TypingEnv};
+use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use std::collections::{HashMap, HashSet};
@@ -2443,6 +2443,8 @@ pub(crate) fn get_generic_adt_header<'tcx>(
         "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
     );
 
+    ensure!(attributes.cpp_enum.is_none(), "`cpp_enum` structs cannot be generic");
+
     let adt_def = tcx.adt_def(def_id);
     let keyword = adt_cc_keyword(adt_def, &attributes);
 
@@ -2456,6 +2458,21 @@ pub(crate) fn get_generic_adt_header<'tcx>(
     ensure!(!template_args.is_empty(), "Generic ADT must have at least one type parameter");
 
     Ok(GenericAdtHeader { keyword, cpp_name, fully_qualified_cc_name, template_args })
+}
+
+/// Formats a forward declaration for a generic ADT.
+pub fn generate_generic_adt_fwd_decl<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+) -> Result<TokenStream> {
+    let GenericAdtHeader { keyword, cpp_name, template_args, .. } =
+        get_generic_adt_header(db, def_id)?;
+
+    let template_params = template_args.iter().map(|arg| quote! { typename #arg });
+    Ok(quote! {
+        template <#(#template_params),*>
+        #keyword #cpp_name;
+    })
 }
 
 /// Formats a primary C++ class template declaration for a generic ADT.
@@ -2535,15 +2552,9 @@ pub fn generate_adt_core_for_ty<'tcx>(
         );
     }
 
-    let layout = get_layout(tcx, self_ty)
-        .with_context(|| format!("Error computing the layout of #{cpp_name}"))?;
-    ensure!(
-        layout.backend_repr().is_sized(),
-        "Bindings for dynamically sized types are not supported."
-    );
+    let layout = get_validated_layout(tcx, self_ty)?;
     let alignment_in_bytes = layout.align().abi.bytes();
     let size_in_bytes = layout.size().bytes();
-    ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
 
     let cc_short_name = quote! { #cpp_name };
     let cc_fully_qualified_name = self_ty_cc.tokens.clone();
