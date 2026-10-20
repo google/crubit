@@ -72,6 +72,15 @@ static_assert((struct Nontrivial (::Nontrivial::*)(struct Nontrivial const&)
                    const) &
               ::Nontrivial::operator+);
 
+extern "C" void __rust_thunk___ZNK10Nontrivial18TakesByValueMemberES_(
+    struct Nontrivial* __return, struct Nontrivial const* __this,
+    struct Nontrivial* nontrivial) {
+  new (__return) auto(__this->TakesByValueMember(std::move(*nontrivial)));
+}
+
+static_assert((struct Nontrivial (::Nontrivial::*)(struct Nontrivial) const) &
+              ::Nontrivial::TakesByValueMember);
+
 static_assert(CRUBIT_SIZEOF(struct NontrivialInline) == 4);
 static_assert(alignof(struct NontrivialInline) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct NontrivialInline) == 0);
@@ -221,6 +230,17 @@ extern "C" void __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
 
 static_assert((struct NontrivialUnpin (*)(struct NontrivialUnpin)) &
               ::TakesByValueUnpin);
+
+extern "C" void __rust_thunk___Z26TakesByValueAndByReferenceRK10NontrivialS_(
+    struct Nontrivial* __return, struct Nontrivial const* nontrivial_ref,
+    struct Nontrivial* nontrivial) {
+  new (__return) auto(
+      TakesByValueAndByReference(*nontrivial_ref, std::move(*nontrivial)));
+}
+
+static_assert((struct Nontrivial (*)(struct Nontrivial const&,
+                                     struct Nontrivial)) &
+              ::TakesByValueAndByReference);
 
 static_assert((struct Nontrivial & (*)(struct Nontrivial&)) &
               ::TakesByReference);

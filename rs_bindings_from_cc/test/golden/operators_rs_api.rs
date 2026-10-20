@@ -503,7 +503,7 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
 }
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for AddableConstMemberNonunpin {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -519,7 +519,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for AddableConstMemberNonunpi
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for AddableConstMemberNonunpin {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -540,8 +540,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for AddableConstMemberNonunpin
 impl<'__this, 'rhs> ::core::ops::Add<&'rhs crate::AddableConstMemberNonunpin>
     for &'__this crate::AddableConstMemberNonunpin
 {
-    type Output = impl ::ctor::Ctor<Output = crate::AddableConstMemberNonunpin, Error = ::ctor::Infallible>
-        + use<'__this, 'rhs>;
+    type Output = ::ctor::Ctor![crate::AddableConstMemberNonunpin];
     #[inline(always)]
     fn add(self, rhs: &'rhs crate::AddableConstMemberNonunpin) -> Self::Output {
         unsafe {

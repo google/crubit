@@ -79,7 +79,7 @@ impl ::ctor::CtorNew<()> for Nontrivial {
 }
 
 impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
@@ -95,7 +95,7 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
     }
 }
 impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
@@ -167,7 +167,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for TriviallyCopyableButNontri
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self>
     for TriviallyCopyableButNontriviallyDestructible
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -182,7 +182,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self>
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)>
     for TriviallyCopyableButNontriviallyDestructible
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {

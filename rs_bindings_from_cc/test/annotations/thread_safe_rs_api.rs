@@ -308,8 +308,7 @@ pub mod crubit {
         }
 
         impl<'__unelided> ::ctor::CtorNew<&'__unelided Self> for ThreadSafePinned {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
@@ -325,8 +324,7 @@ pub mod crubit {
             }
         }
         impl<'__unelided> ::ctor::CtorNew<(&'__unelided Self,)> for ThreadSafePinned {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: (&'__unelided Self,)) -> Self::CtorType {
@@ -336,8 +334,7 @@ pub mod crubit {
         }
 
         impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for ThreadSafePinned {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
@@ -355,8 +352,7 @@ pub mod crubit {
         impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
             for ThreadSafePinned
         {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {

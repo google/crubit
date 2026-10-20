@@ -39,6 +39,10 @@ struct Nontrivial final {
   bool operator<(const Nontrivial& rhs) const;
   Nontrivial operator+(const Nontrivial& rhs) const;
 
+  // Takes a non-Unpin type by value (as a `Ctor`) and returns a non-Unpin type,
+  // while also capturing the lifetime of `this`.
+  Nontrivial TakesByValueMember(Nontrivial nontrivial) const;
+
   // Bindings for `operator+=` are *not* supported for non-trivial types.
   Nontrivial& operator+=(const Nontrivial& rhs);
 };
@@ -93,6 +97,11 @@ struct [[clang::trivial_abi]] NontrivialUnpin final {
 Nontrivial TakesByValue(Nontrivial nontrivial);
 NontrivialInline TakesByValueInline(NontrivialInline nontrivial);
 NontrivialUnpin TakesByValueUnpin(NontrivialUnpin nontrivial);
+
+// Takes a non-Unpin type by value (as a `Ctor`) and returns a non-Unpin type,
+// while also capturing the lifetime of a reference parameter.
+Nontrivial TakesByValueAndByReference(const Nontrivial& nontrivial_ref,
+                                      Nontrivial nontrivial);
 
 Nontrivial& TakesByReference(Nontrivial& nontrivial);
 NontrivialUnpin& TakesUnpinByReference(NontrivialUnpin& nontrivial);

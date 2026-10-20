@@ -60,6 +60,15 @@ impl Nontrivial {
     pub fn ConstRvalueRefQualified<'__this>(&'__this self) {
         unsafe { self::nontrivial::ConstRvalueRefQualified(self) }
     }
+    /// Takes a non-Unpin type by value (as a `Ctor`) and returns a non-Unpin type,
+    /// while also capturing the lifetime of `this`.
+    #[inline(always)]
+    pub fn TakesByValueMember<'__this>(
+        &'__this self,
+        nontrivial: ::ctor::Ctor![Self],
+    ) -> ::ctor::Ctor![crate::Nontrivial] {
+        unsafe { self::nontrivial::TakesByValueMember(self, nontrivial) }
+    }
 }
 
 impl ::ctor::CtorNew<()> for Nontrivial {
@@ -123,7 +132,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for Nontrivial {
 }
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -139,7 +148,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for Nontrivial {
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -149,7 +158,7 @@ impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for Nontrivial {
 }
 
 impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
@@ -165,7 +174,7 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
     }
 }
 impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
@@ -254,8 +263,7 @@ impl PartialOrd for Nontrivial {
 }
 
 impl<'__this, 'rhs> ::core::ops::Add<&'rhs crate::Nontrivial> for &'__this crate::Nontrivial {
-    type Output = impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>
-        + use<'__this, 'rhs>;
+    type Output = ::ctor::Ctor![crate::Nontrivial];
     #[inline(always)]
     fn add(self, rhs: &'rhs crate::Nontrivial) -> Self::Output {
         unsafe {
@@ -301,6 +309,23 @@ pub mod nontrivial {
     #[inline(always)]
     pub(crate) fn ConstRvalueRefQualified<'__this>(__this: &'__this crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv(__this) }
+    }
+    /// Takes a non-Unpin type by value (as a `Ctor`) and returns a non-Unpin type,
+    /// while also capturing the lifetime of `this`.
+    #[inline(always)]
+    pub(crate) fn TakesByValueMember<'__this>(
+        __this: &'__this crate::Nontrivial,
+        nontrivial: ::ctor::Ctor![crate::Nontrivial],
+    ) -> ::ctor::Ctor![crate::Nontrivial] {
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
+                crate::detail::__rust_thunk___ZNK10Nontrivial18TakesByValueMemberES_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __this,
+                    ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+                );
+            })
+        }
     }
 }
 
@@ -395,7 +420,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialInline {
 }
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -411,7 +436,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NontrivialInline {
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -421,7 +446,7 @@ impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NontrivialInline {
 }
 
 impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
@@ -439,7 +464,7 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
 impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
     for NontrivialInline
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
@@ -535,7 +560,7 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
 }
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NontrivialMembers {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -551,7 +576,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NontrivialMembers {
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NontrivialMembers {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -563,7 +588,7 @@ impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NontrivialMembers {
 impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
     for NontrivialMembers
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
@@ -581,7 +606,7 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
 impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
     for NontrivialMembers
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
@@ -832,6 +857,24 @@ pub fn TakesByValueUnpin(nontrivial: crate::NontrivialUnpin) -> crate::Nontrivia
             nontrivial.as_mut_ptr(),
         );
         __crubit_return.assume_init()
+    }
+}
+
+/// Takes a non-Unpin type by value (as a `Ctor`) and returns a non-Unpin type,
+/// while also capturing the lifetime of a reference parameter.
+#[inline(always)]
+pub fn TakesByValueAndByReference<'nontrivial_ref>(
+    nontrivial_ref: &'nontrivial_ref crate::Nontrivial,
+    nontrivial: ::ctor::Ctor![crate::Nontrivial],
+) -> ::ctor::Ctor![crate::Nontrivial] {
+    unsafe {
+        ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
+            crate::detail::__rust_thunk___Z26TakesByValueAndByReferenceRK10NontrivialS_(
+                __crubit_dest as *mut ::core::ffi::c_void,
+                nontrivial_ref,
+                ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+            );
+        })
     }
 }
 
@@ -1129,6 +1172,11 @@ mod detail {
             __this: &'__this crate::Nontrivial,
             rhs: &'rhs crate::Nontrivial,
         );
+        pub(crate) unsafe fn __rust_thunk___ZNK10Nontrivial18TakesByValueMemberES_<'__this>(
+            __return: *mut ::core::ffi::c_void,
+            __this: &'__this crate::Nontrivial,
+            nontrivial: &mut crate::Nontrivial,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -1250,6 +1298,13 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
             __return: *mut ::core::ffi::c_void,
             nontrivial: *mut crate::NontrivialUnpin,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z26TakesByValueAndByReferenceRK10NontrivialS_<
+            'nontrivial_ref,
+        >(
+            __return: *mut ::core::ffi::c_void,
+            nontrivial_ref: &'nontrivial_ref crate::Nontrivial,
+            nontrivial: &mut crate::Nontrivial,
         );
         #[link_name = "_Z16TakesByReferenceR10Nontrivial"]
         pub(crate) unsafe fn __rust_thunk___Z16TakesByReferenceR10Nontrivial<'nontrivial>(

@@ -122,7 +122,7 @@ impl<'__this> From<&'__this crate::Src> for crate::DstLocalMovable {
 }
 
 impl<'__this> ::ctor::CtorNew<&'__this crate::Src> for crate::DstLocalNonMovable {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__this>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__this crate::Src) -> Self::CtorType {

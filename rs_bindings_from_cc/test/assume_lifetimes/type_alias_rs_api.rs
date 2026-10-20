@@ -30,7 +30,7 @@ unsafe impl ::cxx::ExternType for TypeAliasCtor {
 forward_declare::unsafe_define!(forward_declare::symbol!("TypeAliasCtor"), crate::TypeAliasCtor);
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for TypeAliasCtor {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -46,7 +46,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for TypeAliasCtor {
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for TypeAliasCtor {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -65,7 +65,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for TypeAliasCtor {
 }
 
 impl<'a> ::ctor::CtorNew<::cc_std::std::string_view<'a>> for TypeAliasCtor {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'a>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::cc_std::std::string_view<'a>) -> Self::CtorType {
@@ -79,7 +79,7 @@ impl<'a> ::ctor::CtorNew<::cc_std::std::string_view<'a>> for TypeAliasCtor {
     }
 }
 impl<'a> ::ctor::CtorNew<(::cc_std::std::string_view<'a>,)> for TypeAliasCtor {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'a>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::cc_std::std::string_view<'a>,)) -> Self::CtorType {

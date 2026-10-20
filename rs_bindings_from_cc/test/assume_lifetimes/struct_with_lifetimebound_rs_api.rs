@@ -185,7 +185,7 @@ impl ::ctor::CtorNew<()> for DropClassWithLifetimeboundMemberFunction {
 }
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropClassWithLifetimeboundMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -201,7 +201,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropClassWithLifetimeboun
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for DropClassWithLifetimeboundMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -287,7 +287,7 @@ impl ::ctor::CtorNew<()> for DropClassWithLifetimeboundRefMemberFunction {
 }
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropClassWithLifetimeboundRefMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -302,7 +302,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropClassWithLifetimeboun
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)>
     for DropClassWithLifetimeboundRefMemberFunction
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -448,7 +448,7 @@ forward_declare::unsafe_define!(
 );
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithLifetimeboundCtor {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -464,7 +464,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithLifetimebou
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for DropStructWithLifetimeboundCtor {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -537,7 +537,7 @@ forward_declare::unsafe_define!(
 );
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithLifetimeboundRefCtor {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -553,7 +553,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithLifetimebou
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for DropStructWithLifetimeboundRefCtor {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -574,7 +574,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for DropStructWithLifetimeboun
 }
 
 impl<'s> ::ctor::CtorNew<&'s crate::PlainStruct> for DropStructWithLifetimeboundRefCtor {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'s>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'s crate::PlainStruct) -> Self::CtorType {
@@ -587,7 +587,7 @@ impl<'s> ::ctor::CtorNew<&'s crate::PlainStruct> for DropStructWithLifetimebound
     }
 }
 impl<'s> ::ctor::CtorNew<(&'s crate::PlainStruct,)> for DropStructWithLifetimeboundRefCtor {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'s>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'s crate::PlainStruct,)) -> Self::CtorType {
@@ -628,7 +628,7 @@ impl DropStructWithRefCtorAndRefMemberFunction {
 }
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithRefCtorAndRefMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -646,7 +646,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithRefCtorAndR
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)>
     for DropStructWithRefCtorAndRefMemberFunction
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -667,7 +667,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for DropStructWithRefCtorAndRe
 }
 
 impl<'s> ::ctor::CtorNew<&'s crate::PlainStruct> for DropStructWithRefCtorAndRefMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'s>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'s crate::PlainStruct) -> Self::CtorType {
@@ -680,7 +680,7 @@ impl<'s> ::ctor::CtorNew<&'s crate::PlainStruct> for DropStructWithRefCtorAndRef
     }
 }
 impl<'s> ::ctor::CtorNew<(&'s crate::PlainStruct,)> for DropStructWithRefCtorAndRefMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'s>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'s crate::PlainStruct,)) -> Self::CtorType {
@@ -734,7 +734,7 @@ impl DropStructWithCtorAndMemberFunction {
 }
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithCtorAndMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -750,7 +750,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithCtorAndMemb
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for DropStructWithCtorAndMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -842,7 +842,7 @@ impl DropStructWithCtorAndRefMemberFunction {
 }
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithCtorAndRefMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -858,7 +858,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithCtorAndRefM
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for DropStructWithCtorAndRefMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -948,7 +948,7 @@ impl DropStructWithRefCtorAndMemberFunction {
 }
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithRefCtorAndMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -964,7 +964,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithRefCtorAndM
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for DropStructWithRefCtorAndMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -985,7 +985,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for DropStructWithRefCtorAndMe
 }
 
 impl<'s> ::ctor::CtorNew<&'s crate::PlainStruct> for DropStructWithRefCtorAndMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'s>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'s crate::PlainStruct) -> Self::CtorType {
@@ -998,7 +998,7 @@ impl<'s> ::ctor::CtorNew<&'s crate::PlainStruct> for DropStructWithRefCtorAndMem
     }
 }
 impl<'s> ::ctor::CtorNew<(&'s crate::PlainStruct,)> for DropStructWithRefCtorAndMemberFunction {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'s>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'s crate::PlainStruct,)) -> Self::CtorType {

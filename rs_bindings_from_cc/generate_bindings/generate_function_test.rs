@@ -2436,7 +2436,7 @@ fn test_nonunpin_by_value_params() -> Result<()> {
             > for HasConstructor {
                 // The captures are why we need explicit lifetimes for the two rvalue reference
                 // parameters.
-                type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b, 'b_2, 'y>;
+                type CtorType = ::ctor::Ctor![Self];
                 type Error = ::ctor::Infallible;
 
                 #[inline (always)]
@@ -2475,7 +2475,7 @@ fn test_nonunpin_return() -> Result<()> {
         rs_api,
         quote! {
             pub fn ReturnsByValue<'a, 'b>(x: &'a ::ffi_11::c_int, y: &'b ::ffi_11::c_int)
-            -> impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible> + use<'a, 'b> {
+            -> ::ctor::Ctor![crate::Nontrivial] {
                 unsafe {
                     ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
                         crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, x, y);
@@ -2514,7 +2514,7 @@ fn test_nonunpin_const_return() -> Result<()> {
         rs_api,
         quote! {
             pub fn ReturnsByValue<'a, 'b>(x: &'a ::ffi_11::c_int, y: &'b ::ffi_11::c_int)
-            -> impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible> + use<'a, 'b> {
+            -> ::ctor::Ctor![crate::Nontrivial] {
                 unsafe {
                     ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
                         crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, x, y);
@@ -2554,10 +2554,10 @@ fn test_nonunpin_return_with_lifetime_and_ctor_param() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub fn ReturnsByValue<'a, __CtorParam_y: ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>>(
+            pub fn ReturnsByValue<'a>(
                 x: &'a ::ffi_11::c_int,
-                y: __CtorParam_y
-            ) -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible> + use<'a, __CtorParam_y> {
+                y: ::ctor::Ctor![crate::Nontrivial]
+            ) -> ::ctor::Ctor![crate::Nontrivial] {
                 unsafe {
                     ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
                         crate::detail::...(
@@ -3020,12 +3020,12 @@ fn test_deterministic_lifetime_order() -> Result<()> {
     let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
 
-    // Verify that lifetimes are sorted alphabetically in the `use<...>` clause.
+    // Verify that lifetimes are sorted alphabetically.
     assert_rs_matches!(
         rs_api,
         quote! {
             ...
-            + use<'a, 'b, 'c, 'd>
+            impl<'a, 'b, 'c, 'd> ::ctor::CtorNew<()> for S<'a, 'b, 'c, 'd>
             ...
         }
     );

@@ -570,7 +570,7 @@ impl ::core::fmt::Debug for NonTrivialStructWithConstructors {
 }
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NonTrivialStructWithConstructors {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -586,7 +586,7 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NonTrivialStructWithConst
     }
 }
 impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NonTrivialStructWithConstructors {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {

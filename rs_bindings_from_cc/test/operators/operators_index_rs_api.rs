@@ -83,8 +83,7 @@ pub mod crubit {
         }
 
         impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for ItemNonUnpin {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -100,8 +99,7 @@ pub mod crubit {
             }
         }
         impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for ItemNonUnpin {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -237,8 +235,7 @@ pub mod crubit {
         );
 
         impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for ContainerUnpinItemNonUnpin {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -251,8 +248,7 @@ pub mod crubit {
             }
         }
         impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for ContainerUnpinItemNonUnpin {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -264,8 +260,7 @@ pub mod crubit {
         impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
             for ContainerUnpinItemNonUnpin
         {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
@@ -280,8 +275,7 @@ pub mod crubit {
         impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
             for ContainerUnpinItemNonUnpin
         {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
@@ -426,8 +420,7 @@ pub mod crubit {
         );
 
         impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for ContainerNonUnpinItemUnpin {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -440,8 +433,7 @@ pub mod crubit {
             }
         }
         impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for ContainerNonUnpinItemUnpin {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
@@ -553,8 +545,7 @@ pub mod crubit {
         );
 
         impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for ContainerNonUnpinItemNonUnpin {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
@@ -567,8 +558,7 @@ pub mod crubit {
             }
         }
         impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for ContainerNonUnpinItemNonUnpin {
-            type CtorType =
-                impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+            type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
