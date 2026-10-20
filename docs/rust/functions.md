@@ -75,8 +75,8 @@ fn foo(_: &mut i32, _: &i32) {}  // More than one reference, one of which is mut
 fn foo(_: &'a i32) {}  // 'a is not a lifetime parameter of `foo`
 ```
 
-Returned references are still not supported, and references which are bound to
-some lifetime (e.g. `'static`) are also still not supported.
+Returned references are mapped to C++ references (for `self` borrows) or C++
+pointers, depending on the lifetime.
 
 If you wish to accept more than one reference/pointer in C++, a raw pointer
 (`*const T`, `*mut T`) can be used instead. However, all of the usual `unsafe`

@@ -122,9 +122,12 @@ pub fn DoSomethingCpp(in_val: UnsupportedWrapper,
 
 #### Bridged types passed by reference or pointer
 
-Bridged types (such as Protocol Buffers) cannot be passed by reference (`&T`) or
-pointer (`*const T`). Because Crubit performs value conversions across the FFI
-boundary, bridged types must be passed by value.
+Most bridged types cannot be passed by reference (`&T`) or pointer (`*const T`).
+Because Crubit performs value conversions across the FFI boundary, bridged types
+must usually be passed by value.
+
+(Note: Protocol Buffers are an exception; they can be passed by reference when
+the `//features:proto_references` feature is enabled).
 
 Otherwise, if the function semantics strictly requires passing by reference, you
 can wrap the data in a layout-compatible `struct` or write an FFI wrapper

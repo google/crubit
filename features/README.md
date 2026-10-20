@@ -11,10 +11,11 @@ C++/Rust interop is configured per target using "features": aspect hints which
 are applied onto a build target in order to configure its automatically
 generated bindings.
 
-Features control which capabilities Crubit has. For example, support for move
-constructors is gated behind the `:experimental` feature. If the class is in a
-target configured to use `:experimental`, then the constructor will receive
-bindings, otherwise it will not.
+Features control which capabilities Crubit has. For example, the
+layout-compatible `std::string` type is gated behind the `:layout_compat_string`
+feature. If a target is configured to use `:layout_compat_string`, then
+`std::string` in its bindings will use the layout-compatible Rust type,
+otherwise it will use the bridged `string_wrapper` type.
 
 Features are also used for gradual rollouts of new capabilities, and to allow
 for separate build modes for un-annotated code, code which opts into C++/Rust

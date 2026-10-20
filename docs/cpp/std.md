@@ -13,7 +13,9 @@ support. Instead of linking to API docs, we link to Rust source files.
 
 ## `std::string` {#string}
 
-TODO(b/408961701): Bindings for the real `std::string` type.
+Bindings for the layout-compatible `std::string` type are available behind the
+`//features:layout_compat_string` feature flag, but are not
+yet enabled by default (b/408961701).
 
 `std::string` is only supported as a "bridge type", with runtime conversion.
 When a `std::string` is passed or returned by value, it is transformed into a

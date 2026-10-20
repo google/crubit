@@ -148,9 +148,9 @@ feature flags
 order to get bindings for a Rust interface, that interface must only use the
 subset of features currently supported.
 
-For a particularly notable example, references are only supported as function
-parameters, and only in a subset of cases that we can prove does not add
-aliasing UB to C++ callers.
+For a particularly notable example, references are supported as function
+parameters and return types, but only in a subset of cases that we can prove
+does not add aliasing UB to C++ callers.
 
 The way to work around this kind of problem, in all cases, is to wrap or hide
 the problematic interface behind an interface Crubit can handle:

@@ -78,12 +78,6 @@ struct LayoutCompatibleType {
 void bad_foo(void (*)(LayoutCompatibleType));
 ```
 
-```cpp {.bad}
-// foo cannot receive bindings, because bridged types cannot be passed
-// by reference
-void bad_foo(const Status&);
-```
-
 #### Rust {.new-tab}
 
 ```rust {.good}

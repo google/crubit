@@ -59,7 +59,6 @@ with an `enum` payload:
     variants). The following bugs track future work in this area:
 
     *   b/487357254: Constructing variants with a struct payload
-    *   b/489085607: Bindings for constructing enums should be `constexpr`
 
 *   TODO(b/262737383): Matching `enum` variants and inspecting their payload.
 

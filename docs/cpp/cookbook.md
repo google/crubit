@@ -275,17 +275,14 @@ required a manual workaround:
 3.  The method must be manually wrapped in a C++ `const` method (or wrapped in
     Rust with `unsafe` casts).
 
-Due to b/481398972, the mutated field cannot be public. Due to b/481405536, the
-class itself must not be trivially copyable.
+Public `mutable` fields and opaque bytes are safely handled by wrapping them in
+`std::cell::Cell`.
 
 Example of manual wrapping:
 
 ```c++
 class FakeClock {
  public:
-  // The destructor is only here to make the type non-trivially copyable.
-  // TODO(b/481405536): Remove the destructor once this bug is fixed.
-  ~FakeClock() {}
   CRUBIT_RUST_NAME("advance_mut")
   void Advance(int n) {
     DoNotUseForRustOnlyAdvance(n);
