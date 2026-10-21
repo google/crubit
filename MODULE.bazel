@@ -62,12 +62,18 @@ crubit_toolchains.configure(
     llvm_version = "23.1.0",
     rust_version = "nightly/2026-09-29",
 )
-use_repo(crubit_toolchains, "llvm_toolchain", "llvm_version_check", "rust_toolchains")
+use_repo(
+    crubit_toolchains,
+    "llvm_toolchain",
+    "llvm_version_check",
+    "rust_toolchains",
+)
 
 register_toolchains(
     "@rust_toolchains//:all",
     "@llvm_toolchain//:all",
     "//common/bazel_support/toolchains:cc_bindings_from_rs_on_demand_linux",
+    "//common/bazel_support/toolchains:rs_bindings_from_cc_on_demand_linux",
 )
 
 # TODO(b/379928127): Remove this override once cl/974009395 is released in BCR.

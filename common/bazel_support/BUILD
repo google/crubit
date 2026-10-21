@@ -31,13 +31,13 @@ bool_flag(
 
 bool_flag(
     name = "use_label_encoded_names_for_deps",
-    build_setting_default = True,
+    build_setting_default = False,
     visibility = ["//:__subpackages__"],
 )
 
 string_list_flag(
     name = "globally_enabled_features",
-    build_setting_default = [],
+    build_setting_default = ["no_impl_cxx_extern_type"],
     visibility = ["//visibility:public"],
 )
 
@@ -88,11 +88,9 @@ rs_bindings_from_cc_toolchain(
     name = "rs_bindings_from_cc_on_demand_impl",
     binary = "//rs_bindings_from_cc:rs_bindings_from_cc",
     builtin_headers = [
-        "//llvm/llvm-project/clang:builtin_headers_filegroup",
-        "//llvm/llvm-project/compiler-rt:fuzzer_filegroup",
-        "//llvm/llvm-project/compiler-rt:sanitizer_filegroup",
+        "@llvm-project//clang:builtin_headers_gen",
     ],
-    stl_headers = ["//nowhere/llvm:cc-std-headers"],
+    stl_headers = ["@llvm_toolchain//:include"],
 )
 
 rs_bindings_from_cc_toolchain(

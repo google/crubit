@@ -4,7 +4,11 @@
 
 """Module extension for configuring Crubit toolchains."""
 
-load("@toolchains_llvm//toolchain:rules.bzl", _llvm_toolchain_config = "toolchain")
+# buildifier: disable=bzl-visibility
+load(
+    "@toolchains_llvm//toolchain/internal:configure.bzl",
+    "llvm_config_impl",
+)
 
 # buildifier: disable=bzl-visibility
 load(
@@ -41,8 +45,14 @@ _RUST_TAG_ATTRS = {
     "opt_level": attr.string_dict(doc = "Rustc optimization levels."),
     "strip_level": attr.string_dict(doc = "Rustc strip levels."),
     "urls": attr.string_list(doc = "A list of mirror urls.", default = DEFAULT_STATIC_RUST_URL_TEMPLATES),
-    "allocator_library": attr.label(doc = "Target that provides allocator functions."),
-    "global_allocator_library": attr.label(doc = "Target that provides allocator functions when global allocator is used."),
+    "allocator_library": attr.label(
+        doc = "Target that provides allocator functions.",
+        default = Label("@rules_rust//ffi/rs:empty"),
+    ),
+    "global_allocator_library": attr.label(
+        doc = "Target that provides allocator functions when global allocator is used.",
+        default = Label("@rules_rust//ffi/rs:empty"),
+    ),
     "target_settings": attr.label_list(doc = "Config settings for toolchain selection."),
     "aliases": attr.string_dict(doc = "Toolchain repository aliases."),
 }
@@ -101,6 +111,28 @@ _crubit_llvm_repo = repository_rule(
     implementation = _crubit_llvm_repo_impl,
 )
 
+def _crubit_llvm_config_impl(rctx):
+    res = llvm_config_impl(rctx)
+    build_content = rctx.read("BUILD.bazel")
+    if build_content:
+        rctx.file(
+            "BUILD.bazel",
+            build_content + """
+alias(
+    name = "include",
+    actual = "@@%s_llvm//:include",
+)
+""" % rctx.attr.name,
+        )
+    return res
+
+_crubit_llvm_toolchain_config = repository_rule(
+    attrs = llvm_config_attrs,
+    local = True,
+    configure = True,
+    implementation = _crubit_llvm_config_impl,
+)
+
 def _crubit_llvm_toolchain(name, **kwargs):
     if kwargs.get("llvm_version") and kwargs.get("llvm_versions"):
         fail("Exactly one of llvm_version or llvm_versions must be set")
@@ -122,7 +154,7 @@ def _crubit_llvm_toolchain(name, **kwargs):
         for k, v in kwargs.items()
         if (k not in llvm_repo_attrs.keys()) or (k in common_attrs.keys())
     }
-    _llvm_toolchain_config(name = name, **toolchain_args)
+    _crubit_llvm_toolchain_config(name = name, **toolchain_args)
 
 def _crubit_toolchains_impl(ctx):
     # Prefer configuration from the root module.
@@ -177,8 +209,10 @@ def _crubit_toolchains_impl(ctx):
     else:
         # Defaults if no configure tag is present
         rust_kwargs = {
+            "allocator_library": Label("@rules_rust//ffi/rs:empty"),
             "edition": "2024",
             "extra_target_triples": DEFAULT_EXTRA_TARGET_TRIPLES,
+            "global_allocator_library": Label("@rules_rust//ffi/rs:empty"),
             "urls": DEFAULT_STATIC_RUST_URL_TEMPLATES,
         }
 

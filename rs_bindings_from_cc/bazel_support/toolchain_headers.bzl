@@ -4,6 +4,7 @@
 
 """Generates bindings for the toolchain headers."""
 
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(
     "@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl",
@@ -39,11 +40,17 @@ def _bindings_for_toolchain_headers_impl(ctx):
     toolchain = toolchain.rs_bindings_from_cc_toolchain_info
     builtin_headers = toolchain.builtin_headers
 
-    stl_headers = depset(toolchain.stl_headers + ctx.files.extra_hdrs)
+    stl_headers = depset([
+        hdr
+        for hdr in toolchain.stl_headers
+        if "/c++/v1/" in hdr.path or "/usr/" in hdr.path
+    ] + ctx.files.extra_hdrs)
+    stl_cc_headers = [ctx.attr._stl[CcInfo].compilation_context.headers] if hasattr(ctx.attr, "_stl") else []
+    stl_compilation_context = ctx.attr._stl[CcInfo].compilation_context if hasattr(ctx.attr, "_stl") else cc_common.create_compilation_context()
 
     # TODO(b/803417336): depset(...).to_list() is necessary to deduplicate header files.
-    std_files = depset(transitive = [ctx.attr._stl[CcInfo].compilation_context.headers, stl_headers]).to_list()
-    std_and_builtin_files = depset(builtin_headers, transitive = [stl_headers, ctx.attr._stl[CcInfo].compilation_context.headers])
+    std_files = depset(transitive = stl_cc_headers + [stl_headers]).to_list()
+    std_and_builtin_files = depset(builtin_headers, transitive = [stl_headers] + stl_cc_headers)
 
     prefixed_libcxx_hdrs = _add_prefix(ctx.attr.public_libcxx_hdrs, "c++/v1/")
 
@@ -60,7 +67,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
             json.encode({
                 "t": str(ctx.label),
                 "h": [hdr.path for hdr in std_files + builtin_libcxx_files],
-                "f": ["all"],
+                "f": ["all", "no_impl_cxx_extern_type", "no_assume_lifetimes"],
             }),
             json.encode({
                 "t": "//:_nothing_should_depend_on_private_builtin_hdrs",
@@ -70,6 +77,8 @@ def _bindings_for_toolchain_headers_impl(ctx):
     )
 
     public_libcxx_files = _filter_headers_with_suffixes(std_files, prefixed_libcxx_hdrs)
+
+    prefixed_libc_hdrs = []
 
     prefixed_libc_hdrs += _add_prefix(ctx.attr.public_libc_hdrs, "usr/include/")
     prefixed_libc_hdrs += _add_prefix(ctx.attr.public_libc_hdrs, "include/")
@@ -101,7 +110,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
     bindings_providers = generate_and_compile_bindings(
         ctx,
         ctx.attr,
-        compilation_context = ctx.attr._stl[CcInfo].compilation_context,
+        compilation_context = stl_compilation_context,
         public_hdrs = public_hdrs,
         header_includes = header_includes,
         action_inputs = std_and_builtin_files,
@@ -139,7 +148,6 @@ bindings_for_toolchain_headers = rule(
         # This isn't read directly by _bindings_for_toolchain_headers_impl, but is read by
         # rules_rust when compiling the generated and additional Rust source code.
         "crate_features": attr.string_list(),
-        "_stl": attr.label(default = "//third_party/stl:stl"),
         # TODO: b/421934470 - Fix uses of exec groups and re-enable AEG
         "_use_auto_exec_groups": attr.bool(default = False),
     },
@@ -148,5 +156,7 @@ bindings_for_toolchain_headers = rule(
         "@bazel_tools//tools/cpp:toolchain_type",
         config_common.toolchain_type("@rules_crubit//rs_bindings_from_cc/bazel_support:toolchain_type", mandatory = False),
     ],
-    fragments = ["cpp", "google_cpp"],
+    fragments = [
+        "cpp",
+    ],
 )

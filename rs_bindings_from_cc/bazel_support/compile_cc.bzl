@@ -85,16 +85,10 @@ def compile_cc(
         user_link_flags = backrefs_flag,
     )
 
-    debug_context = cc_common.merge_debug_context([
-        cc_info._debug_context if hasattr(cc_info, "_debug_context") else cc_info.debug_context(),
-        cc_common.create_debug_context(compilation_outputs),
-    ])
-
     # `compilation_context` already carries the headers and header modules of `cc_infos` as
     # non-exported deps. Don't re-export `cc_infos` here: the caller decides which module maps
     # dependents may use (see `RustBindingsFromCcInfo.cc_info`).
     return CcInfo(
         compilation_context = compilation_context,
         linking_context = linking_context,
-        debug_context = debug_context,
     )

@@ -38,11 +38,6 @@ load(
     "generate_and_compile_bindings",
     "make_aliasable_dep_info",
 )
-load("@protobuf//rust:aspects.bzl", "RustProtoInfo", "rust_cc_proto_library_aspect")
-load(
-    "@protobuf//rust/bazel:encode_raw_string_as_crate_name.bzl",
-    protobuf_encode_raw_string_as_crate_name = "encode_raw_string_as_crate_name",
-)
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
 # `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
@@ -510,7 +505,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         extra_rs_bindings_from_cc_cli_flags = extra_rs_bindings_from_cc_cli_flags,
         should_generate_bindings = (
             has_public_headers or extra_rs_srcs
-        ) and not _is_cc_proto_library(target),
+        ) and not _is_cc_proto_library(ctx.rule),
         aliases = aliases,
         additional_rust_srcs = depset(
             transitive = [
@@ -550,7 +545,6 @@ def _attr_predicate(ctx):
 rust_bindings_from_cc_aspect = aspect(
     implementation = _rust_bindings_from_cc_aspect_impl,
     attr_aspects = _attr_predicate,
-    requires = [rust_cc_proto_library_aspect],
     required_aspect_providers = [CcInfo],
     attrs = bindings_attrs | {
         "_std": attr.label(
@@ -567,5 +561,7 @@ rust_bindings_from_cc_aspect = aspect(
         # that use Crubit and Nothing Bad Happens.
         config_common.toolchain_type("@rules_crubit//rs_bindings_from_cc/bazel_support:toolchain_type", mandatory = False),
     ],
-    fragments = ["cpp", "google_cpp"],
+    fragments = [
+        "cpp",
+    ],
 )

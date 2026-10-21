@@ -129,7 +129,6 @@ bzl_library(
     visibility = ["//cc_bindings_from_rs/bazel_support:__pkg__"],
     deps = [
         "@bazel_skylib//lib:structs",
-        "@rules_rust//rust/private:bzl_lib",
     ],
 )
 

@@ -96,10 +96,7 @@ def generate_bindings(
     namespaces_output = ctx.actions.declare_file(crate_name + "_namespaces.json")
     error_report_output = None
 
-    if ctx.label in [Label(x) for x in ctx.attr._verbose_log_targets[BuildSettingInfo].value]:
-        verbose_log_flags = ["--stderrthreshold=0"]
-    else:
-        verbose_log_flags = ["--stderrthreshold=2"]
+    verbose_log_flags = []
 
     rs_bindings_from_cc_flags = verbose_log_flags + [
         "--target=" + str(ctx.label),
@@ -156,13 +153,8 @@ def generate_bindings(
     rs_bindings_from_cc_flags += extra_rs_bindings_from_cc_cli_flags
 
     system_include_directories = depset(
-       direct = [
-         # libcxx headers.
-         cc_toolchain.built_in_include_directories[0],
-       ] + [
-         cc_toolchain.built_in_include_directories[2],
-       ],
-       transitive = [compilation_context.system_includes],
+        direct = cc_toolchain.built_in_include_directories,
+        transitive = [compilation_context.system_includes],
     )
 
     local_defines = []
@@ -201,23 +193,38 @@ def generate_bindings(
     )
 
     # Run the `rs_bindings_from_cc` to generate the _rust_api_impl.cc and _rust_api.rs files.
-    cc_common.create_compile_action(
-        compilation_context = compilation_context,
-        actions = ctx.actions,
-        action_name = ACTION_NAMES.rs_bindings_from_cc,
+    args = ctx.actions.args()
+    args.use_param_file("@%s", use_always = True)
+    args.set_param_file_format("multiline")
+    args.add("--driver_path=" + cc_toolchain.compiler_executable)
+    args.add_all(target_args, before_each = "--target_to_arg")
+    args.add_all(rs_bindings_from_cc_flags + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs) + _get_unstable_rust_features_command_line(unstable_rust_features) + _get_extra_cpp_srcs_command_line(extra_cpp_srcs))
+    args.add("--")
+    args.add_all(cc_common.get_memory_inefficient_command_line(
         feature_configuration = feature_configuration,
-        cc_toolchain = cc_toolchain,
-        source_file = public_hdrs[0],
-        output_file = cc_output,
-        additional_inputs = depset(
+        action_name = ACTION_NAMES.cpp_compile,
+        variables = variables,
+    ))
+    ctx.actions.run(
+        outputs = [x for x in [cc_output, rs_output, namespaces_output, error_report_output] if x != None],
+        inputs = depset(
             direct = [
                 ctx.executable._clang_format,
                 ctx.executable._rustfmt,
-                rs_bindings_from_cc_tool,
-            ] + ctx.files._rustfmt_cfg + extra_cpp_srcs,
-            transitive = [action_inputs],
+            ] + ctx.files._rustfmt_cfg + extra_cpp_srcs + public_hdrs,
+            transitive = [
+                action_inputs,
+                compilation_context.headers,
+                cc_toolchain.all_files,
+            ],
         ),
-        additional_outputs = [x for x in [rs_output, namespaces_output, error_report_output] if x != None],
-        variables = variables,
+        executable = rs_bindings_from_cc_tool,
+        arguments = [args],
+        mnemonic = "RustBindingsFromCc",
+        env = cc_common.get_environment_variables(
+            feature_configuration = feature_configuration,
+            action_name = ACTION_NAMES.cpp_compile,
+            variables = variables,
+        ),
     )
     return (cc_output, rs_output, namespaces_output, error_report_output)

@@ -305,15 +305,7 @@ def generate_and_compile_bindings(
                 direct = [file for (file, _) in extra_rs_srcs],
                 transitive = [additional_rust_srcs],
             ),
-            extra_named_deps = depset(
-                direct = [
-                    AliasableDepInfo(
-                        name = name,
-                        dep = dep_variant_info.crate_info,
-                    ),
-                ],
-                transitive = [extra_named_deps],
-            ),
+            extra_named_deps = depset(),
         ),
         GeneratedBindingsInfo(
             cc_file = cc_output,
