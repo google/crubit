@@ -11,7 +11,7 @@ use crate::generate_enum::{anonymous_field_ident, scalar_value_to_string};
 use crate::generate_struct_and_union::{
     generate_associated_item, generate_fields, generate_relocating_ctor, has_type_or_const_vars,
 };
-use crate::{generate_unsupported_def, generate_unsupported_def_with_args};
+use crate::generate_unsupported::{generate_unsupported_def, generate_unsupported_def_with_args};
 use arc_anyhow::{bail, Result};
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
@@ -27,7 +27,7 @@ use error_report::anyhow;
 use itertools::Itertools;
 use proc_macro2::Literal;
 use proc_macro2::TokenStream;
-use query_compiler::{self, get_layout};
+use query_compiler::{self, get_layout, normalize_ty};
 use quote::{format_ident, quote};
 #[rustversion::since(2026-04-22)]
 use rustc_abi::LayoutData;
@@ -99,7 +99,7 @@ fn parse_adt_def_template_specialization<'tcx>(
     adt: ty::AdtDef<'tcx>,
     substs: ty::GenericArgsRef<'tcx>,
 ) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
-    use crate::BridgedBuiltin;
+    use crate::format_type::BridgedBuiltin;
     use database::code_snippet::EnumSpecializationKind;
     let tcx = db.tcx();
     BridgedBuiltin::new(db, adt).map(|bridged_builtin| {
@@ -933,7 +933,7 @@ fn find_pointer_field_offset_impl<'tcx>(
         for (i, field) in variant.fields.iter().enumerate() {
             let field_offset = layout.fields().offset(i).bytes();
             let field_ty = field.ty(tcx, args);
-            let field_ty = crate::normalize_ty(tcx, tcx.param_env(field.did), field_ty);
+            let field_ty = normalize_ty(tcx, tcx.param_env(field.did), field_ty);
 
             if let Some(offset) =
                 find_pointer_field_offset_impl(tcx, field_ty, current_offset + field_offset)
@@ -995,7 +995,7 @@ fn find_capacity_field_offset_impl<'tcx>(
     variant.fields.iter().enumerate().find_map(|(i, field)| {
         let field_offset = layout.fields().offset(i).bytes();
         let field_ty = field.ty(tcx, args);
-        let field_ty = crate::normalize_ty(tcx, tcx.param_env(field.did), field_ty);
+        let field_ty = normalize_ty(tcx, tcx.param_env(field.did), field_ty);
         find_capacity_field_offset_impl(tcx, field_ty, current_offset + field_offset)
     })
 }
@@ -1017,7 +1017,7 @@ fn compute_vec_layout_offsets<'tcx>(
 
     for (i, field) in variant.fields.iter().enumerate() {
         let field_ty = field.ty(tcx, adt_generic_args);
-        let field_ty = crate::normalize_ty(tcx, tcx.param_env(field.did), field_ty);
+        let field_ty = normalize_ty(tcx, tcx.param_env(field.did), field_ty);
         let field_offset = layout.fields().offset(i).bytes();
 
         if matches!(field_ty.kind(), ty::TyKind::Uint(ty::UintTy::Usize)) {
@@ -1767,7 +1767,7 @@ fn append_negative_auto_trait_impls<'tcx>(
         {
             continue;
         }
-        let ty = crate::normalize_ty(
+        let ty = normalize_ty(
             tcx,
             tcx.param_env(self_def_id),
             tcx.type_of(self_def_id).instantiate_identity(),
@@ -1871,7 +1871,7 @@ fn generate_trait_impl_specialization<'tcx>(
     let tcx = db.tcx();
     let impl_def_id = trait_impl.trait_impl;
     let trait_header = tcx.impl_trait_header(impl_def_id);
-    let trait_ref = crate::normalize_ty(
+    let trait_ref = normalize_ty(
         tcx,
         tcx.param_env(impl_def_id),
         trait_header.trait_ref.instantiate_identity(),

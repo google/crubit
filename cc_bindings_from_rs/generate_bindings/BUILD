@@ -19,12 +19,14 @@ rust_library(
     srcs = [
         "avoid_colliding_types.rs",
         "format_type.rs",
+        "generate_comment.rs",
         "generate_ctor.rs",
         "generate_enum.rs",
         "generate_function.rs",
         "generate_function_thunk.rs",
         "generate_struct_and_union.rs",
         "generate_template_specialization.rs",
+        "generate_unsupported.rs",
         "get_generic_args.rs",
         "lib.rs",
     ],
@@ -154,5 +156,6 @@ rust_library(
         "//cc_bindings_from_rs/generate_bindings/database",
         "//common:arc_anyhow",
         "//common:error_report",
+        "@crate_index//:itertools",  # v0_13
     ],
 )

@@ -22,24 +22,26 @@ extern crate rustc_type_ir;
 
 pub mod avoid_colliding_types;
 pub mod format_type;
+mod generate_comment;
 mod generate_ctor;
 mod generate_enum;
 pub mod generate_function;
 mod generate_function_thunk;
 mod generate_struct_and_union;
 mod generate_template_specialization;
+mod generate_unsupported;
 mod get_generic_args;
 
 use crate::format_type::{
-    crubit_abi_type_from_ty, format_cc_ident, format_cc_ident_symbol,
-    format_top_level_ns_for_crate, BridgedBuiltin,
+    crubit_abi_type_from_ty, format_cc_ident, format_cc_ident_symbol, format_top_level_ns_for_crate,
 };
+use crate::generate_comment::{generate_deprecated_tag, generate_doc_comment};
 use crate::generate_ctor::{
     copy_ctor_and_assignment_operator_codegen_style, has_default_ctor,
     is_cpp_constexpr_move_constructible, is_cpp_move_constructible,
     move_ctor_and_assignment_operator_codegen_style,
 };
-use crate::generate_function::{generate_function, must_use_attr_of};
+use crate::generate_function::generate_function;
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, create_type_alias_with_rs_type,
     from_trait_impls_by_argument, generate_adt, generate_adt_core, generate_const,
@@ -47,14 +49,18 @@ use crate::generate_struct_and_union::{
     into_trait_impls_by_destination, GenericAdtHeader,
 };
 use crate::generate_template_specialization::append_trait_impls;
-use arc_anyhow::{Context, Error, Result};
+use crate::generate_unsupported::generate_unsupported_def;
+pub use crate::generate_unsupported::{
+    generate_unsupported_def_with_args, item_name_for_error_report, report_must_bind_error,
+};
+use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude, NamespaceQualifier};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet, TemplateSpecialization,
 };
 use database::{
-    rename_clang_builtin_macros, AdtCoreBindings, CoreBindingsCommon, ExportedPath,
-    FullyQualifiedName, PublicPaths, StaticMethodMode, TypeLocation, UnqualifiedName,
+    rename_clang_builtin_macros, CoreBindingsCommon, ExportedPath, FullyQualifiedName, PublicPaths,
+    StaticMethodMode, TypeLocation, UnqualifiedName,
 };
 pub use database::{
     BindingsGenerator, CopyCodegenStyle, CppTypeSpecialization, IncludeGuard, MoveCodegenStyle,
@@ -62,8 +68,11 @@ pub use database::{
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
+use query_compiler::{
+    is_in_ignore_symbols_from_files, stable_def_id_cmp, try_normalize_ty, SortedByDef,
+};
+pub use query_compiler::{normalize_ty, should_receive_bindings};
 use quote::{format_ident, quote};
-use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
 use rustc_hir::def::{DefKind, Res};
 #[cfg_accessible(rustc_middle::metadata)] // Before nightly-2026-09-06
 use rustc_middle::metadata::{ModChild, Reexport};
@@ -72,55 +81,14 @@ use rustc_middle::middle::resolve::{ModChild, Reexport};
 use rustc_middle::ty::{self, GenericParamDefKind, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
-use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
-use std::fmt::{self, Display, Formatter};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::rc::Rc;
-
-pub(crate) fn are_generics_enabled<'tcx>(db: &BindingsGenerator<'tcx>, krate: CrateNum) -> bool {
-    db.crate_features(db.source_crate_num()).contains(crubit_feature::CrubitFeature::Generics)
-        && db.crate_features(krate).contains(crubit_feature::CrubitFeature::Generics)
-}
 
 /// Implementation of `BindingsGenerator::support_header`.
 fn support_header<'tcx>(db: &BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcInclude {
     CcInclude::support_lib_header(db.crubit_support_path_format(), suffix.into())
-}
-
-pub(crate) fn is_in_ignore_symbols_from_files<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    def_id: DefId,
-) -> bool {
-    let def_span = db.tcx().def_span(def_id);
-    let filepath = db.tcx().sess.source_map().span_to_filename(def_span);
-    let file_name = filepath.prefer_local_unconditionally().to_string();
-    let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
-    db.ignore_symbols_from_files().contains(Path::new(file_name))
-}
-
-pub fn should_receive_bindings<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<()> {
-    let tcx = db.tcx();
-    let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
-    if attributes.do_not_bind {
-        let name = tcx.def_path_str(def_id);
-        bail!("`{name}` does not receive bindings because it is marked `#[do_not_bind]`.");
-    }
-    // If the type has a `cpp_type` attribute, it should receive bindings even if it is defined in
-    // an ignored file.
-    if attributes.cpp_type.is_some() {
-        return Ok(());
-    }
-    if is_in_ignore_symbols_from_files(db, def_id) {
-        let name = tcx.def_path_str(def_id);
-        bail!(
-            "`{name}` does not receive bindings because it is defined in an \
-            additional Rust source on a `rust_api_from_cpp` rule. See \
-            crubit.rs/cpp/best_practices#types-in-srcs-do-not-receive-cpp-bindings."
-        );
-    }
-    Ok(())
 }
 
 fn check_unbindable_type(db: &BindingsGenerator, def_id: DefId) {
@@ -520,13 +488,6 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
     };
 
     Ok(BindingsTokens { cc_api, cc_api_impl })
-}
-
-fn check_feature_enabled_on_self_and_all_deps(
-    db: &BindingsGenerator,
-    feature: crubit_feature::CrubitFeature,
-) -> bool {
-    db.crate_name_to_features().values().all(|crate_features| crate_features.contains(feature))
 }
 
 fn format_with_cc_body(
@@ -1005,131 +966,6 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
     })
 }
 
-/// Checks whether a definition matches a specific qualified name by matching its definition path
-/// against `name`. Name must include the crate in its path.
-fn matches_qualified_name(db: &BindingsGenerator<'_>, item_did: DefId, name: &[&str]) -> bool {
-    let tcx = db.tcx();
-    let path = tcx.def_path(item_did);
-    if path.data.len() + 1 != name.len() {
-        return false;
-    }
-    // This will always return false for anonymous path data because the caller won't be able to
-    // specify the `disambiguator` that gets inserted into the symbol. That's fine. It is expected
-    // this function will only be called to check for non-anonymous paths.
-    [tcx.crate_name(path.krate)]
-        .into_iter()
-        .chain(path.data.into_iter().map(|seg| seg.as_sym(/* verbose= */ false)))
-        .zip(name.iter().map(|s| Symbol::intern(s)))
-        .all(|(sym, expected)| sym == expected)
-}
-
-#[rustversion::before(2026-07-09)]
-fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
-    matches!(
-        backend_repr,
-        BackendRepr::ScalarPair(
-            Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
-            Scalar::Initialized {
-                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
-                ..
-            }
-        )
-    )
-}
-
-#[rustversion::since(2026-07-09)]
-fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
-    matches!(
-        backend_repr,
-        BackendRepr::ScalarPair {
-            a: Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
-            b: Scalar::Initialized {
-                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
-                ..
-            },
-            ..
-        }
-    )
-}
-
-/// Checks that `ty` has the same ABI as `rs_std::SliceRef`.
-fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
-    // Check the assumption from `rust_builtin_type_abi_assumptions.md` that Rust's
-    // slice has the same ABI as `rs_std::SliceRef`.
-    let layout = tcx
-        .layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
-        .expect("`layout_of` is expected to succeed for `{ty}` type")
-        .layout;
-
-    let data_layout = tcx.data_layout();
-    let ptr_size = data_layout.pointer_size().bytes();
-    let ptr_align = data_layout.pointer_align().abi.bytes();
-
-    assert_eq!(ptr_align, layout.align().abi.bytes());
-    assert_eq!(2 * ptr_size, layout.size().bytes());
-    assert!(has_slice_layout_representation(layout.backend_repr()));
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum CcType {
-    Pointer(Symbol),
-    Other(Symbol),
-}
-
-impl AsRef<str> for CcType {
-    fn as_ref(&self) -> &str {
-        match self {
-            CcType::Other(cpp_type) | CcType::Pointer(cpp_type) => cpp_type.as_str(),
-        }
-    }
-}
-
-/// Returns the C++ must_use tag for the item identified by `def_id`, or None if there is no such
-/// tag.
-fn generate_must_use_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
-    if let Some(must_use_attr) = must_use_attr_of(tcx, def_id) {
-        let cc_must_use_tag = match must_use_attr.reason {
-            None => quote! {[[nodiscard]]},
-            Some(reason) => {
-                let reason = reason.as_str();
-                quote! {[[nodiscard(#reason)]]}
-            }
-        };
-        return Some(cc_must_use_tag);
-    }
-    None
-}
-
-/// Returns the C++ deprecated tag for the item identified by `def_id`, if it is
-/// deprecated. Otherwise, returns None.
-fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
-    #[rustversion::since(2026-09-27)]
-    use rustc_attr_ir::{find_attr, AttributeKind};
-    #[rustversion::before(2026-09-27)]
-    use rustc_hir::{attrs::AttributeKind, find_attr};
-
-    // If our definition does not support attributes, get_all_attrs will panic, so we check
-    // beforehand and return None.
-    if !crubit_attr::supports_attrs(tcx.def_kind(def_id)) {
-        return None;
-    }
-
-    #[allow(deprecated)]
-    let deprecation_attr = find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecated{deprecation, span} => (*deprecation, *span));
-
-    if let Some((deprecation, _span)) = deprecation_attr {
-        let cc_deprecated_tag = match deprecation.note {
-            None => quote! {[[deprecated]]},
-            Some(note_symbol) => {
-                let note = note_symbol.as_str();
-                quote! {[[deprecated(#note)]]}
-            }
-        };
-        return Some(cc_deprecated_tag);
-    }
-    None
-}
-
 fn generate_using<'tcx>(
     db: &BindingsGenerator<'tcx>,
     using_name: &Symbol,
@@ -1482,174 +1318,6 @@ fn generate_fwd_decl(db: &BindingsGenerator<'_>, def_id: DefId) -> TokenStream {
     quote! { #keyword #cc_short_name; }
 }
 
-fn generate_kythe_doc_comment(
-    db: &BindingsGenerator,
-    def_id: DefId,
-    doc_comment: String,
-) -> TokenStream {
-    // Always emit a new capture tag so we can unconditionally emit capture brackets around
-    // identifiers. (Otherwise, we might accidentally associate a capture range with the wrong
-    // capture tag; it's fine to emit capture tags that never capture anything.)
-    let tcx = db.tcx();
-    let def_span = tcx.def_ident_span(def_id).unwrap_or_else(|| tcx.def_span(def_id));
-    let (start, end) = if def_span.is_dummy() {
-        ("0".to_string(), "0".to_string())
-    } else {
-        // We're assuming that lo and hi are in the same source file.
-        let sf = tcx.sess.source_map().lookup_source_file(def_span.lo());
-        (
-            sf.relative_position(def_span.lo()).0.to_string(),
-            sf.relative_position(def_span.hi()).0.to_string(),
-        )
-    };
-    let file_name =
-        tcx.sess.source_map().span_to_filename(def_span).prefer_local_unconditionally().to_string();
-    quote! { __CAPTURE_TAG__ #file_name #start #end __COMMENT__ #doc_comment}
-}
-
-/// Normalizes source paths for generated files located under `bazel-out/` by
-/// stripping dynamic configuration directories (such as transition hashes) and
-/// replacing them with stable `bazel-bin/` or `bazel-genfiles/` paths.
-fn normalize_source_path(file_name: &str) -> Cow<'_, str> {
-    if let Some((_config, subpath)) =
-        file_name.strip_prefix("bazel-out/").and_then(|rest| rest.split_once('/'))
-    {
-        if let Some(rel) = subpath.strip_prefix("bin/") {
-            return Cow::Owned(format!("bazel-bin/{rel}"));
-        }
-        if let Some(rel) = subpath.strip_prefix("genfiles/") {
-            return Cow::Owned(format!("bazel-genfiles/{rel}"));
-        }
-    }
-    Cow::Borrowed(file_name)
-}
-
-fn generate_source_location(db: &BindingsGenerator, def_id: DefId) -> String {
-    let tcx = db.tcx();
-    let def_span = tcx.def_span(def_id);
-    let rustc_span::FileLines { file, lines } = match tcx.sess.source_map().span_to_lines(def_span)
-    {
-        Ok(filelines) => filelines,
-        Err(_) => return "unknown location".to_string(),
-    };
-    let file_name = file.name.prefer_local_unconditionally().to_string();
-    // Virtual paths will have a "./" prefix that we don't want to display.
-    let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
-    let file_name = normalize_source_path(file_name);
-
-    // Note: line_index starts at 0, while most everything else starts indexing at 1.
-    let line_number = (lines[0].line_index + 1).to_string();
-    if let (Some(path_format), true) = (db.crubit_debug_path_format(), file.name.is_real()) {
-        return path_format.format(&[file_name.as_ref(), line_number.as_str()]);
-    }
-    format!("{file_name};l={line_number}")
-}
-
-/// Formats the doc comment (if any) associated with the item identified by
-/// `local_def_id`, and appends the source location at which the item is
-/// defined.
-fn generate_doc_comment(db: &BindingsGenerator, def_id: DefId) -> TokenStream {
-    #[allow(deprecated)]
-    let mut doc_comment: String = db
-        .tcx()
-        .get_all_attrs(def_id)
-        .iter()
-        .filter_map(|attr| attr.doc_str())
-        .map(|symbol| symbol.to_string())
-        .join("\n");
-
-    if !db.is_golden_test() || db.kythe_annotations() {
-        if !doc_comment.is_empty() {
-            doc_comment.push_str("\n\n");
-        }
-        doc_comment.push_str("Generated from: ");
-        doc_comment.push_str(&generate_source_location(db, def_id));
-    }
-
-    if db.kythe_annotations() {
-        generate_kythe_doc_comment(db, def_id, doc_comment)
-    } else if !doc_comment.is_empty() {
-        quote! { __COMMENT__ #doc_comment}
-    } else {
-        quote! {}
-    }
-}
-
-fn non_lifetime_args<'tcx>(args: &'tcx [ty::GenericArg<'tcx>]) -> &'tcx [ty::GenericArg<'tcx>] {
-    if args.iter().any(|arg| !matches!(arg.kind(), ty::GenericArgKind::Lifetime(_))) {
-        args
-    } else {
-        &[]
-    }
-}
-
-#[doc(hidden)]
-pub fn item_name_for_error_report<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    def_id: DefId,
-    args: &'tcx [ty::GenericArg<'tcx>],
-) -> error_report::ItemName {
-    let tcx = db.tcx();
-    let args = non_lifetime_args(args);
-    let crate_name = tcx.crate_name(def_id.krate);
-    let def_path = tcx.def_path_str_with_args(def_id, args);
-    let name = if def_id.is_local() {
-        format!("{crate_name}::{def_path}").into()
-    } else {
-        def_path.into()
-    };
-    let id = if args.is_empty() {
-        ((def_id.index.as_u32() as u64) << 32) | def_id.krate.as_u32() as u64
-    } else {
-        #[cfg_accessible(rustc_data_structures::stable_hash)]
-        use rustc_data_structures::stable_hash;
-        #[cfg_accessible(rustc_data_structures::stable_hasher)]
-        use rustc_data_structures::stable_hasher as stable_hash;
-
-        tcx.with_stable_hashing_context(|mut hcx| {
-            let mut hasher = stable_hash::StableHasher::new();
-            let key = (def_id, args);
-
-            #[cfg_accessible(stable_hash::HashStable)]
-            stable_hash::HashStable::hash_stable(&key, &mut hcx, &mut hasher);
-            #[cfg_accessible(stable_hash::StableHash)]
-            stable_hash::StableHash::stable_hash(&key, &mut hcx, &mut hasher);
-
-            hasher
-                .finish::<rustc_data_structures::fingerprint::Fingerprint>()
-                .to_smaller_hash()
-                .as_u64()
-        })
-    };
-    let defining_target = if def_id.krate == db.source_crate_num() {
-        None
-    } else {
-        Some(crate_name.to_string().into())
-    };
-    error_report::ItemName { name, id, unique_name: None, defining_target }
-}
-
-#[doc(hidden)]
-pub fn report_must_bind_error<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    def_id: DefId,
-    args: &'tcx [ty::GenericArg<'tcx>],
-    err: &Error,
-) {
-    let tcx = db.tcx();
-    let args = non_lifetime_args(args);
-    let item_path = tcx.def_path_str_with_args(def_id, args);
-    let bold = "\x1B[1m";
-    let reset = "\x1B[0m";
-    let red = "\x1B[31m";
-    let must_bind_message = format!(
-        "{bold}{red}error:{reset}{bold}{}\n\
-        {bold}note:{reset} hard error because `#[crubit_annotate::must_bind]` was applied to `{item_path}`",
-        unsupported_def_error_message(db, def_id, args, err, ErrorStyle::Terminal),
-    );
-    db.fatal_errors().report(&must_bind_message);
-}
-
 /// Implementation of `BindingsGenerator::generate_item`.
 fn generate_item<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -1664,21 +1332,6 @@ fn generate_item<'tcx>(
         report_must_bind_error(db, def_id, &[], e);
     }
     generated
-}
-
-#[macro_export]
-macro_rules! error_scope {
-    ($db:expr, $def_id:expr) => {
-        $crate::error_scope!($db, $def_id, &[]);
-    };
-    ($db:expr, $def_id:expr, $args:expr) => {
-        let db = $db;
-        let errors = db.errors();
-        let _error_scope = error_report::ItemScope::new(
-            &*errors,
-            $crate::item_name_for_error_report(db, $def_id, $args),
-        );
-    };
 }
 
 // A helper for `generate_item`.
@@ -1712,65 +1365,6 @@ fn generate_item_impl<'tcx>(
         DefKind::Mod => Ok(None),         // Handled by `generate_crate`
         kind => bail!("Unsupported rustc_hir::hir::DefKind: {kind:?}"),
     }
-}
-
-enum ErrorStyle {
-    // This message will be formatted as a comment.
-    Comment,
-    // This message will be printed to a terminal.
-    Terminal,
-}
-
-pub(crate) fn unsupported_def_error_message<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    def_id: DefId,
-    args: &'tcx [ty::GenericArg<'tcx>],
-    err: &Error,
-    style: ErrorStyle,
-) -> String {
-    let tcx = db.tcx();
-    let args = non_lifetime_args(args);
-    let source_loc = generate_source_location(db, def_id);
-    let name = tcx.def_path_str_with_args(def_id, args);
-    let def_kind = tcx.def_kind(def_id);
-    let kind_str = def_kind.descr(def_id);
-    let err_msg = if let ErrorStyle::Terminal = style {
-        format!("\n  {err:#}").replace('\n', "\n  ")
-    } else {
-        format!(" {err:#}")
-    };
-    let bold = if let ErrorStyle::Terminal = style { "\x1B[1m" } else { "" };
-    let reset = if let ErrorStyle::Terminal = style { "\x1B[0m" } else { "" };
-
-    // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
-    // says: To print causes as well [...], use the alternate selector “{:#}”.
-    format!("{bold}{kind_str} `{name}` defined at {source_loc}:{reset}{err_msg}")
-}
-
-/// Formats a C++ comment explaining why no bindings have been generated for
-/// `local_def_id`.
-pub(crate) fn generate_unsupported_def<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    def_id: DefId,
-    err: Error,
-) -> CcSnippet<'tcx> {
-    generate_unsupported_def_with_args(db, def_id, &[], err)
-}
-
-#[doc(hidden)]
-pub fn generate_unsupported_def_with_args<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    def_id: DefId,
-    args: &'tcx [ty::GenericArg<'tcx>],
-    err: Error,
-) -> CcSnippet<'tcx> {
-    db.errors().assert_in_item(item_name_for_error_report(db, def_id, args));
-    db.errors().report(&err);
-    let msg = format!(
-        "Error generating bindings for {}",
-        unsupported_def_error_message(db, def_id, args, &err, ErrorStyle::Comment)
-    );
-    CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ })
 }
 
 /// Formats namespace-bound snippets, given an iterator over (namespace_def_id,
@@ -1846,31 +1440,6 @@ pub fn format_namespace_bound_cc_tokens(
 
     iter.collect()
 }
-
-/// Compares two `DefId` s
-pub(crate) fn stable_def_id_cmp<'tcx>(tcx: TyCtxt<'tcx>, lhs_id: DefId, rhs_id: DefId) -> Ordering {
-    NodeSortKey::from_def_id(tcx, lhs_id).cmp(&NodeSortKey::from_def_id(tcx, rhs_id))
-}
-
-pub(crate) trait SortedByDef: Iterator + Sized {
-    fn sorted_by_def<'tcx>(self, tcx: TyCtxt<'tcx>) -> std::vec::IntoIter<Self::Item>
-    where
-        Self::Item: Copy + Into<DefId>,
-    {
-        self.sorted_by_def_with(tcx, |item| (*item).into())
-    }
-
-    fn sorted_by_def_with<'tcx>(
-        self,
-        tcx: TyCtxt<'tcx>,
-        mut item_to_def_id: impl FnMut(&Self::Item) -> DefId,
-    ) -> std::vec::IntoIter<Self::Item> {
-        self.sorted_unstable_by(|lhs, rhs| {
-            stable_def_id_cmp(tcx, item_to_def_id(lhs), item_to_def_id(rhs))
-        })
-    }
-}
-impl<T: Iterator + Sized> SortedByDef for T {}
 
 struct FormattedItem<'tcx> {
     def_id: DefId,
@@ -1958,7 +1527,7 @@ fn formatted_items_in_crate<'tcx>(
                 // We only want to call `generate_item` on DefIds from our source crate. External
                 // crate DefIds might appear in this map if our crate re-exports them, but we don't
                 // want to regenerate those definitions.
-                error_scope!(db, def_id);
+                crate::error_scope!(db, def_id);
                 let api_snippets = db.generate_item(def_id).transpose()?;
                 let (api_snippets, aliases) = api_snippets.map_or_else(
                     |err| (generate_unsupported_def(db, def_id, err).into_main_api(), vec![]),
@@ -2085,7 +1654,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     let mut main_apis = HashMap::<DefId, CcSnippet>::new();
     for item in formatted_items_in_crate(db) {
         let def_id = item.def_id;
-        error_scope!(db, def_id);
+        crate::error_scope!(db, def_id);
         // We delay handling aliases until after sorting by def id to ensure they are emitted in a
         // deterministic order, same as the main api definitions. This is important for caching and
         // testing.
@@ -2330,109 +1899,4 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     }
 
     Ok(BindingsTokens { cc_api, cc_api_impl })
-}
-
-pub(crate) fn thunk_qualifier(core: &AdtCoreBindings<'_>) -> TokenStream {
-    if core.def_id.is_none() {
-        quote! { ::__crubit_internal }
-    } else {
-        quote! { __crubit_internal }
-    }
-}
-
-#[rustversion::before(2026-04-19)]
-pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, _param_env: ty::ParamEnv<'tcx>, val: T) -> T {
-    val
-}
-
-#[rustversion::since(2026-04-19)]
-pub fn try_normalize_ty<'tcx, T>(
-    tcx: TyCtxt<'tcx>,
-    param_env: ty::ParamEnv<'tcx>,
-    val: ty::Unnormalized<'tcx, T>,
-) -> Result<T>
-where
-    T: ty::TypeFoldable<TyCtxt<'tcx>>,
-{
-    query_compiler::try_normalize_non_body(tcx, param_env, val.skip_normalization())
-        .map_err(|_| anyhow!("val contained unresolved type variables and could not be normalized"))
-}
-
-#[rustversion::since(2026-04-19)]
-pub fn normalize_ty<'tcx, T>(
-    tcx: TyCtxt<'tcx>,
-    param_env: ty::ParamEnv<'tcx>,
-    val: ty::Unnormalized<'tcx, T>,
-) -> T
-where
-    T: ty::TypeFoldable<TyCtxt<'tcx>> + std::fmt::Debug,
-{
-    try_normalize_ty(tcx, param_env, val).expect(
-        "normalize_ty called on a type that could not be normalized. Consider try_normalize_ty",
-    )
-}
-
-/// Returns true if the field is public and stable.
-///
-/// Notably, this rejects public fields that are unstable, which may exist for macro accessibility
-/// reasons.
-pub fn field_def_is_pub_and_stable(
-    tcx: TyCtxt<'_>,
-    field_def: &ty::FieldDef,
-) -> Result<(), PrivateOrUnstableField> {
-    if field_def.vis != ty::Visibility::Public {
-        return Err(PrivateOrUnstableField::Private);
-    }
-    if tcx.lookup_stability(field_def.did).is_some_and(|stability| stability.is_unstable()) {
-        return Err(PrivateOrUnstableField::Unstable);
-    }
-    Ok(())
-}
-
-pub enum PrivateOrUnstableField {
-    Private,
-    Unstable,
-}
-
-impl Display for PrivateOrUnstableField {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            PrivateOrUnstableField::Private => write!(f, "private"),
-            PrivateOrUnstableField::Unstable => write!(f, "unstable"),
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_normalize_source_path_bin() {
-        assert_eq!(
-            normalize_source_path("bazel-out/k8-fastbuild-ST-7be089cf1221/bin/foo/bar.rs"),
-            "bazel-bin/foo/bar.rs"
-        );
-        assert_eq!(
-            normalize_source_path("bazel-out/x86_64-opt/bin/third_party/rust/lib.rs"),
-            "bazel-bin/third_party/rust/lib.rs"
-        );
-    }
-
-    #[test]
-    fn test_normalize_source_path_genfiles() {
-        assert_eq!(
-            normalize_source_path("bazel-out/k8-fastbuild/genfiles/foo/bar.rs"),
-            "bazel-genfiles/foo/bar.rs"
-        );
-    }
-
-    #[test]
-    fn test_normalize_source_path_unmodified() {
-        assert_eq!(
-            normalize_source_path("test.rs"),
-            "test.rs"
-        );
-        assert_eq!(normalize_source_path("<crubit_unittests.rs>"), "<crubit_unittests.rs>");
-    }
 }

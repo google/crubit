@@ -15,7 +15,7 @@ extern crate rustc_middle;
 extern crate rustc_span;
 
 use crate::format_type::{can_be_made_layout_compatible, format_cc_ident};
-use crate::{generate_deprecated_tag, generate_doc_comment};
+use crate::generate_comment::{generate_deprecated_tag, generate_doc_comment};
 use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
 use crubit_feature::CrubitFeature;
@@ -23,7 +23,7 @@ use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::get_layout;
+use query_compiler::{field_def_is_pub_and_stable, get_layout, normalize_ty};
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
 use rustc_abi::LayoutData;
@@ -335,11 +335,11 @@ fn analyze_field<'tcx>(
 ) -> Result<EnumField<'tcx>> {
     let tcx = db.tcx();
     let name = field_def.name.as_str();
-    crate::field_def_is_pub_and_stable(tcx, field_def)
+    field_def_is_pub_and_stable(tcx, field_def)
         .map_err(|private_or_unstable| anyhow!("Field `{name}` is {private_or_unstable}"))?;
 
     let ty = field_def.ty(tcx, generic_args);
-    let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
+    let ty = normalize_ty(tcx, tcx.param_env(field_def.did), ty);
     let size = get_layout(tcx, ty)?.size().bytes();
     ensure!(size != 0, "Field `{name}` is zero-sized, and C++ does not support zero-sized types");
     ensure!(

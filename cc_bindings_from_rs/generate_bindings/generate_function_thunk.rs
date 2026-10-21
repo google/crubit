@@ -2,12 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use crate::format_type::CcType;
 use crate::format_type::{
     alias_ty_as_opaque_def_id, format_cc_ident, format_param_types_for_cc_thunk,
     format_ty_for_closure_param_rs, is_bridged_type, replace_all_regions_with_static,
     ty_as_alias_ty, BridgedType, BridgedTypeConversionInfo, CallableInfo, CallableKind,
 };
-use crate::CcType;
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
 use code_gen_utils::make_rs_ident;
@@ -19,7 +19,7 @@ use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use query_compiler::{
     does_type_implement_trait, is_c_abi_compatible_by_value,
-    liberate_and_deanonymize_late_bound_regions, try_normalize,
+    liberate_and_deanonymize_late_bound_regions, normalize_ty, try_normalize,
 };
 use quote::format_ident;
 use quote::quote;
@@ -104,7 +104,7 @@ pub(crate) fn generate_ctor_thunk_call<'tcx>(
     thunk_name: &Ident,
     args: &[TokenStream],
 ) -> Result<TokenStream> {
-    let thunk_qualifier = crate::thunk_qualifier(core);
+    let thunk_qualifier = thunk_qualifier(core);
     Ok(
         if matches!(
             classify_value_abi(db, core.common.self_ty, /* is_constructor= */ true)?,
@@ -881,7 +881,7 @@ pub fn generate_trait_thunks<'tcx>(
     fn is_supported_trait_method<'tcx>(tcx: TyCtxt<'tcx>, method_def_id: DefId) -> bool {
         // We want to check the `self` type of the method (and not the enclosing impl) so that we
         // see Pin<Self>/Box<Self>.
-        let fn_sig = crate::normalize_ty(
+        let fn_sig = normalize_ty(
             tcx,
             tcx.param_env(method_def_id),
             tcx.fn_sig(method_def_id).instantiate_identity(),
@@ -1091,7 +1091,7 @@ pub(crate) fn function_symbol_name<'tcx>(
             let base_name = tcx
                 .trait_impl_of_assoc(def_id)
                 .map(|impl_id| {
-                    let trait_ref = crate::normalize_ty(
+                    let trait_ref = normalize_ty(
                         tcx,
                         tcx.param_env(impl_id),
                         tcx.impl_trait_ref(impl_id).instantiate_identity(),
@@ -1164,4 +1164,12 @@ pub fn get_async_future_output_ty<'tcx>(
     crate::format_type::get_associated_type(tcx, rs_return_type, sym::Output).ok_or_else(|| {
         anyhow!("Failed to find Future::Output associated type in bounds of {:?}", rs_return_type)
     })
+}
+
+pub(crate) fn thunk_qualifier(core: &AdtCoreBindings<'_>) -> TokenStream {
+    if core.def_id.is_none() {
+        quote! { ::__crubit_internal }
+    } else {
+        quote! { __crubit_internal }
+    }
 }

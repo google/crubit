@@ -7,10 +7,9 @@
 //! value, together with the `BindingsGenerator` queries that decide which of them an ADT gets.
 
 use crate::generate_function_thunk::{
-    generate_ctor_thunk_call, generate_trait_thunks, TraitThunks,
+    generate_ctor_thunk_call, generate_trait_thunks, thunk_qualifier, TraitThunks,
 };
 use crate::generate_struct_and_union::is_struct_aggregate;
-use crate::{normalize_ty, thunk_qualifier};
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, RsSnippet};
@@ -18,7 +17,7 @@ use database::{AdtCoreBindings, BindingsGenerator, CopyCodegenStyle, MoveCodegen
 use error_report::{anyhow, bail};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
-use query_compiler::{does_type_implement_trait, is_copy, is_std_ptr_non_null};
+use query_compiler::{does_type_implement_trait, is_copy, is_std_ptr_non_null, normalize_ty};
 use quote::quote;
 use rustc_middle::ty::{self, Ty};
 use rustc_span::symbol::sym;

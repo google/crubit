@@ -270,6 +270,7 @@ dependencies = [
  "cc_bindings_from_rs_database",
  "cc_bindings_from_rs_rustversion",
  "error_report",
+ "itertools",
 ]
 
 [[package]]

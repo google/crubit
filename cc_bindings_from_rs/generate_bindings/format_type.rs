@@ -12,9 +12,6 @@ extern crate rustc_middle;
 extern crate rustc_span;
 extern crate rustc_type_ir;
 
-use crate::{
-    check_feature_enabled_on_self_and_all_deps, check_slice_layout, matches_qualified_name, CcType,
-};
 use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
 use crubit_abi_type::CrubitAbiType;
@@ -27,9 +24,14 @@ use database::BindingsGenerator;
 use database::{rename_c_stdlib_functions, rename_clang_builtin_macros, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::{get_layout, is_c_abi_compatible_by_value, is_std_ptr_non_null};
+use query_compiler::{
+    get_layout, is_c_abi_compatible_by_value, is_std_ptr_non_null, matches_qualified_name,
+    normalize_ty, should_receive_bindings,
+};
 use quote::{format_ident, quote};
-use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
+use rustc_abi::{
+    AddressSpace, BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout,
+};
 #[rustversion::since(2026-09-27)]
 use rustc_attr_ir::lang_items::LangItem;
 #[rustversion::since(2026-08-09)]
@@ -1145,7 +1147,7 @@ fn format_ty_for_cc_impl<'tcx>(
                     has_cpp_type || !has_non_lifetime_substs(substs),
                     "Generic types are not supported yet (b/259749095)"
                 );
-                crate::should_receive_bindings(db, adt.did())?;
+                should_receive_bindings(db, adt.did())?;
                 db.symbol_canonical_name(adt.did())?;
 
                 prereqs.depend_on_def(db, def_id)?;
@@ -1351,8 +1353,7 @@ pub fn get_associated_type<'tcx>(
             .explicit_item_bounds(alias_def_id)
             .iter_instantiated_copied(tcx, alias_ty.args)
             .find_map(|unnorm| {
-                let (predicate, _span) =
-                    crate::normalize_ty(tcx, tcx.param_env(alias_def_id), unnorm);
+                let (predicate, _span) = normalize_ty(tcx, tcx.param_env(alias_def_id), unnorm);
                 if let ty::ClauseKind::Projection(projection_predicate) =
                     predicate.kind().skip_binder()
                     && tcx.item_name(projection_predicate.def_id()) == assoc_name
@@ -2075,7 +2076,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
 
                 let tcx = db.tcx();
                 ensure!(
-                    db.is_cpp_move_constructible(crate::normalize_ty(
+                    db.is_cpp_move_constructible(normalize_ty(
                         tcx,
                         tcx.param_env(adt.did()),
                         tcx.type_of(adt.did()).instantiate(tcx, substs)
@@ -2142,7 +2143,7 @@ impl BridgedBuiltin {
     pub fn new(db: &BindingsGenerator<'_>, adt: AdtDef<'_>) -> Option<Self> {
         let tcx = db.tcx();
         if tcx.is_diagnostic_item(rustc_span::symbol::sym::Vec, adt.did())
-            || crate::matches_qualified_name(db, adt.did(), &["alloc", "vec", "Vec"])
+            || matches_qualified_name(db, adt.did(), &["alloc", "vec", "Vec"])
         {
             return Some(BridgedBuiltin::Vec);
         }
@@ -2508,4 +2509,72 @@ where
     }
 
     value.fold_with(&mut Staticifier { tcx, static_region: tcx.lifetimes.re_static })
+}
+
+pub(crate) fn check_feature_enabled_on_self_and_all_deps(
+    db: &BindingsGenerator,
+    feature: crubit_feature::CrubitFeature,
+) -> bool {
+    db.crate_name_to_features().values().all(|crate_features| crate_features.contains(feature))
+}
+
+#[rustversion::before(2026-07-09)]
+fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
+    matches!(
+        backend_repr,
+        BackendRepr::ScalarPair(
+            Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
+            Scalar::Initialized {
+                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
+                ..
+            }
+        )
+    )
+}
+
+#[rustversion::since(2026-07-09)]
+fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
+    matches!(
+        backend_repr,
+        BackendRepr::ScalarPair {
+            a: Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
+            b: Scalar::Initialized {
+                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
+                ..
+            },
+            ..
+        }
+    )
+}
+
+/// Checks that `ty` has the same ABI as `rs_std::SliceRef`.
+pub(crate) fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
+    // Check the assumption from `rust_builtin_type_abi_assumptions.md` that Rust's
+    // slice has the same ABI as `rs_std::SliceRef`.
+    let layout = tcx
+        .layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
+        .expect("`layout_of` is expected to succeed for `{ty}` type")
+        .layout;
+
+    let data_layout = tcx.data_layout();
+    let ptr_size = data_layout.pointer_size().bytes();
+    let ptr_align = data_layout.pointer_align().abi.bytes();
+
+    assert_eq!(ptr_align, layout.align().abi.bytes());
+    assert_eq!(2 * ptr_size, layout.size().bytes());
+    assert!(has_slice_layout_representation(layout.backend_repr()));
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CcType {
+    Pointer(Symbol),
+    Other(Symbol),
+}
+
+impl AsRef<str> for CcType {
+    fn as_ref(&self) -> &str {
+        match self {
+            CcType::Other(cpp_type) | CcType::Pointer(cpp_type) => cpp_type.as_str(),
+        }
+    }
 }

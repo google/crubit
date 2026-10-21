@@ -2,19 +2,20 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use crate::format_type::CcType;
 use crate::format_type::{
     check_fn_sig, format_cc_ident, format_param_types_for_cc_api, format_region_as_cc_lifetime,
     format_ret_ty_for_cc, format_top_level_ns_for_crate, has_elided_region, is_bridged_type,
     is_thunk_required, region_is_elided, BridgedType, BridgedTypeConversionInfo, CallableInfo,
     CallableKind, CcParamTy,
 };
+use crate::generate_comment::{generate_deprecated_tag, generate_doc_comment, must_use_attr_of};
 use crate::generate_function_thunk::{
     classify_param_abi, classify_value_abi, fn_arg_idents, function_symbol_name,
     generate_thunk_decl, generate_thunk_impl, get_async_future_output_ty, make_thunk_name,
     ParamAbi, ThunkKind, ValueAbi,
 };
 use crate::get_generic_args::GenericClausesExt;
-use crate::{generate_deprecated_tag, generate_doc_comment, CcType};
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
@@ -25,14 +26,14 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
     as_ref_or_pinned_ref, does_type_implement_trait, get_layout, is_c_abi_compatible_by_value,
-    is_copy, liberate_and_deanonymize_late_bound_regions,
+    is_copy, liberate_and_deanonymize_late_bound_regions, matches_qualified_name, normalize_ty,
 };
 use quote::quote;
 #[rustversion::since(2026-09-27)]
-use rustc_attr_ir::{find_attr, Attribute, AttributeKind};
+use rustc_attr_ir::{Attribute, AttributeKind};
 use rustc_hir::def::DefKind;
 #[rustversion::before(2026-09-27)]
-use rustc_hir::{attrs::AttributeKind, find_attr, Attribute};
+use rustc_hir::{attrs::AttributeKind, Attribute};
 use rustc_middle::mir::{self, Mutability};
 use rustc_middle::ty::{self, TraitRef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
@@ -217,8 +218,8 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
         }
         ParamAbi::Value(ValueAbi::ByValue) => {
             if let ty::TyKind::Adt(adt, _) = ty.kind()
-                && (crate::matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"])
-                    || crate::matches_qualified_name(db, adt.did(), &["ctor", "ByValue"]))
+                && (matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"])
+                    || matches_qualified_name(db, adt.did(), &["ctor", "ByValue"]))
             {
                 includes.insert(code_gen_utils::CcInclude::utility());
                 quote! { ::std::move(#cc_ident) }
@@ -646,11 +647,7 @@ fn self_ty_of_method<'tcx>(
     let num_impl_params = impl_generics.count();
     let impl_args = tcx.mk_args(&generic_args[..num_impl_params]);
 
-    crate::normalize_ty(
-        tcx,
-        tcx.param_env(impl_id),
-        tcx.type_of(impl_id).instantiate(tcx, impl_args),
-    )
+    normalize_ty(tcx, tcx.param_env(impl_id), tcx.type_of(impl_id).instantiate(tcx, impl_args))
 }
 
 fn export_name_and_no_mangle_attrs_of<'tcx>(
@@ -672,21 +669,6 @@ fn export_name_and_no_mangle_attrs_of<'tcx>(
         }
     }
     (export_name, no_mangle)
-}
-
-pub(crate) struct MustUseAttr {
-    pub reason: Option<Symbol>,
-}
-
-pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option<MustUseAttr> {
-    if !crubit_attr::supports_attrs(tcx.def_kind(def_id)) {
-        return None;
-    }
-    find_attr!(
-        tcx,
-        def_id,
-        AttributeKind::MustUse { reason, .. } => MustUseAttr { reason: *reason }
-    )
 }
 
 pub(crate) struct Param<'tcx> {
@@ -1072,11 +1054,7 @@ pub fn generate_function<'tcx>(
         .impl_of_assoc(def_id)
         .and_then(|impl_id| tcx.impl_opt_trait_ref(impl_id))
         .map(|trait_ref| {
-            crate::normalize_ty(
-                tcx,
-                tcx.param_env(def_id),
-                trait_ref.instantiate(tcx, generic_args),
-            )
+            normalize_ty(tcx, tcx.param_env(def_id), trait_ref.instantiate(tcx, generic_args))
         });
     let function_kind = function_kind(tcx, def_id, &sig_mid, generic_args)?;
     let self_ty = function_kind.self_ty();

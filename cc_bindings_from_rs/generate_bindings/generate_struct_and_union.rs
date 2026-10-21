@@ -12,6 +12,9 @@ use crate::format_type::{
     can_be_made_layout_compatible, format_cc_ident, get_cc_template_args,
     replace_all_regions_with_static, BridgedBuiltin, CcParamTy,
 };
+use crate::generate_comment::{
+    generate_deprecated_tag, generate_doc_comment, generate_must_use_tag,
+};
 use crate::generate_ctor::{
     generate_copy_ctor_and_assignment_operator, generate_default_ctor,
     generate_move_ctor_and_assignment_operator,
@@ -25,10 +28,7 @@ use crate::generate_function::{
 use crate::generate_function_thunk::{
     generate_ctor_thunk_call, generate_trait_thunks, trait_method_thunk_name, TraitThunks,
 };
-use crate::{
-    generate_deprecated_tag, generate_doc_comment, generate_must_use_tag,
-    generate_unsupported_def_with_args, matches_qualified_name, normalize_ty, SortedByDef,
-};
+use crate::generate_unsupported::{generate_unsupported_def_with_args, report_must_bind_error};
 
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, CcInclude};
@@ -43,8 +43,9 @@ use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
-    as_ref_or_pinned_ref, does_type_implement_trait, get_layout, get_tag_size_with_padding,
-    get_validated_layout, is_copy, is_std_ptr_non_null,
+    as_ref_or_pinned_ref, does_type_implement_trait, field_def_is_pub_and_stable, get_layout,
+    get_tag_size_with_padding, get_validated_layout, is_copy, is_std_ptr_non_null,
+    matches_qualified_name, normalize_ty, should_receive_bindings, SortedByDef,
 };
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
@@ -106,7 +107,7 @@ pub fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
     }
 
     let field_def_id = fields[0].did;
-    let field_ty = crate::normalize_ty(
+    let field_ty = normalize_ty(
         tcx,
         tcx.param_env(field_def_id),
         tcx.type_of(field_def_id).instantiate_identity(),
@@ -291,7 +292,7 @@ pub(crate) fn generate_associated_item<'tcx>(
     }
     // Associated items resolve names via `symbol_unqualified_name`, which - unlike
     // `symbol_canonical_name` - does not consult `should_receive_bindings`.
-    if crate::should_receive_bindings(db, def_id).is_err() {
+    if should_receive_bindings(db, def_id).is_err() {
         return None;
     }
     let args = generic_args.map_or(&[][..], |args| args.as_slice());
@@ -327,7 +328,7 @@ pub(crate) fn generate_associated_item<'tcx>(
                         .format_for_rs();
                     // The first argument of a trait ref is the self type.
                     let self_ty = trait_ref.args.type_at(0);
-                    let alias_type = crate::normalize_ty(
+                    let alias_type = normalize_ty(
                         tcx,
                         tcx.param_env(def_id),
                         tcx.type_of(def_id).instantiate_identity(),
@@ -357,7 +358,7 @@ pub(crate) fn generate_associated_item<'tcx>(
     match result {
         Err(err) => {
             if crubit_attr::get_attrs(tcx, def_id).unwrap().must_bind {
-                crate::report_must_bind_error(db, def_id, args, &err);
+                report_must_bind_error(db, def_id, args, &err);
             }
             Some(generate_unsupported_def_with_args(db, def_id, args, err).into_main_api())
         }
@@ -375,7 +376,7 @@ fn get_instantiated_trait_ref<'tcx>(
     impl_args: ty::GenericArgsRef<'tcx>,
 ) -> ty::TraitRef<'tcx> {
     let middle_trait_header = tcx.impl_trait_header(impl_id);
-    crate::normalize_ty(
+    normalize_ty(
         tcx,
         tcx.param_env(impl_id),
         middle_trait_header.trait_ref.instantiate(tcx, impl_args),
@@ -758,10 +759,10 @@ fn is_newtype_relationship<'tcx>(tcx: TyCtxt<'tcx>, tgt_ty: Ty<'tcx>, src_ty: Ty
         && variant.ctor_kind() == Some(rustc_hir::def::CtorKind::Fn)
         && variant.fields.len() == 1
         && let field = &variant.fields[FieldIdx::from_usize(0)]
-        && crate::field_def_is_pub_and_stable(tcx, field).is_ok()
+        && field_def_is_pub_and_stable(tcx, field).is_ok()
     {
         let field_ty = field.ty(tcx, substs);
-        let field_ty = crate::normalize_ty(tcx, tcx.param_env(field.did), field_ty);
+        let field_ty = normalize_ty(tcx, tcx.param_env(field.did), field_ty);
         let static_field_ty = replace_all_regions_with_static(tcx, field_ty);
         let static_src_ty = replace_all_regions_with_static(tcx, src_ty);
         static_field_ty == static_src_ty
@@ -1785,12 +1786,12 @@ pub(crate) fn is_struct_aggregate<'tcx>(
     let typing_env = ty::TypingEnv::fully_monomorphized();
     let mut drop_glue_count = 0;
     for field_def in &variant.fields {
-        if crate::field_def_is_pub_and_stable(tcx, field_def).is_err() {
+        if field_def_is_pub_and_stable(tcx, field_def).is_err() {
             return Err(NotAggregateReason::NonPublicField(field_def.name));
         }
         let ty = field_def.ty(tcx, adt_generic_args);
         #[rustversion::since(2026-05-13)]
-        let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
+        let ty = normalize_ty(tcx, tcx.param_env(field_def.did), ty);
         if get_layout(tcx, ty).is_err() {
             return Err(NotAggregateReason::FieldLayoutError(field_def.name));
         }
@@ -2246,7 +2247,7 @@ pub fn generate_adt<'tcx>(
                         .non_enum_variant()
                         .fields
                         .iter()
-                        .any(|f| crate::field_def_is_pub_and_stable(tcx, f).is_ok()),
+                        .any(|f| field_def_is_pub_and_stable(tcx, f).is_ok()),
                     _ => false,
                 };
                 if has_any_public_field {
@@ -2364,11 +2365,7 @@ pub fn adt_needs_bindings<'tcx>(
         #[rustversion::since(2026-04-19)]
         let self_ty = erase_regions(
             tcx,
-            crate::normalize_ty(
-                tcx,
-                tcx.param_env(def_id),
-                tcx.type_of(def_id).instantiate_identity(),
-            ),
+            normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity()),
         );
         let rs_fully_qualified_name =
             db.format_ty_for_rs(replace_all_regions_with_static(tcx, self_ty))?;
@@ -2439,7 +2436,7 @@ pub(crate) fn get_generic_adt_header<'tcx>(
     }
 
     ensure!(
-        crate::are_generics_enabled(db, def_id.krate),
+        are_generics_enabled(db, def_id.krate),
         "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
     );
 
@@ -2514,7 +2511,7 @@ pub fn generate_adt_core<'tcx>(
     #[rustversion::since(2026-04-19)]
     let self_ty = erase_regions(
         tcx,
-        crate::normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity()),
+        normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity()),
     );
     assert!(self_ty.is_adt());
     let fully_qualified_name = db.symbol_canonical_name(def_id)?;
@@ -2658,7 +2655,7 @@ fn generate_variant_ctor<'tcx>(
         .fields
         .iter()
         .map(|field_def| {
-            if let Err(private_or_unstable) = crate::field_def_is_pub_and_stable(tcx, field_def) {
+            if let Err(private_or_unstable) = field_def_is_pub_and_stable(tcx, field_def) {
                 // If our synthesized constructor would have a non public
                 // visibility, don't generate it as we can't mirror that
                 // visibility in C++.
@@ -2666,7 +2663,7 @@ fn generate_variant_ctor<'tcx>(
             }
             let ty = field_def.ty(tcx, adt_generic_args);
             #[rustversion::since(2026-05-13)]
-            let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
+            let ty = normalize_ty(tcx, tcx.param_env(field_def.did), ty);
 
             let is_default =
                 query_compiler::does_type_implement_trait(tcx, ty, default_trait_id, []);
@@ -3004,7 +3001,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         let generic_args = self.adt_generic_args.expect("generic args present for ADT field");
         variant_def.fields.iter().any(|field_def| {
             let ty = field_def.ty(tcx, generic_args);
-            let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
+            let ty = normalize_ty(tcx, tcx.param_env(field_def.did), ty);
             get_layout(tcx, ty).is_ok_and(|layout| layout.size().bytes() > 0)
         })
     }
@@ -3124,8 +3121,8 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         let ty =
             field_def.ty(tcx, self.adt_generic_args.expect("generic args present for ADT field"));
         #[rustversion::since(2026-05-13)]
-        let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
-        let pub_and_stable = crate::field_def_is_pub_and_stable(tcx, field_def);
+        let ty = normalize_ty(tcx, tcx.param_env(field_def.did), ty);
+        let pub_and_stable = field_def_is_pub_and_stable(tcx, field_def);
         // Without `--portable-abi-compatible`, `#[repr(transparent)]` types may be passed by
         // value across `extern "C"` thunks, where replacing e.g. `double` with a byte array
         // changes register classification.
@@ -4387,4 +4384,9 @@ pub(crate) fn create_type_alias_with_rs_type<'tcx>(
     snippet.prereqs.includes.insert(db.support_header("annotations_internal.h"));
 
     Ok(snippet)
+}
+
+pub(crate) fn are_generics_enabled<'tcx>(db: &BindingsGenerator<'tcx>, krate: CrateNum) -> bool {
+    db.crate_features(db.source_crate_num()).contains(crubit_feature::CrubitFeature::Generics)
+        && db.crate_features(krate).contains(crubit_feature::CrubitFeature::Generics)
 }

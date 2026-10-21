@@ -23,3 +23,4 @@ crubit_attr = { path = "../../../../cargo/cc_bindings_from_rs/crubit_attr", pack
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 error_report = { path = "../../../../cargo/common/error_report"}
 rustversion = { path = "../../../../cargo/cc_bindings_from_rs/rustversion", package = "cc_bindings_from_rs_rustversion"}
+itertools.workspace = true

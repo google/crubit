@@ -19,7 +19,8 @@ extern crate rustc_span;
 extern crate rustc_trait_selection;
 
 use arc_anyhow::Result;
-use error_report::{anyhow, ensure};
+use error_report::{anyhow, bail, ensure};
+use itertools::Itertools;
 #[rustversion::before(2026-05-18)]
 use rustc_abi::FieldsShape;
 use rustc_abi::{FieldIdx, Layout, Variants};
@@ -36,7 +37,10 @@ use rustc_middle::ty::{self, GenericArg, GenericArgKind, GenericParamDefKind, Ty
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use rustc_trait_selection::infer::InferCtxtExt;
+use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
+use std::fmt::{self, Display, Formatter};
+use std::path::Path;
 
 use database::BindingsGenerator;
 
@@ -413,4 +417,144 @@ pub fn does_type_implement_trait_with_param_env<'tcx>(
         .build(TypingMode::non_body_analysis())
         .type_implements_trait(trait_id, substs, param_env)
         .must_apply_modulo_regions()
+}
+
+pub fn is_in_ignore_symbols_from_files<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> bool {
+    let def_span = db.tcx().def_span(def_id);
+    let filepath = db.tcx().sess.source_map().span_to_filename(def_span);
+    let file_name = filepath.prefer_local_unconditionally().to_string();
+    let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
+    db.ignore_symbols_from_files().contains(Path::new(file_name))
+}
+
+pub fn should_receive_bindings<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<()> {
+    let tcx = db.tcx();
+    let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
+    if attributes.do_not_bind {
+        let name = tcx.def_path_str(def_id);
+        bail!("`{name}` does not receive bindings because it is marked `#[do_not_bind]`.");
+    }
+    // If the type has a `cpp_type` attribute, it should receive bindings even if it is defined in
+    // an ignored file.
+    if attributes.cpp_type.is_some() {
+        return Ok(());
+    }
+    if is_in_ignore_symbols_from_files(db, def_id) {
+        let name = tcx.def_path_str(def_id);
+        bail!(
+            "`{name}` does not receive bindings because it is defined in an \
+            additional Rust source on a `rust_api_from_cpp` rule. See \
+            crubit.rs/cpp/best_practices#types-in-srcs-do-not-receive-cpp-bindings."
+        );
+    }
+    Ok(())
+}
+
+/// Checks whether a definition matches a specific qualified name by matching its definition path
+/// against `name`. Name must include the crate in its path.
+pub fn matches_qualified_name(db: &BindingsGenerator<'_>, item_did: DefId, name: &[&str]) -> bool {
+    let tcx = db.tcx();
+    let path = tcx.def_path(item_did);
+    if path.data.len() + 1 != name.len() {
+        return false;
+    }
+    // This will always return false for anonymous path data because the caller won't be able to
+    // specify the `disambiguator` that gets inserted into the symbol. That's fine. It is expected
+    // this function will only be called to check for non-anonymous paths.
+    [tcx.crate_name(path.krate)]
+        .into_iter()
+        .chain(path.data.into_iter().map(|seg| seg.as_sym(/* verbose= */ false)))
+        .zip(name.iter().map(|s| Symbol::intern(s)))
+        .all(|(sym, expected)| sym == expected)
+}
+
+/// Compares two `DefId` s by their path and then by their path hash, which is stable across
+/// compilations (the same ordering as `NodeSortKey` in `generate_bindings`).
+pub fn stable_def_id_cmp<'tcx>(tcx: TyCtxt<'tcx>, lhs_id: DefId, rhs_id: DefId) -> Ordering {
+    let sort_key =
+        |def_id: DefId| (tcx.def_path_str(def_id), tcx.def_path_hash(def_id).local_hash().as_u64());
+    sort_key(lhs_id).cmp(&sort_key(rhs_id))
+}
+
+pub trait SortedByDef: Iterator + Sized {
+    fn sorted_by_def<'tcx>(self, tcx: TyCtxt<'tcx>) -> std::vec::IntoIter<Self::Item>
+    where
+        Self::Item: Copy + Into<DefId>,
+    {
+        self.sorted_by_def_with(tcx, |item| (*item).into())
+    }
+
+    fn sorted_by_def_with<'tcx>(
+        self,
+        tcx: TyCtxt<'tcx>,
+        mut item_to_def_id: impl FnMut(&Self::Item) -> DefId,
+    ) -> std::vec::IntoIter<Self::Item> {
+        self.sorted_unstable_by(|lhs, rhs| {
+            stable_def_id_cmp(tcx, item_to_def_id(lhs), item_to_def_id(rhs))
+        })
+    }
+}
+impl<T: Iterator + Sized> SortedByDef for T {}
+
+#[rustversion::before(2026-04-19)]
+pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, _param_env: ty::ParamEnv<'tcx>, val: T) -> T {
+    val
+}
+
+#[rustversion::since(2026-04-19)]
+pub fn try_normalize_ty<'tcx, T>(
+    tcx: TyCtxt<'tcx>,
+    param_env: ty::ParamEnv<'tcx>,
+    val: ty::Unnormalized<'tcx, T>,
+) -> Result<T>
+where
+    T: ty::TypeFoldable<TyCtxt<'tcx>>,
+{
+    try_normalize_non_body(tcx, param_env, val.skip_normalization())
+        .map_err(|_| anyhow!("val contained unresolved type variables and could not be normalized"))
+}
+
+#[rustversion::since(2026-04-19)]
+pub fn normalize_ty<'tcx, T>(
+    tcx: TyCtxt<'tcx>,
+    param_env: ty::ParamEnv<'tcx>,
+    val: ty::Unnormalized<'tcx, T>,
+) -> T
+where
+    T: ty::TypeFoldable<TyCtxt<'tcx>> + std::fmt::Debug,
+{
+    try_normalize_ty(tcx, param_env, val).expect(
+        "normalize_ty called on a type that could not be normalized. Consider try_normalize_ty",
+    )
+}
+
+/// Returns true if the field is public and stable.
+///
+/// Notably, this rejects public fields that are unstable, which may exist for macro accessibility
+/// reasons.
+pub fn field_def_is_pub_and_stable(
+    tcx: TyCtxt<'_>,
+    field_def: &ty::FieldDef,
+) -> Result<(), PrivateOrUnstableField> {
+    if field_def.vis != ty::Visibility::Public {
+        return Err(PrivateOrUnstableField::Private);
+    }
+    if tcx.lookup_stability(field_def.did).is_some_and(|stability| stability.is_unstable()) {
+        return Err(PrivateOrUnstableField::Unstable);
+    }
+    Ok(())
+}
+
+pub enum PrivateOrUnstableField {
+    Private,
+    Unstable,
+}
+
+impl Display for PrivateOrUnstableField {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            PrivateOrUnstableField::Private => write!(f, "private"),
+            PrivateOrUnstableField::Unstable => write!(f, "unstable"),
+        }
+    }
 }
