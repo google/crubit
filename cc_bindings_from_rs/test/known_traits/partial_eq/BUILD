@@ -44,6 +44,8 @@ golden_test(
         "macos",
     ],
     rust_library = "partial_eq",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 crubit_cc_test(
@@ -53,6 +55,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":partial_eq_cc_api",
         "//support/rs_std:str_ref",
