@@ -33,6 +33,8 @@ rust_golden_test(
     basename = "leaf_rs_lib",
     golden_h = "leaf_rs_lib_cc_api.h",
     rust_library = "leaf_rs_lib",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
@@ -106,6 +108,8 @@ crubit_cc_test(
     platforms = [
         "ios",
     ],
+    # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
+    tags = ["no_windows"],
     deps = [
         ":leaf_cc_lib",
         ":middle_rs_lib_cc_api",

@@ -31,4 +31,6 @@ golden_test(
         "macos",
     ],
     rust_library = "send_sync_types",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )

@@ -40,6 +40,8 @@ golden_test(
         "macos",
     ],
     rust_library = "traits",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
@@ -90,6 +92,8 @@ golden_test(
         "macos",
     ],
     rust_library = "generic_traits",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 crubit_cc_test(

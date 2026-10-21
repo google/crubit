@@ -157,7 +157,7 @@ def golden_test(
         basename: The name to use for generated files.
         golden_h: The generated C++ source code for the bindings.
         golden_rs: The generated Rust source code for the bindings.
-        platforms: List of additional target platforms to generate tests for (e.g. ["android", "ios", "macos"]). Defaults to None.
+        platforms: List of additional target platforms to generate tests for (e.g. ["android", "ios", "macos", "windows"]). Defaults to None.
         kythe_annotations: Whether to generate Kythe annotations.
     """
     if not basename:
