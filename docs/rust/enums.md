@@ -2,8 +2,9 @@
 
 A Rust `enum` is mapped to an opaque C++ type.
 
-To receive C++ bindings, the `enum` must be movable in C++. See
-[Movable Types](movable_types.md).
+If an `enum` is not [C++ movable](movable_types.md), then it will be passed
+by-value via the [`rs::Movable`](movable_types.md#movable_wrapper) wrapper type.
+See [Movable Types](movable_types.md).
 
 ## Example
 
@@ -45,7 +46,9 @@ cannot be used to represent a Rust `enum`. Instead, the C++ bindings are a
 
 ## C++ movable {#cpp_movable}
 
-To receive C++ bindings, the `enum` must be movable in C++. See
+If an `enum` is not [C++ movable](movable_types.md), its C++ move constructor
+and move assignment operator will be `= delete`d, and it will be passed by-value
+via the [`rs::Movable`](movable_types.md#movable_wrapper) wrapper type. See
 [Movable Types](movable_types.md).
 
 ## Enums with payload

@@ -1,8 +1,9 @@
 # Movable types
 
-Crubit requires types to be "movable" to be passed by value: if a Rust type does
-not logically support a C++ move operation, then it can receive bindings, but it
-cannot be passed by value.
+Crubit requires types to be "movable" to be passed directly by value: if a Rust
+type does not logically support a C++ move operation, then it can receive
+bindings, but it cannot be passed directly by value (it is passed via the
+[`rs::Movable`](#movable_wrapper) wrapper type).
 
 A Rust type can be made movable in C++ in one of three ways:
 
@@ -81,6 +82,89 @@ variable to another, you copy the bytes, and then replace the old location with
 a special null value representing an unoccupied / moved-from `unique_ptr`. This
 is why `unique_ptr` **must** be nullable in the C++ type system: otherwise, it
 could not be moved!
+
+## The `rs::Movable` wrapper {#movable_wrapper}
+
+If a Rust type is not C++ movable (has a destructor or drop glue, but does not
+implement `Clone` or `Default`), Crubit still generates C++ bindings for it, but
+its C++ move constructor and move assignment operator will be `= delete`d:
+
+```c++
+// C++ move operations are unavailable for this type.
+MyType(MyType&&) = delete;
+MyType& operator=(MyType&&) = delete;
+```
+
+Because C++ requires moved-from objects to remain valid and destructible, Crubit
+cannot generate a native C++ move constructor for such types.
+
+Instead, when a function accepts such a type by value as a parameter, Crubit
+wraps the parameter in the
+[`rs::Movable<T>`](https://github.com/google/crubit/blob/main/support/movable.h)
+wrapper type.
+
+`rs::Movable<T>` makes the type movable in C++ by tracking whether the
+underlying value has been moved out, ensuring that the destructor is not run on
+moved-from instances:
+
+*   **Accessing members**: Like a smart pointer or `std::optional`, you can
+    access the underlying `T`'s fields and methods using `operator*` and
+    `operator->` (e.g. `val->method()`, `(*val).field`). Note that
+    `rs::Movable<T>` does not provide implicit conversions to `T` or `T&`.
+*   **Move semantics**: You can move `rs::Movable<T>` instances with `std::move`
+    to pass them by value into functions. Moving relocates the underlying Rust
+    object into the target without calling intermediate destructors.
+*   **Destruction**: `~Movable()` invokes `T`'s destructor only if the value has
+    not been moved out.
+
+### Example
+
+Given the following Rust code:
+
+```rust
+pub struct Unmovable(pub i32);
+impl Drop for Unmovable {
+    fn drop(&mut self) {}
+}
+
+pub fn make_unmovable(x: i32) -> Unmovable {
+    Unmovable(x)
+}
+
+pub fn consume_unmovable(x: Unmovable) {
+    // ...
+}
+```
+
+Crubit generates C++ bindings where `make_unmovable` returns `Unmovable`
+directly and `consume_unmovable` accepts `rs::Movable<Unmovable>`:
+
+```c++
+Unmovable make_unmovable(::std::int32_t x);
+void consume_unmovable(::rs::Movable<Unmovable> x);
+```
+
+In C++, you call and manipulate them like this:
+
+```c++
+// Receiving an unmovable return value directly into a local variable
+// (uses C++17 guaranteed copy elision):
+Unmovable val = make_unmovable(42);
+std::cout << val.field0 << "\n";
+
+// Passing to a function accepting rs::Movable<T> by constructing in-place:
+consume_unmovable(rs::Movable<Unmovable>(std::in_place, 100));
+
+// Passing an rs::Movable<T> received from another function or parameter:
+void forward_unmovable(rs::Movable<Unmovable> movable) {
+  // Accessing fields and methods through rs::Movable<T>:
+  std::cout << movable->field0 << "\n";    // operator->
+  std::cout << (*movable).field0 << "\n";  // operator*
+
+  // Passing an rs::Movable<T> by value:
+  consume_unmovable(std::move(movable));
+}
+```
 
 [^semiregular]: The combination of default-constructible and copyable is so
     important for making types useful in C++ that it even has a name:

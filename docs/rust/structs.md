@@ -4,8 +4,9 @@ A Rust `struct` is mapped to a C++ `class`/`struct` with the same fields. If any
 field cannot be represented in C++, the struct itself will still have bindings,
 but [the relevant field will be private](#opaque_fields).
 
-To receive C++ bindings, the `struct` must be movable in C++. See
-[Movable Types](movable_types.md).
+If a `struct` is not [C++ movable](movable_types.md), then it will be passed
+by-value via the [`rs::Movable`](movable_types.md#movable_wrapper) wrapper type.
+See [Movable Types](movable_types.md).
 
 ## Example
 
@@ -131,7 +132,9 @@ initializes primitive fields to zero/false, matching C++ value initialization.
 
 ## C++ movable {#cpp_movable}
 
-To receive C++ bindings, the `struct` must be movable in C++. See
+If a `struct` is not [C++ movable](movable_types.md), its C++ move constructor
+and move assignment operator will be `= delete`d, and it will be passed by-value
+via the [`rs::Movable`](movable_types.md#movable_wrapper) wrapper type. See
 [Movable Types](movable_types.md).
 
 ## Zero-sized types (ZSTs) {#zsts}
