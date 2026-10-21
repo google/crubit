@@ -5,7 +5,7 @@
 [Home](./index.md)
 [Are We Crubit Yet?](./overview/status.md) <!-- mdformat-on -->
 
-## Types
+# Types
 
 -   [Overview](./types/index.md)
 -   [Primitive Types](./types/primitive.md)
@@ -14,7 +14,7 @@
 -   [`absl::Status`](./types/absl_status.md)
 -   [Protobuf](./types/protobuf.md)
 
-## C++ Bindings for Rust Libraries
+# C++ Bindings for Rust Libraries
 
 -   [Overview](./rust/index.md)
 -   [Building](./rust/building.md)
@@ -32,7 +32,7 @@
 
 -   [Movable Types](./rust/movable_types.md)
 
-## Rust Bindings for C++ Libraries
+# Rust Bindings for C++ Libraries
 
 -   [Overview](./cpp/index.md)
 -   [Building](./cpp/building.md)
@@ -50,11 +50,19 @@
 -   [Enums](./cpp/enums.md)
 -   [Inline C++](./cpp/inline_cpp.md)
 
-## Errors
+# Errors
 
 -   [Overview](./errors/index.md)
+-   [Unsupported types](./errors/unsupported_type.md)
+-   [Unknown targets](./errors/unknown_target.md)
+-   [Nested types](./errors/nested_type.md)
+-   [Visibility](./errors/visibility.md)
+-   [Unknown attributes](./errors/unknown_attribute.md)
+-   [Bridge types as struct fields](./errors/bridge_field.md)
+-   [Compound types containing bridge types](./errors/bridge_compound_type.md)
+-   [The `Delete` trait](./errors/delete.md)
 
-## Integration notes
+# Integration notes
 
 -   [Build System Integrations](./overview/build_systems.md)
     -   [Bazel](./overview/bazel.md)
@@ -64,7 +72,7 @@
 -   [Limitations](./overview/limits.md)
 -   [Required unstable features of Rust](./overview/unstable_features.md)
 
-## Design
+# Design
 
 -   [High-level design of C++/Rust interop](./design/design.md)
 -   [Lifetime Annotations for C++](./design/lifetime_annotations_cpp.md)
