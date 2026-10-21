@@ -8,9 +8,8 @@ Exceptions:
 
 *   **C++:** There is no mapping for the currently-unsupported types
     `nullptr_t`, `char8_t`, and `wchar_t`.
-*   **Rust:** There is no mapping for the currently-unsupported `char` and `str`
-    types, the never (`!`) type except as a return type, and `i128` / `u128`
-    when calling Rust from C++.
+*   **Rust:** There is no mapping for the never (`!`) type except as a return
+    type, and `i128` / `u128` when calling Rust from C++.
 
 For more information, see [Unsupported types](#unsupported)
 
