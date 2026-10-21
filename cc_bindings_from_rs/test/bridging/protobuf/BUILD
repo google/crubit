@@ -69,6 +69,8 @@ golden_test(
         "macos",
     ],
     rust_library = "rust_lib",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 crubit_cc_test(
@@ -78,6 +80,9 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): `absl::StatusOr` has a different layout under the MSVC ABI
+    # than its Rust mirror expects.
+    tags = ["no_windows"],
     deps = [
         ":foo_cc_proto",
         ":rust_lib_cc_api",

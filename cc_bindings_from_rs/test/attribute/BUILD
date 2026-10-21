@@ -37,6 +37,8 @@ golden_test(
         "macos",
     ],
     rust_library = "cpp_name",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
@@ -51,6 +53,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":cpp_name_cc_api",
         "@googletest//:gtest_main",
@@ -77,6 +81,8 @@ golden_test(
         "macos",
     ],
     rust_library = "must_bind",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
@@ -91,6 +97,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":must_bind_cc_api",
         "@googletest//:gtest_main",

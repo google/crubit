@@ -46,6 +46,8 @@ golden_test(
         "macos",
     ],
     rust_library = "rs_hash",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 crubit_cc_test(
@@ -55,6 +57,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":rs_hash_cc_api",
         "@abseil-cpp//absl/container:flat_hash_map",

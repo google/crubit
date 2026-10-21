@@ -26,6 +26,8 @@ cc_library(
 crubit_cc_test(
     name = "lifetime_test",
     srcs = ["lifetime_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":lifetime",
         "@googletest//:gtest_main",
@@ -78,6 +80,8 @@ cc_library(
 crubit_cc_test(
     name = "lifetime_annotations_test",
     srcs = ["lifetime_annotations_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":lifetime_annotations",
         ":lifetime_error",
@@ -112,6 +116,8 @@ cc_library(
 crubit_cc_test(
     name = "lifetime_substitutions_test",
     srcs = ["lifetime_substitutions_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":lifetime",
         ":lifetime_substitutions",
@@ -132,6 +138,8 @@ cc_library(
 crubit_cc_test(
     name = "lifetime_symbol_table_test",
     srcs = ["lifetime_symbol_table_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":lifetime",
         ":lifetime_symbol_table",
