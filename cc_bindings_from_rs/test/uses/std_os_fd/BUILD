@@ -47,4 +47,6 @@ golden_test(
         "macos",
     ],
     rust_library = "std_os_fd",
+    # `std::os::fd` is Unix-only, so the crate doesn't build for Windows.
+    tags = ["no_windows"],
 )
