@@ -5,6 +5,7 @@
 
 load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "GeneratedBindingsInfo",
     "RustBindingsFromCcInfo",
 )
 load(
@@ -19,8 +20,13 @@ ActionsInfo = provider(
 )
 
 def _attach_aspect_impl(ctx):
-    return [ctx.attr.dep[RustBindingsFromCcInfo], ActionsInfo(actions = ctx.attr.dep.actions)]
+    providers = [ctx.attr.dep[RustBindingsFromCcInfo], ActionsInfo(actions = ctx.attr.dep.actions)]
+    if GeneratedBindingsInfo in ctx.attr.dep:
+        providers.append(ctx.attr.dep[GeneratedBindingsInfo])
+    return providers
 
+# Runs `rust_bindings_from_cc_aspect` on `dep` and re-exports the providers it returns, so that
+# analysis tests can read them from this target.
 attach_aspect = rule(
     implementation = _attach_aspect_impl,
     attrs = {
