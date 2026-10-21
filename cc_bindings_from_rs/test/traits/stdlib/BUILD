@@ -38,6 +38,8 @@ golden_test(
         "macos",
     ],
     rust_library = "stdlib",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 crubit_cc_test(
@@ -47,6 +49,9 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): The generated rs_std.h declares `stdin()`, `stdout()` and
+    # `stderr()`, which the Windows UCRT defines as macros.
+    tags = ["no_windows"],
     deps = [
         ":stdlib_cc_api",
         "//support/rs_std",

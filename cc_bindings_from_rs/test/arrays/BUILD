@@ -37,6 +37,8 @@ golden_test(
         "macos",
     ],
     rust_library = "arrays",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
@@ -52,6 +54,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":arrays_cc_api",
         "@googletest//:gtest_main",

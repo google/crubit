@@ -36,6 +36,8 @@ golden_test(
         "macos",
     ],
     rust_library = "no_std",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 rust_make_no_std(
@@ -57,6 +59,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":no_std_cc_api",
         "@googletest//:gtest_main",
@@ -67,6 +71,8 @@ crubit_stdlib_cc_test(
     name = "no_std_test_on_alloc",
     srcs = ["no_std_test.cc"],
     stdlib = "alloc",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":no_std_cc_api",
         "@googletest//:gtest_main",
@@ -90,6 +96,8 @@ golden_test(
         "macos",
     ],
     rust_library = "no_core",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
@@ -105,6 +113,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":no_core_cc_api",
         "@googletest//:gtest_main",
@@ -115,6 +125,8 @@ crubit_stdlib_cc_test(
     name = "no_core_test_on_core",
     srcs = ["no_core_test.cc"],
     stdlib = "core",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":no_core_cc_api",
         "@googletest//:gtest_main",
