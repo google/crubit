@@ -71,6 +71,7 @@ LIBCXX_HEADERS = [
 ]
 
 LIBC_HEADERS = [
+    "netinet/ether.h",
     "netinet/in.h",
     "netinet/udp.h",
     "sys/socket.h",
