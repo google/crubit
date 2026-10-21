@@ -1,0 +1,105 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated BUILD.gn.
+
+import("../../crubit.gni")
+import("//build/rust/rust_macro.gni")
+import("//build/rust/rust_static_library.gni")
+
+source_set("box") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "box.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support:annotations_internal",
+    "$crubit_src_dir/support:crubit_support",
+    "$crubit_src_dir/support:movable",
+    "$crubit_src_dir/support:unsafe_relocate_tag",
+    "$crubit_src_dir/support/internal:bindings_support",
+  ]
+}
+
+source_set("pin_box") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "pin_box.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support:annotations_internal",
+    "$crubit_src_dir/support:crubit_support",
+    "$crubit_src_dir/support:movable",
+    "$crubit_src_dir/support:unsafe_relocate_tag",
+    "$crubit_src_dir/support/internal:bindings_support",
+  ]
+}
+
+source_set("slice_box") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "slice_box.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support:annotations_internal",
+    "$crubit_src_dir/support:crubit_support",
+    "$crubit_src_dir/support:unsafe_relocate_tag",
+    "$crubit_src_dir/support/internal:bindings_support",
+    "$crubit_src_dir/support/rs_std:slice_ref",
+  ]
+}
+
+source_set("str_box") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "str_box.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support:annotations_internal",
+    "$crubit_src_dir/support:crubit_support",
+    "$crubit_src_dir/support:movable",
+    "$crubit_src_dir/support:unsafe_relocate_tag",
+    "$crubit_src_dir/support/internal:bindings_support",
+    "$crubit_src_dir/support/rs_std:str_ref",
+    "$crubit_src_dir/support/rs_std/internal:is_utf8",
+  ]
+}
+
+group("rs_cpp") {
+  public_deps = [
+    ":box",
+    ":pin_box",
+    ":slice_box",
+    ":str_box",
+  ]
+}
+
