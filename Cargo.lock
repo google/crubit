@@ -170,6 +170,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "cc_bindings_from_rs_avoid_colliding_types"
+version = "0.0.0"
+dependencies = [
+ "arc_anyhow",
+ "cc_bindings_from_rs_avoid_colliding_types",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_generate_bindings",
+ "cc_bindings_from_rs_query_compiler",
+ "cc_bindings_from_rs_run_compiler_test_support",
+ "cc_bindings_from_rs_rustversion",
+ "cc_bindings_from_rs_toposort",
+ "code_gen_utils",
+ "crubit_abi_type",
+ "crubit_feature",
+ "dyn_format",
+ "error_report",
+ "flagset",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
 name = "cc_bindings_from_rs_cmdline"
 version = "0.0.0"
 dependencies = [
@@ -234,13 +259,51 @@ dependencies = [
 ]
 
 [[package]]
-name = "cc_bindings_from_rs_generate_bindings"
+name = "cc_bindings_from_rs_format_type"
 version = "0.0.0"
 dependencies = [
  "arc_anyhow",
  "cc_bindings_from_rs_crubit_attr",
  "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_format_type",
  "cc_bindings_from_rs_generate_bindings",
+ "cc_bindings_from_rs_query_compiler",
+ "cc_bindings_from_rs_run_compiler_test_support",
+ "cc_bindings_from_rs_rustversion",
+ "cc_bindings_from_rs_test_helpers",
+ "cc_bindings_from_rs_toposort",
+ "code_gen_utils",
+ "crubit_abi_type",
+ "crubit_feature",
+ "dyn_format",
+ "error_report",
+ "flagset",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+ "token_stream_matchers",
+]
+
+[[package]]
+name = "cc_bindings_from_rs_generate_bindings"
+version = "0.0.0"
+dependencies = [
+ "arc_anyhow",
+ "cc_bindings_from_rs_avoid_colliding_types",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_format_type",
+ "cc_bindings_from_rs_generate_bindings",
+ "cc_bindings_from_rs_generate_comment",
+ "cc_bindings_from_rs_generate_ctor",
+ "cc_bindings_from_rs_generate_enum",
+ "cc_bindings_from_rs_generate_function",
+ "cc_bindings_from_rs_generate_function_thunk",
+ "cc_bindings_from_rs_generate_struct_and_union",
+ "cc_bindings_from_rs_generate_template_specialization",
+ "cc_bindings_from_rs_generate_unsupported",
+ "cc_bindings_from_rs_get_generic_args",
  "cc_bindings_from_rs_query_compiler",
  "cc_bindings_from_rs_run_compiler_test_support",
  "cc_bindings_from_rs_rustversion",
@@ -259,6 +322,231 @@ dependencies = [
  "syn 2.0.119",
  "token_stream_matchers",
  "token_stream_printer",
+]
+
+[[package]]
+name = "cc_bindings_from_rs_generate_comment"
+version = "0.0.0"
+dependencies = [
+ "arc_anyhow",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_query_compiler",
+ "cc_bindings_from_rs_rustversion",
+ "cc_bindings_from_rs_toposort",
+ "code_gen_utils",
+ "crubit_abi_type",
+ "crubit_feature",
+ "dyn_format",
+ "error_report",
+ "flagset",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "cc_bindings_from_rs_generate_ctor"
+version = "0.0.0"
+dependencies = [
+ "arc_anyhow",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_generate_function_thunk",
+ "cc_bindings_from_rs_query_compiler",
+ "cc_bindings_from_rs_rustversion",
+ "cc_bindings_from_rs_toposort",
+ "code_gen_utils",
+ "crubit_abi_type",
+ "crubit_feature",
+ "dyn_format",
+ "error_report",
+ "flagset",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "cc_bindings_from_rs_generate_enum"
+version = "0.0.0"
+dependencies = [
+ "arc_anyhow",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_format_type",
+ "cc_bindings_from_rs_generate_comment",
+ "cc_bindings_from_rs_query_compiler",
+ "cc_bindings_from_rs_rustversion",
+ "cc_bindings_from_rs_toposort",
+ "code_gen_utils",
+ "crubit_abi_type",
+ "crubit_feature",
+ "dyn_format",
+ "error_report",
+ "flagset",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "cc_bindings_from_rs_generate_function"
+version = "0.0.0"
+dependencies = [
+ "arc_anyhow",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_format_type",
+ "cc_bindings_from_rs_generate_comment",
+ "cc_bindings_from_rs_generate_function_thunk",
+ "cc_bindings_from_rs_get_generic_args",
+ "cc_bindings_from_rs_query_compiler",
+ "cc_bindings_from_rs_rustversion",
+ "cc_bindings_from_rs_test_helpers",
+ "cc_bindings_from_rs_toposort",
+ "code_gen_utils",
+ "crubit_abi_type",
+ "crubit_feature",
+ "dyn_format",
+ "error_report",
+ "flagset",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+ "token_stream_matchers",
+]
+
+[[package]]
+name = "cc_bindings_from_rs_generate_function_thunk"
+version = "0.0.0"
+dependencies = [
+ "arc_anyhow",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_format_type",
+ "cc_bindings_from_rs_query_compiler",
+ "cc_bindings_from_rs_rustversion",
+ "cc_bindings_from_rs_toposort",
+ "code_gen_utils",
+ "crubit_abi_type",
+ "crubit_feature",
+ "dyn_format",
+ "error_report",
+ "flagset",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "cc_bindings_from_rs_generate_struct_and_union"
+version = "0.0.0"
+dependencies = [
+ "arc_anyhow",
+ "cc_bindings_from_rs_avoid_colliding_types",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_format_type",
+ "cc_bindings_from_rs_generate_comment",
+ "cc_bindings_from_rs_generate_ctor",
+ "cc_bindings_from_rs_generate_enum",
+ "cc_bindings_from_rs_generate_function",
+ "cc_bindings_from_rs_generate_function_thunk",
+ "cc_bindings_from_rs_generate_unsupported",
+ "cc_bindings_from_rs_get_generic_args",
+ "cc_bindings_from_rs_query_compiler",
+ "cc_bindings_from_rs_rustversion",
+ "cc_bindings_from_rs_test_helpers",
+ "cc_bindings_from_rs_toposort",
+ "code_gen_utils",
+ "crubit_abi_type",
+ "crubit_feature",
+ "dyn_format",
+ "error_report",
+ "flagset",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+ "token_stream_matchers",
+]
+
+[[package]]
+name = "cc_bindings_from_rs_generate_template_specialization"
+version = "0.0.0"
+dependencies = [
+ "arc_anyhow",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_format_type",
+ "cc_bindings_from_rs_generate_ctor",
+ "cc_bindings_from_rs_generate_enum",
+ "cc_bindings_from_rs_generate_struct_and_union",
+ "cc_bindings_from_rs_generate_unsupported",
+ "cc_bindings_from_rs_query_compiler",
+ "cc_bindings_from_rs_rustversion",
+ "cc_bindings_from_rs_toposort",
+ "code_gen_utils",
+ "crubit_abi_type",
+ "crubit_feature",
+ "dyn_format",
+ "error_report",
+ "flagset",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "cc_bindings_from_rs_generate_unsupported"
+version = "0.0.0"
+dependencies = [
+ "arc_anyhow",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_generate_comment",
+ "cc_bindings_from_rs_query_compiler",
+ "cc_bindings_from_rs_rustversion",
+ "cc_bindings_from_rs_toposort",
+ "code_gen_utils",
+ "crubit_abi_type",
+ "crubit_feature",
+ "dyn_format",
+ "error_report",
+ "flagset",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "cc_bindings_from_rs_get_generic_args"
+version = "0.0.0"
+dependencies = [
+ "arc_anyhow",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
+ "cc_bindings_from_rs_query_compiler",
+ "cc_bindings_from_rs_rustversion",
+ "cc_bindings_from_rs_toposort",
+ "code_gen_utils",
+ "crubit_abi_type",
+ "crubit_feature",
+ "dyn_format",
+ "error_report",
+ "flagset",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]

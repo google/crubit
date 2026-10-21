@@ -20,39 +20,6 @@ extern crate rustc_target;
 extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 
-pub mod avoid_colliding_types;
-pub mod format_type;
-mod generate_comment;
-mod generate_ctor;
-mod generate_enum;
-pub mod generate_function;
-mod generate_function_thunk;
-mod generate_struct_and_union;
-mod generate_template_specialization;
-mod generate_unsupported;
-mod get_generic_args;
-
-use crate::format_type::{
-    crubit_abi_type_from_ty, format_cc_ident, format_cc_ident_symbol, format_top_level_ns_for_crate,
-};
-use crate::generate_comment::{generate_deprecated_tag, generate_doc_comment};
-use crate::generate_ctor::{
-    copy_ctor_and_assignment_operator_codegen_style, has_default_ctor,
-    is_cpp_constexpr_move_constructible, is_cpp_move_constructible,
-    move_ctor_and_assignment_operator_codegen_style,
-};
-use crate::generate_function::generate_function;
-use crate::generate_struct_and_union::{
-    adt_needs_bindings, cpp_enum_cpp_underlying_type, create_type_alias_with_rs_type,
-    from_trait_impls_by_argument, generate_adt, generate_adt_core, generate_const,
-    generate_generic_adt_declaration, generate_generic_adt_fwd_decl, get_generic_adt_header,
-    into_trait_impls_by_destination, GenericAdtHeader,
-};
-use crate::generate_template_specialization::append_trait_impls;
-use crate::generate_unsupported::generate_unsupported_def;
-pub use crate::generate_unsupported::{
-    generate_unsupported_def_with_args, item_name_for_error_report, report_must_bind_error,
-};
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude, NamespaceQualifier};
 use database::code_snippet::{
@@ -66,6 +33,26 @@ pub use database::{
     BindingsGenerator, CopyCodegenStyle, CppTypeSpecialization, IncludeGuard, MoveCodegenStyle,
 };
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
+use format_type::{
+    crubit_abi_type_from_ty, format_cc_ident, format_cc_ident_symbol, format_top_level_ns_for_crate,
+};
+use generate_comment::{generate_deprecated_tag, generate_doc_comment};
+use generate_ctor::{
+    copy_ctor_and_assignment_operator_codegen_style, has_default_ctor, is_cpp_move_constructible,
+    move_ctor_and_assignment_operator_codegen_style,
+};
+use generate_function::generate_function;
+use generate_struct_and_union::{
+    adt_needs_bindings, cpp_enum_cpp_underlying_type, create_type_alias_with_rs_type,
+    from_trait_impls_by_argument, generate_adt, generate_adt_core, generate_const,
+    generate_generic_adt_declaration, generate_generic_adt_fwd_decl, get_generic_adt_header,
+    into_trait_impls_by_destination, is_cpp_constexpr_move_constructible, GenericAdtHeader,
+};
+use generate_template_specialization::append_trait_impls;
+use generate_unsupported::generate_unsupported_def;
+pub use generate_unsupported::{
+    generate_unsupported_def_with_args, item_name_for_error_report, report_must_bind_error,
+};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use query_compiler::{
@@ -1527,7 +1514,7 @@ fn formatted_items_in_crate<'tcx>(
                 // We only want to call `generate_item` on DefIds from our source crate. External
                 // crate DefIds might appear in this map if our crate re-exports them, but we don't
                 // want to regenerate those definitions.
-                crate::error_scope!(db, def_id);
+                generate_unsupported::error_scope!(db, def_id);
                 let api_snippets = db.generate_item(def_id).transpose()?;
                 let (api_snippets, aliases) = api_snippets.map_or_else(
                     |err| (generate_unsupported_def(db, def_id, err).into_main_api(), vec![]),
@@ -1654,7 +1641,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     let mut main_apis = HashMap::<DefId, CcSnippet>::new();
     for item in formatted_items_in_crate(db) {
         let def_id = item.def_id;
-        crate::error_scope!(db, def_id);
+        generate_unsupported::error_scope!(db, def_id);
         // We delay handling aliases until after sorting by def id to ensure they are emitted in a
         // deterministic order, same as the main api definitions. This is important for caching and
         // testing.
@@ -1900,3 +1887,5 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
 
     Ok(BindingsTokens { cc_api, cc_api_impl })
 }
+
+pub use generate_unsupported::error_scope;

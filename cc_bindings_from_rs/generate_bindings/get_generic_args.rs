@@ -2,6 +2,16 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#![feature(cfg_accessible)]
+#![feature(stmt_expr_attributes)]
+#![feature(proc_macro_hygiene)]
+#![feature(rustc_private)]
+
+extern crate rustc_infer;
+extern crate rustc_middle;
+extern crate rustc_span;
+extern crate rustc_trait_selection;
+extern crate rustc_type_ir;
 use arc_anyhow::{anyhow, bail, ensure, Result};
 use database::BindingsGenerator;
 use query_compiler::{liberate_and_deanonymize_late_bound_regions, matches_qualified_name};
@@ -31,7 +41,7 @@ type GenericClauses<'tcx> = ty::GenericPredicates<'tcx>;
 #[cfg_accessible(rustc_middle::ty::GenericClauses)]
 type GenericClauses<'tcx> = ty::GenericClauses<'tcx>;
 
-pub(crate) trait GenericClausesExt<'tcx> {
+pub trait GenericClausesExt<'tcx> {
     fn clauses(&self) -> &[(ty::Clause<'tcx>, rustc_span::Span)];
 }
 

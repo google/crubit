@@ -2,16 +2,16 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::format_type::replace_all_regions_with_static;
-use crate::generate_ctor::{
-    generate_copy_ctor_and_assignment_operator, generate_default_ctor,
-    generate_move_ctor_and_assignment_operator,
-};
-use crate::generate_enum::{anonymous_field_ident, scalar_value_to_string};
-use crate::generate_struct_and_union::{
-    generate_associated_item, generate_fields, generate_relocating_ctor, has_type_or_const_vars,
-};
-use crate::generate_unsupported::{generate_unsupported_def, generate_unsupported_def_with_args};
+#![feature(rustc_private)]
+#![feature(stmt_expr_attributes)]
+#![feature(proc_macro_hygiene)]
+
+extern crate rustc_abi;
+#[rustversion::since(2026-09-27)]
+extern crate rustc_attr_ir;
+extern crate rustc_hir;
+extern crate rustc_middle;
+extern crate rustc_span;
 use arc_anyhow::{bail, Result};
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
@@ -24,6 +24,16 @@ use database::{
     AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, StaticMethodMode, TypeLocation,
 };
 use error_report::anyhow;
+use format_type::replace_all_regions_with_static;
+use generate_ctor::{
+    generate_copy_ctor_and_assignment_operator, generate_default_ctor,
+    generate_move_ctor_and_assignment_operator,
+};
+use generate_enum::{anonymous_field_ident, scalar_value_to_string};
+use generate_struct_and_union::{
+    generate_associated_item, generate_fields, generate_relocating_ctor, has_type_or_const_vars,
+};
+use generate_unsupported::{generate_unsupported_def, generate_unsupported_def_with_args};
 use itertools::Itertools;
 use proc_macro2::Literal;
 use proc_macro2::TokenStream;
@@ -51,7 +61,7 @@ use rustc_span::def_id::DefId;
 use std::collections::HashSet;
 use std::rc::Rc;
 
-pub(crate) fn parse_adt_template_specialization<'tcx>(
+pub fn parse_adt_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
 ) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
@@ -99,8 +109,8 @@ fn parse_adt_def_template_specialization<'tcx>(
     adt: ty::AdtDef<'tcx>,
     substs: ty::GenericArgsRef<'tcx>,
 ) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
-    use crate::format_type::BridgedBuiltin;
     use database::code_snippet::EnumSpecializationKind;
+    use format_type::BridgedBuiltin;
     let tcx = db.tcx();
     BridgedBuiltin::new(db, adt).map(|bridged_builtin| {
         match bridged_builtin {
@@ -1672,7 +1682,7 @@ impl<'tcx> TemplateSpecializationExt<'tcx> for AdtTemplateSpecialization<'tcx> {
 }
 
 /// Collect trait implementations and map them to `TemplateSpecialization::TraitImpl`.
-pub(crate) fn append_trait_impls<'tcx>(
+pub fn append_trait_impls<'tcx>(
     db: &BindingsGenerator<'tcx>,
     trait_impls: &mut Vec<TemplateSpecialization<'tcx>>,
 ) {
@@ -2048,13 +2058,13 @@ pub fn generate_template_specialization<'tcx>(
     let mut snippets = match &specialization {
         TemplateSpecialization::Adt(adt) => adt.api_snippets(db),
         TemplateSpecialization::TraitImpl(trait_impl) => {
-            crate::error_scope!(db, trait_impl.trait_impl);
+            generate_unsupported::error_scope!(db, trait_impl.trait_impl);
             generate_trait_impl_specialization(db, trait_impl).unwrap_or_else(|err| {
                 generate_unsupported_def(db, trait_impl.trait_impl, err).into_main_api()
             })
         }
         TemplateSpecialization::NegativeAutoTraitImpl(negative_auto_trait_impl) => {
-            crate::error_scope!(db, negative_auto_trait_impl.self_def_id);
+            generate_unsupported::error_scope!(db, negative_auto_trait_impl.self_def_id);
             generate_negative_auto_trait_impl_specialization(db, negative_auto_trait_impl)
                 .unwrap_or_else(|err| {
                     generate_unsupported_def(db, negative_auto_trait_impl.self_def_id, err)
@@ -2064,7 +2074,7 @@ pub fn generate_template_specialization<'tcx>(
         TemplateSpecialization::StdHash(std_hash) => generate_std_hash_specialization(db, std_hash)
             .unwrap_or_else(|err| {
                 if let ty::TyKind::Adt(adt, substs) = std_hash.self_ty.kind() {
-                    crate::error_scope!(db, adt.did(), substs);
+                    generate_unsupported::error_scope!(db, adt.did(), substs);
                     generate_unsupported_def_with_args(db, adt.did(), substs, err).into_main_api()
                 } else {
                     ApiSnippets::default()

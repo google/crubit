@@ -6,17 +6,23 @@
 //! the item being generated, the "unsupported" placeholder snippets emitted in their place, and
 //! the hard error for `#[crubit_annotate::must_bind]` items.
 
-use crate::generate_comment::generate_source_location;
+#![feature(cfg_accessible)]
+#![feature(stmt_expr_attributes)]
+#![feature(proc_macro_hygiene)]
+#![feature(rustc_private)]
+
+extern crate rustc_data_structures;
+extern crate rustc_middle;
+extern crate rustc_span;
 use arc_anyhow::Error;
 use database::code_snippet::CcSnippet;
 use database::BindingsGenerator;
+use generate_comment::generate_source_location;
 use quote::quote;
 use rustc_middle::ty;
 use rustc_span::def_id::DefId;
 
-pub(crate) fn non_lifetime_args<'tcx>(
-    args: &'tcx [ty::GenericArg<'tcx>],
-) -> &'tcx [ty::GenericArg<'tcx>] {
+pub fn non_lifetime_args<'tcx>(args: &'tcx [ty::GenericArg<'tcx>]) -> &'tcx [ty::GenericArg<'tcx>] {
     if args.iter().any(|arg| !matches!(arg.kind(), ty::GenericArgKind::Lifetime(_))) {
         args
     } else {
@@ -106,14 +112,14 @@ macro_rules! error_scope {
     };
 }
 
-pub(crate) enum ErrorStyle {
+pub enum ErrorStyle {
     // This message will be formatted as a comment.
     Comment,
     // This message will be printed to a terminal.
     Terminal,
 }
 
-pub(crate) fn unsupported_def_error_message<'tcx>(
+pub fn unsupported_def_error_message<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     args: &'tcx [ty::GenericArg<'tcx>],
@@ -141,7 +147,7 @@ pub(crate) fn unsupported_def_error_message<'tcx>(
 
 /// Formats a C++ comment explaining why no bindings have been generated for
 /// `local_def_id`.
-pub(crate) fn generate_unsupported_def<'tcx>(
+pub fn generate_unsupported_def<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     err: Error,

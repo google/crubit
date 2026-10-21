@@ -2,33 +2,37 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#![feature(cfg_accessible)]
+#![feature(rustc_private)]
+#![feature(stmt_expr_attributes)]
+#![feature(proc_macro_hygiene)]
+
 extern crate rustc_abi;
 extern crate rustc_hir;
+extern crate rustc_infer;
 extern crate rustc_middle;
 extern crate rustc_span;
+extern crate rustc_trait_selection;
 
-use crate::avoid_colliding_types::{AvoidCollidingTypes, TypeCollisionRisk};
-use crate::format_type::{
+use avoid_colliding_types::{AvoidCollidingTypes, TypeCollisionRisk};
+use format_type::{
     can_be_made_layout_compatible, format_cc_ident, get_cc_template_args,
     replace_all_regions_with_static, BridgedBuiltin, CcParamTy,
 };
-use crate::generate_comment::{
-    generate_deprecated_tag, generate_doc_comment, generate_must_use_tag,
-};
-use crate::generate_ctor::{
+use generate_comment::{generate_deprecated_tag, generate_doc_comment, generate_must_use_tag};
+use generate_ctor::{
     generate_copy_ctor_and_assignment_operator, generate_default_ctor,
     generate_move_ctor_and_assignment_operator,
 };
-use crate::generate_enum;
-use crate::generate_enum::{anonymous_field_ident, scalar_value_to_string};
-use crate::generate_function::{
+use generate_enum::{anonymous_field_ident, scalar_value_to_string};
+use generate_function::{
     bool_constraint_template_prefix, cc_param_to_c_abi, format_variant_ctor_cc_name,
     generate_thunk_call, Param, ThunkSelfParameter,
 };
-use crate::generate_function_thunk::{
+use generate_function_thunk::{
     generate_ctor_thunk_call, generate_trait_thunks, trait_method_thunk_name, TraitThunks,
 };
-use crate::generate_unsupported::{generate_unsupported_def_with_args, report_must_bind_error};
+use generate_unsupported::{generate_unsupported_def_with_args, report_must_bind_error};
 
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, CcInclude};
@@ -65,7 +69,7 @@ use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
 
-pub(crate) fn has_type_or_const_vars() -> TypeFlags {
+pub fn has_type_or_const_vars() -> TypeFlags {
     TypeFlags::HAS_TY_PARAM
         | TypeFlags::HAS_CT_PARAM
         | TypeFlags::HAS_TY_INFER
@@ -76,7 +80,7 @@ pub(crate) fn has_type_or_const_vars() -> TypeFlags {
         | TypeFlags::HAS_CT_BOUND
 }
 
-pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
+pub fn adt_core_bindings_needs_drop<'tcx>(
     bindings: &AdtCoreBindings<'tcx>,
     tcx: TyCtxt<'tcx>,
 ) -> bool {
@@ -86,7 +90,7 @@ pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
 /// Similar to the method `TyCtxt::non_blanket_impls_for_ty` but checks for precise self_ty matching
 /// of the impl rather than SimplifiedType. This is important for generics, so we don't return impls
 /// from other instantiations when we query for something like `impl From<T> for NonZero<u32>`.
-pub(crate) fn non_blanket_impls_for_ty<'tcx>(
+pub fn non_blanket_impls_for_ty<'tcx>(
     tcx: TyCtxt<'tcx>,
     trait_def_id: DefId,
     self_ty: Ty<'tcx>,
@@ -117,7 +121,7 @@ pub fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
 }
 
 /// Returns the C++ underlying type of the `cpp_enum` struct specified by the given def id.
-pub(crate) fn cpp_enum_cpp_underlying_type<'tcx>(
+pub fn cpp_enum_cpp_underlying_type<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
 ) -> Result<CcSnippet<'tcx>> {
@@ -277,7 +281,7 @@ fn is_trait_method_of_impl_lookup_stable<'tcx>(tcx: TyCtxt<'tcx>, impl_assoc_id:
         .expect("Associated trait item should be defined on it's trait")
 }
 
-pub(crate) fn generate_associated_item<'tcx>(
+pub fn generate_associated_item<'tcx>(
     db: &BindingsGenerator<'tcx>,
     assoc_item: &ty::AssocItem,
     member_function_names: &mut HashSet<String>,
@@ -296,7 +300,7 @@ pub(crate) fn generate_associated_item<'tcx>(
         return None;
     }
     let args = generic_args.map_or(&[][..], |args| args.as_slice());
-    crate::error_scope!(db, def_id, args);
+    generate_unsupported::error_scope!(db, def_id, args);
     let result = match assoc_item.kind {
         ty::AssocKind::Fn { .. } => {
             db.generate_function(def_id, generic_args, method_name_override, static_method_mode).inspect(|_binding| {
@@ -476,7 +480,7 @@ fn does_impl_apply_inner<'tcx>(
 }
 
 #[must_use]
-pub(crate) fn is_recursive_specialization<'tcx>(
+pub fn is_recursive_specialization<'tcx>(
     tcx: TyCtxt<'tcx>,
     self_ty: Ty<'tcx>,
     target_ty: Ty<'tcx>,
@@ -660,7 +664,7 @@ fn generate_into_impls<'tcx>(
                     key_type,
                     preferred_type,
                 }) => {
-                    crate::error_scope!(db, def_id, impl_args);
+                    generate_unsupported::error_scope!(db, def_id, impl_args);
                     let err = anyhow!(
                         "Conversion to `{key_type}` is not supported when conversion to \
                          `{preferred_type}` is implemented as they may overlap in C++."
@@ -909,7 +913,7 @@ fn generate_constructor_impls<'tcx>(
                     key_type,
                     preferred_type,
                 }) => {
-                    crate::error_scope!(db, impl_id, impl_args);
+                    generate_unsupported::error_scope!(db, impl_id, impl_args);
                     let trait_name = if is_from { "From" } else { "Into" };
                     let err = anyhow!(
                         "{trait_name} implementation for `{key_type}` is not supported when \
@@ -1157,7 +1161,7 @@ fn generate_trait_operator_impls<'tcx>(
                         )
                 }),
                 Err((err, def_id, impl_args)) => {
-                    crate::error_scope!(db, def_id, impl_args);
+                    generate_unsupported::error_scope!(db, def_id, impl_args);
                     Some(
                         generate_unsupported_def_with_args(db, def_id, impl_args, err)
                             .into_main_api(),
@@ -1312,7 +1316,7 @@ fn generate_ord_and_partialord_impls<'tcx>(
 
     // Handle Ord impls (Rhs is always Self)
     for (impl_id, impl_args) in non_blanket_impls_for_ty(tcx, ord_trait_id, core.common.self_ty) {
-        crate::error_scope!(db, impl_id, impl_args);
+        generate_unsupported::error_scope!(db, impl_id, impl_args);
         match generate_ord_impls(db, core) {
             Ok(s) => snippets.push(s),
             Err(err) => snippets.push(
@@ -1345,7 +1349,7 @@ fn generate_ord_and_partialord_impls<'tcx>(
             continue;
         }
 
-        crate::error_scope!(db, impl_id, impl_args);
+        generate_unsupported::error_scope!(db, impl_id, impl_args);
         match generate_partial_ord_impls(db, core, rhs_ty) {
             Ok(s) => snippets.push(s),
             Err(err) => snippets.push(
@@ -1645,7 +1649,7 @@ fn has_manual_default_impl<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId, self_ty: Ty<'
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub(crate) enum NotAggregateReason {
+pub enum NotAggregateReason {
     NotAStruct,
     ImplementsDrop,
     NonExhaustive,
@@ -1754,7 +1758,7 @@ fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
 /// * `db`: The bindings generator.
 /// * `def_id`: The `DefId` of the ADT.
 /// * `self_ty`: The `Ty` of the ADT.
-pub(crate) fn is_struct_aggregate<'tcx>(
+pub fn is_struct_aggregate<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: Option<DefId>,
     self_ty: Ty<'tcx>,
@@ -1824,6 +1828,71 @@ pub(crate) fn is_struct_aggregate<'tcx>(
     }
 
     Ok(())
+}
+
+/// Returns true if the type is a C++20 literal type with a `constexpr` move constructor, so
+/// a `constexpr` C++ constructor can take it by value and move-initialize a member with it.
+///
+/// A non-template constructor declared `constexpr` in C++20 requires every parameter type to be a
+/// literal type (`[dcl.constexpr]/3`) and every member initializer to call a `constexpr`
+/// constructor (`-Winvalid-constexpr`).
+pub fn is_cpp_constexpr_move_constructible<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+) -> bool {
+    let tcx = db.tcx();
+    let typing_env = ty::TypingEnv::fully_monomorphized();
+    if ty.needs_drop(tcx, typing_env) {
+        return false;
+    }
+    match *ty.kind() {
+        ty::Bool
+        | ty::Char
+        | ty::Int(_)
+        | ty::Uint(_)
+        | ty::Float(_)
+        | ty::RawPtr(..)
+        | ty::FnPtr(..)
+        | ty::Ref(..) => true,
+        ty::Array(elem_ty, _) => db.is_cpp_constexpr_move_constructible(elem_ty),
+        ty::Adt(adt_def, substs) => {
+            if is_std_ptr_non_null(tcx, adt_def.did()) || adt_def.is_pin() {
+                return true;
+            }
+            let attrs = crubit_attr::get_attrs(tcx, adt_def.did()).unwrap_or_default();
+            if attrs.cpp_type.is_some() || attrs.get_bridging_attrs().ok().flatten().is_some() {
+                return false;
+            }
+            if attrs.cpp_enum.is_some() {
+                return true;
+            }
+            match adt_def.adt_kind() {
+                ty::AdtKind::Struct => {
+                    is_struct_aggregate(db, Some(adt_def.did()), ty).is_ok()
+                        && adt_def.non_enum_variant().fields.iter().all(|f| {
+                            let field_ty = f.ty(tcx, substs);
+                            let field_ty = normalize_ty(tcx, tcx.param_env(f.did), field_ty);
+                            db.is_cpp_constexpr_move_constructible(field_ty)
+                        })
+                }
+                ty::AdtKind::Enum => {
+                    !adt_def.repr().c()
+                        && db
+                            .crate_features(adt_def.did().krate)
+                            .contains(crubit_feature::CrubitFeature::EnumApiV2)
+                        && adt_def.variants().iter().any(|variant| {
+                            variant.fields.iter().all(|f| {
+                                let field_ty = f.ty(tcx, substs);
+                                let field_ty = normalize_ty(tcx, tcx.param_env(f.did), field_ty);
+                                db.is_cpp_constexpr_move_constructible(field_ty)
+                            })
+                        })
+                }
+                ty::AdtKind::Union => false,
+            }
+        }
+        _ => false,
+    }
 }
 
 /// Generates C++ hashing support (`AbslHashValue` and a `std::hash` template
@@ -2412,14 +2481,14 @@ fn adt_cc_keyword(adt_def: ty::AdtDef<'_>, crubit_attrs: &crubit_attr::CrubitAtt
     }
 }
 
-pub(crate) struct GenericAdtHeader {
+pub struct GenericAdtHeader {
     pub keyword: TokenStream,
     pub cpp_name: Ident,
     pub fully_qualified_cc_name: TokenStream,
     pub template_args: Vec<Ident>,
 }
 
-pub(crate) fn get_generic_adt_header<'tcx>(
+pub fn get_generic_adt_header<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
 ) -> Result<GenericAdtHeader> {
@@ -2595,7 +2664,7 @@ fn generate_adt_based_ctors<'tcx>(
         .variants()
         .iter_enumerated()
         .map(|(variant_index, variant)| {
-            crate::error_scope!(db, variant.def_id, core.substs());
+            generate_unsupported::error_scope!(db, variant.def_id, core.substs());
             generate_variant_ctor(db, core.clone(), member_function_names, variant_index, variant)
                 .unwrap_or_else(|err| {
                     if should_suppress_errors {
@@ -3731,7 +3800,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
 }
 
 /// Returns the body of the C++ struct that represents the given ADT or tuple.
-pub(crate) fn generate_fields<'tcx>(
+pub fn generate_fields<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     cc_short_name: &TokenStream,
@@ -3777,7 +3846,7 @@ pub(crate) fn generate_fields<'tcx>(
 }
 
 /// Generates the `(UnsafeRelocateTag, T&&)` constructor for the given ADT.
-pub(crate) fn generate_relocating_ctor<'tcx>(
+pub fn generate_relocating_ctor<'tcx>(
     db: &BindingsGenerator<'tcx>,
     adt_cc_name: &TokenStream,
     cc_fully_qualified_name: &TokenStream,
@@ -4228,12 +4297,12 @@ fn format_const_value<'tcx>(
     }
 }
 
-pub(crate) fn generate_const<'tcx>(
+pub fn generate_const<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     generic_args: Option<ty::GenericArgsRef<'tcx>>,
 ) -> Result<ApiSnippets<'tcx>> {
-    use crate::get_generic_args::GenericClausesExt;
+    use get_generic_args::GenericClausesExt;
     let tcx = db.tcx();
     if !tcx.generics_of(def_id).is_own_empty() {
         bail!("Generic constants are not supported");
@@ -4354,7 +4423,7 @@ pub(crate) fn generate_const<'tcx>(
     })
 }
 
-pub(crate) fn create_type_alias_with_rs_type<'tcx>(
+pub fn create_type_alias_with_rs_type<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     rs_type: &str,
@@ -4386,7 +4455,7 @@ pub(crate) fn create_type_alias_with_rs_type<'tcx>(
     Ok(snippet)
 }
 
-pub(crate) fn are_generics_enabled<'tcx>(db: &BindingsGenerator<'tcx>, krate: CrateNum) -> bool {
+pub fn are_generics_enabled<'tcx>(db: &BindingsGenerator<'tcx>, krate: CrateNum) -> bool {
     db.crate_features(db.source_crate_num()).contains(crubit_feature::CrubitFeature::Generics)
         && db.crate_features(krate).contains(crubit_feature::CrubitFeature::Generics)
 }

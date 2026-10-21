@@ -8,7 +8,7 @@ extern crate rustc_middle;
 
 use code_gen_utils::format_cc_includes;
 use database::{BindingsGenerator, TypeLocation};
-use generate_bindings::format_type::is_bridged_type;
+use format_type::is_bridged_type;
 use proc_macro2::TokenStream;
 use query_compiler::liberate_and_deanonymize_late_bound_regions;
 use quote::quote;
@@ -882,7 +882,7 @@ fn unique_ptr_preamble() -> TokenStream {
         pub struct StructWithDelete {
             pub x: i32,
         }
-        unsafe impl operator::Delete for StructWithDelete {
+        unsafe impl crate::operator::Delete for StructWithDelete {
             unsafe fn delete(_p: *mut Self) {}
         }
 

@@ -2,12 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::format_type::CcType;
-use crate::format_type::{
-    alias_ty_as_opaque_def_id, format_cc_ident, format_param_types_for_cc_thunk,
-    format_ty_for_closure_param_rs, is_bridged_type, replace_all_regions_with_static,
-    ty_as_alias_ty, BridgedType, BridgedTypeConversionInfo, CallableInfo, CallableKind,
-};
+#![feature(rustc_private)]
+#![feature(stmt_expr_attributes)]
+
+extern crate rustc_hir;
+extern crate rustc_middle;
+extern crate rustc_span;
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
 use code_gen_utils::make_rs_ident;
@@ -15,6 +15,12 @@ use crubit_abi_type::CrubitAbiTypeToRustExprTokens;
 use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail};
+use format_type::CcType;
+use format_type::{
+    alias_ty_as_opaque_def_id, format_cc_ident, format_param_types_for_cc_thunk,
+    format_ty_for_closure_param_rs, is_bridged_type, replace_all_regions_with_static,
+    ty_as_alias_ty, BridgedType, BridgedTypeConversionInfo, CallableInfo, CallableKind,
+};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use query_compiler::{
@@ -32,16 +38,16 @@ use rustc_span::symbol::{kw, sym, Symbol};
 use std::collections::{BTreeSet, HashMap};
 
 /// How a function parameter is passed across the `extern "C"` thunk ABI.
-pub(crate) enum ParamAbi<'tcx> {
+pub enum ParamAbi<'tcx> {
     Callable(CallableInfo<'tcx>),
     Value(ValueAbi<'tcx>),
 }
 
-pub(crate) fn classify_param_abi<'tcx>(
+pub fn classify_param_abi<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
 ) -> Result<ParamAbi<'tcx>> {
-    if let Some(info) = crate::format_type::get_callable_info(db.tcx(), ty)? {
+    if let Some(info) = format_type::get_callable_info(db.tcx(), ty)? {
         return Ok(ParamAbi::Callable(info));
     }
     Ok(ParamAbi::Value(classify_value_abi(db, ty, /* is_constructor= */ false)?))
@@ -49,7 +55,7 @@ pub(crate) fn classify_param_abi<'tcx>(
 
 /// How a non-callable value (parameter or return value) is passed across the `extern "C"` thunk
 /// ABI.
-pub(crate) enum ValueAbi<'tcx> {
+pub enum ValueAbi<'tcx> {
     Bridged(BridgedType),
     ByValue,
     LegacyTuple(&'tcx ty::List<Ty<'tcx>>),
@@ -57,7 +63,7 @@ pub(crate) enum ValueAbi<'tcx> {
     ByPointer,
 }
 
-pub(crate) fn classify_value_abi<'tcx>(
+pub fn classify_value_abi<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
     is_constructor: bool,
@@ -98,7 +104,7 @@ pub(crate) fn classify_value_abi<'tcx>(
 }
 
 /// Generates the C++ statement calling a constructor thunk to initialize `*this`.
-pub(crate) fn generate_ctor_thunk_call<'tcx>(
+pub fn generate_ctor_thunk_call<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
     thunk_name: &Ident,
@@ -609,7 +615,7 @@ pub fn generate_thunk_impl<'tcx>(
         .iter()
         .enumerate()
         .map(|(i, (rs_name, ty))| -> Result<TokenStream> {
-            if let Some(info) = crate::format_type::get_callable_info(db.tcx(), *ty)? {
+            if let Some(info) = format_type::get_callable_info(db.tcx(), *ty)? {
                 let is_generic_param = matches!(
                     uninstantiated_sig.inputs().get(i).map(|t| t.kind()),
                     Some(ty::TyKind::Param(_))
@@ -999,12 +1005,12 @@ pub fn generate_trait_thunks<'tcx>(
     Ok(TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls })
 }
 
-pub(crate) enum ThunkKind<'tcx> {
+pub enum ThunkKind<'tcx> {
     Function { def_id: DefId, export_name: Option<Symbol>, substs: ty::GenericArgsRef<'tcx> },
     TraitMethod { method: &'tcx ty::AssocItem, substs: ty::GenericArgsRef<'tcx> },
 }
 
-pub(crate) fn make_thunk_name<'tcx>(db: &BindingsGenerator<'tcx>, kind: ThunkKind<'tcx>) -> String {
+pub fn make_thunk_name<'tcx>(db: &BindingsGenerator<'tcx>, kind: ThunkKind<'tcx>) -> String {
     let tcx = db.tcx();
     let is_golden_test = db.is_golden_test();
     let target_path_mangled_hash = if is_golden_test {
@@ -1046,7 +1052,7 @@ pub(crate) fn make_thunk_name<'tcx>(db: &BindingsGenerator<'tcx>, kind: ThunkKin
     format!("__crubit_thunk_{}{}", target_path_mangled_hash, escape_non_identifier_chars(&details))
 }
 
-pub(crate) fn trait_method_thunk_name<'tcx>(
+pub fn trait_method_thunk_name<'tcx>(
     db: &BindingsGenerator<'tcx>,
     trait_id: DefId,
     method_name: &str,
@@ -1067,7 +1073,7 @@ pub(crate) fn trait_method_thunk_name<'tcx>(
     Ok(make_thunk_name(db, ThunkKind::TraitMethod { method, substs }))
 }
 
-pub(crate) fn function_symbol_name<'tcx>(
+pub fn function_symbol_name<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     export_name: Option<Symbol>,
@@ -1132,7 +1138,7 @@ pub(crate) fn function_symbol_name<'tcx>(
     }
 }
 
-pub(crate) fn fn_arg_idents(tcx: TyCtxt, def_id: DefId) -> Vec<Option<rustc_span::Ident>> {
+pub fn fn_arg_idents(tcx: TyCtxt, def_id: DefId) -> Vec<Option<rustc_span::Ident>> {
     match tcx.def_kind(def_id) {
         DefKind::Ctor { .. } => {
             // Documentation of `skip_binder` says that accessing generic args in the returned value
@@ -1161,12 +1167,12 @@ pub fn get_async_future_output_ty<'tcx>(
             "crubit.rs-bug: Future::Output alias is not an opaque type (`{rs_return_type}`), this should never happen."
         );
     };
-    crate::format_type::get_associated_type(tcx, rs_return_type, sym::Output).ok_or_else(|| {
+    format_type::get_associated_type(tcx, rs_return_type, sym::Output).ok_or_else(|| {
         anyhow!("Failed to find Future::Output associated type in bounds of {:?}", rs_return_type)
     })
 }
 
-pub(crate) fn thunk_qualifier(core: &AdtCoreBindings<'_>) -> TokenStream {
+pub fn thunk_qualifier(core: &AdtCoreBindings<'_>) -> TokenStream {
     if core.def_id.is_none() {
         quote! { ::__crubit_internal }
     } else {

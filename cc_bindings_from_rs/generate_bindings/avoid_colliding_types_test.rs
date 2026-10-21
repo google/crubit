@@ -5,7 +5,7 @@
 #![feature(rustc_private)]
 extern crate rustc_middle;
 
-use generate_bindings::avoid_colliding_types::{AvoidCollidingTypes, TypeCollisionRisk};
+use avoid_colliding_types::{AvoidCollidingTypes, TypeCollisionRisk};
 use run_compiler_test_support::run_compiler_for_testing;
 use rustc_middle::ty::{Ty, TyCtxt};
 

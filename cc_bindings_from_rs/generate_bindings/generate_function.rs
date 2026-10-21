@@ -2,26 +2,36 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::format_type::CcType;
-use crate::format_type::{
-    check_fn_sig, format_cc_ident, format_param_types_for_cc_api, format_region_as_cc_lifetime,
-    format_ret_ty_for_cc, format_top_level_ns_for_crate, has_elided_region, is_bridged_type,
-    is_thunk_required, region_is_elided, BridgedType, BridgedTypeConversionInfo, CallableInfo,
-    CallableKind, CcParamTy,
-};
-use crate::generate_comment::{generate_deprecated_tag, generate_doc_comment, must_use_attr_of};
-use crate::generate_function_thunk::{
-    classify_param_abi, classify_value_abi, fn_arg_idents, function_symbol_name,
-    generate_thunk_decl, generate_thunk_impl, get_async_future_output_ty, make_thunk_name,
-    ParamAbi, ThunkKind, ValueAbi,
-};
-use crate::get_generic_args::GenericClausesExt;
+#![feature(cfg_accessible)]
+#![feature(rustc_private)]
+#![feature(stmt_expr_attributes)]
+#![feature(proc_macro_hygiene)]
+
+#[rustversion::since(2026-09-27)]
+extern crate rustc_attr_ir;
+extern crate rustc_hir;
+extern crate rustc_middle;
+extern crate rustc_span;
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, RsSnippet};
 use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail};
+use format_type::CcType;
+use format_type::{
+    check_fn_sig, format_cc_ident, format_param_types_for_cc_api, format_region_as_cc_lifetime,
+    format_ret_ty_for_cc, format_top_level_ns_for_crate, has_elided_region, is_bridged_type,
+    is_thunk_required, region_is_elided, BridgedType, BridgedTypeConversionInfo, CallableInfo,
+    CallableKind, CcParamTy,
+};
+use generate_comment::{generate_deprecated_tag, generate_doc_comment, must_use_attr_of};
+use generate_function_thunk::{
+    classify_param_abi, classify_value_abi, fn_arg_idents, function_symbol_name,
+    generate_thunk_decl, generate_thunk_impl, get_async_future_output_ty, make_thunk_name,
+    ParamAbi, ThunkKind, ValueAbi,
+};
+use get_generic_args::GenericClausesExt;
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
@@ -150,7 +160,7 @@ fn legacy_bridged_type_needs_slot<'tcx>(
 ///
 /// Returns a `TokenStream` containing an expression that evaluates to the
 /// C-ABI-compatible version of the type.
-pub(crate) fn cc_param_to_c_abi<'tcx>(
+pub fn cc_param_to_c_abi<'tcx>(
     db: &BindingsGenerator<'tcx>,
     cc_ident: Ident,
     ty: Ty<'tcx>,
@@ -671,10 +681,10 @@ fn export_name_and_no_mangle_attrs_of<'tcx>(
     (export_name, no_mangle)
 }
 
-pub(crate) struct Param<'tcx> {
-    pub(crate) cc_name: Ident,
-    pub(crate) cpp_type: CcParamTy<'tcx>,
-    pub(crate) ty: Ty<'tcx>,
+pub struct Param<'tcx> {
+    pub cc_name: Ident,
+    pub cpp_type: CcParamTy<'tcx>,
+    pub ty: Ty<'tcx>,
 }
 
 fn can_shared_refs_to_ty_alias_mut_refs<'tcx>(tcx: TyCtxt<'tcx>, target_ty: Ty<'tcx>) -> bool {
@@ -715,7 +725,7 @@ fn refs_to_check_for_aliasing<'tcx, 'a>(
     // TODO: b/351876244 - Apply this check to reference-like types such as
     // `cpp_std::string_view` and `absl::Span`.
     for param in params {
-        if matches!(crate::format_type::get_callable_info(tcx, param.ty), Ok(Some(_))) {
+        if matches!(format_type::get_callable_info(tcx, param.ty), Ok(Some(_))) {
             continue;
         }
         if let Some((_region, target_ty, mutability)) = as_ref_or_pinned_ref(param.ty) {
@@ -772,7 +782,7 @@ impl ThunkSelfParameter {
 
 /// Generates the wrapping code to call a thunk and return its result.
 /// This can be checking parameter invariants or creating a slot to pass as an output pointer.
-pub(crate) fn generate_thunk_call<'tcx>(
+pub fn generate_thunk_call<'tcx>(
     db: &BindingsGenerator<'tcx>,
     thunk_name: Ident,
     rs_return_type: Ty<'tcx>,
@@ -901,7 +911,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
     Ok(CcSnippet { prereqs, tokens })
 }
 
-pub(crate) fn format_variant_ctor_cc_name(variant_name: &str) -> String {
+pub fn format_variant_ctor_cc_name(variant_name: &str) -> String {
     format!("Make{variant_name}")
 }
 
@@ -953,8 +963,7 @@ fn format_trait_ref_for_rs<'tcx>(
     } else {
         let arg_tokens = trait_args
             .map(|ty_arg| {
-                let static_ty_arg =
-                    crate::format_type::replace_all_regions_with_static(db.tcx(), ty_arg);
+                let static_ty_arg = format_type::replace_all_regions_with_static(db.tcx(), ty_arg);
                 db.format_ty_for_rs(static_ty_arg)
             })
             .collect::<Result<Vec<_>>>()?;
@@ -965,7 +974,7 @@ fn format_trait_ref_for_rs<'tcx>(
 /// Returns `template <typename __CrubitBoolT> requires(::std::is_same_v<__CrubitBoolT, bool>)`
 /// to prevent C++ standard conversions (e.g. from `const char*` or `int` to `bool`) from
 /// hijacking overload resolution on constructors and overloaded operators.
-pub(crate) fn bool_constraint_template_prefix() -> TokenStream {
+pub fn bool_constraint_template_prefix() -> TokenStream {
     quote! {
         template <typename __CrubitBoolT>
           requires(::std::is_same_v<__CrubitBoolT, bool>)
@@ -1374,8 +1383,7 @@ pub fn generate_function<'tcx>(
     } else {
         // Trait method
         let struct_name_tokens = if let Some(self_ty) = self_ty {
-            let static_self_ty =
-                crate::format_type::replace_all_regions_with_static(db.tcx(), self_ty);
+            let static_self_ty = format_type::replace_all_regions_with_static(db.tcx(), self_ty);
             let formatted = db.format_ty_for_rs(static_self_ty)?;
             Some(formatted)
         } else {
@@ -1470,7 +1478,7 @@ fn check_callable_params_not_borrowed_in_return<'tcx>(
     for (i, &param_ty) in sig_mid.inputs().iter().enumerate() {
         if let ty::TyKind::Ref(region, _, _) = *param_ty.kind()
             && return_regions.regions.contains(&region)
-            && let Ok(Some(info)) = crate::format_type::get_callable_info(tcx, param_ty)
+            && let Ok(Some(info)) = format_type::get_callable_info(tcx, param_ty)
             && !info.kind.is_owning()
         {
             bail!(

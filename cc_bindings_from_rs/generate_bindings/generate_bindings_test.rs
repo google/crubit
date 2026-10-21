@@ -500,11 +500,11 @@ fn test_format_item_reexport_private_type() {
             }
         }
 
-        pub use crate::test_mod::ReExportedStruct as Z;
-        pub use crate::test_mod::ReExportedStruct as X;
-        pub use crate::test_mod::ReExportedStruct as Y;
+        pub use test_mod::ReExportedStruct as Z;
+        pub use test_mod::ReExportedStruct as X;
+        pub use test_mod::ReExportedStruct as Y;
         #[allow(unused_imports)]
-        use crate::test_mod::ReExportedStruct as PrivateUse;
+        use test_mod::ReExportedStruct as PrivateUse;
         "#;
     test_format_item(test_src, "NotReExportedStruct", |result| {
         let result = result.unwrap();

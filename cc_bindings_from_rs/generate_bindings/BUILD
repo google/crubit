@@ -16,22 +16,307 @@ package(
 
 rust_library(
     name = "generate_bindings",
-    srcs = [
-        "avoid_colliding_types.rs",
-        "format_type.rs",
-        "generate_comment.rs",
-        "generate_ctor.rs",
-        "generate_enum.rs",
-        "generate_function.rs",
-        "generate_function_thunk.rs",
-        "generate_struct_and_union.rs",
-        "generate_template_specialization.rs",
-        "generate_unsupported.rs",
-        "get_generic_args.rs",
-        "lib.rs",
-    ],
+    srcs = ["lib.rs"],
     edition = "2024",
     deps = [
+        ":avoid_colliding_types",
+        ":format_type",
+        ":generate_comment",
+        ":generate_ctor",
+        ":generate_enum",
+        ":generate_function",
+        ":generate_function_thunk",
+        ":generate_struct_and_union",
+        ":generate_template_specialization",
+        ":generate_unsupported",
+        ":get_generic_args",
+        ":query_compiler",
+        "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
+        "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:crubit_feature",
+        "//common:dyn_format",
+        "//common:error_report",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+rust_library(
+    name = "avoid_colliding_types",
+    srcs = ["avoid_colliding_types.rs"],
+    edition = "2024",
+    deps = [
+        ":query_compiler",
+        "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
+        "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:crubit_feature",
+        "//common:dyn_format",
+        "//common:error_report",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+rust_library(
+    name = "format_type",
+    srcs = ["format_type.rs"],
+    edition = "2024",
+    deps = [
+        ":query_compiler",
+        "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
+        "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:crubit_feature",
+        "//common:dyn_format",
+        "//common:error_report",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+rust_library(
+    name = "generate_comment",
+    srcs = ["generate_comment.rs"],
+    edition = "2024",
+    deps = [
+        ":query_compiler",
+        "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
+        "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:crubit_feature",
+        "//common:dyn_format",
+        "//common:error_report",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+rust_library(
+    name = "get_generic_args",
+    srcs = ["get_generic_args.rs"],
+    edition = "2024",
+    deps = [
+        ":query_compiler",
+        "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
+        "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:crubit_feature",
+        "//common:dyn_format",
+        "//common:error_report",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+rust_library(
+    name = "generate_function_thunk",
+    srcs = ["generate_function_thunk.rs"],
+    edition = "2024",
+    deps = [
+        ":format_type",
+        ":query_compiler",
+        "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
+        "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:crubit_feature",
+        "//common:dyn_format",
+        "//common:error_report",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+rust_library(
+    name = "generate_ctor",
+    srcs = ["generate_ctor.rs"],
+    edition = "2024",
+    deps = [
+        ":generate_function_thunk",
+        ":query_compiler",
+        "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
+        "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:crubit_feature",
+        "//common:dyn_format",
+        "//common:error_report",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+rust_library(
+    name = "generate_enum",
+    srcs = ["generate_enum.rs"],
+    edition = "2024",
+    deps = [
+        ":format_type",
+        ":generate_comment",
+        ":query_compiler",
+        "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
+        "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:crubit_feature",
+        "//common:dyn_format",
+        "//common:error_report",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+rust_library(
+    name = "generate_unsupported",
+    srcs = ["generate_unsupported.rs"],
+    edition = "2024",
+    deps = [
+        ":generate_comment",
+        ":query_compiler",
+        "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
+        "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:crubit_feature",
+        "//common:dyn_format",
+        "//common:error_report",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+rust_library(
+    name = "generate_function",
+    srcs = ["generate_function.rs"],
+    edition = "2024",
+    deps = [
+        ":format_type",
+        ":generate_comment",
+        ":generate_function_thunk",
+        ":get_generic_args",
+        ":query_compiler",
+        "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
+        "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:crubit_feature",
+        "//common:dyn_format",
+        "//common:error_report",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+rust_library(
+    name = "generate_struct_and_union",
+    srcs = ["generate_struct_and_union.rs"],
+    edition = "2024",
+    deps = [
+        ":avoid_colliding_types",
+        ":format_type",
+        ":generate_comment",
+        ":generate_ctor",
+        ":generate_enum",
+        ":generate_function",
+        ":generate_function_thunk",
+        ":generate_unsupported",
+        ":get_generic_args",
+        ":query_compiler",
+        "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
+        "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:crubit_feature",
+        "//common:dyn_format",
+        "//common:error_report",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+rust_library(
+    name = "generate_template_specialization",
+    srcs = ["generate_template_specialization.rs"],
+    edition = "2024",
+    deps = [
+        ":format_type",
+        ":generate_ctor",
+        ":generate_enum",
+        ":generate_struct_and_union",
+        ":generate_unsupported",
         ":query_compiler",
         "//cc_bindings_from_rs:crubit_attr",
         "//cc_bindings_from_rs:rustversion",
@@ -55,6 +340,7 @@ crubit_rust_test(
     name = "format_type_test",
     srcs = ["format_type_test.rs"],
     deps = [
+        ":format_type",
         ":generate_bindings",
         ":query_compiler",
         ":test_helpers",
@@ -72,6 +358,7 @@ crubit_rust_test(
     name = "avoid_colliding_types_test",
     srcs = ["avoid_colliding_types_test.rs"],
     deps = [
+        ":avoid_colliding_types",
         ":generate_bindings",
         "//cc_bindings_from_rs:run_compiler_test_support",
     ],

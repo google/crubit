@@ -5,6 +5,13 @@
 //! Doc comments, source locations and attribute-derived tags (`[[deprecated]]`, `[[nodiscard]]`)
 //! for the generated C++ API.
 
+#![feature(rustc_private)]
+
+#[rustversion::since(2026-09-27)]
+extern crate rustc_attr_ir;
+extern crate rustc_hir;
+extern crate rustc_middle;
+extern crate rustc_span;
 use database::BindingsGenerator;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
@@ -18,11 +25,11 @@ use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use std::borrow::Cow;
 
-pub(crate) struct MustUseAttr {
+pub struct MustUseAttr {
     pub reason: Option<Symbol>,
 }
 
-pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option<MustUseAttr> {
+pub fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option<MustUseAttr> {
     if !crubit_attr::supports_attrs(tcx.def_kind(def_id)) {
         return None;
     }
@@ -35,7 +42,7 @@ pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option
 
 /// Returns the C++ must_use tag for the item identified by `def_id`, or None if there is no such
 /// tag.
-pub(crate) fn generate_must_use_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
+pub fn generate_must_use_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
     if let Some(must_use_attr) = must_use_attr_of(tcx, def_id) {
         let cc_must_use_tag = match must_use_attr.reason {
             None => quote! {[[nodiscard]]},
@@ -51,7 +58,7 @@ pub(crate) fn generate_must_use_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenS
 
 /// Returns the C++ deprecated tag for the item identified by `def_id`, if it is
 /// deprecated. Otherwise, returns None.
-pub(crate) fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
+pub fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
     #[rustversion::since(2026-09-27)]
     use rustc_attr_ir::{find_attr, AttributeKind};
     #[rustversion::before(2026-09-27)]
@@ -125,7 +132,7 @@ fn normalize_source_path(file_name: &str) -> Cow<'_, str> {
     Cow::Borrowed(file_name)
 }
 
-pub(crate) fn generate_source_location(db: &BindingsGenerator, def_id: DefId) -> String {
+pub fn generate_source_location(db: &BindingsGenerator, def_id: DefId) -> String {
     let tcx = db.tcx();
     let def_span = tcx.def_span(def_id);
     let rustc_span::FileLines { file, lines } = match tcx.sess.source_map().span_to_lines(def_span)
@@ -149,7 +156,7 @@ pub(crate) fn generate_source_location(db: &BindingsGenerator, def_id: DefId) ->
 /// Formats the doc comment (if any) associated with the item identified by
 /// `local_def_id`, and appends the source location at which the item is
 /// defined.
-pub(crate) fn generate_doc_comment(db: &BindingsGenerator, def_id: DefId) -> TokenStream {
+pub fn generate_doc_comment(db: &BindingsGenerator, def_id: DefId) -> TokenStream {
     #[allow(deprecated)]
     let mut doc_comment: String = db
         .tcx()

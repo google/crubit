@@ -10,18 +10,21 @@
 //! produces, and `support/rs_std/enum_test_option_i32.h` for a hand-written example of the
 //! output.
 
+#![feature(rustc_private)]
+#![feature(stmt_expr_attributes)]
+
 extern crate rustc_abi;
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use crate::format_type::{can_be_made_layout_compatible, format_cc_ident};
-use crate::generate_comment::{generate_deprecated_tag, generate_doc_comment};
 use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail, ensure};
+use format_type::{can_be_made_layout_compatible, format_cc_ident};
+use generate_comment::{generate_deprecated_tag, generate_doc_comment};
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{field_def_is_pub_and_stable, get_layout, normalize_ty};
 use quote::{format_ident, quote};
@@ -39,7 +42,7 @@ use std::collections::HashSet;
 use std::ops::RangeInclusive;
 
 /// What `EnumApiV2` needs to know about an enum to generate its bindings.
-pub(crate) struct EnumLayout<'tcx> {
+pub struct EnumLayout<'tcx> {
     /// The enum's `Discriminant` type: the type of every variant's `kDiscriminant`, and of the
     /// value its tag encoding decodes. Is the declared discriminant type (`isize` by default) for
     /// `Single` enums, since this matches rustc.
@@ -176,7 +179,7 @@ struct EnumField<'tcx> {
 ///
 /// `member_function_names` are the names of the enum's members so far, which variant names must
 /// not collide with.
-pub(crate) fn analyze_enum<'tcx>(
+pub fn analyze_enum<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
     member_function_names: &HashSet<String>,
@@ -436,7 +439,7 @@ fn inhabited_variant_field_shape(
 /// Generates the members of the enum's C++ class: its `Discriminant` type, a struct per variant,
 /// the in-place constructor, and the storage. Replaces `generate_fields` for enums with an
 /// `EnumLayout`.
-pub(crate) fn generate_enum<'tcx>(
+pub fn generate_enum<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
     layout: EnumLayout<'tcx>,
@@ -750,6 +753,6 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
     })
 }
 
-pub(crate) fn anonymous_field_ident(index: usize) -> Ident {
+pub fn anonymous_field_ident(index: usize) -> Ident {
     format_ident!("__field{index}")
 }

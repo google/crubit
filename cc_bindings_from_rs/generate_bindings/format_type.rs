@@ -4,6 +4,11 @@
 
 //! Create the right string reprensentation of a type or an identifier.
 
+#![feature(cfg_accessible)]
+#![feature(rustc_private)]
+#![feature(stmt_expr_attributes)]
+#![feature(proc_macro_hygiene)]
+
 extern crate rustc_abi;
 #[rustversion::since(2026-09-27)]
 extern crate rustc_attr_ir;
@@ -1281,7 +1286,7 @@ fn format_ty_for_cc_impl<'tcx>(
 }
 
 /// Returns the `AliasTy` if `ty` is a type alias, or `None` otherwise.
-pub(crate) fn ty_as_alias_ty<'tcx>(ty: Ty<'tcx>) -> Option<&'tcx ty::AliasTy<'tcx>> {
+pub fn ty_as_alias_ty<'tcx>(ty: Ty<'tcx>) -> Option<&'tcx ty::AliasTy<'tcx>> {
     #[rustversion::since(2026-06-25)]
     let ty::TyKind::Alias(_, alias_ty) = ty.kind() else {
         return None;
@@ -1325,7 +1330,7 @@ fn format_layout_compatible_cpp_type_for_rust_proto_msg<'tcx>(
 
 /// Returns `Some(def_id)` if `alias_ty` represents an `Opaque` alias
 /// (`-> impl Trait` / `async fn`).
-pub(crate) fn alias_ty_as_opaque_def_id<'tcx>(
+pub fn alias_ty_as_opaque_def_id<'tcx>(
     tcx: TyCtxt<'tcx>,
     alias_ty: &ty::AliasTy<'tcx>,
 ) -> Option<DefId> {
@@ -1462,7 +1467,7 @@ pub fn format_ret_ty_for_cc<'tcx>(
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))
 }
 
-pub(crate) fn has_elided_region<'tcx>(tcx: TyCtxt<'tcx>, search_ty: ty::Ty<'tcx>) -> bool {
+pub fn has_elided_region<'tcx>(tcx: TyCtxt<'tcx>, search_ty: ty::Ty<'tcx>) -> bool {
     use core::ops::ControlFlow;
     use rustc_middle::ty::{Region, TyCtxt, TypeVisitor};
 
@@ -1678,7 +1683,7 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
 /// `&'static T`) so Rust can infer higher-ranked lifetimes on closure parameters, and formats
 /// generic lifetime arguments as `'_` for parameters (`is_return_ty == false`) or `'static` for
 /// return types (`is_return_ty == true`).
-pub(crate) fn format_ty_for_closure_param_rs<'tcx>(
+pub fn format_ty_for_closure_param_rs<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
     is_return_ty: bool,
@@ -2486,7 +2491,7 @@ pub fn is_thunk_required<'tcx>(db: &BindingsGenerator<'tcx>, sig: &ty::FnSig<'tc
     Ok(())
 }
 
-pub(crate) fn replace_all_regions_with_static<'tcx, T>(tcx: TyCtxt<'tcx>, value: T) -> T
+pub fn replace_all_regions_with_static<'tcx, T>(tcx: TyCtxt<'tcx>, value: T) -> T
 where
     T: ty::TypeFoldable<TyCtxt<'tcx>>,
 {
@@ -2511,7 +2516,7 @@ where
     value.fold_with(&mut Staticifier { tcx, static_region: tcx.lifetimes.re_static })
 }
 
-pub(crate) fn check_feature_enabled_on_self_and_all_deps(
+pub fn check_feature_enabled_on_self_and_all_deps(
     db: &BindingsGenerator,
     feature: crubit_feature::CrubitFeature,
 ) -> bool {
@@ -2548,7 +2553,7 @@ fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
 }
 
 /// Checks that `ty` has the same ABI as `rs_std::SliceRef`.
-pub(crate) fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
+pub fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
     // Check the assumption from `rust_builtin_type_abi_assumptions.md` that Rust's
     // slice has the same ABI as `rs_std::SliceRef`.
     let layout = tcx

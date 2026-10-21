@@ -6,23 +6,27 @@
 //! constructors (and the matching assignment operators) that let a Rust type be used as a C++
 //! value, together with the `BindingsGenerator` queries that decide which of them an ADT gets.
 
-use crate::generate_function_thunk::{
-    generate_ctor_thunk_call, generate_trait_thunks, thunk_qualifier, TraitThunks,
-};
-use crate::generate_struct_and_union::is_struct_aggregate;
+#![feature(rustc_private)]
+
+extern crate rustc_middle;
+extern crate rustc_span;
+
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, RsSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, CopyCodegenStyle, MoveCodegenStyle};
 use error_report::{anyhow, bail};
+use generate_function_thunk::{
+    generate_ctor_thunk_call, generate_trait_thunks, thunk_qualifier, TraitThunks,
+};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
-use query_compiler::{does_type_implement_trait, is_copy, is_std_ptr_non_null, normalize_ty};
+use query_compiler::{does_type_implement_trait, is_copy, is_std_ptr_non_null};
 use quote::quote;
 use rustc_middle::ty::{self, Ty};
 use rustc_span::symbol::sym;
 
-pub(crate) fn has_default_ctor<'tcx>(db: &BindingsGenerator<'tcx>, self_ty: Ty<'tcx>) -> bool {
+pub fn has_default_ctor<'tcx>(db: &BindingsGenerator<'tcx>, self_ty: Ty<'tcx>) -> bool {
     let tcx = db.tcx();
     let trait_id = tcx
         .get_diagnostic_item(sym::Default)
@@ -32,7 +36,7 @@ pub(crate) fn has_default_ctor<'tcx>(db: &BindingsGenerator<'tcx>, self_ty: Ty<'
 
 /// Generates a default constructor for an ADT if possible (i.e. if the `Default`
 /// trait is implemented for the ADT), or a `= delete`d default constructor otherwise.
-pub(crate) fn generate_default_ctor<'tcx>(
+pub fn generate_default_ctor<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
@@ -106,7 +110,7 @@ fn generate_deleted_default_ctor<'tcx>(
 
 /// If we were to generate a C++ copy constructor and assignment operator for a Rust-originating
 /// type, how would we do it?
-pub(crate) fn copy_ctor_and_assignment_operator_codegen_style<'tcx>(
+pub fn copy_ctor_and_assignment_operator_codegen_style<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
 ) -> Option<CopyCodegenStyle> {
@@ -124,7 +128,7 @@ pub(crate) fn copy_ctor_and_assignment_operator_codegen_style<'tcx>(
 /// Generates the copy constructor and the copy-assignment operator for an ADT if
 /// possible (i.e. if the `Clone` trait is implemented for the ADT), or `= delete`d
 /// declarations otherwise.
-pub(crate) fn generate_copy_ctor_and_assignment_operator<'tcx>(
+pub fn generate_copy_ctor_and_assignment_operator<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
@@ -238,7 +242,7 @@ pub(crate) fn generate_copy_ctor_and_assignment_operator<'tcx>(
 
 /// If we were to generate a C++ move constructor and assignment operator for a Rust-originating
 /// type, how would we do it?
-pub(crate) fn move_ctor_and_assignment_operator_codegen_style<'tcx>(
+pub fn move_ctor_and_assignment_operator_codegen_style<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
 ) -> Option<MoveCodegenStyle> {
@@ -262,7 +266,7 @@ pub(crate) fn move_ctor_and_assignment_operator_codegen_style<'tcx>(
 ///
 /// For Rust types, this checks if Crubit can generate move operations for it via
 /// `move_ctor_and_assignment_operator_codegen_style`.
-pub(crate) fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+pub fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
     if query_compiler::as_ref_or_pinned_ref(ty).is_some() {
         return true;
     }
@@ -309,75 +313,10 @@ pub(crate) fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
     }
 }
 
-/// Returns true if the type is a C++20 literal type with a `constexpr` move constructor, so
-/// a `constexpr` C++ constructor can take it by value and move-initialize a member with it.
-///
-/// A non-template constructor declared `constexpr` in C++20 requires every parameter type to be a
-/// literal type (`[dcl.constexpr]/3`) and every member initializer to call a `constexpr`
-/// constructor (`-Winvalid-constexpr`).
-pub(crate) fn is_cpp_constexpr_move_constructible<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    ty: Ty<'tcx>,
-) -> bool {
-    let tcx = db.tcx();
-    let typing_env = ty::TypingEnv::fully_monomorphized();
-    if ty.needs_drop(tcx, typing_env) {
-        return false;
-    }
-    match *ty.kind() {
-        ty::Bool
-        | ty::Char
-        | ty::Int(_)
-        | ty::Uint(_)
-        | ty::Float(_)
-        | ty::RawPtr(..)
-        | ty::FnPtr(..)
-        | ty::Ref(..) => true,
-        ty::Array(elem_ty, _) => db.is_cpp_constexpr_move_constructible(elem_ty),
-        ty::Adt(adt_def, substs) => {
-            if is_std_ptr_non_null(tcx, adt_def.did()) || adt_def.is_pin() {
-                return true;
-            }
-            let attrs = crubit_attr::get_attrs(tcx, adt_def.did()).unwrap_or_default();
-            if attrs.cpp_type.is_some() || attrs.get_bridging_attrs().ok().flatten().is_some() {
-                return false;
-            }
-            if attrs.cpp_enum.is_some() {
-                return true;
-            }
-            match adt_def.adt_kind() {
-                ty::AdtKind::Struct => {
-                    is_struct_aggregate(db, Some(adt_def.did()), ty).is_ok()
-                        && adt_def.non_enum_variant().fields.iter().all(|f| {
-                            let field_ty = f.ty(tcx, substs);
-                            let field_ty = normalize_ty(tcx, tcx.param_env(f.did), field_ty);
-                            db.is_cpp_constexpr_move_constructible(field_ty)
-                        })
-                }
-                ty::AdtKind::Enum => {
-                    !adt_def.repr().c()
-                        && db
-                            .crate_features(adt_def.did().krate)
-                            .contains(crubit_feature::CrubitFeature::EnumApiV2)
-                        && adt_def.variants().iter().any(|variant| {
-                            variant.fields.iter().all(|f| {
-                                let field_ty = f.ty(tcx, substs);
-                                let field_ty = normalize_ty(tcx, tcx.param_env(f.did), field_ty);
-                                db.is_cpp_constexpr_move_constructible(field_ty)
-                            })
-                        })
-                }
-                ty::AdtKind::Union => false,
-            }
-        }
-        _ => false,
-    }
-}
-
 /// Generates the move constructor and the move-assignment operator for an ADT if possible
 /// (depending on `needs_drop`, `is_unpin`, and implementations of `Default` and/or `Clone` traits),
 /// or `= delete`d declarations otherwise.
-pub(crate) fn generate_move_ctor_and_assignment_operator<'tcx>(
+pub fn generate_move_ctor_and_assignment_operator<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {

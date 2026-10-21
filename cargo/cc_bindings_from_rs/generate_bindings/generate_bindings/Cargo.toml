@@ -34,6 +34,17 @@ quote.workspace = true
 syn.workspace = true
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
 flagset.workspace = true
+avoid_colliding_types = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/avoid_colliding_types", package = "cc_bindings_from_rs_avoid_colliding_types"}
+format_type = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/format_type", package = "cc_bindings_from_rs_format_type"}
+generate_comment = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_comment", package = "cc_bindings_from_rs_generate_comment"}
+get_generic_args = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/get_generic_args", package = "cc_bindings_from_rs_get_generic_args"}
+generate_function_thunk = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_function_thunk", package = "cc_bindings_from_rs_generate_function_thunk"}
+generate_ctor = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_ctor", package = "cc_bindings_from_rs_generate_ctor"}
+generate_enum = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_enum", package = "cc_bindings_from_rs_generate_enum"}
+generate_unsupported = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_unsupported", package = "cc_bindings_from_rs_generate_unsupported"}
+generate_function = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_function", package = "cc_bindings_from_rs_generate_function"}
+generate_struct_and_union = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_struct_and_union", package = "cc_bindings_from_rs_generate_struct_and_union"}
+generate_template_specialization = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_template_specialization", package = "cc_bindings_from_rs_generate_template_specialization"}
 [dev-dependencies]
 generate_bindings = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_bindings", package = "cc_bindings_from_rs_generate_bindings"}
 test_helpers = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/test_helpers", package = "cc_bindings_from_rs_test_helpers"}
