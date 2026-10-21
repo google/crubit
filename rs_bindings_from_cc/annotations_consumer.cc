@@ -45,10 +45,10 @@ std::optional<UnqualifiedIdentifier> CrubitRustName(const clang::Decl& decl) {
   }
 
   if (RustOperatorSymbols().contains(**crubit_rust_name)) {
-    return Operator(**std::move(crubit_rust_name));
+    return UnqualifiedIdentifier(Operator(**crubit_rust_name));
   }
 
-  return Identifier(**std::move(crubit_rust_name));
+  return UnqualifiedIdentifier(Identifier(**std::move(crubit_rust_name)));
 }
 
 }  // namespace crubit

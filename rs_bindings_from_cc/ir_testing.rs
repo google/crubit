@@ -7,12 +7,11 @@ use std::sync::LazyLock;
 
 use arc_anyhow::Result;
 
-use ffi_types::{FfiU8Slice, FfiU8SliceBox};
+use ffi_types::FfiU8Slice;
+pub use ir::ir_rust_proto::IRProto;
 use ir::{
     self, Func, GenericItem, Item, LifetimeId, LifetimeName, Record, TreeIR, TypeWithDeclId, IR,
 };
-pub use ir_rust_proto::IRProto;
-use protobuf::Parse;
 
 /// Generates `IR` from a header containing `header_source`.
 pub fn ir_proto_from_cc(
@@ -81,7 +80,7 @@ static TESTING_FEATURES: LazyLock<flagset::FlagSet<crubit_feature::CrubitFeature
 ///
 /// This provides one place to update the IR that affects both
 /// `make_ir_from_items` and `ir_from_cc_dependency`.
-fn update_test_ir(ir: &mut IR<'_>, extra_feature: Option<&str>) {
+fn update_test_ir(ir: &mut IR, extra_feature: Option<&str>) {
     *ir.target_crubit_features_mut(&ir.current_target().clone()) = *TESTING_FEATURES;
     *ir.target_crubit_features_mut(&ir::BazelLabel::from(DEPENDENCY_TARGET)) = *TESTING_FEATURES;
     if let Some(s) = extra_feature {
@@ -94,9 +93,9 @@ fn update_test_ir(ir: &mut IR<'_>, extra_feature: Option<&str>) {
 }
 
 /// Create a testing `IR` instance from given items, using mock values for other fields.
-pub fn make_ir_from_items<'pb>(items: impl IntoIterator<Item = Item<'pb>>) -> IR<'pb> {
+pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR {
     let current_target = ir::BazelLabel::from(TESTING_TARGET);
-    let mut top_level_items: BTreeMap<ir::BazelLabel, Vec<Item<'pb>>> = BTreeMap::new();
+    let mut top_level_items: BTreeMap<ir::BazelLabel, Vec<Item>> = BTreeMap::new();
     for item in items {
         if item.enclosing_item_id().is_none() {
             let target = item.owning_target().unwrap_or_else(|| current_target.clone());
@@ -190,12 +189,12 @@ fn ir_proto_from_cc_dependency_impl(
             carcinize: bool,
             lazy_import_alien_decls: bool,
             check_importer_invariants: bool,
-        ) -> FfiU8SliceBox;
+        ) -> IRProto;
     }
 
     let header_source_with_include =
         format!("#include \"{}\"\n\n{}", DEPENDENCY_HEADER_NAME, header_source);
-    let proto_bytes = unsafe {
+    let ir_proto = unsafe {
         proto_from_cc_dependency(
             FfiU8Slice::from_slice(platform.target_triple().as_ref()),
             FfiU8Slice::from_slice(header_source_with_include.as_bytes()),
@@ -206,25 +205,21 @@ fn ir_proto_from_cc_dependency_impl(
             lazy_import_alien_decls,
             check_importer_invariants,
         )
-        .into_boxed_slice()
     };
-    Ok(IRProto::parse(&proto_bytes)?)
+    Ok(ir_proto)
 }
 
-pub fn make_test_ir<'pb>(proto: &'pb IRProto) -> Result<IR<'pb>> {
+pub fn make_test_ir(proto: &IRProto) -> Result<IR> {
     make_test_ir_dependency(proto, None)
 }
 
-pub fn make_test_ir_dependency<'pb>(
-    proto: &'pb IRProto,
-    extra_feature: Option<&str>,
-) -> Result<IR<'pb>> {
-    let mut ir = ir::proto_to_ir(proto.as_view())?;
+pub fn make_test_ir_dependency(proto: &IRProto, extra_feature: Option<&str>) -> Result<IR> {
+    let mut ir = ir::proto_to_ir(proto)?;
     update_test_ir(&mut ir, extra_feature);
     Ok(ir)
 }
 
-pub fn retrieve_lifetime_param_id(names: &[LifetimeName<'_>], name: &str) -> LifetimeId {
+pub fn retrieve_lifetime_param_id(names: &[LifetimeName], name: &str) -> LifetimeId {
     for param in names {
         if param.name() == name {
             return param.id();
@@ -235,7 +230,7 @@ pub fn retrieve_lifetime_param_id(names: &[LifetimeName<'_>], name: &str) -> Lif
 
 /// Retrieves the function with the given name.
 /// Panics if no such function could be found.
-pub fn retrieve_func<'pb>(ir: &'pb IR<'pb>, name: &str) -> &'pb Func<'pb> {
+pub fn retrieve_func<'a>(ir: &'a IR, name: &str) -> &'a Func {
     for func in ir.functions() {
         if *func.rs_name() == name {
             return func;
@@ -246,7 +241,7 @@ pub fn retrieve_func<'pb>(ir: &'pb IR<'pb>, name: &str) -> &'pb Func<'pb> {
 
 /// Retrieves the `Record` with the given name.
 /// Panics if no such record could be found.
-pub fn retrieve_record<'pb>(ir: &'pb IR<'pb>, cc_name: &str) -> &'pb Record<'pb> {
+pub fn retrieve_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
     for record in ir.records() {
         if record.cc_name() == cc_name {
             return record;
@@ -257,7 +252,7 @@ pub fn retrieve_record<'pb>(ir: &'pb IR<'pb>, cc_name: &str) -> &'pb Record<'pb>
 
 /// Retrieves the `Record` underlying the type alias with the given name.
 /// Panics if no such type alias could be found or it did not refer to a record.
-pub fn retrieve_type_alias_record<'pb>(ir: &'pb IR<'pb>, cc_name: &str) -> &'pb Record<'pb> {
+pub fn retrieve_type_alias_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
     for type_alias in ir.type_aliases() {
         if type_alias.cc_name().as_str() == cc_name {
             let Some(item_id) = type_alias.underlying_type().decl_id() else {
@@ -281,7 +276,6 @@ mod tests {
     use googletest::{expect_eq, gtest};
     use ir::Identifier;
     use multiplatform_testing::Platform;
-    use std::rc::Rc;
 
     #[gtest]
     fn test_features_ir_from_cc() -> Result<()> {
@@ -325,8 +319,34 @@ mod tests {
         let ir = make_test_ir(&proto).unwrap();
         let r1 = retrieve_record(&ir, "R1").clone();
         let mut r2 = r1.clone();
-        let r2_name_proto = protobuf::proto!(ir_rust_proto::Identifier { identifier: "R2" });
-        r2.set_rs_name(Identifier::try_from(r2_name_proto.as_view()).unwrap());
-        let _ = make_ir_from_items([Item::Record(Rc::new(r1)), Item::Record(Rc::new(r2))]);
+        r2.set_rs_name(Identifier::new("R2"));
+        let _ = make_ir_from_items([Item::Record(ir::Rc::new(r1)), Item::Record(ir::Rc::new(r2))]);
+    }
+
+    #[gtest]
+    fn test_in_memory_ffi_ir_from_cc() {
+        unsafe extern "C" {
+            fn crubit_test_make_ffi_ir() -> ir::ir_generated::IRProto;
+        }
+        let ir_proto = unsafe { crubit_test_make_ffi_ir() };
+        assert_eq!(ir_proto.current_target(), "//test:target");
+        assert_eq!(ir_proto.public_headers().len(), 2);
+        assert_eq!(ir_proto.public_headers()[0].name(), "foo.h");
+        assert_eq!(ir_proto.public_headers()[1].name(), "bar.h");
+        let top_level_items: Vec<_> = ir_proto.top_level_items().iter().collect();
+        assert_eq!(top_level_items.len(), 1);
+        assert_eq!(top_level_items[0].0.as_str(), "//test:target");
+        assert_eq!(top_level_items[0].1.len(), 1);
+        let item = &top_level_items[0].1[0];
+        let ir::ir_generated::Item::Func(func) = item else {
+            panic!("Expected Func item");
+        };
+        assert_eq!(func.id(), ir::ItemId::new_for_testing(42));
+        assert!(func.is_inline());
+        assert_eq!(func.unique_name.as_str(), "c:@F@root_node");
+        let ir::ir_generated::UnqualifiedIdentifier::Operator(op) = func.rs_name() else {
+            panic!("Expected Operator identifier");
+        };
+        assert_eq!(op.name(), "+=");
     }
 }

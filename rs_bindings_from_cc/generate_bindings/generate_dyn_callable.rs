@@ -17,9 +17,9 @@ pub const CRUBIT_ANY_INVOCABLE_SUPPORT_HEADER: Option<&str> =
     option_env!("CRUBIT_ANY_INVOCABLE_SUPPORT_HEADER");
 
 /// Generates the `CrubitAbiType` for callables.
-pub fn callable_crubit_abi_type<'a>(
-    db: &BindingsGenerator<'a>,
-    callable: &Callable<'a>,
+pub fn callable_crubit_abi_type(
+    db: &BindingsGenerator,
+    callable: &Callable,
 ) -> Result<CrubitAbiType> {
     if let (BackingType::AnyInvocable { .. }, None) =
         (&callable.backing_type, CRUBIT_ANY_INVOCABLE_SUPPORT_HEADER)
@@ -151,9 +151,9 @@ pub fn callable_crubit_abi_type<'a>(
 /// to be passed to Rust via the C ABI, invoking a statically-known forward-declared thunk which
 /// is linked to a Rust definition, and then converting the return value back into an idiomatic C++
 /// value.
-fn generate_invoker_function_pointer<'a>(
-    db: &BindingsGenerator<'a>,
-    callable: &Callable<'a>,
+fn generate_invoker_function_pointer(
+    db: &BindingsGenerator,
+    callable: &Callable,
     cpp_param_types: &[TokenStream],
     cpp_return_type: &TokenStream,
 ) -> Result<TokenStream> {
@@ -280,9 +280,9 @@ fn generate_invoker_function_pointer<'a>(
 /// manager and invoker to do the actual work.
 ///
 /// The produced function needs to know how to convert values to and from C++.
-fn generate_make_cpp_invoker_tokens<'a>(
-    db: &BindingsGenerator<'a>,
-    callable: &Callable<'a>,
+fn generate_make_cpp_invoker_tokens(
+    db: &BindingsGenerator,
+    callable: &Callable,
     invoke_any_invocable_ident: &Ident,
 ) -> Result<TokenStream> {
     let any_invocable_crate = db

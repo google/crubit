@@ -128,9 +128,9 @@ pub fn generate_bindings(
     Ok(Bindings { rs_api, rs_api_impl })
 }
 
-fn generate_type_alias<'a>(
-    db: &BindingsGenerator<'a>,
-    raw_type_alias: Rc<TypeAlias<'a>>,
+fn generate_type_alias(
+    db: &BindingsGenerator,
+    raw_type_alias: FfiRc<TypeAlias>,
 ) -> Result<ApiSnippets> {
     let assume_lifetimes = db
         .ir()
@@ -207,16 +207,13 @@ fn generate_type_alias<'a>(
     })
 }
 
-fn generate_constant<'a>(
-    db: &BindingsGenerator<'a>,
-    constant: &Constant<'a>,
-) -> Result<ApiSnippets> {
+fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Constant);
     let type_and_value = match constant.value() {
         ConstantValue::Integer(value) => {
             let type_ = db.rs_type_kind(constant.type_().unwrap().clone())?;
             let type_tokens = type_.to_token_stream(db);
-            integer_constant_to_token_stream(db, value, &type_).map(|value| (type_tokens, value))
+            integer_constant_to_token_stream(db, *value, &type_).map(|value| (type_tokens, value))
         }
         ConstantValue::Array(array) => {
             // For array constants, `type_` is the innermost element type.
@@ -272,10 +269,10 @@ fn generate_constant<'a>(
 /// Innermost dimensions of `char` arrays which were initialized by a string literal are bound as
 /// calls to `::crubit_support::array::c_char_array_from_string_literal`, which NUL-fills the
 /// remaining elements.
-fn array_value_to_tokens<'a>(
-    db: &BindingsGenerator<'a>,
-    value: ArrayValue<'_>,
-    element_type: &RsTypeKind<'a>,
+fn array_value_to_tokens(
+    db: &BindingsGenerator<'_>,
+    value: &ArrayValue,
+    element_type: &RsTypeKind,
     element_type_tokens: &TokenStream,
 ) -> Result<(TokenStream, TokenStream)> {
     let length = Literal::u64_unsuffixed(value.length());
@@ -284,7 +281,7 @@ fn array_value_to_tokens<'a>(
             let to_tokens = |element| integer_constant_to_token_stream(db, element, element_type);
             (
                 element_type_tokens.clone(),
-                integers.elements().iter().map(to_tokens).collect::<Result<Vec<_>>>()?,
+                integers.elements().iter().copied().map(to_tokens).collect::<Result<Vec<_>>>()?,
                 integers.filler().map(to_tokens).transpose()?,
             )
         }
@@ -346,10 +343,7 @@ fn generate_global_var(db: &BindingsGenerator, var: &GlobalVar) -> Result<ApiSni
     })
 }
 
-fn generate_namespace<'a>(
-    db: &BindingsGenerator<'a>,
-    namespace: Rc<Namespace<'a>>,
-) -> Result<ApiSnippets> {
+fn generate_namespace(db: &BindingsGenerator, namespace: FfiRc<Namespace>) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Namespace);
 
     let mut api_snippets = ApiSnippets::default();
@@ -370,7 +364,7 @@ fn generate_namespace<'a>(
 }
 
 /// Implementation of `BindingsGenerator::generate_item`.
-fn generate_item<'a>(db: &BindingsGenerator<'a>, item: Item<'a>) -> Result<ApiSnippets> {
+fn generate_item(db: &BindingsGenerator, item: Item) -> Result<ApiSnippets> {
     if let Some(owning_target) = item.owning_target()
         && !db.ir().is_current_target(&owning_target)
     {
@@ -398,7 +392,7 @@ fn generate_item<'a>(db: &BindingsGenerator<'a>, item: Item<'a>) -> Result<ApiSn
 /// The implementation of generate_item, without the error recovery logic.
 ///
 /// Returns Err if bindings could not be generated for this item.
-fn generate_item_impl<'a>(db: &BindingsGenerator<'a>, item: &Item<'a>) -> Result<ApiSnippets> {
+fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets> {
     let generated_item = match item {
         Item::Func(func) => match db.generate_function(func.clone(), None)? {
             None => ApiSnippets::default(),
@@ -790,10 +784,7 @@ pub fn generate_bindings_tokens(
 }
 
 /// Implementation of `BindingsGenerator::rs_type_kind_safety`.
-fn rs_type_kind_safety<'a>(
-    db: &BindingsGenerator<'a>,
-    rs_type_kind: RsTypeKind<'a>,
-) -> Option<UnsafeReason> {
+fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Option<UnsafeReason> {
     match rs_type_kind {
         RsTypeKind::Error { error, .. } => Some(UnsafeReason(intern!(
             db.interner(),
@@ -914,7 +905,7 @@ fn rs_type_kind_safety<'a>(
 /// Returns whether any template parameter is unsafe.
 fn template_params_safety<'a>(
     db: &BindingsGenerator<'a>,
-    template_params: impl IntoIterator<Item = RsTypeKind<'a>>,
+    template_params: impl IntoIterator<Item = RsTypeKind>,
 ) -> Option<UnsafeReason> {
     if !db
         .ir()
@@ -942,10 +933,10 @@ fn template_params_safety<'a>(
 /// Helper function to extract template parameters of a `Record`.
 fn record_template_params<'a>(
     db: &BindingsGenerator<'a>,
-    record: &Record<'a>,
-    uniform_repr_template_type: Option<&UniformReprTemplateType<'a>>,
-    customize_methods: Option<&CustomizeMethodsKind<'a>>,
-) -> Result<Vec<RsTypeKind<'a>>> {
+    record: &Record,
+    uniform_repr_template_type: Option<&UniformReprTemplateType>,
+    customize_methods: Option<&CustomizeMethodsKind>,
+) -> Result<Vec<RsTypeKind>> {
     if let Some(uniform_repr) = uniform_repr_template_type {
         return Ok(match uniform_repr {
             UniformReprTemplateType::StdVector { element_type }
@@ -970,20 +961,41 @@ fn record_template_params<'a>(
 
     if let Some(ts) = record.template_specialization() {
         return match ts.kind() {
-            TemplateSpecializationKind::StdVector { raw_element_type }
-            | TemplateSpecializationKind::StdOptional { raw_element_type }
-            | TemplateSpecializationKind::StdSharedPtr { raw_element_type }
-            | TemplateSpecializationKind::StdUniquePtr { raw_element_type }
-            | TemplateSpecializationKind::C9Co { raw_element_type }
-            | TemplateSpecializationKind::StdAtomic { raw_element_type }
-            | TemplateSpecializationKind::AbslSpan { raw_element_type }
-            | TemplateSpecializationKind::AbslFlatHashSet { raw_element_type } => {
-                let ty = db.rs_type_kind(raw_element_type.clone())?;
+            TemplateSpecializationKind::StdVector(v) => {
+                let ty = db.rs_type_kind(v.element_type().clone())?;
                 Ok(vec![ty])
             }
-            TemplateSpecializationKind::AbslFlatHashMap { raw_key_type, raw_value_type } => {
-                let key_ty = db.rs_type_kind(raw_key_type.clone())?;
-                let val_ty = db.rs_type_kind(raw_value_type.clone())?;
+            TemplateSpecializationKind::StdOptional(o) => {
+                let ty = db.rs_type_kind(o.element_type().clone())?;
+                Ok(vec![ty])
+            }
+            TemplateSpecializationKind::StdSharedPtr(p) => {
+                let ty = db.rs_type_kind(p.element_type().clone())?;
+                Ok(vec![ty])
+            }
+            TemplateSpecializationKind::StdUniquePtr(p) => {
+                let ty = db.rs_type_kind(p.element_type().clone())?;
+                Ok(vec![ty])
+            }
+            TemplateSpecializationKind::C9Co(c) => {
+                let ty = db.rs_type_kind(c.element_type().clone())?;
+                Ok(vec![ty])
+            }
+            TemplateSpecializationKind::StdAtomic(a) => {
+                let ty = db.rs_type_kind(a.element_type().clone())?;
+                Ok(vec![ty])
+            }
+            TemplateSpecializationKind::AbslSpan(s) => {
+                let ty = db.rs_type_kind(s.element_type().clone())?;
+                Ok(vec![ty])
+            }
+            TemplateSpecializationKind::AbslFlatHashSet(s) => {
+                let ty = db.rs_type_kind(s.element_type().clone())?;
+                Ok(vec![ty])
+            }
+            TemplateSpecializationKind::AbslFlatHashMap(m) => {
+                let key_ty = db.rs_type_kind(m.key_type().clone())?;
+                let val_ty = db.rs_type_kind(m.value_type().clone())?;
                 Ok(vec![key_ty, val_ty])
             }
             TemplateSpecializationKind::StdStringView
@@ -997,9 +1009,9 @@ fn record_template_params<'a>(
 
 fn record_template_params_safety<'a>(
     db: &BindingsGenerator<'a>,
-    record: &Record<'a>,
-    uniform_repr_template_type: Option<&UniformReprTemplateType<'a>>,
-    customize_methods: Option<&CustomizeMethodsKind<'a>>,
+    record: &Record,
+    uniform_repr_template_type: Option<&UniformReprTemplateType>,
+    customize_methods: Option<&CustomizeMethodsKind>,
 ) -> Option<UnsafeReason> {
     if !db
         .ir()
@@ -1020,10 +1032,10 @@ fn record_template_params_safety<'a>(
 
 /// Helper function for `rs_type_kind_safety`.
 /// Returns whether a callable is unsafe due to its parameters or return type.
-fn callable_safety<'a>(
-    db: &BindingsGenerator<'a>,
-    param_types: &[RsTypeKind<'a>],
-    return_type: &RsTypeKind<'a>,
+fn callable_safety(
+    db: &BindingsGenerator,
+    param_types: &[RsTypeKind],
+    return_type: &RsTypeKind,
 ) -> Option<UnsafeReason> {
     let param_reasons = param_types
         .iter()
@@ -1059,7 +1071,7 @@ fn callable_safety<'a>(
 }
 
 /// Implementation of `BindingsGenerator::record_field_safety`.
-fn record_field_safety<'a>(db: &BindingsGenerator<'a>, field: Field<'a>) -> Option<UnsafeReason> {
+fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeReason> {
     if field.access() != AccessSpecifier::Public {
         return None;
     }
@@ -1077,9 +1089,9 @@ fn record_field_safety<'a>(db: &BindingsGenerator<'a>, field: Field<'a>) -> Opti
 }
 
 /// Implementation of `BindingsGenerator::unsupported_item_errors`.
-fn unsupported_item_errors<'db>(
-    _db: &BindingsGenerator<'db>,
-    item: Rc<ir::UnsupportedItem<'db>>,
+fn unsupported_item_errors(
+    _db: &BindingsGenerator,
+    item: FfiRc<ir::UnsupportedItem>,
 ) -> Rc<[Error]> {
     item.errors()
         .iter()
@@ -1094,7 +1106,7 @@ fn unsupported_item_errors<'db>(
 }
 
 /// Implementation of `BindingsGenerator::record_safety`.
-fn record_safety<'a>(db: &BindingsGenerator<'a>, record: Rc<Record<'a>>) -> Option<UnsafeReason> {
+fn record_safety(db: &BindingsGenerator, record: FfiRc<Record>) -> Option<UnsafeReason> {
     let mut doc = String::new();
 
     match record.safety_annotation() {
@@ -1305,10 +1317,7 @@ fn generate_rs_api_impl_includes(
 }
 
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
-fn crubit_abi_type<'a>(
-    db: &BindingsGenerator<'a>,
-    rs_type_kind: RsTypeKind<'a>,
-) -> Result<CrubitAbiType> {
+fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
         RsTypeKind::Error { symbol, error, .. } => {
             bail!("Type '{symbol}' has an error and cannot be bridged: {error}")
@@ -1725,9 +1734,9 @@ fn generate_dyn_callable_invoker_and_manager_decls(
 ///
 /// `None` is returned if there is issue generating the definition. The specific error is not
 /// reported because it will be reported elsewhere.
-fn generate_dyn_callable_invoker_and_manager_defs<'a>(
-    db: &BindingsGenerator<'a>,
-    callable: &Callable<'a>,
+fn generate_dyn_callable_invoker_and_manager_defs(
+    db: &BindingsGenerator,
+    callable: &Callable,
     param_idents: &[Ident],
 ) -> Option<TokenStream> {
     assert!(
@@ -1895,9 +1904,9 @@ fn generate_dyn_callable_invoker_and_manager_defs<'a>(
 ///
 /// `None` is returned if there is issue generating the declaration. The specific error is not
 /// reported because it will be reported elsewhere.
-fn generate_any_invocable_invoker_decl<'a>(
-    db: &BindingsGenerator<'a>,
-    callable: &Callable<'a>,
+fn generate_any_invocable_invoker_decl(
+    db: &BindingsGenerator,
+    callable: &Callable,
     param_idents: &[Ident],
     invoke_any_invocable_ident: &Ident,
 ) -> Option<TokenStream> {
@@ -1991,9 +2000,9 @@ fn generate_any_invocable_invoker_decl<'a>(
 ///
 /// `None` is returned if there is issue generating the definition. The specific error is not
 /// reported because it will be reported elsewhere.
-fn generate_any_invocable_invoker_def<'a>(
-    db: &BindingsGenerator<'a>,
-    callable: &Callable<'a>,
+fn generate_any_invocable_invoker_def(
+    db: &BindingsGenerator,
+    callable: &Callable,
     param_idents: &[Ident],
     invoke_any_invocable_ident: &Ident,
     internal_includes: &mut BTreeSet<CcInclude>,
@@ -2213,8 +2222,8 @@ fn strip_leading_colon2(path: &mut &str) -> bool {
 }
 
 /// Only to be used in a `CrubitAbiType::Transmute` context.
-fn make_cpp_type_from_item<'a>(
-    item: &impl GenericItem<'a>,
+fn make_cpp_type_from_item(
+    item: &impl GenericItem,
     cc_name: &str,
     db: &BindingsGenerator,
 ) -> Result<TokenStream> {

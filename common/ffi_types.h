@@ -39,6 +39,15 @@ extern "C" FfiU8SliceBox AllocFfiU8SliceBox(FfiU8Slice ffi_u8_slice);
 // Implemented in Rust.
 extern "C" void FreeFfiU8SliceBox(FfiU8SliceBox);
 
+// Allocates `size` bytes with alignment `align` (must be a non-zero power of
+// two) using the Rust global allocator. If `size == 0`, returns a non-null
+// dangling pointer aligned to `align`. Must be freed with
+// `FreeFfiBytes(ptr, size, align)`.
+extern "C" void* AllocFfiBytes(size_t size, size_t align);
+
+// Frees memory previously allocated by `AllocFfiBytes(size, align)`.
+extern "C" void FreeFfiBytes(void* ptr, size_t size, size_t align);
+
 }  // namespace crubit
 
 #endif  // CRUBIT_COMMON_FFI_TYPES_H_

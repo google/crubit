@@ -50,12 +50,12 @@ multiplatform_rust_test(
         "not_run:arm",
         "not_run:mac",
     ],
+    visibility = [
+    ],
     deps = [
         "//common:multiplatform_testing",
         "//common:token_stream_matchers",
         "//rs_bindings_from_cc:ir_matchers",
-        "//rs_bindings_from_cc:ir_rust_proto",
         "@crate_index//:googletest",
-        "@protobuf//rust:protobuf",
     ],
 )

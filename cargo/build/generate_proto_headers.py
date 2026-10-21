@@ -18,10 +18,7 @@ import sys
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 
-PROTO_FILES = [
-    "rs_bindings_from_cc/ir.proto",
-    "rs_bindings_from_cc/generate_bindings/generate_bindings.proto",
-]
+PROTO_FILES: list[str] = []
 
 
 def fail(msg):
@@ -33,6 +30,8 @@ def fail(msg):
 def generate_protobuf_headers(protoc_bin, out_dir, repo_root=REPO_ROOT):
   """Invokes protoc to generate C++ headers and sources for PROTO_FILES."""
   os.makedirs(out_dir, exist_ok=True)
+  if not PROTO_FILES:
+    return
   proto_paths = [os.path.join(repo_root, p) for p in PROTO_FILES]
   missing = [p for p in proto_paths if not os.path.exists(p)]
   if missing:

@@ -53,9 +53,9 @@ fn needs_manually_drop(ty: &RsTypeKind) -> bool {
 }
 
 /// Generates Rust source code for a given incomplete record declaration.
-pub fn generate_incomplete_record<'a>(
-    db: &BindingsGenerator<'a>,
-    incomplete_record: Rc<IncompleteRecord<'a>>,
+pub fn generate_incomplete_record(
+    db: &BindingsGenerator,
+    incomplete_record: FfiRc<IncompleteRecord>,
 ) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::NonMovable);
 
@@ -81,7 +81,7 @@ pub fn generate_incomplete_record<'a>(
     })
 }
 
-fn make_rs_field_ident(field: &Field<'_>, field_index: usize) -> Ident {
+fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
     match field.rust_identifier() {
         None => make_rs_ident(&format!("__unnamed_field{}", field_index)),
         Some(ident) => make_rs_ident(ident.as_str()),
@@ -92,8 +92,8 @@ fn is_debug_formattable(db: &BindingsGenerator, ty: &ir::CcType) -> bool {
     match ty.variant() {
         ir::CcTypeVariant::Primitive(_)
         | ir::CcTypeVariant::Pointer(_)
-        | ir::CcTypeVariant::FuncPointer { .. } => true,
-        ir::CcTypeVariant::Decl { id, .. } => match db.find_decl::<ir::Item>(*id) {
+        | ir::CcTypeVariant::FuncPointer(_) => true,
+        ir::CcTypeVariant::Decl(id) => match db.find_decl::<ir::Item>(*id) {
             Ok(ir::Item::Record(rec)) => rec.impl_debug(),
             Ok(ir::Item::Enum(_)) => true,
             Ok(ir::Item::TypeAlias(alias)) => is_debug_formattable(db, alias.underlying_type()),
@@ -118,11 +118,11 @@ fn is_debug_formattable(db: &BindingsGenerator, ty: &ir::CcType) -> bool {
 /// of memory, of a size that can fill up space to the next field.
 ///
 /// See docs/design/struct_layout.md
-fn get_field_rs_type_kind_for_layout<'a>(
-    db: &BindingsGenerator<'a>,
-    record: &Record<'a>,
-    field: &Field<'a>,
-) -> Result<RsTypeKind<'a>> {
+fn get_field_rs_type_kind_for_layout(
+    db: &BindingsGenerator,
+    record: &Record,
+    field: &Field,
+) -> Result<RsTypeKind> {
     let type_kind = db.field_rs_type_kind_for_layout(record, field)?;
 
     // In supported, we replace nontrivial fields with opaque blobs.
@@ -147,10 +147,10 @@ fn get_field_rs_type_kind_for_layout<'a>(
     Ok(type_kind)
 }
 
-fn collect_unqualified_member_functions_from_all_bases<'a>(
-    db: &BindingsGenerator<'a>,
-    record: &Record<'a>,
-) -> Rc<[Rc<Func<'a>>]> {
+fn collect_unqualified_member_functions_from_all_bases(
+    db: &BindingsGenerator,
+    record: &Record,
+) -> Rc<[FfiRc<Func>]> {
     record
         .unambiguous_public_bases()
         .iter()
@@ -170,10 +170,10 @@ fn collect_unqualified_member_functions_from_all_bases<'a>(
 }
 
 /// Implementation of `BindingsGenerator::collect_unqualified_member_functions`.
-pub fn collect_unqualified_member_functions<'a>(
-    _db: &BindingsGenerator<'a>,
-    record: Rc<Record<'a>>,
-) -> Rc<[Rc<Func<'a>>]> {
+pub fn collect_unqualified_member_functions(
+    _db: &BindingsGenerator,
+    record: FfiRc<Record>,
+) -> Rc<[FfiRc<Func>]> {
     record
         .children()
         .iter()
@@ -193,22 +193,22 @@ pub fn collect_unqualified_member_functions<'a>(
 ///
 /// Ambiguous functions are functions that have the same name as a function in
 /// the base class.
-fn filter_out_ambiguous_member_functions<'a>(
-    db: &BindingsGenerator<'a>,
-    derived_record: Rc<Record<'a>>,
-    inherited_functions: Rc<[Rc<Func<'a>>]>,
-) -> Rc<[Rc<Func<'a>>]> {
+fn filter_out_ambiguous_member_functions(
+    db: &BindingsGenerator,
+    derived_record: FfiRc<Record>,
+    inherited_functions: Rc<[FfiRc<Func>]>,
+) -> Rc<[FfiRc<Func>]> {
     let derived_member_functions = db
         .collect_unqualified_member_functions(derived_record.clone())
         .iter()
-        .map(|func| (*func.rs_name(), func.clone()))
+        .map(|func| (func.rs_name().clone(), func.clone()))
         .collect::<HashMap<_, _>>();
-    let mut func_counter = HashMap::<_, (&Rc<Func>, u32)>::new();
+    let mut func_counter = HashMap::<_, (&FfiRc<Func>, u32)>::new();
     for func in inherited_functions.iter() {
         let Ok(Some(_)) = db.generate_function(func.clone(), None) else {
             continue;
         };
-        let unqualified_name = *func.rs_name();
+        let unqualified_name = func.rs_name().clone();
         if derived_member_functions.contains_key(&unqualified_name) {
             continue;
         }
@@ -237,7 +237,7 @@ fn filter_out_ambiguous_member_functions<'a>(
 /// It's also needed because Rust rejects `#[repr(packed)]` structs that contain
 /// (directly or transitively) a `#[repr(align)]` type, so packed records must
 /// know which of their fields to erase into opaque byte blobs.
-fn record_has_repr_align<'a>(db: &BindingsGenerator<'a>, record: &Record<'a>) -> bool {
+fn record_has_repr_align(db: &BindingsGenerator, record: &Record) -> bool {
     // Packed records never get `#[repr(align)]`, and an alignment of 1 needs no
     // explicit attribute.
     if record.is_packed() || record.size_align().alignment() <= 1 {
@@ -270,7 +270,7 @@ fn record_has_repr_align<'a>(db: &BindingsGenerator<'a>, record: &Record<'a>) ->
 /// Rust forbids such types as fields of a `#[repr(packed)]` struct (error
 /// E0588), so fields of these types in packed records are represented as opaque
 /// byte blobs instead.
-fn type_has_repr_align<'a>(db: &BindingsGenerator<'a>, type_kind: &RsTypeKind<'a>) -> bool {
+fn type_has_repr_align(db: &BindingsGenerator, type_kind: &RsTypeKind) -> bool {
     let RsTypeKind::Record { record, .. } = type_kind.unalias() else {
         return false;
     };
@@ -288,10 +288,10 @@ fn type_has_repr_align<'a>(db: &BindingsGenerator<'a>, type_kind: &RsTypeKind<'a
 }
 
 #[allow(clippy::too_many_arguments)]
-fn field_definition<'a>(
-    db: &BindingsGenerator<'a>,
-    record: &Record<'a>,
-    field: Option<&ir::Field<'a>>,
+fn field_definition(
+    db: &BindingsGenerator,
+    record: &Record,
+    field: Option<&ir::Field>,
     field_index: usize,
     prev_end: usize,
     offset: usize,
@@ -464,10 +464,7 @@ fn send_sync_impl_polarity(
 
 /// Implementation of `BindingsGenerator::generate_record`.
 #[cfg_attr(enable_heap_profiling, inline(never))]
-pub fn generate_record<'a>(
-    db: &BindingsGenerator<'a>,
-    record: Rc<Record<'a>>,
-) -> Result<ApiSnippets> {
+pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<ApiSnippets> {
     use error_report::Category;
     db.errors().add_category(Category::Type);
     let record_safety = db.record_safety(record.clone());
@@ -525,9 +522,9 @@ pub fn generate_record<'a>(
         quote! { #crate_root_path:: #namespace_qualifier #ident }
     };
 
-    struct FieldWithLayout<'a, 'pb> {
+    struct FieldWithLayout<'a> {
         /// The IR field. Note that bitfields are represented as `None`.
-        ir: Option<&'a ir::Field<'pb>>,
+        ir: Option<&'a ir::Field>,
         /// The offset of the field in the struct.
         offset: usize,
         /// The offset of the end of the field or `None` for opaque fields.
@@ -762,7 +759,7 @@ pub fn generate_record<'a>(
     // with `type_has_repr_align`, which sees the untransformed record.
     let has_repr_align = record_has_repr_align(db, &record);
     let record = if assume_lifetimes {
-        Rc::new(lifetime_defaults_transform_record(db, &record)?)
+        FfiRc::new(lifetime_defaults_transform_record(db, &record)?)
     } else {
         record
     };
@@ -1068,10 +1065,10 @@ pub fn generate_record<'a>(
 
 /// Returns an iterator over the child items of this record, including
 /// whether each child item should be nested in a module.
-pub fn child_items<'a, 'pb>(
-    record: &'a Record<'pb>,
-    db: &'a BindingsGenerator<'pb>,
-) -> impl Iterator<Item = ChildItem<'pb>> + 'a {
+pub fn child_items<'a>(
+    record: &'a Record,
+    db: &'a BindingsGenerator<'_>,
+) -> impl Iterator<Item = ChildItem> + 'a {
     record.children().iter().map(move |item| {
         let is_nested = item.place_in_nested_module_if_nested_in_record()
             && db.has_bindings(item.clone()).is_ok();
@@ -1080,18 +1077,18 @@ pub fn child_items<'a, 'pb>(
 }
 
 /// A child item of a record.
-pub struct ChildItem<'pb> {
+pub struct ChildItem {
     /// Whether the child item should be nested in a module.
     pub is_nested: bool,
     /// The child item.
-    pub item: Item<'pb>,
+    pub item: Item,
 }
 
 pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAlign) -> Assertion {
     Assertion::SizeAlign { type_name, size: size_align.size(), alignment: size_align.alignment() }
 }
 
-pub fn generate_derives(record: &Record<'_>) -> DeriveAttr {
+pub fn generate_derives(record: &Record) -> DeriveAttr {
     // Thread-safe types wrap their fields in UnsafeCell<[MaybeUninit<u8>; N]>.
     // This opaque byte array doesn't support useful standard derives, and Clone/Copy
     // are explicitly prevented to support interior mutability anyway.
@@ -1221,32 +1218,32 @@ fn cc_struct_no_unique_address_impl(
 
 type UpcastImplResult = Result<UpcastImpl, String>;
 
-struct UpcastableBase<'pb> {
-    pub record: Rc<Record<'pb>>,
+struct UpcastableBase {
+    pub record: FfiRc<Record>,
     pub needs_virtual_upcast: bool,
 }
 
-struct UpcastImplementation<'pb> {
+struct UpcastImplementation {
     upcast_impls: Vec<UpcastImplResult>,
     thunks: Vec<Thunk>,
     thunk_impls: Vec<ThunkImpl>,
-    upcastable_bases: Vec<UpcastableBase<'pb>>,
+    upcastable_bases: Vec<UpcastableBase>,
 }
 
 /// Returns the implementation of base class conversions, for converting a type
 /// to its unambiguous public base classes.
-fn cc_struct_upcast_impl<'pb>(
-    db: &BindingsGenerator<'pb>,
-    record: &Rc<Record>,
+fn cc_struct_upcast_impl(
+    db: &BindingsGenerator,
+    record: &FfiRc<Record>,
     ir: &IR,
-) -> Result<UpcastImplementation<'pb>> {
+) -> Result<UpcastImplementation> {
     let mut thunks = vec![];
     let mut thunk_impls = vec![];
     let mut upcast_impls = vec![];
     let mut upcastable_bases = vec![];
     let derived_name = db.rs_type_kind(record.as_ref().into())?.to_token_stream(db);
     for base in record.unambiguous_public_bases() {
-        let base_record: &Rc<Record> = db
+        let base_record: &FfiRc<Record> = db
             .find_decl(base.base_record_id())
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
         let Ok(base_type) = db.rs_type_kind(base_record.as_ref().into()) else {
@@ -1311,7 +1308,7 @@ fn cc_struct_upcast_impl<'pb>(
 
 fn cc_struct_operator_delete_impl(
     db: &BindingsGenerator,
-    record: &Rc<Record>,
+    record: &FfiRc<Record>,
 ) -> Result<(DeleteImpl, Thunk, ThunkImpl)> {
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();

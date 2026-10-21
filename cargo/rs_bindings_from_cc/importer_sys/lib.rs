@@ -16,7 +16,6 @@ extern crate existing_rust_type_sys;
 extern crate friend_sys;
 extern crate function_sys;
 extern crate function_template_sys;
-extern crate ir_cc_proto_sys;
 extern crate namespace_sys;
 extern crate pragma_sys;
 extern crate recording_diagnostic_consumer_sys;

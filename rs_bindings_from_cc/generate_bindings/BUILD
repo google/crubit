@@ -1,6 +1,3 @@
-load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
-load("@protobuf//bazel:proto_library.bzl", "proto_library")
-load("@protobuf//rust:defs.bzl", "rust_proto_library")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
@@ -16,30 +13,10 @@ _PROFILING_RUSTC_FLAGS = select({
     "//conditions:default": [],
 })
 
-proto_library(
-    name = "generate_bindings_proto",
-    srcs = ["generate_bindings.proto"],
-    visibility = ["//:__subpackages__"],
-    deps = ["//rs_bindings_from_cc:ir_proto"],
-)
-
-cc_proto_library(
-    name = "generate_bindings_cc_proto",
-    visibility = ["//:__subpackages__"],
-    deps = [":generate_bindings_proto"],
-)
-
-rust_proto_library(
-    name = "generate_bindings_rust_proto",
-    visibility = ["//:__subpackages__"],
-    deps = [":generate_bindings_proto"],
-)
-
 rust_library(
     name = "cc_api_ffi",
     srcs = [
         "cc_api_ffi.rs",
-        "cc_api_ffi_serialized_proto.rs",
     ],
     edition = "2024",
     visibility = [
@@ -48,9 +25,7 @@ rust_library(
     ],
     deps = [
         ":cc_api",
-        ":generate_bindings_rust_proto",
-        "//common:ffi_types",
-        "@protobuf//rust:protobuf",
+        "//rs_bindings_from_cc:ir",
     ],
 )
 
@@ -66,13 +41,10 @@ rust_library(
     ],
     deps = [
         ":generate_bindings",
-        ":generate_bindings_rust_proto",
         "//common:arc_anyhow",
         "//common:error_report",
         "//rs_bindings_from_cc:ir",
-        "//rs_bindings_from_cc:ir_rust_proto",
         "//rs_bindings_from_cc/generate_bindings/database",
-        "@protobuf//rust:protobuf",
     ],
 )
 
@@ -237,7 +209,6 @@ rust_library(
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
         "//rs_bindings_from_cc:ir",
-        "//rs_bindings_from_cc:ir_rust_proto",
         "//rs_bindings_from_cc:ir_testing",
     ],
 )
@@ -290,6 +261,7 @@ rust_library(
 rust_test(
     name = "generate_comment_test",
     srcs = ["generate_comment_test.rs"],
+    harness = "libtest",
     tags = [
         "not_run:arm",
         "not_run:mac",
