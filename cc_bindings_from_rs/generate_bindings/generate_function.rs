@@ -20,10 +20,10 @@ use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail};
 use format_type::CcType;
 use format_type::{
-    check_fn_sig, format_cc_ident, format_param_types_for_cc_api, format_region_as_cc_lifetime,
-    format_ret_ty_for_cc, format_top_level_ns_for_crate, has_elided_region, is_bridged_type,
-    is_thunk_required, region_is_elided, BridgedType, BridgedTypeConversionInfo, CallableInfo,
-    CallableKind, CcParamTy,
+    check_fn_sig, cpp_layout_equivalent_type, format_cc_ident, format_param_types_for_cc_api,
+    format_region_as_cc_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
+    has_elided_region, is_bridged_type, is_thunk_required, region_is_elided, BridgedType,
+    CallableInfo, CallableKind, CcParamTy,
 };
 use generate_comment::{generate_deprecated_tag, generate_doc_comment, must_use_attr_of};
 use generate_function_thunk::{
@@ -111,9 +111,9 @@ fn ident_for_each(prefix: &str, n: usize) -> Vec<Ident> {
     (0..n).map(|i| expect_format_cc_ident(&format!("{prefix}_{i}"))).collect()
 }
 
-/// Returns a `static_assert` verifying that a layout-equivalent legacy bridged type has the same
-/// size and alignment in C++ as in Rust.
-fn check_legacy_bridged_type_layout<'tcx>(
+/// Returns a `static_assert` verifying that a `cpp_layout_equivalent` type has the same size and
+/// alignment in C++ as in Rust.
+fn check_cpp_layout_equivalent_type_layout<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
 ) -> Result<CcSnippet<'tcx>> {
@@ -128,26 +128,6 @@ fn check_legacy_bridged_type_layout<'tcx>(
             "Verify that C++ layout-equivalent type has the same size and alignment as the Rust type");
     };
     Ok(CcSnippet { tokens, prereqs })
-}
-
-/// Returns whether passing or returning a legacy bridged type across the C ABI requires a
-/// `crubit::Slot`.
-///
-/// A `Slot` is required when:
-/// 1. The Rust type has drop glue (`needs_drop`), so ownership must be transferred into
-///    uninitialized memory to avoid double-dropping; or
-/// 2. The bridged type is layout-compatible (`cpp_layout_equivalent`) and not C++
-///    move-constructible, so parameters are passed via `rs::Movable::MoveToSlot` and return values
-///    are unpacked via `Slot::AssumeInitAndTakeValue` (which supports `UnsafeRelocateTag`).
-fn legacy_bridged_type_needs_slot<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    ty: Ty<'tcx>,
-    is_layout_compat: bool,
-    post_analysis_typing_env: ty::TypingEnv<'tcx>,
-) -> bool {
-    let needs_drop = ty.needs_drop(db.tcx(), post_analysis_typing_env);
-    let is_relocatable_only = is_layout_compat && !db.is_cpp_move_constructible(ty);
-    needs_drop || is_relocatable_only
 }
 
 /// Converts a C++ value to a C-ABI-compatible type.
@@ -172,60 +152,39 @@ pub fn cc_param_to_c_abi<'tcx>(
         ParamAbi::Callable(info) => {
             return cc_callable_param_to_c_abi(db, cc_ident, ty, &info, includes, statements);
         }
-        ParamAbi::Value(ValueAbi::Bridged(bridged_type)) => {
-            let is_layout_compat = bridged_type.is_layout_compatible();
-            match bridged_type {
-                BridgedType::Legacy { cpp_type, conversion_info, .. } => {
-                    if let BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer: false } =
-                        conversion_info
-                    {
-                        let snippet = check_legacy_bridged_type_layout(db, ty)?;
-                        includes.extend(snippet.prereqs.includes);
-                        statements.extend(snippet.tokens);
-                    }
-                    if let CcType::Pointer(_) = cpp_type {
-                        quote! { #cc_ident }
-                    } else if !legacy_bridged_type_needs_slot(db, ty, is_layout_compat, typing_env)
-                    {
-                        quote! { & #cc_ident }
-                    } else {
-                        includes.insert(db.support_header("internal/slot.h"));
-                        let slot_name = expect_format_cc_ident(&format!("{cc_ident}_slot"));
-                        if is_layout_compat && !db.is_cpp_move_constructible(ty) {
-                            let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
-                                db.format_ty_for_cc(ty, TypeLocation::Other)?;
-                            includes.extend(ty_prereqs.includes);
-                            statements.extend(quote! {
-                                crubit::Slot<#cc_type> #slot_name;
-                                ::std::move(#cc_ident).MoveToSlot(#slot_name);
-                            });
-                        } else {
-                            statements.extend(quote! {
-                                crubit::Slot #slot_name((::std::move(#cc_ident)));
-                            });
-                        }
-                        quote! { #slot_name.Get() }
-                    }
-                }
-                BridgedType::Option(crubit_abi_type) => {
-                    // We're the library, and are about to send it over to Rust.
-                    // We need to encode it into a buffer, then send that over.
-                    includes.insert(db.support_header("bridge.h"));
-                    includes.insert(code_gen_utils::CcInclude::utility());
-                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                    let crubit_abi_type_expr = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
-
-                    let buffer_name = expect_format_cc_ident(&format!("{cc_ident}_buffer"));
-                    // Create a buffer, encode it into the buffer, and then make the buffer be
-                    // what we sent to Rust across the C ABI.
+        ParamAbi::Value(ValueAbi::Bridged(bridged_type)) => match bridged_type {
+            BridgedType::ExternCFuncConverters { cpp_type, .. } => {
+                if let CcType::Pointer(_) = cpp_type {
+                    quote! { #cc_ident }
+                } else if !ty.needs_drop(db.tcx(), typing_env) {
+                    quote! { & #cc_ident }
+                } else {
+                    includes.insert(db.support_header("internal/slot.h"));
+                    let slot_name = expect_format_cc_ident(&format!("{cc_ident}_slot"));
                     statements.extend(quote! {
-                        unsigned char #buffer_name[#crubit_abi_type_tokens::kSize];
-                        ::crubit::internal::Encode<#crubit_abi_type_tokens>(#crubit_abi_type_expr, #buffer_name, ::std::move(#cc_ident));
+                        crubit::Slot #slot_name((::std::move(#cc_ident)));
                     });
-                    quote! { #buffer_name }
+                    quote! { #slot_name.Get() }
                 }
             }
-        }
+            BridgedType::Option(crubit_abi_type) => {
+                // We're the library, and are about to send it over to Rust.
+                // We need to encode it into a buffer, then send that over.
+                includes.insert(db.support_header("bridge.h"));
+                includes.insert(code_gen_utils::CcInclude::utility());
+                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                let crubit_abi_type_expr = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+
+                let buffer_name = expect_format_cc_ident(&format!("{cc_ident}_buffer"));
+                // Create a buffer, encode it into the buffer, and then make the buffer be
+                // what we sent to Rust across the C ABI.
+                statements.extend(quote! {
+                    unsigned char #buffer_name[#crubit_abi_type_tokens::kSize];
+                    ::crubit::internal::Encode<#crubit_abi_type_tokens>(#crubit_abi_type_expr, #buffer_name, ::std::move(#cc_ident));
+                });
+                quote! { #buffer_name }
+            }
+        },
         ParamAbi::Value(ValueAbi::ByValue) => {
             if let ty::TyKind::Adt(adt, _) = ty.kind()
                 && (matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"])
@@ -285,12 +244,12 @@ pub fn cc_param_to_c_abi<'tcx>(
             }
         }
         ParamAbi::Value(ValueAbi::Array | ValueAbi::ByPointer) => {
-            if !ty.needs_drop(db.tcx(), typing_env) {
-                // As an optimization, if the type is trivially destructible, we don't
-                // need to move it to a new NoDestructor location. We can directly copy the
-                // bytes.
-                quote! { & #cc_ident }
-            } else if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
+            if let Some((CcType::Other(_), _)) = cpp_layout_equivalent_type(db, ty)? {
+                let snippet = check_cpp_layout_equivalent_type_layout(db, ty)?;
+                includes.extend(snippet.prereqs.includes);
+                statements.extend(snippet.tokens);
+            }
+            if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
                 includes.insert(db.support_header("internal/slot.h"));
                 let slot_name = &expect_format_cc_ident(&format!("{cc_ident}_slot"));
                 let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
@@ -301,6 +260,11 @@ pub fn cc_param_to_c_abi<'tcx>(
                     ::std::move(#cc_ident).MoveToSlot(#slot_name);
                 });
                 quote! { #slot_name.Get() }
+            } else if !ty.needs_drop(db.tcx(), typing_env) {
+                // As an optimization, if the type is trivially destructible, we don't
+                // need to move it to a new NoDestructor location. We can directly copy the
+                // bytes.
+                quote! { & #cc_ident }
             } else {
                 // The implementation will copy the bytes, we just need to leave the variable
                 // behind in a valid moved-from state.
@@ -467,83 +431,67 @@ fn cc_return_value_from_c_abi<'tcx>(
 ) -> Result<ReturnConversion> {
     let storage_name = &expect_format_cc_ident(&format!("__{ident}_storage"));
     match classify_value_abi(db, ty, /* is_constructor= */ false)? {
-        ValueAbi::Bridged(bridged_type) => {
-            let is_layout_compat = bridged_type.is_layout_compatible();
-            match bridged_type {
-                BridgedType::Legacy { conversion_info, .. } => {
-                    if let BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer: false } =
-                        conversion_info
-                    {
-                        let snippet = check_legacy_bridged_type_layout(db, ty)?;
-                        storage_statements.extend(snippet.into_tokens(prereqs));
-                    }
-                    let cpp_type = db
-                        .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })?
-                        .into_tokens(prereqs);
-                    if legacy_bridged_type_needs_slot(
-                        db,
-                        ty,
-                        is_layout_compat,
-                        ty::TypingEnv::fully_monomorphized(),
-                    ) {
-                        prereqs.includes.insert(db.support_header("internal/slot.h"));
-                        let local_name =
-                            expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
-                        storage_statements.extend(quote! {
-                            crubit::Slot<#cpp_type> #local_name;
-                            auto* #storage_name = #local_name.Get();
-                        });
-                        Ok(ReturnConversion {
-                            storage_name: storage_name.clone(),
-                            unpack_expr: quote! {
-                                ::std::move(#local_name).AssumeInitAndTakeValue()
-                            },
-                        })
-                    } else {
-                        // Below, we use a union to allocate uninitialized memory that fits
-                        // cpp_type. The union prevents the type from being
-                        // default constructed. It's the responsibility of
-                        // the thunk to properly initialize the memory. In
-                        // the union's destructor we use std::destroy_at to call
-                        // the cpp_type's destructor after the value has been moved on return.
-                        let union_type =
-                            expect_format_cc_ident(&format!("__{ident}_crubit_return_union"));
-                        let local_name =
-                            expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
-                        storage_statements.extend(quote! {
-                            union #union_type {
-                                constexpr #union_type() {}
-                                ~#union_type() { ::std::destroy_at(&this->val); }
-                                #cpp_type val;
-                            } #local_name;
-                            auto* #storage_name = &#local_name.val;
-                        });
-                        Ok(ReturnConversion {
-                            storage_name: storage_name.clone(),
-                            unpack_expr: quote! {
-                                ::std::move(#local_name.val)
-                            },
-                        })
-                    }
-                }
-                BridgedType::Option(crubit_abi_type) => {
-                    // make the buffer space for it, then decode the buffer into a value
-                    // ::crubit::internal::Decode<T>(buffer);
-                    prereqs.includes.insert(db.support_header("bridge.h"));
-                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                    let crubit_abi_type_expr = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+        ValueAbi::Bridged(bridged_type) => match bridged_type {
+            BridgedType::ExternCFuncConverters { .. } => {
+                let cpp_type = db
+                    .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })?
+                    .into_tokens(prereqs);
+                if ty.needs_drop(db.tcx(), ty::TypingEnv::fully_monomorphized()) {
+                    prereqs.includes.insert(db.support_header("internal/slot.h"));
+                    let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
                     storage_statements.extend(quote! {
-                        unsigned char #storage_name[#crubit_abi_type_tokens::kSize];
+                        crubit::Slot<#cpp_type> #local_name;
+                        auto* #storage_name = #local_name.Get();
                     });
                     Ok(ReturnConversion {
                         storage_name: storage_name.clone(),
                         unpack_expr: quote! {
-                            ::crubit::internal::Decode<#crubit_abi_type_tokens>(#crubit_abi_type_expr, #storage_name)
+                            ::std::move(#local_name).AssumeInitAndTakeValue()
+                        },
+                    })
+                } else {
+                    // Below, we use a union to allocate uninitialized memory that fits
+                    // cpp_type. The union prevents the type from being
+                    // default constructed. It's the responsibility of
+                    // the thunk to properly initialize the memory. In
+                    // the union's destructor we use std::destroy_at to call
+                    // the cpp_type's destructor after the value has been moved on return.
+                    let union_type =
+                        expect_format_cc_ident(&format!("__{ident}_crubit_return_union"));
+                    let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
+                    storage_statements.extend(quote! {
+                        union #union_type {
+                            constexpr #union_type() {}
+                            ~#union_type() { ::std::destroy_at(&this->val); }
+                            #cpp_type val;
+                        } #local_name;
+                        auto* #storage_name = &#local_name.val;
+                    });
+                    Ok(ReturnConversion {
+                        storage_name: storage_name.clone(),
+                        unpack_expr: quote! {
+                            ::std::move(#local_name.val)
                         },
                     })
                 }
             }
-        }
+            BridgedType::Option(crubit_abi_type) => {
+                // make the buffer space for it, then decode the buffer into a value
+                // ::crubit::internal::Decode<T>(buffer);
+                prereqs.includes.insert(db.support_header("bridge.h"));
+                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                let crubit_abi_type_expr = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                storage_statements.extend(quote! {
+                    unsigned char #storage_name[#crubit_abi_type_tokens::kSize];
+                });
+                Ok(ReturnConversion {
+                    storage_name: storage_name.clone(),
+                    unpack_expr: quote! {
+                        ::crubit::internal::Decode<#crubit_abi_type_tokens>(#crubit_abi_type_expr, #storage_name)
+                    },
+                })
+            }
+        },
         ValueAbi::ByValue => {
             let cc_type = &db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(prereqs);
             let local_name = &expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
@@ -585,6 +533,10 @@ fn cc_return_value_from_c_abi<'tcx>(
             })
         }
         ValueAbi::Array | ValueAbi::ByPointer => {
+            if let Some((CcType::Other(_), _)) = cpp_layout_equivalent_type(db, ty)? {
+                let snippet = check_cpp_layout_equivalent_type_layout(db, ty)?;
+                storage_statements.extend(snippet.into_tokens(prereqs));
+            }
             let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
             let cc_type = db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(prereqs);
             storage_statements.extend(quote! {
@@ -1046,9 +998,7 @@ pub fn generate_function<'tcx>(
             bail!("Crubit currently only supports async functions that return a Send future.");
         }
         let future_output_ty = get_async_future_output_ty(tcx, rs_return_type)?;
-        if let Some(bridged) = is_bridged_type(db, future_output_ty)?
-            && !bridged.is_layout_compatible()
-        {
+        if is_bridged_type(db, future_output_ty)?.is_some() {
             bail!(
                 "Crubit currently does not support async functions returning bridged types that require conversion thunks, found `{future_output_ty}`."
             );

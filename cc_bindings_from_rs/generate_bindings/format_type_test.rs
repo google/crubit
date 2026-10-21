@@ -8,9 +8,9 @@ extern crate rustc_middle;
 
 use code_gen_utils::format_cc_includes;
 use database::{BindingsGenerator, TypeLocation};
-use format_type::is_bridged_type;
+use format_type::{cpp_layout_equivalent_type, is_bridged_type};
 use proc_macro2::TokenStream;
-use query_compiler::liberate_and_deanonymize_late_bound_regions;
+use query_compiler::{is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions};
 use quote::quote;
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
 use rustc_middle::ty::{Ty, TyCtxt};
@@ -1190,7 +1190,7 @@ fn test_format_ty_for_cc_ignored_symbols_fails() {
 
 /// `Vec` and `Result` are never bridged types: they are rendered as `rs_std::Vec` and
 /// `rs_std::Result` template specializations. `is_bridged_type` must therefore report them as
-/// non-bridged regardless of `always_specialize_generics_in_cpp_api_from_rust`. Otherwise a type
+/// `None` regardless of `always_specialize_generics_in_cpp_api_from_rust`. Otherwise a type
 /// such as `Vec<SomeProto>`, whose element type is a bridged type that is not layout-compatible,
 /// would be rejected before the specialization gets a chance to be formed.
 // TODO(b/523234159): Delete this test as it will no longer be needed.
@@ -1227,6 +1227,87 @@ fn test_is_bridged_type_never_bridges_vec_or_result() {
             },
         );
     }
+}
+
+#[test]
+fn test_cpp_layout_equivalent_type_is_not_bridged_type() {
+    let preamble = quote! {
+        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::LayoutEquivalentType"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/layout_equivalent_type.h"]
+        pub struct LayoutEquivalentRustType {
+            pub x: i32,
+        }
+
+        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::BridgedType"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/bridged_type.h"]
+        #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = convert_rust_to_cpp_type"]
+        #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = convert_cpp_to_rust_type"]
+        pub struct BridgedRustType {
+            pub x: i32,
+        }
+    };
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[("LayoutEquivalentRustType", true), ("BridgedRustType", false)],
+        preamble,
+        |desc, tcx, ty, &expect_layout_equivalent| {
+            let db = bindings_db_for_tests(tcx);
+            assert_eq!(
+                cpp_layout_equivalent_type(&db, ty).unwrap().is_some(),
+                expect_layout_equivalent,
+                "cpp_layout_equivalent_type for {desc}"
+            );
+            assert_eq!(
+                is_bridged_type(&db, ty).unwrap().is_some(),
+                !expect_layout_equivalent,
+                "is_bridged_type for {desc}"
+            );
+        },
+    );
+}
+
+#[test]
+fn test_repr_transparent_cpp_type_is_not_c_abi_compatible_by_value_without_same_abi() {
+    let preamble = quote! {
+        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::LayoutEquivalentType"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/layout_equivalent_type.h"]
+        #[repr(transparent)]
+        pub struct TransparentLayoutEquivalentRustType {
+            pub ptr: *mut core::ffi::c_void,
+        }
+
+        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::SameAbiType"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/same_abi_type.h"]
+        #[doc="CRUBIT_ANNOTATE: same_abi ="]
+        #[repr(transparent)]
+        pub struct TransparentSameAbiRustType {
+            pub ptr: *mut core::ffi::c_void,
+        }
+
+        #[doc="CRUBIT_ANNOTATE: cpp_type = const cpp_ns::CppType*"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
+        #[repr(transparent)]
+        pub struct TransparentCppPointerRustType {
+            pub ptr: *const core::ffi::c_void,
+        }
+    };
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[
+            ("TransparentLayoutEquivalentRustType", false),
+            ("TransparentSameAbiRustType", true),
+            ("TransparentCppPointerRustType", true),
+        ],
+        preamble,
+        |desc, tcx, ty, &expect_c_abi_compatible| {
+            let db = bindings_db_for_tests(tcx);
+            assert_eq!(
+                is_c_abi_compatible_by_value(&db, ty),
+                expect_c_abi_compatible,
+                "is_c_abi_compatible_by_value for {desc}"
+            );
+        },
+    );
 }
 
 #[test]

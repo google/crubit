@@ -1860,7 +1860,7 @@ pub fn is_cpp_constexpr_move_constructible<'tcx>(
                 return true;
             }
             let attrs = crubit_attr::get_attrs(tcx, adt_def.did()).unwrap_or_default();
-            if attrs.cpp_type.is_some() || attrs.get_bridging_attrs().ok().flatten().is_some() {
+            if attrs.cpp_type.is_some() {
                 return false;
             }
             if attrs.cpp_enum.is_some() {

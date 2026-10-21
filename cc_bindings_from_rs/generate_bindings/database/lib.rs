@@ -13,6 +13,7 @@ pub use adt_core_bindings::{
     AdtCoreBindings, CopyCodegenStyle, CoreBindingsCommon, MoveCodegenStyle,
 };
 mod db;
+pub use code_gen_utils::is_cpp_pointer_type;
 pub use db::{BindingsGenerator, CppTypeSpecialization};
 mod fully_qualified_name;
 pub use fully_qualified_name::{

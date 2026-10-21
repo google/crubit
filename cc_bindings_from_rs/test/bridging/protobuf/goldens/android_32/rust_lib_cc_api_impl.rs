@@ -33,34 +33,16 @@ extern "C" fn __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aFo
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_handle_urequest(
     __self: &'static mut ::rust_lib_golden::FooService,
-    req: *const core::ffi::c_void,
-    rsp: *const core::ffi::c_void,
+    req: ::foo_proto::FooRequestView<'static>,
+    rsp: ::foo_proto::FooResponseMut<'static>,
 ) -> bool {
-    unsafe {
-        let req = {
-            let mut __crubit_temp =
-                ::core::mem::MaybeUninit::<::foo_proto::FooRequestView<'static>>::uninit();
-            __crubit_temp.write(::core::mem::transmute(req));
-            __crubit_temp.assume_init()
-        };
-        let rsp = {
-            let mut __crubit_temp =
-                ::core::mem::MaybeUninit::<::foo_proto::FooResponseMut<'static>>::uninit();
-            __crubit_temp.write(::core::mem::transmute(rsp));
-            __crubit_temp.assume_init()
-        };
-        ::rust_lib_golden::FooService::handle_request(__self, req, rsp)
-    }
+    unsafe { ::rust_lib_golden::FooService::handle_request(__self, req, rsp) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_request_ustats(
     __self: &'static ::rust_lib_golden::FooService,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value = ::rust_lib_golden::FooService::request_stats(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
+) -> ::foo_proto::FooRequestStatsView<'static> {
+    unsafe { ::rust_lib_golden::FooService::request_stats(__self) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_clone_urequest_ustats(
@@ -94,13 +76,9 @@ unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: *const core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: *mut ::foo_proto::FooEnum) -> () {
     unsafe {
-        let _e = {
-            let mut __crubit_temp = ::core::mem::MaybeUninit::<::foo_proto::FooEnum>::uninit();
-            __crubit_temp.write((_e as *const ::foo_proto::FooEnum).read());
-            __crubit_temp.assume_init()
-        };
+        let _e = _e.read();
         ::rust_lib_golden::FooService::enum_in_signature(_e)
     }
 }

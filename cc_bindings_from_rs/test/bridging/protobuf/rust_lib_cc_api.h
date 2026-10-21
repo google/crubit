@@ -228,22 +228,13 @@ inline bool(FooService::handle_request)(const ::foo_service::FooRequest* req,
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_request_ustats(
-    ::rust_lib::FooService const&,
-    const ::foo_service::FooRequestStats** __ret_ptr);
+extern "C" const ::foo_service::FooRequestStats* __crubit_thunk_request_ustats(
+    ::rust_lib::FooService const&);
 }
 inline const ::foo_service::FooRequestStats*(
     FooService::request_stats)() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    const ::foo_service::FooRequestStats* val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
-  __crubit_internal::__crubit_thunk_request_ustats(self,
-                                                   __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return __crubit_internal::__crubit_thunk_request_ustats(self);
 }
 
 namespace __crubit_internal {

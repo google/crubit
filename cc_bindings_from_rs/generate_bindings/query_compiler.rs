@@ -23,7 +23,7 @@ use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 #[rustversion::before(2026-05-18)]
 use rustc_abi::FieldsShape;
-use rustc_abi::{FieldIdx, Layout, Variants};
+use rustc_abi::{BackendRepr, FieldIdx, HasDataLayout, Layout, Scalar, TargetDataLayout, Variants};
 #[rustversion::since(2026-09-27)]
 use rustc_attr_ir::lang_items::LangItem;
 #[rustversion::since(2026-08-09)]
@@ -53,6 +53,16 @@ pub fn is_std_ptr_non_null(tcx: TyCtxt<'_>, did: DefId) -> bool {
 #[rustversion::before(2026-08-18)]
 pub fn is_std_ptr_non_null(tcx: TyCtxt<'_>, did: DefId) -> bool {
     tcx.get_diagnostic_item(rustc_span::symbol::sym::NonNull) == Some(did)
+}
+
+/// Whether the layout is from a type that implements [`std::marker::PointerLike`].
+///
+/// Currently, that means that the type is pointer-sized, pointer-aligned,
+/// and has a initialized (non-union), scalar ABI.
+pub fn has_pointer_abi(from: Layout, data_layout: &TargetDataLayout) -> bool {
+    from.size() == data_layout.pointer_size()
+        && from.align().abi == data_layout.pointer_align().abi
+        && matches!(from.backend_repr(), BackendRepr::Scalar(Scalar::Initialized { .. }))
 }
 
 /// Returns true if pointers to `pointee` are ABI-compatible.
@@ -125,6 +135,20 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
             let attrs = crubit_attr::get_attrs(tcx, adt.did()).unwrap_or_default();
             if attrs.same_abi {
                 return true;
+            }
+            if let Some(layout_equiv) = attrs.get_cpp_layout_equivalent_attrs().ok().flatten()
+                && layout_equiv
+                    .cpp_type
+                    .as_str()
+                    .parse()
+                    .is_ok_and(|ts| database::is_cpp_pointer_type(ts).is_some())
+            {
+                return adt.repr().transparent()
+                    && get_layout(tcx, ty)
+                        .is_ok_and(|layout| has_pointer_abi(layout, tcx.data_layout()));
+            }
+            if attrs.cpp_type.is_some() {
+                return false;
             }
             // NOTE: the below categorizes repr(transparent) types, but that only
             // works if the C++ side uses the _underlying_ type. If it uses the actual

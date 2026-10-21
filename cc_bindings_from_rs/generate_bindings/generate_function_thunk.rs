@@ -19,7 +19,7 @@ use format_type::CcType;
 use format_type::{
     alias_ty_as_opaque_def_id, format_cc_ident, format_param_types_for_cc_thunk,
     format_ty_for_closure_param_rs, is_bridged_type, replace_all_regions_with_static,
-    ty_as_alias_ty, BridgedType, BridgedTypeConversionInfo, CallableInfo, CallableKind,
+    ty_as_alias_ty, BridgedType, CallableInfo, CallableKind,
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -183,7 +183,9 @@ pub fn generate_thunk_decl<'tcx>(
                         quote! { ::rs::internal::FnRefPayload }
                     }),
                     ParamAbi::Value(ValueAbi::Bridged(bridged_type)) => match bridged_type {
-                        BridgedType::Legacy { cpp_type: bridged_cpp_type, .. } => {
+                        BridgedType::ExternCFuncConverters {
+                            cpp_type: bridged_cpp_type, ..
+                        } => {
                             let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
                             if matches!(bridged_cpp_type, CcType::Pointer { .. }) {
                                 Ok(quote! { #cpp_type })
@@ -224,7 +226,7 @@ pub fn generate_thunk_decl<'tcx>(
         quote! { void }
     } else {
         match classify_value_abi(db, sig_mid.output(), is_constructor)? {
-            ValueAbi::Bridged(BridgedType::Legacy { .. }) | ValueAbi::ByPointer => {
+            ValueAbi::Bridged(BridgedType::ExternCFuncConverters { .. }) | ValueAbi::ByPointer => {
                 thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
                 quote! { void }
             }
@@ -265,7 +267,7 @@ pub fn generate_thunk_decl<'tcx>(
     Ok(CcSnippet { prereqs, tokens })
 }
 
-/// Creates Rust code to convert a bridged type from a C ABI type to a Rust type.
+/// Creates Rust code to convert a bridged C++ type from a C ABI type to a Rust type.
 ///
 /// Expects an existing local of type `cpp_type` named `local_name` and shadows it
 /// with a local of type `ty` named `local_name`.
@@ -280,39 +282,18 @@ fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
         .format_ty_for_rs(ty)
         .with_context(|| format!("Error handling parameter `{local_name}`"))?;
 
-    let temp_name = format_ident!("__crubit_temp");
-
     match bridged_type {
-        BridgedType::Legacy { conversion_info, .. } => {
-            let convert = match conversion_info {
-                BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer } => {
-                    if *is_pointer {
-                        quote! {
-                            #temp_name.write(::core::mem::transmute(#local_name));
-                        }
-                    } else {
-                        quote! {
-                            #temp_name.write((#local_name as *const #rs_type).read());
-                        }
-                    }
-                }
-                BridgedTypeConversionInfo::ExternCFuncConverters {
-                    cpp_to_rust_converter, ..
-                } => {
-                    let cpp_to_rust_converter_ident = add_extern_c_decl(
-                        extern_c_decls,
-                        ExternCDeclKind::CppToRustConverter,
-                        *cpp_to_rust_converter,
-                    );
-                    quote! {
-                        #cpp_to_rust_converter_ident(#local_name,#temp_name.as_mut_ptr() as *mut core::ffi::c_void);
-                    }
-                }
-            };
+        BridgedType::ExternCFuncConverters { cpp_to_rust_converter, .. } => {
+            let temp_name = format_ident!("__crubit_temp");
+            let cpp_to_rust_converter_ident = add_extern_c_decl(
+                extern_c_decls,
+                ExternCDeclKind::CppToRustConverter,
+                *cpp_to_rust_converter,
+            );
             Ok(quote! {
                 let #local_name = {
                     let mut #temp_name = ::core::mem::MaybeUninit::<#rs_type>::uninit();
-                    #convert
+                    #cpp_to_rust_converter_ident(#local_name,#temp_name.as_mut_ptr() as *mut core::ffi::c_void);
                     #temp_name.assume_init()
                 };
             })
@@ -368,8 +349,14 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
 ) -> Result<TokenStream> {
     match classify_param_abi(db, ty)? {
         ParamAbi::Callable(_) | ParamAbi::Value(ValueAbi::ByValue) => Ok(quote! {}),
-        ParamAbi::Value(ValueAbi::Bridged(bridged)) => {
-            convert_bridged_type_from_c_abi_to_rust(db, ty, &bridged, local_name, extern_c_decls)
+        ParamAbi::Value(ValueAbi::Bridged(bridged_type)) => {
+            convert_bridged_type_from_c_abi_to_rust(
+                db,
+                ty,
+                &bridged_type,
+                local_name,
+                extern_c_decls,
+            )
         }
         ParamAbi::Value(ValueAbi::LegacyTuple(tuple_tys)) => {
             convert_tuple_from_c_abi_to_rust(db, tuple_tys, local_name, extern_c_decls)
@@ -389,8 +376,8 @@ fn c_abi_for_param_type<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
         } else {
             quote! { ::crubit_support::bridge::FnRefPayload }
         }),
-        ParamAbi::Value(ValueAbi::Bridged(bridged)) => match bridged {
-            BridgedType::Legacy { .. } => Ok(quote! { *const core::ffi::c_void }),
+        ParamAbi::Value(ValueAbi::Bridged(bridged_type)) => match bridged_type {
+            BridgedType::ExternCFuncConverters { .. } => Ok(quote! { *const core::ffi::c_void }),
             BridgedType::Option(_) => Ok(quote! { *const core::ffi::c_uchar }),
         },
         ParamAbi::Value(ValueAbi::ByValue) => {
@@ -471,23 +458,18 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     let write_directly = || quote! { ::core::ptr::write(#c_ptr as *mut _, #rs_value); };
     Ok(match classify_value_abi(db, rs_type, is_constructor)? {
         ValueAbi::Bridged(bridged_type) => match bridged_type {
-            BridgedType::Legacy { conversion_info, .. } => match conversion_info {
-                BridgedTypeConversionInfo::PointerLikeTransmute { .. } => write_directly(),
-                BridgedTypeConversionInfo::ExternCFuncConverters {
-                    rust_to_cpp_converter, ..
-                } => {
-                    let rust_to_cpp_converter_ident = add_extern_c_decl(
-                        extern_c_decls,
-                        ExternCDeclKind::RustToCppConverter,
-                        rust_to_cpp_converter,
-                    );
-                    quote! {
-                        #rust_to_cpp_converter_ident(
-                            ::core::ptr::from_ref(&#rs_value) as *const ::core::ffi::c_void,
-                            #c_ptr);
-                    }
+            BridgedType::ExternCFuncConverters { rust_to_cpp_converter, .. } => {
+                let rust_to_cpp_converter_ident = add_extern_c_decl(
+                    extern_c_decls,
+                    ExternCDeclKind::RustToCppConverter,
+                    rust_to_cpp_converter,
+                );
+                quote! {
+                    #rust_to_cpp_converter_ident(
+                        ::core::ptr::from_ref(&#rs_value) as *const ::core::ffi::c_void,
+                        #c_ptr);
                 }
-            },
+            }
             BridgedType::Option(crubit_abi_type) => {
                 let crubit_abi_type_expr = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
                 quote! {

@@ -20,7 +20,7 @@ extern crate rustc_type_ir;
 use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
 use crubit_abi_type::CrubitAbiType;
-use crubit_attr::BridgingAttrs;
+use crubit_attr::{CppConvertibleAttrs, CppLayoutEquivalentAttrs};
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{
     CcPrerequisites, CcSnippet, CcSnippets, CrubitAbiTypeWithCcPrereqs, TemplateSpecialization,
@@ -30,13 +30,11 @@ use database::{rename_c_stdlib_functions, rename_clang_builtin_macros, TypeLocat
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
-    get_layout, is_c_abi_compatible_by_value, is_std_ptr_non_null, matches_qualified_name,
-    normalize_ty, should_receive_bindings,
+    get_layout, has_pointer_abi, is_c_abi_compatible_by_value, is_std_ptr_non_null,
+    matches_qualified_name, normalize_ty, should_receive_bindings,
 };
 use quote::{format_ident, quote};
-use rustc_abi::{
-    AddressSpace, BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout,
-};
+use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
 #[rustversion::since(2026-09-27)]
 use rustc_attr_ir::lang_items::LangItem;
 #[rustversion::since(2026-08-09)]
@@ -84,19 +82,10 @@ fn is_unique_ptr(db: &BindingsGenerator<'_>, did: DefId) -> bool {
         || matches_qualified_name(db, did, &["rust_out", "std", "unique_ptr"])
         || matches_qualified_name(db, did, &["rust_out", "unique_ptr"])
         || matches_qualified_name(db, did, &["unique_ptr", "unique_ptr"])
-        || {
-            let Ok(attrs) = crubit_attr::get_attrs(tcx, did) else {
-                return false;
-            };
-            let Ok(Some(bridging_attrs)) = attrs.get_bridging_attrs() else {
-                return false;
-            };
-            let cpp_type = match bridging_attrs {
-                BridgingAttrs::JustCppType { cpp_type, .. } => cpp_type,
-                BridgingAttrs::ExternCFuncConverters { cpp_type, .. } => cpp_type,
-            };
-            cpp_type.as_str().contains("unique_ptr")
-        }
+        || crubit_attr::get_attrs(tcx, did)
+            .ok()
+            .and_then(|attrs| attrs.cpp_type)
+            .is_some_and(|cpp_type| cpp_type.as_str().contains("unique_ptr"))
 }
 
 /// Names of the Crubit support crate that defines `SupportsNullable`, `Nullable`, and the smart
@@ -404,7 +393,7 @@ fn is_cpp_relocatable<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool 
     true
 }
 
-fn format_legacy_bridged_type_with_placeholders<'tcx>(
+fn format_existing_cpp_type_with_placeholders<'tcx>(
     db: &BindingsGenerator<'tcx>,
     cpp_type_str: &str,
     adt: ty::AdtDef<'tcx>,
@@ -876,8 +865,7 @@ fn format_ty_for_cc_impl<'tcx>(
 
                 let mut cc_types = Vec::with_capacity(types.len());
                 for element_type in types {
-                    if is_bridged_type(db, element_type)?
-                        .is_some_and(|b| matches!(b, BridgedType::Option(_)))
+                    if matches!(is_bridged_type(db, element_type)?, Some(BridgedType::Option(_)))
                     {
                         bail!(
                             "crubit.rs/errors/bridge_compound_type: Tuples containing bridged type \
@@ -1066,78 +1054,80 @@ fn format_ty_for_cc_impl<'tcx>(
                     snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
                 }
                 return Ok(snippet);
+            } else if let Some((cpp_type, include_paths)) =
+                cpp_layout_equivalent_type(db, ty)?
+            {
+                prereqs.includes.extend(include_paths.iter().cloned());
+
+                let cpp_type_str = cpp_type.as_ref();
+
+                let mut tokens = if cpp_type_str.contains('{') {
+                    format_existing_cpp_type_with_placeholders(
+                        db,
+                        cpp_type_str,
+                        adt,
+                        substs,
+                        &mut prereqs,
+                        location,
+                    )?
+                } else {
+                    match cpp_type_str.parse::<TokenStream>() {
+                        Ok(tokens) => tokens,
+                        Err(err) => {
+                            db.fatal_errors().report(&format!(
+                                "Failed to parse `cpp_type` `{}`: {err}",
+                                cpp_type_str
+                            ));
+                            quote! {}
+                        }
+                    }
+                };
+
+                // Under `nonnull_smart_pointers`, a bare smart pointer is non-null, and
+                // `Nullable<Ptr>` is the spelling for one that may be null.
+                if apply_default_nullability
+                    && db
+                        .crate_features(db.source_crate_num())
+                        .contains(CrubitFeature::NonnullSmartPointers)
+                    && is_smart_pointer(db, ty)?
+                {
+                    prereqs
+                        .includes
+                        .insert(db.support_header("annotations_internal.h"));
+                    tokens = quote! { #tokens crubit_nonnull };
+                }
+
+                if !db.is_cpp_move_constructible(ty)
+                    && matches!(location, TypeLocation::FnParam { .. })
+                {
+                    prereqs.includes.insert(db.support_header("movable.h"));
+                    tokens = quote! { ::rs::Movable< #tokens > };
+                }
+                return Ok(CcSnippet { tokens, prereqs });
             } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
-                let is_layout_compat = bridged_type.is_layout_compatible();
                 match bridged_type {
-                    BridgedType::Legacy {
-                        include_paths,
-                        cpp_type,
-                        conversion_info: _,
-                    } => {
-                        if !is_layout_compat {
-                            if db.is_proto_message(ty)
-                              && !location.is_bridgeable() {
-                                    return Ok(
-                                        format_layout_compatible_cpp_type_for_rust_proto_msg(
-                                            db,
-                                            &include_paths,
-                                            &cpp_type,
-                                        ),
-                                    );
-                            }
-                            location.check_bridgeable()?;
+                    BridgedType::ExternCFuncConverters { include_paths, cpp_type, .. } => {
+                        if db.is_proto_message(ty) && !location.is_bridgeable() {
+                            return Ok(format_layout_compatible_cpp_type_for_rust_proto_msg(
+                                db,
+                                &include_paths,
+                                &cpp_type,
+                            ));
                         }
-                        for path in &include_paths {
-                            prereqs.includes.insert(CcInclude::from_path(path.as_str()));
-                        }
+                        location.check_bridgeable()?;
+                        prereqs.includes.extend(include_paths.iter().cloned());
 
                         let cpp_type_str = cpp_type.as_ref();
-
-                        let tokens = if cpp_type_str.contains('{') {
-                            format_legacy_bridged_type_with_placeholders(
-                                db,
-                                cpp_type_str,
-                                adt,
-                                substs,
-                                &mut prereqs,
-                                location,
-                            )?
-                        } else {
-                            match cpp_type_str.parse::<TokenStream>() {
-                                Ok(tokens) => tokens,
-                                Err(err) => {
-                                    db.fatal_errors().report(&format!(
-                                        "Failed to parse `cpp_type` `{}`: {err}",
-                                        cpp_type_str
-                                    ));
-                                    quote! {}
-                                }
+                        let tokens = match cpp_type_str.parse::<TokenStream>() {
+                            Ok(tokens) => tokens,
+                            Err(err) => {
+                                db.fatal_errors().report(&format!(
+                                    "Failed to parse `cpp_type` `{}`: {err}",
+                                    cpp_type_str
+                                ));
+                                quote! {}
                             }
                         };
-
-                        // Under `nonnull_smart_pointers`, a bare smart pointer is non-null, and
-                        // `Nullable<Ptr>` is the spelling for one that may be null.
-                        let mut tokens = if apply_default_nullability
-                            && db
-                                .crate_features(db.source_crate_num())
-                                .contains(CrubitFeature::NonnullSmartPointers)
-                            && is_smart_pointer(db, ty)?
-                        {
-                            prereqs
-                                .includes
-                                .insert(db.support_header("annotations_internal.h"));
-                            quote! { #tokens crubit_nonnull }
-                        } else {
-                            tokens
-                        };
-
-                        if is_layout_compat
-                            && !db.is_cpp_move_constructible(ty)
-                            && matches!(location, TypeLocation::FnParam { .. })
-                        {
-                            prereqs.includes.insert(db.support_header("movable.h"));
-                            tokens = quote! { ::rs::Movable< #tokens > };
-                        }
                         return Ok(CcSnippet { tokens, prereqs });
                     }
                     BridgedType::Option(_) => {
@@ -1308,13 +1298,11 @@ pub fn ty_as_alias_ty<'tcx>(ty: Ty<'tcx>) -> Option<&'tcx ty::AliasTy<'tcx>> {
 /// represented via `::proto::Rust<CppType>`.
 fn format_layout_compatible_cpp_type_for_rust_proto_msg<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    include_paths: &[Symbol],
+    include_paths: &[CcInclude],
     cpp_type: &CcType,
 ) -> CcSnippet<'tcx> {
     let mut prereqs = CcPrerequisites::default();
-    for path in include_paths {
-        prereqs.includes.insert(CcInclude::from_path(path.as_str()));
-    }
+    prereqs.includes.extend(include_paths.iter().cloned());
     prereqs.includes.insert(CcInclude::from_path("support/protobuf/rust.h"));
     let cpp_type_str = cpp_type.as_ref();
     let inner_tokens = match cpp_type_str.parse::<TokenStream>() {
@@ -1907,54 +1895,22 @@ pub fn format_region_as_rs_lifetime<'tcx>(
     quote! { #lifetime }
 }
 
-/// A Rust type that bridges to a particular pre-existing C++ type.
+/// A Rust type that is bridged to a pre-existing C++ type via conversion (not layout-compatible).
 ///
-/// Bridged types may be representation-equivalent such that pointers to one may be treated as
-/// pointers to the other, or they may require conversion functions (in which case they can only
-/// be passed by-value).
+/// Bridged types require conversion functions (`#[crubit_annotate::cpp_convertible]`) or
+/// `CrubitAbi` encoding (`Option`) and can only be passed by value in bridgeable locations.
+/// For layout-compatible C++ type mappings (`#[crubit_annotate::cpp_layout_equivalent]`), see
+/// [`cpp_layout_equivalent_type`].
 pub enum BridgedType {
-    Legacy {
+    ExternCFuncConverters {
         /// The spelling of the C++ type of the item.
         cpp_type: CcType,
         /// Paths to the header files that declare the type specified in `cpp_type`.
-        include_paths: Vec<Symbol>,
-        conversion_info: BridgedTypeConversionInfo,
-    },
-    Option(CrubitAbiType),
-}
-
-impl BridgedType {
-    pub fn is_layout_compatible(&self) -> bool {
-        match self {
-            BridgedType::Legacy { conversion_info, .. } => match conversion_info {
-                BridgedTypeConversionInfo::PointerLikeTransmute { .. } => true,
-                BridgedTypeConversionInfo::ExternCFuncConverters { .. } => false,
-            },
-            BridgedType::Option(_) => false,
-        }
-    }
-}
-
-/// A description of what method is used to convert between values of the Rust and C++ types.
-pub enum BridgedTypeConversionInfo {
-    /// The types are representation-equivalent and can be transmuted using simple pointer casts.
-    PointerLikeTransmute {
-        is_pointer: bool,
-    },
-    ExternCFuncConverters {
+        include_paths: Vec<CcInclude>,
         cpp_to_rust_converter: Symbol,
         rust_to_cpp_converter: Symbol,
     },
-}
-
-/// Whether the layout is from a type that implements [`std::marker::PointerLike`].
-///
-/// Currently, that means that the type is pointer-sized, pointer-aligned,
-/// and has a initialized (non-union), scalar ABI.
-fn layout_pointer_like(from: Layout, data_layout: &TargetDataLayout) -> bool {
-    from.size() == data_layout.pointer_size()
-        && from.align().abi == data_layout.pointer_align().abi
-        && matches!(from.backend_repr(), BackendRepr::Scalar(Scalar::Initialized { .. }))
+    Option(CrubitAbiType),
 }
 
 /// Returns an error if `ty` is not pointer-like.
@@ -1964,7 +1920,7 @@ pub fn ensure_ty_is_pointer_like<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx
             bail!("Can't convert {ty} to a C++ pointer as it's not `repr(transparent)`");
         }
 
-        if !layout_pointer_like(get_layout(db.tcx(), ty)?, db.tcx().data_layout()) {
+        if !has_pointer_abi(get_layout(db.tcx(), ty)?, db.tcx().data_layout()) {
             bail!(
                 "Can't convert {ty} to a C++ pointer as its layout is not pointer-like. \
                 To be considered pointer-like it may only have one non-ZST field that needs \
@@ -2010,35 +1966,26 @@ pub fn crubit_abi_type_from_ty<'tcx>(
             let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
                 .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
 
-            if let Some(bridging_attrs) = attrs.get_bridging_attrs()? {
-                match bridging_attrs {
-                    BridgingAttrs::JustCppType {
-                        include_paths,
-                        cpp_type,
-                    } => {
-                        let fully_qualified_name = db.symbol_canonical_name(adt.did())?;
-                        let mut prereqs = CcPrerequisites::default();
-                        for path in &include_paths {
-                            prereqs.includes.insert(CcInclude::from_path(path.as_str()));
-                        }
-                        return Ok(CrubitAbiTypeWithCcPrereqs {
-                            crubit_abi_type: CrubitAbiType::Transmute {
-                                rust_type: {
-                                    let parts = fully_qualified_name.rs_name_parts();
-                                    quote! { #(::#parts)* }
-                                },
-                                cpp_type: cpp_type
-                                    .as_str()
-                                    .parse()
-                                    .expect("Malformed cpp_type annotation"),
-                            },
-                            prereqs,
-                        });
-                    }
-                    _ => bail!(
-                        "Failed to construct the CrubitAbiType for {ty} because it has bridging attrs for a different kind of bridging: {bridging_attrs:?}"
-                    ),
+            if let Some(convertible_attrs) = attrs.get_cpp_convertible_attrs()? {
+                bail!(
+                    "Failed to construct the CrubitAbiType for {ty} because it has bridging attrs for a different kind of bridging: {convertible_attrs:?}"
+                );
+            } else if let Some(cpp_type) = attrs.cpp_type {
+                let fully_qualified_name = db.symbol_canonical_name(adt.did())?;
+                let mut prereqs = CcPrerequisites::default();
+                for path in &attrs.include_paths {
+                    prereqs.includes.insert(CcInclude::from_path(path.as_str()));
                 }
+                return Ok(CrubitAbiTypeWithCcPrereqs {
+                    crubit_abi_type: CrubitAbiType::Transmute {
+                        rust_type: {
+                            let parts = fully_qualified_name.rs_name_parts();
+                            quote! { #(::#parts)* }
+                        },
+                        cpp_type: cpp_type.as_str().parse().expect("Malformed cpp_type annotation"),
+                    },
+                    prereqs,
+                });
             } else {
                 if is_std_ptr_non_null(db.tcx(), adt.did()) {
                     let rust_type = db.format_ty_for_rs(ty)?;
@@ -2185,28 +2132,38 @@ impl BridgedBuiltin {
     }
 }
 
-/// Returns a BridgedType for a manually annotated bridged ADT.
-/// Returns None if the type is not manually annotated as bridged.
-/// Returns an error if getting the bridging attributes fails.
-fn is_manually_annotated_bridged_adt<'tcx>(
+/// Returns `Some((CcType, Vec<CcInclude>))` if `ty` is an ADT (or `Pin` wrapping an ADT) annotated
+/// with `#[crubit_annotate::cpp_layout_equivalent]`.
+///
+/// Returns `Ok(None)` if `ty` is not a `cpp_layout_equivalent` type (including imported C++ types
+/// without `include_path` and bridged types that require conversion).
+/// Returns an error if the type or its attributes are invalid.
+pub fn cpp_layout_equivalent_type<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
-) -> Result<Option<BridgedType>> {
-    // We take a `Ty` instead of adt + substs directly so we can use `Ty` in error messages.
-    let ty::TyKind::Adt(adt, substs) = ty.kind() else {
-        panic!("should only be called on an ADT type");
+) -> Result<Option<(CcType, Vec<CcInclude>)>> {
+    let ty = replace_all_regions_with_static(db.tcx(), ty);
+    let ty::TyKind::Adt(adt, substs) = *ty.kind() else {
+        return Ok(None);
     };
+    if adt.is_pin() {
+        let inner_pointer = substs[0].expect_ty();
+        // `Pin` is a `repr(transparent)` wrapper around its inner pointer, so we check the inner
+        // type instead.
+        return cpp_layout_equivalent_type(db, inner_pointer);
+    }
+
     let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
         .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
 
     // `cpp_std::NonNull<Ptr>` (**not** `core::ptr::NonNull<T>`) is spelled `Ptr crubit_nonnull`.
     // Gate that on `nonnull_smart_pointers`, which is also what makes a bare `Ptr` mean non-null
     // (spelled `Ptr crubit_nonnull`) in both directions. Without the feature, treat `NonNull` as
-    // non-bridged, which is how it behaved before it was annotated. `NonNull` is being removed
+    // unmapped, which is how it behaved before it was annotated. `NonNull` is being removed
     // (crubit.rs-nullable); new code should use a bare `Ptr` instead.
     //
     // `Nullable<Ptr>` (spelled `Ptr crubit_nullable`) is not gated: it means the same thing as an
-    // unannotated C++ smart pointer, so bridging it is correct with or without the feature.
+    // unannotated C++ smart pointer, so mapping it is correct with or without the feature.
     if attrs.cpp_type.is_some_and(|cpp_type| cpp_type.as_str().contains("crubit_nonnull"))
         && !db
             .crate_features(db.source_crate_num())
@@ -2215,7 +2172,9 @@ fn is_manually_annotated_bridged_adt<'tcx>(
         return Ok(None);
     }
 
-    let Some(bridging_attrs) = attrs.get_bridging_attrs()? else {
+    let Some(CppLayoutEquivalentAttrs { include_paths, cpp_type }) =
+        attrs.get_cpp_layout_equivalent_attrs()?
+    else {
         return Ok(None);
     };
 
@@ -2229,89 +2188,78 @@ fn is_manually_annotated_bridged_adt<'tcx>(
         );
     }
 
-    match bridging_attrs {
-        BridgingAttrs::JustCppType { include_paths, cpp_type } => {
-            if include_paths.is_empty() {
-                // NOTE: this branch is surprising, and the annotations should probably be rewritten
-                // to be more explicit.
-                //
-                // Specifically when an include path is specified we treat the type as
-                // a pointer-like transmute bridged type rather than a non-bridged type.
-                // When no include path is specified, we treat the type as non-bridged.
-                return Ok(None);
-            }
+    let Ok(ts) = cpp_type.as_str().parse::<TokenStream>() else {
+        bail!("Failed to parse CrubitAttrs.cpp_type for {ty} = {cpp_type}");
+    };
 
-            let ts = cpp_type.as_str().parse::<TokenStream>().unwrap_or_else(|err| {
-                panic!("Failed to parse CrubitAttrs.cpp_type for {ty} = {cpp_type}: {err}")
-            });
-
-            let cpp_type_cc = match code_gen_utils::is_cpp_pointer_type(ts) {
-                Some(_) => {
-                    ensure_ty_is_pointer_like(db, ty)?;
-                    CcType::Pointer(cpp_type)
-                }
-                None => CcType::Other(cpp_type),
-            };
-
-            let is_pointer = matches!(cpp_type_cc, CcType::Pointer(_));
-            Ok(Some(BridgedType::Legacy {
-                cpp_type: cpp_type_cc,
-                include_paths,
-                conversion_info: BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer },
-            }))
+    let cpp_type = match code_gen_utils::is_cpp_pointer_type(ts) {
+        Some(_) => {
+            ensure_ty_is_pointer_like(db, ty)?;
+            CcType::Pointer(cpp_type)
         }
-        BridgingAttrs::ExternCFuncConverters {
-            include_paths,
-            cpp_type,
-            cpp_to_rust_converter,
-            rust_to_cpp_converter,
-        } => {
-            if include_paths.is_empty() {
-                panic!(
-                    "Failed to parse CrubitAttrs.include_paths for {ty} = {cpp_type}: missing include_path"
-                )
-            }
+        None => CcType::Other(cpp_type),
+    };
 
-            let ts = cpp_type.as_str().parse::<TokenStream>().unwrap_or_else(|err| {
-                panic!("Failed to parse CrubitAttrs.cpp_type for {ty} = {cpp_type}: {err}")
-            });
+    Ok(Some((cpp_type, include_paths)))
+}
 
-            Ok(Some(BridgedType::Legacy {
-                cpp_type: match code_gen_utils::is_cpp_pointer_type(ts) {
-                    Some(_) => CcType::Pointer(cpp_type),
-                    None => CcType::Other(cpp_type),
-                },
-                include_paths,
-                conversion_info: BridgedTypeConversionInfo::ExternCFuncConverters {
-                    cpp_to_rust_converter,
-                    rust_to_cpp_converter,
-                },
-            }))
-        }
+/// Returns a `BridgedType` for an ADT manually annotated with
+/// `#[crubit_annotate::cpp_convertible]`. Returns `None` if the type is not annotated with
+/// `cpp_convertible`. Returns an error if getting the attributes fails.
+fn is_bridged_adt<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<Option<BridgedType>> {
+    // We take a `Ty` instead of adt + substs directly so we can use `Ty` in error messages.
+    let ty::TyKind::Adt(adt, _) = ty.kind() else {
+        panic!("should only be called on an ADT type");
+    };
+    let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
+        .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
+
+    let Some(CppConvertibleAttrs {
+        include_paths,
+        cpp_type,
+        cpp_to_rust_converter,
+        rust_to_cpp_converter,
+    }) = attrs.get_cpp_convertible_attrs()?
+    else {
+        return Ok(None);
+    };
+
+    if include_paths.is_empty() {
+        panic!(
+            "Failed to parse CrubitAttrs.include_paths for {ty} = {cpp_type}: missing include_path"
+        )
     }
+
+    let Ok(ts) = cpp_type.as_str().parse::<TokenStream>() else {
+        bail!("Failed to parse CrubitAttrs.cpp_type for {ty} = {cpp_type}");
+    };
+
+    Ok(Some(BridgedType::ExternCFuncConverters {
+        cpp_type: match code_gen_utils::is_cpp_pointer_type(ts) {
+            Some(_) => CcType::Pointer(cpp_type),
+            None => CcType::Other(cpp_type),
+        },
+        include_paths,
+        cpp_to_rust_converter,
+        rust_to_cpp_converter,
+    }))
 }
 
 /// Returns whether a type can be made layout-compatible.
 ///
 /// Layout-compatible types include:
-/// - Non-bridged types.
+/// - Non-bridged types (including `#[crubit_annotate::cpp_layout_equivalent]` types).
 /// - Bridged types with layout-compatible alternatives (e.g. `rs_std::Option<T>`).
 /// - Proto messages.
 ///
 /// Types that are not layout-compatible can only be passed by value (via conversion) in bridgeable
 /// locations such as function parameters and return values. They cannot be used behind references
 /// or pointers, as struct fields (b/400633609), or as generic arguments of non-bridged types.
-///
-/// This is the single source of truth for which types are layout-compatible; prefer it over
-/// checking `BridgedType::is_layout_compatible` directly.
 pub fn can_be_made_layout_compatible<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
 ) -> Result<bool> {
-    let Some(bridged) = is_bridged_type(db, ty)? else {
-        return Ok(true);
-    };
-    if bridged.is_layout_compatible() {
+    if is_bridged_type(db, ty)?.is_none() {
         return Ok(true);
     }
     if db.is_proto_message(ty) {
@@ -2338,9 +2286,14 @@ fn ensure_layout_compatible_pointee<'tcx>(
     Ok(())
 }
 
-/// Returns the contents of the `__crubit_annotate` attribute if type bridging
-/// is configured. An error is returned if the type is a pointer or reference or
-/// the attribute could not be parsed or is in an invalid state.
+/// Returns `Some(BridgedType)` if `ty` is a bridged type that requires conversion across FFI
+/// (`#[crubit_annotate::cpp_convertible]` or composable `Option` bridging).
+///
+/// Layout-compatible C++ type mappings (`#[crubit_annotate::cpp_layout_equivalent]`) are NOT
+/// bridged types and return `Ok(None)` here; see [`cpp_layout_equivalent_type`] for those.
+///
+/// Returns `Ok(None)` if `ty` is not a bridged type, or an error if `ty` is a pointer/reference or
+/// generic instantiation containing a non-layout-compatible type, or if its attributes are invalid.
 pub fn is_bridged_type<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
@@ -2367,12 +2320,11 @@ pub fn is_bridged_type<'tcx>(
             if adt.is_pin() {
                 let inner_pointer = substs[0].expect_ty();
                 // Unlike the other pointer or reference-like types, `Pin` is a repr(transparent)
-                // wrapper around its inner pointer, so we check if the inner type is bridged
-                // instead.
+                // wrapper around its inner pointer, so we check the inner type instead.
                 return is_bridged_type(db, inner_pointer);
             }
 
-            if let Some(bridged_type) = is_manually_annotated_bridged_adt(db, ty)? {
+            if let Some(bridged_type) = is_bridged_adt(db, ty)? {
                 return Ok(Some(bridged_type));
             }
 
@@ -2404,11 +2356,8 @@ pub fn is_bridged_type<'tcx>(
                 }
             }
 
-            // It's neither of the above, so check that it doesn't have any bridged substs.
-
-            // The ADT does not need to be bridged, but check if it has generic types that
-            // need to be bridged e.g. Box<BridgedType> cannot be formatted at
-            // the moment. If we encounter a type like this we return an error.
+            // The ADT is not bridged, so check if any of its generic type arguments are
+            // not layout-compatible (e.g. `Box<BridgedType>` cannot be formatted).
             for subst in substs {
                 if let Some(ty) = subst.as_type()
                     && !can_be_made_layout_compatible(db, ty)?

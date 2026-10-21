@@ -16,6 +16,7 @@ extern crate rustc_middle;
 extern crate rustc_span;
 
 use anyhow::{bail, ensure, Result};
+use code_gen_utils::CcInclude;
 use rustc_hir::def::DefKind;
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
@@ -194,44 +195,31 @@ impl CrubitAttrs {
         Ok(())
     }
 
-    /// Returns the Crubit attributes that specify a bridging strategy,
-    /// either extern C function converters or just a pointer case.
-    ///
-    /// Returns None if the attributes are not present.
-    /// Returns an error if the attributes are present but malformed.
-    pub fn get_bridging_attrs(&self) -> Result<Option<BridgingAttrs>> {
+    fn validate_cpp_type_attrs(&self) -> Result<()> {
         match self {
             Self {
-                cpp_type: Some(cpp_type),
-                include_paths,
-                cpp_to_rust_converter,
-                rust_to_cpp_converter,
+                cpp_type: Some(_),
+                cpp_to_rust_converter: Some(_),
+                rust_to_cpp_converter: Some(_),
                 ..
-            } => match (cpp_to_rust_converter, rust_to_cpp_converter) {
-                (Some(cpp_to_rust_converter), Some(rust_to_cpp_converter)) => {
-                    Ok(Some(BridgingAttrs::ExternCFuncConverters {
-                        include_paths: include_paths.clone(),
-                        cpp_type: *cpp_type,
-                        cpp_to_rust_converter: *cpp_to_rust_converter,
-                        rust_to_cpp_converter: *rust_to_cpp_converter,
-                    }))
-                }
-                (None, None) => Ok(Some(BridgingAttrs::JustCppType {
-                    include_paths: include_paths.clone(),
-                    cpp_type: *cpp_type,
-                })),
-                _ => bail!(
-                    "Invalid state of  #[crubit_annotate::...] attribute. \
-                        Some, but not all, of cpp_to_rust_converter and rust_to_cpp_converter \
-                        are set."
-                ),
-            },
+            }
+            | Self {
+                cpp_type: Some(_),
+                cpp_to_rust_converter: None,
+                rust_to_cpp_converter: None,
+                ..
+            } => Ok(()),
+            Self { cpp_type: Some(_), .. } => bail!(
+                "Invalid state of  #[crubit_annotate::...] attribute. \
+                    Some, but not all, of cpp_to_rust_converter and rust_to_cpp_converter \
+                    are set."
+            ),
             Self {
                 cpp_type: None,
                 cpp_to_rust_converter: None,
                 rust_to_cpp_converter: None,
                 ..
-            } => Ok(None),
+            } => Ok(()),
             Self { cpp_type, cpp_to_rust_converter, rust_to_cpp_converter, .. } => {
                 let mut attrs = Vec::with_capacity(3);
                 if cpp_type.is_some() {
@@ -243,18 +231,68 @@ impl CrubitAttrs {
                 if rust_to_cpp_converter.is_some() {
                     attrs.push(CrubitAttrs::RUST_TO_CPP_CONVERTER);
                 }
-                ensure!(
-                    attrs.is_empty(),
+                bail!(
                     "Invalid state of  #[crubit_annotate::...] attribute. \
                         contains conflicting attributes: {attrs:?}"
-                );
-                Ok(None)
+                )
             }
         }
     }
 
+    /// Returns the `#[crubit_annotate::cpp_layout_equivalent]` attributes if present.
+    ///
+    /// Note that imported C++ types (`is_imported_cpp_type`) have `cpp_type` set without
+    /// `include_paths` and return `Ok(None)` here.
+    pub fn get_cpp_layout_equivalent_attrs(&self) -> Result<Option<CppLayoutEquivalentAttrs>> {
+        self.validate_cpp_type_attrs()?;
+        if let Self {
+            cpp_type: Some(cpp_type),
+            include_paths,
+            cpp_to_rust_converter: None,
+            rust_to_cpp_converter: None,
+            ..
+        } = self
+            && !include_paths.is_empty()
+        {
+            Ok(Some(CppLayoutEquivalentAttrs {
+                include_paths: include_paths
+                    .iter()
+                    .map(|s| CcInclude::from_path(s.as_str()))
+                    .collect(),
+                cpp_type: *cpp_type,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Returns the `#[crubit_annotate::cpp_convertible]` attributes if present.
+    pub fn get_cpp_convertible_attrs(&self) -> Result<Option<CppConvertibleAttrs>> {
+        self.validate_cpp_type_attrs()?;
+        if let Self {
+            cpp_type: Some(cpp_type),
+            include_paths,
+            cpp_to_rust_converter: Some(cpp_to_rust_converter),
+            rust_to_cpp_converter: Some(rust_to_cpp_converter),
+            ..
+        } = self
+        {
+            Ok(Some(CppConvertibleAttrs {
+                include_paths: include_paths
+                    .iter()
+                    .map(|s| CcInclude::from_path(s.as_str()))
+                    .collect(),
+                cpp_type: *cpp_type,
+                cpp_to_rust_converter: *cpp_to_rust_converter,
+                rust_to_cpp_converter: *rust_to_cpp_converter,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
     /// Returns true if this type is a C++ type imported via `rs_bindings_from_cc`
-    /// (rather than a manually bridged Rust type).
+    /// (rather than a manually mapped or bridged Rust type).
     pub fn is_imported_cpp_type(&self) -> bool {
         self.cpp_type.is_some()
             && self.include_paths.is_empty()
@@ -263,21 +301,20 @@ impl CrubitAttrs {
     }
 }
 
-/// An enum that separates out bridging attributes. Successful construction of
-/// this type from `CrubitAttrs::get_bridging_attrs` indicates that the
-/// attributes are valid and there are no conflicting attributes.
-#[derive(Debug)]
-pub enum BridgingAttrs {
-    JustCppType {
-        include_paths: Vec<Symbol>,
-        cpp_type: Symbol,
-    },
-    ExternCFuncConverters {
-        include_paths: Vec<Symbol>,
-        cpp_type: Symbol,
-        cpp_to_rust_converter: Symbol,
-        rust_to_cpp_converter: Symbol,
-    },
+/// Attributes from `#[crubit_annotate::cpp_layout_equivalent]`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CppLayoutEquivalentAttrs {
+    pub include_paths: Vec<CcInclude>,
+    pub cpp_type: Symbol,
+}
+
+/// Attributes from `#[crubit_annotate::cpp_convertible]`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CppConvertibleAttrs {
+    pub include_paths: Vec<CcInclude>,
+    pub cpp_type: Symbol,
+    pub cpp_to_rust_converter: Symbol,
+    pub rust_to_cpp_converter: Symbol,
 }
 
 // Ideally we could call https://github.com/rust-lang/rust/blob/2aaa62b89d22b570e560731b03e3d2d6f5c3bbce/compiler/rustc_metadata/src/rmeta/encoder.rs#L937 directly, but that method is not publicly available.

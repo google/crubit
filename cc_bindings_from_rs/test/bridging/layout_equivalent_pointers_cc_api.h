@@ -61,19 +61,11 @@ inline void test_format_func_arg_pointer_like(const CppType* __param_0) {
 namespace layout_equivalent_pointers::test_format_return_type_pointer_like {
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_test_uformat_ureturn_utype_upointer_ulike(
-    CppType** __ret_ptr);
+extern "C" CppType* __crubit_thunk_test_uformat_ureturn_utype_upointer_ulike();
 }
 inline CppType* test_format_return_type_pointer_like() {
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    CppType* val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
-  __crubit_internal::__crubit_thunk_test_uformat_ureturn_utype_upointer_ulike(
-      __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return __crubit_internal::
+      __crubit_thunk_test_uformat_ureturn_utype_upointer_ulike();
 }
 
 }  // namespace layout_equivalent_pointers::test_format_return_type_pointer_like

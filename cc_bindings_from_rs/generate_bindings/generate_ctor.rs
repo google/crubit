@@ -143,7 +143,7 @@ pub fn generate_copy_ctor_and_assignment_operator<'tcx>(
         match copy_codegen_style {
             Some(CopyCodegenStyle::Copy) => {
                 let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
-                        and assignment operator.";
+                       and assignment operator.";
                 let main_api = CcSnippet::new(quote! {
                     __NEWLINE__ __COMMENT__ #msg
                     #cc_struct_name(const #cc_struct_name&) = default;  __NEWLINE__
@@ -194,19 +194,19 @@ pub fn generate_copy_ctor_and_assignment_operator<'tcx>(
                     let ctor_body =
                         generate_ctor_thunk_call(db, core, clone_thunk_name, &[quote! { other }])?;
                     cc_thunk_decls.map_snippets(|cc_thunk_decls| {
-                        quote! {
-                            #cc_thunk_decls
-                            inline #qualified_adt_name::#cc_struct_name(const #cc_struct_name& other) noexcept {
-                                #ctor_body
-                            }
-                            inline #qualified_adt_name& #qualified_adt_name::operator=(const #cc_struct_name& other) noexcept {
-                                if (this != &other) {
-                                    #thunk_qualifier::#clone_from_thunk_name(*this, other);
-                                }
-                                return *this;
-                            }
-                        }
-                    })
+                       quote! {
+                           #cc_thunk_decls
+                           inline #qualified_adt_name::#cc_struct_name(const #cc_struct_name& other) noexcept {
+                               #ctor_body
+                           }
+                           inline #qualified_adt_name& #qualified_adt_name::operator=(const #cc_struct_name& other) noexcept {
+                               if (this != &other) {
+                                   #thunk_qualifier::#clone_from_thunk_name(*this, other);
+                               }
+                               return *this;
+                           }
+                       }
+                   })
                 };
                 Ok(ApiSnippets { main_api, cc_details, rs_details })
             }
@@ -329,8 +329,8 @@ pub fn generate_move_ctor_and_assignment_operator<'tcx>(
         Some(MoveCodegenStyle::Copy) => ApiSnippets::default(),
         None => {
             let msg = "C++ move operations are unavailable for this type. See \
-                http://crubit.rs/rust/movable_types for an explanation of Rust types that are C++ \
-                movable.";
+               http://crubit.rs/rust/movable_types for an explanation of Rust types that are C++ \
+               movable.";
             ApiSnippets {
                 main_api: CcSnippet::new(quote! {
                     __NEWLINE__ __COMMENT__ #msg
