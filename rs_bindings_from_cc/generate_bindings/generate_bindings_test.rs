@@ -1104,7 +1104,7 @@ fn test_supported_unknown_attr_namespace() -> Result<()> {
     {
         let proto = ir_proto_from_cc(&format!(
             r#"
-            namespace [[gnu::visibility("default")]] unknown_attr_namespace {{
+            namespace [[gnu::visibility("hidden")]] unknown_attr_namespace {{
                 {nested_notpresent}
             }}
             extern "C" {{
@@ -1135,7 +1135,7 @@ fn test_supported_unknown_attr_namespace_merge() -> Result<()> {
         namespace unknown_attr_namespace {
             enum Present {};
         }
-        namespace [[gnu::visibility("default")]] unknown_attr_namespace {
+        namespace [[gnu::visibility("hidden")]] unknown_attr_namespace {
             enum NotPresent {};
         }
         namespace unknown_attr_namespace {
@@ -1162,7 +1162,7 @@ fn test_supported_unknown_attr_namespace_merge() -> Result<()> {
 fn test_supported_unknown_attr_namespace_typedef() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
-        namespace [[gnu::visibility("default")]] unknown_attr_namespace {
+        namespace [[gnu::visibility("hidden")]] unknown_attr_namespace {
             using NotPresent = int;
         }
         extern "C" {

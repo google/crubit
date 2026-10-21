@@ -60,6 +60,17 @@ absl::StatusOr<clang::QualType> ParameterizedByTAndStdTraitT(
     const clang::ClassTemplateSpecializationDecl* spec_decl,
     llvm::StringRef std_trait_name);
 
+// Returns true if `attr` is a `visibility` or `type_visibility` attribute
+// with the "default" value.
+//
+// Importers (e.g. `function.cc` and `namespace.cc`) check and allow default
+// visibility, because such visibility doesn't affect Rust bindings. Other
+// visibility values are not accepted for now to minimize risk (e.g. hidden
+// visibility may work if bindings are linked statically, but won't work if
+// bindings are in a separate shared object / dynamic library).  OTOH this
+// can probably be relaxed if a need comes up.
+bool IsDefaultVisibilityAttr(const clang::Attr& attr);
+
 // Returns the set of ignored attribute names.
 absl::flat_hash_set<absl::string_view> GetIgnoredAttrs(const clang::Decl* decl);
 

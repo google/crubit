@@ -58,6 +58,8 @@ std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
                 clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
           deprecated.emplace(deprecated_attr->getMessage());
           return true;
+        } else if (IsDefaultVisibilityAttr(attr)) {
+          return true;
         }
         return false;
       });

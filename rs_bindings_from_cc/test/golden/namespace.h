@@ -53,4 +53,24 @@ namespace impl {  // `impl` is a reserved keyword in Rust
 inline void foo() {}
 }  // namespace impl
 
+// libc++ marks `namespace std` with visibility attributes like these, unless
+// `_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS` is defined.
+namespace __attribute__((type_visibility("default"))) ns_with_type_visibility {
+  struct S final {
+    int x;
+  };
+}  // namespace ns_with_type_visibility
+
+namespace __attribute__((visibility("default"))) ns_with_visibility {
+  struct S final {
+    int x;
+  };
+}  // namespace ns_with_visibility
+
+namespace __attribute__((visibility("hidden"))) ns_with_hidden_visibility {
+  struct S final {
+    int x;
+  };
+}  // namespace ns_with_hidden_visibility
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_

@@ -226,6 +226,81 @@ pub mod r#impl {
 
 // namespace impl
 
+pub mod ns_with_type_visibility {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N23ns_with_type_visibility1SE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=ns_with_type_visibility :: S
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct S {
+        pub x: ::ffi_11::c_int,
+    }
+    impl !Send for S {}
+    impl !Sync for S {}
+    unsafe impl ::cxx::ExternType for S {
+        type Id = ::cxx::type_id!("ns_with_type_visibility :: S");
+        type Kind = ::cxx::kind::Trivial;
+    }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("ns_with_type_visibility :: S"),
+        crate::ns_with_type_visibility::S
+    );
+
+    impl Default for S {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN23ns_with_type_visibility1SC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+}
+
+// namespace ns_with_type_visibility
+
+pub mod ns_with_visibility {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "N18ns_with_visibility1SE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=ns_with_visibility :: S
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct S {
+        pub x: ::ffi_11::c_int,
+    }
+    impl !Send for S {}
+    impl !Sync for S {}
+    unsafe impl ::cxx::ExternType for S {
+        type Id = ::cxx::type_id!("ns_with_visibility :: S");
+        type Kind = ::cxx::kind::Trivial;
+    }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("ns_with_visibility :: S"),
+        crate::ns_with_visibility::S
+    );
+
+    impl Default for S {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN18ns_with_visibility1SC1Ev(&raw mut tmp as *mut _);
+                tmp.assume_init()
+            }
+        }
+    }
+}
+
+// namespace ns_with_visibility
+
+// error: namespace `ns_with_hidden_visibility` could not be bound
+//   crubit.rs/errors/unknown_attribute: unknown attribute(s): visibility
+
+// namespace ns_with_hidden_visibility
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -263,6 +338,12 @@ mod detail {
             s: *mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
         );
         pub(crate) unsafe fn __rust_thunk___ZN4impl3fooEv();
+        pub(crate) unsafe fn __rust_thunk___ZN23ns_with_type_visibility1SC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN18ns_with_visibility1SC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
     }
 }
 
@@ -288,4 +369,15 @@ const _: () = {
     );
     static_assertions::assert_impl_all!(crate::test_namespace_bindings_inline::inner::StructInInlineNamespace: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings_inline::inner::StructInInlineNamespace: Drop);
+
+    assert!(::core::mem::size_of::<crate::ns_with_type_visibility::S>() == 4);
+    assert!(::core::mem::align_of::<crate::ns_with_type_visibility::S>() == 4);
+    static_assertions::assert_impl_all!(crate::ns_with_type_visibility::S: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::ns_with_type_visibility::S: Drop);
+    assert!(::core::mem::offset_of!(crate::ns_with_type_visibility::S, x) == 0);
+    assert!(::core::mem::size_of::<crate::ns_with_visibility::S>() == 4);
+    assert!(::core::mem::align_of::<crate::ns_with_visibility::S>() == 4);
+    static_assertions::assert_impl_all!(crate::ns_with_visibility::S: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::ns_with_visibility::S: Drop);
+    assert!(::core::mem::offset_of!(crate::ns_with_visibility::S, x) == 0);
 };

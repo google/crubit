@@ -1097,13 +1097,10 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
                    clang::isa<clang::NoThreadSafetyAnalysisAttr>(attr) ||
                    clang::isa<clang::LockReturnedAttr>(attr) ||
                    clang::isa<clang::AbiTagAttr>(attr) ||
-                   clang::isa<clang::LocksExcludedAttr>(attr)) {
+                   clang::isa<clang::LocksExcludedAttr>(attr) ||
+                   IsDefaultVisibilityAttr(attr)) {
           // These attributes don't affect Rust.
           return true;
-        } else if (auto* visibility_attr =
-                       clang::dyn_cast<clang::VisibilityAttr>(&attr)) {
-          return visibility_attr->getVisibility() ==
-                 clang::VisibilityAttr::VisibilityType::Default;
         }
         return false;
       });

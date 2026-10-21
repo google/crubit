@@ -164,6 +164,19 @@ bool IsClangCoroAnnotation(const clang::Attr& attr) {
          clang::isa<clang::CoroOnlyDestroyWhenCompleteAttr>(attr);
 }
 
+bool IsDefaultVisibilityAttr(const clang::Attr& attr) {
+  if (auto* visibility_attr = clang::dyn_cast<clang::VisibilityAttr>(&attr)) {
+    return visibility_attr->getVisibility() ==
+           clang::VisibilityAttr::VisibilityType::Default;
+  }
+  if (auto* type_visibility_attr =
+          clang::dyn_cast<clang::TypeVisibilityAttr>(&attr)) {
+    return type_visibility_attr->getVisibility() ==
+           clang::TypeVisibilityAttr::VisibilityType::Default;
+  }
+  return false;
+}
+
 absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     const clang::Decl& decl,
     absl::FunctionRef<bool(const clang::Attr&)> is_known) {
