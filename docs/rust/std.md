@@ -222,3 +222,9 @@ and `rs::Fn`:
     `absl::AnyInvocable<Sig>`.
 
 See [Callbacks](http://crubit.rs/types/callbacks) for the complete guide and examples.
+
+## `Box`
+
+The Rust `Box<T>`, `Pin<Box<T>>`, `Box<[T]>`, and `Box<str>` types receive C++
+bindings as `rs::Box<T>`, `rs::PinBox<T>`, `rs::SliceBox<T>`, and `rs::StrBox`.
+See [Box types](../types/box.md) for more details.
