@@ -460,11 +460,15 @@ rust_proto_library(
 cc_library(
     name = "cc_ir",
     srcs = ["ir.cc"],
-    hdrs = ["ir.h"],
+    hdrs = [
+        "ir.h",
+        "ir_ffi_support.h",
+    ],
     visibility = ["//:__subpackages__"],
     deps = [
         ":bazel_types",
         ":ir_cc_proto",
+        "//common:cc_ffi_types",
         "//common:strong_int",
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/log:check",
@@ -474,6 +478,7 @@ cc_library(
         "@abseil-cpp//absl/strings:cord",
         "@abseil-cpp//absl/strings:str_format",
         "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:span",
         "@llvm-project//clang:ast",
         "@llvm-project//llvm:Support",
     ],
@@ -490,6 +495,7 @@ rust_library(
     name = "ir",
     srcs = [
         "ir.rs",
+        "ir_ffi_support.rs",
         "proto_to_ir.rs",
     ],
     edition = "2024",
@@ -502,6 +508,7 @@ rust_library(
         "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:error_report",
+        "//common:ffi_types",
         "@crate_index//:flagset",  # v0_4
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",
@@ -516,6 +523,24 @@ crubit_rust_test(
     crate = ":ir",
     deps = [
         "@crate_index//:googletest",
+    ],
+)
+
+rust_library(
+    name = "ir_ffi_support_test_rust",
+    testonly = 1,
+    srcs = ["ir_ffi_support_test_rust.rs"],
+    edition = "2024",
+    deps = [":ir"],
+)
+
+crubit_cc_test(
+    name = "ir_ffi_support_test",
+    srcs = ["ir_ffi_support_test.cc"],
+    deps = [
+        ":cc_ir",
+        ":ir_ffi_support_test_rust",  # build_cleaner: keep
+        "@googletest//:gtest_main",
     ],
 )
 
