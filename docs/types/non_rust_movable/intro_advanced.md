@@ -166,7 +166,7 @@ is what the source code for `emplace` would look like:
 
 ```rust
 fn emplace<C: Ctor<Error=Infallible>>(ctor: C) -> Pin<Box<C::Output>> {
-  let mut uninit = Box::new(MaybeUninit::<T>::uninit());
+  let mut uninit = Box::new(MaybeUninit::<C::Output>::uninit());
   unsafe {
     ctor.ctor(uninit.as_mut_ptr()).unwrap();
     Pin::new_unchecked(uninit.assume_init())
@@ -313,7 +313,7 @@ rather than passing by value.
 ### Unions
 
 Unsafe unions of nontrivial types were added in C++11, but there are currently
-few 1000 uses of them. All other unions are of
+fewer than 1000 uses of them. All other unions are of
 trivial types, which would get ported to Rust unions without using the `Ctor`
 functionality described in this document.
 
@@ -411,7 +411,7 @@ pub struct RvalueReference<'a, T>(Pin<&'a mut T>);  // has as_mut() -> Pin<&mut 
 // std::move()
 macro_rules! mov {
     ($p:expr) => {
-        $crate::RvalueReference(Pin::as_mut(&mut { $p }))
+        $crate::DerefRvalueReference::deref_rvalue_reference(&mut ($p))
     };
 }
 
@@ -419,7 +419,7 @@ macro_rules! mov {
 pub struct ConstRvalueReference<'a, T>(pub &'a T);  // has get_ref() -> &T
 macro_rules! const_mov {
     ($p:expr) => {
-        $crate::ConstRvalueReference(Pin::as_mut(&mut { $p }))
+        $crate::ConstRvalueReference(&*{ $p })
     };
 }
 ```
@@ -431,7 +431,7 @@ entirely. If we do omit it, we need a different story for how to translate every
 piece of existing code which uses the type.)
 
 **When moving a value behind a pinned pointer**, we use the `mov!` macro: it
-takes any pinned pointer type, e.g. `Pin<Box<P>>` or `Pin<&mut T>`, consumes it,
+takes any pinned pointer type, e.g. `Pin<Box<T>>` or `Pin<&mut T>`, consumes it,
 and evaluates to an `RvalueReference` with temporary lifetime which can be used
 to trigger move construction and assignment.
 
@@ -476,7 +476,7 @@ C++, to try to make them a little more ergonomic:
 
 ```rust
 let mut x = emplace!(mov!(y));
-x.assign(mov!(z));
+x.as_mut().assign(mov!(z));
 ```
 
 `RvalueReference<T>` (returned by the `mov!` macro) implements `Ctor<Output=T>`,
@@ -489,15 +489,15 @@ where in C++ you would `x = std::move(y);`.
 
 ```rust
 let mut x = emplace!(copy(y));
-x.assign(copy(z));  // or assign(&*z)
+x.as_mut().assign(copy(z));  // or assign(&*z)
 ```
 
 `Copy<P>` (returned by the `copy` function) implements `Ctor<Output=P::Target>`,
-for copy-constructible `P::Target` so that you can just `let x =
-emplace!(copy(y));` where in C++ you would `auto x = y`. Conversely,
-move-assignable `P:` implements `Assign<Copy<P>>` for all `P :
-Deref&lt;Target=T>`, so that you can `x.assign(copy(y))` where in C++ you would
-`x = y;` – although `&*y` works as well and is preferable.
+for copy-constructible `P::Target` so that you can just
+`let x = emplace!(copy(y));` where in C++ you would `auto x = y`. Conversely,
+copy-assignable `T` implements `Assign<Copy<P>>` for all `P: Deref<Target=T>`,
+so that you can `x.assign(copy(y))` where in C++ you would `x = y;` – although
+`&*y` works as well and is preferable.
 
 (For copying, there are good reasons not to have `let x = c;` work. Also,
 references are ordinary Rust values, and so they already implement `Ctor` for
@@ -511,7 +511,7 @@ Note that for both copying and moving, nothing happens until the actual call to
 ```rust
 let original_value = emplace!(...);
 let copied = emplace!(copy(&*original_value));  // or: MyType::ctor_new(&*original_value)
-let moved = emplace!(mov!(original_value.as_mut()));  // or: MyType::ctor_new(mov!(original_value.as_mut()))
+let mut moved = emplace!(mov!(original_value.as_mut()));  // or: MyType::ctor_new(mov!(original_value.as_mut()))
 // original_value is still available here, but moved-from
 let moved_2 = emplace!(mov!(original_value));
 // original_value is no longer available, since we used the form of mov that
@@ -531,7 +531,7 @@ moved.assign(mov!(copied));
 The following definitions would be automatically generated for a C++ type, and
 user-defined types should automatically derive them instead. Here is what the
 automatic derivations might expand to, using `ctor!` and
-[`#![feature(min_type_alias_impl_trait)]`](https://github.com/rust-lang/rust/issues/63063)
+[`#![feature(impl_trait_in_assoc_type)]`](https://github.com/rust-lang/rust/issues/63063)
 
 <section class="multicol">
 
@@ -575,7 +575,7 @@ impl CtorNew<&MyType> for MyType {
 <section>
 
 ```c++ {.no-copy}
-MyType(const MyType&& other) :
+MyType(MyType&& other) :
   field_(std::move(other.field_)) {}
 ```
 
@@ -587,9 +587,9 @@ MyType(const MyType&& other) :
 impl CtorNew<RvalueReference<'_, Self>> for MyType {
   type CtorType = Ctor![Self];
   type Error = Infallible;
-  fn ctor_new(other: &Self) -> Ctor![Self] {
+  fn ctor_new(mut other: RvalueReference<'_, Self>) -> Ctor![Self] {
     ctor!(MyType {
-      field: FieldType::ctor_new(mov!(other.as_mut().project().field),
+      field: FieldType::ctor_new(mov!(other.as_mut().project_pin().field)),
     })
   }
 }
@@ -605,7 +605,8 @@ impl CtorNew<RvalueReference<'_, Self>> for MyType {
 
 ```c++ {.no-copy}
 MyType& operator=(const MyType& other) {
-  self.field_ = other.field_;
+  field_ = other.field_;
+  return *this;
 }
 ```
 
@@ -615,8 +616,8 @@ MyType& operator=(const MyType& other) {
 
 ```rust {.no-copy}
 impl Assign<&MyType> for MyType {
-  fn assign(self: Pin<&mut Self>, other: &Self) -> Self::CtorType {
-    let this = self.project();
+  fn assign(self: Pin<&mut Self>, other: &Self) {
+    let this = self.project_pin();
 
     this.field.assign(&other.field);
   }
@@ -633,7 +634,8 @@ impl Assign<&MyType> for MyType {
 
 ```c++ {.no-copy}
 MyType& operator=(MyType&& other) {
-  self.field_ = std::move(other.field_);
+  field_ = std::move(other.field_);
+  return *this;
 }
 ```
 
@@ -644,11 +646,11 @@ MyType& operator=(MyType&& other) {
 ```rust {.no-copy}
 impl Assign<RvalueReference<'_, Self>> for MyType {
   fn assign(self: Pin<&mut Self>,
-            other: RvalueReference<'_, Self>) -> Self::CtorType {
-    let this = self.project();
-    let other = other.as_mut().project();
+            mut other: RvalueReference<'_, Self>) {
+    let this = self.project_pin();
+    let other = other.as_mut().project_pin();
 
-    this.field.assign(mov!(other.field);
+    this.field.assign(mov!(other.field));
   }
 }
 ```
@@ -665,7 +667,7 @@ can see every move, and wish it were elided. Well, why not elide it?
 Instead of using `operator=`, we could use a `reconstruct` function, which
 destroys the existing object, and constructs a new one in its place. This is
 implemented
-[here](support/ctor.rs?q=%22pub%20unsafe%20fn%20reconstruct%22)..
+[here](support/ctor.rs?q=%22pub%20unsafe%20fn%20reconstruct%22).
 
 ```rust
 let mut x = emplace!(MyType::ctor_new(0));
@@ -682,7 +684,7 @@ unsafe {
 `reconstruct` is, in effect, a `Ctor`-based dual of
 [`Pin::set`](https://doc.rust-lang.org/std/pin/struct.Pin.html#method.set).
 
-However, this unsafe, because the behavior is undefined for base class
+However, this is unsafe, because the behavior is undefined for base class
 subobjects and `[[no_unique_address]]` fields. This is not suitable for general
 use, and should only be used when performance considerations demand eliding as
 many moves as possible.

@@ -328,8 +328,6 @@ alternatives exist:
     fidelity. Wrapper types of this form should be optional, and available
     equally to both C++ and Rust to avoid fragmenting the ecosystem.
 
-</section>
-
 ## Fidelity {#fidelity}
 
 Anything possible in C++ should be possible in Rust. See

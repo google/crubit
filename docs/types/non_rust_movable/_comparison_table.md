@@ -264,10 +264,10 @@ auto x = std::move(y);
 <section>
 
 ```rust {.no-copy}
-let x = emplace!(ctor::mov(y));
+let x = emplace!(ctor::mov!(y));
 // sugar for:
 let x = emplace!(
-  T::ctor_new(ctor::mov(y)));
+  T::ctor_new(ctor::mov!(y)));
 ```
 
 </section>
@@ -365,7 +365,7 @@ TakesMutableTemporary(T())
 
 ```rust {.no-copy}
 TakesMutableTemporary(
-  emplace!(T::ctor_new()))
+  ctor::mov!(emplace!(T::ctor_new(()))))
 ```
 
 </section>
@@ -432,8 +432,9 @@ T Source2() {
 
 ```rust {.no-copy}
 fn Source2() -> Ctor![T] {
-  T::ctor_new(()).ctor_then(|x| {
-    x.Mutate();
+  T::ctor_new(()).ctor_then(|mut x| {
+    x.as_mut().Mutate();
+    Ok(())
   })
 }
 ```
@@ -579,7 +580,7 @@ T x = {.field = std::move(y)}
 
 ```rust {.no-copy}
 let x = emplace!(ctor!(
-  T {field: ctor::mov(y)}));
+  T {field: ctor::mov!(y)}));
 ```
 
 </section>
@@ -628,7 +629,7 @@ N/A: C++ doesn't have tuple-structs. </section>
 <section>
 
 ```rust {.no-copy}
-let x = emplace!(ctor!(T2(ctor::mov(y))));
+let x = emplace!(ctor!(T2(ctor::mov!(y))));
 ```
 
 </section>
@@ -788,7 +789,7 @@ x = std::move(y);
 <section>
 
 ```rust {.no-copy}
-x.as_mut().assign(ctor::mov(y));
+x.as_mut().assign(ctor::mov!(y));
 ```
 
 </section>
@@ -816,7 +817,7 @@ x = New();  // returns T by value
 <section>
 
 ```rust {.no-copy}
-x.as_mut().assign(ctor::mov(
+x.as_mut().assign(ctor::mov!(
   emplace!(New())));
 ```
 
@@ -846,8 +847,8 @@ new (&x) T();
 <section>
 
 ```rust {.no-copy}
-x.as_mut().reconstruct(
-  T::ctor_new(()));
+unsafe { ctor::reconstruct(x.as_mut(),
+  T::ctor_new(())) };
 ```
 
 </section>

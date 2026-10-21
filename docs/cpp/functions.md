@@ -17,8 +17,8 @@ parameter and return types are supported by Crubit:
     for the function use the bindings for that type.
 
 Additionally, code can call member functions defined in C++ if the parameter and
-return types are supported by Crubit (see above). Currently, member functions
-are translated as non-method associated functions.
+return types are supported by Crubit (see above). Non-static member functions
+become Rust methods, and static member functions become associated functions.
 
 ## Examples
 
@@ -149,5 +149,6 @@ will produce an error.
 
 ## Function Attributes
 
-Function attributes are **not currently supported**. Functions marked
-`[[noreturn]]`, `[[nodiscard]]`, etc. do not have bindings.
+Most function attributes are not supported. For example, functions marked
+`[[noreturn]]` don't get bindings. `[[nodiscard]]` is supported and becomes
+`#[must_use]`.
