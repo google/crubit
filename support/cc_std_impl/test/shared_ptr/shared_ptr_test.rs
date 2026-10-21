@@ -4,6 +4,7 @@
 
 use cc_std::std::{shared_ptr, NonNull, TryDeref};
 use googletest::{expect_eq, expect_false, expect_true, gtest};
+use std::marker::PhantomPinned;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
@@ -520,3 +521,40 @@ fn test_debug() {
     expect_eq!(format!("{null_sp:^8?}"), "  null  ");
     expect_eq!(format!("{null_sp:_>8?}"), "____null");
 }
+
+#[gtest]
+fn test_emplace() {
+    let counter = Arc::new(AtomicUsize::new(0));
+    let sp: shared_ptr<DropDetector> = shared_ptr::emplace(DropDetector(Arc::clone(&counter)));
+    expect_eq!(shared_ptr::use_count(&sp), 1);
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+    drop(sp);
+    expect_eq!(counter.load(Ordering::SeqCst), 0);
+    drop(sp_clone);
+    expect_eq!(counter.load(Ordering::SeqCst), 1);
+}
+
+#[gtest]
+fn test_emplace_destroyed_in_cpp() {
+    let sp: shared_ptr<i32> = shared_ptr::emplace(42);
+    let sp_clone = sp.clone();
+    test_helpers::shared_ptr_test::destroy_shared_ptr(sp);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 1);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+    test_helpers::shared_ptr_test::destroy_shared_ptr(sp_clone);
+}
+
+#[gtest]
+fn test_emplace_not_unpin() {
+    let sp: shared_ptr<NotUnpin> = shared_ptr::emplace(NotUnpin(42, PhantomPinned));
+    expect_eq!(sp.0, 42);
+}
+
+#[gtest]
+fn test_try_emplace_error() {
+    let result = shared_ptr::<i32>::try_emplace(ctor::ctor_error::<i32, _>("error"));
+    expect_true!(matches!(result, Err("error")));
+}
+
+struct NotUnpin(i32, PhantomPinned);

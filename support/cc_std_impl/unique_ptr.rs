@@ -4,9 +4,11 @@
 
 use crate::std::{Allocator, NonNull, StableNullness, TryDeref, TryDerefPin};
 use core::fmt::{Debug, Formatter, Result};
+use core::mem::MaybeUninit;
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::ptr::null_mut;
+use ctor::{Ctor, Infallible};
 
 pub use operator::Delete;
 
@@ -65,6 +67,28 @@ impl<T: Sized> unique_ptr<T> {
     /// Allocates a new `unique_ptr` that owns the given object.
     pub fn new(value: T) -> Self {
         Box::new_in(value, Allocator).into()
+    }
+
+    /// Allocates a new `unique_ptr` and initializes the owned object in place from `ctor`.
+    ///
+    /// Unlike [`unique_ptr::new`], this does not require `T` to be Rust-movable: the object is
+    /// constructed directly in its final heap location.
+    pub fn emplace(ctor: impl Ctor<Output = T, Error = Infallible>) -> Self {
+        let Ok(this) = Self::try_emplace(ctor);
+        this
+    }
+
+    /// Allocates a new `unique_ptr` and initializes the owned object in place from `ctor`,
+    /// returning an error if initialization fails.
+    pub fn try_emplace<E>(ctor: impl Ctor<Output = T, Error = E>) -> core::result::Result<Self, E> {
+        let mut uninit = Box::new_in(MaybeUninit::<T>::uninit(), Allocator);
+        // SAFETY: `uninit.as_mut_ptr()` is valid for writes and uninitialized, and the allocation
+        // is never moved, so it stays pinned. If `ctor` fails, `uninit` is left uninitialized and
+        // is deallocated without running `T`'s destructor. Otherwise, it is initialized.
+        unsafe {
+            ctor.ctor(uninit.as_mut_ptr())?;
+            Ok(uninit.assume_init().into())
+        }
     }
 
     /// Takes ownership of the provided raw pointer.

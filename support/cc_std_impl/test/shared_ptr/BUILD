@@ -27,6 +27,7 @@ crubit_rust_test(
     srcs = ["shared_ptr_test.rs"],
     deps = [
         ":test_helpers_rust",
+        "//support:ctor",
         "//support/cc_std",
         "@crate_index//:googletest",
     ],

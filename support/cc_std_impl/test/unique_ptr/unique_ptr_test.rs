@@ -6,6 +6,7 @@ use cc_std::std::{
     unique_ptr, virtual_unique_ptr, Allocator, NonNull, TryDeref, TryDerefMut, TryDerefPin,
 };
 use googletest::{expect_eq, expect_true, gtest};
+use std::marker::PhantomPinned;
 use std::sync::Arc;
 
 #[track_caller]
@@ -399,3 +400,25 @@ fn test_virtual_unique_ptr_debug() {
     assert_eq!(format!("{null_vp:^8?}"), "  null  ");
     assert_eq!(format!("{null_vp:_>8?}"), "____null");
 }
+
+#[gtest]
+fn test_unique_ptr_emplace() {
+    let rc = Arc::new(());
+    let up: unique_ptr<Arc<()>> = unique_ptr::emplace(rc.clone());
+    expect_true!(Arc::ptr_eq(&*up, &rc));
+    assert_drop_decrements_counter(&rc, up);
+}
+
+#[gtest]
+fn test_unique_ptr_emplace_not_unpin() {
+    let up: unique_ptr<NotUnpin> = unique_ptr::emplace(NotUnpin(42, PhantomPinned));
+    expect_eq!(up.0, 42);
+}
+
+#[gtest]
+fn test_unique_ptr_try_emplace_error() {
+    let result = unique_ptr::<Arc<()>>::try_emplace(ctor::ctor_error::<Arc<()>, _>("error"));
+    expect_true!(matches!(result, Err("error")));
+}
+
+struct NotUnpin(i32, PhantomPinned);

@@ -15,6 +15,7 @@ use core::fmt::{Debug, Formatter, Result};
 use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::Deref;
 use core::pin::Pin;
+use ctor::{Ctor, Infallible};
 
 /// A smart pointer that shares ownership of another object of type `T` via a pointer,
 /// ABI-compatible with `std::shared_ptr<T>`.
@@ -82,6 +83,48 @@ impl<T: Sized> shared_ptr<T> {
         };
 
         shared_ptr { ptr: &*inner.value, cntrl }
+    }
+
+    /// Creates a new `shared_ptr` and initializes the managed object in place from `ctor`.
+    ///
+    /// Like [`shared_ptr::new`], this performs a single heap allocation for both the control block
+    /// and the value. Unlike `shared_ptr::new`, it does not require `T` to be Rust-movable: the
+    /// object is constructed directly in its final heap location.
+    pub fn emplace(ctor: impl Ctor<Output = T, Error = Infallible>) -> Self {
+        let Ok(this) = Self::try_emplace(ctor);
+        this
+    }
+
+    /// Creates a new `shared_ptr` and initializes the managed object in place from `ctor`,
+    /// returning an error if initialization fails.
+    pub fn try_emplace<E>(ctor: impl Ctor<Output = T, Error = E>) -> core::result::Result<Self, E> {
+        let mut uninit = Box::new(MaybeUninit::<SharedInner<T>>::uninit());
+        let inner: *mut SharedInner<T> = uninit.as_mut_ptr();
+
+        // SAFETY: `inner` points to an uninitialized `SharedInner<T>`, so its `value` field is
+        // valid for writes and uninitialized. `ManuallyDrop<T>` is `repr(transparent)`, so the
+        // cast is valid. The allocation is never moved, so the value stays pinned. If `ctor`
+        // fails, `uninit` is deallocated without dropping anything.
+        unsafe { ctor.ctor((&raw mut (*inner).value).cast::<T>())? };
+
+        // `value` is now initialized. Leak the allocation: it is now owned by the control block,
+        // and freed by `SharedInner::<T>::deleter`, which reconstructs the `Box<SharedInner<T>>`.
+        // `MaybeUninit<SharedInner<T>>` has the same layout as `SharedInner<T>`.
+        let inner: *mut SharedInner<T> = Box::into_raw(uninit).cast();
+
+        // SAFETY: `(*inner).cntrl` is a valid location to write a `DynControlBlock` to, and
+        // `SharedInner::<T>::deleter` satisfies the C++ deleter callback preconditions, because
+        // `value` is initialized and `inner` was leaked from a `Box`.
+        let cntrl = unsafe {
+            DynControlBlock::Emplace(
+                (&raw mut (*inner).cntrl).cast::<DynControlBlock>(),
+                Some(SharedInner::<T>::deleter),
+            )
+        };
+
+        // SAFETY: `inner` points to a live `SharedInner<T>`.
+        let ptr = unsafe { (&raw const (*inner).value).cast::<T>() };
+        Ok(shared_ptr { ptr, cntrl })
     }
 
     /// Constructs a `shared_ptr<U>` by projecting the underlying `T` via `f`.
