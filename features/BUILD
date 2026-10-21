@@ -6,11 +6,22 @@ load(
 load(
     ":crubit_feature_hint.bzl",
     "crubit_feature_hint",
+    "crubit_global_features",
 )
 
 package(
     default_applicable_licenses = ["//:license"],
     default_visibility = ["//visibility:private"],
+)
+
+# Exposes `SUPPORTED_FEATURES` as a provider so that Crubit rules
+# and aspects do not load `global_features.bzl` directly in `.bzl` files (which would invalidate
+# the `.bzl` load digest of every Crubit rule/aspect on every feature update).
+crubit_global_features(
+    name = "global_features",
+    compatible_with = ["//buildenv/target:non_prod"],
+    supported_features = SUPPORTED_FEATURES,
+    visibility = ["//visibility:public"],
 )
 
 _EXPERIMENTAL_CLIENTS = [
@@ -402,7 +413,7 @@ bzl_library(
     visibility = [
         "//:__subpackages__",
     ],
-    deps = [":global_features_bzl"],
+    deps = ["@bazel_skylib//rules:common_settings"],
 )
 
 bzl_library(

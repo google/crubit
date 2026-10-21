@@ -58,12 +58,9 @@ load(
 load(
     "//features:crubit_feature_hint.bzl",
     "CrubitFeaturesInfo",
+    "CrubitGlobalFeaturesInfo",
     "find_crubit_features",
     "find_denied_crubit_features",
-)
-load(
-    "//features:global_features.bzl",
-    "SUPPORTED_FEATURES",
 )
 load(
     "//rs_bindings_from_cc/bazel_support:compile_rust.bzl",
@@ -236,14 +233,15 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
             arg = dep_bindings_info.crate_key + "=" + feature
             crubit_args.add("--crate-feature", arg)
 
+    supported_features = ctx.attr._global_features[CrubitGlobalFeaturesInfo].supported_features
     toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"]
     if toolchain != None:
         unsupported_features = getattr(toolchain.cc_bindings_from_rs_toolchain_info, "unsupported_features", [])
-        default_features = [f for f in SUPPORTED_FEATURES if f not in unsupported_features]
+        default_features = [f for f in supported_features if f not in unsupported_features]
         features = [f for f in features if f not in unsupported_features]
     else:
         unsupported_features = []
-        default_features = SUPPORTED_FEATURES
+        default_features = supported_features
 
     crubit_args.add("--default-features", ",".join(default_features))
 
@@ -658,6 +656,10 @@ private_common_attrs = {
     ),
     "_crubit_feature_denylists": attr.label(
         default = "//features/denylists:supported_feature_denylists",
+    ),
+    "_global_features": attr.label(
+        default = "//features:global_features",
+        providers = [CrubitGlobalFeaturesInfo],
     ),
     "_verbose_log_targets": attr.label(
         default = "//common/bazel_support:verbose_log_targets",

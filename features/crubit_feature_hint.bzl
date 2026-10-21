@@ -51,6 +51,33 @@ crubit_feature_hint = rule(
     provides = [CrubitFeaturesInfo],
 )
 
+# `global_features.bzl` is passed via a `BUILD` target (`//features:global_features`)
+# rather than a top-level `.bzl` `load()` so that edits to `SUPPORTED_FEATURES`
+# do not mutate the transitive `.bzl` load digest (`$internal_attr_hash`) of Crubit rules
+# and aspects across the repository.
+CrubitGlobalFeaturesInfo = provider(
+    doc = "Global Crubit default features.",
+    fields = {
+        "supported_features": "list[str]: Features enabled by default in `//features:supported`.",
+    },
+)
+
+def _crubit_global_features_impl(ctx):
+    return [CrubitGlobalFeaturesInfo(
+        supported_features = ctx.attr.supported_features,
+    )]
+
+crubit_global_features = rule(
+    attrs = {
+        "supported_features": attr.string_list(
+            doc = "Features enabled by default in `//features:supported`.",
+            mandatory = True,
+        ),
+    },
+    implementation = _crubit_global_features_impl,
+    provides = [CrubitGlobalFeaturesInfo],
+)
+
 def _add_features(features, target):
     # Starlark doesn't have sets, so the following is O(n^2) for convenience.
     if CrubitFeaturesInfo not in target:

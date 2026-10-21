@@ -24,7 +24,6 @@ bzl_library(
         ":providers_bzl",
         "//common/bazel_support:cc_info_util_bzl",
         "//features:crubit_feature_hint_bzl",
-        "//features:global_features_bzl",
         "//rs_bindings_from_cc/bazel_support:compile_rust_bzl",
         "//rs_bindings_from_cc/bazel_support:providers_bzl",
         "@bazel_skylib//rules:common_settings",
