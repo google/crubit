@@ -420,6 +420,20 @@ where
     msg: &'a str,
 }
 
+#[cold]
+#[inline(never)]
+#[track_caller]
+fn ctor_expect_failed(msg: &str, error: &dyn Debug) -> ! {
+    panic!("{msg}: {error:?}");
+}
+
+#[cold]
+#[inline(never)]
+#[track_caller]
+fn ctor_unwrap_failed(type_name: &'static str, error: &dyn Debug) -> ! {
+    panic!("Construction of {type_name} failed: {error:?}");
+}
+
 impl<'a, C> !SelfCtor for CtorExpect<'a, C> where C: Ctor {}
 
 unsafe impl<'a, C> Ctor for CtorExpect<'a, C>
@@ -429,9 +443,12 @@ where
 {
     type Output = C::Output;
     type Error = Infallible;
+    #[track_caller]
     unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
         unsafe {
-            self.ctor.ctor(dest).unwrap_or_else(|e| panic!("{}: {:?}", self.msg, e));
+            if let Err(e) = self.ctor.ctor(dest) {
+                ctor_expect_failed(self.msg, &e);
+            }
             Ok(())
         }
     }
@@ -454,14 +471,12 @@ where
 {
     type Output = C::Output;
     type Error = Infallible;
+    #[track_caller]
     unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
         unsafe {
-            self.ctor.ctor(dest).unwrap_or_else(|e| {
-                panic!(
-                    "Construction of {type_name} failed: {e:?}",
-                    type_name = core::any::type_name::<C::Output>(),
-                )
-            });
+            if let Err(e) = self.ctor.ctor(dest) {
+                ctor_unwrap_failed(core::any::type_name::<C::Output>(), &e);
+            }
             Ok(())
         }
     }
@@ -1721,6 +1736,37 @@ pub unsafe fn reconstruct<T>(p: Pin<&mut T>, ctor: impl Ctor<Output = T, Error =
     });
 }
 
+#[cold]
+#[inline(never)]
+fn abort_on_unwind_failed() -> ! {
+    panic!("Unwinding occurred when no safe recovery is possible.");
+}
+
+/// A safety guard which panics if dropped, converting unwinds into aborts.
+///
+/// In general, you can't, as the *author* of drop(), assume that it will be
+/// called: callers can just call std::mem::forget(), among other
+/// things. However, as the *user*, you can know that drop is called for
+/// unmoved values at the end of a drop scope. Drop is a defined behavior.
+/// So while there is ordinarily a prohibition on relying on drop for
+/// safety, that only occurs for API owners that are allowing values to
+/// be used in arbitrary ways (including forget). Here, we are API
+/// *users* as well, and specifically using the Bomb in a way that
+/// guarantees its drop will be called in a particular circumstance.
+///
+/// See https://doc.rust-lang.org/reference/destructors.html, specifically this: "When control
+/// flow leaves a drop scope all variables associated to that scope are
+/// dropped in reverse order of declaration (for variables) or creation
+/// (for temporaries)."
+struct Bomb;
+impl Drop for Bomb {
+    #[cold]
+    #[inline(never)]
+    fn drop(&mut self) {
+        abort_on_unwind_failed();
+    }
+}
+
 /// Run f, aborting if it unwinds.
 ///
 /// Because this aborts on unwind, f is not required to be unwind-safe.
@@ -1737,29 +1783,6 @@ fn abort_on_unwind<T, F: FnOnce() -> T>(f: F) -> T {
     // This would work, even for `extern "C-unwind"`, but that wasn't
     // always the case. See https://doc.rust-lang.org/std/panic/fn.catch_unwind.html#notes
     // and compare with https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html
-
-    /// A safety guard which panics if dropped, converting unwinds into aborts.
-    ///
-    /// In general, you can't, as the *author* of drop(), assume that it will be
-    /// called: callers can just call std::mem::forget(), among other
-    /// things. However, as the *user*, you can know that drop is called for
-    /// unmoved values at the end of a drop scope. Drop is a defined behavior.
-    /// So while there is ordinarily a prohibition on relying on drop for
-    /// safety, that only occurs for API owners that are allowing values to
-    /// be used in arbitrary ways (including forget). Here, we are API
-    /// *users* as well, and specifically using the Bomb in a way that
-    /// guarantees its drop will be called in a particular circumstance.
-    ///
-    /// See https://doc.rust-lang.org/reference/destructors.html, specifically this: "When control
-    /// flow leaves a drop scope all variables associated to that scope are
-    /// dropped in reverse order of declaration (for variables) or creation
-    /// (for temporaries)."
-    struct Bomb;
-    impl Drop for Bomb {
-        fn drop(&mut self) {
-            panic!("Unwinding occurred when no safe recovery is possible.");
-        }
-    }
 
     let bomb = Bomb;
     let rv = f();
