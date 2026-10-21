@@ -44,6 +44,8 @@ golden_test(
         "macos",
     ],
     rust_library = "non_trivially_destructible",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 crubit_cc_test(
@@ -53,6 +55,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":non_trivially_destructible_cc_api",
         "@googletest//:gtest_main",

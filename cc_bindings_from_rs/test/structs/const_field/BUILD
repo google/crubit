@@ -60,11 +60,15 @@ golden_test(
     golden_h = "const_field_cc_api.h",
     golden_rs = "const_field_cc_api_impl.rs",
     rust_library = "const_field",
+    # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
+    tags = ["no_windows"],
 )
 
 crubit_cc_test(
     name = "test",
     srcs = ["test.cc"],
+    # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
+    tags = ["no_windows"],
     deps = [
         ":cc_struct",
         ":lib_cc_api",
