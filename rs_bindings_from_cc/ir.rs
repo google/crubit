@@ -25,6 +25,8 @@ use std::fmt::{self, Debug, Display};
 use std::hash::Hash;
 use std::rc::Rc;
 
+pub mod ir_ffi_support;
+pub mod ir_generated;
 mod proto_to_ir;
 pub use proto_to_ir::proto_to_ir;
 
