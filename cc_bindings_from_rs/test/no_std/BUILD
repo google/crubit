@@ -2,7 +2,6 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
-load("@rules_rust//rust:rust_make_no_std.bzl", "rust_make_no_std")
 load(
     "//bazel:cpp_api_from_rust.bzl",
     "cpp_api_from_rust",
@@ -36,12 +35,6 @@ golden_test(
         "macos",
     ],
     rust_library = "no_std",
-)
-
-rust_make_no_std(
-    name = "make_no_std_no_std",
-    testonly = 1,
-    deps = [":no_std"],
 )
 
 cpp_api_from_rust(

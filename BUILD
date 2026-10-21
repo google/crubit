@@ -12,4 +12,7 @@ license(
 
 licenses(["notice"])
 
-exports_files(["LICENSE"])
+exports_files([
+    "LICENSE",
+    "rustfmt.toml",
+])

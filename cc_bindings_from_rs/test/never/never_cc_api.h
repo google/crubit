@@ -6,8 +6,8 @@
 // never_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NEVER_NEVER_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NEVER_NEVER_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_NEVER_NEVER_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_NEVER_NEVER_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -110,4 +110,4 @@ inline void never_return() {
 }  // namespace never
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NEVER_NEVER_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_NEVER_NEVER_GOLDEN

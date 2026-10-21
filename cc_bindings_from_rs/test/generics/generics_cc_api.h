@@ -6,8 +6,8 @@
 // generics_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GENERICS_GENERICS_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GENERICS_GENERICS_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_GENERICS_GENERICS_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_GENERICS_GENERICS_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -31,4 +31,4 @@ struct MultiGenericStruct {
 }  // namespace generics
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GENERICS_GENERICS_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_GENERICS_GENERICS_GOLDEN

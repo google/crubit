@@ -6,8 +6,8 @@
 // do_not_bind_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_DO_NOT_BIND_DO_NOT_BIND_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_DO_NOT_BIND_DO_NOT_BIND_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_DO_NOT_BIND_DO_NOT_BIND_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_DO_NOT_BIND_DO_NOT_BIND_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -99,4 +99,4 @@ rs_std::impl<::do_not_bind::Struct, ::do_not_bind::Trait>::bound_trait_method(
 }
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_DO_NOT_BIND_DO_NOT_BIND_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_DO_NOT_BIND_DO_NOT_BIND_GOLDEN

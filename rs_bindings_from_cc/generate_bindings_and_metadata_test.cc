@@ -50,7 +50,7 @@ Cmdline MakeCmdline(std::string header) {
       .crubit_support_path_format = "<crubit/support/path/{header}>",
       .clang_format_exe_path = std::string(ClangFormatExePath()),
       .rustfmt_exe_path = std::string(RustfmtExePath()),
-      .rustfmt_config_path = "nowhere/rustfmt.toml",
+      .rustfmt_config_path = "rustfmt.toml",
       .is_golden_test = false,
       .public_headers = {HeaderName(header)},
   };

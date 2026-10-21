@@ -6,8 +6,8 @@
 // example_crate_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TRAIT_EXAMPLE_CRATE_GOLDEN
-#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TRAIT_EXAMPLE_CRATE_GOLDEN
+#ifndef EXAMPLES_RUST_TRAIT_EXAMPLE_CRATE_GOLDEN
+#define EXAMPLES_RUST_TRAIT_EXAMPLE_CRATE_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -153,4 +153,4 @@ rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::describe(
 }
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TRAIT_EXAMPLE_CRATE_GOLDEN
+#endif  // EXAMPLES_RUST_TRAIT_EXAMPLE_CRATE_GOLDEN

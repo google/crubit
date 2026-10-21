@@ -6,8 +6,8 @@
 // result_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_RESULT_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_RESULT_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_ENUMS_RESULT_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_ENUMS_RESULT_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -4178,4 +4178,4 @@ inline constexpr rs_std::Result<::std::uint32_t, ::std::uint8_t>::Result(
 #endif
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_RESULT_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_ENUMS_RESULT_GOLDEN

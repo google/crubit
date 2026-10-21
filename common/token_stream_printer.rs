@@ -50,7 +50,10 @@ impl RustfmtConfig {
     }
 
     fn default_cmdline_args() -> Vec<OsString> {
-        Self::append_config_overrides(vec!["--edition=2021".into(), "--config=version=Two".into()])
+        Self::append_config_overrides(vec![
+            "--edition=2021".into(),
+            "--config=style_edition=2024".into(),
+        ])
     }
 
     fn append_config_overrides(mut cmdline_args: Vec<OsString>) -> Vec<OsString> {

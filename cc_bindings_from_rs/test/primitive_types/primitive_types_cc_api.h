@@ -6,8 +6,8 @@
 // primitive_types_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_PRIMITIVE_TYPES_PRIMITIVE_TYPES_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_PRIMITIVE_TYPES_PRIMITIVE_TYPES_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_PRIMITIVE_TYPES_PRIMITIVE_TYPES_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_PRIMITIVE_TYPES_PRIMITIVE_TYPES_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -650,4 +650,4 @@ maybe_uninit_ref_mut(::std::int32_t* $static maybe_uninit) {
 }  // namespace primitive_types::test_maybe_uninit
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_PRIMITIVE_TYPES_PRIMITIVE_TYPES_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_PRIMITIVE_TYPES_PRIMITIVE_TYPES_GOLDEN

@@ -6,8 +6,8 @@
 // cpp_enums_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -89,4 +89,4 @@ inline ::cpp_enums::forward_declared_enum::B AFunction() {
 }  // namespace cpp_enums::forward_declared_enum
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN

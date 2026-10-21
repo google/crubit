@@ -181,7 +181,7 @@ where
 /// ```
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "{Ptr} crubit_nonnull",
-    include_path = "<crubit/support/annotations_internal.h>"
+    include_path = "support/annotations_internal.h"
 )]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]

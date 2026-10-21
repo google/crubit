@@ -6,8 +6,8 @@
 // shared_ptr_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_SHARED_PTR_SHARED_PTR_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_SHARED_PTR_SHARED_PTR_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_BRIDGING_SHARED_PTR_SHARED_PTR_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_BRIDGING_SHARED_PTR_SHARED_PTR_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -133,4 +133,4 @@ roundtrip_shared_ptr(::std::shared_ptr<::std::int32_t> crubit_nonnull val) {
 }  // namespace shared_ptr
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_SHARED_PTR_SHARED_PTR_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_BRIDGING_SHARED_PTR_SHARED_PTR_GOLDEN

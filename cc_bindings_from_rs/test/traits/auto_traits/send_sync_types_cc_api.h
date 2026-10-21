@@ -6,8 +6,8 @@
 // send_sync_types_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_AUTO_TRAITS_SEND_SYNC_TYPES_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_AUTO_TRAITS_SEND_SYNC_TYPES_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_TRAITS_AUTO_TRAITS_SEND_SYNC_TYPES_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_TRAITS_AUTO_TRAITS_SEND_SYNC_TYPES_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -208,4 +208,4 @@ inline void ::send_sync_types::SyncButNotSend::
 }  // namespace send_sync_types
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_AUTO_TRAITS_SEND_SYNC_TYPES_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_TRAITS_AUTO_TRAITS_SEND_SYNC_TYPES_GOLDEN

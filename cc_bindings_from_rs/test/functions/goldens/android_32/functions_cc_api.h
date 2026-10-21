@@ -6,8 +6,8 @@
 // functions_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -1239,4 +1239,4 @@ $(__anon1) rs_std::impl<
 }
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN

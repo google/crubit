@@ -6,8 +6,8 @@
 // tuples_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TUPLES_TUPLES_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TUPLES_TUPLES_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_TUPLES_TUPLES_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_TUPLES_TUPLES_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -4895,4 +4895,4 @@ inline constexpr rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::
 #endif
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TUPLES_TUPLES_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_TUPLES_TUPLES_GOLDEN

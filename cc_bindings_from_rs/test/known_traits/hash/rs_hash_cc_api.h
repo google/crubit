@@ -6,8 +6,8 @@
 // rs_hash_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_HASH_RS_HASH_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_HASH_RS_HASH_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_HASH_RS_HASH_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_HASH_RS_HASH_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -579,4 +579,4 @@ inline ::rs_hash::explicit_struct::CustomHashStruct create_custom(
 }  // namespace rs_hash::explicit_struct
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_HASH_RS_HASH_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_HASH_RS_HASH_GOLDEN

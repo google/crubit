@@ -6,8 +6,8 @@
 // compare_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_COMPARE_COMPARE_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_COMPARE_COMPARE_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_COMPARE_COMPARE_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_COMPARE_COMPARE_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -385,4 +385,4 @@ inline rs_std::Option<::std::int32_t>::Option(::std::in_place_t ip,
 #endif
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_COMPARE_COMPARE_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_COMPARE_COMPARE_GOLDEN

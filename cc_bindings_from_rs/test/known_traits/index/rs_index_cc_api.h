@@ -6,8 +6,8 @@
 // rs_index_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INDEX_RS_INDEX_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INDEX_RS_INDEX_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INDEX_RS_INDEX_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INDEX_RS_INDEX_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -338,4 +338,4 @@ inline void ::rs_index::Map::__crubit_field_offset_assertions() {
 }  // namespace rs_index
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INDEX_RS_INDEX_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INDEX_RS_INDEX_GOLDEN

@@ -6,8 +6,8 @@
 // uses_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -282,4 +282,4 @@ inline ::extern_crate::Y return_y() {
 }  // namespace uses
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN

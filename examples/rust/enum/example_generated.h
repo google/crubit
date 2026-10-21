@@ -6,8 +6,8 @@
 // example_crate_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN
-#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN
+#ifndef EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN
+#define EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -110,4 +110,4 @@ inline void ::example_crate::Color::__crubit_field_offset_assertions() {
 }  // namespace example_crate
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN
+#endif  // EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN

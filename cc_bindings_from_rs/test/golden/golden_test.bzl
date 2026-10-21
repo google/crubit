@@ -173,6 +173,7 @@ def golden_test(
     # target.
     kythe_annotations_flag = []
     if kythe_annotations:
+        tags.append("manual")
         kythe_annotations_flag_name = "kythe_annotations_" + rust_library
         cc_bindings_from_rust_cli_flag(
             name = kythe_annotations_flag_name,

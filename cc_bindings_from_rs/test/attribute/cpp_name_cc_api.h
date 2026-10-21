@@ -6,8 +6,8 @@
 // cpp_name_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_CPP_NAME_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_CPP_NAME_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_CPP_NAME_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_CPP_NAME_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -63,4 +63,4 @@ inline void ::cpp_name::Replaced::__crubit_field_offset_assertions() {
 }  // namespace cpp_name
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_CPP_NAME_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_CPP_NAME_GOLDEN

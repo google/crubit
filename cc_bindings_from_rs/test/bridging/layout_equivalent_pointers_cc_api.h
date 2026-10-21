@@ -6,8 +6,8 @@
 // layout_equivalent_pointers_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_LAYOUT_EQUIVALENT_POINTERS_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_LAYOUT_EQUIVALENT_POINTERS_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_BRIDGING_LAYOUT_EQUIVALENT_POINTERS_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_BRIDGING_LAYOUT_EQUIVALENT_POINTERS_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -71,4 +71,4 @@ inline CppType* test_format_return_type_pointer_like() {
 }  // namespace layout_equivalent_pointers::test_format_return_type_pointer_like
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_LAYOUT_EQUIVALENT_POINTERS_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_BRIDGING_LAYOUT_EQUIVALENT_POINTERS_GOLDEN

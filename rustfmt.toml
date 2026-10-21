@@ -1,0 +1,11 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+edition = "2024"
+style_edition = "2021"
+use_small_heuristics = "Max"
+newline_style = "Unix"
+wrap_comments = true
+comment_width = 100
+format_generated_files = false

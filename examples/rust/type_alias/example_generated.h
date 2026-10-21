@@ -6,8 +6,8 @@
 // example_crate_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN
-#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN
+#ifndef EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN
+#define EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -26,4 +26,4 @@ using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
 }
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN
+#endif  // EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN

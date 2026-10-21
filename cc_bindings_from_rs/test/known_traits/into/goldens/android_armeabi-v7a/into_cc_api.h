@@ -6,8 +6,8 @@
 // into_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INTO_INTO_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INTO_INTO_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INTO_INTO_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INTO_INTO_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -767,4 +767,4 @@ inline void ::into::NotFfiSafe::__crubit_field_offset_assertions() {
 }  // namespace into
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INTO_INTO_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INTO_INTO_GOLDEN

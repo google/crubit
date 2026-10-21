@@ -6,8 +6,8 @@
 // uses_reexport_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_REEXPORT_USES_REEXPORT_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_REEXPORT_USES_REEXPORT_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_USES_REEXPORT_USES_REEXPORT_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_USES_REEXPORT_USES_REEXPORT_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -315,4 +315,4 @@ inline ::std::int32_t g2() { return __crubit_internal::__crubit_thunk_g2(); }
 }  // namespace uses_reexport
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_REEXPORT_USES_REEXPORT_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_USES_REEXPORT_USES_REEXPORT_GOLDEN

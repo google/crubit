@@ -6,8 +6,8 @@
 // modules_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MODULES_MODULES_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MODULES_MODULES_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_MODULES_MODULES_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_MODULES_MODULES_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -156,4 +156,4 @@ inline void ::modules::impl_in_separate_private_module::Foo::
 }  // namespace modules::impl_in_separate_private_module
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MODULES_MODULES_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_MODULES_MODULES_GOLDEN

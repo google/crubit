@@ -6,8 +6,8 @@
 // std_os_fd_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_STD_OS_FD_STD_OS_FD_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_STD_OS_FD_STD_OS_FD_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_USES_STD_OS_FD_STD_OS_FD_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_USES_STD_OS_FD_STD_OS_FD_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -35,4 +35,4 @@ namespace std_os_fd {
 }  // namespace std_os_fd
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_STD_OS_FD_STD_OS_FD_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_USES_STD_OS_FD_STD_OS_FD_GOLDEN

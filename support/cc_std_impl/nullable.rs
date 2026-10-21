@@ -60,7 +60,7 @@ pub unsafe trait SupportsNullable: Sized {
 /// soon as possible using [`OptionLike`]: see the [module documentation](self) for why.
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "{Ptr} crubit_nullable",
-    include_path = "<crubit/support/annotations_internal.h>"
+    include_path = "support/annotations_internal.h"
 )]
 #[repr(transparent)]
 pub struct Nullable<Ptr: SupportsNullable> {

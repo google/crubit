@@ -6,8 +6,8 @@
 // arrays_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ARRAYS_ARRAYS_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ARRAYS_ARRAYS_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_ARRAYS_ARRAYS_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_ARRAYS_ARRAYS_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -572,4 +572,4 @@ inline void ::rs_std::Tuple<
 #endif
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ARRAYS_ARRAYS_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_ARRAYS_ARRAYS_GOLDEN

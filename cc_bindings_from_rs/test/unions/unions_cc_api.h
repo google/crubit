@@ -6,8 +6,8 @@
 // unions_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_UNIONS_UNIONS_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_UNIONS_UNIONS_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_UNIONS_UNIONS_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_UNIONS_UNIONS_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -691,4 +691,4 @@ inline ::unions::repr_rust_packed::U create() {
 }  // namespace unions::repr_rust_packed
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_UNIONS_UNIONS_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_UNIONS_UNIONS_GOLDEN

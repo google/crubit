@@ -6,8 +6,8 @@
 // callables_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_CALLABLES_CALLABLES_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_CALLABLES_CALLABLES_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_CALLABLES_CALLABLES_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_CALLABLES_CALLABLES_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -1447,4 +1447,4 @@ inline rs_std::Option<::std::int32_t>::Option(::std::in_place_t ip,
 #endif
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_CALLABLES_CALLABLES_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_CALLABLES_CALLABLES_GOLDEN

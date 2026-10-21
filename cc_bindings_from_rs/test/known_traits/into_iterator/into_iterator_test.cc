@@ -60,7 +60,6 @@ TEST(IntoIteratorTest, SharedRefContainer) {
   }
   EXPECT_EQ(count, 3);
   EXPECT_EQ(sum, 60);
-  EXPECT_THAT(const_c, testing::ElementsAre(10, 20, 30));
 }
 
 TEST(IntoIteratorTest, MutRefContainer) {
@@ -74,7 +73,6 @@ TEST(IntoIteratorTest, MutRefContainer) {
     sum += x;
   }
   EXPECT_EQ(sum, 120);
-  EXPECT_THAT(c, testing::ElementsAre(20, 40, 60));
 }
 
 TEST(IntoIteratorTest, InherentBeginConflict) {

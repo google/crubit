@@ -6,8 +6,8 @@
 // structs_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_STRUCTS_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_STRUCTS_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_STRUCTS_STRUCTS_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_STRUCTS_STRUCTS_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -1704,4 +1704,4 @@ inline ::std::int32_t get_value(::structs::zst_fields::ZstFields x) {
 }  // namespace structs::zst_fields
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_STRUCTS_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_STRUCTS_STRUCTS_GOLDEN

@@ -18,6 +18,6 @@ path = "../../../cc_bindings_from_rs/run_compiler_test_support.rs"
 doctest = false
 
 [dependencies]
-tempfile.workspace = true
 itertools.workspace = true
+tempfile.workspace = true
 rustversion = { path = "../../../cargo/cc_bindings_from_rs/rustversion", package = "cc_bindings_from_rs_rustversion"}

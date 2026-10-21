@@ -6,8 +6,8 @@
 // async_fn_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ASYNC_FN_ASYNC_FN_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ASYNC_FN_ASYNC_FN_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_ASYNC_FN_ASYNC_FN_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_ASYNC_FN_ASYNC_FN_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -19,7 +19,6 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/dyn_erased_future.h"
-#include "support/rs_std/run_crubit_future.h"
 #include "support/rs_std/slice_ref.h"
 
 #include <cstddef>
@@ -332,4 +331,4 @@ inline ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
 }  // namespace async_fn
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ASYNC_FN_ASYNC_FN_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_ASYNC_FN_ASYNC_FN_GOLDEN

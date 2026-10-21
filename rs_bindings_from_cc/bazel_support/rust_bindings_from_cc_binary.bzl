@@ -53,7 +53,7 @@ rust_bindings_from_cc_binary = rule(
             cfg = "exec",
         ),
         "_rustfmt_cfg": attr.label(
-            default = "@rules_rust//rust/settings:rustfmt.toml",
+            default = "//:rustfmt.toml",
             allow_single_file = True,
         ),
     },

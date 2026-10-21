@@ -6,8 +6,8 @@
 // move_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -296,4 +296,4 @@ inline ::move::UnmovableFoo new_unmovable_foo(::std::uint8_t byte) {
 }  // namespace move
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN

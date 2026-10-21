@@ -6,8 +6,8 @@
 // bridged_types_golden
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_BRIDGED_TYPES_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_BRIDGED_TYPES_GOLDEN
+#ifndef CC_BINDINGS_FROM_RS_TEST_BRIDGING_BRIDGED_TYPES_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_BRIDGING_BRIDGED_TYPES_GOLDEN
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -142,4 +142,4 @@ inline cpp_ns::CppType test_format_bridged_return_type_by_value() {
 }  // namespace bridged_types::test_format_bridged_return_type_by_value
 
 #pragma clang diagnostic pop
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_BRIDGED_TYPES_GOLDEN
+#endif  // CC_BINDINGS_FROM_RS_TEST_BRIDGING_BRIDGED_TYPES_GOLDEN
