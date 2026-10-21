@@ -9,18 +9,24 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/hash/hash_testing.h"
 #include "support/rs_std/enum.h"
+#include "support/rs_std/option.h"
 
 namespace {
 
 using ::enum_api_v2::ClonedEnum;
+using ::enum_api_v2::CollidesWithDiscriminant;
 using ::enum_api_v2::Command;
 using ::enum_api_v2::CustomDropEnum;
+using ::enum_api_v2::Instruction;
 using ::enum_api_v2::MaybeRef;
 using ::enum_api_v2::MaybeTracked;
 using ::enum_api_v2::MoveOnlyOuter;
 using ::enum_api_v2::NestedMaybeTracked;
+using ::enum_api_v2::NonExhaustive;
 using ::enum_api_v2::PayloadTracker;
+using ::enum_api_v2::Route;
 using ::enum_api_v2::Shape;
 using ::enum_api_v2::Sign;
 using ::enum_api_v2::TaggedEntry;
@@ -255,6 +261,65 @@ TEST(EnumApiV2Test, CustomDropImpl) {
     CustomDropEnum e = CustomDropEnum::Empty::Make();
     return 0;
   }>);
+}
+
+TEST(EnumApiV2Test, MethodsAndConstants) {
+  static_assert(Instruction::MAX_STEPS == 100);
+  Instruction clamped = Instruction::walk_clamped(250);
+  EXPECT_THAT(rs::get_if<Instruction::Walk>(&clamped),
+              Pointee(Field(&Instruction::Walk::__field0, 100)));
+
+  EXPECT_EQ(Instruction::Walk::Make(7).steps(), 7);
+  EXPECT_EQ(Instruction::TurnLeft::Make().steps(), 0);
+
+  Instruction turn = Instruction::TurnLeft::Make();
+  turn.reverse();
+  EXPECT_TRUE(rs::holds_alternative<Instruction::TurnRight>(turn));
+}
+
+TEST(EnumApiV2Test, DerivedTraits) {
+  // `Default` calls into Rust.
+  EXPECT_TRUE(rs::holds_alternative<Instruction::TurnLeft>(Instruction()));
+
+  // `PartialEq` compares variants and payloads.
+  EXPECT_EQ(Instruction::Walk::Make(3), Instruction::Walk::Make(3));
+  EXPECT_NE(Instruction::Walk::Make(3), Instruction::Walk::Make(4));
+  EXPECT_NE(Instruction::TurnLeft::Make(), Instruction::TurnRight::Make());
+
+  // `Hash`.
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({
+      Instruction::TurnLeft::Make(),
+      Instruction::TurnRight::Make(),
+      Instruction::Walk::Make(1),
+      Instruction::Walk::Make(2),
+  }));
+}
+
+TEST(EnumApiV2Test, StructFieldAndOption) {
+  Route route;
+  EXPECT_TRUE(rs::holds_alternative<Instruction::TurnLeft>(route.first_step));
+  EXPECT_FALSE(route.next_step.has_value());
+  EXPECT_EQ(enum_api_v2::total_steps(route), 0);
+
+  route.first_step = Instruction::Walk::Make(10);
+  route.next_step = rs_std::Option<Instruction>(Instruction::Walk::Make(5));
+  ASSERT_TRUE(route.next_step.has_value());
+  EXPECT_THAT(rs::get_if<Instruction::Walk>(&*route.next_step),
+              Pointee(Field(&Instruction::Walk::__field0, 5)));
+  EXPECT_EQ(enum_api_v2::total_steps(route), 15);
+}
+
+TEST(EnumApiV2Test, FallbackKeepsMakeV) {
+  EXPECT_EQ(
+      enum_api_v2::collides_value(CollidesWithDiscriminant::MakeDiscriminant()),
+      -1);
+  EXPECT_EQ(enum_api_v2::collides_value(CollidesWithDiscriminant::MakeOther(3)),
+            3);
+}
+
+TEST(EnumApiV2Test, NonExhaustive) {
+  EXPECT_EQ(enum_api_v2::non_exhaustive_value(NonExhaustive::A::Make()), -1);
+  EXPECT_EQ(enum_api_v2::non_exhaustive_value(NonExhaustive::B::Make(8)), 8);
 }
 
 }  // namespace

@@ -35,6 +35,8 @@ crubit_cc_test(
     deps = [
         ":enum_api_v2_cc_api",
         "//support/rs_std:enum",
+        "//support/rs_std:option",
+        "@abseil-cpp//absl/hash:hash_testing",
         "@googletest//:gtest_main",
     ],
 )

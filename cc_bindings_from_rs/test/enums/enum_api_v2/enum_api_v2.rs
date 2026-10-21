@@ -255,3 +255,77 @@ pub enum CustomDropEnum {
 impl Drop for CustomDropEnum {
     fn drop(&mut self) {}
 }
+
+/// Methods, associated functions and constants on an `EnumApiV2` enum coexist with its variant
+/// structs.
+#[derive(Clone, Copy, Default, PartialEq, Eq, Hash)]
+pub enum Instruction {
+    #[default]
+    TurnLeft,
+    TurnRight,
+    Walk(u8),
+}
+
+impl Instruction {
+    pub const MAX_STEPS: u8 = 100;
+
+    pub fn walk_clamped(steps: u8) -> Instruction {
+        Instruction::Walk(steps.min(Self::MAX_STEPS))
+    }
+
+    pub fn steps(&self) -> u8 {
+        match *self {
+            Instruction::Walk(steps) => steps,
+            Instruction::TurnLeft | Instruction::TurnRight => 0,
+        }
+    }
+
+    pub fn reverse(&mut self) {
+        *self = match *self {
+            Instruction::TurnLeft => Instruction::TurnRight,
+            Instruction::TurnRight => Instruction::TurnLeft,
+            Instruction::Walk(steps) => Instruction::Walk(steps),
+        };
+    }
+}
+
+/// An `EnumApiV2` enum as a struct field, and in `Option`.
+#[derive(Clone, Copy, Default)]
+pub struct Route {
+    pub first_step: Instruction,
+    pub next_step: Option<Instruction>,
+}
+
+pub fn total_steps(route: Route) -> u8 {
+    route.first_step.steps() + route.next_step.map_or(0, |step| step.steps())
+}
+
+/// A variant named `Discriminant` collides with the enum's `Discriminant` type alias, so this enum
+/// falls back to the opaque blob of bytes and keeps the `MakeV` constructors.
+#[derive(Clone, Copy)]
+pub enum CollidesWithDiscriminant {
+    Discriminant,
+    Other(i32),
+}
+
+pub fn collides_value(c: CollidesWithDiscriminant) -> i32 {
+    match c {
+        CollidesWithDiscriminant::Discriminant => -1,
+        CollidesWithDiscriminant::Other(value) => value,
+    }
+}
+
+/// `#[non_exhaustive]` only restricts other Rust crates, so it doesn't stop `EnumApiV2`.
+#[derive(Clone, Copy)]
+#[non_exhaustive]
+pub enum NonExhaustive {
+    A,
+    B(i32),
+}
+
+pub fn non_exhaustive_value(e: NonExhaustive) -> i32 {
+    match e {
+        NonExhaustive::A => -1,
+        NonExhaustive::B(value) => value,
+    }
+}
