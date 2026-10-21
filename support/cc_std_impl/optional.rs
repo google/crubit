@@ -27,6 +27,7 @@ pub struct trivial_optional<T> {
 
 impl<T: Copy> Copy for trivial_optional<T> {}
 impl<T: Copy> Clone for trivial_optional<T> {
+    #[inline]
     fn clone(&self) -> Self {
         *self
     }
@@ -34,6 +35,7 @@ impl<T: Copy> Clone for trivial_optional<T> {
 
 impl<T> trivial_optional<T> {
     /// Returns a `trivial_optional` which does not contain a value (C++ `std::nullopt`).
+    #[inline]
     pub const fn nullopt() -> Self
     where
         T: Copy,
@@ -42,6 +44,7 @@ impl<T> trivial_optional<T> {
     }
 
     /// Returns a `trivial_optional` containing `value`.
+    #[inline]
     pub const fn new(value: T) -> Self
     where
         T: Copy,
@@ -50,16 +53,19 @@ impl<T> trivial_optional<T> {
     }
 
     /// Returns true if the `trivial_optional` contains a value.
+    #[inline]
     pub const fn is_some(&self) -> bool {
         self.engaged
     }
 
     /// Returns true if the `trivial_optional` does not contain a value.
+    #[inline]
     pub const fn is_none(&self) -> bool {
         !self.engaged
     }
 
     /// Returns a reference to the contained value, if any.
+    #[inline]
     pub const fn as_ref(&self) -> Option<&T> {
         if self.engaged {
             // SAFETY: payload is initialized because engaged is true.
@@ -70,6 +76,7 @@ impl<T> trivial_optional<T> {
     }
 
     /// Returns a mutable reference to the contained value, if any.
+    #[inline]
     pub const fn as_mut(&mut self) -> Option<&mut T> {
         if self.engaged {
             // SAFETY: payload is initialized because engaged is true.
@@ -83,6 +90,7 @@ impl<T> trivial_optional<T> {
     ///
     /// Use this when the `trivial_optional` is pinned; otherwise use
     /// [`as_mut`](trivial_optional::as_mut).
+    #[inline]
     pub const fn as_pin_mut(self: Pin<&mut Self>) -> Option<Pin<&mut T>> {
         // SAFETY: we never move out of `this`, and the payload is pinned whenever `self` is.
         let this = unsafe { Pin::into_inner_unchecked(self) };
@@ -94,6 +102,7 @@ impl<T> trivial_optional<T> {
     }
 
     /// Removes the contained value, if any, leaving the `trivial_optional` empty.
+    #[inline]
     pub const fn take(&mut self) -> Option<T> {
         if self.engaged {
             // Clear the flag first, so that the payload is not read (or dropped) twice if
@@ -109,12 +118,14 @@ impl<T> trivial_optional<T> {
 }
 
 impl<T: Copy> Default for trivial_optional<T> {
+    #[inline]
     fn default() -> Self {
         trivial_optional::nullopt()
     }
 }
 
 impl<T: PartialEq> PartialEq for trivial_optional<T> {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.as_ref() == other.as_ref()
     }
@@ -123,6 +134,7 @@ impl<T: PartialEq> PartialEq for trivial_optional<T> {
 impl<T: Eq> Eq for trivial_optional<T> {}
 
 impl<T: Copy> From<Option<T>> for trivial_optional<T> {
+    #[inline]
     fn from(value: Option<T>) -> Self {
         match value {
             Some(value) => trivial_optional::new(value),
@@ -132,6 +144,7 @@ impl<T: Copy> From<Option<T>> for trivial_optional<T> {
 }
 
 impl<T> From<trivial_optional<T>> for Option<T> {
+    #[inline]
     fn from(mut value: trivial_optional<T>) -> Self {
         value.take()
     }
@@ -172,31 +185,37 @@ pub struct optional<T> {
 
 impl<T> optional<T> {
     /// Returns an `optional` which does not contain a value (C++ `std::nullopt`).
+    #[inline]
     pub const fn nullopt() -> Self {
         optional { inner: trivial_optional { payload: MaybeUninit::uninit(), engaged: false } }
     }
 
     /// Returns an `optional` containing `value`.
+    #[inline]
     pub const fn new(value: T) -> Self {
         optional { inner: trivial_optional { payload: MaybeUninit::new(value), engaged: true } }
     }
 
     /// Returns true if the `optional` contains a value.
+    #[inline]
     pub const fn is_some(&self) -> bool {
         self.inner.is_some()
     }
 
     /// Returns true if the `optional` does not contain a value.
+    #[inline]
     pub const fn is_none(&self) -> bool {
         self.inner.is_none()
     }
 
     /// Returns a reference to the contained value, if any.
+    #[inline]
     pub const fn as_ref(&self) -> Option<&T> {
         self.inner.as_ref()
     }
 
     /// Returns a mutable reference to the contained value, if any.
+    #[inline]
     pub const fn as_mut(&mut self) -> Option<&mut T> {
         self.inner.as_mut()
     }
@@ -204,6 +223,7 @@ impl<T> optional<T> {
     /// Returns a pinned mutable reference to the contained value, if any.
     ///
     /// Use this when the `optional` is pinned; otherwise use [`as_mut`](optional::as_mut).
+    #[inline]
     pub const fn as_pin_mut(self: Pin<&mut Self>) -> Option<Pin<&mut T>> {
         // SAFETY: `optional` is `#[repr(transparent)]` over `inner`, and we never move out of it.
         unsafe { Pin::new_unchecked(&mut Pin::into_inner_unchecked(self).inner) }.as_pin_mut()
@@ -213,6 +233,7 @@ impl<T> optional<T> {
     ///
     /// This moves the value out, and so is unavailable when `self` is pinned. For a `!Unpin`
     /// `T`, use [`reset`](optional::reset) to destroy the value where it lives instead.
+    #[inline]
     pub const fn take(&mut self) -> Option<T> {
         self.inner.take()
     }
@@ -222,6 +243,7 @@ impl<T> optional<T> {
     /// This is the equivalent of C++ `std::optional::reset()`, and is the pinned counterpart to
     /// [`take`](optional::take): it works even when `T` is `!Unpin`, because the value is
     /// destroyed in place rather than moved out.
+    #[inline]
     pub fn reset(self: Pin<&mut Self>) {
         // SAFETY: we never move the payload; we only clear `engaged` and drop `payload` in place.
         let this = unsafe { Pin::into_inner_unchecked(self) };
@@ -243,6 +265,7 @@ impl<T> optional<T> {
     /// [`string`](crate::std::string), which cannot be produced by value.
     ///
     /// If `value` fails to construct, `self` is left empty.
+    #[inline]
     pub fn emplace<C: Ctor<Output = T>>(
         mut self: Pin<&mut Self>,
         value: C,
@@ -260,6 +283,7 @@ impl<T> optional<T> {
 }
 
 impl<T> Drop for optional<T> {
+    #[inline]
     fn drop(&mut self) {
         // SAFETY: `Drop::drop` is called when `*self` is being destroyed and will never be moved
         // again, so pinning `self` to drop the payload in place is sound.
@@ -268,12 +292,14 @@ impl<T> Drop for optional<T> {
 }
 
 impl<T> Default for optional<T> {
+    #[inline]
     fn default() -> Self {
         optional::nullopt()
     }
 }
 
 impl<T: Clone> Clone for optional<T> {
+    #[inline]
     fn clone(&self) -> Self {
         match self.as_ref() {
             // `T::clone` returns a fresh value, so writing it into the payload is fine even
@@ -285,6 +311,7 @@ impl<T: Clone> Clone for optional<T> {
 }
 
 impl<T: PartialEq> PartialEq for optional<T> {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.as_ref() == other.as_ref()
     }
@@ -293,6 +320,7 @@ impl<T: PartialEq> PartialEq for optional<T> {
 impl<T: Eq> Eq for optional<T> {}
 
 impl<T> From<Option<T>> for optional<T> {
+    #[inline]
     fn from(value: Option<T>) -> Self {
         match value {
             Some(value) => optional::new(value),
@@ -302,6 +330,7 @@ impl<T> From<Option<T>> for optional<T> {
 }
 
 impl<T> From<optional<T>> for Option<T> {
+    #[inline]
     fn from(mut value: optional<T>) -> Self {
         value.take()
     }
@@ -314,12 +343,14 @@ impl<T: Debug> Debug for optional<T> {
 }
 
 impl<T> From<trivial_optional<T>> for optional<T> {
+    #[inline]
     fn from(inner: trivial_optional<T>) -> Self {
         optional { inner }
     }
 }
 
 impl<T: Copy> From<optional<T>> for trivial_optional<T> {
+    #[inline]
     fn from(value: optional<T>) -> Self {
         ManuallyDrop::new(value).inner
     }
@@ -346,6 +377,7 @@ unsafe impl<T> Ctor for NulloptCtor<T> {
     type Output = optional<T>;
     type Error = Infallible;
 
+    #[inline]
     unsafe fn ctor(self, dest: *mut optional<T>) -> core::result::Result<(), Infallible> {
         // SAFETY: the caller guarantees that `dest` is valid for writes. This establishes the
         // safety invariant of `trivial_optional`: `engaged` is false, so `payload` may be
@@ -373,6 +405,7 @@ where
     type Output = optional<C::Output>;
     type Error = C::Error;
 
+    #[inline]
     unsafe fn ctor(self, dest: *mut Self::Output) -> core::result::Result<(), Self::Error> {
         // SAFETY: the caller guarantees that `dest` is valid for writes. `engaged` is written
         // first so that `dest` holds a valid (empty) `optional` even if the payload's
@@ -403,6 +436,7 @@ impl<T> optional<T> {
     /// let empty = emplace!(optional::<string>::ctor_nullopt());
     /// assert!(empty.is_none());
     /// ```
+    #[inline]
     pub fn ctor_nullopt() -> NulloptCtor<T> {
         NulloptCtor(PhantomData)
     }
@@ -423,6 +457,7 @@ impl<T> optional<T> {
     /// let hello = emplace!(optional::ctor_some(string::ctor_new("hello")));
     /// assert_eq!(hello.as_ref().unwrap().as_slice(), b"hello");
     /// ```
+    #[inline]
     pub fn ctor_some<C: Ctor<Output = T>>(value: C) -> SomeCtor<C> {
         SomeCtor(value)
     }
