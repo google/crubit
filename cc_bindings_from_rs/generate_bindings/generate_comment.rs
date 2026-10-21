@@ -71,7 +71,7 @@ pub fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream
     }
 
     #[allow(deprecated)]
-    let deprecation_attr = find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecated{deprecation, span} => (*deprecation, *span));
+    let deprecation_attr = find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecated{deprecation, span, ..} => (*deprecation, *span));
 
     if let Some((deprecation, _span)) = deprecation_attr {
         let cc_deprecated_tag = match deprecation.note {
