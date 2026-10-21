@@ -105,8 +105,9 @@ pub mod crubit {
         }
 
         pub mod some_struct {
+            ///CRUBIT_ANNOTATE: do_not_bind=
             #[inline(always)]
-            pub(crate) fn ConstructorNewName(
+            pub fn ConstructorNewName(
                 a: ::ffi_11::c_int,
                 b: ::ffi_11::c_int,
                 c: ::ffi_11::c_int,
@@ -126,8 +127,9 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
+            ///CRUBIT_ANNOTATE: do_not_bind=
             #[inline(always)]
-            pub(crate) unsafe fn MethodNewName(__this: *const crate::crubit::test::SomeStruct) {
+            pub unsafe fn MethodNewName(__this: *const crate::crubit::test::SomeStruct) {
                 unsafe {
                     crate::detail::__rust_thunk___ZNK6crubit4test10SomeStruct13MethodOldNameEv(
                         __this,

@@ -71,30 +71,36 @@ pub mod ns {
     }
 
     pub mod trivial {
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn Unqualified<'__this>(__this: &'__this mut crate::ns::Trivial) {
+        pub fn Unqualified<'__this>(__this: &'__this mut crate::ns::Trivial) {
             unsafe { crate::detail::__rust_thunk___ZN2ns7Trivial11UnqualifiedEv(__this) }
         }
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn ConstQualified<'__this>(__this: &'__this crate::ns::Trivial) {
+        pub fn ConstQualified<'__this>(__this: &'__this crate::ns::Trivial) {
             unsafe { crate::detail::__rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv(__this) }
         }
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn LvalueRefQualified<'__this>(__this: &'__this mut crate::ns::Trivial) {
+        pub fn LvalueRefQualified<'__this>(__this: &'__this mut crate::ns::Trivial) {
             unsafe { crate::detail::__rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv(__this) }
         }
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn ConstLvalueRefQualified<'__this>(__this: &'__this crate::ns::Trivial) {
+        pub fn ConstLvalueRefQualified<'__this>(__this: &'__this crate::ns::Trivial) {
             unsafe {
                 crate::detail::__rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv(__this)
             }
         }
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn RvalueRefQualified<'__this>(__this: &'__this mut crate::ns::Trivial) {
+        pub fn RvalueRefQualified<'__this>(__this: &'__this mut crate::ns::Trivial) {
             unsafe { crate::detail::__rust_thunk___ZNO2ns7Trivial18RvalueRefQualifiedEv(__this) }
         }
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn ConstRvalueRefQualified<'__this>(__this: &'__this crate::ns::Trivial) {
+        pub fn ConstRvalueRefQualified<'__this>(__this: &'__this crate::ns::Trivial) {
             unsafe {
                 crate::detail::__rust_thunk___ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv(__this)
             }

@@ -68,16 +68,19 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for S {
 }
 
 pub mod s {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn x<'__this>(__this: &'__this crate::S) -> ::ffi_11::c_int {
+    pub fn x<'__this>(__this: &'__this crate::S) -> ::ffi_11::c_int {
         unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn get_x<'__this>(__this: &'__this mut crate::S) -> ::ffi_11::c_int {
+    pub fn get_x<'__this>(__this: &'__this mut crate::S) -> ::ffi_11::c_int {
         unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn set_x<'__this>(__this: &'__this mut crate::S, x: ::ffi_11::c_int) {
+    pub fn set_x<'__this>(__this: &'__this mut crate::S, x: ::ffi_11::c_int) {
         unsafe { (&raw mut *__this).cast::<::ffi_11::c_int>().write(x) }
     }
 }
@@ -128,8 +131,9 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, f32)> for T {
 }
 
 pub mod t {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn y<'__this>(__this: &'__this crate::T) -> f32 {
+    pub fn y<'__this>(__this: &'__this crate::T) -> f32 {
         unsafe { (&raw const *__this).byte_add(4).cast::<f32>().read() }
     }
 }
@@ -197,28 +201,34 @@ impl Default for Chars {
 }
 
 pub mod chars {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn c<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_char {
+    pub fn c<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_char {
         unsafe { (&raw const *__this).cast::<::ffi_11::c_char>().read() }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn sc<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_schar {
+    pub fn sc<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_schar {
         unsafe { (&raw const *__this).byte_add(1).cast::<::ffi_11::c_schar>().read() }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn uc<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_uchar {
+    pub fn uc<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_uchar {
         unsafe { (&raw const *__this).byte_add(2).cast::<::ffi_11::c_uchar>().read() }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn set_c<'__this>(__this: &'__this mut crate::Chars, c: ::ffi_11::c_char) {
+    pub fn set_c<'__this>(__this: &'__this mut crate::Chars, c: ::ffi_11::c_char) {
         unsafe { (&raw mut *__this).cast::<::ffi_11::c_char>().write(c) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn set_sc<'__this>(__this: &'__this mut crate::Chars, sc: ::ffi_11::c_schar) {
+    pub fn set_sc<'__this>(__this: &'__this mut crate::Chars, sc: ::ffi_11::c_schar) {
         unsafe { (&raw mut *__this).byte_add(1).cast::<::ffi_11::c_schar>().write(sc) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn set_uc<'__this>(__this: &'__this mut crate::Chars, uc: ::ffi_11::c_uchar) {
+    pub fn set_uc<'__this>(__this: &'__this mut crate::Chars, uc: ::ffi_11::c_uchar) {
         unsafe { (&raw mut *__this).byte_add(2).cast::<::ffi_11::c_uchar>().write(uc) }
     }
 }
@@ -264,12 +274,14 @@ impl Default for Bools {
 }
 
 pub mod bools {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn b<'__this>(__this: &'__this mut crate::Bools) -> bool {
+    pub fn b<'__this>(__this: &'__this mut crate::Bools) -> bool {
         unsafe { (&raw const *__this).cast::<bool>().read() }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn set_b<'__this>(__this: &'__this mut crate::Bools, b: bool) {
+    pub fn set_b<'__this>(__this: &'__this mut crate::Bools, b: bool) {
         unsafe { (&raw mut *__this).cast::<bool>().write(b) }
     }
 }
@@ -334,31 +346,32 @@ impl Default for Pointers {
 }
 
 pub mod pointers {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn p<'__this>(__this: &'__this crate::Pointers) -> *const ::ffi_11::c_int {
+    pub fn p<'__this>(__this: &'__this crate::Pointers) -> *const ::ffi_11::c_int {
         unsafe { (&raw const *__this).cast::<*const ::ffi_11::c_int>().read() }
     }
     /// # Safety
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `p`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn set_p<'__this>(
-        __this: &'__this mut crate::Pointers,
-        p: *const ::ffi_11::c_int,
-    ) {
+    pub unsafe fn set_p<'__this>(__this: &'__this mut crate::Pointers, p: *const ::ffi_11::c_int) {
         unsafe { (&raw mut *__this).cast::<*const ::ffi_11::c_int>().write(p) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn mut_p<'__this>(__this: &'__this crate::Pointers) -> *mut ::ffi_11::c_int {
+    pub fn mut_p<'__this>(__this: &'__this crate::Pointers) -> *mut ::ffi_11::c_int {
         unsafe { (&raw const *__this).byte_add(8).cast::<*mut ::ffi_11::c_int>().read() }
     }
     /// # Safety
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `mut_p`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn set_mut_p<'__this>(
+    pub unsafe fn set_mut_p<'__this>(
         __this: &'__this mut crate::Pointers,
         mut_p: *mut ::ffi_11::c_int,
     ) {
@@ -475,16 +488,18 @@ impl ::ctor::PinnedDrop for NonTrivial {
 }
 
 pub mod non_trivial {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn p<'__this>(__this: &'__this crate::NonTrivial) -> *const crate::NonTrivial {
+    pub fn p<'__this>(__this: &'__this crate::NonTrivial) -> *const crate::NonTrivial {
         unsafe { (&raw const *__this).cast::<*const crate::NonTrivial>().read() }
     }
     /// # Safety
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `p`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn set_p<'__this>(
+    pub unsafe fn set_p<'__this>(
         __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
         p: *const crate::NonTrivial,
     ) {
@@ -494,8 +509,9 @@ pub mod non_trivial {
                 .write(p)
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn mut_p<'__this>(
+    pub fn mut_p<'__this>(
         __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
     ) -> *mut crate::NonTrivial {
         unsafe { (&raw const *__this).byte_add(8).cast::<*mut crate::NonTrivial>().read() }
@@ -504,8 +520,9 @@ pub mod non_trivial {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `mut_p`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn set_mut_p<'__this>(
+    pub unsafe fn set_mut_p<'__this>(
         __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
         mut_p: *mut crate::NonTrivial,
     ) {
@@ -590,16 +607,18 @@ impl Default for PointerBase {
 }
 
 pub mod pointer_base {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn base_p<'__this>(__this: &'__this crate::PointerBase) -> *const ::ffi_11::c_int {
+    pub fn base_p<'__this>(__this: &'__this crate::PointerBase) -> *const ::ffi_11::c_int {
         unsafe { (&raw const *__this).cast::<*const ::ffi_11::c_int>().read() }
     }
     /// # Safety
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `base_p`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn set_base_p<'__this>(
+    pub unsafe fn set_base_p<'__this>(
         __this: &'__this mut crate::PointerBase,
         base_p: *const ::ffi_11::c_int,
     ) {
@@ -655,16 +674,18 @@ impl Default for DerivedPointers {
 }
 
 pub mod derived_pointers {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn p<'__this>(__this: &'__this crate::DerivedPointers) -> *const ::ffi_11::c_int {
+    pub fn p<'__this>(__this: &'__this crate::DerivedPointers) -> *const ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK15DerivedPointers1pEv(__this) }
     }
     /// # Safety
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `p`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn set_p<'__this>(
+    pub unsafe fn set_p<'__this>(
         __this: &'__this mut crate::DerivedPointers,
         p: *const ::ffi_11::c_int,
     ) {
@@ -734,31 +755,35 @@ impl Default for MorePointers {
 }
 
 pub mod more_pointers {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn v<'__this>(__this: &'__this crate::MorePointers) -> *mut ::ffi_11::c_void {
+    pub fn v<'__this>(__this: &'__this crate::MorePointers) -> *mut ::ffi_11::c_void {
         unsafe { (&raw const *__this).cast::<*mut ::ffi_11::c_void>().read() }
     }
     /// # Safety
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `v`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn set_v<'__this>(
+    pub unsafe fn set_v<'__this>(
         __this: &'__this mut crate::MorePointers,
         v: *mut ::ffi_11::c_void,
     ) {
         unsafe { (&raw mut *__this).cast::<*mut ::ffi_11::c_void>().write(v) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn i<'__this>(__this: &'__this crate::MorePointers) -> *mut crate::Incomplete {
+    pub fn i<'__this>(__this: &'__this crate::MorePointers) -> *mut crate::Incomplete {
         unsafe { (&raw const *__this).byte_add(8).cast::<*mut crate::Incomplete>().read() }
     }
     /// # Safety
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `i`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn set_i<'__this>(
+    pub unsafe fn set_i<'__this>(
         __this: &'__this mut crate::MorePointers,
         i: *mut crate::Incomplete,
     ) {
@@ -825,8 +850,9 @@ pub fn free_get_s<'__param_0>(
 }
 
 pub mod struct_with_record_and_free_getter {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn s<'__this>(__this: &'__this crate::StructWithRecordAndFreeGetter) -> crate::S {
+    pub fn s<'__this>(__this: &'__this crate::StructWithRecordAndFreeGetter) -> crate::S {
         unsafe { (&raw const *__this).cast::<crate::S>().read() }
     }
 }

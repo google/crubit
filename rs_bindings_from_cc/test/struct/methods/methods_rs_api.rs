@@ -61,10 +61,9 @@ impl Default for SomeClass {
 }
 
 pub mod some_class {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn static_factory_method(
-        int_var_initial_value: ::ffi_11::c_int,
-    ) -> crate::SomeClass {
+    pub fn static_factory_method(int_var_initial_value: ::ffi_11::c_int) -> crate::SomeClass {
         unsafe {
             let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SomeClass>::uninit();
             crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
@@ -74,8 +73,9 @@ pub mod some_class {
             __crubit_return.assume_init()
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn static_method_that_multiplies_its_args(
+    pub fn static_method_that_multiplies_its_args(
         x: ::ffi_11::c_int,
         y: ::ffi_11::c_int,
     ) -> ::ffi_11::c_int {
@@ -87,8 +87,9 @@ pub mod some_class {
     }
     /// Using an `inline` method forces generation of a C++ thunk in
     /// methods_rs_api_impl.cc (helping add test coverage for such thunks).
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn static_inline_method(arg: ::ffi_11::c_int) -> ::ffi_11::c_int {
+    pub fn static_inline_method(arg: ::ffi_11::c_int) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass20static_inline_methodEi(arg) }
     }
 }
@@ -165,27 +166,28 @@ impl Default for InstanceMethods {
 }
 
 pub mod instance_methods {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn get_int_field(__this: &crate::InstanceMethods) -> ::ffi_11::c_int {
+    pub fn get_int_field(__this: &crate::InstanceMethods) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK15InstanceMethods13get_int_fieldEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn set_int_field(__this: &mut crate::InstanceMethods, new_value: ::ffi_11::c_int) {
+    pub fn set_int_field(__this: &mut crate::InstanceMethods, new_value: ::ffi_11::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN15InstanceMethods13set_int_fieldEi(__this, new_value)
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn inline_get_int_field(__this: &crate::InstanceMethods) -> ::ffi_11::c_int {
+    pub fn inline_get_int_field(__this: &crate::InstanceMethods) -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZNK15InstanceMethods20inline_get_int_fieldEv(__this)
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn inline_set_int_field(
-        __this: &mut crate::InstanceMethods,
-        new_value: ::ffi_11::c_int,
-    ) {
+    pub fn inline_set_int_field(__this: &mut crate::InstanceMethods, new_value: ::ffi_11::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN15InstanceMethods20inline_set_int_fieldEi(
                 __this, new_value,
@@ -196,8 +198,9 @@ pub mod instance_methods {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `input_ref`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn takes_and_returns_ref(
+    pub unsafe fn takes_and_returns_ref(
         __this: &mut crate::InstanceMethods,
         input_ref: *mut ::ffi_11::c_int,
     ) -> *mut ::ffi_11::c_int {
@@ -207,18 +210,21 @@ pub mod instance_methods {
             )
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn ref_qualified(__this: &mut crate::InstanceMethods) {
+    pub fn ref_qualified(__this: &mut crate::InstanceMethods) {
         unsafe { crate::detail::__rust_thunk___ZNR15InstanceMethods13ref_qualifiedEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn const_ref_qualified(__this: &crate::InstanceMethods) {
+    pub fn const_ref_qualified(__this: &crate::InstanceMethods) {
         unsafe {
             crate::detail::__rust_thunk___ZNKR15InstanceMethods19const_ref_qualifiedEv(__this)
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn rvalue_qualified(__this: &mut crate::InstanceMethods) {
+    pub fn rvalue_qualified(__this: &mut crate::InstanceMethods) {
         unsafe { crate::detail::__rust_thunk___ZNO15InstanceMethods16rvalue_qualifiedEv(__this) }
     }
 }

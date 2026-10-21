@@ -66,10 +66,9 @@ pub mod crubit {
         }
 
         pub mod thread_safe_struct {
+            ///CRUBIT_ANNOTATE: do_not_bind=
             #[inline(always)]
-            pub(crate) fn ConstGet(
-                __this: &crate::crubit::test::ThreadSafeStruct,
-            ) -> ::ffi_11::c_int {
+            pub fn ConstGet(__this: &crate::crubit::test::ThreadSafeStruct) -> ::ffi_11::c_int {
                 unsafe {
                     crate::detail::__rust_thunk___ZNK6crubit4test16ThreadSafeStruct8ConstGetEv(
                         __this,
@@ -79,10 +78,9 @@ pub mod crubit {
             /// A non-const method for testing the generation behavior.
             /// The implementation doesn't actually do anything non-const, but it doesn't
             /// matter for what we are testing, here.
+            ///CRUBIT_ANNOTATE: do_not_bind=
             #[inline(always)]
-            pub(crate) fn NonConstGet(
-                __this: &crate::crubit::test::ThreadSafeStruct,
-            ) -> ::ffi_11::c_int {
+            pub fn NonConstGet(__this: &crate::crubit::test::ThreadSafeStruct) -> ::ffi_11::c_int {
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test16ThreadSafeStruct11NonConstGetEv(
                         __this,
@@ -150,8 +148,9 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
+            ///CRUBIT_ANNOTATE: do_not_bind=
             #[inline(always)]
-            pub(crate) unsafe fn ConstGet(
+            pub unsafe fn ConstGet(
                 __this: *const crate::crubit::test::RegularStruct,
             ) -> ::ffi_11::c_int {
                 unsafe {
@@ -162,8 +161,9 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
+            ///CRUBIT_ANNOTATE: do_not_bind=
             #[inline(always)]
-            pub(crate) unsafe fn NonConstGet(
+            pub unsafe fn NonConstGet(
                 __this: *mut crate::crubit::test::RegularStruct,
             ) -> ::ffi_11::c_int {
                 unsafe {

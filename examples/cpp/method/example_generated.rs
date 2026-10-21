@@ -49,8 +49,9 @@ pub mod foo {
     }
 
     pub mod bar {
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn MyMethod<'__this>(__this: &'__this mut crate::foo::Bar) {
+        pub fn MyMethod<'__this>(__this: &'__this mut crate::foo::Bar) {
             unsafe { crate::detail::__rust_thunk___ZN3foo3Bar8MyMethodEv(__this) }
         }
     }

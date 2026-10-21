@@ -312,8 +312,9 @@ impl ::ctor::CtorNew<crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE>
 
 pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ip_ki_eeee {
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn base<'__this>(
+    pub fn base<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE,
     ) -> crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
         unsafe {
@@ -350,8 +351,9 @@ impl::ctor::CtorNew<crate::__CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_stri
 
 pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ipns_17basic_string_view_ic_ns_11char_traits_ic_eeeeeeee {
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn base<'__this>(
+    pub fn base<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE,
     ) -> crate::__CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE
     {
@@ -428,8 +430,9 @@ impl ::ctor::CtorNew<crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE>
 
 pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_i_pi_eeee {
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn base<'__this>(
+    pub fn base<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE,
     ) -> crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE {
         unsafe {
@@ -509,8 +512,9 @@ impl ::ctor::UnsafeCtorNew<*const ::ffi_11::c_char>
 
 pub mod cc_template_inst_n_st3_u16reverse_iterator_ip_kc_ee {
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn base<'__this>(
+    pub fn base<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
     ) -> *const ::ffi_11::c_char {
         unsafe {
@@ -950,8 +954,9 @@ impl ::core::ops::Index<usize> for __CcTemplateInstNSt3__u4spanIKiLm184467440737
 
 pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn first<'__this>(
+    pub fn first<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
         __count: usize,
     ) -> crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {
@@ -964,8 +969,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn last<'__this>(
+    pub fn last<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
         __count: usize,
     ) -> crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {
@@ -982,8 +988,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn subspan<'__this>(
+    pub fn subspan<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
         __offset: usize,
         __count: usize,
@@ -997,8 +1004,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn size<'__this>(
+    pub fn size<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
     ) -> usize {
         unsafe {
@@ -1008,8 +1016,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn size_bytes<'__this>(
+    pub fn size_bytes<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
     ) -> usize {
         unsafe {
@@ -1017,8 +1026,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn empty<'__this>(
+    pub fn empty<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
     ) -> bool {
         unsafe {
@@ -1028,8 +1038,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn front<'__this>(
+    pub fn front<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
     ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
         unsafe {
@@ -1039,8 +1050,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn back<'__this>(
+    pub fn back<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
     ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
         unsafe {
@@ -1050,8 +1062,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn data<'__this>(
+    pub fn data<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
     ) -> *const ::ffi_11::c_int {
         unsafe {
@@ -1061,8 +1074,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn begin<'__this>(
+    pub fn begin<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
     ) -> crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
         unsafe {
@@ -1074,8 +1088,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn end<'__this>(
+    pub fn end<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
     ) -> crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
         unsafe {
@@ -1090,8 +1105,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn rbegin<'__this>(
+    pub fn rbegin<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
     ) -> crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {
         unsafe {
@@ -1103,8 +1119,9 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn rend<'__this>(
+    pub fn rend<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
     ) -> crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {
         unsafe {
@@ -1143,7 +1160,8 @@ impl Default for __CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_
 
 pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee {
     #[must_use]
-    #[inline(always)]    pub(crate)fn first<'__this>(__this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,__count: usize)->crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{
+    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[inline(always)]    pub fn first<'__this>(__this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,__count: usize)->crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{
         unsafe {
             let mut __crubit_return=::core::mem::MaybeUninit::<crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE>::uninit();
             crate::detail::__rust_thunk__eb5fa8a1__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__count);
@@ -1151,7 +1169,8 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
-    #[inline(always)]    pub(crate)fn last<'__this>(__this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,__count: usize)->crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{
+    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[inline(always)]    pub fn last<'__this>(__this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,__count: usize)->crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{
         unsafe {
             let mut __crubit_return=::core::mem::MaybeUninit::<crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE>::uninit();
             crate::detail::__rust_thunk__cb04abd4__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__count);
@@ -1159,7 +1178,8 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
-    #[inline(always)]    pub(crate)fn subspan<'__this>(__this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,__offset: usize,__count: usize)->crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{
+    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[inline(always)]    pub fn subspan<'__this>(__this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,__offset: usize,__count: usize)->crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{
         unsafe {
             let mut __crubit_return=::core::mem::MaybeUninit::<crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE>::uninit();
             crate::detail::__rust_thunk__f8d72bf1__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__offset,__count);
@@ -1167,8 +1187,9 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn size<'__this>(
+    pub fn size<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,
     ) -> usize {
         unsafe {
@@ -1176,8 +1197,9 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn size_bytes<'__this>(
+    pub fn size_bytes<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,
     ) -> usize {
         unsafe {
@@ -1185,8 +1207,9 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn empty<'__this>(
+    pub fn empty<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,
     ) -> bool {
         unsafe {
@@ -1194,8 +1217,9 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn front<'__this>(
+    pub fn front<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,
     ) -> ::cref::CMut<'__this, ::cc_std::std::__u::raw_string_view> {
         unsafe {
@@ -1203,8 +1227,9 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn back<'__this>(
+    pub fn back<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,
     ) -> ::cref::CMut<'__this, ::cc_std::std::__u::raw_string_view> {
         unsafe {
@@ -1212,8 +1237,9 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn data<'__this>(
+    pub fn data<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,
     ) -> *mut ::cc_std::std::__u::raw_string_view {
         unsafe {
@@ -1221,8 +1247,9 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn begin<'__this>(
+    pub fn begin<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,
     ) -> crate::__CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE
     {
@@ -1233,8 +1260,9 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn end<'__this>(
+    pub fn end<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,
     ) -> crate::__CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE
     {
@@ -1245,7 +1273,8 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
-    #[inline(always)]    pub(crate)fn rbegin<'__this>(__this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE)->crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE{
+    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[inline(always)]    pub fn rbegin<'__this>(__this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE)->crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE{
         unsafe {
             let mut __crubit_return=::core::mem::MaybeUninit::<crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE>::uninit();
             crate::detail::__rust_thunk__3e61f7cc__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
@@ -1253,7 +1282,8 @@ pub mod cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_trait
         }
     }
     #[must_use]
-    #[inline(always)]    pub(crate)fn rend<'__this>(__this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE)->crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE{
+    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[inline(always)]    pub fn rend<'__this>(__this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE)->crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE{
         unsafe {
             let mut __crubit_return=::core::mem::MaybeUninit::<crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE>::uninit();
             crate::detail::__rust_thunk__dc1b110a__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
@@ -1388,8 +1418,9 @@ impl Default for __CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {
 
 pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn first<'__this>(
+    pub fn first<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
         __count: usize,
     ) -> crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {
@@ -1406,8 +1437,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn last<'__this>(
+    pub fn last<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
         __count: usize,
     ) -> crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {
@@ -1424,8 +1456,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn subspan<'__this>(
+    pub fn subspan<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
         __offset: usize,
         __count: usize,
@@ -1439,8 +1472,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn size<'__this>(
+    pub fn size<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
     ) -> usize {
         unsafe {
@@ -1450,8 +1484,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn size_bytes<'__this>(
+    pub fn size_bytes<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
     ) -> usize {
         unsafe {
@@ -1459,8 +1494,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn empty<'__this>(
+    pub fn empty<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
     ) -> bool {
         unsafe {
@@ -1470,8 +1506,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn front<'__this>(
+    pub fn front<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
     ) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
         unsafe {
@@ -1481,8 +1518,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn back<'__this>(
+    pub fn back<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
     ) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
         unsafe {
@@ -1492,8 +1530,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn data<'__this>(
+    pub fn data<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
     ) -> *mut ::ffi_11::c_int {
         unsafe {
@@ -1503,8 +1542,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn begin<'__this>(
+    pub fn begin<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
     ) -> crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE {
         unsafe {
@@ -1519,8 +1559,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn end<'__this>(
+    pub fn end<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
     ) -> crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE {
         unsafe {
@@ -1535,8 +1576,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn rbegin<'__this>(
+    pub fn rbegin<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
     ) -> crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {
         unsafe {
@@ -1548,8 +1590,9 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn rend<'__this>(
+    pub fn rend<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
     ) -> crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {
         unsafe {

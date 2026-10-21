@@ -155,8 +155,9 @@ impl LayoutCompatible {
 }
 
 pub mod layout_compatible {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
+    pub fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
         unsafe {
             let mut __crubit_return = ::core::mem::MaybeUninit::<crate::LayoutCompatible>::uninit();
             crate::detail::__rust_thunk___ZN16LayoutCompatible6CreateEi(
@@ -166,8 +167,9 @@ pub mod layout_compatible {
             __crubit_return.assume_init()
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn get<'__this>(__this: &'__this crate::LayoutCompatible) -> ::ffi_11::c_int {
+    pub fn get<'__this>(__this: &'__this crate::LayoutCompatible) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK16LayoutCompatible3getEv(__this) }
     }
 }

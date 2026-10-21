@@ -108,8 +108,9 @@ pub mod ns {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `parent`: raw pointer
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) unsafe fn Create(
+        pub unsafe fn Create(
             parent: *mut crate::ns::Region,
         ) -> crate::MyBox<crate::ns::Instruction> {
             unsafe {
@@ -167,8 +168,9 @@ pub mod ns {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `instruction`: unsafe bridge type
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) unsafe fn Append<'__this>(
+        pub unsafe fn Append<'__this>(
             __this: &'__this mut crate::ns::Region,
             instruction: crate::MyBox<crate::ns::Instruction>,
         ) -> *mut crate::ns::Instruction {
@@ -176,8 +178,9 @@ pub mod ns {
                 crate::detail::__rust_thunk___ZN2ns6Region6AppendENS_5MyBoxINS_11InstructionEEE(__this,::crubit_support::bridge::unstable_encode!(@crate::MyBoxAbi(::crubit_support::bridge::transmute_abi::<crate::ns::Instruction>()),crate::MyBoxAbi<::crubit_support::bridge::TransmuteAbi<crate::ns::Instruction>>,instruction).as_ptr()as*const u8)
             }
         }
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn Pop<'__this>(
+        pub fn Pop<'__this>(
             __this: &'__this mut crate::ns::Region,
         ) -> crate::MyBox<crate::ns::Instruction> {
             unsafe {

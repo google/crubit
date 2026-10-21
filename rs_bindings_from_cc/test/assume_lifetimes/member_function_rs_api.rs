@@ -52,14 +52,16 @@ impl Default for S {
 }
 
 pub mod s {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn int_accessor<'__this>(
+    pub fn int_accessor<'__this>(
         __this: &'__this crate::S,
     ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
         unsafe { crate::detail::__rust_thunk___ZNK1S12int_accessorEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn me<'__this>(__this: &'__this mut crate::S) -> ::cref::CMut<'__this, crate::S> {
+    pub fn me<'__this>(__this: &'__this mut crate::S) -> ::cref::CMut<'__this, crate::S> {
         unsafe { crate::detail::__rust_thunk___ZN1S2meEv(__this) }
     }
 }

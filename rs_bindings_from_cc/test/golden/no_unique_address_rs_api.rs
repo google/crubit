@@ -61,8 +61,9 @@ impl Default for Struct {
 }
 
 pub mod r#struct {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Make(f1: ::ffi_11::c_int, f2: ::ffi_11::c_char) -> crate::Struct {
+    pub fn Make(f1: ::ffi_11::c_int, f2: ::ffi_11::c_char) -> crate::Struct {
         unsafe {
             let mut __crubit_return = ::core::mem::MaybeUninit::<crate::Struct>::uninit();
             crate::detail::__rust_thunk___ZN6Struct4MakeEic(
@@ -124,8 +125,9 @@ impl Default for PaddingBetweenFields {
 }
 
 pub mod padding_between_fields {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Make(f1: ::ffi_11::c_char, f2: ::ffi_11::c_int) -> crate::PaddingBetweenFields {
+    pub fn Make(f1: ::ffi_11::c_char, f2: ::ffi_11::c_int) -> crate::PaddingBetweenFields {
         unsafe {
             let mut __crubit_return =
                 ::core::mem::MaybeUninit::<crate::PaddingBetweenFields>::uninit();
