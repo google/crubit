@@ -9,18 +9,24 @@ module(
 bazel_dep(name = "rules_rust", version = "0.71.3")
 bazel_dep(name = "rules_cc", version = "0.2.25")
 bazel_dep(name = "rules_shell", version = "0.6.1")
+bazel_dep(name = "apple_support", version = "2.8.0")
 bazel_dep(name = "abseil-cpp", version = "20260526.0")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
-bazel_dep(name = "fuzztest", version = "20250214.0")
+bazel_dep(name = "fuzztest", version = "20260629.0")
 bazel_dep(name = "google_benchmark", version = "1.9.5")
-bazel_dep(name = "googletest", version = "1.17.0")
+bazel_dep(name = "googletest", version = "1.18.0.bcr.1")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "protobuf", version = "36.1.bcr.1")
-bazel_dep(name = "re2", version = "2024-07-02.bcr.1")
+bazel_dep(name = "re2", version = "2025-08-12.bcr.1")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_proto", version = "7.1.0")
 bazel_dep(name = "rules_python", version = "1.7.0")
-bazel_dep(name = "toolchains_llvm", version = "1.9.0")
+bazel_dep(name = "rules_doxygen", version = "2.6.3")
+bazel_dep(name = "toolchains_llvm", version = "1.11.3")
+
+# fuzztest depends (through flatbuffers) on an aspect_rules_esbuild version
+# that does not load under Bazel 9. Raise it to one that does.
+bazel_dep(name = "aspect_rules_esbuild", version = "0.27.1")
 
 ########################################################################
 # Building of Clang/LLVM from sources
@@ -44,6 +50,9 @@ llvm_configure(
     ],
 )
 
+doxygen = use_extension("@rules_doxygen//:extensions.bzl", "doxygen_extension")
+use_repo(doxygen, "doxygen")
+
 ########################################################################
 # Rust Crate Dependencies
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
@@ -55,17 +64,39 @@ crate.from_cargo(
         "//:Cargo.toml",
     ],
 )
+
+# Crates that only Bazel targets use, so no Cargo workspace member pulls them in.
+[
+    crate.spec(
+        package = package,
+        repositories = ["crate_index"],
+        version = version,
+    )
+    for package, version in [
+        ("aho-corasick", "1"),
+        ("bumpalo", "3"),
+        ("cxx", "1"),
+        ("libc", "0.2"),
+        ("maplit", "1"),
+        ("open-enum", "0.5"),
+        ("ra-ap-rustc_lexer", "0.165.0"),
+        ("rstest", "0.16"),
+    ]
+]
+
 use_repo(crate, "crate_index")
 
 crubit_toolchains = use_extension("//bazel:extensions.bzl", "crubit_toolchains")
 crubit_toolchains.configure(
-    llvm_version = "23.1.0",
+    llvm_version = "23.1.3",
     rust_version = "nightly/2026-09-29",
 )
 use_repo(
     crubit_toolchains,
     "llvm_toolchain",
+    "llvm_toolchain_llvm",
     "llvm_version_check",
+    "rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools",
     "rust_toolchains",
 )
 
