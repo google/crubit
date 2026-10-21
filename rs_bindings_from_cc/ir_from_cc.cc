@@ -51,7 +51,7 @@ static constexpr absl::string_view kVirtualInputPath =
 
 namespace {
 
-namespace ir_proto = ::crubit::rs_bindings_from_cc::ir_proto::flat;
+namespace ir_proto = ::crubit::ffi;
 
 struct UseModFromSrc {
   ir_proto::Item use_mod_item;
@@ -68,7 +68,7 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
   absl::flat_hash_set<ItemId> top_level_item_id_set;
   if (auto it = ir.top_level_items().find(ir.current_target());
       it != ir.top_level_items().end()) {
-    for (const auto& item : it->second.items()) {
+    for (const auto& item : it->second) {
       if (item.has_namespace_decl()) {
         top_level_item_id_set.insert(ItemId(item.namespace_decl().id()));
       }
@@ -181,7 +181,7 @@ absl::Status AddUseModToIr(IR& ir,
       *use_mod_from_src.enclosing_namespace.value()->add_children() =
           std::move(use_mod_from_src.use_mod_item);
     } else {
-      *(*ir.mutable_top_level_items())[ir.current_target()].add_items() =
+      *(*ir.mutable_top_level_items())[ir.current_target()].Add() =
           std::move(use_mod_from_src.use_mod_item);
     }
   }

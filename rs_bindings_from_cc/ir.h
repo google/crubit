@@ -34,7 +34,7 @@
 #include "absl/strings/substitute.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/ir.pb.h"
+#include "rs_bindings_from_cc/ir_generated.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/RawCommentList.h"
 #include "llvm/ADT/APSInt.h"
@@ -43,7 +43,7 @@
 
 namespace crubit {
 
-namespace ir_proto = ::crubit::rs_bindings_from_cc::ir_proto::flat;
+namespace ir_proto = ::crubit::ffi;
 
 struct Item;
 
@@ -59,20 +59,22 @@ inline constexpr absl::string_view kInstantiationsNamespaceName =
 // A name of a public header of the C++ library.
 class HeaderName {
  public:
-  explicit HeaderName(std::string name) : name_(std::move(name)) {}
+  explicit HeaderName(std::string name) { inner_.set_name(std::move(name)); }
 
-  absl::string_view IncludePath() const { return name_; }
+  absl::string_view IncludePath() const { return inner_.name(); }
+
+  const ffi::HeaderName& AsFfi() const { return inner_; }
 
   void WriteToProto(ir_proto::HeaderName& proto) const;
 
   template <typename H>
   friend H AbslHashValue(H h, const HeaderName& header_name) {
-    return H::combine(std::move(h), header_name.name_);
+    return H::combine(std::move(h), header_name.IncludePath());
   }
 
  private:
   // Header pathname in the format suitable for a quote include.
-  std::string name_;
+  ffi::HeaderName inner_;
 };
 
 inline bool operator==(const HeaderName& lhs, const HeaderName& rhs) {
@@ -237,12 +239,6 @@ struct CcType {
   // populated.
   std::vector<CcType> template_args;
 };
-
-inline std::ostream& operator<<(std::ostream& o, const CcType& type) {
-  ir_proto::CcType proto;
-  type.WriteToProto(proto);
-  return o << proto.ShortDebugString();
-}
 
 // An identifier involved in bindings.
 //
@@ -618,18 +614,17 @@ std::vector<const T* absl_nonnull> get_items_if(
     }
   };
 
-  // Sort target keys to iterate `top_level_items()` deterministically, this
-  // prevents non-deterministic hash bucket ordering from protobuf::Map.
+  // Sort target keys to iterate `top_level_items()` deterministically.
   std::vector<std::string> target_keys;
   target_keys.reserve(ir_proto.top_level_items().size());
   for (const auto& [target, _] : ir_proto.top_level_items()) {
-    target_keys.push_back(target);
+    target_keys.push_back(std::string(target));
   }
   std::sort(target_keys.begin(), target_keys.end());
 
   for (const auto& target : target_keys) {
     const auto& item_list = ir_proto.top_level_items().at(target);
-    for (const auto& item : item_list.items()) {
+    for (const auto& item : item_list) {
       process_item(process_item, item);
     }
   }
@@ -657,13 +652,13 @@ std::vector<T* absl_nonnull> get_items_if(ir_proto::IRProto& ir_proto) {
   std::vector<std::string> target_keys;
   target_keys.reserve(ir_proto.top_level_items().size());
   for (const auto& [target, _] : ir_proto.top_level_items()) {
-    target_keys.push_back(target);
+    target_keys.push_back(std::string(target));
   }
   std::sort(target_keys.begin(), target_keys.end());
 
   for (const auto& target : target_keys) {
     auto& item_list = (*ir_proto.mutable_top_level_items())[target];
-    for (auto& item : *item_list.mutable_items()) {
+    for (auto& item : item_list) {
       process_item(process_item, item);
     }
   }

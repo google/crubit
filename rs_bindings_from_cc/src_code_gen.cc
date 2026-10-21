@@ -10,15 +10,14 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "rs_bindings_from_cc/generate_bindings/generate_bindings.pb.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir_generated.h"
 #include "rs_bindings_from_cc/src_code_gen_ffi.h"
-#include "llvm/Support/FormatVariadic.h"
 
 namespace crubit {
 
-using rs_bindings_from_cc::generate_bindings::GenerateBindingsRequest;
-using rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse;
+using ffi::GenerateBindingsRequest;
+using ffi::GenerateBindingsResponse;
 
 absl::StatusOr<Bindings> GenerateBindings(
     IR ir, absl::string_view crubit_support_path_format,
@@ -49,9 +48,9 @@ absl::StatusOr<Bindings> GenerateBindings(
   }
 
   Bindings bindings;
-  bindings.rs_api = response.rs_api();
-  bindings.rs_api_impl = response.rs_api_impl();
-  bindings.error_report = response.error_report();
+  bindings.rs_api = std::string(response.rs_api());
+  bindings.rs_api_impl = std::string(response.rs_api_impl());
+  bindings.error_report = std::string(response.error_report());
   return bindings;
 }
 

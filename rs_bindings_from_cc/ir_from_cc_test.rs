@@ -7,6 +7,7 @@ use arc_anyhow::Result;
 use googletest::matcher::Matcher;
 use googletest::matchers::{contains, eq, is_empty, not, pat, some};
 use googletest::{expect_eq, expect_that, expect_true, fail, gtest, OrFail};
+use ir::ir_rust_proto::IRProto;
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
 use ir_testing::{

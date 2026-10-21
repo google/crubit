@@ -1128,7 +1128,6 @@ impl<'a> BridgeRsTypeKind<'a> {
                     ir::FnTrait::Fn => FnTrait::Fn,
                     ir::FnTrait::FnMut => FnTrait::FnMut,
                     ir::FnTrait::FnOnce => FnTrait::FnOnce,
-                    _ => bail!("unspecified FnTrait"),
                 };
 
                 let rust_fn_trait = if cpp_fn_trait == FnTrait::FnMut {
@@ -1149,7 +1148,6 @@ impl<'a> BridgeRsTypeKind<'a> {
                                 record.rs_name().as_str(),
                             ),
                         },
-                        _ => bail!("unspecified BackingType"),
                     },
                     cpp_fn_trait,
                     rust_fn_trait,
@@ -3424,7 +3422,6 @@ mod tests {
     use error_report::anyhow;
     use googletest::matchers::eq;
     use googletest::{expect_that, gtest};
-    use protobuf::proto;
     use std::marker::PhantomData;
     use token_stream_matchers::assert_rs_matches;
 
@@ -3622,12 +3619,14 @@ mod tests {
                 rs_name: ir_rust_proto::Identifier { identifier: "MyEnum" },
                 unique_name: "MyEnum",
                 mangled_cc_name: "6MyEnum",
-                id: 0,
+                id: 0u64,
                 owning_target: "//foo/bar",
                 source_loc: "some_file.h:123",
                 underlying_type: ir_rust_proto::CcType {
-                    primitive: ir_rust_proto::cc_type::Primitive {
-                        spelling: "int",
+                    variant: __ {
+                        primitive: ir_rust_proto::cc_type::Primitive {
+                            spelling: "int",
+                        },
                     },
                 },
             }
@@ -3647,7 +3646,7 @@ mod tests {
                 cc_name: ir_rust_proto::Identifier { identifier: "MyStruct" },
                 rs_name: ir_rust_proto::Identifier { identifier: "MyStruct" },
                 unique_name: "MyStruct",
-                id: 0,
+                id: 0u64,
                 owning_target: "//foo/bar",
                 record_type: ir_rust_proto::RecordType::Class,
             }
@@ -3679,11 +3678,13 @@ mod tests {
                 cc_name: ir_rust_proto::Identifier { identifier: "MyAlias" },
                 rs_name: ir_rust_proto::Identifier { identifier: "MyAlias" },
                 unique_name: "MyAlias",
-                id: 1,
+                id: 1u64,
                 owning_target: "//foo/bar",
                 underlying_type: ir_rust_proto::CcType {
-                    primitive: ir_rust_proto::cc_type::Primitive {
-                        spelling: "int",
+                    variant: __ {
+                        primitive: ir_rust_proto::cc_type::Primitive {
+                            spelling: "int",
+                        },
                     },
                 },
                 source_loc: "some_file.h:123",
@@ -3784,7 +3785,7 @@ mod tests {
     fn test_resolve_bridge_rust_name_success() {
         use ir_rust_proto::IRProto;
 
-        let proto = protobuf::proto!(IRProto {
+        let proto = proto!(IRProto {
             current_target: "//foo:bar",
             crate_names: [("@abseil-cpp//absl/status:status", "absl_status")]
         });
@@ -3842,7 +3843,7 @@ mod tests {
     fn test_resolve_bridge_rust_name_mismatch_panics() {
         use ir_rust_proto::IRProto;
 
-        let proto = protobuf::proto!(IRProto {
+        let proto = proto!(IRProto {
             current_target: "//foo:bar",
             crate_names: [("@abseil-cpp//absl/status:other", "absl_status")]
         });

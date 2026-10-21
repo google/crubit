@@ -95,7 +95,7 @@
 
 namespace crubit {
 
-namespace ir_proto = rs_bindings_from_cc::ir_proto::flat;
+namespace ir_proto = ::crubit::ffi;
 
 namespace {
 
@@ -127,7 +127,7 @@ absl::Status CheckImportStatus(const ir_proto::Item* item) {
   if (item->has_unsupported_item()) {
     const auto& unsupported = item->unsupported_item();
     std::vector<absl::string_view> messages;
-    messages.reserve(unsupported.errors_size());
+    messages.reserve(unsupported.errors().size());
     for (const auto& error : unsupported.errors()) {
       messages.push_back(error.message());
     }
@@ -1369,7 +1369,7 @@ void Importer::Import(
       for (ItemId child_id : child_ids_it->second) {
         auto child_it = id_to_item.find(child_id);
         if (child_it != id_to_item.end()) {
-          record->add_children()->CopyFrom(*child_it->second);
+          *record->add_children() = *child_it->second;
         }
       }
     } else if (parent_it->second->has_namespace_decl()) {
@@ -1378,7 +1378,7 @@ void Importer::Import(
       for (ItemId child_id : child_ids_it->second) {
         auto child_it = id_to_item.find(child_id);
         if (child_it != id_to_item.end()) {
-          ns->add_children()->CopyFrom(*child_it->second);
+          *ns->add_children() = *child_it->second;
         }
       }
     }
@@ -1396,7 +1396,7 @@ void Importer::Import(
       // target that are unsupported. You have to run it only if label is not
       // equal to the current target; you can skip the current target.
       if (it != id_to_item.end() && !IsUnsupportedAndAlien(id)) {
-        target_items.add_items()->CopyFrom(*it->second);
+        *target_items.Add() = *it->second;
       }
     }
   }
@@ -1909,7 +1909,7 @@ bool Importer::IsFeatureEnabledForTarget(const BazelLabel& label,
                                          absl::string_view feature) const {
   if (auto i = invocation_.ir_.crubit_features().find(label.value());
       i != invocation_.ir_.crubit_features().end()) {
-    for (const auto& f : i->second.features()) {
+    for (const auto& f : i->second) {
       if (f == feature) return true;
     }
   }
@@ -2119,7 +2119,7 @@ absl::StatusOr<std::optional<bool>> Importer::DetectFormatterForType(
 bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
   if (auto i = invocation_.ir_.crubit_features().find(label.value());
       i != invocation_.ir_.crubit_features().end()) {
-    return i->second.features_size() > 0;
+    return !i->second.empty();
   }
   // TODO(b/471240594): This is a hack for this specific header. We need to
   // properly fix target assignment for Crubit support libraries.

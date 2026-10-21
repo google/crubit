@@ -139,7 +139,7 @@ mod tests {
     use googletest::gtest;
     use quote::quote;
 
-    fn ir_proto_from_cc(header: &str) -> arc_anyhow::Result<ir_rust_proto::IRProto> {
+    fn ir_proto_from_cc(header: &str) -> arc_anyhow::Result<ir::ir_rust_proto::IRProto> {
         ir_testing::ir_proto_from_cc(multiplatform_testing::Platform::X86Linux, header)
     }
 
