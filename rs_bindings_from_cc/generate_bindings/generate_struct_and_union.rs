@@ -228,6 +228,65 @@ fn filter_out_ambiguous_member_functions<'a>(
         .collect()
 }
 
+/// Returns whether the generated Rust struct for `record` will have an explicit
+/// `#[repr(align(N))]` attribute.
+///
+/// This is the single source of truth for the `align` field of
+/// `database::code_snippet::Record` computed in `generate_record`.
+///
+/// It's also needed because Rust rejects `#[repr(packed)]` structs that contain
+/// (directly or transitively) a `#[repr(align)]` type, so packed records must
+/// know which of their fields to erase into opaque byte blobs.
+fn record_has_repr_align<'a>(db: &BindingsGenerator<'a>, record: &Record<'a>) -> bool {
+    // Packed records never get `#[repr(align)]`, and an alignment of 1 needs no
+    // explicit attribute.
+    if record.is_packed() || record.size_align().alignment() <= 1 {
+        return false;
+    }
+    // The C++ record has an explicit alignment (e.g. `alignas`), or it is
+    // thread-safe and represented by an opaque `UnsafeCell<[MaybeUninit<u8>; N]>`
+    // body whose natural alignment is 1.
+    if record.override_alignment() || record.is_thread_safe() {
+        return true;
+    }
+    // Bitfields and fields whose type can't be represented in Rust are emitted
+    // as unaligned byte blobs, so the struct's alignment no longer follows from
+    // its fields and must be set explicitly. Zero-sized fields (e.g. `int : 0;`)
+    // are skipped, as `generate_record` doesn't emit anything for them.
+    for field in record.fields() {
+        if field.size() == 0 {
+            continue;
+        }
+        if field.is_bitfield() || get_field_rs_type_kind_for_layout(db, record, field).is_err() {
+            return true;
+        }
+    }
+    false
+}
+
+/// Returns whether `type_kind` is a record that has `#[repr(align)]`, or that
+/// transitively contains a field of such a type.
+///
+/// Rust forbids such types as fields of a `#[repr(packed)]` struct (error
+/// E0588), so fields of these types in packed records are represented as opaque
+/// byte blobs instead.
+fn type_has_repr_align<'a>(db: &BindingsGenerator<'a>, type_kind: &RsTypeKind<'a>) -> bool {
+    let RsTypeKind::Record { record, .. } = type_kind.unalias() else {
+        return false;
+    };
+    if record_has_repr_align(db, record) {
+        return true;
+    }
+    for field in record.fields() {
+        if let Ok(field_type_kind) = db.rs_type_kind(field.type_().clone())
+            && type_has_repr_align(db, &field_type_kind)
+        {
+            return true;
+        }
+    }
+    false
+}
+
 #[allow(clippy::too_many_arguments)]
 fn field_definition<'a>(
     db: &BindingsGenerator<'a>,
@@ -238,7 +297,6 @@ fn field_definition<'a>(
     offset: usize,
     end: usize,
     desc: &[BitfieldComment],
-    override_alignment: &mut bool,
     fields_that_must_be_copy: &mut Vec<TokenStream>,
     infer_send_sync: bool,
 ) -> Result<FieldDefinition> {
@@ -269,7 +327,6 @@ fn field_definition<'a>(
     // Bitfields get represented by private padding to ensure overall
     // struct layout is compatible.
     let Some(field) = field else {
-        *override_alignment = true;
         return Ok(FieldDefinition::Bitfield {
             field_index,
             desc: desc.to_vec(),
@@ -285,35 +342,50 @@ fn field_definition<'a>(
     let deprecated_attr = field.deprecated().map(|s| DeprecatedAttr(Rc::from(s)));
     let ident = make_rs_field_ident(field, field_index);
     let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
-    let doc_comment = match &field_rs_type_kind {
-        Ok(_) => generate_doc_comment(
-            field.doc_comment(),
+    let field_has_repr_align_in_packed = record.is_packed()
+        && field_rs_type_kind.as_ref().is_ok_and(|tk| type_has_repr_align(db, tk));
+    let doc_comment = if field_has_repr_align_in_packed {
+        generate_doc_comment(
+            Some("Reason for representing this field as a blob of bytes:\nRust does not support packed structs containing `#[repr(align)]` types"),
             None,
             None,
             db.is_golden_test(),
             db.kythe_annotations(),
-        ),
-        Err(msg) => {
-            use std::fmt::Write;
-
-            let mut new_text = field
-                .doc_comment()
-                .map(|doc_comment| format!("{doc_comment}\n\n"))
-                .unwrap_or_default();
-            let _ = write!(
-                &mut new_text,
-                "Reason for representing this field as a blob of bytes:\n{msg:#}"
-            );
-            generate_doc_comment(
-                Some(new_text.as_str()),
+        )
+    } else {
+        match &field_rs_type_kind {
+            Ok(_) => generate_doc_comment(
+                field.doc_comment(),
                 None,
                 None,
                 db.is_golden_test(),
                 db.kythe_annotations(),
-            )
+            ),
+            Err(msg) => {
+                use std::fmt::Write;
+
+                let mut new_text = field
+                    .doc_comment()
+                    .map(|doc_comment| format!("{doc_comment}\n\n"))
+                    .unwrap_or_default();
+                let _ = write!(
+                    &mut new_text,
+                    "Reason for representing this field as a blob of bytes:\n{msg:#}"
+                );
+                generate_doc_comment(
+                    Some(new_text.as_str()),
+                    None,
+                    None,
+                    db.is_golden_test(),
+                    db.kythe_annotations(),
+                )
+            }
         }
     };
-    let visibility = if field.access() == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
+    let visibility = if field.access() == AccessSpecifier::Public
+        && field_rs_type_kind.is_ok()
+        && !field_has_repr_align_in_packed
+    {
         db.type_visibility(record.owning_target(), field_rs_type_kind.clone().unwrap())
             .unwrap_or_default()
     } else {
@@ -321,14 +393,16 @@ fn field_definition<'a>(
     };
 
     let field_type = match field_rs_type_kind {
-        Err(_) => {
-            *override_alignment = true;
-            FieldType::Erased(BitPadding {
-                size: NonZeroUsize::new(end - field.offset())
-                    .expect("Bit padding should always be greater than 0"),
-                internally_mutable: internally_mutable_unknown_fields,
-            })
-        }
+        Err(_) => FieldType::Erased(BitPadding {
+            size: NonZeroUsize::new(end - field.offset())
+                .expect("Bit padding should always be greater than 0"),
+            internally_mutable: internally_mutable_unknown_fields,
+        }),
+        Ok(_) if field_has_repr_align_in_packed => FieldType::Erased(BitPadding {
+            size: NonZeroUsize::new(end - field.offset())
+                .expect("Bit padding should always be greater than 0"),
+            internally_mutable: internally_mutable_unknown_fields,
+        }),
         Ok(type_kind) => {
             let ty = type_kind.to_token_stream(db);
             let mut wrap_in_manually_drop = false;
@@ -510,7 +584,6 @@ pub fn generate_record<'a>(
         })
         .collect();
 
-    let mut override_alignment = record.override_alignment();
     let mut fields_that_must_be_copy = vec![];
     // Send/Sync are a property of the C++ type, so whether to infer them is controlled by the
     // target which defines the type: for template instantiations that's the template's target, not
@@ -555,7 +628,6 @@ pub fn generate_record<'a>(
                 cur.offset,
                 end,
                 &cur.description,
-                &mut override_alignment,
                 &mut fields_that_must_be_copy,
                 infer_send_sync,
             )
@@ -686,6 +758,9 @@ pub fn generate_record<'a>(
     }
     let mut upcast_impls = vec![];
     let assume_lifetimes = crubit_features.contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+    // Computed before `record` is shadowed by its lifetime-transformed copy, so that it agrees
+    // with `type_has_repr_align`, which sees the untransformed record.
+    let has_repr_align = record_has_repr_align(db, &record);
     let record = if assume_lifetimes {
         Rc::new(lifetime_defaults_transform_record(db, &record)?)
     } else {
@@ -739,7 +814,8 @@ pub fn generate_record<'a>(
     };
     let debug_impl = if record.impl_debug() &&
     // Keep the `impl Debug for raw_string_view` string_view.rs already defines.
-    !record.is_raw_string_view()
+    !record.is_raw_string_view() &&
+    !record.is_packed()
     {
         let mut fields: Vec<database::code_snippet::DebugField> = vec![];
         if !record.is_union() {
@@ -869,15 +945,8 @@ pub fn generate_record<'a>(
         must_use_attr: record.nodiscard().map(|s| MustUseAttr(Rc::from(s))),
         deprecated_attr: record.deprecated().map(|s| DeprecatedAttr(Rc::from(s))),
         cfi_encoding_attr: CfiEncodingAttr(record.mangled_cc_name().into()),
-        // Thread-safe types always need explicit alignment because the opaque
-        // UnsafeCell<[MaybeUninit<u8>; N]> body has alignment 1.
-        align: if (override_alignment || record.is_thread_safe())
-            && record.size_align().alignment() > 1
-        {
-            Some(record.size_align().alignment())
-        } else {
-            None
-        },
+        align: has_repr_align.then(|| record.size_align().alignment()),
+        pack: record.pack(),
         // TODO(b/481405536): we should do this unconditionally.
         internally_mutable_unknown_fields: !record.should_derive_copy(),
         crubit_annotations: {
@@ -1041,7 +1110,7 @@ pub fn generate_derives(record: &Record<'_>) -> DeriveAttr {
             derives.push(quote! { ::ctor::MoveAndAssignViaCopy });
         }
     }
-    if record.trait_derives().debug == TraitImplPolarity::Positive {
+    if !record.is_packed() && record.trait_derives().debug == TraitImplPolarity::Positive {
         derives.push(quote! { Debug });
     }
     for custom_trait in &record.trait_derives().custom {

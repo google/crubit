@@ -101,7 +101,7 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
 //   Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
 // error: struct `PackedLayout` could not be bound
-//   Records with packed layout are not supported
+//   Records with packed fields are not supported
 
 // error: function `MultipleReasons` could not be bound
 //   Parameter #0 is not supported: Unsupported `volatile` qualifier: volatile int

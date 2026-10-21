@@ -671,6 +671,8 @@ message Record {
   bool has_template_argument_lifetime = 44;
   // Whether this record has virtual base classes (direct or indirect).
   bool has_virtual_bases = 45;
+  // The value, in bytes, to use for packing.
+  int64 pack = 46;
 }
 
 // A forward-declared record (e.g. `struct Foo;`)
