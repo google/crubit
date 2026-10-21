@@ -184,25 +184,6 @@ rust_library(
 )
 
 rust_library(
-    name = "interner",
-    srcs = ["interner.rs"],
-    edition = "2024",
-    deps = [
-        "@crate_index//:bumpalo",  # v3
-    ],
-)
-
-rust_test(
-    name = "interner_test",
-    srcs = ["interner_test.rs"],
-    deps = [
-        ":interner",
-        "@crate_index//:bumpalo",  # v3
-        "@crate_index//:googletest",
-    ],
-)
-
-rust_library(
     name = "memoized",
     srcs = ["memoized.rs"],
     edition = "2024",

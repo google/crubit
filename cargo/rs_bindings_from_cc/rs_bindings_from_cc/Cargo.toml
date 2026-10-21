@@ -16,3 +16,8 @@ path = "main.rs"
 # in order to prevent them from being dropped at link time.
 rs_bindings_from_cc_impl_sys = { path = "../rs_bindings_from_cc_impl_sys" }
 
+[dev-dependencies]
+# Crates used by Bazel targets/tests so crate_universe includes them in @crate_index.
+open-enum.workspace = true
+rstest.workspace = true
+

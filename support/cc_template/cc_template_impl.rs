@@ -72,7 +72,6 @@ fn make_syn_error<T: Into<String>>(message: T) -> syn::Error {
 mod tests {
     use super::*;
     use googletest::gtest;
-    use maplit::hashmap;
     use std::path::Path;
 
     fn get_error_from_read_instantiations_map(no_error_happened_msg: &str) -> String {
@@ -131,7 +130,8 @@ mod tests {
         let path = Path::join(Path::new(&env::var("TEST_TMPDIR").unwrap()), "instantiations.json");
         let key = "std::string<bool>";
         let value = "__CcTemplateInst_std_string_bool";
-        std::fs::write(&path, serde_json::to_string(&hashmap! {key => value}).unwrap()).unwrap();
+        std::fs::write(&path, serde_json::to_string(&HashMap::from([(key, value)])).unwrap())
+            .unwrap();
         unsafe {
             env::set_var("CRUBIT_INSTANTIATIONS_FILE", &path);
         }
@@ -139,16 +139,17 @@ mod tests {
         let deserialized_map =
             read_instantiations_map().expect("Expected successful deserialization.");
 
-        assert_eq!(deserialized_map, hashmap! { key.to_string() => value.to_string() });
+        assert_eq!(deserialized_map, HashMap::from([(key.to_string(), value.to_string())]));
     }
 
     #[gtest]
     fn test_successful_expansion() {
         let expanded = get_instantiation_struct_name(
             quote! { std::vector<bool> },
-            hashmap! {
-                quote!{ std::vector<bool> }.to_string().replace(' ', "") => "__std_vector__bool__".to_string(),
-            },
+            HashMap::from([(
+                quote! { std::vector<bool> }.to_string().replace(' ', ""),
+                "__std_vector__bool__".to_string(),
+            )]),
         )
         .unwrap();
         assert_eq!(

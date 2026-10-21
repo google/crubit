@@ -4,3 +4,5 @@
 
 # This directory is built as its own module.
 crubit_explorer
+doxygen
+examples/build_systems/bazel

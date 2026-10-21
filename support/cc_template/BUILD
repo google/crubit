@@ -44,6 +44,5 @@ crubit_rust_test(
     crate = ":cc_template_impl",
     deps = [
         "@crate_index//:googletest",
-        "@crate_index//:maplit",  # v1
     ],
 )
