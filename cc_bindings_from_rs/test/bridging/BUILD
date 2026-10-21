@@ -91,6 +91,8 @@ golden_test(
         "macos",
     ],
     rust_library = "layout_equivalent_generics",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 crubit_cc_test(
@@ -100,6 +102,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":layout_equivalent_generics_cc_api",
         ":rust_pointer_types_cc_api",
@@ -131,6 +135,8 @@ golden_test(
         "macos",
     ],
     rust_library = "bridged_types",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 rust_library(
@@ -156,6 +162,8 @@ golden_test(
         "macos",
     ],
     rust_library = "layout_equivalent_pointers",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 rust_library(
@@ -187,6 +195,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":mapped_cpp_type_cc_api",
         "@googletest//:gtest_main",
