@@ -1329,7 +1329,7 @@ impl<'a> RsTypeKind<'a> {
                 RsTypeKind::new_type_alias(db, type_alias, options, lifetimes)
             }
             Item::ExistingRustType(existing_rust_type) => {
-                RsTypeKind::new_existing_rust_type(db, existing_rust_type, options)
+                RsTypeKind::new_existing_rust_type(db, existing_rust_type, options, template_args)
             }
             other_item => bail!("Item does not define a type: {other_item:?}"),
         }
@@ -1481,6 +1481,7 @@ impl<'a> RsTypeKind<'a> {
         db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
         existing_rust_type: Rc<ExistingRustType<'a>>,
         options: &LifetimeOptions,
+        template_args: &Option<Rc<[CcType]>>,
     ) -> Result<Self> {
         if existing_rust_type.rs_name() == SLICE_REF_NAME_RS {
             let [template_arg] = &existing_rust_type.template_args() else {
@@ -1590,12 +1591,23 @@ impl<'a> RsTypeKind<'a> {
             )
         };
 
+        // The importer records the type argument as written at this use (see
+        // `WithAsWrittenTemplateArgs` in `importer.cc`) when it says something the
+        // specialization's own argument cannot, such as the nullability in
+        // `absl::StatusOr<absl_nonnull std::unique_ptr<T>>`. Prefer it over the specialization's.
+        let as_written_type_arg = match existing_rust_type.template_args() {
+            [TemplateArg::Type(fallback)] if template_args.is_some() => {
+                Some(choose_one_type(fallback, template_args)?)
+            }
+            _ => None,
+        };
         let args = existing_rust_type
             .template_args()
             .iter()
             .map(|subst| {
                 match subst {
                     TemplateArg::Type(type_param) => {
+                        let type_param = as_written_type_arg.as_ref().unwrap_or(type_param);
                         let mut rs_type_kind = db.rs_type_kind_with_lifetime_elision(
                             type_param.clone(),
                             LifetimeOptions {
@@ -3437,6 +3449,7 @@ mod tests {
             EmptyDatabase::new(),
             Rc::new(ExistingRustType::try_from(proto).unwrap()),
             &LifetimeOptions::default(),
+            &None,
         )
         .expect("Should succeed because all fallible operations come from BindingsGenerated, which EmptyDatabase cannot successfully deref to (it panics).")
     }
