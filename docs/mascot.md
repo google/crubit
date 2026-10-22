@@ -1,12 +1,9 @@
 # Cardi, the Crubit Mascot
 
-Meet **Cardi**, the official mascot of the Crubit project!
+Meet **Cardi**, the official mascot of the Crubit project: a friendly blue
+squid.
 
-![Cardi](images/cardi.svg)
-
-## Who is Cardi?
-
-Cardi is a friendly blue squid.
+<img src="images/cardi.svg" alt="Cardi, a friendly blue squid" width="240">
 
 ## Lore
 
