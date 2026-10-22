@@ -186,7 +186,14 @@ pub fn generate_thunk_decl<'tcx>(
                         BridgedType::ExternCFuncConverters {
                             cpp_type: bridged_cpp_type, ..
                         } => {
-                            let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
+                            let cpp_type = if !db.is_cpp_move_constructible(ty)
+                                && format_type::cpp_layout_equivalent_type(db, ty)?.is_some()
+                            {
+                                db.format_ty_for_cc(ty, TypeLocation::Other)?
+                                    .into_tokens(&mut prereqs)
+                            } else {
+                                cpp_type.snippet.into_tokens(&mut prereqs)
+                            };
                             if matches!(bridged_cpp_type, CcType::Pointer { .. }) {
                                 Ok(quote! { #cpp_type })
                             } else {
