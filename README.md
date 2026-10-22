@@ -2,9 +2,11 @@
 
 # Crubit: C++/Rust Bidirectional Interop Tool
 
-[![Docs](https://img.shields.io/badge/docs-crubit.rs-blue)](https://crubit.rs)
-[![rust workflow](https://github.com/google/crubit/actions/workflows/rust.yml/badge.svg)](https://github.com/google/crubit/actions/workflows/rust.yml)
-[![GitHub](https://img.shields.io/badge/github-google%2Fcrubit-blue?logo=github)](https://github.com/google/crubit)
+<p>
+<a href="https://crubit.rs"><img src="https://img.shields.io/badge/docs-crubit.rs-blue" alt="Docs" style="display: inline"></a>
+<a href="https://github.com/google/crubit/actions/workflows/rust.yml"><img src="https://github.com/google/crubit/actions/workflows/rust.yml/badge.svg" alt="Rust workflow" style="display: inline"></a>
+<a href="https://github.com/google/crubit"><img src="https://img.shields.io/badge/github-google%2Fcrubit-blue?logo=github" alt="GitHub" style="display: inline"></a>
+</p>
 
 Crubit is a bidirectional bindings generator for C++ and Rust, allowing users
 to:

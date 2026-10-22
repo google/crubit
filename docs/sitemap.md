@@ -1,10 +1,7 @@
 <!--* css: "//depot/docs/includes/sitemap.css" *-->
 
 *   [Home](/docs/index.md)
-*   [Are We Crubit Yet?](/docs/overview/status.md)
-*   [Limitations](/docs/overview/limits.md)
-*   [Safety](/docs/overview/safety.md)
-*   [Debugging](/docs/overview/debugging.md)
+*   [Supported Features](/docs/overview/status.md)
 *   [Build System Integrations](/docs/overview/build_systems.md)
     *   [Bazel](/docs/overview/bazel.md)
     *   [CMake](/docs/overview/cmake.md)
@@ -58,6 +55,14 @@
     *   [Movable types](/docs/rust/movable_types.md)
     *   <hr>
     *   [The Rust Standard Library](/docs/rust/std.md)
+
+*   [Memory Safety](/docs/overview/safety.md)
+
+*   [Debugging](/docs/overview/debugging.md)
+
+*   Future Functionality {.cnav-collapsed-by-default}
+
+    *   [Limitations](/docs/overview/limits.md)
 
 *   Design {.cnav-collapsed-by-default}
 
