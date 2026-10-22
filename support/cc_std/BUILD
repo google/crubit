@@ -10,6 +10,7 @@ load(
     "//support/cc_std_impl:headers.bzl",
     "LIBCXX_HEADERS",
     "LIBC_HEADERS",
+    "NON_APPLE_LIBC_HEADERS",
 )
 
 package(default_applicable_licenses = ["//:license"])
@@ -27,7 +28,9 @@ bindings_for_toolchain_headers(
     public_libc_hdrs = select({
         # `LIBC_HEADERS` are POSIX headers, which are not available on Windows.
         "@platforms//os:windows": [],
-        "//conditions:default": LIBC_HEADERS,
+        "@platforms//os:ios": LIBC_HEADERS,
+        "@platforms//os:macos": LIBC_HEADERS,
+        "//conditions:default": LIBC_HEADERS + NON_APPLE_LIBC_HEADERS,
     }),
     public_libcxx_hdrs = LIBCXX_HEADERS,
     visibility = [

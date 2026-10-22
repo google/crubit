@@ -71,8 +71,12 @@ LIBCXX_HEADERS = [
 ]
 
 LIBC_HEADERS = [
-    "netinet/ether.h",
     "netinet/in.h",
     "netinet/udp.h",
     "sys/socket.h",
+]
+
+# Libc headers that are not available on Apple platforms (iOS, macOS).
+NON_APPLE_LIBC_HEADERS = [
+    "netinet/ether.h",
 ]
