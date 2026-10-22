@@ -94,8 +94,7 @@ fn is_debug_formattable(db: &BindingsGenerator, ty: &ir::CcType) -> bool {
             Ok(ir::Item::ExistingRustType(existing_type)) => existing_type.impl_debug(),
             _ => false,
         },
-        // TODO(b/575922365): Support debug formatting for constant-sized C-style arrays.
-        ir::CcTypeVariant::ConstantArray(_) => false,
+        ir::CcTypeVariant::ConstantArray(arr) => is_debug_formattable(db, arr.element_type()),
         ir::CcTypeVariant::Error(_) => false,
     }
 }
@@ -292,15 +291,18 @@ fn record_has_repr_align<'a>(db: &BindingsGenerator<'a>, record: &Record<'a>) ->
     if record.override_alignment() || record.is_thread_safe() {
         return true;
     }
-    // Bitfields and fields whose type can't be represented in Rust are emitted
-    // as unaligned byte blobs, so the struct's alignment no longer follows from
-    // its fields and must be set explicitly. Zero-sized fields (e.g. `int : 0;`)
-    // are skipped, as `generate_record` doesn't emit anything for them.
+    // Bitfields, zero-sized fields (e.g. `T[0]`, `T[]`, `int : 0;`, or empty
+    // `[[no_unique_address]]` fields, which `generate_record` omits), and
+    // fields whose type can't be represented in Rust (which are emitted as
+    // unaligned byte blobs) mean the struct's alignment may no longer follow
+    // from its emitted fields and must be set explicitly.
+    // Empty types with `no_unique_address` would normally have an alignment of 1, but if the
+    // empty type has an `alignas`, then alignment could be more than 1.
     for field in record.fields() {
-        if field.size() == 0 {
-            continue;
-        }
-        if field.is_bitfield() || get_field_rs_type_kind_for_layout(db, record, field).is_err() {
+        if field.is_bitfield()
+            || field.size() == 0
+            || get_field_rs_type_kind_for_layout(db, record, field).is_err()
+        {
             return true;
         }
     }
@@ -314,20 +316,23 @@ fn record_has_repr_align<'a>(db: &BindingsGenerator<'a>, record: &Record<'a>) ->
 /// E0588), so fields of these types in packed records are represented as opaque
 /// byte blobs instead.
 fn type_has_repr_align<'a>(db: &BindingsGenerator<'a>, type_kind: &RsTypeKind<'a>) -> bool {
-    let RsTypeKind::Record { record, .. } = type_kind.unalias() else {
-        return false;
-    };
-    if record_has_repr_align(db, record) {
-        return true;
-    }
-    for field in record.fields() {
-        if let Ok(field_type_kind) = db.rs_type_kind(field.type_().clone())
-            && type_has_repr_align(db, &field_type_kind)
-        {
-            return true;
+    match type_kind.unalias() {
+        RsTypeKind::CArray { element_type, .. } => type_has_repr_align(db, element_type),
+        RsTypeKind::Record { record, .. } => {
+            if record_has_repr_align(db, record) {
+                return true;
+            }
+            for field in record.fields() {
+                if let Ok(field_type_kind) = db.rs_type_kind(field.type_().clone())
+                    && type_has_repr_align(db, &field_type_kind)
+                {
+                    return true;
+                }
+            }
+            false
         }
+        _ => false,
     }
-    false
 }
 
 #[allow(clippy::too_many_arguments)]

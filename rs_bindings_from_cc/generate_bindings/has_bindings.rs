@@ -242,7 +242,16 @@ pub fn has_bindings<'a>(
         }
         // Global variables receive bindings if the underlying type has bindings.
         Item::GlobalVar(ref global_var) => match db.rs_type_kind(global_var.type_().clone()) {
-            Ok(_) => Ok(()),
+            Ok(rs_type_kind) => {
+                if let Some(c_array) = rs_type_kind.contains_c_array() {
+                    return Err(NoBindingsReason::Unsupported(anyhow!(
+                        "C-style array global variables are not yet supported: \
+                        {} (b/575922365)",
+                        c_array.cc_debug_name_for_rs_type(),
+                    )));
+                }
+                Ok(())
+            }
             Err(error) => Err(NoBindingsReason::DependencyFailed {
                 type_name: db.debug_name(item.id()),
                 blocker: None,
@@ -312,12 +321,26 @@ fn func_has_bindings<'a>(
     let sig_types =
         func.params().iter().map(|p| p.type_()).chain(std::iter::once(func.return_type()));
     for sig_type in sig_types {
-        if let Err(source) = db.rs_type_kind(sig_type.clone()) {
-            return Err(NoBindingsReason::DependencyFailed {
-                type_name: db.debug_name(func.id()),
-                blocker: None,
-                source,
-            });
+        match db.rs_type_kind(sig_type.clone()) {
+            Ok(rs_type_kind) => {
+                // Keep in sync with parameter/return type validation in `generate_function.rs`,
+                // which evaluates `rs_type_kind_with_lifetime_elision` directly
+                // before thunk generation.
+                if let Some(c_array) = rs_type_kind.contains_c_array() {
+                    return Err(NoBindingsReason::Unsupported(anyhow!(
+                        "C-style array types are not supported in function signatures yet: \
+                {} (b/575922365)",
+                        c_array.cc_debug_name_for_rs_type(),
+                    )));
+                }
+            }
+            Err(source) => {
+                return Err(NoBindingsReason::DependencyFailed {
+                    type_name: db.debug_name(func.id()),
+                    blocker: None,
+                    source,
+                })
+            }
         }
     }
 

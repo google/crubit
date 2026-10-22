@@ -17,6 +17,7 @@ SUPPORTED_FEATURES = [
     "iterator_item_references",
     "nonnull_smart_pointers",
     "reserve_standard_macros",
+    "constant_arrays",
 ]
 
 # Per-feature denylists live in features/denylists/supported_feature_denylists.bzl, not here, so

@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use debuggables::{
-    has_anonymous_union, rust_keywords, Abstract, AliasedDebuggable, Debuggable, Enum, Exhaustive,
-    HasAnonymousUnion, HasNonDebuggable, OptOut, RustKeywords, Union,
+    has_anonymous_union, rust_keywords, Abstract, AliasedDebuggable, ArrayDebuggable, Debuggable,
+    Enum, EnumArrayDebuggable, Exhaustive, HasAnonymousUnion, HasNonDebuggable,
+    MixedOpaqueArrayDebuggable, OptOut, RustKeywords, Union, UnscopedDebugEnum,
 };
 use existing_rust_debuggable::ExistingRustDebuggable;
 use googletest::{expect_eq, gtest};
@@ -83,4 +84,32 @@ fn test_abstract_opt_in() {
 #[gtest]
 fn test_opt_out() {
     assert_not_impl_any!(OptOut: Debug);
+}
+
+#[gtest]
+fn test_array_debuggable_including_large_and_mixed_opaque_arrays() {
+    let mut d = ArrayDebuggable::default();
+    d.large[0] = 1i8.into();
+    d.large[63] = 9i8.into();
+    let expected_large_zeros = "0, ".repeat(62);
+    expect_eq!(
+        format!("{d:?}"),
+        format!(
+            "ArrayDebuggable {{ large: [1, {expected_large_zeros}9], \
+             matrix: [[1, 2, 3], [4, 5, 6]] }}"
+        )
+    );
+
+    let m = MixedOpaqueArrayDebuggable::default();
+    expect_eq!(format!("{m:?}"), "MixedOpaqueArrayDebuggable { header: 7, arr: [8, 9], .. }");
+
+    let e = EnumArrayDebuggable::default();
+    expect_eq!(e.unscoped, [UnscopedDebugEnum::kFirst, UnscopedDebugEnum::kSecond]);
+    expect_eq!(
+        format!("{e:?}"),
+        "EnumArrayDebuggable { \
+         unscoped: [UnscopedDebugEnum(10), UnscopedDebugEnum(20)], \
+         scoped: [Enum(1), Enum(5)], \
+         matrix: [[Enum(1), Enum(2)], [Enum(3), Enum(1)]] }"
+    );
 }

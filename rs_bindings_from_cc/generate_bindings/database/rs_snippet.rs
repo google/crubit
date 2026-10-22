@@ -13,10 +13,10 @@ use crubit_feature::CrubitFeature;
 use error_report::{bail, ensure};
 use flagset::FlagSet;
 use ir::*;
-use proc_macro2::{Delimiter, Group, Ident, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Group, Ident, Literal, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::HashSet;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, Write as _};
 use std::rc::Rc;
 use token_stream_printer::write_unformatted_tokens;
 
@@ -755,6 +755,10 @@ pub enum RsTypeKind<'a> {
         lifetimes: Vec<Lifetime>,
     },
     Primitive(Primitive),
+    CArray {
+        element_type: Rc<RsTypeKind<'a>>,
+        num_elements: usize,
+    },
     /// Types that require custom logic to translate.
     BridgeType {
         bridge_type: BridgeRsTypeKind<'a>,
@@ -1068,14 +1072,22 @@ impl<'a> BridgeRsTypeKind<'a> {
                 } else {
                     None
                 };
+                let generic_types = template_args
+                    .iter()
+                    .map(|template_arg| db.rs_type_kind(template_arg.clone()))
+                    .collect::<Result<Rc<[RsTypeKind]>>>()?;
+                if let Some(c_array) = generic_types.iter().find_map(RsTypeKind::contains_c_array) {
+                    bail!(
+                        "C-style array types are not supported in bridge type arguments yet: \
+                        {} (b/575922365)",
+                        c_array.cc_debug_name_for_rs_type(),
+                    );
+                }
                 BridgeRsTypeKind::Bridge {
                     rust_name: Rc::from(rust_name),
                     abi_rust: Rc::from(abi_rust),
                     abi_cpp: Rc::from(abi_cpp),
-                    generic_types: template_args
-                        .iter()
-                        .map(|template_arg| db.rs_type_kind(template_arg.clone()))
-                        .collect::<Result<Rc<[RsTypeKind]>>>()?,
+                    generic_types,
                     label_hint: parsed_hint,
                 }
             }
@@ -1142,6 +1154,21 @@ impl<'a> BridgeRsTypeKind<'a> {
                 } else {
                     cpp_fn_trait
                 };
+                let return_type = Rc::new(db.rs_type_kind(return_type.clone())?);
+                let param_types: Rc<[RsTypeKind]> = param_types
+                    .iter()
+                    .map(|param_type| db.rs_type_kind(param_type.clone()))
+                    .collect::<Result<_>>()?;
+                if let Some(c_array) = std::iter::once(return_type.as_ref())
+                    .chain(param_types.iter())
+                    .find_map(RsTypeKind::contains_c_array)
+                {
+                    bail!(
+                        "C-style array types are not supported in callable signatures yet: \
+                        {} (b/575922365)",
+                        c_array.cc_debug_name_for_rs_type(),
+                    );
+                }
                 BridgeRsTypeKind::Callable(Rc::new(Callable {
                     backing_type: match backing_type {
                         ir::BackingType::DynCallable => BackingType::DynCallable,
@@ -1155,11 +1182,8 @@ impl<'a> BridgeRsTypeKind<'a> {
                     },
                     cpp_fn_trait,
                     rust_fn_trait,
-                    return_type: Rc::new(db.rs_type_kind(return_type.clone())?),
-                    param_types: param_types
-                        .iter()
-                        .map(|param_type| db.rs_type_kind(param_type.clone()))
-                        .collect::<Result<_>>()?,
+                    return_type,
+                    param_types,
                     invoker_ident: format_ident!(
                         "__crubit_invoker_{}{}",
                         record.rs_name().as_str(),
@@ -1206,10 +1230,17 @@ impl<'a> BridgeRsTypeKind<'a> {
         layout_compat_feature: CrubitFeature,
         type_args: [CcType; N],
     ) -> Result<Option<[RsTypeKind<'a>; N]>> {
+        let inners = type_args.map(|t| db.rs_type_kind(t));
+        for inner in &inners {
+            if let Ok(inner) = inner
+                && inner.contains_c_array().is_some()
+            {
+                inner.ensure_complete_type_arg(db, record.cc_name())?;
+            }
+        }
         if options.requires_layout_compatible {
             return Ok(None);
         }
-        let inners = type_args.map(|t| db.rs_type_kind(t));
         if db.ir().target_crubit_features(db.ir().current_target()).contains(layout_compat_feature)
         {
             let keeps_bridging = inners.iter().any(|inner| {
@@ -1288,6 +1319,12 @@ fn new_c9_co_record<'a>(
             error.clone(),
         ));
     };
+    if let Some(c_array) = arg_type_kind.contains_c_array() {
+        bail!(
+            "C-style array types are not supported in `c9::Co` yet: {} (b/575922365)",
+            c_array.cc_debug_name_for_rs_type(),
+        );
+    }
     let lifetime = if options.assume_lifetimes {
         if lifetimes.is_empty() {
             Some(Lifetime::new("static"))
@@ -1508,6 +1545,12 @@ impl<'a> RsTypeKind<'a> {
                 },
             )?;
             inner_rs_type_kind.force_layout_compatible();
+            if let Some(c_array) = inner_rs_type_kind.contains_c_array() {
+                bail!(
+                    "SliceRef pointee type cannot contain a C-style array: {} (b/575922365)",
+                    c_array.cc_debug_name_for_rs_type(),
+                );
+            }
             ensure!(
                 inner_rs_type_kind.allowed_behind_multi_element_ptr(),
                 "SliceRef pointee type is not allowed behind a multi element pointer: {}",
@@ -1675,6 +1718,7 @@ impl<'a> RsTypeKind<'a> {
     /// Rust spelling is a native Rust type rather than the C++ one.
     pub fn inline_payloads(&self) -> &[RsTypeKind<'a>] {
         match self.unalias() {
+            RsTypeKind::CArray { element_type, .. } => std::slice::from_ref(element_type),
             RsTypeKind::ExistingRustType { type_args, .. } => type_args,
             _ => &[],
         }
@@ -1772,6 +1816,9 @@ impl<'a> RsTypeKind<'a> {
             RsTypeKind::TypeAlias { underlying_type, .. } => {
                 Rc::make_mut(underlying_type).force_layout_compatible();
             }
+            RsTypeKind::CArray { element_type, .. } => {
+                Rc::make_mut(element_type).force_layout_compatible();
+            }
             _ => {}
         }
     }
@@ -1828,7 +1875,73 @@ impl<'a> RsTypeKind<'a> {
             self.is_complete(),
             "Type `{container_name}` uses forward-declared type `{type_name}` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.",
         );
+        if let Some(c_array) = self.contains_c_array() {
+            bail!(
+                "Type `{container_name}` uses C-style array type `{}` as \
+            an argument to a generic type, which is not yet supported (b/575922365)",
+                c_array.cc_debug_name_for_rs_type(),
+            );
+        }
         Ok(())
+    }
+
+    /// If `self` is or contains a [`RsTypeKind::CArray`], returns the first such [`RsTypeKind`].
+    pub fn contains_c_array(&self) -> Option<&RsTypeKind<'a>> {
+        self.dfs_iter().find(|t| matches!(t, RsTypeKind::CArray { .. }))
+    }
+
+    /// Returns a C++ debug name reconstructed from this [`RsTypeKind`].
+    ///
+    /// Note: This is a simplified counterpart to [`BindingsGenerator::cc_type_debug_name`] for
+    /// callers that only have an [`RsTypeKind`] rather than an [`ir::CcType`]; we may consider
+    /// de-duplicating the two in the future.
+    pub fn cc_debug_name_for_rs_type(&self) -> String {
+        let mut dims = String::new();
+        let mut cur = self;
+        while let RsTypeKind::CArray { element_type, num_elements } = cur.unalias() {
+            write!(&mut dims, "[{num_elements}]").unwrap();
+            cur = element_type;
+        }
+        let mut base = match cur.unalias() {
+            RsTypeKind::Primitive(p) => p.to_string(),
+            RsTypeKind::Enum { enum_, crate_path } => {
+                format!(
+                    "{}{}",
+                    crate_path.namespace_qualifier.format_for_cc_debug(),
+                    enum_.cc_name()
+                )
+            }
+            RsTypeKind::Record { record, crate_path, .. } => {
+                format!(
+                    "{}{}",
+                    crate_path.namespace_qualifier.format_for_cc_debug(),
+                    record.cc_name()
+                )
+            }
+            RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => format!(
+                "{}{}",
+                crate_path.namespace_qualifier.format_for_cc_debug(),
+                incomplete_record.cc_name()
+            ),
+            RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
+                existing_rust_type.cc_name().to_string()
+            }
+            RsTypeKind::BridgeType { original_type, .. } => original_type.cc_name().to_string(),
+            RsTypeKind::Pointer { pointee, .. } => {
+                format!("{}*", pointee.cc_debug_name_for_rs_type())
+            }
+            RsTypeKind::Reference { referent, .. } => {
+                format!("{}&", referent.cc_debug_name_for_rs_type())
+            }
+            RsTypeKind::RvalueReference { referent, .. } => {
+                format!("{}&&", referent.cc_debug_name_for_rs_type())
+            }
+            RsTypeKind::FuncPtr { .. } => "function pointer".to_string(),
+            RsTypeKind::Error { symbol, .. } => symbol.to_string(),
+            RsTypeKind::TypeAlias { .. } | RsTypeKind::CArray { .. } => unreachable!(),
+        };
+        base.push_str(&dims);
+        base
     }
 
     pub fn is_proto_message_bridge_type(&self) -> bool {
@@ -1903,6 +2016,18 @@ impl<'a> RsTypeKind<'a> {
             }
         }
 
+        if let Some(c_array) = self.contains_c_array() {
+            require_any_feature(
+                <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::ConstantArrays),
+                &|| {
+                    error_report::anyhow!(
+                        "C-style array types are not yet supported: {} (b/575922365)",
+                        c_array.cc_debug_name_for_rs_type(),
+                    )
+                },
+            );
+        }
+
         for rs_type_kind in self.dfs_iter() {
             match rs_type_kind {
                 RsTypeKind::Error { error, visibility_override, .. } => {
@@ -1962,7 +2087,8 @@ impl<'a> RsTypeKind<'a> {
                 | RsTypeKind::ExistingRustType { .. }
                 | RsTypeKind::Enum { .. }
                 | RsTypeKind::TypeAlias { .. }
-                | RsTypeKind::Primitive { .. } => {}
+                | RsTypeKind::Primitive { .. }
+                | RsTypeKind::CArray { .. } => {}
             }
         }
         reasons.into_values().collect()
@@ -2014,6 +2140,7 @@ impl<'a> RsTypeKind<'a> {
             RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { .. } => unreachable!(),
             RsTypeKind::Primitive(_) => true,
+            RsTypeKind::CArray { .. } => false,
             RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
                 BridgeRsTypeKind::ProtoMessageBridge { kind, .. } => match kind {
                     ProtoBridgeKind::Owned => false,
@@ -2085,6 +2212,7 @@ impl<'a> RsTypeKind<'a> {
             RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { .. } => unreachable!(),
             RsTypeKind::Primitive(_) => true,
+            RsTypeKind::CArray { .. } => true,
             RsTypeKind::BridgeType { .. } => false,
             RsTypeKind::ExistingRustType { .. } => true,
         }
@@ -2176,6 +2304,7 @@ impl<'a> RsTypeKind<'a> {
         match self {
             RsTypeKind::Error { .. } => false,
             RsTypeKind::Primitive { .. } => true,
+            RsTypeKind::CArray { element_type, .. } => element_type.implements_copy(),
             RsTypeKind::Pointer { .. } => true,
             RsTypeKind::FuncPtr { .. } => true,
             RsTypeKind::Reference { mutability: Mutability::Const, .. } => true,
@@ -2483,6 +2612,11 @@ impl<'a> RsTypeKind<'a> {
                     self.to_token_stream(db)
                 }
             }
+            RsTypeKind::CArray { element_type, num_elements } => {
+                let elem = element_type.to_token_stream_replacing_by_self(db, self_type);
+                let len = Literal::usize_unsuffixed(*num_elements);
+                quote! { [#elem; #len] }
+            }
             RsTypeKind::BridgeType { .. } => self.to_token_stream(db),
             RsTypeKind::ExistingRustType { .. } => self.to_token_stream(db),
             _ => self.to_token_stream(db),
@@ -2695,6 +2829,10 @@ fn all_static_lifetimes_internal<'a>(
             }
         }
         RsTypeKind::Primitive(_) => Rc::new(t.clone()),
+        RsTypeKind::CArray { element_type, num_elements } => Rc::new(RsTypeKind::CArray {
+            element_type: all_static_lifetimes_internal(element_type, strip_aliases),
+            num_elements: *num_elements,
+        }),
         RsTypeKind::BridgeType { bridge_type, original_type } => Rc::new(RsTypeKind::BridgeType {
             bridge_type: match bridge_type {
                 BridgeRsTypeKind::Bridge {
@@ -3061,6 +3199,11 @@ impl<'a> RsTypeKind<'a> {
             RsTypeKind::Primitive(primitive) => {
                 PrimitiveName::from_primitive(*primitive).to_token_stream()
             }
+            RsTypeKind::CArray { element_type, num_elements } => {
+                let elem = element_type.to_token_stream(db);
+                let len = proc_macro2::Literal::usize_unsuffixed(*num_elements);
+                quote! { [#elem; #len] }
+            }
             RsTypeKind::BridgeType { bridge_type, original_type } => {
                 match bridge_type {
                     BridgeRsTypeKind::Bridge { rust_name, generic_types, label_hint, .. } => {
@@ -3348,6 +3491,7 @@ impl<'a, 'ty> Iterator for RsTypeKindIter<'a, 'ty> {
                     | RsTypeKind::Record { .. }
                     | RsTypeKind::Enum { .. } => {}
                     RsTypeKind::Pointer { pointee, .. } => self.todo.push(pointee),
+                    RsTypeKind::CArray { element_type, .. } => self.todo.push(element_type),
                     RsTypeKind::Reference { referent, .. } => self.todo.push(referent),
                     RsTypeKind::RvalueReference { referent, .. } => self.todo.push(referent),
                     RsTypeKind::TypeAlias { underlying_type: t, .. } => {

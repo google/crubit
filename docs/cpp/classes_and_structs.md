@@ -39,6 +39,10 @@ The fields on the Rust struct type are the corresponding Rust types:
 *   If the field has a user-defined type, such as a [class
     type](classes_and_structs.md) or [enum](enums.md), then the Rust field uses
     the bindings for that type.
+*   If the field has a non-zero fixed-length C-style array type (`T[N]`) of
+    a [primitive type](../types/primitive.md) or [enum](enums.md) (including
+    multidimensional arrays such as `T[M][N]`), then the Rust field has type
+    `[T; N]`.
 
 ### Unsupported fields {#opaque_fields}
 
@@ -58,8 +62,7 @@ blobs:
 *   Fields that have nontrivial destructors
 *   Fields whose type does not have bindings
 *   Fields that have any unrecognized attribute, including `no_unique_address`
-*   Fields of a [packed struct](#packed) whose Rust type has
-    `#[repr(align(N))]`
+*   Fields of a [packed struct](#packed) whose Rust type has `#[repr(align(N))]`
 
 A Rust struct with opaque blobs is ABI-incompatible with the C++ struct or class
 that it corresponds to. As a consequence, if the struct is used for FFI outside
@@ -283,8 +286,8 @@ differences:
     union.
 *   Base classes aren't printed, since they may be unaligned too.
 
-For example, with the struct above, `format!("{s:?}")` is
-`PackedStruct { a: 10, b: 200, c: 3000 }`. The tests in
+For example, with the struct above, `format!("{s:?}")` is `PackedStruct { a: 10,
+b: 200, c: 3000 }`. The tests in
 [`rs_bindings_from_cc/test/struct/packed/`](/rs_bindings_from_cc/test/struct/packed/)
 show more examples.
 

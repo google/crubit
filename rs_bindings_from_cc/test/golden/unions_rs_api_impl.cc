@@ -73,6 +73,7 @@ static_assert(CRUBIT_OFFSET_OF(bool_field, union NonEmptyUnion) == 0);
 static_assert(CRUBIT_OFFSET_OF(char_field, union NonEmptyUnion) == 0);
 static_assert(CRUBIT_OFFSET_OF(int_field, union NonEmptyUnion) == 0);
 static_assert(CRUBIT_OFFSET_OF(long_long_field, union NonEmptyUnion) == 0);
+static_assert(CRUBIT_OFFSET_OF(int_array_field, union NonEmptyUnion) == 0);
 
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1Ev(
     union NonEmptyUnion* __this) {
@@ -109,7 +110,7 @@ static_assert((union NonCopyUnion2 &
 
 static_assert(sizeof(union UnionWithOpaqueField) == 42);
 static_assert(alignof(union UnionWithOpaqueField) == 1);
-static_assert(CRUBIT_OFFSET_OF(constant_array_field_not_yet_supported,
+static_assert(CRUBIT_OFFSET_OF(volatile_array_field_not_yet_supported,
                                union UnionWithOpaqueField) == 0);
 
 extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
