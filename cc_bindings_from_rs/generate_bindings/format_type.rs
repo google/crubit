@@ -243,19 +243,11 @@ pub fn format_cc_ident_symbol(db: &BindingsGenerator, ident: Symbol) -> Result<I
 
 /// Implementation of `BindingsGenerator::format_cc_ident`.
 pub fn format_cc_ident(db: &BindingsGenerator, ident: &str) -> Result<Ident> {
-    // TODO(b/254104998): Check whether the crate where the identifier is defined is
-    // enabled for the feature. Right now if the dep enables the feature but the
-    // current crate doesn't, we will escape the identifier in the dep but
-    // consider it failed in the current crate.
     let features = db.crate_features(db.source_crate_num());
-    if check_feature_enabled_on_self_and_all_deps(db, CrubitFeature::Experimental) {
-        code_gen_utils::format_cc_ident(
-            code_gen_utils::unkeyword_cpp_ident(ident, features).as_ref(),
-            features,
-        )
-    } else {
-        code_gen_utils::format_cc_ident(ident, features)
-    }
+    code_gen_utils::format_cc_ident(
+        code_gen_utils::unkeyword_cpp_ident(ident, features).as_ref(),
+        features,
+    )
 }
 
 pub fn get_cc_template_args<'tcx>(
