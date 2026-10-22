@@ -10,7 +10,10 @@ load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
     "golden_test",
 )
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_cc_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -19,6 +22,7 @@ rust_library(
     srcs = ["tuples.rs"],
     aspect_hints = [
         "//features:experimental",
+        "//features:movable_return_values",
     ],
     edition = "2024",
     proc_macro_deps = [

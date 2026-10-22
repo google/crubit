@@ -13,7 +13,7 @@ flagset::flags! {
     /// deserialize it, and an `aspect_hint`, which is presented to users in error messages. If
     /// a function requires a feature flag, the users will be told to add the corresponding
     /// `aspect_hint`.
-    pub enum CrubitFeature : u32 {
+    pub enum CrubitFeature : u64 {
         Supported,
 
         Wrapper,
@@ -128,6 +128,13 @@ flagset::flags! {
 
         /// Treat parameter types with unsafe template arguments as unsafe.
         UnsafeTemplateParams,
+
+        /// Return non-C++-movable types by value as `rs::Movable<T>` (the same wrapper already
+        /// used for by-value parameters), instead of as a bare `T` which can only be received via
+        /// guaranteed copy elision. `rs::Movable<T>` implicitly converts to `T`, so
+        /// `T x = f();` keeps compiling, and `g(f())` works when `g` takes `rs::Movable<T>`.
+        /// Only affects cpp_api_from_rust.
+        MovableReturnValues,
     }
 }
 
@@ -173,6 +180,7 @@ impl CrubitFeature {
             Self::IteratorItemReferences => "iterator_item_references",
             Self::InheritedFriendOperators => "inherited_friend_operators",
             Self::UnsafeTemplateParams => "unsafe_template_params",
+            Self::MovableReturnValues => "movable_return_values",
         }
     }
 
@@ -225,6 +233,7 @@ impl CrubitFeature {
                 "//features:inherited_friend_operators"
             }
             Self::UnsafeTemplateParams => "//features:unsafe_template_params",
+            Self::MovableReturnValues => "//features:movable_return_values",
         }
     }
 }
@@ -255,6 +264,9 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::IteratorItemReferences
                 // Standalone opt-in: treats parameter types with unsafe template arguments as unsafe.
                 - CrubitFeature::UnsafeTemplateParams
+                // Out of `all` until callers which use a bare `T` return value as a temporary
+                // (e.g. `f().method()`) are migrated to `rs::Movable<T>`.
+                - CrubitFeature::MovableReturnValues
         }
         // `supported` automatically implies `types` and `impl_cxx_extern_type`.
         b"supported" => {
@@ -293,6 +305,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"iterator_item_references" => CrubitFeature::IteratorItemReferences.into(),
         b"inherited_friend_operators" => CrubitFeature::InheritedFriendOperators.into(),
         b"unsafe_template_params" => CrubitFeature::UnsafeTemplateParams.into(),
+        b"movable_return_values" => CrubitFeature::MovableReturnValues.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -466,6 +479,13 @@ mod tests {
         let SerializedCrubitFeature(features) =
             serde_json::from_str("\"unsafe_template_params\"").unwrap();
         assert_eq!(features, CrubitFeature::UnsafeTemplateParams);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_movable_return_values() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"movable_return_values\"").unwrap();
+        assert_eq!(features, CrubitFeature::MovableReturnValues);
     }
 
     #[gtest]

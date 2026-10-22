@@ -93,6 +93,10 @@ impl TypeLocation {
     }
 
     /// Returns whether a type in this location can be wrapped in `::rs::Movable`.
+    ///
+    /// Top-level return values are not wrapped by `format_ty_for_cc` itself: under the
+    /// `movable_return_values` feature, `format_ret_ty_for_cc` wraps them instead, so that the
+    /// unwrapped type remains available for the thunk's out-pointer and return slot.
     pub fn admits_movable(self) -> bool {
         match self {
             TypeLocation::FnParam { .. } | TypeLocation::NestedBridgeable => true,

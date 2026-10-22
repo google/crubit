@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/movable.h"
 #include "support/rs_std/str_ref.h"
 
 #include <array>
@@ -107,8 +108,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(4)
   Map& operator=(const Map&) = delete;
   Map(::crubit::UnsafeRelocateTag, Map&& value);
 
-  static ::rs_index::Map new_(::std::uintptr_t row_size,
-                              ::std::uintptr_t col_size);
+  static ::rs::Movable<::rs_index::Map> new_(::std::uintptr_t row_size,
+                                             ::std::uintptr_t col_size);
 
   rs_std::StrRef operator[](::std::tuple<::std::uintptr_t, ::std::uintptr_t>
                                 index) const& $(__anon1) CRUBIT_LIFETIME_BOUND;
@@ -282,13 +283,14 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uintptr_t, ::std::uintptr_t,
                                    ::rs_index::Map* __ret_ptr);
 }
-inline ::rs_index::Map(Map::new_)(::std::uintptr_t row_size,
-                                  ::std::uintptr_t col_size) {
+inline ::rs::Movable<::rs_index::Map>(Map::new_)(::std::uintptr_t row_size,
+                                                 ::std::uintptr_t col_size) {
   crubit::Slot<::rs_index::Map> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(row_size, col_size,
                                         __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::rs::Movable<::rs_index::Map>::TakeFromSlot(
+      ::std::move(__return_value_ret_val_holder));
 }
 
 namespace __crubit_internal {

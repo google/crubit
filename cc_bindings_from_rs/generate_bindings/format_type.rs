@@ -1445,14 +1445,41 @@ fn treat_ref_as_ptr<'tcx>(
     }
 }
 
+/// Returns whether a value of type `ty` returned by value (at the top level) is wrapped in
+/// `::rs::Movable`.
+///
+/// Under the `movable_return_values` feature, a non-C++-movable type is returned as
+/// `::rs::Movable<T>` (mirroring how by-value parameters are passed), instead of as a bare `T`
+/// which can only be received through guaranteed copy elision. The types wrapped here are the same
+/// types that `format_ty_for_cc` wraps in a `TypeLocation::FnParam` location: ADTs (including
+/// `rs_std` template specializations) and layout-compatible legacy bridged types.
+pub fn is_movable_wrapped_return_ty<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+) -> Result<bool> {
+    if !db.crate_features(db.source_crate_num()).contains(CrubitFeature::MovableReturnValues) {
+        return Ok(false);
+    }
+    if !matches!(ty.kind(), ty::TyKind::Adt(..)) || db.is_cpp_move_constructible(ty) {
+        return Ok(false);
+    }
+    Ok(is_bridged_type(db, ty)?.is_none())
+}
+
 /// Returns the C++ return type.
 pub fn format_ret_ty_for_cc<'tcx>(
     db: &BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
 ) -> Result<CcSnippet<'tcx>> {
     let output_ty = sig_mid.output();
-    db.format_ty_for_cc(output_ty, TypeLocation::FnReturn { is_constructor: false })
-        .with_context(|| format!("Error formatting function return type `{output_ty}`"))
+    let mut snippet = db
+        .format_ty_for_cc(output_ty, TypeLocation::FnReturn { is_constructor: false })
+        .with_context(|| format!("Error formatting function return type `{output_ty}`"))?;
+    if is_movable_wrapped_return_ty(db, output_ty)? {
+        snippet.prereqs.includes.insert(db.support_header("movable.h"));
+        snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
+    }
+    Ok(snippet)
 }
 
 pub fn has_elided_region<'tcx>(tcx: TyCtxt<'tcx>, search_ty: ty::Ty<'tcx>) -> bool {

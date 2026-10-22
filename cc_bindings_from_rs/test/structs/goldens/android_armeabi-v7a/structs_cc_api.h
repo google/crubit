@@ -17,6 +17,7 @@
 #pragma clang diagnostic ignored "-Wshadow"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/movable.h"
 #include "support/rs_std/char.h"
 #include "support/rs_std/traits.h"
 
@@ -221,8 +222,8 @@ CustomDropStruct final {
   CustomDropStruct(::crubit::UnsafeRelocateTag, CustomDropStruct&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::structs::aggregate_initialization::CustomDropStruct create(
-      ::std::int32_t x);
+  static ::rs::Movable<::structs::aggregate_initialization::CustomDropStruct>
+  create(::std::int32_t x);
 
   union {
     ::std::int32_t x;
@@ -596,7 +597,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-::structs::non_cpp_movable::Point create(::std::int32_t x, ::std::int32_t y);
+::rs::Movable<::structs::non_cpp_movable::Point> create(::std::int32_t x,
+                                                        ::std::int32_t y);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t get_x(::structs::non_cpp_movable::Point const& p);
@@ -1051,13 +1053,14 @@ extern "C" void __crubit_thunk_create(
     ::std::int32_t,
     ::structs::aggregate_initialization::CustomDropStruct* __ret_ptr);
 }
-inline ::structs::aggregate_initialization::CustomDropStruct(
+inline ::rs::Movable<::structs::aggregate_initialization::CustomDropStruct>(
     CustomDropStruct::create)(::std::int32_t x) {
   crubit::Slot<::structs::aggregate_initialization::CustomDropStruct>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(x, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::rs::Movable<::structs::aggregate_initialization::CustomDropStruct>::
+      TakeFromSlot(::std::move(__return_value_ret_val_holder));
 }
 inline void ::structs::aggregate_initialization::CustomDropStruct::
     __crubit_field_offset_assertions() {
@@ -1421,12 +1424,13 @@ extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::structs::non_cpp_movable::Point* __ret_ptr);
 }
-inline ::structs::non_cpp_movable::Point create(::std::int32_t x,
-                                                ::std::int32_t y) {
+inline ::rs::Movable<::structs::non_cpp_movable::Point> create(
+    ::std::int32_t x, ::std::int32_t y) {
   crubit::Slot<::structs::non_cpp_movable::Point> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(x, y, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::rs::Movable<::structs::non_cpp_movable::Point>::TakeFromSlot(
+      ::std::move(__return_value_ret_val_holder));
 }
 
 namespace __crubit_internal {

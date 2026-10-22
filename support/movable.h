@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/internal/check.h"
 #include "support/internal/slot.h"
 
 namespace rs {
@@ -151,6 +152,30 @@ class Movable {
 
   T* operator->() { return &value_; }
   const T* operator->() const { return &value_; }
+
+  // Implicitly unwraps an rvalue `Movable<T>` into a `T`, leaving the `Movable`
+  // valueless.
+  //
+  // The result is a prvalue, so C++17 guaranteed copy elision initializes the
+  // caller's target directly, and no C++ move constructor is required. This
+  // lets code that receives a non-C++-movable `T` from a function returning
+  // `rs::Movable<T>` keep using plain `T`:
+  //
+  //     Unmovable val = make_unmovable();
+  //     Unmovable Make() { return make_unmovable(); }
+  //     TakesUnmovableByConstRef(make_unmovable());
+  //
+  // Only rvalues convert: unwrapping an lvalue would silently leave it
+  // valueless, so that requires an explicit `std::move`.
+  //
+  // Aborts if the `Movable` is already valueless.
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  operator T() && {
+    CRUBIT_CHECK(!valueless_after_move_)
+        << "rs::Movable: cannot unwrap a valueless (moved-from) value";
+    valueless_after_move_ = true;
+    return crubit::UnsafeTakeValue(&value_);
+  }
 
   bool valueless_after_move() const { return valueless_after_move_; }
   explicit operator bool() const { return !valueless_after_move_; }

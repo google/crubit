@@ -20,6 +20,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/movable.h"
 #include "support/rs_std/option.h"
 #include "support/rs_std/result.h"
 #include "support/rs_std/str_ref.h"
@@ -88,7 +89,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
     [[clang::trivial_abi]] HasNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
-  static ::option::HasNoDefault new_(rs_std::StrRef s);
+  static ::rs::Movable<::option::HasNoDefault> new_(rs_std::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
@@ -791,7 +792,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 OptDefaultWithDrop final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
-  static ::option::OptDefaultWithDrop new_(rs_std::StrRef s);
+  static ::rs::Movable<::option::OptDefaultWithDrop> new_(rs_std::StrRef s);
 
   rs_std::Option<::option::HasDefault> opt{};
 
@@ -868,7 +869,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     [[clang::trivial_abi]] OptNoDefaultWithDrop final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
-  static ::option::OptNoDefaultWithDrop new_(rs_std::StrRef s);
+  static ::rs::Movable<::option::OptNoDefaultWithDrop> new_(rs_std::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
@@ -2129,11 +2130,13 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::option::HasNoDefault* __ret_ptr);
 }
-inline ::option::HasNoDefault(HasNoDefault::new_)(rs_std::StrRef s) {
+inline ::rs::Movable<::option::HasNoDefault>(HasNoDefault::new_)(
+    rs_std::StrRef s) {
   crubit::Slot<::option::HasNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&s, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::rs::Movable<::option::HasNoDefault>::TakeFromSlot(
+      ::std::move(__return_value_ret_val_holder));
 }
 
 namespace __crubit_internal {
@@ -2421,12 +2424,13 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::option::OptDefaultWithDrop* __ret_ptr);
 }
-inline ::option::OptDefaultWithDrop(OptDefaultWithDrop::new_)(
+inline ::rs::Movable<::option::OptDefaultWithDrop>(OptDefaultWithDrop::new_)(
     rs_std::StrRef s) {
   crubit::Slot<::option::OptDefaultWithDrop> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&s, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::rs::Movable<::option::OptDefaultWithDrop>::TakeFromSlot(
+      ::std::move(__return_value_ret_val_holder));
 }
 inline void ::option::OptDefaultWithDrop::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::option::OptDefaultWithDrop;
@@ -2443,12 +2447,13 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::option::OptNoDefaultWithDrop* __ret_ptr);
 }
-inline ::option::OptNoDefaultWithDrop(OptNoDefaultWithDrop::new_)(
-    rs_std::StrRef s) {
+inline ::rs::Movable<::option::OptNoDefaultWithDrop>(
+    OptNoDefaultWithDrop::new_)(rs_std::StrRef s) {
   crubit::Slot<::option::OptNoDefaultWithDrop> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&s, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return ::rs::Movable<::option::OptNoDefaultWithDrop>::TakeFromSlot(
+      ::std::move(__return_value_ret_val_holder));
 }
 
 namespace __crubit_internal {
