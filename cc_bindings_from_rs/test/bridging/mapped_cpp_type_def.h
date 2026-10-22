@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "support/unsafe_relocate_tag.h"
+
 namespace mapped_cpp_type {
 struct MappedCppType {
   int32_t value;
@@ -15,6 +17,20 @@ struct MappedCppType {
 template <typename T>
 struct GenericMappedCppType {
   T value;
+};
+
+// Not C++ move-constructible, but relocatable via `crubit::UnsafeRelocateTag`.
+struct UnmovableMappedCppType {
+  int32_t value;
+  UnmovableMappedCppType(const UnmovableMappedCppType&) = delete;
+  UnmovableMappedCppType(UnmovableMappedCppType&&) = delete;
+  UnmovableMappedCppType& operator=(const UnmovableMappedCppType&) = delete;
+  UnmovableMappedCppType& operator=(UnmovableMappedCppType&&) = delete;
+  explicit UnmovableMappedCppType(int32_t v) : value(v) {}
+  UnmovableMappedCppType(crubit::UnsafeRelocateTag,
+                         UnmovableMappedCppType&& other)
+      : value(other.value) {}
+  ~UnmovableMappedCppType() {}
 };
 }  // namespace mapped_cpp_type
 
