@@ -36,6 +36,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Regex.h"
 
 namespace crubit {
@@ -157,7 +158,7 @@ class Invocation {
     if (loc.isInvalid()) {
       return true;
     }
-    absl::string_view path = source_manager.getFilename(loc);
+    llvm::StringRef path = source_manager.getFilename(loc);
     if (path.empty()) {
       return true;
     }

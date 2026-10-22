@@ -10,6 +10,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <type_traits>
 
 #include "gmock/gmock.h"
@@ -86,7 +87,13 @@ TEST(StrTest, Comparison) {
 TEST(StrTest, FromAndTo) {
   static constexpr absl::string_view kStr = "12345";
   static constexpr StrRef kStrRef = kStr;
+#if defined(ABSL_USES_STD_STRING_VIEW)
   EXPECT_EQ(kStr, kStrRef);
+#else
+  // On platforms where `absl::string_view` is not `std::string_view` (e.g.
+  // Apple), comparing it with `StrRef` is ambiguous.
+  EXPECT_EQ(std::string_view(kStr.data(), kStr.size()), kStrRef);
+#endif
 }
 
 // To test the value of `data_`, the test includes the knowledge of
@@ -154,11 +161,15 @@ TEST(ImplicitConversionTest, FromConstCharPtr) {
   EXPECT_EQ(kStrRef, "12");
 }
 
+// `StrRef` converts implicitly to `std::string_view`, which is only
+// `absl::string_view` where Abseil uses the standard type (e.g. not on MacOS).
+#if defined(ABSL_USES_STD_STRING_VIEW)
 TEST(ImplicitConversionTest, ToAbslStringView) {
   rs_std::StrRef str = "hello";
   absl::string_view view = str;
   EXPECT_EQ(view, "hello");
 }
+#endif
 
 void Fuzzer(std::string data) {
   const std::optional<StrRef> s = StrRef::FromUtf8(data);
