@@ -25,6 +25,9 @@ crubit_test_cc_library(
     name = "absl_functional",
     hdrs = ["absl_functional.h"],
     aspect_hints = ["//features:supported"],
+    # Golden-only: MyOption's bridge ABI (::crubit::MyOptionAbi) is not defined anywhere, so the
+    # generated bindings are not expected to compile.
+    tags = ["manual"],
     deps = [
         "@abseil-cpp//absl/functional:any_invocable",
     ],

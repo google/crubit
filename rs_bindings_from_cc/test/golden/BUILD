@@ -139,27 +139,6 @@ rust_bindings_from_cc_cli_flag(
     flags = "--template_blocklist_path_regex=.*blocklist_template_paths.*",
 )
 
-[cc_library(
-    name = name + "_cc",
-    hdrs = [name + ".h"],
-    aspect_hints = [
-        "//features:supported",
-    ] + (ASPECT_HINTS[name] if name in ASPECT_HINTS else []) + ([":enable_kythe_annotations"] if name.endswith("_annotations") else []),
-    deps = [
-        ((d + "_cc") if d in TESTS else d)
-        for d in (DEPS[name] if name in DEPS else [])
-    ],
-) for name in TESTS]
-
-[golden_test(
-    name = name + "_test",
-    basename = name,
-    cc_library = name + "_cc",
-    golden_cc = name + "_rs_api_impl.cc",
-    golden_rs = name + "_rs_api.rs",
-    tags = [tag for tag in (TAGS[name] if name in TAGS else [])],
-) for name in TESTS]
-
 NON_BUILDABLE_TEST = [
     # The bridge ABI types are not defined anywhere.
     "bridged_template_to_self",
@@ -182,6 +161,34 @@ BUILDABLE_TESTS = [name for name in TESTS if name not in NON_BUILDABLE_TEST]
     name = name + "_cc_rust",
     cpp_target = ":%s_cc" % name,
 ) for name in BUILDABLE_TESTS]
+
+# Tests whose generated bindings are only checked against goldens and are not expected to compile
+# (e.g. under `--config=crubit-compiled` or Mondo), because they reference types that are not
+# defined anywhere. `types_in_extra_cpp_srcs` is excluded: its bindings do compile (the extra .cc
+# file provides the type), it just can't be used from a `crubit_rust_test`.
+NON_COMPILABLE_BINDINGS = [name for name in NON_BUILDABLE_TEST if name != "types_in_extra_cpp_srcs"]
+
+[cc_library(
+    name = name + "_cc",
+    hdrs = [name + ".h"],
+    aspect_hints = [
+        "//features:supported",
+    ] + (ASPECT_HINTS[name] if name in ASPECT_HINTS else []) + ([":enable_kythe_annotations"] if name.endswith("_annotations") else []),
+    tags = ["manual"] if name in NON_COMPILABLE_BINDINGS else [],
+    deps = [
+        ((d + "_cc") if d in TESTS else d)
+        for d in (DEPS[name] if name in DEPS else [])
+    ],
+) for name in TESTS]
+
+[golden_test(
+    name = name + "_test",
+    basename = name,
+    cc_library = name + "_cc",
+    golden_cc = name + "_rs_api_impl.cc",
+    golden_rs = name + "_rs_api.rs",
+    tags = [tag for tag in (TAGS[name] if name in TAGS else [])],
+) for name in TESTS]
 
 [crubit_rust_test(
     name = name + "_rs_test",
