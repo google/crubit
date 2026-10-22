@@ -108,8 +108,6 @@ crubit_cc_test(
     platforms = [
         "ios",
     ],
-    # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
-    tags = ["no_windows"],
     deps = [
         ":leaf_cc_lib",
         ":middle_rs_lib_cc_api",
