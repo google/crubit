@@ -191,6 +191,7 @@ rust_library(
         "--cfg=oss",
     ],
     deps = [
+        ":run_compiler",
         ":rustversion",
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:tempfile",  # v3

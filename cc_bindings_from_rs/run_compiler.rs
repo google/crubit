@@ -22,6 +22,25 @@ use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-convent
 use rustc_session::config::{ErrorOutputType, Input};
 use rustc_session::EarlyDiagCtxt;
 
+/// Returns the names (in `-C`/`-Z` command-line spelling, e.g. `llvm-target-feature`) of all
+/// `rustc` target modifier flags.
+///
+/// Target modifiers cause a compilation error when loading metadata (including `std`) if the
+/// crate or sysroot was compiled with target modifiers that we did not pass. But Crubit doesn't
+/// care about setting them because it isn't actually going to do codegen, so the returned list is
+/// passed to `-Cunsafe-allow-abi-mismatch` (`Options::cg::unsafe_allow_abi_mismatch`) to ignore
+/// such mismatches.
+pub fn target_modifier_flag_names() -> Vec<String> {
+    use rustc_session::config::{OptionsTargetModifiers, CG_OPTIONS, Z_OPTIONS};
+    CG_OPTIONS
+        .iter()
+        .map(|opt| opt.name())
+        .chain(Z_OPTIONS.iter().map(|opt| opt.name()))
+        .filter(|name| OptionsTargetModifiers::is_target_modifier(name))
+        .map(|name| name.replace('_', "-"))
+        .collect()
+}
+
 /// Wrapper around `rustc_driver::RunCompiler::run` that exposes a
 /// simplified API:
 /// - Takes a `callback` that will be invoked from within Rust compiler, after parsing and analysis
@@ -160,6 +179,8 @@ where
         // TODO: use `Session::unstable_options` instead of
         // `unstable_opts.unstable_options` and remove the function #[allow(rustc::internal)].
         config.opts.unstable_opts.unstable_options = true;
+        // Ignore target modifiers; see `target_modifier_flag_names`.
+        config.opts.cg.unsafe_allow_abi_mismatch = target_modifier_flag_names();
     }
 
     fn after_analysis<'tcx>(

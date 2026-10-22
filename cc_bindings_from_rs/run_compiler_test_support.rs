@@ -179,6 +179,8 @@ fn run_compiler_for_testing_impl(
     // TODO: use `Session::unstable_options` instead of
     // `unstable_opts.unstable_options` and remove the function #[allow(rustc::internal)].
     opts.unstable_opts.unstable_options = true;
+    // Ignore target modifiers; see `run_compiler::target_modifier_flag_names`.
+    opts.cg.unsafe_allow_abi_mismatch = run_compiler::target_modifier_flag_names();
 
     let target_dir = tempfile::TempDir::new().unwrap();
 

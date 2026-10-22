@@ -9,10 +9,8 @@
 #[cfg(test)]
 extern crate rustc_driver;
 extern crate rustc_middle;
-extern crate rustc_session;
 
 use rustc_middle::ty::TyCtxt;
-use rustc_session::config::OptionsTargetModifiers;
 
 use arc_anyhow::{bail, Context, Result};
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -23,7 +21,6 @@ use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, ReportFatalError, SourceLanguage};
 use generate_bindings::{BindingsGenerator, IncludeGuard};
-use itertools::Itertools;
 use kythe_metadata::cc_embed_provenance_map;
 use run_compiler::{run_compiler, run_compiler_with_input};
 use token_stream_printer::{
@@ -204,21 +201,6 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     for library_path in &cmdline.library_dirs {
         at_args.push(format!("-L{}", library_path));
     }
-
-    // Ignore target modifiers.
-    // These will cause a compilation error when we load our metadata if the crate under compilation
-    // set them and we did not. But we don't care about setting them because we aren't actually
-    // going to do codegen, so we mark them all as ignored via `unsafe_allow_abi_mismatch`.
-    at_args.push(format!(
-        "-Cunsafe-allow-abi-mismatch={}",
-        rustc_session::config::CG_OPTIONS
-            .iter()
-            .map(|opt| opt.name())
-            .chain(rustc_session::config::Z_OPTIONS.iter().map(|opt| opt.name()))
-            .filter(|name| OptionsTargetModifiers::is_target_modifier(name))
-            .map(|name| name.replace("_", "-"))
-            .join(",")
-    ));
 
     let Some(crate_name) = cmdline.source_crate_name.as_ref() else {
         bail!("--source-crate-name must be provided when using rmetas")
@@ -543,6 +525,10 @@ mod tests {
                 "-o".to_string(),
                 rmeta_path.display().to_string(),
                 "-Zunstable-options".to_string(),
+                format!(
+                    "-Cunsafe-allow-abi-mismatch={}",
+                    run_compiler::target_modifier_flag_names().join(",")
+                ),
                 rs_input_path.display().to_string(),
             ];
             if let Some(sysroot) = sysroot_path() {
