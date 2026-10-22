@@ -1435,6 +1435,34 @@ struct FormattedItem<'tcx> {
     aliases: Vec<ExportedPath>,
 }
 
+/// Items from the Rust prelude that, in addition to their canonical C++ spelling (e.g.
+/// `rs::alloc::string::String`), are also exposed directly under the parent of the crate's
+/// top-level C++ namespace (e.g. `rs::String`).
+///
+/// Each entry is `(crate name, path within the crate)`. The alias uses the item's own name.
+///
+/// Generic prelude types that are rendered as `rs_std` templates (`Option`, `Result`, `Vec`) are
+/// aliased in their support headers (`support/rs_std/{option,result,vec}.h`) instead.
+const PRELUDE_PARENT_NS_ALIASES: &[(&str, &[&str])] = &[("alloc", &["string", "String"])];
+
+/// Returns the name of a shorthand alias that should be emitted for `def_id` in the *parent* of
+/// the crate's top-level C++ namespace, if `def_id` is one of `PRELUDE_PARENT_NS_ALIASES`.
+fn prelude_parent_ns_alias(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Symbol> {
+    let tcx = db.tcx();
+    let crate_name = tcx.crate_name(def_id.krate);
+    let def_path = tcx.def_path(def_id);
+    let segments: Vec<Symbol> =
+        def_path.data.iter().map(|seg| seg.as_sym(/* verbose= */ false)).collect();
+    PRELUDE_PARENT_NS_ALIASES
+        .iter()
+        .find(|(krate, path)| {
+            crate_name.as_str() == *krate
+                && segments.len() == path.len()
+                && segments.iter().zip(path.iter()).all(|(seg, s)| seg.as_str() == *s)
+        })
+        .map(|_| *segments.last().expect("prelude alias paths are non-empty"))
+}
+
 struct GeneratedSpecializations<'tcx> {
     specializations: HashMap<TemplateSpecialization<'tcx>, CcSnippet<'tcx>>,
     impls_cc_details: Vec<TokenStream>,
@@ -1637,6 +1665,13 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     }
     let mut cc_details_prereqs = CcPrerequisites::default();
     let mut cc_details: Vec<CcDetails> = vec![];
+    // Shorthand aliases for prelude items (e.g. `rs::String`) emitted in the parent of the
+    // crate's top-level namespace. Only emitted when that parent is not the global namespace.
+    let mut parent_ns_aliases: Vec<CcDetails> = vec![];
+    let cpp_top_level_ns: Vec<Rc<str>> = format_top_level_ns_for_crate(db, db.source_crate_num())
+        .iter()
+        .map(|sym| Rc::from(sym.as_str()))
+        .collect();
     let mut rs_details = RsSnippet::default();
     let mut main_apis = HashMap::<DefId, CcSnippet>::new();
     for item in formatted_items_in_crate(db) {
@@ -1662,6 +1697,24 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
         };
         let old_item = main_apis.insert(def_id, api_snippets.main_api);
         assert!(old_item.is_none(), "Duplicated key: {}", db.tcx().def_path_str(def_id));
+
+        if cpp_top_level_ns.len() >= 2
+            && let Some(alias_name) = prelude_parent_ns_alias(db, def_id)
+        {
+            let using_snippets = generate_using(db, &alias_name, def_id)
+                .unwrap_or_else(|err| generate_unsupported_def(db, def_id, err));
+            let use_leading_colons = db
+                .crate_features(def_id.krate)
+                .contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
+            parent_ns_aliases.push(CcDetails::new(
+                def_id,
+                NamespaceQualifier::new(
+                    cpp_top_level_ns[..cpp_top_level_ns.len() - 1].iter().cloned(),
+                    use_leading_colons,
+                ),
+                using_snippets.into_tokens(&mut cc_details_prereqs),
+            ));
+        }
 
         // `cc_details` don't participate in the toposort, because
         // `CcPrerequisites::defs` always use `main_api` as the predecessor
@@ -1809,11 +1862,6 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
             .sorted_by_def(tcx)
             .map(|def_id| (Node::Def(def_id), generate_fwd_decl(db, def_id)));
 
-        let cpp_top_level_ns: Vec<Rc<str>> =
-            format_top_level_ns_for_crate(db, db.source_crate_num())
-                .iter()
-                .map(|sym| Rc::from(sym.as_str()))
-                .collect();
         // The first item of the tuple here is the DefId of the namespace.
         let ordered_cc: Vec<(Option<DefId>, NamespaceQualifier, TokenStream)> = fwd_decls
             .into_iter()
@@ -1849,6 +1897,13 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                     details.tokens,
                 )
             }))
+            // `parent_ns_aliases` already carry their absolute namespace, so they are not
+            // prefixed with `cpp_top_level_ns`.
+            .chain(
+                parent_ns_aliases
+                    .into_iter()
+                    .map(|details| (None, details.namespace, details.tokens)),
+            )
             .collect_vec();
 
         (includes, ordered_cc)

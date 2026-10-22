@@ -289,4 +289,13 @@ struct Result final {
 
 }  // namespace rs_std
 
+namespace rs {
+
+// Shorthand for `rs_std::Result<T, E>`, mirroring `Result`'s place in the Rust
+// prelude.
+template <typename T, typename E>
+using Result = ::rs_std::Result<T, E>;
+
+}  // namespace rs
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_RESULT_H_

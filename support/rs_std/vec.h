@@ -257,4 +257,12 @@ struct Vec final {
 
 }  // namespace rs_std
 
+namespace rs {
+
+// Shorthand for `rs_std::Vec<T>`, mirroring `Vec`'s place in the Rust prelude.
+template <typename T>
+using Vec = ::rs_std::Vec<T>;
+
+}  // namespace rs
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_VEC_H_

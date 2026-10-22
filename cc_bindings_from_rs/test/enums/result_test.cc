@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "gtest/gtest.h"
@@ -26,6 +27,14 @@ TEST(ResultTest, NestedResult) {
   EXPECT_FALSE(res.in_err.has_value());
   ASSERT_TRUE(res.in_err.err().has_value());
   EXPECT_EQ(res.in_err.err().value(), 42);
+}
+
+TEST(ResultTest, ShorthandAlias) {
+  static_assert(std::is_same_v<rs::Result<uint32_t, uint32_t>,
+                               rs_std::Result<uint32_t, uint32_t>>);
+  auto res = result::GetsResult::new_(42);
+  rs::Result<uint32_t, uint32_t> value = std::move(res.value);
+  EXPECT_TRUE(value.has_value());
 }
 
 TEST(ResultTest, CopyNoDefaultResult) {
