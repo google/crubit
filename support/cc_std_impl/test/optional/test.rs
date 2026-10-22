@@ -53,6 +53,50 @@ fn test_ctor_some_holds_string() {
 }
 
 #[gtest]
+fn test_ctor_from_option_some_holds_string() {
+    let opt = emplace!(optional::ctor_from_option(Some(string::ctor_new("hello"))));
+    expect_eq!((*opt).as_ref().unwrap().as_slice(), &b"hello"[..]);
+}
+
+#[gtest]
+fn test_ctor_from_option_none_is_empty() {
+    let value: Option<&str> = None;
+    let opt = emplace!(optional::ctor_from_option(value.map(string::ctor_new)));
+    expect_true!(opt.is_none());
+}
+
+#[gtest]
+fn test_ctor_from_option_none_destroys_nothing() {
+    let counter = Cell::new(0);
+    {
+        let opt = emplace!(optional::ctor_from_option(None.map(|()| counted(&counter))));
+        expect_true!(opt.is_none());
+    }
+    expect_eq!(counter.get(), 0);
+}
+
+#[gtest]
+fn test_ctor_new_from_some_holds_string() {
+    let value: Option<&str> = Some("hello");
+    let opt = emplace!(optional::<string>::ctor_new(value));
+    expect_eq!((*opt).as_ref().unwrap().as_slice(), &b"hello"[..]);
+}
+
+#[gtest]
+fn test_ctor_new_from_none_is_empty() {
+    let value: Option<&str> = None;
+    let opt = emplace!(optional::<string>::ctor_new(value));
+    expect_true!(opt.is_none());
+}
+
+#[gtest]
+fn test_ctor_new_from_option_of_string_ref_copies() {
+    let source = emplace!(string::ctor_new("hello"));
+    let opt = emplace!(optional::<string>::ctor_new(Some(&*source)));
+    expect_eq!((*opt).as_ref().unwrap().as_slice(), &b"hello"[..]);
+}
+
+#[gtest]
 fn test_emplace_into_empty_optional() {
     let mut opt = emplace!(optional::<string>::ctor_nullopt());
     expect_true!(opt.as_mut().emplace(string::ctor_new("first")).is_ok());

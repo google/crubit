@@ -6,7 +6,7 @@ use core::fmt::{Debug, Formatter, Result};
 use core::marker::PhantomData;
 use core::mem::{ManuallyDrop, MaybeUninit};
 use core::pin::Pin;
-use ctor::{Ctor, Infallible, SelfCtor};
+use ctor::{Ctor, CtorNew, Infallible, SelfCtor};
 
 /// Rust layout-compatible implementation of C++ `std::optional<T>`, where `T` is `Copy`.
 ///
@@ -424,6 +424,68 @@ where
 /// `!SelfCtor` to override the blanket `Ctor` impl for owned values.
 impl<C> !SelfCtor for SomeCtor<C> {}
 
+/// A [`Ctor`] which constructs an [`optional`] which is empty if given `None`, or which contains
+/// the value produced by `C` if given `Some(C)`.
+///
+/// Returned by [`optional::ctor_from_option`] and by the [`CtorNew<Option<A>>`] impl for
+/// [`optional`].
+#[must_use = "Ctors do nothing unless emplaced"]
+pub struct OptionCtor<C>(Option<C>);
+
+// SAFETY: `OptionCtor::ctor` delegates to `SomeCtor::ctor` or `NulloptCtor::ctor`, both of which
+// uphold the safety requirements of `Ctor`.
+unsafe impl<C: Ctor> Ctor for OptionCtor<C>
+where
+    C::Output: Sized,
+{
+    type Output = optional<C::Output>;
+    type Error = C::Error;
+
+    #[inline]
+    unsafe fn ctor(self, dest: *mut Self::Output) -> core::result::Result<(), Self::Error> {
+        match self.0 {
+            // SAFETY: the caller upholds the safety requirements of `Ctor::ctor`.
+            Some(value) => unsafe { optional::ctor_some(value).ctor(dest) },
+            None => {
+                // SAFETY: the caller upholds the safety requirements of `Ctor::ctor`.
+                let Ok(()) = unsafe { optional::ctor_nullopt().ctor(dest) };
+                Ok(())
+            }
+        }
+    }
+}
+
+/// `!SelfCtor` to override the blanket `Ctor` impl for owned values.
+impl<C> !SelfCtor for OptionCtor<C> {}
+
+/// Constructs an `optional<T>` in place from an `Option` of anything `T` can be constructed from.
+///
+/// This is the in-place counterpart to [`From<Option<T>>`], and works for a `T` which cannot be
+/// produced by value, such as [`string`](crate::std::string):
+///
+/// ```
+/// # use cc_std::std::{optional, string};
+/// # use ctor::{emplace, CtorNew};
+/// let name: Option<&str> = Some("hello");
+/// let opt = emplace!(optional::<string>::ctor_new(name));
+/// assert_eq!(opt.as_ref().unwrap().as_slice(), b"hello");
+///
+/// let none = emplace!(optional::<string>::ctor_new(None::<&str>));
+/// assert!(none.is_none());
+/// ```
+impl<T, A> CtorNew<Option<A>> for optional<T>
+where
+    T: CtorNew<A>,
+{
+    type CtorType = OptionCtor<T::CtorType>;
+    type Error = T::Error;
+
+    #[inline]
+    fn ctor_new(args: Option<A>) -> Self::CtorType {
+        OptionCtor(args.map(T::ctor_new))
+    }
+}
+
 impl<T> optional<T> {
     /// Returns a [`Ctor`] which constructs an empty `optional` in place (C++ `std::nullopt`).
     ///
@@ -460,5 +522,25 @@ impl<T> optional<T> {
     #[inline]
     pub fn ctor_some<C: Ctor<Output = T>>(value: C) -> SomeCtor<C> {
         SomeCtor(value)
+    }
+
+    /// Returns a [`Ctor`] which constructs an `optional` in place: empty if `value` is `None`,
+    /// or containing the value produced by the inner `Ctor` if `value` is `Some`.
+    ///
+    /// This combines [`ctor_nullopt`](optional::ctor_nullopt) and
+    /// [`ctor_some`](optional::ctor_some) for when whether the `optional` is engaged is only
+    /// known at runtime. If `T` implements [`CtorNew<A>`](ctor::CtorNew), then
+    /// `optional::<T>::ctor_new(Option<A>)` is usually more convenient.
+    ///
+    /// ```
+    /// # use cc_std::std::{optional, string};
+    /// # use ctor::{emplace, CtorNew};
+    /// let name: Option<&str> = Some("hello");
+    /// let opt = emplace!(optional::ctor_from_option(name.map(string::ctor_new)));
+    /// assert_eq!(opt.as_ref().unwrap().as_slice(), b"hello");
+    /// ```
+    #[inline]
+    pub fn ctor_from_option<C: Ctor<Output = T>>(value: Option<C>) -> OptionCtor<C> {
+        OptionCtor(value)
     }
 }
