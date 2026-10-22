@@ -150,7 +150,13 @@ def generate_and_compile_bindings(
         ctx = ctx,
         cc_toolchain = cc_toolchain,
         requested_features = ctx.features + ["compiler_param_file"],
-        unsupported_features = ctx.disabled_features + ["module_maps"],
+        unsupported_features = ctx.disabled_features + [
+            "module_maps",
+            # `rs_bindings_from_cc` parses its param file using GCC-style quoting
+            # (see `ExpandParamfiles` in `rs_bindings_from_cc/cmdline.cc`), so
+            # Windows-style quoting would corrupt arguments containing spaces.
+            "windows_quoting_for_param_files",
+        ],
     )
 
     cc_output, rs_output, namespaces_output, error_report_output = generate_bindings(
