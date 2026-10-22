@@ -1492,7 +1492,7 @@ HasDefaultResult final {
   HasDefaultResult& operator=(const HasDefaultResult&) = delete;
   HasDefaultResult(::crubit::UnsafeRelocateTag, HasDefaultResult&& value);
 
-  static ::rs::Movable<::result::HasDefaultResult> new_(rs_std::StrRef val);
+  static ::result::HasDefaultResult new_(rs_std::StrRef val);
 
   union {
     rs_std::Result<::result::HasDefault, ::std::uint8_t> in_ok;
@@ -1600,7 +1600,7 @@ HasNoDefaultResult final {
   HasNoDefaultResult& operator=(const HasNoDefaultResult&) = delete;
   HasNoDefaultResult(::crubit::UnsafeRelocateTag, HasNoDefaultResult&& value);
 
-  static ::rs::Movable<::result::HasNoDefaultResult> new_(rs_std::StrRef val);
+  static ::result::HasNoDefaultResult new_(rs_std::StrRef val);
 
   union {
     rs_std::Result<::result::HasNoDefault, ::std::uint8_t> in_ok;
@@ -2173,13 +2173,11 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::result::HasDefaultResult* __ret_ptr);
 }
-inline ::rs::Movable<::result::HasDefaultResult>(HasDefaultResult::new_)(
-    rs_std::StrRef val) {
+inline ::result::HasDefaultResult(HasDefaultResult::new_)(rs_std::StrRef val) {
   crubit::Slot<::result::HasDefaultResult> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
-  return ::rs::Movable<::result::HasDefaultResult>::TakeFromSlot(
-      ::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ::result::HasDefaultResult::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::result::HasDefaultResult;
@@ -2234,13 +2232,12 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::result::HasNoDefaultResult* __ret_ptr);
 }
-inline ::rs::Movable<::result::HasNoDefaultResult>(HasNoDefaultResult::new_)(
+inline ::result::HasNoDefaultResult(HasNoDefaultResult::new_)(
     rs_std::StrRef val) {
   crubit::Slot<::result::HasNoDefaultResult> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
-  return ::rs::Movable<::result::HasNoDefaultResult>::TakeFromSlot(
-      ::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ::result::HasNoDefaultResult::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::result::HasNoDefaultResult;

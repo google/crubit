@@ -19,7 +19,6 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
-#include "support/movable.h"
 #include "support/rs_std/fn.h"
 #include "support/rs_std/fn_ref.h"
 #include "support/rs_std/option.h"
@@ -171,15 +170,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: Point") alignas(4)
 // outlive the function call.
 
 // CRUBIT_ANNOTATE: must_bind=
-::rs::Movable<::callables::NonCppMovable> call_and_return_non_movable(
+::callables::NonCppMovable call_and_return_non_movable(
     ::rs::FnRef<::callables::NonCppMovable() const> f);
 
 // CRUBIT_ANNOTATE: must_bind=
-::rs::Movable<::callables::NonCppMovable> call_and_return_non_movable_box_fn(
+::callables::NonCppMovable call_and_return_non_movable_box_fn(
     ::rs::Fn<::callables::NonCppMovable() const> f);
 
 // CRUBIT_ANNOTATE: must_bind=
-::rs::Movable<::callables::NonCppMovable> call_and_return_non_movable_boxed(
+::callables::NonCppMovable call_and_return_non_movable_boxed(
     ::rs::Fn<::callables::NonCppMovable() &&> f);
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -671,7 +670,7 @@ extern "C" void
 __crubit_thunk_call_uand_ureturn_unon_umovable_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable(
     ::rs::internal::FnRefPayload, ::callables::NonCppMovable* __ret_ptr);
 }
-inline ::rs::Movable<::callables::NonCppMovable> call_and_return_non_movable(
+inline ::callables::NonCppMovable call_and_return_non_movable(
     ::rs::FnRef<::callables::NonCppMovable() const> f) {
   auto __f_invoker = [](void* __data, void* __ret_ptr) -> void {
     new (__ret_ptr)::callables::NonCppMovable(
@@ -687,16 +686,14 @@ inline ::rs::Movable<::callables::NonCppMovable> call_and_return_non_movable(
   __crubit_internal::
       __crubit_thunk_call_uand_ureturn_unon_umovable_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable(
           __f_payload, __return_value_storage);
-  return ::rs::Movable<::callables::NonCppMovable>::TakeFromSlot(
-      ::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_call_uand_ureturn_unon_umovable_ubox_ufn(
     ::rs::internal::FnPayload, ::callables::NonCppMovable* __ret_ptr);
 }
-inline ::rs::Movable<::callables::NonCppMovable>
-call_and_return_non_movable_box_fn(
+inline ::callables::NonCppMovable call_and_return_non_movable_box_fn(
     ::rs::Fn<::callables::NonCppMovable() const> f) {
   auto* __f_heap_fn =
       new ::rs::Fn<::callables::NonCppMovable() const>(::std::move(f));
@@ -718,16 +715,15 @@ call_and_return_non_movable_box_fn(
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_call_uand_ureturn_unon_umovable_ubox_ufn(
       __f_payload, __return_value_storage);
-  return ::rs::Movable<::callables::NonCppMovable>::TakeFromSlot(
-      ::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_call_uand_ureturn_unon_umovable_uboxed(
     ::rs::internal::FnPayload, ::callables::NonCppMovable* __ret_ptr);
 }
-inline ::rs::Movable<::callables::NonCppMovable>
-call_and_return_non_movable_boxed(::rs::Fn<::callables::NonCppMovable() &&> f) {
+inline ::callables::NonCppMovable call_and_return_non_movable_boxed(
+    ::rs::Fn<::callables::NonCppMovable() &&> f) {
   auto* __f_heap_fn =
       new ::rs::Fn<::callables::NonCppMovable() &&>(::std::move(f));
   auto __f_invoker = [](void* __data, void* __ret_ptr) -> void {
@@ -747,8 +743,7 @@ call_and_return_non_movable_boxed(::rs::Fn<::callables::NonCppMovable() &&> f) {
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_call_uand_ureturn_unon_umovable_uboxed(
       __f_payload, __return_value_storage);
-  return ::rs::Movable<::callables::NonCppMovable>::TakeFromSlot(
-      ::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {

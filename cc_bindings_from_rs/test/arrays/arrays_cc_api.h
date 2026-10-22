@@ -18,7 +18,6 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
-#include "support/movable.h"
 #include "support/rs_std/tuple.h"
 
 #include <array>
@@ -62,7 +61,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
   HasDrop& operator=(const HasDrop&) = delete;
   HasDrop(::crubit::UnsafeRelocateTag, HasDrop&& value);
 
-  static ::rs::Movable<::arrays::HasDrop> new_(::std::int32_t x);
+  static ::arrays::HasDrop new_(::std::int32_t x);
 
   union {
     ::std::int32_t x;
@@ -285,12 +284,11 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::arrays::HasDrop* __ret_ptr);
 }
-inline ::rs::Movable<::arrays::HasDrop>(HasDrop::new_)(::std::int32_t x) {
+inline ::arrays::HasDrop(HasDrop::new_)(::std::int32_t x) {
   crubit::Slot<::arrays::HasDrop> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
-  return ::rs::Movable<::arrays::HasDrop>::TakeFromSlot(
-      ::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ::arrays::HasDrop::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::arrays::HasDrop;

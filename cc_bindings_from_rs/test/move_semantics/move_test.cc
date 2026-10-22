@@ -83,44 +83,4 @@ TEST(MoveTest, WrapReturnValueInValue) {
   EXPECT_EQ(v->read_byte(), 42);
 }
 
-// With the `movable_return_values` feature, `new_unmovable_foo` returns
-// `rs::Movable<UnmovableFoo>` rather than a bare `UnmovableFoo`.
-static_assert(std::is_same_v<decltype(move::new_unmovable_foo(42)),
-                             rs::Movable<move::UnmovableFoo>>);
-
-TEST(MoveTest, ReturnUnmovableFooWrappedInMovable) {
-  rs::Movable<move::UnmovableFoo> v = move::new_unmovable_foo(42);
-  EXPECT_FALSE(v.valueless_after_move());
-  EXPECT_EQ(v->read_byte(), 42);
-}
-
-// The returned `rs::Movable<UnmovableFoo>` can be passed straight into a
-// function accepting `UnmovableFoo` by value (i.e. `rs::Movable<UnmovableFoo>`
-// in C++), without going through a `crubit::Slot`.
-TEST(MoveTest, PassReturnedUnmovableFooByValue) {
-  EXPECT_EQ(move::consume_unmovable_foo(move::new_unmovable_foo(42)), 42);
-}
-
-// Callers written against the bare `UnmovableFoo` return type keep compiling:
-// `rs::Movable<T>` implicitly converts to `T` via guaranteed copy elision.
-TEST(MoveTest, ReceiveReturnedUnmovableFooAsPlainValue) {
-  move::UnmovableFoo v = move::new_unmovable_foo(42);
-  EXPECT_EQ(v.read_byte(), 42);
-}
-
-TEST(MoveTest, ReturnUnmovableFooFromCppFunction) {
-  auto make = []() -> move::UnmovableFoo {
-    return move::new_unmovable_foo(42);
-  };
-  move::UnmovableFoo v = make();
-  EXPECT_EQ(v.read_byte(), 42);
-}
-
-TEST(MoveTest, ReturnUnmovableFooResultWrappedInMovable) {
-  rs::Movable<rs_std::Result<move::UnmovableFoo, uint8_t>> v =
-      move::new_unmovable_foo_result(42);
-  ASSERT_TRUE(v->has_value());
-  EXPECT_EQ((*v)->read_byte(), 42);
-}
-
 }  // namespace

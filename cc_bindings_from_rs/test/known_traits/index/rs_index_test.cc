@@ -29,7 +29,7 @@ TEST(IndexTest, IndexByCustomType) {
 }
 
 TEST(IndexTest, IndexByTuple) {
-  rs_index::Map map = rs_index::Map::new_(2, 2);
+  auto map = rs_index::Map::new_(2, 2);
   auto index = std::make_tuple(0, 0);
   EXPECT_EQ(map[index].to_string_view(), "tile(0, 0)");
   EXPECT_EQ(map[std::make_tuple(0, 1)].to_string_view(), "tile(0, 1)");

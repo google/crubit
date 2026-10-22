@@ -18,11 +18,8 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
-#include "support/movable.h"
-#include "support/rs_std/result.h"
 
 #include <array>
-#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -97,7 +94,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: UnmovableFoo") alignas(4)
   UnmovableFoo& operator=(const UnmovableFoo&) = delete;
   UnmovableFoo(::crubit::UnsafeRelocateTag, UnmovableFoo&& value);
 
-  static ::rs::Movable<::move::UnmovableFoo> from_byte(::std::uint8_t byte);
+  static ::move::UnmovableFoo from_byte(::std::uint8_t byte);
 
   ::std::uint8_t read_byte() const;
 
@@ -111,8 +108,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: UnmovableFoo") alignas(4)
 
 void consume_foo(::move::Foo _foo);
 
-::std::uint8_t consume_unmovable_foo(::rs::Movable<::move::UnmovableFoo> foo);
-
 //  Initializes an `UnmovableFoo` in the given memory location.
 //
 //  # Safety
@@ -123,84 +118,7 @@ void consume_foo(::move::Foo _foo);
 //  will be leaked).
 void initialize_unmovable_foo(::move::UnmovableFoo* out, ::std::uint8_t byte);
 
-::rs::Movable<::move::UnmovableFoo> new_unmovable_foo(::std::uint8_t byte);
-
-::rs::Movable<rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>>
-new_unmovable_foo_result(::std::uint8_t byte);
-
-}  // namespace move
-
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020move_x00000020_x0000003a_x0000003a_x00000020UnmovableFoo_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020move_x00000020_x0000003a_x0000003a_x00000020UnmovableFoo_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
-template <>
-struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "core :: result :: Result < :: move_golden :: UnmovableFoo , u8 >")
-    rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>
-    : public rs_std::ResultBase<
-          rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>,
-          ::move::UnmovableFoo, ::std::uint8_t> {
- public:
-  // `core::result::Result` doesn't implement the `Clone` trait
-  Result(const Result&) = delete;
-  Result& operator=(const Result&) = delete;
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  Result(Result&&) = delete;
-  rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>& operator=(Result&&) =
-      delete;
-  Result(::crubit::UnsafeRelocateTag, Result&& value);
-
- public:
-  using base_type =
-      rs_std::ResultBase<rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>,
-                         ::move::UnmovableFoo, ::std::uint8_t>;
-  template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::move::UnmovableFoo, U>)
-  explicit constexpr Result(U&& ok) noexcept;
-  template <typename U>
-    requires(
-        rs_std::ResultForwardConstructible<Result, ::move::UnmovableFoo, U>)
-  constexpr Result& operator=(U&& ok) noexcept;
-  template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
-  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
-  template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
-  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
-  template <typename... Args>
-  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
-  template <typename... Args>
-  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
-  ~Result() noexcept;
-
- private:
-  friend base_type;
-  bool has_value_impl() const noexcept { return tag() == 0; }
-  ::move::UnmovableFoo* ok_ptr() noexcept {
-    return reinterpret_cast<::move::UnmovableFoo*>(__storage + 4);
-  }
-  ::move::UnmovableFoo const* ok_const_ptr() const noexcept {
-    return reinterpret_cast<::move::UnmovableFoo const*>(__storage + 4);
-  }
-  ::std::uint8_t* err_ptr() noexcept {
-    return reinterpret_cast<::std::uint8_t*>(__storage + 1);
-  }
-  ::std::uint8_t const* err_const_ptr() const noexcept {
-    return reinterpret_cast<::std::uint8_t const*>(__storage + 1);
-  }
-  void set_ok_tag() noexcept { set_tag(0); }
-  void set_err_tag() noexcept { set_tag(1); }
-  constexpr ::std::uint8_t tag() const& noexcept;
-  constexpr void set_tag(::std::uint8_t tag) noexcept;
-
- private:
-  unsigned char __storage[8];
-};
-#endif
-
-namespace move {
+::move::UnmovableFoo new_unmovable_foo(::std::uint8_t byte);
 
 static_assert(
     sizeof(::move::Copyable) == 1,
@@ -326,13 +244,11 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
                                           ::move::UnmovableFoo* __ret_ptr);
 }
-inline ::rs::Movable<::move::UnmovableFoo>(UnmovableFoo::from_byte)(
-    ::std::uint8_t byte) {
+inline ::move::UnmovableFoo(UnmovableFoo::from_byte)(::std::uint8_t byte) {
   crubit::Slot<::move::UnmovableFoo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ubyte(byte, __return_value_storage);
-  return ::rs::Movable<::move::UnmovableFoo>::TakeFromSlot(
-      ::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -356,18 +272,6 @@ inline void consume_foo(::move::Foo _foo) {
 }
 
 namespace __crubit_internal {
-extern "C" ::std::uint8_t __crubit_thunk_consume_uunmovable_ufoo(
-    ::move::UnmovableFoo*);
-}
-inline ::std::uint8_t consume_unmovable_foo(
-    ::rs::Movable<::move::UnmovableFoo> foo) {
-  crubit::Slot<::move::UnmovableFoo> foo_slot;
-  ::std::move(foo).MoveToSlot(foo_slot);
-  return __crubit_internal::__crubit_thunk_consume_uunmovable_ufoo(
-      foo_slot.Get());
-}
-
-namespace __crubit_internal {
 extern "C" void __crubit_thunk_initialize_uunmovable_ufoo(::move::UnmovableFoo*,
                                                           ::std::uint8_t);
 }
@@ -381,102 +285,15 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new_uunmovable_ufoo(
     ::std::uint8_t, ::move::UnmovableFoo* __ret_ptr);
 }
-inline ::rs::Movable<::move::UnmovableFoo> new_unmovable_foo(
-    ::std::uint8_t byte) {
+inline ::move::UnmovableFoo new_unmovable_foo(::std::uint8_t byte) {
   crubit::Slot<::move::UnmovableFoo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new_uunmovable_ufoo(byte,
                                                         __return_value_storage);
-  return ::rs::Movable<::move::UnmovableFoo>::TakeFromSlot(
-      ::std::move(__return_value_ret_val_holder));
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_new_uunmovable_ufoo_uresult(
-    ::std::uint8_t,
-    rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>* __ret_ptr);
-}
-inline ::rs::Movable<rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>>
-new_unmovable_foo_result(::std::uint8_t byte) {
-  crubit::Slot<rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_new_uunmovable_ufoo_uresult(
-      byte, __return_value_storage);
-  return ::rs::Movable<rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>>::
-      TakeFromSlot(::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace move
-
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020move_x00000020_x0000003a_x0000003a_x00000020UnmovableFoo_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020move_x00000020_x0000003a_x0000003a_x00000020UnmovableFoo_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
-inline rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>::Result(
-    ::crubit::UnsafeRelocateTag, Result&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-inline rs_std::Result<::move::UnmovableFoo,
-                      ::std::uint8_t>::~Result() noexcept {
-  this->Reset();
-}
-inline constexpr ::std::uint8_t
-rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>::tag() const& noexcept {
-  std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
-    __bytes[i] = __storage[0 + i];
-  }
-  return std::bit_cast<::std::uint8_t>(__bytes);
-}
-inline constexpr void
-rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>::set_tag(
-    ::std::uint8_t tag) noexcept {
-  auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
-    __storage[0 + i] = __bytes[i];
-  }
-}
-
-template <typename U>
-  requires(rs_std::ResultForwardConstructible<
-           rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>,
-           ::move::UnmovableFoo, U>)
-inline constexpr rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>::Result(
-    U&& ok) noexcept
-    : base_type(::std::forward<U>(ok)) {}
-template <typename U>
-  requires(rs_std::ResultForwardConstructible<
-           rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>,
-           ::move::UnmovableFoo, U>)
-inline constexpr rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>&
-rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>::operator=(
-    U&& ok) noexcept {
-  base_type::operator=(::std::forward<U>(ok));
-  return *this;
-}
-template <typename F>
-  requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
-inline constexpr rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>::Result(
-    rs_std::unexpected<F>&& err) noexcept
-    : base_type(::std::move(err)) {}
-template <typename F>
-  requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
-inline constexpr rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>&
-rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>::operator=(
-    rs_std::unexpected<F>&& err) noexcept {
-  base_type::operator=(::std::move(err));
-  return *this;
-}
-template <typename... Args>
-inline constexpr rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>::Result(
-    ::std::in_place_t ip, Args&&... args) noexcept
-    : base_type(ip, ::std::forward<Args>(args)...) {}
-template <typename... Args>
-inline constexpr rs_std::Result<::move::UnmovableFoo, ::std::uint8_t>::Result(
-    rs_std::unexpect_t u, Args&&... args) noexcept
-    : base_type(u, ::std::forward<Args>(args)...) {}
-
-#endif
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN
