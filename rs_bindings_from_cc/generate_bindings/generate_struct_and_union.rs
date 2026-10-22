@@ -707,6 +707,12 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         Some(RecursivelyPinnedAttr { pinned_drop: db.record_should_implement_drop(&record) })
     };
 
+    let needs_explicit_unpin_impl = record.is_unpin()
+        && record
+            .fields()
+            .iter()
+            .any(|f| db.field_rs_type_kind_for_layout(&record, f).is_ok_and(|k| !k.is_unpin()));
+
     // Adjust the struct to also include base class subobjects, vtables, etc.
     let head_padding = if let Some(first_field) = record.fields().first() {
         first_field.offset() / 8
@@ -987,9 +993,37 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
     let member_methods = api_snippets.member_functions.remove(&record.id()).unwrap_or_default();
     let free_functions = api_snippets.free_functions.remove(&record.id()).unwrap_or_default();
 
+    let mut full_doc = record.doc_comment().map(|s| s.to_string()).unwrap_or_default();
+    if !record.is_unpin() {
+        if !full_doc.is_empty() {
+            full_doc.push_str("\n\n");
+        }
+        full_doc.push_str(&format!(
+            "Not Rust-movable: {}",
+            record.not_rust_movable_reason().unwrap_or_default()
+        ));
+    } else {
+        let libcxx_only = record.libcxx_only_fields();
+        if !libcxx_only.is_empty() {
+            if !full_doc.is_empty() {
+                full_doc.push_str("\n\n");
+            }
+            let fields = libcxx_only
+                .iter()
+                .map(|s| format!("`{}`", s.as_ref()))
+                .collect::<Vec<_>>()
+                .join(", ");
+            full_doc.push_str(&format!(
+                "Rust-movable only when built against libc++ (via field {}).",
+                fields
+            ));
+        }
+    }
+    let full_doc_opt = if full_doc.is_empty() { None } else { Some(full_doc.as_str()) };
+
     let record_tokens = database::code_snippet::Record {
         doc_comment_attr: generate_doc_comment(
-            record.doc_comment(),
+            full_doc_opt,
             record_safety.as_deref(),
             record.as_ref().decl_loc(),
             db.is_golden_test(),
@@ -1051,6 +1085,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         delete: operator_delete_impl,
         lifetime_params,
         is_thread_safe: record.is_thread_safe(),
+        needs_explicit_unpin_impl,
         size: record.size_align().size(),
     };
 

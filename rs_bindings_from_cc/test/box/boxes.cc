@@ -28,12 +28,11 @@ int32_t ReadBoxPtr(const rs::Box<int32_t>* b) { return **b; }
 rs::Box<Point> MakeBoxedPoint() { return rs::Box<Point>(Point{1, 2}); }
 int32_t PointX(rs::Box<Point> b) { return b->x; }
 
-Holder* MakeHolder() {
-  auto h = new Holder{rs::Box<int32_t>(42)};
-  return h;
-}
-void DestroyHolder(Holder* h) { delete h; }
-const rs::Box<int32_t>* HolderBox(const Holder* h) { return &h->b; }
+Holder MakeHolder(int32_t v) { return Holder{rs::Box<int32_t>(v)}; }
+int32_t HolderValue(const Holder& h) { return *h.b; }
+void SetHolderValue(Holder& h, int32_t v) { *h.b = v; }
+Outer MakeOuter(int32_t v) { return Outer{MakeHolder(v), v + 1}; }
+void TakesHolderByValue(Holder h) { __builtin_trap(); }
 
 rs::PinBox<NonTrivial> MakePinBoxNonTrivial(int val) {
   return rs::make_pin_box<NonTrivial>(std::make_shared<int>(val));

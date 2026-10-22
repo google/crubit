@@ -48,6 +48,7 @@ pub mod crubit {
             }
         }
 
+        /// Not Rust-movable: destructor or move constructor is user-provided
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[cfi_encoding = "N6crubit4test12ItemNonUnpinE"]
         #[repr(C)]
@@ -205,6 +206,8 @@ pub mod crubit {
             }
         }
 
+        /// Not Rust-movable: member `items_storage_` is not bitwise-relocatable: destructor or move constructor is user-provided
+        ///
         /// # Safety
         ///
         /// To call a function that accepts this type, you must uphold these requirements:
@@ -402,6 +405,7 @@ pub mod crubit {
             }
         }
 
+        /// Not Rust-movable: destructor or move constructor is user-provided
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[cfi_encoding = "N6crubit4test26ContainerNonUnpinItemUnpinE"]
         #[repr(C, align(4))]
@@ -527,6 +531,7 @@ pub mod crubit {
             }
         }
 
+        /// Not Rust-movable: member `items_` is not bitwise-relocatable: destructor or move constructor is user-provided
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[cfi_encoding = "N6crubit4test29ContainerNonUnpinItemNonUnpinE"]
         #[repr(C, align(4))]

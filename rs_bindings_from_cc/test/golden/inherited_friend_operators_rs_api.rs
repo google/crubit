@@ -263,6 +263,8 @@ pub mod outer {
 }
 
 /// Types that aren't `Unpin` can inherit operators as well.
+///
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "19NonTrivialEquatable"]
 #[repr(C, align(4))]

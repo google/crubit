@@ -19,6 +19,8 @@
 ///
 /// This makes it nontrivial for calls (so not trivially relocatable), as well
 /// as specifically giving it a nontrivial move constructor and destructor.
+///
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "10Nontrivial"]
 #[repr(C)]
@@ -333,6 +335,8 @@ pub mod nontrivial {
 ///
 /// This makes it nontrivial for calls (so not trivially relocatable), as well
 /// as specifically giving it a nontrivial move constructor and destructor.
+///
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "16NontrivialInline"]
 #[repr(C)]
@@ -524,6 +528,8 @@ pub mod nontrivial_inline {
 /// This changes how the destructor / drop impl work -- instead of calling
 /// the destructor for NontrivialMembers, it just calls the destructors for
 /// each field.
+///
+/// Not Rust-movable: member `nontrivial_member` is not bitwise-relocatable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "17NontrivialMembers"]
 #[repr(C)]
@@ -1002,6 +1008,7 @@ where
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "10Nonmovable"]
 #[repr(C)]

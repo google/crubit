@@ -153,6 +153,7 @@ pub mod struct_with_lifetimebound_ref_member_function {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "40DropClassWithLifetimeboundMemberFunction"]
 #[repr(C, align(8))]
@@ -258,6 +259,7 @@ pub mod drop_class_with_lifetimebound_member_function {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "43DropClassWithLifetimeboundRefMemberFunction"]
 #[repr(C, align(8))]
@@ -476,6 +478,7 @@ impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "31DropStructWithLifetimeboundCtor"]
 #[repr(C, align(8))]
@@ -568,6 +571,7 @@ impl ::ctor::PinnedDrop for DropStructWithLifetimeboundCtor {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "34DropStructWithLifetimeboundRefCtor"]
 #[repr(C, align(8))]
@@ -683,6 +687,7 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithLifetimeboundRefCtor<'__i
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "41DropStructWithRefCtorAndRefMemberFunction"]
 #[repr(C, align(8))]
@@ -819,6 +824,7 @@ pub mod drop_struct_with_ref_ctor_and_ref_member_function {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "35DropStructWithCtorAndMemberFunction"]
 #[repr(C, align(8))]
@@ -930,6 +936,7 @@ pub mod drop_struct_with_ctor_and_member_function {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "38DropStructWithCtorAndRefMemberFunction"]
 #[repr(C, align(8))]
@@ -1038,6 +1045,7 @@ pub mod drop_struct_with_ctor_and_ref_member_function {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "38DropStructWithRefCtorAndMemberFunction"]
 #[repr(C, align(8))]

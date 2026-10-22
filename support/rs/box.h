@@ -18,6 +18,7 @@
 #include "support/internal/slot.h"
 #include "support/movable.h"
 #include "support/unsafe_relocate_tag.h"
+#include "support/annotations.h"
 #include "support/annotations_internal.h"
 
 extern "C" {
@@ -41,7 +42,8 @@ inline constexpr bool is_rs_movable_v<::rs::Movable<T>> = true;
 // and passed by-value via `rs::Movable`. Memory is managed by the Rust global
 // allocator.
 template <typename T>
-class CRUBIT_INTERNAL_RUST_TYPE("::alloc::boxed::Box<{}>", T) Box final {
+class CRUBIT_INTERNAL_RUST_TYPE("::alloc::boxed::Box<{}>",
+                                T) CRUBIT_UNSAFE_BITWISE_RELOCATABLE Box final {
   static_assert(!::std::is_reference_v<T>, "Box<T> cannot hold a reference");
   static_assert(!::std::is_array_v<T>, "Box<T> cannot hold an array");
   static_assert(!::std::is_const_v<T> && !::std::is_volatile_v<T>,

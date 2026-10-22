@@ -460,4 +460,50 @@
 #define CRUBIT_ALLOW_UNBINDABLE_TYPE \
   CRUBIT_INTERNAL_ANNOTATE("crubit_allow_unbindable_type")
 
+// Asserts that a C++ record type is bitwise relocatable, making it Rust-movable
+// (Unpin) in the generated bindings even if it has a user-provided move
+// constructor or destructor.
+//
+// By applying this annotation, the author guarantees that Crubit's automated
+// checks are sound for this type. Crubit verifies that every base class and
+// non-static data member is also bitwise relocatable. However, the author must
+// verify the following checklist, which Crubit cannot check:
+// (a) The move constructor and destructor are equivalent to `memcpy` plus
+//     forgetting the old object (no self-pointers, no registration of `this` in
+//     side tables, no address-keyed caches).
+// (b) Nothing poisons bytes of `*this` under ASan.
+// (c) No address-dependent pointer encoding is used (`__ptrauth`, tagged PFP).
+// (d) The properties hold on every standard library the type is built against
+//     (or use `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD_LIBCXX_ONLY`).
+//
+// If a member is not bitwise relocatable, bindings generation for the owning
+// target fails with a hard error.
+#define CRUBIT_UNSAFE_BITWISE_RELOCATABLE \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_bitwise_relocatable")
+
+// Like `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`, but if a member is not bitwise
+// relocatable, the generator silently leaves the type pinned instead of
+// failing. Useful for class templates whose bitwise relocatability depends on
+// their template arguments.
+#define CRUBIT_UNSAFE_BITWISE_RELOCATABLE_IF_ELIGIBLE \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_bitwise_relocatable_if_eligible")
+
+// Treats a single non-static data member as bitwise relocatable, bypassing the
+// check on its type. Useful for offset pointers and similar types where the
+// author knows bitwise relocation is safe despite the member's C++ type.
+#define CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_bitwise_relocatable_field")
+
+// Like `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD`, but also allows the member to
+// be `std::basic_string` (which is bitwise relocatable in libc++ but not in
+// libstdc++). If a type's bitwise relocatability relies on this annotation,
+// bindings generation will fail with a hard error on any translation unit not
+// compiled against libc++.
+//
+// This is sound only while libc++ keeps short-string ASan annotations off.
+// It also does not support tagged PFP builds.
+#define CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD_LIBCXX_ONLY \
+  CRUBIT_INTERNAL_ANNOTATE(                                 \
+      "crubit_unsafe_bitwise_relocatable_field_libcxx_only")
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_

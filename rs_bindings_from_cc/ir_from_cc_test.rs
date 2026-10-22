@@ -4170,6 +4170,72 @@ fn test_is_rust_movable_across_target_platforms() -> Result<()> {
             expected_rust_movable_on_linux: true,
             expected_rust_movable_on_windows: true,
         },
+        TestCase {
+            record_name: "AnnotatedLeaf",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "StructWithAnnotatedField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct StructWithAnnotatedField { AnnotatedLeaf f; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "NestedStruct",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct NestedStruct { struct Inner { AnnotatedLeaf f; } i; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "ArrayField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct ArrayField { AnnotatedLeaf f[3]; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "ExplicitDefaultedMoveWithAnnotatedField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct ExplicitDefaultedMoveWithAnnotatedField { ExplicitDefaultedMoveWithAnnotatedField(ExplicitDefaultedMoveWithAnnotatedField&&) = default; AnnotatedLeaf f; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "MoveOnlyWithAnnotatedField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct MoveOnlyWithAnnotatedField { MoveOnlyWithAnnotatedField(MoveOnlyWithAnnotatedField&&) = default; MoveOnlyWithAnnotatedField(const MoveOnlyWithAnnotatedField&) = delete; AnnotatedLeaf f; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "AnonUnionWithAnnotatedField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable_if_eligible\")]] AnonUnionWithAnnotatedField { union { char none_; AnnotatedLeaf f; }; ~AnonUnionWithAnnotatedField() {} };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "UserProvidedMoveWithAnnotatedField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct UserProvidedMoveWithAnnotatedField { UserProvidedMoveWithAnnotatedField(UserProvidedMoveWithAnnotatedField&&) {} AnnotatedLeaf f; };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
+        },
+        TestCase {
+            record_name: "DeletedMoveInts",
+            input_cpp: "struct DeletedMoveInts { DeletedMoveInts(DeletedMoveInts&&) = delete; int i; };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
+        },
+        TestCase {
+            record_name: "DeletedMoveAssignInts",
+            input_cpp: "struct DeletedMoveAssignInts { DeletedMoveAssignInts& operator=(DeletedMoveAssignInts&&) = delete; int i; };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
+        },
+        TestCase {
+            record_name: "NonTrivialField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct NonTrivial { NonTrivial(NonTrivial&&) {} }; struct NonTrivialField { AnnotatedLeaf a; NonTrivial f; };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
+        },
         // Crubit does not analyze destructor bodies, and a destructor may
         // observe `this`, so a non-trivial destructor forces the conservative
         // answer.
@@ -4217,21 +4283,20 @@ fn test_is_rust_movable_across_target_platforms() -> Result<()> {
             expected_rust_movable_on_linux: false,
             expected_rust_movable_on_windows: false,
         },
-        // A *deleted* special member does not disqualify a class - only a
-        // *non-trivial* one does.  Here the union's destructor is deleted
-        // (because the member's destructor is non-trivial), so the union is
-        // still movable by `memcpy`.
+        // Union variant members are checked just like struct fields: if a
+        // variant member is not bitwise-relocatable, neither is the union.
         TestCase {
             record_name: "UnionWithDeletedDtor",
             input_cpp: "struct SmallWithNontrivialDtor { char c; ~SmallWithNontrivialDtor(); }; \
                         union UnionWithDeletedDtor { \
                           int trivial_member; SmallWithNontrivialDtor nontrivial_dtor_member; };",
-            expected_rust_movable_on_linux: true,
-            expected_rust_movable_on_windows: true,
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
         },
-        // Same idea for a deleted copy constructor: `MoveOnlyWrapper` is
-        // movable by `memcpy` even though the copy constructor it would
-        // inherit from its field is non-trivial.
+        // `MoveOnlyWrapper` and `NontrivialCopyButTrivialMove` both select a
+        // defaulted move constructor when initialized from an xvalue, so both
+        // are bitwise-relocatable even though the copy constructor is
+        // user-provided or deleted.
         TestCase {
             record_name: "MoveOnlyWrapper",
             input_cpp: "struct NontrivialCopyButTrivialMove { \
@@ -4251,18 +4316,19 @@ fn test_is_rust_movable_across_target_platforms() -> Result<()> {
                           NontrivialCopyButTrivialMove(const NontrivialCopyButTrivialMove&); \
                           NontrivialCopyButTrivialMove(NontrivialCopyButTrivialMove&&) = default; \
                         };",
-            expected_rust_movable_on_linux: false,
-            expected_rust_movable_on_windows: false,
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
         },
-        // *Every* non-deleted copy constructor must be trivial - it is not
-        // enough that one of the overloads is.
+        // Overload resolution from an xvalue selects `OverloadedCopyCtor(const
+        // OverloadedCopyCtor&) = default`, which is neither user-provided nor
+        // deleted.
         TestCase {
             record_name: "OverloadedCopyCtor",
             input_cpp: "struct OverloadedCopyCtor { \
                           OverloadedCopyCtor(const OverloadedCopyCtor&) = default; \
                           OverloadedCopyCtor(OverloadedCopyCtor&); };",
-            expected_rust_movable_on_linux: false,
-            expected_rust_movable_on_windows: false,
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
         },
         // TODO(b/564616479): Clang drops `[[clang::trivial_abi]]` when a field
         // cannot be passed in registers on the target ABI, so the attribute

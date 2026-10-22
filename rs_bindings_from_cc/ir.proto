@@ -685,6 +685,8 @@ message Record {
   // operation).  Clang's `__builtin_is_cpp_trivially_relocatable` follows
   // P2786, and that predicate neither implies nor is implied by this one.
   bool is_rust_movable = 24;
+  string not_rust_movable_reason = 34;
+  repeated string libcxx_only_fields = 35;
   // Whether this type can be inherited from.
   bool is_inheritable = 25;
   // Whether this type is abstract.

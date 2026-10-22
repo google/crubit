@@ -143,6 +143,7 @@ pub fn AcceptSpecialized(
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "14NonRustMovable"]
 #[repr(C)]

@@ -37,9 +37,20 @@ struct Holder {
   rs::Box<int32_t> b;
 };
 
-Holder* MakeHolder();
-void DestroyHolder(Holder* h);
-const rs::Box<int32_t>* HolderBox(const Holder* h);
+Holder MakeHolder(int32_t v);
+int32_t HolderValue(const Holder& h);
+void SetHolderValue(Holder& h, int32_t v);
+struct Outer {
+  Holder h;
+  int32_t tag;
+};
+Outer MakeOuter(int32_t v);
+// Rejected: `Holder` is Rust-movable but has no C++ copy or move constructor,
+// so it cannot be passed by value (see the `boxes` golden test).
+void TakesHolderByValue(Holder h);
+struct ArrayHolder {
+  rs::Box<int32_t> boxes[2];
+};
 
 // A type that is not Rust-movable (`!Unpin` in Rust) because it has a
 // user-defined move constructor. It shares ownership of an `int` so that tests
@@ -56,6 +67,10 @@ struct NonTrivial {
   ~NonTrivial() = default;
 
   std::shared_ptr<int> ptr;
+};
+
+struct PinHolder {
+  rs::PinBox<NonTrivial> p;
 };
 
 rs::PinBox<NonTrivial> MakePinBoxNonTrivial(int val);

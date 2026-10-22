@@ -14,6 +14,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/decl_importer.h"
+#include "rs_bindings_from_cc/importers/bitwise_relocatable.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
@@ -50,6 +51,8 @@ class CXXRecordDeclImporter : public DeclImporterBase<clang::CXXRecordDecl> {
       const clang::ClassTemplateSpecializationDecl* decl);
 
   absl::StatusOr<SafetyAnnotation> GetSafetyAnnotation(const clang::Decl& decl);
+
+  RelocatabilityAnalysis relocatability_analysis_;
 };
 
 }  // namespace crubit

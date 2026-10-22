@@ -14,6 +14,7 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "13TypeAliasCtor"]
 #[repr(C)]

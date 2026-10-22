@@ -24,25 +24,28 @@ more pleasant API when they are Rust-movable.
 This can happen for a couple of easily fixable reasons, described in
 subsections:
 
-*   The type defines a destructor or copy/move constructor / assignment
-    operator. If it is in-principle still Rust-movable, and these functions do
-    not care about the address of the object in memory, then the type can be
-    [annotated with `ABSL_ATTRIBUTE_TRIVIAL_ABI`](#trivial_abi)
-*   The type has a field which is not rust-movable. In that case, the field can
-    be [boxed in a pointer](#boxing).
+*   The type defines a destructor or copy/move constructor. If it is
+    in-principle still Rust-movable, and these functions do not care about the
+    address of the object in memory, then the type can be [annotated with
+    `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`](#bitwise_relocatable)
 
 There are *other* reasons a type can become non-Rust-movable, which do not have
 these easy fixes described below. For example, virtual methods, or
 non-Rust-movable base classes. For those, your only option is the hard option of
 more radically restructuring your code to avoid those patterns.
 
-### `ABSL_ATTRIBUTE_TRIVIAL_ABI` {#trivial_abi}
+### `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` {#bitwise_relocatable}
 
-crubit.rs/cpp/cookbook#trivial_abi
+crubit.rs/cpp/cookbook#bitwise_relocatable
 
-One of the ways a type can become non-Rust-movable is if it has a copy/move
-constructor / assignment operator, or a destructor. In that case, Clang will
-assume that it cannot be trivially relocated, **unless** it is annotated with
+One of the ways a type can become non-Rust-movable is if it has a user-provided
+move constructor or destructor. In that case, Crubit will assume that it cannot
+be trivially relocated, **unless** it is annotated with
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE`. Note that previously,
+`ABSL_ATTRIBUTE_TRIVIAL_ABI` was recommended for this, but this is deprecated
+because `trivial_abi` alters the C++ ABI and could hide members that make the
+class non-relocatable (like `std::string`). New code should use
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE` instead.
 [`ABSL_ATTRIBUTE_TRIVIAL_ABI`](https://github.com/abseil/abseil-cpp/blob/master/absl/base/attributes.h#:~:text=ABSL_ATTRIBUTE_TRIVIAL_ABI).
 
 ```c++ {.bad}

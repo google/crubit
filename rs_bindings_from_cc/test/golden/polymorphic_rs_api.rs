@@ -14,6 +14,7 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+/// Not Rust-movable: type is polymorphic
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "15PolymorphicBase"]
 #[repr(C, align(8))]
@@ -99,6 +100,7 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase {
     }
 }
 
+/// Not Rust-movable: type is polymorphic
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "16PolymorphicBase2"]
 #[repr(C, align(8))]
@@ -197,6 +199,7 @@ pub mod polymorphic_base2 {
     }
 }
 
+/// Not Rust-movable: type is polymorphic
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "18PolymorphicDerived"]
 #[repr(C, align(8))]

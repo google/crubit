@@ -135,6 +135,7 @@ impl Default for Derived {
     }
 }
 
+/// Not Rust-movable: type has virtual bases
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "12VirtualBase1"]
 #[repr(C, align(8))]
@@ -240,6 +241,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase1 {
     }
 }
 
+/// Not Rust-movable: type has virtual bases
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "12VirtualBase2"]
 #[repr(C, align(8))]
@@ -345,6 +347,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase2 {
     }
 }
 
+/// Not Rust-movable: type has virtual bases
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "14VirtualDerived"]
 #[repr(C, align(8))]
@@ -452,6 +455,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualDerived {
     }
 }
 
+/// Not Rust-movable: type is polymorphic
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "15MyAbstractClass"]
 #[repr(C, align(8))]

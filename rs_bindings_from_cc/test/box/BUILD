@@ -11,7 +11,10 @@ cc_library(
     name = "boxes",
     srcs = ["boxes.cc"],
     hdrs = ["boxes.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [
+        "//features:experimental",
+        "//features:supported",
+    ],
     deps = [
         "//support/rs:box",
         "//support/rs:pin_box",
@@ -32,5 +35,6 @@ crubit_rust_test(
     deps = [
         ":boxes_rust_api",
         "@crate_index//:googletest",
+        "@crate_index//:static_assertions",  # v1
     ],
 )

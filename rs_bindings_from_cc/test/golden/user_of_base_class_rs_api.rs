@@ -19,6 +19,8 @@
 /// This tests inheritance across library boundaries.
 ///
 /// TODO(b/216195042): Correctly namespace base classes in generated Rust code.
+///
+/// Not Rust-movable: type has virtual bases
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "8Derived2"]
 #[repr(C, align(8))]
@@ -125,6 +127,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Derived2 {
     }
 }
 
+/// Not Rust-movable: type has virtual bases
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "15VirtualDerived2"]
 #[repr(C, align(8))]

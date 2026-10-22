@@ -14,6 +14,7 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "10Uncopyable"]
 #[repr(C)]
@@ -45,6 +46,7 @@ impl ::ctor::CtorNew<()> for Uncopyable {
     }
 }
 
+/// Not Rust-movable: member `vector_` is not bitwise-relocatable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "21UncopyableDespiteDecl"]
 #[repr(C, align(8))]

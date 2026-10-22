@@ -45,6 +45,7 @@ impl Default for EmptyUnion {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "10Nontrivial"]
 #[repr(C)]
@@ -135,6 +136,7 @@ impl Default for RenamedUnion {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "44TriviallyCopyableButNontriviallyDestructible"]
 #[repr(C)]
@@ -234,6 +236,8 @@ impl Default for NonEmptyUnion {
     }
 }
 
+/// Not Rust-movable: member `nontrivial_member` is not bitwise-relocatable: destructor or move constructor is user-provided
+///
 /// # Safety
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
@@ -254,10 +258,13 @@ unsafe impl ::cxx::ExternType for NonCopyUnion {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion"), crate::NonCopyUnion);
 
+/// Not Rust-movable: member `nontrivial_member` is not bitwise-relocatable: destructor or move constructor is user-provided
+///
 /// # Safety
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
+#[::ctor::recursively_pinned]
 #[cfi_encoding = "13NonCopyUnion2"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion2
@@ -271,58 +278,31 @@ impl !Send for NonCopyUnion2 {}
 impl !Sync for NonCopyUnion2 {}
 unsafe impl ::cxx::ExternType for NonCopyUnion2 {
     type Id = ::cxx::type_id!("NonCopyUnion2");
-    type Kind = ::cxx::kind::Trivial;
+    type Kind = ::cxx::kind::Opaque;
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion2"), crate::NonCopyUnion2);
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\n`NonCopyUnion2` can't be used by-value because it has a non-public or deleted destructor"
-)]
-pub trait BindingFailedFor_ZN13NonCopyUnion2C1ERKS_ {}
-impl Clone for NonCopyUnion2
-where
-    for<'error> &'error (): BindingFailedFor_ZN13NonCopyUnion2C1ERKS_,
-{
-    #[inline(always)]
-    fn clone<'__param_0>(&'__param_0 self) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a crubit.rs-bug."
-        )
-    }
-}
+// error: constructor `NonCopyUnion2::NonCopyUnion2` could not be bound
+//   `NonCopyUnion2` can't be used by-value because it has a non-public or deleted destructor
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\n`NonCopyUnion2` can't be used by-value because it has a non-public or deleted destructor"
-)]
-pub trait BindingFailedFor_ZN13NonCopyUnion2C1EOS_ {}
-impl From<::ctor::RvalueReference<'_, Self>> for NonCopyUnion2
-where
-    for<'error> &'error (): BindingFailedFor_ZN13NonCopyUnion2C1EOS_,
-{
-    #[inline(always)]
-    fn from(args: ::ctor::RvalueReference<'_, Self>) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a crubit.rs-bug."
-        )
-    }
-}
+// error: constructor `NonCopyUnion2::NonCopyUnion2` could not be bound
+//   `NonCopyUnion2` can't be used by-value because it has a non-public or deleted destructor
 
-impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for NonCopyUnion2 {
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for NonCopyUnion2 {
     #[inline(always)]
-    fn unpin_assign<'__this>(&'__this mut self, __param_0: &'__param_0 Self) {
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13NonCopyUnion2aSERKS_(self, __param_0);
         }
     }
 }
 
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for NonCopyUnion2 {
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for NonCopyUnion2 {
     #[inline(always)]
-    fn unpin_assign<'__this>(&'__this mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
         unsafe {
             crate::detail::__rust_thunk___ZN13NonCopyUnion2aSEOS_(self, __param_0);
         }
@@ -533,13 +513,13 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN13NonCopyUnion2aSERKS_<'__param_0, '__this>(
-            __this: &'__this mut crate::NonCopyUnion2,
+            __this: ::core::pin::Pin<&'__this mut crate::NonCopyUnion2>,
             __param_0: &'__param_0 crate::NonCopyUnion2,
-        ) -> &'__this mut crate::NonCopyUnion2;
+        ) -> ::core::pin::Pin<&'__this mut crate::NonCopyUnion2>;
         pub(crate) unsafe fn __rust_thunk___ZN13NonCopyUnion2aSEOS_<'__this>(
-            __this: &'__this mut crate::NonCopyUnion2,
+            __this: ::core::pin::Pin<&'__this mut crate::NonCopyUnion2>,
             __param_0: ::ctor::RvalueReference<'_, crate::NonCopyUnion2>,
-        ) -> &'__this mut crate::NonCopyUnion2;
+        ) -> ::core::pin::Pin<&'__this mut crate::NonCopyUnion2>;
         pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
             __this: *mut ::core::ffi::c_void,
         );

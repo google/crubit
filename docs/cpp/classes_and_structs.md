@@ -58,8 +58,7 @@ blobs:
 *   Fields that have nontrivial destructors
 *   Fields whose type does not have bindings
 *   Fields that have any unrecognized attribute, including `no_unique_address`
-*   Fields of a [packed struct](#packed) whose Rust type has
-    `#[repr(align(N))]`
+*   Fields of a [packed struct](#packed) whose Rust type has `#[repr(align(N))]`
 
 A Rust struct with opaque blobs is ABI-incompatible with the C++ struct or class
 that it corresponds to. As a consequence, if the struct is used for FFI outside
@@ -91,15 +90,25 @@ Ctor![T]`.
 (For an introduction to `Ctor![T]`, see
 crubit.rs/types/non_rust_movable/intro_short.)
 
-Types are considered Rust-movable by default, meaning they can be relocated
-using `memcpy`. If the type defines a destructor or copy/move constructor, then
-it requires a special annotation to be considered Rust-movable:
-[`ABSL_ATTRIBUTE_TRIVIAL_ABI`](https://github.com/abseil/abseil-cpp/blob/master/absl/base/attributes.h#:~:text=ABSL_ATTRIBUTE_TRIVIAL_ABI).
-If it has a non-Rust-movable field or base class, then it is not Rust-movable.
+Types are considered Rust-movable (bitwise relocatable) by default. If the type
+defines a destructor or copy/move constructor, then it requires a special
+annotation to be considered Rust-movable: `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`.
+(See `support/annotations.h` for variations like `_IF_ELIGIBLE` and `_FIELD` for
+templates and specific field overrides.)
+
+If a type has a non-Rust-movable field or base class, it is not Rust-movable. A
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE` annotation on a type with
+non-bitwise-relocatable fields will result in a hard compiler error during
+bindings generation.
+
+**Note on `trivial_abi`**: While `[[clang::trivial_abi]]` /
+`ABSL_ATTRIBUTE_TRIVIAL_ABI` previously made types Rust-movable, it *may not*
+make a type Rust-movable anymore. Crubit will check the members of a
+`trivial_abi` type, and if any member is not bitwise-relocatable, Crubit
+silently leaves the type pinned and emits a reason in the generated doc comment.
+New code should use `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`.
 
 It can be worth putting some effort into designing the type to be Rust-movable.
-crubit.rs/cpp/cookbook#rust_movable describes, in more detail, how to go about
-this.
 
 Some examples of Rust-movable types:
 
@@ -109,6 +118,11 @@ Some examples of Rust-movable types:
 *   [`struct tm`](https://en.cppreference.com/w/cpp/chrono/c/tm), or any other
     type in the C standard library
 *   `unique_ptr` and `shared_ptr`, in the Clang unstable ABI.
+*   any class whose bases and non-static data members are Rust-movable, and
+    which has no user-provided (or explicitly `= delete`d) special member
+    functions, even if its copy and move constructors are implicitly deleted
+    (such as structs containing `rs::Box` or other non-C++-movable types
+    annotated with `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`).
 *   `absl::Status`
 
 Some examples of types that are **not** Rust-movable:
@@ -283,8 +297,8 @@ differences:
     union.
 *   Base classes aren't printed, since they may be unaligned too.
 
-For example, with the struct above, `format!("{s:?}")` is
-`PackedStruct { a: 10, b: 200, c: 3000 }`. The tests in
+For example, with the struct above, `format!("{s:?}")` is `PackedStruct { a: 10,
+b: 200, c: 3000 }`. The tests in
 [`rs_bindings_from_cc/test/struct/packed/`](/rs_bindings_from_cc/test/struct/packed/)
 show more examples.
 

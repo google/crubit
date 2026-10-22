@@ -465,6 +465,7 @@ impl<'__this, 'rhs> ::core::ops::Add<&'rhs crate::AddableReturnsVoid>
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "26AddableConstMemberNonunpin"]
 #[repr(C, align(4))]

@@ -86,22 +86,13 @@ customizable.
 ### Which types are Rust-movable?
 
 For the purpose of Rust/C++ interop, we define a type to be Rust-movable if, and
-only if, it is "trivial for calls" in Clang. That is, either:
+only if, it is safe to relocate the type in memory by a bitwise copy (e.g.
+`memcpy`), without running the C++ destructor on the old location.
 
-1.  It is actually
-    [trivial](https://en.cppreference.com/w/cpp/named_req/TrivialType), **or**
-2.  It uses
-    [`[[clang::trivial_abi]]`](https://clang.llvm.org/docs/AttributeReference.html#trivial-abi)
-    to make itself trivial for calls
-
-This definition is conservative: some types that could be considered
-Rust-movable are not trivial for calls. (For example, `std::unique_ptr` uses
-`[[clang::trivial_abi]]` only in the unstable libc++ ABI; the stable libc++ ABI
-predates this attribute, and adding it now is ABI-breaking.)
-
-This definition is, however, sound: all types which are trivial for calls are
-Rust-movable, because a type which is trivial for calls is Rust-moved when
-passed by value as a function argument.
+For the exact rules of which types are considered Rust-movable, including the
+annotations used to assert bitwise relocatability for types that have
+user-provided move constructors or destructors, see [Bitwise Relocatable
+Design](bitwise_relocatable.md).
 
 ## Reference Safety
 
