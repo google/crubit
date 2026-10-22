@@ -42,6 +42,23 @@ fn item_is_or_aliases_string_view(db: &BindingsGenerator<'_>, item: &ir::Item<'_
     }
 }
 
+// Checks that the unaliased leaf element type of a fixed-size C array is a
+// non-void primitive or native `RsTypeKind::Enum`. There is also some pre-filtering in
+// `importer.cc` but this provides a more localized check.
+fn has_supported_array_leaf_element(ty: &RsTypeKind<'_>) -> bool {
+    let mut curr = ty;
+    loop {
+        match curr.unalias() {
+            RsTypeKind::Array { element_type, .. } => {
+                curr = element_type;
+            }
+            RsTypeKind::Primitive(p) => return *p != ir::Primitive::Void,
+            RsTypeKind::Enum { .. } => return true,
+            _ => return false,
+        }
+    }
+}
+
 /// Implementation of `BindingsGenerator::rs_type_kind`.
 pub fn rs_type_kind_with_lifetime_elision<'a>(
     db: &BindingsGenerator<'a>,
@@ -63,6 +80,25 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
     );
     match ty.variant() {
         CcTypeVariant::Primitive(primitive) => Ok(RsTypeKind::Primitive(*primitive)),
+        CcTypeVariant::ConstantArray(array) => {
+            let mut element_type = db.rs_type_kind_with_lifetime_elision(
+                array.element_type().clone(),
+                LifetimeOptions { requires_layout_compatible: true, ..lifetime_options },
+            )?;
+            element_type.force_layout_compatible();
+            if let RsTypeKind::Error { error, .. } = element_type.unalias() {
+                return Err(error.clone());
+            }
+            ensure!(
+                has_supported_array_leaf_element(&element_type),
+                "C-style array element type `{}` is not supported yet; only arrays of primitive or enum types are currently supported",
+                element_type.display(db),
+            );
+            Ok(RsTypeKind::Array {
+                element_type: Rc::new(element_type),
+                num_elements: array.num_elements(),
+            })
+        }
         CcTypeVariant::Pointer(pointer) => {
             // In Rust, we have no such concept of a "const" type. All types can be either
             // mutable or immutable depending on the context. However, we do have mutable and
@@ -231,6 +267,10 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                     )
                 })
                 .collect::<Result<Rc<[_]>>>()?;
+            ensure!(
+                param_types.iter().chain(Some(return_type.as_ref())).all(|t| !t.contains_c_array()),
+                "C-style array types are not supported in function pointers yet",
+            );
             ensure!(
                 param_types
                     .iter()

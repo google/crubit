@@ -923,9 +923,14 @@ fn test_no_unique_address_empty() -> Result<()> {
     let rs_api = generate_bindings_tokens_from_cc(&format!(
         r#"
         class Field {{}};
+        class alignas(8) AlignedEmptyField {{}};
         struct Struct final {{
             // Doc comment for no_unique_address empty class type field.
             {no_unique_address_attr} Field field;
+            int x;
+        }};
+        struct StructWithOveralignedEmpty final {{
+            {no_unique_address_attr} AlignedEmptyField field;
             int x;
         }};
     "#,
@@ -934,7 +939,7 @@ fn test_no_unique_address_empty() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            #[repr(C)]
+            #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Struct"]
             #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Struct {
@@ -949,6 +954,27 @@ fn test_no_unique_address_empty() -> Result<()> {
                         &*(ptr as *const crate::Field)
                     }
                   }
+            }
+            ...
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[repr(C, align(8))]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=StructWithOveralignedEmpty"]
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            pub struct StructWithOveralignedEmpty {
+                pub x: ::ffi_11::c_int,
+            }
+            ...
+            impl StructWithOveralignedEmpty {
+                pub fn field(&self) -> &crate::AlignedEmptyField {
+                    unsafe {
+                        let ptr = (self as *const Self as *const u8).offset(0);
+                        &*(ptr as *const crate::AlignedEmptyField)
+                    }
+                }
             }
             ...
         }
@@ -1070,7 +1096,7 @@ fn test_union_with_opaque_field() -> Result<()> {
     let rs_api = generate_bindings_tokens_from_cc(
         r#"
         union MyUnion {
-            char first_field[56];
+            volatile char first_field[56];
             int second_field;
           };
         "#,
@@ -1097,6 +1123,49 @@ fn test_union_with_opaque_field() -> Result<()> {
                 ...
                 assert!(::core::mem::size_of::<crate::MyUnion>() == 56);
                 assert!(::core::mem::align_of::<crate::MyUnion>() == 4);
+                ...
+            };
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_union_with_array_field() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        union MyUnion {
+            char first_field[56];
+            int second_field;
+        };
+        "#,
+    )?
+    .rs_api;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[repr(C)]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=MyUnion"]
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            pub union MyUnion {
+                pub first_field: [::ffi_11::c_char; 56],
+                pub second_field: ::ffi_11::c_int,
+            }
+        }
+    );
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            const _: () = {
+                ...
+                assert!(::core::mem::size_of::<crate::MyUnion>() == 56);
+                assert!(::core::mem::align_of::<crate::MyUnion>() == 4);
+                ...
+                assert!(::core::mem::offset_of!(crate::MyUnion, first_field) == 0);
+                assert!(::core::mem::offset_of!(crate::MyUnion, second_field) == 0);
+                static_assertions::assert_impl_all!([::ffi_11::c_char; 56]: Copy);
                 ...
             };
         }
@@ -2473,5 +2542,314 @@ fn test_no_impl_cxx_extern_type() -> Result<()> {
     let ir = make_test_ir_dependency(&proto, Some("no_impl_cxx_extern_type"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_not_matches!(rs_api, quote! { ::cxx::ExternType });
+    Ok(())
+}
+
+#[gtest]
+fn test_supported_struct_primitive_and_multidim_array_fields() -> Result<()> {
+    let no_unique_address_attr = test_platform().no_unique_address_attr();
+    let rs_api = generate_bindings_tokens_from_cc(&format!(
+        r#"
+        using Uint8 = unsigned char;
+        using Row = int[4];
+        struct MatrixPacket final {{
+            int bar[4];
+            int matrix[2][4];
+            Uint8 bytes[16];
+            Row grid[2];
+        }};
+        struct MutableArrayHolder final {{
+            mutable int cache[4];
+        }};
+        struct NoUniqueAddressArrayHolder final {{
+            {no_unique_address_attr} int nua_ints[2];
+        }};
+        "#
+    ))?
+    .rs_api;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub type Row = [::ffi_11::c_int; 4];
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+            ...
+            #[repr(C)]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=MatrixPacket"]
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            pub struct MatrixPacket {
+                pub bar: [::ffi_11::c_int; 4],
+                pub matrix: [[::ffi_11::c_int; 4]; 2],
+                pub bytes: [crate::Uint8; 16],
+                pub grid: [crate::Row; 2],
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct MutableArrayHolder {
+                ...
+                pub cache: ::core::cell::Cell<[::ffi_11::c_int; 4]>,
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct NoUniqueAddressArrayHolder {
+                ...
+                pub(crate) nua_ints: [::core::mem::MaybeUninit<u8>; ...],
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl NoUniqueAddressArrayHolder {
+                pub fn nua_ints(&self) -> &[::ffi_11::c_int; 2] { ... }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_private_and_protected_array_fields() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        class ClassWithPrivateArrays final {
+            enum SecretEnum : int { kSecret = 0 };
+          public:
+            int visible;
+            SecretEnum secret_enums[2];
+          protected:
+            char prot_arr[8];
+          private:
+            int priv_arr[4];
+            int* priv_ptrs[2];
+        };
+        "#,
+    )?
+    .rs_api;
+
+    // Non-public array fields (or public array fields of private element types) remain opaque
+    // blobs.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct ClassWithPrivateArrays {
+                ...
+                pub visible: ::ffi_11::c_int,
+                ...
+                pub(crate) secret_enums: [::core::mem::MaybeUninit<u8>; 8],
+                ...
+                pub(crate) prot_arr: [::core::mem::MaybeUninit<u8>; 8],
+                ...
+                pub(crate) priv_arr: [::core::mem::MaybeUninit<u8>; ...],
+                ...
+                pub(crate) priv_ptrs: [::core::mem::MaybeUninit<u8>; ...],
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_supported_struct_and_union_enum_array_fields() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        enum UnscopedEnum { kOne = 1, kTwo = 2 };
+        enum class ScopedEnum { kAlpha = 0, kBeta = 1 };
+        enum class ByteEnum : unsigned char { kLo = 1, kHi = 2 };
+        using EnumRow = ScopedEnum[3];
+        template <typename T, int N>
+        using FixedArr = T[N];
+
+        struct EnumPacket final {
+            UnscopedEnum unscoped[2];
+            ScopedEnum scoped[3];
+            ByteEnum bytes[4];
+            ScopedEnum matrix[2][3];
+            EnumRow grid[2];
+            FixedArr<ScopedEnum, 2> tmpl_enums;
+        };
+
+        union EnumUnion {
+            UnscopedEnum unscoped[2];
+            ScopedEnum scoped[2];
+            int raw[2];
+        };
+        "#,
+    )?
+    .rs_api;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub type EnumRow = [crate::ScopedEnum; 3];
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+            ...
+            #[repr(C)]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=EnumPacket"]
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            pub struct EnumPacket {
+                pub unscoped: [crate::UnscopedEnum; 2],
+                pub scoped: [crate::ScopedEnum; 3],
+                pub bytes: [crate::ByteEnum; 4],
+                pub matrix: [[crate::ScopedEnum; 3]; 2],
+                pub grid: [crate::EnumRow; 2],
+                pub tmpl_enums: [crate::ScopedEnum; 2],
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[repr(C)]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=EnumUnion"]
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            pub union EnumUnion {
+                pub unscoped: [crate::UnscopedEnum; 2],
+                pub scoped: [crate::ScopedEnum; 2],
+                pub raw: [::ffi_11::c_int; 2],
+            }
+        }
+    );
+
+    Ok(())
+}
+
+#[gtest]
+fn test_zero_length_array_fields_omitted_and_preserve_alignment() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        struct AlignedElem { __INT64_TYPE__ x; };
+        struct TrailingZeroLengthArray final {
+            __UINT16_TYPE__ count;
+            unsigned char pad[6];
+            AlignedElem items[0];
+        };
+        "#,
+    )?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[repr(C, align(8))]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=TrailingZeroLengthArray"]
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            pub struct TrailingZeroLengthArray {
+                pub count: ::ffi_11::c_ushort,
+                pub pad: [::ffi_11::c_uchar; 6],
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_out_of_scope_array_fields_fallback_to_opaque_blobs() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        struct SubStruct { int x; };
+        enum FwdEnum : int;
+        enum [[clang::annotate("crubit_internal_rust_type", "MyForeignEnum")]] ForeignEnum : int {
+            kForeign = 0,
+        };
+        struct OutOfScopeArrays final {
+            int header;
+            SubStruct structs[2];
+            int* ptrs[2];
+            FwdEnum fwd_enums[2];
+            enum { kAnon = 1 } anon_enums[2];
+            ForeignEnum foreign_enums[2];
+            void (*fn_ptrs[2])();
+            volatile int vol_ints[2];
+            long double long_doubles[2];
+        };
+        "#,
+    )?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct OutOfScopeArrays {
+                ...
+                pub header: ::ffi_11::c_int,
+                ...
+                structs: [::core::mem::MaybeUninit<u8>; ...],
+                ...
+                ptrs: [::core::mem::MaybeUninit<u8>; ...],
+                ...
+                fwd_enums: [::core::mem::MaybeUninit<u8>; 8],
+                ...
+                anon_enums: [::core::mem::MaybeUninit<u8>; 8],
+                ...
+                foreign_enums: [::core::mem::MaybeUninit<u8>; 8],
+                ...
+                fn_ptrs: [::core::mem::MaybeUninit<u8>; ...],
+                ...
+                vol_ints: [::core::mem::MaybeUninit<u8>; ...],
+                ...
+                long_doubles: [::core::mem::MaybeUninit<u8>; ...],
+            }
+        }
+    );
+
+    Ok(())
+}
+
+#[gtest]
+fn test_c_array_feature_gating() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct ArrayStruct final {
+            int data[4];
+        };
+        "#,
+    )?;
+
+    // 1. Enabled with `:experimental` (`CrubitFeature::Types | CrubitFeature::Experimental`):
+    // typed array field is emitted.
+    let mut ir_exp = make_test_ir(&proto)?;
+    *ir_exp.target_crubit_features_mut(&ir_exp.current_target().clone()) =
+        crubit_feature::CrubitFeature::Types | crubit_feature::CrubitFeature::Experimental;
+    let rs_api_exp = generate_bindings_tokens_for_test(ir_exp)?.rs_api;
+    assert_rs_matches!(
+        rs_api_exp,
+        quote! {
+            pub struct ArrayStruct {
+                pub data: [::ffi_11::c_int; 4],
+            }
+        }
+    );
+
+    // 2. Without `CrubitFeature::Experimental` (`:types` alone), array fields are erased to opaque
+    // padding bytes.
+    let mut ir_types = make_test_ir(&proto)?;
+    *ir_types.target_crubit_features_mut(&ir_types.current_target().clone()) =
+        crubit_feature::CrubitFeature::Types.into();
+    let rs_api_types = generate_bindings_tokens_for_test(ir_types)?.rs_api;
+    assert_rs_matches!(
+        rs_api_types,
+        quote! {
+            pub struct ArrayStruct {
+                ...
+                pub(crate) data: [::core::mem::MaybeUninit<u8>; 16],
+            }
+        }
+    );
+
     Ok(())
 }

@@ -18,11 +18,6 @@ pub mod repro {
     // error: class `repro::optional` could not be bound
     //   Class templates are not yet supported
 
-    /// # Safety
-    ///
-    /// To call a function that accepts this type, you must uphold these requirements:
-    /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-    ///   * `nanos`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'char[1]': Unsupported clang::Type class 'ConstantArray'
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N5repro8IntervalE"]
     #[repr(C)]
@@ -30,7 +25,7 @@ pub mod repro {
     ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct Interval {
         /// Reason for representing this field as a blob of bytes:
-        /// Unsupported type 'char[1]': Unsupported clang::Type class 'ConstantArray'
+        /// C-style array types are not yet supported
         pub(crate) nanos: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for Interval {}

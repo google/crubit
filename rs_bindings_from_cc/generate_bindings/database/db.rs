@@ -14,7 +14,7 @@ use ir::{BazelLabel, CcType, Enum, Field, Func, GenericItem, Record, Unqualified
 use proc_macro2::Ident;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::fmt::Arguments;
+use std::fmt::{Arguments, Write as _};
 use std::rc::Rc;
 
 #[derive(Default)]
@@ -25,7 +25,6 @@ struct InternerImpl {
 
 impl InternerImpl {
     fn intern(&mut self, args: Arguments<'_>) -> Rc<str> {
-        use std::fmt::Write as _;
         self.buf.write_fmt(args).unwrap();
         let rc = if let Some(interned) = self.interned.get(self.buf.as_str()) {
             Rc::clone(interned)
@@ -552,6 +551,23 @@ impl<'db> BindingsGenerator<'db> {
     }
 
     pub fn cc_type_debug_name(&self, cc_type: &CcType) -> String {
+        let peel_constant_array = |mut cur: &ir::CcType| -> (String, String) {
+            let mut dims = String::new();
+            let mut any_array_const = false;
+            while let ir::CcTypeVariant::ConstantArray(arr) = cur.variant() {
+                any_array_const |= cur.is_const();
+                write!(&mut dims, "[{}]", arr.num_elements()).unwrap();
+                cur = arr.element_type();
+            }
+            let elem_name = self.cc_type_debug_name(cur);
+            let prefix = if any_array_const && !elem_name.starts_with("const ") {
+                format!("const {elem_name}")
+            } else {
+                elem_name
+            };
+            (prefix, dims)
+        };
+
         let base_name = match cc_type.variant() {
             ir::CcTypeVariant::Primitive(p) => match p {
                 ir::Primitive::Bool => "bool",
@@ -608,15 +624,30 @@ impl<'db> BindingsGenerator<'db> {
                     | ir::PointerTypeKind::NonNull
                     | ir::PointerTypeKind::Owned => "*",
                 };
+                if matches!(ptr.pointee_type().variant(), ir::CcTypeVariant::ConstantArray(_)) {
+                    let (mut prefix, dims) = peel_constant_array(ptr.pointee_type());
+                    return if cc_type.is_const() {
+                        write!(&mut prefix, " ({ptr_str} const){dims}").unwrap();
+                        prefix
+                    } else {
+                        write!(&mut prefix, " ({ptr_str}){dims}").unwrap();
+                        prefix
+                    };
+                }
                 let pointee_name = self.cc_type_debug_name(ptr.pointee_type());
                 format!("{pointee_name}{ptr_str}")
             }
             ir::CcTypeVariant::FuncPointer { .. } => "function pointer".to_string(),
             ir::CcTypeVariant::Decl { id, .. } => self.debug_name(*id).to_string(),
             ir::CcTypeVariant::Error(err) => format!("<error: {}>", err.message),
+            ir::CcTypeVariant::ConstantArray(_) => {
+                let (mut prefix, dims) = peel_constant_array(cc_type);
+                prefix.push_str(&dims);
+                prefix
+            }
         };
 
-        if cc_type.is_const() {
+        if cc_type.is_const() && !matches!(cc_type.variant(), ir::CcTypeVariant::ConstantArray(_)) {
             if matches!(cc_type.variant(), ir::CcTypeVariant::Pointer(_)) {
                 format!("{} const", base_name)
             } else {

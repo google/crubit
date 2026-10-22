@@ -50,3 +50,12 @@ fn test_struct_with_bit_fields_and_no_unique_address_fields() {
     assert_eq!(s.no_unique_address_empty_field1().method(), 12345);
     assert_eq!(s.no_unique_address_empty_field2().method(), 12345);
 }
+
+#[gtest]
+fn test_struct_with_overaligned_empty_no_unique_address_field() {
+    assert_eq!(core::mem::align_of::<StructWithOveralignedEmptyNoUniqueAddressField>(), 8);
+    assert_eq!(core::mem::size_of::<StructWithOveralignedEmptyNoUniqueAddressField>(), 8);
+    let s = StructWithOveralignedEmptyNoUniqueAddressField::default();
+    assert_eq!(s.field1, 1);
+    assert_eq!(s.no_unique_address_aligned_empty_field().method(), 12345);
+}

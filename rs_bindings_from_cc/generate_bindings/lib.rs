@@ -803,9 +803,8 @@ fn rs_type_kind_safety<'a>(
         RsTypeKind::Pointer { .. } => Some(UnsafeReason(intern!(db.interner(), "raw pointer"))),
         RsTypeKind::Reference { referent: t, .. }
         | RsTypeKind::RvalueReference { referent: t, .. }
-        | RsTypeKind::TypeAlias { underlying_type: t, .. } => {
-            db.rs_type_kind_safety(t.as_ref().clone())
-        }
+        | RsTypeKind::TypeAlias { underlying_type: t, .. }
+        | RsTypeKind::Array { element_type: t, .. } => db.rs_type_kind_safety(t.as_ref().clone()),
         RsTypeKind::FuncPtr { return_type, param_types, .. } => {
             callable_safety(db, &param_types, &return_type)
         }
@@ -1358,6 +1357,7 @@ fn crubit_abi_type<'a>(
 
             Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }
+        RsTypeKind::Array { .. } => bail!("C-style array types cannot be bridged by value"),
         RsTypeKind::Primitive(primitive) => Ok(match primitive {
             Primitive::Bool => CrubitAbiType::transmute("bool", "bool"),
             Primitive::Void => bail!("values of type `void` cannot be bridged by value"),

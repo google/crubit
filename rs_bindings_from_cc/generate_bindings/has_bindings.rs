@@ -44,6 +44,9 @@ fn cc_type_has_bindings<'a>(
         CcTypeVariant::Pointer(ptr) => {
             cc_type_has_bindings(db, ptr.pointee_type(), alias_id)?;
         }
+        CcTypeVariant::ConstantArray(arr) => {
+            cc_type_has_bindings(db, arr.element_type(), alias_id)?;
+        }
         CcTypeVariant::FuncPointer { param_and_return_types, .. } => {
             for t in param_and_return_types.iter() {
                 cc_type_has_bindings(db, t, alias_id)?;
@@ -227,6 +230,18 @@ pub fn has_bindings<'a>(
                             cpp_type = db.debug_name(item.id()),
                         )));
                     }
+                    // Only direct aliases to C-style arrays (`using Row = int[4];`) are currently
+                    // supported; aliases referencing pointers, references, or function pointers to
+                    // C-style arrays (`using Ptr = int(*)[4];`) are not yet supported.
+                    if matches!(item, Item::TypeAlias(_))
+                        && rs_type_kind.contains_c_array()
+                        && !matches!(rs_type_kind.unalias(), RsTypeKind::Array { .. })
+                    {
+                        return Err(NoBindingsReason::Unsupported(anyhow!(
+                            "Type alias `{cpp_type}` referencing pointers or references to C-style arrays is not yet supported",
+                            cpp_type = db.debug_name(item.id()),
+                        )));
+                    }
                     let visibility = type_visibility(db, &item, rs_type_kind)?;
                     Ok(BindingsInfo { visibility })
                 }
@@ -239,6 +254,11 @@ pub fn has_bindings<'a>(
         // Global variables receive bindings if the underlying type is visible.
         Item::GlobalVar(ref global_var) => match db.rs_type_kind(global_var.type_().clone()) {
             Ok(rs_type_kind) => {
+                if rs_type_kind.contains_c_array() {
+                    return Err(NoBindingsReason::Unsupported(anyhow!(
+                        "C-style array global variables are not yet supported"
+                    )));
+                }
                 let visibility = type_visibility(db, &item, rs_type_kind)?;
                 Ok(BindingsInfo { visibility })
             }
@@ -311,7 +331,22 @@ fn func_has_bindings<'a>(
     let sig_types =
         func.params().iter().map(|p| p.type_()).chain(std::iter::once(func.return_type()));
     for sig_type in sig_types {
-        let rs_type_kind = db.rs_type_kind(sig_type.clone()).unwrap();
+        let rs_type_kind = match db.rs_type_kind(sig_type.clone()) {
+            Ok(ty) => ty,
+            Err(source) => {
+                return Err(NoBindingsReason::DependencyFailed {
+                    type_name: db.debug_name(func.id()),
+                    source,
+                });
+            }
+        };
+        // Keep in sync with parameter/return type validation in `generate_function.rs`, which
+        // evaluates `rs_type_kind_with_lifetime_elision` directly before thunk generation.
+        if rs_type_kind.contains_c_array() {
+            return Err(NoBindingsReason::Unsupported(anyhow!(
+                "C-style array types are not supported in function signatures yet"
+            )));
+        }
         match type_visibility(db, &func, rs_type_kind) {
             Ok(vis) => {
                 visibility = visibility.or(vis);
