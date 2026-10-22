@@ -20,7 +20,6 @@
 #include "clang/Basic/SourceLocation.h"
 #include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
-#include "absl/container/flat_hash_set.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
@@ -434,7 +433,9 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
   if (!args.has_value()) return absl::OkStatus();
   clang::ASTContext& ast_context = decl.getASTContext();
 
-  absl::flat_hash_set<absl::string_view> custom_traits;
+  // Custom traits are derived in the order of the annotation arguments, so that
+  // the generated `#[derive(...)]` is deterministic.
+  std::vector<absl::string_view> custom_traits;
   for (const clang::Expr* arg : *args) {
     CRUBIT_ASSIGN_OR_RETURN(const absl::string_view derived_trait,
                             GetExprAsStringLiteral(*arg, ast_context));
@@ -475,8 +476,10 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
         return absl::InvalidArgumentError(absl::StrCat(
             "Custom trait '", trait, "' cannot be negatively derived."));
       }
-      auto [it, did_insert] = custom_traits.insert(trait);
-      if (did_insert) continue;
+      if (!absl::c_linear_search(custom_traits, trait)) {
+        custom_traits.push_back(trait);
+        continue;
+      }
 
       return absl::InvalidArgumentError(absl::StrCat(
           "Custom trait '", trait, "' is derived multiple times."));

@@ -34,7 +34,6 @@ cc_library(
         "//rs_bindings_from_cc:decl_importer",
         "@abseil-cpp//absl/algorithm:container",
         "@abseil-cpp//absl/base:nullability",
-        "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/functional:any_invocable",
         "@abseil-cpp//absl/log",
         "@abseil-cpp//absl/log:check",
