@@ -84,7 +84,7 @@ fn test_format_bridged_type_in_generic_types() {
         assert_eq!(
             err,
             "Error handling parameter #0 of type `std::boxed::Box<RustType>`: \
-            crubit.rs/errors/unsupported_type: non-layout-compatible type `RustType` cannot be used as a generic parameter."
+            Template arguments do not support bridgeable types"
         );
     });
 
@@ -92,8 +92,9 @@ fn test_format_bridged_type_in_generic_types() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `std::option::Option<std::boxed::Box<std::result::Result<RustType, ()>>>`: \
-            Failed to construct CrubitAbiType for std::boxed::Box<std::result::Result<RustType, ()>> because it does not have a move ctor or assignment operator."
+            "Error handling parameter #0 of type \
+            `std::option::Option<std::boxed::Box<std::result::Result<RustType, ()>>>`: \
+            Template arguments do not support bridgeable types"
         );
     });
 }

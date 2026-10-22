@@ -745,6 +745,85 @@ pub fn format_ty_for_cc<'tcx>(
     format_ty_for_cc_impl(db, ty, location, /* apply_default_nullability= */ true)
 }
 
+/// Which Rust owning box type is being formatted. See `format_box_for_cc`.
+enum BoxKind {
+    /// `Box<T>` for sized `T`, formatted as `rs::Box<T>`.
+    Sized,
+    /// `Pin<Box<T>>`, formatted as `rs::PinBox<T>`.
+    Pinned,
+    /// `Box<[T]>`, formatted as `rs::SliceBox<T>`.
+    Slice,
+    /// `Box<str>`, formatted as `rs::StrBox`.
+    Str,
+}
+
+/// Formats a Rust owning box type `ty` (whose pointee is `pointee`) as the corresponding
+/// `rs` box template. See crubit.rs/types/box.
+///
+/// Boxes are layout-compatible with their C++ counterparts but not C++-movable, so in locations
+/// that admit it the result is wrapped in `rs::Movable`.
+fn format_box_for_cc<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+    pointee: Ty<'tcx>,
+    kind: BoxKind,
+    location: TypeLocation,
+) -> Result<CcSnippet<'tcx>> {
+    let tcx = db.tcx();
+    let mut prereqs = CcPrerequisites::default();
+    let header_name = match kind {
+        BoxKind::Sized => "rs/box.h",
+        BoxKind::Pinned => "rs/pin_box.h",
+        BoxKind::Slice => "rs/slice_box.h",
+        BoxKind::Str => "rs/str_box.h",
+    };
+    prereqs.includes.insert(db.support_header(header_name));
+
+    let template_name = match kind {
+        BoxKind::Sized => quote! { ::rs::Box },
+        BoxKind::Pinned => quote! { ::rs::PinBox },
+        BoxKind::Slice => quote! { ::rs::SliceBox },
+        BoxKind::Str => quote! { ::rs::StrBox },
+    };
+
+    let mut snippet = match kind {
+        BoxKind::Str => {
+            check_slice_layout(tcx, ty);
+            CcSnippet { tokens: template_name, prereqs }
+        }
+        BoxKind::Slice | BoxKind::Sized | BoxKind::Pinned => {
+            if matches!(kind, BoxKind::Slice) {
+                check_slice_layout(tcx, ty);
+            } else {
+                if let ty::TyKind::Dynamic(..) = pointee.kind() {
+                    bail!(
+                        "Box<dyn Trait> is not supported for traits other than Fn/FnMut/FnOnce. \
+                         See crubit.rs/types/box"
+                    );
+                }
+                let layout =
+                    tcx.layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(pointee));
+                if layout.is_ok_and(|layout| layout.size.bytes() == 0) {
+                    bail!("Box with a zero-sized pointee (ZST) is not supported.");
+                }
+            }
+            let inner_snippet = db.format_ty_for_cc(pointee, TypeLocation::TemplateArg)?;
+            // A forward declaration of `T` suffices to declare `rs::Box<T>` as a function
+            // parameter or struct field. The definition of `T` must be available where the box is
+            // destroyed, so that its destructor can be instantiated.
+            prereqs.forward_declare_type(pointee);
+            let element_tokens = inner_snippet.into_tokens(&mut prereqs);
+            CcSnippet { tokens: quote! { #template_name<#element_tokens> }, prereqs }
+        }
+    };
+
+    if !db.is_cpp_move_constructible(ty) && location.admits_movable() {
+        snippet.prereqs.includes.insert(db.support_header("movable.h"));
+        snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
+    }
+    Ok(snippet)
+}
+
 /// Formats `ty` as a C++ type.
 ///
 /// Under `nonnull_smart_pointers`, a bare smart pointer (see [`is_smart_pointer`]) is non-null, so
@@ -1020,6 +1099,27 @@ fn format_ty_for_cc_impl<'tcx>(
                 return format_ref_for_cc(db, ty, region, referent, mutability, location);
             }
 
+
+            if db.tcx().is_lang_item(adt.did(), LangItem::OwnedBox) {
+                let inner_ty = substs.type_at(0);
+                if let ty::TyKind::Slice(element_ty) = inner_ty.kind() {
+                    return format_box_for_cc(db, ty, *element_ty, BoxKind::Slice, location);
+                } else if matches!(inner_ty.kind(), ty::TyKind::Str) {
+                    return format_box_for_cc(db, ty, inner_ty, BoxKind::Str, location);
+                } else if inner_ty.is_sized(db.tcx(), ty::TypingEnv::fully_monomorphized()) {
+                    return format_box_for_cc(db, ty, inner_ty, BoxKind::Sized, location);
+                }
+            }
+
+            if adt.is_pin()
+                && let ty::TyKind::Adt(inner_adt, inner_substs) = substs.type_at(0).kind()
+                && db.tcx().is_lang_item(inner_adt.did(), LangItem::OwnedBox)
+                && let box_pointee = inner_substs.type_at(0)
+                && box_pointee.is_sized(db.tcx(), ty::TypingEnv::fully_monomorphized())
+            {
+                return format_box_for_cc(db, ty, box_pointee, BoxKind::Pinned, location);
+            }
+
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
@@ -1030,11 +1130,16 @@ fn format_ty_for_cc_impl<'tcx>(
                 );
             }
 
+            // `Option<T>` is bridged by value to `std::optional<T>` unless the payload is not
+            // C++-movable (e.g. `Box<T>`, see crubit.rs/types/box): such payloads can only be
+            // relocated, which `rs::Option<T>` supports via `crubit::UnsafeRelocateTag`, so
+            // they fall through to the layout-compatible template specialization below.
             let is_bridged_option = location.is_bridgeable()
                 && matches!(BridgedBuiltin::new(db, adt), Some(BridgedBuiltin::Option))
                 && !db
                     .crate_features(db.source_crate_num())
-                    .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
+                    .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust)
+                && db.is_cpp_move_constructible(substs[0].expect_ty());
             if is_bridged_option {
                 let inner_ty = substs[0].expect_ty();
                 let mut prereqs = db
@@ -1813,7 +1918,9 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
                 || !has_non_lifetime_substs(substs)
                 || is_rvalue_reference(db, adt.did())
                 || is_ctor_by_value(db, adt.did())
-                || db.parse_adt_template_specialization(ty).transpose()?.is_some();
+                || db.parse_adt_template_specialization(ty).transpose()?.is_some()
+                || db.tcx().is_lang_item(adt.did(), LangItem::OwnedBox)
+                || adt.is_pin();
             ensure!(
                 has_cpp_type || is_supported_generic_type,
                 "Generic types without composable bridging are not supported yet (b/259749095)"
@@ -2060,14 +2167,18 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 // Question: do we need to check that it doesn't have any generics?
 
                 let tcx = db.tcx();
-                ensure!(
-                    db.is_cpp_move_constructible(normalize_ty(
-                        tcx,
-                        tcx.param_env(adt.did()),
-                        tcx.type_of(adt.did()).instantiate(tcx, substs)
-                    )),
-                    "Failed to construct CrubitAbiType for {ty} because it does not have a move ctor or assignment operator."
+                let normalized_ty = normalize_ty(
+                    tcx,
+                    tcx.param_env(adt.did()),
+                    tcx.type_of(adt.did()).instantiate(tcx, substs),
                 );
+                if !db.is_cpp_move_constructible(normalized_ty) {
+                    if query_compiler::is_owned_box_or_pinned_box(tcx, ty) {
+                        bail!("Type `{ty}` is not C++-movable. Box is layout-compatible but not C++-movable, see crubit.rs/types/box.");
+                    } else {
+                        bail!("Failed to construct CrubitAbiType for {ty} because it does not have a move ctor or assignment operator.");
+                    }
+                }
 
                 CrubitAbiType::Transmute {
                     rust_type: {
