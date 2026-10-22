@@ -115,7 +115,7 @@ A Rust tuple `(T1, T2, ...)` receives C++ bindings as `rs_std::Tuple<T1, T2,
 ...>`. It can be constructed from its elements (including with
 brace-initialization, e.g. `{a, b}`) when all elements are move-constructible in
 C++, or converted from a `std::tuple<T1, T2, ...>`. Elements are accessed with
-`std::get<I>` or structured bindings:
+`rs_std::get<I>` or structured bindings:
 
 ```c++
 rs_std::Tuple<int32_t, int32_t> pair = {1, 2};
