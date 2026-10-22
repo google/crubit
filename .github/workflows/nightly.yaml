@@ -44,7 +44,13 @@ jobs:
       - name: Resolve llvm-project head
         id: llvm
         run: |
-          COMMIT=$(git ls-remote https://github.com/llvm/llvm-project.git refs/heads/main | cut -f1)
+          # We query the bazel build for a commit so we don't hit a commit that otherwise works but has a broken bazel build.
+          COMMIT=$(curl -fsSL --max-time 30  "https://buildkite.com/llvm-project/upstream-bazel/builds?branch=main&state=passed" \
+                  | grep -oE 'github\.com/llvm/llvm-project/commit/[0-9a-f]{40}' \
+                  | head -n 1 | awk -F/ '{print $NF}' || true)
+          if [[ ! "$COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            COMMIT=$(git ls-remote https://github.com/llvm/llvm-project.git refs/heads/main | cut -f1)
+          fi
           if [[ ! "$COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
             echo "::error::Could not resolve llvm-project head (got '${COMMIT}')"
             exit 1
