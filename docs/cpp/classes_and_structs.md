@@ -205,9 +205,95 @@ interface in Rust, is not supported. The workaround is a C++ subclass that
 forwards to a Rust type; see
 [`examples/cpp/virtual/`](/examples/cpp/virtual/).
 
+## Packed structs {#packed}
+
+A packed C++ struct becomes a packed Rust struct with the same layout:
+
+*   `__attribute__((packed))` (or `ABSL_ATTRIBUTE_PACKED`) on the struct becomes
+    `#[repr(C, packed)]`.
+*   A struct defined under `#pragma pack(N)` becomes `#[repr(C, packed(N))]`. If
+    the pragma doesn't lower the alignment of any field or base class, it
+    doesn't change the layout, and the struct is treated like any other struct.
+
+For example:
+
+```c++
+struct __attribute__((packed)) PackedStruct {
+  uint8_t a;
+  uint32_t b;  // At offset 1.
+  uint16_t c;  // At offset 5.
+};
+```
+
+becomes a 7-byte Rust struct with alignment 1:
+
+```rust
+#[repr(C, packed)]
+pub struct PackedStruct {
+    pub a: u8,
+    pub b: u32,
+    pub c: u16,
+}
+```
+
+Some packed structs don't get bindings:
+
+*   Structs with `__attribute__((packed))` on individual fields.
+*   Packed structs with an explicit alignment (such as `alignas` or
+    `__attribute__((aligned(N)))`) greater than the packing alignment.
+
+A field of a packed struct whose Rust type has `#[repr(align(N))]`, directly or
+in one of its own fields, becomes a private [opaque blob](#opaque_fields),
+because Rust doesn't allow such types in packed structs. A struct type gets
+`#[repr(align(N))]` if, for example, it has an explicit alignment, or it has an
+alignment greater than 1 and has bitfields or fields whose type doesn't have
+bindings.
+
+Note: Clang doesn't pack fields whose type isn't POD for the purpose of layout
+(for example, a type with a user-defined copy constructor) and warns about this
+with `-Wpacked-non-pod`. If such a field has an alignment greater than 1, the
+Rust bindings won't compile, because the Rust struct packs every field.
+
+### Using fields of packed structs {#packed_fields}
+
+Fields of a packed struct may be unaligned, so Rust doesn't allow references to
+them ([E0793](https://doc.rust-lang.org/error_codes/E0793.html)). Reading a
+field by value (`let b = s.b;`) works, but anything that implicitly takes a
+reference, such as `println!("{}", s.b)` or `s.b.to_string()`, doesn't compile.
+Copy the field out first, for example with braces:
+
+```rust
+println!("{}", { s.b });
+let text = { s.b }.to_string();
+```
+
+Assigning to a field (`s.b = 5;`) works as usual. For fields that aren't `Copy`,
+use raw pointers (`&raw const s.field` or `&raw mut s.field`) with
+`ptr::read_unaligned` and `ptr::write_unaligned`.
+
+### `Debug` for packed structs {#packed_debug}
+
+Crubit ignores `CRUBIT_TRAIT_DERIVE(Debug)` on packed structs, because
+`#[derive(Debug)]` takes references to the fields.
+
+Instead, with the experimental `//features:record_impl_debug`
+feature, packed structs implement `Debug` like other structs, with these
+differences:
+
+*   Each field is copied out before it's printed. If a field that would be
+    printed isn't `Copy` (or is `mutable`, and thus wrapped in a `Cell`), no
+    fields are printed, and the output is `PackedStruct { .. }`, like for a
+    union.
+*   Base classes aren't printed, since they may be unaligned too.
+
+For example, with the struct above, `format!("{s:?}")` is `PackedStruct { a: 10,
+b: 200, c: 3000 }`. The tests in
+[`rs_bindings_from_cc/test/struct/packed/`](/rs_bindings_from_cc/test/struct/packed/)
+show more examples.
+
 ## Attributes {#attributes}
 
 Crubit does not support most attributes on structs and their fields. If a struct
-is marked using any attribute other than alignment or
+is marked using any attribute other than alignment, [packing](#packed), or
 `ABSL_ATTRIBUTE_TRIVIAL_ABI`, it will not receive bindings. If a field is marked
 using any other attribute, it will be replaced with a private opaque blob.

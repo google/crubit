@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "absl/base/attributes.h"
+
 // Struct with __attribute__((packed))
 struct __attribute__((packed)) PackedStruct {
   uint8_t a;
@@ -162,6 +164,50 @@ static_assert(offsetof(PragmaPacked4, a) == kPragmaPacked4OffsetA);
 static_assert(offsetof(PragmaPacked4, b) == kPragmaPacked4OffsetB);
 static_assert(sizeof(PragmaPacked4[2]) == kPragmaPacked4Array2Size);
 static_assert(sizeof(PragmaPacked4[3]) == kPragmaPacked4Array3Size);
+
+// Packed struct containing another packed struct.
+struct __attribute__((packed)) PackedOuter {
+  uint8_t x;
+  PackedStruct inner;
+};
+
+// Struct with a user-defined copy constructor, so it is not trivially copyable
+// (and not `Copy` in Rust).
+struct ABSL_ATTRIBUTE_TRIVIAL_ABI NonTriviallyCopyable {
+  NonTriviallyCopyable() = default;
+  // Intentionally have a copy constructor so the struct is not considered
+  // trivially copyable.
+  //
+  // NOLINTNEXTLINE(modernize-use-equals-default)
+  NonTriviallyCopyable(const NonTriviallyCopyable& other) : x(other.x) {}
+  // Intentionally have a copy assignment operator so the struct is not
+  // considered trivially copyable.
+  //
+  // NOLINTNEXTLINE(modernize-use-equals-default)
+  NonTriviallyCopyable& operator=(const NonTriviallyCopyable& other) {
+    x = other.x;
+    return *this;
+  }
+  uint8_t x;
+};
+
+// Packed struct holding a field that is not trivially copyable.
+//
+// Note: Clang does not pack fields that are non-POD for the purposes of layout.
+// `NonTriviallyCopyable` has an alignment of 1, so this doesn't affect the
+// layout. If `NonTriviallyCopyable` held an `int` instead of a `uint8_t`,
+// this would fail to compile because of `-Werror -Wpacked-non-pod`. Even with
+// `-Wpacked-non-pod` ignored, the Rust bindings would fail to compile because
+// of a size mismatch as clang would put `b` at a 4-byte alignment (3 bytes of
+// padding after `a`), which the Rust bindings would not account for.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpacked-non-pod"
+struct ABSL_ATTRIBUTE_PACKED ABSL_ATTRIBUTE_TRIVIAL_ABI
+    PackedWithNonTriviallyCopyableField {
+  uint8_t a;
+  NonTriviallyCopyable b;
+};
+#pragma clang diagnostic pop
 
 // Functions accepting and returning packed structs
 inline PackedStruct MakePackedStruct(uint8_t a, uint32_t b, uint16_t c) {
