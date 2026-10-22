@@ -279,10 +279,8 @@ rust_library(
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",
         "@crate_index//:itertools",  # v0_13
-        "@crate_index//:once_cell",  # v1
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
-        "@crate_index//:regex",  # v1
     ],
 )
 
@@ -306,6 +304,7 @@ rust_test(
         "//rs_bindings_from_cc/generate_bindings/database",
         "@crate_index//:googletest",
         "@crate_index//:quote",  # v1
+        "@protobuf//rust:protobuf",
     ],
 )
 
