@@ -1407,6 +1407,7 @@ pub enum FieldDefinition {
         visibility: Visibility,
         ident: Ident,
         field_type: FieldType,
+        /// Whether this field is printed by the record's field-wise `Debug` impl.
         is_debug_formattable: bool,
         /// Whether to prevent `Send` and `Sync` from being automatically implemented because of
         /// this field.
