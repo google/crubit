@@ -58,26 +58,6 @@ struct tuple_element<I, ::rs_std::Tuple<Ts...>> {
   using type = std::tuple_element_t<I, std::tuple<Ts...>>;
 };
 
-template <std::size_t I, typename... Ts>
-constexpr decltype(auto) get(::rs_std::Tuple<Ts...>& t) noexcept {
-  return t.template get<I>();
-}
-
-template <std::size_t I, typename... Ts>
-constexpr decltype(auto) get(const ::rs_std::Tuple<Ts...>& t) noexcept {
-  return t.template get<I>();
-}
-
-template <std::size_t I, typename... Ts>
-constexpr decltype(auto) get(::rs_std::Tuple<Ts...>&& t) noexcept {
-  return std::move(t).template get<I>();
-}
-
-template <std::size_t I, typename... Ts>
-constexpr decltype(auto) get(const ::rs_std::Tuple<Ts...>&& t) noexcept {
-  return std::move(t).template get<I>();
-}
-
 }  // namespace std
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_TUPLE_H_
