@@ -89,6 +89,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/SaveAndRestore.h"
 #include "llvm/Support/raw_ostream.h"
@@ -1753,22 +1754,26 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl& decl) const {
   // and appears to be a textual header, then we go up the include stack
   // until we find a header that has an owning target.
 
-  std::optional<llvm::StringRef> filename;
+  std::optional<std::string> filename;
 
   while (source_location.isValid()) {
     if (source_location.isMacroID()) {
       source_location = source_manager.getExpansionLoc(source_location);
     }
     auto id = source_manager.getFileID(source_location);
-    filename = source_manager.getNonBuiltinFilenameForID(id);
-    if (!filename) {
+    std::optional<llvm::StringRef> raw_filename =
+        source_manager.getNonBuiltinFilenameForID(id);
+    if (!raw_filename) {
       return BazelLabel("//:_nothing_should_depend_on_private_builtin_hdrs");
     }
+    // On Windows, Clang may use `\` as a path separator (e.g. `.\../../a.h` or
+    // `../..\a.h`), but header names from the command-line flags use `/`.
+    filename = llvm::sys::path::convert_to_slash(*raw_filename);
     if (filename->starts_with("./")) {
-      filename = filename->substr(2);
+      filename->erase(0, 2);
     }
 
-    if (auto target = invocation_.header_target(HeaderName(filename->str()))) {
+    if (auto target = invocation_.header_target(HeaderName(*filename))) {
       return *target;
     }
 
