@@ -348,21 +348,6 @@ crubit_feature_hint(
     crubit_features = SUPPORTED_FEATURES + ["unsafe_template_params"],
     visibility = ["//visibility:public"],
 )
-
-# A feature set under which Rust functions returning a non-C++-movable type by value return
-# `rs::Movable<T>` (the wrapper already used for by-value parameters) instead of a bare `T`.
-# `rs::Movable<T>` implicitly converts to `T`, so `T x = f();` keeps compiling, and the result
-# can be passed directly to a function accepting `rs::Movable<T>`. This flag only impacts
-# cpp_api_from_rust users.
-#
-# See crubit.rs/rust/movable_types
-crubit_feature_hint(
-    name = "movable_return_values",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = SUPPORTED_FEATURES + ["movable_return_values"],
-    visibility = ["//visibility:public"],
-)
-
 # Implementation details follow.
 
 bzl_library(

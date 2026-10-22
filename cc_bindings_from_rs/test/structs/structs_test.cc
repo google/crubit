@@ -31,8 +31,7 @@ TEST(StructsTest, NonCppMovable) {
 
 TEST(StructsTest, NonCppMovableIntoUniquePtr) {
   std::unique_ptr<structs::non_cpp_movable::Point> p(
-      new structs::non_cpp_movable::Point(
-          structs::non_cpp_movable::create(123, 456)));
+      new auto(structs::non_cpp_movable::create(123, 456)));
   EXPECT_EQ(123, p->x);
   EXPECT_EQ(456, p->y);
   EXPECT_EQ(123, structs::non_cpp_movable::get_x(*p));

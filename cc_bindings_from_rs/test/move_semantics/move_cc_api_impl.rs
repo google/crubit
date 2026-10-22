@@ -90,15 +90,6 @@ unsafe extern "C" fn __crubit_thunk_consume_ufoo(_foo: *mut ::move_golden::Foo) 
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_consume_uunmovable_ufoo(
-    foo: *mut ::move_golden::UnmovableFoo,
-) -> u8 {
-    unsafe {
-        let foo = foo.read();
-        ::move_golden::consume_unmovable_foo(foo)
-    }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_initialize_uunmovable_ufoo(
     out: *mut ::move_golden::UnmovableFoo,
     byte: u8,
@@ -112,16 +103,6 @@ unsafe extern "C" fn __crubit_thunk_new_uunmovable_ufoo(
 ) -> () {
     unsafe {
         let __rs_return_value = ::move_golden::new_unmovable_foo(byte);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new_uunmovable_ufoo_uresult(
-    byte: u8,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value = ::move_golden::new_unmovable_foo_result(byte);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }

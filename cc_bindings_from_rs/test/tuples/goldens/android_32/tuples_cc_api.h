@@ -1863,7 +1863,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefaultTuple") alignas(
   HasDefaultTuple(::crubit::UnsafeRelocateTag, HasDefaultTuple&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::rs::Movable<::tuples::HasDefaultTuple> new_(rs_std::StrRef val);
+  static ::tuples::HasDefaultTuple new_(rs_std::StrRef val);
 
   union {
     rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t> in_tuple1;
@@ -1990,7 +1990,7 @@ HasNoDefaultTuple final {
   HasNoDefaultTuple(::crubit::UnsafeRelocateTag, HasNoDefaultTuple&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::rs::Movable<::tuples::HasNoDefaultTuple> new_(rs_std::StrRef val);
+  static ::tuples::HasNoDefaultTuple new_(rs_std::StrRef val);
 
   union {
     rs_std::Tuple<::tuples::HasNoDefault, ::std::uint8_t> in_tuple1;
@@ -2496,8 +2496,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                         StructWithOptionTuple&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::rs::Movable<::tuples::StructWithOptionTuple> new_(
-      ::std::int32_t val);
+  static ::tuples::StructWithOptionTuple new_(::std::int32_t val);
 
   union {
     rs_std::Tuple<rs_std::Option<::std::int32_t>,
@@ -2728,13 +2727,11 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::tuples::HasDefaultTuple* __ret_ptr);
 }
-inline ::rs::Movable<::tuples::HasDefaultTuple>(HasDefaultTuple::new_)(
-    rs_std::StrRef val) {
+inline ::tuples::HasDefaultTuple(HasDefaultTuple::new_)(rs_std::StrRef val) {
   crubit::Slot<::tuples::HasDefaultTuple> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
-  return ::rs::Movable<::tuples::HasDefaultTuple>::TakeFromSlot(
-      ::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ::tuples::HasDefaultTuple::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::tuples::HasDefaultTuple;
@@ -2789,13 +2786,12 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::tuples::HasNoDefaultTuple* __ret_ptr);
 }
-inline ::rs::Movable<::tuples::HasNoDefaultTuple>(HasNoDefaultTuple::new_)(
+inline ::tuples::HasNoDefaultTuple(HasNoDefaultTuple::new_)(
     rs_std::StrRef val) {
   crubit::Slot<::tuples::HasNoDefaultTuple> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
-  return ::rs::Movable<::tuples::HasNoDefaultTuple>::TakeFromSlot(
-      ::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ::tuples::HasNoDefaultTuple::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::tuples::HasNoDefaultTuple;
@@ -2957,13 +2953,12 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::tuples::StructWithOptionTuple* __ret_ptr);
 }
-inline ::rs::Movable<::tuples::StructWithOptionTuple>(
-    StructWithOptionTuple::new_)(::std::int32_t val) {
+inline ::tuples::StructWithOptionTuple(StructWithOptionTuple::new_)(
+    ::std::int32_t val) {
   crubit::Slot<::tuples::StructWithOptionTuple> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
-  return ::rs::Movable<::tuples::StructWithOptionTuple>::TakeFromSlot(
-      ::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ::tuples::StructWithOptionTuple::
     __crubit_field_offset_assertions() {

@@ -318,7 +318,7 @@ TEST(TuplesTest, CloneNoDefaultTuple) {
 }
 
 TEST(TuplesTest, HasDefaultTuple) {
-  tuples::HasDefaultTuple res = tuples::HasDefaultTuple::new_("hello");
+  auto res = tuples::HasDefaultTuple::new_("hello");
   std::tuple<tuples::HasDefault, uint8_t> t1 = std::move(res.in_tuple1);
   EXPECT_EQ(std::get<0>(t1).val().to_string_view(), "hello");
   std::tuple<uint8_t, tuples::HasDefault> t2 = std::move(res.in_tuple2);
@@ -369,7 +369,7 @@ TEST(TuplesTest, OptionInTupleRef) {
 }
 
 TEST(TuplesTest, StructWithOptionTuple) {
-  tuples::StructWithOptionTuple s = tuples::StructWithOptionTuple::new_(42);
+  auto s = tuples::StructWithOptionTuple::new_(42);
   std::tuple<rs_std::Option<int32_t>,
              rs_std::Result<int32_t, rs::alloc::string::String>>
       t = std::move(s.opt_tuple);

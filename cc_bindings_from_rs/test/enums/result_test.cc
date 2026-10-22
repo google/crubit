@@ -45,7 +45,7 @@ TEST(ResultTest, CloneNoDefaultResult) {
 }
 
 TEST(ResultTest, HasDefaultResult) {
-  result::HasDefaultResult res = result::HasDefaultResult::new_("hello");
+  auto res = result::HasDefaultResult::new_("hello");
   ASSERT_TRUE(res.in_ok.has_value());
   EXPECT_EQ(res.in_ok.value().val().to_string_view(), "hello");
   EXPECT_FALSE(res.in_err.has_value());
@@ -53,7 +53,7 @@ TEST(ResultTest, HasDefaultResult) {
 }
 
 TEST(ResultTest, HasNoDefaultResult) {
-  result::HasNoDefaultResult res = result::HasNoDefaultResult::new_("good bye");
+  auto res = result::HasNoDefaultResult::new_("good bye");
   ASSERT_TRUE(res.in_ok.has_value());
   EXPECT_EQ(res.in_ok.value().val().to_string_view(), "good bye");
   EXPECT_FALSE(res.in_err.has_value());

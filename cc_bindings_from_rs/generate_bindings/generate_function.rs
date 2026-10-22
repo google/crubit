@@ -22,8 +22,8 @@ use format_type::CcType;
 use format_type::{
     check_fn_sig, cpp_layout_equivalent_type, format_cc_ident, format_param_types_for_cc_api,
     format_region_as_cc_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
-    has_elided_region, is_bridged_type, is_movable_wrapped_return_ty, is_thunk_required,
-    region_is_elided, BridgedType, CallableInfo, CallableKind, CcParamTy,
+    has_elided_region, is_bridged_type, is_thunk_required, region_is_elided, BridgedType,
+    CallableInfo, CallableKind, CcParamTy,
 };
 use generate_comment::{generate_deprecated_tag, generate_doc_comment, must_use_attr_of};
 use generate_function_thunk::{
@@ -545,15 +545,7 @@ fn cc_return_value_from_c_abi<'tcx>(
             });
             prereqs.includes.insert(CcInclude::utility()); // for `std::move`
             prereqs.includes.insert(db.support_header("internal/slot.h"));
-            // Non-C++-movable types nested in a compound return value (e.g. a `std::tuple`
-            // element) are always wrapped in `rs::Movable`; top-level ones only under the
-            // `movable_return_values` feature.
-            let wrap_in_movable = if recursive {
-                !db.is_cpp_move_constructible(ty)
-            } else {
-                is_movable_wrapped_return_ty(db, ty)?
-            };
-            let unpack_expr = if wrap_in_movable {
+            let unpack_expr = if recursive && !db.is_cpp_move_constructible(ty) {
                 prereqs.includes.insert(db.support_header("movable.h"));
                 quote! {
                     ::rs::Movable<#cc_type>::TakeFromSlot(::std::move(#local_name))

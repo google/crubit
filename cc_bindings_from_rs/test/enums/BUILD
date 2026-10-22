@@ -13,10 +13,7 @@ load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
     "golden_test",
 )
-load(
-    "//common:crubit_wrapper_macros_oss.bzl",
-    "crubit_cc_test",
-)
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -110,7 +107,6 @@ rust_library(
     name = "option",
     testonly = 1,
     srcs = ["option.rs"],
-    aspect_hints = ["//features:movable_return_values"],
     edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
@@ -154,7 +150,6 @@ rust_library(
     name = "result",
     testonly = 1,
     srcs = ["result.rs"],
-    aspect_hints = ["//features:movable_return_values"],
     edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",

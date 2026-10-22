@@ -79,11 +79,3 @@ pub unsafe fn initialize_unmovable_foo(out: *mut UnmovableFoo, byte: u8) {
 pub fn new_unmovable_foo(byte: u8) -> UnmovableFoo {
     UnmovableFoo::from_byte(byte)
 }
-
-pub fn consume_unmovable_foo(foo: UnmovableFoo) -> u8 {
-    *foo.buf
-}
-
-pub fn new_unmovable_foo_result(byte: u8) -> Result<UnmovableFoo, u8> {
-    Ok(UnmovableFoo::from_byte(byte))
-}

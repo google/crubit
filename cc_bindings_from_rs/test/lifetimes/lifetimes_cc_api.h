@@ -18,7 +18,6 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
-#include "support/movable.h"
 #include "support/rs_std/traits.h"
 
 #include <cstddef>
@@ -116,8 +115,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
                                 StructWithLifetimeAndDropGlue&& value);
 
-  static ::rs::Movable<::lifetimes::StructWithLifetimeAndDropGlue>
-  make_static_42();
+  static ::lifetimes::StructWithLifetimeAndDropGlue make_static_42();
 
   union {
     ::rs::alloc::string::String field_with_drop_glue;
@@ -333,14 +331,13 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_ustatic_u42(
     ::lifetimes::StructWithLifetimeAndDropGlue* __ret_ptr);
 }
-inline ::rs::Movable<::lifetimes::StructWithLifetimeAndDropGlue>(
+inline ::lifetimes::StructWithLifetimeAndDropGlue(
     StructWithLifetimeAndDropGlue::make_static_42)() {
   crubit::Slot<::lifetimes::StructWithLifetimeAndDropGlue>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_make_ustatic_u42(__return_value_storage);
-  return ::rs::Movable<::lifetimes::StructWithLifetimeAndDropGlue>::
-      TakeFromSlot(::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ::lifetimes::StructWithLifetimeAndDropGlue::
     __crubit_field_offset_assertions() {

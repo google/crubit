@@ -18,7 +18,6 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
-#include "support/movable.h"
 #include "support/rs_std/traits.h"
 #include "support/rs_std/tuple.h"
 
@@ -348,7 +347,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                                 TupleStructWithCloneNoDefault&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::rs::Movable<::tuple_structs::TupleStructWithCloneNoDefault> create(
+  static ::tuple_structs::TupleStructWithCloneNoDefault create(
       ::std::int32_t value);
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -393,7 +392,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                                   TupleStructWithCppImmovableType&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::rs::Movable<::tuple_structs::TupleStructWithCppImmovableType> create(
+  static ::tuple_structs::TupleStructWithCppImmovableType create(
       ::std::int32_t first_arg, ::std::int32_t second_arg);
 
   // CRUBIT_ANNOTATE: must_bind=
@@ -1079,14 +1078,13 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::TupleStructWithCloneNoDefault* __ret_ptr);
 }
-inline ::rs::Movable<::tuple_structs::TupleStructWithCloneNoDefault>(
+inline ::tuple_structs::TupleStructWithCloneNoDefault(
     TupleStructWithCloneNoDefault::create)(::std::int32_t value) {
   crubit::Slot<::tuple_structs::TupleStructWithCloneNoDefault>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(value, __return_value_storage);
-  return ::rs::Movable<::tuple_structs::TupleStructWithCloneNoDefault>::
-      TakeFromSlot(::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -1132,7 +1130,7 @@ extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::tuple_structs::TupleStructWithCppImmovableType* __ret_ptr);
 }
-inline ::rs::Movable<::tuple_structs::TupleStructWithCppImmovableType>(
+inline ::tuple_structs::TupleStructWithCppImmovableType(
     TupleStructWithCppImmovableType::create)(::std::int32_t first_arg,
                                              ::std::int32_t second_arg) {
   crubit::Slot<::tuple_structs::TupleStructWithCppImmovableType>
@@ -1140,8 +1138,7 @@ inline ::rs::Movable<::tuple_structs::TupleStructWithCppImmovableType>(
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(first_arg, second_arg,
                                            __return_value_storage);
-  return ::rs::Movable<::tuple_structs::TupleStructWithCppImmovableType>::
-      TakeFromSlot(::std::move(__return_value_ret_val_holder));
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
