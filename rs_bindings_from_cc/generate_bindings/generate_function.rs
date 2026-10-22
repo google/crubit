@@ -399,8 +399,8 @@ fn api_func_shape_for_operator_index<'a>(
         _ => {
             bail_to_errors!(
                 errors,
-                "Unexpected type for 'this' parameter of operator[]: {:?}.",
-                container_type
+                "Unexpected type for 'this' parameter of operator[]: {}.",
+                container_type.display(db)
             );
         }
     };
@@ -1046,8 +1046,8 @@ fn api_func_shape_for_constructor<'a>(
     if !record.is_unpin() {
         let [_this, params @ ..] = param_types else {
             errors.add(anyhow!(
-                "This is a bug in Crubit. Could not find `__this` parameter in a constructor: {:?}",
-                func
+                "This is a bug in Crubit. Could not find `__this` parameter in a constructor: {}",
+                db.debug_name(func.id())
             ));
             return None;
         };
@@ -1107,8 +1107,8 @@ fn api_func_shape_for_constructor<'a>(
     match func.params().len() {
         0 => {
             errors.add(anyhow!(
-                "This is a bug in Crubit. Could not find `__this` parameter in a constructor: {:?}",
-                func
+                "This is a bug in Crubit. Could not find `__this` parameter in a constructor: {}",
+                db.debug_name(func.id())
             ));
             None
         }
@@ -1442,7 +1442,7 @@ fn adjust_param_types_for_trait_impl<'a>(
             };
             if !is_record_clonable(db, param_record.clone()) {
                 errors.add(anyhow!(
-                    "Argument {i} of Rust trait `{trait_name:?}` requires a const reference, but the C++ implementation takes non-cloneable record `{}` by value",
+                    "Argument {i} of Rust trait `{trait_name}` requires a const reference, but the C++ implementation takes non-cloneable record `{}` by value",
                     param_type.display(db),
                 ));
                 return Default::default();
@@ -2643,7 +2643,7 @@ pub fn generate_function<'a>(
                                 match trait_name {
                                     TraitName::CcIndex { .. } => "CcIndex",
                                     TraitName::CcIndexMut { .. } => "CcIndexMut",
-                                    _ => bail!("Unexpected indexing trait: {:?}", trait_name),
+                                    _ => bail!("Unexpected indexing trait: {}", trait_name),
                                 },
                                 lt.0,
                             );
@@ -3384,7 +3384,10 @@ fn function_signature<'a>(
                     // first parameter (typically a reference of some kind) and can be passed to a
                     // thunk via the expression `self`.
                     if first_api_param.is_c_abi_compatible_by_value() {
-                        let rs_snippet = first_api_param.format_as_self_param()?;
+                        let rs_snippet =
+                            first_api_param.format_as_self_param().with_context(|| {
+                                format!("for parameter type {}", first_api_param.display(db))
+                            })?;
                         thunk_args[0] = if derived_record.is_some() {
                             quote! {
                                 // SAFETY: Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
