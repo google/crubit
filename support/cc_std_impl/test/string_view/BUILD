@@ -55,6 +55,8 @@ crubit_rust_test(
 crubit_cc_test(
     name = "string_view_cc_test",
     srcs = ["test.cc"],
+    # TODO(b/575815022): Re-enable once `cc_std` links on macOS.
+    tags = ["no_macos"],
     deps = [
         ":string_view_rs_apis_cc",
         "@googletest//:gtest_main",

@@ -445,6 +445,7 @@ crubit_cc_test(
         "enum_test.cc",
         "enum_test_option_i32.h",
     ],
+    tags = ["no_macos"],
     deps = [
         ":enum",
         "@abseil-cpp//absl/base:core_headers",
