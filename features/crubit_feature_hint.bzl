@@ -9,13 +9,30 @@ visibility-restricted.
 """
 
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
-load("//features:global_features.bzl", "SUPPORTED_FEATURE_DENYLISTS")
 
 visibility(["//..."])
 
 # Omitted from providers.bzl: this is used internally and in tests only.
 # (The "public" interface is `crubit_feature_hint` and `additional_rust_srcs_for_crubit_bindings` to
 # create it, and `find_crubit_features` to aggregate it for collection into RustBindingsFromCcInfo.)
+
+CrubitFeatureDenylistsInfo = provider(
+    doc = "Provider for denylists.",
+    fields = {"denylists": "A dict[str, list[str]]"},
+)
+
+def _crubit_feature_denylists_impl(ctx):
+    return [CrubitFeatureDenylistsInfo(denylists = ctx.attr.denylists)]
+
+crubit_feature_denylists = rule(
+    implementation = _crubit_feature_denylists_impl,
+    attrs = {
+        "denylists": attr.string_list_dict(
+            doc = "A dict mapping a feature to a list of target patterns to be denied.",
+        ),
+    },
+)
+
 CrubitFeaturesInfo = provider(
     doc = "A set of enabled Crubit features.",
     fields = {"crubit_features": "List of features"},
@@ -89,7 +106,7 @@ def _denied_features(label, aspect_hints, denylists):
 denied_features_for_test = _denied_features
 
 def find_denied_crubit_features(target, aspect_ctx):
-    """Returns the features in `SUPPORTED_FEATURE_DENYLISTS` which are denied for a target.
+    """Returns the features in the denylists which are denied for a target.
 
     A feature is denied if the target matches one of the feature's denylist patterns, and the
     target doesn't explicitly opt in to the feature with the feature's own aspect hint.
@@ -101,7 +118,7 @@ def find_denied_crubit_features(target, aspect_ctx):
     Returns:
         A set of feature strings.
     """
-    return _denied_features(target.label, aspect_ctx.rule.attr.aspect_hints, SUPPORTED_FEATURE_DENYLISTS)
+    return _denied_features(target.label, aspect_ctx.rule.attr.aspect_hints, aspect_ctx.attr._crubit_feature_denylists[CrubitFeatureDenylistsInfo].denylists)
 
 def find_crubit_features(target, aspect_ctx):
     """Returns the set of Crubit features enabled on a target.

@@ -390,6 +390,9 @@ bindings_attrs = {
     "_globally_enabled_features": attr.label(
         default = "//common/bazel_support:globally_enabled_features",
     ),
+    "_crubit_feature_denylists": attr.label(
+        default = "//features/denylists:supported_feature_denylists",
+    ),
     "_template_blocklist_path_regex": attr.label(
         default = "//common/bazel_support:template_blocklist_path_regex",
     ),
