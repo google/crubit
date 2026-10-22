@@ -1,0 +1,115 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// trait_impl_golden
+
+// clang-format off
+#ifndef CC_BINDINGS_FROM_RS_TEST_TRAITS_IN_DEPENDENT_CRATE_TRAIT_IMPL_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_TRAITS_IN_DEPENDENT_CRATE_TRAIT_IMPL_GOLDEN
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
+#include "support/annotations_internal.h"
+#include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
+#include <utility>
+
+#include "cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.h"
+#include "support/rs_std/rs_alloc.h"
+
+namespace trait_impl {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
+    [[clang::trivial_abi]] MyStruct final {
+ public:
+  static ::trait_impl::MyStruct new_(::std::int32_t x);
+
+  ::std::int32_t x{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: trait_impl_golden :: NotImplemented") alignas(4) [[clang::trivial_abi]]
+NotImplemented final {
+ public:
+  ::rs::alloc::string::String foo{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace trait_impl
+
+template <>
+struct rs::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait> {
+  static constexpr bool kIsImplemented = true;
+
+  static ::std::int32_t do_something(::trait_impl::MyStruct const& self);
+};
+
+namespace trait_impl {
+
+static_assert(
+    sizeof(::trait_impl::MyStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::trait_impl::MyStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<::trait_impl::MyStruct>);
+static_assert(::std::is_trivially_move_constructible_v<::trait_impl::MyStruct>);
+static_assert(::std::is_trivially_move_assignable_v<::trait_impl::MyStruct>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::std::int32_t,
+                                   ::trait_impl::MyStruct* __ret_ptr);
+}
+inline ::trait_impl::MyStruct(MyStruct::new_)(::std::int32_t x) {
+  crubit::Slot<::trait_impl::MyStruct> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void ::trait_impl::MyStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::trait_impl::MyStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
+}
+static_assert(
+    sizeof(::trait_impl::NotImplemented) == 12,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::trait_impl::NotImplemented) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+inline void ::trait_impl::NotImplemented::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::trait_impl::NotImplemented;
+  static_assert(0 == offsetof(__crubit_assert_type, foo));
+}
+}  // namespace trait_impl
+
+namespace trait_impl {
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_MyTrait_udo_usomething_utrait_uimpl_ugolden_x0000003a_x0000003aMyStruct(
+    ::trait_impl::MyStruct const&);
+}
+}  // namespace trait_impl
+inline ::std::int32_t
+rs::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait>::do_something(
+    ::trait_impl::MyStruct const& self) {
+  return trait_impl::__crubit_internal::
+      __crubit_thunk_MyTrait_udo_usomething_utrait_uimpl_ugolden_x0000003a_x0000003aMyStruct(
+          self);
+}
+
+#pragma clang diagnostic pop
+#endif  // CC_BINDINGS_FROM_RS_TEST_TRAITS_IN_DEPENDENT_CRATE_TRAIT_IMPL_GOLDEN
