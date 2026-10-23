@@ -8,6 +8,11 @@
 use arc_anyhow::{anyhow, bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
+pub mod ir_ffi_support;
+pub mod ir_generated;
+pub use ir_generated as ir_rust_proto;
+
+use ir_ffi_support::{AsView, RepeatedView};
 use ir_rust_proto::{
     BaseClassView, CommentView, ConstantView, EnumView, EnumeratorView, ExistingRustTypeView,
     FieldView, FuncParamView, FuncView, GlobalVarView, HeaderNameView, IdentifierView,
@@ -17,7 +22,6 @@ use ir_rust_proto::{
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
-use protobuf::{ProtoStr, ProxiedInRepeated, RepeatedView, View};
 use quote::{quote, ToTokens};
 use std::collections::hash_map::{Entry, HashMap};
 use std::collections::{BTreeMap, HashSet};
@@ -25,24 +29,21 @@ use std::fmt::{self, Debug, Display};
 use std::hash::Hash;
 use std::rc::Rc;
 
-mod proto_to_ir;
-pub use proto_to_ir::proto_to_ir;
-
 pub use ir_rust_proto::bridge_type::callable::{BackingType, FnTrait};
 
-/// Trait for converting from proto-native types to IR-native types.
+/// Trait for converting from FFI view types to IR-native types.
 ///
 /// This trait intentionally separates validation from construction to allow for eager validation
-/// and lazy construction. In particular, the entire proto can be recursively validated once when
+/// and lazy construction. In particular, the entire FFI IR can be recursively validated once when
 /// received, and then immutable views can be extracted lazily and infallibly later.
 trait ProtoToIr: Sized {
-    /// The IR type that this proto converts to.
+    /// The IR type that this view converts to.
     type IrType;
 
-    /// Validates that the proto upholds the invariants that the IR expects.
+    /// Validates that the view upholds the invariants that the IR expects.
     fn validate(self) -> Result<()>;
 
-    /// Converts the proto to its associated IR type.
+    /// Converts the view to its associated IR type.
     ///
     /// # Panics
     ///
@@ -51,17 +52,69 @@ trait ProtoToIr: Sized {
     fn to_ir(self) -> Self::IrType;
 }
 
-impl<'pb> ProtoToIr for &'pb ProtoStr {
-    type IrType = &'pb str;
+macro_rules! impl_try_from_proto {
+    (
+        $($lt:lifetime: $proto:ty => $ir:ty),* $(,)?;
+        $($proto_no_lt:ty => $ir_no_lt:ty),* $(,)?
+    ) => {
+        $(
+            impl<$lt> TryFrom<$proto> for $ir {
+                type Error = Error;
+                fn try_from(proto: $proto) -> Result<Self> {
+                    proto.validate()?;
+                    Ok(proto.to_ir())
+                }
+            }
+        )*
+        $(
+            impl TryFrom<$proto_no_lt> for $ir_no_lt {
+                type Error = Error;
+                fn try_from(proto: $proto_no_lt) -> Result<Self> {
+                    proto.validate()?;
+                    Ok(proto.to_ir())
+                }
+            }
+        )*
+    };
+}
 
-    fn validate(self) -> Result<()> {
-        let _ = self.to_str()?;
-        Ok(())
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        self.to_str().expect("`&ProtoStr` should have been validated by `ProtoToIr::validate`")
-    }
+impl_try_from_proto! {
+    'pb: ir_rust_proto::HeaderNameView<'pb> => HeaderName,
+    'pb: ir_rust_proto::IdentifierView<'pb> => Identifier<'pb>,
+    'pb: ir_rust_proto::SizeAlignView<'pb> => SizeAlign,
+    'pb: ir_rust_proto::LifetimeNameView<'pb> => LifetimeName<'pb>,
+    'pb: ir_rust_proto::FormattedErrorView<'pb> => FormattedError,
+    'pb: ir_rust_proto::UnqualifiedIdentifierView<'pb> => UnqualifiedIdentifier<'pb>,
+    'pb: ir_rust_proto::OperatorView<'pb> => Operator<'pb>,
+    'pb: ir_rust_proto::InstanceMethodMetadataView<'pb> => InstanceMethodMetadata,
+    'pb: ir_rust_proto::FuncParamView<'pb> => FuncParam<'pb>,
+    'pb: ir_rust_proto::FuncView<'pb> => Func<'pb>,
+    'pb: ir_rust_proto::BaseClassView<'pb> => BaseClass,
+    'pb: ir_rust_proto::FieldView<'pb> => Field<'pb>,
+    'pb: ir_rust_proto::TraitDerivesView<'pb> => TraitDerives<'pb>,
+    'pb: ir_rust_proto::OwnedPtrConfigView<'pb> => OwnedPtrConfig<'pb>,
+    'pb: ir_rust_proto::RecordView<'pb> => Record<'pb>,
+    'pb: ir_rust_proto::IncompleteRecordView<'pb> => IncompleteRecord<'pb>,
+    'pb: ir_rust_proto::EnumeratorView<'pb> => Enumerator<'pb>,
+    'pb: ir_rust_proto::EnumView<'pb> => Enum<'pb>,
+    'pb: ir_rust_proto::ConstantView<'pb> => Constant<'pb>,
+    'pb: ir_rust_proto::GlobalVarView<'pb> => GlobalVar<'pb>,
+    'pb: ir_rust_proto::TypeAliasView<'pb> => TypeAlias<'pb>,
+    'pb: ir_rust_proto::unsupported_item::PathView<'pb> => UnsupportedItemPath<'pb>,
+    'pb: ir_rust_proto::UnsupportedItemView<'pb> => UnsupportedItem<'pb>,
+    'pb: ir_rust_proto::CommentView<'pb> => Comment<'pb>,
+    'pb: ir_rust_proto::NamespaceView<'pb> => Namespace<'pb>,
+    'pb: ir_rust_proto::UseModView<'pb> => UseMod<'pb>,
+    'pb: ir_rust_proto::ExistingRustTypeView<'pb> => ExistingRustType<'pb>;
+    ir_rust_proto::CallingConv => CcCallingConv,
+    ir_rust_proto::PointerTypeKind => PointerTypeKind,
+    ir_rust_proto::instance_method_metadata::ReferenceQualification => ReferenceQualification,
+    ir_rust_proto::SafetyAnnotation => SafetyAnnotation,
+    ir_rust_proto::AccessSpecifier => AccessSpecifier,
+    ir_rust_proto::TraitImplPolarity => TraitImplPolarity,
+    ir_rust_proto::SpecialMemberFunc => SpecialMemberFunc,
+    ir_rust_proto::RecordType => RecordType,
+    ir_rust_proto::unsupported_item::Kind => UnsupportedItemKind,
 }
 
 impl<T: ProtoToIr> ProtoToIr for Option<T> {
@@ -83,16 +136,16 @@ impl<T: ProtoToIr> ProtoToIr for Option<T> {
 ///
 /// This allows IR types to expose repeated fields without allocating, while still supporting
 /// `Debug`, `PartialEq`, `Eq` and `Hash` (e.g. for `derive_debug_partialeq_eq_hash!`).
-pub struct RepeatedIr<'pb, P: ProxiedInRepeated, T> {
+pub struct RepeatedIr<'pb, P: AsView<'pb>, T> {
     proto: RepeatedView<'pb, P>,
-    to_ir: fn(View<'pb, P>) -> T,
+    to_ir: fn(P::View) -> T,
 }
 
-impl<'pb, P: ProxiedInRepeated> ProtoToIr for RepeatedView<'pb, P>
+impl<'pb, P: AsView<'pb>> ProtoToIr for RepeatedView<'pb, P>
 where
-    View<'pb, P>: ProtoToIr,
+    P::View: ProtoToIr,
 {
-    type IrType = RepeatedIr<'pb, P, <View<'pb, P> as ProtoToIr>::IrType>;
+    type IrType = RepeatedIr<'pb, P, <P::View as ProtoToIr>::IrType>;
 
     fn validate(self) -> Result<()> {
         self.iter().try_for_each(ProtoToIr::validate)
@@ -103,51 +156,37 @@ where
     }
 }
 
-impl<'pb, P: ProxiedInRepeated, T> RepeatedIr<'pb, P, T> {
+impl<'pb, P: AsView<'pb>, T> RepeatedIr<'pb, P, T> {
     pub fn iter(&self) -> impl ExactSizeIterator<Item = T> + '_ {
         self.proto.iter().map(self.to_ir)
     }
 }
 
-impl<'pb, P: ProxiedInRepeated, T> Clone for RepeatedIr<'pb, P, T> {
+impl<'pb, P: AsView<'pb>, T> Clone for RepeatedIr<'pb, P, T> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'pb, P: ProxiedInRepeated, T> Copy for RepeatedIr<'pb, P, T> {}
+impl<'pb, P: AsView<'pb>, T> Copy for RepeatedIr<'pb, P, T> {}
 
-impl<P: ProxiedInRepeated, T: Debug> Debug for RepeatedIr<'_, P, T> {
+impl<'pb, P: AsView<'pb>, T: Debug> Debug for RepeatedIr<'pb, P, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list().entries(self.iter()).finish()
     }
 }
 
-impl<P: ProxiedInRepeated, T: PartialEq> PartialEq for RepeatedIr<'_, P, T> {
+impl<'pb, P: AsView<'pb>, T: PartialEq> PartialEq for RepeatedIr<'pb, P, T> {
     fn eq(&self, other: &Self) -> bool {
         self.iter().eq(other.iter())
     }
 }
 
-impl<P: ProxiedInRepeated, T: Eq> Eq for RepeatedIr<'_, P, T> {}
+impl<'pb, P: AsView<'pb>, T: Eq> Eq for RepeatedIr<'pb, P, T> {}
 
-impl<P: ProxiedInRepeated, T: Hash> Hash for RepeatedIr<'_, P, T> {
+impl<'pb, P: AsView<'pb>, T: Hash> Hash for RepeatedIr<'pb, P, T> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.iter().for_each(|element| element.hash(state));
-    }
-}
-
-/// Trait to convert optional protobuf getters, which are`protobuf::Optional<T>` under Cargo
-/// and `std::option::Option<T>` under Bazel into standard `Option<T>`.
-pub(crate) trait IntoOption {
-    type Target;
-    fn into_option(self) -> Option<Self::Target>;
-}
-
-impl<T> IntoOption for Option<T> {
-    type Target = T;
-    fn into_option(self) -> Option<T> {
-        self
     }
 }
 
@@ -350,6 +389,300 @@ pub fn make_ir<'pb>(tree_ir: TreeIR<'pb>) -> IR<'pb> {
     }
 }
 
+impl TryFrom<ir_rust_proto::cc_type::PointerTypeView<'_>> for PointerType {
+    type Error = Error;
+    fn try_from(proto: ir_rust_proto::cc_type::PointerTypeView<'_>) -> Result<Self> {
+        Ok(PointerType {
+            kind: PointerTypeKind::try_from(proto.kind().context("Unspecified PointerTypeKind")?)?,
+            lifetime: proto.lifetime_opt().map(LifetimeId),
+            pointee_type: Rc::new(CcType::try_from(proto.pointee_type())?),
+        })
+    }
+}
+
+impl TryFrom<ir_rust_proto::CcTypeView<'_>> for CcType {
+    type Error = Error;
+    fn try_from(proto: ir_rust_proto::CcTypeView<'_>) -> Result<Self> {
+        let variant = match proto.variant() {
+            ir_rust_proto::cc_type::VariantView::Primitive(p) => {
+                let primitive = p.spelling().parse()?;
+                CcTypeVariant::Primitive(primitive)
+            }
+            ir_rust_proto::cc_type::VariantView::Pointer(p) => {
+                CcTypeVariant::Pointer(PointerType::try_from(p)?)
+            }
+            ir_rust_proto::cc_type::VariantView::FuncPointer(fp) => {
+                let call_conv =
+                    CcCallingConv::try_from(fp.call_conv().context("Unspecified CallingConv")?)?;
+                CcTypeVariant::FuncPointer {
+                    non_null: fp.non_null(),
+                    call_conv,
+                    param_and_return_types: fp
+                        .param_and_return_types()
+                        .iter()
+                        .map(CcType::try_from)
+                        .try_collect()?,
+                    lifetime_inputs: fp.lifetime_inputs().iter().map(Rc::from).collect(),
+                }
+            }
+            ir_rust_proto::cc_type::VariantView::Decl(id) => {
+                // `template_args` is a sibling of the `decl` oneof member in the proto
+                // (it is only meaningful for this variant), but belongs inside the
+                // variant here. Absent is spelled `None` rather than an empty slice, so
+                // that consumers keep falling back to the decl's own arguments.
+                let args: Vec<CcType> =
+                    proto.template_args().iter().map(CcType::try_from).try_collect()?;
+                CcTypeVariant::Decl {
+                    id: ItemId(id as usize),
+                    template_args: if args.is_empty() { None } else { Some(Rc::from(args)) },
+                }
+            }
+            ir_rust_proto::cc_type::VariantView::Error(err) => {
+                CcTypeVariant::Error(FormattedError::try_from(err)?)
+            }
+            _ => bail!("unmapped VariantView: {:?}", proto.variant()),
+        };
+
+        Ok(CcType {
+            variant,
+            is_const: proto.is_const(),
+            is_nonnull: proto.is_nonnull(),
+            unknown_attr: Rc::from(proto.unknown_attr()),
+            explicit_lifetimes: proto.explicit_lifetimes().iter().map(Rc::from).collect(),
+        })
+    }
+}
+
+impl TryFrom<ir_rust_proto::MemberFuncSemanticView<'_>> for MemberFuncSemantic {
+    type Error = Error;
+    fn try_from(proto: ir_rust_proto::MemberFuncSemanticView<'_>) -> Result<Self> {
+        match proto {
+            ir_rust_proto::MemberFuncSemanticView::Setter(s) => {
+                Ok(MemberFuncSemantic::Setter(Setter {
+                    type_: CcType::try_from(s.r#type())?,
+                    offset: s.offset() as usize,
+                }))
+            }
+            ir_rust_proto::MemberFuncSemanticView::Getter(g) => {
+                Ok(MemberFuncSemantic::Getter(Getter {
+                    type_: CcType::try_from(g.r#type())?,
+                    offset: g.offset() as usize,
+                }))
+            }
+            _ => bail!("unmapped MemberFuncSemanticView: {:?}", proto),
+        }
+    }
+}
+
+impl TryFrom<ir_rust_proto::TemplateArgView<'_>> for TemplateArg {
+    type Error = Error;
+    fn try_from(proto: ir_rust_proto::TemplateArgView<'_>) -> Result<Self> {
+        match proto {
+            ir_rust_proto::TemplateArgView::Type(t) => Ok(TemplateArg::Type(CcType::try_from(t)?)),
+            ir_rust_proto::TemplateArgView::BoolValue(b) => Ok(TemplateArg::Bool(b)),
+            ir_rust_proto::TemplateArgView::IntValue(i) => Ok(TemplateArg::Int(i)),
+            _ => bail!("unmapped TemplateArgView: {:?}", proto),
+        }
+    }
+}
+
+impl<'pb> TryFrom<ir_rust_proto::BridgeTypeView<'pb>> for BridgeType<'pb> {
+    type Error = Error;
+    fn try_from(proto: ir_rust_proto::BridgeTypeView<'pb>) -> Result<Self> {
+        match proto {
+            ir_rust_proto::BridgeTypeView::Bridge(b) => Ok(BridgeType::Bridge {
+                rust_name: b.rust_name(),
+                abi_rust: b.abi_rust(),
+                abi_cpp: b.abi_cpp(),
+                template_args: b.template_args().iter().map(CcType::try_from).try_collect()?,
+                label_hint: b.label_hint_opt(),
+            }),
+            ir_rust_proto::BridgeTypeView::StdOptional(so) => {
+                Ok(BridgeType::StdOptional(CcType::try_from(so.inner_type())?))
+            }
+            ir_rust_proto::BridgeTypeView::StdPair(sp) => Ok(BridgeType::StdPair(
+                CcType::try_from(sp.first_type())?,
+                CcType::try_from(sp.second_type())?,
+            )),
+            ir_rust_proto::BridgeTypeView::StdString => Ok(BridgeType::StdString),
+            ir_rust_proto::BridgeTypeView::ProtoMessageBridge(pmb) => {
+                Ok(BridgeType::ProtoMessageBridge { rust_name: pmb.rust_name() })
+            }
+            ir_rust_proto::BridgeTypeView::Callable(c) => Ok(BridgeType::Callable {
+                backing_type: c.backing_type().context("unspecified BackingType")?,
+                fn_trait: c.fn_trait().context("unspecified FnTrait")?,
+                return_type: CcType::try_from(c.return_type())?,
+                param_types: c.param_types().iter().map(CcType::try_from).try_collect()?,
+            }),
+            _ => bail!("unmapped BridgeTypeView: {:?}", proto),
+        }
+    }
+}
+
+impl TryFrom<ir_rust_proto::TemplateSpecializationView<'_>> for TemplateSpecialization {
+    type Error = Error;
+    fn try_from(proto: ir_rust_proto::TemplateSpecializationView<'_>) -> Result<Self> {
+        let kind = match proto.kind() {
+            ir_rust_proto::template_specialization::KindView::StdStringView => {
+                TemplateSpecializationKind::StdStringView
+            }
+            ir_rust_proto::template_specialization::KindView::StdWStringView => {
+                TemplateSpecializationKind::StdWStringView
+            }
+            ir_rust_proto::template_specialization::KindView::StdVector(v) => {
+                TemplateSpecializationKind::StdVector {
+                    raw_element_type: CcType::try_from(v.element_type())?,
+                }
+            }
+            ir_rust_proto::template_specialization::KindView::StdOptional(o) => {
+                TemplateSpecializationKind::StdOptional {
+                    raw_element_type: CcType::try_from(o.element_type())?,
+                }
+            }
+            ir_rust_proto::template_specialization::KindView::StdSharedPtr(up) => {
+                TemplateSpecializationKind::StdSharedPtr {
+                    raw_element_type: CcType::try_from(up.element_type())?,
+                }
+            }
+            ir_rust_proto::template_specialization::KindView::StdUniquePtr(up) => {
+                TemplateSpecializationKind::StdUniquePtr {
+                    raw_element_type: CcType::try_from(up.element_type())?,
+                }
+            }
+            ir_rust_proto::template_specialization::KindView::AbslSpan(as_) => {
+                TemplateSpecializationKind::AbslSpan {
+                    raw_element_type: CcType::try_from(as_.element_type())?,
+                }
+            }
+            ir_rust_proto::template_specialization::KindView::AbslFlatHashMap(afhm) => {
+                TemplateSpecializationKind::AbslFlatHashMap {
+                    raw_key_type: CcType::try_from(afhm.key_type())?,
+                    raw_value_type: CcType::try_from(afhm.value_type())?,
+                }
+            }
+            ir_rust_proto::template_specialization::KindView::AbslFlatHashSet(afhs) => {
+                TemplateSpecializationKind::AbslFlatHashSet {
+                    raw_element_type: CcType::try_from(afhs.element_type())?,
+                }
+            }
+            ir_rust_proto::template_specialization::KindView::C9Co(c) => {
+                TemplateSpecializationKind::C9Co {
+                    raw_element_type: CcType::try_from(c.element_type())?,
+                }
+            }
+            ir_rust_proto::template_specialization::KindView::StdAtomic(a) => {
+                TemplateSpecializationKind::StdAtomic {
+                    raw_element_type: CcType::try_from(a.element_type())?,
+                }
+            }
+            ir_rust_proto::template_specialization::KindView::NonSpecial => {
+                TemplateSpecializationKind::NonSpecial
+            }
+            _ => bail!("unmapped KindView: {:?}", proto.kind()),
+        };
+        Ok(TemplateSpecialization {
+            defining_target: BazelLabel::from(proto.defining_target()),
+            kind,
+        })
+    }
+}
+
+impl<'pb> TryFrom<ir_rust_proto::ItemView<'pb>> for Item<'pb> {
+    type Error = Error;
+    fn try_from(proto: ir_rust_proto::ItemView<'pb>) -> Result<Self> {
+        match proto {
+            ir_rust_proto::ItemView::Func(f) => Ok(Item::Func(Rc::new(Func::try_from(f)?))),
+            ir_rust_proto::ItemView::Record(r) => Ok(Item::Record(Rc::new(Record::try_from(r)?))),
+            ir_rust_proto::ItemView::IncompleteRecord(ir) => {
+                Ok(Item::IncompleteRecord(Rc::new(IncompleteRecord::try_from(ir)?)))
+            }
+            ir_rust_proto::ItemView::EnumDecl(e) => Ok(Item::Enum(Rc::new(Enum::try_from(e)?))),
+            ir_rust_proto::ItemView::Constant(c) => {
+                Ok(Item::Constant(Rc::new(Constant::try_from(c)?)))
+            }
+            ir_rust_proto::ItemView::TypeAlias(ta) => {
+                Ok(Item::TypeAlias(Rc::new(TypeAlias::try_from(ta)?)))
+            }
+            ir_rust_proto::ItemView::GlobalVar(gv) => {
+                Ok(Item::GlobalVar(Rc::new(GlobalVar::try_from(gv)?)))
+            }
+            ir_rust_proto::ItemView::UnsupportedItem(ui) => {
+                Ok(Item::UnsupportedItem(Rc::new(UnsupportedItem::try_from(ui)?)))
+            }
+            ir_rust_proto::ItemView::Comment(c) => {
+                Ok(Item::Comment(Rc::new(Comment::try_from(c)?)))
+            }
+            ir_rust_proto::ItemView::NamespaceDecl(nd) => {
+                Ok(Item::Namespace(Rc::new(Namespace::try_from(nd)?)))
+            }
+            ir_rust_proto::ItemView::UseMod(um) => Ok(Item::UseMod(Rc::new(UseMod::try_from(um)?))),
+            ir_rust_proto::ItemView::ExistingRustType(ert) => {
+                Ok(Item::ExistingRustType(Rc::new(ExistingRustType::try_from(ert)?)))
+            }
+            _ => bail!("unmapped ItemView: {:?}", proto),
+        }
+    }
+}
+
+pub fn proto_to_ir<'pb>(proto: ir_rust_proto::IRProtoView<'pb>) -> Result<IR<'pb>> {
+    let public_headers = proto.public_headers().iter().map(HeaderName::try_from).try_collect()?;
+
+    let crate_root_path = proto.crate_root_path_opt().map(Rc::from);
+
+    let crubit_features = proto
+        .crubit_features()
+        .iter()
+        .map(|(target, features_list)| {
+            let mut features = flagset::FlagSet::<CrubitFeature>::default();
+            for feature_name in features_list.iter() {
+                let feature_flags = crubit_feature::named_features(feature_name.as_bytes())
+                    .with_context(|| format!("Invalid Crubit feature name: {:?}", feature_name))?;
+                features |= feature_flags;
+            }
+            Ok::<_, Error>((
+                BazelLabel::from(target),
+                crubit_feature::SerializedCrubitFeatures::resolved(features),
+            ))
+        })
+        .try_collect()?;
+
+    let unstable_rust_features = proto.unstable_rust_features().iter().map(String::from).collect();
+
+    let reexported_namespaces =
+        proto.reexported_namespaces().iter().map(std::rc::Rc::from).collect();
+
+    let crate_names = proto
+        .crate_names()
+        .iter()
+        .map(|(target, name_str)| {
+            let ident = try_make_rs_ident(name_str)
+                .with_context(|| format!("Invalid crate name identifier: {:?}", name_str))?;
+            Ok::<_, Error>((BazelLabel::from(target), ident))
+        })
+        .try_collect()?;
+
+    let top_level_items = proto
+        .top_level_items()
+        .iter()
+        .map(|(target, item_list)| {
+            let items = item_list.iter().map(Item::try_from).try_collect()?;
+            Ok::<_, Error>((BazelLabel::from(target), items))
+        })
+        .try_collect()?;
+
+    let tree_ir = TreeIR {
+        public_headers,
+        current_target: BazelLabel::from(proto.current_target()),
+        crate_root_path,
+        crubit_features,
+        crate_names,
+        unstable_rust_features,
+        reexported_namespaces,
+        top_level_items,
+    };
+    Ok(make_ir(tree_ir))
+}
+
 macro_rules! derive_debug_partialeq_eq_hash {
     {
         $(#[$impl_metas:meta]),*
@@ -399,26 +732,30 @@ macro_rules! derive_debug_partialeq_eq_hash {
     };
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub struct HeaderName<'pb> {
-    pub(crate) name: &'pb str,
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct HeaderName {
+    pub name: Rc<str>,
+}
+
+impl HeaderName {
+    pub fn from_str(name: &str) -> Self {
+        Self { name: Rc::from(name) }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 impl<'pb> ProtoToIr for HeaderNameView<'pb> {
-    type IrType = HeaderName<'pb>;
+    type IrType = HeaderName;
 
     fn validate(self) -> Result<()> {
-        self.name().validate()
+        Ok(())
     }
 
-    fn to_ir(self) -> HeaderName<'pb> {
-        HeaderName { name: self.name().to_ir() }
-    }
-}
-
-impl<'pb> HeaderName<'pb> {
-    pub fn name(&self) -> &'pb str {
-        self.name
+    fn to_ir(self) -> HeaderName {
+        HeaderName::from_str(self.name())
     }
 }
 
@@ -441,15 +778,15 @@ impl<'pb> LifetimeName<'pb> {
     }
 }
 
-impl<'pb> ProtoToIr for ::ir_rust_proto::LifetimeNameView<'pb> {
+impl<'pb> ProtoToIr for ir_rust_proto::LifetimeNameView<'pb> {
     type IrType = LifetimeName<'pb>;
 
     fn validate(self) -> Result<()> {
-        self.name().validate()
+        Ok(())
     }
 
     fn to_ir(self) -> LifetimeName<'pb> {
-        LifetimeName { name: self.name().to_ir(), id: LifetimeId(self.id()) }
+        LifetimeName { name: self.name(), id: LifetimeId(self.id()) }
     }
 }
 
@@ -570,30 +907,20 @@ pub enum PointerTypeKind {
     Owned,
 }
 
-impl ProtoToIr for ::ir_rust_proto::PointerTypeKind {
+impl ProtoToIr for ir_rust_proto::PointerTypeKind {
     type IrType = PointerTypeKind;
 
     fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::PointerTypeKind::LValueRef
-            | ::ir_rust_proto::PointerTypeKind::RValueRef
-            | ::ir_rust_proto::PointerTypeKind::Nullable
-            | ::ir_rust_proto::PointerTypeKind::NonNull
-            | ::ir_rust_proto::PointerTypeKind::Owned => Ok(()),
-            _ => bail!("Unspecified PointerTypeKind"),
-        }
+        Ok(())
     }
 
     fn to_ir(self) -> Self::IrType {
         match self {
-            ::ir_rust_proto::PointerTypeKind::LValueRef => PointerTypeKind::LValueRef,
-            ::ir_rust_proto::PointerTypeKind::RValueRef => PointerTypeKind::RValueRef,
-            ::ir_rust_proto::PointerTypeKind::Nullable => PointerTypeKind::Nullable,
-            ::ir_rust_proto::PointerTypeKind::NonNull => PointerTypeKind::NonNull,
-            ::ir_rust_proto::PointerTypeKind::Owned => PointerTypeKind::Owned,
-            _ => unreachable!(
-                "`PointerTypeKind` should have been validated by `ProtoToIr::validate`"
-            ),
+            ir_rust_proto::PointerTypeKind::LValueRef => PointerTypeKind::LValueRef,
+            ir_rust_proto::PointerTypeKind::RValueRef => PointerTypeKind::RValueRef,
+            ir_rust_proto::PointerTypeKind::Nullable => PointerTypeKind::Nullable,
+            ir_rust_proto::PointerTypeKind::NonNull => PointerTypeKind::NonNull,
+            ir_rust_proto::PointerTypeKind::Owned => PointerTypeKind::Owned,
         }
     }
 }
@@ -737,30 +1064,21 @@ define_typed_tokens_enum! {
     }
 }
 
-impl ProtoToIr for ::ir_rust_proto::CallingConv {
+impl ProtoToIr for ir_rust_proto::CallingConv {
     type IrType = CcCallingConv;
 
     fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::CallingConv::CDecl
-            | ::ir_rust_proto::CallingConv::FastCall
-            | ::ir_rust_proto::CallingConv::VectorCall
-            | ::ir_rust_proto::CallingConv::ThisCall
-            | ::ir_rust_proto::CallingConv::StdCall
-            | ::ir_rust_proto::CallingConv::MsAbi => Ok(()),
-            _ => bail!("Unspecified CallingConv"),
-        }
+        Ok(())
     }
 
     fn to_ir(self) -> Self::IrType {
         match self {
-            ::ir_rust_proto::CallingConv::CDecl => CcCallingConv::C,
-            ::ir_rust_proto::CallingConv::FastCall => CcCallingConv::X86FastCall,
-            ::ir_rust_proto::CallingConv::VectorCall => CcCallingConv::X86VectorCall,
-            ::ir_rust_proto::CallingConv::ThisCall => CcCallingConv::X86ThisCall,
-            ::ir_rust_proto::CallingConv::StdCall => CcCallingConv::X86StdCall,
-            ::ir_rust_proto::CallingConv::MsAbi => CcCallingConv::Win64,
-            _ => unreachable!("`CallingConv` should have been validated by `ProtoToIr::validate`"),
+            ir_rust_proto::CallingConv::CDecl => CcCallingConv::C,
+            ir_rust_proto::CallingConv::FastCall => CcCallingConv::X86FastCall,
+            ir_rust_proto::CallingConv::VectorCall => CcCallingConv::X86VectorCall,
+            ir_rust_proto::CallingConv::ThisCall => CcCallingConv::X86ThisCall,
+            ir_rust_proto::CallingConv::StdCall => CcCallingConv::X86StdCall,
+            ir_rust_proto::CallingConv::MsAbi => CcCallingConv::Win64,
         }
     }
 }
@@ -891,11 +1209,11 @@ impl<'pb> ProtoToIr for IdentifierView<'pb> {
     type IrType = Identifier<'pb>;
 
     fn validate(self) -> Result<()> {
-        self.identifier().validate()
+        Ok(())
     }
 
     fn to_ir(self) -> Identifier<'pb> {
-        Identifier { identifier: self.identifier().to_ir() }
+        Identifier { identifier: self.identifier() }
     }
 }
 
@@ -989,28 +1307,28 @@ pub enum ConstantValue<'pb> {
 /// ```
 #[derive(Clone, Copy)]
 pub struct ArrayValue<'pb> {
-    proto: ::ir_rust_proto::ArrayValueView<'pb>,
+    proto: ir_rust_proto::ArrayValueView<'pb>,
 }
 
-impl<'pb> ProtoToIr for ::ir_rust_proto::ArrayValueView<'pb> {
+impl<'pb> ProtoToIr for ir_rust_proto::ArrayValueView<'pb> {
     type IrType = ArrayValue<'pb>;
 
     fn validate(self) -> Result<()> {
-        use ::ir_rust_proto::array_value::KindOneof;
+        use ir_rust_proto::array_value::KindView;
         let length = u64::try_from(self.length())
             .ok()
             .filter(|&length| length > 0)
             .ok_or_else(|| anyhow!("ArrayValue has non-positive length {}", self.length()))?;
         match self.kind() {
-            KindOneof::IntegerElements(elements) => {
+            KindView::IntegerElements(elements) => {
                 validate_num_elements(elements.elements().len(), elements.has_filler(), length)?;
                 elements.elements().validate()?;
-                elements.filler_opt().into_option().validate()
+                elements.filler_opt().validate()
             }
-            KindOneof::ArrayElements(elements) => {
+            KindView::ArrayElements(elements) => {
                 validate_num_elements(elements.elements().len(), elements.has_filler(), length)?;
                 let mut first = None;
-                let filler = elements.filler_opt().into_option();
+                let filler = elements.filler_opt();
                 for element in elements.elements().iter().chain(filler) {
                     element.validate()?;
                     let first = *first.get_or_insert(element);
@@ -1023,7 +1341,7 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::ArrayValueView<'pb> {
                 }
                 Ok(())
             }
-            KindOneof::StringLiteral(bytes) => {
+            KindView::StringLiteral(bytes) => {
                 let len = bytes.len() as u64;
                 ensure!(
                     len < length,
@@ -1032,7 +1350,7 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::ArrayValueView<'pb> {
                 );
                 Ok(())
             }
-            _ => bail!("unmapped ArrayValue KindOneof: {:?}", self.kind()),
+            _ => bail!("unmapped ArrayValue KindView: {:?}", self.kind()),
         }
     }
 
@@ -1051,13 +1369,13 @@ derive_debug_partialeq_eq_hash! {
 
         pub fn kind(&self) -> ArrayValueKind<'pb> {
             match self.proto.kind() {
-                ::ir_rust_proto::array_value::KindOneof::IntegerElements(proto) => {
+                ir_rust_proto::array_value::KindView::IntegerElements(proto) => {
                     ArrayValueKind::Integers(IntegerElements { proto })
                 }
-                ::ir_rust_proto::array_value::KindOneof::ArrayElements(proto) => {
+                ir_rust_proto::array_value::KindView::ArrayElements(proto) => {
                     ArrayValueKind::Arrays(ArrayElements { proto })
                 }
-                ::ir_rust_proto::array_value::KindOneof::StringLiteral(bytes) => {
+                ir_rust_proto::array_value::KindView::StringLiteral(bytes) => {
                     ArrayValueKind::StringLiteral(bytes)
                 }
                 _ => unreachable!("`kind` should have been validated by `ArrayValueView::validate`"),
@@ -1083,20 +1401,20 @@ pub enum ArrayValueKind<'pb> {
 /// The elements of the innermost dimension of an array. See `ArrayValue`.
 #[derive(Clone, Copy)]
 pub struct IntegerElements<'pb> {
-    proto: ::ir_rust_proto::array_value::IntegerElementsView<'pb>,
+    proto: ir_rust_proto::array_value::IntegerElementsView<'pb>,
 }
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> IntegerElements<'pb> {
         /// The explicitly initialized elements.
         pub fn elements(&self)
-            -> RepeatedIr<'pb, ::ir_rust_proto::IntegerConstant, IntegerConstant> {
+            -> RepeatedIr<'pb, ir_rust_proto::IntegerConstant, IntegerConstant> {
             self.proto.elements().to_ir()
         }
 
         /// The value of the remaining elements, if any.
         pub fn filler(&self) -> Option<IntegerConstant> {
-            self.proto.filler_opt().into_option().to_ir()
+            self.proto.filler_opt().to_ir()
         }
     }
 }
@@ -1105,19 +1423,19 @@ derive_debug_partialeq_eq_hash! {
 /// `ArrayValue`.
 #[derive(Clone, Copy)]
 pub struct ArrayElements<'pb> {
-    proto: ::ir_rust_proto::array_value::ArrayElementsView<'pb>,
+    proto: ir_rust_proto::array_value::ArrayElementsView<'pb>,
 }
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> ArrayElements<'pb> {
         /// The explicitly initialized elements.
-        pub fn elements(&self) -> RepeatedIr<'pb, ::ir_rust_proto::ArrayValue, ArrayValue<'pb>> {
+        pub fn elements(&self) -> RepeatedIr<'pb, ir_rust_proto::ArrayValue, ArrayValue<'pb>> {
             self.proto.elements().to_ir()
         }
 
         /// The value of the remaining elements, if any.
         pub fn filler(&self) -> Option<ArrayValue<'pb>> {
-            self.proto.filler_opt().into_option().to_ir()
+            self.proto.filler_opt().to_ir()
         }
     }
 }
@@ -1126,10 +1444,12 @@ derive_debug_partialeq_eq_hash! {
 ///
 /// `value` must already have been validated, so that all elements of each outer dimension have
 /// the same shape, and only the first element (or the filler) needs to be followed.
-fn array_dimensions(value: ::ir_rust_proto::ArrayValueView) -> impl Iterator<Item = i32> + '_ {
+fn array_dimensions<'a>(
+    value: ir_rust_proto::ArrayValueView<'a>,
+) -> impl Iterator<Item = i32> + 'a {
     std::iter::successors(Some(value), |value| match value.kind() {
-        ::ir_rust_proto::array_value::KindOneof::ArrayElements(elements) => {
-            elements.elements().first().or(elements.filler_opt().into_option())
+        ir_rust_proto::array_value::KindView::ArrayElements(elements) => {
+            elements.elements().first().or(elements.filler_opt())
         }
         _ => None,
     })
@@ -1175,15 +1495,15 @@ impl<'pb> Operator<'pb> {
     }
 }
 
-impl<'pb> ProtoToIr for ::ir_rust_proto::OperatorView<'pb> {
+impl<'pb> ProtoToIr for ir_rust_proto::OperatorView<'pb> {
     type IrType = Operator<'pb>;
 
     fn validate(self) -> Result<()> {
-        self.name().validate()
+        Ok(())
     }
 
     fn to_ir(self) -> Operator<'pb> {
-        Operator { name: self.name().to_ir() }
+        Operator { name: self.name() }
     }
 }
 
@@ -1235,45 +1555,36 @@ pub enum UnqualifiedIdentifier<'pb> {
     ConversionOperator,
 }
 
-impl<'pb> ProtoToIr for ::ir_rust_proto::UnqualifiedIdentifierView<'pb> {
+impl<'pb> ProtoToIr for ir_rust_proto::UnqualifiedIdentifierView<'pb> {
     type IrType = UnqualifiedIdentifier<'pb>;
 
     fn validate(self) -> Result<()> {
-        match self.identifier() {
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Ident(id) => id.validate(),
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Oper(op) => op.validate(),
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::SpecialName(sn) => match sn {
-                ::ir_rust_proto::SpecialName::Constructor
-                | ::ir_rust_proto::SpecialName::Destructor => Ok(()),
-                _ => bail!("Unspecified SpecialName"),
-            },
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::ConversionOperator(_) => {
-                Ok(())
-            }
-            _ => bail!("unmapped IdentifierOneof: {:?}", self.identifier()),
+        match self {
+            ir_rust_proto::UnqualifiedIdentifierView::Ident(id) => id.validate(),
+            ir_rust_proto::UnqualifiedIdentifierView::Oper(op) => op.validate(),
+            ir_rust_proto::UnqualifiedIdentifierView::SpecialName(_) => Ok(()),
+            ir_rust_proto::UnqualifiedIdentifierView::ConversionOperator => Ok(()),
+            _ => bail!("unmapped UnqualifiedIdentifierView: {:?}", self),
         }
     }
 
     fn to_ir(self) -> UnqualifiedIdentifier<'pb> {
-        match self.identifier() {
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Ident(id) => {
+        match self {
+            ir_rust_proto::UnqualifiedIdentifierView::Ident(id) => {
                 UnqualifiedIdentifier::Identifier(id.to_ir())
             }
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Oper(op) => {
+            ir_rust_proto::UnqualifiedIdentifierView::Oper(op) => {
                 UnqualifiedIdentifier::Operator(op.to_ir())
             }
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::SpecialName(sn) => match sn {
-                ::ir_rust_proto::SpecialName::Constructor => UnqualifiedIdentifier::Constructor,
-                ::ir_rust_proto::SpecialName::Destructor => UnqualifiedIdentifier::Destructor,
-                _ => unreachable!(
-                    "`SpecialName` should have been validated by `UnqualifiedIdentifierView::validate`"
-                ),
+            ir_rust_proto::UnqualifiedIdentifierView::SpecialName(sn) => match sn {
+                ir_rust_proto::SpecialName::Constructor => UnqualifiedIdentifier::Constructor,
+                ir_rust_proto::SpecialName::Destructor => UnqualifiedIdentifier::Destructor,
             },
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::ConversionOperator(_) => {
+            ir_rust_proto::UnqualifiedIdentifierView::ConversionOperator => {
                 UnqualifiedIdentifier::ConversionOperator
             }
             _ => unreachable!(
-                "`IdentifierOneof` should have been validated by `UnqualifiedIdentifierView::validate`"
+                "`UnqualifiedIdentifierView` should have been validated by `UnqualifiedIdentifierView::validate`"
             ),
         }
     }
@@ -1338,34 +1649,24 @@ pub enum ReferenceQualification {
     Unqualified,
 }
 
-impl ProtoToIr for ::ir_rust_proto::instance_method_metadata::ReferenceQualification {
+impl ProtoToIr for ir_rust_proto::instance_method_metadata::ReferenceQualification {
     type IrType = ReferenceQualification;
 
     fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::LValue
-            | ::ir_rust_proto::instance_method_metadata::ReferenceQualification::RValue
-            | ::ir_rust_proto::instance_method_metadata::ReferenceQualification::Unqualified => {
-                Ok(())
-            }
-            _ => bail!("Unspecified ReferenceQualification"),
-        }
+        Ok(())
     }
 
     fn to_ir(self) -> Self::IrType {
         match self {
-            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::LValue => {
+            ir_rust_proto::instance_method_metadata::ReferenceQualification::LValue => {
                 ReferenceQualification::LValue
             }
-            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::RValue => {
+            ir_rust_proto::instance_method_metadata::ReferenceQualification::RValue => {
                 ReferenceQualification::RValue
             }
-            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::Unqualified => {
+            ir_rust_proto::instance_method_metadata::ReferenceQualification::Unqualified => {
                 ReferenceQualification::Unqualified
             }
-            _ => unreachable!(
-                "`ReferenceQualification` should have been validated by `ProtoToIr::validate`"
-            ),
         }
     }
 }
@@ -1381,12 +1682,12 @@ impl<'pb> ProtoToIr for InstanceMethodMetadataView<'pb> {
     type IrType = InstanceMethodMetadata;
 
     fn validate(self) -> Result<()> {
-        self.reference().validate()
+        self.reference().context("Unspecified ReferenceQualification")?.validate()
     }
 
     fn to_ir(self) -> InstanceMethodMetadata {
         InstanceMethodMetadata {
-            reference: self.reference().to_ir(),
+            reference: self.reference().unwrap().to_ir(),
             is_const: self.is_const(),
             is_virtual: self.is_virtual(),
         }
@@ -1441,8 +1742,7 @@ impl<'pb> ProtoToIr for FuncParamView<'pb> {
 
     fn validate(self) -> Result<()> {
         let _ = CcType::try_from(self.r#type())?;
-        self.identifier().validate()?;
-        self.unknown_attr_opt().into_option().validate()
+        self.identifier().validate()
     }
 
     fn to_ir(self) -> FuncParam<'pb> {
@@ -1484,7 +1784,7 @@ derive_debug_partialeq_eq_hash! {
         /// One notable example is `lifetimebound`, which we might expect to map
         /// to Rust lifetimes.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
+            self.proto.unknown_attr_opt()
         }
     }
 }
@@ -1506,26 +1806,18 @@ pub enum SafetyAnnotation {
     Unannotated,
 }
 
-impl ProtoToIr for ::ir_rust_proto::SafetyAnnotation {
+impl ProtoToIr for ir_rust_proto::SafetyAnnotation {
     type IrType = SafetyAnnotation;
 
     fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::SafetyAnnotation::DisableUnsafe
-            | ::ir_rust_proto::SafetyAnnotation::Unsafe
-            | ::ir_rust_proto::SafetyAnnotation::Unannotated => Ok(()),
-            _ => bail!("Unspecified SafetyAnnotation"),
-        }
+        Ok(())
     }
 
     fn to_ir(self) -> Self::IrType {
         match self {
-            ::ir_rust_proto::SafetyAnnotation::DisableUnsafe => SafetyAnnotation::DisableUnsafe,
-            ::ir_rust_proto::SafetyAnnotation::Unsafe => SafetyAnnotation::Unsafe,
-            ::ir_rust_proto::SafetyAnnotation::Unannotated => SafetyAnnotation::Unannotated,
-            _ => unreachable!(
-                "`SafetyAnnotation` should have been validated by `ProtoToIr::validate`"
-            ),
+            ir_rust_proto::SafetyAnnotation::DisableUnsafe => SafetyAnnotation::DisableUnsafe,
+            ir_rust_proto::SafetyAnnotation::Unsafe => SafetyAnnotation::Unsafe,
+            ir_rust_proto::SafetyAnnotation::Unannotated => SafetyAnnotation::Unannotated,
         }
     }
 }
@@ -1550,10 +1842,6 @@ impl<'pb> ProtoToIr for FuncView<'pb> {
     fn validate(self) -> Result<()> {
         self.cc_name().validate()?;
         self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.owning_target().validate()?;
-        self.mangled_name().validate()?;
-        self.doc_comment_opt().into_option().validate()?;
         let _ = CcType::try_from(self.return_type())?;
         for param in self.params().iter() {
             param.validate()?;
@@ -1561,36 +1849,28 @@ impl<'pb> ProtoToIr for FuncView<'pb> {
         for lifetime in self.lifetime_params().iter() {
             lifetime.validate()?;
         }
-        self.instance_method_metadata_opt().into_option().validate()?;
-        self.nodiscard_opt().into_option().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        self.unknown_attr_opt().into_option().validate()?;
-        self.safety_annotation().validate()?;
-        self.source_loc().validate()?;
-        for s in self.lifetime_inputs().iter() {
-            s.validate()?;
-        }
-        if let Some(sem) = self.semantic_opt().into_option() {
+        self.instance_method_metadata_opt().validate()?;
+        self.safety_annotation().context("Unspecified SafetyAnnotation")?.validate()?;
+        if let Some(sem) = self.semantic_opt() {
             let _ = MemberFuncSemantic::try_from(sem)?;
         }
-        self.inline_cpp_source_text_opt().into_option().validate()
+        Ok(())
     }
 
     fn to_ir(self) -> Func<'pb> {
         let cc_name = self.cc_name().to_ir();
         let rs_name = self.rs_name().to_ir();
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let owning_target = BazelLabel::from(self.owning_target());
         let return_type = CcType::try_from(self.return_type())
             .expect("`return_type` should have been validated by `FuncView::validate`");
         let params = self.params().iter().map(|p| p.to_ir()).collect();
         let lifetime_params = self.lifetime_params().iter().map(|l| l.to_ir()).collect();
-        let lifetime_inputs = self.lifetime_inputs().iter().map(|s| Rc::from(s.to_ir())).collect();
-        let semantic = self.semantic_opt().into_option().map(|s| {
+        let lifetime_inputs = self.lifetime_inputs().iter().map(Rc::from).collect();
+        let semantic = self.semantic_opt().map(|s| {
             MemberFuncSemantic::try_from(s)
                 .expect("`semantic` should have been validated by `FuncView::validate`")
         });
-        let inline_cpp_source_text =
-            self.inline_cpp_source_text_opt().into_option().to_ir().map(Rc::from);
+        let inline_cpp_source_text = self.inline_cpp_source_text_opt().map(Rc::from);
         Func {
             proto: self,
             cc_name,
@@ -1617,7 +1897,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
+            self.proto.unique_name()
         }
 
         pub fn owning_target(&self) -> &BazelLabel {
@@ -1625,11 +1905,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn mangled_name(&self) -> &'pb str {
-            self.proto.mangled_name().to_ir()
+            self.proto.mangled_name()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
+            self.proto.doc_comment_opt()
         }
 
         pub fn return_type(&self) -> &CcType {
@@ -1658,7 +1938,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn instance_method_metadata(&self) -> Option<InstanceMethodMetadata> {
-            self.proto.instance_method_metadata_opt().into_option().to_ir()
+            self.proto.instance_method_metadata_opt().to_ir()
         }
 
         pub fn is_extern_c(&self) -> bool {
@@ -1680,13 +1960,13 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
         /// string is used.
         pub fn nodiscard(&self) -> Option<&'pb str> {
-            self.proto.nodiscard_opt().into_option().to_ir()
+            self.proto.nodiscard_opt()
         }
 
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
+            self.proto.deprecated_opt()
         }
 
         /// A human-readable list of attributes that Crubit doesn't understand.
@@ -1695,11 +1975,11 @@ derive_debug_partialeq_eq_hash! {
         /// fairly significant ways, and in ways that may affect interop, we
         /// default-closed and do not expose functions with unknown attributes.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
+            self.proto.unknown_attr_opt()
         }
 
         pub fn call_conv(&self) -> Option<CcCallingConv> {
-            self.proto.call_conv_opt().into_option().to_ir()
+            self.proto.call_conv_opt().to_ir()
         }
 
 
@@ -1708,11 +1988,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn safety_annotation(&self) -> SafetyAnnotation {
-            self.proto.safety_annotation().to_ir()
+            self.proto.safety_annotation().unwrap().to_ir()
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
+            self.proto.source_loc()
         }
 
         pub fn id(&self) -> ItemId {
@@ -1725,7 +2005,7 @@ derive_debug_partialeq_eq_hash! {
         /// a member function, it will be a record type in C++, but might be an
         /// `ExistingRustType` if it was renamed.
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
         }
 
         /// If this function was declared as a `friend` inside of a record
@@ -1735,7 +2015,7 @@ derive_debug_partialeq_eq_hash! {
         /// The record pointed to by `ItemId` must then be ADL-visible in order to
         /// invoke this function.
         pub fn adl_enclosing_record(&self) -> Option<ItemId> {
-            self.proto.adl_enclosing_record_opt().into_option().map(|id| ItemId(id as usize))
+            self.proto.adl_enclosing_record_opt().map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -1834,26 +2114,18 @@ pub enum AccessSpecifier {
     Private,
 }
 
-impl ProtoToIr for ::ir_rust_proto::AccessSpecifier {
+impl ProtoToIr for ir_rust_proto::AccessSpecifier {
     type IrType = AccessSpecifier;
 
     fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::AccessSpecifier::Public
-            | ::ir_rust_proto::AccessSpecifier::Protected
-            | ::ir_rust_proto::AccessSpecifier::Private => Ok(()),
-            _ => bail!("Unspecified AccessSpecifier"),
-        }
+        Ok(())
     }
 
     fn to_ir(self) -> Self::IrType {
         match self {
-            ::ir_rust_proto::AccessSpecifier::Public => AccessSpecifier::Public,
-            ::ir_rust_proto::AccessSpecifier::Protected => AccessSpecifier::Protected,
-            ::ir_rust_proto::AccessSpecifier::Private => AccessSpecifier::Private,
-            _ => unreachable!(
-                "`AccessSpecifier` should have been validated by `ProtoToIr::validate`"
-            ),
+            ir_rust_proto::AccessSpecifier::Public => AccessSpecifier::Public,
+            ir_rust_proto::AccessSpecifier::Protected => AccessSpecifier::Protected,
+            ir_rust_proto::AccessSpecifier::Private => AccessSpecifier::Private,
         }
     }
 }
@@ -1869,22 +2141,15 @@ impl<'pb> ProtoToIr for StatusOrOptionalStringView<'pb> {
     type IrType = Result<Option<&'pb str>, String>;
 
     fn validate(self) -> Result<()> {
-        match self.result() {
-            ::ir_rust_proto::status_or_optional_string::ResultOneof::OkValue(val) => val.validate(),
-            ::ir_rust_proto::status_or_optional_string::ResultOneof::Err(err) => err.validate(),
-            _ => Ok(()),
-        }
+        Ok(())
     }
 
     fn to_ir(self) -> Result<Option<&'pb str>, String> {
-        match self.result() {
-            ::ir_rust_proto::status_or_optional_string::ResultOneof::OkValue(val) => {
-                let s = val.to_ir();
+        match self {
+            ir_rust_proto::StatusOrOptionalStringView::OkValue(s) => {
                 Ok((!s.is_empty()).then_some(s))
             }
-            ::ir_rust_proto::status_or_optional_string::ResultOneof::Err(err) => {
-                Err(err.to_ir().to_string())
-            }
+            ir_rust_proto::StatusOrOptionalStringView::Err(err) => Err(err.to_string()),
             _ => Ok(None),
         }
     }
@@ -1894,13 +2159,11 @@ impl<'pb> ProtoToIr for FieldView<'pb> {
     type IrType = Field<'pb>;
 
     fn validate(self) -> Result<()> {
-        self.rust_identifier_opt().into_option().validate()?;
-        self.cpp_identifier_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()?;
+        self.rust_identifier_opt().validate()?;
+        self.cpp_identifier_opt().validate()?;
         let _ = CcType::try_from(self.r#type())?;
-        self.access().validate()?;
-        self.unknown_attr().validate()?;
-        self.deprecated_opt().into_option().validate()
+        self.access().context("Unspecified AccessSpecifier")?.validate()?;
+        self.unknown_attr().validate()
     }
 
     fn to_ir(self) -> Field<'pb> {
@@ -1914,15 +2177,15 @@ impl<'pb> ProtoToIr for FieldView<'pb> {
 derive_debug_partialeq_eq_hash! {
     impl<'pb> Field<'pb> {
         pub fn rust_identifier(&self) -> Option<Identifier<'pb>> {
-            self.proto.rust_identifier_opt().into_option().to_ir()
+            self.proto.rust_identifier_opt().to_ir()
         }
 
         pub fn cpp_identifier(&self) -> Option<Identifier<'pb>> {
-            self.proto.cpp_identifier_opt().into_option().to_ir()
+            self.proto.cpp_identifier_opt().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
+            self.proto.doc_comment_opt()
         }
 
         pub fn type_(&self) -> &CcType {
@@ -1930,7 +2193,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn access(&self) -> AccessSpecifier {
-            self.proto.access().to_ir()
+            self.proto.access().unwrap().to_ir()
         }
 
         pub fn offset(&self) -> usize {
@@ -1965,7 +2228,7 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
+            self.proto.deprecated_opt()
         }
     }
 }
@@ -1988,32 +2251,23 @@ pub enum SpecialMemberFunc {
     Unavailable,
 }
 
-impl ProtoToIr for ::ir_rust_proto::SpecialMemberFunc {
+impl ProtoToIr for ir_rust_proto::SpecialMemberFunc {
     type IrType = SpecialMemberFunc;
 
     fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::SpecialMemberFunc::Trivial
-            | ::ir_rust_proto::SpecialMemberFunc::NontrivialMembers
-            | ::ir_rust_proto::SpecialMemberFunc::NontrivialUserDefined
-            | ::ir_rust_proto::SpecialMemberFunc::Unavailable => Ok(()),
-            _ => bail!("Unspecified SpecialMemberFunc"),
-        }
+        Ok(())
     }
 
     fn to_ir(self) -> Self::IrType {
         match self {
-            ::ir_rust_proto::SpecialMemberFunc::Trivial => SpecialMemberFunc::Trivial,
-            ::ir_rust_proto::SpecialMemberFunc::NontrivialMembers => {
+            ir_rust_proto::SpecialMemberFunc::Trivial => SpecialMemberFunc::Trivial,
+            ir_rust_proto::SpecialMemberFunc::NontrivialMembers => {
                 SpecialMemberFunc::NontrivialMembers
             }
-            ::ir_rust_proto::SpecialMemberFunc::NontrivialUserDefined => {
+            ir_rust_proto::SpecialMemberFunc::NontrivialUserDefined => {
                 SpecialMemberFunc::NontrivialUserDefined
             }
-            ::ir_rust_proto::SpecialMemberFunc::Unavailable => SpecialMemberFunc::Unavailable,
-            _ => unreachable!(
-                "`SpecialMemberFunc` should have been validated by `ProtoToIr::validate`"
-            ),
+            ir_rust_proto::SpecialMemberFunc::Unavailable => SpecialMemberFunc::Unavailable,
         }
     }
 }
@@ -2034,7 +2288,7 @@ impl<'pb> ProtoToIr for BaseClassView<'pb> {
     fn to_ir(self) -> BaseClass {
         BaseClass {
             base_record_id: ItemId(self.base_record_id() as usize),
-            offset: self.offset_opt().into_option(),
+            offset: self.offset_opt(),
         }
     }
 }
@@ -2062,15 +2316,13 @@ impl<'pb> ProtoToIr for IncompleteRecordView<'pb> {
     fn validate(self) -> Result<()> {
         self.cc_name().validate()?;
         self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.owning_target().validate()?;
-        let _ = RecordType::try_from(self.record_type())?;
-        self.unknown_attr_opt().into_option().validate()
+        let _ = RecordType::try_from(self.record_type().context("Unspecified RecordType")?)?;
+        Ok(())
     }
 
     fn to_ir(self) -> IncompleteRecord<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let record_type = RecordType::try_from(self.record_type())
+        let owning_target = BazelLabel::from(self.owning_target());
+        let record_type = RecordType::try_from(self.record_type().unwrap())
             .expect("`record_type` should have been validated by `IncompleteRecordView::validate`");
         IncompleteRecord { proto: self, owning_target, record_type }
     }
@@ -2087,7 +2339,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
+            self.proto.unique_name()
         }
 
         pub fn id(&self) -> ItemId {
@@ -2104,7 +2356,7 @@ derive_debug_partialeq_eq_hash! {
         /// fairly significant ways, and in ways that may affect interop, we
         /// default-closed and do not expose functions with unknown attributes.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
+            self.proto.unknown_attr_opt()
         }
 
         pub fn record_type(&self) -> RecordType {
@@ -2112,7 +2364,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -2155,24 +2407,18 @@ pub enum RecordType {
     Class,
 }
 
-impl ProtoToIr for ::ir_rust_proto::RecordType {
+impl ProtoToIr for ir_rust_proto::RecordType {
     type IrType = RecordType;
 
     fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::RecordType::Struct
-            | ::ir_rust_proto::RecordType::Union
-            | ::ir_rust_proto::RecordType::Class => Ok(()),
-            _ => bail!("Unspecified RecordType"),
-        }
+        Ok(())
     }
 
     fn to_ir(self) -> Self::IrType {
         match self {
-            ::ir_rust_proto::RecordType::Struct => RecordType::Struct,
-            ::ir_rust_proto::RecordType::Union => RecordType::Union,
-            ::ir_rust_proto::RecordType::Class => RecordType::Class,
-            _ => unreachable!("`RecordType` should have been validated by `ProtoToIr::validate`"),
+            ir_rust_proto::RecordType::Struct => RecordType::Struct,
+            ir_rust_proto::RecordType::Union => RecordType::Union,
+            ir_rust_proto::RecordType::Class => RecordType::Class,
         }
     }
 }
@@ -2314,26 +2560,18 @@ pub enum TraitImplPolarity {
     Positive,
 }
 
-impl ProtoToIr for ::ir_rust_proto::TraitImplPolarity {
+impl ProtoToIr for ir_rust_proto::TraitImplPolarity {
     type IrType = TraitImplPolarity;
 
     fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::TraitImplPolarity::Negative
-            | ::ir_rust_proto::TraitImplPolarity::None
-            | ::ir_rust_proto::TraitImplPolarity::Positive => Ok(()),
-            _ => bail!("Unspecified TraitImplPolarity"),
-        }
+        Ok(())
     }
 
     fn to_ir(self) -> Self::IrType {
         match self {
-            ::ir_rust_proto::TraitImplPolarity::Negative => TraitImplPolarity::Negative,
-            ::ir_rust_proto::TraitImplPolarity::None => TraitImplPolarity::None,
-            ::ir_rust_proto::TraitImplPolarity::Positive => TraitImplPolarity::Positive,
-            _ => unreachable!(
-                "`TraitImplPolarity` should have been validated by `ProtoToIr::validate`"
-            ),
+            ir_rust_proto::TraitImplPolarity::Negative => TraitImplPolarity::Negative,
+            ir_rust_proto::TraitImplPolarity::None => TraitImplPolarity::None,
+            ir_rust_proto::TraitImplPolarity::Positive => TraitImplPolarity::Positive,
         }
     }
 }
@@ -2353,29 +2591,26 @@ pub struct TraitDerives<'pb> {
     pub custom: Vec<&'pb str>,
 }
 
-impl<'pb> ProtoToIr for ::ir_rust_proto::TraitDerivesView<'pb> {
+impl<'pb> ProtoToIr for ir_rust_proto::TraitDerivesView<'pb> {
     type IrType = TraitDerives<'pb>;
 
     fn validate(self) -> Result<()> {
-        self.clone().validate()?;
-        self.copy().validate()?;
-        self.debug().validate()?;
-        self.send_polarity().validate()?;
-        self.sync_polarity().validate()?;
-        for c in self.custom().iter() {
-            c.validate()?;
-        }
+        self.clone().context("Unspecified TraitImplPolarity")?.validate()?;
+        self.copy().context("Unspecified TraitImplPolarity")?.validate()?;
+        self.debug().context("Unspecified TraitImplPolarity")?.validate()?;
+        self.send_polarity().context("Unspecified TraitImplPolarity")?.validate()?;
+        self.sync_polarity().context("Unspecified TraitImplPolarity")?.validate()?;
         Ok(())
     }
 
     fn to_ir(self) -> TraitDerives<'pb> {
         TraitDerives {
-            clone: self.clone().to_ir(),
-            copy: self.copy().to_ir(),
-            debug: self.debug().to_ir(),
-            send: self.send_polarity().to_ir(),
-            sync: self.sync_polarity().to_ir(),
-            custom: self.custom().iter().map(|s| s.to_ir()).collect(),
+            clone: self.clone().unwrap().to_ir(),
+            copy: self.copy().unwrap().to_ir(),
+            debug: self.debug().unwrap().to_ir(),
+            send: self.send_polarity().unwrap().to_ir(),
+            sync: self.sync_polarity().unwrap().to_ir(),
+            custom: self.custom().iter().collect(),
         }
     }
 }
@@ -2389,8 +2624,7 @@ impl<'pb> ProtoToIr for OwnedPtrConfigView<'pb> {
     type IrType = OwnedPtrConfig<'pb>;
 
     fn validate(self) -> Result<()> {
-        self.owned_ptr_type().validate()?;
-        self.drop_impl().validate()
+        Ok(())
     }
 
     fn to_ir(self) -> OwnedPtrConfig<'pb> {
@@ -2401,11 +2635,11 @@ impl<'pb> ProtoToIr for OwnedPtrConfigView<'pb> {
 derive_debug_partialeq_eq_hash! {
     impl<'pb> OwnedPtrConfig<'pb> {
         pub fn owned_ptr_type(&self) -> &'pb str {
-            self.proto.owned_ptr_type().to_ir()
+            self.proto.owned_ptr_type()
         }
 
         pub fn drop_impl(&self) -> &'pb str {
-            self.proto.drop_impl().to_ir()
+            self.proto.drop_impl()
         }
     }
 }
@@ -2431,19 +2665,13 @@ impl<'pb> ProtoToIr for RecordView<'pb> {
     fn validate(self) -> Result<()> {
         self.rs_name().validate()?;
         self.cc_name().validate()?;
-        self.unique_name().validate()?;
-        self.mangled_cc_name().validate()?;
-        self.owning_target().validate()?;
-        if let Some(ts) = self.template_specialization_opt().into_option() {
+        if let Some(ts) = self.template_specialization_opt() {
             let _ = TemplateSpecialization::try_from(ts)?;
         }
-        self.unknown_attr_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()?;
-        if let Some(bt) = self.bridge_type_opt().into_option() {
+        if let Some(bt) = self.bridge_type_opt() {
             let _ = BridgeType::try_from(bt)?;
         }
-        self.owned_ptr_config_opt().into_option().validate()?;
-        self.source_loc().validate()?;
+        self.owned_ptr_config_opt().validate()?;
         for base in self.unambiguous_public_bases().iter() {
             base.validate()?;
         }
@@ -2454,16 +2682,11 @@ impl<'pb> ProtoToIr for RecordView<'pb> {
             lp.validate()?;
         }
         self.trait_derives().validate()?;
-        self.safety_annotation().validate()?;
-        self.copy_constructor().validate()?;
-        self.move_constructor().validate()?;
-        self.destructor().validate()?;
-        self.nodiscard_opt().into_option().validate()?;
-        self.record_type().validate()?;
-        for li in self.lifetime_inputs().iter() {
-            li.validate()?;
-        }
-        self.deprecated_opt().into_option().validate()?;
+        self.safety_annotation().context("Unspecified SafetyAnnotation")?.validate()?;
+        self.copy_constructor().context("Unspecified SpecialMemberFunc")?.validate()?;
+        self.move_constructor().context("Unspecified SpecialMemberFunc")?.validate()?;
+        self.destructor().context("Unspecified SpecialMemberFunc")?.validate()?;
+        self.record_type().context("Unspecified RecordType")?.validate()?;
         for child in self.children().iter() {
             let _ = Item::try_from(child)?;
         }
@@ -2472,13 +2695,13 @@ impl<'pb> ProtoToIr for RecordView<'pb> {
 
     fn to_ir(self) -> Record<'pb> {
         let rs_name = self.rs_name().to_ir();
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let template_specialization = self.template_specialization_opt().into_option().map(|ts| {
+        let owning_target = BazelLabel::from(self.owning_target());
+        let template_specialization = self.template_specialization_opt().map(|ts| {
             TemplateSpecialization::try_from(ts).expect(
                 "`template_specialization` should have been validated by `RecordView::validate`",
             )
         });
-        let bridge_type = self.bridge_type_opt().into_option().map(|bt| {
+        let bridge_type = self.bridge_type_opt().map(|bt| {
             BridgeType::try_from(bt)
                 .expect("`bridge_type` should have been validated by `RecordView::validate`")
         });
@@ -2487,7 +2710,7 @@ impl<'pb> ProtoToIr for RecordView<'pb> {
         let fields = self.fields().iter().map(|f| f.to_ir()).collect();
         let lifetime_params = self.lifetime_params().iter().map(|lp| lp.to_ir()).collect();
         let trait_derives = self.trait_derives().to_ir();
-        let lifetime_inputs = self.lifetime_inputs().iter().map(|s| Rc::from(s.to_ir())).collect();
+        let lifetime_inputs = self.lifetime_inputs().iter().map(Rc::from).collect();
         let children = self
             .children()
             .iter()
@@ -2528,14 +2751,14 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
+            self.proto.unique_name()
         }
 
         /// Mangled record names are used to 1) provide valid Rust identifiers for
         /// C++ template specializations, and 2) help build unique names for virtual
         /// upcast thunks.
         pub fn mangled_cc_name(&self) -> &'pb str {
-            self.proto.mangled_cc_name().to_ir()
+            self.proto.mangled_cc_name()
         }
 
         pub fn id(&self) -> ItemId {
@@ -2556,11 +2779,11 @@ derive_debug_partialeq_eq_hash! {
         /// fairly significant ways, and in ways that may affect interop, we
         /// default-closed and do not expose functions with unknown attributes.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
+            self.proto.unknown_attr_opt()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
+            self.proto.doc_comment_opt()
         }
 
         pub fn bridge_type(&self) -> Option<&BridgeType<'pb>> {
@@ -2568,11 +2791,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn owned_ptr_config(&self) -> Option<OwnedPtrConfig<'pb>> {
-            self.proto.owned_ptr_config_opt().into_option().to_ir()
+            self.proto.owned_ptr_config_opt().to_ir()
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
+            self.proto.source_loc()
         }
 
         pub fn unambiguous_public_bases(&self) -> &[BaseClass] {
@@ -2608,23 +2831,23 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn pack(&self) -> Option<usize> {
-            self.proto.pack_opt().into_option().map(|x| x as usize)
+            self.proto.pack_opt().map(|x| x as usize)
         }
 
         pub fn safety_annotation(&self) -> SafetyAnnotation {
-            self.proto.safety_annotation().to_ir()
+            self.proto.safety_annotation().unwrap().to_ir()
         }
 
         pub fn copy_constructor(&self) -> SpecialMemberFunc {
-            self.proto.copy_constructor().to_ir()
+            self.proto.copy_constructor().unwrap().to_ir()
         }
 
         pub fn move_constructor(&self) -> SpecialMemberFunc {
-            self.proto.move_constructor().to_ir()
+            self.proto.move_constructor().unwrap().to_ir()
         }
 
         pub fn destructor(&self) -> SpecialMemberFunc {
-            self.proto.destructor().to_ir()
+            self.proto.destructor().unwrap().to_ir()
         }
 
         pub fn is_rust_movable(&self) -> bool {
@@ -2642,11 +2865,11 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
         /// string is used.
         pub fn nodiscard(&self) -> Option<&'pb str> {
-            self.proto.nodiscard_opt().into_option().to_ir()
+            self.proto.nodiscard_opt()
         }
 
         pub fn record_type(&self) -> RecordType {
-            self.proto.record_type().to_ir()
+            self.proto.record_type().unwrap().to_ir()
         }
 
         pub fn is_aggregate(&self) -> bool {
@@ -2658,7 +2881,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -2700,7 +2923,7 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
+            self.proto.deprecated_opt()
         }
 
         /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
@@ -2917,31 +3140,26 @@ impl<'pb> ProtoToIr for ConstantView<'pb> {
     fn validate(self) -> Result<()> {
         self.cc_name().validate()?;
         self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.owning_target().validate()?;
-        self.source_loc().validate()?;
         match self.kind() {
-            ::ir_rust_proto::constant::KindOneof::Value(value) => {
+            ir_rust_proto::constant::KindView::Value(value) => {
                 value.validate()?;
                 let _ = CcType::try_from(self.r#type())?;
             }
-            ::ir_rust_proto::constant::KindOneof::ArrayValue(array_value) => {
+            ir_rust_proto::constant::KindView::ArrayValue(array_value) => {
                 array_value.validate()?;
                 let _ = CcType::try_from(self.r#type())?;
             }
-            ::ir_rust_proto::constant::KindOneof::StringViewValue(_) => {
+            ir_rust_proto::constant::KindView::StringViewValue(_) => {
                 ensure!(!self.has_type(), "StringViewValue Constant should not have a CcType");
             }
-            _ => bail!("unmapped Constant KindOneof: {:?}", self.kind()),
+            _ => bail!("unmapped Constant KindView: {:?}", self.kind()),
         }
-        self.unknown_attr_opt().into_option().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()
+        Ok(())
     }
 
     fn to_ir(self) -> Constant<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let type_ = self.r#type_opt().into_option().map(|t| {
+        let owning_target = BazelLabel::from(self.owning_target());
+        let type_ = self.r#type_opt().map(|t| {
             CcType::try_from(t)
                 .expect("`type` should have been validated by `ConstantView::validate`")
         });
@@ -2953,13 +3171,13 @@ derive_debug_partialeq_eq_hash! {
     impl<'pb> Constant<'pb> {
         pub fn value(&self) -> ConstantValue<'pb> {
             match self.proto.kind() {
-                ::ir_rust_proto::constant::KindOneof::Value(value) => {
+                ir_rust_proto::constant::KindView::Value(value) => {
                     ConstantValue::Integer(value.to_ir())
                 }
-                ::ir_rust_proto::constant::KindOneof::ArrayValue(array_value) => {
+                ir_rust_proto::constant::KindView::ArrayValue(array_value) => {
                     ConstantValue::Array(array_value.to_ir())
                 }
-                ::ir_rust_proto::constant::KindOneof::StringViewValue(bytes) => {
+                ir_rust_proto::constant::KindView::StringViewValue(bytes) => {
                     ConstantValue::StringView(bytes)
                 }
                 _ => unreachable!("`kind` should have been validated by `ConstantView::validate`"),
@@ -2975,7 +3193,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
+            self.proto.unique_name()
         }
 
         pub fn id(&self) -> ItemId {
@@ -2987,15 +3205,15 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
+            self.proto.source_loc()
         }
 
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
+            self.proto.unknown_attr_opt()
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
         }
 
         pub fn type_(&self) -> Option<&CcType> {
@@ -3009,11 +3227,11 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
+            self.proto.deprecated_opt()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
+            self.proto.doc_comment_opt()
         }
     }
 }
@@ -3058,18 +3276,12 @@ impl<'pb> ProtoToIr for GlobalVarView<'pb> {
     fn validate(self) -> Result<()> {
         self.cc_name().validate()?;
         self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.owning_target().validate()?;
-        self.source_loc().validate()?;
-        self.unknown_attr_opt().into_option().validate()?;
-        self.mangled_name_opt().into_option().validate()?;
         let _ = CcType::try_from(self.r#type())?;
-        self.deprecated_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()
+        Ok(())
     }
 
     fn to_ir(self) -> GlobalVar<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let owning_target = BazelLabel::from(self.owning_target());
         let type_ = CcType::try_from(self.r#type())
             .expect("`type` should have been validated by `GlobalVarView::validate`");
         GlobalVar { proto: self, owning_target, type_ }
@@ -3087,7 +3299,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
+            self.proto.unique_name()
         }
 
         pub fn id(&self) -> ItemId {
@@ -3099,20 +3311,20 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
+            self.proto.source_loc()
         }
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
+            self.proto.unknown_attr_opt()
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
         }
 
         pub fn mangled_name(&self) -> Option<&'pb str> {
-            self.proto.mangled_name_opt().into_option().to_ir()
+            self.proto.mangled_name_opt()
         }
 
         pub fn type_(&self) -> &CcType {
@@ -3126,11 +3338,11 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
+            self.proto.deprecated_opt()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
+            self.proto.doc_comment_opt()
         }
     }
 }
@@ -3176,24 +3388,17 @@ impl<'pb> ProtoToIr for EnumView<'pb> {
     fn validate(self) -> Result<()> {
         self.cc_name().validate()?;
         self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.mangled_cc_name().validate()?;
-        self.owning_target().validate()?;
-        self.source_loc().validate()?;
         let _ = CcType::try_from(self.underlying_type())?;
         if !self.is_incomplete() {
             for enumerator in self.enumerators().iter() {
                 enumerator.validate()?;
             }
         }
-        self.unknown_attr_opt().into_option().validate()?;
-        self.nodiscard_opt().into_option().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()
+        Ok(())
     }
 
     fn to_ir(self) -> Enum<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let owning_target = BazelLabel::from(self.owning_target());
         let underlying_type = CcType::try_from(self.underlying_type())
             .expect("`underlying_type` should have been validated by `EnumView::validate`");
         let enumerators =
@@ -3213,11 +3418,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
+            self.proto.unique_name()
         }
 
         pub fn mangled_cc_name(&self) -> &'pb str {
-            self.proto.mangled_cc_name().to_ir()
+            self.proto.mangled_cc_name()
         }
 
         pub fn id(&self) -> ItemId {
@@ -3229,7 +3434,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
+            self.proto.source_loc()
         }
 
         pub fn underlying_type(&self) -> &CcType {
@@ -3247,11 +3452,11 @@ derive_debug_partialeq_eq_hash! {
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
+            self.proto.unknown_attr_opt()
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -3265,17 +3470,17 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
         /// string is used.
         pub fn nodiscard(&self) -> Option<&'pb str> {
-            self.proto.nodiscard_opt().into_option().to_ir()
+            self.proto.nodiscard_opt()
         }
 
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
+            self.proto.deprecated_opt()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
+            self.proto.doc_comment_opt()
         }
     }
 }
@@ -3317,10 +3522,7 @@ impl<'pb> ProtoToIr for EnumeratorView<'pb> {
 
     fn validate(self) -> Result<()> {
         self.identifier().validate()?;
-        self.value().validate()?;
-        self.unknown_attr_opt().into_option().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()
+        self.value().validate()
     }
 
     fn to_ir(self) -> Enumerator<'pb> {
@@ -3340,17 +3542,17 @@ derive_debug_partialeq_eq_hash! {
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
+            self.proto.unknown_attr_opt()
         }
 
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
+            self.proto.deprecated_opt()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
+            self.proto.doc_comment_opt()
         }
     }
 }
@@ -3370,24 +3572,15 @@ impl<'pb> ProtoToIr for TypeAliasView<'pb> {
     fn validate(self) -> Result<()> {
         self.cc_name().validate()?;
         self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.owning_target().validate()?;
-        self.doc_comment_opt().into_option().validate()?;
-        self.unknown_attr_opt().into_option().validate()?;
         let _ = CcType::try_from(self.underlying_type())?;
-        self.source_loc().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        for lifetime in self.lifetime_inputs().iter() {
-            lifetime.validate()?;
-        }
         Ok(())
     }
 
     fn to_ir(self) -> TypeAlias<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let owning_target = BazelLabel::from(self.owning_target());
         let underlying_type = CcType::try_from(self.underlying_type())
             .expect("`underlying_type` should have been validated by `TypeAliasView::validate`");
-        let lifetime_inputs = self.lifetime_inputs().iter().map(|p| Rc::from(p.to_ir())).collect();
+        let lifetime_inputs = self.lifetime_inputs().iter().map(Rc::from).collect();
         TypeAlias { proto: self, owning_target, underlying_type, lifetime_inputs }
     }
 }
@@ -3403,7 +3596,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
+            self.proto.unique_name()
         }
 
         pub fn id(&self) -> ItemId {
@@ -3415,12 +3608,12 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
+            self.proto.doc_comment_opt()
         }
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
+            self.proto.unknown_attr_opt()
         }
 
         pub fn underlying_type(&self) -> &CcType {
@@ -3428,11 +3621,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
+            self.proto.source_loc()
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -3442,7 +3635,7 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
+            self.proto.deprecated_opt()
         }
 
         pub fn lifetime_inputs(&self) -> &[Rc<str>] {
@@ -3500,19 +3693,15 @@ pub struct FormattedError {
     pub message: Rc<str>,
 }
 
-impl<'pb> ProtoToIr for ::ir_rust_proto::FormattedErrorView<'pb> {
+impl<'pb> ProtoToIr for ir_rust_proto::FormattedErrorView<'pb> {
     type IrType = FormattedError;
 
     fn validate(self) -> Result<()> {
-        self.fmt().validate()?;
-        self.message().validate()
+        Ok(())
     }
 
     fn to_ir(self) -> FormattedError {
-        FormattedError {
-            fmt: Rc::from(self.fmt().to_ir()),
-            message: Rc::from(self.message().to_ir()),
-        }
+        FormattedError { fmt: Rc::from(self.fmt()), message: Rc::from(self.message()) }
     }
 }
 
@@ -3534,42 +3723,25 @@ pub enum UnsupportedItemKind {
     Other,
 }
 
-impl ProtoToIr for ::ir_rust_proto::unsupported_item::Kind {
+impl ProtoToIr for ir_rust_proto::unsupported_item::Kind {
     type IrType = UnsupportedItemKind;
 
     fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::unsupported_item::Kind::Func
-            | ::ir_rust_proto::unsupported_item::Kind::GlobalVar
-            | ::ir_rust_proto::unsupported_item::Kind::Struct
-            | ::ir_rust_proto::unsupported_item::Kind::Union
-            | ::ir_rust_proto::unsupported_item::Kind::Class
-            | ::ir_rust_proto::unsupported_item::Kind::Enum
-            | ::ir_rust_proto::unsupported_item::Kind::TypeAlias
-            | ::ir_rust_proto::unsupported_item::Kind::Namespace
-            | ::ir_rust_proto::unsupported_item::Kind::Constructor
-            | ::ir_rust_proto::unsupported_item::Kind::Other => Ok(()),
-            _ => bail!("Unspecified UnsupportedItemKind"),
-        }
+        Ok(())
     }
 
     fn to_ir(self) -> Self::IrType {
         match self {
-            ::ir_rust_proto::unsupported_item::Kind::Func => UnsupportedItemKind::Func,
-            ::ir_rust_proto::unsupported_item::Kind::GlobalVar => UnsupportedItemKind::GlobalVar,
-            ::ir_rust_proto::unsupported_item::Kind::Struct => UnsupportedItemKind::Struct,
-            ::ir_rust_proto::unsupported_item::Kind::Union => UnsupportedItemKind::Union,
-            ::ir_rust_proto::unsupported_item::Kind::Class => UnsupportedItemKind::Class,
-            ::ir_rust_proto::unsupported_item::Kind::Enum => UnsupportedItemKind::Enum,
-            ::ir_rust_proto::unsupported_item::Kind::TypeAlias => UnsupportedItemKind::TypeAlias,
-            ::ir_rust_proto::unsupported_item::Kind::Namespace => UnsupportedItemKind::Namespace,
-            ::ir_rust_proto::unsupported_item::Kind::Constructor => {
-                UnsupportedItemKind::Constructor
-            }
-            ::ir_rust_proto::unsupported_item::Kind::Other => UnsupportedItemKind::Other,
-            _ => unreachable!(
-                "`UnsupportedItemKind` should have been validated by `ProtoToIr::validate`"
-            ),
+            ir_rust_proto::unsupported_item::Kind::Func => UnsupportedItemKind::Func,
+            ir_rust_proto::unsupported_item::Kind::GlobalVar => UnsupportedItemKind::GlobalVar,
+            ir_rust_proto::unsupported_item::Kind::Struct => UnsupportedItemKind::Struct,
+            ir_rust_proto::unsupported_item::Kind::Union => UnsupportedItemKind::Union,
+            ir_rust_proto::unsupported_item::Kind::Class => UnsupportedItemKind::Class,
+            ir_rust_proto::unsupported_item::Kind::Enum => UnsupportedItemKind::Enum,
+            ir_rust_proto::unsupported_item::Kind::TypeAlias => UnsupportedItemKind::TypeAlias,
+            ir_rust_proto::unsupported_item::Kind::Namespace => UnsupportedItemKind::Namespace,
+            ir_rust_proto::unsupported_item::Kind::Constructor => UnsupportedItemKind::Constructor,
+            ir_rust_proto::unsupported_item::Kind::Other => UnsupportedItemKind::Other,
         }
     }
 }
@@ -3613,7 +3785,7 @@ impl<'pb> UnsupportedItemPath<'pb> {
     }
 }
 
-impl<'pb> ProtoToIr for ::ir_rust_proto::unsupported_item::PathView<'pb> {
+impl<'pb> ProtoToIr for ir_rust_proto::unsupported_item::PathView<'pb> {
     type IrType = UnsupportedItemPath<'pb>;
 
     fn validate(self) -> Result<()> {
@@ -3623,10 +3795,7 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::unsupported_item::PathView<'pb> {
     fn to_ir(self) -> UnsupportedItemPath<'pb> {
         UnsupportedItemPath {
             ident: self.ident().to_ir(),
-            enclosing_item_id: self
-                .enclosing_item_id_opt()
-                .into_option()
-                .map(|id| ItemId(id as usize)),
+            enclosing_item_id: self.enclosing_item_id_opt().map(|id| ItemId(id as usize)),
         }
     }
 }
@@ -3645,37 +3814,31 @@ pub struct UnsupportedItem<'pb> {
     pub(crate) inline_cpp_source_text: Option<Rc<str>>,
 }
 
-impl<'pb> ProtoToIr for ::ir_rust_proto::UnsupportedItemView<'pb> {
+impl<'pb> ProtoToIr for ir_rust_proto::UnsupportedItemView<'pb> {
     type IrType = UnsupportedItem<'pb>;
 
     fn validate(self) -> Result<()> {
-        self.name().validate()?;
-        self.unique_name_opt().into_option().validate()?;
-        self.kind().validate()?;
-        if let Some(path) = self.path_opt().into_option() {
+        self.kind().context("Unspecified UnsupportedItemKind")?.validate()?;
+        if let Some(path) = self.path_opt() {
             path.validate()?;
         }
         for e in self.errors().iter() {
             e.validate()?;
         }
-        self.source_loc_opt().into_option().validate()?;
-        self.defining_target_opt().into_option().validate()?;
-        self.inline_cpp_source_text_opt().into_option().validate()
+        Ok(())
     }
 
     fn to_ir(self) -> UnsupportedItem<'pb> {
-        let name = Rc::from(self.name().to_ir());
-        let unique_name = self.unique_name_opt().into_option().to_ir();
-        let kind = self.kind().to_ir();
-        let path = self.path_opt().into_option().map(|p| p.to_ir());
+        let name = Rc::from(self.name());
+        let unique_name = self.unique_name_opt();
+        let kind = self.kind().unwrap().to_ir();
+        let path = self.path_opt().map(|p| p.to_ir());
         let errors = self.errors().iter().map(|e| Rc::new(e.to_ir())).collect();
-        let source_loc = self.source_loc_opt().into_option().to_ir();
+        let source_loc = self.source_loc_opt();
         let id = ItemId(self.id() as usize);
         let must_bind = self.must_bind();
-        let defining_target =
-            self.defining_target_opt().into_option().to_ir().map(BazelLabel::from);
-        let inline_cpp_source_text =
-            self.inline_cpp_source_text_opt().into_option().to_ir().map(Rc::from);
+        let defining_target = self.defining_target_opt().map(BazelLabel::from);
+        let inline_cpp_source_text = self.inline_cpp_source_text_opt().map(Rc::from);
 
         UnsupportedItem {
             name,
@@ -3810,7 +3973,7 @@ impl<'pb> ProtoToIr for CommentView<'pb> {
     type IrType = Comment<'pb>;
 
     fn validate(self) -> Result<()> {
-        self.text().validate()
+        Ok(())
     }
 
     fn to_ir(self) -> Comment<'pb> {
@@ -3821,7 +3984,7 @@ impl<'pb> ProtoToIr for CommentView<'pb> {
 derive_debug_partialeq_eq_hash! {
     impl<'pb> Comment<'pb> {
         pub fn text(&self) -> &'pb str {
-            self.proto.text().to_ir()
+            self.proto.text()
         }
 
         pub fn id(&self) -> ItemId {
@@ -3871,11 +4034,6 @@ impl<'pb> ProtoToIr for NamespaceView<'pb> {
     fn validate(self) -> Result<()> {
         self.cc_name().validate()?;
         self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.unknown_attr_opt().into_option().validate()?;
-        self.owning_target().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()?;
         for child in self.children().iter() {
             let _ = Item::try_from(child)?;
         }
@@ -3883,7 +4041,7 @@ impl<'pb> ProtoToIr for NamespaceView<'pb> {
     }
 
     fn to_ir(self) -> Namespace<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let owning_target = BazelLabel::from(self.owning_target());
         let children = self
             .children()
             .iter()
@@ -3907,7 +4065,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
+            self.proto.unique_name()
         }
 
         pub fn id(&self) -> ItemId {
@@ -3920,7 +4078,7 @@ derive_debug_partialeq_eq_hash! {
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
+            self.proto.unknown_attr_opt()
         }
 
         pub fn owning_target(&self) -> &BazelLabel {
@@ -3928,7 +4086,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
         }
 
         pub fn is_inline(&self) -> bool {
@@ -3940,11 +4098,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
+            self.proto.deprecated_opt()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
+            self.proto.doc_comment_opt()
         }
 
         pub fn children(&self) -> &[Item<'pb>] {
@@ -3999,7 +4157,6 @@ impl<'pb> ProtoToIr for UseModView<'pb> {
     type IrType = UseMod<'pb>;
 
     fn validate(self) -> Result<()> {
-        self.path().validate()?;
         self.mod_name().validate()
     }
 
@@ -4011,7 +4168,7 @@ impl<'pb> ProtoToIr for UseModView<'pb> {
 derive_debug_partialeq_eq_hash! {
     impl<'pb> UseMod<'pb> {
         pub fn path(&self) -> &'pb str {
-            self.proto.path().to_ir()
+            self.proto.path()
         }
 
         pub fn mod_name(&self) -> Identifier<'pb> {
@@ -4068,19 +4225,14 @@ impl<'pb> ProtoToIr for ExistingRustTypeView<'pb> {
     type IrType = ExistingRustType<'pb>;
 
     fn validate(self) -> Result<()> {
-        self.rs_name().validate()?;
-        self.cc_name().validate()?;
-        self.unique_name().validate()?;
         for template_arg in self.template_args().iter() {
             let _ = TemplateArg::try_from(template_arg)?;
         }
-        self.owning_target().validate()?;
-        self.size_align_opt().into_option().validate()?;
-        self.label_hint_opt().into_option().validate()
+        self.size_align_opt().validate()
     }
 
     fn to_ir(self) -> ExistingRustType<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let owning_target = BazelLabel::from(self.owning_target());
         let template_args = self
             .template_args()
             .iter()
@@ -4090,7 +4242,7 @@ impl<'pb> ProtoToIr for ExistingRustTypeView<'pb> {
                 )
             })
             .collect();
-        let label_hint = self.label_hint_opt().into_option().to_ir();
+        let label_hint = self.label_hint_opt();
         ExistingRustType { proto: self, template_args, owning_target, label_hint }
     }
 }
@@ -4101,15 +4253,15 @@ derive_debug_partialeq_eq_hash! {
         /// Note that it may contain interpolated type parameters, like `RustType<{T}>`.
         /// This means that it's incorrect to directly parse as an Ident.
         pub fn rs_name(&self) -> &'pb str {
-            self.proto.rs_name().to_ir()
+            self.proto.rs_name()
         }
 
         pub fn cc_name(&self) -> &'pb str {
-            self.proto.cc_name().to_ir()
+            self.proto.cc_name()
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
+            self.proto.unique_name()
         }
 
         /// The template arguments on this instance of the type instantiation (empty is no template
@@ -4123,7 +4275,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn size_align(&self) -> Option<SizeAlign> {
-            self.proto.size_align_opt().into_option().to_ir()
+            self.proto.size_align_opt().to_ir()
         }
 
         pub fn is_same_abi(&self) -> bool {
@@ -4503,7 +4655,7 @@ impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<ExistingRustType<'pb>> {
 
 #[derive(PartialEq, Eq, Clone)]
 pub struct TreeIR<'pb> {
-    pub public_headers: Vec<HeaderName<'pb>>,
+    pub public_headers: Vec<HeaderName>,
     pub current_target: BazelLabel,
     pub crate_root_path: Option<Rc<str>>,
     pub crubit_features: BTreeMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
@@ -4614,7 +4766,7 @@ impl<'pb> IR<'pb> {
         &self.tree_ir.reexported_namespaces
     }
 
-    pub fn public_headers(&self) -> impl Iterator<Item = &HeaderName<'pb>> {
+    pub fn public_headers(&self) -> impl Iterator<Item = &HeaderName> {
         self.tree_ir.public_headers.iter()
     }
 
@@ -4798,14 +4950,14 @@ mod tests {
 
     #[gtest]
     fn test_identifier_debug_print() {
-        let proto = protobuf::proto!(ir_rust_proto::Identifier { identifier: "hello" });
+        let proto = crate::proto!(ir_rust_proto::Identifier { identifier: "hello" });
         let identifier = Identifier::try_from(proto.as_view()).unwrap();
         assert_eq!(format!("{identifier:?}"), "\"hello\"");
     }
 
     #[gtest]
     fn test_unqualified_identifier_debug_print() {
-        let proto = protobuf::proto!(ir_rust_proto::Identifier { identifier: "hello" });
+        let proto = crate::proto!(ir_rust_proto::Identifier { identifier: "hello" });
         let identifier = Identifier::try_from(proto.as_view()).unwrap();
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Identifier(identifier)), "\"hello\"");
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Constructor), "Constructor");
@@ -4814,13 +4966,13 @@ mod tests {
 
     #[gtest]
     fn test_used_headers() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = crate::proto!(IRProto {
             public_headers: [__ { name: "foo/bar.h" }],
             current_target: "//foo:bar",
         });
         let ir = proto_to_ir(proto.as_view()).unwrap();
         let expected = TreeIR {
-            public_headers: vec![HeaderName { name: "foo/bar.h" }],
+            public_headers: vec![HeaderName::from_str("foo/bar.h")],
             current_target: "//foo:bar".into(),
             crate_root_path: None,
             crubit_features: Default::default(),
@@ -4834,14 +4986,14 @@ mod tests {
 
     #[gtest]
     fn test_empty_crate_root_path() {
-        let proto = protobuf::proto!(IRProto { current_target: "//foo:bar" });
+        let proto = crate::proto!(IRProto { current_target: "//foo:bar" });
         let ir = proto_to_ir(proto.as_view()).unwrap();
         assert_eq!(ir.crate_root_path(), None);
     }
 
     #[gtest]
     fn test_crate_root_path() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = crate::proto!(IRProto {
             crate_root_path: "__cc_template_instantiations_rs_api",
             current_target: "//foo:bar",
         });
@@ -4983,39 +5135,37 @@ mod tests {
 
     #[gtest]
     fn test_make_ir_happy_path() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = crate::proto!(IRProto {
             current_target: "//foo:bar",
             top_level_items: [(
                 "//foo:bar",
-                __ {
-                    items: [__ {
-                        namespace_decl: __ {
-                            cc_name: __ { identifier: "nsA" },
-                            rs_name: __ { identifier: "nsA" },
-                            unique_name: "nsA",
-                            id: 1,
-                            canonical_namespace_id: 1,
-                            owning_target: "//foo:bar",
-                            is_inline: false,
-                            must_bind: false,
-                            children: [__ {
-                                namespace_decl: __ {
-                                    cc_name: __ { identifier: "nsB" },
-                                    rs_name: __ { identifier: "nsB" },
-                                    unique_name: "nsB",
-                                    id: 2,
-                                    canonical_namespace_id: 2,
-                                    owning_target: "//foo:bar",
-                                    is_inline: false,
-                                    must_bind: false,
-                                    children: [__ {
-                                        comment: __ { text: "hello", id: 3, must_bind: false }
-                                    }]
-                                }
-                            }]
-                        }
-                    }]
-                }
+                [__ {
+                    namespace_decl: __ {
+                        cc_name: __ { identifier: "nsA" },
+                        rs_name: __ { identifier: "nsA" },
+                        unique_name: "nsA",
+                        id: 1u64,
+                        canonical_namespace_id: 1u64,
+                        owning_target: "//foo:bar",
+                        is_inline: false,
+                        must_bind: false,
+                        children: [__ {
+                            namespace_decl: __ {
+                                cc_name: __ { identifier: "nsB" },
+                                rs_name: __ { identifier: "nsB" },
+                                unique_name: "nsB",
+                                id: 2u64,
+                                canonical_namespace_id: 2u64,
+                                owning_target: "//foo:bar",
+                                is_inline: false,
+                                must_bind: false,
+                                children: [__ {
+                                    comment: __ { text: "hello", id: 3u64, must_bind: false }
+                                }]
+                            }
+                        }]
+                    }
+                }]
             )]
         });
         let ir = proto_to_ir(proto.as_view()).unwrap();
@@ -5026,44 +5176,42 @@ mod tests {
 
     #[gtest]
     fn test_make_ir_redeclarations() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = crate::proto!(IRProto {
             current_target: "//foo:bar",
             top_level_items: [(
                 "//foo:bar",
-                __ {
-                    items: [
-                        __ {
-                            namespace_decl: __ {
-                                cc_name: __ { identifier: "ns1" },
-                                rs_name: __ { identifier: "ns1" },
-                                unique_name: "ns1",
-                                id: 100,
-                                canonical_namespace_id: 100,
-                                owning_target: "//foo:bar",
-                                is_inline: false,
-                                must_bind: false,
-                                children: [__ {
-                                    comment: __ { text: "hello", id: 200, must_bind: false }
-                                }]
-                            }
-                        },
-                        __ {
-                            namespace_decl: __ {
-                                cc_name: __ { identifier: "ns1" },
-                                rs_name: __ { identifier: "ns1" },
-                                unique_name: "ns1",
-                                id: 101,
-                                canonical_namespace_id: 100,
-                                owning_target: "//foo:bar",
-                                is_inline: false,
-                                must_bind: false,
-                                children: [__ {
-                                    comment: __ { text: "hello", id: 200, must_bind: false }
-                                }]
-                            }
+                [
+                    __ {
+                        namespace_decl: __ {
+                            cc_name: __ { identifier: "ns1" },
+                            rs_name: __ { identifier: "ns1" },
+                            unique_name: "ns1",
+                            id: 100u64,
+                            canonical_namespace_id: 100u64,
+                            owning_target: "//foo:bar",
+                            is_inline: false,
+                            must_bind: false,
+                            children: [__ {
+                                comment: __ { text: "hello", id: 200u64, must_bind: false }
+                            }]
                         }
-                    ]
-                }
+                    },
+                    __ {
+                        namespace_decl: __ {
+                            cc_name: __ { identifier: "ns1" },
+                            rs_name: __ { identifier: "ns1" },
+                            unique_name: "ns1",
+                            id: 101u64,
+                            canonical_namespace_id: 100u64,
+                            owning_target: "//foo:bar",
+                            is_inline: false,
+                            must_bind: false,
+                            children: [__ {
+                                comment: __ { text: "hello", id: 200u64, must_bind: false }
+                            }]
+                        }
+                    }
+                ]
             )]
         });
         let ir = proto_to_ir(proto.as_view()).unwrap();
@@ -5075,7 +5223,7 @@ mod tests {
 
     #[gtest]
     fn test_proto_crate_names() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = crate::proto!(IRProto {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "custom_crate")]
         });
@@ -5088,7 +5236,7 @@ mod tests {
 
     #[gtest]
     fn test_proto_crate_names_invalid_ident() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = crate::proto!(IRProto {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "invalid*crate")]
         });
@@ -5104,7 +5252,7 @@ mod tests {
 
     #[gtest]
     fn test_rs_imported_crate_name_with_custom_name() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = crate::proto!(IRProto {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "custom_crate")],
         });
@@ -5115,7 +5263,7 @@ mod tests {
 
     #[gtest]
     fn test_rs_imported_crate_name_without_custom_name() {
-        let proto = protobuf::proto!(IRProto { current_target: "//foo:bar" });
+        let proto = crate::proto!(IRProto { current_target: "//foo:bar" });
         let ir = proto_to_ir(proto.as_view()).unwrap();
         let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
         assert_eq!(crate_ident.to_string(), "target");
@@ -5140,18 +5288,18 @@ mod tests {
             // Negative case: an unrelated target.
             ("//rs_bindings_from_cc:ir", false),
         ] {
-            let proto = protobuf::proto!(::ir_rust_proto::Record {
+            let proto = crate::proto!(crate::ir_rust_proto::Record {
                 rs_name: __ { identifier: "string_view" },
                 trait_derives: __ {
-                    clone: ::ir_rust_proto::TraitImplPolarity::None,
-                    copy: ::ir_rust_proto::TraitImplPolarity::None,
-                    debug: ::ir_rust_proto::TraitImplPolarity::None,
-                    send_polarity: ::ir_rust_proto::TraitImplPolarity::None,
-                    sync_polarity: ::ir_rust_proto::TraitImplPolarity::None,
+                    clone: crate::ir_rust_proto::TraitImplPolarity::None,
+                    copy: crate::ir_rust_proto::TraitImplPolarity::None,
+                    debug: crate::ir_rust_proto::TraitImplPolarity::None,
+                    send_polarity: crate::ir_rust_proto::TraitImplPolarity::None,
+                    sync_polarity: crate::ir_rust_proto::TraitImplPolarity::None,
                 },
                 template_specialization: __ {
                     defining_target: defining_target,
-                    std_string_view: __ {},
+                    kind: crate::ir_rust_proto::template_specialization::Kind::StdStringView,
                 },
             });
             let record = proto.as_view().to_ir();

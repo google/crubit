@@ -7,12 +7,11 @@ use std::sync::LazyLock;
 
 use arc_anyhow::Result;
 
-use ffi_types::{FfiU8Slice, FfiU8SliceBox};
+use ffi_types::FfiU8Slice;
+pub use ir::ir_rust_proto::IRProto;
 use ir::{
     self, Func, GenericItem, Item, LifetimeId, LifetimeName, Record, TreeIR, TypeWithDeclId, IR,
 };
-pub use ir_rust_proto::IRProto;
-use protobuf::Parse;
 
 /// Generates `IR` from a header containing `header_source`.
 pub fn ir_proto_from_cc(
@@ -190,12 +189,12 @@ fn ir_proto_from_cc_dependency_impl(
             carcinize: bool,
             lazy_import_alien_decls: bool,
             check_importer_invariants: bool,
-        ) -> FfiU8SliceBox;
+        ) -> IRProto;
     }
 
     let header_source_with_include =
         format!("#include \"{}\"\n\n{}", DEPENDENCY_HEADER_NAME, header_source);
-    let proto_bytes = unsafe {
+    let ir_proto = unsafe {
         proto_from_cc_dependency(
             FfiU8Slice::from_slice(platform.target_triple().as_ref()),
             FfiU8Slice::from_slice(header_source_with_include.as_bytes()),
@@ -206,9 +205,8 @@ fn ir_proto_from_cc_dependency_impl(
             lazy_import_alien_decls,
             check_importer_invariants,
         )
-        .into_boxed_slice()
     };
-    Ok(IRProto::parse(&proto_bytes)?)
+    Ok(ir_proto)
 }
 
 pub fn make_test_ir<'pb>(proto: &'pb IRProto) -> Result<IR<'pb>> {
@@ -325,8 +323,36 @@ mod tests {
         let ir = make_test_ir(&proto).unwrap();
         let r1 = retrieve_record(&ir, "R1").clone();
         let mut r2 = r1.clone();
-        let r2_name_proto = protobuf::proto!(ir_rust_proto::Identifier { identifier: "R2" });
+        let r2_name_proto = ir::proto!(ir::ir_rust_proto::Identifier { identifier: "R2" });
         r2.set_rs_name(Identifier::try_from(r2_name_proto.as_view()).unwrap());
         let _ = make_ir_from_items([Item::Record(Rc::new(r1)), Item::Record(Rc::new(r2))]);
+    }
+
+    #[gtest]
+    fn test_in_memory_ffi_ir_from_cc() {
+        unsafe extern "C" {
+            fn crubit_test_make_ffi_ir() -> ir::ir_generated::IRProto;
+        }
+        let ir_proto = unsafe { crubit_test_make_ffi_ir() };
+        let view = ir_proto.as_view();
+        assert_eq!(view.current_target(), "//test:target");
+        assert_eq!(view.public_headers().len(), 2);
+        assert_eq!(view.public_headers().get(0).unwrap().name(), "foo.h");
+        assert_eq!(view.public_headers().get(1).unwrap().name(), "bar.h");
+        let top_level_items: Vec<_> = view.top_level_items().iter().collect();
+        assert_eq!(top_level_items.len(), 1);
+        assert_eq!(top_level_items[0].0, "//test:target");
+        assert_eq!(top_level_items[0].1.len(), 1);
+        let item = top_level_items[0].1.get(0).unwrap();
+        let ir::ir_generated::ItemView::Func(func) = item else {
+            panic!("Expected Func item");
+        };
+        assert_eq!(func.id(), 42);
+        assert!(func.is_inline());
+        assert_eq!(func.unique_name(), "c:@F@root_node");
+        let ir::ir_generated::UnqualifiedIdentifierView::Oper(op) = func.rs_name() else {
+            panic!("Expected Oper identifier");
+        };
+        assert_eq!(op.name(), "+=");
     }
 }

@@ -2337,7 +2337,7 @@ fn test_existing_rust_type_with_label_hint() -> Result<()> {
             void Func(MyStruct x);
         "#,
     )?;
-    proto.crate_names_mut().insert("//other/pkg:my_crate", "mangled_my_crate");
+    proto.crate_names.push("//other/pkg:my_crate".into(), "mangled_my_crate".into());
     let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
@@ -2360,7 +2360,7 @@ fn test_existing_rust_type_auto_infer_owning_target() -> Result<()> {
             MyType {};
         "#,
     )?;
-    proto.crate_names_mut().insert("//test:dependency", "mangled_dependency");
+    proto.crate_names.push("//test:dependency".into(), "mangled_dependency".into());
     let ir = make_test_ir_dependency(&proto, None)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
@@ -2389,7 +2389,7 @@ fn test_existing_rust_type_relative_path_matching_target_name_does_not_infer_hin
             MyType {};
         "#,
     )?;
-    proto.crate_names_mut().insert("//test:dependency", "mangled_dependency");
+    proto.crate_names.push("//test:dependency".into(), "mangled_dependency".into());
     let ir = make_test_ir_dependency(&proto, None)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
@@ -2415,7 +2415,7 @@ fn test_existing_rust_type_crate_relative_path() -> Result<()> {
             MyType {};
         "#,
     )?;
-    proto.crate_names_mut().insert("//test:dependency", "mangled_dependency");
+    proto.crate_names.push("//test:dependency".into(), "mangled_dependency".into());
     let ir = make_test_ir_dependency(&proto, None)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(

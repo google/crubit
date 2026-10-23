@@ -23,7 +23,7 @@
 
 namespace crubit {
 
-namespace flat_proto = rs_bindings_from_cc::ir_proto::flat;
+namespace flat_proto = ::crubit::ffi;
 
 namespace {
 // https://en.cppreference.com/w/cpp/utility/variant/visit
@@ -46,10 +46,11 @@ void CcType::WriteToProto(ir_proto::CcType& proto) const {
   std::visit(
       visitor{
           [&](const CcType::Primitive& primitive) {
-            proto.mutable_primitive()->set_spelling(primitive.spelling);
+            proto.mutable_variant()->mutable_primitive()->set_spelling(
+                primitive.spelling);
           },
           [&](const CcType::PointerType& pointer) {
-            auto* p = proto.mutable_pointer();
+            auto* p = proto.mutable_variant()->mutable_pointer();
             p->set_kind(pointer.kind);
             if (pointer.lifetime) {
               p->set_lifetime((*pointer.lifetime).value());
@@ -57,7 +58,7 @@ void CcType::WriteToProto(ir_proto::CcType& proto) const {
             pointer.pointee_type->WriteToProto(*p->mutable_pointee_type());
           },
           [&](const CcType::FuncPointer& func_value) {
-            auto* f = proto.mutable_func_pointer();
+            auto* f = proto.mutable_variant()->mutable_func_pointer();
             f->set_non_null(func_value.non_null);
             f->set_call_conv(func_value.call_conv);
             for (const CcType& type : func_value.param_and_return_types) {
@@ -67,9 +68,11 @@ void CcType::WriteToProto(ir_proto::CcType& proto) const {
                 func_value.lifetime_inputs.begin(),
                 func_value.lifetime_inputs.end());
           },
-          [&](ItemId id) { proto.set_decl(static_cast<int64_t>(id.value())); },
+          [&](ItemId id) {
+            proto.mutable_variant()->set_decl(static_cast<int64_t>(id.value()));
+          },
           [&](const FormattedError& error) {
-            error.WriteToProto(*proto.mutable_error());
+            error.WriteToProto(*proto.mutable_variant()->mutable_error());
           }},
       variant);
 }
@@ -112,7 +115,7 @@ CcType CcType::RValueReferenceTo(CcType pointee_type,
 }
 
 void HeaderName::WriteToProto(ir_proto::HeaderName& proto) const {
-  proto.set_name(name_);
+  proto.set_name(IncludePath());
 }
 
 void FormattedError::WriteToProto(ir_proto::FormattedError& proto) const {
@@ -156,7 +159,7 @@ void WriteToProto(const UnqualifiedIdentifier& unqualified_identifier,
                        proto.set_special_name(special_name);
                      },
                      [&](const ConversionOperator& conversion_operator) {
-                       proto.mutable_conversion_operator();
+                       proto.set_conversion_operator();
                      }},
              unqualified_identifier);
 }
@@ -204,9 +207,7 @@ void BridgeType::WriteToProto(ir_proto::BridgeType& proto) const {
             std_pair.second_type->WriteToProto(*p->mutable_second_type());
           },
           [&](const BridgeType::StdString& std_string) {
-            // Calling mutable_std_string instantiates the message field to
-            // signify its presence
-            proto.mutable_std_string();
+            proto.set_std_string();
           },
           [&](const BridgeType::ProtoMessageBridge& proto_message_bridge) {
             proto.mutable_proto_message_bridge()->set_rust_name(
@@ -256,50 +257,51 @@ void TemplateArg::WriteToProto(ir_proto::TemplateArg& proto) const {
 void TemplateSpecialization::WriteToProto(
     ir_proto::TemplateSpecialization& proto) const {
   proto.set_defining_target(defining_target.value());
+  auto* kind_proto = proto.mutable_kind();
   std::visit(
       visitor{
-          [&](const StdStringView&) { proto.mutable_std_string_view(); },
-          [&](const StdWStringView&) { proto.mutable_std_w_string_view(); },
+          [&](const StdStringView&) { kind_proto->set_std_string_view(); },
+          [&](const StdWStringView&) { kind_proto->set_std_w_string_view(); },
           [&](const StdVector& std_vector) {
             std_vector.element_type.WriteToProto(
-                *proto.mutable_std_vector()->mutable_element_type());
+                *kind_proto->mutable_std_vector()->mutable_element_type());
           },
           [&](const StdOptional& std_optional) {
             std_optional.element_type.WriteToProto(
-                *proto.mutable_std_optional()->mutable_element_type());
+                *kind_proto->mutable_std_optional()->mutable_element_type());
           },
           [&](const StdSharedPtr& std_shared_ptr) {
             std_shared_ptr.element_type.WriteToProto(
-                *proto.mutable_std_shared_ptr()->mutable_element_type());
+                *kind_proto->mutable_std_shared_ptr()->mutable_element_type());
           },
           [&](const StdUniquePtr& std_unique_ptr) {
             std_unique_ptr.element_type.WriteToProto(
-                *proto.mutable_std_unique_ptr()->mutable_element_type());
+                *kind_proto->mutable_std_unique_ptr()->mutable_element_type());
           },
           [&](const AbslSpan& absl_span) {
             absl_span.element_type.WriteToProto(
-                *proto.mutable_absl_span()->mutable_element_type());
+                *kind_proto->mutable_absl_span()->mutable_element_type());
           },
           [&](const AbslFlatHashMap& absl_flat_hash_map) {
-            auto* msg = proto.mutable_absl_flat_hash_map();
+            auto* msg = kind_proto->mutable_absl_flat_hash_map();
             absl_flat_hash_map.key_type.WriteToProto(*msg->mutable_key_type());
             absl_flat_hash_map.value_type.WriteToProto(
                 *msg->mutable_value_type());
           },
           [&](const AbslFlatHashSet& absl_flat_hash_set) {
-            auto* msg = proto.mutable_absl_flat_hash_set();
+            auto* msg = kind_proto->mutable_absl_flat_hash_set();
             absl_flat_hash_set.element_type.WriteToProto(
                 *msg->mutable_element_type());
           },
           [&](const C9Co& c9_co) {
             c9_co.element_type.WriteToProto(
-                *proto.mutable_c9_co()->mutable_element_type());
+                *kind_proto->mutable_c9_co()->mutable_element_type());
           },
           [&](const StdAtomic& std_atomic) {
             std_atomic.element_type.WriteToProto(
-                *proto.mutable_std_atomic()->mutable_element_type());
+                *kind_proto->mutable_std_atomic()->mutable_element_type());
           },
-          [&](const NonSpecial&) { proto.mutable_non_special(); },
+          [&](const NonSpecial&) { kind_proto->set_non_special(); },
       },
       kind);
 }

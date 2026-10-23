@@ -35,3 +35,8 @@ proc-macro2.workspace = true
 quote.workspace = true
 serde_json.workspace = true
 syn.workspace = true
+[dev-dependencies]
+multiplatform_testing = { path = "../../../../../cargo/common/multiplatform_testing"}
+token_stream_matchers = { path = "../../../../../cargo/common/token_stream_matchers"}
+ir_matchers = { path = "../../../../../cargo/rs_bindings_from_cc/ir_matchers", package = "rs_bindings_from_cc_ir_matchers"}
+googletest.workspace = true
