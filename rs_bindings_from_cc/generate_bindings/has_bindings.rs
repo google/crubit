@@ -11,7 +11,7 @@ use database::rs_snippet::{LifetimeOptions, RsTypeKind};
 use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail};
 use heck::ToSnakeCase;
-use ir::{BazelLabel, CcType, CcTypeVariant, Func, GenericItem, Item, ItemId, Record};
+use ir::{BazelLabel, CcType, CcTypeVariant, FfiRc, Func, GenericItem, Item, ItemId, Record};
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -25,7 +25,7 @@ fn cc_type_has_bindings<'a>(
     alias_id: ItemId,
 ) -> Result<(), NoBindingsReason> {
     match cc_type.variant() {
-        CcTypeVariant::Decl { id, template_args } => {
+        CcTypeVariant::Decl(id) => {
             let underlying_item = db.find_untyped_decl(*id);
             if let ir::Item::TypeAlias(inner_alias) = underlying_item {
                 cc_type_has_bindings(db, inner_alias.underlying_type(), alias_id)?;
@@ -35,17 +35,15 @@ fn cc_type_has_bindings<'a>(
                     source: no_bindings.into(),
                 });
             }
-            if let Some(args) = template_args {
-                for arg in args.iter() {
-                    cc_type_has_bindings(db, arg, alias_id)?;
-                }
+            for arg in cc_type.template_args().iter() {
+                cc_type_has_bindings(db, arg, alias_id)?;
             }
         }
         CcTypeVariant::Pointer(ptr) => {
             cc_type_has_bindings(db, ptr.pointee_type(), alias_id)?;
         }
-        CcTypeVariant::FuncPointer { param_and_return_types, .. } => {
-            for t in param_and_return_types.iter() {
+        CcTypeVariant::FuncPointer(fp) => {
+            for t in fp.param_and_return_types().iter() {
                 cc_type_has_bindings(db, t, alias_id)?;
             }
         }
@@ -55,10 +53,7 @@ fn cc_type_has_bindings<'a>(
 }
 
 /// Implementation of `BindingsGenerator::has_bindings`.
-pub fn has_bindings<'a>(
-    db: &BindingsGenerator<'a>,
-    item: Item<'a>,
-) -> Result<BindingsInfo, NoBindingsReason> {
+pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, NoBindingsReason> {
     if let Some(name) = item.cc_name_as_str() {
         // Dunder namespaces are allowed for now.
         if name.starts_with("__") && !matches!(item, Item::Namespace(_)) {
@@ -138,7 +133,7 @@ pub fn has_bindings<'a>(
                         parent_names_that_map_to_same_name: parent_records_that_map_to_this_name
                             .iter()
                             .map(|&parent_record_id| {
-                                db.find_decl::<Rc<Record>>(parent_record_id)
+                                db.find_decl::<FfiRc<Record>>(parent_record_id)
                                     .unwrap()
                                     .rs_name()
                                     .as_str()
@@ -257,9 +252,9 @@ pub fn has_bindings<'a>(
 }
 
 /// Returns function-specific `has_bindings` information.
-fn func_has_bindings<'a>(
-    db: &BindingsGenerator<'a>,
-    func: Rc<Func<'a>>,
+fn func_has_bindings(
+    db: &BindingsGenerator,
+    func: FfiRc<Func>,
 ) -> Result<BindingsInfo, NoBindingsReason> {
     if func.is_consteval() {
         return Err(NoBindingsReason::Unsupported(anyhow!(
@@ -312,7 +307,7 @@ fn func_has_bindings<'a>(
         func.params().iter().map(|p| p.type_()).chain(std::iter::once(func.return_type()));
     for sig_type in sig_types {
         let rs_type_kind = db.rs_type_kind(sig_type.clone()).unwrap();
-        match type_visibility(db, &func, rs_type_kind) {
+        match type_visibility(db, &*func, rs_type_kind) {
             Ok(vis) => {
                 visibility = visibility.or(vis);
             }
@@ -358,9 +353,9 @@ fn func_has_bindings<'a>(
 // structured a bit differently, and it's difficult to share the code.
 //
 // YMMV: feel free to unify the two functions later.
-pub fn type_target_restriction<'a>(
-    db: &BindingsGenerator<'a>,
-    rs_type_kind: RsTypeKind<'a>,
+pub fn type_target_restriction(
+    db: &BindingsGenerator,
+    rs_type_kind: RsTypeKind,
 ) -> Result<Option<BazelLabel>> {
     let mut dfs_iter = rs_type_kind.dfs_iter();
     // `unwrap()` is safe because we know there is at least the `Self type.
@@ -377,11 +372,11 @@ pub fn type_target_restriction<'a>(
 }
 
 /// A visibility restriction indicating that a type is `pub(crate)` within a specific target.
-struct TargetRestriction<'a> {
+struct TargetRestriction {
     /// The target which provides the `pub(crate)` type.
     target: BazelLabel,
     /// The type which is `pub(crate)`, used for error messages.
-    exemplar_type: RsTypeKind<'a>,
+    exemplar_type: RsTypeKind,
 }
 
 /// Updates `old_restriction`: if `new_restriction` is `pub(crate)` while
@@ -389,11 +384,11 @@ struct TargetRestriction<'a> {
 ///
 /// Returns an error if both are `pub(crate)`, and the two types are owned by different crates.
 /// The error contains just a list of the types it found that are incompatible.
-fn intersect_target_restrictions<'a>(
-    db: &BindingsGenerator<'a>,
-    original_type: &RsTypeKind<'a>,
-    old_restriction: &mut Option<TargetRestriction<'a>>,
-    new_restriction: Option<TargetRestriction<'a>>,
+fn intersect_target_restrictions(
+    db: &BindingsGenerator,
+    original_type: &RsTypeKind,
+    old_restriction: &mut Option<TargetRestriction>,
+    new_restriction: Option<TargetRestriction>,
 ) -> Result<()> {
     if let Some(old_restriction) = old_restriction.as_ref()
         && let Some(new_restriction) = new_restriction.as_ref()
@@ -423,10 +418,10 @@ fn intersect_target_restrictions<'a>(
 ///
 /// For example, the top level visibility restriction of `*mut T` is `None` for all `T`, because
 /// pointers are never `pub(crate)`, only their pointees can be.
-fn type_target_restriction_shallow<'a>(
-    db: &BindingsGenerator<'a>,
-    rs_type_kind: &RsTypeKind<'a>,
-) -> Option<TargetRestriction<'a>> {
+fn type_target_restriction_shallow(
+    db: &BindingsGenerator,
+    rs_type_kind: &RsTypeKind,
+) -> Option<TargetRestriction> {
     let rs_type_kind = rs_type_kind.unalias();
     let RsTypeKind::Record { record, .. } = rs_type_kind else {
         // All non-record types are `pub` if they receive bindings.
@@ -452,10 +447,10 @@ fn type_target_restriction_shallow<'a>(
     Some(TargetRestriction { target: target.clone(), exemplar_type: rs_type_kind.clone() })
 }
 
-fn type_visibility<'a>(
-    db: &BindingsGenerator<'a>,
+fn type_visibility(
+    db: &BindingsGenerator,
     item: &dyn GenericItem,
-    rs_type_kind: RsTypeKind<'a>,
+    rs_type_kind: RsTypeKind,
 ) -> Result<Visibility, NoBindingsReason> {
     let Some(target) = item.owning_target() else {
         return Ok(Visibility::Public);
@@ -499,9 +494,9 @@ fn determine_name_conflict_action<'a>(
 /// Resolves names to a map from name to ResolvedName.
 ///
 /// This checks both type and value namespaces.
-pub fn resolve_names<'a>(
-    db: &BindingsGenerator<'a>,
-    parent: Rc<Record<'a>>,
+pub fn resolve_names(
+    db: &BindingsGenerator,
+    parent: FfiRc<Record>,
 ) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>> {
     let child_items = match parent.enclosing_item_id().map(|id| db.find_untyped_decl(id)) {
         Some(Item::Namespace(ns)) => ns.children().iter(),

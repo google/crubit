@@ -7,7 +7,7 @@
 use crate::code_snippet::ApiSnippets;
 use crate::rs_snippet::{Lifetime, RsTypeKind};
 use arc_anyhow::Result;
-use ir::Record;
+use ir::{FfiRc, Record};
 use std::rc::Rc;
 use syn::Ident;
 
@@ -38,50 +38,50 @@ pub struct FunctionId {
 /// The name of a one-function trait, with extra entries for
 /// specially-understood traits and families of traits.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum TraitName<'a> {
+pub enum TraitName {
     /// The std::clone::Clone trait.
     Clone,
     /// The constructor trait for !Unpin types, with a list of parameter types.
     /// For example, `CtorNew(vec![])` is the default constructor.
-    CtorNew(Rc<[RsTypeKind<'a>]>),
+    CtorNew(Rc<[RsTypeKind]>),
     Default,
-    From(Rc<[RsTypeKind<'a>]>),
+    From(Rc<[RsTypeKind]>),
     /// The constructor trait for !Unpin types that are considered unsafe.
-    UnsafeCtorNew(Rc<[RsTypeKind<'a>]>),
+    UnsafeCtorNew(Rc<[RsTypeKind]>),
     /// The conversion trait for Unpin types that are considered unsafe.
-    UnsafeFrom(Rc<[RsTypeKind<'a>]>),
+    UnsafeFrom(Rc<[RsTypeKind]>),
     /// The PartialEq trait.
     PartialEq {
-        param: Rc<RsTypeKind<'a>>,
+        param: Rc<RsTypeKind>,
         negate_thunk_result: bool,
     },
     /// The PartialOrd trait.
     PartialOrd {
-        param: Rc<RsTypeKind<'a>>,
+        param: Rc<RsTypeKind>,
         /// The C++ relational operator that the generated `PartialOrd` impl is backed by.
         op: PartialOrdOp,
     },
     /// The trait for the const C++ operator[] overload.
     CcIndex {
-        index_type: Rc<RsTypeKind<'a>>,
-        output_type: Rc<RsTypeKind<'a>>,
+        index_type: Rc<RsTypeKind>,
+        output_type: Rc<RsTypeKind>,
     },
     /// The trait for the mutable C++ operator[] overload.
     CcIndexMut {
-        index_type: Rc<RsTypeKind<'a>>,
-        output_type: Rc<RsTypeKind<'a>>,
+        index_type: Rc<RsTypeKind>,
+        output_type: Rc<RsTypeKind>,
     },
     /// The operator::Delete trait.
     Delete,
     /// Any other trait, e.g. Eq.
     Other {
         name: Rc<str>,
-        params: Rc<[RsTypeKind<'a>]>,
+        params: Rc<[RsTypeKind]>,
         is_unsafe_fn: bool,
     },
 }
 
-impl std::fmt::Display for TraitName<'_> {
+impl std::fmt::Display for TraitName {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         f.write_str(self.name_str())
     }
@@ -142,7 +142,7 @@ impl PartialOrdOp {
     }
 }
 
-impl<'a> TraitName<'a> {
+impl TraitName {
     fn name_str(&self) -> &str {
         match self {
             TraitName::Clone => "Clone",
@@ -161,7 +161,7 @@ impl<'a> TraitName<'a> {
     }
 
     /// Returns the generic parameters in this trait name.
-    fn params(&self) -> &[RsTypeKind<'a>] {
+    fn params(&self) -> &[RsTypeKind] {
         match self {
             Self::Clone | Self::Default | Self::Delete => &[],
             Self::CtorNew(params)
@@ -186,14 +186,14 @@ impl<'a> TraitName<'a> {
 
 /// The kind of the `impl` block the function needs to be generated in.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ImplKind<'a> {
+pub enum ImplKind {
     /// Used for free functions for which we don't want the `impl` block.
     None { is_unsafe: bool },
     /// Used for inherent methods for which we need an `impl SomeStruct { ... }`
     /// block.
     Struct {
         /// For example, `SomeStruct`.
-        record: Rc<Record<'a>>,
+        record: FfiRc<Record>,
         is_unsafe: bool,
         /// Whether to format the first parameter as "self" (e.g. `__this:
         /// &mut T` -> `&mut self`)
@@ -206,11 +206,11 @@ pub enum ImplKind<'a> {
     /// SomeStruct { ... }` block.
     Trait {
         /// For example, `SomeStruct`.
-        record: Rc<Record<'a>>,
+        record: FfiRc<Record>,
         /// For example, `quote!{ From<i32> }`.
-        trait_name: TraitName<'a>,
+        trait_name: TraitName,
         /// Reference style for the `impl` block and self parameters.
-        impl_for: ImplFor<'a>,
+        impl_for: ImplFor,
 
         /// Whether to format the first parameter as "self" (e.g. `__this:
         /// &mut T` -> `&mut self`)
@@ -247,10 +247,10 @@ pub enum ImplKind<'a> {
         always_public: bool,
     },
 }
-impl<'a> ImplKind<'a> {
+impl ImplKind {
     pub fn new_trait(
-        trait_name: TraitName<'a>,
-        record: Rc<Record<'a>>,
+        trait_name: TraitName,
+        record: FfiRc<Record>,
         format_first_param_as_self: bool,
         force_const_reference_params: bool,
     ) -> Self {
@@ -289,7 +289,7 @@ impl<'a> ImplKind<'a> {
 /// or the impl block is for a reference to T, and the method receivers take
 /// self by value.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ImplFor<'a> {
+pub enum ImplFor {
     /// Implement the trait for `T` directly.
     ///
     /// ```
@@ -316,5 +316,5 @@ pub enum ImplFor<'a> {
     /// ```
     RefT,
     /// Implement the trait for an explicit type.
-    Type(Rc<RsTypeKind<'a>>),
+    Type(Rc<RsTypeKind>),
 }

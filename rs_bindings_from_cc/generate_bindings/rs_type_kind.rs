@@ -17,7 +17,7 @@ use std::rc::Rc;
 
 fn pointee_is_string_view(db: &BindingsGenerator<'_>, ty: &CcType) -> bool {
     match ty.variant() {
-        CcTypeVariant::Decl { id, .. } => {
+        CcTypeVariant::Decl(id) => {
             let item = db.find_untyped_decl(*id);
             if let ir::Item::Record(record) = item {
                 record.is_string_view()
@@ -29,11 +29,11 @@ fn pointee_is_string_view(db: &BindingsGenerator<'_>, ty: &CcType) -> bool {
     }
 }
 
-fn item_is_or_aliases_string_view(db: &BindingsGenerator<'_>, item: &ir::Item<'_>) -> bool {
+fn item_is_or_aliases_string_view(db: &BindingsGenerator<'_>, item: &ir::Item) -> bool {
     match item {
         ir::Item::Record(record) => record.is_string_view(),
         ir::Item::TypeAlias(type_alias) => match type_alias.underlying_type().variant() {
-            CcTypeVariant::Decl { id, .. } => {
+            CcTypeVariant::Decl(id) => {
                 item_is_or_aliases_string_view(db, db.find_untyped_decl(*id))
             }
             _ => false,
@@ -43,19 +43,19 @@ fn item_is_or_aliases_string_view(db: &BindingsGenerator<'_>, item: &ir::Item<'_
 }
 
 /// Implementation of `BindingsGenerator::rs_type_kind`.
-pub fn rs_type_kind_with_lifetime_elision<'a>(
-    db: &BindingsGenerator<'a>,
+pub fn rs_type_kind_with_lifetime_elision(
+    db: &BindingsGenerator,
     ty: CcType,
     lifetime_options: LifetimeOptions,
-) -> Result<RsTypeKind<'a>> {
+) -> Result<RsTypeKind> {
     rs_type_kind_with_lifetime_elision_impl(db, ty, lifetime_options)
 }
 
-fn rs_type_kind_with_lifetime_elision_impl<'a>(
-    db: &BindingsGenerator<'a>,
+fn rs_type_kind_with_lifetime_elision_impl(
+    db: &BindingsGenerator,
     ty: CcType,
     lifetime_options: LifetimeOptions,
-) -> Result<RsTypeKind<'a>> {
+) -> Result<RsTypeKind> {
     ensure!(
         ty.unknown_attr().is_empty(),
         "crubit.rs/errors/unknown_attribute: unknown attribute(s): {}",
@@ -203,13 +203,9 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                 }
             })
         }
-        CcTypeVariant::FuncPointer {
-            non_null,
-            call_conv,
-            param_and_return_types,
-            lifetime_inputs: _,
-        } => {
-            let (return_type, param_types) = param_and_return_types
+        CcTypeVariant::FuncPointer(fp) => {
+            let (return_type, param_types) = fp
+                .param_and_return_types()
                 .split_last()
                 .expect("In well-formed IR function pointers include at least the return type");
             let return_type = Rc::new(db.rs_type_kind_with_lifetime_elision(
@@ -239,13 +235,13 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                 "Either the return type or some of the parameter types require an FFI thunk (and function pointers don't have a thunk)",
             );
             Ok(RsTypeKind::FuncPtr {
-                option: !*non_null,
-                cc_calling_conv: *call_conv,
+                option: !fp.non_null(),
+                cc_calling_conv: fp.call_conv(),
                 return_type,
                 param_types,
             })
         }
-        CcTypeVariant::Decl { id, template_args } => {
+        CcTypeVariant::Decl(id) => {
             let item = db.find_untyped_decl(*id);
 
             if let Err(no_bindings_reason) = db.has_bindings(item.clone()) {
@@ -268,7 +264,7 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                         let mut underlying_type = alias.underlying_type().clone();
                         if underlying_type.explicit_lifetimes().is_empty() {
                             *underlying_type.explicit_lifetimes_mut() =
-                                ty.explicit_lifetimes().to_vec();
+                                ty.explicit_lifetimes().into();
                         }
                         if let Ok(ty) =
                             db.rs_type_kind_with_lifetime_elision(underlying_type, lifetime_options)
@@ -324,11 +320,13 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                     vec![]
                 };
 
+            let template_args: Option<Rc<[CcType]>> = ty.decl_template_args().map(Rc::from);
+
             // This is the implementation of `BindingsGenerator::rs_type_kind()`, so of
             // course we can't call `rs_type_kind` here, and instead reuse the raw construction
             // logic.
             let type_kind =
-                RsTypeKind::from_item_raw(db, item, &lifetime_options, template_args, &lifetimes)?;
+                RsTypeKind::from_item_raw(db, item, &lifetime_options, &template_args, &lifetimes)?;
 
             let nonnull_smart_pointers = db
                 .ir()

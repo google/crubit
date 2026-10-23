@@ -4,4 +4,4 @@
 
 // Automatically @generated lib.rs for the cc_library cc_ir.
 
-extern crate ir_cc_proto_sys;
+extern crate cc_ffi_types_sys;

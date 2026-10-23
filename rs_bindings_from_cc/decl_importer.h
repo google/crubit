@@ -26,7 +26,6 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "rs_bindings_from_cc/ir.pb.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
@@ -40,7 +39,7 @@
 
 namespace crubit {
 
-namespace ir_proto = rs_bindings_from_cc::ir_proto::flat;
+namespace ir_proto = ::crubit::ffi;
 
 // Top-level parameters as well as return value of an importer invocation.
 class Invocation {
@@ -74,7 +73,7 @@ class Invocation {
     CHECK(!header_targets_.empty());
 
     for (const auto& header : public_headers_) {
-      header.WriteToProto(*ir_.add_public_headers());
+      *ir_.add_public_headers() = header.AsFfi();
     }
     ir_.set_current_target(target_.value());
     for (const auto& [target, features] : crubit_features) {
@@ -82,8 +81,7 @@ class Invocation {
       std::vector<std::string> sorted_features(features.begin(),
                                                features.end());
       absl::c_sort(sorted_features);
-      set.mutable_features()->Add(sorted_features.begin(),
-                                  sorted_features.end());
+      set.Add(sorted_features.begin(), sorted_features.end());
     }
     for (const auto& [target, name] : crate_names) {
       (*ir_.mutable_crate_names())[target.value()] = name;
@@ -236,12 +234,21 @@ class ImportContext {
       std::optional<ItemId> enclosing_item_id,
       std::vector<FormattedError> errors, bool is_hard_error = false) {
     ir_proto::UnsupportedItem::Path path;
-    WriteToProto(ident, *path.mutable_ident());
+    *path.mutable_ident() = std::move(ident);
     if (enclosing_item_id.has_value()) {
       path.set_enclosing_item_id(
           static_cast<int64_t>(enclosing_item_id->value()));
     }
     return ImportUnsupportedItem(decl, std::move(path), std::move(errors),
+                                 is_hard_error);
+  }
+
+  std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
+      const clang::Decl& decl, const Identifier& ident,
+      std::optional<ItemId> enclosing_item_id,
+      std::vector<FormattedError> errors, bool is_hard_error = false) {
+    return ImportUnsupportedItem(decl, UnqualifiedIdentifier(ident),
+                                 enclosing_item_id, std::move(errors),
                                  is_hard_error);
   }
 

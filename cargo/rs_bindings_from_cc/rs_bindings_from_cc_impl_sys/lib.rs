@@ -10,3 +10,4 @@ extern crate collect_namespaces_sys;
 extern crate file_io_sys;
 extern crate generate_bindings_and_metadata_sys;
 extern crate profiling_sys;
+extern crate src_code_gen_ffi_sys;

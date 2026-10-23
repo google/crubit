@@ -224,17 +224,24 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
             "constant, found: ",
             ArgKindToString(const_generic_arg.getKind())));
       }
-      format_args.push_back(
-          const_generic_arg.getIntegralType()->isBooleanType()
-              ? TemplateArg(const_generic_arg.getAsIntegral().getBoolValue())
-              : TemplateArg(const_generic_arg.getAsIntegral().getExtValue()));
+      TemplateArg template_arg;
+      if (const_generic_arg.getIntegralType()->isBooleanType()) {
+        template_arg.set_bool_value(
+            const_generic_arg.getAsIntegral().getBoolValue());
+      } else {
+        template_arg.set_int_value(
+            const_generic_arg.getAsIntegral().getExtValue());
+      }
+      format_args.push_back(std::move(template_arg));
     } else {
       // TODO(b/454627672): is specialization_decl the right decl to check
       // for assumed_lifetimes?
-      format_args.push_back(TemplateArg(
+      TemplateArg template_arg;
+      *template_arg.mutable_type() =
           ictx.ConvertQualType(type, /*lifetimes=*/nullptr, /*nullable=*/true,
                                ictx.AreAssumedLifetimesEnabledForTarget(
-                                   ictx.GetOwningTarget(*spec)))));
+                                   ictx.GetOwningTarget(*spec)));
+      format_args.push_back(std::move(template_arg));
     }
   }
 
@@ -263,7 +270,7 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
   if (!opt_attr->has_value()) {
     return nullptr;
   }
-  const auto [format_string, format_args] = **std::move(opt_attr);
+  auto [format_string, format_args] = **std::move(opt_attr);
   absl::StatusOr<bool> is_same_abi = GetIsSameAbiAttribute(type_decl);
   if (!is_same_abi.ok()) {
     return ictx_.HardError(*type_decl,
@@ -305,8 +312,8 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
   existing->set_rs_name(std::move(format_string));
   existing->set_cc_name(std::move(cc_name));
   existing->set_unique_name(ictx_.GetUniqueName(*type_decl));
-  for (const auto& arg : format_args) {
-    arg.WriteToProto(*existing->add_template_args());
+  for (auto& arg : format_args) {
+    *existing->add_template_args() = std::move(arg);
   }
   existing->set_owning_target(ictx_.GetOwningTarget(*type_decl).value());
   if (!cpp_type->isIncompleteType()) {

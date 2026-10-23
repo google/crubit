@@ -90,20 +90,20 @@ struct TestItem {
 
 const TEST_ITEM_ID: ItemId = ItemId::new_for_testing(123);
 
-impl<'a> ir::GenericItem<'a> for TestItem {
+impl ir::GenericItem for TestItem {
     fn id(&self) -> ItemId {
         TEST_ITEM_ID
     }
-    fn unique_name(&self) -> Option<&'a str> {
+    fn unique_name(&self) -> Option<&str> {
         None
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         None
     }
-    fn source_loc(&self) -> Option<&'a str> {
+    fn source_loc(&self) -> Option<&str> {
         self.source_loc
     }
-    fn unknown_attr(&self) -> Option<&'a str> {
+    fn unknown_attr(&self) -> Option<&str> {
         None
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
@@ -114,10 +114,10 @@ impl<'a> ir::GenericItem<'a> for TestItem {
     }
 }
 
-fn make_factory() -> TestDbFactory<'static> {
+fn make_factory() -> TestDbFactory {
     let test_item = UnsupportedItem::new_raw(
         Rc::from("test_item"),
-        None,
+        None::<&str>,
         UnsupportedItemKind::Other,
         TEST_ITEM_ID,
         Some("Generated from: some/header;l=1"),
@@ -182,8 +182,7 @@ fn test_generate_unsupported_item_with_global_cpp() -> Result<()> {
         /* path= */ None,
         "unsupported_message",
     );
-    unsupported_item
-        .set_inline_cpp_source_text(Some("int Add(int a, int b) { return a + b; }".into()));
+    unsupported_item.set_inline_cpp_source_text("int Add(int a, int b) { return a + b; }");
     let actual = generate_unsupported(&db, unsupported_item.into()).generated_items;
     let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
     let expected_comment = "Generated from: some/header;l=1\nerror: item `test_item` could not be bound\n  unsupported_message";
@@ -215,7 +214,7 @@ fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result
         /* path= */ None,
         "unsupported_message",
     );
-    unsupported_item.set_inline_cpp_source_text(None);
+    unsupported_item.clear_inline_cpp_source_text();
     let actual = generate_unsupported(&db, unsupported_item.into()).generated_items;
     let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
     assert_rs_not_matches!(actual, quote! { ::inline_cpp_macro::global_cpp! });
@@ -304,9 +303,8 @@ fn test_generate_unsupported_function_template_with_global_cpp() -> Result<()> {
         /* path= */ None,
         "unsupported_message",
     );
-    unsupported_item.set_inline_cpp_source_text(Some(
-        "template <typename T> T Add(T a, T b) { return a + b; }".into(),
-    ));
+    unsupported_item
+        .set_inline_cpp_source_text("template <typename T> T Add(T a, T b) { return a + b; }");
     let actual = generate_unsupported(&db, unsupported_item.into()).generated_items;
     let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
     let expected_comment =
@@ -343,9 +341,8 @@ fn test_generate_unsupported_function_template_strict_mode_fatal_error() -> Resu
         /* path= */ None,
         "unsupported_message",
     );
-    unsupported_item.set_inline_cpp_source_text(Some(
-        "template <typename T> T Add(T a, T b) { return a + b; }".into(),
-    ));
+    unsupported_item
+        .set_inline_cpp_source_text("template <typename T> T Add(T a, T b) { return a + b; }");
     let _ = generate_unsupported(&db, unsupported_item.into());
     assert!(!factory.fatal_errors().take_string().is_empty());
     Ok(())

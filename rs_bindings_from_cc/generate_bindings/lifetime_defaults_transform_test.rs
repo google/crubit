@@ -19,12 +19,12 @@ use quote::quote;
 use std::rc::Rc;
 use test_generators::TestDbFactory;
 
-fn transform_ir<'pb>(ir: ir::IR<'pb>) -> Result<ir::IR<'pb>> {
+fn transform_ir(ir: ir::IR) -> Result<ir::IR> {
     let factory = TestDbFactory::new(ir);
     lifetime_defaults_transform(&factory.make_db(), factory.ir())
 }
 
-fn transform_from_proto<'pb>(proto: &'pb IRProto) -> Result<ir::IR<'pb>> {
+fn transform_from_proto(proto: &IRProto) -> Result<ir::IR> {
     transform_ir(make_test_ir_dependency(proto, Some("assume_lifetimes"))?)
 }
 

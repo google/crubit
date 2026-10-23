@@ -26,11 +26,11 @@
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/profiling.h"
+#include "rs_bindings_from_cc/src_code_gen_ffi.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/Support/raw_ostream.h"
-#include "google/protobuf/text_format.h"
 
 namespace crubit {
 
@@ -73,9 +73,8 @@ absl::Status Main(absl::Span<char* const> positional_args) {
       GenerateBindingsAndMetadata(cmdline, std::move(clang_args)));
 
   if (!args.ir_out.empty()) {
-    std::string textproto;
-    google::protobuf::TextFormat::PrintToString(bindings_and_metadata.ir, &textproto);
-    CRUBIT_RETURN_IF_ERROR(SetFileContents(args.ir_out, textproto));
+    CRUBIT_RETURN_IF_ERROR(
+        SetFileContents(args.ir_out, FormatIrDebug(bindings_and_metadata.ir)));
   }
 
   std::string extra_cpp_srcs_content;

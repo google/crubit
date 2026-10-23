@@ -20,8 +20,8 @@
 #include <optional>
 #include <ostream>
 #include <string>
+#include <tuple>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "absl/base/nullability.h"
@@ -34,7 +34,7 @@
 #include "absl/strings/substitute.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/ir.pb.h"
+#include "rs_bindings_from_cc/ir_generated.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/RawCommentList.h"
 #include "llvm/ADT/APSInt.h"
@@ -43,7 +43,7 @@
 
 namespace crubit {
 
-namespace ir_proto = ::crubit::rs_bindings_from_cc::ir_proto::flat;
+namespace ir_proto = ::crubit::ffi;
 
 struct Item;
 
@@ -59,20 +59,22 @@ inline constexpr absl::string_view kInstantiationsNamespaceName =
 // A name of a public header of the C++ library.
 class HeaderName {
  public:
-  explicit HeaderName(std::string name) : name_(std::move(name)) {}
+  explicit HeaderName(std::string name) { inner_.set_name(std::move(name)); }
 
-  absl::string_view IncludePath() const { return name_; }
+  absl::string_view IncludePath() const { return inner_.name(); }
 
-  void WriteToProto(ir_proto::HeaderName& proto) const;
+  const ffi::HeaderName& AsFfi() const { return inner_; }
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  operator const ffi::HeaderName&() const { return inner_; }
 
   template <typename H>
   friend H AbslHashValue(H h, const HeaderName& header_name) {
-    return H::combine(std::move(h), header_name.name_);
+    return H::combine(std::move(h), header_name.IncludePath());
   }
 
  private:
   // Header pathname in the format suitable for a quote include.
-  std::string name_;
+  ffi::HeaderName inner_;
 };
 
 inline bool operator==(const HeaderName& lhs, const HeaderName& rhs) {
@@ -107,11 +109,17 @@ CRUBIT_DEFINE_STRONG_INT_TYPE(LifetimeId, int);
 // An error that stores its format string as well as the formatted message.
 class FormattedError final {
  public:
-  auto operator<=>(const FormattedError&) const = default;
+  auto operator<=>(const FormattedError& other) const {
+    return std::make_tuple(fmt(), message()) <=>
+           std::make_tuple(other.fmt(), other.message());
+  }
+  bool operator==(const FormattedError& other) const {
+    return fmt() == other.fmt() && message() == other.message();
+  }
 
   template <typename H>
   friend H AbslHashValue(H h, const FormattedError& e) {
-    return H::combine(std::move(h), e.fmt_, e.message_);
+    return H::combine(std::move(h), e.fmt(), e.message());
   }
 
   // Returns a FormattedError for a static string. The string is used as both
@@ -142,107 +150,45 @@ class FormattedError final {
   // Extracts a format string from a status payload, if present.
   static FormattedError FromStatus(absl::Status status);
 
-  absl::string_view fmt() const { return fmt_; }
-  absl::string_view message() const { return message_; }
+  absl::string_view fmt() const { return inner_.fmt(); }
+  absl::string_view message() const { return inner_.message(); }
 
-  void WriteToProto(ir_proto::FormattedError& proto) const;
+  const ffi::FormattedError& AsFfi() const { return inner_; }
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  operator const ffi::FormattedError&() const { return inner_; }
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  operator ffi::cc_type::Variant() const {
+    return ffi::cc_type::Variant(inner_);
+  }
 
   // Type URL for use as an `absl::Status` payload.
   static constexpr absl::string_view kFmtPayloadTypeUrl =
       "type.googleapis.com/crubit.FormattedError.fmt";
 
  private:
-  FormattedError(std::string fmt, std::string message)
-      : fmt_(fmt), message_(message) {}
+  FormattedError(absl::string_view fmt, absl::string_view message) {
+    inner_.set_fmt(fmt);
+    inner_.set_message(message);
+  }
 
-  // The format string that produced the error message, if available. This is
-  // used as an aggregation key for error reports.
-  std::string fmt_;
-  // Explanation of why we couldn't generate bindings.
-  std::string message_;
+  ffi::FormattedError inner_;
 };
 
 using ir_proto::CallingConv;
+using ir_proto::CcType;
 using ir_proto::PointerTypeKind;
+using ir_proto::Primitive;
 using ir_proto::SafetyAnnotation;
 
-struct CcType {
-  void WriteToProto(ir_proto::CcType& proto) const;
-
-  struct FuncPointer {
-    // When true, this is a C++ function reference that maps to a Rust function
-    // pointer. When false, this is a C++ function pointer that maps to a Rust
-    // function pointer wrapped in an `Option`.
-    bool non_null;
-    CallingConv call_conv;
-    // param_and_return_types assumes the last type is the return type.
-    std::vector<CcType> param_and_return_types;
-    std::vector<std::string> lifetime_inputs;
-  };
-
-  struct PointerType {
-    PointerTypeKind kind;
-
-    // `LifetimeId` is present if the C++ code contained an explicit
-    // lifetime annotation or if C++ lifetime annotation elision was enabled.
-    //
-    // Today, this is rare: the Clang lifetime annotation pass isn't stable or
-    // functional.
-    std::optional<LifetimeId> lifetime;
-
-    std::shared_ptr<CcType> pointee_type;
-  };
-
-  struct Primitive {
-    std::string spelling;
-  };
-
-  static CcType PointerTo(CcType pointee_type,
-                          std::optional<LifetimeId> lifetime, bool nullable);
-
-  static CcType OwnedPointerTo(CcType pointee_type,
-                               std::optional<LifetimeId> lifetime);
-
-  static CcType LValueReferenceTo(CcType pointee_type,
-                                  std::optional<LifetimeId> lifetime);
-
-  static CcType RValueReferenceTo(CcType pointee_type,
-                                  std::optional<LifetimeId> lifetime);
-
-  bool IsVoid() const {
-    const auto* primitive = std::get_if<CcType::Primitive>(&variant);
-    return primitive != nullptr && primitive->spelling == "void";
-  }
-
-  using Variant =
-      std::variant<Primitive, PointerType, FuncPointer, ItemId, FormattedError>;
-
-  explicit CcType(Variant variant) : variant(std::move(variant)) {}
-
-  Variant variant;
-  bool is_const = false;
-  // True if this use of the type is promised to be non-null, via `_Nonnull`
-  // (e.g. `absl_nonnull`) or a `nonnull` file default. Like `is_const`, this
-  // describes one use of the type rather than the type itself.
-  bool is_nonnull = false;
-  std::string unknown_attr = "";
-  // An ordered list of lifetime variable names applied to this type. It is
-  // valid for the same name to appear multiple times.
-  std::vector<std::string> explicit_lifetimes;
-  // The template arguments of this type as written at this use site, or empty
-  // if this use adds nothing over the arguments attached to the referenced
-  // decl. Only meaningful when `variant` holds an `ItemId`. Like `is_const`,
-  // this describes one use of the type rather than the type itself. See
-  // `ir.proto` and `Importer::WithAsWrittenTemplateArgs` for when this is
-  // populated.
-  std::vector<CcType> template_args;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const CcType& type) {
-  ir_proto::CcType proto;
-  type.WriteToProto(proto);
-  return o << proto.ShortDebugString();
-}
+absl::string_view PrimitiveSpelling(Primitive primitive);
+CcType CcTypeDecl(ItemId id);
+CcType PointerTo(CcType pointee_type, std::optional<LifetimeId> lifetime,
+                 bool nullable);
+CcType OwnedPointerTo(CcType pointee_type, std::optional<LifetimeId> lifetime);
+CcType LValueReferenceTo(CcType pointee_type,
+                         std::optional<LifetimeId> lifetime);
+CcType RValueReferenceTo(CcType pointee_type,
+                         std::optional<LifetimeId> lifetime);
 
 // An identifier involved in bindings.
 //
@@ -260,108 +206,40 @@ inline std::ostream& operator<<(std::ostream& o, const CcType& type) {
 //     `identifier` cannot be empty.
 class Identifier {
  public:
-  explicit Identifier(std::string identifier)
-      : identifier_(std::move(identifier)) {
-    CHECK(!identifier_.empty());
+  explicit Identifier(std::string identifier) {
+    CHECK(!identifier.empty());
+    inner_.set_identifier(std::move(identifier));
   }
 
-  absl::string_view Ident() const { return identifier_; }
-  void WriteToProto(ir_proto::Identifier& proto) const;
+  absl::string_view Ident() const { return inner_.identifier(); }
+  const ffi::Identifier& AsFfi() const { return inner_; }
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  operator const ffi::Identifier&() const { return inner_; }
 
   template <typename H>
   friend H AbslHashValue(H h, const Identifier& i) {
-    return H::combine(std::move(h), i.identifier_);
+    return H::combine(std::move(h), i.Ident());
   }
 
   bool operator==(const Identifier& other) const {
-    return identifier_ == other.identifier_;
+    return Ident() == other.Ident();
   }
 
  private:
-  std::string identifier_;
+  ffi::Identifier inner_;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Identifier& id) {
   return o << std::setw(internal::kJsonIndent) << id.Ident();
 }
 
-// An integer value in the range [-2**63, 2**64). This is intended to be used
-// to produce integer literals in Rust code while specifying the type
-// out-of-band.
-class IntegerConstant {
- public:
-  static absl::StatusOr<IntegerConstant> FromAPValue(
-      const llvm::APSInt& value) {
-    if (value.getSignificantBits() > 64) {
-      llvm::SmallString<128> value_str;
-      value.toString(value_str);
-      return absl::InvalidArgumentError(absl::StrCat(
-          "value is too large to fit in 64 bits: ", value_str.c_str()));
-    }
-    return IntegerConstant(value);
-  }
+using IntegerConstant = ir_proto::IntegerConstant;
 
-  IntegerConstant(const IntegerConstant& other) = default;
-  IntegerConstant& operator=(const IntegerConstant& other) = default;
-  void WriteToProto(ir_proto::IntegerConstant& proto) const;
+absl::StatusOr<IntegerConstant> IntegerConstantFromAPValue(
+    const llvm::APSInt& value);
 
- private:
-  explicit IntegerConstant(const llvm::APSInt& value) {
-    is_negative_ = value < 0;
-    // TODO: double-check that the following is correct to adapt for
-    // https://github.com/llvm/llvm-project/commit/0a89825a289d149195be390003424adad026067f
-    // Before:
-    // wrapped_value_ = static_cast<uint64_t>(value.getExtValue());
-    wrapped_value_ = static_cast<uint64_t>(
-        value.isSigned() ? value.getSExtValue() : value.getZExtValue());
-  }
-
-  // value < 0
-  bool is_negative_;
-
-  // value (mod 2**64)
-  uint64_t wrapped_value_;
-};
-
-class Operator {
- public:
-  explicit Operator(std::string name) : name_(std::move(name)) {
-    CHECK(!name_.empty());
-  }
-
-  absl::string_view Name() const { return name_; }
-
-  void WriteToProto(ir_proto::Operator& proto) const;
-
- private:
-  std::string name_;
-};
-
-inline std::ostream& operator<<(std::ostream& stream, const Operator& op) {
-  char first_char = op.Name()[0];
-  const char* separator = ('a' <= first_char) && (first_char <= 'z') ? " " : "";
-  return stream << std::setw(internal::kJsonIndent) << "`operator" << separator
-                << op.Name() << "`";
-}
-
-using ir_proto::SpecialName;
-
-// The target type of the conversion operator is not stored in the struct but
-// rather is resolved using the enclosing Func's return type.
-struct ConversionOperator {};
-
-std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
-
-// A generalized notion of identifier, or an "Unqualified Identifier" in C++
-// jargon: https://en.cppreference.com/w/cpp/language/identifiers
-//
-// Note that constructors are given a separate variant, so that we can treat
-// them differently. After all, they are not invoked or defined like normal
-// functions.
-using UnqualifiedIdentifier =
-    std::variant<Identifier, Operator, SpecialName, ConversionOperator>;
-void WriteToProto(const UnqualifiedIdentifier& unqualified_identifier,
-                  ir_proto::UnqualifiedIdentifier& proto);
+using ir_proto::Operator;
+using UnqualifiedIdentifier = ir_proto::UnqualifiedIdentifier;
 
 struct TranslatedUnqualifiedIdentifier {
   UnqualifiedIdentifier cc_identifier;
@@ -376,165 +254,13 @@ struct TranslatedIdentifier {
   Identifier& rs_identifier();
 };
 
-// TODO(lukasza): Consider extracting a separate ConstructorMetadata struct to
-// account for the fact that `is_const` and `is_virtual` never applies to
-// constructors.
-
-// Information about special member functions.
-//
-// Nontrivial definitions are divided into two: there are nontrivial definitions
-// which are nontrivial only due to a member variable which defines the special
-// member function, and those which are nontrivial because the operation was
-// user defined for the object itself, or for any base class.
-//
-// This allows us to sidestep calling C++ implementations of special member
-// functions in narrow cases: even for a nontrivial special member function, if
-// it is kNontrivialMembers, we can directly implement it in Rust in terms of
-// the member variables.
+using ir_proto::BridgeType;
+using ir_proto::OwnedPtrConfig;
 using ir_proto::SpecialMemberFunc;
-
-inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
-  switch (f) {
-    case SpecialMemberFunc::TRIVIAL:
-      return o << "Trivial";
-    case SpecialMemberFunc::NONTRIVIAL_MEMBERS:
-      return o << "NontrivialMembers";
-    case SpecialMemberFunc::NONTRIVIAL_USER_DEFINED:
-      return o << "NontrivialUserDefined";
-    case SpecialMemberFunc::UNAVAILABLE:
-      return o << "Unavailable";
-    default:
-      return o << "Unspecified";
-  }
-}
-
-struct TemplateArg {
-  void WriteToProto(ir_proto::TemplateArg& proto) const;
-
-  using Variant = std::variant<CcType, bool, int64_t>;
-
-  Variant variant;
-};
-
-// Present on records that are bridge types.
-struct BridgeType {
-  void WriteToProto(ir_proto::BridgeType& proto) const;
-
-  // From CRUBIT_BRIDGE.
-  struct Bridge {
-    std::string rust_name;
-    std::string abi_rust;
-    std::string abi_cpp;
-    std::vector<CcType> template_args;
-    std::optional<std::string> label_hint;
-  };
-
-  struct StdOptional {
-    std::shared_ptr<CcType> inner_type;
-  };
-
-  struct StdPair {
-    std::shared_ptr<CcType> first_type;
-    std::shared_ptr<CcType> second_type;
-  };
-
-  struct ProtoMessageBridge {
-    std::string rust_name;
-  };
-
-  struct StdString {};
-
-  struct Callable {
-    enum BackingType {
-      kDynCallable,
-      kAnyInvocable,
-    } backing_type;
-    enum FnTrait {
-      kFn,
-      kFnMut,
-      kFnOnce,
-    } fn_trait;
-    std::shared_ptr<CcType> return_type;
-    std::vector<CcType> param_types;
-  };
-
-  std::variant<Bridge, StdOptional, StdPair, StdString, ProtoMessageBridge,
-               Callable>
-      variant;
-};
-
-// A template specialization for a template record, containing information
-// including the template name (like `ns::vector` for `ns::vector<int>`) and the
-// template arguments (like [`int`, `float`] for `ns::map<int, float>`).
-struct TemplateSpecialization {
-  void WriteToProto(ir_proto::TemplateSpecialization& proto) const;
-
-  struct StdStringView {};
-  struct StdWStringView {};
-  struct StdVector {
-    CcType element_type;
-  };
-  struct StdOptional {
-    CcType element_type;
-  };
-  struct StdSharedPtr {
-    CcType element_type;
-  };
-  struct StdUniquePtr {
-    CcType element_type;
-  };
-  struct AbslSpan {
-    CcType element_type;
-  };
-  struct AbslFlatHashMap {
-    CcType key_type;
-    CcType value_type;
-  };
-  struct AbslFlatHashSet {
-    CcType element_type;
-  };
-  struct C9Co {
-    CcType element_type;
-  };
-
-  struct StdAtomic {
-    CcType element_type;
-  };
-  struct NonSpecial {};
-
-  using Kind =
-      std::variant<StdStringView, StdWStringView, StdVector, StdOptional,
-                   StdSharedPtr, StdUniquePtr, AbslSpan, AbslFlatHashMap,
-                   AbslFlatHashSet, C9Co, StdAtomic, NonSpecial>;
-
-  BazelLabel defining_target;
-  Kind kind = NonSpecial{};
-};
-
+using ir_proto::TemplateArg;
+using ir_proto::TemplateSpecialization;
+using ir_proto::TraitDerives;
 using ir_proto::TraitImplPolarity;
-
-// The set of traits to derive on the Rust type.
-struct TraitDerives {
-  void WriteToProto(ir_proto::TraitDerives& proto) const;
-
-  TraitImplPolarity* absl_nullable Polarity(absl::string_view trait);
-
-  TraitImplPolarity clone = TraitImplPolarity::NONE;
-  TraitImplPolarity copy = TraitImplPolarity::NONE;
-  TraitImplPolarity debug = TraitImplPolarity::NONE;
-  // POSITIVE: `CRUBIT_UNSAFE_IMPL` / `CRUBIT_THREAD_SAFE`.
-  // NEGATIVE: `CRUBIT_TRAIT_DERIVE("!Send")` / `CRUBIT_TRAIT_DERIVE("!Sync")`.
-  TraitImplPolarity send = TraitImplPolarity::NONE;
-  TraitImplPolarity sync = TraitImplPolarity::NONE;
-  std::vector<std::string> custom;
-};
-
-struct OwnedPtrConfig {
-  void WriteToProto(ir_proto::OwnedPtrConfig& proto) const;
-
-  std::string owned_ptr_type;
-  std::string drop_impl;
-};
 
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
@@ -618,18 +344,17 @@ std::vector<const T* absl_nonnull> get_items_if(
     }
   };
 
-  // Sort target keys to iterate `top_level_items()` deterministically, this
-  // prevents non-deterministic hash bucket ordering from protobuf::Map.
+  // Sort target keys to iterate `top_level_items()` deterministically.
   std::vector<std::string> target_keys;
   target_keys.reserve(ir_proto.top_level_items().size());
   for (const auto& [target, _] : ir_proto.top_level_items()) {
-    target_keys.push_back(target);
+    target_keys.push_back(std::string(target));
   }
   std::sort(target_keys.begin(), target_keys.end());
 
   for (const auto& target : target_keys) {
     const auto& item_list = ir_proto.top_level_items().at(target);
-    for (const auto& item : item_list.items()) {
+    for (const auto& item : item_list) {
       process_item(process_item, item);
     }
   }
@@ -657,13 +382,13 @@ std::vector<T* absl_nonnull> get_items_if(ir_proto::IRProto& ir_proto) {
   std::vector<std::string> target_keys;
   target_keys.reserve(ir_proto.top_level_items().size());
   for (const auto& [target, _] : ir_proto.top_level_items()) {
-    target_keys.push_back(target);
+    target_keys.push_back(std::string(target));
   }
   std::sort(target_keys.begin(), target_keys.end());
 
   for (const auto& target : target_keys) {
     auto& item_list = (*ir_proto.mutable_top_level_items())[target];
-    for (auto& item : *item_list.mutable_items()) {
+    for (auto& item : item_list) {
       process_item(process_item, item);
     }
   }

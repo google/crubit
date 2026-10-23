@@ -14,7 +14,7 @@ use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
 use heck::ToSnakeCase;
 use ir::{
-    BazelLabel, GenericItem, IntegerConstant, Item, ItemId, Namespace, RecordType,
+    BazelLabel, FfiRc, GenericItem, IntegerConstant, Item, ItemId, Namespace, RecordType,
     TraitImplPolarity, UnqualifiedIdentifier,
 };
 use proc_macro2::{Ident, Literal, TokenStream};
@@ -114,10 +114,7 @@ pub struct BindingsTokens {
 ///
 /// If the item does have a defining target, and it doesn't enable the specified
 /// features, then bindings are suppressed for this item.
-pub fn missing_feature_descriptions<'a>(
-    db: &BindingsGenerator<'a>,
-    item: &Item<'a>,
-) -> Result<Vec<Error>> {
+pub fn missing_feature_descriptions(db: &BindingsGenerator<'_>, item: &Item) -> Result<Vec<Error>> {
     let mut missing_features: Vec<Error> = vec![];
 
     let ir = &db.ir();
@@ -146,7 +143,7 @@ pub fn missing_feature_descriptions<'a>(
         true
     };
 
-    let missing_features_of_type = |rs_type_kind: &RsTypeKind<'_>| -> Option<Vec<Error>> {
+    let missing_features_of_type = |rs_type_kind: &RsTypeKind| -> Option<Vec<Error>> {
         for TargetAndFeatures { target, features } in &defining_and_owning_target {
             let descriptions = rs_type_kind.missing_feature_descriptions_of_type(
                 target,
@@ -471,10 +468,10 @@ pub fn generated_items_to_token_stream<'db>(
     tokens
 }
 
-pub fn integer_constant_to_token_stream<'a>(
-    db: &crate::BindingsGenerator<'a>,
+pub fn integer_constant_to_token_stream(
+    db: &crate::BindingsGenerator<'_>,
     integer_constant: IntegerConstant,
-    underlying_type: &RsTypeKind<'a>,
+    underlying_type: &RsTypeKind,
 ) -> Result<TokenStream> {
     let RsTypeKind::Primitive(primitive) = *underlying_type.unalias() else {
         bail!(
@@ -832,7 +829,7 @@ pub fn generated_items_to_tokens<'db>(
                     }
                     .to_tokens(tokens);
                 }
-                let record_ir = db.find_decl::<Rc<ir::Record>>(*id).unwrap();
+                let record_ir = db.find_decl::<FfiRc<ir::Record>>(*id).unwrap();
                 let module_name = db.record_to_associated_module_name(record_ir.clone()).unwrap();
                 if !free_functions.is_empty() || !nested_items.is_empty() {
                     let nested_items_to_tokens =
@@ -861,8 +858,8 @@ pub fn generated_items_to_tokens<'db>(
                 // in our target. We do not have to worry about getting items from
                 // other targets though because Crubit only generates items for this
                 // target.
-                let current_namespace: &Rc<ir::Namespace> =
-                    db.find_decl::<Rc<Namespace>>(id).expect("should always be a namespace");
+                let current_namespace: &FfiRc<ir::Namespace> =
+                    db.find_decl::<FfiRc<Namespace>>(id).expect("should always be a namespace");
                 let is_last_reopened_namespace_in_this_target = db
                     .ir()
                     .is_last_reopened_namespace(id, current_namespace.canonical_namespace_id())
@@ -884,7 +881,7 @@ pub fn generated_items_to_tokens<'db>(
 
                 let namespace_tokens = generated_items_to_token_stream(generated_items, db, items);
 
-                let canonical_namespace: &Rc<ir::Namespace> = db
+                let canonical_namespace: &FfiRc<ir::Namespace> = db
                     .find_decl(current_namespace.canonical_namespace_id())
                     .unwrap_or_else(|_| panic!("Namespace canonical_namespace_id {:?} not found as a valid Namespace item.", current_namespace.canonical_namespace_id()));
                 let name = make_rs_ident(canonical_namespace.rs_name().as_str());

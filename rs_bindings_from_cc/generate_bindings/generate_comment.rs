@@ -6,7 +6,7 @@
 
 use database::code_snippet::{ApiSnippets, DocCommentAttr, GeneratedItem};
 use database::{intern, BindingsGenerator};
-use ir::{Comment, GenericItem, UnsupportedItem, IR};
+use ir::{Comment, FfiRc, GenericItem, UnsupportedItem, IR};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::HashMap;
@@ -120,10 +120,7 @@ pub fn generate_doc_comment(
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.
-pub fn generate_unsupported<'db>(
-    db: &BindingsGenerator<'db>,
-    item: Rc<UnsupportedItem<'db>>,
-) -> ApiSnippets {
+pub fn generate_unsupported(db: &BindingsGenerator, item: FfiRc<UnsupportedItem>) -> ApiSnippets {
     db.assert_in_error_scope(item.id());
 
     // Avoid generating unsupported item comments for standard library templates.
@@ -135,7 +132,7 @@ pub fn generate_unsupported<'db>(
         }
     }
 
-    for error in db.unsupported_item_errors(Rc::clone(&item)).iter() {
+    for error in db.unsupported_item_errors(FfiRc::clone(&item)).iter() {
         db.errors().report(error);
     }
 
@@ -165,7 +162,7 @@ pub fn generate_unsupported<'db>(
         item.name()
     )
     .unwrap();
-    for (index, error) in db.unsupported_item_errors(Rc::clone(&item)).iter().enumerate() {
+    for (index, error) in db.unsupported_item_errors(FfiRc::clone(&item)).iter().enumerate() {
         if index != 0 {
             message.push_str("\n\n");
         }
@@ -197,7 +194,7 @@ pub fn generate_unsupported<'db>(
 }
 
 /// Generates Rust source code for a given `Comment`.
-pub fn generate_comment(comment: Rc<Comment>) -> ApiSnippets {
+pub fn generate_comment(comment: FfiRc<Comment>) -> ApiSnippets {
     ApiSnippets {
         generated_items: HashMap::from([(
             comment.id(),
