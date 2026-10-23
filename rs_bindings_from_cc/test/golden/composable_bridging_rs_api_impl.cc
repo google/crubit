@@ -104,7 +104,7 @@ extern "C" void __rust_thunk___Z14MakeMyI8Structv(
 
 static_assert((struct MyOption<struct MyI8Struct> (*)()) & ::MakeMyI8Struct);
 
-static_assert((void (*)(::rs_std::SliceRef<::std::__u::string_view>)) &
+static_assert((void (*)(::rs::SliceRef<::std::__u::string_view>)) &
               ::InspectStringViews);
 
 extern "C" void __rust_thunk___Z12MaybeVoidPtrv(
@@ -120,8 +120,8 @@ extern "C" void __rust_thunk___Z12MaybeVoidPtrv(
 static_assert((struct MyOption<void*> (*)()) & ::MaybeVoidPtr);
 
 extern "C" void
-__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(
-    unsigned char* __return_abi_buffer, ::rs_std::SliceRef<const int> slice) {
+__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN2rs8SliceRefIKiEE(
+    unsigned char* __return_abi_buffer, ::rs::SliceRef<const int> slice) {
   ::crubit::Encoder __return_encoder(
       ::crubit::MyOptionAbi<
           ::crubit::TransmuteAbi<::rs_std::SliceRef<const int>>>::kSize,
@@ -132,8 +132,8 @@ __rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE
               __return_encoder);
 }
 
-static_assert((struct MyOption<class rs_std::SliceRef<const int>> (*)(
-                  ::rs_std::SliceRef<const int>)) &
+static_assert((struct MyOption<class rs::SliceRef<const int>> (*)(
+                  ::rs::SliceRef<const int>)) &
               ::AcceptsSliceAndReturnsStatusErrorIfEmpty);
 
 extern "C" void __rust_thunk___Z16ReturnsCStrArrayv(

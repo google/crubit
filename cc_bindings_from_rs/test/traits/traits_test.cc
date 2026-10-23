@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 template <typename T>
-  requires(rs_std::where_v<T, traits::MyTrait>)
+  requires(rs::where_v<T, traits::MyTrait>)
 std::int32_t do_something(T const& self) {
   return traits::MyTrait::impl<T>::do_something(self);
 }

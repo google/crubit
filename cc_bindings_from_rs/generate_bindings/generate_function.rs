@@ -1299,7 +1299,7 @@ pub fn generate_function<'tcx>(
                     .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db))?;
                 let trait_name_with_args =
                     format_trait_ref_for_cc(db, trait_ref)?.into_tokens(&mut prereqs);
-                quote! { rs_std :: impl <#struct_name, #trait_name_with_args> :: #bracketed_decl_name }
+                quote! { rs :: impl <#struct_name, #trait_name_with_args> :: #bracketed_decl_name }
             }
             StaticMethodMode::Infer => {
                 if let Some(self_ty_val) = self_ty.filter(|ty| {

@@ -299,21 +299,21 @@ clang::QualType LookupRsCoreFmtDebug(
   return context->getTypeDeclType(debug);
 }
 
-// Returns the canonical declaration of `rs_std::impl`, or null if it is not
+// Returns the canonical declaration of `<ns_name>::impl`, or null if it is not
 // declared in the translation unit.  Most translation units don't declare it
 // (only headers that include `support/rs_std/traits.h` do), so its absence is
 // not an error.
-const clang::ClassTemplateDecl* absl_nullable LookupCanonicalRsStdImpl(
-    const clang::ASTContext* absl_nonnull context) {
+const clang::ClassTemplateDecl* absl_nullable LookupCanonicalImplInNamespace(
+    const clang::ASTContext* absl_nonnull context, absl::string_view ns_name) {
   const clang::TranslationUnitDecl* translation_unit =
       context->getTranslationUnitDecl();
-  const clang::NamespaceDecl* rs_std =
-      FindDecl<clang::NamespaceDecl>(translation_unit, "rs_std");
-  if (rs_std == nullptr) {
+  const clang::NamespaceDecl* ns =
+      FindDecl<clang::NamespaceDecl>(translation_unit, ns_name);
+  if (ns == nullptr) {
     return nullptr;
   }
   const clang::ClassTemplateDecl* impl =
-      FindDecl<clang::ClassTemplateDecl>(rs_std, "impl");
+      FindDecl<clang::ClassTemplateDecl>(ns, "impl");
   if (impl == nullptr) {
     return nullptr;
   }
@@ -329,7 +329,8 @@ Importer::Importer(Invocation& invocation, clang::ASTContext& ctx,
       itanium_tag_name_mangler_(ABSL_DIE_IF_NULL(
           clang::ItaniumMangleContext::create(ctx_, ctx_.getDiagnostics()))),
       rs_core_fmt_debug_(LookupRsCoreFmtDebug(&ctx)),
-      rs_std_impl_(LookupCanonicalRsStdImpl(&ctx)) {
+      rs_impl_(LookupCanonicalImplInNamespace(&ctx, "rs")),
+      rs_std_impl_(LookupCanonicalImplInNamespace(&ctx, "rs_std")) {
   decl_importers_.push_back(std::make_unique<ExistingRustTypeImporter>(*this));
   decl_importers_.push_back(std::make_unique<ClassTemplateDeclImporter>(*this));
   decl_importers_.push_back(std::make_unique<CXXRecordDeclImporter>(*this));
@@ -1035,7 +1036,8 @@ static bool IsInSpecialCasedNamespace(const clang::Decl& decl) {
   std::optional<llvm::StringRef> top_level_ns =
       AsTopLevelNamespace(decl.getDeclContext());
   return top_level_ns == "std" || top_level_ns == "absl" ||
-         top_level_ns == "c9" || top_level_ns == "rs_std";
+         top_level_ns == "c9" || top_level_ns == "rs" ||
+         top_level_ns == "rs_std";
 }
 
 bool Importer::IsAlwaysInstantiate(
@@ -1954,48 +1956,54 @@ absl::StatusOr<bool> Importer::DetectFormatter(
 }
 
 bool Importer::ImplementsCoreFmtDebug(const clang::TypeDecl& type) const {
-  if (rs_core_fmt_debug_.isNull() || rs_std_impl_ == nullptr) {
+  if (rs_core_fmt_debug_.isNull()) {
     return false;
   }
 
-  for (const clang::ClassTemplateSpecializationDecl* absl_nonnull spec :
-       rs_std_impl_->specializations()) {
-    const clang::TemplateArgumentList& template_args = spec->getTemplateArgs();
-    if (template_args.size() != 2) {
+  for (const clang::ClassTemplateDecl* impl_decl : {rs_impl_, rs_std_impl_}) {
+    if (impl_decl == nullptr) {
       continue;
     }
-    if (!clang::ASTContext::hasSameType(template_args[0].getAsType(),
-                                        ctx_.getTypeDeclType(&type))) {
-      continue;
-    }
-    if (!clang::ASTContext::hasSameType(template_args[1].getAsType(),
-                                        rs_core_fmt_debug_)) {
-      continue;
-    }
-
-    const clang::CXXRecordDecl* absl_nullable def = spec->getDefinition();
-    if (def == nullptr) {
-      return false;
-    }
-
-    for (const clang::Decl* absl_nonnull decl : def->decls()) {
-      const auto* absl_nullable var = llvm::dyn_cast<clang::VarDecl>(decl);
-      if (var == nullptr || var->getName() != "kIsImplemented") {
+    for (const clang::ClassTemplateSpecializationDecl* absl_nonnull spec :
+         impl_decl->specializations()) {
+      const clang::TemplateArgumentList& template_args =
+          spec->getTemplateArgs();
+      if (template_args.size() != 2) {
         continue;
       }
-      const clang::Expr* absl_nullable initializer = var->getAnyInitializer();
-      if (initializer == nullptr) {
-        break;
+      if (!clang::ASTContext::hasSameType(template_args[0].getAsType(),
+                                          ctx_.getTypeDeclType(&type))) {
+        continue;
+      }
+      if (!clang::ASTContext::hasSameType(template_args[1].getAsType(),
+                                          rs_core_fmt_debug_)) {
+        continue;
       }
 
-      clang::Expr::EvalResult result;
-      if (!initializer->EvaluateAsConstantExpr(result, ctx_) ||
-          !result.Val.isInt()) {
-        break;
+      const clang::CXXRecordDecl* absl_nullable def = spec->getDefinition();
+      if (def == nullptr) {
+        return false;
       }
-      return result.Val.getInt().getBoolValue();
+
+      for (const clang::Decl* absl_nonnull decl : def->decls()) {
+        const auto* absl_nullable var = llvm::dyn_cast<clang::VarDecl>(decl);
+        if (var == nullptr || var->getName() != "kIsImplemented") {
+          continue;
+        }
+        const clang::Expr* absl_nullable initializer = var->getAnyInitializer();
+        if (initializer == nullptr) {
+          break;
+        }
+
+        clang::Expr::EvalResult result;
+        if (!initializer->EvaluateAsConstantExpr(result, ctx_) ||
+            !result.Val.isInt()) {
+          break;
+        }
+        return result.Val.getInt().getBoolValue();
+      }
+      return false;
     }
-    return false;
   }
 
   return false;

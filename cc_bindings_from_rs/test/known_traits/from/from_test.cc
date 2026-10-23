@@ -17,8 +17,8 @@ TEST(FromTest, FromImplsBecomeConversionOperators) {
   EXPECT_EQ(static_cast<from::OpaqueRef>(std::move(opaque)).get_arg(),
             "Opaque");
 
-  from::OpaqueRef opaque_ref = from::OpaqueRef::create(rs_std::StrRef("hello"));
-  EXPECT_EQ(static_cast<rs_std::StrRef>(opaque_ref), "hello");
+  from::OpaqueRef opaque_ref = from::OpaqueRef::create(rs::StrRef("hello"));
+  EXPECT_EQ(static_cast<rs::StrRef>(opaque_ref), "hello");
 
   from::NotFfiSafe not_ffi_safe = from::NotFfiSafe::create();
   EXPECT_EQ(static_cast<int32_t>(not_ffi_safe), 42);
@@ -34,12 +34,12 @@ TEST(FromTest, CloneCopyConstructorAndConversion) {
 
 TEST(FromTest, CloneAllocConstructorAndConversion) {
   from::CloneAllocSource src =
-      from::CloneAllocSource::create(rs_std::StrRef("hello alloc"));
+      from::CloneAllocSource::create(rs::StrRef("hello alloc"));
   from::CloneAllocType dest(std::move(src));
   EXPECT_EQ(dest.get_value().to_string_view(), "hello alloc");
 
   from::CloneAllocSource src2 =
-      from::CloneAllocSource::create(rs_std::StrRef("hello alloc 2"));
+      from::CloneAllocSource::create(rs::StrRef("hello alloc 2"));
   EXPECT_EQ(static_cast<from::CloneAllocType>(std::move(src2))
                 .get_value()
                 .to_string_view(),

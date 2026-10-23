@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/internal/cpp_config.h"
 #include "support/rs_std/traits.h"
 
 // Implementation note: Forward-declaring `rs::core::iter::Iterator` avoids
@@ -50,11 +51,11 @@ struct IteratorEnd {
 //   functionality conditonally - if `TAdaptedIterator` is `Clone` (which
 //   presumably would ensure that `next()` doesn't affect the other copy?).
 template <typename TAdaptedIterator>
-  requires(rs_std::where_v<TAdaptedIterator, rs::core::iter::Iterator>)
+  requires(rs::where_v<TAdaptedIterator, rs::core::iter::Iterator>)
 
 class IteratorAdapter {
  private:
-  using impl = rs_std::impl<TAdaptedIterator, rs::core::iter::Iterator>;
+  using impl = rs::impl<TAdaptedIterator, rs::core::iter::Iterator>;
   using element_type = impl::Item;
 
  public:
@@ -158,24 +159,46 @@ IteratorAdapter(TAdaptedIterator) -> IteratorAdapter<TAdaptedIterator>;
 
 }  // namespace rs
 
-namespace rs_std {
+#ifdef CRUBIT_INTERNAL_RS_NAMESPACE
+#define CRUBIT_RS_STD_PRIMARY_NS rs
+#else
+#define CRUBIT_RS_STD_PRIMARY_NS rs_std
+#endif
+
+namespace CRUBIT_RS_STD_PRIMARY_NS {
 // Mirrors `impl<I: Iterator + ?Sized> Iterator for &mut I` from the Rust
 // standard library, which is needed because we don't automatically generate
 // bindings for blanket impls today.
 template <typename T>
-  requires(rs_std::where_v<T, rs::core::iter::Iterator>)
+  requires(rs::where_v<T, rs::core::iter::Iterator>)
 struct impl<T*, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
-  using Item = typename rs_std::impl<T, ::rs::core::iter::Iterator>::Item;
+  using Item = typename rs::impl<T, ::rs::core::iter::Iterator>::Item;
   // Reference items (`T&` / `const T&`) are returned as pointers (`T*` /
   // `const T*`) from `next()`.
   using StoredItem =
       ::std::conditional_t< ::std::is_reference_v<Item>,
                             ::std::remove_reference_t<Item>*, Item>;
   static ::std::optional<StoredItem> next(T* self) {
-    return rs_std::impl<T, ::rs::core::iter::Iterator>::next(*self);
+    return rs::impl<T, ::rs::core::iter::Iterator>::next(*self);
   }
 };
+}  // namespace CRUBIT_RS_STD_PRIMARY_NS
+
+#undef CRUBIT_RS_STD_PRIMARY_NS
+
+namespace rs_std {
+#ifdef CRUBIT_INTERNAL_RS_NAMESPACE
+using IteratorEnd [[deprecated("Use rs::IteratorEnd instead")]] =
+    ::rs::IteratorEnd;
+template <typename T>
+using IteratorAdapter [[deprecated("Use rs::IteratorAdapter instead")]] =
+    ::rs::IteratorAdapter<T>;
+#else
+using IteratorEnd = ::rs::IteratorEnd;
+template <typename T>
+using IteratorAdapter = ::rs::IteratorAdapter<T>;
+#endif
 }  // namespace rs_std
 
 #endif  // CRUBIT_SUPPORT_RS_STD_ITERATOR_ADAPTER_H_

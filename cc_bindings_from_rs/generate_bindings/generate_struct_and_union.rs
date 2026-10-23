@@ -1698,11 +1698,11 @@ fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
     let tcx = db.tcx();
     if let Some((_, referent, mutability)) = as_ref_or_pinned_ref(ty) {
         return match *referent.kind() {
-            // `&str` references are formatted as `rs_std::StrRef`, which is default-constructible
+            // `&str` references are formatted as `rs::StrRef`, which is default-constructible
             // in C++ (representing an empty string with a non-null dangling pointer).
             // Mutable references to `str` are unsupported.
             TyKind::Str => mutability.is_not(),
-            // `&[T]` and `&mut [T]` slice references are formatted as `rs_std::SliceRef`, which is
+            // `&[T]` and `&mut [T]` slice references are formatted as `rs::SliceRef`, which is
             // default-constructible in C++ (representing an empty slice with a non-null
             // dangling pointer).
             TyKind::Slice(..) => true,
@@ -4224,7 +4224,7 @@ fn format_const_value<'tcx>(
             };
             let str_data = std::str::from_utf8(slice)
                 .map_err(|e| anyhow!("Invalid UTF-8 in &str constant: {e}"))?;
-            let tokens = quote! { rs_std::StrRef(#str_data) };
+            let tokens = quote! { rs::StrRef(#str_data) };
             Ok(CcSnippet::with_include(tokens, db.support_header("rs_std/str_ref.h")))
         }
         ty::TyKind::Adt(adt_def, _) if adt_def.is_struct() => {

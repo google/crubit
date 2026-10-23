@@ -18,6 +18,7 @@ target_link_libraries(crubit_support_rs_std_char PUBLIC
 crubit_support_rs_std_str_ref
 crubit_support_annotations
 crubit_support_internal_bindings_support
+crubit_support_internal_cpp_config
 )
 
 add_library(crubit_support_rs_std_dyn_callable INTERFACE
@@ -33,6 +34,7 @@ target_link_libraries(crubit_support_rs_std_dyn_callable INTERFACE
 absl::nullability
 absl::any_invocable
 crubit_support_bridge_cpp
+crubit_support_internal_cpp_config
 )
 
 add_library(crubit_support_rs_std_dyn_erased_future_cc INTERFACE
@@ -74,6 +76,7 @@ target_include_directories(crubit_support_rs_std_int INTERFACE
 
 target_link_libraries(crubit_support_rs_std_int INTERFACE
 crubit_support_annotations
+crubit_support_internal_cpp_config
 )
 
 add_library(crubit_support_rs_std_iterator_adapter INTERFACE
@@ -87,6 +90,7 @@ target_include_directories(crubit_support_rs_std_iterator_adapter INTERFACE
 
 target_link_libraries(crubit_support_rs_std_iterator_adapter INTERFACE
 crubit_support_rs_std_traits
+crubit_support_internal_cpp_config
 )
 
 add_library(crubit_support_rs_std_lossy_formatter_for_bindings INTERFACE
@@ -110,6 +114,7 @@ target_include_directories(crubit_support_rs_std_option INTERFACE
 target_link_libraries(crubit_support_rs_std_option INTERFACE
 crubit_support_rs_std_unit
 crubit_support_internal_bindings_support
+crubit_support_internal_cpp_config
 )
 
 add_library(crubit_support_rs_std_result INTERFACE
@@ -124,6 +129,7 @@ target_include_directories(crubit_support_rs_std_result INTERFACE
 target_link_libraries(crubit_support_rs_std_result INTERFACE
 crubit_support_rs_std_unit
 crubit_support_internal_bindings_support
+crubit_support_internal_cpp_config
 )
 
 add_library(crubit_support_rs_std_slice_ref INTERFACE
@@ -138,6 +144,7 @@ target_include_directories(crubit_support_rs_std_slice_ref INTERFACE
 target_link_libraries(crubit_support_rs_std_slice_ref INTERFACE
 crubit_support_annotations
 crubit_support_internal_bindings_support
+crubit_support_internal_cpp_config
 )
 
 add_library(crubit_support_rs_std_str_ref INTERFACE
@@ -153,6 +160,7 @@ target_link_libraries(crubit_support_rs_std_str_ref INTERFACE
 crubit_support_rs_std_slice_ref
 crubit_support_annotations_internal
 crubit_support_internal_bindings_support
+crubit_support_internal_cpp_config
 crubit_support_rs_std_internal_is_utf8
 )
 
@@ -165,6 +173,10 @@ target_include_directories(crubit_support_rs_std_traits INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
+target_link_libraries(crubit_support_rs_std_traits INTERFACE
+crubit_support_internal_cpp_config
+)
+
 add_library(crubit_support_rs_std_tuple INTERFACE
 "tuple.h"
 )
@@ -174,6 +186,10 @@ target_include_directories(crubit_support_rs_std_tuple INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
+target_link_libraries(crubit_support_rs_std_tuple INTERFACE
+crubit_support_internal_cpp_config
+)
+
 add_library(crubit_support_rs_std_unit INTERFACE
 "unit.h"
 )
@@ -181,6 +197,10 @@ set_target_properties(crubit_support_rs_std_unit PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(crubit_support_rs_std_unit INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
+target_link_libraries(crubit_support_rs_std_unit INTERFACE
+crubit_support_internal_cpp_config
 )
 
 add_library(crubit_support_rs_std_vec INTERFACE
@@ -194,6 +214,7 @@ target_include_directories(crubit_support_rs_std_vec INTERFACE
 
 target_link_libraries(crubit_support_rs_std_vec INTERFACE
 crubit_support_internal_bindings_support
+crubit_support_internal_cpp_config
 )
 
 add_library(crubit_support_rs_std_waker STATIC
@@ -204,5 +225,9 @@ set_target_properties(crubit_support_rs_std_waker PROPERTIES LINKER_LANGUAGE CXX
 
 target_include_directories(crubit_support_rs_std_waker PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
+target_link_libraries(crubit_support_rs_std_waker PUBLIC
+crubit_support_internal_cpp_config
 )
 

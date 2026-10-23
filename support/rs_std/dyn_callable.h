@@ -13,11 +13,19 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/internal/cpp_config.h"
 #include "absl/base/nullability.h"
 #include "absl/functional/any_invocable.h"
+
+#ifdef CRUBIT_INTERNAL_RS_NAMESPACE
+#define CRUBIT_RS_STD_PRIMARY_NS rs
+#else
+#define CRUBIT_RS_STD_PRIMARY_NS rs_std
+#endif
+
 #include "support/bridge.h"
 
-namespace rs_std {
+namespace CRUBIT_RS_STD_PRIMARY_NS {
 
 template <class Sig>
 class DynCallable;
@@ -53,7 +61,7 @@ class ManagedCallable {
   ManagedCallable& operator=(ManagedCallable&) = delete;
 
   ManagedCallable(ManagedCallable&& other) {
-    *this = std::forward<ManagedCallable>(other);
+    *this = ::std::forward<ManagedCallable>(other);
   }
 
   ManagedCallable& operator=(ManagedCallable&& other) {
@@ -90,53 +98,55 @@ class Impl {};
 template <class ReturnType, class... P>
 inline ReturnType InvokedAfterMove(TypeErasedState*,
                                    ForwardedParameterType<P>...) {
-  std::terminate();
+  ::std::terminate();
 }
 
-#define CRUBIT_INTERNAL_RUST_ANY_CALLABLE_IMPL(qual)                           \
-  template <class ReturnType, class... P>                                      \
-  class Impl<ReturnType(P...) qual> : public ManagedCallable {                 \
-   protected:                                                                  \
-    friend struct DynCallableAbi<ReturnType(P...) qual>;                       \
-    using InvokerType = InvokerType<ReturnType, P...>;                         \
-                                                                               \
-    explicit Impl(TypeErasedState state, ManagerType* absl_nonnull manager,    \
-                  InvokerType* invoker)                                        \
-        : ManagedCallable(state, manager), invoker_(invoker) {}                \
-                                                                               \
-   public:                                                                     \
-    Impl() = default;                                                          \
-    Impl(const Impl& other) = delete;                                          \
-    Impl& operator=(const Impl& other) = delete;                               \
-    Impl(Impl&& other) { *this = std::forward<Impl>(other); }                  \
-    Impl& operator=(Impl&& other) {                                            \
-      ManagedCallable::operator=(std::move(other));                            \
-      invoker_ = other.invoker_;                                               \
-      other.invoker_ = nullptr;                                                \
-      return *this;                                                            \
-    }                                                                          \
-                                                                               \
-    ReturnType operator()(P... args) qual {                                    \
-      using QualifiedTestType = int qual;                                      \
-                                                                               \
-      InvokerType* invoker_copy = invoker_;                                    \
-      if constexpr (std::is_rvalue_reference_v<QualifiedTestType>) {           \
-        invoker_ = InvokedAfterMove<ReturnType, P...>;                         \
-        manager_ = EmptyManager;                                               \
-      }                                                                        \
-      if constexpr (std::is_const_v<QualifiedTestType>) {                      \
-        return invoker_copy(&const_cast<Impl*>(this)->storage_,                \
-                            std::forward<ForwardedParameterType<P>>(args)...); \
-      } else {                                                                 \
-        return invoker_copy(&this->storage_,                                   \
-                            std::forward<ForwardedParameterType<P>>(args)...); \
-      }                                                                        \
-    }                                                                          \
-                                                                               \
-    bool HasValue() const { return invoker_ != nullptr; }                      \
-                                                                               \
-   protected:                                                                  \
-    InvokerType* invoker_ = nullptr;                                           \
+#define CRUBIT_INTERNAL_RUST_ANY_CALLABLE_IMPL(qual)                        \
+  template <class ReturnType, class... P>                                   \
+  class Impl<ReturnType(P...) qual> : public ManagedCallable {              \
+   protected:                                                               \
+    friend struct DynCallableAbi<ReturnType(P...) qual>;                    \
+    using InvokerType = InvokerType<ReturnType, P...>;                      \
+                                                                            \
+    explicit Impl(TypeErasedState state, ManagerType* absl_nonnull manager, \
+                  InvokerType* invoker)                                     \
+        : ManagedCallable(state, manager), invoker_(invoker) {}             \
+                                                                            \
+   public:                                                                  \
+    Impl() = default;                                                       \
+    Impl(const Impl& other) = delete;                                       \
+    Impl& operator=(const Impl& other) = delete;                            \
+    Impl(Impl&& other) { *this = ::std::forward<Impl>(other); }             \
+    Impl& operator=(Impl&& other) {                                         \
+      ManagedCallable::operator=(::std::move(other));                       \
+      invoker_ = other.invoker_;                                            \
+      other.invoker_ = nullptr;                                             \
+      return *this;                                                         \
+    }                                                                       \
+                                                                            \
+    ReturnType operator()(P... args) qual {                                 \
+      using QualifiedTestType = int qual;                                   \
+                                                                            \
+      InvokerType* invoker_copy = invoker_;                                 \
+      if constexpr (::std::is_rvalue_reference_v<QualifiedTestType>) {      \
+        invoker_ = InvokedAfterMove<ReturnType, P...>;                      \
+        manager_ = EmptyManager;                                            \
+      }                                                                     \
+      if constexpr (::std::is_const_v<QualifiedTestType>) {                 \
+        return invoker_copy(                                                \
+            &const_cast<Impl*>(this)->storage_,                             \
+            ::std::forward<ForwardedParameterType<P>>(args)...);            \
+      } else {                                                              \
+        return invoker_copy(                                                \
+            &this->storage_,                                                \
+            ::std::forward<ForwardedParameterType<P>>(args)...);            \
+      }                                                                     \
+    }                                                                       \
+                                                                            \
+    bool HasValue() const { return invoker_ != nullptr; }                   \
+                                                                            \
+   protected:                                                               \
+    InvokerType* invoker_ = nullptr;                                        \
   };
 
 CRUBIT_INTERNAL_RUST_ANY_CALLABLE_IMPL(const)
@@ -216,6 +226,7 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
   // DynCallableAbi<Sig> is a friend so it can access the DynCallable
   // constructor below.
   friend struct internal_dyn_callable::DynCallableAbi<Sig>;
+  friend class ::rs_std::DynCallable<Sig>;
 
   // Private constructor, only intended to be called by DynCallableAbi<Sig>.
   //
@@ -235,7 +246,7 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
   // Constructs the `DynCallable` in an empty state.
   // Invoking it results in undefined behavior.
   DynCallable() noexcept = default;
-  DynCallable(std::nullptr_t) noexcept {}  // NOLINT
+  DynCallable(::std::nullptr_t) noexcept {}  // NOLINT
 
   // DynCallable is not copyable.
   DynCallable(DynCallable& other) = delete;
@@ -252,7 +263,7 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
   // rs_std::DynCallable::swap()
   //
   // Exchanges the targets of `*this` and `other`.
-  void swap(DynCallable& other) noexcept { std::swap(*this, other); }
+  void swap(DynCallable& other) noexcept { ::std::swap(*this, other); }
 
   // rs_std::DynCallable::operator bool()
   //
@@ -265,30 +276,42 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
 
   // NOLINTNEXTLINE(google-explicit-constructor)
   operator absl::AnyInvocable<Sig>() && {
+#ifdef CRUBIT_INTERNAL_RS_NAMESPACE
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+    return ::rs_std::DynCallable<Sig>::ToAnyInvocable(::std::move(*this));
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+#else
     auto* manager = this->manager_;
     auto* invoker = this->invoker_;
-    this->manager_ = internal_dyn_callable::EmptyManager;
+    this->manager_ =
+        ::CRUBIT_RS_STD_PRIMARY_NS::internal_dyn_callable::EmptyManager;
     this->invoker_ = nullptr;
     return absl::AnyInvocable<Sig>(&this->storage_, manager, invoker);
+#endif
   }
 
   // Returns `true` if `f` is empty.
-  friend bool operator==(const DynCallable& f, std::nullptr_t) noexcept {
+  friend bool operator==(const DynCallable& f, ::std::nullptr_t) noexcept {
     return !f.HasValue();
   }
 
   // Returns `true` if `f` is empty.
-  friend bool operator==(std::nullptr_t, const DynCallable& f) noexcept {
+  friend bool operator==(::std::nullptr_t, const DynCallable& f) noexcept {
     return !f.HasValue();
   }
 
   // Returns `false` if `f` is empty.
-  friend bool operator!=(const DynCallable& f, std::nullptr_t) noexcept {
+  friend bool operator!=(const DynCallable& f, ::std::nullptr_t) noexcept {
     return f.HasValue();
   }
 
   // Returns `false` if `f` is empty.
-  friend bool operator!=(std::nullptr_t, const DynCallable& f) noexcept {
+  friend bool operator!=(::std::nullptr_t, const DynCallable& f) noexcept {
     return f.HasValue();
   }
 
@@ -298,6 +321,56 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
   friend void swap(DynCallable& f1, DynCallable& f2) noexcept { f1.swap(f2); }
 };
 
+}  // namespace CRUBIT_RS_STD_PRIMARY_NS
+
+#undef CRUBIT_RS_STD_PRIMARY_NS
+
+namespace rs_std {
+#ifdef CRUBIT_INTERNAL_RS_NAMESPACE
+namespace internal_dyn_callable {
+template <class Sig>
+using DynCallableAbi = ::rs::internal_dyn_callable::DynCallableAbi<Sig>;
+}  // namespace internal_dyn_callable
+
+template <class Sig>
+class [[deprecated("Use rs::DynCallable instead")]] DynCallable
+    : public ::rs::DynCallable<Sig> {
+ public:
+  using ::rs::DynCallable<Sig>::DynCallable;
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  DynCallable(::rs::DynCallable<Sig>&& other) noexcept
+      : ::rs::DynCallable<Sig>(::std::move(other)) {}
+
+ private:
+  friend class ::rs::DynCallable<Sig>;
+  static absl::AnyInvocable<Sig> ToAnyInvocable(
+      ::rs::DynCallable<Sig>&& callable) {
+    auto* manager = callable.manager_;
+    auto* invoker = callable.invoker_;
+    callable.manager_ = ::rs::internal_dyn_callable::EmptyManager;
+    callable.invoker_ = nullptr;
+    return absl::AnyInvocable<Sig>(&callable.storage_, manager, invoker);
+  }
+};
+#endif
 }  // namespace rs_std
+
+#ifndef CRUBIT_INTERNAL_RS_NAMESPACE
+namespace rs {
+namespace internal_dyn_callable {
+template <class Sig>
+using DynCallableAbi = ::rs_std::internal_dyn_callable::DynCallableAbi<Sig>;
+}  // namespace internal_dyn_callable
+
+template <class Sig>
+class DynCallable : public ::rs_std::DynCallable<Sig> {
+ public:
+  using ::rs_std::DynCallable<Sig>::DynCallable;
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  DynCallable(::rs_std::DynCallable<Sig>&& other) noexcept
+      : ::rs_std::DynCallable<Sig>(::std::move(other)) {}
+};
+}  // namespace rs
+#endif
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_DYN_CALLABLE_H_

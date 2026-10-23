@@ -220,8 +220,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: Point") alignas(4)
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t call_impl_with_tuple_option(
-    ::rs::Fn<rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
-        rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>) &&>
+    ::rs::Fn<rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>(
+        rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>) &&>
         f);
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -270,11 +270,11 @@ void call_void_once(::rs::FnRef<void(::std::int32_t)> f, ::std::int32_t x);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t call_with_hrtb_str(
-    ::rs::FnRef<::std::int32_t(rs_std::StrRef) const> f, rs_std::StrRef s);
+    ::rs::FnRef<::std::int32_t(rs::StrRef) const> f, rs::StrRef s);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::uintptr_t call_with_hrtb_str_to_str(
-    ::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const> f, rs_std::StrRef s);
+    ::rs::FnRef<rs::StrRef(rs::StrRef) const> f, rs::StrRef s);
 
 // CRUBIT_ANNOTATE: must_bind=
 void call_with_movable_drop(
@@ -319,28 +319,28 @@ void call_with_movable_drop(
     ::callables::NonCppMovable const& x);
 
 // CRUBIT_ANNOTATE: must_bind=
-::std::int32_t call_with_str(
-    ::rs::FnRef<::std::int32_t(rs_std::StrRef) const> f, rs_std::StrRef s);
+::std::int32_t call_with_str(::rs::FnRef<::std::int32_t(rs::StrRef) const> f,
+                             rs::StrRef s);
 
 // CRUBIT_ANNOTATE: must_bind=
-rs_std::StrRef call_with_str_to_str(
-    ::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const> f, rs_std::StrRef s);
+rs::StrRef call_with_str_to_str(::rs::FnRef<rs::StrRef(rs::StrRef) const> f,
+                                rs::StrRef s);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t call_with_tuple_option(
-    ::rs::Fn<rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
-        rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>) &&>
+    ::rs::Fn<rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>(
+        rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>) &&>
         f);
 
 }  // namespace callables
 
 template <>
-struct rs_std::impl<::callables::Point, ::rs::core::cmp::Eq> {
+struct rs::impl<::callables::Point, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs_std::impl<::callables::Point, ::rs::core::fmt::Debug> {
+struct rs::impl<::callables::Point, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function `<callables_golden::Point
@@ -350,13 +350,12 @@ struct rs_std::impl<::callables::Point, ::rs::core::fmt::Debug> {
   // std::fmt::Error>`: Failed to format type for the definition of
   // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
 };
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "core :: option :: Option < i32 >") rs_std::Option<::std::int32_t>
-    : public rs_std::OptionBase<rs_std::Option<::std::int32_t>,
-                                ::std::int32_t> {
+    "core :: option :: Option < i32 >") rs::Option<::std::int32_t>
+    : public rs::OptionBase<rs::Option<::std::int32_t>, ::std::int32_t> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -366,22 +365,21 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
-  using base_type =
-      rs_std::OptionBase<rs_std::Option<::std::int32_t>, ::std::int32_t>;
+  using base_type = rs::OptionBase<rs::Option<::std::int32_t>, ::std::int32_t>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(rs::OptionForwardConstructible<Option, ::std::int32_t, U>)
   Option(U&& value) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(rs::OptionForwardConstructible<Option, ::std::int32_t, U>)
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+    requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+    requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -408,12 +406,12 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
 template <>
 struct alignas(4)
     CRUBIT_INTERNAL_RUST_TYPE("(i32 , :: core :: option :: Option < i32 > ,)")
-        rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>> {
+        rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>> {
  public:
   // Default::default
   Tuple();
@@ -426,14 +424,13 @@ struct alignas(4)
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
-  Tuple(::std::int32_t __field0,
-        rs_std::Option<::std::int32_t> __field1) noexcept;
-  Tuple(std::tuple<::std::int32_t, rs_std::Option<::std::int32_t>>&&
+  Tuple(::std::int32_t __field0, rs::Option<::std::int32_t> __field1) noexcept;
+  Tuple(::std::tuple<::std::int32_t, rs::Option<::std::int32_t>>&&
             tuple) noexcept;
   ~Tuple() = default;
-  operator std::tuple<::std::int32_t,
-                      rs_std::Option<::std::int32_t>>() && noexcept;
-  template <std::size_t I>
+  operator ::std::tuple<::std::int32_t,
+                        rs::Option<::std::int32_t>>() && noexcept;
+  template <::std::size_t I>
   constexpr decltype(auto) get() & noexcept {
     static_assert(I < 2, "Tuple index out of bounds");
     if constexpr (I == 0) {
@@ -444,7 +441,7 @@ struct alignas(4)
       CRUBIT_UNREACHABLE();
     }
   }
-  template <std::size_t I>
+  template <::std::size_t I>
   constexpr decltype(auto) get() const& noexcept {
     static_assert(I < 2, "Tuple index out of bounds");
     if constexpr (I == 0) {
@@ -455,24 +452,24 @@ struct alignas(4)
       CRUBIT_UNREACHABLE();
     }
   }
-  template <std::size_t I>
+  template <::std::size_t I>
   constexpr decltype(auto) get() && noexcept {
     static_assert(I < 2, "Tuple index out of bounds");
     if constexpr (I == 0) {
-      return std::move(this->__field0);
+      return ::std::move(this->__field0);
     } else if constexpr (I == 1) {
-      return std::move(this->__field1);
+      return ::std::move(this->__field1);
     } else {
       CRUBIT_UNREACHABLE();
     }
   }
-  template <std::size_t I>
+  template <::std::size_t I>
   constexpr decltype(auto) get() const&& noexcept {
     static_assert(I < 2, "Tuple index out of bounds");
     if constexpr (I == 0) {
-      return std::move(this->__field0);
+      return ::std::move(this->__field0);
     } else if constexpr (I == 1) {
-      return std::move(this->__field1);
+      return ::std::move(this->__field1);
     } else {
       CRUBIT_UNREACHABLE();
     }
@@ -481,7 +478,7 @@ struct alignas(4)
     ::std::int32_t __field0;
   };
   union {
-    rs_std::Option<::std::int32_t> __field1;
+    rs::Option<::std::int32_t> __field1;
   };
 
  private:
@@ -853,29 +850,28 @@ extern "C" ::std::int32_t
         ::rs::internal::FnPayload);
 }
 inline ::std::int32_t call_impl_with_tuple_option(
-    ::rs::Fn<rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
-        rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>) &&>
+    ::rs::Fn<rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>(
+        rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>) &&>
         f) {
-  auto* __f_heap_fn = new ::rs::Fn<
-      rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
-          rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>) &&>(
-      ::std::move(f));
+  auto* __f_heap_fn =
+      new ::rs::Fn<rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>(
+          rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>) &&>(
+          ::std::move(f));
   auto __f_invoker =
       [](void* __data,
-         rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>* __arg_0,
+         rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>* __arg_0,
          void* __ret_ptr) -> void {
-    new (__ret_ptr) rs_std::Tuple<::std::int32_t,
-                                  rs_std::Option<::std::int32_t>>(::std::move(
-        *reinterpret_cast<::rs::Fn<
-            rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
-                rs_std::Tuple<::std::int32_t,
-                              rs_std::Option<::std::int32_t>>) &&>*>(__data))(
-        ::std::move(*__arg_0)));
+    new (__ret_ptr) rs::Tuple<::std::int32_t,
+                              rs::Option<::std::int32_t>>(::std::move(
+        *reinterpret_cast<
+            ::rs::Fn<rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>(
+                rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>) &&>*>(
+            __data))(::std::move(*__arg_0)));
   };
   auto __f_destroyer = [](void* __data) noexcept {
-    delete reinterpret_cast<::rs::Fn<rs_std::Tuple<
-        ::std::int32_t, rs_std::Option<::std::int32_t>>(
-        rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>) &&>*>(
+    delete reinterpret_cast<
+        ::rs::Fn<rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>(
+            rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>) &&>*>(
         __data);
   };
   ::rs::internal::FnPayload __f_payload{
@@ -1101,15 +1097,13 @@ inline void call_void_once(::rs::FnRef<void(::std::int32_t)> f,
 namespace __crubit_internal {
 extern "C" ::std::int32_t
 __crubit_thunk_call_uwith_uhrtb_ustr_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
-    ::rs::internal::FnRefPayload, rs_std::StrRef*);
+    ::rs::internal::FnRefPayload, rs::StrRef*);
 }
 inline ::std::int32_t call_with_hrtb_str(
-    ::rs::FnRef<::std::int32_t(rs_std::StrRef) const> f, rs_std::StrRef s) {
-  auto __f_invoker = [](void* __data,
-                        rs_std::StrRef* __arg_0) -> ::std::int32_t {
-    return (
-        *reinterpret_cast<::rs::FnRef<::std::int32_t(rs_std::StrRef) const>*>(
-            __data))(::std::move(*__arg_0));
+    ::rs::FnRef<::std::int32_t(rs::StrRef) const> f, rs::StrRef s) {
+  auto __f_invoker = [](void* __data, rs::StrRef* __arg_0) -> ::std::int32_t {
+    return (*reinterpret_cast<::rs::FnRef<::std::int32_t(rs::StrRef) const>*>(
+        __data))(::std::move(*__arg_0));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1123,15 +1117,15 @@ inline ::std::int32_t call_with_hrtb_str(
 namespace __crubit_internal {
 extern "C" ::std::uintptr_t
 __crubit_thunk_call_uwith_uhrtb_ustr_uto_ustr_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026str(
-    ::rs::internal::FnRefPayload, rs_std::StrRef*);
+    ::rs::internal::FnRefPayload, rs::StrRef*);
 }
 inline ::std::uintptr_t call_with_hrtb_str_to_str(
-    ::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const> f, rs_std::StrRef s) {
-  auto __f_invoker = [](void* __data, rs_std::StrRef* __arg_0,
+    ::rs::FnRef<rs::StrRef(rs::StrRef) const> f, rs::StrRef s) {
+  auto __f_invoker = [](void* __data, rs::StrRef* __arg_0,
                         void* __ret_ptr) -> void {
-    new (__ret_ptr) rs_std::StrRef(
-        (*reinterpret_cast<::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const>*>(
-            __data))(::std::move(*__arg_0)));
+    new (__ret_ptr) rs::StrRef(
+        (*reinterpret_cast<::rs::FnRef<rs::StrRef(rs::StrRef) const>*>(__data))(
+            ::std::move(*__arg_0)));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1241,15 +1235,13 @@ inline ::std::int32_t call_with_ref_to_ref(
 namespace __crubit_internal {
 extern "C" ::std::int32_t
 __crubit_thunk_call_uwith_ustr_u_x00000027a_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
-    ::rs::internal::FnRefPayload, rs_std::StrRef*);
+    ::rs::internal::FnRefPayload, rs::StrRef*);
 }
 inline ::std::int32_t call_with_str(
-    ::rs::FnRef<::std::int32_t(rs_std::StrRef) const> f, rs_std::StrRef s) {
-  auto __f_invoker = [](void* __data,
-                        rs_std::StrRef* __arg_0) -> ::std::int32_t {
-    return (
-        *reinterpret_cast<::rs::FnRef<::std::int32_t(rs_std::StrRef) const>*>(
-            __data))(::std::move(*__arg_0));
+    ::rs::FnRef<::std::int32_t(rs::StrRef) const> f, rs::StrRef s) {
+  auto __f_invoker = [](void* __data, rs::StrRef* __arg_0) -> ::std::int32_t {
+    return (*reinterpret_cast<::rs::FnRef<::std::int32_t(rs::StrRef) const>*>(
+        __data))(::std::move(*__arg_0));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1263,21 +1255,21 @@ inline ::std::int32_t call_with_str(
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_call_uwith_ustr_uto_ustr_u_x00000027a_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026_x00000027a_x00000020str(
-    ::rs::internal::FnRefPayload, rs_std::StrRef*, rs_std::StrRef* __ret_ptr);
+    ::rs::internal::FnRefPayload, rs::StrRef*, rs::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef call_with_str_to_str(
-    ::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const> f, rs_std::StrRef s) {
-  auto __f_invoker = [](void* __data, rs_std::StrRef* __arg_0,
+inline rs::StrRef call_with_str_to_str(
+    ::rs::FnRef<rs::StrRef(rs::StrRef) const> f, rs::StrRef s) {
+  auto __f_invoker = [](void* __data, rs::StrRef* __arg_0,
                         void* __ret_ptr) -> void {
-    new (__ret_ptr) rs_std::StrRef(
-        (*reinterpret_cast<::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const>*>(
-            __data))(::std::move(*__arg_0)));
+    new (__ret_ptr) rs::StrRef(
+        (*reinterpret_cast<::rs::FnRef<rs::StrRef(rs::StrRef) const>*>(__data))(
+            ::std::move(*__arg_0)));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
       reinterpret_cast<void (*)()>(+__f_invoker),
   };
-  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  crubit::Slot<rs::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
       __crubit_thunk_call_uwith_ustr_uto_ustr_u_x00000027a_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026_x00000027a_x00000020str(
@@ -1290,29 +1282,28 @@ extern "C" ::std::int32_t __crubit_thunk_call_uwith_utuple_uoption(
     ::rs::internal::FnPayload);
 }
 inline ::std::int32_t call_with_tuple_option(
-    ::rs::Fn<rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
-        rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>) &&>
+    ::rs::Fn<rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>(
+        rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>) &&>
         f) {
-  auto* __f_heap_fn = new ::rs::Fn<
-      rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
-          rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>) &&>(
-      ::std::move(f));
+  auto* __f_heap_fn =
+      new ::rs::Fn<rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>(
+          rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>) &&>(
+          ::std::move(f));
   auto __f_invoker =
       [](void* __data,
-         rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>* __arg_0,
+         rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>* __arg_0,
          void* __ret_ptr) -> void {
-    new (__ret_ptr) rs_std::Tuple<::std::int32_t,
-                                  rs_std::Option<::std::int32_t>>(::std::move(
-        *reinterpret_cast<::rs::Fn<
-            rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
-                rs_std::Tuple<::std::int32_t,
-                              rs_std::Option<::std::int32_t>>) &&>*>(__data))(
-        ::std::move(*__arg_0)));
+    new (__ret_ptr) rs::Tuple<::std::int32_t,
+                              rs::Option<::std::int32_t>>(::std::move(
+        *reinterpret_cast<
+            ::rs::Fn<rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>(
+                rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>) &&>*>(
+            __data))(::std::move(*__arg_0)));
   };
   auto __f_destroyer = [](void* __data) noexcept {
-    delete reinterpret_cast<::rs::Fn<rs_std::Tuple<
-        ::std::int32_t, rs_std::Option<::std::int32_t>>(
-        rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>) &&>*>(
+    delete reinterpret_cast<
+        ::rs::Fn<rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>(
+            rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>) &&>*>(
         __data);
   };
   ::rs::internal::FnPayload __f_payload{
@@ -1326,75 +1317,71 @@ inline ::std::int32_t call_with_tuple_option(
 
 }  // namespace callables
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029(
-    rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>* __ret_ptr);
+    rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>* __ret_ptr);
 }
-inline ::rs_std::Tuple<::std::int32_t,
-                       rs_std::Option<::std::int32_t>>::Tuple() {
+inline ::rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>::Tuple() {
   ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029(
           this);
 }
 static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>>);
+              ::rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>>);
 static_assert(::std::is_trivially_copy_assignable_v<
-              ::rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>>);
+              ::rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              ::rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>>);
+              ::rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>>);
 static_assert(::std::is_trivially_move_assignable_v<
-              ::rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>>);
-inline ::rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>::Tuple(
+              ::rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>>);
+inline ::rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>::Tuple(
-    ::std::int32_t __field0, rs_std::Option<::std::int32_t> __field1) noexcept {
-  std::construct_at(&this->__field0, std::move(__field0));
-  std::construct_at(&this->__field1, std::move(__field1));
+inline rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>::Tuple(
+    ::std::int32_t __field0, rs::Option<::std::int32_t> __field1) noexcept {
+  ::std::construct_at(&this->__field0, ::std::move(__field0));
+  ::std::construct_at(&this->__field1, ::std::move(__field1));
 }
-inline rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>::Tuple(
-    std::tuple<::std::int32_t, rs_std::Option<::std::int32_t>>&&
-        tuple) noexcept {
-  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
-  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
+inline rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>::Tuple(
+    ::std::tuple<::std::int32_t, rs::Option<::std::int32_t>>&& tuple) noexcept {
+  ::std::construct_at(&this->__field0, ::std::move(::std::get<0>(tuple)));
+  ::std::construct_at(&this->__field1, ::std::move(::std::get<1>(tuple)));
 }
-inline rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>::
-operator std::tuple<::std::int32_t,
-                    rs_std::Option<::std::int32_t>>() && noexcept {
-  return std::tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
-      std::move(this->__field0), std::move(this->__field1));
+inline rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>::operator ::std::
+    tuple<::std::int32_t, rs::Option<::std::int32_t>>() && noexcept {
+  return ::std::tuple<::std::int32_t, rs::Option<::std::int32_t>>(
+      ::std::move(this->__field0), ::std::move(this->__field1));
 }
 
-inline void ::rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>::
+inline void ::rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>::
     __crubit_field_offset_assertions() {
   using __crubit_assert_type =
-      ::rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>;
+      ::rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
   static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 static_assert(
-    ::std::is_trivially_copy_constructible_v<rs_std::Option<::std::int32_t>>);
+    ::std::is_trivially_copy_constructible_v<rs::Option<::std::int32_t>>);
 static_assert(
-    ::std::is_trivially_copy_assignable_v<rs_std::Option<::std::int32_t>>);
+    ::std::is_trivially_copy_assignable_v<rs::Option<::std::int32_t>>);
 static_assert(
-    ::std::is_trivially_move_constructible_v<rs_std::Option<::std::int32_t>>);
+    ::std::is_trivially_move_constructible_v<rs::Option<::std::int32_t>>);
 static_assert(
-    ::std::is_trivially_move_assignable_v<rs_std::Option<::std::int32_t>>);
-inline rs_std::Option<::std::int32_t>::Option(::crubit::UnsafeRelocateTag,
-                                              Option&& value) {
+    ::std::is_trivially_move_assignable_v<rs::Option<::std::int32_t>>);
+inline rs::Option<::std::int32_t>::Option(::crubit::UnsafeRelocateTag,
+                                          Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-static_assert(
-    ::std::is_trivially_destructible_v<rs_std::Option<::std::int32_t>>);
-inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
+static_assert(::std::is_trivially_destructible_v<rs::Option<::std::int32_t>>);
+inline constexpr ::std::uint32_t rs::Option<::std::int32_t>::tag()
     const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
@@ -1402,7 +1389,7 @@ inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
   }
   return ::std::bit_cast<::std::uint32_t>(__bytes);
 }
-inline constexpr void rs_std::Option<::std::int32_t>::set_tag(
+inline constexpr void rs::Option<::std::int32_t>::set_tag(
     ::std::uint32_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint32_t)>>(
@@ -1412,41 +1399,40 @@ inline constexpr void rs_std::Option<::std::int32_t>::set_tag(
   }
 }
 
-inline constexpr rs_std::Option<::std::int32_t>::Option(
-    ::std::nullopt_t) noexcept
+inline constexpr rs::Option<::std::int32_t>::Option(::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
+inline constexpr rs::Option<::std::int32_t>&
+rs::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
-                                              ::std::int32_t, U>)
-inline rs_std::Option<::std::int32_t>::Option(U&& value) noexcept
+  requires(rs::OptionForwardConstructible<rs::Option<::std::int32_t>,
+                                          ::std::int32_t, U>)
+inline rs::Option<::std::int32_t>::Option(U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
-                                              ::std::int32_t, U>)
-inline rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(U&& value) noexcept {
+  requires(rs::OptionForwardConstructible<rs::Option<::std::int32_t>,
+                                          ::std::int32_t, U>)
+inline rs::Option<::std::int32_t>& rs::Option<::std::int32_t>::operator=(
+    U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
-inline rs_std::Option<::std::int32_t>::Option(Opt&& value) noexcept
+  requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
+inline rs::Option<::std::int32_t>::Option(Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
-inline rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(Opt&& value) noexcept {
+  requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
+inline rs::Option<::std::int32_t>& rs::Option<::std::int32_t>::operator=(
+    Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::std::int32_t>::Option(::std::in_place_t ip,
-                                              Args&&... args) noexcept
+inline rs::Option<::std::int32_t>::Option(::std::in_place_t ip,
+                                          Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif

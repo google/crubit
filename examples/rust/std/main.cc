@@ -11,8 +11,8 @@
 #include "support/rs_std/rs_alloc.h"
 
 int main(int argc, char* argv[]) {
-  rs_std::Result<rs_std::Option<rs_std::StrRef>, ::rs::alloc::string::String>
-      result = example_crate::returns_result(true);
+  rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String> result =
+      example_crate::returns_result(true);
   if (result.has_value()) {
     if (result->has_value()) {
       std::cout << "ok: " << **result << std::endl;

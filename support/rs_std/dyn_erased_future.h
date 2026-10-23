@@ -16,8 +16,8 @@ extern "C" {
 // linker.
 void rs_std_dyn_erased_future_init(void* storage);
 void rs_std_dyn_erased_future_drop(void* storage);
-bool rs_std_dyn_erased_future_poll(void* storage,
-                                   const rs_std::Waker* waker_ptr, void* out);
+bool rs_std_dyn_erased_future_poll(void* storage, const rs::Waker* waker_ptr,
+                                   void* out);
 }
 }  // namespace internal_dyn_erased_future
 
@@ -44,7 +44,7 @@ class alignas(void*) [[clang::trivial_abi]] DynErasedFuture final {
  public:
   DynErasedFuture() = delete;
   DynErasedFuture(DynErasedFuture&& other) {
-    std::memcpy(storage_, other.storage_, sizeof(storage_));
+    ::std::memcpy(storage_, other.storage_, sizeof(storage_));
     internal_dyn_erased_future::rs_std_dyn_erased_future_init(other.storage_);
   }
   DynErasedFuture& operator=(DynErasedFuture&&) = delete;
@@ -69,7 +69,7 @@ class alignas(void*) [[clang::trivial_abi]] DynErasedFuture final {
   //
   // REQUIRES: If the `DynErasedFuture` was created with temporaries, they must
   //           still be alive and valid.
-  bool Poll(const rs_std::Waker* waker_ptr, T* out) {
+  bool Poll(const rs::Waker* waker_ptr, T* out) {
     return internal_dyn_erased_future::rs_std_dyn_erased_future_poll(
         storage_, waker_ptr, out);
   }

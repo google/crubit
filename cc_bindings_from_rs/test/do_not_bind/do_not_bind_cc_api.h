@@ -37,7 +37,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: do_not_bind_golden :: Struct") alignas(4)
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: do_not_bind_golden :: Trait") Trait {
   template <typename T>
-  using impl = rs_std::impl<T, Trait>;
+  using impl = rs::impl<T, Trait>;
 };
 
 ::std::int32_t bound_free_fn();
@@ -45,7 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: do_not_bind_golden :: Trait") Trait {
 }  // namespace do_not_bind
 
 template <>
-struct rs_std::impl<::do_not_bind::Struct, ::do_not_bind::Trait> {
+struct rs::impl<::do_not_bind::Struct, ::do_not_bind::Trait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t bound_trait_method(::do_not_bind::Struct const& self);
@@ -91,7 +91,7 @@ __crubit_thunk_Trait_ubound_utrait_umethod_udo_unot_ubind_ugolden_x0000003a_x000
 }
 }  // namespace do_not_bind
 inline ::std::int32_t
-rs_std::impl<::do_not_bind::Struct, ::do_not_bind::Trait>::bound_trait_method(
+rs::impl<::do_not_bind::Struct, ::do_not_bind::Trait>::bound_trait_method(
     ::do_not_bind::Struct const& self) {
   return do_not_bind::__crubit_internal::
       __crubit_thunk_Trait_ubound_utrait_umethod_udo_unot_ubind_ugolden_x0000003a_x0000003aStruct(

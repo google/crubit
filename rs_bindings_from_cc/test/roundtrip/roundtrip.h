@@ -12,26 +12,26 @@
 
 // Tests for round-tripping between:
 // - Rust built-in `char` type
-// - C++ `rs_std::char_` type (from `crubit/support/rs_std/char.h`)
+// - C++ `rs::char_` type (from `crubit/support/rs_std/char.h`)
 namespace char_test {
 
-CRUBIT_MUST_BIND inline rs_std::char_ NextChar(rs_std::char_ c) {
-  return rs_std::char_::from_u32(std::uint32_t{c} + 1).value();
+CRUBIT_MUST_BIND inline rs::char_ NextChar(rs::char_ c) {
+  return rs::char_::from_u32(std::uint32_t{c} + 1).value();
 }
 
 struct SomeStruct final {
-  rs_std::char_ c;
+  rs::char_ c;
 
-  CRUBIT_MUST_BIND rs_std::char_ GetChar() const { return c; }
+  CRUBIT_MUST_BIND rs::char_ GetChar() const { return c; }
 };
 
-using CharAlias = rs_std::char_;
+using CharAlias = rs::char_;
 CRUBIT_MUST_BIND inline CharAlias NextCharViaTypeAlias(CharAlias c) {
   return CharAlias::from_u32(std::uint32_t{c} + 1).value();
 }
 
 namespace using_test {
-using rs_std::char_;
+using rs::char_;
 }
 
 CRUBIT_MUST_BIND

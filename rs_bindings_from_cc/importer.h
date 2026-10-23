@@ -308,6 +308,7 @@ class Importer final : public ImportContext {
   absl::flat_hash_set<const clang::NamedDecl*> known_type_decls_;
 
   clang::QualType rs_core_fmt_debug_;
+  const clang::ClassTemplateDecl* absl_nullable rs_impl_;
   const clang::ClassTemplateDecl* absl_nullable rs_std_impl_;
 
   // Returns the nullability that `type` has in the absence of an explicit

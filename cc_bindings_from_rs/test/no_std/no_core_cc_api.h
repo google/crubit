@@ -32,7 +32,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(8)
  public:
   static ::no_core::Test new_();
 
-  rs_std::StrRef s() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+  rs::StrRef s() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   ::rs::alloc::string::String s_{};
 
@@ -58,12 +58,11 @@ inline ::no_core::Test(Test::new_)() {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_s(::no_core::Test const&,
-                                 rs_std::StrRef* __ret_ptr);
+extern "C" void __crubit_thunk_s(::no_core::Test const&, rs::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef(Test::s)() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
+inline rs::StrRef(Test::s)() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  crubit::Slot<rs::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_s(self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();

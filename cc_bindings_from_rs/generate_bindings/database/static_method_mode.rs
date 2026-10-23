@@ -6,7 +6,7 @@
 /// or a free function.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum StaticMethodMode {
-    /// Used when generating methods for `rs_std::impl` - these should be static
+    /// Used when generating methods for `rs::impl` - these should be static
     /// methods even though the trait function has a `self` parameter.
     ForceStaticMethod,
 

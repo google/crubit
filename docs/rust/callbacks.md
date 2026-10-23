@@ -8,8 +8,8 @@ callbacks) and `rs::Fn` (for owned callbacks). C++ callers can satisfy these
 parameters using C++ lambdas, function pointers, `std::function`, or
 `absl::AnyInvocable`.
 
-For the reverse direction (calling C++ APIs taking `absl::AnyInvocable` from Rust),
-see [Rust bindings for C++ callbacks](http://crubit.rs/cpp/callbacks).
+For the reverse direction (calling C++ APIs taking `absl::AnyInvocable` from
+Rust), see [Rust bindings for C++ callbacks](http://crubit.rs/cpp/callbacks).
 
 ## `BUILD` configuration
 
@@ -44,19 +44,20 @@ The complete, tested version is in
 Rust functions can take callable parameters as borrowed references, owned boxes,
 or generic `impl Trait` parameters:
 
-Rust parameter type                               | Generated C++ parameter type      | Ownership / Allocation
-:------------------------------------------------ | :-------------------------------- | :---------------------
-`&dyn Fn(Args...) -> R`                           | `rs::FnRef<R(Args...) const>`     | Borrowed (no allocation)
-`&mut dyn FnMut(Args...) -> R`                    | `rs::FnRef<R(Args...)>`           | Borrowed (no allocation)
-`impl Fn(Args...) -> R`                           | `rs::FnRef<R(Args...) const>`     | Borrowed (no allocation)
-`impl FnMut(Args...) -> R`                        | `rs::FnRef<R(Args...)>`           | Borrowed (no allocation)
-`impl FnOnce(Args...) -> R` (without `'static`)   | `rs::FnRef<R(Args...)>`           | Borrowed (no allocation)
-`Box<dyn Fn(Args...) -> R>`                       | `rs::Fn<R(Args...) const>`        | Owning (heap-allocated)
-`Box<dyn FnMut(Args...) -> R>`                    | `rs::Fn<R(Args...)>`              | Owning (heap-allocated)
-`Box<dyn FnOnce(Args...) -> R>`                   | `rs::Fn<R(Args...) &&>`           | Owning (heap-allocated)
-`impl FnOnce(Args...) -> R + 'static`             | `rs::Fn<R(Args...) &&>`           | Owning (heap-allocated)
+| Rust parameter type                             | Generated C++ parameter type  | Ownership / Allocation   |
+| :---------------------------------------------- | :---------------------------- | :----------------------- |
+| `&dyn Fn(Args...) -> R`                         | `rs::FnRef<R(Args...) const>` | Borrowed (no allocation) |
+| `&mut dyn FnMut(Args...) -> R`                  | `rs::FnRef<R(Args...)>`       | Borrowed (no allocation) |
+| `impl Fn(Args...) -> R`                         | `rs::FnRef<R(Args...) const>` | Borrowed (no allocation) |
+| `impl FnMut(Args...) -> R`                      | `rs::FnRef<R(Args...)>`       | Borrowed (no allocation) |
+| `impl FnOnce(Args...) -> R` (without `'static`) | `rs::FnRef<R(Args...)>`       | Borrowed (no allocation) |
+| `Box<dyn Fn(Args...) -> R>`                     | `rs::Fn<R(Args...) const>`    | Owning (heap-allocated)  |
+| `Box<dyn FnMut(Args...) -> R>`                  | `rs::Fn<R(Args...)>`          | Owning (heap-allocated)  |
+| `Box<dyn FnOnce(Args...) -> R>`                 | `rs::Fn<R(Args...) &&>`       | Owning (heap-allocated)  |
+| `impl FnOnce(Args...) -> R + 'static`           | `rs::Fn<R(Args...) &&>`       | Owning (heap-allocated)  |
 
 The generated headers include the necessary support headers automatically:
+
 *   `rs::FnRef`: `#include "support/rs_std/fn_ref.h"`
 *   `rs::Fn`: `#include "support/rs_std/fn.h"`
 
@@ -127,20 +128,20 @@ int32_t res3 = rust_api::apply_fn_once(
     `rs::Fn<Sig &&>` indicates a callable that can only be invoked once; call it
     using `std::move(f)(...)`.
 
-## Converting Rust callbacks to `absl::AnyInvocable` (`rs_std::DynCallable`)
+## Converting Rust callbacks to `absl::AnyInvocable` (`rs::DynCallable`)
 
-When C++ code receives an owned Rust callback (for example, stored in a Rust struct
-field exposed to C++), the C++ type is `rs_std::DynCallable<Sig>`
+When C++ code receives an owned Rust callback (for example, stored in a Rust
+struct field exposed to C++), the C++ type is `rs::DynCallable<Sig>`
 (`support/rs_std/dyn_callable.h`).
 
-`rs_std::DynCallable` is a move-only functional wrapper around Rust's `Box<dyn Trait>`.
-It is **implicitly convertible** to `absl::AnyInvocable`:
+`rs::DynCallable` is a move-only functional wrapper around Rust's `Box<dyn
+Trait>`. It is **implicitly convertible** to `absl::AnyInvocable`:
 
 ```c++
-rs_std::DynCallable<void() &&> rust_callback = ...;
+rs::DynCallable<void() &&> rust_callback = ...;
 absl::AnyInvocable<void() &&> any_invocable = std::move(rust_callback);
 ```
 
-Because `rs_std::DynCallable` uses an internal representation compatible with
-`absl::AnyInvocable`, this conversion is efficient and avoids re-wrapping or additional
-heap allocations.
+Because `rs::DynCallable` uses an internal representation compatible with
+`absl::AnyInvocable`, this conversion is efficient and avoids re-wrapping or
+additional heap allocations.

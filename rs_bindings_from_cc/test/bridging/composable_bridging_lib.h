@@ -90,15 +90,15 @@ std::pair<std::string, Stuff> ProperlyGreetStuff(Stuff stuff);
 
 std::string_view StringViewByValue(std::string_view sv);
 
-rs_std::SliceRef<const std::string_view> ReturnSliceRefStringView(
-    rs_std::SliceRef<const std::string_view> slice);
+rs::SliceRef<const std::string_view> ReturnSliceRefStringView(
+    rs::SliceRef<const std::string_view> slice);
 
 CRUBIT_UNSAFE_MARK_SAFE
 absl::StatusOr<void*> AcceptsVoidPtrAndReturnsStatusErrorIfNull(void* ptr);
 
 CRUBIT_UNSAFE_MARK_SAFE
-absl::StatusOr<rs_std::SliceRef<const int>>
-AcceptsSliceAndReturnsStatusErrorIfEmpty(rs_std::SliceRef<const int> slice);
+absl::StatusOr<rs::SliceRef<const int>>
+AcceptsSliceAndReturnsStatusErrorIfEmpty(rs::SliceRef<const int> slice);
 
 struct StructWithVirtualDestructor {
   virtual ~StructWithVirtualDestructor() = default;

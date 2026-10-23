@@ -23,10 +23,10 @@ TEST(OptionTest, OptionWithNicheIsConvertibleToStd) {
 
 TEST(OptionTest, NestedOptionIsConvertibleToStd) {
   option::HasOptions has_options = option::HasOptions::new_(1);
-  std::optional<rs_std::Option<option::LessThan20U8>> opt_nested =
+  std::optional<rs::Option<option::LessThan20U8>> opt_nested =
       std::move(has_options.nested);
   ASSERT_TRUE(opt_nested.has_value());
-  EXPECT_EQ((static_cast<std::optional<rs_std::Option<option::LessThan20U8>>>(
+  EXPECT_EQ((static_cast<std::optional<rs::Option<option::LessThan20U8>>>(
                 std::move(has_options.nested))),
             std::nullopt);
   ASSERT_TRUE(opt_nested.value().has_value());
@@ -48,7 +48,7 @@ TEST(OptionTest, OptionNoneIsNullOpt) {
   std::optional<option::LessThan20U8> opt_niche =
       std::move(has_options_none.niche);
   EXPECT_EQ(opt_niche, std::nullopt);
-  std::optional<rs_std::Option<option::LessThan20U8>> opt_nested =
+  std::optional<rs::Option<option::LessThan20U8>> opt_nested =
       std::move(has_options_none.nested);
   EXPECT_EQ(opt_nested, std::nullopt);
   std::optional<uint8_t> opt_direct = std::move(has_options_none.direct);
@@ -67,8 +67,8 @@ TEST(OptionTest, MoveIntoOptionalSetsOptionToNone) {
 
 TEST(OptionTest, ConstructFromOption) {
   std::optional<uint8_t> some_u8 = std::make_optional(uint8_t{42});
-  option::HasOptions has_options = option::HasOptions::with_option(
-      rs_std::Option<uint8_t>(std::move(some_u8)));
+  option::HasOptions has_options =
+      option::HasOptions::with_option(rs::Option<uint8_t>(std::move(some_u8)));
   std::optional<uint8_t> some_u8_retaken = std::move(has_options.direct);
   ASSERT_TRUE(some_u8_retaken.has_value());
   EXPECT_EQ(*some_u8_retaken, 42);
@@ -81,7 +81,7 @@ TEST(OptionTest, StructWithNicheIsConvertibleToStd) {
   std::optional<option::LessThan20U8> opt_niche =
       std::move(has_options.value().niche);
   ASSERT_TRUE(opt_niche.has_value());
-  std::optional<rs_std::Option<option::LessThan20U8>> opt_nested =
+  std::optional<rs::Option<option::LessThan20U8>> opt_nested =
       std::move(has_options.value().nested);
   ASSERT_TRUE(opt_nested.has_value());
   std::optional<uint8_t> opt_direct = std::move(has_options.value().direct);
@@ -97,23 +97,23 @@ TEST(OptionTest, OptNoDefaultWithDrop) {
 }
 
 TEST(OptionTest, OptionHasNoDefaultDefaultConstruct) {
-  rs_std::Option<option::HasNoDefault> val;
+  rs::Option<option::HasNoDefault> val;
   EXPECT_FALSE(val.has_value());
 }
 
 TEST(OptionTest, OptionHasNoDefaultNullOptConstruct) {
-  rs_std::Option<option::HasNoDefault> val(std::nullopt);
+  rs::Option<option::HasNoDefault> val(std::nullopt);
   EXPECT_FALSE(val.has_value());
 }
 
 TEST(OptionTest, OptionHasNoDefaultNullOptAssign) {
-  rs_std::Option<option::HasNoDefault> val;
+  rs::Option<option::HasNoDefault> val;
   val = std::nullopt;
   EXPECT_FALSE(val.has_value());
 }
 
 TEST(OptionTest, OptionHasDefaultValueConstruct) {
-  rs_std::Option<option::HasDefault> x(option::HasDefault::new_("has default"));
+  rs::Option<option::HasDefault> x(option::HasDefault::new_("has default"));
   ASSERT_TRUE(x.has_value());
   std::optional<option::HasDefault> val = std::move(x);
   ASSERT_TRUE(val.has_value());
@@ -121,16 +121,15 @@ TEST(OptionTest, OptionHasDefaultValueConstruct) {
 }
 
 TEST(OptionTest, OptionMoveConstructAndAssignFromOption) {
-  rs_std::Option<option::HasNoDefault> x(std::nullopt);
-  rs_std::Option<option::HasNoDefault> y(std::move(x));
-  rs_std::Option<option::HasNoDefault> z;
+  rs::Option<option::HasNoDefault> x(std::nullopt);
+  rs::Option<option::HasNoDefault> y(std::move(x));
+  rs::Option<option::HasNoDefault> z;
   z = std::move(y);
   EXPECT_FALSE(z.has_value());
 }
 
 TEST(OptionTest, OptionArrowProvidesReferenceToValue) {
-  rs_std::Option<option::HasDefault> opt(
-      option::HasDefault::new_("pls move me"));
+  rs::Option<option::HasDefault> opt(option::HasDefault::new_("pls move me"));
   ASSERT_TRUE(opt.has_value());
   EXPECT_EQ(std::move(opt->get_string_inside_option()), "pls move me");
   std::optional<option::HasDefault> val = std::move(opt);
@@ -140,7 +139,7 @@ TEST(OptionTest, OptionArrowProvidesReferenceToValue) {
 }
 
 TEST(OptionTest, OptionHasDefaultValueAssign) {
-  rs_std::Option<option::HasDefault> x;
+  rs::Option<option::HasDefault> x;
   x = option::HasDefault::new_("hello");
   ASSERT_TRUE(x.has_value());
   std::optional<option::HasDefault> val = std::move(x);
@@ -151,7 +150,7 @@ TEST(OptionTest, OptionHasDefaultValueAssign) {
 TEST(OptionTest, OptionHasNoDefaultOptionConstruct) {
   std::optional<option::HasDefault> some_has_default(
       std::in_place, ::option::HasDefault::new_("hello"));
-  rs_std::Option<option::HasDefault> x(std::move(some_has_default));
+  rs::Option<option::HasDefault> x(std::move(some_has_default));
   ASSERT_TRUE(x.has_value());
   std::optional<option::HasDefault> val = std::move(x);
   ASSERT_TRUE(val.has_value());
@@ -161,7 +160,7 @@ TEST(OptionTest, OptionHasNoDefaultOptionConstruct) {
 TEST(OptionTest, OptionHasNoDefaultOptionAssign) {
   std::optional<option::HasDefault> some_has_default(
       std::in_place, ::option::HasDefault::new_("hello"));
-  rs_std::Option<option::HasDefault> x;
+  rs::Option<option::HasDefault> x;
   x = std::move(some_has_default);
   ASSERT_TRUE(x.has_value());
   std::optional<option::HasDefault> val = std::move(x);
@@ -191,14 +190,14 @@ TEST(OptionTest, OptCloneNoDefault) {
 }
 
 TEST(OptionTest, PassingOptionAsReferenceArgument) {
-  rs_std::Option<option::HasDefault> x = option::HasDefault::new_("hello");
+  rs::Option<option::HasDefault> x = option::HasDefault::new_("hello");
   std::optional<uint32_t> y = std::move(option::stringify_len(x));
   ASSERT_TRUE(y.has_value());
   EXPECT_EQ(y.value(), 5);
 }
 
 TEST(OptionTest, ReturnOptionResult) {
-  std::optional<rs_std::Result<int32_t, rs::std::string::String>> result =
+  std::optional<rs::Result<int32_t, rs::std::string::String>> result =
       option::return_option_result();
   ASSERT_TRUE(result.has_value());
   ASSERT_TRUE(result.value().has_value());
@@ -222,7 +221,7 @@ TEST(OptionTest, OptionWithSizeTypes) {
 
 TEST(OptionTest, OptionUnitNone) {
   option::UnitOptionField unit_option_field;
-  rs_std::Option<rs_std::unit_t> none_unit = unit_option_field.unit;
+  rs::Option<rs::unit_t> none_unit = unit_option_field.unit;
   EXPECT_FALSE(none_unit.has_value());
 }
 
@@ -237,21 +236,20 @@ concept HasValueOr =
 TEST(OptionTest, OptionUnitSome) {
   option::UnitOptionField unit_option_field =
       option::UnitOptionField::new_with_some();
-  rs_std::Option<rs_std::unit_t> some_unit = unit_option_field.unit;
+  rs::Option<rs::unit_t> some_unit = unit_option_field.unit;
   EXPECT_TRUE(some_unit.has_value());
-  static_assert(!HasDeref<rs_std::Option<rs_std::unit_t>>);
-  static_assert(!HasValue<rs_std::Option<rs_std::unit_t>>);
-  static_assert(!HasValueOr<rs_std::Option<rs_std::unit_t>&, rs_std::unit_t>);
-  static_assert(!HasValueOr<rs_std::Option<rs_std::unit_t>&&, rs_std::unit_t>);
+  static_assert(!HasDeref<rs::Option<rs::unit_t>>);
+  static_assert(!HasValue<rs::Option<rs::unit_t>>);
+  static_assert(!HasValueOr<rs::Option<rs::unit_t>&, rs::unit_t>);
+  static_assert(!HasValueOr<rs::Option<rs::unit_t>&&, rs::unit_t>);
 }
 
 TEST(OptionTest, OptionUnitEquality) {
-  const rs_std::Option<rs_std::unit_t> some_unit =
+  const rs::Option<rs::unit_t> some_unit =
       option::UnitOptionField::new_with_some().unit;
-  const rs_std::Option<rs_std::unit_t> other_some_unit =
+  const rs::Option<rs::unit_t> other_some_unit =
       option::UnitOptionField::new_with_some().unit;
-  const rs_std::Option<rs_std::unit_t> none_unit =
-      option::UnitOptionField().unit;
+  const rs::Option<rs::unit_t> none_unit = option::UnitOptionField().unit;
   EXPECT_EQ(some_unit, other_some_unit);
   EXPECT_NE(some_unit, none_unit);
   EXPECT_EQ(none_unit, option::UnitOptionField().unit);
@@ -260,31 +258,31 @@ TEST(OptionTest, OptionUnitEquality) {
 }
 
 TEST(OptionTest, ValueOrLvalue) {
-  const rs_std::Option<uint8_t> some_u8(uint8_t{42});
-  const rs_std::Option<uint8_t> none_u8(std::nullopt);
+  const rs::Option<uint8_t> some_u8(uint8_t{42});
+  const rs::Option<uint8_t> none_u8(std::nullopt);
   EXPECT_EQ(some_u8.value_or(99), 42);
   EXPECT_EQ(none_u8.value_or(99), 99);
   EXPECT_EQ(none_u8.value_or({}), 0);
 }
 
 TEST(OptionTest, Value) {
-  rs_std::Option<uint8_t> some_u8(uint8_t{42});
-  const rs_std::Option<uint8_t>& const_some_u8 = some_u8;
+  rs::Option<uint8_t> some_u8(uint8_t{42});
+  const rs::Option<uint8_t>& const_some_u8 = some_u8;
   EXPECT_EQ(some_u8.value(), 42);
   EXPECT_EQ(const_some_u8.value(), 42);
   EXPECT_EQ(std::move(some_u8).value(), 42);
 }
 
 TEST(OptionTest, ValueOnNoneDies) {
-  const rs_std::Option<uint8_t> none_u8(std::nullopt);
+  const rs::Option<uint8_t> none_u8(std::nullopt);
   EXPECT_DEATH_IF_SUPPORTED(none_u8.value(), "");
 }
 
 TEST(OptionTest, ValueOrRvalue) {
   static_assert(
-      HasValueOr<rs_std::Option<option::HasDefault>&&, option::HasDefault>);
+      HasValueOr<rs::Option<option::HasDefault>&&, option::HasDefault>);
 
-  rs_std::Option<option::HasDefault> some_opt(
+  rs::Option<option::HasDefault> some_opt(
       option::HasDefault::new_("from some"));
   option::HasDefault unwrapped_some =
       std::move(some_opt).value_or(option::HasDefault::new_("default"));
@@ -292,7 +290,7 @@ TEST(OptionTest, ValueOrRvalue) {
             "from some");
   EXPECT_FALSE(some_opt.has_value());
 
-  rs_std::Option<option::HasDefault> none_opt(std::nullopt);
+  rs::Option<option::HasDefault> none_opt(std::nullopt);
   option::HasDefault unwrapped_none =
       std::move(none_opt).value_or(option::HasDefault::new_("default"));
   EXPECT_EQ(unwrapped_none.get_string_inside_option().to_string_view(),
@@ -301,10 +299,10 @@ TEST(OptionTest, ValueOrRvalue) {
 }
 
 TEST(OptionTest, EqualityComparison) {
-  const rs_std::Option<uint8_t> some_42(uint8_t{42});
-  const rs_std::Option<uint8_t> some_42_b(uint8_t{42});
-  const rs_std::Option<uint8_t> some_99(uint8_t{99});
-  const rs_std::Option<uint8_t> none_u8(std::nullopt);
+  const rs::Option<uint8_t> some_42(uint8_t{42});
+  const rs::Option<uint8_t> some_42_b(uint8_t{42});
+  const rs::Option<uint8_t> some_99(uint8_t{99});
+  const rs::Option<uint8_t> none_u8(std::nullopt);
 
   EXPECT_EQ(some_42, some_42_b);
   EXPECT_NE(some_42, some_99);
@@ -319,8 +317,8 @@ TEST(OptionTest, EqualityComparison) {
 }
 
 TEST(OptionTest, ExplicitOperatorBoolAndImplicitNullopt) {
-  const rs_std::Option<uint8_t> some_42(uint8_t{42});
-  const rs_std::Option<uint8_t> none_u8 = std::nullopt;
+  const rs::Option<uint8_t> some_42(uint8_t{42});
+  const rs::Option<uint8_t> none_u8 = std::nullopt;
 
   EXPECT_TRUE(static_cast<bool>(some_42));
   EXPECT_FALSE(static_cast<bool>(none_u8));
@@ -334,7 +332,7 @@ TEST(OptionTest, ExplicitOperatorBoolAndImplicitNullopt) {
   }
 
   bool cond = false;
-  rs_std::Option<uint8_t> ternary_opt = cond ? some_42 : std::nullopt;
+  rs::Option<uint8_t> ternary_opt = cond ? some_42 : std::nullopt;
   EXPECT_FALSE(ternary_opt.has_value());
 }
 

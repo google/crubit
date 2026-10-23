@@ -17,7 +17,7 @@ namespace crubit {
 namespace {
 
 TEST(VecTest, ReturnVec) {
-  rs_std::Vec<int32_t> v = vec::return_vec();
+  rs::Vec<int32_t> v = vec::return_vec();
   EXPECT_EQ(v.size(), 3);
   ASSERT_NE(v.data(), nullptr);
   EXPECT_EQ(v.data()[0], 1);
@@ -29,8 +29,8 @@ TEST(VecTest, ReturnVec) {
   EXPECT_EQ(s.size(), 3);
   EXPECT_EQ(s[0], 1);
 
-  // Check coercion to rs_std::SliceRef
-  rs_std::SliceRef<const int32_t> sr = v;
+  // Check coercion to rs::SliceRef
+  rs::SliceRef<const int32_t> sr = v;
   EXPECT_EQ(sr.size(), 3);
   EXPECT_EQ(sr.data()[0], 1);
 }
@@ -44,13 +44,13 @@ TEST(VecTest, StructWithVec) {
 }
 
 TEST(VecTest, Indexing) {
-  rs_std::Vec<int32_t> v = vec::return_vec();
+  rs::Vec<int32_t> v = vec::return_vec();
   EXPECT_EQ(v[0], 1);
   EXPECT_EQ(v[1], 2);
   EXPECT_EQ(v[2], 3);
 
   // Const indexing
-  const rs_std::Vec<int32_t>& const_v = v;
+  const rs::Vec<int32_t>& const_v = v;
   EXPECT_EQ(const_v[0], 1);
   EXPECT_EQ(const_v[1], 2);
   EXPECT_EQ(const_v[2], 3);
@@ -66,10 +66,10 @@ TEST(VecTest, Indexing) {
 }
 
 TEST(VecTest, CStringCallability) {
-  rs_std::Vec<uint8_t> u8_vec = vec::return_u8_vec();
+  rs::Vec<uint8_t> u8_vec = vec::return_u8_vec();
   EXPECT_EQ(u8_vec.size(), 5);
 
-  rs_std::Vec<uint8_t> u8_vec_copy = u8_vec;
+  rs::Vec<uint8_t> u8_vec_copy = u8_vec;
 
   auto result = ::rs::alloc::ffi::CString::new_(std::move(u8_vec_copy));
   ASSERT_TRUE(result.has_value());
@@ -84,7 +84,7 @@ TEST(VecTest, CStringCallability) {
 }
 
 TEST(VecTest, CreateInCppPassToRustByValue) {
-  rs_std::Vec<int32_t> v;
+  rs::Vec<int32_t> v;
   v.push_back(1);
   v.push_back(2);
   v.push_back(3);
@@ -93,12 +93,12 @@ TEST(VecTest, CreateInCppPassToRustByValue) {
 }
 
 TEST(VecTest, CreateInRustPassToCppByValue) {
-  rs_std::Vec<int32_t> v = vec::return_vec();
+  rs::Vec<int32_t> v = vec::return_vec();
   EXPECT_EQ(v.size(), 3);
 }
 
 TEST(VecTest, CppGrowsPassToRust) {
-  rs_std::Vec<int32_t> v;
+  rs::Vec<int32_t> v;
   for (int i = 0; i < 100; ++i) {
     v.push_back(i);
   }
@@ -108,7 +108,7 @@ TEST(VecTest, CppGrowsPassToRust) {
 }
 
 TEST(VecTest, RustGrowsPassToCpp) {
-  rs_std::Vec<int32_t> v = vec::return_grown_vec();
+  rs::Vec<int32_t> v = vec::return_grown_vec();
   EXPECT_EQ(v.size(), 3);
   EXPECT_GE(v.capacity(), 10);
 }
@@ -116,7 +116,7 @@ TEST(VecTest, RustGrowsPassToCpp) {
 TEST(VecTest, CppAddsToMutRefToRustVec) {
   vec::RustVecOwner owner = vec::RustVecOwner::new_();
   {
-    rs_std::Vec<int32_t>& v_ref = owner.vec_mut();
+    rs::Vec<int32_t>& v_ref = owner.vec_mut();
     EXPECT_EQ(v_ref.size(), 0);
     v_ref.push_back(10);
     v_ref.push_back(20);
@@ -129,7 +129,7 @@ TEST(VecTest, CppAddsToMutRefToRustVec) {
 }
 
 TEST(VecTest, RustAddsToMutRefToCppVec) {
-  rs_std::Vec<int32_t> v;
+  rs::Vec<int32_t> v;
   v.push_back(1);
   vec::rust_add_elements(v);
   EXPECT_EQ(v.size(), 3);
@@ -139,7 +139,7 @@ TEST(VecTest, RustAddsToMutRefToCppVec) {
 }
 
 TEST(VecTest, IterationAndAccessors) {
-  rs_std::Vec<int32_t> v;
+  rs::Vec<int32_t> v;
   EXPECT_TRUE(v.empty());
 
   v.push_back(10);
@@ -189,11 +189,11 @@ TEST(VecTest, IterationAndAccessors) {
 TEST(VecTest, MoveOperations) {
   // Move constructor
   {
-    rs_std::Vec<int32_t> a;
+    rs::Vec<int32_t> a;
     a.push_back(10);
     a.push_back(20);
 
-    rs_std::Vec<int32_t> b = std::move(a);
+    rs::Vec<int32_t> b = std::move(a);
     EXPECT_EQ(b.size(), 2);
     EXPECT_EQ(b[0], 10);
     EXPECT_EQ(b[1], 20);
@@ -204,11 +204,11 @@ TEST(VecTest, MoveOperations) {
 
   // Move assignment destroys LHS and empties RHS
   {
-    rs_std::Vec<int32_t> a;
+    rs::Vec<int32_t> a;
     a.push_back(1);
     a.push_back(2);
 
-    rs_std::Vec<int32_t> b;
+    rs::Vec<int32_t> b;
     b.push_back(100);
     b.push_back(200);
     b.push_back(300);
@@ -226,7 +226,7 @@ TEST(VecTest, MoveOperations) {
 
   // Self-move assignment is a safe no-op
   {
-    rs_std::Vec<int32_t> a;
+    rs::Vec<int32_t> a;
     a.push_back(42);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wself-move"

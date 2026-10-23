@@ -37,7 +37,7 @@ static_assert(
 TEST(TypeAliasesTest, GenericsMatching) {
   using namespace type_aliases::test_generics_matching;
 
-  // Note: these functions return rs_std::Results, which do not have ergonomic
+  // Note: these functions return rs::Results, which do not have ergonomic
   // matchers. We must instead manually check for value presence and then
   // compare the value.
 

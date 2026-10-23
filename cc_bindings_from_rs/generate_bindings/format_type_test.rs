@@ -192,7 +192,7 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "usize", cc: "::std::uintptr_t", includes: ["<cstdint>"]),
         case!(
             rs: "char",
-            cc: "rs_std::char_",
+            cc: "rs::char_",
             includes: ["<crubit/support/for/tests/rs_std/char.h>"]
         ),
         case!(rs: "SomeStruct", cc: "::rust_out::SomeStruct", includes: [],  prereq_def: "SomeStruct"),
@@ -260,104 +260,104 @@ fn test_format_ty_for_cc_successes() {
         // Slice pointers:
         case!(
             rs: "*const [i8]",
-            cc: "rs_std::SliceRef< const ::std::int8_t>",
+            cc: "rs::SliceRef< const ::std::int8_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "*mut [i64]",
-            cc: "rs_std::SliceRef< ::std::int64_t>",
+            cc: "rs::SliceRef< ::std::int64_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "*mut [SomeStruct]",
-            cc: "rs_std::SliceRef< ::rust_out::SomeStruct>",
+            cc: "rs::SliceRef< ::rust_out::SomeStruct>",
             includes: [ "<crubit/support/for/tests/rs_std/slice_ref.h>"],
             prereq_def: "SomeStruct"
 
         ),
         case!(
             rs: "&'static [i32]",
-            cc: "rs_std::SliceRef< const ::std::int32_t>",
+            cc: "rs::SliceRef< const ::std::int32_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static mut [i32]",
-            cc: "rs_std::SliceRef< ::std::int32_t>",
+            cc: "rs::SliceRef< ::std::int32_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "*const [*const core::ffi::c_void]",
-            cc: "rs_std::SliceRef< const void * const >",
+            cc: "rs::SliceRef< const void * const >",
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "*const [*mut core::ffi::c_void]",
-            cc: "rs_std::SliceRef< void * const >",
+            cc: "rs::SliceRef< void * const >",
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "*mut [*const core::ffi::c_void]",
-            cc: "rs_std::SliceRef< const void * >",
+            cc: "rs::SliceRef< const void * >",
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "*mut [*mut core::ffi::c_void]",
-            cc: "rs_std::SliceRef< void * >",
+            cc: "rs::SliceRef< void * >",
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static [*const core::ffi::c_void]",
-            cc: "rs_std::SliceRef< const void * const >",
+            cc: "rs::SliceRef< const void * const >",
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static [*mut core::ffi::c_void]",
-            cc: "rs_std::SliceRef< void * const >",
+            cc: "rs::SliceRef< void * const >",
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static mut [*const core::ffi::c_void]",
-            cc: "rs_std::SliceRef< const void * >",
+            cc: "rs::SliceRef< const void * >",
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static mut [*mut core::ffi::c_void]",
-            cc: "rs_std::SliceRef< void * >",
+            cc: "rs::SliceRef< void * >",
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static [*const i32]",
-            cc: "rs_std::SliceRef< ::std::int32_t const * const >",
+            cc: "rs::SliceRef< ::std::int32_t const * const >",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static [*mut i32]",
-            cc: "rs_std::SliceRef< ::std::int32_t * const >",
+            cc: "rs::SliceRef< ::std::int32_t * const >",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static mut [*const i32]",
-            cc: "rs_std::SliceRef< ::std::int32_t const * >",
+            cc: "rs::SliceRef< ::std::int32_t const * >",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static mut [*mut i32]",
-            cc: "rs_std::SliceRef< ::std::int32_t * >",
+            cc: "rs::SliceRef< ::std::int32_t * >",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "*const [ConstVoidPtr]",
-            cc: "rs_std::SliceRef< const void * const >",
+            cc: "rs::SliceRef< const void * const >",
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static [ConstVoidPtr]",
-            cc: "rs_std::SliceRef< const void * const >",
+            cc: "rs::SliceRef< const void * const >",
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static [Identity<*const i32>]",
-            cc: "rs_std::SliceRef< ::std::int32_t const * const >",
+            cc: "rs::SliceRef< ::std::int32_t const * const >",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
@@ -1188,8 +1188,8 @@ fn test_format_ty_for_cc_ignored_symbols_fails() {
     );
 }
 
-/// `Vec` and `Result` are never bridged types: they are rendered as `rs_std::Vec` and
-/// `rs_std::Result` template specializations. `is_bridged_type` must therefore report them as
+/// `Vec` and `Result` are never bridged types: they are rendered as `rs::Vec` and
+/// `rs::Result` template specializations. `is_bridged_type` must therefore report them as
 /// `None` regardless of `always_specialize_generics_in_cpp_api_from_rust`. Otherwise a type
 /// such as `Vec<SomeProto>`, whose element type is a bridged type that is not layout-compatible,
 /// would be rejected before the specialization gets a chance to be formed.

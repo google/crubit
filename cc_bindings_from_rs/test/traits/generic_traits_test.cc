@@ -9,7 +9,7 @@
 namespace generic_traits {
 
 template <typename Self, typename T, typename U>
-  requires(rs_std::where_v<Self, TraitWithTwoGenerics<T, U>>)
+  requires(rs::where_v<Self, TraitWithTwoGenerics<T, U>>)
 T generic_do_something(Self const& self, T t, U u) {
   return TraitWithTwoGenerics<T, U>::template impl<Self>::bar(self, t, u);
 }

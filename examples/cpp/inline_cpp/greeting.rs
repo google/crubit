@@ -5,15 +5,15 @@
 use inline_cpp_macro::{global_cpp, inline_cpp};
 
 global_cpp! {
-    #include "support/rs_std/str_ref.h"
     #include "third_party/absl/strings/str_cat.h"
+    #include "support/rs_std/str_ref.h"
 }
 
 /// Formats a greeting using C++ `absl::StrCat`.
 pub fn format_greeting(name: &str) -> String {
     let greet = inline_cpp! {
-        (rs_std::StrRef name) -> std::string {
-            return absl::StrCat("Hello, ", name);
+        (rs::StrRef name) -> std::string {
+          return absl::StrCat("Hello, ", name);
         }
     };
     let cpp_str = greet(name);

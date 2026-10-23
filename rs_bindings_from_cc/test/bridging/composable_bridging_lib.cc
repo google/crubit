@@ -64,8 +64,8 @@ std::pair<std::string, Stuff> ProperlyGreetStuff(Stuff stuff) {
 
 std::string_view StringViewByValue(std::string_view sv) { return sv; }
 
-rs_std::SliceRef<const std::string_view> ReturnSliceRefStringView(
-    rs_std::SliceRef<const std::string_view> slice) {
+rs::SliceRef<const std::string_view> ReturnSliceRefStringView(
+    rs::SliceRef<const std::string_view> slice) {
   return slice;
 }
 
@@ -76,8 +76,8 @@ absl::StatusOr<void*> AcceptsVoidPtrAndReturnsStatusErrorIfNull(void* ptr) {
   return ptr;
 }
 
-absl::StatusOr<rs_std::SliceRef<const int>>
-AcceptsSliceAndReturnsStatusErrorIfEmpty(rs_std::SliceRef<const int> slice) {
+absl::StatusOr<rs::SliceRef<const int>>
+AcceptsSliceAndReturnsStatusErrorIfEmpty(rs::SliceRef<const int> slice) {
   if (slice.size() == 0) {
     return absl::InvalidArgumentError("slice is empty");
   }

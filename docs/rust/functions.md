@@ -84,8 +84,8 @@ caveats apply.
 
 ## Slice parameters
 
-Rust slice parameters (`&[T]`, `&mut [T]`, `&str`) map to
-`rs_std::SliceRef<const T>`, `rs_std::SliceRef<T>`, and `rs_std::StrRef` in C++.
+Rust slice parameters (`&[T]`, `&mut [T]`, `&str`) map to `rs::SliceRef<const
+T>`, `rs::SliceRef<T>`, and `rs::StrRef` in C++.
 
 C++ callers can pass `absl::Span<const T>`, `std::span<const T>`, or contiguous
 containers like `std::vector<T>` and `std::array<T, N>` directly to satisfy
@@ -104,17 +104,17 @@ string literals:
 fn process_mut_bytes(_: &mut [u8]) {}  // Cannot pass string literals or const spans to mutable byte slices
 ```
 
-*   **`&[T]`**: Maps to `rs_std::SliceRef<const T>`
+*   **`&[T]`**: Maps to `rs::SliceRef<const T>`
     (`crubit/support/rs_std/slice_ref.h`). Converts implicitly from
     `absl::Span<const T>`, `absl::Span<T>`, `std::span<const T>`,
     `std::span<T>`, `std::vector<T>`, and `std::array<T, N>`.
-*   **`&mut [T]`**: Maps to `rs_std::SliceRef<T>`
+*   **`&mut [T]`**: Maps to `rs::SliceRef<T>`
     (`crubit/support/rs_std/slice_ref.h`). Converts implicitly from mutable
-    `std::span<T>` and `absl::Span<T>`, or construct via `rs_std::SliceRef(ptr,
+    `std::span<T>` and `absl::Span<T>`, or construct via `rs::SliceRef(ptr,
     size)`.
-*   **`&str`**: Maps to `rs_std::StrRef` (`crubit/support/rs_std/str_ref.h`).
+*   **`&str`**: Maps to `rs::StrRef` (`crubit/support/rs_std/str_ref.h`).
     Converts from string literals and `std::string_view`.
-*   **`&[u8]`**: Maps to `rs_std::SliceRef<const uint8_t>`. In addition to
+*   **`&[u8]`**: Maps to `rs::SliceRef<const uint8_t>`. In addition to
     `absl::Span` and `std::span`, also converts from string literals and
     `std::string_view`.
 

@@ -93,7 +93,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     requires(::std::is_same_v<__CrubitBoolT, bool>)
   bool operator==(__CrubitBoolT const& other) const;
 
-  bool operator==(rs_std::StrRef other) const;
+  bool operator==(rs::StrRef other) const;
 
   bool operator==(::std::intptr_t const& other) const;
 
@@ -135,7 +135,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::partial_eq::str_and_ref_str_rhs::MyStruct new_(
       ::std::uintptr_t str_len);
 
-  bool operator==(rs_std::StrRef other) const;
+  bool operator==(rs::StrRef other) const;
 
   // Error generating bindings for implementation
   // `<partial_eq_golden::str_and_ref_str_rhs::MyStruct as
@@ -184,7 +184,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // PartialEq implementation for `(u64, bool)` is not supported when
   // `PartialEq<(usize, bool)>` is implemented as it may overlap.
 
-  bool operator==(rs_std::Tuple<::std::uint64_t, bool> const& _other) const;
+  bool operator==(rs::Tuple<::std::uint64_t, bool> const& _other) const;
 
  private:
   // Field type has been replaced with a blob of bytes: Field is private
@@ -231,11 +231,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 }  // namespace partial_eq::usize_rhs
 
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "(usize , bool ,)") rs_std::Tuple<::std::uint64_t, bool> {
+    "(usize , bool ,)") rs::Tuple<::std::uint64_t, bool> {
  public:
   // Default::default
   Tuple();
@@ -249,10 +249,10 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
   Tuple(::std::uint64_t __field0, bool __field1) noexcept;
-  Tuple(std::tuple<::std::uint64_t, bool>&& tuple) noexcept;
+  Tuple(::std::tuple<::std::uint64_t, bool>&& tuple) noexcept;
   ~Tuple() = default;
-  operator std::tuple<::std::uint64_t, bool>() && noexcept;
-  template <std::size_t I>
+  operator ::std::tuple<::std::uint64_t, bool>() && noexcept;
+  template <::std::size_t I>
   constexpr decltype(auto) get() & noexcept {
     static_assert(I < 2, "Tuple index out of bounds");
     if constexpr (I == 0) {
@@ -263,7 +263,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       CRUBIT_UNREACHABLE();
     }
   }
-  template <std::size_t I>
+  template <::std::size_t I>
   constexpr decltype(auto) get() const& noexcept {
     static_assert(I < 2, "Tuple index out of bounds");
     if constexpr (I == 0) {
@@ -274,24 +274,24 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       CRUBIT_UNREACHABLE();
     }
   }
-  template <std::size_t I>
+  template <::std::size_t I>
   constexpr decltype(auto) get() && noexcept {
     static_assert(I < 2, "Tuple index out of bounds");
     if constexpr (I == 0) {
-      return std::move(this->__field0);
+      return ::std::move(this->__field0);
     } else if constexpr (I == 1) {
-      return std::move(this->__field1);
+      return ::std::move(this->__field1);
     } else {
       CRUBIT_UNREACHABLE();
     }
   }
-  template <std::size_t I>
+  template <::std::size_t I>
   constexpr decltype(auto) get() const&& noexcept {
     static_assert(I < 2, "Tuple index out of bounds");
     if constexpr (I == 0) {
-      return std::move(this->__field0);
+      return ::std::move(this->__field0);
     } else if constexpr (I == 1) {
-      return std::move(this->__field1);
+      return ::std::move(this->__field1);
     } else {
       CRUBIT_UNREACHABLE();
     }
@@ -414,9 +414,9 @@ inline bool(MyStruct::operator==)(__CrubitBoolT const& other) const {
 namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abool_uand_ustr_urhs_x0000003a_x0000003aMyStruct_ustr(
-    ::partial_eq::bool_and_str_rhs::MyStruct const&, rs_std::StrRef*);
+    ::partial_eq::bool_and_str_rhs::MyStruct const&, rs::StrRef*);
 }
-inline bool(MyStruct::operator==)(rs_std::StrRef other) const {
+inline bool(MyStruct::operator==)(rs::StrRef other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abool_uand_ustr_urhs_x0000003a_x0000003aMyStruct_ustr(
@@ -478,9 +478,9 @@ inline ::partial_eq::str_and_ref_str_rhs::MyStruct(MyStruct::new_)(
 namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003astr_uand_uref_ustr_urhs_x0000003a_x0000003aMyStruct_ustr(
-    ::partial_eq::str_and_ref_str_rhs::MyStruct const&, rs_std::StrRef*);
+    ::partial_eq::str_and_ref_str_rhs::MyStruct const&, rs::StrRef*);
 }
-inline bool(MyStruct::operator==)(rs_std::StrRef other) const {
+inline bool(MyStruct::operator==)(rs::StrRef other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003astr_uand_uref_ustr_urhs_x0000003a_x0000003aMyStruct_ustr(
@@ -529,10 +529,10 @@ namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucollision_x0000003a_x0000003aMyStruct_u_x00000028usize_x0000002c_x00000020bool_x00000029(
     ::partial_eq::tuple_collision::MyStruct const&,
-    rs_std::Tuple<::std::uint64_t, bool> const&);
+    rs::Tuple<::std::uint64_t, bool> const&);
 }
 inline bool(MyStruct::operator==)(
-    rs_std::Tuple<::std::uint64_t, bool> const& _other) const {
+    rs::Tuple<::std::uint64_t, bool> const& _other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucollision_x0000003a_x0000003aMyStruct_u_x00000028usize_x0000002c_x00000020bool_x00000029(
@@ -593,49 +593,49 @@ inline void ::partial_eq::usize_rhs::MyStruct::
 }
 }  // namespace partial_eq::usize_rhs
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020bool_x00000029(
-    rs_std::Tuple<::std::uint64_t, bool>* __ret_ptr);
+    rs::Tuple<::std::uint64_t, bool>* __ret_ptr);
 }
-inline ::rs_std::Tuple<::std::uint64_t, bool>::Tuple() {
+inline ::rs::Tuple<::std::uint64_t, bool>::Tuple() {
   ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020bool_x00000029(
           this);
 }
 static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs_std::Tuple<::std::uint64_t, bool>>);
-static_assert(::std::is_trivially_copy_assignable_v<
-              ::rs_std::Tuple<::std::uint64_t, bool>>);
+              ::rs::Tuple<::std::uint64_t, bool>>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<::rs::Tuple<::std::uint64_t, bool>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              ::rs_std::Tuple<::std::uint64_t, bool>>);
-static_assert(::std::is_trivially_move_assignable_v<
-              ::rs_std::Tuple<::std::uint64_t, bool>>);
-inline ::rs_std::Tuple<::std::uint64_t, bool>::Tuple(
-    ::crubit::UnsafeRelocateTag, Tuple&& value) {
+              ::rs::Tuple<::std::uint64_t, bool>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::rs::Tuple<::std::uint64_t, bool>>);
+inline ::rs::Tuple<::std::uint64_t, bool>::Tuple(::crubit::UnsafeRelocateTag,
+                                                 Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline rs_std::Tuple<::std::uint64_t, bool>::Tuple(::std::uint64_t __field0,
-                                                   bool __field1) noexcept {
-  std::construct_at(&this->__field0, std::move(__field0));
-  std::construct_at(&this->__field1, std::move(__field1));
+inline rs::Tuple<::std::uint64_t, bool>::Tuple(::std::uint64_t __field0,
+                                               bool __field1) noexcept {
+  ::std::construct_at(&this->__field0, ::std::move(__field0));
+  ::std::construct_at(&this->__field1, ::std::move(__field1));
 }
-inline rs_std::Tuple<::std::uint64_t, bool>::Tuple(
-    std::tuple<::std::uint64_t, bool>&& tuple) noexcept {
-  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
-  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
+inline rs::Tuple<::std::uint64_t, bool>::Tuple(
+    ::std::tuple<::std::uint64_t, bool>&& tuple) noexcept {
+  ::std::construct_at(&this->__field0, ::std::move(::std::get<0>(tuple)));
+  ::std::construct_at(&this->__field1, ::std::move(::std::get<1>(tuple)));
 }
-inline rs_std::Tuple<::std::uint64_t, bool>::operator std::tuple<
+inline rs::Tuple<::std::uint64_t, bool>::operator ::std::tuple<
     ::std::uint64_t, bool>() && noexcept {
-  return std::tuple<::std::uint64_t, bool>(std::move(this->__field0),
-                                           std::move(this->__field1));
+  return ::std::tuple<::std::uint64_t, bool>(::std::move(this->__field0),
+                                             ::std::move(this->__field1));
 }
 
-inline void ::rs_std::Tuple<::std::uint64_t,
-                            bool>::__crubit_field_offset_assertions() {
-  using __crubit_assert_type = ::rs_std::Tuple<::std::uint64_t, bool>;
+inline void ::rs::Tuple<::std::uint64_t,
+                        bool>::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::rs::Tuple<::std::uint64_t, bool>;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
   static_assert(8 == offsetof(__crubit_assert_type, __field1));
 }

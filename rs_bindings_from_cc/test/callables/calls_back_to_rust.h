@@ -10,16 +10,16 @@
 #include "support/annotations.h"
 #include "support/rs_std/dyn_callable.h"
 
-void invoke_once(rs_std::DynCallable<void() &&> f);
+void invoke_once(rs::DynCallable<void() &&> f);
 
-void invoke(rs_std::DynCallable<void()> f);
+void invoke(rs::DynCallable<void()> f);
 
-void invoke_const(rs_std::DynCallable<void() const> f);
+void invoke_const(rs::DynCallable<void() const> f);
 
-int map_int(rs_std::DynCallable<int(int) const> f, int arg);
+int map_int(rs::DynCallable<int(int) const> f, int arg);
 
 std::optional<int> map_optional_int(
-    rs_std::DynCallable<std::optional<int>(std::optional<int>) const> f,
+    rs::DynCallable<std::optional<int>(std::optional<int>) const> f,
     std::optional<int> arg);
 
 struct ABICompatible {
@@ -27,8 +27,7 @@ struct ABICompatible {
 };
 
 ABICompatible map_abi_compatible(
-    rs_std::DynCallable<ABICompatible(ABICompatible) const> f,
-    ABICompatible arg);
+    rs::DynCallable<ABICompatible(ABICompatible) const> f, ABICompatible arg);
 
 class LayoutCompatible {
  private:
@@ -45,12 +44,11 @@ class LayoutCompatible {
 };
 
 LayoutCompatible map_layout_compatible(
-    rs_std::DynCallable<LayoutCompatible(LayoutCompatible) const> f,
+    rs::DynCallable<LayoutCompatible(LayoutCompatible) const> f,
     LayoutCompatible arg);
 
-rs_std::DynCallable<void() &&> bridge_to_and_from_cpp(
-    rs_std::DynCallable<void() &&> f);
+rs::DynCallable<void() &&> bridge_to_and_from_cpp(rs::DynCallable<void() &&> f);
 
-void invoke_as_absl_anyinvocable(rs_std::DynCallable<void()> f);
+void invoke_as_absl_anyinvocable(rs::DynCallable<void()> f);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CALLABLES_CALLS_BACK_TO_RUST_H_

@@ -71,7 +71,7 @@ pub mod fn_param_ty_tests {
         // This function used to return unmodified `c` value, but (as we learned when
         // authoring `rs_bindings_from_cc/test/struct/abi_class` tests) making
         // some simple calculations below helps to exercise the ABI
-        // compatibility between Rust `char` and C++ `rs_std::char_`.
+        // compatibility between Rust `char` and C++ `rs::char_`.
         c.to_ascii_lowercase()
     }
 

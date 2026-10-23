@@ -15,12 +15,12 @@
 
 namespace {
 
-class NoopWaker final : public rs_std::Waker {
+class NoopWaker final : public rs::Waker {
  public:
   NoopWaker() = default;
   void WakeByRef() override {}
   void WakeAndDestroy() override {}
-  rs_std::Waker* Clone() override { return this; }
+  rs::Waker* Clone() override { return this; }
   void Destroy() override {}
 };
 
@@ -36,7 +36,7 @@ TEST(AsyncFnTest, SumSlice) {
   NoopWaker waker;
   std::vector<int32_t> vec = {10, 20, 30};
   crubit::DynErasedFuture<int32_t> fut =
-      async_fn::sum_slice(rs_std::SliceRef<const int32_t>(vec));
+      async_fn::sum_slice(rs::SliceRef<const int32_t>(vec));
   crubit::Slot<int32_t> out;
   ASSERT_TRUE(fut.Poll(&waker, out.Get()));
   EXPECT_EQ(std::move(out).AssumeInitAndTakeValue(), 60);

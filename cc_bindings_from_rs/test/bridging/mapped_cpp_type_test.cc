@@ -11,9 +11,9 @@ namespace mapped_cpp_type {
 namespace {
 
 TEST(MappedCppTypeTest, EqTraitGenerated) {
-  // Verify that rs_std::impl<MappedCppType, Eq> is successfully generated and
+  // Verify that rs::impl<MappedCppType, Eq> is successfully generated and
   // compiled!
-  EXPECT_TRUE((rs_std::impl<MappedCppType, rs::core::cmp::Eq>::kIsImplemented));
+  EXPECT_TRUE((rs::impl<MappedCppType, rs::core::cmp::Eq>::kIsImplemented));
 }
 
 TEST(MappedCppTypeTest, GenericMappedCppType) {

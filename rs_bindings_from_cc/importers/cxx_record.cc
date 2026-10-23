@@ -787,8 +787,8 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
 
 // Returns the `DynCallable` information for the given `specialization_decl`.
 //
-// If the given `specialization_decl` is not a `rs_std::DynCallable`, returns
-// `std::nullopt`. If it is a `rs_std::DynCallable` but has other errors,
+// If the given `specialization_decl` is not a `rs::DynCallable`, returns
+// `std::nullopt`. If it is a `rs::DynCallable` but has other errors,
 // returns an error.
 std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
     ImportContext& ictx,
@@ -799,7 +799,7 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
   auto top_level_namespace =
       AsTopLevelNamespace(templated_decl->getDeclContext());
   BridgeType::Callable::BackingType backing_type;
-  if (top_level_namespace == "rs_std" &&
+  if ((top_level_namespace == "rs" || top_level_namespace == "rs_std") &&
       templated_decl->getName() == "DynCallable") {
     backing_type = BridgeType::Callable::BackingType::kDynCallable;
   } else if (top_level_namespace == "absl" &&

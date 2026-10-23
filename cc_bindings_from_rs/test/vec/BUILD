@@ -56,7 +56,6 @@ crubit_cc_test(
         ":vec_cc_api",
         "//support/rs_std:rs_alloc",
         "//support/rs_std:slice_ref",
-        "//support/rs_std:vec",
         "@abseil-cpp//absl/types:span",
         "@googletest//:gtest_main",
     ],

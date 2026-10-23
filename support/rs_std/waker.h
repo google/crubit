@@ -5,7 +5,9 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_WAKER_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_WAKER_H_
 
-namespace rs_std {
+#include "support/internal/cpp_config.h"
+
+namespace rs {
 
 class Waker;
 
@@ -65,6 +67,14 @@ class Waker {
   friend void internal::rs_std_waker_drop(Waker* in);
 };
 
+}  // namespace rs
+
+namespace rs_std {
+#ifdef CRUBIT_INTERNAL_RS_NAMESPACE
+using Waker [[deprecated("Use rs::Waker instead")]] = ::rs::Waker;
+#else
+using Waker = ::rs::Waker;
+#endif
 }  // namespace rs_std
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_WAKER_H_

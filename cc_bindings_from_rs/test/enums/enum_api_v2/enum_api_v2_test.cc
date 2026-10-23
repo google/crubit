@@ -302,7 +302,7 @@ TEST(EnumApiV2Test, StructFieldAndOption) {
   EXPECT_EQ(enum_api_v2::total_steps(route), 0);
 
   route.first_step = Instruction::Walk::Make(10);
-  route.next_step = rs_std::Option<Instruction>(Instruction::Walk::Make(5));
+  route.next_step = rs::Option<Instruction>(Instruction::Walk::Make(5));
   ASSERT_TRUE(route.next_step.has_value());
   EXPECT_THAT(rs::get_if<Instruction::Walk>(&*route.next_step),
               Pointee(Field(&Instruction::Walk::__field0, 5)));

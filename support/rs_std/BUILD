@@ -31,6 +31,7 @@ cc_library(
         ":str_ref",
         "//support:annotations",
         "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
     ],
 )
 
@@ -44,6 +45,7 @@ cc_library(
     ],
     deps = [
         "//support:annotations",
+        "//support/internal:cpp_config",
     ],
 )
 
@@ -88,6 +90,9 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
+    ],
+    deps = [
+        "//support/internal:cpp_config",
     ],
 )
 
@@ -152,6 +157,7 @@ cc_library(
     deps = [
         "//support:annotations",
         "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
     ],
 )
 
@@ -186,6 +192,7 @@ cc_library(
         ":slice_ref",
         "//support:annotations_internal",
         "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
         "//support/rs_std/internal:is_utf8",
     ],
 )
@@ -224,6 +231,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//support:bridge_cpp",
+        "//support/internal:cpp_config",
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/functional:any_invocable",
     ],
@@ -246,7 +254,6 @@ cc_library(
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = [],
 )
 
 crubit_cc_test(
@@ -265,7 +272,6 @@ cc_library(
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = [],
 )
 
 crubit_cc_test(
@@ -287,7 +293,9 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [],
+    deps = [
+        "//support/internal:cpp_config",
+    ],
 )
 
 cc_library(
@@ -300,6 +308,7 @@ cc_library(
     ],
     deps = [
         ":traits",
+        "//support/internal:cpp_config",
     ],
 )
 
@@ -324,6 +333,7 @@ cc_library(
     deps = [
         ":unit",
         "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
     ],
 )
 
@@ -338,6 +348,7 @@ cc_library(
     deps = [
         ":unit",
         "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
     ],
 )
 
@@ -351,6 +362,7 @@ cc_library(
     ],
     deps = [
         "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
     ],
 )
 
@@ -362,7 +374,9 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [],
+    deps = [
+        "//support/internal:cpp_config",
+    ],
 )
 
 cc_library(
@@ -373,7 +387,9 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [],
+    deps = [
+        "//support/internal:cpp_config",
+    ],
 )
 
 crubit_cc_test(

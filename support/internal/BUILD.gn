@@ -37,9 +37,24 @@ source_set("bindings_support") {
   ]
 }
 
+source_set("cpp_config") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "cpp_config.h",
+  ]
+}
+
 group("internal_cpp") {
   public_deps = [
     ":bindings_support",
+    ":cpp_config",
   ]
 }
 

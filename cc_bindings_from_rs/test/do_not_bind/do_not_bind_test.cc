@@ -9,7 +9,7 @@
 namespace do_not_bind {
 namespace {
 
-using TraitImpl = rs_std::impl<Struct, Trait>;
+using TraitImpl = rs::impl<Struct, Trait>;
 
 // `do_not_bind` used to parse and then be silently dropped on associated items,
 // so assert absence directly rather than relying only on the golden. These must
@@ -19,9 +19,8 @@ concept HasSuppressedInherentMethod =
     requires(const T& s) { s.suppressed_inherent_method(); };
 
 template <typename T>
-concept HasSuppressedTraitMethod = requires(const T& s) {
-  rs_std::impl<T, Trait>::suppressed_trait_method(s);
-};
+concept HasSuppressedTraitMethod =
+    requires(const T& s) { rs::impl<T, Trait>::suppressed_trait_method(s); };
 
 static_assert(!HasSuppressedInherentMethod<Struct>);
 static_assert(!HasSuppressedTraitMethod<Struct>);

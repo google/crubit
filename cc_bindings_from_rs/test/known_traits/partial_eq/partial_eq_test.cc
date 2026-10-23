@@ -59,8 +59,8 @@ TEST(PartialEqTest, TestStrAndRefStrRhs) {
   // Verify that gTest EXPECT_EQ/EXPECT_NE macros also compile and work.  The
   // `StrRef` has to be spelled out: `StrRef`'s constructor from a string
   // literal is `consteval`, so it cannot run on gTest's runtime parameter.
-  EXPECT_EQ(s, rs_std::StrRef("hello"));
-  EXPECT_NE(s, rs_std::StrRef("hi"));
+  EXPECT_EQ(s, rs::StrRef("hello"));
+  EXPECT_NE(s, rs::StrRef("hi"));
 }
 
 }  // namespace

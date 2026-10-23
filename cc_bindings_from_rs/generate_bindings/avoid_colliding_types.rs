@@ -46,8 +46,8 @@ pub trait AvoidCollidingTypes<'tcx, T: 'tcx>: Iterator<Item = T> {
         // A shared reference `&T` always overlaps with its referent `T`, because the C++
         // parameter is derived from a reference to the key type: `T` is passed as
         // `cpp_type_of(&T)`, whereas `&T` is passed as `cpp_type_of(&T) const&`.  For example
-        // `impl PartialEq<str> for String` generates `operator==(rs_std::StrRef)` while
-        // `impl PartialEq<&str> for String` generates `operator==(rs_std::StrRef const&)`,
+        // `impl PartialEq<str> for String` generates `operator==(rs::StrRef)` while
+        // `impl PartialEq<&str> for String` generates `operator==(rs::StrRef const&)`,
         // and the two overloads are ambiguous at every call site.
         retain_non_colliding(tcx, results, &key_getter, |tcx, ty| {
             get_preferred_type(tcx, peel_shared_refs(ty))

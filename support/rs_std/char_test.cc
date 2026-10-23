@@ -180,7 +180,7 @@ void ExpectEncodedIsUtf8(uint32_t data) {
   }
   std::array<uint8_t, 4> buffer;
   rs_std::StrRef str = c->encode_utf8(absl::MakeSpan(buffer));
-  EXPECT_TRUE(rs_std::internal::IsUtf8(str.to_string_view()));
+  EXPECT_TRUE(rs::internal::IsUtf8(str.to_string_view()));
 }
 FUZZ_TEST(ExpectEncodedIsUtf8FuzzTest, ExpectEncodedIsUtf8);
 
@@ -199,7 +199,7 @@ TEST_P(EncodedIsUtf8BytesTest, EncodedIsUtf8Bytes) {
   }
   std::array<uint8_t, 4> buffer;
   rs_std::StrRef str = c->encode_utf8(absl::MakeSpan(buffer));
-  EXPECT_TRUE(rs_std::internal::IsUtf8(str.to_string_view()));
+  EXPECT_TRUE(rs::internal::IsUtf8(str.to_string_view()));
   EXPECT_EQ(absl::MakeSpan(str), expected_utf8_bytes);
 }
 

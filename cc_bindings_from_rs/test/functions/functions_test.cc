@@ -51,9 +51,9 @@ TEST(FnParamTyTest, Int32) {
 }
 
 TEST(FnParamTyTest, char_) {
-  std::optional<const rs_std::char_> input = rs_std::char_::from_u32(U'A');
+  std::optional<const rs::char_> input = rs::char_::from_u32(U'A');
   ASSERT_TRUE(input.has_value());
-  rs_std::char_ output = fn_param_ty_tests::char_to_ascii_lowercase(*input);
+  rs::char_ output = fn_param_ty_tests::char_to_ascii_lowercase(*input);
   EXPECT_EQ(std::uint32_t{U'a'}, std::uint32_t{output});
 }
 
@@ -200,7 +200,7 @@ TEST(NoDiscardTest, WithMessageWorks) {
 TEST(GenericFnTest, AsMutTraitBasicTest) {
   namespace tests = functions::generic_fn_tests::as_mut_trait_tests;
   std::vector<int32_t> vec = {1, 2, 3};
-  tests::prefix_sums(rs_std::SliceRef<int32_t>{vec});
+  tests::prefix_sums(rs::SliceRef<int32_t>{vec});
   EXPECT_EQ(1, vec[0]);
   EXPECT_EQ(1 + 2, vec[1]);
   EXPECT_EQ(1 + 2 + 3, vec[2]);
@@ -209,24 +209,22 @@ TEST(GenericFnTest, AsMutTraitBasicTest) {
 TEST(GenericFnTest, AsRefTraitTests) {
   namespace tests = functions::generic_fn_tests::as_ref_trait_tests;
   std::vector<int32_t> vec = {1, 2, 3};
-  EXPECT_EQ(1 + 2 + 3,
-            tests::slice_ref_sum(rs_std::SliceRef<const int32_t>{vec}));
+  EXPECT_EQ(1 + 2 + 3, tests::slice_ref_sum(rs::SliceRef<const int32_t>{vec}));
 
   std::vector<int32_t> vec1 = {1, 2, 3};
   std::vector<int32_t> vec2 = {10, 20, 30};
   std::vector<int32_t> vec3 = {100, 200, 300};
   std::vector<int32_t> result = {0, 0, 0};
-  tests::diverse_lifetimes(rs_std::SliceRef<const int32_t>{vec1},
-                           rs_std::SliceRef<const int32_t>{vec2},
-                           rs_std::SliceRef<const int32_t>{vec3},
-                           rs_std::SliceRef<int32_t>{result});
+  tests::diverse_lifetimes(
+      rs::SliceRef<const int32_t>{vec1}, rs::SliceRef<const int32_t>{vec2},
+      rs::SliceRef<const int32_t>{vec3}, rs::SliceRef<int32_t>{result});
   EXPECT_EQ(111, result[0]);
   EXPECT_EQ(222, result[1]);
   EXPECT_EQ(333, result[2]);
 
   EXPECT_EQ(1 + 2 + 3 + 10 + 20 + 30,
-            tests::two_args(rs_std::SliceRef<const int32_t>{vec1},
-                            rs_std::SliceRef<const int32_t>{vec2}));
+            tests::two_args(rs::SliceRef<const int32_t>{vec1},
+                            rs::SliceRef<const int32_t>{vec2}));
 
   tests::MyStruct my_struct = tests::MyStruct::new_(123);
   EXPECT_EQ(123, tests::struct_ref(my_struct));

@@ -94,7 +94,7 @@ pub mod bool_and_str_rhs {
 }
 
 /// `PartialEq<str>` and `PartialEq<&str>` both generate an `operator==` that accepts an
-/// `rs_std::StrRef`, so bindings may only be generated for one of them.  This mirrors the shape
+/// `rs::StrRef`, so bindings may only be generated for one of them.  This mirrors the shape
 /// of `alloc::string::String`.  The main verification is whether the generated bindings compile
 /// without any errors.
 pub mod str_and_ref_str_rhs {

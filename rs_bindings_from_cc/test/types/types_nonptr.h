@@ -122,34 +122,33 @@ TEST(ExistingRustTypeEnum, MyI8Enum);
 TEST(ExistingRustTypeAlias, MyI8Alias);
 
 // Test all numerical types...
-TEST(ExistingRustTypeSliceRefConstUint8, rs_std::SliceRef<const uint8_t>);
-TEST(ExistingRustTypeSliceRefUint8, rs_std::SliceRef<uint8_t>);
-TEST(ExistingRustTypeSliceRefConstUint16, rs_std::SliceRef<const uint16_t>);
-TEST(ExistingRustTypeSliceRefUint16, rs_std::SliceRef<uint16_t>);
-TEST(ExistingRustTypeSliceRefConstUint32, rs_std::SliceRef<const uint32_t>);
-TEST(ExistingRustTypeSliceRefUint32, rs_std::SliceRef<uint32_t>);
-TEST(ExistingRustTypeSliceRefConstUint64, rs_std::SliceRef<const uint64_t>);
-TEST(ExistingRustTypeSliceRefUint64, rs_std::SliceRef<uint64_t>);
+TEST(ExistingRustTypeSliceRefConstUint8, rs::SliceRef<const uint8_t>);
+TEST(ExistingRustTypeSliceRefUint8, rs::SliceRef<uint8_t>);
+TEST(ExistingRustTypeSliceRefConstUint16, rs::SliceRef<const uint16_t>);
+TEST(ExistingRustTypeSliceRefUint16, rs::SliceRef<uint16_t>);
+TEST(ExistingRustTypeSliceRefConstUint32, rs::SliceRef<const uint32_t>);
+TEST(ExistingRustTypeSliceRefUint32, rs::SliceRef<uint32_t>);
+TEST(ExistingRustTypeSliceRefConstUint64, rs::SliceRef<const uint64_t>);
+TEST(ExistingRustTypeSliceRefUint64, rs::SliceRef<uint64_t>);
 
-TEST(ExistingRustTypeSliceRefConstInt8, rs_std::SliceRef<const int8_t>);
-TEST(ExistingRustTypeSliceRefInt8, rs_std::SliceRef<int8_t>);
-TEST(ExistingRustTypeSliceRefConstInt16, rs_std::SliceRef<const int16_t>);
-TEST(ExistingRustTypeSliceRefInt16, rs_std::SliceRef<int16_t>);
-TEST(ExistingRustTypeSliceRefConstInt32, rs_std::SliceRef<const int32_t>);
-TEST(ExistingRustTypeSliceRefInt32, rs_std::SliceRef<int32_t>);
-TEST(ExistingRustTypeSliceRefConstInt64, rs_std::SliceRef<const int64_t>);
-TEST(ExistingRustTypeSliceRefInt64, rs_std::SliceRef<int64_t>);
+TEST(ExistingRustTypeSliceRefConstInt8, rs::SliceRef<const int8_t>);
+TEST(ExistingRustTypeSliceRefInt8, rs::SliceRef<int8_t>);
+TEST(ExistingRustTypeSliceRefConstInt16, rs::SliceRef<const int16_t>);
+TEST(ExistingRustTypeSliceRefInt16, rs::SliceRef<int16_t>);
+TEST(ExistingRustTypeSliceRefConstInt32, rs::SliceRef<const int32_t>);
+TEST(ExistingRustTypeSliceRefInt32, rs::SliceRef<int32_t>);
+TEST(ExistingRustTypeSliceRefConstInt64, rs::SliceRef<const int64_t>);
+TEST(ExistingRustTypeSliceRefInt64, rs::SliceRef<int64_t>);
 
-TEST(ExistingRustTypeSliceRefConstFloat, rs_std::SliceRef<const float>);
-TEST(ExistingRustTypeSliceRefFloat, rs_std::SliceRef<float>);
-TEST(ExistingRustTypeSliceRefConstDouble, rs_std::SliceRef<const double>);
-TEST(ExistingRustTypeSliceRefDouble, rs_std::SliceRef<double>);
+TEST(ExistingRustTypeSliceRefConstFloat, rs::SliceRef<const float>);
+TEST(ExistingRustTypeSliceRefFloat, rs::SliceRef<float>);
+TEST(ExistingRustTypeSliceRefConstDouble, rs::SliceRef<const double>);
+TEST(ExistingRustTypeSliceRefDouble, rs::SliceRef<double>);
 
 // ... and arbitrary structs/enums.
-TEST(ExistingRustTypeSliceRefArbitraryStruct,
-     rs_std::SliceRef<ns::ExampleStruct>);
+TEST(ExistingRustTypeSliceRefArbitraryStruct, rs::SliceRef<ns::ExampleStruct>);
 TEST(ExistingRustTypeSliceRefArbitraryEnum,
-     rs_std::SliceRef<const ns::ExampleEnum>);
-TEST(ExistingRustTypeSliceRefArbitraryAliasEnum, rs_std::SliceRef<AliasEnum>);
+     rs::SliceRef<const ns::ExampleEnum>);
+TEST(ExistingRustTypeSliceRefArbitraryAliasEnum, rs::SliceRef<AliasEnum>);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_

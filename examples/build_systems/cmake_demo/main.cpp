@@ -22,9 +22,9 @@ int main(int argc, char* argv[]) {
   }
 
   // Crubit includes C++ equivalents for Rust builtin types for use in bindings.
-  // `rs_std::StrRef` is equivalent to Rust's `&str`.
+  // `rs::StrRef` is equivalent to Rust's `&str`.
+  using ::rs::StrRef;
   using ::rs::std::string::String;
-  using ::rs_std::StrRef;
   std::optional<StrRef> dir_path = StrRef::FromUtf8(argv[1]);
   if (!dir_path.has_value()) {
     std::cerr << "The filename \"" << argv[1] << "\" contains invalid utf8"
@@ -38,8 +38,7 @@ int main(int argc, char* argv[]) {
   using ::rust_blake3_scanner::DirEntry;
   // new is a normal identifier in Rust, but a keyword in C++. Crubit will
   // escape C++ keywords that appear in bindings by appending an underscore.
-  rs_std::Result<DirIterator, Error> walk_dir_res =
-      DirIterator::new_(*dir_path);
+  rs::Result<DirIterator, Error> walk_dir_res = DirIterator::new_(*dir_path);
   if (!walk_dir_res.has_value()) {
     std::cerr << "Error: Provided path is not a valid directory: "
               << walk_dir_res.err().message
@@ -48,21 +47,22 @@ int main(int argc, char* argv[]) {
   }
   DirIterator& walk_dir = *walk_dir_res;
 
-  for (rs_std::Result<DirEntry, Error>& entry : walk_dir) {
+  for (rs::Result<DirEntry, Error>& entry : walk_dir) {
     if (!entry.has_value()) {
       std::cerr << "Error: Failed to read directory entry: "
                 << entry.err() << std::endl;
       continue;
     }
     const String& path = entry->path;
-    const rs_std::Vec<std::uint8_t>& archive = entry->contents;
+    const rs::Vec<std::uint8_t>& archive = entry->contents;
     blake3::Hash hash = rust_blake3_scanner::hash_archive(archive);
     std::cout << path << " - "
               << hash << std::endl;
   }
 
   // Hash and print the full archive of the directory.
-  rs_std::Result<rs_std::Vec<std::uint8_t>, Error> archive_res = walk_dir.take_archive();
+  rs::Result<rs::Vec<std::uint8_t>, Error> archive_res =
+      walk_dir.take_archive();
   if (!archive_res.has_value()) {
     std::cerr << "Error: Failed to package archive: "
               << archive_res.err()

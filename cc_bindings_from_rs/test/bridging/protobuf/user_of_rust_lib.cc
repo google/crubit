@@ -57,7 +57,7 @@ TEST(ProtoBridging, ProtoPointerAndReference) {
 }
 
 TEST(ProtoBridging, ProtoVec) {
-  rs_std::Vec<proto::Rust<foo_service::FooRequestStats>> v =
+  rs::Vec<proto::Rust<foo_service::FooRequestStats>> v =
       rust_lib::create_proto_vec(42);
   EXPECT_EQ(v.size(), 1);
   EXPECT_EQ(v[0]->num_requests(), 42);

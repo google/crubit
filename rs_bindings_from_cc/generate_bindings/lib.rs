@@ -586,7 +586,7 @@ pub fn generate_bindings_tokens(
                 // We assume !has_reference_param: it doesn't matter since we're just checking for
                 // presence of DynCallable.
 
-                // Find records that are template instantiations of `rs_std::DynCallable` or
+                // Find records that are template instantiations of `rs::DynCallable` or
                 // `absl::AnyInvocable`.
                 let Ok(Some(BridgeRsTypeKind::Callable(callable))) =
                     BridgeRsTypeKind::new(record, &LifetimeOptions::default(), &None, &db, &[])

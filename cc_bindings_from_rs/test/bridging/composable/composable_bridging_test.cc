@@ -12,7 +12,7 @@
 namespace crubit {
 namespace {
 
-using ::rs_std::SliceRef;
+using ::rs::SliceRef;
 
 TEST(ComposableBridging, MaybeInt) {
   std::optional<int> maybe_int = composable_bridging::maybe_int();
@@ -27,10 +27,10 @@ TEST(ComposableBridging, MaybeStringView) {
 }
 
 TEST(ComposableBridging, MaybeIntSlice) {
-  std::optional<rs_std::SliceRef<const int>> maybe_int_slice =
+  std::optional<rs::SliceRef<const int>> maybe_int_slice =
       composable_bridging::maybe_int_slice();
   ASSERT_TRUE(maybe_int_slice.has_value());
-  rs_std::SliceRef<const int> int_slice = maybe_int_slice.value();
+  rs::SliceRef<const int> int_slice = maybe_int_slice.value();
   auto int_slice_span = int_slice.to_span();
   EXPECT_EQ(int_slice_span.size(), 3);
   EXPECT_EQ(int_slice_span[0], 1);

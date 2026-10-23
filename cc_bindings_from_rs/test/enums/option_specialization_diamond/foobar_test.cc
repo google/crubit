@@ -13,7 +13,7 @@ TEST(FoobarTest, FooBar) {
   bar::Bar b = bar::Bar::new_(2);
   // Test that we can use our two option types interchangeably between bindings
   // from our crates.
-  const rs_std::Option<int32_t>& b_bar = b.bar;
+  const rs::Option<int32_t>& b_bar = b.bar;
   a.set_field(b_bar);
   EXPECT_TRUE(foobar::foo(foo::Foo::new_(1)).has_value());
   EXPECT_EQ(*foobar::foo(foo::Foo::new_(1)), 1);

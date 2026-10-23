@@ -10,38 +10,37 @@
 #include "absl/functional/any_invocable.h"
 #include "support/rs_std/dyn_callable.h"
 
-void invoke_once(rs_std::DynCallable<void() &&> f) { std::move(f)(); }
+void invoke_once(rs::DynCallable<void() &&> f) { std::move(f)(); }
 
-void invoke(rs_std::DynCallable<void()> f) { f(); }
+void invoke(rs::DynCallable<void()> f) { f(); }
 
-void invoke_const(rs_std::DynCallable<void() const> f) { f(); }
+void invoke_const(rs::DynCallable<void() const> f) { f(); }
 
-int map_int(rs_std::DynCallable<int(int) const> f, int arg) { return f(arg); }
+int map_int(rs::DynCallable<int(int) const> f, int arg) { return f(arg); }
 
 std::optional<int> map_optional_int(
-    rs_std::DynCallable<std::optional<int>(std::optional<int>) const> f,
+    rs::DynCallable<std::optional<int>(std::optional<int>) const> f,
     std::optional<int> arg) {
   return f(arg);
 }
 
 ABICompatible map_abi_compatible(
-    rs_std::DynCallable<ABICompatible(ABICompatible) const> f,
-    ABICompatible arg) {
+    rs::DynCallable<ABICompatible(ABICompatible) const> f, ABICompatible arg) {
   return f(arg);
 }
 
 LayoutCompatible map_layout_compatible(
-    rs_std::DynCallable<LayoutCompatible(LayoutCompatible) const> f,
+    rs::DynCallable<LayoutCompatible(LayoutCompatible) const> f,
     LayoutCompatible arg) {
   return f(arg);
 }
 
-rs_std::DynCallable<void() &&> bridge_to_and_from_cpp(
-    rs_std::DynCallable<void() &&> f) {
+rs::DynCallable<void() &&> bridge_to_and_from_cpp(
+    rs::DynCallable<void() &&> f) {
   return f;
 }
 
-void invoke_as_absl_anyinvocable(rs_std::DynCallable<void()> f) {
+void invoke_as_absl_anyinvocable(rs::DynCallable<void()> f) {
   absl::AnyInvocable<void()> any_invocable = std::move(f);
   any_invocable();
 }

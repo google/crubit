@@ -1519,7 +1519,7 @@ fn test_format_item_struct_not_aggregate_with_result_field() {
                     __COMMENT__ #comment
                     ...
                     union {
-                        rs_std::Result<::std::uint32_t, ::std::uint32_t> res;
+                        rs::Result<::std::uint32_t, ::std::uint32_t> res;
                     };
                     ...
                 };
@@ -1815,7 +1815,7 @@ fn test_format_item_struct_with_str_reference_is_default_constructible() {
                 struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithStr") alignas(8)
                 [[clang::trivial_abi]] StructWithStr final {
                   ...
-                  rs_std::StrRef s{};
+                  rs::StrRef s{};
                   ...
                 };
             }
@@ -1838,7 +1838,7 @@ fn test_format_item_struct_with_slice_reference_is_default_constructible() {
                 struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithSlice") alignas(8)
                 [[clang::trivial_abi]] StructWithSlice final {
                   ...
-                  rs_std::SliceRef<const ::std::int32_t> s{};
+                  rs::SliceRef<const ::std::int32_t> s{};
                   ...
                 };
             }
@@ -1861,7 +1861,7 @@ fn test_format_item_struct_with_mut_slice_reference_is_default_constructible() {
                 struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithMutSlice") alignas(8)
                 [[clang::trivial_abi]] StructWithMutSlice final {
                   ...
-                  rs_std::SliceRef<::std::int32_t> s{};
+                  rs::SliceRef<::std::int32_t> s{};
                   ...
                 };
             }

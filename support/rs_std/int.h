@@ -11,9 +11,10 @@
 #include <cstdint>
 #include <type_traits>
 
+#include "support/internal/cpp_config.h"
 #include "support/annotations.h"
 
-namespace rs_std {
+namespace rs {
 
 // `rs_std::usize` is a C++ representation of the `usize` type from Rust when
 // used as a template argument inside template specializations (such as
@@ -36,7 +37,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("usize") usize final {
   constexpr operator ::std::uintptr_t() const noexcept { return value_; }
 
   friend constexpr bool operator==(usize lhs, usize rhs) noexcept = default;
-  friend constexpr std::strong_ordering operator<=>(
+  friend constexpr ::std::strong_ordering operator<=>(
       usize lhs, usize rhs) noexcept = default;
 
   friend constexpr usize operator+(usize lhs, usize rhs) noexcept {
@@ -110,6 +111,16 @@ static_assert(alignof(isize) == alignof(::std::intptr_t));
 static_assert(::std::is_trivially_copyable_v<isize>);
 static_assert(::std::is_trivially_destructible_v<isize>);
 
+}  // namespace rs
+
+namespace rs_std {
+#ifdef CRUBIT_INTERNAL_RS_NAMESPACE
+using isize [[deprecated("Use rs::isize instead")]] = ::rs::isize;
+using usize [[deprecated("Use rs::usize instead")]] = ::rs::usize;
+#else
+using isize = ::rs::isize;
+using usize = ::rs::usize;
+#endif
 }  // namespace rs_std
 
 #endif  // CRUBIT_SUPPORT_RS_STD_INT_H_

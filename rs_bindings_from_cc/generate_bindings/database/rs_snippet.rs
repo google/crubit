@@ -693,7 +693,7 @@ pub enum RustPtrKind {
     /// The C++ pointer type that this was derived from, which is used for spelling the original
     /// C++ type back out even if we only treat it as a raw pointer in Rust.
     CcPtr(PointerTypeKind),
-    /// This is the `rs_std::SliceRef` type.
+    /// This is the `rs::SliceRef` type.
     Slice,
 }
 

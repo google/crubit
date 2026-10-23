@@ -14,14 +14,14 @@ TEST(IntoTest, ConvertConversionOperators) {
   into::Convert convert(1563);
   EXPECT_EQ(static_cast<int32_t>(convert), 1563);
   EXPECT_EQ(static_cast<int64_t>(convert), 1563);
-  EXPECT_EQ(static_cast<rs_std::StrRef>(convert), "Convert");
+  EXPECT_EQ(static_cast<rs::StrRef>(convert), "Convert");
   EXPECT_EQ(static_cast<int16_t>(convert), 1563);
 }
 
 TEST(IntoTest, ConvertRefConversionOperators) {
   into::ConvertRef convert_ref =
-      into::ConvertRef::create(rs_std::StrRef("Hello, World!"));
-  EXPECT_EQ(static_cast<rs_std::StrRef>(convert_ref), "Hello, World!");
+      into::ConvertRef::create(rs::StrRef("Hello, World!"));
+  EXPECT_EQ(static_cast<rs::StrRef>(convert_ref), "Hello, World!");
   EXPECT_EQ(static_cast<into::Convert>(std::move(convert_ref)).__field0, 42);
 }
 
@@ -36,12 +36,12 @@ TEST(IntoTest, CloneCopyConversionAndConstructor) {
 
 TEST(IntoTest, CloneAllocConversionAndConstructor) {
   into::CloneAllocType src =
-      into::CloneAllocType::create(rs_std::StrRef("hello into alloc"));
+      into::CloneAllocType::create(rs::StrRef("hello into alloc"));
   auto target = static_cast<into::CloneAllocTarget>(std::move(src));
   EXPECT_EQ(target.get_value().to_string_view(), "hello into alloc");
 
   into::CloneAllocType src2 =
-      into::CloneAllocType::create(rs_std::StrRef("hello into alloc 2"));
+      into::CloneAllocType::create(rs::StrRef("hello into alloc 2"));
   into::CloneAllocTarget target2(std::move(src2));
   EXPECT_EQ(target2.get_value().to_string_view(), "hello into alloc 2");
 }
@@ -75,8 +75,7 @@ TEST(IntoTest, ConstConversionOperatorExplicit) {
 }
 
 TEST(IntoTest, RvalueRefConversionOperatorExplicit) {
-  into::CloneAllocType src =
-      into::CloneAllocType::create(rs_std::StrRef("hello"));
+  into::CloneAllocType src = into::CloneAllocType::create(rs::StrRef("hello"));
   auto target = static_cast<into::CloneAllocTarget>(std::move(src));
   EXPECT_EQ(target.get_value().to_string_view(), "hello");
 }

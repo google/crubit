@@ -27,3 +27,12 @@ crubit_support_annotations_internal
 crubit_support_unsafe_relocate_tag
 )
 
+add_library(crubit_support_internal_cpp_config INTERFACE
+"cpp_config.h"
+)
+set_target_properties(crubit_support_internal_cpp_config PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_internal_cpp_config INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+

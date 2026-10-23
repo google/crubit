@@ -187,7 +187,7 @@ template <typename T>
 concept HasBadTupleMethod = requires(T t) { t.tuple_not_by_value(); };
 
 TEST(TuplesTest, DirectFieldAccess) {
-  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  rs::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
   EXPECT_EQ(t.__field0, 10u);
   EXPECT_EQ(t.__field1, 20u);
 
@@ -198,14 +198,14 @@ TEST(TuplesTest, DirectFieldAccess) {
 }
 
 TEST(TuplesTest, TupleTypeTraits) {
-  using TupleType = rs_std::Tuple<uint32_t, uint32_t>;
+  using TupleType = rs::Tuple<uint32_t, uint32_t>;
   static_assert(std::tuple_size_v<TupleType> == 2);
   static_assert(std::is_same_v<std::tuple_element_t<0, TupleType>, uint32_t>);
   static_assert(std::is_same_v<std::tuple_element_t<1, TupleType>, uint32_t>);
 }
 
 TEST(TuplesTest, MemberGet) {
-  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  rs::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
   EXPECT_EQ(t.template get<0>(), 10u);
   EXPECT_EQ(t.template get<1>(), 20u);
 
@@ -218,7 +218,7 @@ TEST(TuplesTest, MemberGet) {
 }
 
 TEST(TuplesTest, StdGet) {
-  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  rs::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
   EXPECT_EQ(std::get<0>(t), 10u);
   EXPECT_EQ(std::get<1>(t), 20u);
 
@@ -233,14 +233,14 @@ TEST(TuplesTest, StdGet) {
 }
 
 TEST(TuplesTest, StructuredBindingByValue) {
-  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  rs::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
   auto [v0, v1] = t;
   EXPECT_EQ(v0, 10u);
   EXPECT_EQ(v1, 20u);
 }
 
 TEST(TuplesTest, StructuredBindingByReference) {
-  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  rs::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
   auto& [r0, r1] = t;
   EXPECT_EQ(r0, 10u);
   EXPECT_EQ(r1, 20u);
@@ -252,14 +252,14 @@ TEST(TuplesTest, StructuredBindingByReference) {
 }
 
 TEST(TuplesTest, StructuredBindingByConstReference) {
-  const rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  const rs::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
   const auto& [cr0, cr1] = t;
   EXPECT_EQ(cr0, 10u);
   EXPECT_EQ(cr1, 20u);
 }
 
 TEST(TuplesTest, StructuredBindingByRvalue) {
-  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  rs::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
   auto [m0, m1] = std::move(t);
   EXPECT_EQ(m0, 10u);
   EXPECT_EQ(m1, 20u);
@@ -291,13 +291,11 @@ TEST(TuplesTest, NestedTupleStruct) {
   EXPECT_EQ(res.in_tuple2.__field1.__field1.__field0, 42);
   EXPECT_EQ(res.in_tuple2.__field1.__field1.__field1, 42);
 
-  std::tuple<rs_std::Tuple<rs_std::Tuple<uint32_t, uint32_t>, uint32_t>,
-             uint32_t>
-      t1 = std::move(res.in_tuple1);
+  std::tuple<rs::Tuple<rs::Tuple<uint32_t, uint32_t>, uint32_t>, uint32_t> t1 =
+      std::move(res.in_tuple1);
   EXPECT_EQ(std::get<1>(t1), 42);
-  std::tuple<uint32_t,
-             rs_std::Tuple<uint32_t, rs_std::Tuple<uint32_t, uint32_t>>>
-      t2 = std::move(res.in_tuple2);
+  std::tuple<uint32_t, rs::Tuple<uint32_t, rs::Tuple<uint32_t, uint32_t>>> t2 =
+      std::move(res.in_tuple2);
   EXPECT_EQ(std::get<0>(t2), 42);
 }
 
@@ -326,26 +324,26 @@ TEST(TuplesTest, HasDefaultTuple) {
 }
 
 TEST(TuplesTest, ConstructAndPassTupleCopyNoDefault) {
-  rs_std::Tuple<tuples::CopyNoDefault, std::uint8_t> res(
+  rs::Tuple<tuples::CopyNoDefault, std::uint8_t> res(
       std::make_tuple(tuples::CopyNoDefault::new_(42), std::uint8_t{10}));
   EXPECT_EQ(tuples::take_tuple_copy_no_default_1(res), 42);
 }
 
 TEST(TuplesTest, ConstructAndPassTupleCloneNoDefault) {
-  rs_std::Tuple<std::uint8_t, tuples::CloneNoDefault> res(
+  rs::Tuple<std::uint8_t, tuples::CloneNoDefault> res(
       std::make_tuple(std::uint8_t{10}, tuples::CloneNoDefault::new_(42)));
   EXPECT_EQ(tuples::take_tuple_clone_no_default_2(res), 42);
 }
 
 TEST(TuplesTest, CopyTupleCloneNoDefault) {
-  rs_std::Tuple<std::uint8_t, tuples::CloneNoDefault> res(
+  rs::Tuple<std::uint8_t, tuples::CloneNoDefault> res(
       std::make_tuple(std::uint8_t{10}, tuples::CloneNoDefault::new_(42)));
-  rs_std::Tuple<std::uint8_t, tuples::CloneNoDefault> copy = res;
+  rs::Tuple<std::uint8_t, tuples::CloneNoDefault> copy = res;
   EXPECT_EQ(tuples::take_tuple_clone_no_default_2(copy), 42);
 }
 
 TEST(TuplesTest, ConstructAndPassTupleHasDefault) {
-  rs_std::Tuple<tuples::HasDefault, std::uint8_t> res(std::make_tuple(
+  rs::Tuple<tuples::HasDefault, std::uint8_t> res(std::make_tuple(
       tuples::HasDefault::new_("halo strategy"), std::uint8_t{15}));
   EXPECT_EQ(tuples::take_tuple_has_default(&res), "halo strategy");
   std::tuple<tuples::HasDefault, std::uint8_t> t = std::move(res);
@@ -353,7 +351,7 @@ TEST(TuplesTest, ConstructAndPassTupleHasDefault) {
 }
 
 TEST(TuplesTest, ConstructAndPassCppMovedTupleHasDefault) {
-  rs_std::Tuple<tuples::HasDefault, std::uint8_t> res(std::make_tuple(
+  rs::Tuple<tuples::HasDefault, std::uint8_t> res(std::make_tuple(
       tuples::HasDefault::new_("halo strategy"), std::uint8_t{15}));
   std::tuple<tuples::HasDefault, std::uint8_t> t = std::move(res);
   EXPECT_EQ(std::get<0>(t).val().to_string_view(), "halo strategy");
@@ -362,26 +360,26 @@ TEST(TuplesTest, ConstructAndPassCppMovedTupleHasDefault) {
 }
 
 TEST(TuplesTest, OptionInTupleRef) {
-  rs_std::Tuple<rs_std::Option<std::int32_t>> res(
-      std::make_tuple(rs_std::Option<std::int32_t>(42)));
+  rs::Tuple<rs::Option<std::int32_t>> res(
+      std::make_tuple(rs::Option<std::int32_t>(42)));
   std::optional<int32_t> opt = tuples::return_option_in_tuple_ref(res);
   EXPECT_EQ(opt, 42);
 }
 
 TEST(TuplesTest, StructWithOptionTuple) {
   tuples::StructWithOptionTuple s = tuples::StructWithOptionTuple::new_(42);
-  std::tuple<rs_std::Option<int32_t>,
-             rs_std::Result<int32_t, rs::alloc::string::String>>
+  std::tuple<rs::Option<int32_t>,
+             rs::Result<int32_t, rs::alloc::string::String>>
       t = std::move(s.opt_tuple);
   EXPECT_EQ(std::optional<int32_t>(std::move(std::get<0>(t))), 42);
-  rs_std::Result<int32_t, rs::alloc::string::String> res =
+  rs::Result<int32_t, rs::alloc::string::String> res =
       std::move(std::get<1>(t));
   EXPECT_TRUE(res.has_value());
   EXPECT_EQ(res.value(), 42);
 }
 
 TEST(TuplesTest, ElementConstructor) {
-  rs_std::Tuple<uint32_t, uint32_t> t(10u, 20u);
+  rs::Tuple<uint32_t, uint32_t> t(10u, 20u);
   EXPECT_EQ(std::get<0>(t), 10u);
   EXPECT_EQ(std::get<1>(t), 20u);
 
@@ -392,8 +390,7 @@ TEST(TuplesTest, ElementConstructor) {
                 {std::uint8_t{10}, tuples::CloneNoDefault::new_(42)}),
             42);
 
-  rs_std::Tuple<rs_std::Option<std::int32_t>> opt_tuple(
-      rs_std::Option<std::int32_t>(42));
+  rs::Tuple<rs::Option<std::int32_t>> opt_tuple(rs::Option<std::int32_t>(42));
   EXPECT_EQ(
       std::optional<int32_t>(tuples::return_option_in_tuple_ref(opt_tuple)),
       42);

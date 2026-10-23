@@ -833,10 +833,10 @@ fn test_format_item_slice() {
             quote! {
               void
               foo(
-                rs_std::SliceRef<const ::std::uint32_t> _a,
-                rs_std::SliceRef<const ::std::uint8_t> _b,
-                rs_std::SliceRef<::std::int16_t> _c,
-                rs_std::SliceRef<bool> _d
+                rs::SliceRef<const ::std::uint32_t> _a,
+                rs::SliceRef<const ::std::uint8_t> _b,
+                rs::SliceRef<::std::int16_t> _c,
+                rs::SliceRef<bool> _d
               );
             }
         );
@@ -870,7 +870,7 @@ fn test_format_item_slice_of_const_pointers() {
                     public:
                       ...
                       static ::rust_out::PtrVec new_(
-                          rs_std::SliceRef<const void* const> contents
+                          rs::SliceRef<const void* const> contents
                       );
                     ...
                 };
@@ -895,7 +895,7 @@ fn test_format_item_slice_of_mut_pointers() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                rs_std::Vec<void*> to_vec(rs_std::SliceRef<void* const> slice);
+                rs::Vec<void*> to_vec(rs::SliceRef<void* const> slice);
             }
         );
     });
@@ -1967,7 +1967,7 @@ fn test_trait_impl_for_std_iter_iterator_trait() {
             bindings.cc_api,
             quote! {
                 template <>
-                struct rs_std::impl<::rust_out::MyStruct, ::rs::core::iter::Iterator> {
+                struct rs::impl<::rust_out::MyStruct, ::rs::core::iter::Iterator> {
                     static constexpr bool kIsImplemented = true;
                     ...
                     using Item CRUBIT_INTERNAL_RUST_TYPE(
@@ -1998,7 +1998,7 @@ fn test_trait_impl_for_unpin_trait() {
         assert_cc_not_matches!(
             bindings.cc_api,
             quote! {
-                struct rs_std::impl<::rust_out::MyStruct, ::rs::core::marker::Unpin>
+                struct rs::impl<::rust_out::MyStruct, ::rs::core::marker::Unpin>
             }
         );
 
@@ -2007,7 +2007,7 @@ fn test_trait_impl_for_unpin_trait() {
             bindings.cc_api,
             quote! {
                 template <>
-                struct rs_std::impl<::rust_out::NonUnpinStruct, ::rs::core::marker::Unpin> {
+                struct rs::impl<::rust_out::NonUnpinStruct, ::rs::core::marker::Unpin> {
                     static constexpr bool kIsImplemented = false;
                 };
             }
@@ -2039,7 +2039,7 @@ fn test_trait_impl_for_std_future_future_trait() {
             bindings.cc_api,
             quote! {
                 template <>
-                struct rs_std::impl<::rust_out::MyStruct, ::rs::core::future::Future> {
+                struct rs::impl<::rust_out::MyStruct, ::rs::core::future::Future> {
                     static constexpr bool kIsImplemented = true;
                     ...
                     using Output CRUBIT_INTERNAL_RUST_TYPE(
@@ -2156,7 +2156,7 @@ fn test_trait_impl_for_mapped_cpp_type() {
                 __HASH_TOKEN__ include "some_ns/some_cpp_struct.h"
                 ...
                 template <>
-                struct rs_std::impl<::some_ns::SomeCppStruct, ::rs::core::iter::Iterator> {
+                struct rs::impl<::some_ns::SomeCppStruct, ::rs::core::iter::Iterator> {
                     ...
                 };
                 ...
@@ -2211,7 +2211,7 @@ fn test_trait_impl_for_generic_mapped_cpp_type_does_not_panic() {
                 ...
             }
         );
-        assert!(!bindings.cc_api.to_string().contains("rs_std::impl"));
+        assert!(!bindings.cc_api.to_string().contains("rs::impl"));
     });
 }
 
@@ -2259,7 +2259,7 @@ fn test_into_iterator_with_generic_into_iter_does_not_panic() {
                 ...
             }
         );
-        assert!(!bindings.cc_api.to_string().contains("rs_std::impl"));
+        assert!(!bindings.cc_api.to_string().contains("rs::impl"));
     });
 }
 
@@ -2286,7 +2286,7 @@ fn test_generic_mapped_cpp_type_with_derived_trait() {
     test_generated_bindings(test_src, |bindings| {
         let bindings = bindings.unwrap();
         let cc_api_str = bindings.cc_api.to_string();
-        // Trait impl specializations (rs_std::impl) should not be emitted for generic types.
+        // Trait impl specializations (rs::impl) should not be emitted for generic types.
         assert!(
             !cc_api_str.contains("rs_std :: impl"),
             "Unexpected trait impl specialization:\n{cc_api_str}"
@@ -2849,7 +2849,7 @@ fn test_method_returning_self_in_tuple() {
                     ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] Foo final {
                         ...
-                        rs_std::Tuple<::rust_out::Foo, ::std::int32_t> split() &&;
+                        rs::Tuple<::rust_out::Foo, ::std::int32_t> split() &&;
                         ...
                     };
                     ...
@@ -2857,7 +2857,7 @@ fn test_method_returning_self_in_tuple() {
                 ...
                 template <>
                 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(...)
-                    rs_std::Tuple<::rust_out::Foo, ::std::int32_t> {
+                    rs::Tuple<::rust_out::Foo, ::std::int32_t> {
                     ...
                     union {
                         ::rust_out::Foo __field0;
@@ -3509,10 +3509,10 @@ fn test_iterator_item_references() {
             quote! {
                 ...
                 template<>
-                struct rs_std::impl<::rust_out::MutRefIter, ::rs::core::iter::Iterator> {
+                struct rs::impl<::rust_out::MutRefIter, ::rs::core::iter::Iterator> {
                     static constexpr bool kIsImplemented = true;
                     using Item CRUBIT_INTERNAL_RUST_TYPE(...) = ::std::int32_t& $a;
-                    static rs_std::Option<::std::int32_t* $static crubit_nonnull> next(::rust_out::MutRefIter& self);
+                    static rs::Option<::std::int32_t* $static crubit_nonnull> next(::rust_out::MutRefIter& self);
                 };
                 ...
             }
@@ -3522,10 +3522,10 @@ fn test_iterator_item_references() {
             quote! {
                 ...
                 template<>
-                struct rs_std::impl<::rust_out::RefIter, ::rs::core::iter::Iterator> {
+                struct rs::impl<::rust_out::RefIter, ::rs::core::iter::Iterator> {
                     static constexpr bool kIsImplemented = true;
                     using Item CRUBIT_INTERNAL_RUST_TYPE(...) = ::std::int32_t const& $a;
-                    static rs_std::Option<::std::int32_t const* $static crubit_nonnull> next(::rust_out::RefIter& self);
+                    static rs::Option<::std::int32_t const* $static crubit_nonnull> next(::rust_out::RefIter& self);
                 };
                 ...
             }

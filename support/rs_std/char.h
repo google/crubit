@@ -14,10 +14,11 @@
 #include <span>  // NOLINT(build/c++20)
 #include <type_traits>
 
+#include "support/internal/cpp_config.h"
 #include "support/annotations.h"
 #include "support/rs_std/str_ref.h"
 
-namespace rs_std {
+namespace rs {
 namespace internal {
 
 // A call to this function is used to trigger a compiler error when a `char_`
@@ -52,11 +53,12 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") char_ final {
   //
   // Note: this constructor is templated in order to ensure that implicit
   // conversions from `int` values are not applied.
-  template <typename Char, typename CharNoCv = std::remove_cvref_t<Char>,
-            typename = std::enable_if_t<std::is_same_v<CharNoCv, char> ||
-                                        std::is_same_v<CharNoCv, char8_t> ||
-                                        std::is_same_v<CharNoCv, char16_t> ||
-                                        std::is_same_v<CharNoCv, char32_t>>>
+  template <
+      typename Char, typename CharNoCv = ::std::remove_cvref_t<Char>,
+      typename = ::std::enable_if_t<::std::is_same_v<CharNoCv, char> ||
+                                    ::std::is_same_v<CharNoCv, char8_t> ||
+                                    ::std::is_same_v<CharNoCv, char16_t> ||
+                                    ::std::is_same_v<CharNoCv, char32_t>>>
   consteval char_(  // NOLINT(google-explicit-constructor)
                     // Style waiver for implicit conversions granted in
                     // cl/825200658.
@@ -70,8 +72,8 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") char_ final {
   // Converts a `uint32_t` into a `rs_std::char_`.
   //
   // Note that not all valid `uint32_t`s are valid `rs_std::char_`s.
-  // `from_u32` will return `std::nullopt` if the input is not a valid value for
-  // a `rs_std::char_`.
+  // `from_u32` will return `::std::nullopt` if the input is not a valid value
+  // for a `rs_std::char_`.
   //
   // See also
   // https://doc.rust-lang.org/reference/behavior-considered-undefined.html
@@ -80,9 +82,9 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") char_ final {
   //
   // This function mimics Rust's `char::from_u32`:
   // https://doc.rust-lang.org/std/primitive.char.html#method.from_u32
-  static constexpr std::optional<char_> from_u32(char32_t c) noexcept {
+  static constexpr ::std::optional<char_> from_u32(char32_t c) noexcept {
     if (!IsValidCodePoint(c)) {
-      return std::nullopt;
+      return ::std::nullopt;
     }
 
     return from_u32_unchecked(c);
@@ -91,7 +93,9 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") char_ final {
   constexpr char_(const char_&) = default;
   constexpr char_& operator=(const char_&) = default;
 
-  explicit constexpr operator std::uint32_t() const noexcept { return value_; }
+  explicit constexpr operator ::std::uint32_t() const noexcept {
+    return value_;
+  }
 
   friend constexpr bool operator==(char_ lhs, char_ rhs) noexcept;
   friend constexpr auto operator<=>(char_ lhs, char_ rhs) noexcept;
@@ -110,7 +114,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") char_ final {
   //
   // This function mimics Rust's `char::encode_utf8`:
   // https://doc.rust-lang.org/std/primitive.char.html#method.encode_utf8
-  StrRef encode_utf8(std::span<uint8_t> output_buffer) const;
+  StrRef encode_utf8(::std::span<uint8_t> output_buffer) const;
 
   // Returns the number of bytes required to UTF-8-encode this `char_`.
   //
@@ -152,12 +156,12 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") char_ final {
     return true;
   }
 
-  explicit constexpr char_(std::uint32_t value, UnsafePromiseUnicode)
+  explicit constexpr char_(::std::uint32_t value, UnsafePromiseUnicode)
       : value_(value) {}
 
   // See "layout tests" comments in `char_test.cc` for explanation why
   // `char32_t` is not used.
-  std::uint32_t value_ = '\0';
+  ::std::uint32_t value_ = '\0';
 };
 
 // Definition of `char_::MAX` - it can't be defined and declared within the
@@ -184,11 +188,19 @@ CRUBIT_DO_NOT_BIND constexpr auto operator<=>(char_ lhs, char_ rhs) noexcept {
 // in order to understand this type.
 template <typename Sink>
 void AbslStringify(Sink& sink, const char_& c) {
-  std::array<uint8_t, 4> buffer;
-  rs_std::StrRef str_ref = c.encode_utf8(std::span<uint8_t>(buffer));
+  ::std::array<uint8_t, 4> buffer;
+  StrRef str_ref = c.encode_utf8(::std::span<uint8_t>(buffer));
   sink.Append(str_ref.to_string_view());
 }
 
+}  // namespace rs
+
+namespace rs_std {
+#ifdef CRUBIT_INTERNAL_RS_NAMESPACE
+using char_ [[deprecated("Use rs::char_ instead")]] = ::rs::char_;
+#else
+using char_ = ::rs::char_;
+#endif
 }  // namespace rs_std
 
 #endif  // CRUBIT_SUPPORT_RS_STD_CHAR_H_

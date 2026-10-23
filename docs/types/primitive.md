@@ -20,7 +20,7 @@ Crubit, then `int32_t` in C++ becomes `i32` in Rust. Vice versa, if you call a
 Rust interface from C++ using Crubit, `i32` in Rust becomes `int32_t` in C++.
 
 C++                  | Rust
--------------------- | -------------------------------------------------------
+-------------------- | ----------------------------------------------------
 `void`               | `()` as a return type, `::ffi_11::c_void` otherwise.
 `int8_t`             | `i8`
 `int16_t`            | `i16`
@@ -46,7 +46,7 @@ C++                  | Rust
 `unsigned long`      | `::ffi_11::c_ulong`
 `long long`          | `::ffi_11::c_longlong`
 `unsigned long long` | `::ffi_11::c_ulonglong`
-`rs_std::char_`      | `char`
+`rs::char_`          | `char`
 
 ## One-way type mapping {#one_way}
 

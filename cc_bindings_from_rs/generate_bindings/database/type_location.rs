@@ -46,13 +46,13 @@ pub enum TypeLocation {
     NestedBridgeable,
 
     /// The type of a template argument when specializing a generic class template or trait (e.g.,
-    /// inside `rs_std::Result<T, E>` or `rs_std::Vec<T>`).
+    /// inside `rs::Result<T, E>` or `rs::Vec<T>`).
     TemplateArg,
 
     /// The `Item` associated type of `core::iter::Iterator` or `core::iter::IntoIterator`.
     ///
     /// Unlike other associated types and type aliases (where Rust references are formatted as C++
-    /// pointers to stay consistent with generic specializations like `rs_std::Option<const T*>`
+    /// pointers to stay consistent with generic specializations like `rs::Option<const T*>`
     /// returned by `Iterator::next`), `Iterator::Item` and `IntoIterator::Item` are formatted as
     /// C++ references (`const T&` / `T&`) when `iterator_item_references` is enabled so that
     /// `rs::IteratorAdapter` yields C++ references when iterating in C++.

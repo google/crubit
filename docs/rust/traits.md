@@ -29,10 +29,10 @@ consts, and functions.
 
 ## Checking if a trait is implemented
 
-C++ users can check if a trait implementation is available using
-`rs_std::where_v<T, SomeTrait>`. This is useful when writing templated C++
-functions, as it can be used with `requires` (or `enable_if`) to specify that a
-particular trait is implemented by a type parameter. For example:
+C++ users can check if a trait implementation is available using `rs::where_v<T,
+SomeTrait>`. This is useful when writing templated C++ functions, as it can be
+used with `requires` (or `enable_if`) to specify that a particular trait is
+implemented by a type parameter. For example:
 
 ```
 {{ #include ../../examples/rust/trait/main.cc }}
@@ -66,9 +66,9 @@ A template specialization for `impl MyTrait for MyStruct`:
 <!--  class:impl -->
 
 
-Our generated `rs_std::impl` specialization is an implementation detail of
-binding generation. It holds the actual thunks that call into rust to implement
-our trait, but they should be accessed through our template struct `MyTrait`:
+Our generated `rs::impl` specialization is an implementation detail of binding
+generation. It holds the actual thunks that call into rust to implement our
+trait, but they should be accessed through our template struct `MyTrait`:
 
 ```
 {{ #include ../../examples/rust/trait/example_generated.h }}
@@ -77,8 +77,8 @@ our trait, but they should be accessed through our template struct `MyTrait`:
 
 
 Each struct generated for a Rust trait has the `impl` member that provides
-access to the generated `rs_std::impl`. This is the preferred way to reference
-the generated `rs_std::impl`.
+access to the generated `rs::impl`. This is the preferred way to reference the
+generated `rs::impl`.
 
 Finally, a struct for `MyStruct`:
 

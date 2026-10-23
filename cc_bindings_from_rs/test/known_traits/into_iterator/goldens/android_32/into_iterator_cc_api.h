@@ -265,8 +265,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 }  // namespace into_iterator_rust
 
 template <>
-struct rs_std::impl<::into_iterator_rust::ContainerWithInherentBegin,
-                    ::rs::core::iter::IntoIterator> {
+struct rs::impl<::into_iterator_rust::ContainerWithInherentBegin,
+                ::rs::core::iter::IntoIterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::ContainerWithInherentBegin as :: core :: "
@@ -280,8 +280,8 @@ struct rs_std::impl<::into_iterator_rust::ContainerWithInherentBegin,
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::ContainerWithRefIntoIter,
-                    ::rs::core::iter::IntoIterator> {
+struct rs::impl<::into_iterator_rust::ContainerWithRefIntoIter,
+                ::rs::core::iter::IntoIterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::ContainerWithRefIntoIter<'a> as :: core :: "
@@ -296,20 +296,20 @@ struct rs_std::impl<::into_iterator_rust::ContainerWithRefIntoIter,
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::MoveOnlyIterator,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::into_iterator_rust::MoveOnlyIterator,
+                ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MoveOnlyIterator as :: core :: iter :: "
       "Iterator>::Item") = ::into_iterator_rust::MoveOnlyPayload;
 
-  static rs_std::Option<::into_iterator_rust::MoveOnlyPayload> next(
+  static rs::Option<::into_iterator_rust::MoveOnlyPayload> next(
       ::into_iterator_rust::MoveOnlyIterator& self);
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::MyContainer,
-                    ::rs::core::iter::IntoIterator> {
+struct rs::impl<::into_iterator_rust::MyContainer,
+                ::rs::core::iter::IntoIterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyContainer as :: core :: iter :: "
@@ -323,38 +323,38 @@ struct rs_std::impl<::into_iterator_rust::MyContainer,
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::MyContainerIntoIter,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::into_iterator_rust::MyContainerIntoIter,
+                ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyContainerIntoIter as :: core :: iter :: "
       "Iterator>::Item") = ::std::int32_t;
 
-  static rs_std::Option<::std::int32_t> next(
+  static rs::Option<::std::int32_t> next(
       ::into_iterator_rust::MyContainerIntoIter& self);
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::MyContainerIter,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::into_iterator_rust::MyContainerIter,
+                ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyContainerIter<'a> as :: core :: iter :: "
       "Iterator>::Item") = ::std::int32_t const& $a;
 
-  static rs_std::Option<::std::int32_t const * $static crubit_nonnull> next(
+  static rs::Option<::std::int32_t const * $static crubit_nonnull> next(
       ::into_iterator_rust::MyContainerIter& self);
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::MyContainerIterMut,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::into_iterator_rust::MyContainerIterMut,
+                ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyContainerIterMut<'a> as :: core :: iter "
       ":: Iterator>::Item") = ::std::int32_t& $a;
 
-  static rs_std::Option<::std::int32_t* $static crubit_nonnull> next(
+  static rs::Option<::std::int32_t* $static crubit_nonnull> next(
       ::into_iterator_rust::MyContainerIterMut& self);
 };
 
@@ -383,36 +383,35 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 }  // namespace into_iterator_rust
 
 template <>
-struct rs_std::impl<::into_iterator_rust::MyIterator,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::into_iterator_rust::MyIterator, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyIterator as :: core :: iter :: "
       "Iterator>::Item") = ::std::int32_t;
 
-  static rs_std::Option<::std::int32_t> next(
+  static rs::Option<::std::int32_t> next(
       ::into_iterator_rust::MyIterator& self);
 };
 
 template <>
-struct rs_std::impl<::into_iterator_rust::SimpleIntoIter,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::into_iterator_rust::SimpleIntoIter,
+                ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::SimpleIntoIter as :: core :: iter :: "
       "Iterator>::Item") = ::std::int32_t;
 
-  static rs_std::Option<::std::int32_t> next(
+  static rs::Option<::std::int32_t> next(
       ::into_iterator_rust::SimpleIntoIter& self);
 };
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
 template <>
 struct alignas(4)
     CRUBIT_INTERNAL_RUST_TYPE("core :: option :: Option < & 'static i32 >")
-        rs_std::Option<::std::int32_t const * $static crubit_nonnull>
-    : public rs_std::OptionBase<
-          rs_std::Option<::std::int32_t const * $static crubit_nonnull>,
+        rs::Option<::std::int32_t const * $static crubit_nonnull>
+    : public rs::OptionBase<
+          rs::Option<::std::int32_t const * $static crubit_nonnull>,
           ::std::int32_t const * $static crubit_nonnull> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
@@ -423,26 +422,26 @@ struct alignas(4)
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
-  using base_type = rs_std::OptionBase<
-      rs_std::Option<::std::int32_t const * $static crubit_nonnull>,
-      ::std::int32_t const * $static crubit_nonnull>;
+  using base_type =
+      rs::OptionBase<rs::Option<::std::int32_t const * $static crubit_nonnull>,
+                     ::std::int32_t const * $static crubit_nonnull>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
+    requires(rs::OptionForwardConstructible<
              Option, ::std::int32_t const * $static crubit_nonnull, U>)
   Option(U&& value) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
+    requires(rs::OptionForwardConstructible<
              Option, ::std::int32_t const * $static crubit_nonnull, U>)
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
+    requires(rs::OptionFromStdOptional<
              ::std::int32_t const * $static crubit_nonnull, Opt>)
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
+    requires(rs::OptionFromStdOptional<
              ::std::int32_t const * $static crubit_nonnull, Opt>)
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
@@ -473,15 +472,14 @@ struct alignas(4)
 };
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
 template <>
 struct alignas(4)
     CRUBIT_INTERNAL_RUST_TYPE("core :: option :: Option < & 'static mut i32 >")
-        rs_std::Option<::std::int32_t* $static crubit_nonnull>
-    : public rs_std::OptionBase<
-          rs_std::Option<::std::int32_t* $static crubit_nonnull>,
-          ::std::int32_t* $static crubit_nonnull> {
+        rs::Option<::std::int32_t* $static crubit_nonnull>
+    : public rs::OptionBase<rs::Option<::std::int32_t* $static crubit_nonnull>,
+                            ::std::int32_t* $static crubit_nonnull> {
  public:
   // `core::option::Option` doesn't implement the `Clone` trait
   Option(const Option&) = delete;
@@ -491,26 +489,26 @@ struct alignas(4)
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type =
-      rs_std::OptionBase<rs_std::Option<::std::int32_t* $static crubit_nonnull>,
-                         ::std::int32_t* $static crubit_nonnull>;
+      rs::OptionBase<rs::Option<::std::int32_t* $static crubit_nonnull>,
+                     ::std::int32_t* $static crubit_nonnull>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
+    requires(rs::OptionForwardConstructible<
              Option, ::std::int32_t* $static crubit_nonnull, U>)
   Option(U&& value) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
+    requires(rs::OptionForwardConstructible<
              Option, ::std::int32_t* $static crubit_nonnull, U>)
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             ::std::int32_t* $static crubit_nonnull, Opt>)
+    requires(
+        rs::OptionFromStdOptional<::std::int32_t* $static crubit_nonnull, Opt>)
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             ::std::int32_t* $static crubit_nonnull, Opt>)
+    requires(
+        rs::OptionFromStdOptional<::std::int32_t* $static crubit_nonnull, Opt>)
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -539,13 +537,12 @@ struct alignas(4)
 };
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "core :: option :: Option < i32 >") rs_std::Option<::std::int32_t>
-    : public rs_std::OptionBase<rs_std::Option<::std::int32_t>,
-                                ::std::int32_t> {
+    "core :: option :: Option < i32 >") rs::Option<::std::int32_t>
+    : public rs::OptionBase<rs::Option<::std::int32_t>, ::std::int32_t> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -555,22 +552,21 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
-  using base_type =
-      rs_std::OptionBase<rs_std::Option<::std::int32_t>, ::std::int32_t>;
+  using base_type = rs::OptionBase<rs::Option<::std::int32_t>, ::std::int32_t>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(rs::OptionForwardConstructible<Option, ::std::int32_t, U>)
   Option(U&& value) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(rs::OptionForwardConstructible<Option, ::std::int32_t, U>)
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+    requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+    requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -597,15 +593,14 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020into_uiterator_urust_x00000020_x0000003a_x0000003a_x00000020MoveOnlyPayload_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020into_uiterator_urust_x00000020_x0000003a_x0000003a_x00000020MoveOnlyPayload_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020into_uiterator_urust_x00000020_x0000003a_x0000003a_x00000020MoveOnlyPayload_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020into_uiterator_urust_x00000020_x0000003a_x0000003a_x00000020MoveOnlyPayload_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
     "core :: option :: Option < :: into_iterator_rust_golden :: "
-    "MoveOnlyPayload >") rs_std::Option<::into_iterator_rust::MoveOnlyPayload>
-    : public rs_std::OptionBase<
-          rs_std::Option<::into_iterator_rust::MoveOnlyPayload>,
-          ::into_iterator_rust::MoveOnlyPayload> {
+    "MoveOnlyPayload >") rs::Option<::into_iterator_rust::MoveOnlyPayload>
+    : public rs::OptionBase<rs::Option<::into_iterator_rust::MoveOnlyPayload>,
+                            ::into_iterator_rust::MoveOnlyPayload> {
  public:
   // `core::option::Option` doesn't implement the `Clone` trait
   Option(const Option&) = delete;
@@ -615,26 +610,26 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type =
-      rs_std::OptionBase<rs_std::Option<::into_iterator_rust::MoveOnlyPayload>,
-                         ::into_iterator_rust::MoveOnlyPayload>;
+      rs::OptionBase<rs::Option<::into_iterator_rust::MoveOnlyPayload>,
+                     ::into_iterator_rust::MoveOnlyPayload>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
+    requires(rs::OptionForwardConstructible<
              Option, ::into_iterator_rust::MoveOnlyPayload, U>)
   Option(U&& value) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<
+    requires(rs::OptionForwardConstructible<
              Option, ::into_iterator_rust::MoveOnlyPayload, U>)
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             ::into_iterator_rust::MoveOnlyPayload, Opt>)
+    requires(
+        rs::OptionFromStdOptional<::into_iterator_rust::MoveOnlyPayload, Opt>)
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             ::into_iterator_rust::MoveOnlyPayload, Opt>)
+    requires(
+        rs::OptionFromStdOptional<::into_iterator_rust::MoveOnlyPayload, Opt>)
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -1024,8 +1019,8 @@ __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_
 }
 }  // namespace into_iterator_rust
 inline ::into_iterator_rust::SimpleIntoIter
-rs_std::impl<::into_iterator_rust::ContainerWithInherentBegin,
-             ::rs::core::iter::IntoIterator>::
+rs::impl<::into_iterator_rust::ContainerWithInherentBegin,
+         ::rs::core::iter::IntoIterator>::
     into_iter(::into_iterator_rust::ContainerWithInherentBegin self) {
   crubit::Slot<::into_iterator_rust::SimpleIntoIter>
       __return_value_ret_val_holder;
@@ -1044,8 +1039,8 @@ __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_
 }
 }  // namespace into_iterator_rust
 inline ::into_iterator_rust::MyIterator& $a
-rs_std::impl<::into_iterator_rust::ContainerWithRefIntoIter,
-             ::rs::core::iter::IntoIterator>::
+rs::impl<::into_iterator_rust::ContainerWithRefIntoIter,
+         ::rs::core::iter::IntoIterator>::
     into_iter(::into_iterator_rust::ContainerWithRefIntoIter self) {
   return into_iterator_rust::__crubit_internal::
       __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithRefIntoIter_x0000003c_x00000027a_x0000003e_u_x00000027a(
@@ -1057,14 +1052,13 @@ namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMoveOnlyIterator(
     ::into_iterator_rust::MoveOnlyIterator&,
-    rs_std::Option<::into_iterator_rust::MoveOnlyPayload>* __ret_ptr);
+    rs::Option<::into_iterator_rust::MoveOnlyPayload>* __ret_ptr);
 }
 }  // namespace into_iterator_rust
-inline rs_std::Option<::into_iterator_rust::MoveOnlyPayload> rs_std::impl<
-    ::into_iterator_rust::MoveOnlyIterator,
-    ::rs::core::iter::Iterator>::next(::into_iterator_rust::MoveOnlyIterator&
-                                          self) {
-  crubit::Slot<rs_std::Option<::into_iterator_rust::MoveOnlyPayload>>
+inline rs::Option<::into_iterator_rust::MoveOnlyPayload>
+rs::impl<::into_iterator_rust::MoveOnlyIterator, ::rs::core::iter::Iterator>::
+    next(::into_iterator_rust::MoveOnlyIterator& self) {
+  crubit::Slot<rs::Option<::into_iterator_rust::MoveOnlyPayload>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   into_iterator_rust::__crubit_internal::
@@ -1081,10 +1075,9 @@ __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_
     ::into_iterator_rust::MyContainerIntoIter* __ret_ptr);
 }
 }  // namespace into_iterator_rust
-inline ::into_iterator_rust::MyContainerIntoIter rs_std::impl<
-    ::into_iterator_rust::MyContainer,
-    ::rs::core::iter::IntoIterator>::into_iter(::into_iterator_rust::MyContainer
-                                                   self) {
+inline ::into_iterator_rust::MyContainerIntoIter
+rs::impl<::into_iterator_rust::MyContainer, ::rs::core::iter::IntoIterator>::
+    into_iter(::into_iterator_rust::MyContainer self) {
   crubit::Slot<::into_iterator_rust::MyContainerIntoIter>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -1099,14 +1092,14 @@ namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIntoIter(
     ::into_iterator_rust::MyContainerIntoIter&,
-    rs_std::Option<::std::int32_t>* __ret_ptr);
+    rs::Option<::std::int32_t>* __ret_ptr);
 }
 }  // namespace into_iterator_rust
-inline rs_std::Option<::std::int32_t> rs_std::impl<
+inline rs::Option<::std::int32_t> rs::impl<
     ::into_iterator_rust::MyContainerIntoIter,
     ::rs::core::iter::Iterator>::next(::into_iterator_rust::MyContainerIntoIter&
                                           self) {
-  crubit::Slot<rs_std::Option<::std::int32_t>> __return_value_ret_val_holder;
+  crubit::Slot<rs::Option<::std::int32_t>> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   into_iterator_rust::__crubit_internal::
       __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIntoIter(
@@ -1119,14 +1112,13 @@ namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIter_x0000003c_x00000027a_x0000003e_u_x00000027a(
     ::into_iterator_rust::MyContainerIter&,
-    rs_std::Option<::std::int32_t const * $static crubit_nonnull>* __ret_ptr);
+    rs::Option<::std::int32_t const * $static crubit_nonnull>* __ret_ptr);
 }
 }  // namespace into_iterator_rust
-inline rs_std::Option<::std::int32_t const * $static crubit_nonnull>
-rs_std::impl<::into_iterator_rust::MyContainerIter,
-             ::rs::core::iter::Iterator>::
+inline rs::Option<::std::int32_t const * $static crubit_nonnull>
+rs::impl<::into_iterator_rust::MyContainerIter, ::rs::core::iter::Iterator>::
     next(::into_iterator_rust::MyContainerIter& self) {
-  crubit::Slot<rs_std::Option<::std::int32_t const * $static crubit_nonnull>>
+  crubit::Slot<rs::Option<::std::int32_t const * $static crubit_nonnull>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   into_iterator_rust::__crubit_internal::
@@ -1140,14 +1132,13 @@ namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIterMut_x0000003c_x00000027a_x0000003e_u_x00000027a(
     ::into_iterator_rust::MyContainerIterMut&,
-    rs_std::Option<::std::int32_t* $static crubit_nonnull>* __ret_ptr);
+    rs::Option<::std::int32_t* $static crubit_nonnull>* __ret_ptr);
 }
 }  // namespace into_iterator_rust
-inline rs_std::Option<::std::int32_t* $static crubit_nonnull> rs_std::impl<
-    ::into_iterator_rust::MyContainerIterMut,
-    ::rs::core::iter::Iterator>::next(::into_iterator_rust::MyContainerIterMut&
-                                          self) {
-  crubit::Slot<rs_std::Option<::std::int32_t* $static crubit_nonnull>>
+inline rs::Option<::std::int32_t* $static crubit_nonnull>
+rs::impl<::into_iterator_rust::MyContainerIterMut, ::rs::core::iter::Iterator>::
+    next(::into_iterator_rust::MyContainerIterMut& self) {
+  crubit::Slot<rs::Option<::std::int32_t* $static crubit_nonnull>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   into_iterator_rust::__crubit_internal::
@@ -1160,14 +1151,13 @@ namespace into_iterator_rust {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyIterator(
-    ::into_iterator_rust::MyIterator&,
-    rs_std::Option<::std::int32_t>* __ret_ptr);
+    ::into_iterator_rust::MyIterator&, rs::Option<::std::int32_t>* __ret_ptr);
 }
 }  // namespace into_iterator_rust
-inline rs_std::Option<::std::int32_t> rs_std::impl<
-    ::into_iterator_rust::MyIterator,
-    ::rs::core::iter::Iterator>::next(::into_iterator_rust::MyIterator& self) {
-  crubit::Slot<rs_std::Option<::std::int32_t>> __return_value_ret_val_holder;
+inline rs::Option<::std::int32_t>
+rs::impl<::into_iterator_rust::MyIterator, ::rs::core::iter::Iterator>::next(
+    ::into_iterator_rust::MyIterator& self) {
+  crubit::Slot<rs::Option<::std::int32_t>> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   into_iterator_rust::__crubit_internal::
       __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyIterator(
@@ -1180,13 +1170,13 @@ namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aSimpleIntoIter(
     ::into_iterator_rust::SimpleIntoIter&,
-    rs_std::Option<::std::int32_t>* __ret_ptr);
+    rs::Option<::std::int32_t>* __ret_ptr);
 }
 }  // namespace into_iterator_rust
-inline rs_std::Option<::std::int32_t>
-rs_std::impl<::into_iterator_rust::SimpleIntoIter, ::rs::core::iter::Iterator>::
+inline rs::Option<::std::int32_t>
+rs::impl<::into_iterator_rust::SimpleIntoIter, ::rs::core::iter::Iterator>::
     next(::into_iterator_rust::SimpleIntoIter& self) {
-  crubit::Slot<rs_std::Option<::std::int32_t>> __return_value_ret_val_holder;
+  crubit::Slot<rs::Option<::std::int32_t>> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   into_iterator_rust::__crubit_internal::
       __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aSimpleIntoIter(
@@ -1194,23 +1184,23 @@ rs_std::impl<::into_iterator_rust::SimpleIntoIter, ::rs::core::iter::Iterator>::
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
 static_assert(::std::is_trivially_copy_constructible_v<
-              rs_std::Option<::std::int32_t const * $static crubit_nonnull>>);
+              rs::Option<::std::int32_t const * $static crubit_nonnull>>);
 static_assert(::std::is_trivially_copy_assignable_v<
-              rs_std::Option<::std::int32_t const * $static crubit_nonnull>>);
+              rs::Option<::std::int32_t const * $static crubit_nonnull>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              rs_std::Option<::std::int32_t const * $static crubit_nonnull>>);
+              rs::Option<::std::int32_t const * $static crubit_nonnull>>);
 static_assert(::std::is_trivially_move_assignable_v<
-              rs_std::Option<::std::int32_t const * $static crubit_nonnull>>);
-inline rs_std::Option<::std::int32_t const * $static crubit_nonnull>::Option(
+              rs::Option<::std::int32_t const * $static crubit_nonnull>>);
+inline rs::Option<::std::int32_t const * $static crubit_nonnull>::Option(
     ::crubit::UnsafeRelocateTag, Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
 static_assert(::std::is_trivially_destructible_v<
-              rs_std::Option<::std::int32_t const * $static crubit_nonnull>>);
-inline constexpr ::std::uint32_t rs_std::Option<
+              rs::Option<::std::int32_t const * $static crubit_nonnull>>);
+inline constexpr ::std::uint32_t rs::Option<
     ::std::int32_t const * $static crubit_nonnull>::tag() const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
@@ -1219,7 +1209,7 @@ inline constexpr ::std::uint32_t rs_std::Option<
   return ::std::bit_cast<::std::uint32_t>(__bytes);
 }
 inline constexpr void
-rs_std::Option<::std::int32_t const * $static crubit_nonnull>::set_tag(
+rs::Option<::std::int32_t const * $static crubit_nonnull>::set_tag(
     ::std::uint32_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint32_t)>>(
@@ -1229,68 +1219,68 @@ rs_std::Option<::std::int32_t const * $static crubit_nonnull>::set_tag(
   }
 }
 
-inline constexpr rs_std::Option<::std::int32_t const * $static crubit_nonnull>::
+inline constexpr rs::Option<::std::int32_t const * $static crubit_nonnull>::
     Option(::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr rs_std::Option<::std::int32_t const * $static crubit_nonnull>&
-rs_std::Option<::std::int32_t const * $static crubit_nonnull>::operator=(
+inline constexpr rs::Option<::std::int32_t const * $static crubit_nonnull>&
+rs::Option<::std::int32_t const * $static crubit_nonnull>::operator=(
     ::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<
-           rs_std::Option<::std::int32_t const * $static crubit_nonnull>,
+  requires(rs::OptionForwardConstructible<
+           rs::Option<::std::int32_t const * $static crubit_nonnull>,
            ::std::int32_t const * $static crubit_nonnull, U>)
-inline rs_std::Option<::std::int32_t const * $static crubit_nonnull>::Option(
+inline rs::Option<::std::int32_t const * $static crubit_nonnull>::Option(
     U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<
-           rs_std::Option<::std::int32_t const * $static crubit_nonnull>,
+  requires(rs::OptionForwardConstructible<
+           rs::Option<::std::int32_t const * $static crubit_nonnull>,
            ::std::int32_t const * $static crubit_nonnull, U>)
-inline rs_std::Option<::std::int32_t const * $static crubit_nonnull>&
-rs_std::Option<::std::int32_t const * $static crubit_nonnull>::operator=(
+inline rs::Option<::std::int32_t const * $static crubit_nonnull>&
+rs::Option<::std::int32_t const * $static crubit_nonnull>::operator=(
     U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<
+  requires(rs::OptionFromStdOptional<
            ::std::int32_t const * $static crubit_nonnull, Opt>)
-inline rs_std::Option<::std::int32_t const * $static crubit_nonnull>::Option(
+inline rs::Option<::std::int32_t const * $static crubit_nonnull>::Option(
     Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<
+  requires(rs::OptionFromStdOptional<
            ::std::int32_t const * $static crubit_nonnull, Opt>)
-inline rs_std::Option<::std::int32_t const * $static crubit_nonnull>&
-rs_std::Option<::std::int32_t const * $static crubit_nonnull>::operator=(
+inline rs::Option<::std::int32_t const * $static crubit_nonnull>&
+rs::Option<::std::int32_t const * $static crubit_nonnull>::operator=(
     Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::std::int32_t const * $static crubit_nonnull>::Option(
+inline rs::Option<::std::int32_t const * $static crubit_nonnull>::Option(
     ::std::in_place_t ip, Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
 static_assert(::std::is_trivially_move_constructible_v<
-              rs_std::Option<::std::int32_t* $static crubit_nonnull>>);
+              rs::Option<::std::int32_t* $static crubit_nonnull>>);
 static_assert(::std::is_trivially_move_assignable_v<
-              rs_std::Option<::std::int32_t* $static crubit_nonnull>>);
-inline rs_std::Option<::std::int32_t* $static crubit_nonnull>::Option(
+              rs::Option<::std::int32_t* $static crubit_nonnull>>);
+inline rs::Option<::std::int32_t* $static crubit_nonnull>::Option(
     ::crubit::UnsafeRelocateTag, Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
 static_assert(::std::is_trivially_destructible_v<
-              rs_std::Option<::std::int32_t* $static crubit_nonnull>>);
+              rs::Option<::std::int32_t* $static crubit_nonnull>>);
 inline constexpr ::std::uint32_t
-rs_std::Option<::std::int32_t* $static crubit_nonnull>::tag() const& noexcept {
+rs::Option<::std::int32_t* $static crubit_nonnull>::tag() const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __bytes[i] = storage_[0 + i];
@@ -1298,7 +1288,7 @@ rs_std::Option<::std::int32_t* $static crubit_nonnull>::tag() const& noexcept {
   return ::std::bit_cast<::std::uint32_t>(__bytes);
 }
 inline constexpr void
-rs_std::Option<::std::int32_t* $static crubit_nonnull>::set_tag(
+rs::Option<::std::int32_t* $static crubit_nonnull>::set_tag(
     ::std::uint32_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint32_t)>>(
@@ -1308,71 +1298,70 @@ rs_std::Option<::std::int32_t* $static crubit_nonnull>::set_tag(
   }
 }
 
-inline constexpr rs_std::Option<::std::int32_t* $static crubit_nonnull>::Option(
+inline constexpr rs::Option<::std::int32_t* $static crubit_nonnull>::Option(
     ::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr rs_std::Option<::std::int32_t* $static crubit_nonnull>&
-rs_std::Option<::std::int32_t* $static crubit_nonnull>::operator=(
+inline constexpr rs::Option<::std::int32_t* $static crubit_nonnull>&
+rs::Option<::std::int32_t* $static crubit_nonnull>::operator=(
     ::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<
-           rs_std::Option<::std::int32_t* $static crubit_nonnull>,
+  requires(rs::OptionForwardConstructible<
+           rs::Option<::std::int32_t* $static crubit_nonnull>,
            ::std::int32_t* $static crubit_nonnull, U>)
-inline rs_std::Option<::std::int32_t* $static crubit_nonnull>::Option(
+inline rs::Option<::std::int32_t* $static crubit_nonnull>::Option(
     U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<
-           rs_std::Option<::std::int32_t* $static crubit_nonnull>,
+  requires(rs::OptionForwardConstructible<
+           rs::Option<::std::int32_t* $static crubit_nonnull>,
            ::std::int32_t* $static crubit_nonnull, U>)
-inline rs_std::Option<::std::int32_t* $static crubit_nonnull>&
-rs_std::Option<::std::int32_t* $static crubit_nonnull>::operator=(
+inline rs::Option<::std::int32_t* $static crubit_nonnull>&
+rs::Option<::std::int32_t* $static crubit_nonnull>::operator=(
     U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::int32_t* $static crubit_nonnull,
-                                         Opt>)
-inline rs_std::Option<::std::int32_t* $static crubit_nonnull>::Option(
+  requires(
+      rs::OptionFromStdOptional<::std::int32_t* $static crubit_nonnull, Opt>)
+inline rs::Option<::std::int32_t* $static crubit_nonnull>::Option(
     Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::int32_t* $static crubit_nonnull,
-                                         Opt>)
-inline rs_std::Option<::std::int32_t* $static crubit_nonnull>&
-rs_std::Option<::std::int32_t* $static crubit_nonnull>::operator=(
+  requires(
+      rs::OptionFromStdOptional<::std::int32_t* $static crubit_nonnull, Opt>)
+inline rs::Option<::std::int32_t* $static crubit_nonnull>&
+rs::Option<::std::int32_t* $static crubit_nonnull>::operator=(
     Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::std::int32_t* $static crubit_nonnull>::Option(
+inline rs::Option<::std::int32_t* $static crubit_nonnull>::Option(
     ::std::in_place_t ip, Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 static_assert(
-    ::std::is_trivially_copy_constructible_v<rs_std::Option<::std::int32_t>>);
+    ::std::is_trivially_copy_constructible_v<rs::Option<::std::int32_t>>);
 static_assert(
-    ::std::is_trivially_copy_assignable_v<rs_std::Option<::std::int32_t>>);
+    ::std::is_trivially_copy_assignable_v<rs::Option<::std::int32_t>>);
 static_assert(
-    ::std::is_trivially_move_constructible_v<rs_std::Option<::std::int32_t>>);
+    ::std::is_trivially_move_constructible_v<rs::Option<::std::int32_t>>);
 static_assert(
-    ::std::is_trivially_move_assignable_v<rs_std::Option<::std::int32_t>>);
-inline rs_std::Option<::std::int32_t>::Option(::crubit::UnsafeRelocateTag,
-                                              Option&& value) {
+    ::std::is_trivially_move_assignable_v<rs::Option<::std::int32_t>>);
+inline rs::Option<::std::int32_t>::Option(::crubit::UnsafeRelocateTag,
+                                          Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-static_assert(
-    ::std::is_trivially_destructible_v<rs_std::Option<::std::int32_t>>);
-inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
+static_assert(::std::is_trivially_destructible_v<rs::Option<::std::int32_t>>);
+inline constexpr ::std::uint32_t rs::Option<::std::int32_t>::tag()
     const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
@@ -1380,7 +1369,7 @@ inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
   }
   return ::std::bit_cast<::std::uint32_t>(__bytes);
 }
-inline constexpr void rs_std::Option<::std::int32_t>::set_tag(
+inline constexpr void rs::Option<::std::int32_t>::set_tag(
     ::std::uint32_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint32_t)>>(
@@ -1390,59 +1379,58 @@ inline constexpr void rs_std::Option<::std::int32_t>::set_tag(
   }
 }
 
-inline constexpr rs_std::Option<::std::int32_t>::Option(
-    ::std::nullopt_t) noexcept
+inline constexpr rs::Option<::std::int32_t>::Option(::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
+inline constexpr rs::Option<::std::int32_t>&
+rs::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
-                                              ::std::int32_t, U>)
-inline rs_std::Option<::std::int32_t>::Option(U&& value) noexcept
+  requires(rs::OptionForwardConstructible<rs::Option<::std::int32_t>,
+                                          ::std::int32_t, U>)
+inline rs::Option<::std::int32_t>::Option(U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
-                                              ::std::int32_t, U>)
-inline rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(U&& value) noexcept {
+  requires(rs::OptionForwardConstructible<rs::Option<::std::int32_t>,
+                                          ::std::int32_t, U>)
+inline rs::Option<::std::int32_t>& rs::Option<::std::int32_t>::operator=(
+    U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
-inline rs_std::Option<::std::int32_t>::Option(Opt&& value) noexcept
+  requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
+inline rs::Option<::std::int32_t>::Option(Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
-inline rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(Opt&& value) noexcept {
+  requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
+inline rs::Option<::std::int32_t>& rs::Option<::std::int32_t>::operator=(
+    Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::std::int32_t>::Option(::std::in_place_t ip,
-                                              Args&&... args) noexcept
+inline rs::Option<::std::int32_t>::Option(::std::in_place_t ip,
+                                          Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020into_uiterator_urust_x00000020_x0000003a_x0000003a_x00000020MoveOnlyPayload_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020into_uiterator_urust_x00000020_x0000003a_x0000003a_x00000020MoveOnlyPayload_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020into_uiterator_urust_x00000020_x0000003a_x0000003a_x00000020MoveOnlyPayload_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020into_uiterator_urust_x00000020_x0000003a_x0000003a_x00000020MoveOnlyPayload_x00000020_x0000003e
 static_assert(::std::is_trivially_move_constructible_v<
-              rs_std::Option<::into_iterator_rust::MoveOnlyPayload>>);
+              rs::Option<::into_iterator_rust::MoveOnlyPayload>>);
 static_assert(::std::is_trivially_move_assignable_v<
-              rs_std::Option<::into_iterator_rust::MoveOnlyPayload>>);
-inline rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::Option(
+              rs::Option<::into_iterator_rust::MoveOnlyPayload>>);
+inline rs::Option<::into_iterator_rust::MoveOnlyPayload>::Option(
     ::crubit::UnsafeRelocateTag, Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
 static_assert(::std::is_trivially_destructible_v<
-              rs_std::Option<::into_iterator_rust::MoveOnlyPayload>>);
+              rs::Option<::into_iterator_rust::MoveOnlyPayload>>);
 inline constexpr ::std::uint32_t
-rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::tag() const& noexcept {
+rs::Option<::into_iterator_rust::MoveOnlyPayload>::tag() const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __bytes[i] = storage_[0 + i];
@@ -1450,7 +1438,7 @@ rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::tag() const& noexcept {
   return ::std::bit_cast<::std::uint32_t>(__bytes);
 }
 inline constexpr void
-rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::set_tag(
+rs::Option<::into_iterator_rust::MoveOnlyPayload>::set_tag(
     ::std::uint32_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint32_t)>>(
@@ -1460,49 +1448,49 @@ rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::set_tag(
   }
 }
 
-inline constexpr rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::Option(
+inline constexpr rs::Option<::into_iterator_rust::MoveOnlyPayload>::Option(
     ::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr rs_std::Option<::into_iterator_rust::MoveOnlyPayload>&
-rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::operator=(
+inline constexpr rs::Option<::into_iterator_rust::MoveOnlyPayload>&
+rs::Option<::into_iterator_rust::MoveOnlyPayload>::operator=(
     ::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<
-           rs_std::Option<::into_iterator_rust::MoveOnlyPayload>,
+  requires(rs::OptionForwardConstructible<
+           rs::Option<::into_iterator_rust::MoveOnlyPayload>,
            ::into_iterator_rust::MoveOnlyPayload, U>)
-inline rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::Option(
+inline rs::Option<::into_iterator_rust::MoveOnlyPayload>::Option(
     U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<
-           rs_std::Option<::into_iterator_rust::MoveOnlyPayload>,
+  requires(rs::OptionForwardConstructible<
+           rs::Option<::into_iterator_rust::MoveOnlyPayload>,
            ::into_iterator_rust::MoveOnlyPayload, U>)
-inline rs_std::Option<::into_iterator_rust::MoveOnlyPayload>&
-rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::operator=(
+inline rs::Option<::into_iterator_rust::MoveOnlyPayload>&
+rs::Option<::into_iterator_rust::MoveOnlyPayload>::operator=(
     U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
   requires(
-      rs_std::OptionFromStdOptional<::into_iterator_rust::MoveOnlyPayload, Opt>)
-inline rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::Option(
+      rs::OptionFromStdOptional<::into_iterator_rust::MoveOnlyPayload, Opt>)
+inline rs::Option<::into_iterator_rust::MoveOnlyPayload>::Option(
     Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
   requires(
-      rs_std::OptionFromStdOptional<::into_iterator_rust::MoveOnlyPayload, Opt>)
-inline rs_std::Option<::into_iterator_rust::MoveOnlyPayload>&
-rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::operator=(
+      rs::OptionFromStdOptional<::into_iterator_rust::MoveOnlyPayload, Opt>)
+inline rs::Option<::into_iterator_rust::MoveOnlyPayload>&
+rs::Option<::into_iterator_rust::MoveOnlyPayload>::operator=(
     Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::into_iterator_rust::MoveOnlyPayload>::Option(
+inline rs::Option<::into_iterator_rust::MoveOnlyPayload>::Option(
     ::std::in_place_t ip, Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 

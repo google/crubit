@@ -64,16 +64,16 @@ TEST(ResultTest, HasNoDefaultResult) {
 
 TEST(ResultTest, ConstructAndPassOkResult) {
   auto copy_no_default = result::CopyNoDefaultResult::new_(42);
-  rs_std::Result<result::CopyNoDefault, uint8_t> res(
+  rs::Result<result::CopyNoDefault, uint8_t> res(
       std::move(copy_no_default.in_ok));
   EXPECT_EQ(result::take_result_copy_no_default_ok(res), 42);
-  res = rs_std::unexpected<uint8_t>(36);
+  res = rs::unexpected<uint8_t>(36);
   EXPECT_EQ(result::take_result_copy_no_default_ok(res), 36);
 }
 
 TEST(ResultTest, ConstructAndPassErrResult) {
   auto clone_no_default = result::CloneNoDefaultResult::new_(42);
-  rs_std::Result<uint8_t, result::CloneNoDefault> err(
+  rs::Result<uint8_t, result::CloneNoDefault> err(
       std::move(clone_no_default.in_err));
   EXPECT_EQ(result::take_result_clone_no_default_err(err), 42);
   err = 122;
@@ -81,32 +81,32 @@ TEST(ResultTest, ConstructAndPassErrResult) {
 }
 
 TEST(ResultTest, ConstructAndPassResultHasDefault) {
-  rs_std::Result<result::HasDefault, uint8_t> res(
+  rs::Result<result::HasDefault, uint8_t> res(
       result::HasDefault::new_("halo strategy"));
   EXPECT_EQ(result::take_result_has_default(&res), "halo strategy");
   auto has_default = std::move(res.value());
   EXPECT_EQ(has_default.val().to_string_view(), "halo strategy");
   // Moving leaves the default value behind.
   EXPECT_EQ(res.value().val().to_string_view(), "");
-  res = rs_std::unexpected<std::uint8_t>(122);
+  res = rs::unexpected<std::uint8_t>(122);
   EXPECT_EQ(result::take_result_has_default(&res), "a number");
 }
 
 TEST(ResultTest, ConstructAndAccessResultHasDefault) {
-  rs_std::Result<result::HasDefault, uint8_t> res(
+  rs::Result<result::HasDefault, uint8_t> res(
       result::HasDefault::new_("accessible value"));
   EXPECT_EQ(res->val(), "accessible value");
 }
 
 TEST(ResultTest, ConstructAndPassResultByValue) {
-  rs_std::Result<uint8_t, uint8_t> res(123);
+  rs::Result<uint8_t, uint8_t> res(123);
   EXPECT_EQ(result::take_result_by_value(res), 123);
-  rs_std::Result<uint8_t, uint8_t> err(rs_std::unexpected<uint8_t>(34));
+  rs::Result<uint8_t, uint8_t> err(rs::unexpected<uint8_t>(34));
   EXPECT_EQ(result::take_result_by_value(err), 34);
 }
 
 TEST(ResultTest, ReturnResultByValue) {
-  rs_std::Result<uint8_t, uint8_t> res = result::return_result_by_value();
+  rs::Result<uint8_t, uint8_t> res = result::return_result_by_value();
   ASSERT_TRUE(res.has_value());
   EXPECT_EQ(res.value(), 1);
 }
@@ -124,73 +124,70 @@ template <typename R>
 concept HasErr = requires(R& r) { r.err(); };
 
 TEST(ResultTest, ResultUnitOk) {
-  rs_std::Result<rs_std::unit_t, uint8_t> res_ok =
-      result::return_result_unit_ok(true);
+  rs::Result<rs::unit_t, uint8_t> res_ok = result::return_result_unit_ok(true);
   ASSERT_TRUE(res_ok.has_value());
   EXPECT_TRUE(result::take_result_unit_ok(res_ok));
-  static_assert(!HasValue<rs_std::Result<rs_std::unit_t, uint8_t>>,
+  static_assert(!HasValue<rs::Result<rs::unit_t, uint8_t>>,
                 "Result<unit_t, E>::value() must not be available");
-  static_assert(!HasDeref<rs_std::Result<rs_std::unit_t, uint8_t>>,
+  static_assert(!HasDeref<rs::Result<rs::unit_t, uint8_t>>,
                 "Result<unit_t, E>::operator*() must not be available");
 
-  rs_std::Result<rs_std::unit_t, uint8_t> res_err =
+  rs::Result<rs::unit_t, uint8_t> res_err =
       result::return_result_unit_ok(false);
   EXPECT_FALSE(res_err.has_value());
   EXPECT_EQ(res_err.err(), 42);
   EXPECT_FALSE(result::take_result_unit_ok(res_err));
 
-  rs_std::Result<rs_std::unit_t, uint8_t> res_in_place(std::in_place,
-                                                       rs_std::unit);
+  rs::Result<rs::unit_t, uint8_t> res_in_place(std::in_place, rs::unit);
   EXPECT_TRUE(res_in_place.has_value());
 }
 
 TEST(ResultTest, ResultUnitErr) {
-  rs_std::Result<uint8_t, rs_std::unit_t> res_ok =
+  rs::Result<uint8_t, rs::unit_t> res_ok =
       result::return_result_unit_err(false);
   ASSERT_TRUE(res_ok.has_value());
   EXPECT_EQ(res_ok.value(), 100);
   EXPECT_FALSE(result::take_result_unit_err(res_ok));
 
-  rs_std::Result<uint8_t, rs_std::unit_t> res_err =
+  rs::Result<uint8_t, rs::unit_t> res_err =
       result::return_result_unit_err(true);
   EXPECT_FALSE(res_err.has_value());
   EXPECT_TRUE(result::take_result_unit_err(res_err));
-  static_assert(!HasError<rs_std::Result<uint8_t, rs_std::unit_t>>,
+  static_assert(!HasError<rs::Result<uint8_t, rs::unit_t>>,
                 "Result<T, unit_t>::error() must not be available");
-  static_assert(!HasErr<rs_std::Result<uint8_t, rs_std::unit_t>>,
+  static_assert(!HasErr<rs::Result<uint8_t, rs::unit_t>>,
                 "Result<T, unit_t>::err() must not be available");
 
-  rs_std::Result<uint8_t, rs_std::unit_t> res_unexpect(rs_std::unexpect,
-                                                       rs_std::unit);
+  rs::Result<uint8_t, rs::unit_t> res_unexpect(rs::unexpect, rs::unit);
   EXPECT_FALSE(res_unexpect.has_value());
 }
 
 TEST(ResultTest, PassUnmovableResultByValue) {
-  rs::Movable<rs_std::Result<rs_std::unit_t, result::DropNoDefault>> res_ok(
-      std::in_place, std::in_place, rs_std::unit);
+  rs::Movable<rs::Result<rs::unit_t, result::DropNoDefault>> res_ok(
+      std::in_place, std::in_place, rs::unit);
   EXPECT_TRUE(result::take_result_drop_no_default_unit(std::move(res_ok)));
 
-  rs::Movable<rs_std::Result<rs_std::unit_t, result::DropNoDefault>> res_err(
-      std::in_place, rs_std::unexpect, uint8_t{42});
+  rs::Movable<rs::Result<rs::unit_t, result::DropNoDefault>> res_err(
+      std::in_place, rs::unexpect, uint8_t{42});
   EXPECT_FALSE(result::take_result_drop_no_default_unit(std::move(res_err)));
 
-  rs::Movable<rs_std::Result<result::DropNoDefault, uint8_t>> ok_val(
+  rs::Movable<rs::Result<result::DropNoDefault, uint8_t>> ok_val(
       std::in_place, std::in_place, uint8_t{100});
   EXPECT_EQ(result::take_result_drop_no_default_ok(std::move(ok_val)), 100);
 
-  rs::Movable<rs_std::Result<result::DropNoDefault, uint8_t>> err_val(
-      std::in_place, rs_std::unexpect, uint8_t{42});
+  rs::Movable<rs::Result<result::DropNoDefault, uint8_t>> err_val(
+      std::in_place, rs::unexpect, uint8_t{42});
   EXPECT_EQ(result::take_result_drop_no_default_ok(std::move(err_val)), 42);
 }
 
 TEST(ResultTest, PassUnmovableResultInTupleByValue) {
-  rs::Movable<rs_std::Result<rs_std::unit_t, result::DropNoDefault>> res_ok(
-      std::in_place, std::in_place, rs_std::unit);
+  rs::Movable<rs::Result<rs::unit_t, result::DropNoDefault>> res_ok(
+      std::in_place, std::in_place, rs::unit);
   EXPECT_TRUE(result::take_result_drop_no_default_tuple(
       std::make_tuple(std::move(res_ok))));
 
-  rs::Movable<rs_std::Result<rs_std::unit_t, result::DropNoDefault>> res_err(
-      std::in_place, rs_std::unexpect, uint8_t{42});
+  rs::Movable<rs::Result<rs::unit_t, result::DropNoDefault>> res_err(
+      std::in_place, rs::unexpect, uint8_t{42});
   EXPECT_FALSE(result::take_result_drop_no_default_tuple(
       std::make_tuple(std::move(res_err))));
 }

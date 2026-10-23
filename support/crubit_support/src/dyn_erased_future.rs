@@ -96,7 +96,7 @@ unsafe extern "C" fn rs_std_dyn_erased_future_drop(dyn_erased_future: *mut DynEr
 /// # Safety
 ///
 /// * `dyn_erased_future` must be a valid mutable reference.
-/// * `waker_ptr` must be a valid pointer to a C++ waker managed by `rs_std::Waker`.
+/// * `waker_ptr` must be a valid pointer to a C++ waker managed by `rs::Waker`.
 /// * `out` must be a valid, properly aligned pointer to uninitialized memory suitable for writing a
 ///   value of the future's output type `T` (if `T` is not zero-sized).
 /// * The `DynErasedFuture` must not be polled again after this call returns `true`.

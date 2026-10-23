@@ -15,11 +15,11 @@ rs::std::string::String s("hello, world!")
 ```
 
 An existing `std::string_view` (or `absl::string_view`) can be converted to a
-Rust `String` using `rs_std::StrRef::FromUtf8`:
+Rust `String` using `rs::StrRef::FromUtf8`:
 
 ```c++
 void AcceptsStringView(std::string_view view) {
-  std::optional<rs_std::StrRef> str_ref = rs_std::StrRef::FromUtf8(view);
+  std::optional<rs::StrRef> str_ref = rs::StrRef::FromUtf8(view);
   if (!str_ref.has_value()) {
     return;
   }
@@ -37,7 +37,7 @@ std::string s2(s.as_str());
 EXPECT_EQUAL(s2, "hello, world");
 ```
 
-`rs_std::StrRef` supports implicit conversion to `std::string_view` to make this
+`rs::StrRef` supports implicit conversion to `std::string_view` to make this
 work.
 
 A Rust method that takes an `&mut String` such as:
@@ -53,7 +53,7 @@ becomes a C++ method taking a reference to a `rs::std::string::String`:
 ```c++
 // You could just as easily call `push_str` directly. It receives Crubit
 // bindings. We use a wrapper method here for expository purposes.
-void append_to_rust_string(rs::std::string::String& val, rs_std::StrRef s);
+void append_to_rust_string(rs::std::string::String& val, rs::StrRef s);
 ```
 
 Allowing for C++ to call it:
@@ -64,10 +64,10 @@ append_to_rust_string(s, " I'm a neat addition");
 
 ## `Result`
 
-The Rust `Result<T, E>` generic receives Rust bindings as `rs_std::Result<T,
-E>`, so long as both `T` and `E` are non-ZST types supported by Crubit.
+The Rust `Result<T, E>` generic receives Rust bindings as `rs::Result<T, E>`, so
+long as both `T` and `E` are non-ZST types supported by Crubit.
 
-`rs_std::Result<T, E>` has a similar API to
+`rs::Result<T, E>` has a similar API to
 [`std::expected`](https://en.cppreference.com/cpp/utility/expected).
 (Alternatively, it has a similar API to
 [`std::optional`](https://en.cppreference.com/cpp/utility/optional), but with an
@@ -87,15 +87,15 @@ class: support/rs_std/result.h
 
 ## `Option`
 
-The Rust `Option<T>` generic receives Rust bindings as `rs_std::Option<T>`, so
-long as `T` is a non-ZST type supported by Crubit. It has a similar API to
+The Rust `Option<T>` generic receives Rust bindings as `rs::Option<T>`, so long
+as `T` is a non-ZST type supported by Crubit. It has a similar API to
 [`std::optional`](https://en.cppreference.com/cpp/utility/optional), and
 implicitly converts to and from `std::optional`.
 
-Unlike `std::optional`, `rs_std::Option` has no `operator bool`, so check for a
+Unlike `std::optional`, `rs::Option` has no `operator bool`, so check for a
 value with `has_value()` rather than `if (myoption)`. Conversion to
 `std::optional` is only available from an rvalue, so either convert the result
-of a call directly or `std::move` an existing `rs_std::Option`:
+of a call directly or `std::move` an existing `rs::Option`:
 
 ```c++
 if (myoption.has_value()) {
@@ -111,14 +111,14 @@ class: support/rs_std/option.h
 
 ## `Tuple`
 
-A Rust tuple `(T1, T2, ...)` receives C++ bindings as `rs_std::Tuple<T1, T2,
-...>`. It can be constructed from its elements (including with
-brace-initialization, e.g. `{a, b}`) when all elements are move-constructible in
-C++, or converted from a `std::tuple<T1, T2, ...>`. Elements are accessed with
-`std::get<I>` or structured bindings:
+A Rust tuple `(T1, T2, ...)` receives C++ bindings as `rs::Tuple<T1, T2, ...>`.
+It can be constructed from its elements (including with brace-initialization,
+e.g. `{a, b}`) when all elements are move-constructible in C++, or converted
+from a `std::tuple<T1, T2, ...>`. Elements are accessed with `std::get<I>` or
+structured bindings:
 
 ```c++
-rs_std::Tuple<int32_t, int32_t> pair = {1, 2};
+rs::Tuple<int32_t, int32_t> pair = {1, 2};
 auto [first, second] = pair;
 ```
 
@@ -126,21 +126,21 @@ The support header is support/rs_std/tuple.h.
 
 ## `Vec`
 
-The Rust `Vec<T>` generic receives C++ bindings as `rs_std::Vec<T>`, so long as
-`T` is a type supported by Crubit. Each `rs_std::Vec<T>` is a generated
-specialization that inherits its public API from the common `VecBase<T>` base
-class in support/rs_std/vec.h. The API is modeled on
+The Rust `Vec<T>` generic receives C++ bindings as `rs::Vec<T>`, so long as `T`
+is a type supported by Crubit. Each `rs::Vec<T>` is a generated specialization
+that inherits its public API from the common `VecBase<T>` base class in
+support/rs_std/vec.h. The API is modeled on
 [`std::vector`](https://en.cppreference.com/cpp/container/vector), with a few
 differences noted below.
 
-`rs_std::Vec<T>` is a real Rust `Vec` under the hood: it has the same layout,
-and its buffer is allocated and freed through Rust's global allocator. A `Vec`
+`rs::Vec<T>` is a real Rust `Vec` under the hood: it has the same layout, and
+its buffer is allocated and freed through Rust's global allocator. A `Vec`
 created in C++ can therefore be handed to Rust (and vice versa) without any
 copying or conversion.
 
 ### Element access and iteration
 
-`rs_std::Vec<T>` provides the usual contiguous-container accessors:
+`rs::Vec<T>` provides the usual contiguous-container accessors:
 
 *   `size()`, `capacity()`, `empty()`
 *   `data()` (returns a pointer to the contiguous element buffer)
@@ -150,21 +150,20 @@ copying or conversion.
 *   `begin()` / `end()`, `cbegin()` / `cend()`, `rbegin()` / `rend()`,
     `crbegin()` / `crend()`
 
-Iterators are raw pointers, so `rs_std::Vec<T>` works with range-based `for`
-loops and standard algorithms, and satisfies `std::ranges::contiguous_range`.
-This also makes it implicitly convertible to `std::span<const T>` /
-`std::span<T>` and, by extension, to `rs_std::SliceRef<const T>` /
-`rs_std::SliceRef<T>`:
+Iterators are raw pointers, so `rs::Vec<T>` works with range-based `for` loops
+and standard algorithms, and satisfies `std::ranges::contiguous_range`. This
+also makes it implicitly convertible to `std::span<const T>` / `std::span<T>`
+and, by extension, to `rs::SliceRef<const T>` / `rs::SliceRef<T>`:
 
 ```c++
-rs_std::Vec<int32_t> v = my_crate::return_vec();
+rs::Vec<int32_t> v = my_crate::return_vec();
 for (int32_t& x : v) {
   x += 1;
 }
 int32_t sum = std::accumulate(v.begin(), v.end(), 0);
 
 std::span<const int32_t> span = v;
-rs_std::SliceRef<const int32_t> slice = v;
+rs::SliceRef<const int32_t> slice = v;
 ```
 
 ### Modifying a `Vec` from C++
@@ -172,7 +171,7 @@ rs_std::SliceRef<const int32_t> slice = v;
 Elements can be added, removed, and constructed in place from C++:
 
 ```c++
-rs_std::Vec<int32_t> v;
+rs::Vec<int32_t> v;
 v.reserve(3);         // Total capacity, like std::vector::reserve.
 v.push_back(1);
 v.push_back(2);
@@ -196,16 +195,15 @@ Differences from `std::vector` worth knowing about:
 
 ## Availability of generic `rs_std` specializations
 
-Generic standard library types such as `rs_std::Option<T>`,
-`rs_std::Result<T, E>`, `rs_std::Tuple<Ts...>`, and `rs_std::Vec<T>` are only
-defined for type arguments that are actually used in a Crubit-bound Rust API.
-The support headers (`option.h`, `result.h`, `tuple.h`, `vec.h`) provide only
-the generic base implementations (`OptionBase`, `ResultBase`, `VecBase`, etc.)
-and leave the primary template uninstantiable; the concrete specialization for a
-given set of type arguments is emitted into the generated header of a crate
-whose public API mentions that instantiation. Attempting to use one of these
-templates with type arguments that do not appear in any of the Rust APIs you
-depend on is a compile-time error.
+Generic standard library types such as `rs::Option<T>`, `rs::Result<T, E>`,
+`rs::Tuple<Ts...>`, and `rs::Vec<T>` are only defined for type arguments that
+are actually used in a Crubit-bound Rust API. The support headers (`option.h`,
+`result.h`, `tuple.h`, `vec.h`) provide only the generic base implementations
+(`OptionBase`, `ResultBase`, `VecBase`, etc.) and leave the primary template
+uninstantiable; the concrete specialization for a given set of type arguments is
+emitted into the generated header of a crate whose public API mentions that
+instantiation. Attempting to use one of these templates with type arguments that
+do not appear in any of the Rust APIs you depend on is a compile-time error.
 
 ## Callables (`Fn`, `FnMut`, `FnOnce`) {#callables}
 
@@ -219,8 +217,9 @@ and `rs::Fn`:
     callable corresponding to `Box<dyn Fn>`, `Box<dyn FnMut>`, or `Box<dyn FnOnce>`
     (or generic `impl FnOnce + 'static`). `rs::Fn<Sig &&>` corresponds to `FnOnce`
     and must be invoked via `std::move(f)(...)`.
-*   **`rs_std::DynCallable<Sig>`** (`support/rs_std/dyn_callable.h`):
-    Move-only wrapper for Rust `Box<dyn Trait>` objects received in C++, implicitly
-    convertible to `absl::AnyInvocable<Sig>`.
+*   **`rs::DynCallable<Sig>`**
+    (`support/rs_std/dyn_callable.h`): Move-only wrapper for
+    Rust `Box<dyn Trait>` objects received in C++, implicitly convertible to
+    `absl::AnyInvocable<Sig>`.
 
 See [Callbacks](http://crubit.rs/types/callbacks) for the complete guide and examples.

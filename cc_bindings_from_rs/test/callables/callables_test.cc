@@ -199,51 +199,49 @@ TEST(CallablesTest, CallPointVoid) {
 
 TEST(CallablesTest, CallWithStr) {
   auto result = callables::call_with_str(
-      [](rs_std::StrRef s) -> int {
+      [](rs::StrRef s) -> int {
         return static_cast<int>(s.to_string_view().size());
       },
-      rs_std::StrRef("hello world"));
+      rs::StrRef("hello world"));
   EXPECT_THAT(result, Eq(11));
 }
 
 TEST(CallablesTest, CallWithTupleOption) {
-  auto result = callables::call_with_tuple_option(
-      [](rs_std::Tuple<int, rs_std::Option<int>> t) {
-        return rs_std::Tuple<int, rs_std::Option<int>>(std::make_tuple(
-            t.__field0 * 2, rs_std::Option<int>(*t.__field1 * 3)));
+  auto result =
+      callables::call_with_tuple_option([](rs::Tuple<int, rs::Option<int>> t) {
+        return rs::Tuple<int, rs::Option<int>>(
+            std::make_tuple(t.__field0 * 2, rs::Option<int>(*t.__field1 * 3)));
       });
   EXPECT_THAT(result, Eq(42 * 2 + 100 * 3));
 }
 
 TEST(CallablesTest, CallImplWithTupleOption) {
   auto result = callables::call_impl_with_tuple_option(
-      [](rs_std::Tuple<int, rs_std::Option<int>> t) {
-        return rs_std::Tuple<int, rs_std::Option<int>>(std::make_tuple(
-            t.__field0 + 5, rs_std::Option<int>(*t.__field1 + 5)));
+      [](rs::Tuple<int, rs::Option<int>> t) {
+        return rs::Tuple<int, rs::Option<int>>(
+            std::make_tuple(t.__field0 + 5, rs::Option<int>(*t.__field1 + 5)));
       });
   EXPECT_THAT(result, Eq((10 + 5) + (20 + 5)));
 }
 
 TEST(CallablesTest, CallWithHrtbStr) {
   auto result = callables::call_with_hrtb_str(
-      [](rs_std::StrRef s) -> int {
+      [](rs::StrRef s) -> int {
         return static_cast<int>(s.to_string_view().size());
       },
-      rs_std::StrRef("higher-ranked"));
+      rs::StrRef("higher-ranked"));
   EXPECT_THAT(result, Eq(13));
 }
 
 TEST(CallablesTest, CallWithHrtbStrToStr) {
   auto result = callables::call_with_hrtb_str_to_str(
-      [](rs_std::StrRef s) -> rs_std::StrRef { return s; },
-      rs_std::StrRef("echo"));
+      [](rs::StrRef s) -> rs::StrRef { return s; }, rs::StrRef("echo"));
   EXPECT_THAT(result, Eq(4));
 }
 
 TEST(CallablesTest, CallWithStrToStr) {
   auto result = callables::call_with_str_to_str(
-      [](rs_std::StrRef s) -> rs_std::StrRef { return s; },
-      rs_std::StrRef("hello"));
+      [](rs::StrRef s) -> rs::StrRef { return s; }, rs::StrRef("hello"));
   EXPECT_THAT(result.to_string_view(), Eq("hello"));
 }
 

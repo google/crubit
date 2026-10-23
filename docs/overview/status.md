@@ -42,9 +42,9 @@ C++ and Rust:
 :                                                :                             :                           : compatible    :                             :
 | References                                     | `const T&` / `T&`           | `&T` / `&mut T`           | Layout        | Supported as function       |
 :                                                :                             :                           : compatible    : parameters and return types :
-| String slices                                  | `rs_std::StrRef`            | `&str`                    | Layout        |                             |
+| String slices                                  | `rs::StrRef`                | `&str`                    | Layout        |                             |
 :                                                :                             :                           : compatible    :                             :
-| Slices                                         | `rs_std::SliceRef<T>`       | `&[T]`, `&mut [T]`        | Layout        |                             |
+| Slices                                         | `rs::SliceRef<T>`           | `&[T]`, `&mut [T]`        | Layout        |                             |
 :                                                :                             :                           : compatible    :                             :
 | **Smart Pointers**                             |                             |                           |               |                             |
 | [Unique                                        | `std::unique_ptr<T>`        | `cpp_std::unique_ptr<T>`  | Layout        |                             |
@@ -54,7 +54,7 @@ C++ and Rust:
 | **Containers**                                 |                             |                           |               |                             |
 | [Vector                                        | `std::vector<T>`            | `cpp_std::vector<T>`      | Layout        | C++ `std::vector` in Rust   |
 : (C++)](http\://crubit.rs/cpp/std#vector)       :                             :                           : compatible    :                             :
-| Vec (Rust)                                     | `rs_std::Vec<T>`            | `Vec<T>`                  | Layout        | Rust `Vec` in C++           |
+| Vec (Rust)                                     | `rs::Vec<T>`                | `Vec<T>`                  | Layout        | Rust `Vec` in C++           |
 :                                                :                             :                           : compatible    :                             :
 | Fixed-size array                               | `std::array<T, N>`          | `[T; N]`                  | Layout        |                             |
 :                                                :                             :                           : compatible    :                             :
@@ -70,16 +70,16 @@ C++ and Rust:
 : (C++)](http\://crubit.rs/cpp/std#optional)     :                             :                           : compatible    : `Option<T>`. Uses           :
 :                                                :                             :                           :               : `trivial_optional<T>` if    :
 :                                                :                             :                           :               : `T\: Copy`                  :
-| Option (Rust)                                  | `rs_std::Option<T>`         | `Option<T>`               | Layout        | Converts to/from            |
+| Option (Rust)                                  | `rs::Option<T>`             | `Option<T>`               | Layout        | Converts to/from            |
 :                                                :                             :                           : compatible    : `std\:\:optional<T>` in C++ :
-| Result                                         | `rs_std::Result<T, E>`      | `Result<T, E>`            | Layout        |                             |
+| Result                                         | `rs::Result<T, E>`          | `Result<T, E>`            | Layout        |                             |
 :                                                :                             :                           : compatible    :                             :
 | **Other**                                      |                             |                           |               |                             |
 | User-defined types                             | `struct`/`class`            | `struct`/`enum`/`union`   | Layout        | Must be rust-movable        |
 :                                                :                             :                           : compatible    : (trivially copyable or      :
 :                                                :                             :                           :               : `[[clang\:\:trivial_abi]]`) :
-| Tuples                                         | `rs_std::Tuple<T1, T2,      | `(T1, T2, ...)`           | Layout        | Rust tuples in C++ only.    |
-:                                                : ...>`                       :                           : compatible    : Not supported in C++ APIs   :
+| Tuples                                         | `rs::Tuple<T1, T2, ...>`    | `(T1, T2, ...)`           | Layout        | Rust tuples in C++ only.    |
+:                                                :                             :                           : compatible    : Not supported in C++ APIs   :
 :                                                :                             :                           :               : used from Rust; use a named :
 :                                                :                             :                           :               : struct (b/557569186)        :
 | Protocol Buffers                               | C++ Proto                   | Rust Proto                | Bridged       |                             |

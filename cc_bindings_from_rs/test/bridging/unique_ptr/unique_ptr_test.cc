@@ -69,14 +69,14 @@ TEST(VirtualUniquePtrBridging, ConsumedByRust) {
 }
 
 TEST(UniquePtrBridging, Tuple) {
-  auto ptr = std::make_unique<rs_std::Tuple<int32_t, int32_t>>(
+  auto ptr = std::make_unique<rs::Tuple<int32_t, int32_t>>(
       std::tuple<int32_t, int32_t>(1, 2));
   auto ptr2 = unique_ptr::accept_unique_ptr_tuple(std::move(ptr));
   EXPECT_NE(ptr2, nullptr);
 }
 
 TEST(UniquePtrBridging, Option) {
-  auto ptr = std::make_unique<rs_std::Option<int32_t>>(42);
+  auto ptr = std::make_unique<rs::Option<int32_t>>(42);
   auto ptr2 = unique_ptr::accept_unique_ptr_option(std::move(ptr));
   EXPECT_NE(ptr2, nullptr);
 }

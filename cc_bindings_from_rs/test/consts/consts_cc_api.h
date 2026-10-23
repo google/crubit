@@ -136,14 +136,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithStr") alignas(8)
  public:
   bool operator==(::consts::StructWithStr const& other) const;
 
-  rs_std::StrRef msg{};
+  rs::StrRef msg{};
   ::std::int32_t count{};
 
  private:
   static void __crubit_field_offset_assertions();
 };
 static constexpr ::consts::StructWithStr STRUCT_WITH_STR_CONST =
-    ::consts::StructWithStr{.msg = rs_std::StrRef("hello world"),
+    ::consts::StructWithStr{.msg = rs::StrRef("hello world"),
                             .count = INT32_C(42)};
 struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: TupleStruct") alignas(4)
     [[clang::trivial_abi]] TupleStruct final {
@@ -211,12 +211,12 @@ static constexpr ::std::uint32_t UNSIGNED_INT = UINT32_C(4294967295);
 }  // namespace consts
 
 template <>
-struct rs_std::impl<::consts::NestedStruct, ::rs::core::cmp::Eq> {
+struct rs::impl<::consts::NestedStruct, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs_std::impl<::consts::NestedStruct, ::rs::core::fmt::Debug> {
+struct rs::impl<::consts::NestedStruct, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
@@ -228,12 +228,12 @@ struct rs_std::impl<::consts::NestedStruct, ::rs::core::fmt::Debug> {
 };
 
 template <>
-struct rs_std::impl<::consts::Point, ::rs::core::cmp::Eq> {
+struct rs::impl<::consts::Point, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs_std::impl<::consts::Point, ::rs::core::fmt::Debug> {
+struct rs::impl<::consts::Point, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function `<consts_golden::Point as
@@ -245,12 +245,12 @@ struct rs_std::impl<::consts::Point, ::rs::core::fmt::Debug> {
 };
 
 template <>
-struct rs_std::impl<::consts::StructWithArray, ::rs::core::cmp::Eq> {
+struct rs::impl<::consts::StructWithArray, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs_std::impl<::consts::StructWithArray, ::rs::core::fmt::Debug> {
+struct rs::impl<::consts::StructWithArray, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
@@ -262,12 +262,12 @@ struct rs_std::impl<::consts::StructWithArray, ::rs::core::fmt::Debug> {
 };
 
 template <>
-struct rs_std::impl<::consts::StructWithRef, ::rs::core::cmp::Eq> {
+struct rs::impl<::consts::StructWithRef, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs_std::impl<::consts::StructWithRef, ::rs::core::fmt::Debug> {
+struct rs::impl<::consts::StructWithRef, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
@@ -279,12 +279,12 @@ struct rs_std::impl<::consts::StructWithRef, ::rs::core::fmt::Debug> {
 };
 
 template <>
-struct rs_std::impl<::consts::StructWithStr, ::rs::core::cmp::Eq> {
+struct rs::impl<::consts::StructWithStr, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs_std::impl<::consts::StructWithStr, ::rs::core::fmt::Debug> {
+struct rs::impl<::consts::StructWithStr, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
@@ -296,12 +296,12 @@ struct rs_std::impl<::consts::StructWithStr, ::rs::core::fmt::Debug> {
 };
 
 template <>
-struct rs_std::impl<::consts::TupleStruct, ::rs::core::cmp::Eq> {
+struct rs::impl<::consts::TupleStruct, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs_std::impl<::consts::TupleStruct, ::rs::core::fmt::Debug> {
+struct rs::impl<::consts::TupleStruct, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function

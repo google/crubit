@@ -8,7 +8,7 @@
 
 namespace {
 
-using ::rs_std::StrRef;
+using ::rs::StrRef;
 
 TEST(StrTest, StrAsArgument) {
   EXPECT_EQ(str::get_str_len(StrRef("hello")), 5);
