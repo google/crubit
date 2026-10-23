@@ -151,8 +151,6 @@ cc_library(
 crubit_cc_test(
     name = "generate_bindings_and_metadata_test",
     srcs = ["generate_bindings_and_metadata_test.cc"],
-    data = [
-    ],
     local_defines = EXTERNAL_BINARIES,
     tags = [
         # This test uses e.g. rustfmt and is difficult to run cross-platform. We could run it using
