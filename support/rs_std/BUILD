@@ -71,6 +71,7 @@ alias(
 crubit_cc_test(
     name = "char_test",
     srcs = ["char_test.cc"],
+    tags = ["no_macos"],
     deps = [
         ":char",
         ":str_ref",
@@ -445,6 +446,7 @@ crubit_cc_test(
         "enum_test.cc",
         "enum_test_option_i32.h",
     ],
+    tags = ["no_macos"],
     deps = [
         ":enum",
         "@abseil-cpp//absl/base:core_headers",
