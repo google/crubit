@@ -41,20 +41,16 @@ called from C++, and how to actually use it from C++. The quick summary is:
 The first part of creating a library that can be used by Crubit is to write a
 `rust_library` target. For example:
 
+```live-snippet
+cs/file:examples/rust/function/example.rs content:^[^/].*
 ```
-{{ #include ../../examples/rust/function/example.rs }}
-```
-<!--  content:^[^/].* -->
-
 
 In the BUILD file, in addition to defining the `rust_library`, you should also
 define the `cpp_api_from_rust` target (loaded via `load("//bazel:cpp_api_from_rust.bzl", "cpp_api_from_rust")`) to make it easier to use from C++:
 
+```live-snippet
+cs/file:examples/rust/function/BUILD symbol:example_crate|example_crate_cc_api
 ```
-{{ #include ../../examples/rust/function/BUILD }}
-```
-<!--  symbol:example_crate|example_crate_cc_api -->
-
 
 Example: If your Rust library is named `//path/to:example_crate`, then the C++
 header file is `"path/to/example_crate.h"`, and the C++ namespace is
@@ -67,17 +63,13 @@ bindings for a target, they must depend on the `cpp_api_from_rust` rule.
 
 For example:
 
+```live-snippet
+cs/file:examples/rust/function/BUILD symbol:main
 ```
-{{ #include ../../examples/rust/function/BUILD }}
-```
-<!--  symbol:main -->
 
-
+```live-snippet
+cs/file:examples/rust/function/main.cc content:^[^/\n].*
 ```
-{{ #include ../../examples/rust/function/main.cc }}
-```
-<!--  content:^[^/\n].* -->
-
 
 NOTE: Other than for declaring the dependency, all other information about the
 generated bindings comes from the actual `rust_library` rule. For example, the
@@ -93,20 +85,16 @@ The crate name might make a poor namespace. In addition, typically, multiple C++
 headers and build targets share the same namespace. To customize the namespace
 name, use `cc_bindings_from_rust_library_config`:
 
+```live-snippet
+cs/file:examples/rust/library_config/BUILD symbol:custom_namespace|example_crate
 ```
-{{ #include ../../examples/rust/library_config/BUILD }}
-```
-<!--  symbol:custom_namespace|example_crate -->
-
 
 Now, instead of the crate name, the generated bindings will use the namespace
 name you provided:
 
+```live-snippet
+cs/file:examples/rust/library_config/main.cc content:^[^/\n].*
 ```
-{{ #include ../../examples/rust/library_config/main.cc }}
-```
-<!--  content:^[^/\n].* -->
-
 
 ### Look at the generated bindings {#examine}
 

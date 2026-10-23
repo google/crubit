@@ -10,21 +10,17 @@ See [Movable Types](movable_types.md).
 
 Given the following Rust crate:
 
+```live-snippet
+cs/file:examples/rust/enum/example.rs class:Color
 ```
-{{ #include ../../examples/rust/enum/example.rs }}
-```
-<!--  class:Color -->
-
 
 Crubit will generate the following bindings:
 
 <!-- Note: Kythe currently indexes this as class `CRUBIT_INTERNAL_RUST_TYPE` because it doesn't have a build rule. -->
 
+```live-snippet
+cs/file:examples/rust/enum/example_generated.h class:CRUBIT_INTERNAL_RUST_TYPE|Color
 ```
-{{ #include ../../examples/rust/enum/example_generated.h }}
-```
-<!--  class:CRUBIT_INTERNAL_RUST_TYPE|Color -->
-
 
 ## Why isn't it a C++ `enum`? {#cpp_enum}
 
@@ -71,18 +67,14 @@ Given the following Rust crate:
 
 <!-- b/487357254: Cover struct payload in this example. -->
 
+```live-snippet
+cs/file:examples/rust/enum_with_payload/example.rs class:Color
 ```
-{{ #include ../../examples/rust/enum_with_payload/example.rs }}
-```
-<!--  class:Color -->
-
 
 Crubit will generate the following bindings:
 
 <!-- Note: Kythe currently indexes this as class `CRUBIT_INTERNAL_RUST_TYPE` because it doesn't have a build rule. -->
 
+```live-snippet
+cs/file:examples/rust/enum_with_payload/example_generated.h class:CRUBIT_INTERNAL_RUST_TYPE|Color
 ```
-{{ #include ../../examples/rust/enum_with_payload/example_generated.h }}
-```
-<!--  class:CRUBIT_INTERNAL_RUST_TYPE|Color -->
-

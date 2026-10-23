@@ -23,29 +23,23 @@ Crubit applies
 [Rust's lifetime elision rules](https://doc.rust-lang.org/reference/lifetime-elision.html)
 to C++ references. For example, given the following C++ header:
 
+```live-snippet
+cs/file:examples/cpp/references_and_lifetimes/example.h class:Counter
 ```
-{{ #include ../../examples/cpp/references_and_lifetimes/example.h }}
-```
-<!--  class:Counter -->
-
 
 Crubit will generate the following bindings (notice the inferred `'__this`
 lifetime):
 
+```live-snippet
+cs/file:examples/cpp/references_and_lifetimes/example_generated.rs content:"(?m)impl Counter.*?(^$|^    \})"
 ```
-{{ #include ../../examples/cpp/references_and_lifetimes/example_generated.rs }}
-```
-<!--  content:"(?m)impl Counter.*?(^$|^    \})" -->
-
 
 Reference parameters become Rust references, and each of them gets its own
 lifetime (e.g. see `'x` below):
 
+```live-snippet
+cs/file:examples/cpp/references_and_lifetimes/example_generated.rs function:\bAddOne\b
 ```
-{{ #include ../../examples/cpp/references_and_lifetimes/example_generated.rs }}
-```
-<!--  function:\bAddOne\b -->
-
 
 ## When lifetime elision doesn't apply {#elision_fails}
 
@@ -58,19 +52,15 @@ in the Rust Book.
 For such C++ functions, Crubit generates bindings that return a raw pointer
 instead of a reference. For example, given the following C++ function:
 
+```live-snippet
+cs/file:examples/cpp/references_and_lifetimes/example.h function:\bSmaller\b
 ```
-{{ #include ../../examples/cpp/references_and_lifetimes/example.h }}
-```
-<!--  function:\bSmaller\b -->
-
 
 Crubit will generate the following bindings:
 
+```live-snippet
+cs/file:examples/cpp/references_and_lifetimes/example_generated.rs function:\bSmaller\b
 ```
-{{ #include ../../examples/cpp/references_and_lifetimes/example_generated.rs }}
-```
-<!--  function:\bSmaller\b -->
-
 
 Rust code needs `unsafe` to dereference the returned pointer. To bind the result
 as a reference, add [explicit lifetime annotations](#explicit) to the C++
@@ -82,19 +72,15 @@ C++ code can use explicit lifetime annotations (e.g. `$a`) to specify lifetimes
 that lifetime elision can't infer. For example, given the following C++
 function:
 
+```live-snippet
+cs/file:examples/cpp/references_and_lifetimes/example.h content:^inline\ const\ int&\ \$a\ SmallerWithLifetimes.*?^\}
 ```
-{{ #include ../../examples/cpp/references_and_lifetimes/example.h }}
-```
-<!--  content:^inline\ const\ int&\ \$a\ SmallerWithLifetimes.*?^\} -->
-
 
 Crubit will generate the following bindings:
 
+```live-snippet
+cs/file:examples/cpp/references_and_lifetimes/example_generated.rs function:SmallerWithLifetimes
 ```
-{{ #include ../../examples/cpp/references_and_lifetimes/example_generated.rs }}
-```
-<!--  function:SmallerWithLifetimes -->
-
 
 Notes:
 
@@ -114,19 +100,15 @@ Lifetime elision is a good default for most C++ APIs, but neither the C++
 compiler nor Crubit checks that the lifetimes match what the C++ code does. For
 example, given the following C++ struct:
 
+```live-snippet
+cs/file:examples/cpp/references_and_lifetimes/example.h class:Number
 ```
-{{ #include ../../examples/cpp/references_and_lifetimes/example.h }}
-```
-<!--  class:Number -->
-
 
 Crubit will generate the following bindings:
 
+```live-snippet
+cs/file:examples/cpp/references_and_lifetimes/example_generated.rs content:"(?m)impl Number.*?(^$|^    \})"
 ```
-{{ #include ../../examples/cpp/references_and_lifetimes/example_generated.rs }}
-```
-<!--  content:"(?m)impl Number.*?(^$|^    \})" -->
-
 
 Lifetime elision ties the result of `GetLarger` only to `self`. This is wrong,
 because the result can refer to `other`. Rust code can keep the result after

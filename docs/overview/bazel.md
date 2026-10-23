@@ -24,11 +24,9 @@ Add `rules_crubit` to your `MODULE.bazel`, together with the Rust and LLVM
 toolchains. The example project's `MODULE.bazel` shows the exact versions that
 Crubit is tested with:
 
+```live-snippet
+cs/file:examples/build_systems/bazel/MODULE.bazel
 ```
-{{ #include ../../examples/build_systems/bazel/MODULE.bazel }}
-```
-<!--  -->
-
 
 The example uses `local_path_override` because it lives inside the Crubit
 repository. In your own project, use `git_override` instead, and pin a commit
@@ -58,20 +56,16 @@ It sets the Rust channel and the C++20 and Clang flags that Crubit expects.
 Add a `cpp_api_from_rust` target for your `rust_library`, and depend on that
 target from C++:
 
+```live-snippet
+cs/file:examples/build_systems/bazel/BUILD.bazel
 ```
-{{ #include ../../examples/build_systems/bazel/BUILD.bazel }}
-```
-<!--  -->
-
 
 The header name is the Rust target's name with `.h` appended, and the
 namespace is the target name:
 
+```live-snippet
+cs/file:examples/build_systems/bazel/main.cpp
 ```
-{{ #include ../../examples/build_systems/bazel/main.cpp }}
-```
-<!--  -->
-
 
 See [C++ bindings for Rust libraries](../rust/index.md) for what the generated
 API looks like, and how to customize it.

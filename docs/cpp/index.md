@@ -44,20 +44,16 @@ $ bazel build --config=crubit-genfiles //path/to:my_cc_library
 The first part of creating a library that can be used by Crubit is to write a
 `cc_library` target. For example:
 
+```live-snippet
+cs/file:examples/cpp/function/example.h
 ```
-{{ #include ../../examples/cpp/function/example.h }}
-```
-<!--  -->
-
 
 If you write a BUILD target as normal, it will not actually get Crubit bindings,
 but we'll start from there:
 
+```live-snippet
+cs/file:examples/cpp/function/BUILD symbol:example_lib_broken
 ```
-{{ #include ../../examples/cpp/function/BUILD }}
-```
-<!--  symbol:example_lib_broken -->
-
 
 ### Enable Crubit on a target {#enable}
 
@@ -73,17 +69,13 @@ Define a `rust_api_from_cpp` target in the same `BUILD` file as your
 `cc_library` (loaded via `load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")`), and add its `.hint` target to the `aspect_hints` of the
 `cc_library`:
 
+```live-snippet
+cs/file:examples/cpp/function/BUILD symbol:\bexample_lib\b
 ```
-{{ #include ../../examples/cpp/function/BUILD }}
-```
-<!--  symbol:\bexample_lib\b -->
 
-
+```live-snippet
+cs/file:examples/cpp/function/BUILD symbol:\bexample_lib_rust\b
 ```
-{{ #include ../../examples/cpp/function/BUILD }}
-```
-<!--  symbol:\bexample_lib_rust\b -->
-
 
 The `.hint` target is automatically created by the `rust_api_from_cpp` macro
 (named `<name>.hint`) and is used to avoid circular dependencies between the C++
@@ -131,11 +123,9 @@ you build a Rust build target which depends on C++.
 The `.rs` file is the interesting one for end users. It should contain an
 actually useful API for the target:
 
+```live-snippet
+cs/file:examples/cpp/function/example_generated.rs
 ```
-{{ #include ../../examples/cpp/function/example_generated.rs }}
-```
-<!--  -->
-
 
 #### When something is missing {#missing}
 
@@ -164,20 +154,16 @@ attribute to it. See [Customizing the generated bindings](customizing.md).
 To depend on a C++ library from Rust, add the corresponding `rust_api_from_cpp`
 target to your Rust target's `deps`:
 
+```live-snippet
+cs/file:examples/cpp/function/BUILD symbol:main
 ```
-{{ #include ../../examples/cpp/function/BUILD }}
-```
-<!--  symbol:main -->
-
 
 At that point, the bindings are directly usable from Rust. The interface is
 identical to the `.rs` file previewed earlier, but can be used directly:
 
+```live-snippet
+cs/file:examples/cpp/function/main.rs
 ```
-{{ #include ../../examples/cpp/function/main.rs }}
-```
-<!--  -->
-
 
 #### Crate name {#crate_name}
 

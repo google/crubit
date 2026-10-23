@@ -18,27 +18,21 @@ supported:
 
 Given the following C++ header:
 
+```live-snippet
+cs/file:examples/cpp/enum/example.h class:Color
 ```
-{{ #include ../../examples/cpp/enum/example.h }}
-```
-<!--  class:Color -->
-
 
 Crubit will generate the following bindings:
 
+```live-snippet
+cs/file:examples/cpp/enum/example_generated.rs content:^([^/#\n]|#[^!]|///)[^\n]*
 ```
-{{ #include ../../examples/cpp/enum/example_generated.rs }}
-```
-<!--  content:^([^/#\n]|#[^!]|///)[^\n]* -->
-
 
 Which can be used like this:
 
+```live-snippet
+cs/file:examples/cpp/enum/main.rs function:main
 ```
-{{ #include ../../examples/cpp/enum/main.rs }}
-```
-<!--  function:main -->
-
 
 ## Why isn't it an `enum`?
 

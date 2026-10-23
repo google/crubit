@@ -1,0 +1,19 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "mdbook-live-snippet"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+anyhow = "1"
+regex = "1"
+serde_json = "1"
+
+[dev-dependencies]
+googletest = "0.14"
+
+[workspace]

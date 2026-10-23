@@ -27,16 +27,12 @@ More information:
 
 Given the following C++ header:
 
+```live-snippet
+cs/file:examples/cpp/unsafe_attributes/example.h content:SafeSignatureButAnnotatedUnsafe
 ```
-{{ #include ../../examples/cpp/unsafe_attributes/example.h }}
-```
-<!--  content:SafeSignatureButAnnotatedUnsafe -->
-
 
 Crubit will generate the following bindings:
 
+```live-snippet
+cs/file:examples/cpp/unsafe_attributes/example_generated.rs symbol:SafeSignatureButAnnotatedUnsafe
 ```
-{{ #include ../../examples/cpp/unsafe_attributes/example_generated.rs }}
-```
-<!--  symbol:SafeSignatureButAnnotatedUnsafe -->
-

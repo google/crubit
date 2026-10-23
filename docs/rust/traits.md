@@ -9,19 +9,15 @@ method `SomeTrait::some_fn` implemented by `SomeType`, C++ callers can use
 
 Given the following Rust crate:
 
+```live-snippet
+cs/file:examples/rust/trait/example.rs
 ```
-{{ #include ../../examples/rust/trait/example.rs }}
-```
-<!--  -->
-
 
 You can call the trait from C++ using the following code:
 
+```live-snippet
+cs/file:examples/rust/trait/main.cc function:main
 ```
-{{ #include ../../examples/rust/trait/main.cc }}
-```
-<!--  function:main -->
-
 
 Each trait has an associated `impl` member which is generic upon the `Self` type
 of the trait implementation, and which provides all of the associated types,
@@ -34,11 +30,9 @@ SomeTrait>`. This is useful when writing templated C++ functions, as it can be
 used with `requires` (or `enable_if`) to specify that a particular trait is
 implemented by a type parameter. For example:
 
+```live-snippet
+cs/file:examples/rust/trait/main.cc function:add_with_2
 ```
-{{ #include ../../examples/rust/trait/main.cc }}
-```
-<!--  function:add_with_2 -->
-
 
 ## Limitations
 
@@ -60,21 +54,17 @@ Some trait implementations will not receive bindings:
 Under the hood, Crubit will generate three bindings from the example Rust crate.
 A template specialization for `impl MyTrait for MyStruct`:
 
+```live-snippet
+cs/file:examples/rust/trait/example_generated.h class:impl
 ```
-{{ #include ../../examples/rust/trait/example_generated.h }}
-```
-<!--  class:impl -->
-
 
 Our generated `rs::impl` specialization is an implementation detail of binding
 generation. It holds the actual thunks that call into rust to implement our
 trait, but they should be accessed through our template struct `MyTrait`:
 
+```live-snippet
+cs/file:examples/rust/trait/example_generated.h class:MyTrait
 ```
-{{ #include ../../examples/rust/trait/example_generated.h }}
-```
-<!--  class:MyTrait -->
-
 
 Each struct generated for a Rust trait has the `impl` member that provides
 access to the generated `rs::impl`. This is the preferred way to reference the
@@ -82,11 +72,9 @@ generated `rs::impl`.
 
 Finally, a struct for `MyStruct`:
 
+```live-snippet
+cs/file:examples/rust/trait/example_generated.h class:MyStruct
 ```
-{{ #include ../../examples/rust/trait/example_generated.h }}
-```
-<!--  class:MyStruct -->
-
 
 Our struct is generated normally and exists purely so we have something to
 implement our trait for.

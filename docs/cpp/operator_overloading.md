@@ -131,8 +131,6 @@ back to `operator<<`.
 The [attribute macro](customizing.md) `CRUBIT_OVERRIDE_DISPLAY` forces whether
 to implement the `Display` binding. See the macro's documentation:
 
+```live-snippet
+cs/file:support/annotations.h symbol:CRUBIT_OVERRIDE_DISPLAY
 ```
-{{ #include ../../support/annotations.h }}
-```
-<!--  symbol:CRUBIT_OVERRIDE_DISPLAY -->
-

@@ -130,11 +130,9 @@ target_link_libraries(main PRIVATE rust_lib)
 Crubit names the generated C++ header after the library package. In
 `main.cpp`, include `crubit/rust_lib.h`:
 
+```live-snippet
+cs/file:examples/build_systems/cmake/main.cpp
 ```
-{{ #include ../../examples/build_systems/cmake/main.cpp }}
-```
-<!--  -->
-
 
 Now C++ can call the Rust code. See
 [C++ bindings for Rust libraries](../rust/index.md) for what the generated API

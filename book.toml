@@ -9,6 +9,12 @@ title = "Crubit Documentation"
 
 [preprocessor.tabs]
 
+# Expands docs-style `live-snippet` blocks. Runs after the built-in `links`
+# preprocessor so that `{{#include}}`-like text in snippets is left alone.
+[preprocessor.live-snippet]
+command = "cargo run --quiet --release --manifest-path tools/mdbook_live_snippet/Cargo.toml --"
+after = ["links"]
+
 [output.html]
 git-repository-url = "https://github.com/google/crubit"
 additional-css = ["theme/tabs.css"]

@@ -114,19 +114,15 @@ By default, Carcinize partitions declarations:
 
 Consider a C++ header containing both a standard function and a C++ template:
 
+```live-snippet
+cs/file:examples/cpp/carcinize/math_utils.h content:^namespace\s+math\s*\{[\s\S]*?^\}\s*//\s*namespace\s+math
 ```
-{{ #include ../../examples/cpp/carcinize/math_utils.h }}
-```
-<!--  content:^namespace\s+math\s*\{[\s\S]*?^\}\s*//\s*namespace\s+math -->
-
 
 When migrated, Carcinize generates `math_utils_rs.rs`:
 
+```live-snippet
+cs/file:examples/cpp/carcinize/math_utils_rs.rs content:^\s*global_cpp!\s*\{[\s\S]*?^\}\s*pub\s+mod\s+math\s*\{[\s\S]*?^\}
 ```
-{{ #include ../../examples/cpp/carcinize/math_utils_rs.rs }}
-```
-<!--  content:^\s*global_cpp!\s*\{[\s\S]*?^\}\s*pub\s+mod\s+math\s*\{[\s\S]*?^\} -->
-
 
 ### Caller access {#incomplete_downstream}
 
@@ -153,11 +149,9 @@ declarations with Rust implementations over time using one of these strategies:
 
 #### Strategy 1: Rewrite in Rust (for Rust callers)
 
+```live-snippet
+cs/file:examples/cpp/carcinize/math_utils_rs.rs function:clamp
 ```
-{{ #include ../../examples/cpp/carcinize/math_utils_rs.rs }}
-```
-<!--  function:clamp -->
-
 
 > NOTE: `cpp_api_from_rust` does not currently generate C++ function
 > templates from Rust generic functions. If existing C++ callers still require
@@ -167,11 +161,9 @@ declarations with Rust implementations over time using one of these strategies:
 
 #### Strategy 2: Wrap specific instantiations with `inline_cpp!`
 
+```live-snippet
+cs/file:examples/cpp/carcinize/math_utils_rs.rs function:clamp_i32
 ```
-{{ #include ../../examples/cpp/carcinize/math_utils_rs.rs }}
-```
-<!--  function:clamp_i32 -->
-
 
 #### Clean up fallback blocks
 
@@ -222,31 +214,25 @@ inside fallback blocks become natively supported by Crubit.
 
 Consider a C++ library target:
 
+```live-snippet
+cs/file:examples/cpp/carcinize/BUILD symbol:point_before
 ```
-{{ #include ../../examples/cpp/carcinize/BUILD }}
-```
-<!--  symbol:point_before -->
-
 
 ### After migration
 
 Carcinize updates the `BUILD` file to define a `rust_library_with_embedded_cpp`
 target for the migrated Rust library:
 
+```live-snippet
+cs/file:examples/cpp/carcinize/BUILD symbol:point_rs
 ```
-{{ #include ../../examples/cpp/carcinize/BUILD }}
-```
-<!--  symbol:point_rs -->
-
 
 And re-exports the library back to C++ callers under the original target name
 using `cpp_api_from_rust`:
 
+```live-snippet
+cs/file:examples/cpp/carcinize/BUILD symbol:\bpoint\b
 ```
-{{ #include ../../examples/cpp/carcinize/BUILD }}
-```
-<!--  symbol:\bpoint\b -->
-
 
 *   **`rust_library_with_embedded_cpp` (`:point_rs`)**: Compiles the generated
     Rust crate and formats/extracts embedded C++ blocks.
@@ -260,19 +246,15 @@ using `cpp_api_from_rust`:
 
 For a C++ library like:
 
+```live-snippet
+cs/file:examples/cpp/carcinize/point.h content:^namespace\s+geometry\s*\{[\s\S]*?^\}\s*//\s*namespace\s+geometry
 ```
-{{ #include ../../examples/cpp/carcinize/point.h }}
-```
-<!--  content:^namespace\s+geometry\s*\{[\s\S]*?^\}\s*//\s*namespace\s+geometry -->
-
 
 Carcinize generates `point_rs.rs`:
 
+```live-snippet
+cs/file:examples/cpp/carcinize/point_rs.rs content:^\s*global_cpp!\s*\{[\s\S]*?^\}\s*pub\s+mod\s+geometry\s*\{[\s\S]*?^\}
 ```
-{{ #include ../../examples/cpp/carcinize/point_rs.rs }}
-```
-<!--  content:^\s*global_cpp!\s*\{[\s\S]*?^\}\s*pub\s+mod\s+geometry\s*\{[\s\S]*?^\} -->
-
 
 ## Refactoring workflow {#workflow}
 
@@ -292,19 +274,15 @@ refactor the crate into idiomatic Rust:
 
 For example, when rewriting functions in step 2, convert embedded C++:
 
+```live-snippet
+cs/file:examples/cpp/carcinize/point_rs.rs function:GetX
 ```
-{{ #include ../../examples/cpp/carcinize/point_rs.rs }}
-```
-<!--  function:GetX -->
-
 
 Into pure, idiomatic Rust:
 
+```live-snippet
+cs/file:examples/cpp/carcinize/point_refactored.rs function:GetX
 ```
-{{ #include ../../examples/cpp/carcinize/point_refactored.rs }}
-```
-<!--  function:GetX -->
-
 
 ## Common errors {#errors}
 

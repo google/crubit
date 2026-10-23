@@ -26,36 +26,28 @@ Rust code that uses the status types depends on
 
 C++ functions returning `Status`/`StatusOr` return the corresponding Rust types:
 
+```live-snippet
+cs/file:examples/types/absl_status/cpp_api.h content:absl::Status
 ```
-{{ #include ../../examples/types/absl_status/cpp_api.h }}
-```
-<!--  content:absl::Status -->
 
-
+```live-snippet
+cs/file:examples/types/absl_status/user_of_cpp_api.rs content:ReturnsStatus
 ```
-{{ #include ../../examples/types/absl_status/user_of_cpp_api.rs }}
-```
-<!--  content:ReturnsStatus -->
-
 
 ## Calling Rust APIs using `Status` {#rust}
 
 Rust APIs can directly return `Status` or `StatusOr<T>` in public functions:
 
+```live-snippet
+cs/file:examples/types/absl_status/rust_api.rs
 ```
-{{ #include ../../examples/types/absl_status/rust_api.rs }}
-```
-<!--  -->
-
 
 `cpp_api_from_rust` will automatically generate C++ bindings returning
 `absl::Status` and `absl::StatusOr<T>`:
 
+```live-snippet
+cs/file:examples/types/absl_status/user_of_rust_api.cc content:rust_api::returns_status
 ```
-{{ #include ../../examples/types/absl_status/user_of_rust_api.cc }}
-```
-<!--  content:rust_api::returns_status -->
-
 
 ## Working with `Status` in Rust
 
@@ -113,20 +105,16 @@ Instead of returning `absl::StatusOr<MyProto>` directly by value across FFI, the
 C++ API can return `absl::Status` and accept a mutable reference (`MyProto&`)
 output parameter:
 
+```live-snippet
+cs/file:examples/types/absl_status/cpp_api.h function:ReturnsStatusWithProto
 ```
-{{ #include ../../examples/types/absl_status/cpp_api.h }}
-```
-<!--  function:ReturnsStatusWithProto -->
-
 
 In Rust, create an instance of the message and pass its mutable view
 (`.as_mut()`):
 
+```live-snippet
+cs/file:examples/types/absl_status/user_of_cpp_api.rs function:test_returns_status_with_proto
 ```
-{{ #include ../../examples/types/absl_status/user_of_cpp_api.rs }}
-```
-<!--  function:test_returns_status_with_proto -->
-
 
 ## Migration and Future Evolution
 
