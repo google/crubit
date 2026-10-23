@@ -223,6 +223,17 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set that reserves standard C/C++ macro names (such as `errno`, `stdin`, `stdout`, and
+# `stderr`) as keywords so they are not emitted as C++ identifiers.
+#
+# See b/576606305
+crubit_feature_hint(
+    name = "reserve_standard_macros",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["reserve_standard_macros"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set that emits some accessor code directly instead of using thunks.
 #
 # See b/482092715
