@@ -43,6 +43,10 @@ _PROFILING_RUSTC_FLAGS = select({
     "//conditions:default": [],
 })
 
+# Undefine NDEBUG to ensure assertions (including inlined Clang AST assertions)
+# remain active even in opt compilation mode (see b/541930690).
+_CRUBIT_COPTS = ["-UNDEBUG"]
+
 rust_bindings_from_cc_binary(
     name = "rs_bindings_from_cc",
     binary = ":rs_bindings_from_cc_main",
@@ -94,6 +98,7 @@ crubit_rust_binary(
 cc_library(
     name = "rs_bindings_from_cc_impl",
     srcs = ["rs_bindings_from_cc.cc"],
+    copts = _CRUBIT_COPTS,
     # Defines CRUBIT_HEAP_PROFILING when --define=enable_heap_profiling=1 is passed,
     # enabling heap profile recording in rs_bindings_from_cc.cc.
     defines = select({
@@ -125,6 +130,7 @@ cc_library(
     name = "generate_bindings_and_metadata",
     srcs = ["generate_bindings_and_metadata.cc"],
     hdrs = ["generate_bindings_and_metadata.h"],
+    copts = _CRUBIT_COPTS,
     visibility = [
         "//cargo:__subpackages__",
     ],
@@ -190,6 +196,7 @@ cc_library(
     name = "ast_util",
     srcs = ["ast_util.cc"],
     hdrs = ["ast_util.h"],
+    copts = _CRUBIT_COPTS,
     visibility = ["//:__subpackages__"],
     deps = [
         ":cc_ir",
@@ -252,6 +259,7 @@ cc_library(
     name = "type_map",
     srcs = ["type_map.cc"],
     hdrs = ["type_map.h"],
+    copts = _CRUBIT_COPTS,
     visibility = ["//:__subpackages__"],
     deps = [
         ":cc_ir",
@@ -265,6 +273,7 @@ cc_library(
     name = "annotations_consumer",
     srcs = ["annotations_consumer.cc"],
     hdrs = ["annotations_consumer.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         ":cc_ir",
         "//common:annotation_reader",
@@ -280,6 +289,7 @@ cc_library(
     name = "cmdline",
     srcs = ["cmdline.cc"],
     hdrs = ["cmdline.h"],
+    copts = _CRUBIT_COPTS,
     visibility = [
         "//cargo:__subpackages__",
     ],
@@ -305,6 +315,7 @@ cc_library(
 cc_library(
     name = "cmdline_flags",
     hdrs = ["cmdline_flags.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "@abseil-cpp//absl/flags:flag",
         "@abseil-cpp//absl/strings:string_view",
@@ -333,6 +344,7 @@ crubit_cc_test(
 cc_library(
     name = "decl_importer",
     hdrs = ["decl_importer.h"],
+    copts = _CRUBIT_COPTS,
     visibility = ["//:__subpackages__"],
     deps = [
         "cc_ir",
@@ -361,6 +373,7 @@ cc_library(
     name = "frontend_action",
     srcs = ["frontend_action.cc"],
     hdrs = ["frontend_action.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         ":ast_consumer",
         ":decl_importer",
@@ -378,6 +391,7 @@ cc_library(
     name = "ast_consumer",
     srcs = ["ast_consumer.cc"],
     hdrs = ["ast_consumer.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         ":decl_importer",
         ":importer",
@@ -391,6 +405,7 @@ cc_library(
     name = "importer",
     srcs = ["importer.cc"],
     hdrs = ["importer.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         ":annotations_consumer",
         ":ast_util",
@@ -461,6 +476,7 @@ cc_library(
     name = "cc_ir",
     srcs = ["ir.cc"],
     hdrs = ["ir.h"],
+    copts = _CRUBIT_COPTS,
     visibility = ["//:__subpackages__"],
     deps = [
         ":bazel_types",
@@ -559,6 +575,7 @@ cc_library(
     name = "ir_from_cc",
     srcs = ["ir_from_cc.cc"],
     hdrs = ["ir_from_cc.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         ":bazel_types",
         ":cc_ir",
@@ -589,6 +606,7 @@ cc_library(
     testonly = 1,
     srcs = ["ir_from_cc_dependency.cc"],
     hdrs = ["ir_from_cc_dependency.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         ":bazel_types",
         ":cc_ir",
@@ -605,6 +623,7 @@ cc_library(
     name = "proto_from_cc",
     testonly = 1,
     srcs = ["proto_from_cc.cc"],
+    copts = _CRUBIT_COPTS,
     deps = [
         ":cc_ir",
         ":cmdline_flags",
@@ -646,6 +665,7 @@ cc_library(
         "src_code_gen_ffi_serialized_proto.cc",
     ],
     hdrs = ["src_code_gen_ffi.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         ":profiling",
         "//common:cc_ffi_types",
@@ -658,6 +678,7 @@ cc_library(
     name = "src_code_gen",
     srcs = ["src_code_gen.cc"],
     hdrs = ["src_code_gen.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         ":cc_ir",
         ":profiling",
@@ -675,6 +696,7 @@ cc_library(
     name = "ast_convert",
     srcs = ["ast_convert.cc"],
     hdrs = ["ast_convert.h"],
+    copts = _CRUBIT_COPTS,
     visibility = ["//:__subpackages__"],
     deps = [
         ":ast_util",
@@ -694,6 +716,7 @@ cc_library(
     name = "recording_diagnostic_consumer",
     srcs = ["recording_diagnostic_consumer.cc"],
     hdrs = ["recording_diagnostic_consumer.h"],
+    copts = _CRUBIT_COPTS,
     visibility = [
         "//:__subpackages__",
     ],
@@ -755,6 +778,7 @@ cc_library(
     name = "cc_collect_instantiations",
     srcs = ["collect_instantiations.cc"],
     hdrs = ["collect_instantiations.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         ":collect_instantiations",  # build_cleaner: keep
         "//common:cc_ffi_types",
@@ -807,6 +831,7 @@ cc_library(
     name = "collect_namespaces",
     srcs = ["collect_namespaces.cc"],
     hdrs = ["collect_namespaces.h"],
+    copts = _CRUBIT_COPTS,
     visibility = ["//:__subpackages__"],
     deps = [
         ":bazel_types",
