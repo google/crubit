@@ -11,7 +11,7 @@ Rust's `String` becomes `rs::std::string::String` in C++ (also spelled
 `rs::alloc::string::String`). It can be constructed from a C++ string literal:
 
 ```c++
-rs::std::string::String s("hello, world!")
+rs::std::string::String s("hello, world!");
 ```
 
 An existing `std::string_view` (or `absl::string_view`) can be converted to a
@@ -29,12 +29,11 @@ void AcceptsStringView(std::string_view view) {
 ```
 
 An instance of `String` can be converted back to a `std::string` by calling
-`.as_str()` and using the resulting `rs_str::StrRef` to construct a
-`std::string`:
+`.as_str()` and using the resulting `rs::StrRef` to construct a `std::string`:
 
 ```c++
 std::string s2(s.as_str());
-EXPECT_EQUAL(s2, "hello, world");
+EXPECT_EQ(s2, "hello, world!");
 ```
 
 `rs::StrRef` supports implicit conversion to `std::string_view` to make this
@@ -64,7 +63,7 @@ append_to_rust_string(s, " I'm a neat addition");
 
 ## `Result`
 
-The Rust `Result<T, E>` generic receives Rust bindings as `rs::Result<T, E>`, so
+The Rust `Result<T, E>` generic receives C++ bindings as `rs::Result<T, E>`, so
 long as both `T` and `E` are non-ZST types supported by Crubit.
 
 `rs::Result<T, E>` has a similar API to
@@ -87,7 +86,7 @@ class: support/rs_std/result.h
 
 ## `Option`
 
-The Rust `Option<T>` generic receives Rust bindings as `rs::Option<T>`, so long
+The Rust `Option<T>` generic receives C++ bindings as `rs::Option<T>`, so long
 as `T` is a non-ZST type supported by Crubit. It has a similar API to
 [`std::optional`](https://en.cppreference.com/cpp/utility/optional), and
 implicitly converts to and from `std::optional`.

@@ -5,10 +5,10 @@ return types are supported by Crubit:
 
 *   If a parameter or return type is a
     [fundamental type](../cpp/fundamental_types.md), then the bindings for the
-    function use the corresponding Rust type.
+    function use the corresponding C++ type.
 *   Similarly, if a parameter or return type is a
     [pointer type](../cpp/pointer_types.md), then the bindings for the function
-    use the corresponding Rust pointer type.
+    use the corresponding C++ pointer type.
 *   If the type is a user-defined type, such as a [struct](struct.md) or
     [enum](enums.md), then the bindings for the function use the bindings for
     that type.
@@ -137,6 +137,8 @@ parameters:
 
 *   **`&dyn Fn(...)` / `impl Fn(...)`**: Maps to `rs::FnRef<... const>` (borrowed, no allocation).
 *   **`&mut dyn FnMut(...)` / `impl FnMut(...)`**: Maps to `rs::FnRef<...>` (borrowed, no allocation).
+*   **`impl FnOnce(...)`** (without `'static`): Maps to `rs::FnRef<...>`
+    (borrowed, no allocation).
 *   **`Box<dyn Fn(...)>`**: Maps to `rs::Fn<... const>` (owned).
 *   **`Box<dyn FnMut(...)>`**: Maps to `rs::Fn<...>` (owned mutable).
 *   **`Box<dyn FnOnce(...)>` / `impl FnOnce(...) + 'static`**: Maps to `rs::Fn<... &&>` (owned, single-use).

@@ -1,8 +1,8 @@
 # C++ bindings for Rust traits
 
-Crubit allows C++ callers to invoke Rust trait implementations. For each `trait
-SomeTrait`, Crubit generates a matching C++ `struct MyTrait`. To call a trait
-method `SomeTrait::some_fn` implemented by `SomeType`, C++ callers can use
+Crubit allows C++ callers to invoke Rust trait implementations. For each
+`trait SomeTrait`, Crubit generates a matching C++ `struct SomeTrait`. To call a
+trait method `SomeTrait::some_fn` implemented by `SomeType`, C++ callers can use
 `SomeTrait::impl<SomeType>::some_fn(args...)`.
 
 ## Example
@@ -45,7 +45,7 @@ Some trait implementations will not receive bindings:
     *   This also means that blanket impls (e.g. `impl<T> Trait for T`) are not
         supported.
 *   Traits with `const` parameters (e.g. `trait T<const V: usize>`) do not yet
-    not receive bindings.
+    receive bindings.
 *   Trait methods will not receive bindings if their parameter or return types
     are not yet supported by Crubit.
 

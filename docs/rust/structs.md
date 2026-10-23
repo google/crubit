@@ -33,24 +33,24 @@ The fields on the C++ class are the corresponding Rust types:
 *   Similarly, if the Rust field has [pointer type](../types/pointer.md), then
     the C++ field has the corresponding C++ pointer type.
 *   If the field has a user-defined type, such as a struct or [enum](enums.md),
-    then the bindings for the function use the bindings for that type.
+    then the C++ field uses the bindings for that type.
 
 ### Unsupported fields {#opaque_fields}
 
 Fields that do not receive bindings are made private, and replaced with an
 opaque blob of maybe-uninitialized bytes, as well as a comment in the generated
 source code explaining why the field could not receive bindings. For example,
-since `String` is not supported, the space of the object occupied by a `String`
-field will instead be this opaque blob of bytes:
+since `HashMap` is not supported, the space of the object occupied by a
+`HashMap` field will instead be this opaque blob of bytes:
 
 ```rust {.bad}
-// Rust: `my_field` is some unsupported type, such as `String`
-pub my_field: String,
+// Rust: `my_field` is some unsupported type, such as `HashMap`
+pub my_field: HashMap<i32, i32>,
 ```
 
 ```c++ {.bad}
 // C++: `my_field` becomes `private`, and its type is replaced by bytes.
-private: unsigned char my_field[24]
+private: ::std::array<unsigned char, 24> my_field;
 ```
 
 Specifically, the following subobjects are hidden and replaced with opaque

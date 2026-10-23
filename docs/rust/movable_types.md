@@ -150,7 +150,7 @@ In C++, you call and manipulate them like this:
 // Receiving an unmovable return value directly into a local variable
 // (uses C++17 guaranteed copy elision):
 Unmovable val = make_unmovable(42);
-std::cout << val.field0 << "\n";
+std::cout << val.__field0 << "\n";
 
 // Passing to a function accepting rs::Movable<T> by constructing in-place:
 consume_unmovable(rs::Movable<Unmovable>(std::in_place, 100));
@@ -158,8 +158,8 @@ consume_unmovable(rs::Movable<Unmovable>(std::in_place, 100));
 // Passing an rs::Movable<T> received from another function or parameter:
 void forward_unmovable(rs::Movable<Unmovable> movable) {
   // Accessing fields and methods through rs::Movable<T>:
-  std::cout << movable->field0 << "\n";    // operator->
-  std::cout << (*movable).field0 << "\n";  // operator*
+  std::cout << movable->__field0 << "\n";    // operator->
+  std::cout << (*movable).__field0 << "\n";  // operator*
 
   // Passing an rs::Movable<T> by value:
   consume_unmovable(std::move(movable));

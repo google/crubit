@@ -145,5 +145,6 @@ the problematic interface behind an interface Crubit can handle:
 
 *   Use raw pointers instead of references, if this use of references falls into
     a case Crubit does not support.
-*   Hide unsupported types behind a wrapper type. For example, a `Vec<T>` is not
-    supported by Crubit, but `pub struct MyStruct(Vec<i32>);` is.
+*   Hide unsupported types behind a wrapper type. For example, a `HashMap<K, V>`
+    is not supported by Crubit, but `pub struct MyStruct(HashMap<i32, i32>);`
+    is.
