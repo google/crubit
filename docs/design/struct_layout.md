@@ -76,7 +76,7 @@ class A {
 
 struct B final : A {
   int8_t z;
-}
+};
 ```
 
 In memory, this may be laid out as so:
@@ -97,11 +97,11 @@ The correct representation for `B`, in Rust, is something like this:
 #[repr(C)]
 #[repr(align(2))] // match the alignment of the int16_t variable.
 struct B {
-  // The We don't use a field of type `A`, because it would have a size of 4,
+  // We don't use a field of type `A`, because it would have a size of 4,
   // and Rust wouldn't permit `z` to live inside of it.
   // Nor do we align the array, for the same reason -- correct alignment must be
   // achieved via the repr(align(2)) at the top.
-  __non_field_data : [MaybeUninit<u8>; 3];
+  __non_field_data: [MaybeUninit<u8>; 3],
   pub z: i8,
 }
 ```

@@ -422,13 +422,17 @@ T>` is the same syntax as `cpp_cast`-conversion of `&mut T` to itself.
 
 Full matrix, in the presence of a reborrow:
 
-    | Operation                              | Example code
---- | -------------------------------------- | ------------
-A   | Incomplete → Incomplete (same library) | `ConsumeIncomplete1(CreateIncomplete1().as_mut())`
-B   | Incomplete → Incomplete                | `ConsumeIncomplete1(CreateIncomplete2().as_mut().cpp_cast())`
-C   | Incomplete → Complete                  | `ConsumeComplete(CreateIncomplete1().as_mut().cpp_cast())`
-D   | Complete → Incomplete                  | `ConsumeIncomplete1(CreateComplete().cpp_cast())`
-E   | Complete → Complete                    | `ConsumeComplete(CreateComplete())`
+<!-- mdformat off(multiline tables) -->
+
+|     | Operation                              | Example code |
+| --- | -------------------------------------- | ------------ |
+| A   | Incomplete → Incomplete (same library) | `ConsumeIncomplete1(CreateIncomplete1().as_mut())` |
+| B   | Incomplete → Incomplete                | `ConsumeIncomplete1(CreateIncomplete2().as_mut().cpp_cast())` |
+| C   | Incomplete → Complete                  | `ConsumeComplete(CreateIncomplete1().as_mut().cpp_cast())` |
+| D   | Complete → Incomplete                  | `ConsumeIncomplete1(CreateComplete().cpp_cast())` |
+| E   | Complete → Complete                    | `ConsumeComplete(CreateComplete())` |
+
+<!-- mdformat on -->
 
 Moving from A/B/C to D/E is compatibility breaking if a call to `.as_mut()` was
 present.

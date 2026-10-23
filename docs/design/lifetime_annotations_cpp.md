@@ -464,7 +464,7 @@ int *$a return_ptr(int *$b p) {
 
 Again, the `copy` pointer has lifetime `$a`. If we choose the substitution
 `$x` = `$a`, we can lifetime-convert the second argument but not the first
-argument (we need an i`nt *$a` but we have an `int *$b`). If we choose `$x` =
+argument (we need an `int *$a` but we have an `int *$b`). If we choose `$x` =
 `$b`, we can lifetime-convert the first argument but not the second argument (we
 need an `int *$b *` but we have an `int *$a *`).
 
@@ -502,7 +502,7 @@ value), lifetime elision is performed separately for any lifetimes that occur in
 this function type, independent of the lifetimes in the surrounding function
 signature. Any elided lifetimes within the function type become lifetime
 parameters of the function type. See also the discussion of lifetime parameters
-on function types in [this section](#pointers-and-references).
+on function types in [this section](#functions).
 
 Lifetime elision rules have two requirements:
 

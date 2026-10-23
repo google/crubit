@@ -380,7 +380,7 @@ structs (e.g. via a proc macro) and use the same `Pin`-like pointer type:
 ```rs
 // instead of C++:
 //     `struct Foo {[[no_unique_address]] T1 x; [[no_unique_address]] T2 y; }`
-##[repr(C, align( /* max(align_of<T1>(), align_of<T2>()) */ ... ))]
+#[repr(C, align( /* max(align_of<T1>(), align_of<T2>()) */ ... ))]
 struct Foo {
     // These arrays are not of size size_of<T1>() etc., but rather the same as the proposed data_size_of<T1>().
     x: [u8; SIZE_OF_T1_DATA],
@@ -448,11 +448,11 @@ do not allow their tail padding to be reused.
 ### Papers and blog posts
 
 *   I worked around this in Crubit, a C++/Rust bindings generator. The design is
-    here: https://github.com/google/crubit/blob/main/docs/unpin.md . tl;dr: if
-    we assume that the only source of this layout phenomenon is base classes,
-    then only non-`final` classes needed to get the uncomfortable `Pin`-like
-    API. Unfortunately, this does not work if `[[no_unique_address]]` becomes
-    pervasive.
+    here: https://github.com/google/crubit/blob/main/docs/design/unpin.md .
+    tl;dr: if we assume that the only source of this layout phenomenon is base
+    classes, then only non-`final` classes needed to get the uncomfortable
+    `Pin`-like API. Unfortunately, this does not work if `[[no_unique_address]]`
+    becomes pervasive.
 
 ## Unresolved questions
 
