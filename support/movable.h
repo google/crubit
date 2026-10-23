@@ -26,6 +26,37 @@ void Relocate(T* dest, T* src) {
     std::destroy_at(src);
   }
 }
+
+// Destructively takes the value pointed to by `src`, leaving `*src`
+// uninitialized. The result is a prvalue, so C++17 guaranteed copy elision
+// initializes the caller's target directly, and no move constructor is required
+// for relocatable types.
+//
+// This is a copy of `crubit::UnsafeTakeValue` from
+// `crubit/support/internal/slot.h`, for compatibility with releases of that
+// header that predate it.
+//
+// SAFETY REQUIREMENTS:
+// - `*src` is initialized.
+// - The caller must not use or destroy `*src` afterwards without first
+//   reinitializing it.
+template <typename T>
+T UnsafeTakeValueCompat(T* src) {
+  if constexpr (requires(T x) {
+                  T(crubit::UnsafeRelocateTag{}, std::move(x));
+                }) {
+    return T(crubit::UnsafeRelocateTag{}, std::move(*src));
+  } else {
+    // The husk must be destroyed *after* the return object has been
+    // initialized, so the destruction is deferred to a scope guard rather than
+    // written as a statement (which would force an extra move).
+    struct Destroyer {
+      T* src;
+      ~Destroyer() { std::destroy_at(src); }
+    } destroyer{src};
+    return std::move(*src);
+  }
+}
 }  // namespace internal
 
 // A wrapper that makes Rust-movable (but potentially C++ non-movable) types
@@ -174,7 +205,7 @@ class Movable {
     CRUBIT_CHECK(!valueless_after_move_)
         << "rs::Movable: cannot unwrap a valueless (moved-from) value";
     valueless_after_move_ = true;
-    return crubit::UnsafeTakeValue(&value_);
+    return internal::UnsafeTakeValueCompat(&value_);
   }
 
   bool valueless_after_move() const { return valueless_after_move_; }
