@@ -2951,12 +2951,17 @@ fn test_function_using_error_type_by_value() -> Result<()> {
 fn test_thunkless_accessors_enabled() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
+        #pragma clang lifetime_elision
+        struct Inner { int v; };
         class S {
          public:
           int x() const { return x_; }
+          Inner inner() const { return inner_; }
+          friend int free_get_x(const S& s) { return s.x_; }
           void set_x(int x) { x_ = x; }
          private:
           int x_;
+          Inner inner_;
         };
         "#,
     )?;
@@ -2965,8 +2970,19 @@ fn test_thunkless_accessors_enabled() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
-                as ::ffi_11::c_int
+            *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            *((&*__this as *const _ as *const u8).add(4) as *const crate::Inner)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            *((&*s as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
         }
     );
     // Match on the thunk bodies rather than on the thunk names, because the
@@ -2978,6 +2994,38 @@ fn test_thunkless_accessors_enabled() -> Result<()> {
     assert_cc_not_matches!(
         rs_api_impl,
         quote! { extern "C" void ...(class S* __this, int x) { __this->set_x(x); } }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_owned_pointer() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        struct [[clang::annotate("crubit_owned_pointee", "OwnedTarget")]] Target {
+            int v;
+        };
+        using OwnedTargetPtr = Target* [[clang::annotate_type("crubit_owned_pointer")]];
+        class S {
+         public:
+          OwnedTargetPtr p() const { return p_; }
+         private:
+          OwnedTargetPtr p_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            *((&*__this as *const _ as *const u8).add(0) as *const ...)
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! { extern "C" struct Target* ...(class S const* __this) { return __this->p(); } }
     );
     Ok(())
 }
@@ -2999,8 +3047,7 @@ fn test_thunkless_accessors_non_const_getter() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
-                as ::ffi_11::c_int
+            *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
         }
     );
     // Match on the thunk body rather than on the thunk name, because the
@@ -3028,8 +3075,7 @@ fn test_thunkless_accessors_disabled() -> Result<()> {
     assert_rs_not_matches!(
         rs_api,
         quote! {
-            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
-                as ::ffi_11::c_int
+            *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
         }
     );
     // Match on the thunk bodies rather than on the thunk names, because the

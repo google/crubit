@@ -7288,13 +7288,22 @@ fn test_impl_debug_default_true() {
 fn test_getter_semantic() {
     let proto = ir_proto_from_cc(
         "
-        class S {
+        struct Inner { int v; };
+        struct BaseA { long pad; };
+        struct BaseB { int base_x_; };
+        class S : public BaseA, public BaseB {
          public:
           int x() const { return x_; }
           int explicit_this_x() const { return this->x_; }
+          Inner inner() const { return inner_; }
+          friend int free_get_x(const S& s) { return s.x_; }
+          friend int free_get_x_by_value(S s) { return s.x_; }
+          int inherited_x() const { return base_x_; }
+          friend int free_inherited_x(const S& s) { return s.base_x_; }
           int not_getter() const { return 42; }
          private:
           int x_;
+          Inner inner_;
         };
         ",
     )
@@ -7317,6 +7326,35 @@ fn test_getter_semantic() {
     };
     assert_eq!(g_x.offset, g_exp.offset);
     assert_eq!(g_x.type_, g_exp.type_);
+
+    let func_free =
+        ir.functions().find(|f| f.rs_name() == "free_get_x").expect("should find free_get_x()");
+    let semantic_free = func_free.semantic().expect("free_get_x() should have Getter semantic");
+    let MemberFuncSemantic::Getter(g_free) = semantic_free else {
+        panic!("expected Getter");
+    };
+    assert_eq!(g_x.offset, g_free.offset);
+    assert_eq!(g_x.type_, g_free.type_);
+
+    let func_inner = ir.functions().find(|f| f.rs_name() == "inner").expect("should find inner()");
+    let semantic_inner = func_inner.semantic().expect("inner() should have Getter semantic");
+    assert!(matches!(semantic_inner, MemberFuncSemantic::Getter(_)));
+
+    let func_by_val = ir
+        .functions()
+        .find(|f| f.rs_name() == "free_get_x_by_value")
+        .expect("should find free_get_x_by_value()");
+    assert_eq!(func_by_val.semantic(), None);
+
+    let func_inherited =
+        ir.functions().find(|f| f.rs_name() == "inherited_x").expect("should find inherited_x()");
+    assert_eq!(func_inherited.semantic(), None);
+
+    let func_free_inherited = ir
+        .functions()
+        .find(|f| f.rs_name() == "free_inherited_x")
+        .expect("should find free_inherited_x()");
+    assert_eq!(func_free_inherited.semantic(), None);
 
     let func_not =
         ir.functions().find(|f| f.rs_name() == "not_getter").expect("should find not_getter()");

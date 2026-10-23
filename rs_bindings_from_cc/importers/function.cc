@@ -332,8 +332,10 @@ struct PropertyFieldInfo {
   clang::QualType qual_type;
 };
 
-std::optional<PropertyFieldInfo> GetPropertyFieldInfo(ImportContext& ictx,
-                                                      const clang::Expr* expr) {
+std::optional<PropertyFieldInfo> GetPropertyFieldInfo(
+    ImportContext& ictx, const clang::CXXRecordDecl* receiver_record,
+    const clang::Expr* expr, const clang::ParmVarDecl* self_param = nullptr) {
+  // Matches: `<a>.<b>` or `<a>-><b>` (or implicit `<b>` for `this-><b>`).
   auto* member_expr = clang::dyn_cast_or_null<clang::MemberExpr>(expr);
   if (!member_expr) {
     return std::nullopt;
@@ -341,11 +343,22 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(ImportContext& ictx,
 
   if (!member_expr->isImplicitAccess()) {
     const clang::Expr* base = member_expr->getBase()->IgnoreParenImpCasts();
-    if (!clang::isa<clang::CXXThisExpr>(base)) {
+    if (self_param != nullptr) {
+      // Matches free-function receiver access: `<self_param>.<b>`.
+      const auto* decl_ref = clang::dyn_cast<clang::DeclRefExpr>(base);
+      if (!decl_ref || decl_ref->getDecl() != self_param) {
+        return std::nullopt;
+      }
+    } else if (!clang::isa<clang::CXXThisExpr>(base)) {
+      // Matches explicit `this` access in a member function: `this-><b>`.
       return std::nullopt;
     }
+  } else if (self_param != nullptr) {
+    // Free functions cannot have implicit `this-><b>` member access.
+    return std::nullopt;
   }
 
+  // Matches direct non-bitfield data member access: `<a>.<field>`.
   auto* field_decl =
       clang::dyn_cast_or_null<clang::FieldDecl>(member_expr->getMemberDecl());
   if (!field_decl || field_decl->isBitField()) {
@@ -355,6 +368,12 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(ImportContext& ictx,
   auto* record_decl = field_decl->getParent();
   if (!record_decl || record_decl->isDependentContext() ||
       !record_decl->isCompleteDefinition()) {
+    return std::nullopt;
+  }
+  // The offset below is relative to the record that declares the field, so it
+  // is only meaningful if that is also the receiver's record (not a base).
+  if (receiver_record == nullptr ||
+      record_decl->getCanonicalDecl() != receiver_record->getCanonicalDecl()) {
     return std::nullopt;
   }
   CcType type = ictx.ConvertQualType(field_decl->getType(),
@@ -377,13 +396,29 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(ImportContext& ictx,
 std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
     ImportContext& ictx, const clang::FunctionDecl* function_decl) {
   auto* method_decl = clang::dyn_cast<clang::CXXMethodDecl>(function_decl);
-  if (!method_decl || !method_decl->isInstance()) {
+  bool is_instance_method = method_decl && method_decl->isInstance();
+  // Matches single-parameter free functions taking a record reference:
+  // `<T> f(const <R>& s)` or `<T> f(<R>& s)`.
+  bool is_free_getter_candidate =
+      !is_instance_method && function_decl->getNumParams() == 1 &&
+      !function_decl->getReturnType()->isVoidType() &&
+      function_decl->getParamDecl(0)->getType()->isReferenceType() &&
+      function_decl->getParamDecl(0)
+          ->getType()
+          .getNonReferenceType()
+          ->isRecordType();
+  if (!is_instance_method && !is_free_getter_candidate) {
     return std::nullopt;
   }
 
+  // Matches zero-arg member getter `<T> get() const` or free getter `<T>
+  // get(const <R>& s)`.
   bool is_getter_candidate =
-      method_decl->param_empty() && !method_decl->getReturnType()->isVoidType();
-  bool is_setter_candidate = !method_decl->isConst() &&
+      is_free_getter_candidate ||
+      (is_instance_method && method_decl->param_empty() &&
+       !method_decl->getReturnType()->isVoidType());
+  // Matches single-arg non-const void member setter: `void set(<T> v)`.
+  bool is_setter_candidate = is_instance_method && !method_decl->isConst() &&
                              method_decl->getNumParams() == 1 &&
                              method_decl->getReturnType()->isVoidType();
   if (!is_getter_candidate && !is_setter_candidate) {
@@ -391,16 +426,25 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
   }
 
   const clang::FunctionDecl* def = nullptr;
-  if (!method_decl->hasBody(def)) {
+  if (!function_decl->hasBody(def)) {
     return std::nullopt;
   }
   auto* method_def = clang::dyn_cast_or_null<clang::CXXMethodDecl>(def);
-  if (!method_def || !method_def->isInstance()) {
+  if (is_instance_method && (!method_def || !method_def->isInstance())) {
     return std::nullopt;
   }
 
   // Extra checks against the definition.
-  if (is_getter_candidate) {
+  if (is_free_getter_candidate) {
+    if (def->getNumParams() != 1 || def->getReturnType()->isVoidType() ||
+        !def->getParamDecl(0)->getType()->isReferenceType() ||
+        !def->getParamDecl(0)
+             ->getType()
+             .getNonReferenceType()
+             ->isRecordType()) {
+      return std::nullopt;
+    }
+  } else if (is_getter_candidate) {
     if (!method_def->param_empty() ||
         method_def->getReturnType()->isVoidType()) {
       return std::nullopt;
@@ -412,17 +456,19 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
     }
   }
 
-  if (!FunctionBodyIsDefinedInHeader(method_def)) {
+  if (!FunctionBodyIsDefinedInHeader(def)) {
     return std::nullopt;
   }
 
-  const clang::Stmt* body = method_def->getBody();
+  // Matches a single-statement function body: `{ <stmt>; }`.
+  const clang::Stmt* body = def->getBody();
   auto* compound_stmt = clang::dyn_cast_or_null<clang::CompoundStmt>(body);
   if (!compound_stmt || compound_stmt->size() != 1) {
     return std::nullopt;
   }
 
   if (is_getter_candidate) {
+    // Matches: `return <ret_expr>;`.
     auto* return_stmt =
         clang::dyn_cast<clang::ReturnStmt>(compound_stmt->body_back());
     if (!return_stmt || !return_stmt->getRetValue()) {
@@ -431,14 +477,29 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
 
     const clang::Expr* ret_expr =
         return_stmt->getRetValue()->IgnoreParenImpCasts();
+    // Unwraps trivial copy/move construction when returning a class/struct
+    // field by value: `return <T>(<a>.<b>);` -> `<a>.<b>`.
+    if (const auto* ctor = clang::dyn_cast<clang::CXXConstructExpr>(ret_expr);
+        ctor != nullptr && ctor->getNumArgs() == 1 &&
+        ctor->getConstructor()->isCopyOrMoveConstructor() &&
+        ctor->getConstructor()->isTrivial()) {
+      ret_expr = ctor->getArg(0)->IgnoreParenImpCasts();
+    }
+    // Matches: `return <a>.<b>;` or `return this-><b>;` or `return <b>;`.
+    const clang::ParmVarDecl* self_param =
+        is_free_getter_candidate ? def->getParamDecl(0) : nullptr;
+    const clang::CXXRecordDecl* receiver_record =
+        self_param != nullptr
+            ? self_param->getType().getNonReferenceType()->getAsCXXRecordDecl()
+            : method_def->getParent();
     std::optional<PropertyFieldInfo> field_info =
-        GetPropertyFieldInfo(ictx, ret_expr);
+        GetPropertyFieldInfo(ictx, receiver_record, ret_expr, self_param);
     if (!field_info) {
       return std::nullopt;
     }
     // TODO(b/482092715): relax this restriction and allow conversions where
     // possible.
-    if (method_def->getReturnType().getCanonicalType() !=
+    if (def->getReturnType().getCanonicalType() !=
         field_info->qual_type.getCanonicalType()) {
       return std::nullopt;
     }
@@ -463,12 +524,14 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
     const clang::Expr* lhs = nullptr;
     const clang::Expr* rhs = nullptr;
     if (auto* bin_op = clang::dyn_cast<clang::BinaryOperator>(expr)) {
+      // Matches built-in assignment: `<lhs> = <rhs>;`.
       if (bin_op->getOpcode() == clang::BO_Assign) {
         lhs = bin_op->getLHS()->IgnoreParenImpCasts();
         rhs = bin_op->getRHS()->IgnoreParenImpCasts();
       }
     } else if (auto* op_call =
                    clang::dyn_cast<clang::CXXOperatorCallExpr>(expr)) {
+      // Matches overloaded assignment operator: `<lhs>.operator=(<rhs>);`.
       if (op_call->getOperator() == clang::OO_Equal &&
           op_call->getNumArgs() == 2) {
         lhs = op_call->getArg(0)->IgnoreParenImpCasts();
@@ -479,6 +542,7 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
       return std::nullopt;
     }
 
+    // Matches `<rhs>` referencing the setter's parameter: `<lhs> = <param>;`.
     auto* decl_ref = clang::dyn_cast<clang::DeclRefExpr>(rhs);
     if (!decl_ref) {
       return std::nullopt;
@@ -488,8 +552,10 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
       return std::nullopt;
     }
 
+    // Matches `<lhs>` accessing a field on `this`: `this-><b> = <param>;` or
+    // `<b> = <param>;`.
     std::optional<PropertyFieldInfo> field_info =
-        GetPropertyFieldInfo(ictx, lhs);
+        GetPropertyFieldInfo(ictx, method_def->getParent(), lhs);
     if (!field_info) {
       return std::nullopt;
     }

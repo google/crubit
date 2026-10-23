@@ -70,17 +70,11 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for S {
 pub mod s {
     #[inline(always)]
     pub(crate) fn x<'__this>(__this: &'__this crate::S) -> ::ffi_11::c_int {
-        unsafe {
-            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
-                as ::ffi_11::c_int
-        }
+        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int) }
     }
     #[inline(always)]
     pub(crate) fn get_x<'__this>(__this: &'__this mut crate::S) -> ::ffi_11::c_int {
-        unsafe {
-            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
-                as ::ffi_11::c_int
-        }
+        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int) }
     }
     #[inline(always)]
     pub(crate) fn set_x<'__this>(__this: &'__this mut crate::S, x: ::ffi_11::c_int) {
@@ -156,14 +150,11 @@ unsafe impl oops::Inherits<crate::S> for crate::T {
 pub mod t {
     #[inline(always)]
     pub(crate) fn y<'__this>(__this: &'__this crate::T) -> f32 {
-        unsafe { (*((&*__this as *const _ as *const u8).add(4) as *const f32)) as f32 }
+        unsafe { *((&*__this as *const _ as *const u8).add(4) as *const f32) }
     }
     #[inline(always)]
     pub(crate) fn get_x<'__this>(__this: &'__this mut crate::S) -> ::ffi_11::c_int {
-        unsafe {
-            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
-                as ::ffi_11::c_int
-        }
+        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int) }
     }
     #[inline(always)]
     pub(crate) fn set_x<'__this>(__this: &'__this mut crate::S, x: ::ffi_11::c_int) {
@@ -173,10 +164,7 @@ pub mod t {
     }
     #[inline(always)]
     pub(crate) fn x<'__this>(__this: &'__this crate::S) -> ::ffi_11::c_int {
-        unsafe {
-            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
-                as ::ffi_11::c_int
-        }
+        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int) }
     }
 }
 
@@ -245,24 +233,15 @@ impl Default for Chars {
 pub mod chars {
     #[inline(always)]
     pub(crate) fn c<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_char {
-        unsafe {
-            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_char))
-                as ::ffi_11::c_char
-        }
+        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_char) }
     }
     #[inline(always)]
     pub(crate) fn sc<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_schar {
-        unsafe {
-            (*((&*__this as *const _ as *const u8).add(1) as *const ::ffi_11::c_schar))
-                as ::ffi_11::c_schar
-        }
+        unsafe { *((&*__this as *const _ as *const u8).add(1) as *const ::ffi_11::c_schar) }
     }
     #[inline(always)]
     pub(crate) fn uc<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_uchar {
-        unsafe {
-            (*((&*__this as *const _ as *const u8).add(2) as *const ::ffi_11::c_uchar))
-                as ::ffi_11::c_uchar
-        }
+        unsafe { *((&*__this as *const _ as *const u8).add(2) as *const ::ffi_11::c_uchar) }
     }
     #[inline(always)]
     pub(crate) fn set_c<'__this>(__this: &'__this mut crate::Chars, c: ::ffi_11::c_char) {
@@ -330,11 +309,76 @@ impl Default for Bools {
 pub mod bools {
     #[inline(always)]
     pub(crate) fn b<'__this>(__this: &'__this mut crate::Bools) -> bool {
-        unsafe { (*((&*__this as *const _ as *const u8).add(0) as *const bool)) as bool }
+        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const bool) }
     }
     #[inline(always)]
     pub(crate) fn set_b<'__this>(__this: &'__this mut crate::Bools, b: bool) {
         unsafe { *((__this as *mut _ as *mut u8).add(0) as *mut bool) = (b as bool) }
+    }
+}
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "29StructWithRecordAndFreeGetter"]
+#[repr(C, align(4))]
+///CRUBIT_ANNOTATE: cpp_type=StructWithRecordAndFreeGetter
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct StructWithRecordAndFreeGetter {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) s_: [::core::mem::MaybeUninit<u8>; 4],
+}
+impl !Send for StructWithRecordAndFreeGetter {}
+impl !Sync for StructWithRecordAndFreeGetter {}
+unsafe impl ::cxx::ExternType for StructWithRecordAndFreeGetter {
+    type Id = ::cxx::type_id!("StructWithRecordAndFreeGetter");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithRecordAndFreeGetter"),
+    crate::StructWithRecordAndFreeGetter
+);
+impl StructWithRecordAndFreeGetter {
+    #[inline(always)]
+    pub fn s<'__this>(&'__this self) -> crate::S {
+        unsafe { self::struct_with_record_and_free_getter::s(self) }
+    }
+}
+
+impl From<::ffi_11::c_int> for StructWithRecordAndFreeGetter {
+    #[inline(always)]
+    fn from(args: ::ffi_11::c_int) -> Self {
+        let mut x = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN29StructWithRecordAndFreeGetterC1Ei(
+                &raw mut tmp as *mut _,
+                x,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithRecordAndFreeGetter {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
+        <Self as From<::ffi_11::c_int>>::from(args)
+    }
+}
+
+#[inline(always)]
+pub fn free_get_s<'__param_0>(
+    __param_0: &'__param_0 crate::StructWithRecordAndFreeGetter,
+) -> crate::S {
+    unsafe { *((&*__param_0 as *const _ as *const u8).add(0) as *const crate::S) }
+}
+
+pub mod struct_with_record_and_free_getter {
+    #[inline(always)]
+    pub(crate) fn s<'__this>(__this: &'__this crate::StructWithRecordAndFreeGetter) -> crate::S {
+        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const crate::S) }
     }
 }
 
@@ -353,6 +397,10 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN5CharsC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN5BoolsC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN29StructWithRecordAndFreeGetterC1Ei(
+            __this: *mut ::core::ffi::c_void,
+            x: ::ffi_11::c_int,
+        );
     }
 }
 
@@ -379,4 +427,9 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::Bools: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Bools: Drop);
     assert!(::core::mem::offset_of!(crate::Bools, b_) == 0);
+    assert!(::core::mem::size_of::<crate::StructWithRecordAndFreeGetter>() == 4);
+    assert!(::core::mem::align_of::<crate::StructWithRecordAndFreeGetter>() == 4);
+    static_assertions::assert_impl_all!(crate::StructWithRecordAndFreeGetter: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::StructWithRecordAndFreeGetter: Drop);
+    assert!(::core::mem::offset_of!(crate::StructWithRecordAndFreeGetter, s_) == 0);
 };

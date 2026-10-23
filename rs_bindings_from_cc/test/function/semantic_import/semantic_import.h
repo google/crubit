@@ -49,4 +49,17 @@ class Bools {
   bool b_ = true;
 };
 
+class StructWithRecordAndFreeGetter {
+ public:
+  explicit StructWithRecordAndFreeGetter(int x) : s_(x) {}
+  S s() const { return s_; }
+
+  friend S free_get_s(const StructWithRecordAndFreeGetter& self) {
+    return self.s_;
+  }
+
+ private:
+  S s_;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_SEMANTIC_IMPORT_SEMANTIC_IMPORT_H_

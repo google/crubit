@@ -46,4 +46,12 @@ extern "C" void __rust_thunk___ZN5BoolsC1Ev(class Bools* __this) {
   crubit::construct_at(__this);
 }
 
+static_assert(CRUBIT_SIZEOF(class StructWithRecordAndFreeGetter) == 4);
+static_assert(alignof(class StructWithRecordAndFreeGetter) == 4);
+
+extern "C" void __rust_thunk___ZN29StructWithRecordAndFreeGetterC1Ei(
+    class StructWithRecordAndFreeGetter* __this, int x) {
+  crubit::construct_at(__this, x);
+}
+
 #pragma clang diagnostic pop
