@@ -13,7 +13,7 @@ load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
 
 # buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:rustc.bzl", "AliasableDepInfo")
-
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load(
     "//cc_bindings_from_rs/bazel_support:providers.bzl",
     "CcBindingsFromRustInfo",
@@ -42,13 +42,84 @@ load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 _NO_MODULES_FLAGS = ["-fno-modules", "-fno-cxx-modules"]
 
 def _has_fno_modules(ctx, attr):
-    """Returns whether the `_rust_api_impl.cc` compile is passed a flag that turns modules off.
+    """Returns whether the bindings actions are passed a flag that turns modules off.
 
-    The flags checked are the ones that `compile_cc` passes: the global `--copt`/`--cxxopt`s and
-    the target's `copts`. (`--per_file_copt` is not visible to Starlark.)
+    The flags checked are the ones that both `generate_bindings` and `compile_cc` pass: the global
+    `--copt`/`--cxxopt`s and the target's `copts`. (`--per_file_copt` is not visible to Starlark.)
     """
     flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.cxxopts + getattr(attr, "copts", [])
     return any([flag in flags for flag in _NO_MODULES_FLAGS])
+
+def _may_use_header_modules(ctx, attr, compilation_context, compile_textually):
+    """Returns whether bindings generation may use header modules.
+
+    Header modules are only actually used if the target also uses header modules (that is, its
+    feature configuration enables `use_header_modules`).
+
+    Args:
+      ctx: The rule context.
+      attr: The current rule's attributes.
+      compilation_context: The compilation context of the headers to generate bindings for.
+      compile_textually: The `compile_textually` argument of `generate_and_compile_bindings`.
+
+    Returns:
+      Whether bindings generation may use header modules.
+    """
+    if not ctx.attr._use_header_modules[BuildSettingInfo].value:
+        return False
+
+    # `rs_bindings_from_cc` gets the same `copts` as the `_rust_api_impl.cc` compile, so the same
+    # reasons to compile it textually apply. (`extra_cpp_srcs` doesn't matter here, because
+    # `layering_check` is off for bindings generation, see `_configure_features_for_bindings`.)
+    if compile_textually or _has_fno_modules(ctx, attr):
+        return False
+
+    # The header modules of `@abseil-cpp//absl/status` are built without `CRUBIT_OLD_STATUS`, so
+    # they map `absl::Status` and `absl::StatusOr` to the new Rust types even if the target defines
+    # `CRUBIT_OLD_STATUS`. Parse the headers from source instead, so that the define takes effect.
+    # TODO(b/573160048): Remove this once no target defines `CRUBIT_OLD_STATUS`.
+    for d in getattr(attr, "local_defines", []):
+        if d == "CRUBIT_OLD_STATUS" or d.startswith("CRUBIT_OLD_STATUS="):
+            return False
+    return getattr(compilation_context, "_module_map", None) != None
+
+def _configure_features_for_bindings(ctx, cc_toolchain, use_header_modules):
+    """Returns the feature configuration for bindings generation.
+
+    Args:
+      ctx: The rule context.
+      cc_toolchain: The C++ toolchain.
+      use_header_modules: Whether to use the precompiled `.pic.pcm` header modules of the
+        dependencies.
+
+    Returns:
+      The feature configuration.
+    """
+    if use_header_modules:
+        # Use the precompiled `.pic.pcm` header modules of the dependencies, instead of parsing
+        # tens of thousands of transitive headers from source.
+        # - `"header_modules"` is unsupported because `rs_bindings_from_cc` shouldn't produce a
+        #   `.pcm`.
+        # - `"layering_check"` is omitted from `requested_features` (rather than added to
+        #   `unsupported_features`, which would trigger `validate_layering_check_features`)
+        #   because bindings generation may include transitive headers via `header_includes` and
+        #   `extra_cpp_srcs`.
+        requested_features = [f for f in ctx.features if f != "layering_check"]
+        unsupported_features = ctx.disabled_features + ["header_modules"]
+    else:
+        requested_features = ctx.features
+        unsupported_features = ctx.disabled_features + ["module_maps"]
+    return cc_common.configure_features(
+        ctx = ctx,
+        cc_toolchain = cc_toolchain,
+        requested_features = requested_features + ["compiler_param_file"],
+        unsupported_features = unsupported_features + [
+            # `rs_bindings_from_cc` parses its param file using GCC-style quoting
+            # (see `ExpandParamfiles` in `rs_bindings_from_cc/cmdline.cc`), so
+            # Windows-style quoting would corrupt arguments containing spaces.
+            "windows_quoting_for_param_files",
+        ],
+    )
 
 def generate_and_compile_bindings(
         ctx,
@@ -146,18 +217,22 @@ def generate_and_compile_bindings(
 
     cc_toolchain = find_cpp_toolchain(ctx)
 
-    feature_configuration_for_bindings = cc_common.configure_features(
-        ctx = ctx,
-        cc_toolchain = cc_toolchain,
-        requested_features = ctx.features + ["compiler_param_file"],
-        unsupported_features = ctx.disabled_features + [
-            "module_maps",
-            # `rs_bindings_from_cc` parses its param file using GCC-style quoting
-            # (see `ExpandParamfiles` in `rs_bindings_from_cc/cmdline.cc`), so
-            # Windows-style quoting would corrupt arguments containing spaces.
-            "windows_quoting_for_param_files",
-        ],
+    use_header_modules = _may_use_header_modules(ctx, attr, compilation_context, compile_textually)
+    feature_configuration_for_bindings = _configure_features_for_bindings(
+        ctx,
+        cc_toolchain,
+        use_header_modules,
     )
+    if use_header_modules and not feature_configuration_for_bindings.is_enabled("use_header_modules"):
+        # The target doesn't use header modules, for example because it is built with
+        # `features = ["-use_header_modules"]` (as the Kythe extractor does), or because the
+        # toolchain doesn't support them. Handle it exactly as if header modules were disabled.
+        use_header_modules = False
+        feature_configuration_for_bindings = _configure_features_for_bindings(
+            ctx,
+            cc_toolchain,
+            use_header_modules,
+        )
 
     cc_output, rs_output, namespaces_output, error_report_output = generate_bindings(
         ctx = ctx,
@@ -173,6 +248,7 @@ def generate_and_compile_bindings(
         extra_cpp_srcs = extra_cpp_srcs,
         unstable_rust_features = unstable_rust_features,
         extra_rs_bindings_from_cc_cli_flags = extra_rs_bindings_from_cc_cli_flags,
+        use_header_modules = use_header_modules,
     )
 
     # Relocate the rs files so that they can be read by rustc using relative paths.
@@ -389,6 +465,9 @@ bindings_attrs = {
     ),
     "_lazy_import_alien_decls": attr.label(
         default = "@rules_crubit//rs_bindings_from_cc/bazel_support:lazy_import_alien_decls",
+    ),
+    "_use_header_modules": attr.label(
+        default = "@rules_crubit//rs_bindings_from_cc/bazel_support:use_header_modules",
     ),
     "_is_golden_test": attr.label(
         default = "//common/bazel_support:is_golden_test",
