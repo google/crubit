@@ -283,26 +283,28 @@ refactor the crate into idiomatic Rust:
     generated target compiles and passes existing unit tests.
 2.  **Rewrite Functions in Rust**: Replace `inline_cpp!` blocks one function at
     a time with pure Rust implementations.
-
-    For example, converting embedded C++:
-
-    ```live-snippet
-    cs/file:examples/cpp/carcinize/point_rs.rs function:GetX
-    ```
-
-    Into pure, idiomatic Rust:
-
-    ```live-snippet
-    cs/file:examples/cpp/carcinize/point_refactored.rs function:GetX
-    ```
-
 3.  **Idiomatic Rust Types and Traits**: Replace FFI types (such as
     `::ffi_11::c_int`) with standard Rust types (such as `i32`), and derive
     standard traits (`Debug`, `PartialEq`, `Default`).
-
 4.  **Remove C++ Dependencies**: Once all embedded C++ is replaced with pure
     Rust, remove the `global_cpp!` blocks and `deps_of_cc_library` from your
     `BUILD` file.
+
+For example, when rewriting functions in step 2, convert embedded C++:
+
+```
+{{ #include ../../examples/cpp/carcinize/point_rs.rs }}
+```
+<!--  function:GetX -->
+
+
+Into pure, idiomatic Rust:
+
+```
+{{ #include ../../examples/cpp/carcinize/point_refactored.rs }}
+```
+<!--  function:GetX -->
+
 
 ## Common errors {#errors}
 

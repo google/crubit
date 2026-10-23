@@ -185,19 +185,23 @@ You can pass Rust references to C++ as `const T&` or raw pointers:
 Crubit does not automatically generate Rust bindings for uninstantiated C++
 templates. With embedded C++, you can:
 
-1.  **Instantiate library templates**: Call templated functions or classes from
+*   **Instantiate library templates**: Call templated functions or classes from
     included C++ headers inside `inline_cpp!`:
 
-    ```live-snippet
-    cs/file:examples/cpp/inline_cpp/clamp.rs function:clamp_value
-    ```
+```
+{{ #include ../../examples/cpp/inline_cpp/clamp.rs }}
+```
+<!--  function:clamp_value -->
 
-2.  **Define helper templates in `global_cpp!`**: Define C++ template helpers at
+
+*   **Define helper templates in `global_cpp!`**: Define C++ template helpers at
     module scope, then instantiate them with concrete types in `inline_cpp!`:
 
-    ```live-snippet
-    cs/file:examples/cpp/inline_cpp/math_helper.rs function:multiply_ints
-    ```
+```
+{{ #include ../../examples/cpp/inline_cpp/math_helper.rs }}
+```
+<!--  function:multiply_ints -->
+
 
 ## Common Errors {#errors}
 
