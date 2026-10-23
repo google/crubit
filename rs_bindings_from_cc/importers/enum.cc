@@ -208,8 +208,8 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
   proto_enum->set_mangled_cc_name(ictx_.GetMangledName(*enum_decl));
   proto_enum->set_id(ictx_.GenerateItemId(*enum_decl).value());
   proto_enum->set_owning_target(std::move(owning_target).value());
-  proto_enum->set_source_loc(
-      ictx_.ConvertSourceLocation(enum_decl->getBeginLoc(), &name_info));
+  *proto_enum->mutable_decl_loc() =
+      ictx_.ConvertDeclLocation(enum_decl->getBeginLoc(), &name_info);
   type->WriteToProto(*proto_enum->mutable_underlying_type());
   if (enum_decl->isCompleteDefinition()) {
     for (auto& enumerator : enumerators) {

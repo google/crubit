@@ -416,8 +416,9 @@ class ImportContext {
   virtual std::optional<std::string> GetComment(
       const clang::Decl& decl) const = 0;
 
-  // Converts a Clang source location to IR. `name_info` may be null.
-  virtual std::string ConvertSourceLocation(
+  // Converts a Clang source location to a structured `DeclLocation`.
+  // `name_info` may be null.
+  virtual ir_proto::DeclLocation ConvertDeclLocation(
       clang::SourceLocation loc,
       clang::DeclarationNameInfo* absl_nullable name_info) const = 0;
 

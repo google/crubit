@@ -526,7 +526,7 @@ impl<'db> BindingsGenerator<'db> {
                 return intern!(
                     self.interner(),
                     "<[internal] comment at {}>",
-                    c.source_loc().unwrap_or("<unknown loc>")
+                    ir::DeclLocationOrUnknown(c.decl_loc())
                 );
             }
             ir::Item::UseMod(u) => {
@@ -639,7 +639,7 @@ impl<'db> BindingsGenerator<'db> {
             item.unique_name(),
             item.unsupported_kind(),
             item.id(),
-            item.source_loc(),
+            item.decl_loc(),
             self.defining_target(item.id()),
             must_bind,
             path,
@@ -657,7 +657,7 @@ impl<'db> BindingsGenerator<'db> {
         self.new_unsupported_item(
             item,
             path,
-            Some(Rc::new(ir::FormattedError { fmt: Rc::clone(&message), message })),
+            Some(Rc::new(ir::FormattedError { fmt: Rc::clone(&message), message, cause: None })),
             item.must_bind(),
         )
     }
@@ -672,7 +672,11 @@ impl<'db> BindingsGenerator<'db> {
         self.new_unsupported_item(
             item,
             path,
-            Some(Rc::new(ir::FormattedError { fmt: Rc::clone(&message), message })),
+            Some(Rc::new(ir::FormattedError {
+                fmt: Rc::clone(&message),
+                message,
+                cause: Some(cause),
+            })),
             item.must_bind(),
         )
     }
@@ -685,6 +689,10 @@ impl<'db> BindingsGenerator<'db> {
             id: item.id().as_u64(),
             unique_name: item.unique_name().map(Rc::from),
             defining_target: self.defining_target(item.id()).map(|label| label.as_str().into()),
+            source_loc: item
+                .decl_loc()
+                .and_then(|decl_loc| decl_loc.spelling())
+                .map(|spelling| Rc::from(spelling.to_string())),
         }
     }
 
