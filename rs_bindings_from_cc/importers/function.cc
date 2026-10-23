@@ -1239,6 +1239,8 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   func->set_safety_annotation(safety_annotation);
   func->set_source_loc(
       ictx_.ConvertSourceLocation(function_decl->getBeginLoc(), &name_info));
+  *func->mutable_decl_loc() =
+      ictx_.ConvertDeclLocation(function_decl->getBeginLoc(), &name_info);
   func->set_id(ictx_.GenerateItemId(*function_decl).value());
   if (enclosing_item_id->has_value()) {
     func->set_enclosing_item_id((*enclosing_item_id)->value());

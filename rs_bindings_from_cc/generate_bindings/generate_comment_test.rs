@@ -121,6 +121,7 @@ fn make_factory() -> TestDbFactory<'static> {
         UnsupportedItemKind::Other,
         TEST_ITEM_ID,
         Some("Generated from: some/header;l=1"),
+        /* decl_loc= */ None,
         None,
         false,
         /* path= */ None,

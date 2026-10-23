@@ -114,6 +114,10 @@ fn test_function() {
                 is_member_or_descendant_of_class_template: false,
                 safety_annotation: Unannotated,
                 source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3",
+                decl_loc: Some(DeclLocation {
+                    spelling: Some(SourceLocation { path: "ir_from_cc_virtual_header.h", line: 3, }),
+                    ...
+                }),
                 id: ItemId(...),
                 enclosing_item_id: None,
                 adl_enclosing_record: None,
@@ -6022,6 +6026,105 @@ fn test_source_location_class_template_specialization() {
           ...
           }
         ...
+        }
+    );
+}
+
+/// Returns the `source_loc()` of each item that has one, with how its `decl_loc()` is displayed.
+fn source_locs_and_displayed_decl_locs(ir: &IR<'_>) -> Vec<(String, Option<String>)> {
+    ir.items()
+        .filter_map(|item| {
+            let decl_loc = item.decl_loc().map(|decl_loc| decl_loc.to_string());
+            Some((item.source_loc()?.to_string(), decl_loc))
+        })
+        .collect()
+}
+
+#[gtest]
+fn test_decl_location_displays_as_source_loc() -> Result<()> {
+    let headers = [
+        r#"
+        void Func();
+        struct Record { int field; };
+        enum Enum { kEnumerator };
+        using Alias = int;
+        int global_var = 1;
+        constexpr int kConstant = 1;
+        template <typename T> void Template() {}
+        "#,
+        r#"
+#define DECLARE_FUNC(name) void name();
+DECLARE_FUNC(FuncFromMacro)
+#define DECLARE_STRUCT(name) struct name {};
+DECLARE_STRUCT(StructFromMacro)
+#define DECLARE_TEMPLATE(name) template <typename T> void name() {}
+DECLARE_TEMPLATE(TemplateFromMacro)
+        "#,
+        "DEPENDENCY_MACRO(AliasFromDependencyMacro);",
+    ];
+    let dependency_header = "#define DEPENDENCY_MACRO(name) using name = int;";
+    for kythe_annotations in [false, true] {
+        for header in headers {
+            let proto = ir_testing::ir_proto_from_cc_dependency(
+                test_platform(),
+                header,
+                dependency_header,
+                None,
+                kythe_annotations,
+                /* carcinize= */ false,
+            )?;
+            let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
+            let locs = source_locs_and_displayed_decl_locs(&ir);
+            expect_that!(locs, not(is_empty()), "for {header}");
+            for (source_loc, decl_loc) in &locs {
+                expect_that!(decl_loc.as_deref(), some(eq(source_loc.as_str())), "for {header}");
+            }
+        }
+    }
+    Ok(())
+}
+
+#[gtest]
+fn test_decl_location() {
+    let proto = ir_proto_from_cc("struct SomeStructToTestDeclLocation {};").unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    // `ir_proto_from_cc` prepends two lines to the header, so the snippet starts on line 3.
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                ...
+                decl_loc: Some(DeclLocation {
+                    spelling: Some(SourceLocation { path: "ir_from_cc_virtual_header.h", line: 3, }),
+                    expansion: None,
+                    name_range: None,
+                }),
+                ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_decl_location_with_macro_defined_in_another_file() {
+    let dependency_header = r#"
+#define MyIntTypeAliasToTestDeclLocation(type_alias_name) using type_alias_name = int;"#;
+    let header = "MyIntTypeAliasToTestDeclLocation(my_int);";
+    let proto = ir_proto_from_cc_dependency(header, dependency_header).unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, None).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            TypeAlias {
+                ...
+                decl_loc: Some(DeclLocation {
+                    spelling: Some(SourceLocation { path: "test/dependency_header.h", line: 2, }),
+                    expansion: Some(SourceLocation { path: "ir_from_cc_virtual_header.h", line: 3, }),
+                    name_range: None,
+                }),
+                ...
+            }
         }
     );
 }
