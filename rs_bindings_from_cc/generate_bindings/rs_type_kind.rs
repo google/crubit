@@ -349,5 +349,9 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
             );
             Err(e.into())
         }
+        CcTypeVariant::ConstantArray(_) => Err(error_report::anyhow!(
+            "Unsupported ConstantArray type: {} (b/575922365)",
+            db.cc_type_debug_name(&ty)
+        )),
     }
 }

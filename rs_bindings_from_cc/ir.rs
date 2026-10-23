@@ -639,6 +639,51 @@ impl PointerType {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct ConstantArrayType {
+    pub(crate) num_elements: usize,
+    pub(crate) element_type: Rc<CcType>,
+}
+
+impl<'pb> ProtoToIr for ::ir_rust_proto::cc_type::ConstantArrayTypeView<'pb> {
+    type IrType = ConstantArrayType;
+
+    fn validate(self) -> Result<()> {
+        ensure!(
+            self.num_elements() > 0,
+            "ConstantArrayType has non-positive num_elements: {}",
+            self.num_elements()
+        );
+        let _ = usize::try_from(self.num_elements())?;
+        let _ = CcType::try_from(self.element_type())?;
+        Ok(())
+    }
+
+    fn to_ir(self) -> ConstantArrayType {
+        let num_elements = usize::try_from(self.num_elements()).expect(
+            "`num_elements` should have been validated by `ConstantArrayTypeView::validate`",
+        );
+        let element_type = Rc::new(CcType::try_from(self.element_type()).expect(
+            "`element_type` should have been validated by `ConstantArrayTypeView::validate`",
+        ));
+        ConstantArrayType { num_elements, element_type }
+    }
+}
+
+impl ConstantArrayType {
+    pub fn new(num_elements: usize, element_type: Rc<CcType>) -> Self {
+        Self { num_elements, element_type }
+    }
+
+    pub fn num_elements(&self) -> usize {
+        self.num_elements
+    }
+
+    pub fn element_type(&self) -> &CcType {
+        &self.element_type
+    }
+}
+
 ///// Generates an enum type that implements `ToTokens`, which quotes the contents of the braces.
 macro_rules! define_typed_tokens_enum {
     {$(#[$ty_attr:meta])* $vis:vis enum $Type:ident {$($(#[$variant_attr:meta])* $Variant:ident = {$($cpp_spelling:tt)+},)+}} => {
@@ -842,6 +887,7 @@ pub enum CcTypeVariant {
         /// The type arguments to the type. These override any type arguments attached to the item.
         template_args: Option<Rc<[CcType]>>,
     },
+    ConstantArray(ConstantArrayType),
     /// This type could not be translated to Rust.
     ///
     /// It's preferable to forward on a failed type conversion,
@@ -5157,5 +5203,27 @@ mod tests {
             let record = proto.as_view().to_ir();
             assert_eq!(record.is_string_view(), expected, "target={defining_target}");
         }
+    }
+
+    #[gtest]
+    fn test_constant_array_type_validate_num_elements() {
+        for invalid_len in [0, -1] {
+            let proto = protobuf::proto!(::ir_rust_proto::cc_type::ConstantArrayType {
+                num_elements: invalid_len,
+                element_type: __ { primitive: __ { spelling: "int" } },
+            });
+            let err = ConstantArrayType::try_from(proto.as_view()).unwrap_err();
+            assert!(
+                err.to_string().contains("ConstantArrayType has non-positive num_elements"),
+                "unexpected error for num_elements={invalid_len}: {err}"
+            );
+        }
+
+        let valid_proto = protobuf::proto!(::ir_rust_proto::cc_type::ConstantArrayType {
+            num_elements: 4,
+            element_type: __ { primitive: __ { spelling: "int" } },
+        });
+        let arr = ConstantArrayType::try_from(valid_proto.as_view()).unwrap();
+        assert_eq!(arr.num_elements(), 4);
     }
 }

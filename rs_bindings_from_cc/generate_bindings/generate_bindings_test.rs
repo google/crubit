@@ -2455,6 +2455,29 @@ fn test_existing_rust_type_label_hint_mismatch_fails() -> Result<()> {
 }
 
 #[gtest]
+fn test_cc_type_debug_name_for_c_arrays() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+        struct DebugTypes {
+            int matrix[2][4];
+            const int const_row[3];
+            int (*ptr_to_arr)[4];
+            const int (&ref_to_matrix)[2][4];
+        };
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let rec = db.ir().records().find(|r| r.cc_name() == "DebugTypes").unwrap();
+    assert_eq!(db.cc_type_debug_name(rec.fields()[0].type_()), "int[2][4]");
+    assert_eq!(db.cc_type_debug_name(rec.fields()[1].type_()), "const int[3]");
+    assert_eq!(db.cc_type_debug_name(rec.fields()[2].type_()), "int (*)[4]");
+    assert_eq!(db.cc_type_debug_name(rec.fields()[3].type_()), "const int (&)[2][4]");
+    Ok(())
+}
+
+#[gtest]
 fn test_existing_rust_type_single_ident_matching_target_name_does_not_infer_hint() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"

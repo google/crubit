@@ -113,6 +113,12 @@ message CcType {
     repeated CcType param_and_return_types = 3;
     repeated string lifetime_inputs = 4;
   }
+  // A C-style array with a constant number of elements.
+  message ConstantArrayType {
+    CcType element_type = 1;
+    // The length of the array. Always positive.
+    int64 num_elements = 2;
+  }
 
   oneof variant {
     Primitive primitive = 1;
@@ -120,6 +126,7 @@ message CcType {
     FuncPointer func_pointer = 3;
     uint64 decl = 4;
     FormattedError error = 5;
+    ConstantArrayType constant_array = 11;
   }
 
   bool is_const = 6;

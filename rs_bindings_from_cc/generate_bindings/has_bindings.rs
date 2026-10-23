@@ -44,6 +44,9 @@ fn cc_type_has_bindings<'a>(
         CcTypeVariant::Pointer(ptr) => {
             cc_type_has_bindings(db, ptr.pointee_type(), alias_id)?;
         }
+        CcTypeVariant::ConstantArray(arr) => {
+            cc_type_has_bindings(db, arr.element_type(), alias_id)?;
+        }
         CcTypeVariant::FuncPointer { param_and_return_types, .. } => {
             for t in param_and_return_types.iter() {
                 cc_type_has_bindings(db, t, alias_id)?;
@@ -311,7 +314,15 @@ fn func_has_bindings<'a>(
     let sig_types =
         func.params().iter().map(|p| p.type_()).chain(std::iter::once(func.return_type()));
     for sig_type in sig_types {
-        let rs_type_kind = db.rs_type_kind(sig_type.clone()).unwrap();
+        let rs_type_kind = match db.rs_type_kind(sig_type.clone()) {
+            Ok(ty) => ty,
+            Err(source) => {
+                return Err(NoBindingsReason::DependencyFailed {
+                    type_name: db.debug_name(func.id()),
+                    source,
+                });
+            }
+        };
         match type_visibility(db, &func, rs_type_kind) {
             Ok(vis) => {
                 visibility = visibility.or(vis);

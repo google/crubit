@@ -197,6 +197,11 @@ struct CcType {
     std::string spelling;
   };
 
+  struct ConstantArrayType {
+    int64_t num_elements;
+    std::shared_ptr<CcType> element_type;
+  };
+
   static CcType PointerTo(CcType pointee_type,
                           std::optional<LifetimeId> lifetime, bool nullable);
 
@@ -214,8 +219,8 @@ struct CcType {
     return primitive != nullptr && primitive->spelling == "void";
   }
 
-  using Variant =
-      std::variant<Primitive, PointerType, FuncPointer, ItemId, FormattedError>;
+  using Variant = std::variant<Primitive, PointerType, FuncPointer,
+                               ConstantArrayType, ItemId, FormattedError>;
 
   explicit CcType(Variant variant) : variant(std::move(variant)) {}
 

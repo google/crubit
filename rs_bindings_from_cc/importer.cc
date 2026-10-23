@@ -165,6 +165,17 @@ bool IsBuiltinFunction(const clang::Decl* decl) {
   return function->getBuiltinID() != 0;
 }
 
+// Returns true if `type` is a supported element type for fixed-size C arrays
+// (currently non-void primitives and enums, including nested arrays).
+bool IsSupportedArrayElementType(const clang::ASTContext& ctx,
+                                 clang::QualType type) {
+  while (const auto* inner_array = ctx.getAsArrayType(type)) {
+    type = inner_array->getElementType();
+  }
+  return (type->isBuiltinType() && !type->isVoidType()) ||
+         type->isEnumeralType();
+}
+
 bool IsTypeValueOrRefToConst(clang::QualType candidate,
                              clang::CanQualType target) {
   return candidate->getCanonicalTypeUnqualified() == target ||
@@ -3066,6 +3077,12 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     return ConvertTypeDecl(using_type->getDecl());
   } else if (const auto* tst_type =
                  type.getAs<clang::TemplateSpecializationType>()) {
+    // Desugar alias templates to arrays (e.g., `template <class T, int N> using
+    // Arr = T[N]`).
+    if (tst_type->isTypeAlias() && type.isArrayType()) {
+      return ConvertQualType(tst_type->getAliasedType(), lifetimes,
+                             /*nullable=*/true, assume_lifetimes);
+    }
     return ConvertTemplateSpecializationType(*tst_type, assume_lifetimes);
   } else if (const auto* subst_type =
                  type.getAs<clang::SubstTemplateTypeParmType>()) {
@@ -3080,6 +3097,31 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
   } else if (const auto* decltype_type = type.getAs<clang::DecltypeType>()) {
     return ConvertQualType(decltype_type->getUnderlyingType(), lifetimes,
                            /*nullable=*/true, assume_lifetimes);
+  } else if (const auto* array_type =
+                 ctx_.getAsConstantArrayType(clang::QualType(&type, 0))) {
+    std::optional<int64_t> num_elements = array_type->getSize().trySExtValue();
+    if (!num_elements.has_value()) {
+      // C-style arrays could technically be size_t, but practically shouldn't
+      // be that big.
+      return absl::UnimplementedError("Array size exceeds int64_t");
+    }
+    if (*num_elements == 0) {
+      // Don't support the GNU extension for zero-length arrays (which may
+      // actually be flexible arrays / not a constant size).
+      return absl::UnimplementedError("Zero-length C arrays are not supported");
+    }
+    if (!IsSupportedArrayElementType(ctx_, array_type->getElementType())) {
+      return absl::UnimplementedError(
+          "C-style arrays of non-primitive, non-enum types are not yet "
+          "supported (b/575922365)");
+    }
+    CcType element_type =
+        ConvertQualType(array_type->getElementType(), /*lifetimes=*/nullptr,
+                        /*nullable=*/true, assume_lifetimes);
+    return CcType(CcType::ConstantArrayType{
+        .num_elements = *num_elements,
+        .element_type = std::make_shared<CcType>(std::move(element_type)),
+    });
   }
 
   return absl::UnimplementedError(absl::StrCat(

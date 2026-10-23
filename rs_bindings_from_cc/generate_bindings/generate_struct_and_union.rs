@@ -100,6 +100,8 @@ fn is_debug_formattable(db: &BindingsGenerator, ty: &ir::CcType) -> bool {
             Ok(ir::Item::ExistingRustType(existing_type)) => existing_type.impl_debug(),
             _ => false,
         },
+        // TODO(b/575922365): Support debug formatting for constant-sized C-style arrays.
+        ir::CcTypeVariant::ConstantArray(_) => false,
         ir::CcTypeVariant::Error(_) => false,
     }
 }

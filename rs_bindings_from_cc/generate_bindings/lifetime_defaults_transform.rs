@@ -38,6 +38,7 @@ fn lifetime_arity(db: &BindingsGenerator, ty: &CcType) -> Result<usize> {
             bail!("TODO(b/454627672): function pointer returns are unsupported")
         }
         CcTypeVariant::Decl { id, .. } => decl_lifetime_arity(db, *id),
+        CcTypeVariant::ConstantArray(arr) => lifetime_arity(db, arr.element_type()),
         CcTypeVariant::Error(msg) => bail!("encountered error type: {:?}", msg),
     }
 }
@@ -83,6 +84,7 @@ fn mentions_lifetime(ty: &CcType, name: &str) -> bool {
     }
     match ty.variant() {
         CcTypeVariant::Pointer(pty) => mentions_lifetime(pty.pointee_type(), name),
+        CcTypeVariant::ConstantArray(arr) => mentions_lifetime(arr.element_type(), name),
         CcTypeVariant::Decl { template_args: Some(args), .. } => {
             args.iter().any(|arg| mentions_lifetime(arg, name))
         }
