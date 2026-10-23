@@ -39,6 +39,7 @@ traits as follows:
 C++ API       | Rust bindings
 ------------- | --------------
 `operator==`  | `PartialEq`
+`operator<=>` | `PartialOrd`
 `operator<`   | `PartialOrd`
 `operator>`   | `PartialOrd`
 `operator<=`  | `PartialOrd`
@@ -75,19 +76,19 @@ C++ API     | Rust bindings
 ### `PartialOrd`
 
 Rust only permits a single `PartialOrd` impl for a given pair of operand types,
-so Crubit picks one of the relational operators (`<`, `>`, `<=`, `>=`) to back
-the impl, in that order of preference, and synthesizes `partial_cmp` from it
-together with `operator==`. The remaining relational operators are not bound
-directly; they are served by the default `PartialOrd` methods, which are derived
-from `partial_cmp`.
+so Crubit picks one of the comparison operators (`<=>`, `<`, `>`, `<=`, `>=`) to
+back the impl, in that order of preference. The remaining comparison operators
+are not bound directly; they are served by the default `PartialOrd` methods,
+which are derived from `partial_cmp`.
+
+`operator<=>` (the "spaceship" operator) implements `partial_cmp` directly. It
+must return `std::strong_ordering`, `std::weak_ordering`, or
+`std::partial_ordering` (`std::partial_ordering::unordered` maps to `None`). For
+the other operators, Crubit synthesizes `partial_cmp` from the operator together
+with `operator==`.
 
 A `PartialOrd` impl is only generated if `operator==` is also available for the
 same operand types, and if the left- and right-hand operands have the same type.
-
-The three-way comparison operator (`operator<=>`) is not yet supported. Types
-that only declare `operator<=>` do not receive a `PartialOrd` impl: Crubit only
-binds explicitly declared relational operators, not the rewritten candidates
-that C++20 synthesizes from `<=>`.
 
 ### Operators inherited from base classes
 
