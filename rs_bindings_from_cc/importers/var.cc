@@ -19,6 +19,7 @@
 #include "absl/types/span.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/ast_util.h"
+#include "rs_bindings_from_cc/clang_compat_macros.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/APValue.h"
@@ -36,6 +37,9 @@
 #include "clang/Sema/DeclSpec.h"
 #include "clang/Sema/Ownership.h"
 #include "clang/Sema/Sema.h"
+#if LLVM_DEV_DATE_GE(20261022)
+#include "clang/Sema/SemaProxy.h"
+#endif
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 
@@ -276,8 +280,15 @@ absl::StatusOr<std::string> EvaluateStringViewContents(
 
   std::string contents;
   clang::Expr::EvalResult eval_result;
+#if LLVM_DEV_DATE_GE(20261022)
+  clang::sema::EvalProxy sema_proxy(sema);
+  if (!string_view_ref->EvaluateCharRangeAsString(contents, size_call,
+                                                  data_call, ast_context,
+                                                  sema_proxy, eval_result)) {
+#else
   if (!string_view_ref->EvaluateCharRangeAsString(
           contents, size_call, data_call, ast_context, eval_result)) {
+#endif
     return absl::InvalidArgumentError(
         "string_view constant does not refer to constant characters");
   }
