@@ -14,6 +14,7 @@ use database::function_types::{
 use database::rs_snippet::{
     format_generic_params, format_generic_params_replacing_by_self, should_derive_clone,
     unique_lifetimes, Lifetime, LifetimeOptions, Mutability, PassingConvention, RsTypeKind,
+    RustPtrKind,
 };
 use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail, ErrorList};
@@ -1482,6 +1483,29 @@ fn can_use_thunkless_getter(field_type: &RsTypeKind, return_type: &RsTypeKind) -
         && !field_type.is_owned_ptr()
 }
 
+/// Returns whether a setter assigning a value of type `param_type` to a field of type
+/// `field_type` can be emitted directly in Rust as a pointer write at the field offset without a
+/// C++ thunk.
+///
+/// The write is a bitwise copy, so it can only replace a C++ assignment which is itself a bitwise
+/// copy: only primitives and plain C++ pointers qualify. (Assigning to a C++ reference member
+/// assigns through the reference, whereas writing the field would rebind it; and the new value of
+/// an owned pointer is passed as an owning wrapper type rather than as a raw pointer.) As for
+/// getters, the two types must be the same up to type aliases: an `as` cast does not implement
+/// C++'s conversions (e.g. C++ `char` is mapped to `u8`, which `as` zero-extends where C++
+/// sign-extends).
+fn can_use_thunkless_setter(field_type: &RsTypeKind, param_type: &RsTypeKind) -> bool {
+    field_type.unalias() == param_type.unalias()
+        && matches!(
+            field_type.unalias(),
+            RsTypeKind::Primitive(_)
+                | RsTypeKind::Pointer {
+                    kind: RustPtrKind::CcPtr(PointerTypeKind::Nullable | PointerTypeKind::NonNull),
+                    ..
+                }
+        )
+}
+
 fn thunkless_accessor<'a>(
     db: &BindingsGenerator<'a>,
     func: &Func<'a>,
@@ -1508,11 +1532,10 @@ fn thunkless_accessor<'a>(
             })
         }
         MemberFuncSemantic::Setter(setter) => {
-            let (Ok(field_type @ RsTypeKind::Primitive(_)), Some(RsTypeKind::Primitive(_))) =
-                (db.rs_type_kind(setter.type_.clone()), param_types.get(1))
-            else {
+            let field_type = db.rs_type_kind(setter.type_.clone()).ok()?;
+            if !can_use_thunkless_setter(&field_type, param_types.get(1)?) {
                 return None;
-            };
+            }
             Some(ThunklessAccessor {
                 kind: ThunklessAccessorKind::Setter,
                 field_type,
@@ -1556,11 +1579,21 @@ fn generate_func_body<'a>(
 
     if let Some(ThunklessAccessor { kind, field_type, offset }) = thunkless_accessor {
         let self_arg = &thunk_args[0];
-        let offset_bytes = syn::Index::from(offset / 8);
+        // The field is addressed by its offset rather than by name: the Rust struct may represent
+        // it as an opaque blob of bytes, or it may belong to a base class.
+        let offset_bytes = offset / 8;
+        let byte_add = if offset_bytes == 0 {
+            quote! {}
+        } else {
+            let offset_bytes = syn::Index::from(offset_bytes);
+            quote! { .byte_add(#offset_bytes) }
+        };
         let body = match kind {
             ThunklessAccessorKind::Getter => {
+                // `&raw const`, rather than `&*`, so as not to materialize a reference to the
+                // whole record: `#self_arg` may be a raw pointer.
                 quote! {
-                    *((&*#self_arg as *const _ as *const u8).add(#offset_bytes) as *const #return_type_or_self)
+                    (&raw const *#self_arg) #byte_add .cast::<#return_type_or_self>().read()
                 }
             }
             ThunklessAccessorKind::Setter => {
@@ -1572,13 +1605,14 @@ fn generate_func_body<'a>(
                     }) => !referent.is_unpin(),
                     _ => false,
                 };
-                let self_ptr = if is_pinned_mut_ref {
-                    quote! { (::core::pin::Pin::into_inner_unchecked(#self_arg) as *mut _ as *mut u8) }
+                let self_ref = if is_pinned_mut_ref {
+                    quote! { ::core::pin::Pin::into_inner_unchecked(#self_arg) }
                 } else {
-                    quote! { (#self_arg as *mut _ as *mut u8) }
+                    quote! { #self_arg }
                 };
+                // `write`, rather than an assignment, which would first drop the old value.
                 quote! {
-                    *((#self_ptr).add(#offset_bytes) as *mut #field_type_tokens) = (#val_arg as #field_type_tokens)
+                    (&raw mut *#self_ref) #byte_add .cast::<#field_type_tokens>().write(#val_arg)
                 }
             }
         };

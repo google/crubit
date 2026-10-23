@@ -46,6 +46,84 @@ extern "C" void __rust_thunk___ZN5BoolsC1Ev(class Bools* __this) {
   crubit::construct_at(__this);
 }
 
+static_assert(CRUBIT_SIZEOF(class Pointers) == 16);
+static_assert(alignof(class Pointers) == 8);
+
+extern "C" void __rust_thunk___ZN8PointersC1Ev(class Pointers* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(class NonTrivial) == 16);
+static_assert(alignof(class NonTrivial) == 8);
+
+extern "C" void __rust_thunk___ZN10NonTrivialC1ERKS_(
+    class NonTrivial* __this, class NonTrivial const* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+
+extern "C" class NonTrivial* __rust_thunk___ZN10NonTrivialaSERKS_(
+    class NonTrivial* __this, class NonTrivial const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+static_assert((class NonTrivial & (::NonTrivial::*)(class NonTrivial const&)) &
+              ::NonTrivial::operator=);
+
+extern "C" void __rust_thunk___ZN10NonTrivialC1Ev(class NonTrivial* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN10NonTrivialD1Ev(class NonTrivial* __this) {
+  std::destroy_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(class Padding) == 8);
+static_assert(alignof(class Padding) == 8);
+static_assert(CRUBIT_OFFSET_OF(pad_, class Padding) == 0);
+
+extern "C" void __rust_thunk___ZN7PaddingC1Ev(class Padding* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(class PointerBase) == 8);
+static_assert(alignof(class PointerBase) == 8);
+
+extern "C" void __rust_thunk___ZN11PointerBaseC1Ev(class PointerBase* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(class DerivedPointers) == 16);
+static_assert(alignof(class DerivedPointers) == 8);
+
+extern "C" void __rust_thunk___ZN15DerivedPointersC1Ev(
+    class DerivedPointers* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" int const* __rust_thunk___ZNK15DerivedPointers1pEv(
+    class DerivedPointers const* __this) {
+  return __this->p();
+}
+
+static_assert((int const* (::DerivedPointers::*)() const) &
+              ::DerivedPointers::p);
+
+extern "C" void __rust_thunk___ZN15DerivedPointers5set_pEPKi(
+    class DerivedPointers* __this, int const* p) {
+  __this->set_p(p);
+}
+
+static_assert((void (::DerivedPointers::*)(int const*)) &
+              ::DerivedPointers::set_p);
+
+static_assert(CRUBIT_SIZEOF(class MorePointers) == 16);
+static_assert(alignof(class MorePointers) == 8);
+
+extern "C" void __rust_thunk___ZN12MorePointersC1Ev(
+    class MorePointers* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(CRUBIT_SIZEOF(class StructWithRecordAndFreeGetter) == 4);
 static_assert(alignof(class StructWithRecordAndFreeGetter) == 4);
 

@@ -386,6 +386,29 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(
   int64_t offset =
       static_cast<int64_t>(layout.getFieldOffset(field_decl->getFieldIndex()));
 
+  // A consumer of `MemberFuncSemantic` may read or write the field with a typed
+  // access, which requires the field to be aligned for its type in every object
+  // of this record type. That is the case only if both the offset of the field
+  // and the alignment of the record are multiples of the alignment of the
+  // field's type. Records with a packed layout (`__attribute__((packed))`, or a
+  // `#pragma pack(N)` which lowers the alignment of a field) can break either
+  // condition: a field at offset 0 is still misaligned whenever the packed
+  // record that contains it is.
+  //
+  // The alignment of the field's type is taken from its canonical type, because
+  // that is the type the field is accessed as in Rust: a typedef with an
+  // `aligned` attribute can lower the alignment of a C++ type, but not of the
+  // Rust type that the typedef is mapped to.
+  clang::ASTContext& ast_context = record_decl->getASTContext();
+  int64_t type_align_in_bits = static_cast<int64_t>(
+      ast_context.getTypeAlign(field_decl->getType().getCanonicalType()));
+  int64_t record_align_in_bits =
+      static_cast<int64_t>(ast_context.toBits(layout.getAlignment()));
+  if (type_align_in_bits <= 0 || offset % type_align_in_bits != 0 ||
+      record_align_in_bits % type_align_in_bits != 0) {
+    return std::nullopt;
+  }
+
   return PropertyFieldInfo{
       .type = std::move(type),
       .offset = offset,
@@ -408,6 +431,15 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
           .getNonReferenceType()
           ->isRecordType();
   if (!is_instance_method && !is_free_getter_candidate) {
+    return std::nullopt;
+  }
+
+  // A virtual accessor must be called through the vtable: the final overrider
+  // may not read this field, or any field, at all. Describing it as a getter or
+  // setter would let a consumer replace the call with a direct field access and
+  // silently devirtualize it. (Compare `can_skip_cc_thunk`, which keeps a C++
+  // thunk for virtual methods for the same reason.)
+  if (method_decl != nullptr && method_decl->isVirtual()) {
     return std::nullopt;
   }
 

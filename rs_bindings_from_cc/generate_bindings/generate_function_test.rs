@@ -2970,19 +2970,19 @@ fn test_thunkless_accessors_enabled() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
+            (&raw const *__this).cast::<::ffi_11::c_int>().read()
         }
     );
     assert_rs_matches!(
         rs_api,
         quote! {
-            *((&*__this as *const _ as *const u8).add(4) as *const crate::Inner)
+            (&raw const *__this).byte_add(4).cast::<crate::Inner>().read()
         }
     );
     assert_rs_matches!(
         rs_api,
         quote! {
-            *((&*s as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
+            (&raw const *s).cast::<::ffi_11::c_int>().read()
         }
     );
     // Match on the thunk bodies rather than on the thunk names, because the
@@ -3017,12 +3017,7 @@ fn test_thunkless_accessors_owned_pointer() -> Result<()> {
     )?;
     let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
-    assert_rs_not_matches!(
-        rs_api,
-        quote! {
-            *((&*__this as *const _ as *const u8).add(0) as *const ...)
-        }
-    );
+    assert_rs_not_matches!(rs_api, quote! { (&raw const *__this) });
     assert_cc_matches!(
         rs_api_impl,
         quote! { extern "C" struct Target* ...(class S const* __this) { return __this->p(); } }
@@ -3047,7 +3042,7 @@ fn test_thunkless_accessors_non_const_getter() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
+            (&raw const *__this).cast::<::ffi_11::c_int>().read()
         }
     );
     // Match on the thunk body rather than on the thunk name, because the
@@ -3075,7 +3070,7 @@ fn test_thunkless_accessors_disabled() -> Result<()> {
     assert_rs_not_matches!(
         rs_api,
         quote! {
-            *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
+            (&raw const *__this).cast::<::ffi_11::c_int>().read()
         }
     );
     // Match on the thunk bodies rather than on the thunk names, because the
@@ -3088,6 +3083,424 @@ fn test_thunkless_accessors_disabled() -> Result<()> {
         rs_api_impl,
         quote! { extern "C" void ...(class S* __this, int x) { __this->set_x(x); } }
     );
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_pointer_types() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          int* p() const { return p_; }
+          void set_p(int* p) { p_ = p; }
+         private:
+          int* p_;
+        };
+        class T {
+         public:
+          const S* s() const { return s_; }
+          void set_s(const S* s) { s_ = s; }
+         private:
+          const S* s_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // Note the absence of an `as` cast: the field type is required to be exactly the type used in
+    // the API, so the pointer is copied verbatim.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (&raw const *__this).cast::<*mut ::ffi_11::c_int>().read()
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (&raw mut *__this).cast::<*mut ::ffi_11::c_int>().write(p)
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (&raw const *__this).cast::<*const crate::S>().read()
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (&raw mut *__this).cast::<*const crate::S>().write(s)
+            }
+        }
+    );
+    // Match on the calls that the thunks would contain rather than on the thunk names, because
+    // the latter are derived from the target-specific mangled names.
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->p() });
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->set_p(p) });
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->s() });
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->set_s(s) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_non_unpin_type() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        class NonTrivial {
+         public:
+          ~NonTrivial() {}
+          NonTrivial* p() const { return p_; }
+          NonTrivial* mut_p() { return p_; }
+          void set_p(NonTrivial* p) { p_ = p; }
+         private:
+          NonTrivial* p_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub(crate) fn p<'a>(__this: &'a crate::NonTrivial) -> *mut crate::NonTrivial {
+                unsafe {
+                    (&raw const *__this).cast::<*mut crate::NonTrivial>().read()
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub(crate) fn mut_p<'a>(
+                __this: ::core::pin::Pin<&'a mut crate::NonTrivial>
+            ) -> *mut crate::NonTrivial {
+                unsafe {
+                    (&raw const *__this).cast::<*mut crate::NonTrivial>().read()
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub(crate) unsafe fn set_p<'a>(
+                __this: ::core::pin::Pin<&'a mut crate::NonTrivial>,
+                p: *mut crate::NonTrivial
+            ) {
+                unsafe {
+                    (&raw mut *::core::pin::Pin::into_inner_unchecked(__this))
+                        .cast::<*mut crate::NonTrivial>()
+                        .write(p)
+                }
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->p() });
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->mut_p() });
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->set_p(p) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_in_trait_impl() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          void operator=(int* p) { p_ = p; }
+         private:
+          int* p_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // A setter can be spelled `operator=`, which is generated into a trait impl rather than an
+    // inherent impl. That path reaches `generate_func_body` with a different `impl_kind` and a
+    // different `self` argument, so check that the field write is still relative to `self`.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::ctor::UnpinAssign<*mut ::ffi_11::c_int> for S {
+                #[inline(always)]
+                fn unpin_assign(&mut self, p: *mut ::ffi_11::c_int) {
+                    unsafe {
+                        (&raw mut *self).cast::<*mut ::ffi_11::c_int>().write(p)
+                    }
+                }
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->operator=(p) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_void_pointer() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          void* p() const { return p_; }
+          void set_p(void* p) { p_ = p; }
+         private:
+          void* p_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (&raw const *__this).cast::<*mut ::ffi_11::c_void>().read()
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (&raw mut *__this).cast::<*mut ::ffi_11::c_void>().write(p)
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->p() });
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->set_p(p) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_incomplete_pointee() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class Incomplete;
+        class S {
+         public:
+          Incomplete* p() const { return p_; }
+          void set_p(Incomplete* p) { p_ = p; }
+         private:
+          Incomplete* p_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // The pointee is an incomplete type, which is still a thin pointer, so it can be copied out
+    // of the field like any other pointer.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (&raw const *__this).cast::<*mut crate::Incomplete>().read()
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (&raw mut *__this).cast::<*mut crate::Incomplete>().write(p)
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->p() });
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->set_p(p) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_function_pointer() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          void (*fp() const)() { return fp_; }
+          void set_fp(void (*fp)()) { fp_ = fp; }
+         private:
+          void (*fp_)();
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // A function pointer is `Copy`, so the getter reads the field directly.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (&raw const *__this).cast::<Option<extern "C" fn()>>().read()
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->fp() });
+    // Only primitives and plain pointers get a thunkless setter.
+    assert_rs_not_matches!(rs_api, quote! { (&raw mut *__this) });
+    assert_cc_matches!(rs_api_impl, quote! { __this->set_fp(fp) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_reference_field() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          int& r() const { return r_; }
+          void set_r(int& r) { r_ = r; }
+         private:
+          int& r_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // Without lifetimes, a C++ reference is mapped to a raw pointer. The storage of a reference
+    // member holds the address of its referent, which is what the getter returns, so the getter
+    // reads the field directly.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (&raw const *__this).cast::<*mut ::ffi_11::c_int>().read()
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->r() });
+    // But assigning to a reference member assigns through the reference, whereas writing the
+    // field would rebind it, so the setter keeps using a thunk.
+    assert_rs_not_matches!(rs_api, quote! { (&raw mut *__this) });
+    assert_cc_matches!(rs_api_impl, quote! { __this->set_r(*r) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_inherited_field() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class A { public: long pad_; };
+        class B { public: int* p_; };
+        class D : public A, public B {
+         public:
+          int* p() const { return p_; }
+          void set_p(int* p) { p_ = p; }
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // The offset of `p_` is relative to the `B` subobject, which is at offset 8 within `D`, so
+    // it cannot be applied to a `D`. These accessors must keep using a thunk. (Note that the
+    // `assert_cc_matches!`es below also guard against the accessors not being bound at all,
+    // which would make this test vacuous.)
+    assert_rs_not_matches!(rs_api, quote! { (&raw const *__this) });
+    assert_rs_not_matches!(rs_api, quote! { (&raw mut *__this) });
+    assert_cc_matches!(rs_api_impl, quote! { __this->p() });
+    assert_cc_matches!(rs_api_impl, quote! { __this->set_p(p) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_virtual() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class B {
+         public:
+          virtual ~B() {}
+          virtual int* p() const { return p_; }
+          virtual void set_p(int* p) { p_ = p; }
+         private:
+          int* p_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // Reading the field directly would call `B::p` even when the final overrider is
+    // `Derived::p`, so virtual accessors must keep using a thunk and go through the vtable.
+    assert_rs_not_matches!(rs_api, quote! { (&raw const *__this) });
+    assert_rs_not_matches!(rs_api, quote! { (&raw mut *__this) });
+    assert_cc_matches!(rs_api_impl, quote! { __this->p() });
+    assert_cc_matches!(rs_api_impl, quote! { __this->set_p(p) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_underaligned_field() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma pack(push, 1)
+        class P {
+         public:
+          int* p() const { return p_; }
+          void set_p(int* p) { p_ = p; }
+          char c() const { return c_; }
+         private:
+          char c_;
+          int* p_;
+        };
+        #pragma pack(pop)
+        class __attribute__((packed)) Q {
+         public:
+          int* q() const { return q_; }
+          void set_q(int* q) { q_ = q; }
+         private:
+          int* q_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // Under `#pragma pack(1)`, `p_` is at byte offset 1, so a typed read or write of a
+    // `*mut c_int` there would be misaligned, which is UB in Rust even where the hardware
+    // tolerates it. These accessors must keep using a thunk.
+    assert_cc_matches!(rs_api_impl, quote! { __this->p() });
+    assert_cc_matches!(rs_api_impl, quote! { __this->set_p(p) });
+    // `q_` is at offset 0, but a packed `Q` is only 1-byte aligned, so `q_` is misaligned whenever
+    // `Q` is. These accessors must keep using a thunk too.
+    assert_cc_matches!(rs_api_impl, quote! { __this->q() });
+    assert_cc_matches!(rs_api_impl, quote! { __this->set_q(q) });
+    // `char` is always aligned, so it still gets a direct read: this also confirms that packed
+    // records are supported and that the assertions above are not vacuous.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (&raw const *__this).cast::<::ffi_11::c_char>().read()
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->c() });
+    assert_rs_not_matches!(rs_api, quote! { (&raw mut *__this) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_free_getter_receiver() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        class A { public: long pad_; };
+        class B { public: int x_; };
+        class D : public A, public B {};
+        struct R { int x_; };
+        inline int by_ref_x(const R& r) { return r.x_; }
+        inline int by_value_x(R r) { return r.x_; }
+        inline int inherited_x(const D& d) { return d.x_; }
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (&raw const *r).cast::<::ffi_11::c_int>().read()
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { by_ref_x });
+    // A by-value receiver is the caller's own copy of the argument, which is not a C++ object at
+    // all for a bridged type, and whose destructor must run for a non-trivially-destructible one.
+    assert_cc_matches!(rs_api_impl, quote! { by_value_x });
+    // `x_` is at offset 8 within `D`, but at offset 0 within `B`.
+    assert_cc_matches!(rs_api_impl, quote! { inherited_x });
     Ok(())
 }
 

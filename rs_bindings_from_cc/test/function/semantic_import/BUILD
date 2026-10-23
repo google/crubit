@@ -29,6 +29,8 @@ cc_library(
     hdrs = ["semantic_import.h"],
     aspect_hints = [
         "//features:supported",
+        # for `Incomplete*`, which is otherwise not bound at all.
+        "//features:forward_declare",
         "//features:thunkless_accessors",
     ],
 )
@@ -71,6 +73,30 @@ crubit_rust_test(
     deps = [
         ":semantic_import_rust",
         "//support:ctor",
+        "@crate_index//:googletest",
+    ],
+)
+
+cc_library(
+    name = "slices",
+    hdrs = ["slices.h"],
+    aspect_hints = [
+        "//features:supported",
+        "//features:thunkless_accessors",
+    ],
+    deps = ["//support/rs_std:slice_ref"],
+)
+
+rust_api_from_cpp(
+    name = "slices_rust",
+    cpp_target = ":slices",
+)
+
+crubit_rust_test(
+    name = "slices_test",
+    srcs = ["slices_test.rs"],
+    deps = [
+        ":slices_rust",
         "@crate_index//:googletest",
     ],
 )

@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/function/semantic_import:semantic_import_upcast
 
 #![rustfmt::skip]
-#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -70,17 +70,15 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for S {
 pub mod s {
     #[inline(always)]
     pub(crate) fn x<'__this>(__this: &'__this crate::S) -> ::ffi_11::c_int {
-        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int) }
+        unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
     }
     #[inline(always)]
     pub(crate) fn get_x<'__this>(__this: &'__this mut crate::S) -> ::ffi_11::c_int {
-        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int) }
+        unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
     }
     #[inline(always)]
     pub(crate) fn set_x<'__this>(__this: &'__this mut crate::S, x: ::ffi_11::c_int) {
-        unsafe {
-            *((__this as *mut _ as *mut u8).add(0) as *mut ::ffi_11::c_int) = (x as ::ffi_11::c_int)
-        }
+        unsafe { (&raw mut *__this).cast::<::ffi_11::c_int>().write(x) }
     }
 }
 
@@ -150,21 +148,19 @@ unsafe impl oops::Inherits<crate::S> for crate::T {
 pub mod t {
     #[inline(always)]
     pub(crate) fn y<'__this>(__this: &'__this crate::T) -> f32 {
-        unsafe { *((&*__this as *const _ as *const u8).add(4) as *const f32) }
+        unsafe { (&raw const *__this).byte_add(4).cast::<f32>().read() }
     }
     #[inline(always)]
     pub(crate) fn get_x<'__this>(__this: &'__this mut crate::S) -> ::ffi_11::c_int {
-        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int) }
+        unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
     }
     #[inline(always)]
     pub(crate) fn set_x<'__this>(__this: &'__this mut crate::S, x: ::ffi_11::c_int) {
-        unsafe {
-            *((__this as *mut _ as *mut u8).add(0) as *mut ::ffi_11::c_int) = (x as ::ffi_11::c_int)
-        }
+        unsafe { (&raw mut *__this).cast::<::ffi_11::c_int>().write(x) }
     }
     #[inline(always)]
     pub(crate) fn x<'__this>(__this: &'__this crate::S) -> ::ffi_11::c_int {
-        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int) }
+        unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
     }
 }
 
@@ -233,36 +229,27 @@ impl Default for Chars {
 pub mod chars {
     #[inline(always)]
     pub(crate) fn c<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_char {
-        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_char) }
+        unsafe { (&raw const *__this).cast::<::ffi_11::c_char>().read() }
     }
     #[inline(always)]
     pub(crate) fn sc<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_schar {
-        unsafe { *((&*__this as *const _ as *const u8).add(1) as *const ::ffi_11::c_schar) }
+        unsafe { (&raw const *__this).byte_add(1).cast::<::ffi_11::c_schar>().read() }
     }
     #[inline(always)]
     pub(crate) fn uc<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_uchar {
-        unsafe { *((&*__this as *const _ as *const u8).add(2) as *const ::ffi_11::c_uchar) }
+        unsafe { (&raw const *__this).byte_add(2).cast::<::ffi_11::c_uchar>().read() }
     }
     #[inline(always)]
     pub(crate) fn set_c<'__this>(__this: &'__this mut crate::Chars, c: ::ffi_11::c_char) {
-        unsafe {
-            *((__this as *mut _ as *mut u8).add(0) as *mut ::ffi_11::c_char) =
-                (c as ::ffi_11::c_char)
-        }
+        unsafe { (&raw mut *__this).cast::<::ffi_11::c_char>().write(c) }
     }
     #[inline(always)]
     pub(crate) fn set_sc<'__this>(__this: &'__this mut crate::Chars, sc: ::ffi_11::c_schar) {
-        unsafe {
-            *((__this as *mut _ as *mut u8).add(1) as *mut ::ffi_11::c_schar) =
-                (sc as ::ffi_11::c_schar)
-        }
+        unsafe { (&raw mut *__this).byte_add(1).cast::<::ffi_11::c_schar>().write(sc) }
     }
     #[inline(always)]
     pub(crate) fn set_uc<'__this>(__this: &'__this mut crate::Chars, uc: ::ffi_11::c_uchar) {
-        unsafe {
-            *((__this as *mut _ as *mut u8).add(2) as *mut ::ffi_11::c_uchar) =
-                (uc as ::ffi_11::c_uchar)
-        }
+        unsafe { (&raw mut *__this).byte_add(2).cast::<::ffi_11::c_uchar>().write(uc) }
     }
 }
 
@@ -309,11 +296,547 @@ impl Default for Bools {
 pub mod bools {
     #[inline(always)]
     pub(crate) fn b<'__this>(__this: &'__this mut crate::Bools) -> bool {
-        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const bool) }
+        unsafe { (&raw const *__this).cast::<bool>().read() }
     }
     #[inline(always)]
     pub(crate) fn set_b<'__this>(__this: &'__this mut crate::Bools, b: bool) {
-        unsafe { *((__this as *mut _ as *mut u8).add(0) as *mut bool) = (b as bool) }
+        unsafe { (&raw mut *__this).cast::<bool>().write(b) }
+    }
+}
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "8Pointers"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=Pointers
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct Pointers {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) p_: [::core::mem::MaybeUninit<u8>; 8],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) mut_p_: [::core::mem::MaybeUninit<u8>; 8],
+}
+impl !Send for Pointers {}
+impl !Sync for Pointers {}
+unsafe impl ::cxx::ExternType for Pointers {
+    type Id = ::cxx::type_id!("Pointers");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("Pointers"), crate::Pointers);
+impl Pointers {
+    #[inline(always)]
+    pub fn p<'__this>(&'__this self) -> *const ::ffi_11::c_int {
+        unsafe { self::pointers::p(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_p<'__this>(&'__this mut self, p: *const ::ffi_11::c_int) {
+        unsafe { self::pointers::set_p(self, p) }
+    }
+    #[inline(always)]
+    pub fn mut_p<'__this>(&'__this self) -> *mut ::ffi_11::c_int {
+        unsafe { self::pointers::mut_p(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `mut_p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_mut_p<'__this>(&'__this mut self, mut_p: *mut ::ffi_11::c_int) {
+        unsafe { self::pointers::set_mut_p(self, mut_p) }
+    }
+}
+
+impl Default for Pointers {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN8PointersC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+pub mod pointers {
+    #[inline(always)]
+    pub(crate) fn p<'__this>(__this: &'__this crate::Pointers) -> *const ::ffi_11::c_int {
+        unsafe { (&raw const *__this).cast::<*const ::ffi_11::c_int>().read() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_p<'__this>(
+        __this: &'__this mut crate::Pointers,
+        p: *const ::ffi_11::c_int,
+    ) {
+        unsafe { (&raw mut *__this).cast::<*const ::ffi_11::c_int>().write(p) }
+    }
+    #[inline(always)]
+    pub(crate) fn mut_p<'__this>(__this: &'__this crate::Pointers) -> *mut ::ffi_11::c_int {
+        unsafe { (&raw const *__this).byte_add(8).cast::<*mut ::ffi_11::c_int>().read() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `mut_p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_mut_p<'__this>(
+        __this: &'__this mut crate::Pointers,
+        mut_p: *mut ::ffi_11::c_int,
+    ) {
+        unsafe { (&raw mut *__this).byte_add(8).cast::<*mut ::ffi_11::c_int>().write(mut_p) }
+    }
+}
+
+#[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "10NonTrivial"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=NonTrivial
+pub struct NonTrivial {
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) p_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) mut_p_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+}
+impl !Send for NonTrivial {}
+impl !Sync for NonTrivial {}
+unsafe impl ::cxx::ExternType for NonTrivial {
+    type Id = ::cxx::type_id!("NonTrivial");
+    type Kind = ::cxx::kind::Opaque;
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("NonTrivial"), crate::NonTrivial);
+impl NonTrivial {
+    #[inline(always)]
+    pub fn p<'__this>(&'__this self) -> *const crate::NonTrivial {
+        unsafe { self::non_trivial::p(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_p<'__this>(self: ::core::pin::Pin<&'__this mut Self>, p: *const Self) {
+        unsafe { self::non_trivial::set_p(self, p) }
+    }
+    #[inline(always)]
+    pub fn mut_p<'__this>(self: ::core::pin::Pin<&'__this mut Self>) -> *mut crate::NonTrivial {
+        unsafe { self::non_trivial::mut_p(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `mut_p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_mut_p<'__this>(self: ::core::pin::Pin<&'__this mut Self>, mut_p: *mut Self) {
+        unsafe { self::non_trivial::set_mut_p(self, mut_p) }
+    }
+}
+
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NonTrivial {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
+                crate::detail::__rust_thunk___ZN10NonTrivialC1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NonTrivial {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
+
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for NonTrivial {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10NonTrivialaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl ::ctor::CtorNew<()> for NonTrivial {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
+                crate::detail::__rust_thunk___ZN10NonTrivialC1Ev(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                );
+            })
+        }
+    }
+}
+
+/// A user-provided destructor is what makes this type non-trivial (and so
+/// `!Unpin` in Rust).
+/// `= default` would defeat the purpose.
+impl ::ctor::PinnedDrop for NonTrivial {
+    #[inline(always)]
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN10NonTrivialD1Ev(self) }
+    }
+}
+
+pub mod non_trivial {
+    #[inline(always)]
+    pub(crate) fn p<'__this>(__this: &'__this crate::NonTrivial) -> *const crate::NonTrivial {
+        unsafe { (&raw const *__this).cast::<*const crate::NonTrivial>().read() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_p<'__this>(
+        __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
+        p: *const crate::NonTrivial,
+    ) {
+        unsafe {
+            (&raw mut *::core::pin::Pin::into_inner_unchecked(__this))
+                .cast::<*const crate::NonTrivial>()
+                .write(p)
+        }
+    }
+    #[inline(always)]
+    pub(crate) fn mut_p<'__this>(
+        __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
+    ) -> *mut crate::NonTrivial {
+        unsafe { (&raw const *__this).byte_add(8).cast::<*mut crate::NonTrivial>().read() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `mut_p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_mut_p<'__this>(
+        __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
+        mut_p: *mut crate::NonTrivial,
+    ) {
+        unsafe {
+            (&raw mut *::core::pin::Pin::into_inner_unchecked(__this))
+                .byte_add(8)
+                .cast::<*mut crate::NonTrivial>()
+                .write(mut_p)
+        }
+    }
+}
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "7Padding"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=Padding
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct Padding {
+    pub pad_: ::ffi_11::c_long,
+}
+impl !Send for Padding {}
+impl !Sync for Padding {}
+unsafe impl ::cxx::ExternType for Padding {
+    type Id = ::cxx::type_id!("Padding");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("Padding"), crate::Padding);
+
+impl Default for Padding {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN7PaddingC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "11PointerBase"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=PointerBase
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct PointerBase {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) base_p_: [::core::mem::MaybeUninit<u8>; 8],
+}
+impl !Send for PointerBase {}
+impl !Sync for PointerBase {}
+unsafe impl ::cxx::ExternType for PointerBase {
+    type Id = ::cxx::type_id!("PointerBase");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("PointerBase"), crate::PointerBase);
+impl PointerBase {
+    #[inline(always)]
+    pub fn base_p<'__this>(&'__this self) -> *const ::ffi_11::c_int {
+        unsafe { self::pointer_base::base_p(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `base_p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_base_p<'__this>(&'__this mut self, base_p: *const ::ffi_11::c_int) {
+        unsafe { self::pointer_base::set_base_p(self, base_p) }
+    }
+}
+
+impl Default for PointerBase {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN11PointerBaseC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+pub mod pointer_base {
+    #[inline(always)]
+    pub(crate) fn base_p<'__this>(__this: &'__this crate::PointerBase) -> *const ::ffi_11::c_int {
+        unsafe { (&raw const *__this).cast::<*const ::ffi_11::c_int>().read() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `base_p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_base_p<'__this>(
+        __this: &'__this mut crate::PointerBase,
+        base_p: *const ::ffi_11::c_int,
+    ) {
+        unsafe { (&raw mut *__this).cast::<*const ::ffi_11::c_int>().write(base_p) }
+    }
+}
+
+/// `PointerBase` is at a non-zero offset within `DerivedPointers`, so the
+/// accessors declared here must not reuse `PointerBase`'s offset for `base_p_`.
+/// They therefore keep using a thunk, unlike `PointerBase`'s own accessors.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "15DerivedPointers"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=DerivedPointers
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct DerivedPointers {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
+}
+impl !Send for DerivedPointers {}
+impl !Sync for DerivedPointers {}
+unsafe impl ::cxx::ExternType for DerivedPointers {
+    type Id = ::cxx::type_id!("DerivedPointers");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DerivedPointers"),
+    crate::DerivedPointers
+);
+impl DerivedPointers {
+    #[inline(always)]
+    pub fn p<'__this>(&'__this self) -> *const ::ffi_11::c_int {
+        unsafe { self::derived_pointers::p(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_p<'__this>(&'__this mut self, p: *const ::ffi_11::c_int) {
+        unsafe { self::derived_pointers::set_p(self, p) }
+    }
+    #[inline(always)]
+    pub fn base_p<'__this>(&'__this self) -> *const ::ffi_11::c_int {
+        unsafe { self::derived_pointers::base_p(unsafe { oops::Upcast::<_>::upcast(self) }) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `base_p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_base_p<'__this>(&'__this mut self, base_p: *const ::ffi_11::c_int) {
+        unsafe {
+            self::derived_pointers::set_base_p(
+                unsafe { &mut *oops::Upcast::<_>::upcast(self as *mut _) },
+                base_p,
+            )
+        }
+    }
+}
+
+impl Default for DerivedPointers {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN15DerivedPointersC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+unsafe impl oops::Inherits<crate::Padding> for crate::DerivedPointers {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Padding {
+        unsafe { (derived as *const _ as *const u8).offset(0) as *const crate::Padding }
+    }
+}
+
+unsafe impl oops::Inherits<crate::PointerBase> for crate::DerivedPointers {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::PointerBase {
+        unsafe { (derived as *const _ as *const u8).offset(8) as *const crate::PointerBase }
+    }
+}
+
+pub mod derived_pointers {
+    #[inline(always)]
+    pub(crate) fn p<'__this>(__this: &'__this crate::DerivedPointers) -> *const ::ffi_11::c_int {
+        unsafe { crate::detail::__rust_thunk___ZNK15DerivedPointers1pEv(__this) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_p<'__this>(
+        __this: &'__this mut crate::DerivedPointers,
+        p: *const ::ffi_11::c_int,
+    ) {
+        unsafe { crate::detail::__rust_thunk___ZN15DerivedPointers5set_pEPKi(__this, p) }
+    }
+    #[inline(always)]
+    pub(crate) fn base_p<'__this>(__this: &'__this crate::PointerBase) -> *const ::ffi_11::c_int {
+        unsafe { (&raw const *__this).cast::<*const ::ffi_11::c_int>().read() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `base_p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_base_p<'__this>(
+        __this: &'__this mut crate::PointerBase,
+        base_p: *const ::ffi_11::c_int,
+    ) {
+        unsafe { (&raw mut *__this).cast::<*const ::ffi_11::c_int>().write(base_p) }
+    }
+}
+
+forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Incomplete"));
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "12MorePointers"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=MorePointers
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct MorePointers {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) v_: [::core::mem::MaybeUninit<u8>; 8],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) i_: [::core::mem::MaybeUninit<u8>; 8],
+}
+impl !Send for MorePointers {}
+impl !Sync for MorePointers {}
+unsafe impl ::cxx::ExternType for MorePointers {
+    type Id = ::cxx::type_id!("MorePointers");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("MorePointers"), crate::MorePointers);
+impl MorePointers {
+    #[inline(always)]
+    pub fn v<'__this>(&'__this self) -> *mut ::ffi_11::c_void {
+        unsafe { self::more_pointers::v(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `v`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_v<'__this>(&'__this mut self, v: *mut ::ffi_11::c_void) {
+        unsafe { self::more_pointers::set_v(self, v) }
+    }
+    #[inline(always)]
+    pub fn i<'__this>(&'__this self) -> *mut crate::Incomplete {
+        unsafe { self::more_pointers::i(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `i`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_i<'__this>(&'__this mut self, i: *mut crate::Incomplete) {
+        unsafe { self::more_pointers::set_i(self, i) }
+    }
+}
+
+impl Default for MorePointers {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN12MorePointersC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+pub mod more_pointers {
+    #[inline(always)]
+    pub(crate) fn v<'__this>(__this: &'__this crate::MorePointers) -> *mut ::ffi_11::c_void {
+        unsafe { (&raw const *__this).cast::<*mut ::ffi_11::c_void>().read() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `v`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_v<'__this>(
+        __this: &'__this mut crate::MorePointers,
+        v: *mut ::ffi_11::c_void,
+    ) {
+        unsafe { (&raw mut *__this).cast::<*mut ::ffi_11::c_void>().write(v) }
+    }
+    #[inline(always)]
+    pub(crate) fn i<'__this>(__this: &'__this crate::MorePointers) -> *mut crate::Incomplete {
+        unsafe { (&raw const *__this).byte_add(8).cast::<*mut crate::Incomplete>().read() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `i`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_i<'__this>(
+        __this: &'__this mut crate::MorePointers,
+        i: *mut crate::Incomplete,
+    ) {
+        unsafe { (&raw mut *__this).byte_add(8).cast::<*mut crate::Incomplete>().write(i) }
     }
 }
 
@@ -372,13 +895,13 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithRecordAndFreeGetter {
 pub fn free_get_s<'__param_0>(
     __param_0: &'__param_0 crate::StructWithRecordAndFreeGetter,
 ) -> crate::S {
-    unsafe { *((&*__param_0 as *const _ as *const u8).add(0) as *const crate::S) }
+    unsafe { (&raw const *__param_0).cast::<crate::S>().read() }
 }
 
 pub mod struct_with_record_and_free_getter {
     #[inline(always)]
     pub(crate) fn s<'__this>(__this: &'__this crate::StructWithRecordAndFreeGetter) -> crate::S {
-        unsafe { *((&*__this as *const _ as *const u8).add(0) as *const crate::S) }
+        unsafe { (&raw const *__this).cast::<crate::S>().read() }
     }
 }
 
@@ -397,6 +920,32 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN5CharsC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN5BoolsC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN8PointersC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10NonTrivialC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::NonTrivial,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10NonTrivialaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
+            __param_0: &'__param_0 crate::NonTrivial,
+        ) -> ::core::pin::Pin<&'__this mut crate::NonTrivial>;
+        pub(crate) unsafe fn __rust_thunk___ZN10NonTrivialC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10NonTrivialD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN7PaddingC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN11PointerBaseC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN15DerivedPointersC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZNK15DerivedPointers1pEv<'__this>(
+            __this: &'__this crate::DerivedPointers,
+        ) -> *const ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN15DerivedPointers5set_pEPKi<'__this>(
+            __this: &'__this mut crate::DerivedPointers,
+            p: *const ::ffi_11::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN12MorePointersC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN29StructWithRecordAndFreeGetterC1Ei(
             __this: *mut ::core::ffi::c_void,
             x: ::ffi_11::c_int,
@@ -427,6 +976,39 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::Bools: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Bools: Drop);
     assert!(::core::mem::offset_of!(crate::Bools, b_) == 0);
+    assert!(::core::mem::size_of::<crate::Pointers>() == 16);
+    assert!(::core::mem::align_of::<crate::Pointers>() == 8);
+    static_assertions::assert_impl_all!(crate::Pointers: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::Pointers: Drop);
+    assert!(::core::mem::offset_of!(crate::Pointers, p_) == 0);
+    assert!(::core::mem::offset_of!(crate::Pointers, mut_p_) == 8);
+    assert!(::core::mem::size_of::<crate::NonTrivial>() == 16);
+    assert!(::core::mem::align_of::<crate::NonTrivial>() == 8);
+    static_assertions::assert_impl_all!(crate::NonTrivial: Drop);
+    static_assertions::assert_not_impl_any!(crate::NonTrivial: Copy);
+    assert!(::core::mem::offset_of!(crate::NonTrivial, p_) == 0);
+    assert!(::core::mem::offset_of!(crate::NonTrivial, mut_p_) == 8);
+    assert!(::core::mem::size_of::<crate::Padding>() == 8);
+    assert!(::core::mem::align_of::<crate::Padding>() == 8);
+    static_assertions::assert_impl_all!(crate::Padding: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::Padding: Drop);
+    assert!(::core::mem::offset_of!(crate::Padding, pad_) == 0);
+    assert!(::core::mem::size_of::<crate::PointerBase>() == 8);
+    assert!(::core::mem::align_of::<crate::PointerBase>() == 8);
+    static_assertions::assert_impl_all!(crate::PointerBase: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::PointerBase: Drop);
+    assert!(::core::mem::offset_of!(crate::PointerBase, base_p_) == 0);
+    assert!(::core::mem::size_of::<crate::DerivedPointers>() == 16);
+    assert!(::core::mem::align_of::<crate::DerivedPointers>() == 8);
+    static_assertions::assert_impl_all!(crate::DerivedPointers: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::DerivedPointers: Drop);
+
+    assert!(::core::mem::size_of::<crate::MorePointers>() == 16);
+    assert!(::core::mem::align_of::<crate::MorePointers>() == 8);
+    static_assertions::assert_impl_all!(crate::MorePointers: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::MorePointers: Drop);
+    assert!(::core::mem::offset_of!(crate::MorePointers, v_) == 0);
+    assert!(::core::mem::offset_of!(crate::MorePointers, i_) == 8);
     assert!(::core::mem::size_of::<crate::StructWithRecordAndFreeGetter>() == 4);
     assert!(::core::mem::align_of::<crate::StructWithRecordAndFreeGetter>() == 4);
     static_assertions::assert_impl_all!(crate::StructWithRecordAndFreeGetter: Copy,Clone);

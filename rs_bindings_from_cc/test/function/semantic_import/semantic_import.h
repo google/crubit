@@ -49,6 +49,75 @@ class Bools {
   bool b_ = true;
 };
 
+class Pointers {
+ public:
+  const int* p() const { return p_; }
+  void set_p(const int* p) { p_ = p; }
+  int* mut_p() const { return mut_p_; }
+  void set_mut_p(int* mut_p) { mut_p_ = mut_p; }
+
+ private:
+  const int* p_ = nullptr;
+  int* mut_p_ = nullptr;
+};
+
+class NonTrivial {
+ public:
+  NonTrivial() = default;
+  // A user-provided destructor is what makes this type non-trivial (and so
+  // `!Unpin` in Rust).
+  // `= default` would defeat the purpose.
+  // NOLINTNEXTLINE(modernize-use-equals-default)
+  ~NonTrivial() {}
+  const NonTrivial* p() const { return p_; }
+  void set_p(const NonTrivial* p) { p_ = p; }
+  NonTrivial* mut_p() { return mut_p_; }
+  void set_mut_p(NonTrivial* mut_p) { mut_p_ = mut_p; }
+
+ private:
+  const NonTrivial* p_ = nullptr;
+  NonTrivial* mut_p_ = nullptr;
+};
+
+class Padding {
+ public:
+  long pad_ = 0;
+};
+
+class PointerBase {
+ public:
+  const int* base_p() const { return base_p_; }
+  void set_base_p(const int* base_p) { base_p_ = base_p; }
+
+ protected:
+  const int* base_p_ = nullptr;
+};
+
+// `PointerBase` is at a non-zero offset within `DerivedPointers`, so the
+// accessors declared here must not reuse `PointerBase`'s offset for `base_p_`.
+// They therefore keep using a thunk, unlike `PointerBase`'s own accessors.
+class DerivedPointers : public Padding, public PointerBase {
+ public:
+  const int* p() const { return base_p_; }
+  void set_p(const int* p) { base_p_ = p; }
+};
+
+// A type which is never defined, so that `Incomplete*` below is a pointer to an
+// incomplete type.
+class Incomplete;
+
+class MorePointers {
+ public:
+  void* v() const { return v_; }
+  void set_v(void* v) { v_ = v; }
+  Incomplete* i() const { return i_; }
+  void set_i(Incomplete* i) { i_ = i; }
+
+ private:
+  void* v_ = nullptr;
+  Incomplete* i_ = nullptr;
+};
+
 class StructWithRecordAndFreeGetter {
  public:
   explicit StructWithRecordAndFreeGetter(int x) : s_(x) {}
