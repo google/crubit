@@ -13,9 +13,9 @@ correctness, as well as forward-compatibility between Crubit releases.
 
 While many attributes, like `[[nodiscard]]`, can be safely ignored, others
 cannot be. For example, Crubit *must* correctly understand the
-`[[no_unique_address]]`attribute to produce bindings, as it can alter the layout
-of the type containing it. In Rust, Crubit *must* understand the `#[repr(...)]`
-attribute, which changes type layout.
+`[[no_unique_address]]` attribute to produce bindings, as it can alter the
+layout of the type containing it. In Rust, Crubit *must* understand the
+`#[repr(...)]` attribute, which changes type layout.
 
 Simply ignoring these attributes would result in code which failed to compile,
 or worse, which had undefined behavior at runtime.

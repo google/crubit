@@ -94,7 +94,7 @@ UnsupportedWrapper DoSomethingRust(
     UnsupportedWrapper in_val,
     UnsupportedWrapper* in_ref) {
   return UnsupportedWrapper{
-      DoSomething(std::move(*in_val.value), in_ref ? &in_ref->value : nullptr)
+      DoSomething(std::move(in_val.value), in_ref->value)
   };
 }
 ```
@@ -126,8 +126,9 @@ Most bridged types cannot be passed by reference (`&T`) or pointer (`*const T`).
 Because Crubit performs value conversions across the FFI boundary, bridged types
 must usually be passed by value.
 
-(Note: Protocol Buffers are an exception; they can be passed by reference when
-the `//features:proto_references` feature is enabled).
+(Note: Protocol Buffers are an exception; they can be passed by reference. This
+uses the `proto_references` feature, which
+`//features:supported` enables by default.)
 
 Otherwise, if the function semantics strictly requires passing by reference, you
 can wrap the data in a layout-compatible `struct` or write an FFI wrapper
@@ -163,9 +164,9 @@ default behavior for unsupported types in supported targets in a future release,
 so that no additional work is necessary.
 
 In an FFI-oriented header, you can define a replacement `DoSomething` function
-that uses void a wrapper type, and which, at worst, heap-allocates when passing
-or returning by value. However, you must also free the memory when complete.
-Using a wrapper is likely to be more user-friendly.
+that uses pointers to a forward-declared type, and which, at worst,
+heap-allocates when passing or returning by value. However, you must also free
+the memory when complete. Using a wrapper is likely to be more user-friendly.
 
 To make the example C++ function `DoSomething` callable from Rust:
 
@@ -186,7 +187,7 @@ Unsupported* DoSomethingRust(Unsupported* in_val, Unsupported* in_ref);
 
 Unsupported* DoSomethingRust(Unsupported* in_val, Unsupported* in_ref) {
   std::unique_ptr<Unsupported> in_val_owned = absl::WrapUnique(in_val);
-  return new auto(DoSomething(std::move(*in_val_owned), in_ref));
+  return new auto(DoSomething(std::move(*in_val_owned), *in_ref));
 }
 ```
 
@@ -227,7 +228,7 @@ void* DoSomethingRust(void* in_val, void* in_ref);
 
 void* DoSomethingRust(void* in_val, void* in_ref) {
   std::unique_ptr<Unsupported> in_val_owned = absl::WrapUnique(reinterpret_cast<Unsupported*>(in_val));
-  return new auto(DoSomething(std::move(*in_val_owned), reinterpret_cast<Unsupported*>(in_ref)));
+  return new auto(DoSomething(std::move(*in_val_owned), *reinterpret_cast<Unsupported*>(in_ref)));
 }
 ```
 
@@ -247,10 +248,10 @@ To make the example Rust function `DoSomething` callable from C++:
 #[crubit_annotate::cpp_name("DoSomething")]
 pub unsafe fn DoSomethingCpp(in_val: *mut c_void, in_ref: *mut c_void) -> *mut c_void {
     unsafe {
-        DoSomething(
+        Box::into_raw(Box::new(DoSomething(
             (in_val as *mut Unsupported).read(),
-            *(in_ref as *mut Unsupported)
-        ) as *mut _ as *mut _
+            &mut *(in_ref as *mut Unsupported),
+        ))) as *mut c_void
     }
 }
 ```

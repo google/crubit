@@ -20,6 +20,7 @@ libraries](../rust/index.md#examine).
 *   [Bridge types as struct fields](bridge_field.md): struct or union fields
     whose type is a bridge type.
 *   [Compound types containing bridge types](bridge_compound_type.md): bridge
-    types behind a pointer or inside a type like `std::vector`.
+    types behind a pointer or inside another type that can't bridge its
+    contents.
 *   [The `Delete` trait](delete.md): using `virtual_unique_ptr<T>` with a type
     that has neither a virtual destructor nor a custom `operator delete`.

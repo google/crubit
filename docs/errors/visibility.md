@@ -25,11 +25,11 @@ pub(crate) fn Foo(...: SomeType) { ... }
 ```
 
 If a different library uses the type, and defines a similar function `Bar`, then
-it will not receive bindings at all, because the bindings for `Bar` are only
-visible in the library where it was defined.
+it will not receive bindings at all, because the bindings for `SomeType` are
+only visible in the library where it was defined.
 
 ```c++
-void Bar(SomeType);  // won't receive bindings: it's in a another library
+void Bar(SomeType);  // won't receive bindings: it's in another library
 ```
 
 This can dramatically reduce the set of bindings which are generated, and it is
