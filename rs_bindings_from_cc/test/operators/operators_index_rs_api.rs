@@ -209,7 +209,7 @@ pub mod crubit {
         ///
         /// To call a function that accepts this type, you must uphold these requirements:
         /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-        ///   * `items_storage_`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'crubit::test::ItemNonUnpin[10]': Unsupported clang::Type class 'ConstantArray'
+        ///   * `items_storage_`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'crubit::test::ItemNonUnpin[10]': C-style arrays of non-primitive, non-enum types are not yet supported (b/575922365)
         ///   * `items_`: raw pointer
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[cfi_encoding = "N6crubit4test26ContainerUnpinItemNonUnpinE"]
@@ -219,7 +219,7 @@ pub mod crubit {
         pub struct ContainerUnpinItemNonUnpin {
             __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
             /// Reason for representing this field as a blob of bytes:
-            /// Unsupported type 'crubit::test::ItemNonUnpin[10]': Unsupported clang::Type class 'ConstantArray'
+            /// Unsupported type 'crubit::test::ItemNonUnpin[10]': C-style arrays of non-primitive, non-enum types are not yet supported (b/575922365)
             pub(crate) items_storage_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 40],
             pub items_: *mut crate::crubit::test::ItemNonUnpin,
         }

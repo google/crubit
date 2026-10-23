@@ -247,3 +247,46 @@ fn test_member_func_semantic_proto() -> Result<()> {
     assert!(matches!(g.type_.variant(), ir::CcTypeVariant::Primitive(ir::Primitive::Int)));
     Ok(())
 }
+
+#[gtest]
+fn test_record_with_constant_array_member_proto() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct ArrayHolder {
+            int arr_1d[4];
+            int arr_2d[2][4];
+        };
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let record = ir
+        .records()
+        .find(|r| r.cc_name() == "ArrayHolder")
+        .expect("should find record ArrayHolder");
+    let fields = record.fields();
+    assert_eq!(fields.len(), 2);
+
+    let ir::CcTypeVariant::ConstantArray(arr_1d) = fields[0].type_().variant() else {
+        panic!("expected ConstantArray for arr_1d, got {:?}", fields[0].type_());
+    };
+    assert_eq!(arr_1d.num_elements(), 4);
+    assert!(matches!(
+        arr_1d.element_type().variant(),
+        ir::CcTypeVariant::Primitive(ir::Primitive::Int)
+    ));
+
+    let ir::CcTypeVariant::ConstantArray(arr_2d_outer) = fields[1].type_().variant() else {
+        panic!("expected outer ConstantArray for arr_2d, got {:?}", fields[1].type_());
+    };
+    assert_eq!(arr_2d_outer.num_elements(), 2);
+    let ir::CcTypeVariant::ConstantArray(arr_2d_inner) = arr_2d_outer.element_type().variant()
+    else {
+        panic!("expected inner ConstantArray for arr_2d, got {:?}", arr_2d_outer.element_type());
+    };
+    assert_eq!(arr_2d_inner.num_elements(), 4);
+    assert!(matches!(
+        arr_2d_inner.element_type().variant(),
+        ir::CcTypeVariant::Primitive(ir::Primitive::Int)
+    ));
+    Ok(())
+}

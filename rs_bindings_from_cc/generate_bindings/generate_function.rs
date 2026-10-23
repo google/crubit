@@ -1907,6 +1907,16 @@ fn rs_type_kinds_for_func<'a>(
                         requires_layout_compatible: false,
                     },
                 )
+                .and_then(|ty| {
+                    // Keep in sync with `func_has_bindings` in `has_bindings.rs`: function codegen
+                    // evaluates `rs_type_kind_with_lifetime_elision` directly before calling
+                    // `func_has_bindings`, so reject C-style arrays here before thunk generation.
+                    ensure!(
+                        !ty.contains_c_array(),
+                        "C-style array types are not supported in function signatures yet"
+                    );
+                    Ok(ty)
+                })
                 .map_err(|err| {
                     // Use a shared aggregation fmt key for all "parameter not supported" errors.
                     let fail = |parameter| anyhow!("{parameter} is not supported: {err}");
@@ -1938,6 +1948,13 @@ fn rs_type_kinds_for_func<'a>(
                 requires_layout_compatible: false,
             },
         )
+        .and_then(|ty| {
+            ensure!(
+                !ty.contains_c_array(),
+                "C-style array types are not supported in function signatures yet"
+            );
+            Ok(ty)
+        })
         .map_err(|err| anyhow!("Return type is not supported: {err}")),
     );
 

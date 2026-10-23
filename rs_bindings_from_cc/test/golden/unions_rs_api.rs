@@ -333,8 +333,6 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for NonCopyUnion2 {
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
-/// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `constant_array_field_not_yet_supported`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "20UnionWithOpaqueField"]
 #[repr(C)]
@@ -342,7 +340,7 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for NonCopyUnion2 {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub union UnionWithOpaqueField {
     /// Reason for representing this field as a blob of bytes:
-    /// Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
+    /// C-style array types are not yet supported
     pub(crate) constant_array_field_not_yet_supported: [::core::mem::MaybeUninit<u8>; 42],
 }
 impl !Send for UnionWithOpaqueField {}

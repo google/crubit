@@ -67,6 +67,11 @@ void CcType::WriteToProto(ir_proto::CcType& proto) const {
                 func_value.lifetime_inputs.begin(),
                 func_value.lifetime_inputs.end());
           },
+          [&](const CcType::ConstantArrayType& array) {
+            auto* a = proto.mutable_constant_array();
+            a->set_num_elements(array.num_elements);
+            array.element_type->WriteToProto(*a->mutable_element_type());
+          },
           [&](ItemId id) { proto.set_decl(static_cast<int64_t>(id.value())); },
           [&](const FormattedError& error) {
             error.WriteToProto(*proto.mutable_error());

@@ -7442,3 +7442,383 @@ fn test_maybe_unused_on_record_and_field() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_constant_array_fields_and_bounds() {
+    let proto = ir_proto_from_cc(
+        r#"
+        constexpr int kLen = 5;
+        template <typename T, int N>
+        struct TemplatedArray {
+          T data[N];
+        };
+        struct ArrayFields {
+          int ints[4];
+          bool flags[2];
+          double matrix[2][4];
+          const int const_ints[3];
+          int constexpr_arr[kLen];
+          TemplatedArray<float, 6> templated;
+        };
+        "#,
+    )
+    .unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "ArrayFields",
+                cc_name: "ArrayFields", ...
+                fields: [
+                    Field {
+                        rust_identifier: Some("ints"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 4,
+                                element_type: CcType {
+                                    variant: Primitive(Int),
+                                    is_const: false, ...
+                                },
+                            }),
+                            is_const: false, ...
+                        }, ...
+                    },
+                    Field {
+                        rust_identifier: Some("flags"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 2,
+                                element_type: CcType {
+                                    variant: Primitive(Bool),
+                                    is_const: false, ...
+                                },
+                            }),
+                            is_const: false, ...
+                        }, ...
+                    },
+                    Field {
+                        rust_identifier: Some("matrix"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 2,
+                                element_type: CcType {
+                                    variant: ConstantArray(ConstantArrayType {
+                                        num_elements: 4,
+                                        element_type: CcType {
+                                            variant: Primitive(Double),
+                                            is_const: false, ...
+                                        },
+                                    }),
+                                    is_const: false, ...
+                                },
+                            }),
+                            is_const: false, ...
+                        }, ...
+                    },
+                    Field {
+                        rust_identifier: Some("const_ints"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 3,
+                                element_type: CcType {
+                                    variant: Primitive(Int),
+                                    is_const: true, ...
+                                },
+                            }),
+                            is_const: true, ...
+                        }, ...
+                    },
+                    Field {
+                        rust_identifier: Some("constexpr_arr"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 5,
+                                element_type: CcType {
+                                    variant: Primitive(Int),
+                                    is_const: false, ...
+                                },
+                            }),
+                            is_const: false, ...
+                        }, ...
+                    },
+                    Field {
+                        rust_identifier: Some("templated"), ...
+                    },
+                ], ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "__CcTemplateInst14TemplatedArrayIfLi6EE",
+                cc_name: "TemplatedArray<float, 6>", ...
+                fields: [
+                    Field {
+                        rust_identifier: Some("data"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 6,
+                                element_type: CcType {
+                                    variant: Primitive(Float),
+                                    is_const: false, ...
+                                },
+                            }),
+                            is_const: false, ...
+                        }, ...
+                    }
+                ], ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_zero_length_and_incomplete_array_rejected_as_error() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct ZeroAndFlex {
+          int header;
+          int zero[0];
+          char flex[];
+        };
+        "#,
+    )
+    .unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
+    let rec = ir.records().find(|r| r.cc_name() == "ZeroAndFlex").unwrap();
+    let zero_field = rec
+        .fields()
+        .iter()
+        .find(|f| f.rust_identifier().map(|i| i.as_str()) == Some("zero"))
+        .unwrap();
+    assert!(
+        matches!(zero_field.type_().variant(), ir::CcTypeVariant::Error(_)),
+        "expected Error for zero[0], got {:?}",
+        zero_field.type_()
+    );
+    let flex_field = rec
+        .fields()
+        .iter()
+        .find(|f| f.rust_identifier().map(|i| i.as_str()) == Some("flex"))
+        .unwrap();
+    assert!(
+        matches!(flex_field.type_().variant(), ir::CcTypeVariant::Error(_)),
+        "expected Error for flex[], got {:?}",
+        flex_field.type_()
+    );
+}
+
+#[gtest]
+fn test_array_parameter_decay_vs_array_ref_and_multidim_param() {
+    let proto = ir_proto_from_cc(
+        r#"
+        using Arr = int[4];
+        void decayed_param(int x[4]);
+        void decayed_alias(Arr x);
+        void array_ref(int (&x)[4]);
+        void array_ptr(int (*x)[4]);
+        void multidim_param(int x[2][4]);
+        "#,
+    )
+    .unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
+
+    let f_decayed = ir.functions().find(|f| f.rs_name() == "decayed_param").unwrap();
+    assert!(
+        matches!(f_decayed.params()[0].type_().variant(), ir::CcTypeVariant::Pointer(_)),
+        "1D array parameter should decay to Pointer, got {:?}",
+        f_decayed.params()[0].type_()
+    );
+
+    let f_alias = ir.functions().find(|f| f.rs_name() == "decayed_alias").unwrap();
+    assert!(
+        matches!(f_alias.params()[0].type_().variant(), ir::CcTypeVariant::Pointer(_)),
+        "1D array alias parameter should decay to Pointer, got {:?}",
+        f_alias.params()[0].type_()
+    );
+
+    let f_ref = ir.functions().find(|f| f.rs_name() == "array_ref").unwrap();
+    let ir::CcTypeVariant::Pointer(ref_ptr) = f_ref.params()[0].type_().variant() else {
+        panic!("expected Pointer(LValueRef)");
+    };
+    assert!(matches!(ref_ptr.pointee_type().variant(), ir::CcTypeVariant::ConstantArray(_)));
+
+    let f_ptr = ir.functions().find(|f| f.rs_name() == "array_ptr").unwrap();
+    let ir::CcTypeVariant::Pointer(raw_ptr) = f_ptr.params()[0].type_().variant() else {
+        panic!("expected Pointer");
+    };
+    assert!(matches!(raw_ptr.pointee_type().variant(), ir::CcTypeVariant::ConstantArray(_)));
+
+    let f_multi = ir.functions().find(|f| f.rs_name() == "multidim_param").unwrap();
+    let ir::CcTypeVariant::Pointer(multi_ptr) = f_multi.params()[0].type_().variant() else {
+        panic!("expected outer Pointer to inner ConstantArray");
+    };
+    assert!(matches!(multi_ptr.pointee_type().variant(), ir::CcTypeVariant::ConstantArray(_)));
+}
+
+#[gtest]
+fn test_constant_array_enum_and_alias_template_fields() {
+    let proto = ir_proto_from_cc(
+        r#"
+        enum UnscopedEnum { kZero = 0, kOne = 1 };
+        enum class ScopedEnum { kAlpha, kBeta };
+        enum class ByteEnum : unsigned char { kLo = 1, kHi = 2 };
+        using EnumRow = ScopedEnum[3];
+        template <typename T, int N>
+        using FixedArr = T[N];
+
+        struct EnumArrayFields {
+          UnscopedEnum unscoped[2];
+          ScopedEnum scoped[3];
+          ByteEnum fixed_u8[4];
+          ScopedEnum matrix[2][3];
+          EnumRow grid[2];
+          FixedArr<int, 4> tmpl_ints;
+          FixedArr<ScopedEnum, 2> tmpl_enums;
+        };
+        "#,
+    )
+    .unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
+    let unscoped_id = ir.enums().find(|e| e.cc_name() == "UnscopedEnum").unwrap().id();
+    let scoped_id = ir.enums().find(|e| e.cc_name() == "ScopedEnum").unwrap().id();
+    let byte_id = ir.enums().find(|e| e.cc_name() == "ByteEnum").unwrap().id();
+    let row_id = ir.type_aliases().find(|t| t.cc_name() == "EnumRow").unwrap().id();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "EnumArrayFields",
+                cc_name: "EnumArrayFields", ...
+                fields: [
+                    Field {
+                        rust_identifier: Some("unscoped"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 2,
+                                element_type: CcType {
+                                    variant: Decl { id: ItemId(#unscoped_id), ... }, ...
+                                },
+                            }), ...
+                        }, ...
+                    },
+                    Field {
+                        rust_identifier: Some("scoped"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 3,
+                                element_type: CcType {
+                                    variant: Decl { id: ItemId(#scoped_id), ... }, ...
+                                },
+                            }), ...
+                        }, ...
+                    },
+                    Field {
+                        rust_identifier: Some("fixed_u8"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 4,
+                                element_type: CcType {
+                                    variant: Decl { id: ItemId(#byte_id), ... }, ...
+                                },
+                            }), ...
+                        }, ...
+                    },
+                    Field {
+                        rust_identifier: Some("matrix"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 2,
+                                element_type: CcType {
+                                    variant: ConstantArray(ConstantArrayType {
+                                        num_elements: 3,
+                                        element_type: CcType {
+                                            variant: Decl { id: ItemId(#scoped_id), ... }, ...
+                                        },
+                                    }), ...
+                                },
+                            }), ...
+                        }, ...
+                    },
+                    Field {
+                        rust_identifier: Some("grid"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 2,
+                                element_type: CcType {
+                                    variant: Decl { id: ItemId(#row_id), ... }, ...
+                                },
+                            }), ...
+                        }, ...
+                    },
+                    Field {
+                        rust_identifier: Some("tmpl_ints"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 4,
+                                element_type: CcType {
+                                    variant: Primitive(Int), ...
+                                },
+                            }), ...
+                        }, ...
+                    },
+                    Field {
+                        rust_identifier: Some("tmpl_enums"), ...
+                        type_: CcType {
+                            variant: ConstantArray(ConstantArrayType {
+                                num_elements: 2,
+                                element_type: CcType {
+                                    variant: Decl { id: ItemId(#scoped_id), ... }, ...
+                                },
+                            }), ...
+                        }, ...
+                    },
+                ], ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_non_primitive_non_enum_arrays_rejected() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct SubStruct { int x; };
+
+        struct RejectedArrays {
+          SubStruct structs[2];
+          int* ptrs[2];
+          void (*fn_ptrs[2])();
+        };
+        "#,
+    )
+    .unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
+
+    let rec = ir.records().find(|r| r.cc_name() == "RejectedArrays").unwrap();
+    for field_name in ["structs", "ptrs", "fn_ptrs"] {
+        let field = rec
+            .fields()
+            .iter()
+            .find(|f| f.rust_identifier().map(|i| i.as_str()) == Some(field_name))
+            .unwrap();
+        let ir::CcTypeVariant::Error(err) = field.type_().variant() else {
+            panic!("expected CcTypeVariant::Error for {field_name}, got {:?}", field.type_());
+        };
+        expect_that!(
+            err.message.as_ref(),
+            googletest::matchers::contains_substring(
+                "C-style arrays of non-primitive, non-enum types are not yet supported"
+            )
+        );
+    }
+}

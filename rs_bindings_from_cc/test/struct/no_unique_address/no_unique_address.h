@@ -98,4 +98,14 @@ struct StructWithBitFieldsAndNoUniqueAddressField final {
   [[no_unique_address]] int no_unique_address_int_field = 67890;
 };
 
+struct alignas(8) AlignedEmptyStruct final {
+  int method() const { return 12345; }
+};
+
+struct StructWithOveralignedEmptyNoUniqueAddressField final {
+  int field1 = 1;
+  [[no_unique_address]] AlignedEmptyStruct
+      no_unique_address_aligned_empty_field;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_NO_UNIQUE_ADDRESS_NO_UNIQUE_ADDRESS_H_

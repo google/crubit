@@ -75,6 +75,14 @@ impl TryFrom<::ir_rust_proto::cc_type::PointerTypeView<'_>> for PointerType {
     }
 }
 
+impl TryFrom<::ir_rust_proto::cc_type::ConstantArrayTypeView<'_>> for ConstantArrayType {
+    type Error = Error;
+    fn try_from(proto: ::ir_rust_proto::cc_type::ConstantArrayTypeView<'_>) -> Result<Self> {
+        proto.validate()?;
+        Ok(proto.to_ir())
+    }
+}
+
 impl TryFrom<::ir_rust_proto::CcTypeView<'_>> for CcType {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::CcTypeView<'_>) -> Result<Self> {
@@ -85,6 +93,9 @@ impl TryFrom<::ir_rust_proto::CcTypeView<'_>> for CcType {
             }
             ::ir_rust_proto::cc_type::VariantOneof::Pointer(p) => {
                 CcTypeVariant::Pointer(PointerType::try_from(p)?)
+            }
+            ::ir_rust_proto::cc_type::VariantOneof::ConstantArray(arr) => {
+                CcTypeVariant::ConstantArray(ConstantArrayType::try_from(arr)?)
             }
             ::ir_rust_proto::cc_type::VariantOneof::FuncPointer(fp) => {
                 let call_conv = CcCallingConv::try_from(fp.call_conv())?;
