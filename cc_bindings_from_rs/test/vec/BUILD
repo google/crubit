@@ -51,6 +51,7 @@ crubit_cc_test(
     platforms = [
         "android",
         "ios",
+        "macos",
     ],
     deps = [
         ":vec_cc_api",
