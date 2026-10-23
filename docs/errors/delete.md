@@ -9,6 +9,10 @@ a virtual destructor or which overrides operator delete.
 When `T` does not have a virtual destructor and does not override operator
 delete, use `cpp_std::unique_ptr<T>` instead.
 
+Conversely, if `T` implements `Delete` (it has a virtual destructor or overrides
+operator delete), Crubit won't bind `unique_ptr<T>`. Use
+`cpp_std::virtual_unique_ptr<T>` instead.
+
 ## Why
 
 For types with virtual destructors or custom operator delete implementations,

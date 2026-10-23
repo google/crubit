@@ -60,10 +60,10 @@ cs/file:examples/cpp/function/BUILD symbol:example_lib_broken
 To enable Crubit on a C++ target, you must define a `rust_api_from_cpp` target
 associated with it, and link them using `aspect_hints`.
 
-Behind the scenes, Rust APIs are generated via Bazel aspects which run on the
-`cc_library` target. When examining a `cc_library`, Rust API generation looks
-for the `aspect_hints` so that it can find the corresponding `rust_api_from_cpp`
-target.
+Behind the scenes, Rust APIs are generated via Bazel aspects[^aspects] which run
+on the `cc_library` target. When examining a `cc_library`, Rust API generation
+looks for the `aspect_hints` so that it can find the corresponding
+`rust_api_from_cpp` target.
 
 Define a `rust_api_from_cpp` target in the same `BUILD` file as your
 `cc_library` (loaded via `load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")`), and add its `.hint` target to the `aspect_hints` of the
