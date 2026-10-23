@@ -911,14 +911,18 @@ TEST(EnumApiTest, UntaggedSingleVariant) {
 // -----------------------------------------------------------------------------
 class RefOption {
  public:
-  using Discriminant = uintptr_t;
+  // Like the generated bindings, use a fixed-width discriminant type
+  // (`uint64_t` on 64-bit targets) rather than `uintptr_t`, which is a distinct
+  // type from `uint64_t` on some platforms (e.g. `unsigned long` vs `unsigned
+  // long long` on Darwin) and therefore does not satisfy `RustcDiscriminant`.
+  using Discriminant = uint64_t;
 
   struct None : public crubit::internal::Variant<None, RefOption, 0> {
     ENUM_API_TEST_PRIVATE_COPY_AND_MOVE(None)
     constexpr explicit None(VariantKey) {}
 
    private:
-    uintptr_t tag = 0;
+    uint64_t tag = 0;
   };
 
   struct Some : public crubit::internal::Variant<Some, RefOption, 1> {
@@ -936,7 +940,7 @@ class RefOption {
   friend struct crubit::internal::EnumAccess;
 
   crubit::internal::VariadicUnionStorage<
-      crubit::internal::tag_encoding::Niche<uintptr_t, /*Offset=*/0,
+      crubit::internal::tag_encoding::Niche<uint64_t, /*Offset=*/0,
                                             /*UntaggedVariant=*/1,
                                             /*NicheStartVariant=*/0,
                                             /*NicheEndVariant=*/0,
