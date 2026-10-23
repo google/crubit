@@ -47,9 +47,9 @@ use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
-    as_ref_or_pinned_ref, does_type_implement_trait, field_def_is_pub_and_stable, get_layout,
-    get_tag_size_with_padding, get_validated_layout, is_copy, is_std_ptr_non_null,
-    matches_qualified_name, normalize_ty, should_receive_bindings, SortedByDef,
+    as_ref_or_pinned_ref, field_def_is_pub_and_stable, get_layout, get_tag_size_with_padding,
+    get_validated_layout, is_copy, is_std_ptr_non_null, matches_qualified_name, normalize_ty,
+    should_receive_bindings, SortedByDef,
 };
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
@@ -90,13 +90,14 @@ pub fn adt_core_bindings_needs_drop<'tcx>(
 /// Similar to the method `TyCtxt::non_blanket_impls_for_ty` but checks for precise self_ty matching
 /// of the impl rather than SimplifiedType. This is important for generics, so we don't return impls
 /// from other instantiations when we query for something like `impl From<T> for NonZero<u32>`.
-pub fn non_blanket_impls_for_ty<'tcx>(
-    tcx: TyCtxt<'tcx>,
+pub fn non_blanket_impls_for_ty<'tcx, 'a>(
+    db: &'a BindingsGenerator<'tcx>,
     trait_def_id: DefId,
     self_ty: Ty<'tcx>,
-) -> impl Iterator<Item = (DefId, ty::GenericArgsRef<'tcx>)> {
+) -> impl Iterator<Item = (DefId, ty::GenericArgsRef<'tcx>)> + 'a {
+    let tcx = db.tcx();
     tcx.non_blanket_impls_for_ty(trait_def_id, self_ty).filter_map(move |impl_id| {
-        let impl_args = does_impl_apply(tcx, impl_id, self_ty)?;
+        let impl_args = db.does_impl_apply(impl_id, self_ty)?;
         Some((impl_id, impl_args))
     })
 }
@@ -391,20 +392,20 @@ fn get_trait_ref_from_impl_id<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId) -> ty::Tr
     get_instantiated_trait_ref(tcx, impl_id, ty::GenericArgs::identity_for_item(tcx, impl_id))
 }
 
-fn does_impl_apply<'tcx>(
-    tcx: TyCtxt<'tcx>,
+pub fn does_impl_apply<'tcx>(
+    db: &BindingsGenerator<'tcx>,
     impl_id: DefId,
     target_ty: Ty<'tcx>,
 ) -> Option<ty::GenericArgsRef<'tcx>> {
-    does_impl_apply_inner(tcx, impl_id, target_ty, /* match_first_trait_arg= */ false)
+    does_impl_apply_inner(db.tcx(), impl_id, target_ty, /* match_first_trait_arg= */ false)
 }
 
-fn does_trait_arg_impl_apply<'tcx>(
-    tcx: TyCtxt<'tcx>,
+pub fn does_trait_impl_apply_by_first_arg<'tcx>(
+    db: &BindingsGenerator<'tcx>,
     impl_id: DefId,
     target_ty: Ty<'tcx>,
 ) -> Option<ty::GenericArgsRef<'tcx>> {
-    does_impl_apply_inner(tcx, impl_id, target_ty, /* match_first_trait_arg= */ true)
+    does_impl_apply_inner(db.tcx(), impl_id, target_ty, /* match_first_trait_arg= */ true)
 }
 
 fn does_impl_apply_inner<'tcx>(
@@ -607,7 +608,8 @@ fn generate_into_impls<'tcx>(
     let from_map = db.from_trait_impls_by_argument(def_id.krate);
     let from_impls =
         from_map.get(&def_id).into_iter().flat_map(|vec| vec.iter()).filter_map(|from_impl_id| {
-            let impl_args = does_trait_arg_impl_apply(tcx, *from_impl_id, core.common.self_ty)?;
+            let impl_args =
+                db.does_trait_impl_apply_by_first_arg(*from_impl_id, core.common.self_ty)?;
             let trait_ref = get_instantiated_trait_ref(tcx, *from_impl_id, impl_args);
             let from_middle_ty = trait_ref.args.type_at(0);
 
@@ -628,7 +630,7 @@ fn generate_into_impls<'tcx>(
                 .ok()?;
             Some((from_middle_ty, cc_ty, *from_impl_id, impl_args))
         });
-    let into_impls = non_blanket_impls_for_ty(tcx, into_trait, core.common.self_ty).filter_map(
+    let into_impls = non_blanket_impls_for_ty(db, into_trait, core.common.self_ty).filter_map(
         |(into_impl_id, impl_args)| {
             let trait_ref = get_instantiated_trait_ref(tcx, into_impl_id, impl_args);
             // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
@@ -828,7 +830,7 @@ fn generate_constructor_impls<'tcx>(
 
     // Find From impls from the selected ADT
     let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
-    let from_impls = non_blanket_impls_for_ty(tcx, from_trait, core.common.self_ty).filter_map(
+    let from_impls = non_blanket_impls_for_ty(db, from_trait, core.common.self_ty).filter_map(
         |(impl_id, impl_args)| {
             let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
             let src_ty = trait_ref.args.type_at(1);
@@ -870,7 +872,7 @@ fn generate_constructor_impls<'tcx>(
     let into_map = db.into_trait_impls_by_destination(def_id.krate);
     let into_impls =
         into_map.get(&def_id).into_iter().flat_map(|vec| vec.iter()).filter_map(|impl_id| {
-            let impl_args = does_trait_arg_impl_apply(tcx, *impl_id, core.common.self_ty)?;
+            let impl_args = db.does_trait_impl_apply_by_first_arg(*impl_id, core.common.self_ty)?;
             let trait_ref = get_instantiated_trait_ref(tcx, *impl_id, impl_args);
             let src_ty = trait_ref.args.type_at(0);
             if src_ty.flags().intersects(has_type_or_const_vars()) {
@@ -1034,11 +1036,12 @@ fn generate_constructor_impls<'tcx>(
 /// on a `&mut` self type are the compound-assignment ones, and those take `&mut self`, giving a
 /// `&mut &mut T` receiver that has no C++ equivalent.
 fn operator_impls_for_ty<'tcx>(
-    tcx: TyCtxt<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     trait_def_id: DefId,
     self_ty: Ty<'tcx>,
 ) -> Vec<(DefId, ty::GenericArgsRef<'tcx>)> {
-    let mut impls: Vec<_> = non_blanket_impls_for_ty(tcx, trait_def_id, self_ty).collect();
+    let tcx = db.tcx();
+    let mut impls: Vec<_> = non_blanket_impls_for_ty(db, trait_def_id, self_ty).collect();
 
     // The self type of an impl only decides how the C++ receiver is qualified, so an
     // `impl Trait<Rhs> for &T` and an `impl Trait<Rhs> for T` produce the same C++ overload.
@@ -1052,7 +1055,7 @@ fn operator_impls_for_ty<'tcx>(
         .collect();
 
     let ref_to_self_ty = Ty::new_ref(tcx, tcx.lifetimes.re_erased, self_ty, Mutability::Not);
-    impls.extend(non_blanket_impls_for_ty(tcx, trait_def_id, ref_to_self_ty).filter(
+    impls.extend(non_blanket_impls_for_ty(db, trait_def_id, ref_to_self_ty).filter(
         |(impl_id, impl_args)| {
             // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it also
             // holds blanket impls like `impl<A, B> PartialEq<&B> for &A`. Exclude impls whose
@@ -1091,7 +1094,7 @@ fn generate_trait_operator_impls<'tcx>(
      -> Vec<ApiSnippets<'_>> {
         let trait_name = tcx.item_name(trait_def_id).to_string();
 
-        operator_impls_for_ty(tcx, trait_def_id, core.common.self_ty)
+        operator_impls_for_ty(db, trait_def_id, core.common.self_ty)
             .into_iter()
             .filter_map(|(impl_id, impl_args)| {
                 let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
@@ -1315,7 +1318,7 @@ fn generate_ord_and_partialord_impls<'tcx>(
     let mut snippets = Vec::new();
 
     // Handle Ord impls (Rhs is always Self)
-    for (impl_id, impl_args) in non_blanket_impls_for_ty(tcx, ord_trait_id, core.common.self_ty) {
+    for (impl_id, impl_args) in non_blanket_impls_for_ty(db, ord_trait_id, core.common.self_ty) {
         generate_unsupported::error_scope!(db, impl_id, impl_args);
         match generate_ord_impls(db, core) {
             Ok(s) => snippets.push(s),
@@ -1328,7 +1331,7 @@ fn generate_ord_and_partialord_impls<'tcx>(
     // Handle PartialOrd impls
     let mut ord_rhs_types = HashSet::new();
     let implements_ord =
-        non_blanket_impls_for_ty(tcx, ord_trait_id, core.common.self_ty).next().is_some();
+        non_blanket_impls_for_ty(db, ord_trait_id, core.common.self_ty).next().is_some();
     if implements_ord {
         ord_rhs_types.insert(erase_regions(tcx, core.common.self_ty));
     }
@@ -1336,7 +1339,7 @@ fn generate_ord_and_partialord_impls<'tcx>(
     let self_is_generic =
         core.def_id.is_some_and(|id| query_compiler::has_non_lifetime_generics(tcx, id));
     for (impl_id, impl_args) in
-        non_blanket_impls_for_ty(tcx, partial_ord_trait_id, core.common.self_ty)
+        non_blanket_impls_for_ty(db, partial_ord_trait_id, core.common.self_ty)
     {
         let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
         let rhs_ty = trait_ref.args.type_at(1);
@@ -1551,7 +1554,7 @@ fn generate_display_impl<'tcx>(
         ));
     };
 
-    if !does_type_implement_trait(tcx, core.common.self_ty, display_trait_id, []) {
+    if !db.does_type_implement_trait(core.common.self_ty, display_trait_id) {
         // This isn't an error, our type doesn't implement `Display` and so we don't generate
         // any bindings.
         return ApiSnippets::default();
@@ -1628,11 +1631,16 @@ fn generate_display_impl<'tcx>(
 /// * `tcx`: The type context.
 /// * `def_id`: The `DefId` of the type.
 /// * `self_ty`: The type of the type.
-fn has_manual_default_impl<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId, self_ty: Ty<'tcx>) -> bool {
+fn has_manual_default_impl<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+    self_ty: Ty<'tcx>,
+) -> bool {
+    let tcx = db.tcx();
     let Some(default_trait_id) = tcx.get_diagnostic_item(sym::Default) else {
         return false;
     };
-    if !does_type_implement_trait(tcx, self_ty, default_trait_id, []) {
+    if !db.does_type_implement_trait(self_ty, default_trait_id) {
         return false;
     }
     let trait_impls = tcx.trait_impls_of(default_trait_id);
@@ -1721,7 +1729,7 @@ fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
         TyKind::Ref(..) => false,
         TyKind::Array(..) | TyKind::Tuple(..) => {
             if let Some(default_trait_id) = tcx.get_diagnostic_item(sym::Default) {
-                does_type_implement_trait(tcx, ty, default_trait_id, [])
+                db.does_type_implement_trait(ty, default_trait_id)
             } else {
                 false
             }
@@ -1742,7 +1750,7 @@ fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
                 return false;
             }
             if let Some(default_trait_id) = tcx.get_diagnostic_item(sym::Default)
-                && does_type_implement_trait(tcx, ty, default_trait_id, [])
+                && db.does_type_implement_trait(ty, default_trait_id)
             {
                 return true;
             }
@@ -1780,7 +1788,7 @@ pub fn is_struct_aggregate<'tcx>(
     if variant.is_field_list_non_exhaustive() {
         return Err(NotAggregateReason::NonExhaustive);
     }
-    if has_manual_default_impl(tcx, def_id, self_ty) {
+    if has_manual_default_impl(db, def_id, self_ty) {
         return Err(NotAggregateReason::ManualDefault);
     }
     let crubit_attrs = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
@@ -1917,7 +1925,7 @@ fn generate_hash_impl<'tcx>(
         return err_snippets(anyhow!("Internal Crubit Error: `core::hash::Hash` trait not found."));
     };
 
-    if !does_type_implement_trait(tcx, core.common.self_ty, hash_trait_id, []) {
+    if !db.does_type_implement_trait(core.common.self_ty, hash_trait_id) {
         // This isn't an error, our type doesn't implement `Hash` and so we don't generate
         // any bindings.
         return ApiSnippets::default();
@@ -2081,7 +2089,7 @@ pub fn generate_adt<'tcx>(
             if self_is_not_generic {
                 Some((impl_id, None))
             } else {
-                let impl_args = does_impl_apply(tcx, impl_id, core.common.self_ty)?;
+                let impl_args = db.does_impl_apply(impl_id, core.common.self_ty)?;
                 Some((impl_id, Some(impl_args)))
             }
         })
@@ -2734,10 +2742,9 @@ fn generate_variant_ctor<'tcx>(
             #[rustversion::since(2026-05-13)]
             let ty = normalize_ty(tcx, tcx.param_env(field_def.did), ty);
 
-            let is_default =
-                query_compiler::does_type_implement_trait(tcx, ty, default_trait_id, []);
-            let is_clone = query_compiler::does_type_implement_trait(tcx, ty, clone_trait_id, []);
-            let is_unpin = query_compiler::does_type_implement_trait(tcx, ty, unpin_trait_id, []);
+            let is_default = db.does_type_implement_trait(ty, default_trait_id);
+            let is_clone = db.does_type_implement_trait(ty, clone_trait_id);
+            let is_unpin = db.does_type_implement_trait(ty, unpin_trait_id);
             let is_movable_in_cpp = (is_default && is_unpin) || is_clone;
             if !is_movable_in_cpp {
                 // If one of our fields isn't movable in C++, we can't generate a C++ constructor.
@@ -3958,7 +3965,7 @@ fn generate_begin_and_end_for_type<'tcx>(
     };
 
     if let Some(iterator_trait_id) = tcx.get_diagnostic_item(sym::Iterator)
-        && does_type_implement_trait(tcx, self_ty, iterator_trait_id, [])
+        && db.does_type_implement_trait(self_ty, iterator_trait_id)
     {
         let PassingMode::MutRef = passing_mode else {
             return Ok(None);
@@ -3981,7 +3988,7 @@ fn generate_begin_and_end_for_type<'tcx>(
         return Ok(Some(ApiSnippets { main_api, ..Default::default() }));
     }
 
-    if !does_type_implement_trait(tcx, check_ty, into_iterator_trait_id, []) {
+    if !db.does_type_implement_trait(check_ty, into_iterator_trait_id) {
         return Ok(None);
     }
 
@@ -4047,7 +4054,7 @@ fn generate_begin_and_end_for_type<'tcx>(
     let iterator_trait_id = tcx
         .get_diagnostic_item(sym::Iterator)
         .ok_or_else(|| anyhow!("Iterator trait not found"))?;
-    let mut impls = non_blanket_impls_for_ty(tcx, iterator_trait_id, into_iter_ty);
+    let mut impls = non_blanket_impls_for_ty(db, iterator_trait_id, into_iter_ty);
     let Some((trait_impl_def_id, _)) = impls.next() else {
         return Ok(None);
     };

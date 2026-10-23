@@ -1782,7 +1782,7 @@ fn append_negative_auto_trait_impls<'tcx>(
             tcx.param_env(self_def_id),
             tcx.type_of(self_def_id).instantiate_identity(),
         );
-        if query_compiler::does_type_implement_trait(tcx, ty, trait_id, []) {
+        if db.does_type_implement_trait(ty, trait_id) {
             // If we implement the trait, then there's no need to generate a negative auto trait
             // impl.
             continue;

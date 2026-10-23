@@ -366,6 +366,16 @@ memoized::query_group! {
           &self,
           self_ty: Ty<'tcx>,
       ) -> Option<Result<AdtTemplateSpecialization<'tcx>>>;
+
+      /// Checks if `self_ty` implements `trait_id` with empty generic arguments.
+      fn does_type_implement_trait(&self, self_ty: Ty<'tcx>, trait_id: DefId) -> bool;
+
+      /// Returns the generic args if `impl_id` applies to `target_ty`.
+      fn does_impl_apply(&self, impl_id: DefId, target_ty: Ty<'tcx>) -> Option<ty::GenericArgsRef<'tcx>>;
+
+      /// Returns the generic args if `impl_id` applies to `target_ty` matching the first trait argument.
+      fn does_trait_impl_apply_by_first_arg(&self, impl_id: DefId, target_ty: Ty<'tcx>) -> Option<ty::GenericArgsRef<'tcx>>;
+
   }
 }
 

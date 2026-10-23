@@ -414,6 +414,14 @@ fn does_type_implement_trait_substs<'tcx>(
 }
 
 pub fn does_type_implement_trait<'tcx>(
+    db: &database::BindingsGenerator<'tcx>,
+    self_ty: Ty<'tcx>,
+    trait_id: DefId,
+) -> bool {
+    does_type_implement_trait_with_args(db.tcx(), self_ty, trait_id, [])
+}
+
+pub fn does_type_implement_trait_with_args<'tcx>(
     tcx: TyCtxt<'tcx>,
     self_ty: Ty<'tcx>,
     trait_id: DefId,

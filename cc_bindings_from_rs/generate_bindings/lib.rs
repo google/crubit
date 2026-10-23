@@ -44,9 +44,10 @@ use generate_ctor::{
 use generate_function::generate_function;
 use generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, create_type_alias_with_rs_type,
-    from_trait_impls_by_argument, generate_adt, generate_adt_core, generate_const,
-    generate_generic_adt_declaration, generate_generic_adt_fwd_decl, get_generic_adt_header,
-    into_trait_impls_by_destination, is_cpp_constexpr_move_constructible, GenericAdtHeader,
+    does_impl_apply, does_trait_impl_apply_by_first_arg, from_trait_impls_by_argument,
+    generate_adt, generate_adt_core, generate_const, generate_generic_adt_declaration,
+    generate_generic_adt_fwd_decl, get_generic_adt_header, into_trait_impls_by_destination,
+    is_cpp_constexpr_move_constructible, GenericAdtHeader,
 };
 use generate_template_specialization::append_trait_impls;
 use generate_unsupported::generate_unsupported_def;
@@ -352,6 +353,9 @@ pub fn new_database<'db>(
         into_trait_impls_by_destination,
         get_generic_args::get_generic_args,
         generate_template_specialization::parse_adt_template_specialization,
+        query_compiler::does_type_implement_trait,
+        does_impl_apply,
+        does_trait_impl_apply_by_first_arg,
     )
 }
 

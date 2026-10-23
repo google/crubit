@@ -35,8 +35,8 @@ use get_generic_args::GenericClausesExt;
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
-    as_ref_or_pinned_ref, does_type_implement_trait, get_layout, is_c_abi_compatible_by_value,
-    is_copy, liberate_and_deanonymize_late_bound_regions, matches_qualified_name, normalize_ty,
+    as_ref_or_pinned_ref, get_layout, is_c_abi_compatible_by_value, is_copy,
+    liberate_and_deanonymize_late_bound_regions, matches_qualified_name, normalize_ty,
 };
 use quote::quote;
 #[rustversion::since(2026-09-27)]
@@ -978,7 +978,7 @@ pub fn generate_function<'tcx>(
         let send_trait_id = tcx
             .get_diagnostic_item(sym::Send)
             .ok_or_else(|| anyhow!("crubit.rs-bug: Send trait not found"))?;
-        if !does_type_implement_trait(tcx, rs_return_type, send_trait_id, []) {
+        if !db.does_type_implement_trait(rs_return_type, send_trait_id) {
             bail!("Crubit currently only supports async functions that return a Send future.");
         }
         let future_output_ty = get_async_future_output_ty(tcx, rs_return_type)?;

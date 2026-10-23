@@ -21,7 +21,7 @@ use generate_function_thunk::{
 };
 use itertools::Itertools;
 use proc_macro2::TokenStream;
-use query_compiler::{does_type_implement_trait, is_copy, is_std_ptr_non_null};
+use query_compiler::{is_copy, is_std_ptr_non_null};
 use quote::quote;
 use rustc_middle::ty::{self, Ty};
 use rustc_span::symbol::sym;
@@ -31,7 +31,7 @@ pub fn has_default_ctor<'tcx>(db: &BindingsGenerator<'tcx>, self_ty: Ty<'tcx>) -
     let trait_id = tcx
         .get_diagnostic_item(sym::Default)
         .expect("Couldn't find lang item `core::default::Default`");
-    does_type_implement_trait(tcx, self_ty, trait_id, [])
+    db.does_type_implement_trait(self_ty, trait_id)
 }
 
 /// Generates a default constructor for an ADT if possible (i.e. if the `Default`
@@ -121,7 +121,7 @@ pub fn copy_ctor_and_assignment_operator_codegen_style<'tcx>(
     let clone_trait_id = tcx.lang_items().clone_trait().expect("Can't find the `Clone` trait");
     CopyCodegenStyle::from_available_traits(
         is_copy(tcx, self_ty),
-        does_type_implement_trait(tcx, self_ty, clone_trait_id, []),
+        db.does_type_implement_trait(self_ty, clone_trait_id),
     )
 }
 

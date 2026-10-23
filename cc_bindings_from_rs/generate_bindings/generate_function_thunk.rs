@@ -24,8 +24,8 @@ use format_type::{
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use query_compiler::{
-    does_type_implement_trait, is_c_abi_compatible_by_value,
-    liberate_and_deanonymize_late_bound_regions, normalize_ty, try_normalize,
+    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, normalize_ty,
+    try_normalize,
 };
 use quote::format_ident;
 use quote::quote;
@@ -92,7 +92,7 @@ pub fn classify_value_abi<'tcx>(
         // TODO: b/451981992 - Nested arrays containing types that are Drop but not Default do not
         // behave well in std::arrays.
         if let ty::TyKind::Array(nested_ty, _) = inner_ty.kind()
-            && is_drop_not_default(db.tcx(), *nested_ty)
+            && is_drop_not_default(db, *nested_ty)
         {
             bail!(
                 "b/260128806 - nested array {inner_ty} is not supported because it contains a type that implements Drop but not Default"
@@ -129,13 +129,14 @@ pub fn generate_ctor_thunk_call<'tcx>(
     )
 }
 
-fn is_drop_not_default<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bool {
+fn is_drop_not_default<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+    let tcx = db.tcx();
     if !ty.needs_drop(tcx, TypingEnv::fully_monomorphized()) {
         return false;
     }
     let trait_id =
         tcx.get_diagnostic_item(sym::Default).expect("Couldn't find `core::default::Default`");
-    !does_type_implement_trait(tcx, ty, trait_id, [])
+    !db.does_type_implement_trait(ty, trait_id)
 }
 
 /// Formats a C++ declaration of a C-ABI-compatible-function wrapper around a Rust function.
@@ -882,7 +883,7 @@ pub fn generate_trait_thunks<'tcx>(
         // the `Drop` trait.  Instead we require the caller to check
         // `needs_drop`.
         assert!(self_ty.needs_drop(tcx, TypingEnv::fully_monomorphized()));
-    } else if !does_type_implement_trait(
+    } else if !query_compiler::does_type_implement_trait_with_args(
         tcx,
         self_ty,
         trait_id,
