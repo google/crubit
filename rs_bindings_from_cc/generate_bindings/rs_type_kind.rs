@@ -42,6 +42,29 @@ fn item_is_or_aliases_string_view(db: &BindingsGenerator<'_>, item: &ir::Item<'_
     }
 }
 
+/// Returns the error for a type alias that has no bindings, and whose underlying type can't be used
+/// in its place either.
+///
+/// The reasons are nested below the headline, indented like other nested errors. The underlying
+/// type error is omitted if it is identical to `alias_error`.
+fn unsupported_alias_error(
+    alias_name: &str,
+    alias_error: &Error,
+    underlying_type_error: Option<&Error>,
+) -> Error {
+    let alias_error = alias_error.to_string();
+    let mut message =
+        format!("Unsupported type alias {alias_name}:\n  {}", alias_error.replace('\n', "\n  "));
+    if let Some(underlying_type_error) = underlying_type_error {
+        let underlying_type_error = underlying_type_error.to_string();
+        if underlying_type_error != alias_error {
+            message.push_str("\n  ");
+            message.push_str(&underlying_type_error.replace('\n', "\n  "));
+        }
+    }
+    anyhow!(message)
+}
+
 /// Implementation of `BindingsGenerator::rs_type_kind`.
 pub fn rs_type_kind_with_lifetime_elision<'a>(
     db: &BindingsGenerator<'a>,
@@ -250,13 +273,10 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
 
             if let Err(no_bindings_reason) = db.has_bindings(item.clone()) {
                 let error: Error;
-                let unsupported_alias_error = || {
-                    use ir::GenericItem;
-                    anyhow!("Unsupported type alias {name}", name = db.debug_name(item.id()))
-                };
                 // Alias fallbacks: type aliases are unique among items, in that if the item
                 // defining the alias fails to receive bindings, we can still use the aliased type.
                 if let ir::Item::TypeAlias(alias) = item {
+                    let alias_name = db.debug_name(item.id());
                     // Additionally, we should not "see through" type aliases that are specifically
                     // not on targets that intend to support Rust users of those type aliases.
                     // (If we did, then a C++ library owner could break Rust callers, which is a
@@ -270,19 +290,26 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                             *underlying_type.explicit_lifetimes_mut() =
                                 ty.explicit_lifetimes().to_vec();
                         }
-                        if let Ok(ty) =
-                            db.rs_type_kind_with_lifetime_elision(underlying_type, lifetime_options)
+                        match db
+                            .rs_type_kind_with_lifetime_elision(underlying_type, lifetime_options)
                         {
-                            return Ok(ty);
-                        } else {
-                            // TODO(b/481368622): this fails if we fall through to comprehensive
-                            // fallbacks.
-                            return Err(unsupported_alias_error());
+                            Ok(ty) => return Ok(ty),
+                            Err(underlying_type_error) => {
+                                // TODO(b/481368622): this fails if we fall through to comprehensive
+                                // fallbacks.
+                                return Err(unsupported_alias_error(
+                                    &alias_name,
+                                    &no_bindings_reason.into(),
+                                    Some(&underlying_type_error),
+                                ));
+                            }
                         }
                     }
-                    // If it still fails, hide the error. Most users only need to know
-                    // "Alias does not exist", not "decltype(declval<T>().x()) does not exist".
-                    error = unsupported_alias_error();
+                    // The underlying type is not tried here (see above), so only report why the
+                    // alias itself has no bindings (e.g. which target needs Crubit enabled). This
+                    // also avoids surfacing underlying type errors that don't help users of the
+                    // alias, e.g. "decltype(declval<T>().x()) does not exist".
+                    error = unsupported_alias_error(&alias_name, &no_bindings_reason.into(), None);
                 } else {
                     error = no_bindings_reason.into();
                 }

@@ -54,8 +54,10 @@ forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::s
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
 ///   * `wchar_t_field`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'wchar_t': Unsupported builtin type
-///   * `ptrdiff_t_field`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type alias PtrDiff
-///   * `size_t_field`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type alias Size
+///   * `ptrdiff_t_field`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type alias PtrDiff:
+///   Unsupported type 'decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr))': Unsupported type '__ptrdiff_t': Unsupported clang::Type class 'PredefinedSugar'
+///   * `size_t_field`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type alias Size:
+///   Unsupported type 'decltype(sizeof (0))': Unsupported type '__size_t': Unsupported clang::Type class 'PredefinedSugar'
 ///   * `ptr_field`: raw pointer
 ///   * `void_ptr_field`: raw pointer
 ///   * `const_void_ptr_field`: raw pointer
@@ -94,10 +96,12 @@ pub struct FieldTypeTestStruct {
     pub signed_long_field: ::ffi_11::c_long,
     pub signed_long_long_field: ::ffi_11::c_longlong,
     /// Reason for representing this field as a blob of bytes:
-    /// Unsupported type alias PtrDiff
+    /// Unsupported type alias PtrDiff:
+    ///   Unsupported type 'decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr))': Unsupported type '__ptrdiff_t': Unsupported clang::Type class 'PredefinedSugar'
     pub(crate) ptrdiff_t_field: [::core::mem::MaybeUninit<u8>; 8],
     /// Reason for representing this field as a blob of bytes:
-    /// Unsupported type alias Size
+    /// Unsupported type alias Size:
+    ///   Unsupported type 'decltype(sizeof (0))': Unsupported type '__size_t': Unsupported clang::Type class 'PredefinedSugar'
     pub(crate) size_t_field: [::core::mem::MaybeUninit<u8>; 8],
     pub float_field: f32,
     pub double_field: f64,
