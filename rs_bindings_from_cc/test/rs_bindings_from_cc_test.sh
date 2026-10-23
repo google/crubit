@@ -85,6 +85,53 @@ EOT
   EXPECT_FILE_NOT_EMPTY "${cc_out}"
 }
 
+# Successful runs on ordinary headers should not print anything to stderr
+# (except for the known lines allowlisted below).
+# `--stderrthreshold=1` makes warnings visible (as they are in builds that do
+# not set the threshold, e.g. the OSS build); `--undefok` keeps the command
+# valid in builds that don't register the absl log flags.
+function test::no_log_spam_on_success() {
+  local rs_out="${TEST_TMPDIR}/rs_api.rs"
+  local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
+  local stderr_out="${TEST_TMPDIR}/stderr.txt"
+
+  local hdr="${TEST_TMPDIR}/hello_world.h"
+  echo "int foo();" > "${hdr}"
+
+  local json
+  json="$(cat <<-EOT
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+EOT
+)"
+
+  EXPECT_SUCCEED \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//:target \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
+      --rustfmt_exe_path=\"${CRUBIT_RUSTFMT_EXE_PATH}\" \
+      --public_headers=\"${hdr}\" \
+      --target_args=\"$(echo "${json}" | quote_escape)\" \
+      --stderrthreshold=1 \
+      --undefok=stderrthreshold \
+      2>\"${stderr_out}\""
+
+  # Known, benign stderr lines:
+  # * `DEBUG BINARY` is logged by `InitGoogle` in non-optimized builds.
+  # * The `'linker' input unused` clang warning (and the `1 warning generated.`
+  #   summary that follows it) is caused by this test's command line.
+  local unexpected_stderr
+  unexpected_stderr="$(grep -v \
+    -e '\] DEBUG BINARY -- Performance may suffer$' \
+    -e "'linker' input unused when '-fsyntax-only' is present" \
+    -e '^1 warning generated\.$' \
+    "${stderr_out}" || true)"
+  EXPECT_STR_EMPTY "${unexpected_stderr}" \
+    "Unexpected stderr output: ${unexpected_stderr}"
+}
+
 function test::optional_formatting_paths() {
   local rs_out="${TEST_TMPDIR}/rs_api.rs"
   local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"

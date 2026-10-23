@@ -271,6 +271,10 @@ const T* absl_nullable FindDecl(const clang::DeclContext* absl_nonnull context,
   return nullptr;
 }
 
+// Returns the type of `rs::core::fmt::Debug`, or a null `QualType` if it is not
+// declared in the translation unit.  Most translation units don't declare it
+// (only headers that include `support/rs_std/traits.h` do), so its absence is
+// not an error.
 clang::QualType LookupRsCoreFmtDebug(
     const clang::ASTContext* absl_nonnull context) {
   const clang::TranslationUnitDecl* translation_unit =
@@ -278,27 +282,27 @@ clang::QualType LookupRsCoreFmtDebug(
   const clang::NamespaceDecl* rs =
       FindDecl<clang::NamespaceDecl>(translation_unit, "rs");
   if (rs == nullptr) {
-    LOG(WARNING) << "Could not find namespace rs";
     return clang::QualType();
   }
   const clang::NamespaceDecl* core = FindDecl<clang::NamespaceDecl>(rs, "core");
   if (core == nullptr) {
-    LOG(WARNING) << "Could not find namespace rs::core";
     return clang::QualType();
   }
   const clang::NamespaceDecl* fmt = FindDecl<clang::NamespaceDecl>(core, "fmt");
   if (fmt == nullptr) {
-    LOG(WARNING) << "Could not find namespace rs::core::fmt";
     return clang::QualType();
   }
   const clang::TypeDecl* debug = FindDecl<clang::TypeDecl>(fmt, "Debug");
   if (debug == nullptr) {
-    LOG(WARNING) << "Could not find rs::core::fmt::Debug";
     return clang::QualType();
   }
   return context->getTypeDeclType(debug);
 }
 
+// Returns the canonical declaration of `rs_std::impl`, or null if it is not
+// declared in the translation unit.  Most translation units don't declare it
+// (only headers that include `support/rs_std/traits.h` do), so its absence is
+// not an error.
 const clang::ClassTemplateDecl* absl_nullable LookupCanonicalRsStdImpl(
     const clang::ASTContext* absl_nonnull context) {
   const clang::TranslationUnitDecl* translation_unit =
@@ -306,13 +310,11 @@ const clang::ClassTemplateDecl* absl_nullable LookupCanonicalRsStdImpl(
   const clang::NamespaceDecl* rs_std =
       FindDecl<clang::NamespaceDecl>(translation_unit, "rs_std");
   if (rs_std == nullptr) {
-    LOG(WARNING) << "Could not find namespace rs_std";
     return nullptr;
   }
   const clang::ClassTemplateDecl* impl =
       FindDecl<clang::ClassTemplateDecl>(rs_std, "impl");
   if (impl == nullptr) {
-    LOG(WARNING) << "Could not find rs_std::impl";
     return nullptr;
   }
   return impl->getCanonicalDecl();
