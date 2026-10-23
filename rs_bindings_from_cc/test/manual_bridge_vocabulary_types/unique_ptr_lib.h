@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "rs_bindings_from_cc/test/manual_bridge_vocabulary_types/common.h"
 #include "rs_bindings_from_cc/test/manual_bridge_vocabulary_types/crubit_disabled.h"
 #include "support/annotations.h"
@@ -15,32 +16,36 @@
 struct IncompleteType;
 
 CRUBIT_MUST_BIND
-inline int UseUniquePtrByValue(std::unique_ptr<int> p) { return *p; }
+inline int UseUniquePtrByValue(absl_nonnull std::unique_ptr<int> p) {
+  return *p;
+}
 
 CRUBIT_MUST_BIND
-inline int UseUniquePtrByRef(std::unique_ptr<int>& p) { return *p; }
+inline int UseUniquePtrByRef(absl_nonnull std::unique_ptr<int>& p) {
+  return *p;
+}
 
 CRUBIT_MUST_BIND
-inline std::unique_ptr<int> MakeUniquePtr(int value) {
+inline absl_nonnull std::unique_ptr<int> MakeUniquePtr(int value) {
   return std::make_unique<int>(value);
 }
 
-inline std::unique_ptr<NonTrivialType> MakeUniquePtrForNonTrivialType(
-    int value) {
+inline absl_nonnull std::unique_ptr<NonTrivialType>
+MakeUniquePtrForNonTrivialType(int value) {
   return std::make_unique<NonTrivialType>(value);
 }
 
 inline int UseUniquePtrTypeByValueForNonTrivialType(
-    std::unique_ptr<NonTrivialType> p) {
+    absl_nonnull std::unique_ptr<NonTrivialType> p) {
   return p->x;
 }
 
 inline int UseUniquePtrByRefForNonTrivialType(
-    std::unique_ptr<NonTrivialType>& p) {
+    absl_nonnull std::unique_ptr<NonTrivialType>& p) {
   return p->x;
 }
 
-inline std::unique_ptr<std::string> MakeUniquePtrString() {
+inline absl_nonnull std::unique_ptr<std::string> MakeUniquePtrString() {
   return std::make_unique<std::string>("hello, world");
 }
 

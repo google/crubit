@@ -70,6 +70,7 @@ cc_library(
         ":common",
         ":crubit_disabled",
         "//support:annotations",
+        "@abseil-cpp//absl/base:nullability",
     ],
 )
 
@@ -124,6 +125,7 @@ cc_library(
         ":common",
         ":crubit_disabled",
         "//support:annotations",
+        "@abseil-cpp//absl/base:nullability",
     ],
 )
 
@@ -235,6 +237,7 @@ cc_library(
     ],
     deps = [
         "//support:annotations",
+        "@abseil-cpp//absl/base:nullability",
     ],
 )
 

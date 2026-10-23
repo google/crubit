@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "support/annotations.h"
 
 // With the `layout_compat_optional` feature, `std::optional<T>` is
@@ -139,7 +140,7 @@ inline std::optional<std::string> MakeOptionalString(bool engaged) {
 // `cc_std::std::shared_ptr<i32>` in Rust, which is Rust-movable.
 class CRUBIT_MUST_BIND SharedPayload final {
  public:
-  explicit SharedPayload(std::shared_ptr<int> owned)
+  explicit SharedPayload(absl_nonnull std::shared_ptr<int> owned)
       : owned_(std::move(owned)) {}
   SharedPayload(SharedPayload&& other) : owned_(std::move(other.owned_)) {}
 

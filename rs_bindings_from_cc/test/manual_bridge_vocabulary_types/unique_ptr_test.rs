@@ -44,7 +44,8 @@ fn test_unique_ptr_deleted_destructor() {
 
 #[gtest]
 fn test_unique_ptr_final_type() {
-    let _: cc_std::std::unique_ptr<FinalType> = unique_ptr_lib::MakeUniquePtrFinalType();
+    let _: cc_std::std::Nullable<cc_std::std::unique_ptr<FinalType>> =
+        unique_ptr_lib::MakeUniquePtrFinalType();
 }
 
 #[gtest]

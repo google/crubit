@@ -54,11 +54,5 @@ SUPPORTED_FEATURE_DENYLISTS = {
     ],
     # TODO(b/561501001): Migrate these targets to `Nullable<Ptr>` / bare non-null `Ptr`.
     "nonnull_smart_pointers": [
-        # buildifier: keep sorted <internal link>
-        "//cc_bindings_from_rs/test/bridging/unique_ptr:test_helpers",
-        "//rs_bindings_from_cc/test/manual_bridge_vocabulary_types:optional_lib",
-        "//rs_bindings_from_cc/test/manual_bridge_vocabulary_types:unique_ptr_lib",
-        "//support/cc_std_impl/test/shared_ptr:test_helpers",
-        "//support/cc_std_impl/test/unique_ptr:test_helpers",
     ],
 }
