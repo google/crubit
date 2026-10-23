@@ -1281,6 +1281,32 @@ fn test_default_crubit_features_disabled_dependency_struct() -> Result<()> {
 }
 
 #[gtest]
+fn test_default_crubit_features_disabled_dependency_type_alias_error_explains_why() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        "void Func(NotPresent);",
+        /* dependency= */ "using NotPresent = signed char;",
+    )?;
+
+    let mut ir = make_test_ir_dependency(&proto, None)?;
+    ir.target_crubit_features_mut(&ir::BazelLabel::from("//test:dependency")).clear();
+    enable_supported(&mut ir);
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let func = retrieve_func(db.ir(), "Func");
+    let rs_type = db.rs_type_kind(func.params()[0].type_().clone())?;
+    let RsTypeKind::Error { error, .. } = rs_type else {
+        panic!("Expected RsTypeKind::Error, got {rs_type:?}");
+    };
+    expect_eq!(
+        error.to_string(),
+        "Unsupported type alias NotPresent:\n  \
+         Crubit is not enabled on defining target:\n    \
+         //test:dependency"
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_default_crubit_features_disabled_template_explicit_specialization() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
