@@ -8,17 +8,16 @@ next to the library you want to call:
 
 Here is where you can use each of them today:
 
-Build system          | `cpp_api_from_rust` (C++ calling Rust)                                   | `rust_api_from_cpp` (Rust calling C++)
-:-------------------- | :----------------------------------------------------------------------- | :-------------------------------------
-[Bazel](bazel.md)     | [Supported](bazel.md#cpp_api_from_rust) ([example](https://github.com/google/crubit/tree/main/examples/build_systems/bazel)) | [Supported](bazel.md#rust_api_from_cpp)
-[CMake](cmake.md)     | [Supported](cmake.md) ([example](https://github.com/google/crubit/tree/main/examples/build_systems/cmake)) | Not yet
-[Other](#other-build-systems) | Through the `cargo cpp_api_from_rust` subcommand                    | Not yet
+| Build system                  | `cpp_api_from_rust` (C++ calling Rust)                                                                              | `rust_api_from_cpp` (Rust calling C++)  |
+| :---------------------------- | :------------------------------------------------------------------------------------------------------------------ | :-------------------------------------- |
+| [Bazel](bazel.md)             | [Supported](bazel.md#cpp_api_from_rust) ([example](https://github.com/google/crubit/tree/main/examples/build_systems/bazel)) | [Supported](bazel.md#rust_api_from_cpp) |
+| [CMake](cmake.md)             | [Supported](cmake.md) ([example](https://github.com/google/crubit/tree/main/examples/build_systems/cmake))                   | Not yet                                 |
+| [Other](#other-build-systems) | Through the `cargo cpp_api_from_rust` subcommand                                                                    | Not yet                                 |
 
 Crubit is used in production inside Google, and we are working towards the same
-level of support for the open-source integrations; see
-[Usage outside of Google](status.md#usage-outside-of-google) for the plan.
-Open-source CI builds the Bazel and CMake examples on Linux x86_64 on every
-change to Crubit.
+level of support for the open-source integrations; see [Usage outside of
+Google](status.md#usage-outside-of-google) for the plan. Open-source CI builds
+the Bazel and CMake examples on Linux x86_64 on every change to Crubit.
 
 ## Toolchain requirements {#toolchain-requirements}
 
@@ -45,6 +44,7 @@ channel:
 *   **Bazel (nightly):** `crubit_toolchains.configure` in `MODULE.bazel`
     downloads a pinned nightly toolchain with `rustc-dev` for you; see
     [Bazel](bazel.md).
+
 *   **Nightly with `rustup` (CMake or Cargo):** Install a recent nightly with
     the `rustc-dev` component:
 
@@ -54,6 +54,7 @@ channel:
 
     In a Crubit checkout, `rust-toolchain.toml` selects a nightly toolchain with
     `rustc-dev` automatically.
+
 *   **Stable with `rustup` (CMake or Cargo):** Add the `rustc-dev` component to
     one of the two most recent stable releases, and set `RUSTC_BOOTSTRAP=1` when
     building Crubit and the crates that use the generated bindings (because they
@@ -66,26 +67,26 @@ channel:
 
 ### C++
 
-`cpp_api_from_rust` generates portable C++20. The examples and CI use Clang,
-but the generated code doesn't depend on a particular compiler or Clang
-version.
+`cpp_api_from_rust` generates portable C++20. The examples and CI use Clang, but
+the generated code doesn't depend on a particular compiler or Clang version.
 
 `rust_api_from_cpp` parses C++ with Clang's libraries, so the Crubit binary is
 built against a specific LLVM commit. The Bazel integration takes care of this
 for you, and `MODULE.bazel` pins a commit that CI updates regularly. The LLVM
 release that Bazel downloads for compiling C++ needs to be at least as new as
 the LLVM that your Rust toolchain was built with; `crubit_toolchains` checks
-this for you.
+this against the `rustc` found on your `PATH`, so a `rustc` must be on `PATH`
+when Bazel fetches dependencies.
 
 ## Versions and releases
 
-Crubit doesn't publish releases or semantic versions yet. Development happens
-on `main`, and every day a GitHub Action moves the
+Crubit doesn't publish releases or semantic versions yet. Development happens on
+`main`, and every day a GitHub Action moves the
 [`latest`](https://github.com/google/crubit/tree/latest) tag to the newest
 commit on `main` that passed CI. We recommend that you **pin a specific
 commit**, such as the one `latest` points to, and upgrade on purpose. Binary
-releases are planned; see
-[Usage outside of Google](status.md#usage-outside-of-google).
+releases are planned; see [Usage outside of
+Google](status.md#usage-outside-of-google).
 
 ## Other build systems
 

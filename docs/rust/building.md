@@ -32,7 +32,8 @@ To run the examples on Linux x86_64, you need:
     `CMakeLists.txt` uses to compile the C++ binary), and `rustup` (which
     installs the Rust toolchain from Crubit's `rust-toolchain.toml`).
 *   **Bazel:** `bazelisk` (which downloads the Rust and Clang toolchains for
-    you).
+    you), plus a `rustc` on your `PATH`, which `crubit_toolchains` uses to check
+    LLVM version compatibility.
 
 {{#tabs}}
 

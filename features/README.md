@@ -139,5 +139,4 @@ visibility restrictions or level of support. The build flag:
 
 accepts a comma-separated list of unstable internal feature names (like
 `supported`, `experimental`, or the special alias `all`) and overrides the
-baseline feature set for all targets for the duration of the build. The flag's
-default value is the empty list.
+baseline feature set for all targets for the duration of the build.

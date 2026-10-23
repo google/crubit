@@ -33,7 +33,7 @@ impl std::fmt::Display for Account { ... }
 // Takes shared references, mapped to const references in C++.
 pub fn calculate_interest(account: &Account, rate: f64) -> f64 { ... }
 
-// Takes a string slice, mapped to rs_std::StrRef in C++.
+// Takes a string slice, mapped to rs::StrRef in C++.
 pub fn is_valid_username(username: &str) -> bool { ... }
 ```
 
