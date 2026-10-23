@@ -303,4 +303,13 @@ struct Option final {
 
 }  // namespace rs_std
 
+namespace rs {
+
+// Shorthand for `rs_std::Option<T>`, mirroring `Option`'s place in the Rust
+// prelude.
+template <typename T>
+using Option = ::rs_std::Option<T>;
+
+}  // namespace rs
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_OPTION_H_

@@ -4,6 +4,7 @@
 
 #include "cc_bindings_from_rs/test/string/string.h"
 
+#include <type_traits>
 #include <utility>
 
 #include "gtest/gtest.h"
@@ -29,6 +30,15 @@ TEST(RustStringBridging, References) {
   string::append_to_rust_string(s, " appended");
   EXPECT_EQ(string::compute_rust_string_ref_length(s), 14);
   EXPECT_EQ(s.as_str(), "hello appended");
+}
+
+TEST(RustStringBridging, ShorthandAlias) {
+  static_assert(std::is_same_v<rs::String, rs::alloc::string::String>);
+  static_assert(std::is_same_v<rs::String, rs::std::string::String>);
+
+  rs::String s("hello");
+  EXPECT_EQ(string::compute_rust_string_ref_length(s), 5);
+  EXPECT_EQ(string::compute_rust_string_length(std::move(s)), 5);
 }
 
 }  // namespace
