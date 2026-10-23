@@ -263,8 +263,12 @@ impl Ord for ExportedPath {
                 (false, true) => Ordering::Less,
                 _ => Ordering::Equal,
             })
-            // Failing all else, choose the lexicographically smallest path.
-            .then_with(|| self.path.cmp(&other.path))
+            // Failing all else, choose the lexicographically smallest path. Compare the segments
+            // as strings: `Symbol`'s `Ord` compares interner indices, which depend on the order
+            // in which rustc happened to intern the names.
+            .then_with(|| {
+                self.path.iter().map(|s| s.as_str()).cmp(other.path.iter().map(|s| s.as_str()))
+            })
             .then_with(|| self.name.as_str().cmp(other.name.as_str()))
     }
 }
