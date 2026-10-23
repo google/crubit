@@ -70,10 +70,10 @@ void foo(Status);
 ```c++ {.bad}
 struct LayoutCompatibleType {
     UnsupportedType field;
-    // or [[no_unique_addres]] int field; or...
+    // or [[no_unique_address]] int field; or...
 };
 
-// foo cannot receive bindings, because the function pointer type
+// bad_foo cannot receive bindings, because the function pointer type
 // does not work with non-ABI-compatible types
 void bad_foo(void (*)(LayoutCompatibleType));
 ```
@@ -81,9 +81,9 @@ void bad_foo(void (*)(LayoutCompatibleType));
 #### Rust {.new-tab}
 
 ```rust {.good}
-pub fn foo(_: i32) {}
-pub fn foo(_: fn(i32)) {}
-pub fn foo(_: Status) {}
+pub fn foo1(_: i32) {}
+pub fn foo2(_: fn(i32)) {}
+pub fn foo3(_: Status) {}
 ```
 
 ```rust {.bad}
@@ -91,15 +91,15 @@ struct LayoutCompatibleType {
     field: UnsupportedType
 }
 
-// foo cannot receive bindings, because the function pointer type
+// bad_foo cannot receive bindings, because the function pointer type
 // does not work with non-ABI-compatible types
 pub fn bad_foo(_: fn(LayoutCompatibleType)) {}
 ```
 
 ```rust {.bad}
-// foo cannot receive bindings, because bridged types cannot be passed
+// bad_foo cannot receive bindings, because bridged types cannot be passed
 // by reference
-fn bad_foo(_: &Status) {}
+pub fn bad_foo(_: &(i32, i32)) {}
 ```
 
 </section>

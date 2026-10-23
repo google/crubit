@@ -32,11 +32,12 @@ C++        | Rust
 ### C++ pointers with lifetime {#object_lifetime}
 
 C++ allows attaching lifetime annotations to arbitrary types, including
-pointers. There are two competing annotations for this, neither of which are
-supported in Rust bindings yet:
+pointers. There are two competing annotations for this:
 
-*   `[[clang::lifetimebound]]`
-*   [Lifetime attributes](https://discourse.llvm.org/t/rfc-lifetime-annotations-for-c/61377)
+*   `[[clang::lifetimebound]]`: Crubit honors this on references (with
+    `assume_lifetimes`, see [Rust references](#rust_references)).
+*   [Lifetime attributes](https://discourse.llvm.org/t/rfc-lifetime-annotations-for-c/61377):
+    not supported.
 
 ## Function pointers {#function}
 
@@ -45,7 +46,7 @@ and vice versa:
 
 C++                                   | Rust
 ------------------------------------- | -------------------------------
-`void(&)(int32_t)>`                   | `extern "C" fn(i32)`
+`void(&)(int32_t)`                    | `extern "C" fn(i32)`
 `void(*)(int32_t)`                    | `Option<extern "C" fn(i32)>`
 `std::type_identity_t<void(int32_t)>` | Not supported [^function_types]
 
@@ -84,9 +85,12 @@ lifetime of the function pointer.
 
 Rust references, unlike C++ references, cannot mutably alias. This introduces a
 new form of Undefined Behavior (UB) that many C++ programmers may not be
-accustomed to. For now, C++ pointers and references do **not** map to Rust
-references. Instead, they map to Rust raw pointers. Vice versa, Rust references
-are an unsupported type which do not map to any C++ type at all.
+accustomed to. C++ pointers map to Rust raw pointers. C++ references map to Rust
+references (in parameter position) or to `cref::CRef`/`cref::CMut` (in return
+position) when `assume_lifetimes` is enabled, which it is by default under
+`//features:supported`. Without it, C++ references map to raw
+pointers. Vice versa, Rust references are an unsupported type which do not map
+to any C++ type at all.
 
 The one exception to this rule are function parameters. In some limited
 circumstances, Rust functions may accept references, and the corresponding C++

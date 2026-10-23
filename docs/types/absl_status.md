@@ -72,14 +72,15 @@ When using `googletest` alongside `status::{ok, err}`, import matchers with
 aliases to avoid name collisions:
 
 ```rust
-use googletest::matchers::{err as is_err, ok as is_ok, status_is};
+use googletest::matchers::{eq, err as is_err, ok as is_ok, status_is};
+use status::StatusCodeError;
 ```
 
 You can then assert on `Status` or `StatusOr` values:
 
 ```rust
 expect_that!(result, is_ok(eq(&42)));
-expect_that!(result, is_err(status_is(StatusCode::Internal)));
+expect_that!(result, is_err(status_is(StatusCodeError::INTERNAL)));
 ```
 
 ## Types inside `StatusOr` must be layout-compatible {#layout-compatibility}
@@ -90,11 +91,10 @@ requires that the inner payload type `T` is **also layout-compatible** between
 C++ and Rust.
 
 Types that are bridged across the FFI boundary via runtime conversions (such as
-[Protocol Buffers](/docs/types/protobuf.md), which are not
-layout-compatible between C++ and Rust; see b/534900713, or `std::string`) do
-not share the same in-memory representation between C++ and Rust. Because `T` is
-stored directly inside `StatusOr<T>`, `absl::StatusOr<T>` cannot be used with
-these types.
+[Protocol Buffers](protobuf.md), which are not layout-compatible between C++ and
+Rust; see b/534900713, or `std::string`) do not share the same in-memory
+representation between C++ and Rust. Because `T` is stored directly inside
+`StatusOr<T>`, `absl::StatusOr<T>` cannot be used with these types.
 
 As a result, functions that accept or return `absl::StatusOr<MyProto>` (or
 `c9::Co<absl::StatusOr<MyProto>>`) cannot be bound directly by Crubit.

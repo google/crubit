@@ -14,7 +14,7 @@ Crubit supports bidirectional function callbacks across C++ and Rust:
 | Direction       | C++ type                                 | Rust type                                                  | Semantics                                        |
 | :-------------- | :--------------------------------------- | :--------------------------------------------------------- | :----------------------------------------------- |
 | C++ $\\to$ Rust | `absl::AnyInvocable<R(...) const>`       | `Box<dyn Fn(...) -> R + Send + Sync>`                      | Multiple invocations                             |
-| C++ $\\to$ Rust | `absl::AnyInvocable<R(...) &&>`          | `Box<dyn FnOnce(...) -> R + Send + Sync>`                  | Single-use invocation                            |
+| C++ $\\to$ Rust | `absl::AnyInvocable<R(...) &&>`          | `Box<dyn FnOnce(...) -> R + Send>`                         | Single-use invocation                            |
 | C++ $\\to$ Rust | `absl::AnyInvocable<R(...)>` (non-const) | `Box<dyn Fn(...) -> R + Send + Sync>`                      | Promoted to `Fn`                                 |
 | Rust $\\to$ C++ | `rs::FnRef<R(...) const>`                | `&dyn Fn(...) -> R` / `impl Fn(...) -> R`                  | Borrowed, zero allocation                        |
 | Rust $\\to$ C++ | `rs::FnRef<R(...)>`                      | `&mut dyn FnMut(...) -> R` / `impl FnMut(...) -> R`        | Borrowed mutable, zero allocation                |
