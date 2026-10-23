@@ -399,8 +399,8 @@ fn api_func_shape_for_operator_index<'a>(
         _ => {
             bail_to_errors!(
                 errors,
-                "Unexpected type for 'this' parameter of operator[]: {:?}.",
-                container_type
+                "Unexpected type for 'this' parameter of operator[]: {}.",
+                container_type.display(db)
             );
         }
     };
