@@ -19,11 +19,10 @@ const _: () = assert!(
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::non_trivially_destructible_golden::NonTriviallyDestructable,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::non_trivially_destructible_golden::NonTriviallyDestructable as::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<::non_trivially_destructible_golden::NonTriviallyDestructable as::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]
@@ -35,11 +34,10 @@ extern "C" fn __crubit_thunk_Drop_udrop_unon_utrivially_udestructible_ugolden_x0
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
     __self: &'static ::non_trivially_destructible_golden::NonTriviallyDestructable,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::non_trivially_destructible_golden::NonTriviallyDestructable,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::non_trivially_destructible_golden::NonTriviallyDestructable as::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<::non_trivially_destructible_golden::NonTriviallyDestructable as::core::clone::Clone>::clone(__self));
     }
 }
 #[unsafe(no_mangle)]
@@ -56,10 +54,11 @@ const _: () = assert!(
         == 0
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_return_uby_uvalue(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_return_uby_uvalue(
+    __ret_ptr: *mut ::non_trivially_destructible_golden::NonTriviallyDestructable,
+) -> () {
     unsafe {
-        let __rs_return_value = ::non_trivially_destructible_golden::return_by_value();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::non_trivially_destructible_golden::return_by_value());
     }
 }
 #[unsafe(no_mangle)]

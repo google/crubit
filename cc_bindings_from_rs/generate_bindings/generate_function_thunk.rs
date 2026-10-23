@@ -14,7 +14,7 @@ use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiTypeToRustExprTokens;
 use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
-use error_report::{anyhow, bail};
+use error_report::{anyhow, bail, ensure};
 use format_type::CcType;
 use format_type::{
     alias_ty_as_opaque_def_id, format_cc_ident, format_param_types_for_cc_thunk,
@@ -284,17 +284,25 @@ fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
 
     match bridged_type {
         BridgedType::ExternCFuncConverters { cpp_to_rust_converter, .. } => {
-            let temp_name = format_ident!("__crubit_temp");
             let cpp_to_rust_converter_ident = add_extern_c_decl(
                 extern_c_decls,
                 ExternCDeclKind::CppToRustConverter,
                 *cpp_to_rust_converter,
             );
+            // The generated block below declares a local named `__crubit_temp`, which would
+            // shadow the parameter or the converter if either of them had the same name.
+            // `thunk_param_names` never produces `__crubit_`-prefixed names, so this can
+            // only fail for a converter function literally named `__crubit_temp`.
+            ensure!(
+                *local_name != "__crubit_temp" && cpp_to_rust_converter_ident != "__crubit_temp",
+                "`__crubit_temp` is reserved and cannot be used as the name of a parameter \
+                 or a `cpp_to_rust_converter`"
+            );
             Ok(quote! {
                 let #local_name = {
-                    let mut #temp_name = ::core::mem::MaybeUninit::<#rs_type>::uninit();
-                    #cpp_to_rust_converter_ident(#local_name,#temp_name.as_mut_ptr() as *mut core::ffi::c_void);
-                    #temp_name.assume_init()
+                    let mut __crubit_temp = ::core::mem::MaybeUninit::<#rs_type>::uninit();
+                    #cpp_to_rust_converter_ident(#local_name, __crubit_temp.as_mut_ptr() as *mut core::ffi::c_void);
+                    __crubit_temp.assume_init()
                 };
             })
         }
@@ -397,13 +405,19 @@ fn c_abi_for_param_type<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
 
 /// Returns an iterator which yields arbitrary unique names for the parameters
 /// of the function identified by `fn_def_id`.
+///
+/// The returned names never start with `__crubit_`, which is reserved for locals introduced by
+/// the generated thunk body.
 fn thunk_param_names(tcx: TyCtxt<'_>, fn_def_id: DefId) -> impl Iterator<Item = Ident> + '_ {
     fn_arg_idents(tcx, fn_def_id).into_iter().enumerate().map(|(i, ident)| {
         let Some(ident) = ident.as_ref() else {
             return format_ident!("__param_{i}");
         };
         // TODO(jeanpierreda): Deduplicate the logic after the next rustc rollout.
-        if ident.name == kw::Underscore || ident.name.is_empty() {
+        if ident.name == kw::Underscore
+            || ident.name.is_empty()
+            || ident.as_str().starts_with("__crubit_")
+        {
             format_ident!("__param_{i}")
         } else if ident.name == kw::SelfLower {
             format_ident!("__self")
@@ -447,9 +461,14 @@ fn add_extern_c_decl(
 }
 
 /// Writes a Rust value out into the memory pointed to a `*mut c_void` pointed to by `c_ptr`.
+///
+/// `local_name_prefix` is used to name any locals introduced to hold parts of `rs_value` (e.g.
+/// the elements of a tuple). It must be unique within the scope of the generated code, so that
+/// these locals do not shadow other locals (including those of enclosing tuples).
 fn write_rs_value_to_c_abi_ptr<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    rs_value: &Ident,
+    rs_value: &TokenStream,
+    local_name_prefix: &Ident,
     c_ptr: &Ident,
     rs_type: Ty<'tcx>,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
@@ -464,6 +483,8 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
                     ExternCDeclKind::RustToCppConverter,
                     rust_to_cpp_converter,
                 );
+                // The temporary holding `rs_value` lives until the end of the statement, so
+                // it is dropped only after the converter has run.
                 quote! {
                     #rust_to_cpp_converter_ident(
                         ::core::ptr::from_ref(&#rs_value) as *const ::core::ffi::c_void,
@@ -489,7 +510,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
         ValueAbi::LegacyTuple(tuple_tys) => {
             let num_elements = tuple_tys.len();
             let rs_element_names =
-                (0..num_elements).map(|i| format_ident!("{rs_value}_{i}")).collect_vec();
+                (0..num_elements).map(|i| format_ident!("{local_name_prefix}_{i}")).collect_vec();
             let ptr_member_names =
                 (0..num_elements).map(|i| format_ident!("{c_ptr}_{i}")).collect_vec();
             let unpack = quote! {
@@ -498,9 +519,11 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
             };
             let write_elements = (0..num_elements)
                 .map(|i| {
+                    let elem_ident = &rs_element_names[i];
                     write_rs_value_to_c_abi_ptr(
                         db,
-                        &rs_element_names[i],
+                        &quote! { #elem_ident },
+                        elem_ident,
                         &ptr_member_names[i],
                         tuple_tys[i],
                         extern_c_decls,
@@ -618,8 +641,7 @@ pub fn generate_thunk_impl<'tcx>(
         });
         thunk_return_expression = quote! {
             // SAFETY: `__ret_ptr` points to a valid, uninitialized crubit::Slot.
-            ::core::ptr::write(
-                #return_ptr_ident,
+            #return_ptr_ident.write(
                 ::crubit_support::dyn_erased_future::DynErasedFuture::new(#fully_qualified_fn_name( #( #fn_args ),* ))
             );
         };
@@ -634,31 +656,42 @@ pub fn generate_thunk_impl<'tcx>(
             };
         } else {
             let return_ptr_ident = format_ident!("__ret_ptr");
-            let rs_return_value_ident = format_ident!("__rs_return_value");
             thunk_return_type = quote! { () };
 
-            let return_ptr_type = match return_abi {
-                ValueAbi::Bridged(BridgedType::Option(_)) => {
-                    // Composable bridging writes its Crubit ABI form in an unsigned char array.
-                    quote! { *mut core::ffi::c_uchar }
+            let fn_call_expr = quote! { #fully_qualified_fn_name( #( #fn_args ),* ) };
+            match return_abi {
+                ValueAbi::Array | ValueAbi::ByPointer => {
+                    // Like by-pointer params (see `c_abi_for_param_type`), the out-param is
+                    // typed as `*mut T`, so the call result can be written directly into it.
+                    let rs_type = db.format_ty_for_rs(sig.output())?;
+                    thunk_params.push(quote! { #return_ptr_ident: *mut #rs_type });
+                    thunk_return_expression = quote! {
+                        #return_ptr_ident.write(#fn_call_expr);
+                    };
                 }
-                _ => quote! { *mut core::ffi::c_void },
-            };
-            thunk_params.push(quote! {
-                #return_ptr_ident: #return_ptr_type
-            });
-            let write_return_value = write_rs_value_to_c_abi_ptr(
-                db,
-                &rs_return_value_ident,
-                &return_ptr_ident,
-                sig.output(),
-                &mut extern_c_decls,
-                is_constructor,
-            )?;
-            thunk_return_expression = quote! {
-                let #rs_return_value_ident = #fully_qualified_fn_name( #( #fn_args ),* );
-                #write_return_value
-            };
+                _ => {
+                    let return_ptr_type = match return_abi {
+                        ValueAbi::Bridged(BridgedType::Option(_)) => {
+                            // Composable bridging writes its Crubit ABI form in an unsigned char
+                            // array.
+                            quote! { *mut core::ffi::c_uchar }
+                        }
+                        _ => quote! { *mut core::ffi::c_void },
+                    };
+                    thunk_params.push(quote! {
+                        #return_ptr_ident: #return_ptr_type
+                    });
+                    thunk_return_expression = write_rs_value_to_c_abi_ptr(
+                        db,
+                        &fn_call_expr,
+                        &format_ident!("__rs_return_value"),
+                        &return_ptr_ident,
+                        sig.output(),
+                        &mut extern_c_decls,
+                        is_constructor,
+                    )?;
+                }
+            }
         }
     }
 

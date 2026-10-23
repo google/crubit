@@ -14,11 +14,10 @@ extern crate core;
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_clone_ushared_uptr(
     val: &'static ::cc_std::std::shared_ptr<i32>,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::cc_std::std::shared_ptr<i32>,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::shared_ptr_golden::clone_shared_ptr(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::shared_ptr_golden::clone_shared_ptr(val));
     }
 }
 #[unsafe(no_mangle)]
@@ -33,22 +32,20 @@ unsafe extern "C" fn __crubit_thunk_consume_ushared_uptr(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_roundtrip_unonnull_ushared_uptr(
     val: *mut ::cc_std::std::NonNull<::cc_std::std::shared_ptr<i32>>,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::cc_std::std::NonNull<::cc_std::std::shared_ptr<i32>>,
 ) -> () {
     unsafe {
         let val = val.read();
-        let __rs_return_value = ::shared_ptr_golden::roundtrip_nonnull_shared_ptr(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::shared_ptr_golden::roundtrip_nonnull_shared_ptr(val));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_roundtrip_ushared_uptr(
     val: *mut ::cc_std::std::shared_ptr<i32>,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::cc_std::std::shared_ptr<i32>,
 ) -> () {
     unsafe {
         let val = val.read();
-        let __rs_return_value = ::shared_ptr_golden::roundtrip_shared_ptr(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::shared_ptr_golden::roundtrip_shared_ptr(val));
     }
 }

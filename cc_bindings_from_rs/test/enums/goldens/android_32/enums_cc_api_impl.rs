@@ -120,12 +120,11 @@ const _: () = assert!(::core::mem::align_of::<::enums_golden::qr_error::QrError>
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Structured(
     __param_0: *mut ::enums_golden::qr_error::StructuredQrError,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::qr_error::QrError,
 ) -> () {
     unsafe {
         let __param_0 = __param_0.read();
-        let __rs_return_value = ::enums_golden::qr_error::QrError::Structured(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::qr_error::QrError::Structured(__param_0));
     }
 }
 #[unsafe(no_mangle)]
@@ -150,57 +149,52 @@ const _: () = assert!(::core::mem::align_of::<::enums_golden::qr_error::Structur
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_TotalMismatch(
     __param_0: usize,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::qr_error::StructuredQrError,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::qr_error::StructuredQrError::TotalMismatch(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::qr_error::StructuredQrError::TotalMismatch(__param_0));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_SeqGreaterThanTotal(
     __param_0: u8,
     __param_1: u8,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::qr_error::StructuredQrError,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::qr_error::StructuredQrError::SeqGreaterThanTotal(__param_0, __param_1);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::qr_error::StructuredQrError::SeqGreaterThanTotal(
+            __param_0, __param_1,
+        ));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_LengthMismatch(
     __param_0: usize,
     __param_1: usize,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::qr_error::StructuredQrError,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::qr_error::StructuredQrError::LengthMismatch(__param_0, __param_1);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::qr_error::StructuredQrError::LengthMismatch(
+            __param_0, __param_1,
+        ));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_UnsupportedVersion(
     __param_0: i16,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::qr_error::StructuredQrError,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::qr_error::StructuredQrError::UnsupportedVersion(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::qr_error::StructuredQrError::UnsupportedVersion(__param_0));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_SplitMax16(
     __param_0: usize,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::qr_error::StructuredQrError,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::enums_golden::qr_error::StructuredQrError::SplitMax16(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::qr_error::StructuredQrError::SplitMax16(__param_0));
     }
 }
 #[unsafe(no_mangle)]
@@ -240,35 +234,31 @@ const _: () = assert!(::core::mem::size_of::<::enums_golden::repr_c::MyEnum>() =
 const _: () = assert!(::core::mem::align_of::<::enums_golden::repr_c::MyEnum>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_x0000003a_x0000003aMyEnum(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_c::MyEnum,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::enums_golden::repr_c::MyEnum as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<::enums_golden::repr_c::MyEnum as ::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_E(
     __param_0: *mut ::alloc::string::String,
     __param_1: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_c::MyEnum,
 ) -> () {
     unsafe {
         let __param_0 = __param_0.read();
-        let __rs_return_value = ::enums_golden::repr_c::MyEnum::E(__param_0, __param_1);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::repr_c::MyEnum::E(__param_0, __param_1));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_A(
     __param_0: i32,
     __param_1: i64,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_c::MyEnum,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::enums_golden::repr_c::MyEnum::A(__param_0, __param_1);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::repr_c::MyEnum::A(__param_0, __param_1));
     }
 }
 #[unsafe(no_mangle)]
@@ -324,45 +314,49 @@ const _: () = assert!(
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_A(__param_0: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_A(
+    __param_0: i32,
+    __ret_ptr: *mut ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant::A(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(::enums_golden::repr_c_clone_active_variant::CloneActiveVariant::A(__param_0));
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_B(__param_0: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_B(
+    __param_0: i32,
+    __ret_ptr: *mut ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant::B(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(::enums_golden::repr_c_clone_active_variant::CloneActiveVariant::B(__param_0));
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_C(__param_0: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_C(
+    __param_0: i32,
+    __ret_ptr: *mut ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant::C(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(::enums_golden::repr_c_clone_active_variant::CloneActiveVariant::C(__param_0));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
     __self: &'static ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::clone::Clone>::clone(__self));
     }
 }
 #[unsafe(no_mangle)]
@@ -398,26 +392,26 @@ const _: () =
     assert!(::core::mem::align_of::<::enums_golden::repr_c_clone_counter::CloneCount>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_c_clone_counter::CloneCount,
 ) -> () {
     unsafe {
-        let __rs_return_value =
+        __ret_ptr.write(
             <::enums_golden::repr_c_clone_counter::CloneCount as ::core::default::Default>::default(
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+            ),
+        );
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
     __self: &'static ::enums_golden::repr_c_clone_counter::CloneCount,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_c_clone_counter::CloneCount,
 ) -> () {
     unsafe {
-        let __rs_return_value =
+        __ret_ptr.write(
             <::enums_golden::repr_c_clone_counter::CloneCount as ::core::clone::Clone>::clone(
                 __self,
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+            ),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -435,26 +429,29 @@ const _: () = assert!(::core::mem::size_of::<::enums_golden::repr_c_drop::DropMe
 const _: () = assert!(::core::mem::align_of::<::enums_golden::repr_c_drop::DropMe>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aDropMe(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_c_drop::DropMe,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::enums_golden::repr_c_drop::DropMe as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(<::enums_golden::repr_c_drop::DropMe as ::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_A(__param_0: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_A(
+    __param_0: i32,
+    __ret_ptr: *mut ::enums_golden::repr_c_drop::DropMe,
+) -> () {
     unsafe {
-        let __rs_return_value = ::enums_golden::repr_c_drop::DropMe::A(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::repr_c_drop::DropMe::A(__param_0));
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_B(__param_0: i64, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_B(
+    __param_0: i64,
+    __ret_ptr: *mut ::enums_golden::repr_c_drop::DropMe,
+) -> () {
     unsafe {
-        let __rs_return_value = ::enums_golden::repr_c_drop::DropMe::B(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::repr_c_drop::DropMe::B(__param_0));
     }
 }
 #[unsafe(no_mangle)]
@@ -472,19 +469,25 @@ const _: () = assert!(
         == 16
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_A(__param_0: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_A(
+    __param_0: i32,
+    __ret_ptr: *mut ::enums_golden::repr_c_variant_alignment::OverAlignedNarrowPayload,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::repr_c_variant_alignment::OverAlignedNarrowPayload::A(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::repr_c_variant_alignment::OverAlignedNarrowPayload::A(
+            __param_0,
+        ));
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_B(__param_0: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_B(
+    __param_0: u8,
+    __ret_ptr: *mut ::enums_golden::repr_c_variant_alignment::OverAlignedNarrowPayload,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::repr_c_variant_alignment::OverAlignedNarrowPayload::B(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::repr_c_variant_alignment::OverAlignedNarrowPayload::B(
+            __param_0,
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -502,19 +505,23 @@ const _: () = assert!(
         == 16
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_A(__param_0: u64, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_A(
+    __param_0: u64,
+    __ret_ptr: *mut ::enums_golden::repr_c_variant_alignment::OverAlignedWidePayload,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::repr_c_variant_alignment::OverAlignedWidePayload::A(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(::enums_golden::repr_c_variant_alignment::OverAlignedWidePayload::A(__param_0));
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_B(__param_0: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_B(
+    __param_0: u8,
+    __ret_ptr: *mut ::enums_golden::repr_c_variant_alignment::OverAlignedWidePayload,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::repr_c_variant_alignment::OverAlignedWidePayload::B(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(::enums_golden::repr_c_variant_alignment::OverAlignedWidePayload::B(__param_0));
     }
 }
 #[unsafe(no_mangle)]
@@ -532,19 +539,23 @@ const _: () = assert!(
         == 8
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_B(__param_0: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_B(
+    __param_0: u8,
+    __ret_ptr: *mut ::enums_golden::repr_c_variant_alignment::UnbindableFieldPayload,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::repr_c_variant_alignment::UnbindableFieldPayload::B(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(::enums_golden::repr_c_variant_alignment::UnbindableFieldPayload::B(__param_0));
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_make_ua(value: u64, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_make_ua(
+    value: u64,
+    __ret_ptr: *mut ::enums_golden::repr_c_variant_alignment::UnbindableFieldPayload,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::repr_c_variant_alignment::UnbindableFieldPayload::make_a(value);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(::enums_golden::repr_c_variant_alignment::UnbindableFieldPayload::make_a(value));
     }
 }
 #[unsafe(no_mangle)]
@@ -565,21 +576,22 @@ const _: () = assert!(
 unsafe extern "C" fn __crubit_thunk_A(
     __param_0: i32,
     __param_1: i64,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_c_variant_alignment::WideTagNarrowAlignment,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::enums_golden::repr_c_variant_alignment::WideTagNarrowAlignment::A(
+        __ret_ptr.write(::enums_golden::repr_c_variant_alignment::WideTagNarrowAlignment::A(
             __param_0, __param_1,
-        );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ));
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_B(__param_0: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_B(
+    __param_0: u8,
+    __ret_ptr: *mut ::enums_golden::repr_c_variant_alignment::WideTagNarrowAlignment,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::repr_c_variant_alignment::WideTagNarrowAlignment::B(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(::enums_golden::repr_c_variant_alignment::WideTagNarrowAlignment::B(__param_0));
     }
 }
 #[unsafe(no_mangle)]
@@ -638,12 +650,12 @@ const _: () = assert!(::core::mem::align_of::<::enums_golden::repr_rust::RustRep
 unsafe extern "C" fn __crubit_thunk_TuplePayloadVariant(
     __param_0: i32,
     __param_1: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_rust::RustReprEnum,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::enums_golden::repr_rust::RustReprEnum::TuplePayloadVariant(__param_0, __param_1);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::repr_rust::RustReprEnum::TuplePayloadVariant(
+            __param_0, __param_1,
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -675,30 +687,29 @@ const _: () = assert!(
     >() == 4
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_MakeNoPayloadVariant(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_MakeNoPayloadVariant(
+    __ret_ptr: *mut ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods,
+) -> () {
     unsafe {
-        let __rs_return_value=::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::MakeNoPayloadVariant();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::MakeNoPayloadVariant());
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_MakeTuplePayloadVariant(
     i: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods,
 ) -> () {
     unsafe {
-        let __rs_return_value=::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::MakeTuplePayloadVariant(i);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::MakeTuplePayloadVariant(i));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_MakeStructPayloadVariant(
     x: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods,
 ) -> () {
     unsafe {
-        let __rs_return_value=::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::MakeStructPayloadVariant(x);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::MakeStructPayloadVariant(x));
     }
 }
 #[unsafe(no_mangle)]
@@ -729,14 +740,14 @@ const _: () = assert!(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_SingleVariant(
     __param_0: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant,
 ) -> () {
     unsafe {
-        let __rs_return_value =
+        __ret_ptr.write(
             ::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant::SingleVariant(
                 __param_0,
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+            ),
+        );
     }
 }
 #[unsafe(no_mangle)]

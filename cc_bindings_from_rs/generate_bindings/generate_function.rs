@@ -343,8 +343,9 @@ fn cc_callable_param_to_c_abi<'tcx>(
             invoker_params.push(quote! { #p_cc_tok #arg_name });
             fn_call_args.push(quote! { ::std::move(#arg_name) });
         } else {
+            includes.insert(db.support_header("internal/slot.h"));
             invoker_params.push(quote! { #p_cc_tok* #arg_name });
-            fn_call_args.push(quote! { ::std::move(*#arg_name) });
+            fn_call_args.push(quote! { ::crubit::UnsafeTakeValue(#arg_name) });
         }
     }
 
@@ -436,44 +437,19 @@ fn cc_return_value_from_c_abi<'tcx>(
                 let cpp_type = db
                     .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })?
                     .into_tokens(prereqs);
-                if ty.needs_drop(db.tcx(), ty::TypingEnv::fully_monomorphized()) {
-                    prereqs.includes.insert(db.support_header("internal/slot.h"));
-                    let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
-                    storage_statements.extend(quote! {
-                        crubit::Slot<#cpp_type> #local_name;
-                        auto* #storage_name = #local_name.Get();
-                    });
-                    Ok(ReturnConversion {
-                        storage_name: storage_name.clone(),
-                        unpack_expr: quote! {
-                            ::std::move(#local_name).AssumeInitAndTakeValue()
-                        },
-                    })
-                } else {
-                    // Below, we use a union to allocate uninitialized memory that fits
-                    // cpp_type. The union prevents the type from being
-                    // default constructed. It's the responsibility of
-                    // the thunk to properly initialize the memory. In
-                    // the union's destructor we use std::destroy_at to call
-                    // the cpp_type's destructor after the value has been moved on return.
-                    let union_type =
-                        expect_format_cc_ident(&format!("__{ident}_crubit_return_union"));
-                    let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
-                    storage_statements.extend(quote! {
-                        union #union_type {
-                            constexpr #union_type() {}
-                            ~#union_type() { ::std::destroy_at(&this->val); }
-                            #cpp_type val;
-                        } #local_name;
-                        auto* #storage_name = &#local_name.val;
-                    });
-                    Ok(ReturnConversion {
-                        storage_name: storage_name.clone(),
-                        unpack_expr: quote! {
-                            ::std::move(#local_name.val)
-                        },
-                    })
-                }
+                prereqs.includes.insert(CcInclude::utility()); // for `std::move`
+                prereqs.includes.insert(db.support_header("internal/slot.h"));
+                let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
+                storage_statements.extend(quote! {
+                    crubit::Slot<#cpp_type> #local_name;
+                    auto* #storage_name = #local_name.Get();
+                });
+                Ok(ReturnConversion {
+                    storage_name: storage_name.clone(),
+                    unpack_expr: quote! {
+                        ::std::move(#local_name).AssumeInitAndTakeValue()
+                    },
+                })
             }
             BridgedType::Option(crubit_abi_type) => {
                 // make the buffer space for it, then decode the buffer into a value

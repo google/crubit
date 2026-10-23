@@ -17,10 +17,11 @@ const _: () = assert!(::core::mem::offset_of!(::function_pointers_golden::CStruc
 const _: () = assert!(::core::mem::size_of::<::function_pointers_golden::HasFnPtrField>() == 4);
 const _: () = assert!(::core::mem::align_of::<::function_pointers_golden::HasFnPtrField>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_with_uadd_uten(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_with_uadd_uten(
+    __ret_ptr: *mut ::function_pointers_golden::HasFnPtrField,
+) -> () {
     unsafe {
-        let __rs_return_value = ::function_pointers_golden::HasFnPtrField::with_add_ten();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::function_pointers_golden::HasFnPtrField::with_add_ten());
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::function_pointers_golden::HasFnPtrField, ptr) == 0);

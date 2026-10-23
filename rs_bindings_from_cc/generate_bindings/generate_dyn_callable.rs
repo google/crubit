@@ -306,8 +306,8 @@ fn generate_make_cpp_invoker_tokens<'a>(
                 arg_exprs.push(quote! { #param_ident });
             }
             PassingConvention::LayoutCompatible => {
-                params.push(quote! { mut #param_ident: #rust_param_type });
-                arg_exprs.push(quote! { &mut #param_ident });
+                params.push(quote! { #param_ident: #rust_param_type });
+                arg_exprs.push(quote! { ::core::mem::MaybeUninit::new(#param_ident).as_mut_ptr() });
             }
             PassingConvention::ComposablyBridged => {
                 let crubit_abi_type = db.crubit_abi_type(param_ty.clone())?;

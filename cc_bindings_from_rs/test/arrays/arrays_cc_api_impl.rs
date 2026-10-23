@@ -23,10 +23,9 @@ extern "C" fn __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDr
     unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut ::arrays_golden::HasDrop) -> () {
     unsafe {
-        let __rs_return_value = ::arrays_golden::HasDrop::new(x);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::arrays_golden::HasDrop::new(x));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::arrays_golden::HasDrop, x) == 0);
@@ -34,12 +33,11 @@ const _: () = assert!(::core::mem::size_of::<::arrays_golden::HasDropAndDefault>
 const _: () = assert!(::core::mem::align_of::<::arrays_golden::HasDropAndDefault>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_uarrays_ugolden_x0000003a_x0000003aHasDropAndDefault(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::arrays_golden::HasDropAndDefault,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::arrays_golden::HasDropAndDefault as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(<::arrays_golden::HasDropAndDefault as ::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]
@@ -52,23 +50,21 @@ const _: () = assert!(::core::mem::offset_of!(::arrays_golden::HasDropAndDefault
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_uarray_uid(
     array: *mut [i32; 2],
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut [i32; 2],
 ) -> () {
     unsafe {
         let array = array.read();
-        let __rs_return_value = ::arrays_golden::function_with_array_id(array);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::arrays_golden::function_with_array_id(array));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_uarray_ustruct_uid(
     array_struct: *mut ::arrays_golden::ArrayStruct,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::arrays_golden::ArrayStruct,
 ) -> () {
     unsafe {
         let array_struct = array_struct.read();
-        let __rs_return_value = ::arrays_golden::function_with_array_struct_id(array_struct);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::arrays_golden::function_with_array_struct_id(array_struct));
     }
 }
 #[unsafe(no_mangle)]
@@ -91,8 +87,8 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_uarray_utuple_uid(
                 array_tup_1
             },
         );
-        let __rs_return_value = ::arrays_golden::function_with_array_tuple_id(array_tup);
-        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let (__rs_return_value_0, __rs_return_value_1) =
+            ::arrays_golden::function_with_array_tuple_id(array_tup);
         let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
         ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
         ::core::ptr::write(__ret_ptr_1 as *mut _, __rs_return_value_1);
@@ -107,43 +103,39 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_uconst_uarray_uptr_uid(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_uempty_uarray(
     array: *mut [i32; 0],
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut [i32; 0],
 ) -> () {
     unsafe {
         let array = array.read();
-        let __rs_return_value = ::arrays_golden::function_with_empty_array(array);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::arrays_golden::function_with_empty_array(array));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_uhas_udrop_uand_udefault_uarray_uid(
     array: *mut [::arrays_golden::HasDropAndDefault; 2],
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut [::arrays_golden::HasDropAndDefault; 2],
 ) -> () {
     unsafe {
         let array = array.read();
-        let __rs_return_value = ::arrays_golden::function_with_has_drop_and_default_array_id(array);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::arrays_golden::function_with_has_drop_and_default_array_id(array));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_uhas_udrop_uarray_uid(
     array: *mut [::arrays_golden::HasDrop; 2],
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut [::arrays_golden::HasDrop; 2],
 ) -> () {
     unsafe {
         let array = array.read();
-        let __rs_return_value = ::arrays_golden::function_with_has_drop_array_id(array);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::arrays_golden::function_with_has_drop_array_id(array));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_uhas_udrop_uret_uonly(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut [::arrays_golden::HasDrop; 2],
 ) -> () {
     unsafe {
-        let __rs_return_value = ::arrays_golden::function_with_has_drop_ret_only();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::arrays_golden::function_with_has_drop_ret_only());
     }
 }
 #[unsafe(no_mangle)]
@@ -155,43 +147,39 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_umut_uarray_unamed_usize_uptr
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_unested_uarrays(
     array: *mut [[i32; 2]; 2],
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut [[i32; 2]; 2],
 ) -> () {
     unsafe {
         let array = array.read();
-        let __rs_return_value = ::arrays_golden::function_with_nested_arrays(array);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::arrays_golden::function_with_nested_arrays(array));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_unested_udrop_udefault_uarrays(
     array: *mut [[::arrays_golden::HasDropAndDefault; 2]; 2],
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut [[::arrays_golden::HasDropAndDefault; 2]; 2],
 ) -> () {
     unsafe {
         let array = array.read();
-        let __rs_return_value = ::arrays_golden::function_with_nested_drop_default_arrays(array);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::arrays_golden::function_with_nested_drop_default_arrays(array));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_utuple_uarray_uid(
     tup_array: *mut [(i32, i32); 2],
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut [(i32, i32); 2],
 ) -> () {
     unsafe {
         let tup_array = tup_array.read();
-        let __rs_return_value = ::arrays_golden::function_with_tuple_array_id(tup_array);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::arrays_golden::function_with_tuple_array_id(tup_array));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut (i32, i32),
 ) -> () {
     unsafe {
-        let __rs_return_value = <(i32, i32) as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<(i32, i32) as ::core::default::Default>::default());
     }
 }
 const _: () = assert!(::core::mem::offset_of!((i32, i32,), 0) == 0);

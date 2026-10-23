@@ -15,9 +15,10 @@ const _: () = assert!(::core::mem::size_of::<::dep_crate_golden::ExpectedName>()
 const _: () = assert!(::core::mem::align_of::<::dep_crate_golden::ExpectedName>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::dep_crate_golden::ExpectedName, x) == 0);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_use_us(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_use_us(
+    __ret_ptr: *mut ::core::result::Result<::dep_crate_golden::ExpectedName, i32>,
+) -> () {
     unsafe {
-        let __rs_return_value = ::dep_crate_golden::use_s();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::dep_crate_golden::use_s());
     }
 }

@@ -15,6 +15,10 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wshadow"
+#include "support/internal/slot.h"
+
+#include <utility>
+
 #include "cpp_ns/cpp_type.h"
 
 namespace bridged_types::test_format_bridged_func_arg_by_pointer {
@@ -106,16 +110,12 @@ extern "C" void __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_upointer(
     CppType** __ret_ptr);
 }
 inline CppType* test_format_bridged_return_type_by_pointer() {
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    CppType* val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<CppType*> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
       __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_upointer(
           __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace bridged_types::test_format_bridged_return_type_by_pointer
@@ -127,16 +127,12 @@ extern "C" void __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_uvalue(
     cpp_ns::CppType* __ret_ptr);
 }
 inline cpp_ns::CppType test_format_bridged_return_type_by_value() {
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    cpp_ns::CppType val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<cpp_ns::CppType> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
       __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_uvalue(
           __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace bridged_types::test_format_bridged_return_type_by_value

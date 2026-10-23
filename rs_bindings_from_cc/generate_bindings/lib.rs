@@ -634,6 +634,7 @@ pub fn generate_bindings_tokens(
                         &callable,
                         param_idents,
                         invoke_any_invocable_ident,
+                        &crubit_support_versioned_path_format,
                         &mut internal_includes,
                     )?);
                 }
@@ -1802,10 +1803,8 @@ fn generate_dyn_callable_invoker_and_manager_defs<'a>(
         }
         PassingConvention::LayoutCompatible => {
             invoke_rust_and_return_to_ffi = quote! {
-                match #invoke_rust_and_return_to_ffi {
-                    result => unsafe {
-                        ::core::ptr::write(out, result);
-                    }
+                unsafe {
+                    out.write(#invoke_rust_and_return_to_ffi);
                 }
             };
 
@@ -1996,6 +1995,7 @@ fn generate_any_invocable_invoker_def<'a>(
     callable: &Callable<'a>,
     param_idents: &[Ident],
     invoke_any_invocable_ident: &Ident,
+    crubit_support_versioned_path_format: &Format<1>,
     internal_includes: &mut BTreeSet<CcInclude>,
 ) -> Option<TokenStream> {
     assert_eq!(
@@ -2021,9 +2021,11 @@ fn generate_any_invocable_invoker_def<'a>(
                     Some(quote! { , #param_type_tokens #param_ident })
                 }
                 PassingConvention::LayoutCompatible => {
-                    // include utility for std::move.
-                    internal_includes.insert(CcInclude::utility());
-                    arg_exprs.push(quote! { std::move(*#param_ident) });
+                    internal_includes.insert(CcInclude::SupportLibHeader(
+                        crubit_support_versioned_path_format.clone(),
+                        intern!(db.interner(), "slot.h"),
+                    ));
+                    arg_exprs.push(quote! { ::crubit::UnsafeTakeValue(#param_ident) });
                     let param_type_tokens =
                         cpp_type_name::format_cpp_type_with_references(param_type, db).ok()?;
                     Some(quote! { , #param_type_tokens* #param_ident })

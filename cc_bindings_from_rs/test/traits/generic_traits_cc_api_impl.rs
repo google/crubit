@@ -17,10 +17,12 @@ const _: () = assert!(::core::mem::offset_of!(::generic_traits_golden::AnotherSt
 const _: () = assert!(::core::mem::size_of::<::generic_traits_golden::StructGeneric>() == 4);
 const _: () = assert!(::core::mem::align_of::<::generic_traits_golden::StructGeneric>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    x: i32,
+    __ret_ptr: *mut ::generic_traits_golden::StructGeneric,
+) -> () {
     unsafe {
-        let __rs_return_value = ::generic_traits_golden::StructGeneric::new(x);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::generic_traits_golden::StructGeneric::new(x));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::generic_traits_golden::StructGeneric, x) == 0);

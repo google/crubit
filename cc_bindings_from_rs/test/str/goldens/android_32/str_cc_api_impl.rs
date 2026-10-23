@@ -16,12 +16,11 @@ const _: () = assert!(::core::mem::align_of::<::str_golden::TypeWithStr>() == 4)
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(
     s: *mut &'static str,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::str_golden::TypeWithStr,
 ) -> () {
     unsafe {
         let s = s.read();
-        let __rs_return_value = ::str_golden::TypeWithStr::create(s);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::str_golden::TypeWithStr::create(s));
     }
 }
 #[unsafe(no_mangle)]
@@ -38,10 +37,9 @@ unsafe extern "C" fn __crubit_thunk_get_ustr_udata(
 }
 const _: () = assert!(::core::mem::offset_of!(::str_golden::TypeWithStr, str_field) == 0);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_foo_uas_ustr(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_foo_uas_ustr(__ret_ptr: *mut &'static str) -> () {
     unsafe {
-        let __rs_return_value = ::str_golden::foo_as_str();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::str_golden::foo_as_str());
     }
 }
 #[unsafe(no_mangle)]

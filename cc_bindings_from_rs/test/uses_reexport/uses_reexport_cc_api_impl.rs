@@ -16,17 +16,15 @@ const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::Bar>() == 
 const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::Foo>() == 8);
 const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::Foo>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut ::uses_reexport_golden::Foo) -> () {
     unsafe {
-        let __rs_return_value = ::uses_reexport_golden::Foo::create();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::uses_reexport_golden::Foo::create());
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_bar(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_bar(__ret_ptr: *mut ::uses_reexport_golden::Bar) -> () {
     unsafe {
-        let __rs_return_value = ::uses_reexport_golden::Foo::bar();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::uses_reexport_golden::Foo::bar());
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::uses_reexport_golden::Foo, bar) == 4);

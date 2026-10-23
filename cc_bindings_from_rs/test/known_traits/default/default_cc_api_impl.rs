@@ -16,12 +16,12 @@ const _: () =
     assert!(::core::mem::align_of::<::rs_default_golden::derived_impl::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003aderived_uimpl_x0000003a_x0000003aSomeStruct(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::rs_default_golden::derived_impl::SomeStruct,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::rs_default_golden::derived_impl::SomeStruct as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(
+            <::rs_default_golden::derived_impl::SomeStruct as ::core::default::Default>::default(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -41,12 +41,12 @@ const _: () =
     assert!(::core::mem::align_of::<::rs_default_golden::explicit_impl::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003aexplicit_uimpl_x0000003a_x0000003aSomeStruct(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::rs_default_golden::explicit_impl::SomeStruct,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::rs_default_golden::explicit_impl::SomeStruct as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(
+            <::rs_default_golden::explicit_impl::SomeStruct as ::core::default::Default>::default(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -70,11 +70,10 @@ const _: () = assert!(
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003afield_uwith_uno_udefault_x0000003a_x0000003aStructWithFieldWithNoDefault(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::rs_default_golden::field_with_no_default::StructWithFieldWithNoDefault,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::rs_default_golden::field_with_no_default::StructWithFieldWithNoDefault as::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<::rs_default_golden::field_with_no_default::StructWithFieldWithNoDefault as::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]

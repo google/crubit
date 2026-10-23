@@ -1322,27 +1322,26 @@ fn test_format_item_fn_layout_compatible_not_abi_compatible_type() {
             quote! {
                 unsafe extern "C" fn __crubit_thunk_call_upoint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028Point_x00000029_x00000020_x0000002d_x0000003e_x00000020Point(
                     f: ::crubit_support::bridge::FnRefPayload,
-                    __ret_ptr: *mut core::ffi::c_void
+                    __ret_ptr: *mut ::rust_out::Point
                 ) -> () {
                     unsafe {
-                        let __rs_return_value = ::rust_out::call_point(move |__arg_0: ::rust_out::Point| {
-                            let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
-                            let __invoker: unsafe extern "C" fn(
-                                *mut core::ffi::c_void,
-                                *mut ::rust_out::Point,
-                                *mut core::ffi::c_void
-                            ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                            let mut __ret_storage = ::core::mem::MaybeUninit::<::rust_out::Point>::uninit();
-                            unsafe {
-                                __invoker(
-                                    f.data(),
-                                    &mut *__arg_0 as *mut _,
-                                    __ret_storage.as_mut_ptr() as *mut _
-                                );
-                                __ret_storage.assume_init()
-                            }
-                        });
-                        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+                        __ret_ptr.write(::rust_out::call_point(move |__arg_0: ::rust_out::Point| {
+                                let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
+                                let __invoker: unsafe extern "C" fn(
+                                    *mut core::ffi::c_void,
+                                    *mut ::rust_out::Point,
+                                    *mut core::ffi::c_void
+                                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                                let mut __ret_storage = ::core::mem::MaybeUninit::<::rust_out::Point>::uninit();
+                                unsafe {
+                                    __invoker(
+                                        f.data(),
+                                        &mut *__arg_0 as *mut _,
+                                        __ret_storage.as_mut_ptr() as *mut _
+                                    );
+                                    __ret_storage.assume_init()
+                                }
+                            }));
                     }
                 }
             }
@@ -1527,7 +1526,7 @@ fn test_format_item_fn_async() {
                 #[unsafe(no_mangle)]
                 unsafe extern "C" fn ...(__ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>) -> () {
                     unsafe {
-                        ::core::ptr::write(__ret_ptr, ::crubit_support::dyn_erased_future::DynErasedFuture::new(::rust_out::async_function()));
+                        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(::rust_out::async_function()));
                     }
                 }
             }
@@ -1569,7 +1568,7 @@ fn test_format_item_fn_async_returning_type() {
                 #[unsafe(no_mangle)]
                 unsafe extern "C" fn ...(__ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>) -> () {
                     unsafe {
-                        ::core::ptr::write(__ret_ptr, ::crubit_support::dyn_erased_future::DynErasedFuture::new(::rust_out::async_function()));
+                        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(::rust_out::async_function()));
                     }
                 }
             }
@@ -1775,11 +1774,10 @@ fn test_format_item_fn_rust_abi_returning_struct_by_value() {
                 unsafe extern "C"
                 fn ...(
                     i: i32,
-                    __ret_ptr: *mut core::ffi::c_void
+                    __ret_ptr: *mut ::rust_out::S
                 ) -> () {
                     unsafe {
-                        let __rs_return_value = ::rust_out::create(i);
-                        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+                        __ret_ptr.write(::rust_out::create(i));
                     }
                 }
             }

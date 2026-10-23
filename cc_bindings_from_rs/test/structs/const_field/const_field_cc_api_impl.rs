@@ -13,21 +13,17 @@ extern crate alloc;
 extern crate core;
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalue_uin_uoption(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::core::option::Option<::cc_struct::struct_with_const_field>,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::const_field_golden::return_struct_with_const_field_by_value_in_option();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::const_field_golden::return_struct_with_const_field_by_value_in_option());
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalue_uin_uresult(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::core::result::Result<::cc_struct::struct_with_const_field, u8>,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::const_field_golden::return_struct_with_const_field_by_value_in_result();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::const_field_golden::return_struct_with_const_field_by_value_in_result());
     }
 }

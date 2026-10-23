@@ -79,27 +79,24 @@ unsafe extern "C" fn __crubit_thunk_apply_ubinary_ui32_uop(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_char_uto_uascii_ulowercase(
     c: *mut char,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut char,
 ) -> () {
     unsafe {
         let c = c.read();
-        let __rs_return_value = ::functions_golden::fn_param_ty_tests::char_to_ascii_lowercase(c);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::functions_golden::fn_param_ty_tests::char_to_ascii_lowercase(c));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create_ustruct_uwith_upinned_urefs(
     pinned_ref: ::core::pin::Pin<&'static i32>,
     pinned_mut_ref: ::core::pin::Pin<&'static mut i32>,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::functions_golden::fn_param_ty_tests::StructWithPinnedRefs<'static>,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::functions_golden::fn_param_ty_tests::create_struct_with_pinned_refs(
-                pinned_ref,
-                pinned_mut_ref,
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::functions_golden::fn_param_ty_tests::create_struct_with_pinned_refs(
+            pinned_ref,
+            pinned_mut_ref,
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -172,11 +169,12 @@ const _: () = assert!(
         == 4
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    x: i32,
+    __ret_ptr: *mut ::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct::new(x);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct::new(x));
     }
 }
 #[unsafe(no_mangle)]
@@ -240,11 +238,13 @@ const _: () = assert!(
         == 4
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    value: i32,
+    __ret_ptr: *mut ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable::new(value);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable::new(value));
     }
 }
 const _: () = assert!(
@@ -357,14 +357,17 @@ unsafe extern "C" fn __crubit_thunk_return_urvalue_ureference_uarray(
         'static,
         ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
     >,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut [::ctor::RvalueReference<
+        'static,
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
+    >; 1],
 ) -> () {
     unsafe {
-        let __rs_return_value =
+        __ret_ptr.write(
             ::functions_golden::generic_fn_tests::ctor_trait_tests::return_rvalue_reference_array(
                 c,
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+            ),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -376,11 +379,10 @@ unsafe extern "C" fn __crubit_thunk_return_urvalue_ureference_utuple(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
+        let (__rs_return_value_0,) =
             ::functions_golden::generic_fn_tests::ctor_trait_tests::return_rvalue_reference_tuple(
                 c,
             );
-        let (__rs_return_value_0,) = __rs_return_value;
         let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
         ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
     }

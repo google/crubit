@@ -13,30 +13,26 @@ extern crate alloc;
 extern crate core;
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_returns_uflipped_ualias(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::core::result::Result<u32, i8>,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::type_aliases_golden::test_generics_matching::returns_flipped_alias();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::type_aliases_golden::test_generics_matching::returns_flipped_alias());
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_returns_umatching_ualias(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::core::result::Result<i32, i32>,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::type_aliases_golden::test_generics_matching::returns_matching_alias();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::type_aliases_golden::test_generics_matching::returns_matching_alias());
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_returns_uspecialized(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_returns_uspecialized(
+    __ret_ptr: *mut ::core::result::Result<i32, i32>,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::type_aliases_golden::test_generics_matching::returns_specialized();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::type_aliases_golden::test_generics_matching::returns_specialized());
     }
 }
 #[unsafe(no_mangle)]

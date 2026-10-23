@@ -22,12 +22,11 @@ extern "C" fn __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x00000
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
     __self: &'static ::tuple_structs_golden::CloneNoDefault,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::tuple_structs_golden::CloneNoDefault,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::tuple_structs_golden::CloneNoDefault as ::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(<::tuple_structs_golden::CloneNoDefault as ::core::clone::Clone>::clone(__self));
     }
 }
 #[unsafe(no_mangle)]
@@ -43,10 +42,12 @@ const _: () = assert!(::core::mem::offset_of!(::tuple_structs_golden::CloneNoDef
 const _: () = assert!(::core::mem::size_of::<::tuple_structs_golden::CopyNoDefault>() == 4);
 const _: () = assert!(::core::mem::align_of::<::tuple_structs_golden::CopyNoDefault>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_create(
+    value: i32,
+    __ret_ptr: *mut ::tuple_structs_golden::CopyNoDefault,
+) -> () {
     unsafe {
-        let __rs_return_value = ::tuple_structs_golden::CopyNoDefault::create(value);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::tuple_structs_golden::CopyNoDefault::create(value));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::tuple_structs_golden::CopyNoDefault, value) == 0);
@@ -56,23 +57,23 @@ const _: () =
     assert!(::core::mem::align_of::<::tuple_structs_golden::DefaultAndCloneNoUnpin>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::tuple_structs_golden::DefaultAndCloneNoUnpin,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::tuple_structs_golden::DefaultAndCloneNoUnpin as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(
+            <::tuple_structs_golden::DefaultAndCloneNoUnpin as ::core::default::Default>::default(),
+        );
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
     __self: &'static ::tuple_structs_golden::DefaultAndCloneNoUnpin,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::tuple_structs_golden::DefaultAndCloneNoUnpin,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::tuple_structs_golden::DefaultAndCloneNoUnpin as ::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(
+            <::tuple_structs_golden::DefaultAndCloneNoUnpin as ::core::clone::Clone>::clone(__self),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -108,10 +109,12 @@ const _: () =
 const _: () =
     assert!(::core::mem::align_of::<::tuple_structs_golden::TupleStructOnePrivateArg>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create(arg: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_create(
+    arg: i32,
+    __ret_ptr: *mut ::tuple_structs_golden::TupleStructOnePrivateArg,
+) -> () {
     unsafe {
-        let __rs_return_value = ::tuple_structs_golden::TupleStructOnePrivateArg::create(arg);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::tuple_structs_golden::TupleStructOnePrivateArg::create(arg));
     }
 }
 #[unsafe(no_mangle)]
@@ -128,10 +131,12 @@ const _: () =
 const _: () =
     assert!(::core::mem::align_of::<::tuple_structs_golden::TupleStructOnePublicArg>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create(arg: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_create(
+    arg: i32,
+    __ret_ptr: *mut ::tuple_structs_golden::TupleStructOnePublicArg,
+) -> () {
     unsafe {
-        let __rs_return_value = ::tuple_structs_golden::TupleStructOnePublicArg::create(arg);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::tuple_structs_golden::TupleStructOnePublicArg::create(arg));
     }
 }
 #[unsafe(no_mangle)]
@@ -155,14 +160,12 @@ const _: () = assert!(
 unsafe extern "C" fn __crubit_thunk_create(
     first_arg: i32,
     second_arg: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::tuple_structs_golden::TupleStructOnePublicArgOnePrivateArg,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::tuple_structs_golden::TupleStructOnePublicArgOnePrivateArg::create(
-                first_arg, second_arg,
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::tuple_structs_golden::TupleStructOnePublicArgOnePrivateArg::create(
+            first_arg, second_arg,
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -185,12 +188,12 @@ const _: () =
 unsafe extern "C" fn __crubit_thunk_create(
     first_arg: i32,
     second_arg: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::tuple_structs_golden::TupleStructTwoPrivateArgs,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::tuple_structs_golden::TupleStructTwoPrivateArgs::create(first_arg, second_arg);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::tuple_structs_golden::TupleStructTwoPrivateArgs::create(
+            first_arg, second_arg,
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -219,12 +222,11 @@ const _: () =
 unsafe extern "C" fn __crubit_thunk_create(
     first_arg: i32,
     second_arg: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::tuple_structs_golden::TupleStructTwoPublicArgs,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::tuple_structs_golden::TupleStructTwoPublicArgs::create(first_arg, second_arg);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(::tuple_structs_golden::TupleStructTwoPublicArgs::create(first_arg, second_arg));
     }
 }
 #[unsafe(no_mangle)]
@@ -260,11 +262,12 @@ extern "C" fn __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x00000
     unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_create(
+    value: i32,
+    __ret_ptr: *mut ::tuple_structs_golden::TupleStructWithCloneNoDefault,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::tuple_structs_golden::TupleStructWithCloneNoDefault::create(value);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::tuple_structs_golden::TupleStructWithCloneNoDefault::create(value));
     }
 }
 #[unsafe(no_mangle)]
@@ -291,12 +294,12 @@ extern "C" fn __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x00000
 unsafe extern "C" fn __crubit_thunk_create(
     first_arg: i32,
     second_arg: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::tuple_structs_golden::TupleStructWithCppImmovableType,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::tuple_structs_golden::TupleStructWithCppImmovableType::create(first_arg, second_arg);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::tuple_structs_golden::TupleStructWithCppImmovableType::create(
+            first_arg, second_arg,
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -324,11 +327,11 @@ const _: () = assert!(
     ::core::mem::align_of::<::tuple_structs_golden::TupleStructWithDefaultAndCloneNoUnpin>() == 4
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_create(
+    __ret_ptr: *mut ::tuple_structs_golden::TupleStructWithDefaultAndCloneNoUnpin,
+) -> () {
     unsafe {
-        let __rs_return_value =
-            ::tuple_structs_golden::TupleStructWithDefaultAndCloneNoUnpin::create();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::tuple_structs_golden::TupleStructWithDefaultAndCloneNoUnpin::create());
     }
 }
 #[unsafe(no_mangle)]
@@ -363,23 +366,22 @@ const _: () = assert!(
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithNonExhaustiveCtor(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::tuple_structs_golden::TupleStructWithNonExhaustiveCtor,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::tuple_structs_golden::TupleStructWithNonExhaustiveCtor as::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<::tuple_structs_golden::TupleStructWithNonExhaustiveCtor as::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(
     first_arg: i32,
     second_arg: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::tuple_structs_golden::TupleStructWithNonExhaustiveCtor,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::tuple_structs_golden::TupleStructWithNonExhaustiveCtor::create(first_arg, second_arg);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::tuple_structs_golden::TupleStructWithNonExhaustiveCtor::create(
+            first_arg, second_arg,
+        ));
     }
 }
 const _: () = assert!(
@@ -395,7 +397,7 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(
     __param_0: *const [*const core::ffi::c_void; 2usize],
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::tuple_structs_golden::TupleStructWithTupleFieldType,
 ) -> () {
     unsafe {
         let __param_0 = (
@@ -408,9 +410,7 @@ unsafe extern "C" fn __crubit_thunk_create(
                 __param_0_1
             },
         );
-        let __rs_return_value =
-            ::tuple_structs_golden::TupleStructWithTupleFieldType::create(__param_0);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::tuple_structs_golden::TupleStructWithTupleFieldType::create(__param_0));
     }
 }
 #[unsafe(no_mangle)]
@@ -420,9 +420,8 @@ unsafe extern "C" fn __crubit_thunk_get_uarg(
 ) -> () {
     unsafe {
         let __self = __self.read();
-        let __rs_return_value =
+        let (__rs_return_value_0, __rs_return_value_1) =
             ::tuple_structs_golden::TupleStructWithTupleFieldType::get_arg(__self);
-        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
         let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
         ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
         ::core::ptr::write(__ret_ptr_1 as *mut _, __rs_return_value_1);
@@ -432,11 +431,10 @@ const _: () =
     assert!(::core::mem::offset_of!(::tuple_structs_golden::TupleStructWithTupleFieldType, 0) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut (i32, i32),
 ) -> () {
     unsafe {
-        let __rs_return_value = <(i32, i32) as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<(i32, i32) as ::core::default::Default>::default());
     }
 }
 const _: () = assert!(::core::mem::offset_of!((i32, i32,), 0) == 0);

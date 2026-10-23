@@ -16,12 +16,11 @@ const _: () = assert!(::core::mem::align_of::<::rs_hash_golden::derived_enum::Co
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_urs_uhash_ugolden_x0000003a_x0000003aderived_uenum_x0000003a_x0000003aColor(
     __self: &'static ::rs_hash_golden::derived_enum::Color,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::rs_hash_golden::derived_enum::Color,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::rs_hash_golden::derived_enum::Color as ::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(<::rs_hash_golden::derived_enum::Color as ::core::clone::Clone>::clone(__self));
     }
 }
 #[unsafe(no_mangle)]
@@ -51,24 +50,27 @@ extern "C" fn __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003ader
     ::crubit_support::hash::hash_u64(self_)
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create_ublue(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_create_ublue(
+    __ret_ptr: *mut ::rs_hash_golden::derived_enum::Color,
+) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::derived_enum::create_blue();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::rs_hash_golden::derived_enum::create_blue());
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create_ugreen(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_create_ugreen(
+    __ret_ptr: *mut ::rs_hash_golden::derived_enum::Color,
+) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::derived_enum::create_green();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::rs_hash_golden::derived_enum::create_green());
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create_ured(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_create_ured(
+    __ret_ptr: *mut ::rs_hash_golden::derived_enum::Color,
+) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::derived_enum::create_red();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::rs_hash_golden::derived_enum::create_red());
     }
 }
 const _: () = assert!(::core::mem::size_of::<::rs_hash_golden::derived_struct::Point>() == 8);
@@ -96,11 +98,10 @@ const _: () = assert!(::core::mem::offset_of!(::rs_hash_golden::derived_struct::
 unsafe extern "C" fn __crubit_thunk_create_upoint(
     x: i32,
     y: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::rs_hash_golden::derived_struct::Point,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::derived_struct::create_point(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::rs_hash_golden::derived_struct::create_point(x, y));
     }
 }
 const _: () =
@@ -132,11 +133,10 @@ const _: () =
 unsafe extern "C" fn __crubit_thunk_create_utuple(
     x: i32,
     y: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::rs_hash_golden::derived_tuple_struct::TupleStruct,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::derived_tuple_struct::create_tuple(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::rs_hash_golden::derived_tuple_struct::create_tuple(x, y));
     }
 }
 const _: () =
@@ -166,10 +166,9 @@ const _: () = assert!(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create_ucustom(
     value: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::rs_hash_golden::explicit_struct::CustomHashStruct,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::explicit_struct::create_custom(value);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::rs_hash_golden::explicit_struct::create_custom(value));
     }
 }

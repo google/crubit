@@ -14,30 +14,34 @@ extern crate core;
 const _: () = assert!(::core::mem::size_of::<::rs_index_golden::CustomIndex>() == 8);
 const _: () = assert!(::core::mem::align_of::<::rs_index_golden::CustomIndex>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(index: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    index: usize,
+    __ret_ptr: *mut ::rs_index_golden::CustomIndex,
+) -> () {
     unsafe {
-        let __rs_return_value = ::rs_index_golden::CustomIndex::new(index);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::rs_index_golden::CustomIndex::new(index));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::CustomIndex, 0) == 0);
 const _: () = assert!(::core::mem::size_of::<::rs_index_golden::Id>() == 4);
 const _: () = assert!(::core::mem::align_of::<::rs_index_golden::Id>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(id: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(id: i32, __ret_ptr: *mut ::rs_index_golden::Id) -> () {
     unsafe {
-        let __rs_return_value = ::rs_index_golden::Id::new(id);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::rs_index_golden::Id::new(id));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::Id, 0) == 0);
 const _: () = assert!(::core::mem::size_of::<::rs_index_golden::IntPair>() == 8);
 const _: () = assert!(::core::mem::align_of::<::rs_index_golden::IntPair>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(x: i32, y: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    x: i32,
+    y: i32,
+    __ret_ptr: *mut ::rs_index_golden::IntPair,
+) -> () {
     unsafe {
-        let __rs_return_value = ::rs_index_golden::IntPair::new(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::rs_index_golden::IntPair::new(x, y));
     }
 }
 #[unsafe(no_mangle)]
@@ -92,18 +96,17 @@ extern "C" fn __crubit_thunk_Drop_udrop_urs_uindex_ugolden_x0000003a_x0000003aMa
 unsafe extern "C" fn __crubit_thunk_new(
     row_size: usize,
     col_size: usize,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::rs_index_golden::Map,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::rs_index_golden::Map::new(row_size, col_size);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::rs_index_golden::Map::new(row_size, col_size));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000028usize_x0000002c_x00000020usize_x00000029(
     __self: &'static ::rs_index_golden::Map,
     index: *const [*const core::ffi::c_void; 2usize],
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut &'static str,
 ) -> () {
     unsafe {
         let index = (
@@ -116,21 +119,20 @@ unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0
                 index_1
             },
         );
-        let __rs_return_value =
-            <::rs_index_golden::Map as ::core::ops::Index<(usize, usize)>>::index(__self, index);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<::rs_index_golden::Map as ::core::ops::Index<(usize, usize)>>::index(
+            __self, index,
+        ));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId_u_x00000027_u(
     __self: &'static ::rs_index_golden::Map,
     _index: &'static ::rs_index_golden::Id,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut &'static str,
 ) -> () {
     unsafe {
-        let __rs_return_value = <::rs_index_golden::Map as ::core::ops::Index<
+        __ret_ptr.write(<::rs_index_golden::Map as ::core::ops::Index<
             &'static ::rs_index_golden::Id,
-        >>::index(__self, _index);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        >>::index(__self, _index));
     }
 }

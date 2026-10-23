@@ -88,10 +88,9 @@ const _: () = assert!(::core::mem::offset_of!(::compare_golden::MyUnordered, 0) 
 unsafe extern "C" fn __crubit_thunk_Ord_ucmp_ucompare_ugolden_x0000003a_x0000003aMyOrd(
     __self: &'static ::compare_golden::MyOrd,
     other: &'static ::compare_golden::MyOrd,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::core::cmp::Ordering,
 ) -> () {
     unsafe {
-        let __rs_return_value = <::compare_golden::MyOrd as ::core::cmp::Ord>::cmp(__self, other);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<::compare_golden::MyOrd as ::core::cmp::Ord>::cmp(__self, other));
     }
 }

@@ -14,10 +14,9 @@ extern crate core;
 const _: () = assert!(::core::mem::size_of::<::cpp_name_golden::Original>() == 4);
 const _: () = assert!(::core::mem::align_of::<::cpp_name_golden::Original>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut ::cpp_name_golden::Original) -> () {
     unsafe {
-        let __rs_return_value = ::cpp_name_golden::Original::new();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::cpp_name_golden::Original::new());
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::cpp_name_golden::Original, x) == 0);

@@ -24,12 +24,10 @@ const _: () = assert!(::core::mem::size_of::<::async_fn_golden::StructWithDrop>(
 const _: () = assert!(::core::mem::align_of::<::async_fn_golden::StructWithDrop>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_uasync_ufn_ugolden_x0000003a_x0000003aStructWithDrop(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::async_fn_golden::StructWithDrop,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::async_fn_golden::StructWithDrop as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<::async_fn_golden::StructWithDrop as ::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]
@@ -46,10 +44,9 @@ unsafe extern "C" fn __crubit_thunk_add(
     __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
-        ::core::ptr::write(
-            __ret_ptr,
-            ::crubit_support::dyn_erased_future::DynErasedFuture::new(::async_fn_golden::add(x, y)),
-        );
+        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(
+            ::async_fn_golden::add(x, y),
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -57,12 +54,9 @@ unsafe extern "C" fn __crubit_thunk_do_unothing(
     __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
-        ::core::ptr::write(
-            __ret_ptr,
-            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
-                ::async_fn_golden::do_nothing(),
-            ),
-        );
+        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(
+            ::async_fn_golden::do_nothing(),
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -70,12 +64,9 @@ unsafe extern "C" fn __crubit_thunk_pend_u5_utimes(
     __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
-        ::core::ptr::write(
-            __ret_ptr,
-            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
-                ::async_fn_golden::pend_5_times(),
-            ),
-        );
+        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(
+            ::async_fn_golden::pend_5_times(),
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -84,12 +75,9 @@ unsafe extern "C" fn __crubit_thunk_return_ucpp_ulayout_uequivalent(
     __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
-        ::core::ptr::write(
-            __ret_ptr,
-            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
-                ::async_fn_golden::return_cpp_layout_equivalent(x),
-            ),
-        );
+        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(
+            ::async_fn_golden::return_cpp_layout_equivalent(x),
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -98,12 +86,9 @@ unsafe extern "C" fn __crubit_thunk_return_ustruct_uwith_udrop(
     __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
-        ::core::ptr::write(
-            __ret_ptr,
-            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
-                ::async_fn_golden::return_struct_with_drop(x),
-            ),
-        );
+        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(
+            ::async_fn_golden::return_struct_with_drop(x),
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -112,12 +97,9 @@ unsafe extern "C" fn __crubit_thunk_return_uunmovable(
     __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
-        ::core::ptr::write(
-            __ret_ptr,
-            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
-                ::async_fn_golden::return_unmovable(x),
-            ),
-        );
+        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(
+            ::async_fn_golden::return_unmovable(x),
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -127,11 +109,8 @@ unsafe extern "C" fn __crubit_thunk_sum_uslice(
 ) -> () {
     unsafe {
         let slice = slice.read();
-        ::core::ptr::write(
-            __ret_ptr,
-            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
-                ::async_fn_golden::sum_slice(slice),
-            ),
-        );
+        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(
+            ::async_fn_golden::sum_slice(slice),
+        ));
     }
 }

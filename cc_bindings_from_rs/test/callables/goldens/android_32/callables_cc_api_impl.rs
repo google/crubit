@@ -15,12 +15,11 @@ const _: () = assert!(::core::mem::size_of::<::callables_golden::CallbackHolder>
 const _: () = assert!(::core::mem::align_of::<::callables_golden::CallbackHolder>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_ucallables_ugolden_x0000003a_x0000003aCallbackHolder(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::callables_golden::CallbackHolder,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::callables_golden::CallbackHolder as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(<::callables_golden::CallbackHolder as ::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]
@@ -30,10 +29,9 @@ extern "C" fn __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCa
     unsafe { ::core::ptr::drop_in_place(__self) };
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut ::callables_golden::CallbackHolder) -> () {
     unsafe {
-        let __rs_return_value = ::callables_golden::CallbackHolder::new();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::callables_golden::CallbackHolder::new());
     }
 }
 #[unsafe(no_mangle)]
@@ -70,12 +68,11 @@ const _: () = assert!(::core::mem::size_of::<::callables_golden::CppMovableDrop>
 const _: () = assert!(::core::mem::align_of::<::callables_golden::CppMovableDrop>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_ucallables_ugolden_x0000003a_x0000003aCppMovableDrop(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::callables_golden::CppMovableDrop,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::callables_golden::CppMovableDrop as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(<::callables_golden::CppMovableDrop as ::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]
@@ -112,10 +109,10 @@ const _: () = assert!(::core::mem::offset_of!(::callables_golden::Point, y) == 4
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_call_uand_ureturn_unon_umovable_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable(
     f: ::crubit_support::bridge::FnRefPayload,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::callables_golden::NonCppMovable,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::callables_golden::call_and_return_non_movable(move || {
+        __ret_ptr.write(::callables_golden::call_and_return_non_movable(move || {
             let __invoker: unsafe extern "C" fn(
                 *mut core::ffi::c_void,
                 *mut core::ffi::c_void,
@@ -126,17 +123,16 @@ unsafe extern "C" fn __crubit_thunk_call_uand_ureturn_unon_umovable_u_x00000026d
                 __invoker(f.data(), __ret_storage.as_mut_ptr() as *mut _);
                 __ret_storage.assume_init()
             }
-        });
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        }));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_call_uand_ureturn_unon_umovable_ubox_ufn(
     f: ::crubit_support::bridge::FnPayload,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::callables_golden::NonCppMovable,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::callables_golden::call_and_return_non_movable_box_fn(
+        __ret_ptr.write(::callables_golden::call_and_return_non_movable_box_fn(
             ::alloc::boxed::Box::new(move || {
                 let __invoker: unsafe extern "C" fn(
                     *mut core::ffi::c_void,
@@ -149,17 +145,16 @@ unsafe extern "C" fn __crubit_thunk_call_uand_ureturn_unon_umovable_ubox_ufn(
                     __ret_storage.assume_init()
                 }
             }),
-        );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_call_uand_ureturn_unon_umovable_uboxed(
     f: ::crubit_support::bridge::FnPayload,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::callables_golden::NonCppMovable,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::callables_golden::call_and_return_non_movable_boxed(
+        __ret_ptr.write(::callables_golden::call_and_return_non_movable_boxed(
             ::alloc::boxed::Box::new(move || {
                 let __invoker: unsafe extern "C" fn(
                     *mut core::ffi::c_void,
@@ -172,8 +167,7 @@ unsafe extern "C" fn __crubit_thunk_call_uand_ureturn_unon_umovable_uboxed(
                     __ret_storage.assume_init()
                 }
             }),
-        );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -351,10 +345,10 @@ unsafe extern "C" fn __crubit_thunk_call_uimpl_uwith_utuple_uoption_ustd_x000000
 unsafe extern "C" fn __crubit_thunk_call_uint_uto_upoint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
     f: ::crubit_support::bridge::FnRefPayload,
     x: i32,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::callables_golden::Point,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::callables_golden::call_int_to_point(
+        __ret_ptr.write(::callables_golden::call_int_to_point(
             move |__arg_0: i32| {
                 let __invoker: unsafe extern "C" fn(
                     *mut core::ffi::c_void,
@@ -369,19 +363,18 @@ unsafe extern "C" fn __crubit_thunk_call_uint_uto_upoint_u_x00000026dyn_x0000002
                 }
             },
             x,
-        );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_call_upoint_umut_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
     f: ::crubit_support::bridge::FnRefPayload,
     pt: *mut ::callables_golden::Point,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::callables_golden::Point,
 ) -> () {
     unsafe {
         let pt = pt.read();
-        let __rs_return_value = ::callables_golden::call_point_mut(
+        __ret_ptr.write(::callables_golden::call_point_mut(
             move |__arg_0: ::callables_golden::Point| {
                 let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
                 let __invoker: unsafe extern "C" fn(
@@ -401,19 +394,18 @@ unsafe extern "C" fn __crubit_thunk_call_upoint_umut_u_x00000026mut_x00000020dyn
                 }
             },
             pt,
-        );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_call_upoint_uonce_ustatic_ustd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x00000028dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnOnce_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint_x00000020_x0000002b_x00000020_x00000027static_x00000029_x0000003e(
     f: ::crubit_support::bridge::FnPayload,
     pt: *mut ::callables_golden::Point,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::callables_golden::Point,
 ) -> () {
     unsafe {
         let pt = pt.read();
-        let __rs_return_value = ::callables_golden::call_point_once_static(
+        __ret_ptr.write(::callables_golden::call_point_once_static(
             move |__arg_0: ::callables_golden::Point| {
                 let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
                 let __invoker: unsafe extern "C" fn(
@@ -433,8 +425,7 @@ unsafe extern "C" fn __crubit_thunk_call_upoint_uonce_ustatic_ustd_x0000003a_x00
                 }
             },
             pt,
-        );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -502,12 +493,12 @@ unsafe extern "C" fn __crubit_thunk_call_utwo_upoints_u_x00000026dyn_x00000020st
     f: ::crubit_support::bridge::FnRefPayload,
     a: *mut ::callables_golden::Point,
     b: *mut ::callables_golden::Point,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::callables_golden::Point,
 ) -> () {
     unsafe {
         let a = a.read();
         let b = b.read();
-        let __rs_return_value = ::callables_golden::call_two_points(
+        __ret_ptr.write(::callables_golden::call_two_points(
             move |__arg_0: ::callables_golden::Point, __arg_1: ::callables_golden::Point| {
                 let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
                 let mut __arg_1 = ::core::mem::ManuallyDrop::new(__arg_1);
@@ -531,8 +522,7 @@ unsafe extern "C" fn __crubit_thunk_call_utwo_upoints_u_x00000026dyn_x00000020st
             },
             a,
             b,
-        );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -701,11 +691,11 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_unon_umovable_uref_u_x00000026dyn
 unsafe extern "C" fn __crubit_thunk_call_uwith_upoint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
     f: ::crubit_support::bridge::FnRefPayload,
     pt: *mut ::callables_golden::Point,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::callables_golden::Point,
 ) -> () {
     unsafe {
         let pt = pt.read();
-        let __rs_return_value = ::callables_golden::call_with_point(
+        __ret_ptr.write(::callables_golden::call_with_point(
             move |__arg_0: ::callables_golden::Point| {
                 let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
                 let __invoker: unsafe extern "C" fn(
@@ -725,8 +715,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_upoint_u_x00000026dyn_x00000020st
                 }
             },
             pt,
-        );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -771,11 +760,11 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_ustr_u_x00000027a_u_x00000026dyn_
 unsafe extern "C" fn __crubit_thunk_call_uwith_ustr_uto_ustr_u_x00000027a_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026_x00000027a_x00000020str(
     f: ::crubit_support::bridge::FnRefPayload,
     s: *mut &'static str,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut &'static str,
 ) -> () {
     unsafe {
         let s = s.read();
-        let __rs_return_value = ::callables_golden::call_with_str_to_str(
+        __ret_ptr.write(::callables_golden::call_with_str_to_str(
             move |__arg_0: &str| {
                 let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
                 let __invoker: unsafe extern "C" fn(
@@ -794,8 +783,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_ustr_uto_ustr_u_x00000027a_u_x000
                 }
             },
             s,
-        );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ));
     }
 }
 #[unsafe(no_mangle)]
@@ -827,12 +815,11 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_utuple_uoption(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut (i32, ::core::option::Option<i32>),
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <(i32, ::core::option::Option<i32>) as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr
+            .write(<(i32, ::core::option::Option<i32>) as ::core::default::Default>::default());
     }
 }
 const _: () = assert!(::core::mem::offset_of!((i32, ::core::option::Option<i32>,), 0) == 0);

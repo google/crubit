@@ -17,13 +17,13 @@ const _: () =
     assert!(::core::mem::align_of::<::return_position_impl_trait_golden::ArcWrapper>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_ureturn_uposition_uimpl_utrait_ugolden_x0000003a_x0000003aArcWrapper(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::return_position_impl_trait_golden::ArcWrapper,
 ) -> () {
     unsafe {
-        let __rs_return_value =
+        __ret_ptr.write(
             <::return_position_impl_trait_golden::ArcWrapper as ::core::default::Default>::default(
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+            ),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -35,14 +35,14 @@ extern "C" fn __crubit_thunk_Drop_udrop_ureturn_uposition_uimpl_utrait_ugolden_x
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_ureturn_uposition_uimpl_utrait_ugolden_x0000003a_x0000003aArcWrapper(
     __self: &'static ::return_position_impl_trait_golden::ArcWrapper,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::return_position_impl_trait_golden::ArcWrapper,
 ) -> () {
     unsafe {
-        let __rs_return_value =
+        __ret_ptr.write(
             <::return_position_impl_trait_golden::ArcWrapper as ::core::clone::Clone>::clone(
                 __self,
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+            ),
+        );
     }
 }
 #[unsafe(no_mangle)]

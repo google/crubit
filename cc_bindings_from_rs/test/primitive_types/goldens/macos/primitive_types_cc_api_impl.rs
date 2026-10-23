@@ -86,10 +86,9 @@ const _: () =
 const _: () =
     assert!(::core::mem::offset_of!(::primitive_types_golden::field_types::Types, u8) == 148);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uchar(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_c_uchar(__ret_ptr: *mut ::ffi_11::c_char) -> () {
     unsafe {
-        let __rs_return_value = ::primitive_types_golden::return_types::c_char();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::primitive_types_golden::return_types::c_char());
     }
 }
 #[unsafe(no_mangle)]
@@ -113,10 +112,9 @@ unsafe extern "C" fn __crubit_thunk_c_uint() -> i32 {
     unsafe { ::primitive_types_golden::return_types::c_int() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_ulong(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_c_ulong(__ret_ptr: *mut ::ffi_11::c_long) -> () {
     unsafe {
-        let __rs_return_value = ::primitive_types_golden::return_types::c_long();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::primitive_types_golden::return_types::c_long());
     }
 }
 #[unsafe(no_mangle)]
@@ -140,10 +138,9 @@ unsafe extern "C" fn __crubit_thunk_c_uuint() -> u32 {
     unsafe { ::primitive_types_golden::return_types::c_uint() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uulong(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_c_uulong(__ret_ptr: *mut ::ffi_11::c_ulong) -> () {
     unsafe {
-        let __rs_return_value = ::primitive_types_golden::return_types::c_ulong();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::primitive_types_golden::return_types::c_ulong());
     }
 }
 #[unsafe(no_mangle)]
@@ -254,14 +251,14 @@ unsafe extern "C" fn __crubit_thunk_identity_umut_uc_uvoid_uptr(
 unsafe extern "C" fn __crubit_thunk_new_ustruct_uwith_uc_uvoid_upointer_umember(
     ptr_const: *const ::core::ffi::c_void,
     ptr_mut: *mut ::core::ffi::c_void,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember,
 ) -> () {
     unsafe {
-        let __rs_return_value =
+        __ret_ptr.write(
             ::primitive_types_golden::test_c_void_ptr::new_struct_with_c_void_pointer_member(
                 ptr_const, ptr_mut,
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+            ),
+        );
     }
 }
 #[unsafe(no_mangle)]

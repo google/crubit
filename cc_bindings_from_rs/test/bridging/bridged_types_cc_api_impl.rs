@@ -49,11 +49,7 @@ unsafe extern "C" fn __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_upoi
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=::bridged_types_golden::test_format_bridged_return_type_by_pointer::test_format_bridged_return_type_by_pointer();
-        rust_struct_to_cpp_pointer(
-            ::core::ptr::from_ref(&__rs_return_value) as *const ::core::ffi::c_void,
-            __ret_ptr,
-        );
+        rust_struct_to_cpp_pointer(::core::ptr::from_ref(&::bridged_types_golden::test_format_bridged_return_type_by_pointer::test_format_bridged_return_type_by_pointer())as*const::core::ffi::c_void,__ret_ptr);
     }
 }
 #[unsafe(no_mangle)]
@@ -61,11 +57,7 @@ unsafe extern "C" fn __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_uval
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=::bridged_types_golden::test_format_bridged_return_type_by_value::test_format_bridged_return_type_by_value();
-        rust_to_cpp_converter(
-            ::core::ptr::from_ref(&__rs_return_value) as *const ::core::ffi::c_void,
-            __ret_ptr,
-        );
+        rust_to_cpp_converter(::core::ptr::from_ref(&::bridged_types_golden::test_format_bridged_return_type_by_value::test_format_bridged_return_type_by_value())as*const::core::ffi::c_void,__ret_ptr);
     }
 }
 unsafe extern "C" {

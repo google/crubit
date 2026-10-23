@@ -15,20 +15,18 @@ extern crate core;
 const _: () = assert!(::core::mem::size_of::<::no_core_golden::Test>() == 12);
 const _: () = assert!(::core::mem::align_of::<::no_core_golden::Test>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut ::no_core_golden::Test) -> () {
     unsafe {
-        let __rs_return_value = ::no_core_golden::Test::new();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::no_core_golden::Test::new());
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_s(
     __self: &'static ::no_core_golden::Test,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut &'static str,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::no_core_golden::Test::s(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::no_core_golden::Test::s(__self));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::no_core_golden::Test, s) == 0);

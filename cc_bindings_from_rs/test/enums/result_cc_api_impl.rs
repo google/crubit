@@ -17,10 +17,12 @@ const _: () = assert!(::core::mem::offset_of!(::result_golden::CloneNoDefault, v
 const _: () = assert!(::core::mem::size_of::<::result_golden::CloneNoDefaultResult>() == 4);
 const _: () = assert!(::core::mem::align_of::<::result_golden::CloneNoDefaultResult>() == 1);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(val: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    val: u8,
+    __ret_ptr: *mut ::result_golden::CloneNoDefaultResult,
+) -> () {
     unsafe {
-        let __rs_return_value = ::result_golden::CloneNoDefaultResult::new(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::CloneNoDefaultResult::new(val));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::CloneNoDefaultResult, in_ok) == 0);
@@ -31,10 +33,12 @@ const _: () = assert!(::core::mem::offset_of!(::result_golden::CopyNoDefault, va
 const _: () = assert!(::core::mem::size_of::<::result_golden::CopyNoDefaultResult>() == 4);
 const _: () = assert!(::core::mem::align_of::<::result_golden::CopyNoDefaultResult>() == 1);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(val: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    val: u8,
+    __ret_ptr: *mut ::result_golden::CopyNoDefaultResult,
+) -> () {
     unsafe {
-        let __rs_return_value = ::result_golden::CopyNoDefaultResult::new(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::CopyNoDefaultResult::new(val));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::CopyNoDefaultResult, in_ok) == 0);
@@ -51,10 +55,12 @@ const _: () = assert!(::core::mem::offset_of!(::result_golden::DropNoDefault, 0)
 const _: () = assert!(::core::mem::size_of::<::result_golden::GetsResult>() == 8);
 const _: () = assert!(::core::mem::align_of::<::result_golden::GetsResult>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(val: u32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    val: u32,
+    __ret_ptr: *mut ::result_golden::GetsResult,
+) -> () {
     unsafe {
-        let __rs_return_value = ::result_golden::GetsResult::new(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::GetsResult::new(val));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::GetsResult, value) == 0);
@@ -63,22 +69,20 @@ const _: () = assert!(::core::mem::align_of::<::result_golden::HasDefault>() == 
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
     val: *mut &'static str,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::result_golden::HasDefault,
 ) -> () {
     unsafe {
         let val = val.read();
-        let __rs_return_value = ::result_golden::HasDefault::new(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::HasDefault::new(val));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_val(
     __self: &'static ::result_golden::HasDefault,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut &'static str,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::result_golden::HasDefault::val(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::HasDefault::val(__self));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::HasDefault, val) == 0);
@@ -93,12 +97,11 @@ extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasDe
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
     val: *mut &'static str,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::result_golden::HasDefaultResult,
 ) -> () {
     unsafe {
         let val = val.read();
-        let __rs_return_value = ::result_golden::HasDefaultResult::new(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::HasDefaultResult::new(val));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::HasDefaultResult, in_ok) == 0);
@@ -108,11 +111,10 @@ const _: () = assert!(::core::mem::align_of::<::result_golden::HasNoDefault>() =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_val(
     __self: &'static ::result_golden::HasNoDefault,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut &'static str,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::result_golden::HasNoDefault::val(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::HasNoDefault::val(__self));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::HasNoDefault, val) == 0);
@@ -127,12 +129,11 @@ extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasNo
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
     val: *mut &'static str,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::result_golden::HasNoDefaultResult,
 ) -> () {
     unsafe {
         let val = val.read();
-        let __rs_return_value = ::result_golden::HasNoDefaultResult::new(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::HasNoDefaultResult::new(val));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::HasNoDefaultResult, in_ok) == 0);
@@ -140,10 +141,12 @@ const _: () = assert!(::core::mem::offset_of!(::result_golden::HasNoDefaultResul
 const _: () = assert!(::core::mem::size_of::<::result_golden::NestedResult>() == 16);
 const _: () = assert!(::core::mem::align_of::<::result_golden::NestedResult>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(val: u32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    val: u32,
+    __ret_ptr: *mut ::result_golden::NestedResult,
+) -> () {
     unsafe {
-        let __rs_return_value = ::result_golden::NestedResult::new(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::NestedResult::new(val));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::NestedResult, in_ok) == 0);
@@ -163,11 +166,10 @@ const _: () = assert!(::core::mem::align_of::<::result_golden::ZStream>() == 8);
 const _: () = assert!(::core::mem::offset_of!(::result_golden::ZStream, zfree) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uresult_uby_uvalue(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::core::result::Result<u8, u8>,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::result_golden::return_result_by_value();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::return_result_by_value());
     }
 }
 #[unsafe(no_mangle)]
@@ -176,8 +178,7 @@ unsafe extern "C" fn __crubit_thunk_return_uresult_udrop_uno_udefault_utuple(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::result_golden::return_result_drop_no_default_tuple(success);
-        let (__rs_return_value_0,) = __rs_return_value;
+        let (__rs_return_value_0,) = ::result_golden::return_result_drop_no_default_tuple(success);
         let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
         ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
     }
@@ -185,21 +186,19 @@ unsafe extern "C" fn __crubit_thunk_return_uresult_udrop_uno_udefault_utuple(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uresult_uunit_uerr(
     has_err: bool,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::core::result::Result<u8, ()>,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::result_golden::return_result_unit_err(has_err);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::return_result_unit_err(has_err));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uresult_uunit_uok(
     has_val: bool,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::core::result::Result<(), u8>,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::result_golden::return_result_unit_ok(has_val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::return_result_unit_ok(has_val));
     }
 }
 #[unsafe(no_mangle)]
@@ -260,11 +259,10 @@ unsafe extern "C" fn __crubit_thunk_take_uresult_udrop_uno_udefault_uunit(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_take_uresult_uhas_udefault(
     r: &'static ::core::result::Result<::result_golden::HasDefault, u8>,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut &'static str,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::result_golden::take_result_has_default(r);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::result_golden::take_result_has_default(r));
     }
 }
 #[unsafe(no_mangle)]
@@ -288,11 +286,10 @@ unsafe extern "C" fn __crubit_thunk_take_uresult_uunit_uok(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cresult_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x0000003e(
     __self: &'static ::core::result::Result<::result_golden::CloneNoDefault, u8>,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::core::result::Result<::result_golden::CloneNoDefault, u8>,
 ) -> () {
     unsafe {
-        let __rs_return_value=<core::result::Result<::result_golden::CloneNoDefault,u8>as::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<core::result::Result<::result_golden::CloneNoDefault,u8>as::core::clone::Clone>::clone(__self));
     }
 }
 #[unsafe(no_mangle)]
@@ -307,11 +304,10 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003ar
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cu8_x0000002c_x00000020result_ugolden_x0000003a_x0000003aCloneNoDefault_x0000003e(
     __self: &'static ::core::result::Result<u8, ::result_golden::CloneNoDefault>,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::core::result::Result<u8, ::result_golden::CloneNoDefault>,
 ) -> () {
     unsafe {
-        let __rs_return_value=<core::result::Result<u8,::result_golden::CloneNoDefault>as::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(<core::result::Result<u8,::result_golden::CloneNoDefault>as::core::clone::Clone>::clone(__self));
     }
 }
 #[unsafe(no_mangle)]

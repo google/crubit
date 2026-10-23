@@ -268,14 +268,14 @@ extern "C" void
 __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF13ABICompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::AnyInvocable<struct ABICompatible(struct ABICompatible) const>* f,
     struct ABICompatible* param_0, struct ABICompatible* out) {
-  new (out) struct ABICompatible((*f)(std::move(*param_0)));
+  new (out) struct ABICompatible((*f)(::crubit::UnsafeTakeValue(param_0)));
 }
 extern "C" void
 __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF16LayoutCompatibleS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::AnyInvocable<class LayoutCompatible(class LayoutCompatible) const>*
         f,
     class LayoutCompatible* param_0, class LayoutCompatible* out) {
-  new (out) class LayoutCompatible((*f)(std::move(*param_0)));
+  new (out) class LayoutCompatible((*f)(::crubit::UnsafeTakeValue(param_0)));
 }
 extern "C" void
 __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKF7BridgedS1_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(

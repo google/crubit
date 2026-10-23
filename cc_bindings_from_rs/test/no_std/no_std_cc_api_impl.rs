@@ -15,20 +15,22 @@ extern crate core;
 const _: () = assert!(::core::mem::size_of::<::no_std_golden::NoStdStruct>() == 24);
 const _: () = assert!(::core::mem::align_of::<::no_std_golden::NoStdStruct>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(x: i32, y: f32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    x: i32,
+    y: f32,
+    __ret_ptr: *mut ::no_std_golden::NoStdStruct,
+) -> () {
     unsafe {
-        let __rs_return_value = ::no_std_golden::NoStdStruct::new(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::no_std_golden::NoStdStruct::new(x, y));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_display(
     __self: &'static ::no_std_golden::NoStdStruct,
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut &'static str,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::no_std_golden::NoStdStruct::display(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(::no_std_golden::NoStdStruct::display(__self));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::no_std_golden::NoStdStruct, test) == 0);

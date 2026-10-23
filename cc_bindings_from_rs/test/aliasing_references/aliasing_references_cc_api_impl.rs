@@ -15,12 +15,12 @@ const _: () = assert!(::core::mem::size_of::<::aliasing_references_golden::NonFr
 const _: () = assert!(::core::mem::align_of::<::aliasing_references_golden::NonFreezeType>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_ualiasing_ureferences_ugolden_x0000003a_x0000003aNonFreezeType(
-    __ret_ptr: *mut core::ffi::c_void,
+    __ret_ptr: *mut ::aliasing_references_golden::NonFreezeType,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::aliasing_references_golden::NonFreezeType as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        __ret_ptr.write(
+            <::aliasing_references_golden::NonFreezeType as ::core::default::Default>::default(),
+        );
     }
 }
 #[unsafe(no_mangle)]
