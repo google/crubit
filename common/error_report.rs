@@ -337,7 +337,22 @@ impl ErrorReport {
     }
 
     pub fn to_json_string(&self) -> String {
-        serde_json::to_string_pretty(&SerializeIterator(self.map.borrow().values()))
+        // Sort by content, not by `ItemName::id`: for C++ items the ID is the address of the AST
+        // node, and the order in which items are processed isn't deterministic either (for
+        // example, `cc_bindings_from_rs` visits items in `HashMap` order). Entries with equal sort
+        // keys serialize identically, so their relative order doesn't matter.
+        let map = self.map.borrow();
+        let mut entries: Vec<&ErrorReportEntry> = map.values().collect();
+        entries.sort_by_cached_key(|entry| {
+            (
+                entry.name.clone(),
+                entry.unique_name.clone(),
+                entry.defining_target.clone(),
+                serde_json::to_string(entry)
+                    .expect("ErrorReporting serialization to JSON failed unexpectedly"),
+            )
+        });
+        serde_json::to_string_pretty(&SerializeIterator(entries.into_iter()))
             .expect("ErrorReporting serialization to JSON failed unexpectedly")
     }
 
@@ -787,16 +802,6 @@ mod tests {
             serde_json::json!([
                 {
                     "source_language": "Rust",
-                    "name": "foo",
-                    "errors": [
-                        {
-                            "fmt": "error in {}",
-                            "full_error": "error in item 1",
-                        },
-                    ],
-                },
-                {
-                    "source_language": "Rust",
                     "name": "bar",
                     "errors": [
                         {
@@ -807,8 +812,36 @@ mod tests {
                     "unique_name": "abc123",
                     "defining_target": "//other:target",
                 },
+                {
+                    "source_language": "Rust",
+                    "name": "foo",
+                    "errors": [
+                        {
+                            "fmt": "error in {}",
+                            "full_error": "error in item 1",
+                        },
+                    ],
+                },
             ]),
         );
+    }
+
+    /// Entries are serialized sorted by name, regardless of `ItemName::id` (for C++ items, an AST
+    /// node address) and of the order in which the items were processed.
+    #[gtest]
+    fn error_report_is_sorted_by_name() {
+        let report = ErrorReport::new(SourceLanguage::Cpp);
+        for (name, id) in [("b", 10), ("c", 30), ("a", 20), ("b", 10)] {
+            let _scope = ItemScope::new(
+                &report,
+                ItemName { name: name.into(), id, unique_name: None, defining_target: None },
+            );
+            report.report(&anyhow!("error"));
+        }
+        let json = serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap();
+        let names: Vec<&str> =
+            json.as_array().unwrap().iter().map(|e| e["name"].as_str().unwrap()).collect();
+        expect_eq!(names, vec!["a", "b", "c"]);
     }
 
     #[gtest]
