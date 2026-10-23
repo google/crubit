@@ -74,18 +74,6 @@ For each feature we use, we document the following:
     that Rust needs user-defined types to be usable as self types (e.g. it
     already has this for Rc), although the exact mechanism is as-yet undecided.
 
-### `never_type`
-
-*   **Crubit feature:** `experimental`
-*   **Use case:** Used in a test to demonstrate we don't support it.
-*   **Exit strategy:** Delete test.
-
-### `c_variadic`
-
-*   **Crubit feature:** `experimental`
-*   **Use case:** Used in a test to demonstrate we don't support it.
-*   **Exit strategy:** Delete test.
-
 ### `abi_vectorcall`
 
 *   **Crubit feature:** `experimental`
