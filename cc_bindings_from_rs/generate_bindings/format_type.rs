@@ -237,6 +237,10 @@ pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum
     }
 }
 
+pub fn include_from_path(db: &BindingsGenerator<'_>, path: &str) -> CcInclude {
+    code_gen_utils::include_from_path(db.crubit_support_path_format(), path)
+}
+
 pub fn format_cc_ident_symbol(db: &BindingsGenerator, ident: Symbol) -> Result<Ident> {
     format_cc_ident(db, ident.as_str())
 }
@@ -768,7 +772,7 @@ fn format_ty_for_cc_impl<'tcx>(
             });
         let mut prereqs = CcPrerequisites::default();
         for include_path in &specialization.include_paths {
-            prereqs.includes.insert(CcInclude::from_path(include_path.as_ref()));
+            prereqs.includes.insert(include_from_path(db, include_path.as_ref()));
         }
         return Ok(CcSnippet { tokens, prereqs });
     }
@@ -1985,7 +1989,9 @@ pub fn crubit_abi_type_from_ty<'tcx>(
             let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
                 .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
 
-            if let Some(convertible_attrs) = attrs.get_cpp_convertible_attrs()? {
+            if let Some(convertible_attrs) =
+                attrs.get_cpp_convertible_attrs(db.crubit_support_path_format())?
+            {
                 bail!(
                     "Failed to construct the CrubitAbiType for {ty} because it has bridging attrs for a different kind of bridging: {convertible_attrs:?}"
                 );
@@ -1993,7 +1999,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 let fully_qualified_name = db.symbol_canonical_name(adt.did())?;
                 let mut prereqs = CcPrerequisites::default();
                 for path in &attrs.include_paths {
-                    prereqs.includes.insert(CcInclude::from_path(path.as_str()));
+                    prereqs.includes.insert(include_from_path(db, path.as_str()));
                 }
                 return Ok(CrubitAbiTypeWithCcPrereqs {
                     crubit_abi_type: CrubitAbiType::Transmute {
@@ -2192,7 +2198,7 @@ pub fn cpp_layout_equivalent_type<'tcx>(
     }
 
     let Some(CppLayoutEquivalentAttrs { include_paths, cpp_type }) =
-        attrs.get_cpp_layout_equivalent_attrs()?
+        attrs.get_cpp_layout_equivalent_attrs(db.crubit_support_path_format())?
     else {
         return Ok(None);
     };
@@ -2238,7 +2244,7 @@ fn is_bridged_adt<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<Op
         cpp_type,
         cpp_to_rust_converter,
         rust_to_cpp_converter,
-    }) = attrs.get_cpp_convertible_attrs()?
+    }) = attrs.get_cpp_convertible_attrs(db.crubit_support_path_format())?
     else {
         return Ok(None);
     };

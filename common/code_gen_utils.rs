@@ -12,7 +12,7 @@ use std::fmt::Write as _;
 use std::rc::Rc;
 
 use crubit_feature::CrubitFeature;
-use dyn_format::Format;
+pub use dyn_format::Format;
 use flagset::FlagSet;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -948,8 +948,12 @@ impl NamespaceQualifier {
 }
 
 /// `CcInclude` represents a single `#include ...` directive in C++.
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum CcInclude {
+    /// Represents an `#include` for Crubit C++ support library headers: the
+    /// format specifier for what comes after `#include` and path of the support
+    /// library header.
+    SupportLibHeader(Format<1>, Rc<str>),
     /// Represents a system header, e.g., `cstdef`, which will be included by
     /// angular brackets.
     SystemHeader(Rc<str>),
@@ -957,10 +961,42 @@ pub enum CcInclude {
     UserHeader(Rc<str>),
     /// Represents a user header which should be re-exported by IWYU.
     ExportedUserHeader(Rc<str>),
-    /// Represents an `#include` for Crubit C++ support library headers: the
-    /// format specifier for what comes after `#include` and path of the support
-    /// library header.
-    SupportLibHeader(Format<1>, Rc<str>),
+}
+
+impl CcInclude {
+    fn include_group(&self) -> u8 {
+        match self {
+            Self::SupportLibHeader(..) => 0,
+            Self::SystemHeader(..) => 1,
+            Self::UserHeader(..) | Self::ExportedUserHeader(..) => 2,
+        }
+    }
+}
+
+impl Ord for CcInclude {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match (self, other) {
+            (Self::SupportLibHeader(f1, p1), Self::SupportLibHeader(f2, p2)) => {
+                (f1.format(&[p1.as_ref()]), f1, p1).cmp(&(f2.format(&[p2.as_ref()]), f2, p2))
+            }
+            (Self::SystemHeader(p1), Self::SystemHeader(p2)) => p1.cmp(p2),
+            (
+                Self::UserHeader(p1) | Self::ExportedUserHeader(p1),
+                Self::UserHeader(p2) | Self::ExportedUserHeader(p2),
+            ) => {
+                let is_exported1 = matches!(self, Self::ExportedUserHeader(_));
+                let is_exported2 = matches!(other, Self::ExportedUserHeader(_));
+                (p1, is_exported1).cmp(&(p2, is_exported2))
+            }
+            _ => self.include_group().cmp(&other.include_group()),
+        }
+    }
+}
+
+impl PartialOrd for CcInclude {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl CcInclude {
@@ -1076,6 +1112,20 @@ impl CcInclude {
     }
 }
 
+/// Creates a `CcInclude` from an `include_path` annotation string, mapping
+/// `<crubit/support/...>` and `support/...` paths to `CcInclude::SupportLibHeader`.
+pub fn include_from_path(crubit_support_path_format: Format<1>, path: &str) -> CcInclude {
+    if let Some(support_path) = path
+        .strip_prefix("<crubit/support/")
+        .and_then(|s| s.strip_suffix('>'))
+        .or_else(|| path.strip_prefix("support/"))
+    {
+        CcInclude::support_lib_header(crubit_support_path_format, support_path.into())
+    } else {
+        CcInclude::from_path(path)
+    }
+}
+
 impl ToTokens for CcInclude {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
@@ -1089,7 +1139,8 @@ impl ToTokens for CcInclude {
                 quote! { __HASH_TOKEN__ include #path __NEWLINE__ }.to_tokens(tokens)
             }
             Self::ExportedUserHeader(path) => {
-                quote! { __HASH_TOKEN__ include #path __COMMENT__ "IWYU pragma: export" __NEWLINE__ }.to_tokens(tokens)
+                quote! { __HASH_TOKEN__ include #path __COMMENT__ "IWYU pragma: export" }
+                    .to_tokens(tokens)
             }
             Self::SupportLibHeader(format, path) => {
                 let full_path: TokenStream = format
@@ -1118,11 +1169,10 @@ pub fn format_cc_includes(set_of_includes: &BTreeSet<CcInclude>) -> TokenStream 
     while let Some(include) = iter.next() {
         include.to_tokens(&mut tokens);
 
-        // Add an empty line between system headers and user headers.
-        if let (
-            CcInclude::SystemHeader(_),
-            Some(CcInclude::UserHeader(_) | CcInclude::ExportedUserHeader(_)),
-        ) = (include, iter.peek())
+        // Add an empty line between different include groups (support library headers,
+        // system headers, and user headers).
+        if let Some(next_include) = iter.peek()
+            && include.include_group() != next_include.include_group()
         {
             quote! { __NEWLINE__ }.to_tokens(&mut tokens)
         }
@@ -1327,10 +1377,23 @@ pub mod tests {
 
     #[gtest]
     fn test_cc_include_ord() {
+        let support_format =
+            Format::parse_with_metavars("<crubit/support/{header}>", &["header"]).unwrap();
+        let support_internal_format =
+            Format::parse_with_metavars("<crubit/support/internal/{header}>", &["header"]).unwrap();
+        let support_bridge =
+            CcInclude::support_lib_header(support_format.clone(), "bridge.h".into());
+        let support_internal =
+            CcInclude::support_lib_header(support_internal_format, "fmt.h".into());
+        let support_rs_std =
+            CcInclude::support_lib_header(support_format, "rs_std/slice_ref.h".into());
         let cstddef = CcInclude::cstddef();
         let memory = CcInclude::memory();
         let a = CcInclude::user_header("a.h".into());
         let b = CcInclude::user_header("b.h".into());
+        assert!(support_bridge < support_internal);
+        assert!(support_internal < support_rs_std);
+        assert!(support_rs_std < cstddef);
         assert!(cstddef < memory);
         assert!(cstddef < a);
         assert!(cstddef < b);
@@ -1341,7 +1404,11 @@ pub mod tests {
 
     #[gtest]
     fn test_format_cc_includes() {
+        let support_format =
+            Format::parse_with_metavars("\"support/{header}\"", &["header"]).unwrap();
         let includes = [
+            CcInclude::support_lib_header(support_format.clone(), "rs_std/char.h".into()),
+            CcInclude::support_lib_header(support_format, "internal/slot.h".into()),
             CcInclude::cstddef(),
             CcInclude::memory(),
             CcInclude::user_header("a.h".into()),
@@ -1356,6 +1423,9 @@ pub mod tests {
         assert_eq!(
             actual,
             r#"
+#include "support/internal/slot.h"
+#include "support/rs_std/char.h"
+
 #include <cstddef>
 #include <memory>
 

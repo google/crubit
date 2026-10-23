@@ -136,7 +136,10 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
             if attrs.same_abi {
                 return true;
             }
-            if let Some(layout_equiv) = attrs.get_cpp_layout_equivalent_attrs().ok().flatten()
+            if let Some(layout_equiv) = attrs
+                .get_cpp_layout_equivalent_attrs(db.crubit_support_path_format())
+                .ok()
+                .flatten()
                 && layout_equiv
                     .cpp_type
                     .as_str()

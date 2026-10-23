@@ -16,7 +16,7 @@ extern crate rustc_middle;
 extern crate rustc_span;
 
 use anyhow::{bail, ensure, Result};
-use code_gen_utils::CcInclude;
+use code_gen_utils::{include_from_path, CcInclude, Format};
 use rustc_hir::def::DefKind;
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
@@ -243,7 +243,10 @@ impl CrubitAttrs {
     ///
     /// Note that imported C++ types (`is_imported_cpp_type`) have `cpp_type` set without
     /// `include_paths` and return `Ok(None)` here.
-    pub fn get_cpp_layout_equivalent_attrs(&self) -> Result<Option<CppLayoutEquivalentAttrs>> {
+    pub fn get_cpp_layout_equivalent_attrs(
+        &self,
+        crubit_support_path_format: Format<1>,
+    ) -> Result<Option<CppLayoutEquivalentAttrs>> {
         self.validate_cpp_type_attrs()?;
         if let Self {
             cpp_type: Some(cpp_type),
@@ -257,7 +260,7 @@ impl CrubitAttrs {
             Ok(Some(CppLayoutEquivalentAttrs {
                 include_paths: include_paths
                     .iter()
-                    .map(|s| CcInclude::from_path(s.as_str()))
+                    .map(|s| include_from_path(crubit_support_path_format.clone(), s.as_str()))
                     .collect(),
                 cpp_type: *cpp_type,
             }))
@@ -267,7 +270,10 @@ impl CrubitAttrs {
     }
 
     /// Returns the `#[crubit_annotate::cpp_convertible]` attributes if present.
-    pub fn get_cpp_convertible_attrs(&self) -> Result<Option<CppConvertibleAttrs>> {
+    pub fn get_cpp_convertible_attrs(
+        &self,
+        crubit_support_path_format: Format<1>,
+    ) -> Result<Option<CppConvertibleAttrs>> {
         self.validate_cpp_type_attrs()?;
         if let Self {
             cpp_type: Some(cpp_type),
@@ -280,7 +286,7 @@ impl CrubitAttrs {
             Ok(Some(CppConvertibleAttrs {
                 include_paths: include_paths
                     .iter()
-                    .map(|s| CcInclude::from_path(s.as_str()))
+                    .map(|s| include_from_path(crubit_support_path_format.clone(), s.as_str()))
                     .collect(),
                 cpp_type: *cpp_type,
                 cpp_to_rust_converter: *cpp_to_rust_converter,
