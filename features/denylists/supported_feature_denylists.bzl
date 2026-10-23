@@ -52,7 +52,6 @@ SUPPORTED_FEATURE_DENYLISTS = {
     "always_specialize_generics_in_cpp_api_from_rust": [
         "//cc_bindings_from_rs/test/bridging/composable:composable_bridging",
     ],
-    # TODO(b/561501001): Migrate these targets to `Nullable<Ptr>` / bare non-null `Ptr`.
-    "nonnull_smart_pointers": [
-    ],
+    # Some denylists (e.g. `nonnull_smart_pointers`) are stored as one file per entry instead, in
+    # `internal/<feature>/`. See `denylist_dir.bzl`.
 }
