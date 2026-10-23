@@ -8,6 +8,8 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "packed",
     hdrs = ["packed.h"],
+    aspect_hints = ["//features:record_impl_debug"],
+    deps = ["@abseil-cpp//absl/base:core_headers"],
 )
 
 crubit_rust_test(

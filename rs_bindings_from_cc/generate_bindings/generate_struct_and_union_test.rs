@@ -2303,6 +2303,152 @@ fn test_crubit_override_debug_false() -> Result<()> {
 }
 
 #[gtest]
+fn test_packed_impl_debug_copies_fields() -> Result<()> {
+    let proto =
+        ir_proto_from_record_impl_debug_cc("struct __attribute__((packed)) S { char a; int b; };")?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for S {
+                fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    formatter.debug_struct("S")
+                        .field("a", &{ self.a })
+                        .field("b", &{ self.b })
+                        .finish()
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_packed_impl_debug_pragma_pack() -> Result<()> {
+    let proto = ir_proto_from_record_impl_debug_cc(
+        r#"
+        #pragma pack(push, 2)
+        struct S { char a; int b; };
+        #pragma pack(pop)
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for S {
+                fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    formatter.debug_struct("S")
+                        .field("a", &{ self.a })
+                        .field("b", &{ self.b })
+                        .finish()
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_packed_impl_debug_with_non_copy_field_prints_no_fields() -> Result<()> {
+    let proto = ir_proto_from_record_impl_debug_cc(
+        "struct __attribute__((packed)) S { char a; mutable int b; };",
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for S {
+                fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    formatter.debug_struct("S").finish_non_exhaustive()
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_packed_impl_debug_with_formatter_and_non_copy_field_prints_no_fields() -> Result<()> {
+    // The C++ formatter is only used for `Display`, never for `Debug`.
+    let proto = ir_proto_from_record_impl_debug_cc(
+        r#"
+        struct __attribute__((packed)) S {
+            char a;
+            mutable int b;
+
+            template <typename Sink>
+            friend void AbslStringify(Sink& sink, const S& s) {}
+        };
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Display for S { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for S {
+                fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    formatter.debug_struct("S").finish_non_exhaustive()
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_packed_no_impl_debug_override_false() -> Result<()> {
+    let proto = ir_proto_from_record_impl_debug_cc(
+        r#"struct __attribute__((packed)) [[clang::annotate("crubit_override_debug", false)]] S {
+            char a;
+            int b;
+        };"#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for S { ... }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_impl_debug_prints_field_of_packed_type_with_non_copy_field() -> Result<()> {
+    let proto = ir_proto_from_record_impl_debug_cc(
+        r#"
+        struct __attribute__((packed)) Packed { char a; mutable int b; };
+        struct Outer { Packed packed; };
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for Outer {
+                fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    formatter.debug_struct("Outer").field("packed", &self.packed).finish()
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_cpp_move_constructible_annotation() -> Result<()> {
     let rs_api = generate_bindings_tokens_from_cc("struct Movable {};")?.rs_api;
     assert_rs_matches!(
