@@ -16,4 +16,18 @@ struct HasPointerToIncompleteTypedefs {
   Incomplete* incomplete;
 };
 
+// An elaborated type specifier inside a class declares the struct in the
+// nearest enclosing namespace, not in the class (b/576260039).
+class OuterWithElaboratedTypedef {
+ public:
+  typedef const struct IncompleteFromElaboratedTypedef* IncompletePtr;
+};
+
+namespace ns {
+class Outer {
+ public:
+  typedef const struct NsIncompleteFromElaboratedTypedef* IncompletePtr;
+};
+}  // namespace ns
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPEDEF_INCOMPLETE_TYPES_H_

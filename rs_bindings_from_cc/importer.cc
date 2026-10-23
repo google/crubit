@@ -686,6 +686,17 @@ static bool ShouldImportEagerly(const clang::Decl& decl, bool is_record,
          IsCcTemplateInstantiationsNamespace(decl.getDeclContext());
 }
 
+// Returns true if `decl` is a tag that was first declared by an elaborated type
+// specifier inside a record, e.g. `struct S` in
+// `class C { typedef struct S* P; };`. Such a tag is lexically a child of the
+// record, but semantically a member of the nearest enclosing namespace (or of
+// the translation unit), see [basic.scope.pdecl]/7.
+static bool IsTagInjectedIntoEnclosingNamespace(const clang::Decl& decl) {
+  return clang::isa<clang::TagDecl>(decl) &&
+         decl.getLexicalDeclContext()->isRecord() &&
+         !decl.getDeclContext()->isRecord();
+}
+
 Importer::DeclItems Importer::GetDeclItems(const clang::Decl& decl) {
   DeclItems decl_items;
   clang::SourceManager& sm = ctx_.getSourceManager();
@@ -708,7 +719,7 @@ Importer::DeclItems Importer::GetDeclItems(const clang::Decl& decl) {
 
   const auto& decl_context = clang::cast<clang::DeclContext>(decl);
   const bool is_record = clang::isa<clang::RecordDecl>(&decl_context);
-  for (auto decl : GetCanonicalChildren(decl_context)) {
+  auto add_child = [&](clang::Decl* absl_nonnull decl) {
     const ir_proto::Item* item = nullptr;
     if (ShouldImportEagerly(*decl, is_record, *this)) {
       item = GetDeclItem(decl);
@@ -743,6 +754,38 @@ Importer::DeclItems Importer::GetDeclItems(const clang::Decl& decl) {
         !compare_locations(decl->getEndLoc(), decl->getBeginLoc())) {
       ordered_comments.erase(ordered_comments.lower_bound(decl->getBeginLoc()),
                              ordered_comments.upper_bound(decl->getEndLoc()));
+    }
+  };
+
+  std::vector<clang::Decl*> children = GetCanonicalChildren(decl_context);
+  for (clang::Decl* child : children) {
+    add_child(child);
+  }
+
+  // Tags first declared by an elaborated type specifier inside a (possibly
+  // nested) record are members of this namespace, but they are not in its
+  // `decls()`, because their lexical context is the record. Add them here so
+  // that their bindings are emitted in this namespace (where references to them
+  // point), rather than in the record's module (b/576260039).
+  if (!is_record) {
+    std::vector<const clang::RecordDecl*> records;
+    for (clang::Decl* child : children) {
+      if (const auto* record_decl = clang::dyn_cast<clang::RecordDecl>(child)) {
+        records.push_back(record_decl);
+      }
+    }
+    while (!records.empty()) {
+      const clang::RecordDecl* record_decl = records.back();
+      records.pop_back();
+      for (clang::Decl* child : GetCanonicalChildren(*record_decl)) {
+        if (IsTagInjectedIntoEnclosingNamespace(*child) &&
+            child->getDeclContext() == &decl_context) {
+          add_child(child);
+        } else if (const auto* nested_record_decl =
+                       clang::dyn_cast<clang::RecordDecl>(child)) {
+          records.push_back(nested_record_decl);
+        }
+      }
     }
   }
 
@@ -819,6 +862,14 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
     if (decl->getDeclContext() !=
             clang::cast<clang::DeclContext>(parent_decl) &&
         llvm::isa<clang::CXXRecordDecl>(decl->getDeclContext())) {
+      continue;
+    }
+    // Skip tags declared by an elaborated type specifier when listing children
+    // of records: they are listed as children of the enclosing namespace
+    // instead (see `GetDeclItems`).
+    if (IsTagInjectedIntoEnclosingNamespace(*decl) &&
+        decl->getDeclContext() !=
+            clang::cast<clang::DeclContext>(parent_decl)) {
       continue;
     }
     items.push_back({GetSourceOrderKey(*decl), item_id});

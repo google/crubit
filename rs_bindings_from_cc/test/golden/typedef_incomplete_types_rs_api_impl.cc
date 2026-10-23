@@ -30,4 +30,19 @@ extern "C" void __rust_thunk___ZN30HasPointerToIncompleteTypedefsC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(sizeof(class OuterWithElaboratedTypedef) == 1);
+static_assert(alignof(class OuterWithElaboratedTypedef) == 1);
+
+extern "C" void __rust_thunk___ZN26OuterWithElaboratedTypedefC1Ev(
+    class OuterWithElaboratedTypedef* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(sizeof(class ns::Outer) == 1);
+static_assert(alignof(class ns::Outer) == 1);
+
+extern "C" void __rust_thunk___ZN2ns5OuterC1Ev(class ns::Outer* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop
