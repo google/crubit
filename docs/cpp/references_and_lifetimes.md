@@ -85,11 +85,41 @@ cs/file:examples/cpp/references_and_lifetimes/example_generated.rs function:Smal
 Notes:
 
 *   The `$a`, `$b`, etc. macros come from
-    `"support/lifetime_annotations.h"`.
-*   `$a` annotates the lifetime of the reference that precedes it.
+    `"support/lifetime_annotations.h"` (BUILD target
+    `//support:lifetime_annotations`).
+*   `$a` annotates the lifetime of the reference or view type that precedes it
+    (or use `$(name)` for arbitrary lifetime names).
 *   In a method, `$a` after the parameter list (and after `const`, if present)
     annotates the lifetime of `this`. See [the example below](#elision_wrong).
 *   `$static` annotates a `'static` lifetime.
+*   `$lifetime_param("a")` (or `$lifetime_params("a", "b")`) on a `struct` or
+    `class` declaration gives the generated Rust struct explicit lifetime
+    parameters (`pub struct Foo<'a>`). See
+    [Lifetime parameters on structs and classes](#struct_lifetimes) below.
+
+### Lifetime parameters on structs and classes {#struct_lifetimes}
+
+By default, a C++ `struct` or `class` does not get a lifetime parameter in Rust,
+so view types in fields (such as `absl::string_view` or `std::string_view`) are
+bound without a lifetime as `cpp_std::raw_string_view`.
+
+To give a C++ `struct` or `class` a lifetime parameter in Rust, include
+`"support/lifetime_annotations.h"` (from
+`//support:lifetime_annotations`) and annotate the type with
+`$lifetime_param("a")` (or `$lifetime_params("a", "b")` for multiple lifetime
+parameters). You can then reference `$a` on fields, constructors, and methods:
+
+```c++
+#include "third_party/absl/strings/string_view.h"
+#include "support/lifetime_annotations.h"
+
+struct $lifetime_param("a") Foo {
+  absl::string_view $a s;
+};
+```
+
+See [`absl::SourceLocation`](/third_party/absl/types/source_location.h) for a
+real-world example.
 
 See [Lifetime Annotations for C++](../design/lifetime_annotations_cpp.md) for
 more details and design discussions.
