@@ -233,8 +233,8 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
     type_alias->set_unknown_attr(std::move(**unknown_attr));
   }
   underlying_type->WriteToProto(*type_alias->mutable_underlying_type());
-  type_alias->set_source_loc(
-      ictx_.ConvertSourceLocation(decl->getBeginLoc(), nullptr));
+  *type_alias->mutable_decl_loc() =
+      ictx_.ConvertDeclLocation(decl->getBeginLoc(), nullptr);
   if (enclosing_item_id->has_value()) {
     type_alias->set_enclosing_item_id((*enclosing_item_id)->value());
   }

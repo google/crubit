@@ -427,8 +427,8 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
   global_var->set_unique_name(ictx_.GetUniqueName(*var_decl));
   global_var->set_id(ictx_.GenerateItemId(*var_decl).value());
   global_var->set_owning_target(ictx_.GetOwningTarget(*var_decl).value());
-  global_var->set_source_loc(
-      ictx_.ConvertSourceLocation(var_decl->getBeginLoc(), nullptr));
+  *global_var->mutable_decl_loc() =
+      ictx_.ConvertDeclLocation(var_decl->getBeginLoc(), nullptr);
   if (mangled_name.has_value()) {
     global_var->set_mangled_name(std::move(*mangled_name));
   }
@@ -567,8 +567,8 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
   constant->set_unique_name(ictx_.GetUniqueName(*var_decl));
   constant->set_id(ictx_.GenerateItemId(*var_decl).value());
   constant->set_owning_target(ictx_.GetOwningTarget(*var_decl).value());
-  constant->set_source_loc(
-      ictx_.ConvertSourceLocation(var_decl->getBeginLoc(), nullptr));
+  *constant->mutable_decl_loc() =
+      ictx_.ConvertDeclLocation(var_decl->getBeginLoc(), nullptr);
   if (unknown_attr.has_value()) {
     constant->set_unknown_attr(std::move(*unknown_attr));
   }

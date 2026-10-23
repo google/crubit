@@ -188,7 +188,7 @@ fn generate_type_alias<'a>(
         doc_comment: generate_doc_comment(
             type_alias.doc_comment(),
             None,
-            Some(type_alias.source_loc()),
+            type_alias.decl_loc(),
             db.is_golden_test(),
             db.kythe_annotations(),
         ),
@@ -1084,11 +1084,16 @@ fn unsupported_item_errors<'db>(
     item.errors()
         .iter()
         .map(|e| {
-            error_report::FormattedError::new(
+            let error: Error = error_report::FormattedError::new(
                 e.fmt.to_string().into(),
                 e.message.to_string().into(),
             )
-            .into()
+            .into();
+            // Keep displaying the message, but report the cause it was formatted from.
+            match &e.cause {
+                Some(cause) => error_report::because(error, cause.clone()),
+                None => error,
+            }
         })
         .collect()
 }

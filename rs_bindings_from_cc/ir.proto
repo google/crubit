@@ -21,6 +21,35 @@ message LifetimeName {
   int32 id = 2;
 }
 
+// A line in a source file.
+message SourceLocation {
+  // The path of the file, relative to the workspace root (e.g.
+  // `path/to/header.h`).
+  string path = 1;
+  // The 1-based line number.
+  uint32 line = 2;
+}
+
+// Where a declaration is in the source code.
+message DeclLocation {
+  // A range of byte offsets in a file.
+  message ByteRange {
+    uint32 begin = 1;
+    uint32 end = 2;
+  }
+
+  // Where the declaration is spelled. For a declaration produced by a macro
+  // expansion, this is inside the macro definition. Unset if unknown.
+  SourceLocation spelling = 1;
+  // For a declaration produced by a macro expansion, where the macro is
+  // expanded. Unset otherwise, or if unknown.
+  SourceLocation expansion = 2;
+  // The byte offsets of the declaration's name in the `spelling` file, for
+  // Kythe. Only set when generating Kythe annotations; both offsets are 0 if
+  // the name's range is unknown.
+  ByteRange name_range = 3;
+}
+
 // An error that stores its format string as well as the formatted message.
 message FormattedError {
   // The format string that produced the error message, if available. This is
@@ -261,6 +290,8 @@ message MemberFuncSemantic {
 }
 
 message Func {
+  reserved 22;
+  reserved source_loc;
   reserved 19;
   UnqualifiedIdentifier cc_name = 1;
   UnqualifiedIdentifier rs_name = 2;
@@ -282,7 +313,6 @@ message Func {
   string unknown_attr = 18;
   bool is_member_or_descendant_of_class_template = 20;
   SafetyAnnotation safety_annotation = 21;
-  string source_loc = 22;
   uint64 id = 23;
   uint64 enclosing_item_id = 24;
   // The enclosing record that this function is a friend of.
@@ -295,6 +325,8 @@ message Func {
   // Whether the function or method should have `pub(crate)` visibility.
   bool is_pub_crate = 32;
   bool is_always_inline = 33;
+  // Where the item is declared.
+  DeclLocation decl_loc = 34;
 }
 
 // Access specifier for a member or base class.
@@ -481,6 +513,8 @@ message ArrayValue {
 
 // A constant value (constexpr or const with constant initializer).
 message Constant {
+  reserved 7;
+  reserved source_loc;
   oneof kind {
     // A scalar integer or boolean value.
     IntegerConstant value = 1;
@@ -494,7 +528,6 @@ message Constant {
   string unique_name = 4;
   uint64 id = 5;
   string owning_target = 6;
-  string source_loc = 7;
   // The type of the constant. Set for `value` (the scalar type) and
   // `array_value` (the innermost element type); unset for
   // `string_view_value`, whose Rust type is determined from the bytes
@@ -505,6 +538,8 @@ message Constant {
   bool must_bind = 11;
   string deprecated = 12;
   string doc_comment = 13;
+  // Where the item is declared.
+  DeclLocation decl_loc = 16;
 }
 
 // A template specialization for a template record, containing information
@@ -589,6 +624,8 @@ message OwnedPtrConfig {
 }
 
 message Record {
+  reserved 12;
+  reserved source_loc;
   // `rs_name` and `cc_name` are typically equal, but they may be different for
   // template instantiations.
   Identifier rs_name = 1;
@@ -607,7 +644,6 @@ message Record {
   string doc_comment = 9;
   BridgeType bridge_type = 10;
   OwnedPtrConfig owned_ptr_config = 11;
-  string source_loc = 12;
   repeated BaseClass unambiguous_public_bases = 13;
   repeated Field fields = 14;
   repeated LifetimeName lifetime_params = 15;
@@ -673,6 +709,8 @@ message Record {
   bool has_virtual_bases = 45;
   // The value, in bytes, to use for packing.
   int64 pack = 46;
+  // Where the item is declared.
+  DeclLocation decl_loc = 47;
 }
 
 // A forward-declared record (e.g. `struct Foo;`)
@@ -697,12 +735,13 @@ message Enumerator {
 }
 
 message Enum {
+  reserved 6;
+  reserved source_loc;
   Identifier cc_name = 1;
   Identifier rs_name = 2;
   string unique_name = 3;
   uint64 id = 4;
   string owning_target = 5;
-  string source_loc = 6;
   CcType underlying_type = 7;
   repeated Enumerator enumerators = 8;
   string unknown_attr = 9;
@@ -714,15 +753,18 @@ message Enum {
   string doc_comment = 15;
   string mangled_cc_name = 16;
   bool is_incomplete = 17;
+  // Where the item is declared.
+  DeclLocation decl_loc = 18;
 }
 
 message GlobalVar {
+  reserved 6;
+  reserved source_loc;
   Identifier cc_name = 1;
   Identifier rs_name = 2;
   string unique_name = 3;
   uint64 id = 4;
   string owning_target = 5;
-  string source_loc = 6;
   string mangled_name = 7;
   CcType type = 8;
   string unknown_attr = 9;
@@ -730,10 +772,14 @@ message GlobalVar {
   bool must_bind = 11;
   string deprecated = 12;
   string doc_comment = 13;
+  // Where the item is declared.
+  DeclLocation decl_loc = 14;
 }
 
 // A type alias (defined either using `typedef` or `using`).
 message TypeAlias {
+  reserved 9;
+  reserved source_loc;
   Identifier cc_name = 1;
   Identifier rs_name = 2;
   string unique_name = 3;
@@ -742,16 +788,19 @@ message TypeAlias {
   string doc_comment = 6;
   string unknown_attr = 7;
   CcType underlying_type = 8;
-  string source_loc = 9;
   uint64 enclosing_item_id = 10;
   bool must_bind = 11;
   string deprecated = 12;
   // Lifetime variable names bound by this type alias.
   repeated string lifetime_inputs = 13;
+  // Where the item is declared.
+  DeclLocation decl_loc = 14;
 }
 
 // A placeholder for an item that we can't generate bindings for (yet)
 message UnsupportedItem {
+  reserved 6;
+  reserved source_loc;
   enum Kind {
     KIND_UNSPECIFIED = 0;
     FUNC = 1;
@@ -776,12 +825,13 @@ message UnsupportedItem {
   Kind kind = 3;
   Path path = 4;
   repeated FormattedError errors = 5;
-  string source_loc = 6;
   uint64 id = 7;
   // Whether the item required binding (was annotated with `CRUBIT_MUST_BIND`).
   bool must_bind = 8;
   string defining_target = 9;
   string inline_cpp_source_text = 10;
+  // Where the item is declared.
+  DeclLocation decl_loc = 11;
 }
 
 message Comment {
