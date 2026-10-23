@@ -135,6 +135,10 @@ flagset::flags! {
         /// `T x = f();` keeps compiling, and `g(f())` works when `g` takes `rs::Movable<T>`.
         /// Only affects cpp_api_from_rust.
         MovableReturnValues,
+
+        /// Implement `Eq` and `Ord` for C++ types whose `operator<=>` returns
+        /// `std::strong_ordering`. Only affects rust_api_from_cpp.
+        StrongOrderingTraits,
     }
 }
 
@@ -181,6 +185,7 @@ impl CrubitFeature {
             Self::InheritedFriendOperators => "inherited_friend_operators",
             Self::UnsafeTemplateParams => "unsafe_template_params",
             Self::MovableReturnValues => "movable_return_values",
+            Self::StrongOrderingTraits => "strong_ordering_traits",
         }
     }
 
@@ -234,6 +239,7 @@ impl CrubitFeature {
             }
             Self::UnsafeTemplateParams => "//features:unsafe_template_params",
             Self::MovableReturnValues => "//features:movable_return_values",
+            Self::StrongOrderingTraits => "//features:strong_ordering_traits",
         }
     }
 }
@@ -306,6 +312,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"inherited_friend_operators" => CrubitFeature::InheritedFriendOperators.into(),
         b"unsafe_template_params" => CrubitFeature::UnsafeTemplateParams.into(),
         b"movable_return_values" => CrubitFeature::MovableReturnValues.into(),
+        b"strong_ordering_traits" => CrubitFeature::StrongOrderingTraits.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -489,6 +496,13 @@ mod tests {
     }
 
     #[gtest]
+    fn test_serialized_crubit_feature_strong_ordering_traits() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"strong_ordering_traits\"").unwrap();
+        assert_eq!(features, CrubitFeature::StrongOrderingTraits);
+    }
+
+    #[gtest]
     fn test_serialized_crubit_feature_all() {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"all\"").unwrap();
         assert_eq!(
@@ -509,6 +523,7 @@ mod tests {
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
+                | CrubitFeature::StrongOrderingTraits
         );
     }
 
@@ -552,6 +567,7 @@ mod tests {
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
+                | CrubitFeature::StrongOrderingTraits
         );
     }
 
@@ -577,6 +593,7 @@ mod tests {
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
+                | CrubitFeature::StrongOrderingTraits
         );
     }
 
@@ -603,6 +620,7 @@ mod tests {
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
+                | CrubitFeature::StrongOrderingTraits
         );
     }
 
@@ -629,6 +647,7 @@ mod tests {
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
+                | CrubitFeature::StrongOrderingTraits
         );
     }
 
@@ -655,6 +674,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::InheritedFriendOperators
+                | CrubitFeature::StrongOrderingTraits
         );
     }
 }

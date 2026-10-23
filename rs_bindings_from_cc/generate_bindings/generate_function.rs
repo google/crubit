@@ -23,7 +23,8 @@ use flagset::FlagSet;
 use generate_comment::{generate_doc_comment, parse_extended_source_loc};
 use generate_function_thunk::{
     generate_function_assertion, generate_function_thunk, generate_function_thunk_impl,
-    generate_inline_cpp_call, ident_fragment_from_mangled_name, thunk_ident,
+    generate_inline_cpp_call, ident_fragment_from_mangled_name, is_spaceship_operator,
+    spaceship_thunk_return_type, thunk_ident,
 };
 use ir::*;
 use itertools::Itertools;
@@ -530,14 +531,15 @@ fn generate_cc_operator_index_mut_impls<'a>(
     Ok((func_name, impl_kind))
 }
 
-/// Generates the shape of a `PartialOrd` impl backed by one of the C++ relational operators
-/// (`<`, `>`, `<=`, `>=`).
+/// Generates the shape of a `PartialOrd` impl backed by one of the C++ comparison operators
+/// (`<=>`, `<`, `>`, `<=`, `>=`).
 ///
 /// Rust only allows a single `PartialOrd` impl for a given pair of operand types, so if the C++
-/// type overloads several relational operators, only the most preferred one (see
+/// type overloads several comparison operators, only the most preferred one (see
 /// [`PartialOrdOp::ALL`]) is bound. The remaining operators emit an explanatory error comment and
-/// are served by the default `PartialOrd` methods, which are derived from the generated
-/// `partial_cmp`.
+/// are served by the default `PartialOrd` methods, which are derived from `partial_cmp`.
+/// `operator<=>` implements `partial_cmp` directly; for the other operators, `partial_cmp` is
+/// synthesized.
 fn api_func_shape_for_operator_partial_ord<'a>(
     db: &BindingsGenerator<'a>,
     func: &Func<'a>,
@@ -808,13 +810,9 @@ fn api_func_shape_for_operator<'a>(
     match op.name() {
         "==" => api_func_shape_for_operator_eq(db, func, param_types, errors).ok(),
         "!=" => api_func_shape_for_operator_ne(db, func, param_types, errors).ok().flatten(),
-        "<=>" => {
-            errors.add(anyhow!("Three-way comparison operator not yet supported (b/219827738)"));
-            None
-        }
-        "<" | ">" | "<=" | ">=" => {
+        "<=>" | "<" | ">" | "<=" | ">=" => {
             let partial_ord_op = PartialOrdOp::from_cc_name(op.name())
-                .expect("relational operator should map to a PartialOrdOp");
+                .expect("comparison operator should map to a PartialOrdOp");
             api_func_shape_for_operator_partial_ord(db, func, param_types, partial_ord_op, errors)
                 .ok()
         }
@@ -1545,6 +1543,59 @@ fn thunkless_accessor<'a>(
     }
 }
 
+/// Returns whether `func` returns `std::strong_ordering`.
+///
+/// This only checks the name of the returned record. This is sufficient for `operator<=>`, because
+/// the C++ importer only imports `operator<=>` if it returns a comparison category type from the
+/// `std` namespace.
+fn returns_strong_ordering(db: &BindingsGenerator<'_>, func: &Func<'_>) -> bool {
+    let Ok(return_type) = db.rs_type_kind(func.return_type().clone()) else {
+        return false;
+    };
+    matches!(
+        return_type.unalias(),
+        RsTypeKind::Record { record, .. } if record.cc_name().as_str() == "strong_ordering"
+    )
+}
+
+/// Adjusts `thunk_result` (an expression that calls the C++ function, either through a thunk or
+/// through `inline_cpp!`) to match the generated Rust function, if needed:
+///
+/// * Negates the result of `operator!=`, when it implements `PartialEq::eq`.
+/// * Discards the result, if `drop_return` is set (e.g. for compound assignment operators).
+/// * Decodes the result of `operator<=>` into an `Option<core::cmp::Ordering>`. See
+///   `spaceship_thunk_return_type`.
+fn adjust_thunk_result_if_needed(
+    impl_kind: &ImplKind<'_>,
+    return_type: &RsTypeKind<'_>,
+    thunk_result: TokenStream,
+) -> TokenStream {
+    let ImplKind::Trait { trait_name, drop_return, .. } = impl_kind else {
+        return thunk_result;
+    };
+    match trait_name {
+        TraitName::PartialEq { negate_thunk_result: true, .. } => quote! { ! #thunk_result },
+        TraitName::PartialOrd { op: PartialOrdOp::Spaceship, .. } => quote! {
+            match #thunk_result {
+                -1 => Some(core::cmp::Ordering::Less),
+                0 => Some(core::cmp::Ordering::Equal),
+                1 => Some(core::cmp::Ordering::Greater),
+                _ => None,
+            }
+        },
+        _ if *drop_return => {
+            if return_type.is_unpin() {
+                // The trailing `;` discards the result.
+                quote! { #thunk_result; }
+            } else {
+                // A `!Unpin` result needs to be constructed before it can be discarded.
+                quote! { let _ = ::ctor::emplace!(#thunk_result); }
+            }
+        }
+        _ => thunk_result,
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn generate_func_body<'a>(
     db: &BindingsGenerator<'a>,
@@ -1648,17 +1699,8 @@ fn generate_func_body<'a>(
         _ => {
             let mut body = match return_type.passing_convention() {
                 PassingConvention::AbiCompatible | PassingConvention::Void => {
-                    let negate_symbol = if let ImplKind::Trait {
-                        trait_name: TraitName::PartialEq { negate_thunk_result: true, .. },
-                        ..
-                    } = &impl_kind
-                    {
-                        Some(quote! { ! })
-                    } else {
-                        None
-                    };
                     quote! {
-                        #negate_symbol #crate_root_path::detail::#thunk_ident(
+                        #crate_root_path::detail::#thunk_ident(
                             #( #clone_prefixes #thunk_args #clone_suffixes ),*
                         )
                     }
@@ -1722,23 +1764,7 @@ fn generate_func_body<'a>(
                     }
                 }
             };
-            // Discard the return value if requested (for example, when calling a C++
-            // operator that returns a value from a Rust trait that returns
-            // unit).
-            if let ImplKind::Trait { drop_return: true, .. } = impl_kind {
-                if return_type.is_unpin() {
-                    // If it's unpin, just discard it:
-                    body = quote! { #body; };
-                } else {
-                    // Otherwise, in order to discard the return value and return void, we
-                    // need to run the constructor.
-                    body = quote! {let _ = ::ctor::emplace!(#body);};
-                }
-
-                // We would need to do this, but it's no longer used:
-                //    return_type = RsTypeKind::Primitive(PrimitiveType::Unit);
-                let _ = return_type; // proof that we don't need to update it.
-            }
+            body = adjust_thunk_result_if_needed(impl_kind, return_type, body);
             // Rust 2024 requires that bodies of unsafe functions are not exempt from having unsafe
             // blocks.
             body = quote! { unsafe { #body } };
@@ -1954,26 +1980,35 @@ fn rs_type_kinds_for_func<'a>(
         })
         .collect();
 
-    let return_type = errors.consume_error(
-        db.rs_type_kind_with_lifetime_elision(
-            func.return_type().clone(),
-            LifetimeOptions {
-                infer_lifetimes,
-                is_return_type: true,
+    let return_type = if is_spaceship_operator(func) {
+        // The C++ comparison category type is not exposed to Rust. See
+        // `spaceship_thunk_return_type`.
+        Some(spaceship_thunk_return_type())
+    } else {
+        errors.consume_error(
+            db.rs_type_kind_with_lifetime_elision(
+                func.return_type().clone(),
+                LifetimeOptions {
+                    infer_lifetimes,
+                    is_return_type: true,
 
-                have_reference_param: param_types.iter().any(|pt| {
-                    matches!(pt, RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. })
-                }),
-                assume_lifetimes: run_lifetime_transform,
-                is_operator,
+                    have_reference_param: param_types.iter().any(|pt| {
+                        matches!(
+                            pt,
+                            RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. }
+                        )
+                    }),
+                    assume_lifetimes: run_lifetime_transform,
+                    is_operator,
 
-                // A by-value return type can hold a bridged type; whether it does is up to
-                // the target's features.
-                requires_layout_compatible: false,
-            },
+                    // A by-value return type can hold a bridged type; whether it does is up to
+                    // the target's features.
+                    requires_layout_compatible: false,
+                },
+            )
+            .map_err(|err| anyhow!("Return type is not supported: {err}")),
         )
-        .map_err(|err| anyhow!("Return type is not supported: {err}")),
-    );
+    };
 
     errors.consolidate()?;
     Ok((param_types, return_type.unwrap()))
@@ -2193,7 +2228,11 @@ pub fn generate_function<'a>(
                 && let Some(inline_cpp_body) =
                     generate_inline_cpp_call(db, &func, &thunk_args, body_tokens)?
             {
-                return Ok(inline_cpp_body);
+                return Ok(adjust_thunk_result_if_needed(
+                    &impl_kind,
+                    &return_type,
+                    inline_cpp_body,
+                ));
             }
             generate_func_body(
                 db,
@@ -2675,7 +2714,9 @@ pub fn generate_function<'a>(
                     quoted_return_type = quote! { Self::#name };
                 };
                 associated_type
-            } else if let TraitName::PartialOrd { param, op } = &trait_name {
+            } else if let TraitName::PartialOrd { param, op } = &trait_name
+                && *op != PartialOrdOp::Spaceship
+            {
                 let mut self_type = db.rs_type_kind(trait_record.into())?;
                 if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
                     *lifetimes = trait_lifetime_params.clone();
@@ -2708,6 +2749,7 @@ pub fn generate_function<'a>(
                         quote! { core::cmp::Ordering::Greater },
                         quote! { core::cmp::Ordering::Less },
                     ),
+                    PartialOrdOp::Spaceship => unreachable!("operator<=> implements partial_cmp"),
                 };
                 quote! {
                     #[inline(always)]
@@ -2858,6 +2900,31 @@ pub fn generate_function<'a>(
                         &unsatisfied_where_clause,
                         trait_name,
                     )?
+                }
+                // `std::strong_ordering` implies that equal values are substitutable, so the
+                // type also gets `Eq` and `Ord`.
+                TraitName::PartialOrd { op: PartialOrdOp::Spaceship, param }
+                    if reportable_status.is_ok()
+                        && **param == self_type_for_extra
+                        && db
+                            .ir()
+                            .target_crubit_features(func.as_ref().owning_target())
+                            .contains(crubit_feature::CrubitFeature::StrongOrderingTraits)
+                        && returns_strong_ordering(db, &func) =>
+                {
+                    quote! {
+                        impl #formatted_trait_generic_params Eq for #formatted_impl_for {}
+
+                        impl #formatted_trait_generic_params Ord for #formatted_impl_for {
+                            #[inline(always)]
+                            fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+                                match self.partial_cmp(other) {
+                                    Some(ordering) => ordering,
+                                    None => unreachable!("`std::strong_ordering` is never unordered"),
+                                }
+                            }
+                        }
+                    }
                 }
                 _ => quote! {},
             };
@@ -3253,6 +3320,11 @@ fn function_signature<'a>(
         _ => None,
     };
     match trait_name {
+        Some(TraitName::PartialOrd { op: PartialOrdOp::Spaceship, .. }) => {
+            // The thunk returns an encoded comparison result, which is decoded in the function
+            // body. See `spaceship_thunk_return_type`.
+            quoted_return_type = Some(quote! { Option<core::cmp::Ordering> });
+        }
         Some(TraitName::PartialOrd { .. } | TraitName::PartialEq { .. }) => {
             if *return_type != RsTypeKind::Primitive(Primitive::Bool) {
                 errors.add(anyhow!(

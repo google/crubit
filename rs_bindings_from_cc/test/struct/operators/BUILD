@@ -110,6 +110,27 @@ crubit_rust_test(
     ],
 )
 
+crubit_test_cc_library(
+    name = "spaceship",
+    hdrs = ["spaceship.h"],
+    aspect_hints = ["//features:strong_ordering_traits"],
+)
+
+rust_api_from_cpp(
+    name = "spaceship_rust",
+    cpp_target = ":spaceship",
+)
+
+crubit_rust_test(
+    name = "spaceship_test",
+    srcs = ["spaceship_test.rs"],
+    deps = [
+        ":spaceship_rust",
+        "@crate_index//:googletest",
+        "@crate_index//:static_assertions",  # v1
+    ],
+)
+
 # Crubit is intentionally not enabled for this library.
 cc_library(
     name = "operator_mixins",
