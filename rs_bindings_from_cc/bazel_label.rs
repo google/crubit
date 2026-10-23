@@ -39,6 +39,16 @@ impl BazelLabel {
         &self.0
     }
 
+    /// Whether this label names Crubit's bindings for the C++ standard library.
+    ///
+    /// Only the target name is compared: the package differs between internal
+    /// builds (`//support/cc_std`), the toolchain copies, the
+    /// OSS repository (`//support/cc_std`), and downstream build systems that
+    /// use the OSS binary (e.g. Chromium).
+    pub fn is_cc_std(&self) -> bool {
+        self.target_name() == "cc_std"
+    }
+
     pub fn package_name(&self) -> &str {
         self.0.rsplit_once(':').unwrap_or((&self.0, "")).0
     }

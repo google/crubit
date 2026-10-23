@@ -562,7 +562,7 @@ pub fn generate_bindings_tokens(
     // For #![rustfmt::skip].
     snippets.features |= Feature::custom_inner_attributes;
 
-    if ir.current_target().target_name() == "cc_std" {
+    if ir.current_target().is_cc_std() {
         // For the `vector` in `cc_std`.
         snippets.features |= Feature::allocator_api;
         snippets.features |= Feature::cfg_sanitize;

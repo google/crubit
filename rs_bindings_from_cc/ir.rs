@@ -2791,24 +2791,15 @@ impl<'pb> Record<'pb> {
     // flavors of string_view because of our special-casing.
     pub fn is_string_view(&self) -> bool {
         match &self.template_specialization {
-            Some(TemplateSpecialization { defining_target, kind, .. }) => {
-                let is_in_cc_std = [
-                    "//support/cc_std:cc_std",
-                    "//third_party/crosstool/rust/stable/crubit/support/cc_std:cc_std",
-                    "//third_party/crosstool/rust/stable_nonprod/crubit/support/cc_std:cc_std",
-                ]
-                .into_iter()
-                .any(|label| *defining_target == BazelLabel::from(label));
-                if is_in_cc_std {
-                    let is_string_view = *kind == TemplateSpecializationKind::StdStringView
-                        || *kind == TemplateSpecializationKind::StdWStringView;
-                    if is_string_view {
-                        return true;
-                    };
-                    self.cc_name().as_str().starts_with("std::basic_string_view<")
-                } else {
-                    false
-                }
+            Some(TemplateSpecialization { defining_target, kind, .. })
+                if defining_target.is_cc_std() =>
+            {
+                let is_string_view = *kind == TemplateSpecializationKind::StdStringView
+                    || *kind == TemplateSpecializationKind::StdWStringView;
+                if is_string_view {
+                    return true;
+                };
+                self.cc_name().as_str().starts_with("std::basic_string_view<")
             }
             _ => false,
         }
@@ -4865,6 +4856,33 @@ mod tests {
     }
 
     #[gtest]
+    fn test_bazel_label_is_cc_std() {
+        // Internal HEAD layout (and also the target label used in Chromium's repository
+        // layout).
+        assert!(BazelLabel::from("//support/cc_std:cc_std").is_cc_std());
+        // Internal toolchain stable release snapshot.
+        assert!(BazelLabel::from(
+            "//third_party/crosstool/rust/stable/crubit/support/cc_std:cc_std"
+        )
+        .is_cc_std());
+        // Internal toolchain stable_nonprod release snapshot.
+        assert!(BazelLabel::from(
+            "//third_party/crosstool/rust/stable_nonprod/crubit/support/cc_std:cc_std"
+        )
+        .is_cc_std());
+        // Open-source Crubit repository layout (GitHub: google/crubit, rewritten by Copybara).
+        assert!(BazelLabel::from("//support/cc_std:cc_std").is_cc_std());
+        // Open-source Crubit repository layout using Bazel's shorthand package syntax.
+        assert!(BazelLabel::from("//support/cc_std").is_cc_std());
+
+        // Negative cases:
+        // A different target within the cc_std package.
+        assert!(!BazelLabel::from("//support/cc_std:other").is_cc_std());
+        // An unrelated target.
+        assert!(!BazelLabel::from("//rs_bindings_from_cc:ir").is_cc_std());
+    }
+
+    #[gtest]
     fn test_bazel_label_target_dotless() {
         let label: BazelLabel = "//foo".into();
         assert_eq!(label.target_name(), "foo");
@@ -5106,10 +5124,21 @@ mod tests {
     #[gtest]
     fn test_record_is_string_view() {
         for (defining_target, expected) in [
+            // Internal HEAD layout (and also the target label used in Chromium's repository
+            // layout).
             ("//support/cc_std:cc_std", true),
+            // Internal toolchain stable release snapshot.
             ("//third_party/crosstool/rust/stable/crubit/support/cc_std:cc_std", true),
+            // Internal toolchain stable_nonprod release snapshot.
             ("//third_party/crosstool/rust/stable_nonprod/crubit/support/cc_std:cc_std", true),
-            ("//some/other:target", false),
+            // Open-source Crubit repository layout (GitHub: google/crubit, rewritten by Copybara).
+            ("//support/cc_std:cc_std", true),
+            // Open-source Crubit repository layout using Bazel's shorthand package syntax.
+            ("//support/cc_std", true),
+            // Negative case: a different target within the cc_std package.
+            ("//support/cc_std:other", false),
+            // Negative case: an unrelated target.
+            ("//rs_bindings_from_cc:ir", false),
         ] {
             let proto = protobuf::proto!(::ir_rust_proto::Record {
                 rs_name: __ { identifier: "string_view" },
