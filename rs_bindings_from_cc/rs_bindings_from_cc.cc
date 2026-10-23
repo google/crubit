@@ -18,6 +18,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+
 #include "absl/types/span.h"
 #include "common/file_io.h"
 #include "common/status_macros.h"
@@ -120,6 +121,7 @@ extern "C" int crubit_rs_bindings_from_cc_main(int argc, char* argv[]) {
   crubit::PreprocessTargetArgs(argc, argv);
   auto args = absl::ParseCommandLine(argc, argv);
   absl::InitializeLog();
+
   if (const char* prefix = getenv("RS_BINDINGS_ALLOC_RECORDER_PREFIX")) {
     crubit::StartHeapProfiling(prefix);
   }

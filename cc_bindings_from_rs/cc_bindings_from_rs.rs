@@ -8,6 +8,7 @@ use arc_anyhow::Result;
 use cmdline::Cmdline;
 
 fn main() -> Result<()> {
+
     // TODO: Investigate if we should install a signal handler here.  See also how
     // compiler/rustc_driver/src/lib.rs calls `signal_handler::install()`.
 
