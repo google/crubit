@@ -188,7 +188,7 @@ fn generate_type_alias<'a>(
         doc_comment: generate_doc_comment(
             type_alias.doc_comment(),
             None,
-            Some(type_alias.source_loc()),
+            type_alias.decl_loc(),
             db.is_golden_test(),
             db.kythe_annotations(),
         ),
