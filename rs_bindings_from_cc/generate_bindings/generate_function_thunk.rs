@@ -21,10 +21,64 @@ use std::fmt::Write;
 use std::rc::Rc;
 use unicode_ident::is_xid_continue;
 
+/// Returns whether `func` is a C++ spaceship operator (`operator<=>`) that hasn't been renamed
+/// with `CRUBIT_RUST_NAME`.
+pub fn is_spaceship_operator(func: &Func<'_>) -> bool {
+    let is_spaceship = |name: &UnqualifiedIdentifier| matches!(name, UnqualifiedIdentifier::Operator(op) if op.name() == "<=>");
+    is_spaceship(func.cc_name()) && is_spaceship(func.rs_name())
+}
+
+/// The return type of the thunk of a spaceship operator (see [`is_spaceship_operator`]).
+///
+/// The C++ comparison category types (e.g. `std::strong_ordering`) are not passed across the FFI
+/// boundary, because Rust can't inspect them: their layout is implementation-specific, and they
+/// can only be compared with a literal `0` (through a `consteval` constructor). Instead, the thunk
+/// returns an integer that encodes the result of the comparison: -1 (less), 0 (equal or
+/// equivalent), 1 (greater), or 2 (unordered). (This is the same encoding as used by
+/// `cc_bindings_from_rs`.) The generated `PartialOrd::partial_cmp` decodes the result.
+pub fn spaceship_thunk_return_type<'a>() -> RsTypeKind<'a> {
+    RsTypeKind::Primitive(Primitive::SignedChar)
+}
+
+/// Returns the type returned by the thunk of `func`.
+fn thunk_return_type_kind<'a>(
+    db: &BindingsGenerator<'a>,
+    func: &Func<'a>,
+) -> Result<RsTypeKind<'a>> {
+    if is_spaceship_operator(func) {
+        Ok(spaceship_thunk_return_type())
+    } else {
+        db.rs_type_kind(func.return_type().clone())
+    }
+}
+
+/// Converts `expr` (the result of `operator<=>`) into the encoding described in
+/// [`spaceship_thunk_return_type`].
+///
+/// The C++ importer only imports `operator<=>` if it returns one of the C++ comparison category
+/// types, so `expr` can be compared with `0`.
+fn encode_spaceship_result(expr: TokenStream) -> TokenStream {
+    quote! {
+        [](auto __crubit_ordering) -> signed char {
+            if (__crubit_ordering < 0) return -1;
+            if (__crubit_ordering == 0) return 0;
+            if (__crubit_ordering > 0) return 1;
+            return 2;
+        }(#expr)
+    }
+}
+
 /// If we know the original C++ function is codegenned and already compatible
 /// with `extern "C"` calling convention we skip creating/calling the C++ thunk
 /// since we can call the original C++ directly.
 pub fn can_skip_cc_thunk<'a>(db: &BindingsGenerator<'a>, func: &Func<'a>) -> bool {
+    // ## Spaceship operator
+    //
+    // The thunk converts the C++ comparison category type into an integer. See
+    // `spaceship_thunk_return_type`.
+    if is_spaceship_operator(func) {
+        return false;
+    }
     // ## Inline functions
     //
     // Inline functions may not be codegenned in the C++ library since Clang doesn't
@@ -787,7 +841,7 @@ pub fn generate_cc_thunk_parts<'a>(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let return_type_kind = db.rs_type_kind(func.return_type().clone())?;
+    let return_type_kind = thunk_return_type_kind(db, func)?;
     let return_type_cpp_spelling = cpp_type_name::format_cpp_type(&return_type_kind, db)?;
 
     let return_type_name = match return_type_kind.passing_convention() {
@@ -833,7 +887,14 @@ pub fn generate_cc_thunk_parts<'a>(
             }
             PassingConvention::Void
             | PassingConvention::AbiCompatible
-            | PassingConvention::OwnedPtr => quote! { #body_tokens },
+            | PassingConvention::OwnedPtr => {
+                if is_spaceship_operator(func) {
+                    let encoded_result = encode_spaceship_result(quote! { ([&]() #body_tokens)() });
+                    quote! { { return #encoded_result; } }
+                } else {
+                    quote! { #body_tokens }
+                }
+            }
         },
         ThunkCallKind::Normal(implementation_function) => {
             let (implementation_function, arg_expressions) = {
@@ -865,7 +926,10 @@ pub fn generate_cc_thunk_parts<'a>(
                     (implementation_function, arg_expressions)
                 }
             };
-            let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
+            let mut return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
+            if is_spaceship_operator(func) {
+                return_expr = encode_spaceship_result(return_expr);
+            }
             match return_type_kind.passing_convention() {
                 PassingConvention::ComposablyBridged => {
                     let out_param = &param_idents[0];
@@ -966,7 +1030,7 @@ pub fn generate_inline_cpp_call<'a>(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let return_type_kind = db.rs_type_kind(func.return_type().clone())?;
+    let return_type_kind = thunk_return_type_kind(db, func)?;
     let body_block = if conversion_stmts.is_empty() {
         match return_type_kind.passing_convention() {
             PassingConvention::ComposablyBridged
