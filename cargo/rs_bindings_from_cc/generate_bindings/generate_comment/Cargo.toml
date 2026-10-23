@@ -31,6 +31,7 @@ regex.workspace = true
 [dev-dependencies]
 generate_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings", package = "rs_bindings_from_cc_generate_bindings"}
 generate_comment = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_comment", package = "rs_bindings_from_cc_generate_comment"}
+test_generators = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/test_generators", package = "rs_bindings_from_cc_test_generators"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 error_report = { path = "../../../../cargo/common/error_report"}
 token_stream_matchers = { path = "../../../../cargo/common/token_stream_matchers"}

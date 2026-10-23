@@ -56,7 +56,33 @@ where
     F: FnOnce(Result<Option<ApiSnippets>, String>) -> T + Send,
     T: Send,
 {
-    let features = features.into();
+    let mut output: Option<T> = None;
+    let output_ref = &mut output;
+    test_format_item_with_features_impl(
+        source,
+        name,
+        features.into(),
+        with_kythe_annotations,
+        Box::new(move |result| {
+            *output_ref = Some(test_function(result));
+        }),
+    );
+    output.unwrap()
+}
+
+type FormatItemTestFn<'a> =
+    Box<dyn for<'tcx> FnOnce(Result<Option<ApiSnippets<'tcx>>, String>) + Send + 'a>;
+
+/// Non-generic implementation of `test_format_item_with_features` so that compiler invocation,
+/// database setup, item lookup, and error formatting are compiled once in `test_helpers` rather
+/// than monomorphized at every test call site.
+fn test_format_item_with_features_impl(
+    source: &str,
+    name: &str,
+    features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+    with_kythe_annotations: bool,
+    test_function: FormatItemTestFn<'_>,
+) {
     run_compiler_for_testing(source, |tcx| {
         let local_def_id = find_def_id_by_name(tcx, name);
         let result =
@@ -67,16 +93,50 @@ where
         // To print causes as well [...], use the alternate selector “{:#}”.
         let result = result.map_err(|anyhow_err| format!("{anyhow_err:#}"));
 
-        test_function(result)
-    })
+        test_function(result);
+    });
 }
 
-pub fn bindings_db_for_tests_with_crate_headers<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    known_crate_names: &[&str],
-) -> BindingsGenerator<'tcx> {
-    let features =
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported;
+const DEFAULT_KNOWN_CRATE_NAMES: &[&str] = &["alloc", "core", "std"];
+
+fn default_test_features() -> flagset::FlagSet<crubit_feature::CrubitFeature> {
+    crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported
+}
+
+struct TestDbOptions<'a> {
+    known_crate_names: &'a [&'a str],
+    features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+    with_kythe_annotations: bool,
+    self_namespace: Option<&'a str>,
+    errors: Rc<dyn error_report::ErrorReporting>,
+    fatal_errors: Rc<dyn error_report::ReportFatalError>,
+    ignore_symbols_from_files: HashSet<PathBuf>,
+}
+
+impl Default for TestDbOptions<'_> {
+    fn default() -> Self {
+        Self {
+            known_crate_names: DEFAULT_KNOWN_CRATE_NAMES,
+            features: default_test_features(),
+            with_kythe_annotations: false,
+            self_namespace: None,
+            errors: Rc::new(IgnoreErrors),
+            fatal_errors: Rc::new(FatalErrors::new()),
+            ignore_symbols_from_files: HashSet::default(),
+        }
+    }
+}
+
+fn build_test_db<'tcx>(tcx: TyCtxt<'tcx>, options: TestDbOptions<'_>) -> BindingsGenerator<'tcx> {
+    let TestDbOptions {
+        known_crate_names,
+        features,
+        with_kythe_annotations,
+        self_namespace,
+        errors,
+        fatal_errors,
+        ignore_symbols_from_files,
+    } = options;
     let crate_name_to_include_paths = known_crate_names
         .iter()
         .map(|&name| {
@@ -94,92 +154,7 @@ pub fn bindings_db_for_tests_with_crate_headers<'tcx>(
         .chain(std::iter::once("self"))
         .map(|name| (Rc::from(name), features))
         .collect();
-    let crate_name_to_namespace: HashMap<Rc<str>, Rc<str>> = known_crate_names
-        .iter()
-        .map(|&name| (Rc::from(name), Rc::from(format!("rs::{name}").as_str())))
-        .collect();
-    new_database(
-        tcx,
-        /* source_crate_name= */ None,
-        /* crubit_support_path_format= */
-        Format::parse_with_metavars("<crubit/support/for/tests/{header}>", &["header"]).unwrap(),
-        /* crubit_debug_path_format= */ None,
-        /* default_features= */ Default::default(),
-        /* kythe_annotations= */ false,
-        /* portable_abi_compatible= */ true,
-        /* enable_rmeta_interface= */ false,
-        Rc::new(crate_name_to_include_paths),
-        Rc::new(crate_name_to_features),
-        Rc::new(crate_name_to_namespace),
-        /* crate_renames= */ HashMap::default().into(),
-        /* errors = */ Rc::new(IgnoreErrors),
-        /* fatal_errors= */ Rc::new(FatalErrors::new()),
-        /* is_golden_test= */ true,
-        /* include_guard */ IncludeGuard::PragmaOnce,
-        /* ignore_symbols_from_files */ HashSet::default().into(),
-    )
-}
-
-pub fn bindings_db_for_tests_with_features<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    features: flagset::FlagSet<crubit_feature::CrubitFeature>,
-    with_kythe_annotations: bool,
-    self_namespace: Option<&str>,
-) -> BindingsGenerator<'tcx> {
-    bindings_db_for_tests_with_features_and_errors(
-        tcx,
-        features,
-        with_kythe_annotations,
-        self_namespace,
-        Rc::new(IgnoreErrors),
-        Rc::new(FatalErrors::new()),
-    )
-}
-
-pub fn bindings_db_for_tests_with_error_report<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    features: flagset::FlagSet<crubit_feature::CrubitFeature>,
-) -> (BindingsGenerator<'tcx>, Rc<error_report::ErrorReport>, Rc<FatalErrors>) {
-    let error_report = Rc::new(error_report::ErrorReport::new(error_report::SourceLanguage::Rust));
-    let fatal_errors = Rc::new(FatalErrors::new());
-    let db = bindings_db_for_tests_with_features_and_errors(
-        tcx,
-        features,
-        /* with_kythe_annotations= */ false,
-        /* self_namespace= */ None,
-        error_report.clone(),
-        fatal_errors.clone(),
-    );
-    (db, error_report, fatal_errors)
-}
-
-fn bindings_db_for_tests_with_features_and_errors<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    features: flagset::FlagSet<crubit_feature::CrubitFeature>,
-    with_kythe_annotations: bool,
-    self_namespace: Option<&str>,
-    errors: Rc<dyn error_report::ErrorReporting>,
-    fatal_errors: Rc<dyn error_report::ReportFatalError>,
-) -> BindingsGenerator<'tcx> {
-    const KNOWN_CRATE_NAMES: &[&str] = &["alloc", "core", "std"];
-    let crate_name_to_include_paths = KNOWN_CRATE_NAMES
-        .iter()
-        .map(|&name| {
-            (
-                Rc::from(name),
-                vec![CcInclude::user_header(Rc::from(
-                    format!("fake_bindings_for_unittests/{name}_cc_api.h").as_str(),
-                ))],
-            )
-        })
-        .collect();
-    let crate_name_to_features = KNOWN_CRATE_NAMES
-        .iter()
-        .copied()
-        .chain(std::iter::once("self"))
-        .map(|name| (Rc::from(name), features))
-        .collect();
-    let mut crate_name_to_namespace: HashMap<Rc<str>, Rc<str>> = KNOWN_CRATE_NAMES
+    let mut crate_name_to_namespace: HashMap<Rc<str>, Rc<str>> = known_crate_names
         .iter()
         .map(|&name| (Rc::from(name), Rc::from(format!("rs::{name}").as_str())))
         .collect();
@@ -204,64 +179,58 @@ fn bindings_db_for_tests_with_features_and_errors<'tcx>(
         fatal_errors,
         /* is_golden_test= */ true,
         /* include_guard */ IncludeGuard::PragmaOnce,
-        /* ignore_symbols_from_files */ HashSet::default().into(),
+        /* ignore_symbols_from_files */ ignore_symbols_from_files.into(),
     )
+}
+
+pub fn bindings_db_for_tests_with_crate_headers<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    known_crate_names: &[&str],
+) -> BindingsGenerator<'tcx> {
+    build_test_db(tcx, TestDbOptions { known_crate_names, ..Default::default() })
+}
+
+pub fn bindings_db_for_tests_with_features<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+    with_kythe_annotations: bool,
+    self_namespace: Option<&str>,
+) -> BindingsGenerator<'tcx> {
+    build_test_db(
+        tcx,
+        TestDbOptions { features, with_kythe_annotations, self_namespace, ..Default::default() },
+    )
+}
+
+pub fn bindings_db_for_tests_with_error_report<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+) -> (BindingsGenerator<'tcx>, Rc<error_report::ErrorReport>, Rc<FatalErrors>) {
+    let error_report = Rc::new(error_report::ErrorReport::new(error_report::SourceLanguage::Rust));
+    let fatal_errors = Rc::new(FatalErrors::new());
+    let db = build_test_db(
+        tcx,
+        TestDbOptions {
+            features,
+            errors: error_report.clone(),
+            fatal_errors: fatal_errors.clone(),
+            ..Default::default()
+        },
+    );
+    (db, error_report, fatal_errors)
 }
 
 pub fn bindings_db_for_tests_with_ignore_symbols_from_files<'tcx>(
     tcx: TyCtxt<'tcx>,
     ignore_symbols_from_files: HashSet<PathBuf>,
 ) -> BindingsGenerator<'tcx> {
-    const KNOWN_CRATE_NAMES: &[&str] = &["alloc", "core", "std"];
-    let crate_name_to_include_paths = KNOWN_CRATE_NAMES
-        .iter()
-        .map(|&name| {
-            (
-                Rc::from(name),
-                vec![CcInclude::user_header(Rc::from(
-                    format!("fake_bindings_for_unittests/{name}_cc_api.h").as_str(),
-                ))],
-            )
-        })
-        .collect();
-    let features =
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported;
-    let crate_name_to_features = KNOWN_CRATE_NAMES
-        .iter()
-        .copied()
-        .chain(std::iter::once("self"))
-        .map(|name| (Rc::from(name), features))
-        .collect();
-    let crate_name_to_namespace: HashMap<Rc<str>, Rc<str>> = KNOWN_CRATE_NAMES
-        .iter()
-        .map(|&name| (Rc::from(name), Rc::from(format!("rs::{name}").as_str())))
-        .collect();
-    new_database(
-        tcx,
-        /* source_crate_name= */ None,
-        /* crubit_support_path_format= */
-        Format::parse_with_metavars("<crubit/support/for/tests/{header}>", &["header"]).unwrap(),
-        /* crubit_debug_path_format= */ None,
-        /* default_features= */ Default::default(),
-        /* kythe_annotations= */ false,
-        /* portable_abi_compatible= */ true,
-        /* enable_rmeta_interface= */ false,
-        Rc::new(crate_name_to_include_paths),
-        Rc::new(crate_name_to_features),
-        Rc::new(crate_name_to_namespace),
-        /* crate_renames= */ HashMap::default().into(),
-        /* errors = */ Rc::new(IgnoreErrors),
-        /* fatal_errors= */ Rc::new(FatalErrors::new()),
-        /* is_golden_test= */ true,
-        /* include_guard */ IncludeGuard::PragmaOnce,
-        /* ignore_symbols_from_files */ ignore_symbols_from_files.into(),
-    )
+    build_test_db(tcx, TestDbOptions { ignore_symbols_from_files, ..Default::default() })
 }
 
 pub fn bindings_db_for_tests<'tcx>(tcx: TyCtxt<'tcx>) -> BindingsGenerator<'tcx> {
     bindings_db_for_tests_with_features(
         tcx,
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        default_test_features(),
         /* with_kythe_annotations= */ false,
         None,
     )
@@ -273,7 +242,7 @@ pub fn bindings_db_for_tests_with_namespace<'tcx>(
 ) -> BindingsGenerator<'tcx> {
     bindings_db_for_tests_with_features(
         tcx,
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        default_test_features(),
         /* with_kythe_annotations= */ false,
         Some(namespace),
     )
@@ -288,9 +257,7 @@ where
     F: FnOnce(Result<BindingsTokens>) -> T + Send,
     T: Send,
 {
-    run_compiler_for_testing(source, |tcx| {
-        test_function(generate_bindings(&bindings_db_for_tests(tcx)))
-    })
+    test_function(generate_bindings_for_test_impl(source, None))
 }
 
 pub fn test_generated_bindings_with_namespace<F, T>(
@@ -302,7 +269,28 @@ where
     F: FnOnce(Result<BindingsTokens>) -> T + Send,
     T: Send,
 {
-    run_compiler_for_testing(source, |tcx| {
-        test_function(generate_bindings(&bindings_db_for_tests_with_namespace(tcx, namespace)))
+    test_function(generate_bindings_for_test_impl(source, Some(namespace)))
+}
+
+fn generate_bindings_for_test_impl(
+    source: &str,
+    namespace: Option<&str>,
+) -> Result<BindingsTokens> {
+    let (cc_api, cc_api_impl) = run_compiler_for_testing(source, |tcx| {
+        let db = bindings_db_for_tests_with_features(
+            tcx,
+            default_test_features(),
+            /* with_kythe_annotations= */ false,
+            namespace,
+        );
+        generate_bindings(&db).map(|tokens| {
+            // Convert `TokenStream` to `String` across the thread boundary since `TokenStream` is
+            // `!Send`.
+            (tokens.cc_api.to_string(), tokens.cc_api_impl.to_string())
+        })
+    })?;
+    Ok(BindingsTokens {
+        cc_api: cc_api.parse().unwrap(),
+        cc_api_impl: cc_api_impl.parse().unwrap(),
     })
 }

@@ -8,14 +8,15 @@ use database::code_snippet::BindingsTokens;
 use generate_struct_and_union::generate_derives;
 use googletest::{expect_that, gtest, matchers::contains_substring};
 use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_record, with_lifetime_macros};
-use multiplatform_ir_testing::{
-    ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc, ir_proto_from_cc_dependency,
-    ir_proto_from_record_impl_debug_cc,
-};
+use multiplatform_ir_testing::ir_proto_from_cc;
 use multiplatform_testing::test_platform;
 use proc_macro2::TokenStream;
 use quote::quote;
-use test_generators::generate_bindings_tokens_for_test;
+use test_generators::{
+    generate_bindings_tokens_for_test, generate_bindings_tokens_from_assumed_lifetimes_cc,
+    generate_bindings_tokens_from_cc, generate_bindings_tokens_from_cc_dependency,
+    generate_bindings_tokens_from_record_impl_debug_cc,
+};
 use token_stream_matchers::{
     assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
 };
@@ -33,10 +34,8 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
                 }; "#;
     let current_target_src = r#"
                 using MyAliasOfTemplate = MyTemplate<int>; "#;
-    let proto = ir_proto_from_cc_dependency(current_target_src, dependency_src)?;
-    let ir = make_test_ir(&proto)?;
-
-    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    let BindingsTokens { rs_api, rs_api_impl } =
+        generate_bindings_tokens_from_cc_dependency(current_target_src, dependency_src)?;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -96,7 +95,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
 fn test_template_with_out_of_line_definition() -> Result<()> {
     // See also an end-to-end test in the `test/templates/out_of_line_definition`
     // directory.
-    let proto = ir_proto_from_cc(
+    let BindingsTokens { rs_api_impl, .. } = generate_bindings_tokens_from_cc(
         r#"
             template <typename T>
             class [[clang::annotate("crubit_always_instantiate")]] MyTemplate final {
@@ -110,10 +109,6 @@ fn test_template_with_out_of_line_definition() -> Result<()> {
 
             using MyTypeAlias = MyTemplate<int>; "#,
     )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    let BindingsTokens { rs_api_impl, .. } = generate_bindings_tokens_for_test(ir)?;
 
     // Even though the member functions above are *not* defined inline (e.g.
     // IR::Func::is_inline is false), they still need to have thunks generated for
@@ -150,7 +145,7 @@ fn test_template_with_out_of_line_definition() -> Result<()> {
 
 #[gtest]
 fn test_simple_struct() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc(
         r#"
         struct SomeStruct final {
             ~SomeStruct() {}
@@ -162,10 +157,6 @@ fn test_simple_struct() -> Result<()> {
         };
     "#,
     )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -220,7 +211,7 @@ fn test_simple_struct() -> Result<()> {
 
 #[gtest]
 fn test_struct_vs_class() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc(
         r#"
         struct SomeStruct final {
             SomeStruct() {}
@@ -233,9 +224,6 @@ fn test_struct_vs_class() -> Result<()> {
         };
     "#,
     )?;
-
-    let ir = make_test_ir(&proto)?;
-    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
 
     // A Rust `struct` is generated for both `SomeStruct` and `SomeClass`.
     assert_rs_matches!(rs_api, quote! { pub struct SomeStruct },);
@@ -255,7 +243,7 @@ fn test_struct_vs_class() -> Result<()> {
 
 #[gtest]
 fn test_struct_vs_typedefed_struct() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc(
         r#"
         struct SomeStruct final {
           int x;
@@ -265,9 +253,6 @@ fn test_struct_vs_typedefed_struct() -> Result<()> {
         } SomeAnonStruct __attribute__((aligned(16)));
     "#,
     )?;
-
-    let ir = make_test_ir(&proto)?;
-    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
 
     // A `struct` is generated for both `SomeStruct` and `SomeAnonStruct`, both
     // in Rust and in C++.
@@ -311,17 +296,15 @@ fn test_struct_vs_typedefed_struct() -> Result<()> {
 fn test_record_with_unsupported_field_type() -> Result<()> {
     // Using a volatile field because it's currently not supported.
     // But... any other unsupported type would also work for this test.
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct StructWithUnsupportedField {
           // Doc comment for `my_field`.
           volatile int my_field;
         };
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -348,7 +331,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
 /// generated struct was wrong/missing.
 #[gtest]
 fn test_struct_with_only_bitfields() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
         r#"
             struct SomeStruct {
               char32_t code_point : 31;
@@ -361,9 +344,6 @@ fn test_struct_with_only_bitfields() -> Result<()> {
             static_assert(alignof(SomeStruct) == 4);
         "#,
     )?;
-
-    let ir = make_test_ir(&proto)?;
-    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -391,7 +371,7 @@ fn test_struct_with_only_bitfields() -> Result<()> {
 fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
     // This test input causes `field_decl->getName()` to return an empty string.
     // This example is based on `struct timex` from bits/timex.h
-    let proto = ir_proto_from_cc(
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
         r#"
         struct SomeStruct {
             int first_field;
@@ -399,9 +379,6 @@ fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
             int last_field;
         }; "#,
     )?;
-
-    let ir = make_test_ir(&proto)?;
-    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -429,7 +406,7 @@ fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
 /// even via Copy/Clone.
 #[gtest]
 fn test_trivial_nonpublic_destructor() -> Result<()> {
-    let proto = ir_proto_from_assumed_lifetimes_cc(
+    let rs_api = generate_bindings_tokens_from_assumed_lifetimes_cc(
         r#"
         struct Indestructible final {
           Indestructible() = default;
@@ -444,10 +421,8 @@ fn test_trivial_nonpublic_destructor() -> Result<()> {
         void TakesValue(Indestructible);
         void TakesReference(const Indestructible& x);
     "#,
-    )?;
-
-    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     // It isn't available by value:
     expect_that!(
         rs_api.to_string(),
@@ -463,7 +438,7 @@ fn test_trivial_nonpublic_destructor() -> Result<()> {
 
 #[gtest]
 fn test_nontrivial_nonpublic_destructor() -> Result<()> {
-    let proto = ir_proto_from_assumed_lifetimes_cc(
+    let rs_api = generate_bindings_tokens_from_assumed_lifetimes_cc(
         r#"
         struct Indestructible final {
           Indestructible() = default;
@@ -478,10 +453,8 @@ fn test_nontrivial_nonpublic_destructor() -> Result<()> {
         void TakesValue(Indestructible);
         void TakesReference(const Indestructible& x);
     "#,
-    )?;
-
-    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     // It isn't available by value:
     assert_rs_not_matches!(rs_api, quote! {CtorNew});
     assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
@@ -503,7 +476,7 @@ fn test_nontrivial_nonpublic_destructor() -> Result<()> {
 /// restriction will likely be lifted later.
 #[gtest]
 fn test_trivial_abstract_by_value() -> Result<()> {
-    let proto = ir_proto_from_assumed_lifetimes_cc(
+    let rs_api = generate_bindings_tokens_from_assumed_lifetimes_cc(
         r#"
         struct Abstract final {
           Abstract() = default;
@@ -514,10 +487,8 @@ fn test_trivial_abstract_by_value() -> Result<()> {
         };
         void TakesAbstract(const Abstract& a);
     "#,
-    )?;
-
-    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     // It isn't available by value:
     assert_rs_not_matches!(rs_api, quote! {Default});
     assert_rs_not_matches!(rs_api, quote! {From});
@@ -533,7 +504,7 @@ fn test_trivial_abstract_by_value() -> Result<()> {
 
 #[gtest]
 fn test_nontrivial_abstract_by_value() -> Result<()> {
-    let proto = ir_proto_from_assumed_lifetimes_cc(
+    let rs_api = generate_bindings_tokens_from_assumed_lifetimes_cc(
         r#"
         struct Abstract final {
           Abstract() {};
@@ -544,10 +515,8 @@ fn test_nontrivial_abstract_by_value() -> Result<()> {
         };
         void TakesAbstract(const Abstract& a);
     "#,
-    )?;
-
-    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_not_matches!(rs_api, quote! {CtorNew});
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Abstract});
@@ -564,7 +533,7 @@ fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
     // - https://en.cppreference.com/w/c/language/struct: "[...] an unnamed member of a struct whose
     //   type is a struct without name is known as anonymous struct."
     // - https://rust-lang.github.io/rfcs/2102-unnamed-fields.html
-    let proto = ir_proto_from_cc(
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
         r#"
         struct StructWithUnnamedMembers {
           int first_field;
@@ -581,9 +550,6 @@ fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
           int last_field;
         }; "#,
     )?;
-
-    let ir = make_test_ir(&proto)?;
-    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     // Once anonymous structs and unions are supported, `__unnamed_field1` and `__unnamed_field2`
     // should have a real, usable type.
     assert_rs_matches!(
@@ -619,7 +585,10 @@ fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
 }
 
 #[track_caller]
-fn assert_derives(record: &ir::Record, expected: &[&str]) {
+fn assert_derives(cc_src: &str, record_name: &str, expected: &[&str]) {
+    let proto = ir_proto_from_cc(cc_src).unwrap();
+    let ir = make_test_ir(&proto).unwrap();
+    let record = retrieve_record(&ir, record_name);
     let derives: Vec<TokenStream> = generate_derives(record).0;
     let formatted_derives: Vec<String> =
         derives.into_iter().map(|d| tokens_to_string(d).unwrap()).collect();
@@ -628,65 +597,43 @@ fn assert_derives(record: &ir::Record, expected: &[&str]) {
 
 #[gtest]
 fn test_copy_derives() {
-    let proto = ir_proto_from_cc("struct S final {};").unwrap();
-    let ir = make_test_ir(&proto).unwrap();
-    let record = retrieve_record(&ir, "S");
-    assert_derives(record, &["Clone", "Copy", "::ctor::MoveAndAssignViaCopy"]);
+    assert_derives("struct S final {};", "S", &["Clone", "Copy", "::ctor::MoveAndAssignViaCopy"]);
 }
 
 #[gtest]
 fn test_copy_derives_not_rust_movable() {
-    let proto = ir_proto_from_cc("struct S final { ~S() {} };").unwrap();
-    let ir = make_test_ir(&proto).unwrap();
-    let record = retrieve_record(&ir, "S");
-    assert_derives(record, &[]);
+    assert_derives("struct S final { ~S() {} };", "S", &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_deleted() {
-    let proto = ir_proto_from_cc("struct S final { S(const S&) = delete; };").unwrap();
-    let ir = make_test_ir(&proto).unwrap();
-    let record = retrieve_record(&ir, "S");
-    assert_derives(record, &[]);
+    assert_derives("struct S final { S(const S&) = delete; };", "S", &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_members() {
-    let proto =
-        ir_proto_from_cc("struct A { A(const A&) = delete; }; struct S final { A a; };").unwrap();
-    let ir = make_test_ir(&proto).unwrap();
-    let record = retrieve_record(&ir, "S");
-    assert_derives(record, &[]);
+    assert_derives("struct A { A(const A&) = delete; }; struct S final { A a; };", "S", &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_self() {
-    let proto = ir_proto_from_cc("struct S final { S(const S&) {} };").unwrap();
-    let ir = make_test_ir(&proto).unwrap();
-    let record = retrieve_record(&ir, "S");
-    assert_derives(record, &[]);
+    assert_derives("struct S final { S(const S&) {} };", "S", &[]);
 }
 
 /// In Rust, a Drop type cannot be Copy.
 #[gtest]
 fn test_copy_derives_dtor_nontrivial_self_because_of_direct_dtor() {
-    let proto = ir_proto_from_cc("struct S final { ~S() {} };").unwrap();
-    let ir = make_test_ir(&proto).unwrap();
-    let record = retrieve_record(&ir, "S");
-    assert_derives(record, &[]);
+    assert_derives("struct S final { ~S() {} };", "S", &[]);
 }
 
 #[gtest]
 fn test_copy_derives_dtor_nontrivial_self_because_of_indirect_dtor() {
-    let proto = ir_proto_from_cc("struct A { ~A() {} }; struct S final { A a; };").unwrap();
-    let ir = make_test_ir(&proto).unwrap();
-    let record = retrieve_record(&ir, "S");
-    assert_derives(record, &[]);
+    assert_derives("struct A { ~A() {} }; struct S final { A a; };", "S", &[]);
 }
 
 #[gtest]
 fn test_base_class_subobject_layout() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         // We make `Base` non-POD to force `Derived::z` to live inside the tail padding of `Base`.
         // On the Itanium ABI, this would not happen if `Base` were a POD type.
@@ -699,10 +646,8 @@ fn test_base_class_subobject_layout() -> Result<()> {
           __INT16_TYPE__ z;
         };
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     // The Microsoft C++ ABI does not reuse the tail padding of a base class
     // subobject, so `Derived::z` lands after the padding of `Base`.
     let base_subobject_size = if test_platform().uses_msvc_cxx_abi() {
@@ -729,16 +674,14 @@ fn test_base_class_subobject_layout() -> Result<()> {
 /// inheritance.
 #[gtest]
 fn test_base_class_multiple_inheritance_subobject_layout() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         class Base1 {__INT64_TYPE__ x;};
         class Base2 {char y;};
         struct Derived final : Base1, Base2 {__INT16_TYPE__ z;};
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -758,16 +701,14 @@ fn test_base_class_multiple_inheritance_subobject_layout() -> Result<()> {
 /// inheritance.
 #[gtest]
 fn test_base_class_deep_inheritance_subobject_layout() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         class Base1 {__INT64_TYPE__ x;};
         class Base2 : Base1 {char y;};
         struct Derived final : Base2 {__INT16_TYPE__ z;};
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     // The Microsoft C++ ABI does not reuse the tail padding of a base class
     // subobject, so `Derived::z` lands after the padding of `Base2`.
     let base_subobject_size = if test_platform().uses_msvc_cxx_abi() {
@@ -794,15 +735,13 @@ fn test_base_class_deep_inheritance_subobject_layout() -> Result<()> {
 /// first member to determine the size of the base class subobjects.
 #[gtest]
 fn test_base_class_subobject_fieldless_layout() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         class Base {__INT64_TYPE__ x; char y;};
         struct Derived final : Base {};
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -819,15 +758,13 @@ fn test_base_class_subobject_fieldless_layout() -> Result<()> {
 
 #[gtest]
 fn test_base_class_subobject_empty_fieldless() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         class Base {};
         struct Derived final : Base {};
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -845,17 +782,15 @@ fn test_base_class_subobject_empty_fieldless() -> Result<()> {
 
 #[gtest]
 fn test_base_class_subobject_empty() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         class Base {};
         struct Derived final : Base {
             __INT16_TYPE__ x;
         };
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -873,7 +808,7 @@ fn test_base_class_subobject_empty() -> Result<()> {
 /// a zero-sized private field to the bindings.
 #[gtest]
 fn test_non_aggregate_struct_private_field() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct NonAggregate {
             NonAggregate() {}
@@ -881,10 +816,8 @@ fn test_non_aggregate_struct_private_field() -> Result<()> {
             __INT16_TYPE__ x = 0;
         };
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -902,7 +835,7 @@ fn test_non_aggregate_struct_private_field() -> Result<()> {
 #[gtest]
 fn test_no_unique_address() -> Result<()> {
     let no_unique_address_attr = test_platform().no_unique_address_attr();
-    let proto = ir_proto_from_cc(&format!(
+    let rs_api = generate_bindings_tokens_from_cc(&format!(
         r#"
         class Field1 {{__INT64_TYPE__ x;}};
         class Field2 {{char y;}};
@@ -912,10 +845,8 @@ fn test_no_unique_address() -> Result<()> {
             __INT16_TYPE__ z;
         }};
     "#,
-    ))?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    ))?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -958,7 +889,7 @@ fn test_no_unique_address() -> Result<()> {
 #[gtest]
 fn test_no_unique_address_last_field() -> Result<()> {
     let no_unique_address_attr = test_platform().no_unique_address_attr();
-    let proto = ir_proto_from_cc(&format!(
+    let rs_api = generate_bindings_tokens_from_cc(&format!(
         r#"
         class Field1 {{__INT64_TYPE__ x;}};
         class Field2 {{char y;}};
@@ -967,10 +898,8 @@ fn test_no_unique_address_last_field() -> Result<()> {
             {no_unique_address_attr} Field2 field2;
         }};
     "#,
-    ))?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    ))?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -991,7 +920,7 @@ fn test_no_unique_address_last_field() -> Result<()> {
 #[gtest]
 fn test_no_unique_address_empty() -> Result<()> {
     let no_unique_address_attr = test_platform().no_unique_address_attr();
-    let proto = ir_proto_from_cc(&format!(
+    let rs_api = generate_bindings_tokens_from_cc(&format!(
         r#"
         class Field {{}};
         struct Struct final {{
@@ -1000,10 +929,8 @@ fn test_no_unique_address_empty() -> Result<()> {
             int x;
         }};
     "#,
-    ))?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    ))?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -1032,7 +959,7 @@ fn test_no_unique_address_empty() -> Result<()> {
 #[gtest]
 fn test_base_class_subobject_empty_last_field() -> Result<()> {
     let no_unique_address_attr = test_platform().no_unique_address_attr();
-    let proto = ir_proto_from_cc(&format!(
+    let rs_api = generate_bindings_tokens_from_cc(&format!(
         r#"
         class Field {{}};
         struct Struct final {{
@@ -1040,10 +967,8 @@ fn test_base_class_subobject_empty_last_field() -> Result<()> {
             {no_unique_address_attr} Field field;
         }};
     "#,
-    ))?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    ))?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -1069,20 +994,17 @@ fn test_base_class_subobject_empty_last_field() -> Result<()> {
 
 #[gtest]
 fn test_doc_comment_record() -> Result<()> {
-    let proto = ir_proto_from_cc(
-        "// Doc Comment\n\
+    assert_rs_matches!(
+        generate_bindings_tokens_from_cc(
+            "// Doc Comment\n\
         //\n\
         //  * with bullet\n\
         struct SomeStruct final {\n\
             // Field doc\n\
             int field;\
         };",
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    assert_rs_matches!(
-        generate_bindings_tokens_for_test(ir)?.rs_api,
+        )?
+        .rs_api,
         quote! {
             #[doc = " Doc Comment\n \n  * with bullet\n \n Generated from: ir_from_cc_virtual_header.h;l=6"]
             #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -1101,7 +1023,7 @@ fn test_doc_comment_record() -> Result<()> {
 
 #[gtest]
 fn test_basic_union() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc(
         r#"
         union SomeUnion {
             int some_field;
@@ -1109,9 +1031,6 @@ fn test_basic_union() -> Result<()> {
         };
         "#,
     )?;
-
-    let ir = make_test_ir(&proto)?;
-    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
 
     assert_rs_matches!(
         rs_api,
@@ -1148,17 +1067,15 @@ fn test_basic_union() -> Result<()> {
 
 #[gtest]
 fn test_union_with_opaque_field() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         union MyUnion {
             char first_field[56];
             int second_field;
           };
         "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1189,7 +1106,7 @@ fn test_union_with_opaque_field() -> Result<()> {
 
 #[gtest]
 fn test_currently_no_offset_assertions_for_unions() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
         r#"
         union SomeUnion {
             int some_field;
@@ -1197,9 +1114,6 @@ fn test_currently_no_offset_assertions_for_unions() -> Result<()> {
         };
         "#,
     )?;
-
-    let ir = make_test_ir(&proto)?;
-    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
 
     assert_rs_matches!(
         rs_api,
@@ -1219,7 +1133,7 @@ fn test_currently_no_offset_assertions_for_unions() -> Result<()> {
 
 #[gtest]
 fn test_union_with_private_fields() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         union SomeUnionWithPrivateFields {
           public:
@@ -1228,10 +1142,8 @@ fn test_union_with_private_fields() -> Result<()> {
             long long private_field;
         };
         "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1267,7 +1179,7 @@ fn test_union_with_private_fields() -> Result<()> {
 
 #[gtest]
 fn test_nontrivial_unions() -> Result<()> {
-    let proto = ir_proto_from_cc_dependency(
+    let rs_api = generate_bindings_tokens_from_cc_dependency(
         r#"
         union UnionWithNontrivialField {
             NonTrivialStruct my_field;
@@ -1278,10 +1190,8 @@ fn test_nontrivial_unions() -> Result<()> {
             NonTrivialStruct(NonTrivialStruct&&);
         };
         "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
     assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
@@ -1300,14 +1210,12 @@ fn test_nontrivial_unions() -> Result<()> {
 
 #[gtest]
 fn test_empty_struct() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct EmptyStruct final {};
         "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1341,14 +1249,12 @@ fn test_empty_struct() -> Result<()> {
 
 #[gtest]
 fn test_empty_union() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         union EmptyUnion {};
         "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1382,7 +1288,7 @@ fn test_empty_union() -> Result<()> {
 
 #[gtest]
 fn test_union_field_with_nontrivial_destructor() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct NontrivialStruct { ~NontrivialStruct(); };
         union UnionWithNontrivialField {
@@ -1390,10 +1296,8 @@ fn test_union_field_with_nontrivial_destructor() -> Result<()> {
             NontrivialStruct nontrivial_field;
         };
         "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1424,16 +1328,14 @@ fn test_union_field_with_nontrivial_destructor() -> Result<()> {
 
 #[gtest]
 fn test_union_with_constructors() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         union UnionWithDefaultConstructors {
             int a;
         };
         "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1469,7 +1371,7 @@ fn test_union_with_constructors() -> Result<()> {
 
 #[gtest]
 fn test_unambiguous_public_bases() -> Result<()> {
-    let proto = ir_proto_from_cc_dependency(
+    let rs_api = generate_bindings_tokens_from_cc_dependency(
         "
         struct VirtualBase {};
         struct PrivateBase {};
@@ -1480,10 +1382,7 @@ fn test_unambiguous_public_bases() -> Result<()> {
         struct Derived : private PrivateBase, protected ProtectedBase, MultipleInheritance, AmbiguousPublicBase, virtual VirtualBase {};
     ",
         "",
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?.rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -1561,29 +1460,24 @@ fn test_unambiguous_public_bases() -> Result<()> {
 /// bases.
 #[gtest]
 fn test_unambiguous_public_bases_private_ambiguity() -> Result<()> {
-    let proto = ir_proto_from_cc_dependency(
+    let rs_api = generate_bindings_tokens_from_cc_dependency(
         "
         struct Base {};
         struct Intermediate : public Base {};
         struct Derived : Base, private Intermediate {};
     ",
         "",
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_not_matches!(rs_api, quote! { unsafe impl oops::Inherits<crate::Base> for Derived });
     Ok(())
 }
 
 #[gtest]
 fn test_virtual_thunk() -> Result<()> {
-    let proto = ir_proto_from_cc("struct Polymorphic { virtual void Foo(); };")?;
-
-    let ir = make_test_ir(&proto)?;
-
     assert_cc_matches!(
-        generate_bindings_tokens_for_test(ir)?.rs_api_impl,
+        generate_bindings_tokens_from_cc("struct Polymorphic { virtual void Foo(); };")?
+            .rs_api_impl,
         quote! {
             extern "C" void ...(struct Polymorphic * __this)
         }
@@ -1595,20 +1489,14 @@ fn test_virtual_thunk() -> Result<()> {
 /// and is Unpin.
 #[gtest]
 fn test_no_negative_impl_unpin() -> Result<()> {
-    let proto = ir_proto_from_cc("struct Trivial final {};")?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    let rs_api = generate_bindings_tokens_from_cc("struct Trivial final {};")?.rs_api;
     assert_rs_not_matches!(rs_api, quote! {#[::ctor::recursively_pinned]});
     Ok(())
 }
 
 #[gtest]
 fn test_no_aligned_attr() {
-    let proto = ir_proto_from_cc("struct SomeStruct {};").unwrap();
-
-    let ir = make_test_ir(&proto).unwrap();
-    let rs_api = generate_bindings_tokens_for_test(ir).unwrap().rs_api;
+    let rs_api = generate_bindings_tokens_from_cc("struct SomeStruct {};").unwrap().rs_api;
 
     assert_rs_matches! {rs_api, quote! {
         #[repr(C)]
@@ -1620,10 +1508,10 @@ fn test_no_aligned_attr() {
 
 #[gtest]
 fn test_aligned_attr() {
-    let proto = ir_proto_from_cc("struct SomeStruct {} __attribute__((aligned(64)));").unwrap();
-
-    let ir = make_test_ir(&proto).unwrap();
-    let rs_api = generate_bindings_tokens_for_test(ir).unwrap().rs_api;
+    let rs_api =
+        generate_bindings_tokens_from_cc("struct SomeStruct {} __attribute__((aligned(64)));")
+            .unwrap()
+            .rs_api;
 
     assert_rs_matches! {rs_api, quote! {
        #[repr(C, align(64))]
@@ -1636,13 +1524,11 @@ fn test_aligned_attr() {
 
 #[gtest]
 fn test_forward_declared() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct ForwardDeclared;"#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -1655,7 +1541,7 @@ fn test_forward_declared() -> Result<()> {
 
 #[gtest]
 fn test_private_struct_not_present() -> Result<()> {
-    let proto = ir_proto_from_cc(&with_lifetime_macros(
+    let rs_api = generate_bindings_tokens_from_cc(&with_lifetime_macros(
         r#"
         template <typename T> class MyTemplate {};
         class HasPrivateType {
@@ -1667,10 +1553,8 @@ fn test_private_struct_not_present() -> Result<()> {
          protected:
           HasPrivateType(MyTemplate<PrivateType> x) {}
         };"#,
-    ))?;
-
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    ))?
+    .rs_api;
 
     assert_rs_not_matches!(
         rs_api,
@@ -1681,7 +1565,7 @@ fn test_private_struct_not_present() -> Result<()> {
 
 #[gtest]
 fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let bindings = generate_bindings_tokens_from_cc(
         r#"
             template <typename T>
             struct [[clang::annotate("crubit_always_instantiate")]] MyStruct {
@@ -1696,10 +1580,6 @@ fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result
             }
             "#,
     )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    let bindings = generate_bindings_tokens_for_test(ir)?;
 
     // Mangled name order: bool < double < int
     let my_struct_bool = make_rs_ident("__CcTemplateInst8MyStructIbE");
@@ -1743,7 +1623,7 @@ fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result
 
 #[gtest]
 fn test_implicit_template_specialization_namespace_qualifier() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
             namespace test_namespace_bindings {
                 template <typename T>
@@ -1753,11 +1633,8 @@ fn test_implicit_template_specialization_namespace_qualifier() -> Result<()> {
 
                 using MyTypeAlias = MyTemplate<int>;
             }"#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1780,7 +1657,7 @@ fn test_implicit_template_specialization_namespace_qualifier() -> Result<()> {
 
 #[gtest]
 fn test_derived_class_inherits_unambiguous_public_functions_bases() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         namespace test{
         class Base1 {
@@ -1800,11 +1677,8 @@ fn test_derived_class_inherits_unambiguous_public_functions_bases() -> Result<()
         };
         }
         "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1825,7 +1699,7 @@ fn test_derived_class_inherits_unambiguous_public_functions_bases() -> Result<()
 
 #[gtest]
 fn test_member_in_derived_class_overwrites_inherited_ones() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         namespace test{
         class Base1 {
@@ -1839,11 +1713,8 @@ fn test_member_in_derived_class_overwrites_inherited_ones() -> Result<()> {
         };
         }
         "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1864,7 +1735,7 @@ fn test_member_in_derived_class_overwrites_inherited_ones() -> Result<()> {
 
 #[gtest]
 fn test_forward_declared_class_template_specialization_symbol() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         namespace test_namespace_bindings {
           template <typename T>
@@ -1878,11 +1749,8 @@ fn test_forward_declared_class_template_specialization_symbol() -> Result<()> {
 
           using MyTypeAlias = MyTemplate<Param>;
         }"#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -2066,7 +1934,7 @@ fn test_nested_type_definitions() -> Result<()> {
 /// instead.
 #[gtest]
 fn test_typedef_member() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc(
         r#"
         struct SomeStruct final {
           typedef int Type;
@@ -2074,9 +1942,6 @@ fn test_typedef_member() -> Result<()> {
         inline SomeStruct::Type Function() {return 0;}
     "#,
     )?;
-
-    let ir = make_test_ir(&proto)?;
-    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(rs_api, quote! { pub fn Function() -> crate::some_struct::Type { ... } },);
 
     assert_cc_matches!(
@@ -2090,10 +1955,10 @@ fn test_typedef_member() -> Result<()> {
 
 #[gtest]
 fn test_struct_from_other_target() -> Result<()> {
-    let proto = ir_proto_from_cc_dependency("// intentionally empty", "struct SomeStruct {};")?;
-
-    let ir = make_test_ir(&proto)?;
-    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc_dependency(
+        "// intentionally empty",
+        "struct SomeStruct {};",
+    )?;
     assert_rs_not_matches!(rs_api, quote! { SomeStruct });
     assert_cc_not_matches!(rs_api_impl, quote! { SomeStruct });
     Ok(())
@@ -2101,7 +1966,7 @@ fn test_struct_from_other_target() -> Result<()> {
 
 #[gtest]
 fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
-    let proto = ir_proto_from_assumed_lifetimes_cc(
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
         r#"
         struct SomeStruct final {
             void Method1() {}
@@ -2110,9 +1975,6 @@ fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
         };
         "#,
     )?;
-
-    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
-    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
 
     assert_rs_matches!(
         rs_api,
@@ -2142,7 +2004,7 @@ fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
 
 #[gtest]
 fn test_display() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct CanDisplay {
             template <typename Sink>
@@ -2151,11 +2013,8 @@ fn test_display() -> Result<()> {
             }
         };
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -2170,17 +2029,14 @@ fn test_display() -> Result<()> {
 
 #[gtest]
 fn test_thread_safe_annotation_generates_send_sync() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct [[clang::annotate("crubit_thread_safe")]] ThreadSafeStruct final {
             int field;
         };
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     // Thread-safe types should get `unsafe impl Send` and `unsafe impl Sync`.
     assert_rs_matches!(rs_api, quote! { unsafe impl Send for ThreadSafeStruct {} });
@@ -2199,17 +2055,14 @@ fn test_thread_safe_annotation_generates_send_sync() -> Result<()> {
 
 #[gtest]
 fn test_thread_safe_annotation_generates_unsafe_cell_body() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct [[clang::annotate("crubit_thread_safe")]] ThreadSafeStruct final {
             int field;
         };
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     // Thread-safe types should have an opaque UnsafeCell body instead of individual fields.
     assert_rs_matches!(
@@ -2229,17 +2082,14 @@ fn test_thread_safe_annotation_generates_unsafe_cell_body() -> Result<()> {
 
 #[gtest]
 fn test_non_thread_safe_struct_has_negative_send_sync() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct RegularStruct final {
             int field;
         };
     "#,
-    )?;
-
-    let ir = make_test_ir(&proto)?;
-
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
 
     // Non-thread-safe types should NOT have `unsafe impl Send/Sync`.
     assert_rs_not_matches!(rs_api, quote! { unsafe impl Send for RegularStruct {} });
@@ -2303,15 +2153,14 @@ fn test_infer_send_sync_marks_erased_fields() -> Result<()> {
 
 #[gtest]
 fn test_without_infer_send_sync_erased_fields_are_unmarked() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct StructWithUnsupportedField {
           volatile int my_field;
         };
     "#,
-    )?;
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_not_matches!(rs_api, quote! { __do_not_auto_impl_send_sync0 });
     assert_rs_matches!(rs_api, quote! { impl !Send for StructWithUnsupportedField {} });
     Ok(())
@@ -2428,9 +2277,7 @@ fn test_raw_string_view_is_send_sync() -> Result<()> {
 
 #[gtest]
 fn test_impl_debug() -> Result<()> {
-    let proto = ir_proto_from_record_impl_debug_cc("struct S { int x; };")?;
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    let rs_api = generate_bindings_tokens_from_record_impl_debug_cc("struct S { int x; };")?.rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -2442,11 +2289,10 @@ fn test_impl_debug() -> Result<()> {
 
 #[gtest]
 fn test_crubit_override_debug_false() -> Result<()> {
-    let proto = ir_proto_from_record_impl_debug_cc(
+    let rs_api = generate_bindings_tokens_from_record_impl_debug_cc(
         r#"struct [[clang::annotate("crubit_override_debug", false)]] S { int x; };"#,
-    )?;
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_not_matches!(
         rs_api,
         quote! {
@@ -2458,9 +2304,7 @@ fn test_crubit_override_debug_false() -> Result<()> {
 
 #[gtest]
 fn test_cpp_move_constructible_annotation() -> Result<()> {
-    let proto = ir_proto_from_cc("struct Movable {};")?;
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    let rs_api = generate_bindings_tokens_from_cc("struct Movable {};")?.rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -2474,15 +2318,14 @@ fn test_cpp_move_constructible_annotation() -> Result<()> {
 
 #[gtest]
 fn test_cpp_move_constructible_annotation_non_movable() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct NonMovable {
             NonMovable(NonMovable&&) = delete;
         };
         "#,
-    )?;
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -2501,7 +2344,7 @@ fn test_cpp_move_constructible_annotation_non_movable() -> Result<()> {
 
 #[gtest]
 fn test_static_function() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         class BaseWithStaticFunc {
         public:
@@ -2513,9 +2356,8 @@ fn test_static_function() -> Result<()> {
         public:
         };
         "#,
-    )?;
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -2569,7 +2411,7 @@ fn test_static_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_cxx_extern_type_enabled_by_default() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct TrivialStruct final {
             int field;
@@ -2584,9 +2426,8 @@ fn test_impl_cxx_extern_type_enabled_by_default() -> Result<()> {
         };
         using MyAlias = MyTemplate<int>;
         "#,
-    )?;
-    let ir = make_test_ir(&proto)?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    )?
+    .rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {

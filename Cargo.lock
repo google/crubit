@@ -1695,6 +1695,7 @@ dependencies = [
  "rs_bindings_from_cc_ir_matchers",
  "rs_bindings_from_cc_ir_rust_proto",
  "rs_bindings_from_cc_ir_testing",
+ "rs_bindings_from_cc_test_generators",
  "token_stream_matchers",
 ]
 
@@ -2071,6 +2072,7 @@ dependencies = [
  "rs_bindings_from_cc_database",
  "rs_bindings_from_cc_generate_bindings",
  "rs_bindings_from_cc_ir",
+ "rs_bindings_from_cc_ir_testing",
  "rs_bindings_from_cc_multiplatform_ir_testing",
 ]
 

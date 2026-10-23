@@ -1110,8 +1110,10 @@ fn transform_item<'a>(db: &BindingsGenerator<'_>, item: &Item<'a>) -> Result<Ite
 
 /// Creates a copy of `ir` with default lifetimes filled in. This is mostly useful for testing;
 /// prefer to transform items on demand.
-pub fn lifetime_defaults_transform<'pb>(db: &BindingsGenerator<'pb>) -> Result<IR<'pb>> {
-    let ir = db.ir();
+pub fn lifetime_defaults_transform<'pb>(
+    db: &BindingsGenerator<'_>,
+    ir: &IR<'pb>,
+) -> Result<IR<'pb>> {
     let mut top_level_items: BTreeMap<BazelLabel, Vec<Item<'pb>>> = BTreeMap::new();
     for (target, items) in &ir.tree_ir().top_level_items {
         let transformed_roots = items.iter().map(|item| transform_item(db, item)).try_collect()?;

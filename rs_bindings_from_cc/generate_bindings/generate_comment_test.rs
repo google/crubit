@@ -6,15 +6,13 @@
 
 use arc_anyhow::Result;
 use database::code_snippet;
-use database::db::{BindingsGenerator, Interner};
-use error_report::{ErrorReport, FatalErrors, SourceLanguage};
-use generate_bindings::new_database;
 use generate_comment::{generate_doc_comment, generate_unsupported};
 use googletest::prelude::gtest;
-use ir::{BazelLabel, ItemId, UnsupportedItem, UnsupportedItemKind, IR};
+use ir::{BazelLabel, ItemId, UnsupportedItem, UnsupportedItemKind};
 use ir_testing::make_ir_from_items;
 use quote::quote;
 use std::rc::Rc;
+use test_generators::TestDbFactory;
 use token_stream_matchers::{assert_rs_matches, assert_rs_not_matches};
 
 #[gtest]
@@ -116,33 +114,6 @@ impl<'a> ir::GenericItem<'a> for TestItem {
     }
 }
 
-struct TestDbFactory<'pb> {
-    ir: IR<'pb>,
-    errors: ErrorReport,
-    fatal_errors: FatalErrors,
-    interner: Interner,
-}
-impl<'pb> TestDbFactory<'pb> {
-    fn new(ir: IR<'pb>) -> Self {
-        Self {
-            ir,
-            errors: ErrorReport::new(SourceLanguage::Cpp),
-            fatal_errors: FatalErrors::new(),
-            interner: Interner::new(),
-        }
-    }
-    fn make_db(&self, is_golden_test: bool) -> BindingsGenerator {
-        new_database(
-            &self.ir,
-            &self.errors,
-            &self.fatal_errors,
-            is_golden_test,
-            /* kythe_annotations= */ false,
-            &self.interner,
-        )
-    }
-}
-
 fn make_factory() -> TestDbFactory<'static> {
     let test_item = UnsupportedItem::new_raw(
         Rc::from("test_item"),
@@ -164,7 +135,7 @@ fn make_factory() -> TestDbFactory<'static> {
 #[gtest]
 fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
     let factory = make_factory();
-    let db = factory.make_db(false);
+    let db = factory.make_db();
     let _scope = error_report::ItemScope::new(
         db.errors(),
         error_report::ItemName {
@@ -196,7 +167,7 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
 #[gtest]
 fn test_generate_unsupported_item_with_global_cpp() -> Result<()> {
     let factory = make_factory();
-    let db = factory.make_db(false);
+    let db = factory.make_db();
     let _scope = error_report::ItemScope::new(
         db.errors(),
         error_report::ItemName {
@@ -229,7 +200,7 @@ fn test_generate_unsupported_item_with_global_cpp() -> Result<()> {
 #[gtest]
 fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result<()> {
     let factory = make_factory();
-    let db = factory.make_db(false);
+    let db = factory.make_db();
     let _scope = error_report::ItemScope::new(
         db.errors(),
         error_report::ItemName {
@@ -257,7 +228,7 @@ fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result
 #[gtest]
 fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
     let factory = make_factory();
-    let db = factory.make_db(false);
+    let db = factory.make_db();
     let _scope = error_report::ItemScope::new(
         db.errors(),
         error_report::ItemName {
@@ -286,7 +257,7 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
 #[gtest]
 fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
     let factory = make_factory();
-    let db = factory.make_db(true);
+    let db = factory.make_db_with_golden_test(true);
     let _scope = error_report::ItemScope::new(
         db.errors(),
         error_report::ItemName {
@@ -318,7 +289,7 @@ fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
 #[gtest]
 fn test_generate_unsupported_function_template_with_global_cpp() -> Result<()> {
     let factory = make_factory();
-    let db = factory.make_db(false);
+    let db = factory.make_db();
     let _scope = error_report::ItemScope::new(
         db.errors(),
         error_report::ItemName {
@@ -350,14 +321,14 @@ fn test_generate_unsupported_function_template_with_global_cpp() -> Result<()> {
         }
     };
     assert_rs_matches!(quote! { #actual }, expected);
-    assert!(factory.fatal_errors.take_string().is_empty());
+    assert!(factory.fatal_errors().take_string().is_empty());
     Ok(())
 }
 
 #[gtest]
 fn test_generate_unsupported_function_template_strict_mode_fatal_error() -> Result<()> {
     let factory = make_factory();
-    let db = factory.make_db(false);
+    let db = factory.make_db();
     let _scope = error_report::ItemScope::new(
         db.errors(),
         error_report::ItemName {
@@ -376,6 +347,6 @@ fn test_generate_unsupported_function_template_strict_mode_fatal_error() -> Resu
         "template <typename T> T Add(T a, T b) { return a + b; }".into(),
     ));
     let _ = generate_unsupported(&db, unsupported_item.into());
-    assert!(!factory.fatal_errors.take_string().is_empty());
+    assert!(!factory.fatal_errors().take_string().is_empty());
     Ok(())
 }

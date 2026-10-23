@@ -9,12 +9,16 @@ use googletest::matchers::{contains, eq, is_empty, not, pat, some};
 use googletest::{expect_eq, expect_that, expect_true, fail, gtest, OrFail};
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
-use ir_rust_proto::IRProto;
 use ir_testing::{
-    make_test_ir, retrieve_func, retrieve_record, retrieve_type_alias_record,
-    with_full_lifetime_macros, DEPENDENCY_TARGET, TESTING_TARGET,
+    make_test_ir, retrieve_func, retrieve_record, retrieve_type_alias_record, DEPENDENCY_TARGET,
+    TESTING_TARGET,
 };
 use itertools::Itertools;
+use multiplatform_ir_testing::{
+    ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc, ir_proto_from_cc_dependency,
+    ir_proto_from_cc_dependency_with_lazy_import, ir_proto_from_inherited_friend_operators_cc,
+    ir_proto_from_record_impl_debug_cc,
+};
 use multiplatform_testing::test_platform;
 use quote::quote;
 use std::collections::{HashMap, HashSet};
@@ -54,65 +58,6 @@ impl<'pb> IrTestingExt<'pb> for IR<'pb> {
             )
         })
     }
-}
-
-fn ir_proto_from_cc(header: &str) -> Result<IRProto> {
-    ir_testing::ir_proto_from_cc(test_platform(), header)
-}
-
-fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<IRProto> {
-    ir_testing::ir_proto_from_cc_dependency(
-        test_platform(),
-        header,
-        dep_header,
-        None,
-        /* kythe_annotations= */ false,
-        /* carcinize= */ false,
-    )
-}
-
-fn ir_proto_from_cc_dependency_with_lazy_import(header: &str, dep_header: &str) -> Result<IRProto> {
-    ir_testing::ir_proto_from_cc_dependency_with_lazy_import(
-        test_platform(),
-        header,
-        dep_header,
-        None,
-    )
-}
-
-fn ir_proto_from_record_impl_debug_cc(header: &str) -> Result<IRProto> {
-    ir_testing::ir_proto_from_cc_dependency(
-        test_platform(),
-        header,
-        "// empty header",
-        Some("record_impl_debug"),
-        /* kythe_annotations= */ false,
-        /* carcinize= */ false,
-    )
-}
-
-fn ir_proto_from_inherited_friend_operators_cc(header: &str, dep_header: &str) -> Result<IRProto> {
-    ir_testing::ir_proto_from_cc_dependency(
-        multiplatform_testing::test_platform(),
-        header,
-        dep_header,
-        Some("inherited_friend_operators"),
-        /* kythe_annotations= */ false,
-        /* carcinize= */ false,
-    )
-}
-
-fn ir_proto_from_assumed_lifetimes_cc(program: &str) -> Result<IRProto> {
-    let mut full_program = with_full_lifetime_macros();
-    full_program.push_str(program);
-    ir_testing::ir_proto_from_cc_dependency(
-        test_platform(),
-        &full_program,
-        "// empty header",
-        Some("assume_lifetimes"),
-        /* kythe_annotations= */ false,
-        /* carcinize= */ false,
-    )
 }
 
 #[gtest]

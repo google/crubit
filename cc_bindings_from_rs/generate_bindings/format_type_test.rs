@@ -30,23 +30,34 @@ fn test_ty<TestFn, Expectation>(
         for<'tcx> Fn(/* testcase_description: */ &str, TyCtxt<'tcx>, Ty<'tcx>, &Expectation) + Sync,
     Expectation: Sync,
 {
-    fn input_to_string(input: &str, preamble: &TokenStream, type_location: TypeLocation) -> String {
-        let ty_tokens: TokenStream = input.parse().unwrap();
-        let input = match type_location {
-            TypeLocation::FnReturn { .. } => quote! {
-                #preamble
-                pub fn test_function() -> #ty_tokens { unimplemented!() }
-            },
-            TypeLocation::FnParam { .. } => quote! {
-                #preamble
-                pub fn test_function(_arg: #ty_tokens) { unimplemented!() }
-            },
-            _ => unimplemented!(),
-        };
-        input.to_string()
+    for (index, (input, expected)) in testcases.iter().enumerate() {
+        test_single_ty(type_location, index, input, &preamble, &|desc, tcx, ty| {
+            test_fn(desc, tcx, ty, expected);
+        });
     }
+}
 
-    fn get_test_function_ty<'tcx>(tcx: TyCtxt<'tcx>, type_location: TypeLocation) -> Ty<'tcx> {
+fn test_single_ty(
+    type_location: TypeLocation,
+    index: usize,
+    input: &str,
+    preamble: &TokenStream,
+    test_fn: &(dyn for<'tcx> Fn(&str, TyCtxt<'tcx>, Ty<'tcx>) + Sync),
+) {
+    let desc = format!("test #{index}: test input: `{input}`");
+    let ty_tokens: TokenStream = input.parse().unwrap();
+    let input = match type_location {
+        TypeLocation::FnReturn { .. } => quote! {
+            #preamble
+            pub fn test_function() -> #ty_tokens { unimplemented!() }
+        },
+        TypeLocation::FnParam { .. } => quote! {
+            #preamble
+            pub fn test_function(_arg: #ty_tokens) { unimplemented!() }
+        },
+        _ => unimplemented!(),
+    };
+    run_compiler_for_testing(input.to_string(), |tcx| {
         let sig_mid = {
             let def_id = find_def_id_by_name(tcx, "test_function").to_def_id();
             liberate_and_deanonymize_late_bound_regions(
@@ -55,21 +66,13 @@ fn test_ty<TestFn, Expectation>(
                 def_id,
             )
         };
-        match type_location {
+        let ty = match type_location {
             TypeLocation::FnReturn { .. } => sig_mid.output(),
             TypeLocation::FnParam { .. } => sig_mid.inputs()[0],
             _ => unimplemented!(),
-        }
-    }
-
-    for (index, (input, expected)) in testcases.iter().enumerate() {
-        let desc = format!("test #{index}: test input: `{input}`");
-        let input = input_to_string(input, &preamble, type_location);
-        run_compiler_for_testing(input, |tcx| {
-            let ty = get_test_function_ty(tcx, type_location);
-            test_fn(&desc, tcx, ty, expected);
-        });
-    }
+        };
+        test_fn(&desc, tcx, ty);
+    });
 }
 
 /// `test_format_ret_ty_for_cc_successes` provides test coverage for cases

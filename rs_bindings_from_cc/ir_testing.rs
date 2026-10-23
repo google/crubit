@@ -11,7 +11,7 @@ use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{
     self, Func, GenericItem, Item, LifetimeId, LifetimeName, Record, TreeIR, TypeWithDeclId, IR,
 };
-use ir_rust_proto::IRProto;
+pub use ir_rust_proto::IRProto;
 use protobuf::Parse;
 
 /// Generates `IR` from a header containing `header_source`.

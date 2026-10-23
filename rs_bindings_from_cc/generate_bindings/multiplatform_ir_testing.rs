@@ -39,12 +39,38 @@ pub fn ir_proto_from_cc_with_inline_cpp(header: &str) -> Result<IRProto> {
     )
 }
 
+pub fn ir_proto_from_cc_dependency_with_lazy_import(
+    header: &str,
+    dep_header: &str,
+) -> Result<IRProto> {
+    ir_testing::ir_proto_from_cc_dependency_with_lazy_import(
+        test_platform(),
+        header,
+        dep_header,
+        None,
+    )
+}
+
 pub fn ir_proto_from_record_impl_debug_cc(header: &str) -> Result<IRProto> {
     ir_testing::ir_proto_from_cc_dependency(
         test_platform(),
         header,
         "// empty header",
         Some("record_impl_debug"),
+        /* kythe_annotations= */ false,
+        /* carcinize= */ false,
+    )
+}
+
+pub fn ir_proto_from_inherited_friend_operators_cc(
+    header: &str,
+    dep_header: &str,
+) -> Result<IRProto> {
+    ir_testing::ir_proto_from_cc_dependency(
+        test_platform(),
+        header,
+        dep_header,
+        Some("inherited_friend_operators"),
         /* kythe_annotations= */ false,
         /* carcinize= */ false,
     )

@@ -630,6 +630,7 @@ multiplatform_rust_test(
         ":ir_testing",
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
+        "//rs_bindings_from_cc/generate_bindings:multiplatform_ir_testing",
         "@crate_index//:googletest",
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",

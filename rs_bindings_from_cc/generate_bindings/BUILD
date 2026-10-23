@@ -258,6 +258,7 @@ rust_library(
         "//common:dyn_format",
         "//common:error_report",
         "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc:ir_testing",
         "//rs_bindings_from_cc/generate_bindings/database",
     ],
 )
@@ -297,6 +298,7 @@ rust_test(
     deps = [
         ":generate_bindings",
         ":generate_comment",
+        ":test_generators",
         "//common:arc_anyhow",
         "//common:error_report",
         "//common:token_stream_matchers",
