@@ -65,7 +65,7 @@ If you happen to be *directly* passing a return value into a parameter, you can
 avoid the intermediate boxed value:
 
 ```rust
-accepts(returns());
+accepts_value(returns());
 ```
 
 If you want to avoid heap allocations in general, you will need to use the more
