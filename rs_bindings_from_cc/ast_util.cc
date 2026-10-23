@@ -226,7 +226,7 @@ absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
       name_buf = attr->getNormalizedFullName();
       name = name_buf;
     } else {
-      name = attr->getSpelling();
+      name = StringViewFromStringRef(attr->getSpelling());
     }
     if (ignored_attr_names.contains(name)) {
       continue;
@@ -345,7 +345,7 @@ absl::StatusOr<absl::string_view> EvaluateAsStringLiteral(
     return absl::InvalidArgumentError("expression is not a string literal");
   }
 
-  return strlit->getString();
+  return StringViewFromStringRef(strlit->getString());
 }
 
 absl::StatusOr<ClangLifetimeAnnotations>

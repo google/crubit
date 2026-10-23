@@ -9,6 +9,7 @@
 #include <array>
 #include <optional>
 #include <type_traits>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "fuzztest/fuzztest.h"
@@ -186,7 +187,10 @@ FUZZ_TEST(ExpectEncodedIsUtf8FuzzTest, ExpectEncodedIsUtf8);
 
 struct EncodeTestCase {
   uint32_t data;
-  absl::Span<const char> expected_utf8_bytes;
+  // Must be an owning container (not a view/pointer) because the braced
+  // initializer list in `INSTANTIATE_TEST_SUITE_P` is a temporary whose
+  // backing array is destroyed before the test body runs.
+  std::vector<char> expected_utf8_bytes;
 };
 
 class EncodedIsUtf8BytesTest : public testing::TestWithParam<EncodeTestCase> {};
@@ -207,9 +211,9 @@ INSTANTIATE_TEST_SUITE_P(
     EncodedIsUtf8BytesTests, EncodedIsUtf8BytesTest,
     testing::Values(EncodeTestCase{0x00, {0x00}}, EncodeTestCase{0x01, {0x01}},
                     EncodeTestCase{'x', {0x78}},
-                    EncodeTestCase{0xe9, {0xc3, 0xa9}},
-                    EncodeTestCase{0xa66e, {0xea, 0x99, 0xae}},
-                    EncodeTestCase{0x1f4a9, {0xf0, 0x9f, 0x92, 0xa9}}));
+                    EncodeTestCase{0xe9, {'\xc3', '\xa9'}},
+                    EncodeTestCase{0xa66e, {'\xea', '\x99', '\xae'}},
+                    EncodeTestCase{0x1f4a9, {'\xf0', '\x9f', '\x92', '\xa9'}}));
 
 TEST(CharTest, AbslStringify) {
   EXPECT_EQ(absl::StrCat(rs_std::char_('x')), "x");

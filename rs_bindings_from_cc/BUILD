@@ -158,6 +158,7 @@ crubit_cc_test(
         # cross-compilation, but it's mostly uninteresting from a multi-platform POV.
         "not_run:arm",
         "not_run:mac",
+        "no_macos",
     ],
     deps = [
         ":cc_ir",
