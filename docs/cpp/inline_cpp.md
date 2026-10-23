@@ -20,18 +20,39 @@ Embedded C++ uses two macros depending on scope:
 
 You can use embedded C++ in two ways:
 
-1.  **In a `rust_api_from_cpp` target (Recommended)**: When extending the
-    generated Rust bindings of an existing C++ library using custom Rust source
-    files (the `srcs` attribute).
-2.  **In a `rust_library_with_embedded_cpp` or `rust_test_with_embedded_cpp`
+1.  **In a `rust_library_with_embedded_cpp` or `rust_test_with_embedded_cpp`
     target**: When authoring a standalone Rust library or test with embedded C++
     without an underlying `cc_library`.
+2.  **In a `rust_api_from_cpp` target**: When extending the generated Rust
+    bindings of an existing C++ library using custom Rust source files (the
+    `srcs` attribute).
 
-### 1. Using embedded C++ in a `rust_api_from_cpp` target {#rust_api_from_cpp}
+### 1. Using embedded C++ in a standalone `rust_library` or `rust_test` target {#build}
+
+To write a standalone Rust library or test that uses embedded C++ without an
+underlying `cc_library`, define your target with
+`rust_library_with_embedded_cpp` or `rust_test_with_embedded_cpp`:
+
+```live-snippet
+cs/file:examples/cpp/inline_cpp/BUILD symbol:greeting_lib
+```
+
+The `deps_of_cc_library` attribute lists the C++ libraries that provide the
+headers and symbols used in your embedded C++ snippets. For a complete runnable
+example, see
+[examples/cpp/inline_cpp/](https://github.com/google/crubit/tree/main/examples/cpp/inline_cpp/).
+
+### 2. Using embedded C++ in a `rust_api_from_cpp` target {#rust_api_from_cpp}
 
 If you maintain a `cc_library` and want to provide hand-written Rust helper
 methods or trait implementations alongside your generated Crubit API, you can
 pass custom Rust source files directly to `rust_api_from_cpp` via `srcs`.
+
+> **NOTE:** No Crubit test or example uses `inline_cpp!` in `rust_api_from_cpp`
+> `srcs` yet. Prefer `rust_library_with_embedded_cpp` unless the code must be
+> part of the bindings crate.
+
+<!-- TODO: add a test for inline_cpp! in rust_api_from_cpp srcs. -->
 
 Given a C++ header containing a template method that cannot be natively bound by
 Crubit:
@@ -94,21 +115,6 @@ impl Widget {
     }
 }
 ```
-
-### 2. Using embedded C++ in a standalone `rust_library` or `rust_test` target {#build}
-
-To write a standalone Rust library or test that uses embedded C++ without an
-underlying `cc_library`, define your target with
-`rust_library_with_embedded_cpp` or `rust_test_with_embedded_cpp`:
-
-```live-snippet
-cs/file:examples/cpp/inline_cpp/BUILD symbol:greeting_lib
-```
-
-The `deps_of_cc_library` attribute lists the C++ libraries that provide the
-headers and symbols used in your embedded C++ snippets. For a complete runnable
-example, see
-[examples/cpp/inline_cpp/](https://github.com/google/crubit/tree/main/examples/cpp/inline_cpp/).
 
 ## Writing Embedded C++ {#writing_code}
 
