@@ -37,8 +37,8 @@ The fields on the Rust struct type are the corresponding Rust types:
 *   Similarly, if the C++ field has [pointer type](../types/pointer.md), then
     the Rust field has the corresponding Rust pointer type.
 *   If the field has a user-defined type, such as a
-    [class type](classes_and_structs.md) or [enum](enums.md), then the bindings
-    for the function use the bindings for that type.
+    [class type](classes_and_structs.md) or [enum](enums.md), then the Rust
+    field uses the bindings for that type.
 
 ### Unsupported fields {#opaque_fields}
 
@@ -67,10 +67,10 @@ be used as normal.
 
 ## Static data members {#static_members}
 
-Public static data members get bindings: compile-time integer and `bool`
-constants become associated `const`s of the Rust struct, and other static data
-members become Rust `static`s. See [Static data members](static_data_members.md)
-for details.
+Public static data members get bindings: compile-time integer, `bool`, integer
+array, and string_view constants become associated `const`s of the Rust struct,
+and other static data members become Rust `static`s. See
+[Static data members](static_data_members.md) for details.
 
 <span id="trivially_relocatable"></span>
 
