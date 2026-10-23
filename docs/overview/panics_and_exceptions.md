@@ -36,7 +36,7 @@ behavior is defined.
 > bearings. Then I'll start panicking." \
 > -- "The Hitchhiker’s Guide to the Galaxy" by Douglas Adams
 
-**Rust:** Rust: Crubit can create bindings for libraries built with either
+**Rust:** Crubit can create bindings for libraries built with either
 `-Cpanic=abort` or `-Cpanic=unwind`.
 
 If a panic unwinds past a Crubit FFI boundary, the process will terminate, with

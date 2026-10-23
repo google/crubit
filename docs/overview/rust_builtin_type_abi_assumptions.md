@@ -40,9 +40,8 @@ integer types.
 
 ## Rust built-in `[T]` slice type
 
-`extern “C”` thunks generated in `..._cc_api_impl.rs` can take `*const [i32]`
-and similar arguments (or return them). At the moment references to slices (like
-`&[u8]`) are not supported.
+`extern “C”` thunks generated in `..._cc_api_impl.rs` can take `&[T]`,
+`&mut [T]`, `*const [T]` and similar arguments (or return them).
 
 [Rust documentation describes](https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html)
 the layout of references and pointers to arrays and slices and
@@ -53,9 +52,9 @@ Rust does *not* document the ABI of slice references (i.e. if the pointer comes
 before or after the length in memory). `cc_bindings_from_rs` assumes that `&[T]`
 has the same layout as `rs::SliceRef<T>` - a C++ struct with 2 fields: a `T*`
 pointer, and the `size_t` number of slice elements. `check_slice_layout` inside
-`crubit/cc_bindings_from_rs/generate_bindings/lib.rs` verifies the assumptions
-on the Rust slice each time a reference or a pointer to a slice is processed by
-`format_type.rs`. Similar assertions are verified on C++ side in
+`crubit/cc_bindings_from_rs/generate_bindings/format_type.rs` verifies the
+assumptions on the Rust slice each time a reference or a pointer to a slice is
+processed by `format_type.rs`. Similar assertions are verified on C++ side in
 `support/rs_std/slice_ref_test.cc`. The response to the unlikely failure of
 these assertions can be changing the types from which `rs::SliceRef` is built to
 match the Rust side again.

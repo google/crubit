@@ -80,7 +80,7 @@ Using C++ as an example:
 ```c++
 // This function will always get bindings
 inline void DoStuff(void* untyped_out, const void* untyped_in) {
-    auto* out = reinterpret_cast<UnsupportedType*>(out);
+    auto* out = reinterpret_cast<UnsupportedType*>(untyped_out);
     const auto* in = reinterpret_cast<const OtherUnsupportedType*>(untyped_in);
     // arbitrary C++ logic here
     out->UnsupportedMethod(*in);

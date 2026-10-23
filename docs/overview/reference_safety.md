@@ -65,8 +65,8 @@ provides non-native types with conversion operators:
 
 *   Rust has `absl::{string_view, span<T>}` types which provide `From`-based
     conversions to `&str` and `&[T]`.
-*   C++ has `rs::{StrRef, Slice<T>}` types which provide implicit conversions to
-    and from `string_view` and `span<T>`.
+*   C++ has `rs::{StrRef, SliceRef<T>}` types which provide implicit conversions
+    to and from `string_view` and `span<T>`.
 
 ## References to uninitialized memory or invalid values
 

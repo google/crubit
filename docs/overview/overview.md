@@ -82,9 +82,9 @@ pub fn add_two_integers(x: i32, y: i32) -> i32 { x + y }
 ```c++
 // main.cc:
 
-// The generated bindings are in a header at the same path as the `rust_library`,
-// and with the name that follows the `<crate name>_cc_api.h` pattern:
-#include "examples/cc_bindings_from_rs_basics/example_crate.h"
+// The generated bindings are in a header at the same path as the
+// `example_crate` rust_library, with a `.h` suffix.
+#include "examples/rust/function/example_crate.h"
 
 int main(int argc, char* argv[]) {
   // The generated bindings are in a namespace with the same name as the
