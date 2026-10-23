@@ -4,9 +4,10 @@
 
 Crubit does not support exposing struct or union fields with bridge types.
 
-Bridge types are types that are converted at runtime between C++ and Rust
-(`std::optional` mapping to `Option`), but have different underlying
-representations. (See crubit.rs/types)
+Bridge types are types that are converted at runtime between C++ and Rust, but
+have different underlying representations. Examples include `absl::AnyInvocable`
+(mapped to `Box<dyn Fn...>`) and types annotated with `CRUBIT_BRIDGE`. (See
+crubit.rs/types)
 
 If a field is a bridge type, this conversion is impossible: field accesses do
 not run any conversion logic, and the field is required to have identical
@@ -16,18 +17,21 @@ of bytes.
 
 ## Example
 
+The examples below use `either::Either<L, R>`, a C++ struct that is bridged to a
+Rust `enum Either<L, R>`. It is defined in
+[examples/types/bridging](https://github.com/google/crubit/tree/main/examples/types/bridging/).
+
 Consider the following C++ struct:
 
 ```c++
-#include <optional>
-#include <cstdint>
+#include "examples/types/bridging/either.h"
 
 struct Config {
-  std::optional<int> foo;
+  either::Either<int, bool> value;
 };
 ```
 
-Crubit will treat the `foo` field of `Config` as an opaque blob of bytes that
+Crubit will treat the `value` field of `Config` as an opaque blob of bytes that
 cannot be accessed directly from Rust.
 
 ## Workaround: Add getter and setter methods {#workaround}
@@ -39,25 +43,27 @@ by value.
 For example:
 
 ```c++
-#include <optional>
+#include "examples/types/bridging/either.h"
 
 struct Config {
-  std::optional<int> foo;
+  either::Either<int, bool> value;
 
-  // Getter returning by value (mapped to Option<i32> in Rust)
-  std::optional<int> get_foo() const { return foo; }
+  // Getter returning by value (mapped to `Either<i32, bool>` in Rust).
+  either::Either<int, bool> get_value() const { return value; }
 
-  // Setter accepting by value
-  void set_foo(std::optional<int> val) { foo = val; }
+  // Setter accepting by value.
+  void set_value(either::Either<int, bool> v) { value = v; }
 };
 ```
 
 Then in Rust, you can use these methods:
 
 ```rust
+use either::either::Either;
+
 let mut config = Config::default();
-config.set_foo(Some(42));
-assert_eq!(config.get_foo(), Some(42));
+config.set_value(Either::Left(42));
+assert_eq!(config.get_value(), Either::Left(42));
 ```
 
 See crubit.rs/cpp/best_practices#bridging for more information.
