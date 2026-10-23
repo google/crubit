@@ -2,6 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+// Declare `namespace rs::std` before the generated bindings headers (as
+// `rs_std.h` does when Rust `std` types are bound) so `namespace rs`
+// specializations and declarations are checked with `rs::std` in scope,
+// ensuring C++ standard library types are root-qualified as `::std`.
+namespace rs::std {}
+
 #include "cc_bindings_from_rs/test/enums/enum_api_v2/enum_api_v2.h"
 
 #include <type_traits>
@@ -320,6 +326,11 @@ TEST(EnumApiV2Test, FallbackKeepsMakeV) {
 TEST(EnumApiV2Test, NonExhaustive) {
   EXPECT_EQ(enum_api_v2::non_exhaustive_value(NonExhaustive::A::Make()), -1);
   EXPECT_EQ(enum_api_v2::non_exhaustive_value(NonExhaustive::B::Make(8)), 8);
+}
+
+TEST(EnumApiV2Test, EnumHelpersCoexistWithRsStdNamespace) {
+  Shape circle = enum_api_v2::make_circle(6);
+  EXPECT_EQ(rs::get_unchecked<Shape::Circle>(&circle)->__field0, 6);
 }
 
 }  // namespace

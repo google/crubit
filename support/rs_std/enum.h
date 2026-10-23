@@ -106,7 +106,7 @@ bool holds_alternative(const Enum& e) noexcept {
 template <typename V, typename Enum>
   requires ::crubit::internal::VariantOfEnum<V, Enum>
 constexpr auto* crubit_nonnull get_unchecked(Enum* crubit_nonnull e) noexcept {
-  if (!std::is_constant_evaluated()) {
+  if (!::std::is_constant_evaluated()) {
     CRUBIT_DCHECK(holds_alternative<V>(*e))
         << "rs::get_unchecked: V is not the active variant";
   }

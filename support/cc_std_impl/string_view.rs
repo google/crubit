@@ -31,7 +31,7 @@ use std::os::unix::ffi::{OsStrExt, OsStringExt};
 /// cannot be used directly in safe Rust code.
 #[allow(non_camel_case_types)]
 #[repr(transparent)]
-#[doc = "CRUBIT_ANNOTATE: cpp_type=std::string_view"]
+#[doc = "CRUBIT_ANNOTATE: cpp_type=::std::string_view"]
 #[doc = "CRUBIT_ANNOTATE: include_path=<string_view>"]
 #[derive(Copy, Clone)]
 pub struct string_view<'a> {

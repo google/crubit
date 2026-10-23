@@ -28,10 +28,10 @@ inline void NoOpDestroyer(void*) noexcept {}
 
 template <typename R, typename F, typename... Args>
 R FnInvokeHelper(F&& f, Args&&... args) {
-  if constexpr (std::is_void_v<R>) {
-    std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
+  if constexpr (::std::is_void_v<R>) {
+    ::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
   } else {
-    return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
+    return ::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
   }
 }
 
@@ -42,18 +42,18 @@ template <typename R, typename... Args>
 class Fn<R(Args...)> {
  public:
   constexpr Fn() noexcept = default;
-  constexpr Fn(std::nullptr_t) noexcept {}
+  constexpr Fn(::std::nullptr_t) noexcept {}
 
   template <typename F>
-    requires(!std::is_same_v<std::remove_cvref_t<F>, Fn> &&
-             !std::is_same_v<std::remove_cvref_t<F>, std::nullptr_t> &&
-             std::is_invocable_r_v<R, std::decay_t<F>&, Args...>)
+    requires(!::std::is_same_v<::std::remove_cvref_t<F>, Fn> &&
+             !::std::is_same_v<::std::remove_cvref_t<F>, ::std::nullptr_t> &&
+             ::std::is_invocable_r_v<R, ::std::decay_t<F>&, Args...>)
   Fn(F&& f) {
-    using DecayedF = std::decay_t<F>;
-    data_ = new DecayedF(std::forward<F>(f));
+    using DecayedF = ::std::decay_t<F>;
+    data_ = new DecayedF(::std::forward<F>(f));
     invoker_ = [](void* data, Args... args) -> R {
       return internal::FnInvokeHelper<R>(*reinterpret_cast<DecayedF*>(data),
-                                         std::forward<Args>(args)...);
+                                         ::std::forward<Args>(args)...);
     };
     destroyer_ = [](void* data) noexcept {
       delete reinterpret_cast<DecayedF*>(data);
@@ -70,18 +70,18 @@ class Fn<R(Args...)> {
   Fn& operator=(const Fn&) = delete;
 
   Fn(Fn&& other) noexcept
-      : data_(std::exchange(other.data_, nullptr)),
-        invoker_(std::exchange(other.invoker_, nullptr)),
-        destroyer_(std::exchange(other.destroyer_, nullptr)) {}
+      : data_(::std::exchange(other.data_, nullptr)),
+        invoker_(::std::exchange(other.invoker_, nullptr)),
+        destroyer_(::std::exchange(other.destroyer_, nullptr)) {}
 
   Fn& operator=(Fn&& other) noexcept {
     if (this != &other) {
       if (data_ && destroyer_) {
         destroyer_(data_);
       }
-      data_ = std::exchange(other.data_, nullptr);
-      invoker_ = std::exchange(other.invoker_, nullptr);
-      destroyer_ = std::exchange(other.destroyer_, nullptr);
+      data_ = ::std::exchange(other.data_, nullptr);
+      invoker_ = ::std::exchange(other.invoker_, nullptr);
+      destroyer_ = ::std::exchange(other.destroyer_, nullptr);
     }
     return *this;
   }
@@ -89,7 +89,7 @@ class Fn<R(Args...)> {
   explicit operator bool() const noexcept { return data_ != nullptr; }
 
   R operator()(Args... args) {
-    return invoker_(data_, std::forward<Args>(args)...);
+    return invoker_(data_, ::std::forward<Args>(args)...);
   }
 
   internal::FnPayload release_payload() && noexcept {
@@ -115,15 +115,15 @@ template <typename R, typename... Args>
 class Fn<R(Args...) const> {
  public:
   constexpr Fn() noexcept = default;
-  constexpr Fn(std::nullptr_t) noexcept {}
+  constexpr Fn(::std::nullptr_t) noexcept {}
 
   template <typename F>
-    requires(!std::is_same_v<std::remove_cvref_t<F>, Fn> &&
-             !std::is_same_v<std::remove_cvref_t<F>, std::nullptr_t> &&
-             std::is_invocable_r_v<R, const std::decay_t<F>&, Args...>)
+    requires(!::std::is_same_v<::std::remove_cvref_t<F>, Fn> &&
+             !::std::is_same_v<::std::remove_cvref_t<F>, ::std::nullptr_t> &&
+             ::std::is_invocable_r_v<R, const ::std::decay_t<F>&, Args...>)
   Fn(F&& f) {
-    using DecayedF = std::decay_t<F>;
-    data_ = new DecayedF(std::forward<F>(f));
+    using DecayedF = ::std::decay_t<F>;
+    data_ = new DecayedF(::std::forward<F>(f));
     // NOTE: the parameter is `void*`, not `const void*`, so that this
     // function's CFI type id matches the signature that the generated Rust
     // thunk transmutes to (`extern "C" fn(*mut c_void, ...)`). Clang's
@@ -133,7 +133,7 @@ class Fn<R(Args...) const> {
     invoker_ = [](void* data, Args... args) -> R {
       return internal::FnInvokeHelper<R>(
           *reinterpret_cast<const DecayedF*>(const_cast<const void*>(data)),
-          std::forward<Args>(args)...);
+          ::std::forward<Args>(args)...);
     };
     destroyer_ = [](void* data) noexcept {
       delete reinterpret_cast<DecayedF*>(data);
@@ -150,18 +150,18 @@ class Fn<R(Args...) const> {
   Fn& operator=(const Fn&) = delete;
 
   Fn(Fn&& other) noexcept
-      : data_(std::exchange(other.data_, nullptr)),
-        invoker_(std::exchange(other.invoker_, nullptr)),
-        destroyer_(std::exchange(other.destroyer_, nullptr)) {}
+      : data_(::std::exchange(other.data_, nullptr)),
+        invoker_(::std::exchange(other.invoker_, nullptr)),
+        destroyer_(::std::exchange(other.destroyer_, nullptr)) {}
 
   Fn& operator=(Fn&& other) noexcept {
     if (this != &other) {
       if (data_ && destroyer_) {
         destroyer_(data_);
       }
-      data_ = std::exchange(other.data_, nullptr);
-      invoker_ = std::exchange(other.invoker_, nullptr);
-      destroyer_ = std::exchange(other.destroyer_, nullptr);
+      data_ = ::std::exchange(other.data_, nullptr);
+      invoker_ = ::std::exchange(other.invoker_, nullptr);
+      destroyer_ = ::std::exchange(other.destroyer_, nullptr);
     }
     return *this;
   }
@@ -169,7 +169,7 @@ class Fn<R(Args...) const> {
   explicit operator bool() const noexcept { return data_ != nullptr; }
 
   R operator()(Args... args) const {
-    return invoker_(data_, std::forward<Args>(args)...);
+    return invoker_(data_, ::std::forward<Args>(args)...);
   }
 
   internal::FnPayload release_payload() && noexcept {
@@ -195,21 +195,22 @@ template <typename R, typename... Args>
 class Fn<R(Args...) &&> {
  public:
   constexpr Fn() noexcept = default;
-  constexpr Fn(std::nullptr_t) noexcept {}
+  constexpr Fn(::std::nullptr_t) noexcept {}
 
   template <typename F>
-    requires(!std::is_same_v<std::remove_cvref_t<F>, Fn> &&
-             !std::is_same_v<std::remove_cvref_t<F>, std::nullptr_t> &&
-             std::is_invocable_r_v<R, std::decay_t<F> &&, Args...>)
+    requires(!::std::is_same_v<::std::remove_cvref_t<F>, Fn> &&
+             !::std::is_same_v<::std::remove_cvref_t<F>, ::std::nullptr_t> &&
+             ::std::is_invocable_r_v<R, ::std::decay_t<F> &&, Args...>)
   Fn(F&& f) {
-    using DecayedF = std::decay_t<F>;
-    data_ = new DecayedF(std::forward<F>(f));
+    using DecayedF = ::std::decay_t<F>;
+    data_ = new DecayedF(::std::forward<F>(f));
     invoker_ = [](void* data, Args... args) -> R {
       auto* typed_data = reinterpret_cast<DecayedF*>(data);
-      if constexpr (std::is_void_v<R>) {
-        std::invoke(std::move(*typed_data), std::forward<Args>(args)...);
+      if constexpr (::std::is_void_v<R>) {
+        ::std::invoke(::std::move(*typed_data), ::std::forward<Args>(args)...);
       } else {
-        return std::invoke(std::move(*typed_data), std::forward<Args>(args)...);
+        return ::std::invoke(::std::move(*typed_data),
+                             ::std::forward<Args>(args)...);
       }
     };
     destroyer_ = [](void* data) noexcept {
@@ -227,18 +228,18 @@ class Fn<R(Args...) &&> {
   Fn& operator=(const Fn&) = delete;
 
   Fn(Fn&& other) noexcept
-      : data_(std::exchange(other.data_, nullptr)),
-        invoker_(std::exchange(other.invoker_, nullptr)),
-        destroyer_(std::exchange(other.destroyer_, nullptr)) {}
+      : data_(::std::exchange(other.data_, nullptr)),
+        invoker_(::std::exchange(other.invoker_, nullptr)),
+        destroyer_(::std::exchange(other.destroyer_, nullptr)) {}
 
   Fn& operator=(Fn&& other) noexcept {
     if (this != &other) {
       if (data_ && destroyer_) {
         destroyer_(data_);
       }
-      data_ = std::exchange(other.data_, nullptr);
-      invoker_ = std::exchange(other.invoker_, nullptr);
-      destroyer_ = std::exchange(other.destroyer_, nullptr);
+      data_ = ::std::exchange(other.data_, nullptr);
+      invoker_ = ::std::exchange(other.invoker_, nullptr);
+      destroyer_ = ::std::exchange(other.destroyer_, nullptr);
     }
     return *this;
   }
@@ -259,7 +260,7 @@ class Fn<R(Args...) &&> {
         if (d && dest) dest(d);
       }
     } cleanup{d, dest};
-    return inv(d, std::forward<Args>(args)...);
+    return inv(d, ::std::forward<Args>(args)...);
   }
 
   internal::FnPayload release_payload() && noexcept {

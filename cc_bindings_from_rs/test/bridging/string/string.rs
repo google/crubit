@@ -25,3 +25,9 @@ pub fn compute_optional_layout_compat_string_length(
 ) -> usize {
     val.as_ref().map_or(0, |s| s.len())
 }
+
+pub fn roundtrip_optional_string_view(
+    val: Option<cc_std::std::string_view>,
+) -> Option<cc_std::std::string_view> {
+    val
+}

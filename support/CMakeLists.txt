@@ -54,6 +54,7 @@ target_include_directories(crubit_support_movable INTERFACE
 )
 
 target_link_libraries(crubit_support_movable INTERFACE
+crubit_support_unsafe_relocate_tag
 crubit_support_internal_bindings_support
 )
 

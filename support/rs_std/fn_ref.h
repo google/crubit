@@ -25,10 +25,10 @@ struct FnRefPayload {
 
 template <typename R, typename F, typename... Args>
 R InvokeHelper(F&& f, Args&&... args) {
-  if constexpr (std::is_void_v<R>) {
-    std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
+  if constexpr (::std::is_void_v<R>) {
+    ::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
   } else {
-    return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
+    return ::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
   }
 }
 
@@ -41,31 +41,31 @@ class FnRef<R(Args...)> {
   constexpr FnRef() noexcept = delete;
 
   template <typename F>
-    requires(!std::is_same_v<std::remove_cvref_t<F>, FnRef> &&
-             std::is_invocable_r_v<R, F&, Args...>)
+    requires(!::std::is_same_v<::std::remove_cvref_t<F>, FnRef> &&
+             ::std::is_invocable_r_v<R, F&, Args...>)
   FnRef(F&& f) noexcept
       : data_(const_cast<void*>(
-            reinterpret_cast<const void*>(std::addressof(f)))),
+            reinterpret_cast<const void*>(::std::addressof(f)))),
         invoker_([](void* data, Args... args) -> R {
           return internal::InvokeHelper<R>(
-              *reinterpret_cast<std::remove_reference_t<F>*>(data),
-              std::forward<Args>(args)...);
+              *reinterpret_cast<::std::remove_reference_t<F>*>(data),
+              ::std::forward<Args>(args)...);
         }) {}
 
   template <typename F>
-    requires(std::is_function_v<F> && std::is_invocable_r_v<R, F&, Args...>)
+    requires(::std::is_function_v<F> && ::std::is_invocable_r_v<R, F&, Args...>)
   FnRef(F* f) noexcept
       : data_(reinterpret_cast<void*>(f)),
         invoker_([](void* data, Args... args) -> R {
           return internal::InvokeHelper<R>(reinterpret_cast<F*>(data),
-                                           std::forward<Args>(args)...);
+                                           ::std::forward<Args>(args)...);
         }) {}
 
   FnRef(const FnRef&) noexcept = default;
   FnRef& operator=(const FnRef&) noexcept = default;
 
   R operator()(Args... args) const {
-    return invoker_(data_, std::forward<Args>(args)...);
+    return invoker_(data_, ::std::forward<Args>(args)...);
   }
 
   internal::FnRefPayload payload() const noexcept {
@@ -90,11 +90,11 @@ class FnRef<R(Args...) const> {
   constexpr FnRef() noexcept = delete;
 
   template <typename F>
-    requires(!std::is_same_v<std::remove_cvref_t<F>, FnRef> &&
-             std::is_invocable_r_v<R, const F&, Args...>)
+    requires(!::std::is_same_v<::std::remove_cvref_t<F>, FnRef> &&
+             ::std::is_invocable_r_v<R, const F&, Args...>)
   FnRef(const F& f) noexcept
       : data_(const_cast<void*>(
-            reinterpret_cast<const void*>(std::addressof(f)))),
+            reinterpret_cast<const void*>(::std::addressof(f)))),
         // NOTE: the parameter is `void*`, not `const void*`, so that this
         // function's CFI type id matches the signature that the generated Rust
         // thunk transmutes to (`extern "C" fn(*mut c_void, ...)`). Clang's
@@ -104,24 +104,24 @@ class FnRef<R(Args...) const> {
         invoker_([](void* data, Args... args) -> R {
           return internal::InvokeHelper<R>(
               *reinterpret_cast<const F*>(const_cast<const void*>(data)),
-              std::forward<Args>(args)...);
+              ::std::forward<Args>(args)...);
         }) {}
 
   template <typename F>
-    requires(std::is_function_v<F> &&
-             std::is_invocable_r_v<R, const F&, Args...>)
+    requires(::std::is_function_v<F> &&
+             ::std::is_invocable_r_v<R, const F&, Args...>)
   FnRef(F* f) noexcept
       : data_(reinterpret_cast<void*>(f)),
         invoker_([](void* data, Args... args) -> R {
           return internal::InvokeHelper<R>(reinterpret_cast<F*>(data),
-                                           std::forward<Args>(args)...);
+                                           ::std::forward<Args>(args)...);
         }) {}
 
   FnRef(const FnRef&) noexcept = default;
   FnRef& operator=(const FnRef&) noexcept = default;
 
   R operator()(Args... args) const {
-    return invoker_(data_, std::forward<Args>(args)...);
+    return invoker_(data_, ::std::forward<Args>(args)...);
   }
 
   internal::FnRefPayload payload() const noexcept {

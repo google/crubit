@@ -375,6 +375,7 @@ cc_library(
         "//visibility:public",
     ],
     deps = [
+        ":unsafe_relocate_tag",
         "//support/internal:bindings_support",
     ],
 )

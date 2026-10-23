@@ -32,7 +32,7 @@ use std::os::unix::ffi::OsStrExt;
 /// O(n).
 // TODO: Make it mutable?.
 // TODO: add a dependency on `crubit_annotate` to use that directly rather than doc attributes.
-#[doc = "CRUBIT_ANNOTATE: cpp_type=std::string"]
+#[doc = "CRUBIT_ANNOTATE: cpp_type=::std::string"]
 #[doc = "CRUBIT_ANNOTATE: include_path=<string>"]
 #[doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_string_to_rust_string"]
 #[doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_string_to_cpp_string"]

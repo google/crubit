@@ -2,6 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+// Declare `namespace rs::std` before the generated bindings headers (as
+// `rs_std.h` does when Rust `std` types are bound) so `namespace rs`
+// specializations and declarations are checked with `rs::std` in scope,
+// ensuring C++ standard library types are root-qualified as `::std`.
+namespace rs::std {}
+
 #include "cc_bindings_from_rs/test/callables/callables.h"
 
 #include <cstdint>
@@ -351,6 +357,25 @@ TEST(CallablesTest, CallWithMovableDrop) {
   callables::call_with_movable_drop(
       [&](callables::CppMovableDrop x) { observed = x.__field0; }, 777);
   EXPECT_THAT(observed, Eq(777));
+}
+
+TEST(CallablesTest, FnAndFnRefCoexistWithRsStdNamespace) {
+  int base = 5;
+  EXPECT_THAT(callables::call_dyn_fn([base](int x) { return x + base; }, 37),
+              Eq(42));
+  EXPECT_THAT(callables::call_dyn_fn(FreeAddOne, 41), Eq(42));
+  auto mut_fn = [base](int x) mutable { return x + base; };
+  EXPECT_THAT(callables::call_dyn_fn_mut(mut_fn, 37), Eq(42));
+  EXPECT_THAT(callables::call_dyn_fn_mut(FreeAddOne, 41), Eq(42));
+  EXPECT_THAT(
+      callables::call_box_dyn_fn([base](int x) { return x + base; }, 37),
+      Eq(42));
+  EXPECT_THAT(callables::call_box_dyn_fn_mut(
+                  [base](int x) mutable { return x + base; }, 37),
+              Eq(42));
+  EXPECT_THAT(
+      callables::call_box_dyn_fn_once([base](int x) { return x + base; }, 37),
+      Eq(42));
 }
 
 }  // namespace

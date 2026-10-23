@@ -2,6 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+// Declare `namespace rs::std` before the generated bindings headers (as
+// `rs_std.h` does when Rust `std` types are bound) so `namespace rs`
+// specializations and declarations are checked with `rs::std` in scope,
+// ensuring C++ standard library types are root-qualified as `::std`.
+namespace rs::std {}
+
 #include "cc_bindings_from_rs/test/move_semantics/move.h"
 
 #include <type_traits>
@@ -121,6 +127,19 @@ TEST(MoveTest, ReturnUnmovableFooResultWrappedInMovable) {
       move::new_unmovable_foo_result(42);
   ASSERT_TRUE(v->has_value());
   EXPECT_EQ((*v)->read_byte(), 42);
+}
+
+TEST(MoveTest, MovableCoexistsWithRsStdNamespace) {
+  rs::Movable<int> in_place(std::in_place, 3);
+  rs::Movable<int> from_val(7);
+  rs::Movable<int> moved = std::move(from_val);
+  rs::Movable<int> copy = in_place;
+  rs::Movable<int> assigned;
+  assigned = copy;
+  assigned = std::move(moved);
+  EXPECT_EQ(*std::move(assigned), 7);
+  const rs::Movable<int> const_copy = copy;
+  EXPECT_EQ(*std::move(const_copy), 3);
 }
 
 }  // namespace

@@ -11,6 +11,7 @@
 
 #include "support/internal/check.h"
 #include "support/internal/slot.h"
+#include "support/unsafe_relocate_tag.h"
 
 namespace rs {
 
@@ -18,12 +19,12 @@ namespace internal {
 template <typename T>
 void Relocate(T* dest, T* src) {
   if constexpr (requires(T x) {
-                  T(crubit::UnsafeRelocateTag{}, std::move(x));
+                  T(crubit::UnsafeRelocateTag{}, ::std::move(x));
                 }) {
-    new (dest) T(crubit::UnsafeRelocateTag{}, std::move(*src));
+    new (dest) T(crubit::UnsafeRelocateTag{}, ::std::move(*src));
   } else {
-    new (dest) T(std::move(*src));
-    std::destroy_at(src);
+    new (dest) T(::std::move(*src));
+    ::std::destroy_at(src);
   }
 }
 
@@ -43,18 +44,18 @@ void Relocate(T* dest, T* src) {
 template <typename T>
 T UnsafeTakeValueCompat(T* src) {
   if constexpr (requires(T x) {
-                  T(crubit::UnsafeRelocateTag{}, std::move(x));
+                  T(crubit::UnsafeRelocateTag{}, ::std::move(x));
                 }) {
-    return T(crubit::UnsafeRelocateTag{}, std::move(*src));
+    return T(crubit::UnsafeRelocateTag{}, ::std::move(*src));
   } else {
     // The husk must be destroyed *after* the return object has been
     // initialized, so the destruction is deferred to a scope guard rather than
     // written as a statement (which would force an extra move).
     struct Destroyer {
       T* src;
-      ~Destroyer() { std::destroy_at(src); }
+      ~Destroyer() { ::std::destroy_at(src); }
     } destroyer{src};
-    return std::move(*src);
+    return ::std::move(*src);
   }
 }
 }  // namespace internal
@@ -70,7 +71,7 @@ class Movable {
  public:
   // Default constructor: constructs contained T if T is default constructible.
   Movable()
-    requires(std::is_default_constructible_v<T>)
+    requires(::std::is_default_constructible_v<T>)
   {
     new (&value_) T();
     valueless_after_move_ = false;
@@ -80,24 +81,24 @@ class Movable {
   // Only allowed if T is C++ move constructible, to ensure temporary
   // destruction is safe.
   template <typename U = T>
-    requires(!std::is_same_v<std::remove_cvref_t<U>, Movable> &&
-             std::is_move_constructible_v<T> &&
-             std::is_constructible_v<T, U &&>)
+    requires(!::std::is_same_v<::std::remove_cvref_t<U>, Movable> &&
+             ::std::is_move_constructible_v<T> &&
+             ::std::is_constructible_v<T, U &&>)
   explicit Movable(U&& x) {
-    new (&value_) T(std::forward<U>(x));
+    new (&value_) T(::std::forward<U>(x));
     valueless_after_move_ = false;
   }
 
   // Construct T in-place.
   template <typename... Args>
-  explicit Movable(std::in_place_t, Args&&... args) {
-    new (&value_) T(std::forward<Args>(args)...);
+  explicit Movable(::std::in_place_t, Args&&... args) {
+    new (&value_) T(::std::forward<Args>(args)...);
     valueless_after_move_ = false;
   }
 
   // Take ownership of a value stored in a Slot<T>.
   static Movable TakeFromSlot(crubit::Slot<T>&& slot) {
-    return Movable(std::move(slot));
+    return Movable(::std::move(slot));
   }
 
   // Moves the contained value into a Slot and leaves this object valueless.
@@ -140,7 +141,7 @@ class Movable {
 
   // Copy constructor (only available if T is copy constructible)
   Movable(const Movable& other)
-    requires(std::is_copy_constructible_v<T>)
+    requires(::std::is_copy_constructible_v<T>)
   {
     if (!other.valueless_after_move_) {
       new (&value_) T(other.value_);
@@ -151,13 +152,14 @@ class Movable {
   }
 
   Movable(const Movable&)
-    requires(!std::is_copy_constructible_v<T>)
+    requires(!::std::is_copy_constructible_v<T>)
   = delete;
 
   // Copy assignment (only available if T is copy constructible and
   // copy assignable)
   Movable& operator=(const Movable& other)
-    requires(std::is_copy_constructible_v<T> && std::is_copy_assignable_v<T>)
+    requires(::std::is_copy_constructible_v<T> &&
+             ::std::is_copy_assignable_v<T>)
   {
     if (this == &other) return *this;
     if (!valueless_after_move_ && !other.valueless_after_move_) {
@@ -173,13 +175,14 @@ class Movable {
   }
 
   Movable& operator=(const Movable&)
-    requires(!std::is_copy_constructible_v<T> || !std::is_copy_assignable_v<T>)
+    requires(!::std::is_copy_constructible_v<T> ||
+             !::std::is_copy_assignable_v<T>)
   = delete;
 
   T& operator*() & { return value_; }
   const T& operator*() const& { return value_; }
-  T&& operator*() && { return std::move(value_); }
-  const T&& operator*() const&& { return std::move(value_); }
+  T&& operator*() && { return ::std::move(value_); }
+  const T&& operator*() const&& { return ::std::move(value_); }
 
   T* operator->() { return &value_; }
   const T* operator->() const { return &value_; }

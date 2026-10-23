@@ -80,6 +80,7 @@ source_set("movable") {
     "movable.h",
   ]
   deps = [
+    "$crubit_src_dir/support:unsafe_relocate_tag",
     "$crubit_src_dir/support/internal:bindings_support",
   ]
 }
