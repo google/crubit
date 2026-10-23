@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "absl/flags/parse.h"
+#include "absl/log/initialize.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -118,6 +119,7 @@ extern "C" int crubit_rs_bindings_from_cc_main(int argc, char* argv[]) {
   crubit::ExpandParamfiles(argc, argv);
   crubit::PreprocessTargetArgs(argc, argv);
   auto args = absl::ParseCommandLine(argc, argv);
+  absl::InitializeLog();
   if (const char* prefix = getenv("RS_BINDINGS_ALLOC_RECORDER_PREFIX")) {
     crubit::StartHeapProfiling(prefix);
   }

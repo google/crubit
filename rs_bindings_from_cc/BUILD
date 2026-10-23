@@ -110,6 +110,7 @@ cc_library(
         "//common:status_macros",
         "@abseil-cpp//absl/cleanup",
         "@abseil-cpp//absl/flags:parse",
+        "@abseil-cpp//absl/log:initialize",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
