@@ -415,14 +415,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     [[clang::trivial_abi]] DisplayStruct final {
  public:
   // AbslStringify and std::ostream support via std::fmt::Display
-  template <typename Sink, typename Str = rs::alloc::string::String>
+  template <typename Sink, typename Str = ::rs::alloc::string::String>
   friend void AbslStringify(Sink& sink, const DisplayStruct& self) {
     crubit::Slot<Str> s;
     __crubit_thunk_ToString_uto_ustring_ustructs_ugolden_x0000003a_x0000003adisplay_x0000003a_x0000003aDisplayStruct(
         self, s.Get());
     AbslStringify(sink, ::std::move(s).AssumeInitAndTakeValue().as_str());
   }
-  template <typename Str = rs::alloc::string::String>
+  template <typename Str = ::rs::alloc::string::String>
   friend ::std::ostream& operator<<(::std::ostream& os,
                                     const DisplayStruct& self) {
     crubit::Slot<Str> s;
@@ -713,9 +713,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     [[clang::trivial_abi]] SomeStruct final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
-  static ::structs::unsupported_types::SomeStruct create(rs::char_ x);
+  static ::structs::unsupported_types::SomeStruct create(::rs::char_ x);
 
-  rs::char_ unsupported_field{};
+  ::rs::char_ unsupported_field{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -782,7 +782,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 }  // namespace structs::zst_fields
 
 template <>
-struct rs::impl<::structs::display::DisplayStruct, ::rs::core::fmt::Display> {
+struct ::rs::impl<::structs::display::DisplayStruct, ::rs::core::fmt::Display> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
@@ -795,8 +795,8 @@ struct rs::impl<::structs::display::DisplayStruct, ::rs::core::fmt::Display> {
 };
 
 template <>
-struct rs::impl<::structs::interior_mutability::SomeStruct,
-                ::rs::core::fmt::Debug> {
+struct ::rs::impl<::structs::interior_mutability::SomeStruct,
+                  ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
@@ -1645,10 +1645,10 @@ static_assert(::std::is_trivially_move_assignable_v<
               ::structs::unsupported_types::SomeStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    rs::char_*, ::structs::unsupported_types::SomeStruct* __ret_ptr);
+    ::rs::char_*, ::structs::unsupported_types::SomeStruct* __ret_ptr);
 }
 inline ::structs::unsupported_types::SomeStruct(SomeStruct::create)(
-    rs::char_ x) {
+    ::rs::char_ x) {
   crubit::Slot<::structs::unsupported_types::SomeStruct>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();

@@ -161,24 +161,24 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 }  // namespace rs_hash::explicit_struct
 
 template <>
-struct rs::impl<::rs_hash::derived_enum::Color, ::rs::core::cmp::Eq> {
+struct ::rs::impl<::rs_hash::derived_enum::Color, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs::impl<::rs_hash::derived_struct::Point, ::rs::core::cmp::Eq> {
+struct ::rs::impl<::rs_hash::derived_struct::Point, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs::impl<::rs_hash::derived_tuple_struct::TupleStruct,
-                ::rs::core::cmp::Eq> {
+struct ::rs::impl<::rs_hash::derived_tuple_struct::TupleStruct,
+                  ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs::impl<::rs_hash::explicit_struct::CustomHashStruct,
-                ::rs::core::cmp::Eq> {
+struct ::rs::impl<::rs_hash::explicit_struct::CustomHashStruct,
+                  ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020derived_uenum_x00000020_x0000003a_x0000003a_x00000020Color_x00000020_x0000003e

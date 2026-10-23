@@ -62,14 +62,14 @@ template <typename T0>
 struct CRUBIT_INTERNAL_RUST_TYPE(":: generic_traits_golden :: TraitWithGeneric")
     TraitWithGeneric {
   template <typename T>
-  using impl = rs::impl<T, TraitWithGeneric<T0>>;
+  using impl = ::rs::impl<T, TraitWithGeneric<T0>>;
 };
 
 template <typename T0, typename T1>
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generic_traits_golden :: TraitWithTwoGenerics") TraitWithTwoGenerics {
   template <typename T>
-  using impl = rs::impl<T, TraitWithTwoGenerics<T0, T1>>;
+  using impl = ::rs::impl<T, TraitWithTwoGenerics<T0, T1>>;
 };
 
 }  // namespace generic_traits
@@ -81,8 +81,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // Implementation of traits must specify all types to receive bindings.
 
 template <>
-struct rs::impl<::generic_traits::StructGeneric,
-                ::generic_traits::TraitWithGeneric<::std::int32_t>> {
+struct ::rs::impl<::generic_traits::StructGeneric,
+                  ::generic_traits::TraitWithGeneric<::std::int32_t>> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t foo(::generic_traits::StructGeneric const& self,
@@ -90,7 +90,7 @@ struct rs::impl<::generic_traits::StructGeneric,
 };
 
 template <>
-struct rs::impl<
+struct ::rs::impl<
     ::generic_traits::StructGeneric,
     ::generic_traits::TraitWithTwoGenerics<::std::int32_t, ::std::int32_t>> {
   static constexpr bool kIsImplemented = true;
@@ -161,10 +161,10 @@ __crubit_thunk_TraitWithGeneric_ufoo_ugeneric_utraits_ugolden_x0000003a_x0000003
     ::generic_traits::StructGeneric const&, ::std::int32_t);
 }
 }  // namespace generic_traits
-inline ::std::int32_t
-rs::impl<::generic_traits::StructGeneric,
-         ::generic_traits::TraitWithGeneric<::std::int32_t>>::
-    foo(::generic_traits::StructGeneric const& self, ::std::int32_t t) {
+inline ::std::int32_t(
+    ::rs::impl<::generic_traits::StructGeneric,
+               ::generic_traits::TraitWithGeneric<::std::int32_t>>::foo)(
+    ::generic_traits::StructGeneric const& self, ::std::int32_t t) {
   return generic_traits::__crubit_internal::
       __crubit_thunk_TraitWithGeneric_ufoo_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32(
           self, t);
@@ -177,11 +177,11 @@ __crubit_thunk_TraitWithTwoGenerics_ubar_ugeneric_utraits_ugolden_x0000003a_x000
     ::generic_traits::StructGeneric const&, ::std::int32_t, ::std::int32_t);
 }
 }  // namespace generic_traits
-inline ::std::int32_t rs::impl<
-    ::generic_traits::StructGeneric,
-    ::generic_traits::TraitWithTwoGenerics<::std::int32_t, ::std::int32_t>>::
-    bar(::generic_traits::StructGeneric const& self, ::std::int32_t t,
-        ::std::int32_t u) {
+inline ::std::int32_t(::rs::impl<::generic_traits::StructGeneric,
+                                 ::generic_traits::TraitWithTwoGenerics<
+                                     ::std::int32_t, ::std::int32_t>>::bar)(
+    ::generic_traits::StructGeneric const& self, ::std::int32_t t,
+    ::std::int32_t u) {
   return generic_traits::__crubit_internal::
       __crubit_thunk_TraitWithTwoGenerics_ubar_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32_ui32(
           self, t, u);

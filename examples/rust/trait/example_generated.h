@@ -58,19 +58,19 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyTrait") MyTrait {
   template <typename T>
-  using impl = rs::impl<T, MyTrait>;
+  using impl = ::rs::impl<T, MyTrait>;
 };
 
 }  // namespace example_crate
 
 template <>
-struct rs::impl<::example_crate::MyStruct, ::example_crate::MyTrait> {
+struct ::rs::impl<::example_crate::MyStruct, ::example_crate::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t add_with(::example_crate::MyStruct const& self,
                                  ::std::int32_t y);
 
-  static rs::StrRef describe(::example_crate::MyStruct const& self);
+  static ::rs::StrRef describe(::example_crate::MyStruct const& self);
 };
 
 namespace example_crate {
@@ -126,8 +126,8 @@ __crubit_thunk_MyTrait_uadd_uwith_uexample_ucrate_ugolden_x0000003a_x0000003aMyS
     ::example_crate::MyStruct const&, ::std::int32_t);
 }
 }  // namespace example_crate
-inline ::std::int32_t
-rs::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::add_with(
+inline ::std::int32_t(
+    ::rs::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::add_with)(
     ::example_crate::MyStruct const& self, ::std::int32_t y) {
   return example_crate::__crubit_internal::
       __crubit_thunk_MyTrait_uadd_uwith_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
@@ -138,13 +138,13 @@ namespace example_crate {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_MyTrait_udescribe_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
-    ::example_crate::MyStruct const&, rs::StrRef* __ret_ptr);
+    ::example_crate::MyStruct const&, ::rs::StrRef* __ret_ptr);
 }
 }  // namespace example_crate
-inline rs::StrRef
-rs::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::describe(
+inline ::rs::StrRef(
+    ::rs::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::describe)(
     ::example_crate::MyStruct const& self) {
-  crubit::Slot<rs::StrRef> __return_value_ret_val_holder;
+  crubit::Slot<::rs::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   example_crate::__crubit_internal::
       __crubit_thunk_MyTrait_udescribe_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(

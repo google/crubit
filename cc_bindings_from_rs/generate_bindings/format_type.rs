@@ -334,16 +334,16 @@ fn format_slice_ref_for_cc<'tcx>(
             }
 
             quote! {
-                rs::SliceRef<#tokens>
+                ::rs::SliceRef<#tokens>
             }
         });
     snippet.prereqs.includes.insert(db.support_header("rs_std/slice_ref.h"));
     Ok(snippet)
 }
 
-/// Returns a CcSnippet referencing `rs::StrRef` and its include path.
+/// Returns a CcSnippet referencing `::rs::StrRef` and its include path.
 fn format_str_ref_for_cc<'tcx>(db: &BindingsGenerator<'tcx>) -> CcSnippet<'tcx> {
-    CcSnippet::with_include(quote! { rs::StrRef }, db.support_header("rs_std/str_ref.h"))
+    CcSnippet::with_include(quote! { ::rs::StrRef }, db.support_header("rs_std/str_ref.h"))
 }
 
 fn format_transparent_pointee_or_reference_for_cc<'tcx>(
@@ -780,7 +780,7 @@ fn format_ty_for_cc_impl<'tcx>(
         let mut prereqs = CcPrerequisites::default();
         // Use `TypeLocation::ClosureReturn` so that `()` is formatted as `void`, while types like
         // tuples and `Option` are formatted as their layout-compatible representations (e.g.
-        // `rs::Tuple`, `rs::Option`) rather than bridged C++ types (`std::tuple`,
+        // `::rs::Tuple`, `::rs::Option`) rather than bridged C++ types (`std::tuple`,
         // `std::optional`), since the FFI trampoline invokes the callback directly without
         // inserting bridging conversion logic.
         let ret_snippet = db
@@ -924,7 +924,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 })
             ));
 
-            CcSnippet::with_include(quote! { rs::char_ }, db.support_header("rs_std/char.h"))
+            CcSnippet::with_include(quote! { ::rs::char_ }, db.support_header("rs_std/char.h"))
         }
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
@@ -1149,7 +1149,7 @@ fn format_ty_for_cc_impl<'tcx>(
 
             let mut tokens = canonical_name.format_for_cc(db)?;
 
-            // Wrap in rs::Movable if the type is not C++ movable.
+            // Wrap in ::rs::Movable if the type is not C++ movable.
             if !db.is_cpp_move_constructible(ty) && location.admits_movable() {
                 prereqs.includes.insert(db.support_header("movable.h"));
                 tokens = quote! { ::rs::Movable< #tokens > };
@@ -2268,7 +2268,7 @@ fn is_bridged_adt<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<Op
 ///
 /// Layout-compatible types include:
 /// - Non-bridged types (including `#[crubit_annotate::cpp_layout_equivalent]` types).
-/// - Bridged types with layout-compatible alternatives (e.g. `rs::Option<T>`).
+/// - Bridged types with layout-compatible alternatives (e.g. `::rs::Option<T>`).
 /// - Proto messages.
 ///
 /// Types that are not layout-compatible can only be passed by value (via conversion) in bridgeable
@@ -2520,10 +2520,10 @@ fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
     )
 }
 
-/// Checks that `ty` has the same ABI as `rs::SliceRef`.
+/// Checks that `ty` has the same ABI as `::rs::SliceRef`.
 pub fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
     // Check the assumption from `rust_builtin_type_abi_assumptions.md` that Rust's
-    // slice has the same ABI as `rs::SliceRef`.
+    // slice has the same ABI as `::rs::SliceRef`.
     let layout = tcx
         .layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
         .expect("`layout_of` is expected to succeed for `{ty}` type")

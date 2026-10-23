@@ -1595,14 +1595,14 @@ fn generate_display_impl<'tcx>(
 
     let main_api = CcSnippet::new(quote! {
         __NEWLINE__ __COMMENT__ "AbslStringify and std::ostream support via std::fmt::Display"
-        template <typename Sink, typename Str = rs::alloc::string::String>
+        template <typename Sink, typename Str = ::rs::alloc::string::String>
         friend void AbslStringify(Sink& sink, const #adt_cc_short_name& self) {
             crubit::Slot<Str> s;
             #to_string_thunk_name(self, s.Get());
             AbslStringify(sink, ::std::move(s).AssumeInitAndTakeValue().as_str());
         }
         __NEWLINE__
-        template <typename Str = rs::alloc::string::String>
+        template <typename Str = ::rs::alloc::string::String>
         friend ::std::ostream& operator<<(::std::ostream& os, const #adt_cc_short_name& self) {
             crubit::Slot<Str> s;
             #to_string_thunk_name(self, s.Get());
@@ -1698,11 +1698,11 @@ fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
     let tcx = db.tcx();
     if let Some((_, referent, mutability)) = as_ref_or_pinned_ref(ty) {
         return match *referent.kind() {
-            // `&str` references are formatted as `rs::StrRef`, which is default-constructible
+            // `&str` references are formatted as `::rs::StrRef`, which is default-constructible
             // in C++ (representing an empty string with a non-null dangling pointer).
             // Mutable references to `str` are unsupported.
             TyKind::Str => mutability.is_not(),
-            // `&[T]` and `&mut [T]` slice references are formatted as `rs::SliceRef`, which is
+            // `&[T]` and `&mut [T]` slice references are formatted as `::rs::SliceRef`, which is
             // default-constructible in C++ (representing an empty slice with a non-null
             // dangling pointer).
             TyKind::Slice(..) => true,
@@ -3968,11 +3968,11 @@ fn generate_begin_and_end_for_type<'tcx>(
         let main_api = CcSnippet::with_include(
             quote! {
                 template <typename TAdaptedSelf_ = #adt_cc_name>
-                inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
-                    return rs::IteratorAdapter<TAdaptedSelf_*>(this);
+                inline ::rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
+                    return ::rs::IteratorAdapter<TAdaptedSelf_*>(this);
                 }
-                inline rs::IteratorEnd end() & {
-                    return rs::IteratorEnd();
+                inline ::rs::IteratorEnd end() & {
+                    return ::rs::IteratorEnd();
                 }
             },
             db.support_header("rs_std/iterator_adapter.h"),
@@ -4084,9 +4084,9 @@ fn generate_begin_and_end_for_type<'tcx>(
                 };
                 quote! {
                     template <typename TAdaptedSelf_ = #adt_cc_name>
-                    rs::IteratorAdapter< #into_iter_cc_ty_tokens_main > begin() #ref_qualifiers;
+                    ::rs::IteratorAdapter< #into_iter_cc_ty_tokens_main > begin() #ref_qualifiers;
                     template <typename TAdaptedSelf_ = #adt_cc_name>
-                    rs::IteratorEnd end() #ref_qualifiers;
+                    ::rs::IteratorEnd end() #ref_qualifiers;
                 }
             }
         });
@@ -4126,16 +4126,16 @@ fn generate_begin_and_end_for_type<'tcx>(
                         #cc_thunk_decls_tokens
 
                         template <typename TAdaptedSelf_>
-                        inline rs::IteratorAdapter< #into_iter_cc_ty_tokens_details > (#cc_fully_qualified_name :: begin) () #ref_qualifiers {
+                        inline ::rs::IteratorAdapter< #into_iter_cc_ty_tokens_details > (#cc_fully_qualified_name :: begin) () #ref_qualifiers {
                             #self_binding
                             auto call_into_iter = [&]() -> decltype(auto) {
                                 #impl_body_tokens
                             };
-                            return rs::IteratorAdapter< #into_iter_cc_ty_tokens_details >(#call_expr);
+                            return ::rs::IteratorAdapter< #into_iter_cc_ty_tokens_details >(#call_expr);
                         }
                         template <typename TAdaptedSelf_>
-                        inline rs::IteratorEnd (#cc_fully_qualified_name :: end) () #ref_qualifiers {
-                            return rs::IteratorEnd();
+                        inline ::rs::IteratorEnd (#cc_fully_qualified_name :: end) () #ref_qualifiers {
+                            return ::rs::IteratorEnd();
                         }
                     }
                 }
@@ -4224,7 +4224,7 @@ fn format_const_value<'tcx>(
             };
             let str_data = std::str::from_utf8(slice)
                 .map_err(|e| anyhow!("Invalid UTF-8 in &str constant: {e}"))?;
-            let tokens = quote! { rs::StrRef(#str_data) };
+            let tokens = quote! { ::rs::StrRef(#str_data) };
             Ok(CcSnippet::with_include(tokens, db.support_header("rs_std/str_ref.h")))
         }
         ty::TyKind::Adt(adt_def, _) if adt_def.is_struct() => {

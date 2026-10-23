@@ -31,17 +31,17 @@
 
 namespace example_crate {
 
-rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String> returns_result(
-    bool is_ok);
+::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>
+returns_result(bool is_ok);
 
 }
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "core :: option :: Option < & 'static str >") rs::Option<rs::StrRef>
-    : public rs::OptionBase<rs::Option<rs::StrRef>, rs::StrRef> {
+    "core :: option :: Option < & 'static str >")::rs::Option<::rs::StrRef>
+    : public ::rs::OptionBase<::rs::Option<::rs::StrRef>, ::rs::StrRef> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -51,21 +51,21 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
-  using base_type = rs::OptionBase<rs::Option<rs::StrRef>, rs::StrRef>;
+  using base_type = ::rs::OptionBase<::rs::Option<::rs::StrRef>, ::rs::StrRef>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs::OptionForwardConstructible<Option, rs::StrRef, U>)
+    requires(::rs::OptionForwardConstructible<Option, ::rs::StrRef, U>)
   Option(U&& value) noexcept;
   template <typename U>
-    requires(rs::OptionForwardConstructible<Option, rs::StrRef, U>)
+    requires(::rs::OptionForwardConstructible<Option, ::rs::StrRef, U>)
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(rs::OptionFromStdOptional<rs::StrRef, Opt>)
+    requires(::rs::OptionFromStdOptional<::rs::StrRef, Opt>)
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(rs::OptionFromStdOptional<rs::StrRef, Opt>)
+    requires(::rs::OptionFromStdOptional<::rs::StrRef, Opt>)
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -75,11 +75,11 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   friend base_type;
   using tag_type = ::std::uint64_t;
   static constexpr tag_type kNoneVal = 0;
-  rs::StrRef* some_ptr() noexcept {
-    return reinterpret_cast<rs::StrRef*>(storage_);
+  ::rs::StrRef* some_ptr() noexcept {
+    return reinterpret_cast<::rs::StrRef*>(storage_);
   }
-  rs::StrRef const* some_const_ptr() const noexcept {
-    return reinterpret_cast<rs::StrRef const*>(storage_);
+  ::rs::StrRef const* some_const_ptr() const noexcept {
+    return reinterpret_cast<::rs::StrRef const*>(storage_);
   }
   void set_some_tag() noexcept {}
   constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
@@ -92,46 +92,50 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     "core :: result :: Result < :: core :: option :: Option < & 'static str > "
-    ", :: alloc :: string :: String >")
-    rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>
-    : public rs::ResultBase<
-          rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>,
-          rs::Option<rs::StrRef>, ::rs::alloc::string::String> {
+    ", :: alloc :: string :: String >")::rs::Result<::rs::Option<::rs::StrRef>,
+                                                    ::rs::alloc::string::String>
+    : public ::rs::ResultBase<
+          ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>,
+          ::rs::Option<::rs::StrRef>, ::rs::alloc::string::String> {
  public:
   // Clone::clone
   Result(const Result&) noexcept;
 
   // Clone::clone_from
-  rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>& operator=(
-      const Result&) noexcept;
+  ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>&
+  operator=(const Result&) noexcept;
 
   Result(::crubit::UnsafeRelocateTag, Result&& value);
 
  public:
-  using base_type = rs::ResultBase<
-      rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>,
-      rs::Option<rs::StrRef>, ::rs::alloc::string::String>;
+  using base_type = ::rs::ResultBase<
+      ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>,
+      ::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>;
   template <typename U>
-    requires(rs::ResultForwardConstructible<Result, rs::Option<rs::StrRef>, U>)
+    requires(
+        ::rs::ResultForwardConstructible<Result, ::rs::Option<::rs::StrRef>, U>)
   explicit constexpr Result(U&& ok) noexcept;
   template <typename U>
-    requires(rs::ResultForwardConstructible<Result, rs::Option<rs::StrRef>, U>)
+    requires(
+        ::rs::ResultForwardConstructible<Result, ::rs::Option<::rs::StrRef>, U>)
   constexpr Result& operator=(U&& ok) noexcept;
   template <typename F>
-    requires(rs::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
-  explicit constexpr Result(rs::unexpected<F>&& err) noexcept;
+    requires(
+        ::rs::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+  explicit constexpr Result(::rs::unexpected<F>&& err) noexcept;
   template <typename F>
-    requires(rs::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
-  constexpr Result& operator=(rs::unexpected<F>&& err) noexcept;
+    requires(
+        ::rs::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+  constexpr Result& operator=(::rs::unexpected<F>&& err) noexcept;
   template <typename... Args>
   explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
   template <typename... Args>
-  explicit constexpr Result(rs::unexpect_t u, Args&&... args) noexcept;
+  explicit constexpr Result(::rs::unexpect_t u, Args&&... args) noexcept;
   ~Result() noexcept;
 
  private:
@@ -139,11 +143,11 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   bool has_value_impl() const noexcept {
     return tag() == UINT64_C(18446744073709551615);
   }
-  rs::Option<rs::StrRef>* ok_ptr() noexcept {
-    return reinterpret_cast<rs::Option<rs::StrRef>*>(__storage + 8);
+  ::rs::Option<::rs::StrRef>* ok_ptr() noexcept {
+    return reinterpret_cast<::rs::Option<::rs::StrRef>*>(__storage + 8);
   }
-  rs::Option<rs::StrRef> const* ok_const_ptr() const noexcept {
-    return reinterpret_cast<rs::Option<rs::StrRef> const*>(__storage + 8);
+  ::rs::Option<::rs::StrRef> const* ok_const_ptr() const noexcept {
+    return reinterpret_cast<::rs::Option<::rs::StrRef> const*>(__storage + 8);
   }
   ::rs::alloc::string::String* err_ptr() noexcept {
     return reinterpret_cast<::rs::alloc::string::String*>(__storage);
@@ -165,12 +169,13 @@ namespace example_crate {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_returns_uresult(
-    bool,
-    rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>* __ret_ptr);
+    bool, ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>*
+              __ret_ptr);
 }
-inline rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>
+inline ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>
 returns_result(bool is_ok) {
-  crubit::Slot<rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>>
+  crubit::Slot<
+      ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_returns_uresult(is_ok,
@@ -180,25 +185,30 @@ returns_result(bool is_ok) {
 
 }  // namespace example_crate
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e
-static_assert(::std::is_trivially_copy_constructible_v<rs::Option<rs::StrRef>>);
-static_assert(::std::is_trivially_copy_assignable_v<rs::Option<rs::StrRef>>);
-static_assert(::std::is_trivially_move_constructible_v<rs::Option<rs::StrRef>>);
-static_assert(::std::is_trivially_move_assignable_v<rs::Option<rs::StrRef>>);
-inline rs::Option<rs::StrRef>::Option(::crubit::UnsafeRelocateTag,
-                                      Option&& value) {
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e
+static_assert(
+    ::std::is_trivially_copy_constructible_v<::rs::Option<::rs::StrRef>>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<::rs::Option<::rs::StrRef>>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::rs::Option<::rs::StrRef>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::rs::Option<::rs::StrRef>>);
+inline ::rs::Option<::rs::StrRef>::Option(::crubit::UnsafeRelocateTag,
+                                          Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-static_assert(::std::is_trivially_destructible_v<rs::Option<rs::StrRef>>);
-inline constexpr ::std::uint64_t rs::Option<rs::StrRef>::tag() const& noexcept {
+static_assert(::std::is_trivially_destructible_v<::rs::Option<::rs::StrRef>>);
+inline constexpr ::std::uint64_t(
+    ::rs::Option<::rs::StrRef>::tag)() const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
   return ::std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline constexpr void rs::Option<rs::StrRef>::set_tag(
+inline constexpr void(::rs::Option<::rs::StrRef>::set_tag)(
     ::std::uint64_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
@@ -208,66 +218,70 @@ inline constexpr void rs::Option<rs::StrRef>::set_tag(
   }
 }
 
-inline constexpr rs::Option<rs::StrRef>::Option(::std::nullopt_t) noexcept
+inline constexpr ::rs::Option<::rs::StrRef>::Option(::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr rs::Option<rs::StrRef>& rs::Option<rs::StrRef>::operator=(
-    ::std::nullopt_t) noexcept {
+inline constexpr ::rs::Option<::rs::StrRef>& ::rs::Option<
+    ::rs::StrRef>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
-  requires(
-      rs::OptionForwardConstructible<rs::Option<rs::StrRef>, rs::StrRef, U>)
-inline rs::Option<rs::StrRef>::Option(U&& value) noexcept
+  requires(::rs::OptionForwardConstructible<::rs::Option<::rs::StrRef>,
+                                            ::rs::StrRef, U>)
+inline ::rs::Option<::rs::StrRef>::Option(U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(
-      rs::OptionForwardConstructible<rs::Option<rs::StrRef>, rs::StrRef, U>)
-inline rs::Option<rs::StrRef>& rs::Option<rs::StrRef>::operator=(
+  requires(::rs::OptionForwardConstructible<::rs::Option<::rs::StrRef>,
+                                            ::rs::StrRef, U>)
+inline ::rs::Option<::rs::StrRef>& ::rs::Option<::rs::StrRef>::operator=(
     U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires(rs::OptionFromStdOptional<rs::StrRef, Opt>)
-inline rs::Option<rs::StrRef>::Option(Opt&& value) noexcept
+  requires(::rs::OptionFromStdOptional<::rs::StrRef, Opt>)
+inline ::rs::Option<::rs::StrRef>::Option(Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires(rs::OptionFromStdOptional<rs::StrRef, Opt>)
-inline rs::Option<rs::StrRef>& rs::Option<rs::StrRef>::operator=(
+  requires(::rs::OptionFromStdOptional<::rs::StrRef, Opt>)
+inline ::rs::Option<::rs::StrRef>& ::rs::Option<::rs::StrRef>::operator=(
     Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline rs::Option<rs::StrRef>::Option(::std::in_place_t ip,
-                                      Args&&... args) noexcept
+inline ::rs::Option<::rs::StrRef>::Option(::std::in_place_t ip,
+                                          Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003c_x00000026_x00000027static_x00000020str_x0000003e_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-    rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String> const&,
-    rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>* __ret_ptr);
+    ::rs::Result<::rs::Option<::rs::StrRef>,
+                 ::rs::alloc::string::String> const&,
+    ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>*
+        __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003c_x00000026_x00000027static_x00000020str_x0000003e_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-    rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>&,
-    rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String> const&);
+    ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>&,
+    ::rs::Result<::rs::Option<::rs::StrRef>,
+                 ::rs::alloc::string::String> const&);
 }
-inline rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>::Result(
-    const Result& other) noexcept {
+inline ::rs::Result<::rs::Option<::rs::StrRef>,
+                    ::rs::alloc::string::String>::Result(const Result&
+                                                             other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003c_x00000026_x00000027static_x00000020str_x0000003e_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
           other, this);
 }
-inline rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>&
-rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>::operator=(
+inline ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>& ::
+rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>::operator=(
     const Result& other) noexcept {
   if (this != &other) {
     __crubit_internal::
@@ -276,25 +290,25 @@ rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>::operator=(
   }
   return *this;
 }
-inline rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>::Result(
-    ::crubit::UnsafeRelocateTag, Result&& value) {
+inline ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>::
+    Result(::crubit::UnsafeRelocateTag, Result&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline rs::Result<rs::Option<rs::StrRef>,
-                  ::rs::alloc::string::String>::~Result() noexcept {
+inline ::rs::Result<::rs::Option<::rs::StrRef>,
+                    ::rs::alloc::string::String>::~Result() noexcept {
   this->Reset();
 }
-inline constexpr ::std::uint64_t
-rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>::tag()
-    const& noexcept {
+inline constexpr ::std::uint64_t(
+    ::rs::Result<::rs::Option<::rs::StrRef>,
+                 ::rs::alloc::string::String>::tag)() const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     __bytes[i] = __storage[0 + i];
   }
   return ::std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline constexpr void
-rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>::set_tag(
+inline constexpr void(::rs::Result<::rs::Option<::rs::StrRef>,
+                                   ::rs::alloc::string::String>::set_tag)(
     ::std::uint64_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
@@ -305,48 +319,50 @@ rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>::set_tag(
 }
 
 template <typename U>
-  requires(rs::ResultForwardConstructible<
-           rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>,
-           rs::Option<rs::StrRef>, U>)
-inline constexpr rs::Result<
-    rs::Option<rs::StrRef>,
+  requires(
+      ::rs::ResultForwardConstructible<
+          ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>,
+          ::rs::Option<::rs::StrRef>, U>)
+inline constexpr ::rs::Result<
+    ::rs::Option<::rs::StrRef>,
     ::rs::alloc::string::String>::Result(U&& ok) noexcept
     : base_type(::std::forward<U>(ok)) {}
 template <typename U>
-  requires(rs::ResultForwardConstructible<
-           rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>,
-           rs::Option<rs::StrRef>, U>)
-inline constexpr rs::Result<rs::Option<rs::StrRef>,
-                            ::rs::alloc::string::String>&
-rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>::operator=(
+  requires(
+      ::rs::ResultForwardConstructible<
+          ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>,
+          ::rs::Option<::rs::StrRef>, U>)
+inline constexpr ::rs::Result<::rs::Option<::rs::StrRef>,
+                              ::rs::alloc::string::String>& ::
+rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>::operator=(
     U&& ok) noexcept {
   base_type::operator=(::std::forward<U>(ok));
   return *this;
 }
 template <typename F>
-  requires(rs::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
-inline constexpr rs::Result<
-    rs::Option<rs::StrRef>,
-    ::rs::alloc::string::String>::Result(rs::unexpected<F>&& err) noexcept
+  requires(::rs::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+inline constexpr ::rs::Result<
+    ::rs::Option<::rs::StrRef>,
+    ::rs::alloc::string::String>::Result(::rs::unexpected<F>&& err) noexcept
     : base_type(::std::move(err)) {}
 template <typename F>
-  requires(rs::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
-inline constexpr rs::Result<rs::Option<rs::StrRef>,
-                            ::rs::alloc::string::String>&
-rs::Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>::operator=(
-    rs::unexpected<F>&& err) noexcept {
+  requires(::rs::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+inline constexpr ::rs::Result<::rs::Option<::rs::StrRef>,
+                              ::rs::alloc::string::String>& ::
+rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>::operator=(
+    ::rs::unexpected<F>&& err) noexcept {
   base_type::operator=(::std::move(err));
   return *this;
 }
 template <typename... Args>
-inline constexpr rs::
-    Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>::Result(
+inline constexpr ::rs::
+    Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>::Result(
         ::std::in_place_t ip, Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 template <typename... Args>
-inline constexpr rs::
-    Result<rs::Option<rs::StrRef>, ::rs::alloc::string::String>::Result(
-        rs::unexpect_t u, Args&&... args) noexcept
+inline constexpr ::rs::
+    Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>::Result(
+        ::rs::unexpect_t u, Args&&... args) noexcept
     : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif

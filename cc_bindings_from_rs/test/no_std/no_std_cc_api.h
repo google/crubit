@@ -33,7 +33,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(8)
  public:
   static ::no_std::NoStdStruct new_(::std::int32_t x, float y);
 
-  rs::StrRef display() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+  ::rs::StrRef display() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   ::rs::alloc::string::String test{};
 
@@ -61,12 +61,12 @@ inline ::no_std::NoStdStruct(NoStdStruct::new_)(::std::int32_t x, float y) {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_display(::no_std::NoStdStruct const&,
-                                       rs::StrRef* __ret_ptr);
+                                       ::rs::StrRef* __ret_ptr);
 }
-inline rs::StrRef(NoStdStruct::display)() const& $(__anon1)
+inline ::rs::StrRef(NoStdStruct::display)() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  crubit::Slot<rs::StrRef> __return_value_ret_val_holder;
+  crubit::Slot<::rs::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_display(self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();

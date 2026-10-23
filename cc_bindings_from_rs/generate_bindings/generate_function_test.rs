@@ -1137,7 +1137,7 @@ fn test_format_item_generic_fn_as_ref_trait_basic_replacement() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-              void generic_function(rs::SliceRef<const ::std::uint8_t> arg);
+              void generic_function(::rs::SliceRef<const ::std::uint8_t> arg);
             }
         );
         assert_rs_matches!(
@@ -1363,7 +1363,7 @@ fn test_format_item_fn_bridged_type() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                void call_str(::rs::FnRef<void(rs::StrRef) const> f);
+                void call_str(::rs::FnRef<void(::rs::StrRef) const> f);
             }
         );
         assert_rs_matches!(
@@ -1402,8 +1402,8 @@ fn test_format_item_fn_with_bridgeable_types() {
             result.main_api.tokens,
             quote! {
                 void take_fn_with_bridgeable_types(
-                    ::rs::Fn<rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>(
-                        rs::Tuple<::std::int32_t, rs::Option<::std::int32_t>>) &&> f);
+                    ::rs::Fn<::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>(
+                        ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>) &&> f);
             }
         );
         assert_rs_matches!(
@@ -1605,7 +1605,7 @@ fn test_format_item_fn_async_with_slice() {
             main_api.tokens,
             quote! {
                 ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
-                    rs::SliceRef<const ::std::int32_t> slice CRUBIT_LIFETIME_BOUND);
+                    ::rs::SliceRef<const ::std::int32_t> slice CRUBIT_LIFETIME_BOUND);
             }
         );
     });
@@ -2304,14 +2304,14 @@ fn test_unmovable_result_param_wrapped_in_movable() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                void pass_unmovable_result(::rs::Movable<rs::Result<rs::unit_t, ::rust_out::Unmovable>> _x);
+                void pass_unmovable_result(::rs::Movable<::rs::Result<::rs::unit_t, ::rust_out::Unmovable>> _x);
             }
         );
         assert_cc_matches!(
             result.cc_details.tokens,
             quote! {
-                inline void pass_unmovable_result(::rs::Movable<rs::Result<rs::unit_t, ::rust_out::Unmovable>> _x) {
-                    crubit::Slot<rs::Result<rs::unit_t, ::rust_out::Unmovable>> _x_slot;
+                inline void pass_unmovable_result(::rs::Movable<::rs::Result<::rs::unit_t, ::rust_out::Unmovable>> _x) {
+                    crubit::Slot<::rs::Result<::rs::unit_t, ::rust_out::Unmovable>> _x_slot;
                     ::std::move(_x).MoveToSlot(_x_slot);
                     return __crubit_internal::__crubit_thunk_pass_uunmovable_uresult(_x_slot.Get());
                 }
@@ -2338,14 +2338,14 @@ fn test_unmovable_result_ok_param_wrapped_in_movable() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                void pass_unmovable_result_ok(::rs::Movable<rs::Result<::rust_out::Unmovable, ::std::int32_t>> _x);
+                void pass_unmovable_result_ok(::rs::Movable<::rs::Result<::rust_out::Unmovable, ::std::int32_t>> _x);
             }
         );
         assert_cc_matches!(
             result.cc_details.tokens,
             quote! {
-                inline void pass_unmovable_result_ok(::rs::Movable<rs::Result<::rust_out::Unmovable, ::std::int32_t>> _x) {
-                    crubit::Slot<rs::Result<::rust_out::Unmovable, ::std::int32_t>> _x_slot;
+                inline void pass_unmovable_result_ok(::rs::Movable<::rs::Result<::rust_out::Unmovable, ::std::int32_t>> _x) {
+                    crubit::Slot<::rs::Result<::rust_out::Unmovable, ::std::int32_t>> _x_slot;
                     ::std::move(_x).MoveToSlot(_x_slot);
                     return __crubit_internal::__crubit_thunk_pass_uunmovable_uresult_uok(_x_slot.Get());
                 }
@@ -2372,14 +2372,14 @@ fn test_unmovable_result_both_param_wrapped_in_movable() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                void pass_unmovable_result_both(::rs::Movable<rs::Result<::rust_out::Unmovable, ::rust_out::Unmovable>> _x);
+                void pass_unmovable_result_both(::rs::Movable<::rs::Result<::rust_out::Unmovable, ::rust_out::Unmovable>> _x);
             }
         );
         assert_cc_matches!(
             result.cc_details.tokens,
             quote! {
-                inline void pass_unmovable_result_both(::rs::Movable<rs::Result<::rust_out::Unmovable, ::rust_out::Unmovable>> _x) {
-                    crubit::Slot<rs::Result<::rust_out::Unmovable, ::rust_out::Unmovable>> _x_slot;
+                inline void pass_unmovable_result_both(::rs::Movable<::rs::Result<::rust_out::Unmovable, ::rust_out::Unmovable>> _x) {
+                    crubit::Slot<::rs::Result<::rust_out::Unmovable, ::rust_out::Unmovable>> _x_slot;
                     ::std::move(_x).MoveToSlot(_x_slot);
                     return __crubit_internal::__crubit_thunk_pass_uunmovable_uresult_uboth(_x_slot.Get());
                 }
@@ -2406,7 +2406,7 @@ fn test_unmovable_result_in_tuple_param() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                void pass_unmovable_result_tuple(::std::tuple<::rs::Movable<rs::Result<rs::unit_t, ::rust_out::Unmovable>>> _x);
+                void pass_unmovable_result_tuple(::std::tuple<::rs::Movable<::rs::Result<::rs::unit_t, ::rust_out::Unmovable>>> _x);
             }
         );
     });
@@ -2432,18 +2432,18 @@ fn test_unmovable_result_in_tuple_return() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                ::std::tuple<::rs::Movable<rs::Result<rs::unit_t, ::rust_out::Unmovable>>> return_unmovable_result_tuple();
+                ::std::tuple<::rs::Movable<::rs::Result<::rs::unit_t, ::rust_out::Unmovable>>> return_unmovable_result_tuple();
             }
         );
         assert_cc_matches!(
             result.cc_details.tokens,
             quote! {
-                inline ::std::tuple<::rs::Movable<rs::Result<rs::unit_t, ::rust_out::Unmovable>>> return_unmovable_result_tuple() {
-                    crubit::Slot<rs::Result<rs::unit_t, ::rust_out::Unmovable>> __return_value_0_ret_val_holder;
+                inline ::std::tuple<::rs::Movable<::rs::Result<::rs::unit_t, ::rust_out::Unmovable>>> return_unmovable_result_tuple() {
+                    crubit::Slot<::rs::Result<::rs::unit_t, ::rust_out::Unmovable>> __return_value_0_ret_val_holder;
                     auto* __return_value_0_storage = __return_value_0_ret_val_holder.Get();
                     void* __return_value_storage[] = { __return_value_0_storage };
                     __crubit_internal::__crubit_thunk_return_uunmovable_uresult_utuple(__return_value_storage);
-                    return ::std::make_tuple(::rs::Movable<rs::Result<rs::unit_t, ::rust_out::Unmovable>>::TakeFromSlot(::std::move(__return_value_0_ret_val_holder)));
+                    return ::std::make_tuple(::rs::Movable<::rs::Result<::rs::unit_t, ::rust_out::Unmovable>>::TakeFromSlot(::std::move(__return_value_0_ret_val_holder)));
                 }
             }
         );
@@ -2586,15 +2586,15 @@ fn test_unmovable_template_specialization_param_wrapped_in_movable() {
             result.main_api.tokens,
             quote! {
                 void pass_unmovable_result(
-                    ::rs::Movable<rs::Result<rs::unit_t, ::rust_out::Unmovable>> _x);
+                    ::rs::Movable<::rs::Result<::rs::unit_t, ::rust_out::Unmovable>> _x);
             }
         );
         assert_cc_matches!(
             result.cc_details.tokens,
             quote! {
                 inline void pass_unmovable_result(
-                    ::rs::Movable<rs::Result<rs::unit_t, ::rust_out::Unmovable>> _x) {
-                    crubit::Slot<rs::Result<rs::unit_t, ::rust_out::Unmovable>> _x_slot;
+                    ::rs::Movable<::rs::Result<::rs::unit_t, ::rust_out::Unmovable>> _x) {
+                    crubit::Slot<::rs::Result<::rs::unit_t, ::rust_out::Unmovable>> _x_slot;
                     ::std::move(_x).MoveToSlot(_x_slot);
                     return __crubit_internal::__crubit_thunk_pass_uunmovable_uresult(_x_slot.Get());
                 }

@@ -26,7 +26,7 @@
 #include <utility>
 
 namespace str {
-static constexpr rs::StrRef CONST_STR_FOO = rs::StrRef("foo");
+static constexpr ::rs::StrRef CONST_STR_FOO = ::rs::StrRef("foo");
 
 // Error generating bindings for static `str_golden::STATIC_STR_FOO` defined at
 // cc_bindings_from_rs/test/str/str.rs;l=43:
@@ -36,25 +36,25 @@ static constexpr rs::StrRef CONST_STR_FOO = rs::StrRef("foo");
 struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
     [[clang::trivial_abi]] TypeWithStr final {
  public:
-  static ::str::TypeWithStr create(rs::StrRef s);
+  static ::str::TypeWithStr create(::rs::StrRef s);
 
   ::std::uintptr_t get_str_len() const;
 
   ::std::uint8_t const* get_str_data() const;
 
-  rs::StrRef str_field{};
+  ::rs::StrRef str_field{};
 
  private:
   static void __crubit_field_offset_assertions();
 };
 
-rs::StrRef foo_as_str();
+::rs::StrRef foo_as_str();
 
-::std::uint8_t const* get_str_data(rs::StrRef s);
+::std::uint8_t const* get_str_data(::rs::StrRef s);
 
-::std::uintptr_t get_str_len(rs::StrRef s);
+::std::uintptr_t get_str_len(::rs::StrRef s);
 
-void str_checked_as_potentially_aliasing(rs::StrRef __param_0,
+void str_checked_as_potentially_aliasing(::rs::StrRef __param_0,
                                          ::std::uint8_t& __param_1);
 
 static_assert(
@@ -69,10 +69,10 @@ static_assert(::std::is_trivially_move_assignable_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_constructible_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_assignable_v<::str::TypeWithStr>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs::StrRef*,
+extern "C" void __crubit_thunk_create(::rs::StrRef*,
                                       ::str::TypeWithStr* __ret_ptr);
 }
-inline ::str::TypeWithStr(TypeWithStr::create)(rs::StrRef s) {
+inline ::str::TypeWithStr(TypeWithStr::create)(::rs::StrRef s) {
   crubit::Slot<::str::TypeWithStr> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(&s, __return_value_storage);
@@ -101,38 +101,38 @@ inline void ::str::TypeWithStr::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(__crubit_assert_type, str_field));
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_foo_uas_ustr(rs::StrRef* __ret_ptr);
+extern "C" void __crubit_thunk_foo_uas_ustr(::rs::StrRef* __ret_ptr);
 }
-inline rs::StrRef foo_as_str() {
-  crubit::Slot<rs::StrRef> __return_value_ret_val_holder;
+inline ::rs::StrRef foo_as_str() {
+  crubit::Slot<::rs::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_foo_uas_ustr(__return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(rs::StrRef*);
+extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(::rs::StrRef*);
 }
-inline ::std::uint8_t const* get_str_data(rs::StrRef s) {
+inline ::std::uint8_t const* get_str_data(::rs::StrRef s) {
   return __crubit_internal::__crubit_thunk_get_ustr_udata(&s);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::uintptr_t __crubit_thunk_get_ustr_ulen(rs::StrRef*);
+extern "C" ::std::uintptr_t __crubit_thunk_get_ustr_ulen(::rs::StrRef*);
 }
-inline ::std::uintptr_t get_str_len(rs::StrRef s) {
+inline ::std::uintptr_t get_str_len(::rs::StrRef s) {
   return __crubit_internal::__crubit_thunk_get_ustr_ulen(&s);
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(
-    rs::StrRef*, ::std::uint8_t&);
+    ::rs::StrRef*, ::std::uint8_t&);
 }
-inline void str_checked_as_potentially_aliasing(rs::StrRef __param_0,
+inline void str_checked_as_potentially_aliasing(::rs::StrRef __param_0,
                                                 ::std::uint8_t& __param_1) {
   crubit::internal::CheckNoMutableAliasing(
       crubit::internal::AsMutPtrDatas<::std::uint8_t&>(__param_1),
-      crubit::internal::AsPtrDatas<rs::StrRef>(__param_0));
+      crubit::internal::AsPtrDatas<::rs::StrRef>(__param_0));
   return __crubit_internal::
       __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(&__param_0,
                                                              __param_1);

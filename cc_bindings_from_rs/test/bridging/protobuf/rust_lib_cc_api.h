@@ -121,7 +121,7 @@ absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>
 create_proto_status_or(::std::int32_t num);
 
 // CRUBIT_ANNOTATE: must_bind=
-rs::Vec<::proto::Rust<::foo_service::FooRequestStats>> create_proto_vec(
+::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>> create_proto_vec(
     ::std::int32_t num);
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -140,13 +140,13 @@ rs::Vec<::proto::Rust<::foo_service::FooRequestStats>> create_proto_vec(
 
 }  // namespace rust_lib
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    ":: alloc :: vec :: Vec < :: foo_proto :: FooRequestStats >")
-    rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>
-    : public rs::VecBase<::proto::Rust<::foo_service::FooRequestStats>> {
+    ":: alloc :: vec :: Vec < :: foo_proto :: FooRequestStats >")::rs::
+    Vec<::proto::Rust<::foo_service::FooRequestStats>>
+    : public ::rs::VecBase<::proto::Rust<::foo_service::FooRequestStats>> {
  public:
   // Default::default
   Vec() noexcept;
@@ -155,18 +155,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Vec(const Vec&) noexcept;
 
   // Clone::clone_from
-  rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>& operator=(
+  ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>& operator=(
       const Vec&) noexcept;
 
   Vec(Vec&&) noexcept;
-  rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>& operator=(
+  ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>& operator=(
       Vec&&) noexcept;
   Vec(::crubit::UnsafeRelocateTag, Vec&& value);
 
   ~Vec() noexcept;
 
  private:
-  friend class rs::VecBase<::proto::Rust<::foo_service::FooRequestStats>>;
+  friend class ::rs::VecBase<::proto::Rust<::foo_service::FooRequestStats>>;
   static constexpr ::std::size_t kPtrOffset = 8;
   static constexpr ::std::size_t kCapOffset = 0;
   static constexpr ::std::size_t kLenOffset = 16;
@@ -346,11 +346,11 @@ create_proto_status_or(::std::int32_t num) {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create_uproto_uvec(
     ::std::int32_t,
-    rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>* __ret_ptr);
+    ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>* __ret_ptr);
 }
-inline rs::Vec<::proto::Rust<::foo_service::FooRequestStats>> create_proto_vec(
-    ::std::int32_t num) {
-  crubit::Slot<rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>>
+inline ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>
+create_proto_vec(::std::int32_t num) {
+  crubit::Slot<::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create_uproto_uvec(num,
@@ -391,29 +391,29 @@ inline ::std::int32_t read_proto_ref(
 
 }  // namespace rust_lib
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
-    rs::Vec<::proto::Rust<::foo_service::FooRequestStats>> const&,
-    rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>* __ret_ptr);
+    ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>> const&,
+    ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>* __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
-    rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>&,
-    rs::Vec<::proto::Rust<::foo_service::FooRequestStats>> const&);
+    ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>&,
+    ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>> const&);
 }
-inline rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
+inline ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
     const Vec& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
           other, this);
 }
-inline rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>&
-rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
-    const Vec& other) noexcept {
+inline ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>& ::rs::
+    Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
+        const Vec& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
@@ -421,31 +421,32 @@ rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
   }
   return *this;
 }
-inline rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
+inline ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
     Vec&& other) noexcept
     : storage_{} {
   ::std::memcpy(storage_, other.storage_, sizeof(storage_));
   other.init_empty();
 }
-inline rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>&
-rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
-    Vec&& other) noexcept {
+inline ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>& ::rs::
+    Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
+        Vec&& other) noexcept {
   if (this != &other) {
     destroy();
     crubit::MemSwap(*this, other);
   }
   return *this;
 }
-inline rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
+inline ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
     ::crubit::UnsafeRelocateTag, Vec&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
 
-inline rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec() noexcept
+inline ::rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec() noexcept
     : storage_{} {
   init_empty();
 }
-inline rs::Vec<::proto::Rust<::foo_service::FooRequestStats>>::~Vec() noexcept {
+inline ::rs::Vec<
+    ::proto::Rust<::foo_service::FooRequestStats>>::~Vec() noexcept {
   destroy();
 }
 #endif

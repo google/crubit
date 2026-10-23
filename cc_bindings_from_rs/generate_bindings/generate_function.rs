@@ -546,7 +546,7 @@ fn cc_return_value_from_c_abi<'tcx>(
             prereqs.includes.insert(CcInclude::utility()); // for `std::move`
             prereqs.includes.insert(db.support_header("internal/slot.h"));
             // Non-C++-movable types nested in a compound return value (e.g. a `std::tuple`
-            // element) are always wrapped in `rs::Movable`; top-level ones only under the
+            // element) are always wrapped in `::rs::Movable`; top-level ones only under the
             // `movable_return_values` feature.
             let wrap_in_movable = if recursive {
                 !db.is_cpp_move_constructible(ty)
@@ -1299,7 +1299,7 @@ pub fn generate_function<'tcx>(
                     .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db))?;
                 let trait_name_with_args =
                     format_trait_ref_for_cc(db, trait_ref)?.into_tokens(&mut prereqs);
-                quote! { rs :: impl <#struct_name, #trait_name_with_args> :: #bracketed_decl_name }
+                quote! { ( ::rs::impl <#struct_name, #trait_name_with_args> :: #bracketed_decl_name ) }
             }
             StaticMethodMode::Infer => {
                 if let Some(self_ty_val) = self_ty.filter(|ty| {

@@ -163,7 +163,7 @@ return_cpp_layout_equivalent(::std::int32_t x);
     ::std::int32_t x);
 
 ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
-    rs::SliceRef<const ::std::int32_t> slice CRUBIT_LIFETIME_BOUND);
+    ::rs::SliceRef<const ::std::int32_t> slice CRUBIT_LIFETIME_BOUND);
 
 static_assert(
     sizeof(::async_fn::NotCppMovable) == 4,
@@ -316,11 +316,11 @@ inline ::crubit::DynErasedFuture<::async_fn::NotCppMovable> return_unmovable(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_sum_uslice(
-    rs::SliceRef<const ::std::int32_t>*,
+    ::rs::SliceRef<const ::std::int32_t>*,
     ::crubit::DynErasedFuture<::std::int32_t>* __ret_ptr);
 }
 inline ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
-    rs::SliceRef<const ::std::int32_t> slice CRUBIT_LIFETIME_BOUND) {
+    ::rs::SliceRef<const ::std::int32_t> slice CRUBIT_LIFETIME_BOUND) {
   ::crubit::Slot<::crubit::DynErasedFuture<::std::int32_t>>
       __return_value_ret_val_holder;
   __crubit_internal::__crubit_thunk_sum_uslice(

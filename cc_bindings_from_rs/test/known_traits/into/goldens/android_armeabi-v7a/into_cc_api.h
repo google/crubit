@@ -36,7 +36,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocTarget") alignas(
     4) [[clang::trivial_abi]] CloneAllocTarget final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
-  rs::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+  ::rs::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   // Constructor from `<into_golden::CloneAllocType as
   // std::convert::Into<into_golden::CloneAllocTarget>>` is suppressed because
@@ -53,10 +53,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocType") alignas(4)
     [[clang::trivial_abi]] CloneAllocType final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
-  static ::into::CloneAllocType create(rs::StrRef s);
+  static ::into::CloneAllocType create(::rs::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
-  rs::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+  ::rs::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   explicit operator ::into::CloneAllocTarget();
 
@@ -119,7 +119,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
 
   explicit operator ::std::int64_t();
 
-  explicit operator rs::StrRef();
+  explicit operator ::rs::StrRef();
 
   explicit operator ::std::int16_t();
 
@@ -165,12 +165,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(4)
   ConvertRef(::crubit::UnsafeRelocateTag, ConvertRef&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::into::ConvertRef create(rs::StrRef s);
+  static ::into::ConvertRef create(::rs::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
   ::into::Convert transmigrate() &&;
 
-  explicit operator rs::StrRef();
+  explicit operator ::rs::StrRef();
 
   explicit operator ::into::Convert();
 
@@ -304,12 +304,12 @@ static_assert(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_get_uvalue(::into::CloneAllocTarget const&,
-                                          rs::StrRef* __ret_ptr);
+                                          ::rs::StrRef* __ret_ptr);
 }
-inline rs::StrRef(CloneAllocTarget::get_value)() const& $(__anon1)
+inline ::rs::StrRef(CloneAllocTarget::get_value)() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  crubit::Slot<rs::StrRef> __return_value_ret_val_holder;
+  crubit::Slot<::rs::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_get_uvalue(self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
@@ -326,10 +326,10 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs::StrRef*,
+extern "C" void __crubit_thunk_create(::rs::StrRef*,
                                       ::into::CloneAllocType* __ret_ptr);
 }
-inline ::into::CloneAllocType(CloneAllocType::create)(rs::StrRef s) {
+inline ::into::CloneAllocType(CloneAllocType::create)(::rs::StrRef s) {
   crubit::Slot<::into::CloneAllocType> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(&s, __return_value_storage);
@@ -338,12 +338,12 @@ inline ::into::CloneAllocType(CloneAllocType::create)(rs::StrRef s) {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_get_uvalue(::into::CloneAllocType const&,
-                                          rs::StrRef* __ret_ptr);
+                                          ::rs::StrRef* __ret_ptr);
 }
-inline rs::StrRef(CloneAllocType::get_value)() const& $(__anon1)
+inline ::rs::StrRef(CloneAllocType::get_value)() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  crubit::Slot<rs::StrRef> __return_value_ret_val_holder;
+  crubit::Slot<::rs::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_get_uvalue(self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
@@ -473,11 +473,11 @@ inline ::into::Convert::operator ::std::int64_t() {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aConvert_u_x00000026_x00000027static_x00000020str(
-    ::into::Convert*, rs::StrRef* __ret_ptr);
+    ::into::Convert*, ::rs::StrRef* __ret_ptr);
 }
-inline ::into::Convert::operator rs::StrRef() {
+inline ::into::Convert::operator ::rs::StrRef() {
   auto&& self = *this;
-  crubit::Slot<rs::StrRef> __return_value_ret_val_holder;
+  crubit::Slot<::rs::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
       __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aConvert_u_x00000026_x00000027static_x00000020str(
@@ -550,9 +550,9 @@ inline ::into::ConvertRef::ConvertRef(::crubit::UnsafeRelocateTag,
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create_u_x00000027a(
-    rs::StrRef*, ::into::ConvertRef* __ret_ptr);
+    ::rs::StrRef*, ::into::ConvertRef* __ret_ptr);
 }
-inline ::into::ConvertRef(ConvertRef::create)(rs::StrRef s) {
+inline ::into::ConvertRef(ConvertRef::create)(::rs::StrRef s) {
   crubit::Slot<::into::ConvertRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create_u_x00000027a(&s,
@@ -575,11 +575,11 @@ inline ::into::Convert(ConvertRef::transmigrate)() && {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aConvertRef_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020str(
-    ::into::ConvertRef*, rs::StrRef* __ret_ptr);
+    ::into::ConvertRef*, ::rs::StrRef* __ret_ptr);
 }
-inline ::into::ConvertRef::operator rs::StrRef() {
+inline ::into::ConvertRef::operator ::rs::StrRef() {
   auto&& self = *this;
-  crubit::Slot<rs::StrRef> __return_value_ret_val_holder;
+  crubit::Slot<::rs::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
       __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aConvertRef_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020str(
