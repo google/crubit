@@ -27,8 +27,10 @@ pub fn compute_thunk_name(target: &str, file_path: &str, line: usize, col: usize
     let mut hasher = Fnv1aHasher::new();
     hasher.write(target.as_bytes());
     hasher.write(file_path.as_bytes());
-    hasher.write(&line.to_ne_bytes());
-    hasher.write(&col.to_ne_bytes());
+    // Hash fixed-width little-endian bytes: the thunk name is a linker symbol shared by the Rust
+    // and C++ sides, so it must not depend on the host's `usize` width or byte order.
+    hasher.write(&(line as u64).to_le_bytes());
+    hasher.write(&(col as u64).to_le_bytes());
     let hash = hasher.finish();
 
     let filename =
