@@ -160,6 +160,10 @@ pub fn format_cpp_type_inner(
             &Item::ExistingRustType(Rc::clone(existing_rust_type)),
             db,
         ),
+        RsTypeKind::Box { existing_rust_type, .. } => tagless_cpp_type_name_for_item(
+            &Item::ExistingRustType(Rc::clone(existing_rust_type)),
+            db,
+        ),
     }
 }
 

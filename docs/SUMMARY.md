@@ -12,6 +12,7 @@
 -   [Pointer Types](./types/pointer.md)
 -   [Callbacks (`absl::AnyInvocable` and `Fn`/`FnMut`/`FnOnce`)](./types/callbacks.md)
 -   [`absl::Status`](./types/absl_status.md)
+-   [Box (`Box<T>`, `Pin<Box<T>>`, `Box<[T]>`, `Box<str>`)](./types/box.md)
 -   [Protobuf](./types/protobuf.md)
 
 # C++ Bindings for Rust Libraries

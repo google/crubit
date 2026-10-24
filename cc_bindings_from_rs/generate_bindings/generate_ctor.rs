@@ -285,6 +285,9 @@ pub fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx
         // ADT: check CrubitAttrs if C++-originated, else check
         // move_ctor_and_assignment_operator_codegen_style.
         ty::Adt(adt_def, substs) => {
+            if query_compiler::is_owned_box_or_pinned_box(db.tcx(), ty) {
+                return false;
+            }
             if is_std_ptr_non_null(db.tcx(), adt_def.did()) {
                 return true;
             }
