@@ -839,6 +839,30 @@ fn test_anon_struct_typedef_with_packed_and_greater_alignment_unsupported() {
     );
 }
 
+#[gtest]
+fn test_struct_with_packed_and_greater_field_alignment_unsupported() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct __attribute__((packed)) PackedStructWithAlignedField {
+          char char_var;
+          alignas(8) int x;
+        };"#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "PackedStructWithAlignedField", ...
+            errors: [FormattedError {
+                ... message: "Records with packed layout and explicit alignment greater than packed alignment are not supported", ...
+            }], ...
+        }}
+    );
+}
+
 /// A `#pragma pack(N)` that doesn't lower the alignment of any field doesn't
 /// affect the layout, so the record is still supported.
 #[gtest]

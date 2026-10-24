@@ -1523,6 +1523,57 @@ fn test_aligned_attr() {
 }
 
 #[gtest]
+fn test_aligned_fields() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc_dependency(
+        r#"
+        using UserAlignedInt __attribute__((aligned(8))) = int;
+
+        struct AlignedFields final {
+            char prefix;
+            UserAlignedInt user_x;
+            char mid;
+            alignas(8) short x;
+            SysAlignedInt sys_x;
+            unsigned char reserved[16] __attribute__((__aligned__(16)));
+        };
+        "#,
+        r#"
+        typedef int SysAlignedInt __attribute__((aligned(8)));
+        "#,
+    )?
+    .rs_api;
+
+    // Each aligned field is placed at a larger offset than its natural Rust type alignment would
+    // produce (`user_x` at 8 instead of 4, `x` at 16 instead of 14, `sys_x` at 24 instead of 20,
+    // and `reserved` at 32 instead of 28). Opaque fields stretch to the start offset of the
+    // following field (so `x` at offset 16 stretches 8 bytes to `sys_x` at offset 24, and `sys_x`
+    // at offset 24 stretches 8 bytes to `reserved` at offset 32).
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[repr(C, align(16))]
+            ...
+            pub struct AlignedFields {
+                pub prefix: ::ffi_11::c_char,
+                __padding1: [::core::mem::MaybeUninit<u8>; 7],
+                #[doc = " Reason for representing this field as a blob of bytes:\n Fields with explicit alignment attributes are not supported"]
+                pub(crate) user_x: [::core::mem::MaybeUninit<u8>; 4],
+                pub mid: ::ffi_11::c_char,
+                __padding3: [::core::mem::MaybeUninit<u8>; 3],
+                #[doc = " Reason for representing this field as a blob of bytes:\n Fields with explicit alignment attributes are not supported"]
+                pub(crate) x: [::core::mem::MaybeUninit<u8>; 8],
+                #[doc = " Reason for representing this field as a blob of bytes:\n Fields with explicit alignment attributes are not supported"]
+                pub(crate) sys_x: [::core::mem::MaybeUninit<u8>; 8],
+                #[doc = " Reason for representing this field as a blob of bytes:\n Fields with explicit alignment attributes are not supported"]
+                pub(crate) reserved: [::core::mem::MaybeUninit<u8>; 16],
+            }
+        }
+    );
+
+    Ok(())
+}
+
+#[gtest]
 fn test_forward_declared() -> Result<()> {
     let rs_api = generate_bindings_tokens_from_cc(
         r#"

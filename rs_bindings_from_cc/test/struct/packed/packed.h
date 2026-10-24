@@ -196,4 +196,15 @@ inline void IncrementPackedArray(PackedStruct* arr, size_t len) {
   }
 }
 
+// Packed struct with an overaligned field (`alignas(8) > pack(1)`): Rust cannot
+// combine `#[repr(C, packed)]` with `#[repr(align(8))]`, so Crubit must reject
+// this struct as an unsupported item rather than emitting a
+// `#[repr(C, packed)]` struct whose generated
+// `assert!(align_of::<PackedWithAlignedField>() == 8)` would fail to compile
+// the header's bindings crate.
+struct __attribute__((packed)) PackedWithAlignedField {
+  char c;
+  alignas(8) int x;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_PACKED_PACKED_H_
