@@ -906,7 +906,7 @@ fn test_format_item_with_kythe_annotations() {
     test_format_item_with_features(
         test_src,
         "fn_with_provenance",
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        crubit_feature::CrubitFeature::Supported,
         /* with_kythe_annotations= */ true,
         |result| {
             let result = result.unwrap().unwrap();

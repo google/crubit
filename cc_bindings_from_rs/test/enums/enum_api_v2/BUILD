@@ -18,7 +18,6 @@ rust_library(
     srcs = ["enum_api_v2.rs"],
     aspect_hints = [
         "//features:enum_api_v2",
-        "//features:experimental",
     ],
     edition = "2024",
 )

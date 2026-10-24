@@ -22,7 +22,7 @@ rust_library(
     testonly = 1,
     srcs = ["functions.rs"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:ctor_plain_values",
     ],
     edition = "2024",
     proc_macro_deps = [

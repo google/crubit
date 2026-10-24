@@ -17,9 +17,6 @@ rust_library(
     name = "unions",
     testonly = 1,
     srcs = ["unions.rs"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
     edition = "2024",
 )
 

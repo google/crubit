@@ -25,9 +25,6 @@ rust_library(
     name = "into_iterator_rust",
     testonly = 1,
     srcs = ["into_iterator.rs"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
     edition = "2024",
     deps = [
         "//support:bridge_rust",
