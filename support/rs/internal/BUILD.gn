@@ -1,0 +1,51 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated BUILD.gn.
+
+import("../../../crubit.gni")
+import("//build/rust/rust_macro.gni")
+import("//build/rust/rust_static_library.gni")
+
+source_set("enum") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "enum.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std/internal:enum",
+  ]
+}
+
+source_set("is_utf8") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "is_utf8.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std/internal:is_utf8",
+  ]
+}
+
+group("internal_cpp") {
+  public_deps = [
+    ":enum",
+    ":is_utf8",
+  ]
+}
+

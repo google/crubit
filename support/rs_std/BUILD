@@ -492,7 +492,7 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         # We depend on the extern "C" symbols in lossy_formatter_for_bindings_rs.
-        ":lossy_formatter_for_bindings_rs",
+        ":lossy_formatter_for_bindings_rs",  # build_cleaner: keep
     ],
 )
 
