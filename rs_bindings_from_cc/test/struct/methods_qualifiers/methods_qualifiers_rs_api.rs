@@ -17,7 +17,7 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "34UnpinStructWithRefQualifiedMethods"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: UnpinStructWithRefQualifiedMethods
+///CRUBIT_ANNOTATE: cpp_type=UnpinStructWithRefQualifiedMethods
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct UnpinStructWithRefQualifiedMethods {
     pub i: ::ffi_11::c_int,
@@ -25,14 +25,13 @@ pub struct UnpinStructWithRefQualifiedMethods {
 impl !Send for UnpinStructWithRefQualifiedMethods {}
 impl !Sync for UnpinStructWithRefQualifiedMethods {}
 unsafe impl ::cxx::ExternType for UnpinStructWithRefQualifiedMethods {
-    type Id = ::cxx::type_id!(":: UnpinStructWithRefQualifiedMethods");
+    type Id = ::cxx::type_id!("UnpinStructWithRefQualifiedMethods");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for UnpinStructWithRefQualifiedMethods {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter.debug_struct("UnpinStructWithRefQualifiedMethods").field("i", &self.i).finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("UnpinStructWithRefQualifiedMethods"),
+    crate::UnpinStructWithRefQualifiedMethods
+);
 impl UnpinStructWithRefQualifiedMethods {
     #[inline(always)]
     pub fn increment_i<'__this>(&'__this mut self) {

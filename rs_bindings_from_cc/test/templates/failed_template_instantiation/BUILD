@@ -7,7 +7,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "failed_template_instantiation",
     hdrs = ["failed_template_instantiation.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
 )
 
 rust_api_from_cpp(

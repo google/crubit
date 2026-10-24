@@ -11,7 +11,7 @@ cc_library(
     name = "common",
     hdrs = ["common.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:supported",
     ],
 )
 
@@ -116,20 +116,6 @@ crubit_rust_test(
 )
 
 cc_library(
-    name = "unique_ptr_experimental_lib",
-    hdrs = ["unique_ptr_lib.h"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
-    deps = [
-        ":common",
-        ":crubit_disabled",
-        "//support:annotations",
-        "@abseil-cpp//absl/base:nullability",
-    ],
-)
-
-cc_library(
     name = "vector_lib",
     hdrs = ["vector_lib.h"],
     aspect_hints = [
@@ -156,38 +142,6 @@ crubit_rust_test(
     deps = [
         ":common_rust",
         ":vector_lib_rust",
-        "//support/cc_std",
-        "@crate_index//:googletest",
-    ],
-)
-
-cc_library(
-    name = "vector_experimental_lib",
-    hdrs = ["vector_lib.h"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
-    deps = [
-        ":common",
-        ":crubit_disabled",
-        "//support:annotations",
-    ],
-)
-
-rust_api_from_cpp(
-    name = "vector_experimental_lib_rust",
-    cpp_target = ":vector_experimental_lib",
-)
-
-crubit_rust_test(
-    name = "vector_experimental_test",
-    srcs = ["vector_experimental_test.rs"],
-    proc_macro_deps = [
-        "//common:item_exists",
-    ],
-    deps = [
-        ":common_rust",
-        ":vector_experimental_lib_rust",
         "//support/cc_std",
         "@crate_index//:googletest",
     ],

@@ -10,7 +10,7 @@ crubit_test_cc_library(
     name = "isolated",
     hdrs = ["isolated.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:supported",
     ],
     deps = [
         "//support:annotations",

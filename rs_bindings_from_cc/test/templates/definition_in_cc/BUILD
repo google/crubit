@@ -10,7 +10,7 @@ crubit_test_cc_library(
     name = "definition_in_cc",
     srcs = ["definition_in_cc.cc"],
     hdrs = ["definition_in_cc.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     deps = [
         "//support:annotations",
     ],

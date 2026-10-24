@@ -7,7 +7,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "forward_declaration1",
     hdrs = ["forward_declaration1.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
 )
 
 # Ensure Crubit doesn't crash when it sees forward declarations of the same type in 2 different
@@ -15,7 +15,7 @@ crubit_test_cc_library(
 crubit_test_cc_library(
     name = "forward_declaration2",
     hdrs = ["forward_declaration2.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
 )
 
 crubit_test_cc_library(
@@ -23,7 +23,7 @@ crubit_test_cc_library(
     hdrs = [
         "definition.h",
     ],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     deps = [
         ":forward_declaration1",
         ":forward_declaration2",

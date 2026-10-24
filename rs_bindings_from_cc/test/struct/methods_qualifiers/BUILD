@@ -13,7 +13,7 @@ cc_library(
     srcs = ["methods_qualifiers.cc"],
     hdrs = ["methods_qualifiers.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:supported",
     ],
 )
 
