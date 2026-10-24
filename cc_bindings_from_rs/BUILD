@@ -136,6 +136,7 @@ rust_library(
     srcs = ["crubit_attr.rs"],
     edition = "2024",
     deps = [
+        ":rustversion",
         "//common:code_gen_utils",
         "@crate_index//:anyhow",  # v1
     ],

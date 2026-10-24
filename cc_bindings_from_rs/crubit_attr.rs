@@ -10,6 +10,8 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
+#[rustversion::since(2026-09-27)]
+extern crate rustc_attr_ir;
 extern crate rustc_driver;
 extern crate rustc_hir;
 extern crate rustc_middle;
@@ -17,7 +19,11 @@ extern crate rustc_span;
 
 use anyhow::{bail, ensure, Result};
 use code_gen_utils::CcInclude;
+#[rustversion::since(2026-09-27)]
+use rustc_attr_ir::{Attribute, AttributeKind};
 use rustc_hir::def::DefKind;
+#[rustversion::before(2026-09-27)]
+use rustc_hir::{attrs::AttributeKind, Attribute};
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
@@ -371,7 +377,7 @@ pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
     // the warning here.
     #[allow(deprecated)]
     for attr in tcx.get_all_attrs(did) {
-        let Some(comment) = attr.doc_str() else { continue };
+        let Attribute::Parsed(AttributeKind::DocComment { comment, .. }) = attr else { continue };
         let Some((_, key_value)) = comment.as_str().split_once("CRUBIT_ANNOTATE:") else {
             continue;
         };

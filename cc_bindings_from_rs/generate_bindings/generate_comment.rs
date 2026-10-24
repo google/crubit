@@ -17,9 +17,9 @@ use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
 #[rustversion::since(2026-09-27)]
-use rustc_attr_ir::{find_attr, AttributeKind};
+use rustc_attr_ir::{find_attr, Attribute, AttributeKind};
 #[rustversion::before(2026-09-27)]
-use rustc_hir::{attrs::AttributeKind, find_attr};
+use rustc_hir::{attrs::AttributeKind, find_attr, Attribute};
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
@@ -169,8 +169,10 @@ pub fn generate_doc_comment(db: &BindingsGenerator, def_id: DefId) -> TokenStrea
         .tcx()
         .get_all_attrs(def_id)
         .iter()
-        .filter_map(|attr| attr.doc_str())
-        .map(|symbol| symbol.to_string())
+        .filter_map(|attr| match attr {
+            Attribute::Parsed(AttributeKind::DocComment { comment, .. }) => Some(comment.as_str()),
+            _ => None,
+        })
         .join("\n");
 
     if !db.is_golden_test() || db.kythe_annotations() {

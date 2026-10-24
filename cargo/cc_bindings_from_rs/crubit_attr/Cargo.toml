@@ -18,6 +18,7 @@ path = "../../../cc_bindings_from_rs/crubit_attr.rs"
 doctest = false
 
 [dependencies]
+rustversion = { path = "../../../cargo/cc_bindings_from_rs/rustversion", package = "cc_bindings_from_rs_rustversion"}
 code_gen_utils = { path = "../../../cargo/common/code_gen_utils"}
 anyhow.workspace = true
 [dev-dependencies]
