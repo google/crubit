@@ -2136,7 +2136,8 @@ bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
   // properly fix target assignment for Crubit support libraries.
   if (std::optional<absl::string_view> header = HeaderOfUnknownTarget(label);
       header.has_value() &&
-      header->ends_with("crubit/support/rs_std/slice_ref.h")) {
+      (header->ends_with("crubit/support/rs_std/slice_ref.h") ||
+       header->ends_with("crubit/support/rs/slice_ref.h"))) {
     return true;
   }
   return false;

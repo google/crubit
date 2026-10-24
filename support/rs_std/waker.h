@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+// IWYU pragma: private, include "support/rs/waker.h"
+
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_WAKER_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_WAKER_H_
 
