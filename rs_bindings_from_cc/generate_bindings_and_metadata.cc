@@ -14,10 +14,10 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "common/check.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/collect_instantiations.h"
@@ -31,27 +31,28 @@ namespace crubit {
 
 namespace ir_proto = ::crubit::ffi;
 
-const ir_proto::Namespace* absl_nullable FindNamespace(const IR& ir,
-                                                       absl::string_view name) {
+const ir_proto::Namespace* _Nullable FindNamespace(const IR& ir,
+                                                   llvm::StringRef name) {
   for (const auto* ns : get_items_if<ir_proto::Namespace>(ir)) {
-    if (ns->cc_name().identifier() == kInstantiationsNamespaceName) {
+    if (llvm::StringRef(ns->cc_name().identifier()) ==
+        kInstantiationsNamespaceName) {
       return ns;
     }
   }
   return nullptr;
 }
 
-std::vector<const ir_proto::Record* absl_nonnull> FindInstantiationsInNamespace(
+std::vector<const ir_proto::Record* _Nonnull> FindInstantiationsInNamespace(
     const IR& ir, ItemId namespace_id) {
   absl::flat_hash_set<ItemId> record_ids;
   for (const auto* type_alias : get_items_if<ir_proto::TypeAlias>(ir)) {
     if (ItemId(type_alias->enclosing_item_id()) == namespace_id) {
-      CHECK(type_alias->underlying_type().variant().has_decl());
+      CRUBIT_CHECK(type_alias->underlying_type().variant().has_decl());
       record_ids.insert(ItemId(type_alias->underlying_type().variant().decl()));
     }
   }
 
-  std::vector<const ir_proto::Record* absl_nonnull> result;
+  std::vector<const ir_proto::Record* _Nonnull> result;
   for (const auto* record : get_items_if<ir_proto::Record>(ir)) {
     if (record_ids.find(ItemId(record->id())) != record_ids.end()) {
       result.push_back(record);
@@ -64,7 +65,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
     Cmdline& cmdline, std::vector<std::string> clang_args,
     absl::flat_hash_map<HeaderName, std::string>
         virtual_headers_contents_for_testing) {
-  std::vector<absl::string_view> clang_args_view;
+  std::vector<llvm::StringRef> clang_args_view;
   clang_args_view.insert(clang_args_view.end(), clang_args.begin(),
                          clang_args.end());
   const CmdlineArgs& args = cmdline.args();
@@ -82,8 +83,8 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
     }
   }
 
-  absl_nullable std::shared_ptr<const llvm::Regex>
-      template_blocklist_path_regex = nullptr;
+  _Nullable std::shared_ptr<const llvm::Regex> template_blocklist_path_regex =
+      nullptr;
   if (!args.template_blocklist_path_regex.empty()) {
     template_blocklist_path_regex = std::make_shared<llvm::Regex>(
         args.template_blocklist_path_regex, llvm::Regex::RegexFlags::NoFlags);
@@ -124,9 +125,9 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
   bool generate_error_report = !args.error_report_out.empty();
 
   absl::flat_hash_map<Identifier, Identifier> instantiations;
-  if (const auto* absl_nullable ns =
+  if (const auto* _Nullable ns =
           FindNamespace(ir, kInstantiationsNamespaceName)) {
-    std::vector<const ir_proto::Record* absl_nonnull> records =
+    std::vector<const ir_proto::Record* _Nonnull> records =
         FindInstantiationsInNamespace(ir, ItemId(ns->id()));
     for (const auto* record : records) {
       instantiations.insert(

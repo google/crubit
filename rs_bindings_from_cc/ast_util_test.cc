@@ -9,10 +9,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/status.h"
-#include "absl/status/status_matchers.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
+#include "common/status.h"
+#include "common/status_test_matchers.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclTemplate.h"
@@ -20,10 +18,11 @@
 #include "clang/Frontend/ASTUnit.h"
 #include "clang/Tooling/Tooling.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/Error.h"
 
 namespace {
 
-using ::absl_testing::StatusIs;
+using ::crubit::StatusIs;
 
 constexpr char kStdTemplates[] = R"(
   namespace std {
@@ -64,9 +63,9 @@ TEST(ParameterizedByTAndStdTraitTTest, StdStringView) {
   const clang::ClassTemplateSpecializationDecl* spec = GetTypeOfX(*ast_unit);
   ASSERT_NE(spec, nullptr);
 
-  absl::StatusOr<clang::QualType> t = crubit::ParameterizedByTAndStdTraitT(
+  llvm::Expected<clang::QualType> t = crubit::ParameterizedByTAndStdTraitT(
       ast_unit->getASTContext(), spec, "char_traits");
-  ASSERT_TRUE(t.ok()) << t.status();
+  ASSERT_TRUE((bool)t) << llvm::toString(t.takeError());
   EXPECT_TRUE(ast_unit->getASTContext().hasSameType(
       *t, ast_unit->getASTContext().CharTy));
 }
@@ -80,7 +79,7 @@ TEST(ParameterizedByTAndStdTraitTTest, WrongTraitName) {
 
   EXPECT_THAT(crubit::ParameterizedByTAndStdTraitT(ast_unit->getASTContext(),
                                                    spec, "char_traits"),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(crubit::StatusCode::kInvalidArgument));
 }
 
 TEST(ParameterizedByTAndStdTraitTTest, TraitNotInStd) {
@@ -92,7 +91,7 @@ TEST(ParameterizedByTAndStdTraitTTest, TraitNotInStd) {
 
   EXPECT_THAT(crubit::ParameterizedByTAndStdTraitT(ast_unit->getASTContext(),
                                                    spec, "char_traits"),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(crubit::StatusCode::kInvalidArgument));
 }
 
 TEST(ParameterizedByTAndStdTraitTTest, MismatchedTraitArgument) {
@@ -104,7 +103,7 @@ TEST(ParameterizedByTAndStdTraitTTest, MismatchedTraitArgument) {
 
   EXPECT_THAT(crubit::ParameterizedByTAndStdTraitT(ast_unit->getASTContext(),
                                                    spec, "char_traits"),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(crubit::StatusCode::kInvalidArgument));
 }
 
 }  // namespace

@@ -19,7 +19,7 @@ class ClassTemplateDeclImporter
  public:
   explicit ClassTemplateDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::unique_ptr<ir_proto::Item> Import(clang::ClassTemplateDecl*) override;
+  std::unique_ptr<crubit::ffi::Item> Import(clang::ClassTemplateDecl*) override;
 };
 
 }  // namespace crubit

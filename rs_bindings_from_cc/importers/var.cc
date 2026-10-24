@@ -13,10 +13,10 @@
 #include <utility>
 #include <vector>
 
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
+#include "common/check.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/clang_compat_macros.h"
@@ -121,12 +121,12 @@ const clang::StringLiteral* GetStringLiteralInit(const clang::Expr* init,
 
 // Converts `value`, an integer or boolean array element, to `out`.
 absl::Status ConvertIntegerElement(const clang::APValue& value,
-                                   ir_proto::IntegerConstant& out) {
+                                   crubit::ffi::IntegerConstant& out) {
   if (!value.isInt()) {
     return absl::InvalidArgumentError(
         "array element did not evaluate to an integer");
   }
-  CRUBIT_ASSIGN_OR_RETURN(ir_proto::IntegerConstant integer_constant,
+  CRUBIT_ASSIGN_OR_RETURN(crubit::ffi::IntegerConstant integer_constant,
                           IntegerConstantFromAPValue(value.getInt()));
   out = std::move(integer_constant);
   return absl::OkStatus();
@@ -145,11 +145,13 @@ absl::Status ConvertIntegerElement(const clang::APValue& value,
 absl::Status ConvertArrayValue(const clang::APValue& value,
                                absl::Span<const uint64_t> dimensions,
                                const clang::Expr* char_array_init,
-                               ir_proto::ArrayValue& out) {
-  CHECK(!dimensions.empty()) << "must be called with at least one dimension";
+                               crubit::ffi::ArrayValue& out) {
+  CRUBIT_CHECK(!dimensions.empty())
+      << "must be called with at least one dimension";
   const uint64_t size = dimensions[0];
-  CHECK(value.isArray()) << "`value` must be the evaluated value of an array";
-  CHECK_EQ(value.getArraySize(), size)
+  CRUBIT_CHECK(value.isArray())
+      << "`value` must be the evaluated value of an array";
+  CRUBIT_CHECK(value.getArraySize() == size)
       << "`dimensions` must come from the type `value` was evaluated from";
   out.set_length(static_cast<int32_t>(size));
   // "Filler" in Clang means the value of the trailing elements that were not
@@ -220,11 +222,11 @@ bool IsStringViewType(const clang::ASTContext& ast_context,
         specialization->getName() != "basic_string_view") {
       return false;
     }
-    absl::StatusOr<clang::QualType> char_type = ParameterizedByTAndStdTraitT(
-        ast_context, specialization, "char_traits");
+    auto char_type = ParameterizedByTAndStdTraitT(ast_context, specialization,
+                                                  "char_traits");
     // Unlike `TemplateSpecialization::StdStringView`, only plain `char` (not
     // `signed char` or `unsigned char`) is treated as text.
-    return char_type.ok() && IsPlainChar(*char_type);
+    return (bool)char_type && IsPlainChar((*char_type));
   }
   return top_level_namespace == "absl" &&
          record_decl->getName() == "string_view";
@@ -297,7 +299,7 @@ absl::StatusOr<std::string> EvaluateStringViewContents(
 
 }  // namespace
 
-std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
+std::unique_ptr<crubit::ffi::Item> VarDeclImporter::Import(
     clang::VarDecl* var_decl) {
   // Most vars are not globals – fail fast if this is the case.
   clang::DeclContext* decl_context = var_decl->getDeclContext();
@@ -376,7 +378,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
   }
 
   std::optional<std::string> deprecated;
-  absl::StatusOr<std::optional<std::string>> unknown_attr =
+  auto unknown_attr =
       CollectUnknownAttrs(*var_decl, [&](const clang::Attr& attr) {
         if (auto* deprecated_attr =
                 clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
@@ -389,10 +391,10 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
         }
         return false;
       });
-  if (!unknown_attr.ok()) {
+  if (!unknown_attr) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(unknown_attr.status()))});
+        {FormattedError::FromStatus(unknown_attr.takeError())});
   }
 
   if (has_const_init) {
@@ -418,7 +420,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
   }
 
   ictx_.MarkAsSuccessfullyImported(*var_decl);
-  auto item = std::make_unique<ir_proto::Item>();
+  auto item = std::make_unique<crubit::ffi::Item>();
   auto* global_var = item->mutable_global_var();
   global_var->mutable_cc_name()->set_identifier(
       var_name->cc_identifier.Ident());
@@ -448,7 +450,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
   return item;
 }
 
-std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
+std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
     clang::VarDecl* var_decl, TranslatedIdentifier& var_name,
     std::optional<ItemId> enclosing_item_id,
     std::optional<std::string> unknown_attr,
@@ -511,7 +513,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
     }
   }
 
-  auto item = std::make_unique<ir_proto::Item>();
+  auto item = std::make_unique<crubit::ffi::Item>();
   auto* constant = item->mutable_constant();
   if (is_string_view) {
     absl::StatusOr<std::string> string_view_value =
@@ -530,12 +532,12 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
           {FormattedError::Static(
               "constexpr value did not evaluate to an integer")});
     }
-    absl::StatusOr<ir_proto::IntegerConstant> integer_constant =
+    llvm::Expected<crubit::ffi::IntegerConstant> integer_constant =
         IntegerConstantFromAPValue(value->getInt());
-    if (!integer_constant.ok()) {
+    if (!integer_constant) {
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
-          {FormattedError::FromStatus(std::move(integer_constant.status()))});
+          {FormattedError::FromStatus(integer_constant.takeError())});
     }
     *constant->mutable_kind()->mutable_value() = *std::move(integer_constant);
   } else {

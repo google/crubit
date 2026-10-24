@@ -17,6 +17,7 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
+status_sys = { path = "../../../cargo/common/status_sys"}
 
 
 [build-dependencies]

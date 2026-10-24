@@ -16,10 +16,10 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "common/check.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "nullability/pragma.h"
@@ -70,8 +70,8 @@ class Invocation {
         lazy_import_alien_decls_(lazy_import_alien_decls),
         check_importer_invariants_(check_importer_invariants) {
     // Caller should verify that the inputs are non-empty.
-    CHECK(!public_headers_.empty());
-    CHECK(!header_targets_.empty());
+    CRUBIT_CHECK(!public_headers_.empty());
+    CRUBIT_CHECK(!header_targets_.empty());
 
     for (const auto& header : public_headers_) {
       *ir_.add_public_headers() = header.AsFfi();
@@ -201,8 +201,8 @@ class ImportContext {
 
   // Returns an unsupported item that will result in a hard error at binding
   // generation time.
-  virtual std::unique_ptr<ir_proto::Item> HardError(const clang::Decl& decl,
-                                                    FormattedError error) = 0;
+  virtual std::unique_ptr<crubit::ffi::Item> HardError(
+      const clang::Decl& decl, FormattedError error) = 0;
 
   // Imports an unsupported item with a vector of formatted error messages.
   //
@@ -212,17 +212,17 @@ class ImportContext {
   // `[[crubit::must_bind]]`). If false, the error is instead emitted as a
   // comment in the generated Rust source, allowing the rest of the target's
   // bindings to be generated.
-  virtual std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
+  virtual std::unique_ptr<crubit::ffi::Item> ImportUnsupportedItem(
       const clang::Decl& decl,
-      std::optional<ir_proto::UnsupportedItem::Path> path,
+      std::optional<crubit::ffi::UnsupportedItem::Path> path,
       std::vector<FormattedError> errors, bool is_hard_error) = 0;
 
   // Convenience wrapper for `ImportUnsupportedItem` with `is_hard_error=false`.
   // This results in a diagnostic comment in the generated Rust code rather than
   // a build failure.
-  std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
+  std::unique_ptr<crubit::ffi::Item> ImportUnsupportedItem(
       const clang::Decl& decl,
-      std::optional<ir_proto::UnsupportedItem::Path> path,
+      std::optional<crubit::ffi::UnsupportedItem::Path> path,
       std::vector<FormattedError> errors) {
     return ImportUnsupportedItem(decl, std::move(path), std::move(errors),
                                  /*is_hard_error=*/false);
@@ -230,11 +230,11 @@ class ImportContext {
 
   // Convenience overload for `ImportUnsupportedItem` constructing a `Path`
   // directly from an unqualified enclosing item path.
-  std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
+  std::unique_ptr<crubit::ffi::Item> ImportUnsupportedItem(
       const clang::Decl& decl, UnqualifiedIdentifier ident,
       std::optional<ItemId> enclosing_item_id,
       std::vector<FormattedError> errors, bool is_hard_error = false) {
-    ir_proto::UnsupportedItem::Path path;
+    crubit::ffi::UnsupportedItem::Path path;
     *path.mutable_ident() = std::move(ident);
     if (enclosing_item_id.has_value()) {
       path.set_enclosing_item_id(enclosing_item_id->value());
@@ -243,7 +243,7 @@ class ImportContext {
                                  is_hard_error);
   }
 
-  std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
+  std::unique_ptr<crubit::ffi::Item> ImportUnsupportedItem(
       const clang::Decl& decl, const Identifier& ident,
       std::optional<ItemId> enclosing_item_id,
       std::vector<FormattedError> errors, bool is_hard_error = false) {
@@ -255,15 +255,15 @@ class ImportContext {
   // Imports a decl and creates an IR item (or error messages). This allows
   // importers to recursively delegate to other importers.
   // Does not use or update the cache.
-  virtual absl_nullable std::unique_ptr<ir_proto::Item> ImportDecl(
-      clang::Decl* absl_nonnull decl) = 0;
+  virtual _Nullable std::unique_ptr<crubit::ffi::Item> ImportDecl(
+      clang::Decl* _Nonnull decl) = 0;
 
   // Returns the Item of a Decl, importing it first if necessary.
   // Updates the cache.
-  virtual const ir_proto::Item* absl_nullable GetDeclItem(
-      clang::Decl* absl_nonnull decl) = 0;
+  virtual const crubit::ffi::Item* _Nullable GetDeclItem(
+      clang::Decl* _Nonnull decl) = 0;
 
-  virtual const ir_proto::Item* absl_nullable GetImportedItem(
+  virtual const crubit::ffi::Item* _Nullable GetImportedItem(
       const clang::Decl& decl) const = 0;
 
   virtual ItemId GenerateItemId(const clang::Decl& decl) const = 0;
@@ -277,7 +277,7 @@ class ImportContext {
   // Imports the parent decl if it is not already imported, and returns a bad
   // status if the parent cannot be imported.
   virtual absl::StatusOr<std::optional<ItemId>> GetEnclosingItemId(
-      clang::Decl* absl_nonnull decl) = 0;
+      clang::Decl* _Nonnull decl) = 0;
 
   // Returns a map of top level item ids in source order for each target.
   virtual absl::flat_hash_map<BazelLabel, std::vector<ItemId>>
@@ -288,7 +288,7 @@ class ImportContext {
   // Returns item ids of the children. This includes ids of comments within
   // `decl`.  The returned ids are ordered by their source order.
   virtual std::vector<ItemId> GetItemIdsInSourceOrder(
-      clang::Decl* absl_nonnull decl) = 0;
+      clang::Decl* _Nonnull decl) = 0;
 
   // Imports the hidden friend operators that `record_decl` inherits from its
   // (direct or indirect) base classes, and returns their item ids.
@@ -308,7 +308,7 @@ class ImportContext {
   // already been marked as successfully imported. The returned ids should be
   // added to the children of `record_decl`.
   virtual std::vector<ItemId> ImportInheritedFriendOperators(
-      clang::CXXRecordDecl* absl_nonnull record_decl) = 0;
+      clang::CXXRecordDecl* _Nonnull record_decl) = 0;
 
   // Mangles the name of a named decl.
   virtual std::string GetMangledName(
@@ -317,9 +317,9 @@ class ImportContext {
   // Gets the path of an unsupported item by mangling its name and importing
   // its enclosing item. Returns `std::nullopt` if the enclosing item cannot be
   // imported.
-  virtual std::optional<ir_proto::UnsupportedItem::Path>
+  virtual std::optional<crubit::ffi::UnsupportedItem::Path>
   GetUnsupportedItemPathForTemplateDecl(
-      clang::RedeclarableTemplateDecl* absl_nonnull template_decl) = 0;
+      clang::RedeclarableTemplateDecl* _Nonnull template_decl) = 0;
 
   // Returns the label of the target that contains a decl.
   virtual BazelLabel GetOwningTarget(const clang::Decl& decl) const = 0;
@@ -377,9 +377,9 @@ class ImportContext {
       const BazelLabel& label) const = 0;
 
   virtual bool IsFeatureEnabledForTarget(const BazelLabel& label,
-                                         absl::string_view feature) const = 0;
+                                         llvm::StringRef feature) const = 0;
 
-  bool IsFeatureEnabledForCurrentTarget(absl::string_view feature) {
+  bool IsFeatureEnabledForCurrentTarget(llvm::StringRef feature) {
     return IsFeatureEnabledForTarget(invocation_.target_, feature);
   }
 
@@ -432,9 +432,9 @@ class ImportContext {
 
   // Converts a Clang source location to a structured `DeclLocation`.
   // `name_info` may be null.
-  virtual ir_proto::DeclLocation ConvertDeclLocation(
+  virtual crubit::ffi::DeclLocation ConvertDeclLocation(
       clang::SourceLocation loc,
-      clang::DeclarationNameInfo* absl_nullable name_info) const = 0;
+      clang::DeclarationNameInfo* _Nullable name_info) const = 0;
 
   // Converts the Clang type `qual_type` into an equivalent `CcType`.
   // Lifetimes for the type can optionally be specified using `lifetimes` (pass
@@ -453,7 +453,7 @@ class ImportContext {
   // (as arguments or parameters) will be recorded.
   virtual CcType ConvertQualType(
       clang::QualType qual_type,
-      const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
+      const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
       bool nullable, bool assume_lifetimes) = 0;
 
   // Returns a unique name for the given decl. (Probably the USR.)
@@ -493,13 +493,12 @@ class ImportContext {
   // Returns whether the `decl` will be successfully imported. If it hasn't been
   // imported yet, attempts to import it now, calling
   // MarkAsSuccessfullyImported.
-  virtual bool EnsureSuccessfullyImported(
-      clang::NamedDecl* absl_nonnull decl) = 0;
+  virtual bool EnsureSuccessfullyImported(clang::NamedDecl* _Nonnull decl) = 0;
 
   // Returns the canonical typedef for this template specialziation, or nullptr
   // if there is not one (or if this is not a template specialization).
-  virtual clang::TypedefNameDecl* absl_nullable GetTemplateSpecializationAlias(
-      clang::Decl* absl_nonnull decl) const = 0;
+  virtual clang::TypedefNameDecl* _Nullable GetTemplateSpecializationAlias(
+      clang::Decl* _Nonnull decl) const = 0;
 
   Invocation& invocation_;
   clang::ASTContext& ctx_;
@@ -517,8 +516,8 @@ class DeclImporter {
   // If it can't be imported, other DeclImporters may be attempted.
   // To indicate that an item can't be imported, and no other importers should
   // be attempted, return UnsupportedItem.
-  virtual absl_nullable std::unique_ptr<ir_proto::Item> ImportDecl(
-      clang::Decl* absl_nullable decl, bool must_bind) = 0;
+  virtual _Nullable std::unique_ptr<crubit::ffi::Item> ImportDecl(
+      clang::Decl* _Nullable decl, bool must_bind) = 0;
 
  protected:
   ImportContext& ictx_;
@@ -532,15 +531,15 @@ class DeclImporterBase : public DeclImporter {
   explicit DeclImporterBase(ImportContext& context) : DeclImporter(context) {}
 
  protected:
-  absl_nullable std::unique_ptr<ir_proto::Item> ImportDecl(
-      clang::Decl* absl_nullable decl, bool must_bind) override {
-    auto* absl_nullable typed_decl = clang::dyn_cast_or_null<D>(decl);
+  _Nullable std::unique_ptr<crubit::ffi::Item> ImportDecl(
+      clang::Decl* _Nullable decl, bool must_bind) override {
+    auto* _Nullable typed_decl = clang::dyn_cast_or_null<D>(decl);
     if (typed_decl == nullptr) return nullptr;
     must_bind_ = must_bind;
     return Import(typed_decl);
   }
-  virtual absl_nullable std::unique_ptr<ir_proto::Item> Import(
-      D* absl_nonnull typed_decl) = 0;
+  virtual _Nullable std::unique_ptr<crubit::ffi::Item> Import(
+      D* _Nonnull typed_decl) = 0;
 
   // A property of the current decl being imported.
   // This is used to avoid re-parsing the annotation.

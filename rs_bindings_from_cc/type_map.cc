@@ -7,18 +7,17 @@
 #include <optional>
 #include <string>
 
-#include "absl/container/flat_hash_map.h"
-#include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Type.h"
+#include "llvm/ADT/DenseMap.h"
 
 namespace crubit {
 
 namespace {
 // Returns the Primitive enum if the type is a known primitive type.
-std::optional<Primitive> LookupPrimitive(absl::string_view cpp_type) {
+std::optional<Primitive> LookupPrimitive(llvm::StringRef cpp_type) {
   static const auto* const kWellKnownTypes =
-      new absl::flat_hash_map<absl::string_view, Primitive>({
+      new llvm::DenseMap<llvm::StringRef, Primitive>({
           // TODO(lukasza): Try to deduplicate the entries below - for example:
           // - Try to unify `std::int32_t` and `int32_t`
           // One approach would be to desugar the types before calling
