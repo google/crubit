@@ -476,7 +476,13 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
             "Custom trait '", trait, "' cannot be negatively derived."));
       }
       auto [it, did_insert] = custom_traits.insert(trait);
-      if (did_insert) continue;
+      if (did_insert) {
+        // Keep the order in which the traits were written: iterating
+        // `custom_traits` would make the generated `#[derive(...)]` order
+        // depend on the per-process hash seed.
+        result.custom.emplace_back(trait);
+        continue;
+      }
 
       return absl::InvalidArgumentError(absl::StrCat(
           "Custom trait '", trait, "' is derived multiple times."));
@@ -494,10 +500,6 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
     }
     return absl::InvalidArgumentError(
         absl::StrCat("Trait '", trait, "' is derived multiple times."));
-  }
-  result.custom.reserve(custom_traits.size());
-  for (const absl::string_view trait : custom_traits) {
-    result.custom.emplace_back(trait);
   }
   return absl::OkStatus();
 }
