@@ -22,6 +22,21 @@ exports_files([
     "golden_test.sh",
 ])
 
+cc_library(
+    name = "check",
+    hdrs = ["check.h"],
+    visibility = ["//:__subpackages__"],
+)
+
+crubit_cc_test(
+    name = "check_test",
+    srcs = ["check_test.cc"],
+    deps = [
+        ":check",
+        "@googletest//:gtest_main",
+    ],
+)
+
 rust_library(
     name = "arc_anyhow",
     srcs = ["arc_anyhow.rs"],
@@ -58,9 +73,9 @@ crubit_cc_test(
     tags = ["no_windows"],
     deps = [
         ":annotation_reader",
+        ":check",
         ":status_test_matchers",
         ":string_view_conversion",
-        "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
@@ -395,8 +410,9 @@ cc_library(
     srcs = ["test_utils.cc"],
     hdrs = ["test_utils.h"],
     deps = [
+        ":check",
         ":file_io",
-        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest",
