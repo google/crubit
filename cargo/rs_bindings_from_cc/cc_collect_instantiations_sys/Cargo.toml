@@ -19,6 +19,7 @@ path = "lib.rs"
 [dependencies]
 collect_instantiations = { path = "../../../cargo/rs_bindings_from_cc/collect_instantiations", package = "rs_bindings_from_cc_collect_instantiations"}
 cc_ffi_types_sys = { path = "../../../cargo/common/cc_ffi_types_sys"}
+status_sys = { path = "../../../cargo/common/status_sys"}
 
 
 [build-dependencies]

@@ -17,11 +17,11 @@
 #include "absl/debugging/leak_check.h"
 #include "absl/flags/flag.h"
 #include "absl/log/log.h"
-#include "absl/status/status.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
+#include "common/status.h"
 #include "common/string_view_conversion.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline_flags.h"
@@ -264,7 +264,7 @@ absl::Status ParseTargetArgs(absl::string_view target_args_str,
 
 }  // namespace internal
 
-absl::StatusOr<Cmdline> Cmdline::FromFlags() {
+llvm::Expected<Cmdline> Cmdline::FromFlags() {
   auto args = CmdlineArgs{
       .current_target = BazelLabel(absl::GetFlag(FLAGS_target)),
       .driver_path = absl::GetFlag(FLAGS_driver_path),
@@ -304,16 +304,22 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
   absl::Status parse_target_args_status =
       internal::ParseTargetArgs(absl::GetFlag(FLAGS_target_args), args);
 
-  absl::StatusOr<Cmdline> cmdline = Cmdline::Create(std::move(args));
-  if (!parse_target_args_status.ok() || !cmdline.ok()) {
-    return absl::InvalidArgumentError(
-        absl::StrCat(cmdline.status().message(), cmdline.ok() ? "" : "\n",
-                     parse_target_args_status.message()));
+  llvm::Expected<Cmdline> cmdline = Cmdline::Create(std::move(args));
+  if (!parse_target_args_status.ok() || !cmdline) {
+    std::string err_msg = "";
+    if (!cmdline) {
+      err_msg += llvm::toString(cmdline.takeError());
+    }
+    if (!parse_target_args_status.ok()) {
+      if (!err_msg.empty()) err_msg += "\n";
+      err_msg += parse_target_args_status.message();
+    }
+    return crubit::InvalidArgumentError(err_msg);
   }
-  return cmdline;
+  return std::move(*cmdline);
 }
 
-absl::StatusOr<Cmdline> Cmdline::Create(CmdlineArgs args) {
+llvm::Expected<Cmdline> Cmdline::Create(CmdlineArgs args) {
   std::string error;
   if (args.current_target.empty()) {
     absl::StrAppend(&error, "please specify --target\n");
@@ -350,12 +356,12 @@ absl::StatusOr<Cmdline> Cmdline::Create(CmdlineArgs args) {
           absl::Substitute(
               "Couldn't find header '$0' in the `headers_to_target` map "
               "derived from the --target_args cmdline argument\n",
-              header.IncludePath()));
+              header.IncludePath().str()));
     }
   }
   if (!error.empty()) {
     error.erase(error.size() - 1);  // remove trailing \n
-    return absl::InvalidArgumentError(error);
+    return crubit::InvalidArgumentError(error);
   }
   return Cmdline(std::move(args));
 }

@@ -7,3 +7,4 @@
 extern crate cc_ir_sys;
 extern crate frontend_action_sys;
 extern crate profiling_sys;
+extern crate status_sys;
