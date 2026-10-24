@@ -217,11 +217,17 @@ fn source_crate_num(db: &BindingsGenerator<'_>) -> CrateNum {
         };
         let source_crate_name = Symbol::intern(source_crate_name.as_ref());
         let tcx = db.tcx();
-        let Some(crate_num) = tcx
-            .used_crates(())
+        let used_crates = tcx.used_crates(());
+        let Some(crate_num) = used_crates
             .iter()
             .copied()
-            .find(|&crate_num| tcx.crate_name(crate_num) == source_crate_name)
+            .find(|&crate_num| db.imported_crate_name(crate_num) == source_crate_name)
+            .or_else(|| {
+                used_crates
+                    .iter()
+                    .copied()
+                    .find(|&crate_num| tcx.crate_name(crate_num) == source_crate_name)
+            })
         else {
             db.fatal_errors()
                 .report(&format!("Failed to resolve source crate name: `{source_crate_name}`"));
@@ -229,6 +235,24 @@ fn source_crate_num(db: &BindingsGenerator<'_>) -> CrateNum {
         };
         crate_num
     }
+}
+
+fn imported_crate_name(db: &BindingsGenerator<'_>, krate: CrateNum) -> Symbol {
+    let tcx = db.tcx();
+    if krate == rustc_span::def_id::LOCAL_CRATE {
+        return tcx.crate_name(krate);
+    }
+    for path in tcx.crate_extern_paths(krate) {
+        if let Some(name) = db.extern_crate_names().get(path as &std::path::Path) {
+            return Symbol::intern(name.as_ref());
+        }
+        if let Ok(canon) = path.canonicalize() {
+            if let Some(name) = db.extern_crate_names().get(canon.as_path()) {
+                return Symbol::intern(name.as_ref());
+            }
+        }
+    }
+    tcx.crate_name(krate)
 }
 
 fn specializations<'tcx>(db: &crate::BindingsGenerator<'tcx>) -> Rc<[CppTypeSpecialization<'tcx>]> {
@@ -303,6 +327,7 @@ pub fn new_database<'db>(
     is_golden_test: bool,
     h_out_include_guard: IncludeGuard,
     ignore_symbols_from_files: Rc<HashSet<PathBuf>>,
+    extern_crate_names: Rc<HashMap<PathBuf, Rc<str>>>,
 ) -> BindingsGenerator<'db> {
     BindingsGenerator::new(
         tcx,
@@ -322,6 +347,8 @@ pub fn new_database<'db>(
         is_golden_test,
         h_out_include_guard,
         ignore_symbols_from_files,
+        extern_crate_names,
+        imported_crate_name,
         specializations,
         source_crate_num,
         support_header,
@@ -739,6 +766,7 @@ fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, Publ
         std::iter::once(LOCAL_CRATE).chain(tcx.used_crates(()).iter().cloned()).filter(|&krate|
         // Check if our krate can be imported (and so should provide public paths for DefIds).
         krate == db.source_crate_num()
+            || db.crate_name_to_include_paths().contains_key(&Rc::from(imported_crate_name(db, krate).as_str()))
             || db.crate_name_to_include_paths().contains_key(&Rc::from(tcx.crate_name(krate).as_str())))
     {
         let public_paths = db.public_paths_by_def_id(krate);
@@ -919,13 +947,15 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
     // crate to include the `_rust_proto` suffix, but the rmeta file contains the unsuffixed
     // crate name. If we're naming a symbol from our source crate, use the source crate name as
     // the krate name to resolve any renaming issues.
-    let krate = (krate_num == db.source_crate_num())
-        .then_some(())
-        .and_then(|_| db.source_crate_name())
-        .map(|source_crate_name| Symbol::intern(source_crate_name.as_ref()))
-        .unwrap_or_else(|| tcx.crate_name(krate_num));
+    let krate = if krate_num == db.source_crate_num()
+        && let Some(source_crate_name) = db.source_crate_name()
+    {
+        Symbol::intern(source_crate_name.as_ref())
+    } else {
+        db.imported_crate_name(krate_num)
+    };
 
-    if krate.as_str() == "polars_plan"
+    if tcx.crate_name(krate_num).as_str() == "polars_plan"
         && matches!(unqualified.rs_name.as_str(), "date_range" | "time_range")
     {
         // Short-circuit `polars_plan::dsl::{date_range, time_range}`.
@@ -1552,12 +1582,15 @@ fn formatted_items_in_crate<'tcx>(
 struct NodeSortKey {
     hash: u64,
     path_str: String,
+    stable_crate_id: u64,
 }
 impl NodeSortKey {
     fn from_def_id(tcx: TyCtxt<'_>, def_id: DefId) -> Self {
         let path_str = tcx.def_path_str(def_id);
-        let hash = tcx.def_path_hash(def_id).local_hash().as_u64();
-        NodeSortKey { hash, path_str }
+        let path_hash = tcx.def_path_hash(def_id);
+        let hash = path_hash.local_hash().as_u64();
+        let stable_crate_id = path_hash.stable_crate_id().as_u64();
+        NodeSortKey { hash, path_str, stable_crate_id }
     }
 
     fn new<'tcx>(tcx: TyCtxt<'tcx>, spec: &TemplateSpecialization<'tcx>) -> Self {
@@ -1586,6 +1619,7 @@ impl NodeSortKey {
 
                 Self {
                     hash,
+                    stable_crate_id: 0,
                     // Ty's Display implementation uses FmtPrinter to pretty print the type, so this
                     // will be a reasonable representation of the underlying tree structure.
                     path_str: ty.to_string(),
@@ -1598,24 +1632,30 @@ impl NodeSortKey {
                 // type-trait impl combination, auto trait impls do not have this, so we construct
                 // a path string manually.
                 let path_str = format!("{} as !{trait_name}", tcx.def_path_str(u.self_def_id));
-                let hash = tcx.def_path_hash(u.self_def_id).local_hash().as_u64();
-                NodeSortKey { hash, path_str }
+                let path_hash = tcx.def_path_hash(u.self_def_id);
+                let hash = path_hash.local_hash().as_u64();
+                let stable_crate_id = path_hash.stable_crate_id().as_u64();
+                NodeSortKey { hash, path_str, stable_crate_id }
             }
             TemplateSpecialization::StdHash(h) => {
                 let path_str = format!("{} as std::hash::Hash", h.self_ty);
-                let hash = if let Some(adt) = h.self_ty.ty_adt_def() {
-                    tcx.def_path_hash(adt.did()).local_hash().as_u64()
+                let (hash, stable_crate_id) = if let Some(adt) = h.self_ty.ty_adt_def() {
+                    let path_hash = tcx.def_path_hash(adt.did());
+                    (path_hash.local_hash().as_u64(), path_hash.stable_crate_id().as_u64())
                 } else {
-                    0
+                    (0, 0)
                 };
-                NodeSortKey { hash, path_str }
+                NodeSortKey { hash, path_str, stable_crate_id }
             }
         }
     }
 }
 impl Ord for NodeSortKey {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.path_str.cmp(&other.path_str).then_with(|| self.hash.cmp(&other.hash))
+        self.path_str
+            .cmp(&other.path_str)
+            .then_with(|| self.hash.cmp(&other.hash))
+            .then_with(|| self.stable_crate_id.cmp(&other.stable_crate_id))
     }
 }
 impl PartialOrd for NodeSortKey {

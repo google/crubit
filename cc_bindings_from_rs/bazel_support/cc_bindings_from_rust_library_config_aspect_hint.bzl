@@ -51,12 +51,13 @@ which affects the tool behavior when generating the C++ binding for the Rust tar
 """,
 )
 
-def crate_name_to_library_config(aspect_hints, rust_infos):
+def crate_name_to_library_config(aspect_hints, rust_infos, use_label_encoded_names_for_deps = False):
     """Returns the configuration for `cc_bindings_from_rust`.
 
     Args:
         aspect_hints: The aspect hints from the target.
         rust_infos: The CcBindingsFromRustInfo from the target's dependencies.
+        use_label_encoded_names_for_deps: Whether dependency crate keys use label-encoded names.
 
     Returns:
         A map from crate name to the configuration for `cc_bindings_from_rust`.
@@ -67,7 +68,8 @@ def crate_name_to_library_config(aspect_hints, rust_infos):
             crate_config_map["self"] = hint[CcBindingsFromRustLibraryConfigInfo]
     for rust_info in rust_infos:
         if rust_info.configuration:
-            crate_config_map[rust_info.crate_key] = rust_info.configuration
+            key = rust_info.encoded_crate_key if use_label_encoded_names_for_deps else rust_info.crate_key
+            crate_config_map[key] = rust_info.configuration
     return crate_config_map
 
 def get_additional_cc_hdrs_and_srcs(aspect_hints):

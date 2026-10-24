@@ -122,6 +122,11 @@ memoized::query_group! {
       #[input]
       fn ignore_symbols_from_files(&self) -> Rc<HashSet<PathBuf>>;
 
+      #[input]
+      fn extern_crate_names(&self) -> Rc<HashMap<PathBuf, Rc<str>>>;
+
+      fn imported_crate_name(&self, krate: CrateNum) -> rustc_span::Symbol;
+
       /// Computes all specializations specified in the crate.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:specializations
@@ -388,7 +393,9 @@ impl<'tcx> BindingsGenerator<'tcx> {
         let features = if krate == self.source_crate_num() {
             crate_features.get("self")
         } else {
-            crate_features.get(self.tcx().crate_name(krate).as_str())
+            crate_features
+                .get(self.imported_crate_name(krate).as_str())
+                .or_else(|| crate_features.get(self.tcx().crate_name(krate).as_str()))
         };
         features.copied().unwrap_or_else(|| self.default_features())
     }

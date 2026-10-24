@@ -180,6 +180,7 @@ fn build_test_db<'tcx>(tcx: TyCtxt<'tcx>, options: TestDbOptions<'_>) -> Binding
         /* is_golden_test= */ true,
         /* include_guard */ IncludeGuard::PragmaOnce,
         /* ignore_symbols_from_files */ ignore_symbols_from_files.into(),
+        /* extern_crate_names= */ HashMap::default().into(),
     )
 }
 

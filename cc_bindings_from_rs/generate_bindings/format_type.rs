@@ -232,9 +232,15 @@ fn format_non_owning_pointer_prefix<'tcx>(
 /// Implementation of `BindingsGenerator::format_top_level_ns_for_crate`.
 pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum) -> Rc<[Symbol]> {
     let crate_name = db.tcx().crate_name(krate);
-    let crate_needle_name =
-        if krate == db.source_crate_num() { "self" } else { crate_name.as_str() };
-    if let Some(namespaces) = db.crate_name_to_namespace().get(crate_needle_name) {
+    let crate_name_to_namespace = db.crate_name_to_namespace();
+    let namespaces = if krate == db.source_crate_num() {
+        crate_name_to_namespace.get("self")
+    } else {
+        crate_name_to_namespace
+            .get(db.imported_crate_name(krate).as_str())
+            .or_else(|| crate_name_to_namespace.get(crate_name.as_str()))
+    };
+    if let Some(namespaces) = namespaces {
         namespaces
             .split("::")
             .enumerate()

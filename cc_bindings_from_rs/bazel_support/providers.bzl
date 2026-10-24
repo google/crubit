@@ -11,9 +11,12 @@ CcBindingsFromRustInfo = provider(
         # TODO(b/271857814): A `CRATE_NAME` might not be globally unique - the
         # key needs to also cover a "hash" of the crate version and compilation
         # flags.
-        "crate_key": "String with a crate key to use in --other-crate-bindings",
+        "crate_key": "String with the plain (non-label-encoded) crate key.",
+        "encoded_crate_key": "String with the label-encoded crate key (or plain crate key for exempt targets).",
+        "extra_named_deps": "An AliasableDepInfo depset that lists this crate and its direct and transitive Rust dependencies under their label-encoded crate names.",
         "headers": "A list of C++ headers which correspond to this crate.",
         "features": "A list of features enabled for the bindings for this crate.",
+        "target_args": "A depset of JSON-encoded --target_args entries for this crate's generated headers and its transitive dependencies.",
         "target_denied_features": ("A set of features denied for this crate by " +
                                    "`SUPPORTED_FEATURE_DENYLISTS`, overriding `--default-features`. Optional."),
         "configuration": "A CcBindingsFromRustLibraryConfigInfo provider.",
@@ -33,6 +36,7 @@ CcBindingsFromRustToolchainInfo = provider(
     doc = """A provider for platform-specific data, provided as a toolchain.""",
     fields = {
         "binary": "The label for the cc_bindings_from_rs binary",
+        "supports_label_encoded_deps": "Whether the cc_bindings_from_rs binary supports label-encoded --extern crate names for dependencies",
         "unsupported_features": "Features that are unsupported by this toolchain binary",
     },
 )

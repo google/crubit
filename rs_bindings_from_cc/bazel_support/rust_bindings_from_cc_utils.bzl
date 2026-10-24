@@ -335,8 +335,11 @@ def generate_and_compile_bindings(
         CcBindingsFromRustInfo(
             cc_info = dep_variant_info.cc_info,
             crate_key = crate_name,
+            encoded_crate_key = name,
+            extra_named_deps = depset(),
             headers = public_hdrs,
             features = [],
+            target_args = target_args,
             configuration = None,
             transitive_infos = depset(),
         ),
