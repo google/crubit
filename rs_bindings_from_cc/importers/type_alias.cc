@@ -12,6 +12,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/log/check.h"
 #include "absl/log/log.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
@@ -19,10 +20,12 @@
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir.pb.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/LLVM.h"
 #include "llvm/Support/MD5.h"
@@ -110,9 +113,7 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
   } else if (auto* using_decl = clang::dyn_cast<clang::UsingShadowDecl>(decl)) {
     clang::NamedDecl* target = using_decl->getTargetDecl();
     if (auto* function_decl = clang::dyn_cast<clang::FunctionDecl>(target)) {
-      return ictx_.ImportUnsupportedItem(
-          *decl, std::nullopt,
-          {FormattedError::Static("Function aliases are not yet supported.")});
+      return ImportFunctionAlias(*using_decl, *function_decl);
     }
     auto* target_type = clang::dyn_cast<clang::TypeDecl>(target);
     if (target_type == nullptr) {
@@ -240,6 +241,93 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
   }
   if (deprecated.has_value()) {
     type_alias->set_deprecated(std::move(*deprecated));
+  }
+  return item;
+}
+
+std::unique_ptr<ir_proto::Item> TypeAliasImporter::ImportFunctionAlias(
+    clang::UsingShadowDecl& using_decl, clang::FunctionDecl& function_decl) {
+  // `using Base::Method;` inside a class. Binding these requires adjusting the
+  // `this` type of the method to the derived class, which is not done yet.
+  if (clang::isa<clang::CXXMethodDecl>(function_decl)) {
+    return ictx_.ImportUnsupportedItem(
+        using_decl, std::nullopt,
+        {FormattedError::Static(
+            "Using-declarations of member functions are not yet supported.")});
+  }
+  if (!ictx_.IsFromCurrentTarget(using_decl)) {
+    return nullptr;
+  }
+  // `FunctionDeclImporter` only imports functions from the current target, so
+  // report a specific error rather than silently dropping the alias.
+  if (!ictx_.IsFromCurrentTarget(function_decl)) {
+    return ictx_.ImportUnsupportedItem(
+        using_decl, std::nullopt,
+        {FormattedError::Static("Using-declarations of functions from other "
+                                "targets are not yet supported.")});
+  }
+
+  absl::StatusOr<std::optional<ItemId>> enclosing_item_id =
+      ictx_.GetEnclosingItemId(&using_decl);
+  if (!enclosing_item_id.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        using_decl, std::nullopt,
+        {FormattedError::FromStatus(std::move(enclosing_item_id).status())});
+  }
+
+  // Import the function itself, and then re-home the resulting item onto the
+  // using-declaration. The name is intentionally kept: a using-declaration
+  // cannot rename, and the target's name already accounts for
+  // `CRUBIT_RUST_NAME`. Two items with the same mangled name may exist in the
+  // IR afterwards (the function and its alias); bindings generation handles
+  // that by generating a distinct C++ thunk for each.
+  std::unique_ptr<ir_proto::Item> item = ictx_.ImportDecl(&function_decl);
+  if (item == nullptr) {
+    return nullptr;
+  }
+  const std::string unique_name = ictx_.GetUniqueName(using_decl);
+  const ItemId id = ictx_.GenerateItemId(using_decl);
+  const std::string source_loc =
+      ictx_.ConvertSourceLocation(using_decl.getBeginLoc(), nullptr);
+  const BazelLabel owning_target = ictx_.GetOwningTarget(using_decl);
+
+  if (item->has_unsupported_item()) {
+    ir_proto::UnsupportedItem* unsupported = item->mutable_unsupported_item();
+    unsupported->set_name(using_decl.getQualifiedNameAsString());
+    unsupported->set_unique_name(unique_name);
+    unsupported->set_id(id.value());
+    unsupported->set_source_loc(source_loc);
+    unsupported->set_defining_target(owning_target.value());
+    if (unsupported->has_path()) {
+      if (enclosing_item_id->has_value()) {
+        unsupported->mutable_path()->set_enclosing_item_id(
+            (*enclosing_item_id)->value());
+      } else {
+        unsupported->mutable_path()->clear_enclosing_item_id();
+      }
+    }
+    return item;
+  }
+
+  CHECK(item->has_func()) << "Importing a FunctionDecl should produce a Func";
+  ir_proto::Func* func = item->mutable_func();
+  func->set_unique_name(unique_name);
+  func->set_id(id.value());
+  func->set_source_loc(source_loc);
+  func->set_owning_target(owning_target.value());
+  if (enclosing_item_id->has_value()) {
+    func->set_enclosing_item_id((*enclosing_item_id)->value());
+  } else {
+    func->clear_enclosing_item_id();
+  }
+  // A hidden friend becomes reachable by qualified name through the alias.
+  func->clear_adl_enclosing_record();
+  // Comments are attached to the written `using` declaration (the introducer),
+  // not to the implicit shadow declaration.
+  if (std::optional<std::string> doc =
+          ictx_.GetComment(*using_decl.getIntroducer());
+      doc.has_value()) {
+    func->set_doc_comment(*std::move(doc));
   }
   return item;
 }
