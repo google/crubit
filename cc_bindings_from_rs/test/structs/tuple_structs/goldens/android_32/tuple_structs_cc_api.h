@@ -19,6 +19,7 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/movable.h"
+#include "support/rs/box.h"
 #include "support/rs_std/traits.h"
 #include "support/rs_std/tuple.h"
 
@@ -39,7 +40,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: CloneNoDefault") alignas(4)
     [[clang::trivial_abi]] CloneNoDefault final {
  public:
-  // Type is not a C++ aggregate: Field `value` has a type unsupported in C++
+  // Type is not a C++ aggregate: Field `value` requires drop glue but is not
+  // C++-movable
 
   // `tuple_structs_golden::CloneNoDefault` doesn't implement the `Default`
   // trait
@@ -56,10 +58,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value);
 
- private:
-  // Field type has been replaced with a blob of bytes: Generic types are not
-  // supported yet (b/259749095)
-  ::std::array<unsigned char, 4> value;
+  union {
+    ::rs::Box<::std::int32_t> value;
+  };
 
  private:
   static void __crubit_field_offset_assertions();
@@ -126,7 +127,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: DontMoveMe") alignas(4) [[clang::trivial_abi]]
 DontMoveMe final {
  public:
-  // Type is not a C++ aggregate: Field `value` has a type unsupported in C++
+  // Type is not a C++ aggregate: Field `value` requires drop glue but is not
+  // C++-movable
 
   // `tuple_structs_golden::DontMoveMe` doesn't implement the `Default` trait
   DontMoveMe() = delete;
@@ -144,10 +146,9 @@ DontMoveMe final {
   DontMoveMe& operator=(const DontMoveMe&) = delete;
   DontMoveMe(::crubit::UnsafeRelocateTag, DontMoveMe&& value);
 
- private:
-  // Field type has been replaced with a blob of bytes: Generic types are not
-  // supported yet (b/259749095)
-  ::std::array<unsigned char, 4> value;
+  union {
+    ::rs::Box<::std::int32_t> value;
+  };
 
  private:
   static void __crubit_field_offset_assertions();

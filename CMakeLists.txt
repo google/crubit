@@ -47,6 +47,7 @@ endif()
 set(CRUBIT_SUBDIRS
   support
   support/internal
+  support/rs
   support/rs_std
   support/rs_std/internal
 )
