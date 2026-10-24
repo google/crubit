@@ -21,6 +21,11 @@ TEST(CrossCrateTests, BasicEndToEndTest) {
 TEST(CrossCrateTests, SpecializationTest) {
   crubit::test::MyStatus s = test_api::return_status_from_other_crate();
   EXPECT_TRUE(s.ok);
+
+  crubit::test::MyStatusOr<int32_t> s_or =
+      test_api::return_status_or_from_other_crate(42);
+  EXPECT_TRUE(s_or.has_value);
+  EXPECT_EQ(s_or.value, 42);
 }
 
 // b/292231336

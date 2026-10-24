@@ -30,6 +30,8 @@ use std::rc::Rc;
 /// For example, `std::vector<int>` and `std::vector<double>` are two different
 /// specializations of the `std::vector` type.
 pub struct CppTypeSpecialization<'tcx> {
+    /// The `DefId` of the type alias that defines the specialization.
+    pub def_id: DefId,
     /// The Rust type that the specialization is for.
     pub ty: Ty<'tcx>,
     /// The C++ spelling of the type.

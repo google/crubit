@@ -1818,29 +1818,45 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
                 has_cpp_type || is_supported_generic_type,
                 "Generic types without composable bridging are not supported yet (b/259749095)"
             );
-            let canonical_name = db.symbol_canonical_name(adt.did())?;
-            let type_name = canonical_name.format_for_rs();
-            let generic_params = if substs.is_empty() {
-                quote! {}
-            } else {
-                let generic_params = substs
-                    .iter()
-                    .map(|subst| match subst.kind() {
-                        ty::GenericArgKind::Type(ty) => lifetime_mode.format_ty(db, ty),
-                        ty::GenericArgKind::Lifetime(_) => match lifetime_mode {
-                            RsLifetimeMode::Default | RsLifetimeMode::ClosureReturn => {
-                                Ok(quote! { 'static })
+            let format_adt = || -> Result<TokenStream> {
+                let canonical_name = db.symbol_canonical_name(adt.did())?;
+                let type_name = canonical_name.format_for_rs();
+                let generic_params = if substs.is_empty() {
+                    quote! {}
+                } else {
+                    let generic_params = substs
+                        .iter()
+                        .map(|subst| match subst.kind() {
+                            ty::GenericArgKind::Type(ty) => lifetime_mode.format_ty(db, ty),
+                            ty::GenericArgKind::Lifetime(_) => match lifetime_mode {
+                                RsLifetimeMode::Default | RsLifetimeMode::ClosureReturn => {
+                                    Ok(quote! { 'static })
+                                }
+                                RsLifetimeMode::ClosureParam => Ok(quote! { '_ }),
+                            },
+                            ty::GenericArgKind::Const(_) => {
+                                bail!("crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)")
                             }
-                            RsLifetimeMode::ClosureParam => Ok(quote! { '_ }),
-                        },
-                        ty::GenericArgKind::Const(_) => {
-                            bail!("crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)")
-                        }
-                    })
-                    .collect::<Result<Vec<TokenStream>>>()?;
-                quote! { < #(#generic_params),* > }
+                        })
+                        .collect::<Result<Vec<TokenStream>>>()?;
+                    quote! { < #(#generic_params),* > }
+                };
+                Ok(quote! { #type_name #generic_params })
             };
-            quote! { #type_name #generic_params }
+            match format_adt() {
+                Ok(tokens) => tokens,
+                Err(err) => {
+                    let erased_ty = db.tcx().erase_and_anonymize_regions(ty);
+                    if let Some(specialization) =
+                        db.specializations().iter().find(|s| s.ty == erased_ty)
+                        && let Ok(canonical_name) = db.symbol_canonical_name(specialization.def_id)
+                    {
+                        canonical_name.format_for_rs()
+                    } else {
+                        return Err(err);
+                    }
+                }
+            }
         }
         ty::TyKind::RawPtr(pointee_ty, mutbl) => {
             let qualifier = match mutbl {

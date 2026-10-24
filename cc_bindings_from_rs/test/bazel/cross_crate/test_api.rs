@@ -24,5 +24,9 @@ pub fn return_a_type_from_a_rust_toolchain_crate() -> String {
 }
 
 pub fn return_status_from_other_crate() -> other_crate::MyStatus {
-    other_crate::MyStatusOr { has_value: true, value: () }
+    other_crate::internal::MyStatusOr { has_value: true, value: () }
+}
+
+pub fn return_status_or_from_other_crate(v: i32) -> other_crate::internal::MyStatusOr<i32> {
+    other_crate::internal::MyStatusOr { has_value: true, value: v }
 }
