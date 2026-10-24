@@ -337,7 +337,13 @@ impl ErrorReport {
     }
 
     pub fn to_json_string(&self) -> String {
-        serde_json::to_string_pretty(&SerializeIterator(self.map.borrow().values()))
+        // The map is keyed by `ItemName::id`, which can be a pointer (e.g. the address of an AST
+        // node), so iterating over it in key order would make the report nondeterministic. Sort the
+        // entries by their contents instead.
+        let map = self.map.borrow();
+        let mut entries: Vec<&ErrorReportEntry> = map.values().collect();
+        entries.sort_by(|a, b| a.sort_key().cmp(&b.sort_key()));
+        serde_json::to_string_pretty(&SerializeIterator(entries.into_iter()))
             .expect("ErrorReporting serialization to JSON failed unexpectedly")
     }
 
@@ -470,6 +476,21 @@ pub struct ErrorReportEntry {
     /// The Bazel label or Rust crate that defines this item, if it's not the current one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub defining_target: Option<Rc<str>>,
+}
+
+impl ErrorReportEntry {
+    /// Returns a key by which entries are ordered in the serialized report. Entries with equal keys
+    /// serialize identically, so their relative order doesn't matter.
+    fn sort_key(&self) -> impl Ord + '_ {
+        (
+            &self.name,
+            &self.unique_name,
+            &self.defining_target,
+            self.category,
+            self.source_language.map(|language| language as u8),
+            self.errors.iter().map(|error| (&error.fmt, &error.full_error)).collect::<Vec<_>>(),
+        )
+    }
 }
 
 fn is_default<T: Default + PartialEq>(value: &T) -> bool {
@@ -787,16 +808,6 @@ mod tests {
             serde_json::json!([
                 {
                     "source_language": "Rust",
-                    "name": "foo",
-                    "errors": [
-                        {
-                            "fmt": "error in {}",
-                            "full_error": "error in item 1",
-                        },
-                    ],
-                },
-                {
-                    "source_language": "Rust",
                     "name": "bar",
                     "errors": [
                         {
@@ -807,8 +818,37 @@ mod tests {
                     "unique_name": "abc123",
                     "defining_target": "//other:target",
                 },
+                {
+                    "source_language": "Rust",
+                    "name": "foo",
+                    "errors": [
+                        {
+                            "fmt": "error in {}",
+                            "full_error": "error in item 1",
+                        },
+                    ],
+                },
             ]),
         );
+    }
+
+    /// Item IDs can be pointers, which differ from run to run, so they must not affect the report.
+    #[gtest]
+    fn error_report_order_does_not_depend_on_item_ids() {
+        let report_with_ids = |ids: [u64; 3]| {
+            let report = ErrorReport::new(SourceLanguage::Cpp);
+            for (name, id) in ["a", "b", "c"].into_iter().zip(ids) {
+                let _scope = ItemScope::new(
+                    &report,
+                    ItemName { name: name.into(), id, unique_name: None, defining_target: None },
+                );
+                report.report(&anyhow!("error in {}", name));
+            }
+            report.to_json_string()
+        };
+        let expected = report_with_ids([1, 2, 3]);
+        expect_eq!(report_with_ids([3, 2, 1]), expected);
+        expect_eq!(report_with_ids([2, 3, 1]), expected);
     }
 
     #[gtest]
