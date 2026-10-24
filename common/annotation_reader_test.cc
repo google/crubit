@@ -9,10 +9,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "common/check.h"
+#include "common/status.h"
 #include "common/status_test_matchers.h"
 #include "common/string_view_conversion.h"
 #include "clang/AST/Attr.h"
@@ -20,6 +18,8 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/TypeBase.h"
 #include "clang/Testing/TestAST.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace crubit {
 namespace {
@@ -41,7 +41,7 @@ T& LookupDecl(clang::ASTContext& context, absl::string_view name) {
   clang::DeclContextLookupResult result =
       context.getTranslationUnitDecl()->lookup(
           &context.Idents.get(StringRefFromStringView(name)));
-  CHECK(result.isSingleResult());
+  CRUBIT_CHECK(result.isSingleResult());
   return *cast<T>(result.front());
 }
 
@@ -79,7 +79,7 @@ TEST(AnnotationReaderTest, GetAnnotateAttrArgsFailureDoubleAnnotation) {
   EXPECT_THAT(
       GetAnnotateAttrArgs(var, "foo"),
       StatusIs(
-          absl::StatusCode::kInvalidArgument,
+          crubit::StatusCode::kInvalidArgument,
           HasSubstr(
               "Only one `foo` annotation may be placed on a declaration.")));
 }
@@ -93,7 +93,7 @@ TEST(AnnotationReaderTest, GetAnnotateAttrFailureArgNotIntegralOrString) {
 
   ASSERT_THAT(
       GetAnnotateAttrArgs(var, "foo"),
-      StatusIs(absl::StatusCode::kInvalidArgument,
+      StatusIs(crubit::StatusCode::kInvalidArgument,
                HasSubstr("Arguments of `foo` annotation must be of integral "
                          "type, string literal, or constructor")));
 }
@@ -121,7 +121,7 @@ TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingIntArgs) {
   ASSERT_THAT(
       GetAnnotateAttrArgs(var, "foo"),
       StatusIs(
-          absl::StatusCode::kInvalidArgument,
+          crubit::StatusCode::kInvalidArgument,
           HasSubstr(
               "Different declarations have inconsistent `foo` annotations.")));
 }
@@ -137,7 +137,7 @@ TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingStringArgs) {
   ASSERT_THAT(
       GetAnnotateAttrArgs(var, "foo"),
       StatusIs(
-          absl::StatusCode::kInvalidArgument,
+          crubit::StatusCode::kInvalidArgument,
           HasSubstr(
               "Different declarations have inconsistent `foo` annotations.")));
 }
@@ -153,7 +153,7 @@ TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingArgCounts) {
   ASSERT_THAT(
       GetAnnotateAttrArgs(var, "foo"),
       StatusIs(
-          absl::StatusCode::kInvalidArgument,
+          crubit::StatusCode::kInvalidArgument,
           HasSubstr(
               "Different declarations have inconsistent `foo` annotations.")));
 }
@@ -215,7 +215,7 @@ TEST(AnnotationReaderTest, GetAnnotationWithStringArgsFailureNonString) {
 
   EXPECT_THAT(
       GetAnnotationWithStringArgs(var, "foo"),
-      StatusIs(absl::StatusCode::kInvalidArgument,
+      StatusIs(crubit::StatusCode::kInvalidArgument,
                HasSubstr("Annotation foo arguments must be string literals.")));
 }
 
@@ -242,7 +242,7 @@ TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureNoArgs) {
   EXPECT_THAT(
       GetAnnotationWithStringArg(var, "foo"),
       StatusIs(
-          absl::StatusCode::kInvalidArgument,
+          crubit::StatusCode::kInvalidArgument,
           HasSubstr("Annotation foo must have a single string argument.")));
 }
 
@@ -256,7 +256,7 @@ TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureMultipleArgs) {
   EXPECT_THAT(
       GetAnnotationWithStringArg(var, "foo"),
       StatusIs(
-          absl::StatusCode::kInvalidArgument,
+          crubit::StatusCode::kInvalidArgument,
           HasSubstr("Annotation foo must have a single string argument.")));
 }
 
@@ -269,7 +269,7 @@ TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureNonStringArg) {
 
   EXPECT_THAT(
       GetAnnotationWithStringArg(var, "foo"),
-      StatusIs(absl::StatusCode::kInvalidArgument,
+      StatusIs(crubit::StatusCode::kInvalidArgument,
                HasSubstr("Annotation foo arguments must be string literals.")));
 }
 
@@ -286,7 +286,7 @@ TEST(AnnotationReaderTest, HasAnnotationWithoutArgsCases) {
   EXPECT_THAT(HasAnnotationWithoutArgs(var_j, "no_args"), IsOkAndHolds(false));
   EXPECT_THAT(
       HasAnnotationWithoutArgs(var_i, "with_args"),
-      StatusIs(absl::StatusCode::kInvalidArgument,
+      StatusIs(crubit::StatusCode::kInvalidArgument,
                HasSubstr("Annotation with_args does not expect arguments.")));
 }
 
@@ -316,11 +316,11 @@ TEST(AnnotationReaderTest, GetExprAsBoolRejectsNonBooleanTypes) {
   auto expr_as_bool = MakeExprAsBoolMatcher(ast.context());
 
   EXPECT_THAT(
-      absl::MakeSpan(attr->args_begin(), attr->args_end()),
+      llvm::ArrayRef(attr->args_begin(), attr->args_end()),
       AllOf(
           SizeIs(4),
           Each(Pointee(expr_as_bool(StatusIs(
-              absl::StatusCode::kInvalidArgument,
+              crubit::StatusCode::kInvalidArgument,
               HasSubstr("annotation expression must evaluate to a bool")))))));
 }
 
@@ -381,7 +381,7 @@ TEST(AnnotationReaderTest,
   EXPECT_THAT(
       GetTypeAnnotationSingleDecl(type, "duplicate"),
       StatusIs(
-          absl::StatusCode::kInvalidArgument,
+          crubit::StatusCode::kInvalidArgument,
           HasSubstr(
               "Only one `duplicate` annotation may be placed on a type.")));
 }

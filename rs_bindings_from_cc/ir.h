@@ -25,13 +25,13 @@
 #include <vector>
 
 #include "absl/base/nullability.h"
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
+#include "common/check.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir_generated.h"
@@ -205,7 +205,7 @@ CcType RValueReferenceTo(CcType pointee_type,
 class Identifier {
  public:
   explicit Identifier(absl::string_view identifier) {
-    CHECK(!identifier.empty());
+    CRUBIT_CHECK(!identifier.empty());
     inner_.set_identifier(identifier);
   }
 
