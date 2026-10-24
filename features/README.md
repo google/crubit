@@ -112,15 +112,9 @@ team itself, as part of producing bindings for high-touch core libraries.
 
 ### `"//features:experimental"` {#experimental}
 
-WARNING: `experimental` is easily broken, may have bugs at head, and is by
-allowlist only. As a general rule, you should prefer to deploy a workaround
-rather than use `experimental`.
-
-The `experimental` feature enables internal-only experimental capabilities. This
-is used for testing of upcoming features, and is also used by pilot partners who
-are testing those features. This also includes everything in `:supported`.
-
-`experimental` is visibility-restricted to only internal use and pilot partners.
+WARNING: `experimental` is deprecated, visibility-restricted to Crubit itself,
+and slated for removal. Use `:supported` plus the individual feature hints
+described in [Other features](#other) instead.
 
 ### Other features {#other}
 

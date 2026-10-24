@@ -90,12 +90,17 @@ crubit_feature_hint(
 # A feature set containing experimental Crubit features, in addition to the officially supported
 # features.
 #
+# This is only for Crubit's own tests and support libraries. Outside of Crubit, use `:supported`
+# plus the individual feature hints below.
+#
 # See crubit.rs-features#experimental
 crubit_feature_hint(
     name = "experimental",
     compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = ["all"],
-    visibility = _EXPERIMENTAL_CLIENTS,
+    visibility = [
+        "//:__subpackages__",
+    ],
 )
 
 # A feature set enabling the `this` pointer to be interpreted as a reference.
