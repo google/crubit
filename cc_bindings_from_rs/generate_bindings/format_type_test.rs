@@ -1379,3 +1379,47 @@ fn test_format_ty_for_cc_iterator_item_references() {
         );
     }
 }
+
+/// When several `specializes_cpp_type` aliases name the same type, the choice must not depend on
+/// `HashMap` iteration order: the alias that comes first by path wins. Aliases of non-ADT types are
+/// separate entries in `all_public_paths_by_def_id`, so this exercises the iteration order.
+#[test]
+fn test_format_ty_for_cc_picks_specialization_in_stable_order() {
+    let preamble = quote! {
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppH"]
+        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
+        pub type AliasH = (i32, u8);
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppC"]
+        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
+        pub type AliasC = (i32, u8);
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppF"]
+        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
+        pub type AliasF = (i32, u8);
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppA"]
+        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
+        pub type AliasA = (i32, u8);
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppE"]
+        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
+        pub type AliasE = (i32, u8);
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppB"]
+        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
+        pub type AliasB = (i32, u8);
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppG"]
+        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
+        pub type AliasG = (i32, u8);
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppD"]
+        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
+        pub type AliasD = (i32, u8);
+    };
+    test_ty(
+        TypeLocation::FnReturn { is_constructor: false },
+        &[("(i32, u8)", ())],
+        preamble,
+        |desc, tcx, ty, ()| {
+            let db = bindings_db_for_tests(tcx);
+            let cc_snippet =
+                db.format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false }).unwrap();
+            assert_eq!(cc_snippet.tokens.to_string(), "CppA", "{desc}");
+        },
+    );
+}
