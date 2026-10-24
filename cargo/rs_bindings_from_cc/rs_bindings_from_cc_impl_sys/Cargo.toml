@@ -17,13 +17,14 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
+file_io_sys = { path = "../../../cargo/common/file_io_sys"}
+status_sys = { path = "../../../cargo/common/status_sys"}
 cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys", package = "rs_bindings_from_cc_cc_ir_sys"}
 cmdline_sys = { path = "../../../cargo/rs_bindings_from_cc/cmdline_sys", package = "rs_bindings_from_cc_cmdline_sys"}
 collect_namespaces_sys = { path = "../../../cargo/rs_bindings_from_cc/collect_namespaces_sys", package = "rs_bindings_from_cc_collect_namespaces_sys"}
 generate_bindings_and_metadata_sys = { path = "../../../cargo/rs_bindings_from_cc/generate_bindings_and_metadata_sys", package = "rs_bindings_from_cc_generate_bindings_and_metadata_sys"}
 profiling_sys = { path = "../../../cargo/rs_bindings_from_cc/profiling_sys", package = "rs_bindings_from_cc_profiling_sys"}
 src_code_gen_ffi_sys = { path = "../../../cargo/rs_bindings_from_cc/src_code_gen_ffi_sys", package = "rs_bindings_from_cc_src_code_gen_ffi_sys"}
-file_io_sys = { path = "../../../cargo/common/file_io_sys"}
 
 
 [build-dependencies]

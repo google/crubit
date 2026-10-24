@@ -35,6 +35,9 @@
 
 #include "absl/flags/marshalling.h"
 #include "absl/strings/string_view.h"
+#include "llvm/ADT/DenseMapInfo.h"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/StringRef.h"
 
 // Defines the StringType using StringTypeRepresentation and provides a type
 // alias to string_type_name.  The struct string_type_name ## _tag_ trickery is
@@ -55,15 +58,16 @@ namespace crubit {
 // StringType provides these operations:
 //   * relational operators (==, !=, <, <=, >, >=)
 //   * compare (future <=> operator)
-//   * AbslHashValue
 //   * streaming with operator<<
 //   * value(), which should return a string-like object (const string&,
-//     absl::string_view, ShortString<N>, etc.)
+//     llvm::StringRef, ShortString<N>, etc.)
 template <typename Tag>
 class StringType {
  public:
   StringType() = default;
   explicit StringType(std::string value) : s_(std::move(value)) {}
+  explicit StringType(llvm::StringRef value) : s_(value) {}
+  explicit StringType(const char* value) : s_(value) {}
 
   const std::string& value() const { return s_; }
 
@@ -114,7 +118,7 @@ class StringType {
 template <typename Tag>
 bool AbslParseFlag(absl::string_view text, StringType<Tag>* out,
                    std::string* error) {
-  *out = StringType<Tag>(text);
+  *out = StringType<Tag>(std::string(text));
   return true;
 }
 
@@ -124,5 +128,24 @@ std::string AbslUnparseFlag(const StringType<Tag>& val) {
 }
 
 }  // namespace crubit
+
+namespace llvm {
+template <typename Tag>
+struct DenseMapInfo<crubit::StringType<Tag>> {
+  static crubit::StringType<Tag> getEmptyKey() {
+    return crubit::StringType<Tag>("\x01__crubit_empty__");
+  }
+  static crubit::StringType<Tag> getTombstoneKey() {
+    return crubit::StringType<Tag>("\x01__crubit_tombstone__");
+  }
+  static unsigned getHashValue(const crubit::StringType<Tag>& Val) {
+    return DenseMapInfo<StringRef>::getHashValue(Val.value());
+  }
+  static bool isEqual(const crubit::StringType<Tag>& LHS,
+                      const crubit::StringType<Tag>& RHS) {
+    return LHS == RHS;
+  }
+};
+}  // namespace llvm
 
 #endif  // CRUBIT_COMMON_STRING_TYPE_H_
