@@ -326,6 +326,16 @@ mod tests {
         expect_eq!(extract_global_cpp(&parse(input, "test.rs"), "test.rs").0, expected);
     }
 
+    /// The thunk name is a linker symbol, so it must be the same on every host. This value was
+    /// computed with 64-bit little-endian line and column numbers.
+    #[gtest]
+    fn test_compute_thunk_name_is_platform_independent() {
+        expect_eq!(
+            inline_cpp_utils::compute_thunk_name("//test:target", "dir/test-src.rs", 12, 34),
+            "inline_cpp_thunk_test_src_rs_213d5ff12ac5a43c"
+        );
+    }
+
     #[gtest]
     fn test_extract_inline_cpp() {
         let input = "let r = inline_cpp! { () -> int { return 42; } };";
