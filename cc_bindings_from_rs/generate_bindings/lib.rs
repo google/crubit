@@ -275,6 +275,7 @@ fn specializations<'tcx>(db: &crate::BindingsGenerator<'tcx>) -> Rc<[CppTypeSpec
                     );
                     let ty = tcx.erase_and_anonymize_regions(ty);
                     Some(CppTypeSpecialization {
+                        def_id,
                         ty,
                         cpp_type: Rc::from(cpp_type.as_str()),
                         include_paths: attrs.include_paths.iter().map(|s| Rc::from(s.as_str())).collect(),
@@ -625,9 +626,7 @@ fn public_paths_by_def_id(
                     });
                 // If our generics do not match for our type alias, do not consider them a public
                 // path for their underlying type.
-                if generics_match
-                    || crubit_attr::get_attrs(tcx, def_id).unwrap().specializes_cpp_type
-                {
+                if generics_match {
                     type_alias_def_id = Some(def_id);
                     def_id = def.did();
                 }
@@ -735,14 +734,29 @@ fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, Publ
     // TODO(b/458768435): LOCAL_CRATE is not included in list of `used_crates`, so while we still
     // have `--enable-rmeta-interface` (and some users that are not on the rmeta interface) we
     // need to manually add it to the list of considered crates.
-    for krate in
-        std::iter::once(LOCAL_CRATE).chain(tcx.used_crates(()).iter().cloned()).filter(|&krate|
+    for krate in std::iter::once(LOCAL_CRATE).chain(tcx.used_crates(()).iter().cloned()) {
         // Check if our krate can be imported (and so should provide public paths for DefIds).
-        krate == db.source_crate_num()
-            || db.crate_name_to_include_paths().contains_key(&Rc::from(tcx.crate_name(krate).as_str())))
-    {
+        let has_crate_header = krate == db.source_crate_num()
+            || db
+                .crate_name_to_include_paths()
+                .contains_key(&Rc::from(tcx.crate_name(krate).as_str()));
+        let is_direct_extern = krate != LOCAL_CRATE
+            && tcx
+                .extern_crate(krate)
+                .is_some_and(|ext| ext.dependency_of == db.source_crate_num());
+        if !has_crate_header && !is_direct_extern {
+            continue;
+        }
         let public_paths = db.public_paths_by_def_id(krate);
         for (def_id, mut paths) in public_paths {
+            if !has_crate_header {
+                let Ok(attrs) = crubit_attr::get_attrs(tcx, def_id) else {
+                    continue;
+                };
+                if attrs.cpp_type.is_none() && !attrs.specializes_cpp_type {
+                    continue;
+                }
+            }
             use std::collections::hash_map::Entry;
             match out.entry(def_id) {
                 Entry::Vacant(vacant) => {
@@ -1515,6 +1529,9 @@ fn formatted_items_in_crate<'tcx>(
     defs_in_crate
         .into_iter()
         .filter_map(|(def_id, paths)| {
+            if crubit_attr::get_attrs(tcx, def_id).unwrap().specializes_cpp_type {
+                return None;
+            }
             let mut snippets = None;
             let canonical_name = db.symbol_canonical_name(def_id).ok()?;
             let aliases = if canonical_name.krate_num == db.source_crate_num() {

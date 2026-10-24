@@ -7,18 +7,20 @@
 
 pub struct SomeStruct(pub i32);
 
-#[crubit_annotate::cpp_layout_equivalent(
-    cpp_type = "crubit::test::MyStatusOr<{T}>",
-    include_path = "cc_bindings_from_rs/test/bazel/cross_crate/other_crate_types.h"
-)]
-#[repr(C)]
-pub struct MyStatusOr<T> {
-    pub has_value: bool,
-    pub value: T,
+pub mod internal {
+    #[crubit_annotate::cpp_layout_equivalent(
+        cpp_type = "crubit::test::MyStatusOr<{T}>",
+        include_path = "cc_bindings_from_rs/test/bazel/cross_crate/other_crate_types.h"
+    )]
+    #[repr(C)]
+    pub struct MyStatusOr<T> {
+        pub has_value: bool,
+        pub value: T,
+    }
 }
 
 #[crubit_annotate::cpp_specialization(
     cpp_type = "crubit::test::MyStatus",
     include_path = "cc_bindings_from_rs/test/bazel/cross_crate/other_crate_types.h"
 )]
-pub type MyStatus = MyStatusOr<()>;
+pub type MyStatus = internal::MyStatusOr<()>;
