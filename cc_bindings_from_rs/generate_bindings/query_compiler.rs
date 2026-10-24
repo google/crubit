@@ -503,8 +503,10 @@ pub fn matches_qualified_name(db: &BindingsGenerator<'_>, item_did: DefId, name:
 /// Compares two `DefId` s by their path and then by their path hash, which is stable across
 /// compilations (the same ordering as `NodeSortKey` in `generate_bindings`).
 pub fn stable_def_id_cmp<'tcx>(tcx: TyCtxt<'tcx>, lhs_id: DefId, rhs_id: DefId) -> Ordering {
-    let sort_key =
-        |def_id: DefId| (tcx.def_path_str(def_id), tcx.def_path_hash(def_id).local_hash().as_u64());
+    let sort_key = |def_id: DefId| {
+        let hash = tcx.def_path_hash(def_id);
+        (tcx.def_path_str(def_id), hash.local_hash().as_u64(), hash.stable_crate_id())
+    };
     sort_key(lhs_id).cmp(&sort_key(rhs_id))
 }
 

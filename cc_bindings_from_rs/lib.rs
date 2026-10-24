@@ -86,6 +86,15 @@ fn new_db<'tcx>(
     for file in &cmdline.ignore_symbols_from_files {
         ignore_symbols_from_files.insert(file.to_path_buf());
     }
+    let mut extern_crate_names = <HashMap<PathBuf, Rc<str>>>::new();
+    for (crate_name, metadata_path) in &cmdline.r#extern {
+        let name: Rc<str> = Rc::from(crate_name.as_str());
+        let path = PathBuf::from(metadata_path);
+        extern_crate_names.insert(path.clone(), name.clone());
+        if let Ok(canon) = path.canonicalize() {
+            extern_crate_names.insert(canon, name);
+        }
+    }
     generate_bindings::new_database(
         tcx,
         cmdline.source_crate_name.as_ref().map(|s| s.clone().into()),
@@ -104,6 +113,7 @@ fn new_db<'tcx>(
         cmdline.is_golden_test,
         include_guard,
         ignore_symbols_from_files.into(),
+        extern_crate_names.into(),
     )
 }
 
@@ -226,7 +236,7 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
         let has_crate =
             |name: &str| used_crates.iter().any(|&c| tcx.crate_name(c).as_str() == name);
 
-        if !has_crate(crate_name) {
+        if used_crates.is_empty() {
             // If we can't load the metadata for the crate, we won't be able to generate
             // bindings for it and we'll generate the relevant error below.
             return Ok(());
@@ -259,6 +269,41 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     let mut input_str = crate_attrs.join("\n");
     if crate_name != "std" {
         input_str.push_str(&format!("\n\nextern crate r#{};\n", crate_name));
+    }
+
+    // To ensure `tcx.used_crates(())` correctly enumerates all dependency crates
+    // provided via `--extern`, we must explicitly force `rustc` to load their metadata.
+    // However, some `--extern` flags might specify different dependency crates that
+    // share the same internal crate name (e.g. `dep` and `_y_pkg_z_dep`), or they might
+    // share the same internal crate name as the target crate itself.
+    //
+    // If we simply wrote `extern crate r#<name>;`, `rustc` would error with E0259
+    // (name defined multiple times) or collision with the target crate. If we wrote
+    // `extern crate r#<name> as _;`, `rustc` might complain about unused extern crates.
+    //
+    // By wrapping each extern crate in an anonymous constant block:
+    // `const _: () = { extern crate r#<name> as _; };`
+    // we force `rustc` to load the metadata for every `--extern` crate under its
+    // provided CLI name, while completely isolating them from each other and the root
+    // namespace, thereby avoiding all E0259 collisions and unused extern crate lints.
+    let mut seen_externs = HashSet::new();
+    for (ext_name, _) in &cmdline.r#extern {
+        if ext_name == "std" || ext_name == crate_name || !seen_externs.insert(ext_name.clone()) {
+            continue;
+        }
+
+        // We can only use `r#<name>` if it's a valid Rust identifier.
+        // If it's an invalid identifier (e.g. starts with a digit), or a keyword,
+        // it couldn't have been provided via a valid `--extern` flag intended for this
+        // macro expansion anyway.
+        let is_valid_ident = !ext_name.is_empty()
+            && !ext_name.starts_with(|c: char| c.is_ascii_digit())
+            && ext_name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+            && !["crate", "self", "super", "Self"].contains(&ext_name.as_str());
+
+        if is_valid_ident {
+            input_str.push_str(&format!("const _: () = {{ extern crate r#{ext_name} as _; }};\n"));
+        }
     }
 
     if let Err(e) =
@@ -939,6 +984,178 @@ unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
             .expect("Unstable target modifier flags with '-' should not cause an error");
         let cc_api = std::fs::read_to_string(&test_result.h_path)?;
         assert!(cc_api.contains("public_function"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_rmeta_dependency_label_encoding() -> Result<()> {
+        let tempdir = tempdir()?;
+        let panic_mechanism = "abort";
+        let target = setup_rustc_target_for_testing(tempdir.path());
+
+        let build_rmeta = |crate_name: &str,
+                           rs_input: &str,
+                           out_filename: &str,
+                           extra_rustc_args: &[String]|
+         -> Result<PathBuf> {
+            let rs_path = tempdir.path().join(format!("{}.rs", out_filename));
+            std::fs::write(&rs_path, rs_input)?;
+            let rmeta_path =
+                tempdir.path().join(format!("lib{}-{}.rmeta", crate_name, out_filename));
+            let mut rustc_args = vec![
+                "rustc".to_string(),
+                format!("--codegen=panic={}", panic_mechanism),
+                format!("--crate-name={}", crate_name),
+                format!("-Cmetadata={}", out_filename),
+                "--crate-type=lib".to_string(),
+                "--emit=metadata".to_string(),
+                "-o".to_string(),
+                rmeta_path.display().to_string(),
+                "-Zunstable-options".to_string(),
+                format!(
+                    "-Cunsafe-allow-abi-mismatch={}",
+                    run_compiler::target_modifier_flag_names().join(",")
+                ),
+                rs_path.display().to_string(),
+            ];
+            rustc_args.extend_from_slice(extra_rustc_args);
+            if let Some(sysroot) = sysroot_path() {
+                rustc_args.push(format!("--sysroot={}", sysroot.display()));
+            }
+            if let Some(target) = &target {
+                rustc_args.push(format!("--target={}", target));
+            }
+            run_rustc(&rustc_args)?;
+            Ok(rmeta_path)
+        };
+
+        let dep1_rmeta = build_rmeta("dep", "pub struct Dep1Struct(pub i32);", "dep1", &[])?;
+        let dep2_rmeta = build_rmeta("dep", "pub struct Dep2Struct(pub i32);", "dep2", &[])?;
+        let parent_rmeta = build_rmeta(
+            "dep",
+            "extern crate dep1; extern crate dep2; \
+             pub struct ParentStruct(pub i32); \
+             pub fn pass_dep1(x: dep1::Dep1Struct) -> dep1::Dep1Struct { x } \
+             pub fn pass_dep2(x: dep2::Dep2Struct) -> dep2::Dep2Struct { x }",
+            "parent",
+            &[
+                format!("--extern=dep1={}", dep1_rmeta.display()),
+                format!("--extern=dep2={}", dep2_rmeta.display()),
+            ],
+        )?;
+
+        let h_out = tempdir.path().join("out.h");
+        let rs_out = tempdir.path().join("out.rs");
+
+        let mut args = vec![
+            "cc_bindings_from_rs".to_string(),
+            format!("--h-out={}", h_out.display()),
+            format!("--rs-out={}", rs_out.display()),
+            "--crubit-support-path-format=<crubit/support/{header}>".to_string(),
+            format!("--clang-format-exe-path={CLANG_FORMAT_EXE_PATH}"),
+            format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH}"),
+            "--default-features=supported".to_string(),
+            "--enable-rmeta-interface".to_string(),
+            "--source-crate-name=_y__y_parent_z_dep".to_string(),
+            "--crate-namespace=self=parent_ns".to_string(),
+            "--crate-header=_y__y_pkg1_z_dep=dep1.h".to_string(),
+            "--crate-namespace=_y__y_pkg1_z_dep=dep1_ns".to_string(),
+            "--crate-header=_y__y_pkg2_z_dep=dep2.h".to_string(),
+            "--crate-namespace=_y__y_pkg2_z_dep=dep2_ns".to_string(),
+            format!("--extern=_y__y_parent_z_dep={}", parent_rmeta.display()),
+            format!("--extern=_y__y_pkg1_z_dep={}", dep1_rmeta.display()),
+            format!("--extern=_y__y_pkg2_z_dep={}", dep2_rmeta.display()),
+            format!("-Ldependency={}", tempdir.path().display()),
+        ];
+        if let Some(sysroot) = sysroot_path() {
+            args.push(format!("--sysroot={}", sysroot.display()));
+        }
+        if let Some(target) = &target {
+            args.push(format!("--target={}", target));
+        }
+
+        let cmdline = Cmdline::new(&args)?;
+        run_with_cmdline_args(&cmdline)?;
+
+        let h_content = std::fs::read_to_string(&h_out)?;
+        let rs_content = std::fs::read_to_string(&rs_out)?;
+
+        assert!(h_content.contains("namespace parent_ns"), "{h_content}");
+        assert!(h_content.contains("::dep1_ns::Dep1Struct"), "{h_content}");
+        assert!(h_content.contains("::dep2_ns::Dep2Struct"), "{h_content}");
+        assert!(rs_content.contains("::_y__y_parent_z_dep::ParentStruct"), "{rs_content}");
+        assert!(rs_content.contains("::_y__y_pkg1_z_dep::Dep1Struct"), "{rs_content}");
+        assert!(rs_content.contains("::_y__y_pkg2_z_dep::Dep2Struct"), "{rs_content}");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_rmeta_no_std_preservation() -> Result<()> {
+        let tempdir = tempdir()?;
+        let panic_mechanism = "abort";
+        let target = setup_rustc_target_for_testing(tempdir.path());
+
+        let build_rmeta =
+            |crate_name: &str, rs_input: &str, out_filename: &str| -> Result<PathBuf> {
+                let rs_path = tempdir.path().join(format!("{}.rs", out_filename));
+                std::fs::write(&rs_path, rs_input)?;
+                let rmeta_path = tempdir.path().join(format!("lib{}.rmeta", out_filename));
+                let mut rustc_args = vec![
+                    "rustc".to_string(),
+                    format!("--codegen=panic={}", panic_mechanism),
+                    format!("--crate-name={}", crate_name),
+                    "--crate-type=lib".to_string(),
+                    "--emit=metadata".to_string(),
+                    "-o".to_string(),
+                    rmeta_path.display().to_string(),
+                    "-Zunstable-options".to_string(),
+                    format!(
+                        "-Cunsafe-allow-abi-mismatch={}",
+                        run_compiler::target_modifier_flag_names().join(",")
+                    ),
+                    rs_path.display().to_string(),
+                ];
+                if let Some(sysroot) = sysroot_path() {
+                    rustc_args.push(format!("--sysroot={}", sysroot.display()));
+                }
+                if let Some(target) = &target {
+                    rustc_args.push(format!("--target={}", target));
+                }
+                run_rustc(&rustc_args)?;
+                Ok(rmeta_path)
+            };
+
+        let nostd_rmeta = build_rmeta("foo", "#![no_std] pub struct Foo;", "foo")?;
+
+        let h_out = tempdir.path().join("out.h");
+        let rs_out = tempdir.path().join("out.rs");
+
+        let mut args = vec![
+            "cc_bindings_from_rs".to_string(),
+            format!("--h-out={}", h_out.display()),
+            format!("--rs-out={}", rs_out.display()),
+            "--crubit-support-path-format=<crubit/support/{header}>".to_string(),
+            format!("--clang-format-exe-path={CLANG_FORMAT_EXE_PATH}"),
+            format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH}"),
+            "--enable-rmeta-interface".to_string(),
+            "--source-crate-name=_y__y_nostd_z_foo".to_string(),
+            format!("--extern=_y__y_nostd_z_foo={}", nostd_rmeta.display()),
+        ];
+        if let Some(sysroot) = sysroot_path() {
+            args.push(format!("--sysroot={}", sysroot.display()));
+        }
+        if let Some(target) = &target {
+            args.push(format!("--target={}", target));
+        }
+
+        let cmdline = Cmdline::new(&args)?;
+        run_with_cmdline_args(&cmdline)?;
+
+        let rs_content = std::fs::read_to_string(&rs_out)?;
+
+        assert!(rs_content.contains("#![no_std]"), "{rs_content}");
+
         Ok(())
     }
 }

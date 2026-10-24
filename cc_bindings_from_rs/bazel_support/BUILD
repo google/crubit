@@ -26,6 +26,7 @@ bzl_library(
         "//features:crubit_feature_hint_bzl",
         "//features:global_features_bzl",
         "//rs_bindings_from_cc/bazel_support:compile_rust_bzl",
+        "//rs_bindings_from_cc/bazel_support:encode_raw_string_as_crate_name_bzl",
         "//rs_bindings_from_cc/bazel_support:providers_bzl",
         "@bazel_skylib//rules:common_settings",
         "@rules_cc//cc/common",
