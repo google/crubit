@@ -975,6 +975,33 @@ fn test_struct_with_trait_derive_annotation() {
 }
 
 #[gtest]
+fn test_struct_with_custom_trait_derives_keeps_source_order() -> googletest::Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_trait_derive",
+                                 "Zeta", "Alpha", "Mu", "Beta", "Omega", "Gamma", "Kappa",
+                                 "Delta", "Sigma", "Epsilon", "Rho", "Eta", "Pi", "Theta",
+                                 "Omicron", "Iota", "Xi", "Lambda", "Nu", "Tau")]]
+                RecordWithCustomDerives {
+            int foo;
+        };"#,
+    )
+    .expect("Failed to generate IR from CC");
+    let ir = ir_testing::make_test_ir(&proto).expect("Failed to make test IR");
+
+    let record =
+        ir.records().find(|record| record.rs_name() == "RecordWithCustomDerives").or_fail()?;
+    expect_eq!(
+        record.trait_derives().custom,
+        vec![
+            "Zeta", "Alpha", "Mu", "Beta", "Omega", "Gamma", "Kappa", "Delta", "Sigma", "Epsilon",
+            "Rho", "Eta", "Pi", "Theta", "Omicron", "Iota", "Xi", "Lambda", "Nu", "Tau",
+        ]
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_struct_with_negative_send_sync_trait_derive() {
     let proto = ir_proto_from_cc(
         r#"
