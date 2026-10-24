@@ -216,6 +216,20 @@ void ApplyRefQualifierToThisPointer(CcType& this_param_type,
   }
 }
 
+// Returns true if `type` is one of the C++ comparison category types:
+// `std::strong_ordering`, `std::weak_ordering`, or `std::partial_ordering`.
+// (Returns false for references to these types.)
+bool IsComparisonCategoryType(clang::QualType type) {
+  const clang::CXXRecordDecl* record_decl = type->getAsCXXRecordDecl();
+  if (record_decl == nullptr || !record_decl->isInStdNamespace() ||
+      !record_decl->getIdentifier()) {
+    return false;
+  }
+  llvm::StringRef name = record_decl->getName();
+  return name == "strong_ordering" || name == "weak_ordering" ||
+         name == "partial_ordering";
+}
+
 }  // namespace
 
 static bool IsInStdNamespace(const clang::FunctionDecl* decl) {
@@ -1061,6 +1075,14 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     if (!return_type.ok()) {
       errors.Add(FormattedError::PrefixedStrCat(
           "Return type is not supported", return_type.status().message()));
+    }
+    // The generated bindings convert the result of `operator<=>` into an
+    // integer, which requires a comparison category type.
+    if (function_decl->getOverloadedOperator() == clang::OO_Spaceship &&
+        !IsComparisonCategoryType(function_decl->getReturnType())) {
+      errors.Add(FormattedError::Static(
+          "operator<=> is only supported if it returns std::strong_ordering, "
+          "std::weak_ordering, or std::partial_ordering"));
     }
   }
 
