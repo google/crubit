@@ -2473,7 +2473,9 @@ std::optional<std::string> Importer::CheckSpecializationInstantiable(
 CcType Importer::ConvertTemplateSpecializationType(
     const clang::TemplateSpecializationType& type, bool assume_lifetimes) {
   // Qualifiers are handled separately in TypeMapper::ConvertQualType().
-  std::string type_string = clang::QualType(&type, 0).getAsString();
+  auto type_string = [&type]() {
+    return clang::QualType(&type, 0).getAsString();
+  };
 
   auto* specialization_decl =
       clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
@@ -2482,7 +2484,7 @@ CcType Importer::ConvertTemplateSpecializationType(
     return CcType(FormattedError::Substitute(
         "Template specialization '$0' without an associated record decl "
         "is not supported.",
-        type_string));
+        type_string()));
   }
 
   if (auto* template_decl = type.getTemplateName().getAsTemplateDecl()) {
@@ -2514,12 +2516,12 @@ CcType Importer::ConvertTemplateSpecializationType(
             "add that library as a direct dependency (and `#include` the "
             "header directly),\n"
             "or move the template to a public header.",
-            type_string, *header, invocation_.target_.value()));
+            type_string(), *header, invocation_.target_.value()));
       }
       return CcType(FormattedError::Substitute(
           "Failed to complete template specialization type $0: template "
           "belongs to target $1, which does not support Crubit.",
-          type_string, target.value()));
+          type_string(), target.value()));
     }
   }
 
@@ -2527,17 +2529,24 @@ CcType Importer::ConvertTemplateSpecializationType(
     return WithAsWrittenTemplateArgs(ConvertTypeDecl(specialization_decl), type,
                                      assume_lifetimes);
 
+  constexpr int kMaxSpecializationImportDepth = 32;
+  if (specialization_import_depth_ >= kMaxSpecializationImportDepth) {
+    return CcType(FormattedError::Substitute(
+        "Failed to create bindings for template specialization type $0: "
+        "exceeded maximum template specialization import depth of $1",
+        type_string(), kMaxSpecializationImportDepth));
+  }
+  llvm::SaveAndRestore depth_guard(specialization_import_depth_,
+                                   specialization_import_depth_ + 1);
+
   if (std::optional<std::string> instantiation_errors =
           CheckSpecializationInstantiable(specialization_decl);
       instantiation_errors.has_value()) {
     return CcType(FormattedError::Substitute(
         "Failed to complete template specialization type $0: Diagnostics "
         "emitted:\n$1",
-        type_string, *instantiation_errors));
+        type_string(), *instantiation_errors));
   }
-
-  // TODO(lukasza): Limit specialization depth? (e.g. using
-  // `isSpecializationDepthGreaterThan` from earlier prototypes).
 
   // Import record type arguments before the specialization itself. Importing a
   // specialization like `std::unique_ptr<T>` converts `T`, and if `T` has not
@@ -2570,7 +2579,7 @@ CcType Importer::ConvertTemplateSpecializationType(
   if (!import_status.ok()) {
     return CcType(FormattedError::Substitute(
         "Failed to create bindings for template specialization type $0: $1",
-        type_string, import_status.message()));
+        type_string(), import_status.message()));
   }
 
   return WithAsWrittenTemplateArgs(ConvertTypeDecl(specialization_decl), type,
@@ -2905,9 +2914,6 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     const clang::Type& type,
     const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
     bool nullable, bool assume_lifetimes) {
-  // Qualifiers are handled separately in ConvertQualType().
-  std::string type_string = clang::QualType(&type, 0).getAsString();
-
   CRUBIT_ASSIGN_OR_RETURN(
       const clang::AnnotateTypeAttr* crubit_owned_ptr_attr,
       GetTypeAnnotationSingleDecl(&type, "crubit_owned_pointer"));
