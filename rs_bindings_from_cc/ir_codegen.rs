@@ -766,7 +766,7 @@ fn generate_cc(schema: &Schema) -> String {
         #include <type_traits>$['\r']
         #include <utility>$['\n']
         #include "third_party/absl/base/attributes.h"$['\r']
-        #include "third_party/absl/log/check.h"$['\r']
+        #include "common/check.h"$['\r']
         #include "third_party/absl/strings/string_view.h"$['\r']
         #include "rs_bindings_from_cc/ir_ffi_support.h"$['\n']
         namespace crubit::ffi $("{")$['\r']
@@ -935,7 +935,7 @@ fn generate_cc(schema: &Schema) -> String {
                                         case k$vp: return lhs.payload_.$(vf)_ == rhs.payload_.$(vf)_;$['\r']
                                     })
                                 })
-                                default: CHECK(false);$['\r']
+                                default: CRUBIT_CHECK(false);$['\r']
                             }$['\r']
                             return false;$['\r']
                         }$['\r']
@@ -951,7 +951,7 @@ fn generate_cc(schema: &Schema) -> String {
                                         case k$vp: std::destroy_at(&payload_.$(vf)_); break;$['\r']
                                     })
                                 })
-                                default: CHECK(false);$['\r']
+                                default: CRUBIT_CHECK(false);$['\r']
                             }$['\r']
                         }$['\r']
                         void CopyFrom(const $uname& other) {$['\r']
@@ -968,7 +968,7 @@ fn generate_cc(schema: &Schema) -> String {
                                         case k$vp: new (&payload_.$(vf)_) $cty(other.payload_.$(vf)_); break;$['\r']
                                     })
                                 })
-                                default: CHECK(false);$['\r']
+                                default: CRUBIT_CHECK(false);$['\r']
                             }$['\r']
                         }$['\r']
                         void MoveFrom($uname&& other) noexcept {$['\r']
@@ -985,7 +985,7 @@ fn generate_cc(schema: &Schema) -> String {
                                         case k$vp: new (&payload_.$(vf)_) $cty(std::move(other.payload_.$(vf)_)); break;$['\r']
                                     })
                                 })
-                                default: CHECK(false);$['\r']
+                                default: CRUBIT_CHECK(false);$['\r']
                             }$['\r']
                             other.Clear();$['\r']
                         }$['\r']

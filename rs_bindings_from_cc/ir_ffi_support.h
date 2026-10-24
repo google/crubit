@@ -17,9 +17,9 @@
 #include <utility>
 
 #include "absl/base/attributes.h"
-#include "absl/log/check.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "common/check.h"
 #include "common/ffi_types.h"
 #include "support/rs_std/internal/is_utf8.h"
 
@@ -34,7 +34,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiString {
   constexpr FfiString() : dangling_ptr_(1), len_(0) {}
 
   explicit FfiString(absl::string_view sv) : dangling_ptr_(1), len_(0) {
-    CHECK(rs::internal::IsUtf8(sv));
+    CRUBIT_CHECK(rs::internal::IsUtf8(sv));
     if (!sv.empty()) {
       uint8_t* buf = static_cast<uint8_t*>(AllocFfiBytes(sv.size(), 1));
       std::memcpy(buf, sv.data(), sv.size());
@@ -232,7 +232,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiVec {
   void reserve(size_t new_cap) {
     if (new_cap <= cap_) return;
     if constexpr (sizeof(T) > 0) {
-      CHECK(new_cap <= static_cast<size_t>(-1) / sizeof(T));
+      CRUBIT_CHECK(new_cap <= static_cast<size_t>(-1) / sizeof(T));
     }
     T* new_ptr =
         static_cast<T*>(AllocFfiBytes(new_cap * sizeof(T), alignof(T)));
@@ -251,7 +251,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiVec {
 
   void push_back(T value) {
     if (len_ == cap_) {
-      CHECK(cap_ <= static_cast<size_t>(-1) / 2);
+      CRUBIT_CHECK(cap_ <= static_cast<size_t>(-1) / 2);
       reserve(cap_ == 0 ? 4 : cap_ * 2);
     }
     new (ptr_ + len_) T(std::move(value));
@@ -259,9 +259,9 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiVec {
   }
 
   T* insert(size_t idx, T value) {
-    CHECK(idx <= len_);
+    CRUBIT_CHECK(idx <= len_);
     if (len_ == cap_) {
-      CHECK(cap_ <= static_cast<size_t>(-1) / 2);
+      CRUBIT_CHECK(cap_ <= static_cast<size_t>(-1) / 2);
       reserve(cap_ == 0 ? 4 : cap_ * 2);
     }
     if (idx < len_) {
@@ -279,7 +279,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiVec {
 
   T* Add() {
     if (len_ == cap_) {
-      CHECK(cap_ <= static_cast<size_t>(-1) / 2);
+      CRUBIT_CHECK(cap_ <= static_cast<size_t>(-1) / 2);
       reserve(cap_ == 0 ? 4 : cap_ * 2);
     }
     T* elem = new (ptr_ + len_) T();
@@ -315,11 +315,11 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiVec {
   T* end() { return ptr_ + len_; }
 
   const T& operator[](size_t idx) const {
-    CHECK(idx < len_);
+    CRUBIT_CHECK(idx < len_);
     return ptr_[idx];
   }
   T& operator[](size_t idx) {
-    CHECK(idx < len_);
+    CRUBIT_CHECK(idx < len_);
     return ptr_[idx];
   }
 
@@ -387,7 +387,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiRc {
 
   FfiRc(const FfiRc& other) noexcept : ptr_(other.ptr_) {
     if (ptr_ != nullptr) {
-      CHECK(ptr_->strong_count < static_cast<size_t>(-1) / 2);
+      CRUBIT_CHECK(ptr_->strong_count < static_cast<size_t>(-1) / 2);
       ++ptr_->strong_count;
     }
   }
@@ -420,20 +420,20 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiRc {
     return &ptr_->value;
   }
   const T& operator*() const {
-    CHECK(ptr_ != nullptr);
+    CRUBIT_CHECK(ptr_ != nullptr);
     return ptr_->value;
   }
   T& operator*() {
-    CHECK(ptr_ != nullptr);
+    CRUBIT_CHECK(ptr_ != nullptr);
     EnsureUnique();
     return ptr_->value;
   }
   const T* operator->() const {
-    CHECK(ptr_ != nullptr);
+    CRUBIT_CHECK(ptr_ != nullptr);
     return &ptr_->value;
   }
   T* operator->() {
-    CHECK(ptr_ != nullptr);
+    CRUBIT_CHECK(ptr_ != nullptr);
     EnsureUnique();
     return &ptr_->value;
   }
@@ -553,13 +553,13 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiMap {
 
   V& at(absl::string_view key) {
     auto it = find(key);
-    CHECK(it != end());
+    CRUBIT_CHECK(it != end());
     return it->second;
   }
 
   const V& at(absl::string_view key) const {
     auto it = find(key);
-    CHECK(it != end());
+    CRUBIT_CHECK(it != end());
     return it->second;
   }
 

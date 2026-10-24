@@ -22,6 +22,21 @@ exports_files([
     "golden_test.sh",
 ])
 
+cc_library(
+    name = "check",
+    hdrs = ["check.h"],
+    visibility = ["//:__subpackages__"],
+)
+
+crubit_cc_test(
+    name = "check_test",
+    srcs = ["check_test.cc"],
+    deps = [
+        ":check",
+        "@googletest//:gtest_main",
+    ],
+)
+
 rust_library(
     name = "arc_anyhow",
     srcs = ["arc_anyhow.rs"],
@@ -58,9 +73,9 @@ crubit_cc_test(
     tags = ["no_windows"],
     deps = [
         ":annotation_reader",
+        ":check",
         ":status_test_matchers",
         ":string_view_conversion",
-        "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
@@ -281,9 +296,11 @@ cc_library(
     name = "status_macros",
     hdrs = ["status_macros.h"],
     deps = [
+        ":status_absl_compat",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -395,8 +412,9 @@ cc_library(
     srcs = ["test_utils.cc"],
     hdrs = ["test_utils.h"],
     deps = [
+        ":check",
         ":file_io",
-        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest",
@@ -409,9 +427,12 @@ cc_library(
     testonly = True,
     hdrs = ["status_test_matchers.h"],
     deps = [
+        ":status",
+        ":status_macros",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -503,4 +524,60 @@ rust_static_library(
     name = "include_allocator_symbols",
     srcs = ["empty.rs"],
     edition = "2024",
+)
+
+cc_library(
+    name = "status",
+    srcs = ["status.cc"],
+    hdrs = ["status.h"],
+    deps = [
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "status_test",
+    srcs = ["status_test.cc"],
+    deps = [
+        ":status",
+        "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "status_absl_compat",
+    hdrs = ["status_absl_compat.h"],
+    deps = [
+        ":status",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "status_macros_test",
+    srcs = ["status_macros_test.cc"],
+    deps = [
+        ":status",
+        ":status_macros",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "status_test_matchers_test",
+    srcs = ["status_test_matchers_test.cc"],
+    deps = [
+        ":status",
+        ":status_test_matchers",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
+    ],
 )

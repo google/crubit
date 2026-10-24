@@ -13,10 +13,10 @@
 #include <utility>
 #include <vector>
 
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
+#include "common/check.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/clang_compat_macros.h"
@@ -146,10 +146,12 @@ absl::Status ConvertArrayValue(const clang::APValue& value,
                                absl::Span<const uint64_t> dimensions,
                                const clang::Expr* char_array_init,
                                ir_proto::ArrayValue& out) {
-  CHECK(!dimensions.empty()) << "must be called with at least one dimension";
+  CRUBIT_CHECK(!dimensions.empty())
+      << "must be called with at least one dimension";
   const uint64_t size = dimensions[0];
-  CHECK(value.isArray()) << "`value` must be the evaluated value of an array";
-  CHECK_EQ(value.getArraySize(), size)
+  CRUBIT_CHECK(value.isArray())
+      << "`value` must be the evaluated value of an array";
+  CRUBIT_CHECK(value.getArraySize() == size)
       << "`dimensions` must come from the type `value` was evaluated from";
   out.set_length(static_cast<int32_t>(size));
   // "Filler" in Clang means the value of the trailing elements that were not
