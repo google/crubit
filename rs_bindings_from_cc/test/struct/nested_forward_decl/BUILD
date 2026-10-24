@@ -7,7 +7,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "nested_forward_decl",
     hdrs = ["nested_forward_decl.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
 )
 
 rust_api_from_cpp(

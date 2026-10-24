@@ -75,3 +75,11 @@ fn test_vector_deleted_destructor() {
 fn test_vector_no_bindings() {
     assert!(!item_exists::value_exists!(vector_lib::MakeUniquePtrNoBindings))
 }
+
+/// The Rust std::vector reimplementation does support non-trivial types, but it's not very
+/// useful with them!
+#[gtest]
+fn test_vector_non_trivial() {
+    let v: cc_std::std::vector<NonTrivialType> = vector_lib::MakeVectorNonTrivial();
+    assert_eq!(v.len(), 0);
+}

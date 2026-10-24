@@ -45,7 +45,7 @@ rust_api_from_cpp(
 crubit_test_cc_library(
     name = "types_inferred_lifetimes",
     hdrs = ["types_inferred_lifetimes.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
 )
 
 rust_api_from_cpp(

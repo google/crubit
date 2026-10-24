@@ -66,7 +66,7 @@ function test::cmd_line_api() {
 
   local json
   json="$(cat <<-EOT
-  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["supported"]}]
 EOT
 )"
 
@@ -100,7 +100,7 @@ function test::no_log_spam_on_success() {
 
   local json
   json="$(cat <<-EOT
-  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["supported"]}]
 EOT
 )"
 
@@ -138,7 +138,7 @@ function test::optional_formatting_paths() {
   local hdr="no_such_file.h"
   local json
   json="$(cat <<-EOT
-  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["supported"]}]
 EOT
 )"
 
@@ -162,7 +162,7 @@ function test::do_nothing() {
   local hdr="no_such_file.h"
   local json
   json="$(cat <<-EOT
-  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["supported"]}]
 EOT
 )"
 
@@ -198,7 +198,7 @@ function test::tool_returns_nonzero_on_invalid_input() {
   echo "int foo(); But this is not C++;" > "${hdr}"
   local json
   json="$(cat <<-EOT
-  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["supported"]}]
 EOT
 )"
 
@@ -228,7 +228,7 @@ function test::tool_returns_nonzero_on_clang_driver_error() {
   echo "int foo();" > "${hdr}"
   local json
   json="$(cat <<-EOT
-  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["supported"]}]
 EOT
 )"
 
@@ -260,7 +260,7 @@ function test::public_headers() {
 
   local json
   json="$(cat <<-EOT
-  [{"t": "//foo/bar:baz", "h": ["${header_1}", "${header_2}"], "f": ["experimental", "supported"]}]
+  [{"t": "//foo/bar:baz", "h": ["${header_1}", "${header_2}"], "f": ["supported"]}]
 EOT
 )"
 
@@ -288,7 +288,7 @@ function test::rustfmt_config_path() {
 
   local json
   json="$(cat <<-EOT
-  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["supported"]}]
 EOT
 )"
 
@@ -360,7 +360,7 @@ function test::crubit_support_path_format() {
 
   local json
   json="$(cat <<-EOT
-  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["supported"]}]
 EOT
 )"
 
@@ -393,7 +393,7 @@ function test::clang_depfile_args() {
 
   local json
   json="$(cat <<-EOT
-  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["supported"]}]
 EOT
 )"
 

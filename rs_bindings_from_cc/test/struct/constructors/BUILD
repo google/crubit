@@ -15,7 +15,7 @@ crubit_test_cc_library(
     srcs = ["constructors.cc"],
     hdrs = ["constructors.h"],
     # operator lifetime inference and ctor
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
 )
 
 rust_api_from_cpp(
@@ -27,7 +27,7 @@ crubit_test_cc_library(
     name = "span_constructors",
     hdrs = ["span_constructors.h"],
     # operator lifetime inference and ctor
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     deps = ["@abseil-cpp//absl/types:span"],
 )
 

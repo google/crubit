@@ -27,40 +27,38 @@ pub mod crubit {
         pub type MapWithThreeParams = crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE;
 
         // error: type alias `crubit::test::MapWithBridgedKey` could not be bound
-        //   depends on `crubit::test::MapWithBridgedKey` which cannot be bound because `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
+        //   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
         //   See crubit.rs/types.
 
         // error: type alias `crubit::test::MapWithBridgedValue` could not be bound
-        //   depends on `crubit::test::MapWithBridgedValue` which cannot be bound because `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
+        //   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
         //   See crubit.rs/types.
 
-        // error: class `crubit::test::Incomplete` could not be bound
-        //   incomplete type
+        forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("crubit :: test :: Incomplete"));
 
         // error: type alias `crubit::test::MapWithIncompleteKey` could not be bound
-        //   depends on `crubit::test::MapWithIncompleteKey` which cannot be bound because incomplete type
+        //   Type `absl::flat_hash_map<class crubit::test::Incomplete, int, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
 
         // error: type alias `crubit::test::MapWithIncompleteValue` could not be bound
-        //   depends on `crubit::test::MapWithIncompleteValue` which cannot be bound because incomplete type
+        //   Type `absl::flat_hash_map<int, class crubit::test::Incomplete, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
 
         #[::ctor::recursively_pinned]
         #[cfi_encoding = "N6crubit4test12NoDestructorE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: NoDestructor
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NoDestructor
         pub struct NoDestructor {
             __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
         }
         impl !Send for NoDestructor {}
         impl !Sync for NoDestructor {}
         unsafe impl ::cxx::ExternType for NoDestructor {
-            type Id = ::cxx::type_id!(":: crubit :: test :: NoDestructor");
+            type Id = ::cxx::type_id!("crubit :: test :: NoDestructor");
             type Kind = ::cxx::kind::Opaque;
         }
-        impl ::core::fmt::Debug for NoDestructor {
-            fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                formatter.debug_struct("NoDestructor").finish()
-            }
-        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: NoDestructor"),
+            crate::crubit::test::NoDestructor
+        );
 
         // error: constructor `crubit::test::NoDestructor::NoDestructor` could not be bound
         //   `NoDestructor` can't be used by-value because it has a non-public or deleted destructor
@@ -83,15 +81,15 @@ pub mod crubit {
         }
 
         // error: type alias `crubit::test::MapWithNoDestructorKey` could not be bound
-        //   depends on `crubit::test::MapWithNoDestructorKey` which cannot be bound because `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor
+        //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor
 
         // error: type alias `crubit::test::MapWithNoDestructorValue` could not be bound
-        //   depends on `crubit::test::MapWithNoDestructorValue` which cannot be bound because `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor
+        //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor
 
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test8NoDeleteE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: NoDelete
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NoDelete
         ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct NoDelete {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
@@ -99,14 +97,13 @@ pub mod crubit {
         impl !Send for NoDelete {}
         impl !Sync for NoDelete {}
         unsafe impl ::cxx::ExternType for NoDelete {
-            type Id = ::cxx::type_id!(":: crubit :: test :: NoDelete");
+            type Id = ::cxx::type_id!("crubit :: test :: NoDelete");
             type Kind = ::cxx::kind::Trivial;
         }
-        impl ::core::fmt::Debug for NoDelete {
-            fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                formatter.debug_struct("NoDelete").finish()
-            }
-        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: NoDelete"),
+            crate::crubit::test::NoDelete
+        );
 
         impl Default for NoDelete {
             #[inline(always)]
@@ -122,17 +119,17 @@ pub mod crubit {
         }
 
         // error: type alias `crubit::test::MapWithNoDeleteKey` could not be bound
-        //   depends on `crubit::test::MapWithNoDeleteKey` which cannot be bound because `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public operator delete
+        //   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public operator delete
 
         // error: type alias `crubit::test::MapWithNoDeleteValue` could not be bound
-        //   depends on `crubit::test::MapWithNoDeleteValue` which cannot be bound because `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public operator delete
+        //   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public operator delete
     }
 }
 
 // namespace crubit::test
 
 // error: class `absl::flat_hash_map<class crubit::test::Incomplete, int, 42>` could not be bound
-//   incomplete type
+//   Type `absl::flat_hash_map<class crubit::test::Incomplete, int, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
 
 // error: class `absl::flat_hash_map<class crubit::test::NoDestructor, int, 42>` could not be bound
 //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor
@@ -145,7 +142,7 @@ pub mod crubit {
 //   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public operator delete
 
 // error: class `absl::flat_hash_map<int, class crubit::test::Incomplete, 42>` could not be bound
-//   incomplete type
+//   Type `absl::flat_hash_map<int, class crubit::test::Incomplete, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
 
 // error: class `absl::flat_hash_map<int, class crubit::test::NoDestructor, 42>` could not be bound
 //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor
@@ -162,18 +159,17 @@ pub mod crubit {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: absl :: flat_hash_map < int , unsigned long , 42 >
+///CRUBIT_ANNOTATE: cpp_type=absl :: flat_hash_map < int , unsigned long , 42 >
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {}
 impl !Sync for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {}
-impl ::core::fmt::Debug for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter.debug_struct("__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE").finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("absl :: flat_hash_map < int , unsigned long , 42 >"),
+    crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE
+);
 
 impl Default for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
     #[inline(always)]

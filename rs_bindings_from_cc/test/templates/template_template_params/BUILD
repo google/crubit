@@ -9,7 +9,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "template_template_params",
     hdrs = ["template_template_params.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     deps = ["//support:annotations"],
 )
 

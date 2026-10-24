@@ -85,7 +85,7 @@ crubit_test_cc_library(
     srcs = ["simple_string_view.cc"],
     hdrs = ["simple_string_view.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:supported",
     ],
     deps = [":test_annotations"],
 )
@@ -117,7 +117,7 @@ crubit_test_cc_library(
     srcs = ["crefs.cc"],
     hdrs = ["crefs.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:supported",
     ],
 )
 
@@ -149,7 +149,7 @@ crubit_test_cc_library(
     srcs = ["assumed_span.cc"],
     hdrs = ["assumed_span.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:supported",
     ],
     deps = ["@abseil-cpp//absl/types:span"],
 )
