@@ -34,7 +34,7 @@ where
     test_format_item_with_features(
         source,
         name,
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        crubit_feature::CrubitFeature::Supported,
         /* with_kythe_annotations= */ false,
         test_function,
     )
@@ -100,7 +100,7 @@ fn test_format_item_with_features_impl(
 const DEFAULT_KNOWN_CRATE_NAMES: &[&str] = &["alloc", "core", "std"];
 
 fn default_test_features() -> flagset::FlagSet<crubit_feature::CrubitFeature> {
-    crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported
+    crubit_feature::CrubitFeature::Supported.into()
 }
 
 struct TestDbOptions<'a> {

@@ -23,7 +23,6 @@ rust_library(
     name = "callables",
     srcs = ["callables.rs"],
     aspect_hints = [
-        "//features:experimental",
         "//features:movable_return_values",
     ],
     edition = "2024",

@@ -17,9 +17,6 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "function_pointers",
     srcs = ["function_pointers.rs"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
     edition = "2024",
     proc_macro_deps = ["//support:crubit_annotate"],
 )

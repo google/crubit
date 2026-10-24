@@ -111,9 +111,6 @@ crubit_cc_test(
 rust_library(
     name = "bridged_types",
     srcs = ["bridged_types.rs"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
     edition = "2024",
     deps = [
         "//support:bridge_rust",
@@ -136,9 +133,6 @@ golden_test(
 rust_library(
     name = "layout_equivalent_pointers",
     srcs = ["layout_equivalent_pointers.rs"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
     edition = "2024",
     deps = [
         "//support:bridge_rust",

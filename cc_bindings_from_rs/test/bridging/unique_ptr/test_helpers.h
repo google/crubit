@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "absl/base/nullability.h"
 #include "support/annotations.h"
 
 namespace unique_ptr_test {
@@ -23,8 +24,8 @@ struct Target {
   std::shared_ptr<int32_t> token;
 };
 
-CRUBIT_MUST_BIND std::unique_ptr<Target> create_target(
-    std::shared_ptr<int32_t> token);
+CRUBIT_MUST_BIND absl_nonnull std::unique_ptr<Target> create_target(
+    absl_nonnull std::shared_ptr<int32_t> token);
 
 // For virtual_unique_ptr test
 struct Base {
@@ -38,8 +39,8 @@ struct Derived : public Base {
   std::shared_ptr<int32_t> token;
 };
 
-CRUBIT_MUST_BIND std::unique_ptr<Base> create_virtual_base(
-    std::shared_ptr<int32_t> token);
+CRUBIT_MUST_BIND absl_nonnull std::unique_ptr<Base> create_virtual_base(
+    absl_nonnull std::shared_ptr<int32_t> token);
 
 }  // namespace unique_ptr_test
 

@@ -18,9 +18,6 @@ rust_library(
     name = "do_not_bind",
     testonly = 1,
     srcs = ["do_not_bind.rs"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
     edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",

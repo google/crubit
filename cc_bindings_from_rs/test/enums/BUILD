@@ -24,9 +24,6 @@ rust_library(
     name = "enums",
     testonly = 1,
     srcs = ["enums.rs"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
     edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",

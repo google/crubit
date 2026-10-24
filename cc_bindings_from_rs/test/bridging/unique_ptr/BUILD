@@ -23,14 +23,16 @@ crubit_test_cc_library(
     aspect_hints = [
         ":test_helpers_rust.hint",
     ],
-    deps = ["//support:annotations"],
+    deps = [
+        "//support:annotations",
+        "@abseil-cpp//absl/base:nullability",
+    ],
 )
 
 rust_api_from_cpp(
     name = "test_helpers_rust",
     testonly = 1,
     cpp_target = ":test_helpers",
-    crubit_features = ["experimental"],
 )
 
 rust_library(
