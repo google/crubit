@@ -5,12 +5,21 @@
 
 #include <cstdint>
 #include <optional>
+#include <type_traits>
 #include <utility>
 
 #include "gtest/gtest.h"
 #include "support/rs_std/rs_std.h"
 
 namespace {
+
+TEST(OptionTest, ShorthandAlias) {
+  static_assert(std::is_same_v<rs::Option<uint8_t>, rs_std::Option<uint8_t>>);
+  option::HasOptions has_options = option::HasOptions::new_(1);
+  rs::Option<uint8_t> direct = std::move(has_options.direct);
+  ASSERT_TRUE(direct.has_value());
+  EXPECT_EQ(*direct, 1);
+}
 
 TEST(OptionTest, OptionWithNicheIsConvertibleToStd) {
   option::HasOptions has_options = option::HasOptions::new_(1);

@@ -6,6 +6,7 @@
 
 #include <numeric>
 #include <span>
+#include <type_traits>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -33,6 +34,12 @@ TEST(VecTest, ReturnVec) {
   rs::SliceRef<const int32_t> sr = v;
   EXPECT_EQ(sr.size(), 3);
   EXPECT_EQ(sr.data()[0], 1);
+}
+
+TEST(VecTest, ShorthandAlias) {
+  static_assert(std::is_same_v<rs::Vec<int32_t>, rs_std::Vec<int32_t>>);
+  rs::Vec<int32_t> v = vec::return_vec();
+  EXPECT_EQ(v.size(), 3);
 }
 
 TEST(VecTest, StructWithVec) {

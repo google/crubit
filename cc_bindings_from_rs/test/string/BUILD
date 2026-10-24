@@ -33,7 +33,6 @@ crubit_cc_test(
     deps = [
         ":string_cc_api",
         "//support/rs_std",
-        "//support/rs_std:rs_alloc",
         "@googletest//:gtest_main",
     ],
 )
