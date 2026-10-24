@@ -195,6 +195,6 @@ pub fn tagless_cpp_type_name_for_item(
             .cc_name()
             .parse::<TokenStream>()
             .map_err(|_| anyhow!("malformed type name: {:?}", existing_rust_type.cc_name())),
-        _ => bail!("Item does not define a type: {:?}", item),
+        _ => bail!("`{}` does not define a type", db.debug_name(item.id())),
     }
 }

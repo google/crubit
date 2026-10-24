@@ -1331,7 +1331,7 @@ impl<'a> RsTypeKind<'a> {
             Item::ExistingRustType(existing_rust_type) => {
                 RsTypeKind::new_existing_rust_type(db, existing_rust_type, options, template_args)
             }
-            other_item => bail!("Item does not define a type: {other_item:?}"),
+            other_item => bail!("`{}` does not define a type", db.debug_name(other_item.id())),
         }
     }
 
@@ -2158,7 +2158,9 @@ impl<'a> RsTypeKind<'a> {
                 // to a trait impl that take the first argument by value.
                 Ok(RsSnippet::new(quote! { self }))
             }
-            _ => bail!("Unexpected type of `self` parameter: {:?}", self),
+            // The caller adds the type to the error: `RsTypeKind`'s `Debug` output contains item
+            // IDs, which differ from run to run.
+            _ => bail!("Unexpected type of `self` parameter"),
         }
     }
 
