@@ -217,6 +217,71 @@ crubit_support_internal_bindings_support
 crubit_support_internal_cpp_config
 )
 
+add_library(crubit_support_rs_std_box INTERFACE
+"box.h"
+)
+set_target_properties(crubit_support_rs_std_box PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_rs_std_box INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
+target_link_libraries(crubit_support_rs_std_box INTERFACE
+crubit_support_annotations_internal
+crubit_support_movable
+crubit_support_unsafe_relocate_tag
+crubit_support_internal_bindings_support
+)
+
+add_library(crubit_support_rs_std_pin_box INTERFACE
+"pin_box.h"
+)
+set_target_properties(crubit_support_rs_std_pin_box PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_rs_std_pin_box INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
+target_link_libraries(crubit_support_rs_std_pin_box INTERFACE
+crubit_support_annotations_internal
+crubit_support_movable
+crubit_support_unsafe_relocate_tag
+crubit_support_internal_bindings_support
+)
+
+add_library(crubit_support_rs_std_slice_box INTERFACE
+"slice_box.h"
+)
+set_target_properties(crubit_support_rs_std_slice_box PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_rs_std_slice_box INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
+target_link_libraries(crubit_support_rs_std_slice_box INTERFACE
+crubit_support_rs_std_slice_ref
+crubit_support_annotations_internal
+crubit_support_unsafe_relocate_tag
+crubit_support_internal_bindings_support
+)
+
+add_library(crubit_support_rs_std_str_box INTERFACE
+"str_box.h"
+)
+set_target_properties(crubit_support_rs_std_str_box PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_rs_std_str_box INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
+target_link_libraries(crubit_support_rs_std_str_box INTERFACE
+crubit_support_rs_std_str_ref
+crubit_support_annotations_internal
+crubit_support_movable
+crubit_support_unsafe_relocate_tag
+crubit_support_rs_std_internal_is_utf8
+)
+
 add_library(crubit_support_rs_std_waker STATIC
 "waker.cc"
 "waker.h"
