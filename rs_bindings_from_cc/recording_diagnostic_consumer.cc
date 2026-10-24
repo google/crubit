@@ -9,24 +9,21 @@
 #include <string>
 #include <utility>
 
-#include "absl/cleanup/cleanup.h"
-#include "absl/functional/function_ref.h"
-#include "absl/log/log.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/str_join.h"
-#include "absl/strings/string_view.h"
-#include "absl/strings/strip.h"
+#include "common/check.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
+#include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/FormatVariadic.h"
 
 namespace crubit {
 
 // Clang doesn't provide a public utility method to stringify the diagnostic
 // level, so we roll our own here.
-static ::absl::string_view GetDiagnosticLevelName(
+static ::llvm::StringRef GetDiagnosticLevelName(
     clang::DiagnosticsEngine::Level level) {
   switch (level) {
     case clang::DiagnosticsEngine::Ignored:
@@ -42,24 +39,25 @@ static ::absl::string_view GetDiagnosticLevelName(
     case clang::DiagnosticsEngine::Fatal:
       return "fatal error";
     default:
-      LOG(DFATAL) << "Unknown diagnostic level: " << static_cast<int>(level);
+      CRUBIT_CHECK(false) << "Unknown diagnostic level: "
+                          << static_cast<int>(level);
       return "<unknown diagnostic level>";
   };
 }
 
 std::string RecordingDiagnosticConsumer::Diagnostic::FormattedDiagnostics()
     const {
-  constexpr absl::string_view kDiagnosticFormat = "%s:%u:%u: %s: %s";
+  constexpr llvm::StringRef kDiagnosticFormat = "{0}:{1}:{2}: {3}: {4}";
   if (source_location.has_value()) {
-    return absl::StrFormat(
-        kDiagnosticFormat,
-        // `getFileName` has the form `./relative/path.h`.
-        absl::StripPrefix(source_location->getFilename(), "./"),
-        source_location->getLine(), source_location->getColumn(),
-        GetDiagnosticLevelName(diagnostic_level), diagnostic.str());
+    llvm::StringRef filename = source_location->getFilename();
+    filename.consume_front("./");
+    return llvm::formatv(
+        kDiagnosticFormat.data(), filename, source_location->getLine(),
+        source_location->getColumn(), GetDiagnosticLevelName(diagnostic_level),
+        diagnostic.str());
   } else {
-    return absl::StrFormat("%s: %s", GetDiagnosticLevelName(diagnostic_level),
-                           diagnostic.str());
+    return llvm::formatv("{0}: {1}", GetDiagnosticLevelName(diagnostic_level),
+                         diagnostic.str());
   }
 };
 
@@ -90,23 +88,25 @@ void RecordingDiagnosticConsumer::clear() {
 }
 
 std::string RecordingDiagnosticConsumer::ConcatenatedDiagnostics(
-    absl::string_view prefix) const {
+    llvm::StringRef prefix) const {
   // In reverse order, so that it's easier to backtrace.
-  std::string concatenated =
-      absl::StrJoin(diagnostics_.rbegin(), diagnostics_.rend(), "\n",
-                    [](std::string* out, const Diagnostic diagnostic) {
-                      absl::StrAppend(out, diagnostic.FormattedDiagnostics());
-                    });
+  std::vector<std::string> formatted_diagnostics;
+  formatted_diagnostics.reserve(diagnostics_.size());
+  for (auto it = diagnostics_.rbegin(); it != diagnostics_.rend(); ++it) {
+    formatted_diagnostics.push_back(it->FormattedDiagnostics());
+  }
+  std::string concatenated = llvm::join(formatted_diagnostics.begin(),
+                                        formatted_diagnostics.end(), "\n");
   if (concatenated.empty()) {
     return concatenated;
   }
-  return absl::StrCat(prefix, concatenated);
+  return prefix.str() + concatenated;
 }
 
 RecordingDiagnosticConsumer RecordDiagnostics(
     clang::DiagnosticsEngine& diagnostic_engine,
-    absl::FunctionRef<void()> callback,
-    std::optional<absl::FunctionRef<void()>> on_error) {
+    llvm::function_ref<void()> callback,
+    std::optional<llvm::function_ref<void()>> on_error) {
   // Reset the diagnostic engine to a known state. In particular, if there were
   // too many diagnostics reported previously (even in sfinae contexts),
   // the diagnostic engine's fatal bit will get stuck on.
@@ -121,7 +121,7 @@ RecordingDiagnosticConsumer RecordDiagnostics(
       diagnostic_engine.takeClient();
   clang::DiagnosticConsumer* original_consumer = diagnostic_engine.getClient();
   diagnostic_engine.setClient(&diagnostic_recorder, /*ShouldOwnClient=*/false);
-  auto restore_consumer = absl::MakeCleanup([&] {
+  auto restore_consumer = llvm::scope_exit([&] {
     diagnostic_engine.setClient(
         original_consumer,
         /*ShouldOwnClient=*/owned_original_consumer.release() != nullptr);

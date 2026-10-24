@@ -18,6 +18,8 @@ path = "lib.rs"
 
 [dependencies]
 cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys", package = "rs_bindings_from_cc_cc_ir_sys"}
+logging_sys = { path = "../../../cargo/common/logging_sys"}
+status_sys = { path = "../../../cargo/common/status_sys"}
 
 
 [build-dependencies]

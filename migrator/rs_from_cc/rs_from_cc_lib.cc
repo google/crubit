@@ -10,11 +10,10 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
 #include "absl/types/span.h"
+#include "common/status.h"
 #include "migrator/rs_from_cc/converter.h"
 #include "migrator/rs_from_cc/frontend_action.h"
 #include "clang/Basic/FileManager.h"
@@ -24,7 +23,7 @@
 
 namespace crubit_rs_from_cc {
 
-absl::StatusOr<std::string> RsFromCc(const absl::string_view cc_file_content,
+llvm::Expected<std::string> RsFromCc(const absl::string_view cc_file_content,
                                      const absl::string_view cc_file_name,
                                      absl::Span<const absl::string_view> args) {
   std::vector<std::string> args_as_strings{
@@ -40,8 +39,8 @@ absl::StatusOr<std::string> RsFromCc(const absl::string_view cc_file_content,
           clang::tooling::FileContentMappings())) {
     return invocation.rs_code_;
   } else {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Could not compile source file contents");
+    return crubit::InvalidArgumentError(
+        "Could not compile source file contents");
   }
 }
 

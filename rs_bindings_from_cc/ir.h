@@ -24,26 +24,70 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/nullability.h"
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
-#include "absl/strings/substitute.h"
+#include "common/check.h"
+#include "common/status.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir_generated.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/RawCommentList.h"
 #include "llvm/ADT/APSInt.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMapInfo.h"
+#include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/Support/Error.h"
+#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
 
 namespace ir_proto = ::crubit::ffi;
+namespace internal {
+inline std::string Substitute(llvm::StringRef format,
+                              llvm::ArrayRef<std::string> args) {
+  std::string result;
+  for (size_t i = 0; i < format.size(); ++i) {
+    if (format[i] == '$' && i + 1 < format.size()) {
+      if (format[i + 1] >= '0' && format[i + 1] <= '9') {
+        size_t idx = format[i + 1] - '0';
+        if (idx < args.size()) {
+          result += args[idx];
+        }
+        ++i;
+        continue;
+      } else if (format[i + 1] == '$') {
+        result += '$';
+        ++i;
+        continue;
+      }
+    }
+    result += format[i];
+  }
+  return result;
+}
+
+template <typename T>
+std::string ToStringForSubstitute(const T& t) {
+  return (llvm::Twine(t)).str();
+}
+inline std::string ToStringForSubstitute(llvm::StringRef t) { return t.str(); }
+inline std::string ToStringForSubstitute(const char* t) {
+  return std::string(t);
+}
+inline std::string ToStringForSubstitute(const std::string& t) { return t; }
+
+template <typename T>
+inline void AppendToString(std::string& s, const T& t) {
+  s += (llvm::Twine(t)).str();
+}
+
+inline void AppendToString(std::string& s, llvm::StringRef ref) {
+  s += ref.str();
+}
+inline void AppendToString(std::string& s, const std::string& ref) { s += ref; }
+inline void AppendToString(std::string& s, const char* ref) { s += ref; }
+}  // namespace internal
 
 struct Item;
 
@@ -53,15 +97,15 @@ inline constexpr int kJsonIndent = 2;
 
 // Name of the top-level namespace in which `IrFromCc` generates code that
 // triggers `cc_template!` class template instantiations.
-inline constexpr absl::string_view kInstantiationsNamespaceName =
+inline constexpr llvm::StringRef kInstantiationsNamespaceName =
     "__cc_template_instantiations";
 
 // A name of a public header of the C++ library.
 class HeaderName {
  public:
-  explicit HeaderName(absl::string_view name) { inner_.set_name(name); }
+  explicit HeaderName(llvm::StringRef name) { inner_.set_name(name); }
 
-  absl::string_view IncludePath() const { return inner_.name(); }
+  llvm::StringRef IncludePath() const { return inner_.name(); }
 
   const ffi::HeaderName& AsFfi() const { return inner_; }
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -82,7 +126,7 @@ inline bool operator==(const HeaderName& lhs, const HeaderName& rhs) {
 }
 
 inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
-  return o << h.IncludePath();
+  return o << h.IncludePath().str();
 }
 
 // An integer uniquely identifying an Item across the FFI IR so cross-item
@@ -97,8 +141,9 @@ inline std::string DebugStringFromDecl(const clang::Decl& decl) {
   auto ostream = llvm::raw_string_ostream(decl_name);
   decl.print(ostream);
   ostream.flush();
-  return absl::StrFormat("Canonical DeclID: %d; DeclID: %d; decl: %s",
-                         canonical_decl_id, decl_id, decl_name);
+  return llvm::formatv("Canonical DeclID: {0}; DeclID: {1}; decl: {2}",
+                       canonical_decl_id, decl_id, decl_name)
+      .str();
 }
 
 // A numerical ID that uniquely identifies a lifetime.
@@ -134,22 +179,33 @@ class FormattedError final {
   template <size_t N, typename... Ts>
   static FormattedError PrefixedStrCat(const char (&prefix)[N],
                                        Ts&&... moreArgs) {
-    return FormattedError(
-        prefix, absl::StrCat(prefix, ": ", std::forward<Ts>(moreArgs)...));
+    std::string message;
+    llvm::raw_string_ostream os(message);
+    os << prefix << ": ";
+    (os << ... << std::forward<Ts>(moreArgs));
+    return FormattedError(prefix, message);
   }
 
-  // Returns a FormattedError built with `absl::Substitute()`.
+  // Returns a FormattedError built with `internal::Substitute()`.
   template <size_t N, typename... Ts>
   static FormattedError Substitute(const char (&format)[N], Ts&&... args) {
-    return FormattedError(format,
-                          absl::Substitute(format, std::forward<Ts>(args)...));
+    if constexpr (sizeof...(args) == 0) {
+      return FormattedError(format, crubit::internal::Substitute(format, {}));
+    } else {
+      std::string str_args[] = {
+          crubit::internal::ToStringForSubstitute(std::forward<Ts>(args))...};
+      return FormattedError(
+          format,
+          crubit::internal::Substitute(
+              format, llvm::ArrayRef<std::string>(str_args, sizeof...(args))));
+    }
   }
 
   // Extracts a format string from a status payload, if present.
-  static FormattedError FromStatus(absl::Status status);
+  static FormattedError FromStatus(llvm::Error error);
 
-  absl::string_view fmt() const { return inner_.fmt(); }
-  absl::string_view message() const { return inner_.message(); }
+  llvm::StringRef fmt() const { return inner_.fmt(); }
+  llvm::StringRef message() const { return inner_.message(); }
 
   const ffi::FormattedError& AsFfi() const { return inner_; }
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -160,11 +216,11 @@ class FormattedError final {
   }
 
   // Type URL for use as an `absl::Status` payload.
-  static constexpr absl::string_view kFmtPayloadTypeUrl =
+  static constexpr llvm::StringRef kFmtPayloadTypeUrl =
       "type.googleapis.com/crubit.FormattedError.fmt";
 
  private:
-  FormattedError(absl::string_view fmt, absl::string_view message) {
+  FormattedError(llvm::StringRef fmt, llvm::StringRef message) {
     inner_.set_fmt(fmt);
     inner_.set_message(message);
   }
@@ -178,7 +234,7 @@ using ir_proto::PointerTypeKind;
 using ir_proto::Primitive;
 using ir_proto::SafetyAnnotation;
 
-absl::string_view PrimitiveSpelling(Primitive primitive);
+llvm::StringRef PrimitiveSpelling(Primitive primitive);
 CcType CcTypeDecl(ItemId id);
 CcType PointerTo(CcType pointee_type, std::optional<LifetimeId> lifetime,
                  bool nullable);
@@ -204,12 +260,12 @@ CcType RValueReferenceTo(CcType pointee_type,
 //     `identifier` cannot be empty.
 class Identifier {
  public:
-  explicit Identifier(absl::string_view identifier) {
-    CHECK(!identifier.empty());
+  explicit Identifier(llvm::StringRef identifier) {
+    CRUBIT_CHECK(!identifier.empty());
     inner_.set_identifier(identifier);
   }
 
-  absl::string_view Ident() const { return inner_.identifier(); }
+  llvm::StringRef Ident() const { return inner_.identifier(); }
   const ffi::Identifier& AsFfi() const { return inner_; }
   // NOLINTNEXTLINE(google-explicit-constructor)
   operator const ffi::Identifier&() const { return inner_; }
@@ -228,12 +284,12 @@ class Identifier {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Identifier& id) {
-  return o << std::setw(internal::kJsonIndent) << id.Ident();
+  return o << std::setw(internal::kJsonIndent) << id.Ident().str();
 }
 
 using IntegerConstant = ir_proto::IntegerConstant;
 
-absl::StatusOr<IntegerConstant> IntegerConstantFromAPValue(
+llvm::Expected<IntegerConstant> IntegerConstantFromAPValue(
     const llvm::APSInt& value);
 
 using ir_proto::Operator;
@@ -263,7 +319,7 @@ using ir_proto::TraitImplPolarity;
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
 template <typename T>
-const T* absl_nullable get_item_if(const ir_proto::Item& item) {
+const T* _Nullable get_item_if(const ir_proto::Item& item) {
   if constexpr (std::is_same_v<T, ir_proto::Record>) {
     return item.has_record() ? &item.record() : nullptr;
   } else if constexpr (std::is_same_v<T, ir_proto::Func>) {
@@ -292,7 +348,7 @@ const T* absl_nullable get_item_if(const ir_proto::Item& item) {
 }
 
 template <typename T>
-T* absl_nullable get_item_if(ir_proto::Item& item) {
+T* _Nullable get_item_if(ir_proto::Item& item) {
   if constexpr (std::is_same_v<T, ir_proto::Record>) {
     return item.has_record() ? item.mutable_record() : nullptr;
   } else if constexpr (std::is_same_v<T, ir_proto::Func>) {
@@ -324,9 +380,8 @@ T* absl_nullable get_item_if(ir_proto::Item& item) {
 }
 
 template <typename T>
-std::vector<const T* absl_nonnull> get_items_if(
-    const ir_proto::IRProto& ir_proto) {
-  std::vector<const T* absl_nonnull> filtered_items;
+std::vector<const T* _Nonnull> get_items_if(const ir_proto::IRProto& ir_proto) {
+  std::vector<const T* _Nonnull> filtered_items;
   auto process_item = [&](auto& self, const ir_proto::Item& item) -> void {
     if (const T* val = get_item_if<T>(item)) {
       filtered_items.push_back(val);
@@ -360,8 +415,8 @@ std::vector<const T* absl_nonnull> get_items_if(
 }
 
 template <typename T>
-std::vector<T* absl_nonnull> get_items_if(ir_proto::IRProto& ir_proto) {
-  std::vector<T* absl_nonnull> filtered_items;
+std::vector<T* _Nonnull> get_items_if(ir_proto::IRProto& ir_proto) {
+  std::vector<T* _Nonnull> filtered_items;
   auto process_item = [&](auto& self, ir_proto::Item& item) -> void {
     if (T* val = get_item_if<T>(item)) {
       filtered_items.push_back(val);
@@ -397,4 +452,58 @@ using IR = ir_proto::IRProto;
 
 }  // namespace crubit
 
+namespace llvm {
+
+template <>
+struct DenseMapInfo<crubit::HeaderName> {
+  static inline crubit::HeaderName getEmptyKey() {
+    return crubit::HeaderName("\x01<empty>");
+  }
+  static inline crubit::HeaderName getTombstoneKey() {
+    return crubit::HeaderName("\x01<tombstone>");
+  }
+  static unsigned getHashValue(const crubit::HeaderName& Val) {
+    return llvm::hash_value(Val.IncludePath());
+  }
+  static bool isEqual(const crubit::HeaderName& LHS,
+                      const crubit::HeaderName& RHS) {
+    return LHS == RHS;
+  }
+};
+
+template <>
+struct DenseMapInfo<crubit::Identifier> {
+  static inline crubit::Identifier getEmptyKey() {
+    return crubit::Identifier("\x01<empty>");
+  }
+  static inline crubit::Identifier getTombstoneKey() {
+    return crubit::Identifier("\x01<tombstone>");
+  }
+  static unsigned getHashValue(const crubit::Identifier& Val) {
+    return llvm::hash_value(Val.Ident());
+  }
+  static bool isEqual(const crubit::Identifier& LHS,
+                      const crubit::Identifier& RHS) {
+    return LHS == RHS;
+  }
+};
+
+template <>
+struct DenseMapInfo<crubit::FormattedError> {
+  static inline crubit::FormattedError getEmptyKey() {
+    return crubit::FormattedError::Static("\x01<empty>");
+  }
+  static inline crubit::FormattedError getTombstoneKey() {
+    return crubit::FormattedError::Static("\x01<tombstone>");
+  }
+  static unsigned getHashValue(const crubit::FormattedError& Val) {
+    return llvm::hash_combine(Val.fmt(), Val.message());
+  }
+  static bool isEqual(const crubit::FormattedError& LHS,
+                      const crubit::FormattedError& RHS) {
+    return LHS == RHS;
+  }
+};
+
+}  // namespace llvm
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_H_

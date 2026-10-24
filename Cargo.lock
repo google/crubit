@@ -16,6 +16,7 @@ name = "annotation_reader_sys"
 version = "0.0.0"
 dependencies = [
  "crubit_build",
+ "status_sys",
 ]
 
 [[package]]
@@ -851,6 +852,7 @@ name = "file_io_sys"
 version = "0.0.0"
 dependencies = [
  "crubit_build",
+ "status_sys",
 ]
 
 [[package]]
@@ -968,6 +970,18 @@ dependencies = [
  "cfg-if",
  "libc",
  "r-efi",
+]
+
+[[package]]
+name = "google-protobuf"
+version = "0.36.1-release"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c1b1799baa729b23385d7b48428279c3ecbd1222083e872a507ffb794631932"
+dependencies = [
+ "cc",
+ "linkme",
+ "paste-complete",
+ "protobuf-macros",
 ]
 
 [[package]]
@@ -1089,10 +1103,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "linkme"
+version = "0.3.37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3045e122bd98aef8ec3ad58ce84f0791f64e70163d1a02710af4aa11a4d54cc5"
+dependencies = [
+ "linkme-impl",
+]
+
+[[package]]
+name = "linkme-impl"
+version = "0.3.37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77060ebe535362c3da75682cd17b0431017b6e7c5661e714fc69a7ad017d1301"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.4",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
+
+[[package]]
+name = "logging_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+]
 
 [[package]]
 name = "memchr"
@@ -1166,6 +1207,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "paste-complete"
+version = "1.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a4cf96a295ab7f0ec2334fa557745c0e9526595f6ebabbb129563a98dfc1b2a"
+
+[[package]]
 name = "phf"
 version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1234,6 +1281,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "protobuf"
+version = "4.36.1-release"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee794de60d9736458ad4316aee4339f0761b87a7b6b10b2ac6d4c99b1c8af0ff"
+dependencies = [
+ "google-protobuf",
+]
+
+[[package]]
+name = "protobuf-codegen"
+version = "4.36.1-release"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea064ac566d3f94e5017da436d8c47d6afb8101febf62194055171b6ed4b5577"
+
+[[package]]
+name = "protobuf-macros"
+version = "0.36.1-release"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16a4745e7f0a32c238439105b43ad064d6dbda6ed4d9f7f0c7957e573f10eb40"
+dependencies = [
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -1309,8 +1381,10 @@ name = "rs_bindings_from_cc_annotations_consumer_sys"
 version = "0.0.0"
 dependencies = [
  "annotation_reader_sys",
+ "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1339,6 +1413,7 @@ dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
  "rs_bindings_from_cc_recording_diagnostic_consumer_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1371,6 +1446,7 @@ dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_collect_instantiations",
+ "status_sys",
 ]
 
 [[package]]
@@ -1379,6 +1455,7 @@ version = "0.0.0"
 dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
+ "status_sys",
 ]
 
 [[package]]
@@ -1394,7 +1471,9 @@ name = "rs_bindings_from_cc_cmdline_sys"
 version = "0.0.0"
 dependencies = [
  "crubit_build",
+ "logging_sys",
  "rs_bindings_from_cc_cc_ir_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1514,6 +1593,7 @@ dependencies = [
  "lifetime_annotations_sys",
  "pragma_sys",
  "rs_bindings_from_cc_ast_consumer_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1592,6 +1672,24 @@ dependencies = [
  "rs_bindings_from_cc_ir_from_cc_sys",
  "rs_bindings_from_cc_profiling_sys",
  "rs_bindings_from_cc_src_code_gen_sys",
+ "status_sys",
+]
+
+[[package]]
+name = "rs_bindings_from_cc_generate_bindings_cc_proto_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+ "rs_bindings_from_cc_generate_bindings_rust_proto",
+]
+
+[[package]]
+name = "rs_bindings_from_cc_generate_bindings_rust_proto"
+version = "0.0.0"
+dependencies = [
+ "protobuf",
+ "protobuf-codegen",
+ "rs_bindings_from_cc_ir_rust_proto",
 ]
 
 [[package]]
@@ -1752,6 +1850,7 @@ dependencies = [
  "rs_bindings_from_cc_generate_bindings_and_metadata_sys",
  "rs_bindings_from_cc_profiling_sys",
  "rs_bindings_from_cc_src_code_gen_ffi_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1760,11 +1859,13 @@ version = "0.0.0"
 dependencies = [
  "annotation_reader_sys",
  "crubit_build",
+ "logging_sys",
  "pragma_sys",
  "rs_bindings_from_cc_annotations_consumer_sys",
  "rs_bindings_from_cc_ast_util_sys",
  "rs_bindings_from_cc_cc_ir_sys",
  "rs_bindings_from_cc_class_template_sys",
+ "rs_bindings_from_cc_cmdline_sys",
  "rs_bindings_from_cc_cxx_record_sys",
  "rs_bindings_from_cc_enum_constant_sys",
  "rs_bindings_from_cc_enum_sys",
@@ -1777,6 +1878,7 @@ dependencies = [
  "rs_bindings_from_cc_type_alias_sys",
  "rs_bindings_from_cc_type_map_sys",
  "rs_bindings_from_cc_var_sys",
+ "status_sys",
  "type_lifetimes_sys",
 ]
 
@@ -1805,7 +1907,9 @@ dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_cmdline_sys",
  "rs_bindings_from_cc_ir_from_cc_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1814,8 +1918,10 @@ version = "0.0.0"
 dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_cmdline_sys",
  "rs_bindings_from_cc_frontend_action_sys",
  "rs_bindings_from_cc_profiling_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1833,6 +1939,14 @@ dependencies = [
  "rs_bindings_from_cc_ir_testing",
  "token_stream_matchers",
  "token_stream_printer",
+]
+
+[[package]]
+name = "rs_bindings_from_cc_ir_rust_proto"
+version = "0.0.0"
+dependencies = [
+ "protobuf",
+ "protobuf-codegen",
 ]
 
 [[package]]
@@ -1904,6 +2018,7 @@ name = "rs_bindings_from_cc_profiling_sys"
 version = "0.0.0"
 dependencies = [
  "crubit_build",
+ "status_sys",
 ]
 
 [[package]]
@@ -1913,7 +2028,9 @@ dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_cmdline_sys",
  "rs_bindings_from_cc_ir_from_cc_dependency_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1954,8 +2071,10 @@ dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_api_ffi",
  "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_generate_bindings_cc_proto_sys",
  "rs_bindings_from_cc_profiling_sys",
  "rs_bindings_from_cc_src_code_gen_ffi_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1986,8 +2105,10 @@ dependencies = [
 name = "rs_bindings_from_cc_type_map_sys"
 version = "0.0.0"
 dependencies = [
+ "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -2135,6 +2256,13 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "status_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+]
 
 [[package]]
 name = "strsim"

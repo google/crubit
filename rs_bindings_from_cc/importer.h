@@ -12,12 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/nullability.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/log/check.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "common/check.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/decl_importer.h"
@@ -44,7 +39,7 @@ struct ItemCacheEntry {
   enum class Status { kInProgress, kCompleted, kFailed, kUnsupported };
   Status status = Status::kCompleted;
   ItemId id = ItemId(0);
-  std::unique_ptr<ir_proto::Item> proto_item;
+  std::unique_ptr<crubit::ffi::Item> proto_item;
 };
 
 // Iterates over the AST created from the invocation's entry headers and
@@ -55,34 +50,34 @@ class Importer final : public ImportContext {
   // Maps each declaration to its representative copy. See
   // `representative_copy_cache_`.
   using RepresentativeCopyCache =
-      absl::flat_hash_map<const clang::Decl*, const clang::Decl*>;
+      llvm::DenseMap<const clang::Decl*, const clang::Decl*>;
 
   explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
                     clang::Sema& sema);
 
   // Import all visible declarations from a translation unit.
-  void Import(clang::TranslationUnitDecl* absl_nonnull decl);
+  void Import(clang::TranslationUnitDecl* _Nonnull decl);
 
  protected:
   // Implementation of `ImportContext`
   void ImportDeclsFromDeclContext(
       const clang::DeclContext& decl_context) override;
-  std::unique_ptr<ir_proto::Item> HardError(const clang::Decl& decl,
-                                            FormattedError error) override;
-  std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
+  std::unique_ptr<crubit::ffi::Item> HardError(const clang::Decl& decl,
+                                               FormattedError error) override;
+  std::unique_ptr<crubit::ffi::Item> ImportUnsupportedItem(
       const clang::Decl& decl,
-      std::optional<ir_proto::UnsupportedItem::Path> path,
+      std::optional<crubit::ffi::UnsupportedItem::Path> path,
       std::vector<FormattedError> errors, bool is_hard_error) override;
-  absl_nullable std::unique_ptr<ir_proto::Item> ImportDecl(
-      clang::Decl* absl_nonnull decl) override;
-  const ir_proto::Item* absl_nullable GetImportedItem(
+  _Nullable std::unique_ptr<crubit::ffi::Item> ImportDecl(
+      clang::Decl* _Nonnull decl) override;
+  const crubit::ffi::Item* _Nullable GetImportedItem(
       const clang::Decl& decl) const override;
 
   ItemId GenerateItemId(const clang::Decl& decl) const override;
   ItemId GenerateItemId(const clang::RawComment& comment) const override;
   bool IsUnsupportedAndAlien(ItemId item_id) const override;
-  absl::StatusOr<std::optional<ItemId>> GetEnclosingItemId(
-      clang::Decl* absl_nonnull decl) override;
+  llvm::Expected<std::optional<ItemId>> GetEnclosingItemId(
+      clang::Decl* _Nonnull decl) override;
 
   // The canonical children and comments that are within a decl.
   // This is the return type of `GetDeclItems`, and is intended to only be used
@@ -97,17 +92,17 @@ class Importer final : public ImportContext {
   // GetTopLevelItemIdsInSourceOrder and GetItemIdsInSourceOrder.
   DeclItems GetDeclItems(const clang::Decl& decl);
 
-  absl::flat_hash_map<BazelLabel, std::vector<ItemId>>
+  llvm::DenseMap<BazelLabel, std::vector<ItemId>>
   GetTopLevelItemIdsInSourceOrder(
       const clang::TranslationUnitDecl& decl) override;
   std::vector<ItemId> GetItemIdsInSourceOrder(
-      clang::Decl* absl_nonnull decl) override;
+      clang::Decl* _Nonnull decl) override;
   std::vector<ItemId> ImportInheritedFriendOperators(
-      clang::CXXRecordDecl* absl_nonnull record_decl) override;
+      clang::CXXRecordDecl* _Nonnull record_decl) override;
   std::string GetMangledName(const clang::NamedDecl& named_decl) const override;
-  std::optional<ir_proto::UnsupportedItem::Path>
+  std::optional<crubit::ffi::UnsupportedItem::Path>
   GetUnsupportedItemPathForTemplateDecl(
-      clang::RedeclarableTemplateDecl* absl_nonnull template_decl) override;
+      clang::RedeclarableTemplateDecl* _Nonnull template_decl) override;
   BazelLabel GetOwningTarget(const clang::Decl& decl) const override;
   bool IsFromCurrentTarget(const clang::Decl& decl) const override;
   bool RefersToOwnedDefinition(const clang::CXXRecordDecl& decl) const override;
@@ -124,22 +119,22 @@ class Importer final : public ImportContext {
   bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const override;
   bool IsRecordImplDebugEnabledForTarget(
       const BazelLabel& label) const override;
-  absl::StatusOr<bool> DetectFormatter(
+  llvm::Expected<bool> DetectFormatter(
       const clang::TypeDecl& decl) const override;
   bool ImplementsCoreFmtDebug(const clang::TypeDecl& type) const override;
-  absl::StatusOr<std::optional<bool>> GetCrubitOverrideDebugAnnotation(
+  llvm::Expected<std::optional<bool>> GetCrubitOverrideDebugAnnotation(
       const clang::TypeDecl& type) const override;
-  absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
+  llvm::Expected<TranslatedUnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl& named_decl) const override;
-  absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
+  llvm::Expected<TranslatedIdentifier> GetTranslatedIdentifier(
       const clang::NamedDecl& named_decl) const override;
   std::optional<std::string> GetComment(const clang::Decl& decl) const override;
-  ir_proto::DeclLocation ConvertDeclLocation(
+  crubit::ffi::DeclLocation ConvertDeclLocation(
       clang::SourceLocation loc,
-      clang::DeclarationNameInfo* absl_nullable name_info) const override;
+      clang::DeclarationNameInfo* _Nullable name_info) const override;
   CcType ConvertQualType(
       clang::QualType qual_type,
-      const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
+      const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
       bool nullable, bool assume_lifetimes) override;
 
   std::string GetUniqueName(const clang::Decl& decl) const override;
@@ -152,16 +147,15 @@ class Importer final : public ImportContext {
       std::string reason) override;
   bool IsInvalidTemplateSpecialization(
       const clang::CXXRecordDecl& decl) const override;
-  bool EnsureSuccessfullyImported(
-      clang::NamedDecl* absl_nonnull decl) override {
+  bool EnsureSuccessfullyImported(clang::NamedDecl* _Nonnull decl) override {
     // First, return early so that we avoid re-entrant imports.
     if (HasBeenAlreadySuccessfullyImported(*decl)) return true;
     (void)GetDeclItem(CanonicalizeDecl(decl));
     return HasBeenAlreadySuccessfullyImported(*decl);
   }
 
-  clang::TypedefNameDecl* absl_nullable GetTemplateSpecializationAlias(
-      clang::Decl* absl_nonnull decl) const override;
+  clang::TypedefNameDecl* _Nullable GetTemplateSpecializationAlias(
+      clang::Decl* _Nonnull decl) const override;
 
  private:
   class SourceOrderKey;
@@ -207,11 +201,11 @@ class Importer final : public ImportContext {
   // from a `[[clang::lifetimebound]]` constructor parameter) are not counted.
   std::optional<size_t> CountLifetimes(clang::QualType type) const;
 
-  absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
+  llvm::DenseSet<const clang::ClassTemplateSpecializationDecl*>
       always_instantiate_specs_;
 
-  const ir_proto::Item* absl_nullable GetDeclItem(
-      clang::Decl* absl_nonnull decl) override;
+  const crubit::ffi::Item* _Nullable GetDeclItem(
+      clang::Decl* _Nonnull decl) override;
   // Stores the comments of this target in source order.
   void ImportFreeComments();
 
@@ -224,13 +218,14 @@ class Importer final : public ImportContext {
   // `-fparse-all-comments`). So for declarations in files that were loaded
   // from a module, this looks for the comment in `module_comments_` instead of
   // in `ctx_.Comments`.
-  const clang::RawComment* absl_nullable GetRawComment(
+  const clang::RawComment* _Nullable GetRawComment(
       const clang::Decl& decl) const;
 
   // Returns the comments in `file`, a file loaded from a precompiled header
   // module, collecting them first if necessary. See `module_comments_`.
-  const std::map<unsigned, clang::RawComment*>* absl_nullable
-  GetModuleCommentsInFile(clang::FileID file) const;
+  const std::
+      map<unsigned, clang::RawComment*>* _Nullable GetModuleCommentsInFile(
+          clang::FileID file) const;
 
   // Returns the copy of `file` loaded from a precompiled header module that
   // comes first in the translation unit, or an invalid FileID if `file` was
@@ -247,14 +242,12 @@ class Importer final : public ImportContext {
   clang::SourceLocation TranslateToCommentFile(
       clang::SourceLocation location) const;
 
-  clang::Decl* absl_nullable CanonicalizeDecl(
-      clang::Decl* absl_nonnull decl) const;
-  const clang::Decl* absl_nullable CanonicalizeDecl(
-      const clang::Decl& decl) const;
+  clang::Decl* _Nullable CanonicalizeDecl(clang::Decl* _Nonnull decl) const;
+  const clang::Decl* _Nullable CanonicalizeDecl(const clang::Decl& decl) const;
   // Like `CanonicalizeDecl`, but only considers the redeclaration chain of
   // `decl`, and not other declarations of the same entity that Clang did not
   // merge into it. See `CanonicalizeUnmergedDuplicates`.
-  const clang::Decl* absl_nullable CanonicalizeDeclInRedeclChain(
+  const clang::Decl* _Nullable CanonicalizeDeclInRedeclChain(
       const clang::Decl& decl) const;
   // Given the result of `CanonicalizeDeclInRedeclChain`, returns a single
   // representative of all the declarations of the same entity in the same
@@ -266,22 +259,22 @@ class Importer final : public ImportContext {
   // current target and to a dependency): Clang merges declarations with
   // external linkage, but not e.g. typedefs, or variables with internal
   // linkage.
-  const clang::Decl* absl_nonnull CanonicalizeUnmergedDuplicates(
-      const clang::Decl* absl_nonnull decl) const;
+  const clang::Decl* _Nonnull CanonicalizeUnmergedDuplicates(
+      const clang::Decl* _Nonnull decl) const;
 
   std::vector<clang::Decl*> GetCanonicalChildren(
       const clang::DeclContext& decl_context) const;
   // Converts a type to a CcType.
   // TODO(b/251045039): Return a `CcType`.
-  absl::StatusOr<CcType> ConvertType(
+  llvm::Expected<CcType> ConvertType(
       const clang::Type& type,
-      const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
+      const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
       bool nullable, bool assume_lifetimes);
   // Converts a type, without processing attributes.
   // TODO(b/251045039): Return a `CcType`.
-  absl::StatusOr<CcType> ConvertUnattributedType(
+  llvm::Expected<CcType> ConvertUnattributedType(
       const clang::Type& type,
-      const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
+      const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
       bool nullable, bool assume_lifetimes);
   // Adds the lifetime parameter that a specialization takes for its template
   // argument (see `GetTemplateArgumentLifetimeParam`) to `cpp_type`, the
@@ -289,10 +282,10 @@ class Importer final : public ImportContext {
   // argument, if `type` is a use of the specialization, or unbound, if `type`
   // is the template parameter inside it. `has_written_lifetimes` is whether
   // `type` itself was written with lifetimes.
-  absl::Status AddTemplateArgumentLifetime(const clang::Type& type,
-                                           bool has_written_lifetimes,
-                                           CcType& cpp_type);
-  CcType ConvertTypeDecl(clang::NamedDecl* absl_nonnull decl);
+  llvm::Error AddTemplateArgumentLifetime(const clang::Type& type,
+                                          bool has_written_lifetimes,
+                                          CcType& cpp_type);
+  CcType ConvertTypeDecl(clang::NamedDecl* _Nonnull decl);
 
   // Converts `type` into a CcType, after first importing the Record behind
   // the template instantiation.
@@ -320,21 +313,21 @@ class Importer final : public ImportContext {
   // The result is memoized in `instantiation_attempts_`, which is required for
   // correctness rather than just for speed -- see the comment there.
   std::optional<std::string> CheckSpecializationInstantiable(
-      clang::ClassTemplateSpecializationDecl* absl_nonnull specialization_decl);
+      clang::ClassTemplateSpecializationDecl* _Nonnull specialization_decl);
   std::optional<std::string> CheckTemplateArgInstantiable(
       const clang::TemplateArgument& arg);
 
   bool RefersToOwnedDefinitionImpl(
       const clang::CXXRecordDecl& decl,
-      absl::flat_hash_set<const clang::CXXRecordDecl*>& visited) const;
+      llvm::DenseSet<const clang::CXXRecordDecl*>& visited) const;
 
   bool IsFeatureEnabledForTarget(const BazelLabel& label,
-                                 absl::string_view feature) const override;
+                                 llvm::StringRef feature) const override;
 
-  absl::StatusOr<std::optional<bool>> GetCrubitOverrideDisplayAnnotation(
+  llvm::Expected<std::optional<bool>> GetCrubitOverrideDisplayAnnotation(
       const clang::TypeDecl& decl) const;
 
-  absl::StatusOr<std::optional<bool>> DetectFormatterForType(
+  llvm::Expected<std::optional<bool>> DetectFormatterForType(
       clang::CanQualType lookup, clang::CanQualType target) const;
 
   // The different decl importers. Note that order matters: the first importer
@@ -346,13 +339,13 @@ class Importer final : public ImportContext {
   // This is always an Itanium mangler, even when the target platform uses
   // another C++ ABI (e.g. the Microsoft ABI).  See `GetMangledName` for why.
   std::unique_ptr<clang::MangleContext> itanium_tag_name_mangler_;
-  absl::flat_hash_map<const clang::Decl*, ItemCacheEntry> import_cache_;
+  llvm::DenseMap<const clang::Decl*, ItemCacheEntry> import_cache_;
   // The keys of `import_cache_`, in the order they were inserted. Entries are
   // never removed from `import_cache_`. Its iteration order is randomized
   // between processes, so code whose result depends on the order in which it
   // visits the cache iterates this instead.
   std::vector<const clang::Decl*> import_cache_insertion_order_;
-  absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
+  llvm::DenseSet<const clang::ClassTemplateSpecializationDecl*>
       class_template_instantiations_;
   // Memoizes the outcome of the eager instantiation attempts performed by
   // `CheckSpecializationInstantiable`, keyed by the canonical decl of the
@@ -363,7 +356,7 @@ class Importer final : public ImportContext {
   // the errors of a failed instantiation only once, and leaves behind a
   // complete but ill-formed definition, so later attempts to complete the same
   // type silently succeed.
-  absl::flat_hash_map<const clang::CXXRecordDecl*, std::optional<std::string>>
+  llvm::DenseMap<const clang::CXXRecordDecl*, std::optional<std::string>>
       instantiation_attempts_;
 
   std::vector<const clang::RawComment*> comments_;
@@ -379,16 +372,16 @@ class Importer final : public ImportContext {
   mutable llvm::DenseSet<clang::FileID> module_comment_files_;
   // With header modules, the copy of each public header that `comments_` are
   // in. Empty without header modules. See `TranslateToCommentFile`.
-  absl::flat_hash_map<const clang::FileEntry*, clang::FileID> comment_file_ids_;
+  llvm::DenseMap<const clang::FileEntry*, clang::FileID> comment_file_ids_;
 
   // Set of decls that have been successfully imported (i.e. that will be
   // present in the IR output / that will not produce dangling ItemIds in the IR
   // output).
   //
   // Note that this includes non-TypeDecls in the form of using decls.
-  absl::flat_hash_set<const clang::NamedDecl*> known_type_decls_;
+  llvm::DenseSet<const clang::NamedDecl*> known_type_decls_;
   // Memoizes `CanonicalizeUnmergedDuplicates`.
-  mutable absl::flat_hash_map<const clang::Decl*, const clang::Decl*>
+  mutable llvm::DenseMap<const clang::Decl*, const clang::Decl*>
       unmerged_duplicates_cache_;
   // Memoizes the representative copy of each declaration (with header modules,
   // the copy whose source locations are used for comments and for ordering).
@@ -396,8 +389,8 @@ class Importer final : public ImportContext {
   mutable RepresentativeCopyCache representative_copy_cache_;
 
   clang::QualType rs_core_fmt_debug_;
-  const clang::ClassTemplateDecl* absl_nullable rs_impl_;
-  const clang::ClassTemplateDecl* absl_nullable rs_std_impl_;
+  const clang::ClassTemplateDecl* _Nullable rs_impl_;
+  const clang::ClassTemplateDecl* _Nullable rs_std_impl_;
 
   // Returns the nullability that `type` has in the absence of an explicit
   // annotation: the `#pragma nullability file_default` of the file in which
@@ -423,7 +416,7 @@ class Importer final : public ImportContext {
   // `ImportInheritedFriendOperators`, if any. `GetOwningTarget` attributes it
   // to the current target, because it is imported as if it were a hidden
   // friend of a record from the current target.
-  const clang::FunctionDecl* absl_nullable inherited_friend_operator_ = nullptr;
+  const clang::FunctionDecl* _Nullable inherited_friend_operator_ = nullptr;
 };  // class Importer
 
 }  // namespace crubit
