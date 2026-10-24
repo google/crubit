@@ -49,6 +49,8 @@ set(CRUBIT_SUBDIRS
   support/internal
   support/rs_std
   support/rs_std/internal
+  support/rs
+  support/rs/internal
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

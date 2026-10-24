@@ -1,0 +1,303 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated BUILD.gn.
+
+import("../../crubit.gni")
+import("//build/rust/rust_macro.gni")
+import("//build/rust/rust_static_library.gni")
+
+source_set("char") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "char.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:char",
+  ]
+}
+
+source_set("dyn_callable") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "dyn_callable.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:dyn_callable",
+  ]
+}
+
+source_set("dyn_erased_future_cc") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "dyn_erased_future.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:dyn_erased_future_cc",
+  ]
+}
+
+source_set("enum") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "enum.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:enum",
+  ]
+}
+
+source_set("int") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "int.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:int",
+  ]
+}
+
+source_set("iterator_adapter") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "iterator_adapter.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:iterator_adapter",
+  ]
+}
+
+source_set("lossy_formatter_for_bindings") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "lossy_formatter_for_bindings.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:lossy_formatter_for_bindings",
+  ]
+}
+
+source_set("option") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "option.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:option",
+  ]
+}
+
+source_set("result") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "result.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:result",
+  ]
+}
+
+source_set("slice_ref") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "slice_ref.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:slice_ref",
+  ]
+}
+
+source_set("str_ref") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "str_ref.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:str_ref",
+  ]
+}
+
+source_set("traits") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "traits.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:traits",
+  ]
+}
+
+source_set("tuple") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "tuple.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:tuple",
+  ]
+}
+
+source_set("unit") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "unit.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:unit",
+  ]
+}
+
+source_set("vec") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "vec.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:vec",
+  ]
+}
+
+source_set("waker") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "waker.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/rs_std:waker",
+  ]
+}
+
+group("rs_cpp") {
+  public_deps = [
+    ":char",
+    ":dyn_callable",
+    ":dyn_erased_future_cc",
+    ":enum",
+    ":int",
+    ":iterator_adapter",
+    ":lossy_formatter_for_bindings",
+    ":option",
+    ":result",
+    ":slice_ref",
+    ":str_ref",
+    ":traits",
+    ":tuple",
+    ":unit",
+    ":vec",
+    ":waker",
+  ]
+}
+
