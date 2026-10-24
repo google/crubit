@@ -58,7 +58,7 @@ pub enum TraitName<'a> {
     /// The PartialOrd trait.
     PartialOrd {
         param: Rc<RsTypeKind<'a>>,
-        /// The C++ relational operator that the generated `PartialOrd` impl is backed by.
+        /// The C++ comparison operator that the generated `PartialOrd` impl is backed by.
         op: PartialOrdOp,
     },
     /// The trait for the const C++ operator[] overload.
@@ -87,9 +87,11 @@ impl std::fmt::Display for TraitName<'_> {
     }
 }
 
-/// A C++ relational operator that can be used to implement `PartialOrd`.
+/// A C++ comparison operator that can be used to implement `PartialOrd`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PartialOrdOp {
+    /// `operator<=>` (the spaceship operator)
+    Spaceship,
     /// `operator<`
     Lt,
     /// `operator>`
@@ -101,14 +103,19 @@ pub enum PartialOrdOp {
 }
 
 impl PartialOrdOp {
-    /// All relational operators, in order of preference.
+    /// All comparison operators, in order of preference.
     ///
     /// Only one of these operators is used to implement `PartialOrd` for a given pair of operand
     /// types. If a type overloads several of them, the earliest entry in this list wins, and the
     /// remaining operators fall back on the default `PartialOrd` methods (which are derived from
     /// `partial_cmp`).
-    pub const ALL: [PartialOrdOp; 4] =
-        [PartialOrdOp::Lt, PartialOrdOp::Gt, PartialOrdOp::Le, PartialOrdOp::Ge];
+    pub const ALL: [PartialOrdOp; 5] = [
+        PartialOrdOp::Spaceship,
+        PartialOrdOp::Lt,
+        PartialOrdOp::Gt,
+        PartialOrdOp::Le,
+        PartialOrdOp::Ge,
+    ];
 
     /// Returns the `PartialOrdOp` corresponding to the given C++ operator name, if any.
     pub fn from_cc_name(cc_name: &str) -> Option<PartialOrdOp> {
@@ -118,6 +125,7 @@ impl PartialOrdOp {
     /// The C++ spelling of the operator, e.g. `<=`.
     pub fn cc_name(self) -> &'static str {
         match self {
+            PartialOrdOp::Spaceship => "<=>",
             PartialOrdOp::Lt => "<",
             PartialOrdOp::Gt => ">",
             PartialOrdOp::Le => "<=",
@@ -128,6 +136,7 @@ impl PartialOrdOp {
     /// The name of the `PartialOrd` method implemented by this operator, e.g. `le`.
     pub fn rs_method_name(self) -> &'static str {
         match self {
+            PartialOrdOp::Spaceship => "partial_cmp",
             PartialOrdOp::Lt => "lt",
             PartialOrdOp::Gt => "gt",
             PartialOrdOp::Le => "le",
@@ -135,7 +144,7 @@ impl PartialOrdOp {
         }
     }
 
-    /// The relational operators that take precedence over `self` when implementing `PartialOrd`.
+    /// The comparison operators that take precedence over `self` when implementing `PartialOrd`.
     pub fn preferred_ops(self) -> &'static [PartialOrdOp] {
         let index = PartialOrdOp::ALL.iter().position(|op| *op == self).unwrap();
         &PartialOrdOp::ALL[..index]
