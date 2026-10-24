@@ -1518,3 +1518,41 @@ pub mod tests {
         }
     }
 }
+
+impl memoized::CheapClone for CcInclude {}
+
+/// Pre-interned constant [`TokenStream`]s stored in the bindings database so codegen functions can
+/// borrow `&'db TokenStream` directly instead of repeatedly allocating via `quote!`.
+#[derive(Clone)]
+pub struct CommonTokens {
+    pub void: TokenStream,
+    pub unit: TokenStream,
+    pub rs_unit_t: TokenStream,
+    pub crubit_bool_t: TokenStream,
+    pub crubit_bool_t_const_ref: TokenStream,
+    pub lifetime_static: TokenStream,
+    pub lifetime_wildcard: TokenStream,
+}
+
+impl Default for CommonTokens {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl CommonTokens {
+    pub fn new() -> Self {
+        thread_local! {
+            static INTERNED: CommonTokens = CommonTokens {
+                void: quote! { void },
+                unit: quote! { () },
+                rs_unit_t: quote! { ::rs::unit_t },
+                crubit_bool_t: quote! { __CrubitBoolT },
+                crubit_bool_t_const_ref: quote! { __CrubitBoolT const& },
+                lifetime_static: quote! { 'static },
+                lifetime_wildcard: quote! { '_ },
+            };
+        }
+        INTERNED.with(Clone::clone)
+    }
+}

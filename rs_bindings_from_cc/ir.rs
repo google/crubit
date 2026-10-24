@@ -463,7 +463,7 @@ pub struct CcType {
     pub(crate) unknown_attr: Rc<str>,
     // An ordered list of lifetime variable names applied to this type. It is valid for the same
     // name to appear multiple times.
-    pub(crate) explicit_lifetimes: Vec<Rc<str>>,
+    pub(crate) explicit_lifetimes: Rc<[Rc<str>]>,
 }
 
 impl CcType {
@@ -471,14 +471,14 @@ impl CcType {
         variant: CcTypeVariant,
         is_const: bool,
         unknown_attr: impl Into<Rc<str>>,
-        explicit_lifetimes: Vec<Rc<str>>,
+        explicit_lifetimes: impl Into<Rc<[Rc<str>]>>,
     ) -> Self {
         Self {
             variant,
             is_const,
             is_nonnull: false,
             unknown_attr: unknown_attr.into(),
-            explicit_lifetimes,
+            explicit_lifetimes: explicit_lifetimes.into(),
         }
     }
 
@@ -516,8 +516,12 @@ impl CcType {
         &self.explicit_lifetimes
     }
 
-    pub fn explicit_lifetimes_mut(&mut self) -> &mut Vec<Rc<str>> {
-        &mut self.explicit_lifetimes
+    pub fn set_explicit_lifetimes(&mut self, lifetimes: impl Into<Rc<[Rc<str>]>>) {
+        self.explicit_lifetimes = lifetimes.into();
+    }
+
+    pub fn clear_explicit_lifetimes(&mut self) {
+        self.explicit_lifetimes = Rc::new([]);
     }
 
     pub fn is_unit_type(&self) -> bool {
@@ -532,7 +536,7 @@ impl From<&Record<'_>> for CcType {
             is_const: false,
             is_nonnull: false,
             unknown_attr: Rc::default(),
-            explicit_lifetimes: Vec::default(),
+            explicit_lifetimes: Rc::from([]),
         }
     }
 }
@@ -544,7 +548,7 @@ impl From<&TypeAlias<'_>> for CcType {
             is_const: false,
             is_nonnull: false,
             unknown_attr: Rc::default(),
-            explicit_lifetimes: Vec::default(),
+            explicit_lifetimes: Rc::from([]),
         }
     }
 }
@@ -556,7 +560,7 @@ impl From<&ExistingRustType<'_>> for CcType {
             is_const: false,
             is_nonnull: false,
             unknown_attr: Rc::default(),
-            explicit_lifetimes: Vec::default(),
+            explicit_lifetimes: Rc::from([]),
         }
     }
 }
@@ -880,7 +884,7 @@ pub enum CcTypeVariant {
         param_and_return_types: Rc<[CcType]>,
 
         // Lifetime variable names bound by this function pointer.
-        lifetime_inputs: Vec<Rc<str>>,
+        lifetime_inputs: Rc<[Rc<str>]>,
     },
     Decl {
         id: ItemId,
@@ -5227,3 +5231,9 @@ mod tests {
         assert_eq!(arr.num_elements(), 4);
     }
 }
+
+impl memoized::CheapClone for CcType {}
+
+impl memoized::CheapClone for Field<'_> {}
+impl memoized::CheapClone for Item<'_> {}
+impl memoized::CheapClone for UnqualifiedIdentifier<'_> {}

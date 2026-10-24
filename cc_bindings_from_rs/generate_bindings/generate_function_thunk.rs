@@ -12,7 +12,7 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiTypeToRustExprTokens;
-use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
+use database::code_snippet::{CcPrerequisites, CcSnippet, CcSnippets, ExternCDecl, RsSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use format_type::CcType;
@@ -35,18 +35,19 @@ use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, Mutability, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::{kw, sym, Symbol};
+use std::borrow::Cow;
 use std::collections::{BTreeSet, HashMap};
 
 /// How a function parameter is passed across the `extern "C"` thunk ABI.
-pub enum ParamAbi<'tcx> {
+pub enum ParamAbi<'db, 'tcx> {
     Callable(CallableInfo<'tcx>),
-    Value(ValueAbi<'tcx>),
+    Value(ValueAbi<'db, 'tcx>),
 }
 
-pub fn classify_param_abi<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+pub fn classify_param_abi<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
-) -> Result<ParamAbi<'tcx>> {
+) -> Result<ParamAbi<'db, 'tcx>> {
     if let Some(info) = format_type::get_callable_info(db.tcx(), ty)? {
         return Ok(ParamAbi::Callable(info));
     }
@@ -55,19 +56,19 @@ pub fn classify_param_abi<'tcx>(
 
 /// How a non-callable value (parameter or return value) is passed across the `extern "C"` thunk
 /// ABI.
-pub enum ValueAbi<'tcx> {
-    Bridged(BridgedType),
+pub enum ValueAbi<'db, 'tcx> {
+    Bridged(BridgedType<'db>),
     ByValue,
     LegacyTuple(&'tcx ty::List<Ty<'tcx>>),
     Array,
     ByPointer,
 }
 
-pub fn classify_value_abi<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+pub fn classify_value_abi<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
     is_constructor: bool,
-) -> Result<ValueAbi<'tcx>> {
+) -> Result<ValueAbi<'db, 'tcx>> {
     if is_constructor {
         return Ok(if is_c_abi_compatible_by_value(db, ty) {
             ValueAbi::ByValue
@@ -161,11 +162,15 @@ pub fn generate_thunk_decl<'tcx>(
             .format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })?
             .into_tokens(&mut prereqs);
         prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
-        quote! { ::crubit::DynErasedFuture<#cc_ret_ty> }
+        Cow::Owned(quote! { ::crubit::DynErasedFuture<#cc_ret_ty> })
     } else {
-        db.format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })
-            .with_context(|| format!("Error formatting function return type `{actual_output_ty}`"))?
-            .into_tokens(&mut prereqs)
+        Cow::Borrowed(
+            db.format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })
+                .with_context(|| {
+                    format!("Error formatting function return type `{actual_output_ty}`")
+                })?
+                .into_tokens(&mut prereqs),
+        )
     };
 
     let mut thunk_params = {
@@ -220,29 +225,29 @@ pub fn generate_thunk_decl<'tcx>(
 
     // Types which are not C-ABI compatible by-value are returned via out-pointer parameters.
     let thunk_ret_type = if is_async {
-        let cc_ret_ty = db
+        let cc_ret_ty = &db
             .format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })?
             .tokens;
         thunk_params.push(quote! { ::crubit::DynErasedFuture<#cc_ret_ty>* __ret_ptr });
-        quote! { void }
+        Cow::Borrowed(&db.tokens().void)
     } else {
         match classify_value_abi(db, sig_mid.output(), is_constructor)? {
             ValueAbi::Bridged(BridgedType::ExternCFuncConverters { .. }) | ValueAbi::ByPointer => {
                 thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
-                quote! { void }
+                Cow::Borrowed(&db.tokens().void)
             }
             ValueAbi::Bridged(BridgedType::Option(_)) => {
                 thunk_params.push(quote! { unsigned char * __ret_ptr });
-                quote! { void }
+                Cow::Borrowed(&db.tokens().void)
             }
             ValueAbi::ByValue => main_api_ret_type,
             ValueAbi::LegacyTuple(_) => {
                 thunk_params.push(quote! { void** __ret_ptr });
-                quote! { void }
+                Cow::Borrowed(&db.tokens().void)
             }
             ValueAbi::Array => {
                 thunk_params.push(quote! { void* __ret_ptr });
-                quote! { void }
+                Cow::Borrowed(&db.tokens().void)
             }
         }
     };
@@ -493,7 +498,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
                 }
             }
             BridgedType::Option(crubit_abi_type) => {
-                let crubit_abi_type_expr = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+                let crubit_abi_type_expr = CrubitAbiTypeToRustExprTokens(crubit_abi_type);
                 quote! {
                     // SAFETY: TODO(okabayashi)
                     unsafe {
@@ -636,7 +641,7 @@ pub fn generate_thunk_impl<'tcx>(
     let thunk_return_expression;
     if is_async {
         let return_ptr_ident = format_ident!("__ret_ptr");
-        thunk_return_type = quote! { () };
+        thunk_return_type = &db.tokens().unit;
         thunk_params.push(quote! {
             #return_ptr_ident: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>
         });
@@ -657,7 +662,7 @@ pub fn generate_thunk_impl<'tcx>(
             };
         } else {
             let return_ptr_ident = format_ident!("__ret_ptr");
-            thunk_return_type = quote! { () };
+            thunk_return_type = &db.tokens().unit;
 
             let fn_call_expr = quote! { #fully_qualified_fn_name( #( #fn_args ),* ) };
             match return_abi {
@@ -793,7 +798,7 @@ fn format_callable_thunk_arg<'tcx>(
     let (invoker_ret_ty, call_body) = if is_ret_c_abi_compat {
         if is_ret_unit {
             (
-                quote! { () },
+                Cow::Borrowed(&db.tokens().unit),
                 quote! {
                     unsafe {
                         __invoker(#( #full_invoker_call_args ),*);
@@ -805,7 +810,7 @@ fn format_callable_thunk_arg<'tcx>(
         {
             let call = quote! { __invoker(#( #full_invoker_call_args ),*) };
             (
-                raw_ptr_ty,
+                Cow::Owned(raw_ptr_ty),
                 match mutability {
                     Mutability::Mut => quote! { unsafe { &mut *#call } },
                     Mutability::Not => quote! { unsafe { &*#call } },
@@ -813,7 +818,7 @@ fn format_callable_thunk_arg<'tcx>(
             )
         } else {
             (
-                quote! { #rs_ret_ty },
+                Cow::Owned(rs_ret_ty),
                 quote! {
                     unsafe {
                         __invoker(#( #full_invoker_call_args ),*)
@@ -824,7 +829,7 @@ fn format_callable_thunk_arg<'tcx>(
     } else {
         full_invoker_param_tys.push(quote! { *mut core::ffi::c_void });
         (
-            quote! { () },
+            Cow::Borrowed(&db.tokens().unit),
             quote! {
                 let mut __ret_storage = ::core::mem::MaybeUninit::<#rs_ret_ty>::uninit();
                 unsafe {
@@ -870,7 +875,7 @@ pub fn generate_trait_thunks<'tcx>(
     type_args: &[Ty<'tcx>],
     self_ty: Ty<'tcx>,
     def_id: Option<DefId>,
-    rs_fully_qualified_name: TokenStream,
+    rs_fully_qualified_name: &TokenStream,
     is_constructor: bool,
     within_template: bool,
 ) -> Result<TraitThunks<'tcx>> {

@@ -18,6 +18,7 @@ path = "../../../common/dyn_format.rs"
 doctest = false
 
 [dependencies]
+memoized = { path = "../../../cargo/common/memoized"}
 anyhow.workspace = true
 [dev-dependencies]
 dyn_format = { path = "../../../cargo/common/dyn_format"}

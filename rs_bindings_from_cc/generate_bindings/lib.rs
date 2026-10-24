@@ -5,7 +5,9 @@
 
 use arc_anyhow::{anyhow, ensure, Context, Error, Result};
 use code_gen_utils::make_rs_lifetime_ident;
-use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
+use code_gen_utils::{
+    format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude, CommonTokens,
+};
 use cpp_type_name::format_cpp_type_with_references;
 use crubit_abi_type::{
     CrubitAbiType, CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens,
@@ -34,6 +36,7 @@ use lifetime_defaults_transform::lifetime_defaults_transform_type_alias;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use rs_type_kind::rs_type_kind_with_lifetime_elision;
+use std::borrow::Cow;
 use std::collections::{BTreeSet, HashMap};
 use std::ffi::OsStr;
 use std::fmt::Write;
@@ -524,6 +527,7 @@ pub fn new_database<'db>(
             decl_lifetime_arity: lifetime_defaults_transform::decl_lifetime_arity,
         },
         interner,
+        CommonTokens::new(),
         rs_type_kind_safety,
         record_field_safety,
         record_safety,
@@ -1316,7 +1320,7 @@ fn crubit_abi_type<'a>(
         }
         RsTypeKind::TypeAlias { underlying_type, .. } => {
             // We don't actually _have_ to expand the type alias here
-            db.crubit_abi_type(underlying_type.as_ref().clone())
+            db.crubit_abi_type(underlying_type.as_ref().clone()).cloned()
         }
         RsTypeKind::Pointer { pointee, kind, mutability } => {
             let rust_tokens = pointee.to_token_stream(db);
@@ -1453,18 +1457,18 @@ fn crubit_abi_type<'a>(
 
                 let type_args = generic_types
                     .iter()
-                    .map(|t: &RsTypeKind| db.crubit_abi_type(t.clone()))
+                    .map(|t: &RsTypeKind| db.crubit_abi_type(t.clone()).cloned())
                     .collect::<Result<Rc<[CrubitAbiType]>>>()?;
 
                 Ok(CrubitAbiType::Type { rust_abi_path, cpp_abi_path, type_args })
             }
             BridgeRsTypeKind::StdOptional(inner) => {
-                let inner_abi = db.crubit_abi_type(inner.as_ref().clone())?;
+                let inner_abi = db.crubit_abi_type(inner.as_ref().clone())?.clone();
                 Ok(CrubitAbiType::option(inner_abi))
             }
             BridgeRsTypeKind::StdPair(first, second) => {
-                let first_abi = db.crubit_abi_type(first.as_ref().clone())?;
-                let second_abi = db.crubit_abi_type(second.as_ref().clone())?;
+                let first_abi = db.crubit_abi_type(first.as_ref().clone())?.clone();
+                let second_abi = db.crubit_abi_type(second.as_ref().clone())?.clone();
                 Ok(CrubitAbiType::Pair(Rc::from(first_abi), Rc::from(second_abi)))
             }
             BridgeRsTypeKind::StdString { in_cc_std, layout_compatible } => {
@@ -1496,9 +1500,9 @@ fn crubit_abi_type<'a>(
                     .unwrap_or_else(|| quote! { ::co });
 
                 let result_type_tokens = if result_type.is_void() {
-                    quote! { () }
+                    Cow::Borrowed(&db.tokens().unit)
                 } else {
-                    result_type.all_static_lifetimes(false).to_token_stream(db)
+                    Cow::Owned(result_type.all_static_lifetimes(false).to_token_stream(db))
                 };
                 let rust_type_tokens = quote! {
                     #co_crate::internal_crubit::CoCrubitAbi<#result_type_tokens>
@@ -1511,7 +1515,7 @@ fn crubit_abi_type<'a>(
                 };
 
                 let rust_expr_tokens = {
-                    let consume_result_fn = match &result_type_crubit_abi_type {
+                    let consume_result_fn = match result_type_crubit_abi_type {
                         None => quote! { #co_crate::internal_crubit::consume_void_result },
                         Some(result_type_crubit_abi_type) => {
                             let result_type_crubit_abi_type_tokens =
@@ -1553,16 +1557,16 @@ fn crubit_abi_type<'a>(
                 };
 
                 let cpp_type_tokens = {
-                    let result_type_crubit_abi_type_tokens = match &result_type_crubit_abi_type {
+                    let result_type_crubit_abi_type_tokens = match result_type_crubit_abi_type {
                         None => {
                             // For coroutines that return void, there is no CrubitAbi type. To avoid
                             // needing many C++ types, we'll use `void` as the placeholder since
                             // it's never used on as the CrubitAbi type in this context anyways.
-                            quote! { void }
+                            Cow::Borrowed(&db.tokens().void)
                         }
                         Some(result_type_crubit_abi_type) => {
                             let cpp_tokens = CrubitAbiTypeToCppTokens(result_type_crubit_abi_type);
-                            quote! { #cpp_tokens }
+                            Cow::Owned(quote! { #cpp_tokens })
                         }
                     };
                     quote! {
@@ -1571,7 +1575,7 @@ fn crubit_abi_type<'a>(
                 };
 
                 let cpp_expr_tokens = {
-                    let start_coroutine_fn_tokens = match &result_type_crubit_abi_type {
+                    let start_coroutine_fn_tokens = match result_type_crubit_abi_type {
                         None => {
                             quote! {
                                 &::c9::internal::rust::StartCoroutineFromRust
@@ -1663,8 +1667,9 @@ fn generate_dyn_callable_invoker_and_manager_decls(
     match callable.return_type.passing_convention() {
         PassingConvention::AbiCompatible => {
             out_param = None;
-            decl_return_type_tokens =
-                cpp_type_name::format_cpp_type_with_references(&callable.return_type, db).ok()?;
+            decl_return_type_tokens = Cow::Owned(
+                cpp_type_name::format_cpp_type_with_references(&callable.return_type, db).ok()?,
+            );
         }
         PassingConvention::LayoutCompatible => {
             // For std::move in the invoker impl.
@@ -1673,11 +1678,11 @@ fn generate_dyn_callable_invoker_and_manager_decls(
             let return_type_tokens =
                 cpp_type_name::format_cpp_type_with_references(&callable.return_type, db).ok()?;
             out_param = Some(quote! { , #return_type_tokens* out });
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = Cow::Borrowed(&db.tokens().void);
         }
         PassingConvention::ComposablyBridged => {
             out_param = Some(quote! { , unsigned char* out });
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = Cow::Borrowed(&db.tokens().void);
         }
         PassingConvention::Ctor => {
             return None;
@@ -1687,7 +1692,7 @@ fn generate_dyn_callable_invoker_and_manager_decls(
         }
         PassingConvention::Void => {
             out_param = None;
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = Cow::Borrowed(&db.tokens().void);
         }
     }
 
@@ -1755,7 +1760,7 @@ fn generate_dyn_callable_invoker_and_manager_defs<'a>(
                 }
                 PassingConvention::ComposablyBridged => {
                     let crubit_abi_type = db.crubit_abi_type(ty.clone()).ok()?;
-                    let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+                    let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(crubit_abi_type);
                     ffi_to_rust_transforms.extend(quote! {
                         let #ident = unsafe { ::crubit_support::bridge::internal::decode(#crubit_abi_type_expr_tokens, #ident) };
                     });
@@ -1814,7 +1819,7 @@ fn generate_dyn_callable_invoker_and_manager_defs<'a>(
         }
         PassingConvention::ComposablyBridged => {
             let crubit_abi_type = db.crubit_abi_type(callable.return_type.as_ref().clone()).ok()?;
-            let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+            let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(crubit_abi_type);
             invoke_rust_and_return_to_ffi = quote! {
                 unsafe {
                     ::crubit_support::bridge::internal::encode(
@@ -2031,10 +2036,9 @@ fn generate_any_invocable_invoker_def<'a>(
                     Some(quote! { , #param_type_tokens* #param_ident })
                 }
                 PassingConvention::ComposablyBridged => {
-                    let crubit_abi_type =
-                        db.crubit_abi_type(RsTypeKind::clone(param_type)).ok()?;
-                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                    let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                    let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(param_type)).ok()?;
+                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(crubit_abi_type);
+                    let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(crubit_abi_type);
                     arg_exprs.push(quote! { ::crubit::internal::Decode<#crubit_abi_type_tokens>(#crubit_abi_type_expr_tokens, #param_ident) });
                     Some(quote! { , unsigned char* #param_ident })
                 }
@@ -2066,8 +2070,9 @@ fn generate_any_invocable_invoker_def<'a>(
                 return #invoke_rust_and_return_to_ffi;
             };
 
-            decl_return_type_tokens =
-                cpp_type_name::format_cpp_type_with_references(&callable.return_type, db).ok()?;
+            decl_return_type_tokens = Cow::Owned(
+                cpp_type_name::format_cpp_type_with_references(&callable.return_type, db).ok()?,
+            );
             out_param = None;
         }
         PassingConvention::LayoutCompatible => {
@@ -2079,11 +2084,11 @@ fn generate_any_invocable_invoker_def<'a>(
             };
 
             out_param = Some(quote! { , #return_type_tokens* out });
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = Cow::Borrowed(&db.tokens().void);
         }
         PassingConvention::ComposablyBridged => {
             let crubit_abi_type = db.crubit_abi_type(callable.return_type.as_ref().clone()).ok()?;
-            let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+            let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(crubit_abi_type);
             invoke_rust_and_return_to_ffi = quote! {
                 ::crubit::internal::Encode(
                     #crubit_abi_type_expr_tokens,
@@ -2092,7 +2097,7 @@ fn generate_any_invocable_invoker_def<'a>(
                 );
             };
 
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = Cow::Borrowed(&db.tokens().void);
             out_param = Some(quote! { , unsigned char* out });
         }
         PassingConvention::Ctor => {
@@ -2107,7 +2112,7 @@ fn generate_any_invocable_invoker_def<'a>(
                 #invoke_rust_and_return_to_ffi;
             };
 
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = Cow::Borrowed(&db.tokens().void);
             out_param = None;
         }
     }

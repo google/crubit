@@ -18,3 +18,4 @@ path = "../../../rs_bindings_from_cc/bazel_label.rs"
 doctest = false
 
 [dependencies]
+memoized = { path = "../../../cargo/common/memoized"}

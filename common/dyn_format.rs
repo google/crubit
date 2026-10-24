@@ -23,6 +23,8 @@ enum Fragment {
     Variable(usize),
 }
 
+impl<const N: usize> memoized::CheapClone for Format<N> {}
+
 impl<const N: usize> Format<N> {
     /// Parse a format string, using textual names for each variable.
     ///

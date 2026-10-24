@@ -347,18 +347,24 @@ pub enum NoBindingsReason {
 
 impl Display for NoBindingsReason {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        <Error as Display>::fmt(&Error::from(self.clone()), f)
+        <Error as Display>::fmt(&Error::from(self), f)
     }
 }
 
 impl std::fmt::Debug for NoBindingsReason {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        <Error as std::fmt::Debug>::fmt(&Error::from(self.clone()), f)
+        <Error as std::fmt::Debug>::fmt(&Error::from(self), f)
     }
 }
 
 impl From<NoBindingsReason> for Error {
     fn from(reason: NoBindingsReason) -> Error {
+        Error::from(&reason)
+    }
+}
+
+impl From<&NoBindingsReason> for Error {
+    fn from(reason: &NoBindingsReason) -> Error {
         match reason {
             NoBindingsReason::MissingRequiredFeatures { missing_features } => {
                 let message =
@@ -371,7 +377,9 @@ impl From<NoBindingsReason> for Error {
             NoBindingsReason::LeadingDunder { name } => {
                 anyhow!("Skipping generating bindings for '{name}' because it has a leading `__`")
             }
-            NoBindingsReason::Visibility(error) | NoBindingsReason::Unsupported(error) => error,
+            NoBindingsReason::Visibility(error) | NoBindingsReason::Unsupported(error) => {
+                error.clone()
+            }
             NoBindingsReason::ParentModuleNameNotUnique {
                 conflicting_name,
                 parent_names_that_map_to_same_name,
@@ -463,7 +471,7 @@ impl ResolvedName {
 
 pub fn generated_items_to_token_stream<'db>(
     generated_items: &HashMap<ItemId, GeneratedItem>,
-    db: &'db crate::BindingsGenerator<'db>,
+    db: &crate::BindingsGenerator<'db>,
     elements: &[ItemId],
 ) -> TokenStream {
     let mut tokens = quote! {};
@@ -517,7 +525,7 @@ pub fn integer_constant_to_token_stream<'a>(
 
 pub fn generated_items_to_tokens<'db>(
     generated_items: &HashMap<ItemId, GeneratedItem>,
-    db: &'db crate::BindingsGenerator<'db>,
+    db: &crate::BindingsGenerator<'db>,
     elements: &[ItemId],
     tokens: &mut TokenStream,
 ) {

@@ -488,18 +488,16 @@ fn test_format_ty_for_cc_successes() {
              expected_prereq_def,
              expected_prereq_fwd_decl,
          }| {
-            let (actual_tokens, actual_prereqs) = {
-                let db = bindings_db_for_tests(tcx);
-                let s = db
-                    .format_ty_for_cc(
-                        ty,
-                        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-                    )
-                    .unwrap_or_else(|e| panic!("Failed to format type {}: {}", ty, e));
-                (s.tokens.to_string(), s.prereqs)
-            };
+            let db = bindings_db_for_tests(tcx);
+            let s = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .unwrap_or_else(|e| panic!("Failed to format type {}: {}", ty, e));
+            let actual_tokens = s.tokens.to_string();
             let (actual_includes, actual_prereq_defs, actual_prereq_fwd_decls) =
-                (actual_prereqs.includes, actual_prereqs.defs, actual_prereqs.fwd_decls);
+                (&s.prereqs.includes, &s.prereqs.defs, &s.prereqs.fwd_decls);
 
             let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(actual_tokens, expected_tokens, "{desc}");
@@ -515,7 +513,7 @@ fn test_format_ty_for_cc_successes() {
                     .map(|include| include.parse::<TokenStream>().unwrap())
                     .collect::<Vec<_>>();
                 assert_cc_matches!(
-                    format_cc_includes(&actual_includes),
+                    format_cc_includes(actual_includes),
                     quote! { #( __HASH_TOKEN__ include #expected_includes )*}
                 );
             }
@@ -523,7 +521,7 @@ fn test_format_ty_for_cc_successes() {
             if let Some(expected_prereq_def) = expected_prereq_def {
                 let expected_def_id = find_def_id_by_name(tcx, expected_prereq_def).to_def_id();
                 assert_eq!(1, actual_prereq_defs.len());
-                assert_eq!(expected_def_id, actual_prereq_defs.into_iter().next().unwrap());
+                assert_eq!(expected_def_id, *actual_prereq_defs.iter().next().unwrap());
             } else {
                 assert!(
                     actual_prereq_defs.is_empty(),
@@ -535,7 +533,7 @@ fn test_format_ty_for_cc_successes() {
                 let expected_def_id =
                     find_def_id_by_name(tcx, expected_prereq_fwd_decl).to_def_id();
                 assert_eq!(1, actual_prereq_fwd_decls.len());
-                assert_eq!(expected_def_id, actual_prereq_fwd_decls.into_iter().next().unwrap());
+                assert_eq!(expected_def_id, *actual_prereq_fwd_decls.iter().next().unwrap());
             } else {
                 assert!(
                     actual_prereq_fwd_decls.is_empty(),

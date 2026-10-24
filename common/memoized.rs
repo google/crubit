@@ -18,6 +18,10 @@
 //! # Differences with Salsa
 //!
 //! * Supports non-`'static` types.
+//! * Supports `#[return_ref]` (`-> &T`, `-> Option<&T>`, `-> Result<&T>`) to store owned values
+//!   once in the database and return references without cloning on lookup.
+//! * Statically checks via [`CheapClone`] that query arguments and by-value inputs/outputs are
+//!   `Copy` or `O(1)` to clone.
 //! * Syntactic differences when initially setting up the trait and database.
 //! * Immutable input and no support for recomputation given mutated inputs.
 //! * Correspondingly, no requirement that the *return* types implement `Eq` or `Hash`.
@@ -30,6 +34,60 @@
 //! differences are kept relatively small so as to support eventually either
 //! going back to Salsa, or evolving towards something closer to what
 //! Salsa implements.
+
+/// Marker trait for types whose `Clone::clone` is `O(1)` and does not heap-allocate.
+///
+/// Memoized query arguments and by-value inputs/outputs must be `Copy` or `CheapClone`; annotate
+/// with `#[return_ref]` (`-> &T`, `-> Option<&T>`, `-> Result<&T>`) to borrow from the database.
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is not known to be cheaply cloneable (`Copy` or `memoized::CheapClone`)",
+    note = "annotate with `#[return_ref]` (`-> &T`, `-> Option<&T>`, or `-> Result<&T>`) so the database stores `{Self}` once, or implement `Copy`/`memoized::CheapClone` if cloning is O(1)"
+)]
+pub trait CheapClone: Clone {}
+
+macro_rules! impl_cheap_clone {
+    ($($ty:ty),*) => { $(impl CheapClone for $ty {})* };
+    (@u $T:ident: $($ty:ty),*) => { $(impl<$T: ?Sized> CheapClone for $ty {})* };
+    (@t $(($($p:ident),+)),+) => { $(impl<$($p: CheapClone),+> CheapClone for ($($p,)+) {})+ };
+}
+impl_cheap_clone!((), bool, char, u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize);
+impl_cheap_clone!(f32, f64);
+impl_cheap_clone!(@u T: &T, *const T, *mut T, core::ptr::NonNull<T>, core::marker::PhantomData<T>);
+impl_cheap_clone!(@u T: std::rc::Rc<T>, std::rc::Weak<T>, std::sync::Arc<T>, std::sync::Weak<T>);
+impl_cheap_clone!(@t (A), (A, B), (A, B, C), (A, B, C, D), (A, B, C, D, E), (A, B, C, D, E, F));
+impl_cheap_clone!(@t (A, B, C, D, E, F, G), (A, B, C, D, E, F, G, H));
+impl<T: CheapClone, const N: usize> CheapClone for [T; N] {}
+impl<T: CheapClone> CheapClone for Option<T> {}
+impl<T: CheapClone, E: CheapClone> CheapClone for Result<T, E> {}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __mode {
+    ([return_ref], $ty:ty) => { $crate::internal::ByRef<fn(&()) -> *mut $ty> };
+    ([], $ty:ty) => { $crate::internal::ByValue<$ty> };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __on_cycle {
+    ($fn_name:ident, $default:expr) => {
+        $default
+    };
+    ($fn_name:ident) => {
+        panic!("Cycle detected: '{}' depends on its own return value", stringify!($fn_name))
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __assert_cheap_clone {
+    ($($ty:ty),* $(,)?) => {
+        if false {
+            use $crate::internal::cheap_clone_traits::*;
+            $((&&&$crate::internal::CheapCloneCheck::<$ty>::NEW).__assert_cheap_clone();)*
+        }
+    };
+}
 
 /// `query_group!` defines a collection of memoized functions, and the shared
 /// inputs that all of those functions can access.
@@ -50,9 +108,10 @@
 ///     // in order to access the input value. In other words, they form a sort of immutable global
 ///     // state, useful to pass immutable configuration values to _all_ of the memoized functions.
 ///     //
-///     // The inputs are immutable, and must be `Clone`. Because they are immutable and global,
-///     // they do not need to be `Eq` or `Hash`, and they are not compared when memoizing
-///     // functions.
+///     // By-value inputs are immutable and must be `Copy` or `CheapClone` (or annotated with
+///     // `#[return_ref]` to borrow `&InputType` from the database without cloning). Because they
+///     // are immutable and global, they do not need to be `Eq` or `Hash`, and they are not
+///     // compared when memoizing functions.
 ///     //
 ///     // As a rule of thumb, anything which is a constant for the lifetime of an execution, but
 ///     // is not an actual compile time constant, should be an input.
@@ -64,11 +123,13 @@
 ///
 ///     // After all of the inputs, the actual memoized functions are specified.
 ///     //
-///     // Memoized functions are pure functions, which take any number of (`Clone+Eq+Hash`)
-///     // parameters, and return a `Clone` return type.
+///     // Memoized functions are pure functions, which take any number of (`Clone+Eq+Hash`,
+///     // `Copy` or `CheapClone`) parameters, and either return a `Copy`/`CheapClone` value or are
+///     // annotated with `#[return_ref]` (`-> &T`, `-> Option<&T>`, `-> Result<&T>`) so the owned
+///     // value is stored once in the database.
 ///     //
 ///     // Each of these must be implemented in the _same module_ as a top-level function, with
-///     // the same function signature.
+///     // the same function signature (returning the owned value when `#[return_ref]` is used).
 ///     //
 ///     // The functions can call methods on the `&QueryGroup` self argument to access both
 ///     // the shared inputs, as well to call other memoized functions.
@@ -83,8 +144,6 @@
 ///     // Some functions may need to gracefully handle cycles, in which case they should be
 ///     // annotated with `#[break_cycles_with = <default_value>]`. This will generate a function
 ///     // that returns <default_value> if a cycle is detected, but will _not_ cache the result.
-///     // All `#[break_cycles_with = ..]` functions must appear before all
-///     // non-`#[break_cycles_with = ..]` functions.
 ///
 ///     #[break_cycles_with = ReturnType::default()]
 ///     /// Doc comment goes after `#[break_cycles_with = ..]`.
@@ -92,6 +151,10 @@
 ///
 ///     /// Doc comment goes here.
 ///     fn some_function(&self, arg: ArgType) -> ReturnType;
+///
+///     #[return_ref]
+///     /// Doc comment goes after `#[return_ref]`.
+///     fn some_ref_function(&self, arg: ArgType) -> &ExpensiveReturnType;
 ///   }
 /// }
 ///
@@ -159,225 +222,243 @@
 /// And so you may need to specify the lifetime in some uses.
 #[macro_export]
 macro_rules! query_group {
-  (
-    $vis:vis struct $database_struct:ident $(<$($type_param:tt),*>)?{
-      $(
-        // TODO(jeanpierreda): Ideally would allow putting the doc-comment first,
-        // but this causes parsing ambiguity.
-        #[input]
-        $(#[doc = $input_doc:literal])*
-        fn $input_function:ident(&self $(,)?) -> $input_type:ty;
-      )*
-      $(
-        // TODO(jeanpierreda): Ideally would allow putting the doc-comment first,
-        // but this causes parsing ambiguity.
-        #[break_cycles_with = $break_cycles_default_value:expr]
-        $(#[doc = $break_cycles_doc:literal])*
-        fn $break_cycles_function:ident(
-          &self
-          $(
-            , $break_cycles_arg:ident : $break_cycles_arg_type:ty
-          )*
-          $(,)?
-        ) -> $break_cycles_return_type:ty;
-      )*
-      $(
-        $(#[doc = $function_doc:literal])*
-        fn $function:ident(
-          &self
-          $(
-            , $arg:ident : $arg_type:ty
-          )*
-          $(,)?
-        ) -> $return_type:ty;
-      )*
-      $(
-        #[provided]
-        $(#[doc = $provided_doc:literal])*
-        fn $provided_function:ident(&$provided_self:ident $(, $provided_arg:ident : $provided_arg_type:ty)* $(,)?) -> $provided_type:ty { $($provided_body:tt)* }
-      )*
-    }
-  ) => {
-    // The database struct, which contains the lookup tables.
-    $vis struct $database_struct $(<$($type_param),*>)? {
-      pub __unwinding_cycles: ::core::cell::Cell<u32>,
-      pub __db_index: u8,
-      $(
-        $input_function: $input_type,
-      )*
-      $(
-        $break_cycles_function: $crate::internal::FnAndTable<
-            fn(&Self, $($break_cycles_arg_type),*) -> $break_cycles_return_type,
-            ($($break_cycles_arg_type,)*),
-            $break_cycles_return_type
-          >,
-      )*
-      $(
-        $function: $crate::internal::FnAndTable<
-            fn(&Self, $($arg_type),*) -> $return_type,
-            ($($arg_type,)*),
-            $return_type
-          >,
-      )*
-    }
+    (
+        $vis:vis struct $database_struct:ident $(<$($type_param:tt),*>)? {
+            $(
+                // TODO(jeanpierreda): Ideally would allow putting the doc-comment first,
+                // but this causes parsing ambiguity.
+                #[input]
+                $(#[return_ref $(@$in_rr:tt)?])?
+                $(#[doc = $input_doc:literal])*
+                fn $input_function:ident(&self $(,)?) -> $input_type:ty;
+            )*
+            $(
+                // TODO(jeanpierreda): Ideally would allow putting the doc-comment first,
+                // but this causes parsing ambiguity.
+                $(#[break_cycles_with = $break_cycles_default_value:expr])?
+                $(#[return_ref $(@$fn_rr:tt)?])?
+                $(#[doc = $function_doc:literal])*
+                fn $function:ident(&self $(, $arg:ident : $arg_type:ty)* $(,)?) -> $return_type:ty;
+            )*
+            $(
+                #[provided]
+                $(#[doc = $provided_doc:literal])*
+                fn $provided_function:ident(
+                    &$provided_self:ident $(, $provided_arg:ident : $provided_arg_type:ty)* $(,)?
+                ) -> $provided_type:ty { $($provided_body:tt)* }
+            )*
+        }
+    ) => {
+        // The database struct, which contains the lookup tables.
+        $vis struct $database_struct $(<$($type_param),*>)? {
+            pub __unwinding_cycles: ::core::cell::Cell<u32>,
+            pub __db_index: u8,
+            $($input_function: $crate::internal::Input<$crate::__mode!([$(return_ref $($in_rr)?)?], $input_type)>,)*
+            $(
+                $function: $crate::internal::FnAndTable<
+                    fn(&Self, $($arg_type),*) -> $crate::internal::Stored<$crate::__mode!([$(return_ref $($fn_rr)?)?], $return_type)>,
+                    ($($arg_type,)*),
+                    $crate::__mode!([$(return_ref $($fn_rr)?)?], $return_type),
+                >,
+            )*
+        }
 
-    // ...and the methods.
-    impl $(<$($type_param),*>)? $database_struct $(<$($type_param),*>)? {
-      $(
-        $(#[doc = $input_doc])*
-        $vis fn $input_function(&self) -> $input_type {
-          // Have to be very careful to clone whatever the top level value is.
-          // In particular, if it's a reference `&T`, clone the _reference_ to get another `&T`,
-          // not the referent to get a `T`, like if we just cloned `self.$input_function`.
-          (&self.$input_function).clone()
+        // ...and the methods.
+        impl $(<$($type_param),*>)? $database_struct $(<$($type_param),*>)? {
+            $(
+                $(#[doc = $input_doc])*
+                $vis fn $input_function(&self) -> $input_type {
+                    self.$input_function.get()
+                }
+            )*
+            $(
+                $(#[doc = $function_doc])*
+                $vis fn $function(&self, $($arg : $arg_type),*) -> $return_type {
+                    self.$function
+                        .table
+                        .internal_memoized_call(
+                            ($($arg,)*),
+                            |($($arg,)*)| (self.$function.fn_ptr)(self, $($arg),*),
+                            &self.__unwinding_cycles,
+                        )
+                        .unwrap_or_else(|| $crate::__on_cycle!($function $(, $break_cycles_default_value)?))
+                }
+            )*
+            $(
+                $(#[doc = $provided_doc])*
+                $vis fn $provided_function(&$provided_self, $($provided_arg : $provided_arg_type),*) -> $provided_type {
+                    $($provided_body)*
+                }
+            )*
+
+            // And the new() function for initialization.
+            $vis fn new(
+                $($input_function: $crate::internal::Stored<$crate::__mode!([$(return_ref $($in_rr)?)?], $input_type)>,)*
+                $($function: fn(&Self, $($arg_type),*) -> $crate::internal::Stored<$crate::__mode!([$(return_ref $($fn_rr)?)?], $return_type)>,)*
+            ) -> Self {
+                $crate::__assert_cheap_clone!(
+                    $($crate::internal::CheapCheck<$crate::__mode!([$(return_ref $($in_rr)?)?], $input_type)>,)*
+                    $($($arg_type,)* $crate::internal::CheapCheck<$crate::__mode!([$(return_ref $($fn_rr)?)?], $return_type)>,)*
+                );
+                Self {
+                    __unwinding_cycles: ::core::cell::Cell::new(0),
+                    __db_index: $crate::internal::db_index(),
+                    $($input_function: $crate::internal::Input($input_function),)*
+                    $($function: $crate::internal::FnAndTable { fn_ptr: $function, table: Default::default() },)*
+                }
+            }
         }
-      )*
-      $(
-        $(#[doc = $break_cycles_doc])*
-        $vis fn $break_cycles_function(
-          &self,
-          $(
-            $break_cycles_arg : $break_cycles_arg_type
-          ),*
-        ) -> $break_cycles_return_type {
-          self.$break_cycles_function.table.internal_memoized_call(
-            ($(
-              $break_cycles_arg,
-            )*),
-            |($($break_cycles_arg,)*)| {
-              (self.$break_cycles_function.fn_ptr)(self, $($break_cycles_arg),*)
-            },
-            &self.__unwinding_cycles,
-          ).unwrap_or($break_cycles_default_value)
-        }
-      )*
-      $(
-        $(#[doc = $function_doc])*
-        $vis fn $function(
-          &self,
-          $(
-            $arg : $arg_type
-          ),*
-        ) -> $return_type {
-          self.$function.table.internal_memoized_call(
-            ($(
-              $arg,
-            )*),
-            |($($arg,)*)| {
-              (self.$function.fn_ptr)(self, $($arg),*)
-            },
-            &self.__unwinding_cycles,
-          ).unwrap_or_else(
-            || panic!("Cycle detected: '{}' depends on its own return value", stringify!($function)),
-          )
-        }
-      )*
-      $(
-        $(#[doc = $provided_doc])*
-        $vis fn $provided_function(
-          &$provided_self,
-          $(
-            $provided_arg : $provided_arg_type
-          ),*
-        ) -> $provided_type {
-          $( $provided_body )*
-        }
-      )*
-    }
-    // And the new() functions for initialization.
-    impl $(<$($type_param),*>)? $database_struct $(<$($type_param),*>)? {
-      $vis fn new(
-          $($input_function: $input_type,)*
-          $($break_cycles_function: fn(&Self, $($break_cycles_arg_type),*) -> $break_cycles_return_type,)*
-          $($function: fn(&Self, $($arg_type),*) -> $return_type,)*
-      ) -> Self {
-        Self {
-          __unwinding_cycles: ::core::cell::Cell::new(0),
-          __db_index: $crate::internal::db_index(),
-          $(
-            $input_function,
-          )*
-          $(
-            $break_cycles_function: $crate::internal::FnAndTable {
-              fn_ptr: $break_cycles_function,
-              table: Default::default(),
-            },
-          )*
-          $(
-            $function: $crate::internal::FnAndTable {
-              fn_ptr: $function,
-              table: Default::default(),
-            },
-          )*
-        }
-      }
-    }
-  }
+    };
 }
 
 #[macro_export]
 macro_rules! memoized {
-  (
-    $error_handler:ident,
-    $vis:vis fn $memoized_ident:ident(
-      db: $db_type:ty
-      $(, $arg:ident : $arg_type:ty)*
-      $(,)?
-    ) -> $return_type:ty = $original_fn:ident
-  ) => {
-    mod $memoized_ident {
-      std::thread_local! {
-        /// A table off to the side -- one per db instance.
-        ///
-        /// This acts the same as if the db had a table field (or one per thread, anyway),
-        /// but doesn't require centrally registering with the db.
-        // TODO(jeanpierreda): make the `db` part of the key instead of holding it separately.
-        // Probably this means writing a new MemoizationKey trait which subsumes Hash -- that is,
-        // the `&db` gets compared using the __db_index. But this is very tricky to implement,
-        // and might add a lot more code than it saves. The real benefit isn't simplicity,
-        // but removing the double layer of RefCell / the fringe risk of crashes if memoization
-        // tables cross-reference each other.
-        pub static TABLES: ::std::cell::RefCell<::std::vec::Vec<$crate::internal::MemoizationTable<($($arg_type,)*), $return_type>>> = ::std::cell::RefCell::new(vec![Default::default()]);
-      }
-    }
-    $vis fn $memoized_ident(db: $db_type, $($arg: $arg_type),*) -> $return_type {
-      $memoized_ident::TABLES.with(|tables| {
-        let db_index = db.__db_index as usize;
-        if tables.borrow().len() <= db_index {
-          tables.borrow_mut().resize_with(db_index + 1, Default::default);
+    (
+        $error_handler:ident,
+        $vis:vis fn $memoized_ident:ident(
+            db: $db_type:ty $(, $arg:ident : $arg_type:ty)* $(,)?
+        ) -> $return_type:ty = $original_fn:ident
+    ) => {
+        mod $memoized_ident {
+            std::thread_local! {
+                /// A table off to the side -- one per db instance.
+                ///
+                /// This acts the same as if the db had a table field (or one per thread, anyway),
+                /// but doesn't require centrally registering with the db.
+                // TODO(jeanpierreda): make the `db` part of the key instead of holding it separately.
+                // Probably this means writing a new MemoizationKey trait which subsumes Hash -- that is,
+                // the `&db` gets compared using the __db_index. But this is very tricky to implement,
+                // and might add a lot more code than it saves. The real benefit isn't simplicity,
+                // but removing the double layer of RefCell / the fringe risk of crashes if memoization
+                // tables cross-reference each other.
+                pub static TABLES: ::std::cell::RefCell<::std::vec::Vec<$crate::internal::MemoizationTable<($($arg_type,)*), $return_type>>> = ::std::cell::RefCell::new(vec![Default::default()]);
+            }
         }
-        let table = &tables.borrow()[db_index];
-        table.internal_memoized_call(
-          ($($arg,)*),
-          |($($arg,)*)| {
-            $original_fn(db, $($arg),*)
-          },
-          &db.__unwinding_cycles,
-        ).unwrap_or_else(|| $error_handler(stringify!($memoized_ident)))
-      })
-    }
-  }
+        $vis fn $memoized_ident(db: $db_type, $($arg: $arg_type),*) -> $return_type {
+            $crate::__assert_cheap_clone!($($arg_type,)* $return_type);
+            $memoized_ident::TABLES.with(|tables| {
+                let db_index = db.__db_index as usize;
+                if tables.borrow().len() <= db_index {
+                    tables.borrow_mut().resize_with(db_index + 1, Default::default);
+                }
+                let table = &tables.borrow()[db_index];
+                table
+                    .internal_memoized_call(
+                        ($($arg,)*),
+                        |($($arg,)*)| $original_fn(db, $($arg),*),
+                        &db.__unwinding_cycles,
+                    )
+                    .unwrap_or_else(|| $error_handler(stringify!($memoized_ident)))
+            })
+        }
+    };
 }
 
 #[doc(hidden)]
 pub mod internal {
+    use core::marker::PhantomData;
+    use core::ptr::NonNull;
     use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
     use std::hash::Hash;
+
+    pub struct CheapCloneCheck<T: ?Sized>(PhantomData<fn() -> *const T>);
+    impl<T: ?Sized> CheapCloneCheck<T> {
+        pub const NEW: Self = Self(PhantomData);
+    }
+    macro_rules! cheap_traits {
+        ($($name:ident),*) => { $(pub trait $name { fn __assert_cheap_clone(&self) {} })* };
+    }
+    cheap_traits!(CheapCopy, CheapResCopy, CheapOptResCopy, Cheap);
+    impl<T: Copy> CheapCopy for &&&CheapCloneCheck<T> {}
+    impl<T: Copy, E: crate::CheapClone> CheapResCopy for &&CheapCloneCheck<Result<T, E>> {}
+    impl<T: Copy, E: crate::CheapClone> CheapOptResCopy for &CheapCloneCheck<Option<Result<T, E>>> {}
+    impl<T: crate::CheapClone> Cheap for CheapCloneCheck<T> {}
+    pub mod cheap_clone_traits {
+        pub use super::{Cheap as _, CheapCopy as _, CheapOptResCopy as _, CheapResCopy as _};
+    }
+
+    pub struct ByValue<T>(PhantomData<fn() -> T>);
+    pub struct ByRef<Sig>(PhantomData<Sig>);
+
+    pub trait QueryMode {
+        type Stored;
+        type CheapCheck;
+        type Table<Args: Clone + Eq + Hash>: Default;
+    }
+    pub type Stored<M> = <M as QueryMode>::Stored;
+    pub type CheapCheck<M> = <M as QueryMode>::CheapCheck;
+
+    impl<T: Clone> QueryMode for ByValue<T> {
+        type Stored = T;
+        type CheapCheck = T;
+        type Table<Args: Clone + Eq + Hash> = MemoizationTable<Args, T>;
+    }
+    impl<T> QueryMode for ByRef<for<'a> fn(&'a ()) -> *mut &'a T> {
+        type Stored = T;
+        type CheapCheck = ();
+        type Table<Args: Clone + Eq + Hash> = RefMemoizationTable<Args, T>;
+    }
+    impl<T> QueryMode for ByRef<for<'a> fn(&'a ()) -> *mut Option<&'a T>> {
+        type Stored = Option<T>;
+        type CheapCheck = ();
+        type Table<Args: Clone + Eq + Hash> = RefMemoizationTable<Args, Option<T>>;
+    }
+    impl<T, E> QueryMode for ByRef<for<'a> fn(&'a ()) -> *mut Result<&'a T, E>> {
+        type Stored = Result<T, E>;
+        type CheapCheck = Result<(), E>;
+        type Table<Args: Clone + Eq + Hash> = RefMemoizationTable<Args, Result<T, E>>;
+    }
+
+    pub trait RefProject<'a, Out> {
+        fn project(&'a self) -> Out;
+    }
+    impl<'a, T> RefProject<'a, &'a T> for T {
+        fn project(&'a self) -> &'a T {
+            self
+        }
+    }
+    impl<'a, T> RefProject<'a, Option<&'a T>> for Option<T> {
+        fn project(&'a self) -> Option<&'a T> {
+            self.as_ref()
+        }
+    }
+    impl<'a, T, E: Clone> RefProject<'a, Result<&'a T, E>> for Result<T, E> {
+        fn project(&'a self) -> Result<&'a T, E> {
+            self.as_ref().map_err(Clone::clone)
+        }
+    }
+
+    pub struct Input<Mode: QueryMode>(pub Mode::Stored);
+    impl<T: Clone> Input<ByValue<T>> {
+        // Have to be very careful to clone whatever the top level value is.
+        // In particular, if it's a reference `&T`, clone the _reference_ to get another `&T`,
+        // not the referent to get a `T`, like if we just cloned `self.$input_function`.
+        pub fn get(&self) -> T {
+            (&self.0).clone()
+        }
+    }
+    impl<Sig> Input<ByRef<Sig>>
+    where
+        ByRef<Sig>: QueryMode,
+    {
+        pub fn get<'a, Out>(&'a self) -> Out
+        where
+            Stored<ByRef<Sig>>: RefProject<'a, Out>,
+        {
+            self.0.project()
+        }
+    }
+
+    pub struct FnAndTable<F, Args: Clone + Eq + Hash, Mode: QueryMode> {
+        pub fn_ptr: F,
+        pub table: Mode::Table<Args>,
+    }
 
     #[derive(Copy, Clone, PartialEq, Eq)]
     enum FoundCycle {
         No,
         Yes,
-    }
-
-    pub struct FnAndTable<F, Args, Return>
-    where
-        Args: Clone + Eq + Hash,
-        Return: Clone,
-    {
-        pub fn_ptr: F,
-        pub table: MemoizationTable<Args, Return>,
     }
 
     pub struct MemoizationTable<Args, Return>
@@ -449,6 +530,64 @@ pub mod internal {
         }
     }
 
+    // Technical justification for `unsafe` in `RefMemoizationTable`:
+    // Safe Rust cannot return `&'a Return` tied to `&'a self` from an interior-mutable memoization
+    // table (`RefCell<HashMap<Args, ...>>`) without keeping a `cell::Ref` borrow guard alive (which
+    // panics on recursive or subsequent `borrow_mut()` calls) or cloning on every lookup
+    // (`hashbrown::raw::RawTable::clone` dominated `cc_bindings_from_rs` pprof profiles). Storing
+    // raw heap pointers in an append-only `Vec<NonNull<Return>>` avoids `Box` noalias retagging on
+    // `Vec`/`HashMap` reallocation and frees all allocations when the database drops.
+    pub struct RefMemoizationTable<Args: Clone + Eq + Hash, Return> {
+        table: MemoizationTable<Args, NonNull<Return>>,
+        allocated: RefCell<Vec<NonNull<Return>>>,
+    }
+
+    impl<Args: Clone + Eq + Hash, Return> Default for RefMemoizationTable<Args, Return> {
+        fn default() -> Self {
+            Self { table: MemoizationTable::default(), allocated: RefCell::new(Vec::new()) }
+        }
+    }
+
+    impl<Args: Clone + Eq + Hash, Return> Drop for RefMemoizationTable<Args, Return> {
+        fn drop(&mut self) {
+            for ptr in self.allocated.get_mut().drain(..) {
+                // SAFETY: Every pointer in `self.allocated` was created via `Box::into_raw` in
+                // `internal_memoized_call`, is yielded once by `drain(..)`, and has no live
+                // `&Return` borrows because `Drop::drop` has exclusive `&mut self`.
+                // [ai_genererated_and_unmodified]
+                unsafe {
+                    drop(Box::from_raw(ptr.as_ptr()));
+                }
+            }
+        }
+    }
+
+    impl<Args: Clone + Eq + Hash, Return> RefMemoizationTable<Args, Return> {
+        pub fn internal_memoized_call<'a, Out>(
+            &'a self,
+            args: Args,
+            f: impl FnOnce(Args) -> Return,
+            unwinding_cycles: &Cell<u32>,
+        ) -> Option<Out>
+        where
+            Return: RefProject<'a, Out>,
+        {
+            let ptr = self.table.internal_memoized_call(
+                args,
+                |args| {
+                    let ptr = NonNull::new(Box::into_raw(Box::new(f(args)))).unwrap();
+                    self.allocated.borrow_mut().push(ptr);
+                    ptr
+                },
+                unwinding_cycles,
+            )?;
+            // SAFETY: `ptr` was allocated via `Box::into_raw` and pushed into `self.allocated`,
+            // which is append-only until `self` drops, so the value lives at a stable heap address
+            // with no mutable aliases for `'a`. [ai_genererated_and_unmodified]
+            Some(unsafe { ptr.as_ref() }.project())
+        }
+    }
+
     pub fn db_index() -> u8 {
         static DB_INDEX: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
         DB_INDEX.fetch_add(1, std::sync::atomic::Ordering::AcqRel)
@@ -457,9 +596,11 @@ pub mod internal {
 
 #[cfg(test)]
 pub mod tests {
-    use googletest::{expect_eq, gtest};
+    use googletest::{assert_that, expect_eq, gtest, matchers::eq};
     use std::cell::{Cell, RefCell};
+    use std::collections::HashMap;
     use std::rc::Rc;
+    use std::sync::Arc;
 
     #[gtest]
     fn test_basic_memoization() {
@@ -594,7 +735,7 @@ pub mod tests {
           }
         }
 
-        #[derive(Clone)]
+        #[derive(Copy, Clone)]
         struct Record {
             name: &'static str,
             is_unsafe: bool,
@@ -612,11 +753,7 @@ pub mod tests {
 
         // Helper function so we can refer to records by name instead of by index.
         fn record(db: &Table, name: &'static str) -> Record {
-            db.records()
-                .iter()
-                .find(|record| record.name == name)
-                .expect("Record not found")
-                .clone()
+            *db.records().iter().find(|record| record.name == name).expect("Record not found")
         }
 
         let logging = Rc::default();
@@ -757,5 +894,65 @@ pub mod tests {
 
         assert_eq!(add10(&db, 200), 210);
         assert_eq!(db.call_counter().get(), 2);
+    }
+
+    // Deliberately does NOT implement `Clone`, verifying `#[return_ref]` never clones values.
+    #[derive(Debug, PartialEq, Eq)]
+    struct NonCloneValue<'a>(&'a str, HashMap<i32, usize>, Arc<()>);
+
+    #[gtest]
+    fn test_return_ref_memoization_reallocation_and_cycles() {
+        type CustomResult<T, E = i32> = core::result::Result<T, E>;
+        crate::query_group! {
+            pub struct RefDb<'a> {
+                #[input]
+                fn calls(&self) -> Rc<Cell<i32>>;
+                #[input]
+                #[return_ref]
+                fn cfg(&self) -> &NonCloneValue<'a>;
+                #[break_cycles_with = false]
+                fn check(&self, name: &'static str) -> bool;
+                #[return_ref]
+                /// Doc comment after `#[return_ref]`.
+                fn chain(&self, depth: usize) -> &NonCloneValue<'a>;
+                #[return_ref]
+                fn opt(&self, key: i32) -> Option<&NonCloneValue<'a>>;
+                #[return_ref]
+                fn res(&self, key: i32) -> CustomResult<&NonCloneValue<'a>>;
+                #[return_ref]
+                fn details(&self, name: &'static str) -> &NonCloneValue<'a>;
+            }
+        }
+        fn make<'a>(db: &RefDb<'a>, count: bool, k: i32, v: usize) -> NonCloneValue<'a> {
+            db.calls().set(db.calls().get() + i32::from(count));
+            NonCloneValue(db.cfg().0, HashMap::from([(k, v)]), Arc::clone(&db.cfg().2))
+        }
+        let (tracker, label) = (Arc::new(()), String::from("borrowed"));
+        {
+            let db = RefDb::new(
+                Rc::new(Cell::new(0)),
+                NonCloneValue(&label, HashMap::from([(0, 1)]), Arc::clone(&tracker)),
+                |db, n| match n {
+                    "A" => db.check("B") || db.check("U"),
+                    "B" => db.details("B").1[&0] != 0,
+                    _ => n == "U",
+                },
+                |db, d| make(db, false, 0, if d == 0 { 0 } else { db.chain(d - 1).1[&0] + d }),
+                |db, k| (k > 0).then(|| make(db, true, k, k as usize)),
+                |db, k| if k < 0 { Err(k) } else { Ok(make(db, true, k, k as usize)) },
+                |db, n| make(db, true, 0, usize::from(n == "B" && db.check("A"))),
+            );
+            // Hold `first` across 64 nested insertions that reallocate `allocated` and `memoized`.
+            let first = db.chain(0);
+            assert_that!(db.chain(64).1[&0], eq(64 * 65 / 2));
+            assert_that!(core::ptr::eq(first, db.chain(0)), eq(true));
+            assert_that!(core::ptr::eq(db.opt(8).unwrap(), db.opt(8).unwrap()), eq(true));
+            assert_that!(core::ptr::eq(db.res(7).unwrap(), db.res(7).unwrap()), eq(true));
+            assert_that!((db.opt(0), db.res(-5), db.calls().get()), eq((None, Err(-5), 2)));
+            assert_that!(db.check("A"), eq(true));
+            let b = db.details("B");
+            assert_that!((b.1[&0], core::ptr::eq(b, db.details("B"))), eq((1, true)));
+        }
+        assert_that!(Arc::strong_count(&tracker), eq(1));
     }
 }

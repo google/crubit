@@ -20,7 +20,7 @@ extern crate rustc_span;
 use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
 use crubit_feature::CrubitFeature;
-use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
+use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets};
 use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use format_type::{can_be_made_layout_compatible, format_cc_ident};
@@ -42,13 +42,13 @@ use std::collections::HashSet;
 use std::ops::RangeInclusive;
 
 /// What `EnumApiV2` needs to know about an enum to generate its bindings.
-pub struct EnumLayout<'tcx> {
+pub struct EnumLayout<'db, 'tcx> {
     /// The enum's `Discriminant` type: the type of every variant's `kDiscriminant`, and of the
     /// value its tag encoding decodes. Is the declared discriminant type (`isize` by default) for
     /// `Single` enums, since this matches rustc.
     discriminant_ty: DiscriminantTy,
     tag_encoding: EnumTagEncoding,
-    variants: Vec<EnumVariant<'tcx>>,
+    variants: Vec<EnumVariant<'db, 'tcx>>,
 }
 
 /// One of the integer types that `crubit::internal::RustcDiscriminant` allows, except the 128-bit
@@ -138,7 +138,7 @@ enum EnumTagEncoding {
     },
 }
 
-struct EnumVariant<'tcx> {
+struct EnumVariant<'db, 'tcx> {
     def_id: DefId,
     cc_name: Ident,
     /// The variant's `kDiscriminant`, as a literal of the enum's `discriminant_ty`.
@@ -147,7 +147,7 @@ struct EnumVariant<'tcx> {
     tag: Option<EnumTag>,
     /// In declaration order, which is the order of the variant constructor's parameters. (The
     /// members are declared in memory order instead.)
-    fields: Vec<EnumField<'tcx>>,
+    fields: Vec<EnumField<'db, 'tcx>>,
 }
 
 struct EnumTag {
@@ -157,10 +157,10 @@ struct EnumTag {
     value: TokenStream,
 }
 
-struct EnumField<'tcx> {
+struct EnumField<'db, 'tcx> {
     /// The field's name, or `__field{index}` for tuple variants' fields, like tuple structs'.
     cc_name: Ident,
-    cpp_type: CcSnippet<'tcx>,
+    cpp_type: &'db CcSnippet<'tcx>,
     offset: u64,
     size: u64,
     /// Whether the field's C++ type is a literal type with a `constexpr` move constructor, so
@@ -179,11 +179,11 @@ struct EnumField<'tcx> {
 ///
 /// `member_function_names` are the names of the enum's members so far, which variant names must
 /// not collide with.
-pub fn analyze_enum<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+pub fn analyze_enum<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
     member_function_names: &HashSet<String>,
-) -> Result<Option<EnumLayout<'tcx>>> {
+) -> Result<Option<EnumLayout<'db, 'tcx>>> {
     let TyKind::Adt(adt_def, generic_args) = core.common.self_ty.kind() else {
         return Ok(None);
     };
@@ -329,13 +329,13 @@ pub fn analyze_enum<'tcx>(
     Ok(Some(EnumLayout { discriminant_ty, tag_encoding, variants }))
 }
 
-fn analyze_field<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+fn analyze_field<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
     generic_args: ty::GenericArgsRef<'tcx>,
     field_def: &ty::FieldDef,
     field_index: FieldIdx,
     field_shape: &FieldsShape<FieldIdx>,
-) -> Result<EnumField<'tcx>> {
+) -> Result<EnumField<'db, 'tcx>> {
     let tcx = db.tcx();
     let name = field_def.name.as_str();
     field_def_is_pub_and_stable(tcx, field_def)
@@ -442,7 +442,7 @@ fn inhabited_variant_field_shape(
 pub fn generate_enum<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
-    layout: EnumLayout<'tcx>,
+    layout: EnumLayout<'_, 'tcx>,
 ) -> ApiSnippets<'tcx> {
     let cc_short_name = &core.common.cc_short_name;
     let cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
@@ -550,7 +550,7 @@ fn generate_variant<'tcx>(
     db: &BindingsGenerator<'tcx>,
     enum_cc_fully_qualified_name: &TokenStream,
     discriminant_ty: &TokenStream,
-    variant: &EnumVariant<'tcx>,
+    variant: &EnumVariant<'_, 'tcx>,
     prereqs: &mut CcPrerequisites<'tcx>,
 ) -> TokenStream {
     let name = &variant.cc_name;
@@ -562,7 +562,7 @@ fn generate_variant<'tcx>(
         .fields
         .iter()
         .map(|field| {
-            let cpp_type = field.cpp_type.clone().into_tokens(prereqs);
+            let cpp_type = field.cpp_type.into_tokens(prereqs);
             let field_name = &field.cc_name;
             quote! { #cpp_type #field_name }
         })
@@ -570,9 +570,9 @@ fn generate_variant<'tcx>(
 
     // Members are declared in memory order, at the offsets rustc chose, with explicit padding in
     // between. So is the member initializer list, to match.
-    enum Member<'a, 'tcx> {
+    enum Member<'a, 'db, 'tcx> {
         Tag(&'a EnumTag),
-        Field(&'a EnumField<'tcx>),
+        Field(&'a EnumField<'db, 'tcx>),
     }
     let mut members = variant
         .tag
@@ -635,7 +635,7 @@ fn generate_variant<'tcx>(
             }
             Member::Field(field) => {
                 let visibility = set_visibility(true);
-                let cpp_type = field.cpp_type.clone().into_tokens(prereqs);
+                let cpp_type = field.cpp_type.into_tokens(prereqs);
                 let field_name = &field.cc_name;
                 let field_doc_comment = &field.doc_comment;
                 let field_attributes = &field.attributes;

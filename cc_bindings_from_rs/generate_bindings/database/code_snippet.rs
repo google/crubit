@@ -14,6 +14,7 @@ use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
 use rustc_span::Symbol;
+use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::collections::HashSet;
@@ -36,6 +37,12 @@ impl<'tcx> CrubitAbiTypeWithCcPrereqs<'tcx> {
     pub fn crubit_abi_type(self, prereqs: &mut CcPrerequisites<'tcx>) -> CrubitAbiType {
         *prereqs += self.prereqs;
         self.crubit_abi_type
+    }
+
+    /// Borrows the `CrubitAbiType` and merges the C++ prerequisites into `prereqs`.
+    pub fn borrow_crubit_abi_type(&self, prereqs: &mut CcPrerequisites<'tcx>) -> &CrubitAbiType {
+        *prereqs += &self.prereqs;
+        &self.crubit_abi_type
     }
 }
 impl<'tcx> From<CrubitAbiType> for CrubitAbiTypeWithCcPrereqs<'tcx> {
@@ -78,9 +85,8 @@ pub struct CcPrerequisites<'tcx> {
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
-#[allow(clippy::large_enum_variant)]
 pub enum TemplateSpecialization<'tcx> {
-    Adt(AdtTemplateSpecialization<'tcx>),
+    Adt(Ty<'tcx>),
     TraitImpl(TraitImplTemplateSpecialization),
     NegativeAutoTraitImpl(NegativeAutoTraitImplTemplateSpecialization),
     StdHash(StdHashTemplateSpecialization<'tcx>),
@@ -233,8 +239,8 @@ impl<'tcx> FormattedTy<'tcx> {
         location: crate::TypeLocation,
         db: &BindingsGenerator<'tcx>,
     ) -> Result<Self> {
-        let for_cc = db.format_ty_for_cc(ty, location)?;
-        let for_rs = db.format_ty_for_rs(ty)?;
+        let for_cc = db.format_ty_for_cc(ty, location)?.clone();
+        let for_rs = db.format_ty_for_rs(ty)?.clone();
         Ok(Self { ty, for_cc, for_rs })
     }
 }
@@ -320,23 +326,45 @@ impl<'tcx> CcPrerequisites<'tcx> {
         &mut self,
         db: &BindingsGenerator<'tcx>,
         location: TypeLocation,
-        adt_spec: AdtTemplateSpecialization<'tcx>,
+        adt_spec: &AdtTemplateSpecialization<'tcx>,
     ) {
         if let Some(header) = adt_spec.support_header(db) {
             self.includes.insert(header);
         }
+        let spec = TemplateSpecialization::Adt(adt_spec.self_ty_rs);
         if matches!(
             location,
             TypeLocation::Field | TypeLocation::Const | TypeLocation::NestedBridgeable
         ) {
-            self.template_specializations.insert(TemplateSpecialization::Adt(adt_spec));
+            self.template_specializations.insert(spec);
         } else {
-            self.lazy_template_specializations.insert(TemplateSpecialization::Adt(adt_spec));
+            self.lazy_template_specializations.insert(spec);
         }
     }
 }
 
-impl<'tcx> AddAssign for CcPrerequisites<'tcx> {
+impl<'tcx> std::ops::AddAssign<&Self> for CcPrerequisites<'tcx> {
+    fn add_assign(&mut self, rhs: &Self) {
+        if !rhs.includes.is_empty() {
+            self.includes.extend(rhs.includes.iter().cloned());
+        }
+        if !rhs.defs.is_empty() {
+            self.defs.extend(rhs.defs.iter().copied());
+        }
+        if !rhs.fwd_decls.is_empty() {
+            self.fwd_decls.extend(rhs.fwd_decls.iter().copied());
+        }
+        if !rhs.template_specializations.is_empty() {
+            self.template_specializations.extend(rhs.template_specializations.iter().cloned());
+        }
+        if !rhs.lazy_template_specializations.is_empty() {
+            self.lazy_template_specializations
+                .extend(rhs.lazy_template_specializations.iter().cloned());
+        }
+    }
+}
+
+impl<'tcx> std::ops::AddAssign for CcPrerequisites<'tcx> {
     #[allow(clippy::suspicious_op_assign_impl)]
     fn add_assign(&mut self, rhs: Self) {
         let Self {
@@ -408,7 +436,37 @@ impl<'tcx> CcSnippets<'tcx> for CcSnippet<'tcx> {
     type Tokens = TokenStream;
 
     fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> TokenStream {
-        self.into_tokens(prereqs_accumulator)
+        let Self { tokens, prereqs } = self;
+        *prereqs_accumulator += prereqs;
+        tokens
+    }
+}
+
+impl<'a, 'tcx> CcSnippets<'tcx> for &'a CcSnippet<'tcx> {
+    type Tokens = &'a TokenStream;
+
+    fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> &'a TokenStream {
+        *prereqs_accumulator += &self.prereqs;
+        &self.tokens
+    }
+}
+
+impl<'a, 'tcx> CcSnippets<'tcx> for Cow<'a, CcSnippet<'tcx>> {
+    type Tokens = Cow<'a, TokenStream>;
+
+    fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> Cow<'a, TokenStream> {
+        match self {
+            Cow::Borrowed(snippet) => Cow::Borrowed(snippet.into_tokens(prereqs_accumulator)),
+            Cow::Owned(snippet) => Cow::Owned(snippet.into_tokens(prereqs_accumulator)),
+        }
+    }
+}
+
+impl<'a, 'tcx> CcSnippets<'tcx> for &'a Cow<'_, CcSnippet<'tcx>> {
+    type Tokens = &'a TokenStream;
+
+    fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> &'a TokenStream {
+        self.as_ref().into_tokens(prereqs_accumulator)
     }
 }
 
@@ -420,15 +478,15 @@ impl<'tcx, const N: usize> CcSnippets<'tcx> for [CcSnippet<'tcx>; N] {
     }
 }
 
-impl<'tcx> CcSnippet<'tcx> {
-    /// Consumes `self` and returns its `tokens`, while preserving
-    /// its `prereqs` into `prereqs_accumulator`.
-    pub fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> TokenStream {
-        let Self { tokens, prereqs } = self;
-        *prereqs_accumulator += prereqs;
-        tokens
-    }
+impl<'a, 'tcx, const N: usize> CcSnippets<'tcx> for [&'a CcSnippet<'tcx>; N] {
+    type Tokens = [&'a TokenStream; N];
 
+    fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> [&'a TokenStream; N] {
+        self.map(|snippet| snippet.into_tokens(prereqs_accumulator))
+    }
+}
+
+impl<'tcx> CcSnippet<'tcx> {
     /// Creates a new CcSnippet (with no `CcPrerequisites`).
     pub fn new(tokens: TokenStream) -> Self {
         Self { tokens, ..Default::default() }
@@ -459,6 +517,12 @@ impl<'tcx> FromIterator<CcSnippet<'tcx>> for CcSnippet<'tcx> {
 impl<'tcx> AddAssign for CcSnippet<'tcx> {
     fn add_assign(&mut self, rhs: Self) {
         self.tokens.extend(rhs.into_tokens(&mut self.prereqs));
+    }
+}
+
+impl<'tcx> AddAssign<&Self> for CcSnippet<'tcx> {
+    fn add_assign(&mut self, rhs: &Self) {
+        self.tokens.extend(rhs.into_tokens(&mut self.prereqs).clone());
     }
 }
 
@@ -597,6 +661,21 @@ impl AddAssign for RsSnippet {
     }
 }
 
+impl AddAssign<&Self> for RsSnippet {
+    fn add_assign(&mut self, rhs: &Self) {
+        self.extern_c_decls.extend(rhs.extern_c_decls.iter().cloned());
+        for part in &rhs.parts {
+            if let Some(thunk_name) = part.thunk_name
+                && !self.seen_thunks.insert(thunk_name)
+            {
+                continue;
+            }
+            self.tokens.extend(part.tokens.clone());
+            self.parts.push(part.clone());
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct ApiSnippets<'tcx> {
     /// Main API - for example:
@@ -634,6 +713,27 @@ impl<'tcx> FromIterator<ApiSnippets<'tcx>> for ApiSnippets<'tcx> {
             result.main_api += main_api;
             result.cc_details += cc_details;
             result.rs_details += rs_details;
+        }
+        result
+    }
+}
+
+impl<'a, 'tcx> FromIterator<Cow<'a, ApiSnippets<'tcx>>> for ApiSnippets<'tcx> {
+    fn from_iter<I: IntoIterator<Item = Cow<'a, ApiSnippets<'tcx>>>>(iter: I) -> Self {
+        let mut result = ApiSnippets::default();
+        for item in iter {
+            match item {
+                Cow::Borrowed(ApiSnippets { main_api, cc_details, rs_details }) => {
+                    result.main_api += main_api;
+                    result.cc_details += cc_details;
+                    result.rs_details += rs_details;
+                }
+                Cow::Owned(ApiSnippets { main_api, cc_details, rs_details }) => {
+                    result.main_api += main_api;
+                    result.cc_details += cc_details;
+                    result.rs_details += rs_details;
+                }
+            }
         }
         result
     }

@@ -11,6 +11,8 @@ use std::rc::Rc;
 #[derive(Debug, Eq, Clone)]
 pub struct BazelLabel(pub Rc<str>);
 
+impl memoized::CheapClone for BazelLabel {}
+
 /// Prefix of the synthetic label `rs_bindings_from_cc` assigns to declarations
 /// whose header is not owned by any Bazel target visible to Crubit. The rest of
 /// the label is the header path.

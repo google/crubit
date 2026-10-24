@@ -6,7 +6,7 @@ use crate::code_snippet::{ApiSnippets, BindingsInfo, NoBindingsReason, ResolvedN
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::{LifetimeOptions, RsTypeKind, UnsafeReason};
 use arc_anyhow::{anyhow, Error, Result};
-use code_gen_utils::make_rs_ident;
+use code_gen_utils::{make_rs_ident, CommonTokens};
 use crubit_abi_type::CrubitAbiType;
 use error_report::{bail, ensure, ErrorReporting, ReportFatalError};
 use heck::ToSnakeCase;
@@ -86,7 +86,7 @@ macro_rules! intern {
     };
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct CodegenFunctions {
     pub generate_enum: for<'a> fn(&BindingsGenerator<'a>, Rc<Enum<'a>>) -> Result<ApiSnippets>,
     pub generate_item: for<'a> fn(&BindingsGenerator<'a>, ir::Item<'a>) -> Result<ApiSnippets>,
@@ -122,6 +122,10 @@ memoized::query_group! {
         #[input]
         fn interner(&self) -> &'db Interner;
 
+        #[input]
+        #[return_ref]
+        fn tokens(&self) -> &CommonTokens;
+
         #[break_cycles_with = None]
         /// Returns whether the given Rust type is an unsafe type, such as a raw pointer.
         ///
@@ -145,10 +149,11 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:record_safety
         fn record_safety(&self, record: Rc<Record<'db>>) -> Option<UnsafeReason>;
 
+        #[return_ref]
         /// Returns the bindings info for the given item, or an error if the item is not supported.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:has_bindings
-        fn has_bindings(&self, item: ir::Item<'db>) -> Result<BindingsInfo, NoBindingsReason>;
+        fn has_bindings_result(&self, item: ir::Item<'db>) -> &Result<BindingsInfo, NoBindingsReason>;
 
         /// Returns the Rust type kind of the given C++ type, optionally filling in missing
         /// reference lifetimes with the elided lifetime (`'_`).
@@ -186,6 +191,7 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:generate_function
         fn generate_function(&self, func: Rc<Func<'db>>, derived_record: Option<Rc<Record<'db>>>) -> Result<Option<GeneratedFunction>>;
 
+        #[return_ref]
         /// You should call is_function_ambiguous() instead.
         ///
         /// Identifies all functions having overloads that we can't import (yet).
@@ -193,7 +199,7 @@ memoized::query_group! {
         /// TODO(b/213280424): Implement support for overloaded functions.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:overload_sets
-        fn overload_sets(&self) -> Rc<HashMap<Rc<FunctionId>, Option<ir::ItemId>>>;
+        fn overload_sets(&self) -> &HashMap<Rc<FunctionId>, Option<ir::ItemId>>;
 
         /// Returns whether the given record either implements or derives the Clone
         /// trait.
@@ -201,6 +207,7 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:is_record_clonable
         fn is_record_clonable(&self, record: Rc<Record<'db>>) -> bool;
 
+        #[return_ref]
         /// Returns the generated bindings for a function with the given name and param
         /// types. If none exists, returns None.
         ///
@@ -208,8 +215,8 @@ memoized::query_group! {
         fn get_binding(
             &self,
             expected_function_name: UnqualifiedIdentifier<'db>,
-            expected_param_types: Vec<RsTypeKind<'db>>,
-        ) -> Option<(Ident, ImplKind<'db>)>;
+            expected_param_types: Rc<[RsTypeKind<'db>]>,
+        ) -> Option<&(Ident, ImplKind<'db>)>;
 
         /// Returns a collection of unqualified member functions of the given record.
         ///
@@ -219,21 +226,24 @@ memoized::query_group! {
             record: Rc<Record<'db>>,
         ) -> Rc<[Rc<Func<'db>>]>;
 
+        #[return_ref]
         /// Returns the `CrubitAbiType` for the given `RsTypeKind`.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:crubit_abi_type
-        fn crubit_abi_type(&self, rs_type_kind: RsTypeKind<'db>) -> Result<CrubitAbiType>;
+        fn crubit_abi_type(&self, rs_type_kind: RsTypeKind<'db>) -> Result<&CrubitAbiType>;
 
         // You should probably use `type_visibility()` instead of this function.
         fn type_target_restriction(&self, rs_type_kind: RsTypeKind<'db>) -> Result<Option<BazelLabel>>;
 
+        #[return_ref]
         /// Resolves names to a map from name to ResolvedName.
         ///
         /// This checks both type and value namespaces.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:resolve_names
-        fn resolve_names(&self, parent: Rc<Record<'db>>) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>>;
+        fn resolve_names(&self, parent: Rc<Record<'db>>) -> Result<&HashMap<Rc<str>, ResolvedName>>;
 
+        #[return_ref]
         /// Counts how many functions have the given mangled name.
         /// Returns a map from a mangled name to the number of times it occurs in the IR.
         ///
@@ -242,12 +252,18 @@ memoized::query_group! {
         /// bindings are skipped).
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:mangled_name_counts
-        fn mangled_name_counts(&self) -> Rc<HashMap<Rc<str>, usize>>;
+        fn mangled_name_counts(&self) -> &HashMap<Rc<str>, usize>;
 
         /// Returns the formatted errors for the given unsupported item.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:unsupported_item_errors
         fn unsupported_item_errors(&self, item: Rc<ir::UnsupportedItem<'db>>) -> Rc<[Error]>;
+
+        #[provided]
+        /// Returns the bindings info for the given item, or an error if the item is not supported.
+        fn has_bindings(&self, item: ir::Item<'db>) -> Result<BindingsInfo, &NoBindingsReason> {
+            self.has_bindings_result(item).as_ref().copied()
+        }
     }
 }
 

@@ -80,6 +80,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "googletest",
+ "memoized",
 ]
 
 [[package]]
@@ -697,6 +698,7 @@ dependencies = [
  "googletest",
  "heck",
  "itertools",
+ "memoized",
  "phf",
  "proc-macro2",
  "quote",
@@ -779,6 +781,7 @@ dependencies = [
  "anyhow",
  "dyn_format",
  "googletest",
+ "memoized",
 ]
 
 [[package]]
@@ -1406,6 +1409,9 @@ dependencies = [
 [[package]]
 name = "rs_bindings_from_cc_bazel_label"
 version = "0.0.0"
+dependencies = [
+ "memoized",
+]
 
 [[package]]
 name = "rs_bindings_from_cc_cc_api"
@@ -1874,6 +1880,7 @@ dependencies = [
  "flagset",
  "googletest",
  "itertools",
+ "memoized",
  "proc-macro2",
  "protobuf",
  "quote",

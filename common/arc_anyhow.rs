@@ -127,6 +127,8 @@ impl PartialEq for Error {
 
 impl Eq for Error {}
 
+impl memoized::CheapClone for Error {}
+
 impl std::hash::Hash for Error {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         Arc::as_ptr(&self.0).hash(state)

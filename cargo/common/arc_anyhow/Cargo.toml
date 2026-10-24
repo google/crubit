@@ -18,6 +18,7 @@ path = "../../../common/arc_anyhow.rs"
 doctest = false
 
 [dependencies]
+memoized = { path = "../../../cargo/common/memoized"}
 anyhow.workspace = true
 [dev-dependencies]
 googletest.workspace = true

@@ -513,7 +513,7 @@ fn determine_name_conflict_action<'a>(
 pub fn resolve_names<'a>(
     db: &BindingsGenerator<'a>,
     parent: Rc<Record<'a>>,
-) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>> {
+) -> Result<HashMap<Rc<str>, ResolvedName>> {
     let child_items = match parent.enclosing_item_id().map(|id| db.find_untyped_decl(id)) {
         Some(Item::Namespace(ns)) => ns.children().iter(),
         Some(Item::Record(record)) => record.children().iter(),
@@ -640,5 +640,5 @@ pub fn resolve_names<'a>(
         }
     }
 
-    Ok(Rc::new(names))
+    Ok(names)
 }

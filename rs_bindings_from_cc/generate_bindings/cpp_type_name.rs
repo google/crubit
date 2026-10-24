@@ -131,6 +131,7 @@ pub fn format_cpp_type_inner(
         RsTypeKind::TypeAlias { type_alias, .. } => {
             tagless_cpp_type_name_for_item(&Item::TypeAlias(Rc::clone(type_alias)), db)
         }
+        RsTypeKind::Primitive(ir::Primitive::Void) => Ok(db.tokens().void.clone()),
         RsTypeKind::Primitive(primitive) => Ok(quote! { #primitive }),
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             BridgeRsTypeKind::ProtoMessageBridge { kind, .. } => match kind {
