@@ -9,6 +9,7 @@ more context.
 
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+load("@rules_rust//rust/private:providers.bzl", "CrateInfo", "DepInfo", "DepVariantInfo")
 load("@bazel_skylib//lib:collections.bzl", "collections")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load(
@@ -460,6 +461,31 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         ],
     )
 
+    _cpp_std_label = str(ctx.attr._cpp_std.label)
+    _has_cpp_std = False
+    for d in binding_infos:
+        if d.dep_variant_info and getattr(d.dep_variant_info, "crate_info", None) and str(d.dep_variant_info.crate_info.owner) == _cpp_std_label:
+            _has_cpp_std = True
+            break
+    for d in extra_deps:
+        if getattr(d, "crate_info", None) and str(d.crate_info.owner) == _cpp_std_label:
+            _has_cpp_std = True
+            break
+
+    deps_for_rs_file_direct = [
+        d.dep_variant_info
+        for d in binding_infos
+        if d.dep_variant_info
+    ] + extra_deps + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file
+
+    if not _has_cpp_std:
+        deps_for_rs_file_direct.append(DepVariantInfo(
+            crate_info = ctx.attr._cpp_std[CrateInfo],
+            dep_info = ctx.attr._cpp_std[DepInfo],
+            cc_info = ctx.attr._cpp_std[CcInfo],
+            build_info = None,
+        ))
+
     return generate_and_compile_bindings(
         ctx,
         ctx.rule.attr,
@@ -488,11 +514,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             if d.cc_info
         ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + generated_cpp_support_deps,
         deps_for_rs_file = depset(
-            direct = [
-                d.dep_variant_info
-                for d in binding_infos
-                if d.dep_variant_info
-            ] + extra_deps + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
+            direct = deps_for_rs_file_direct,
             transitive = [
                 d.pass_through_dep_variant_infos
                 for d in binding_infos
@@ -547,6 +569,9 @@ rust_bindings_from_cc_aspect = aspect(
     attr_aspects = _attr_predicate,
     required_aspect_providers = [CcInfo],
     attrs = bindings_attrs | {
+        "_cpp_std": attr.label(
+            default = "//support:cpp_std",
+        ),
         "_std": attr.label(
             default = "//support/cc_std",
         ),
