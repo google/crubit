@@ -51,6 +51,22 @@ _generate_bindings = rule(
     implementation = _generate_bindings_impl,
 )
 
+def generated_bindings(name, cc_library, visibility = None):
+    """Makes the generated bindings of `cc_library` available as output groups.
+
+    The output groups are `cc_file`, `rust_file` and `namespaces_file`.
+
+    Args:
+        name: The name of the target.
+        cc_library: The C++ library whose bindings should be generated.
+        visibility: The visibility of the target.
+    """
+    _generate_bindings(
+        name = name,
+        cc_library = cc_library,
+        visibility = visibility,
+    )
+
 def golden_test(
         name,
         cc_library,

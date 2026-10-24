@@ -68,7 +68,8 @@ def generate_bindings(
         extra_rs_srcs,
         extra_cpp_srcs,
         unstable_rust_features,
-        extra_rs_bindings_from_cc_cli_flags):
+        extra_rs_bindings_from_cc_cli_flags,
+        use_header_modules = False):
     """Runs the bindings generator.
 
     Args:
@@ -86,6 +87,8 @@ def generate_bindings(
       extra_cpp_srcs: A list of extra C++ source files to add.
       unstable_rust_features: A list of unstable rustc features to enable.
       extra_rs_bindings_from_cc_cli_flags: CLI flags to be passed to `rs_bindings_from_cc`.
+      use_header_modules: Whether to use the precompiled `.pic.pcm` header modules of the
+        dependencies. `feature_configuration` must enable `module_maps` iff this is true.
 
     Returns:
       tuple(cc_output, rs_output, namespaces_output, error_report_output): The generated source files.
@@ -161,6 +164,24 @@ def generate_bindings(
     for d in getattr(attr, "local_defines", []):
         local_defines.append(ctx.expand_make_variables("local_defines", d, {}))
 
+    use_pic = False
+    header_module_variables = {}
+    if use_header_modules:
+        # Use PIC mode when supported by the toolchain so `create_compile_action` selects
+        # `.pic.pcm` header modules (matching the `.pic.pcm` modules built by `cc_library`). In PIC
+        # mode, the crosstool `pic` feature adds the PIC flags (`-fPIC` etc.) to the
+        # `rs-bindings-from-cc` action, which Clang needs to accept the `.pic.pcm` modules.
+        use_pic = (
+            feature_configuration.is_enabled("pic") or
+            feature_configuration.is_enabled("supports_pic")
+        )
+        header_module_variables = {
+            "cpp_module_map": getattr(compilation_context, "_module_map", None),
+            "direct_module_maps": getattr(compilation_context, "_direct_module_maps", depset()),
+        }
+        if use_pic:
+            header_module_variables["use_pic"] = True
+
     variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
@@ -190,6 +211,7 @@ def generate_bindings(
             "rs_bindings_from_cc_flags": rs_bindings_from_cc_flags + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs) + _get_unstable_rust_features_command_line(unstable_rust_features) + _get_extra_cpp_srcs_command_line(extra_cpp_srcs),
             "target_args": target_args,
         },
+        **header_module_variables
     )
 
     # Run the `rs_bindings_from_cc` to generate the _rust_api_impl.cc and _rust_api.rs files.

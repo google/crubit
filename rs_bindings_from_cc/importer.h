@@ -5,6 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
 
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -28,8 +29,11 @@
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/FileEntry.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Sema/Sema.h"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/Support/Allocator.h"
 
 namespace crubit {
 
@@ -42,6 +46,10 @@ struct ItemCacheEntry {
   Status status = Status::kCompleted;
   ItemId id = ItemId(0);
   std::unique_ptr<ir_proto::Item> proto_item;
+  // The number of entries that were in the cache when this one was added.
+  // The cache is a hash map, whose iteration order is randomized between
+  // processes; this gives code that needs to iterate it a deterministic order.
+  size_t insertion_index = 0;
 };
 
 // Iterates over the AST created from the invocation's entry headers and
@@ -49,6 +57,11 @@ struct ItemCacheEntry {
 // invocation object.
 class Importer final : public ImportContext {
  public:
+  // Maps each declaration to its representative copy. See
+  // `representative_copy_cache_`.
+  using RepresentativeCopyCache =
+      absl::flat_hash_map<const clang::Decl*, const clang::Decl*>;
+
   explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
                     clang::Sema& sema);
 
@@ -106,6 +119,7 @@ class Importer final : public ImportContext {
   bool IsFromCurrentTargetAndNotUnderSpecialization(
       const clang::Decl& decl) const;
   bool IsFromProtoTarget(const clang::Decl& decl) const override;
+  bool IsInSystemHeader(clang::SourceLocation location) const override;
   bool IsCrubitEnabledForTarget(const BazelLabel& label) const override;
   bool AreAssumedLifetimesEnabledForTarget(
       const BazelLabel& label) const override;
@@ -179,6 +193,9 @@ class Importer final : public ImportContext {
   // side looks up `canonical_namespace_id`). This is expensive, so it is only
   // called when `--check_importer_invariants` is set.
   void CheckLazyImportInvariants() const;
+  // Returns the keys of `import_cache_` in the order they were inserted, which
+  // (unlike the iteration order of `import_cache_`) is deterministic.
+  std::vector<const clang::Decl*> GetImportCacheKeysInInsertionOrder() const;
 
   void FindAlwaysInstantiateSpecs(const clang::DeclContext& decl_context);
   bool IsAlwaysInstantiate(
@@ -201,10 +218,59 @@ class Importer final : public ImportContext {
   // Stores the comments of this target in source order.
   void ImportFreeComments();
 
+  // Returns the comment attached to `decl` (or to the copy of `decl` whose
+  // source locations are used for comments, see `GetDeclForSourceLocations`),
+  // or nullptr if there is none.
+  //
+  // Precompiled header modules only contain documentation comments (`///`),
+  // but Crubit also uses ordinary comments (`//`) as documentation (see
+  // `-fparse-all-comments`). So for declarations in files that were loaded
+  // from a module, this looks for the comment in `module_comments_` instead of
+  // in `ctx_.Comments`.
+  const clang::RawComment* absl_nullable GetRawComment(
+      const clang::Decl& decl) const;
+
+  // Returns the comments in `file`, a file loaded from a precompiled header
+  // module, collecting them first if necessary. See `module_comments_`.
+  const std::map<unsigned, clang::RawComment*>* absl_nullable
+  GetModuleCommentsInFile(clang::FileID file) const;
+
+  // Returns the copy of `file` loaded from a precompiled header module that
+  // comes first in the translation unit, or an invalid FileID if `file` was
+  // not loaded from any module.
+  clang::FileID GetFirstLoadedFileID(clang::FileEntryRef file) const;
+
+  // Returns the location at the same position as `location` (i.e. at the same
+  // offset in the same file) in the copy of the file that `comments_` are in.
+  //
+  // With header modules, a header can be in the translation unit several
+  // times (e.g. parsed textually, and in several modules), and the
+  // representative copies of declarations (see `GetDeclForSourceLocations`)
+  // are not necessarily all in the same copy of the header as `comments_`.
+  clang::SourceLocation TranslateToCommentFile(
+      clang::SourceLocation location) const;
+
   clang::Decl* absl_nullable CanonicalizeDecl(
       clang::Decl* absl_nonnull decl) const;
   const clang::Decl* absl_nullable CanonicalizeDecl(
       const clang::Decl& decl) const;
+  // Like `CanonicalizeDecl`, but only considers the redeclaration chain of
+  // `decl`, and not other declarations of the same entity that Clang did not
+  // merge into it. See `CanonicalizeUnmergedDuplicates`.
+  const clang::Decl* absl_nullable CanonicalizeDeclInRedeclChain(
+      const clang::Decl& decl) const;
+  // Given the result of `CanonicalizeDeclInRedeclChain`, returns a single
+  // representative of all the declarations of the same entity in the same
+  // namespace, even if Clang didn't merge them into one redeclaration chain.
+  // The representative is the same no matter which of them `decl` is.
+  //
+  // This happens when a header is both parsed textually and loaded from a
+  // precompiled header module (e.g. because the header belongs to both the
+  // current target and to a dependency): Clang merges declarations with
+  // external linkage, but not e.g. typedefs, or variables with internal
+  // linkage.
+  const clang::Decl* absl_nonnull CanonicalizeUnmergedDuplicates(
+      const clang::Decl* absl_nonnull decl) const;
 
   std::vector<clang::Decl*> GetCanonicalChildren(
       const clang::DeclContext& decl_context) const;
@@ -300,12 +366,32 @@ class Importer final : public ImportContext {
 
   std::vector<const clang::RawComment*> comments_;
 
+  // The comments in files loaded from precompiled header modules, which Crubit
+  // collects itself by lexing the files (whose contents are embedded in the
+  // modules), because the modules don't contain ordinary comments. Only the
+  // files in `module_comment_files_` have been lexed so far.
+  //
+  // Populated lazily by `GetModuleCommentsInFile`, hence `mutable`.
+  mutable llvm::BumpPtrAllocator module_comments_allocator_;
+  mutable clang::RawCommentList module_comments_;
+  mutable llvm::DenseSet<clang::FileID> module_comment_files_;
+  // With header modules, the copy of each public header that `comments_` are
+  // in. Empty without header modules. See `TranslateToCommentFile`.
+  absl::flat_hash_map<const clang::FileEntry*, clang::FileID> comment_file_ids_;
+
   // Set of decls that have been successfully imported (i.e. that will be
   // present in the IR output / that will not produce dangling ItemIds in the IR
   // output).
   //
   // Note that this includes non-TypeDecls in the form of using decls.
   absl::flat_hash_set<const clang::NamedDecl*> known_type_decls_;
+  // Memoizes `CanonicalizeUnmergedDuplicates`.
+  mutable absl::flat_hash_map<const clang::Decl*, const clang::Decl*>
+      unmerged_duplicates_cache_;
+  // Memoizes the representative copy of each declaration (with header modules,
+  // the copy whose source locations are used for comments and for ordering).
+  // See `GetRepresentativeCopy` in importer.cc.
+  mutable RepresentativeCopyCache representative_copy_cache_;
 
   clang::QualType rs_core_fmt_debug_;
   const clang::ClassTemplateDecl* absl_nullable rs_impl_;

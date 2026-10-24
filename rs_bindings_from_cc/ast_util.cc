@@ -32,6 +32,7 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/DeclarationName.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/RecursiveASTVisitor.h"
@@ -785,6 +786,30 @@ absl::flat_hash_set<absl::string_view> GetIgnoredAttrs(
     }
   }
   return ignored_attr_names;
+}
+
+std::vector<clang::CXXConstructorDecl*> GetAllConstructors(
+    const clang::CXXRecordDecl& record) {
+  std::vector<clang::CXXConstructorDecl*> result;
+  absl::flat_hash_set<const clang::Decl*> seen;
+  for (clang::CXXConstructorDecl* ctor : record.ctors()) {
+    if (seen.insert(ctor->getCanonicalDecl()).second) result.push_back(ctor);
+  }
+  clang::ASTContext& ast_context = record.getASTContext();
+  clang::DeclarationName ctor_name =
+      ast_context.DeclarationNames.getCXXConstructorName(
+          ast_context.getCanonicalTagType(&record));
+  for (clang::NamedDecl* decl : record.lookup(ctor_name)) {
+    auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(decl);
+    if (ctor == nullptr) continue;  // E.g. a constructor template.
+    // Lookup returns the most recent redeclaration (e.g. an out-of-line
+    // definition); return the canonical one, like `ctors()` would, because
+    // only the declaration in the class carries some of the properties (e.g.
+    // trivial-for-call from `[[clang::trivial_abi]]`).
+    ctor = ctor->getCanonicalDecl();
+    if (seen.insert(ctor).second) result.push_back(ctor);
+  }
+  return result;
 }
 
 }  // namespace crubit
