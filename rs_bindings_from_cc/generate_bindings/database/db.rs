@@ -749,9 +749,11 @@ impl<'db> BindingsGenerator<'db> {
         &'db T: TryFrom<&'db ir::Item<'db>>,
     {
         self.find_untyped_decl(decl_id).try_into().map_err(|_| {
+            // Use the name rather than the ID: item IDs are pointers, which differ from run to
+            // run, and this message can end up in the generated bindings.
             arc_anyhow::anyhow!(
-                "DeclId {:?} doesn't refer to a {}",
-                decl_id,
+                "`{}` is not a {}",
+                self.debug_name(decl_id),
                 std::any::type_name::<T>()
             )
         })

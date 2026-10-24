@@ -5,9 +5,9 @@
 use arc_anyhow::{anyhow, Result};
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{interpolate_spelled_rust_type, Mutability, RsTypeKind};
-use googletest::matchers::contains_substring;
+use googletest::matchers::{contains_substring, not};
 use googletest::{expect_eq, expect_that, gtest};
-use ir::IR;
+use ir::{GenericItem, IR};
 use ir_matchers::assert_ir_matches;
 use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_func};
 use multiplatform_ir_testing::{
@@ -588,6 +588,22 @@ fn test_rs_type_kind_implements_copy() -> Result<()> {
         expect_eq!(test.rs, fmt, "Testing: {}", test_name);
         expect_eq!(test.is_copy, t.implements_copy(), "Testing: {}", test_name);
     }
+    Ok(())
+}
+
+/// Item IDs are pointers, which differ from run to run. Errors can end up in the generated
+/// bindings, so they must name items rather than print their IDs.
+#[gtest]
+fn test_find_decl_error_names_the_item() -> Result<()> {
+    let proto = ir_proto_from_cc("namespace ns { struct SomeStruct {}; }")?;
+    let ir = make_test_ir(&proto)?;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let record_id = db.ir().records().next().unwrap().id();
+    let error = db.find_decl::<std::rc::Rc<ir::Func>>(record_id).unwrap_err();
+    let message = format!("{error:#}");
+    expect_that!(message, contains_substring("`ns::SomeStruct` is not a"));
+    expect_that!(message, not(contains_substring("ItemId(")));
     Ok(())
 }
 
