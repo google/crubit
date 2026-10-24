@@ -21,5 +21,14 @@ TEST(MappedCppTypeTest, GenericMappedCppType) {
   EXPECT_EQ(val.value, 42);
 }
 
+TEST(MappedCppTypeTest, UnmovableMappedCppType) {
+  crubit::Slot<UnmovableMappedCppType> slot;
+  new (slot.Get()) UnmovableMappedCppType(create_unmovable_mapped_cpp_type(42));
+  EXPECT_EQ(
+      take_unmovable_mapped_cpp_type(
+          rs::Movable<UnmovableMappedCppType>::TakeFromSlot(std::move(slot))),
+      42);
+}
+
 }  // namespace
 }  // namespace mapped_cpp_type

@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crubit_annotate::cpp_layout_equivalent;
+use crubit_annotate::{cpp_layout_equivalent, must_bind};
 
 #[cpp_layout_equivalent(
     cpp_type = "mapped_cpp_type::MappedCppType",
@@ -42,4 +42,26 @@ impl<T: Eq> core::cmp::Eq for GenericMappedCppType<T> {}
 
 pub fn create_generic_mapped_cpp_type(x: i32) -> GenericMappedCppType<i32> {
     GenericMappedCppType(x)
+}
+
+#[cpp_layout_equivalent(
+    cpp_type = "mapped_cpp_type::UnmovableMappedCppType",
+    include_path = "cc_bindings_from_rs/test/bridging/mapped_cpp_type_def.h"
+)]
+#[doc = "CRUBIT_ANNOTATE: derive_rust_movable="]
+#[repr(C)]
+pub struct UnmovableMappedCppType(pub i32);
+
+impl Drop for UnmovableMappedCppType {
+    fn drop(&mut self) {}
+}
+
+#[must_bind]
+pub fn create_unmovable_mapped_cpp_type(x: i32) -> UnmovableMappedCppType {
+    UnmovableMappedCppType(x)
+}
+
+#[must_bind]
+pub fn take_unmovable_mapped_cpp_type(x: UnmovableMappedCppType) -> i32 {
+    x.0
 }
