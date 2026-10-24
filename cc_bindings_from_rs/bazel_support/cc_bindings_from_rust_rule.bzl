@@ -424,6 +424,33 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
     if str(target.label) in targets_to_remove:
         return []
 
+    if target.label == Label("//support:cpp_std"):
+        # `cpp_std` is a pure Rust re-export of `cc_std::std::*`. Its C++ bindings are the
+        # C++ standard library headers from `cc_std` in namespace `::std`, rather than a
+        # `cc_bindings_from_rs`-generated `cpp_std.h` header.
+        cc_std_infos = _get_dep_bindings_infos(ctx.rule.attr)
+        if len(cc_std_infos) != 1:
+            fail("Expected //support:cpp_std to have 1 bindings dep, got: %s" % cc_std_infos)
+        cc_std_info = cc_std_infos[0]
+        return [
+            CcBindingsFromRustInfo(
+                cc_info = cc_std_info.cc_info,
+                crate_key = target[CrateInfo].name,
+                headers = cc_std_info.headers,
+                features = cc_std_info.features,
+                target_denied_features = getattr(cc_std_info, "target_denied_features", []),
+                configuration = CcBindingsFromRustLibraryConfigInfo(
+                    namespace = "std",
+                    extra_cc_hdrs = [],
+                    extra_cc_srcs = [],
+                ),
+                transitive_infos = depset(
+                    direct = [cc_std_info],
+                    transitive = [getattr(cc_std_info, "transitive_infos", depset())] if hasattr(cc_std_info, "transitive_infos") else [],
+                ),
+            ),
+        ]
+
     proto_crate_renames = []
 
     toolchain = find_toolchain(ctx)
