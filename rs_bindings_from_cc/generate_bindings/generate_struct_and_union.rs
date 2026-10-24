@@ -1191,7 +1191,11 @@ fn cc_struct_no_unique_address_impl(
         // into no_unique_address fields, despite laying them out as opaque
         // blobs of bytes.
         let type_ident = db.rs_type_kind(field.type_().clone()).with_context(|| {
-            format!("Failed to format type for field {field:?} on record {record:?}")
+            format!(
+                "Failed to format type for field `{}` on record `{}`",
+                field.cpp_identifier().map_or_else(|| "<unnamed>".to_string(), |id| id.to_string()),
+                db.debug_name(record.id())
+            )
         })?;
         no_unique_address_accessors.push(NoUniqueAddressAccessor {
             doc_comment: if field.size() == 0 {
@@ -1248,9 +1252,9 @@ fn cc_struct_upcast_impl<'pb>(
     let mut upcastable_bases = vec![];
     let derived_name = db.rs_type_kind(record.as_ref().into())?.to_token_stream(db);
     for base in record.unambiguous_public_bases() {
-        let base_record: &Rc<Record> = db
-            .find_decl(base.base_record_id())
-            .with_context(|| format!("Can't find a base record of {:?}", record))?;
+        let base_record: &Rc<Record> = db.find_decl(base.base_record_id()).with_context(|| {
+            format!("Can't find a base record of `{}`", db.debug_name(record.id()))
+        })?;
         let Ok(base_type) = db.rs_type_kind(base_record.as_ref().into()) else {
             // The base type is unknown to Crubit, so don't generate upcast code for it.
             upcast_impls.push(Err(format!(

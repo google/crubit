@@ -749,9 +749,11 @@ impl<'db> BindingsGenerator<'db> {
         &'db T: TryFrom<&'db ir::Item<'db>>,
     {
         self.find_untyped_decl(decl_id).try_into().map_err(|_| {
+            // Use the item's name, not `decl_id`: the ID is an AST node address, and this message
+            // can reach the generated bindings and the error report.
             arc_anyhow::anyhow!(
-                "DeclId {:?} doesn't refer to a {}",
-                decl_id,
+                "`{}` doesn't refer to a {}",
+                self.debug_name(decl_id),
                 std::any::type_name::<T>()
             )
         })
