@@ -484,6 +484,7 @@ rust_library(
     srcs = ["bazel_label.rs"],
     edition = "2024",
     visibility = ["//:__subpackages__"],
+    deps = ["//common:memoized"],
 )
 
 rust_library(
@@ -502,6 +503,7 @@ rust_library(
         "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:error_report",
+        "//common:memoized",
         "@crate_index//:flagset",  # v0_4
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",

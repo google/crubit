@@ -299,7 +299,7 @@ fn api_func_shape_for_operator_ne<'a>(
 ) -> ErrorsOr<Option<(Ident, ImplKind<'a>)>> {
     // If operator== is present, don't generate ne, rely on rust's default ne.
     let eq_binding =
-        db.get_binding(UnqualifiedIdentifier::Operator(Operator::new("==")), param_types.to_vec());
+        db.get_binding(UnqualifiedIdentifier::Operator(Operator::new("==")), param_types.into());
     if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) = eq_binding {
         // operator== is present, skipping bindings for operator!=
         return Ok(None);
@@ -552,7 +552,7 @@ fn api_func_shape_for_operator_partial_ord<'a>(
         let preferred_op_name = preferred_op.cc_name();
         let preferred_binding = db.get_binding(
             UnqualifiedIdentifier::Operator(Operator::new(preferred_op_name)),
-            param_types.to_vec(),
+            param_types.into(),
         );
         if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialOrd { .. }, .. })) =
             preferred_binding
@@ -597,7 +597,7 @@ fn api_func_shape_for_operator_partial_ord<'a>(
     // PartialOrd requires PartialEq, so we need to make sure operator== is
     // implemented for this Record type.
     let partialeq_binding =
-        db.get_binding(UnqualifiedIdentifier::Operator(Operator::new("==")), param_types.to_vec());
+        db.get_binding(UnqualifiedIdentifier::Operator(Operator::new("==")), param_types.into());
     match partialeq_binding {
         Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) => {}
         _ => errors.add(anyhow!("operator{op_name} where operator== is missing.")),
@@ -1321,7 +1321,7 @@ fn api_func_shape_if_some<'a>(
 pub fn get_binding<'a>(
     db: &BindingsGenerator<'a>,
     expected_function_name: UnqualifiedIdentifier<'a>,
-    expected_param_types: Vec<RsTypeKind<'a>>,
+    expected_param_types: Rc<[RsTypeKind<'a>]>,
 ) -> Option<(Ident, ImplKind<'a>)> {
     db.ir()
         .get_functions_by_name(&expected_function_name)
@@ -1675,9 +1675,9 @@ fn generate_func_body<'a>(
                 }
                 PassingConvention::ComposablyBridged => {
                     let crubit_abi_type = db.crubit_abi_type(return_type.clone())?;
-                    let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
+                    let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(crubit_abi_type);
                     let crubit_abi_type_expr_tokens =
-                        CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+                        CrubitAbiTypeToRustExprTokens(crubit_abi_type);
                     quote! {
                         ::crubit_support::bridge::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |__crubit_return_abi_buffer| {
                             #crate_root_path::detail::#thunk_ident(
@@ -2678,7 +2678,7 @@ pub fn generate_function<'a>(
             } else if let TraitName::PartialOrd { param, op } = &trait_name {
                 let mut self_type = db.rs_type_kind(trait_record.into())?;
                 if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
-                    *lifetimes = trait_lifetime_params.clone();
+                    *lifetimes = trait_lifetime_params.clone().into();
                 }
                 let quoted_param_or_self = match &impl_for {
                     ImplFor::T => param.to_token_stream_replacing_by_self(db, Some(&self_type)),
@@ -2755,7 +2755,7 @@ pub fn generate_function<'a>(
                 format_generic_params(&trait_lifetime_params, &*trait_generic_params);
             let mut self_type_for_extra = db.rs_type_kind(trait_record.into())?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type_for_extra {
-                *lifetimes = trait_lifetime_params.clone();
+                *lifetimes = trait_lifetime_params.clone().into();
             }
 
             let (trait_name_without_trait_record, formatted_impl_for) = match &impl_for {
@@ -2881,7 +2881,7 @@ pub fn generate_function<'a>(
 
             let mut self_type = db.rs_type_kind(trait_record.into())?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
-                *lifetimes = trait_lifetime_params.clone();
+                *lifetimes = trait_lifetime_params.clone().into();
             }
 
             let func_body = create_func_body()?;
@@ -3651,7 +3651,7 @@ fn has_copy_assignment_operator_from_const_reference(
 }
 
 /// Implementation of `BindingsGenerator::overload_sets`.
-pub fn overload_sets(db: &BindingsGenerator) -> Rc<HashMap<Rc<FunctionId>, Option<ir::ItemId>>> {
+pub fn overload_sets(db: &BindingsGenerator) -> HashMap<Rc<FunctionId>, Option<ir::ItemId>> {
     #[derive(Copy, Clone)]
     struct CandidateFunction {
         item_id: ir::ItemId,
@@ -3703,20 +3703,18 @@ pub fn overload_sets(db: &BindingsGenerator) -> Rc<HashMap<Rc<FunctionId>, Optio
             value.is_ambiguous = true;
         }
     }
-    Rc::new(
-        overload_sets
-            .into_iter()
-            .map(
-                |(id, canonical)| {
-                    if canonical.is_ambiguous {
-                        (id, None)
-                    } else {
-                        (id, Some(canonical.item_id))
-                    }
-                },
-            )
-            .collect(),
-    )
+    overload_sets
+        .into_iter()
+        .map(
+            |(id, canonical)| {
+                if canonical.is_ambiguous {
+                    (id, None)
+                } else {
+                    (id, Some(canonical.item_id))
+                }
+            },
+        )
+        .collect()
 }
 
 pub const CONTAINER_LIFETIME_NAME: &str = "ctnr";
@@ -3904,6 +3902,6 @@ pub fn adjust_signature_for_indexing_traits<'a>(
 
 /// This is an implementation of a method of `BindingsGenerator<'db>` - for more
 /// information please see the corresponding doc comment in `db.rs`.
-pub fn mangled_name_counts(db: &BindingsGenerator<'_>) -> Rc<HashMap<Rc<str>, usize>> {
-    Rc::new(db.ir().functions().map(|f| Rc::from(f.mangled_name())).counts())
+pub fn mangled_name_counts(db: &BindingsGenerator<'_>) -> HashMap<Rc<str>, usize> {
+    db.ir().functions().map(|f| Rc::from(f.mangled_name())).counts()
 }

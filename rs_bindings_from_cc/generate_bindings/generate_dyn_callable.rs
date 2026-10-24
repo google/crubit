@@ -186,8 +186,8 @@ fn generate_invoker_function_pointer<'a>(
             }
             PassingConvention::ComposablyBridged => {
                 let crubit_abi_type = db.crubit_abi_type(param_ty.clone())?;
-                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(crubit_abi_type);
+                let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(crubit_abi_type);
                 let arg_ident = format_ident!("bridge_param_{i}");
                 arg_transforms.extend(quote! {
                     unsigned char #arg_ident[#crubit_abi_type_tokens::kSize];
@@ -214,7 +214,7 @@ fn generate_invoker_function_pointer<'a>(
         }
         PassingConvention::ComposablyBridged => {
             let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(&callable.return_type))?;
-            let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+            let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(crubit_abi_type);
             arg_transforms.extend(quote! {
                 unsigned char out[#crubit_abi_type_tokens::kSize];
             });
@@ -245,8 +245,8 @@ fn generate_invoker_function_pointer<'a>(
         }
         PassingConvention::ComposablyBridged => {
             let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(&callable.return_type))?;
-            let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-            let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+            let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(crubit_abi_type);
+            let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(crubit_abi_type);
             invoke_ffi_and_transform_to_cpp.extend(quote! {
                 // Because our bridge buffer is named `out`
                 return ::crubit::internal::Decode<#crubit_abi_type_tokens>(#crubit_abi_type_expr_tokens, out);
@@ -311,8 +311,8 @@ fn generate_make_cpp_invoker_tokens<'a>(
             }
             PassingConvention::ComposablyBridged => {
                 let crubit_abi_type = db.crubit_abi_type(param_ty.clone())?;
-                let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
-                let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+                let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(crubit_abi_type);
+                let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(crubit_abi_type);
 
                 params.push(quote! { #param_ident: #rust_param_type });
                 // For arguments that are bridge types, we encode the
@@ -371,8 +371,8 @@ fn generate_make_cpp_invoker_tokens<'a>(
         }
         PassingConvention::ComposablyBridged => {
             let crubit_abi_type = db.crubit_abi_type(callable.return_type.as_ref().clone())?;
-            let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
-            let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+            let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(crubit_abi_type);
+            let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(crubit_abi_type);
             invoke_ffi_and_transform_to_rust = quote! {
                 ::crubit_support::bridge::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |out| {
                     #invoke_ffi_and_transform_to_rust

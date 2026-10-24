@@ -21,9 +21,12 @@ extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 
 use arc_anyhow::{Context, Result};
-use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude, NamespaceQualifier};
+use code_gen_utils::{
+    format_cc_includes, make_rs_ident, CcInclude, CommonTokens, NamespaceQualifier,
+};
 use database::code_snippet::{
-    ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet, TemplateSpecialization,
+    ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, ExternCDecl, RsSnippet,
+    TemplateSpecialization,
 };
 use database::{
     rename_clang_builtin_macros, CoreBindingsCommon, ExportedPath, FullyQualifiedName, PublicPaths,
@@ -69,6 +72,7 @@ use rustc_middle::middle::resolve::{ModChild, Reexport};
 use rustc_middle::ty::{self, GenericParamDefKind, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
+use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::PathBuf;
@@ -112,7 +116,7 @@ fn warn_unbindable_types(db: &BindingsGenerator) {
     let mut checked_def_ids = HashSet::new();
 
     // Check all public definitions across all reachable crates.
-    for def_id in db.all_public_paths_by_def_id().into_keys() {
+    for def_id in db.all_public_paths_by_def_id().keys().copied() {
         checked_def_ids.insert(def_id);
         check_unbindable_type(db, def_id);
     }
@@ -238,13 +242,8 @@ fn specializations<'tcx>(db: &crate::BindingsGenerator<'tcx>) -> Rc<[CppTypeSpec
     let all_public_paths = db.all_public_paths_by_def_id();
     for (adt_or_alias_def_id, paths) in all_public_paths {
         specializations.extend(
-            std::iter::once(adt_or_alias_def_id)
-                .chain(
-                    paths
-                        .into_extern_aliases()
-                        .into_iter()
-                        .filter_map(|path| path.type_alias_def_id),
-                )
+            std::iter::once(*adt_or_alias_def_id)
+                .chain(paths.extern_aliases().filter_map(|path| path.type_alias_def_id))
                 .filter_map(|def_id| {
                     let rustc_hir::def::DefKind::TyAlias = tcx.def_kind(def_id) else {
                         return None;
@@ -294,15 +293,15 @@ pub fn new_database<'db>(
     kythe_annotations: bool,
     portable_abi_compatible: bool,
     enable_rmeta_interface: bool,
-    crate_name_to_include_paths: Rc<HashMap<Rc<str>, Vec<CcInclude>>>,
-    crate_name_to_features: Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>,
-    crate_name_to_namespace: Rc<HashMap<Rc<str>, Rc<str>>>,
-    crate_renames: Rc<HashMap<Rc<str>, Rc<str>>>,
+    crate_name_to_include_paths: HashMap<Rc<str>, Vec<CcInclude>>,
+    crate_name_to_features: HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>,
+    crate_name_to_namespace: HashMap<Rc<str>, Rc<str>>,
+    crate_renames: HashMap<Rc<str>, Rc<str>>,
     errors: Rc<dyn ErrorReporting>,
     fatal_errors: Rc<dyn ReportFatalError>,
     is_golden_test: bool,
     h_out_include_guard: IncludeGuard,
-    ignore_symbols_from_files: Rc<HashSet<PathBuf>>,
+    ignore_symbols_from_files: HashSet<PathBuf>,
 ) -> BindingsGenerator<'db> {
     BindingsGenerator::new(
         tcx,
@@ -322,6 +321,7 @@ pub fn new_database<'db>(
         is_golden_test,
         h_out_include_guard,
         ignore_symbols_from_files,
+        CommonTokens::new(),
         specializations,
         source_crate_num,
         support_header,
@@ -359,7 +359,7 @@ pub fn new_database<'db>(
     )
 }
 
-pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
+pub fn generate_bindings<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<BindingsTokens> {
     warn_unbindable_types(db);
     let tcx = db.tcx();
 
@@ -742,17 +742,18 @@ fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, Publ
             || db.crate_name_to_include_paths().contains_key(&Rc::from(tcx.crate_name(krate).as_str())))
     {
         let public_paths = db.public_paths_by_def_id(krate);
-        for (def_id, mut paths) in public_paths {
+        for (&def_id, paths) in public_paths {
             use std::collections::hash_map::Entry;
             match out.entry(def_id) {
                 Entry::Vacant(vacant) => {
-                    vacant.insert(paths);
+                    vacant.insert(paths.clone());
                 }
                 Entry::Occupied(mut occupied) => {
                     let existing_paths = occupied.get_mut();
                     let existing_rank =
                         CrateOwnershipRank::new(tcx, def_id, existing_paths.canonical().krate);
                     let new_rank = CrateOwnershipRank::new(tcx, def_id, paths.canonical().krate);
+                    let mut paths = paths.clone();
                     match new_rank.cmp(&existing_rank) {
                         Ordering::Greater => {
                             // The new crate has higher ownership priority, so make it canonical
@@ -862,10 +863,10 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
     should_receive_bindings(db, def_id)?;
 
     let (full_path_strs, type_alias_def_id, krate_num) = {
-        let paths =
-            db.all_public_paths_by_def_id().get(&def_id).cloned().ok_or_else(|| {
-                anyhow!("Not a public or a supported reexported type (b/262052635).")
-            })?;
+        let paths = db
+            .all_public_paths_by_def_id()
+            .get(&def_id)
+            .ok_or_else(|| anyhow!("Not a public or a supported reexported type (b/262052635)."))?;
 
         // Select a canonical path for this symbol from available paths.
         // Our paths are kept in sorted order, so the canonical path will be the first one.
@@ -974,11 +975,11 @@ fn generate_using<'tcx>(
     if using_name.as_str().starts_with("__CrubitProject") {
         return Ok(CcSnippet { prereqs: CcPrerequisites::default(), tokens: quote! {} });
     }
-    let mut fn_prereqs = CcPrerequisites::default();
+    let mut fn_prereqs = None;
     let mut snippet = match tcx.def_kind(def_id) {
         DefKind::Fn => {
             fn_prereqs = match db.generate_function(def_id, None, None, StaticMethodMode::Infer) {
-                Ok(snippet) => snippet.main_api.prereqs,
+                Ok(snippet) => Some(&snippet.main_api.prereqs),
                 Err(err) => {
                     bail!("Unable to `use` function whose bindings failed: {err:?}");
                 }
@@ -1092,7 +1093,9 @@ fn generate_using<'tcx>(
             other => other,
         })
         .collect();
-    snippet.prereqs += fn_prereqs;
+    if let Some(fn_prereqs) = fn_prereqs {
+        snippet.prereqs += fn_prereqs;
+    }
     Ok(snippet)
 }
 
@@ -1280,7 +1283,7 @@ fn create_type_alias<'tcx>(
 ///
 /// Will panic if `def_id` doesn't identify an ADT that can be successfully
 /// handled by `generate_adt_core`.
-fn generate_fwd_decl(db: &BindingsGenerator<'_>, def_id: DefId) -> TokenStream {
+fn generate_fwd_decl<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> TokenStream {
     let tcx = db.tcx();
     let def_kind = tcx.def_kind(def_id);
     if matches!(def_kind, DefKind::Struct | DefKind::Enum | DefKind::Union)
@@ -1305,7 +1308,7 @@ fn generate_fwd_decl(db: &BindingsGenerator<'_>, def_id: DefId) -> TokenStream {
     if crubit_attrs.cpp_enum.is_some() {
         let cpp_enum_cpp_underlying_type_snippet = cpp_enum_cpp_underlying_type(db, def_id)
             .expect("`generate_fwd_decl` should only be called if we successfully generated an enum for this type");
-        let cpp_enum_cpp_underlying_type = cpp_enum_cpp_underlying_type_snippet.tokens;
+        let cpp_enum_cpp_underlying_type = &cpp_enum_cpp_underlying_type_snippet.tokens;
         return quote! { #keyword #cc_short_name : #cpp_enum_cpp_underlying_type; };
     }
 
@@ -1349,7 +1352,9 @@ fn generate_item_impl<'tcx>(
                 db.adt_needs_bindings(def_id).map(|core| Some(generate_adt(db, core)))
             }
         }
-        DefKind::Fn => db.generate_function(def_id, None, None, StaticMethodMode::Infer).map(Some),
+        DefKind::Fn => {
+            db.generate_function(def_id, None, None, StaticMethodMode::Infer).cloned().map(Some)
+        }
         DefKind::TyAlias => generate_type_alias(db, def_id, tcx.item_name(def_id).as_str())
             .map(|snippets| Some(snippets.into_main_api())),
         #[allow(clippy::unneeded_struct_pattern)]
@@ -1435,11 +1440,27 @@ pub fn format_namespace_bound_cc_tokens(
     iter.collect()
 }
 
-struct FormattedItem<'tcx> {
+enum FormattedAliases<'db> {
+    None,
+    Local(&'db [ExportedPath]),
+    Extern(&'db PublicPaths),
+}
+
+impl<'db> FormattedAliases<'db> {
+    fn for_each(&self, f: impl FnMut(&'db ExportedPath)) {
+        match *self {
+            FormattedAliases::None => {}
+            FormattedAliases::Local(aliases) => aliases.iter().for_each(f),
+            FormattedAliases::Extern(paths) => paths.extern_aliases().for_each(f),
+        }
+    }
+}
+
+struct FormattedItem<'db, 'tcx> {
     def_id: DefId,
-    cpp_ns_path: NamespaceQualifier,
-    snippets: Option<ApiSnippets<'tcx>>,
-    aliases: Vec<ExportedPath>,
+    cpp_ns_path: &'db NamespaceQualifier,
+    snippets: Option<Cow<'db, ApiSnippets<'tcx>>>,
+    aliases: FormattedAliases<'db>,
 }
 
 struct GeneratedSpecializations<'tcx> {
@@ -1507,38 +1528,42 @@ fn generate_specializations_fixpoint<'tcx>(
     GeneratedSpecializations { specializations, impls_cc_details }
 }
 
-fn formatted_items_in_crate<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-) -> impl Iterator<Item = FormattedItem<'tcx>> {
+fn formatted_items_in_crate<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
+) -> impl Iterator<Item = FormattedItem<'db, 'tcx>> {
     let tcx = db.tcx();
     let defs_in_crate = db.public_paths_by_def_id(db.source_crate_num());
     defs_in_crate
-        .into_iter()
+        .iter()
         .filter_map(|(def_id, paths)| {
             let mut snippets = None;
-            let canonical_name = db.symbol_canonical_name(def_id).ok()?;
+            let canonical_name = db.symbol_canonical_name(*def_id).ok()?;
             let aliases = if canonical_name.krate_num == db.source_crate_num() {
                 // We only want to call `generate_item` on DefIds from our source crate. External
                 // crate DefIds might appear in this map if our crate re-exports them, but we don't
                 // want to regenerate those definitions.
-                generate_unsupported::error_scope!(db, def_id);
-                let api_snippets = db.generate_item(def_id).transpose()?;
-                let (api_snippets, aliases) = api_snippets.map_or_else(
-                    |err| (generate_unsupported_def(db, def_id, err).into_main_api(), vec![]),
-                    |api_snippets| {
+                generate_unsupported::error_scope!(db, *def_id);
+                let (api_snippets, aliases) = match db.generate_item(*def_id) {
+                    Ok(None) => return None,
+                    Ok(Some(api_snippets)) => {
                         // Only generate aliases if we generate a definition.
-                        let (_, aliases) = paths.into_canonical_and_aliases();
-                        (api_snippets, aliases)
-                    },
-                );
+                        (Cow::Borrowed(api_snippets), FormattedAliases::Local(paths.aliases()))
+                    }
+                    Err(err) => (
+                        Cow::Owned(
+                            generate_unsupported_def(db, *def_id, err.clone()).into_main_api(),
+                        ),
+                        FormattedAliases::None,
+                    ),
+                };
                 snippets = Some(api_snippets);
                 aliases
             } else {
-                paths.into_extern_aliases()
+                FormattedAliases::Extern(paths)
             };
             Some(FormattedItem {
-                def_id,
-                cpp_ns_path: canonical_name.cpp_ns_path,
+                def_id: *def_id,
+                cpp_ns_path: &canonical_name.cpp_ns_path,
                 snippets,
                 aliases,
             })
@@ -1562,8 +1587,8 @@ impl NodeSortKey {
 
     fn new<'tcx>(tcx: TyCtxt<'tcx>, spec: &TemplateSpecialization<'tcx>) -> Self {
         match spec {
-            TemplateSpecialization::Adt(e) => {
-                let ty = e.self_ty_rs;
+            TemplateSpecialization::Adt(ty) => {
+                let ty = *ty;
 
                 #[cfg_accessible(rustc_data_structures::stable_hash)]
                 use rustc_data_structures::stable_hash;
@@ -1631,28 +1656,32 @@ impl PartialEq for NodeSortKey {
 impl Eq for NodeSortKey {}
 
 /// Formats all public items from the Rust crate being compiled.
-fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
-    struct CcDetails {
+fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<BindingsTokens> {
+    struct CcDetails<'db> {
         def_id: DefId,
-        namespace: NamespaceQualifier,
+        namespace: Cow<'db, NamespaceQualifier>,
         tokens: TokenStream,
     }
-    impl CcDetails {
-        fn new(def_id: DefId, namespace: NamespaceQualifier, tokens: TokenStream) -> Self {
+    impl<'db> CcDetails<'db> {
+        fn new(
+            def_id: DefId,
+            namespace: Cow<'db, NamespaceQualifier>,
+            tokens: TokenStream,
+        ) -> Self {
             Self { def_id, namespace, tokens }
         }
     }
     let mut cc_details_prereqs = CcPrerequisites::default();
-    let mut cc_details: Vec<CcDetails> = vec![];
+    let mut cc_details: Vec<CcDetails<'_>> = vec![];
     let mut rs_details = RsSnippet::default();
-    let mut main_apis = HashMap::<DefId, CcSnippet>::new();
+    let mut main_apis = HashMap::<DefId, Cow<'_, CcSnippet<'tcx>>>::new();
     for item in formatted_items_in_crate(db) {
         let def_id = item.def_id;
         generate_unsupported::error_scope!(db, def_id);
         // We delay handling aliases until after sorting by def id to ensure they are emitted in a
         // deterministic order, same as the main api definitions. This is important for caching and
         // testing.
-        for alias in item.aliases.iter() {
+        item.aliases.for_each(|alias| {
             let using_snippets = generate_using(db, &alias.name, def_id)
                 .unwrap_or_else(|err| generate_unsupported_def(db, def_id, err));
             cc_details.push(CcDetails::new(
@@ -1660,26 +1689,37 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                 // `format_namespace_bound_cc_tokens`, so we want to carry it alongside our alias
                 // even though we technically no longer need it.
                 def_id,
-                alias.to_namespace_qualifier(db),
+                Cow::Owned(alias.to_namespace_qualifier(db)),
                 using_snippets.into_tokens(&mut cc_details_prereqs),
             ));
-        }
+        });
         let Some(api_snippets) = item.snippets else {
             continue;
         };
-        let old_item = main_apis.insert(def_id, api_snippets.main_api);
+        let (main_api, cc_details_tokens) = match api_snippets {
+            Cow::Borrowed(api_snippets) => {
+                rs_details += &api_snippets.rs_details;
+                (
+                    Cow::Borrowed(&api_snippets.main_api),
+                    (&api_snippets.cc_details).into_tokens(&mut cc_details_prereqs).clone(),
+                )
+            }
+            Cow::Owned(api_snippets) => {
+                rs_details += api_snippets.rs_details;
+                (
+                    Cow::Owned(api_snippets.main_api),
+                    api_snippets.cc_details.into_tokens(&mut cc_details_prereqs),
+                )
+            }
+        };
+        let old_item = main_apis.insert(def_id, main_api);
         assert!(old_item.is_none(), "Duplicated key: {}", db.tcx().def_path_str(def_id));
 
         // `cc_details` don't participate in the toposort, because
         // `CcPrerequisites::defs` always use `main_api` as the predecessor
         // - `chain`ing `cc_details` after `ordered_main_apis` trivially
         // meets the prerequisites.
-        cc_details.push(CcDetails::new(
-            def_id,
-            item.cpp_ns_path,
-            api_snippets.cc_details.into_tokens(&mut cc_details_prereqs),
-        ));
-        rs_details += api_snippets.rs_details;
+        cc_details.push(CcDetails::new(def_id, Cow::Borrowed(item.cpp_ns_path), cc_details_tokens));
     }
 
     let mut worklist: Vec<_> = std::mem::take(&mut cc_details_prereqs.template_specializations)
@@ -1721,7 +1761,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                 .chain(specializations.keys().cloned().map(Node::Specialization));
             let deps = main_apis
                 .iter()
-                .map(|(successor, main_api)| (Node::Def(*successor), main_api))
+                .map(|(successor, main_api)| (Node::Def(*successor), &**main_api))
                 .chain(
                     specializations
                         .iter()
@@ -1788,27 +1828,49 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
         let mut includes = cc_details_prereqs.includes;
         let mut ordered_main_apis: Vec<(Node, TokenStream)> = Vec::new();
         for node in ordered_ids.into_iter() {
-            let CcSnippet {
+            match &node {
+                Node::Def(def_id) => match main_apis.remove(def_id).unwrap() {
+                    Cow::Borrowed(snippet) => {
+                        fwd_decls.extend(
+                            snippet.prereqs.fwd_decls.difference(&already_declared).copied(),
+                        );
+                        already_declared.extend(snippet.prereqs.fwd_decls.iter().copied());
+                        already_declared.insert(*def_id);
+                        includes.extend(snippet.prereqs.includes.iter().cloned());
+                        ordered_main_apis.push((node, snippet.tokens.clone()));
+                    }
+                    Cow::Owned(CcSnippet {
                         tokens: cc_tokens,
-                        prereqs: CcPrerequisites {
-                            includes: mut inner_includes,
-                            fwd_decls: inner_fwd_decls,
-                            .. // `defs` and `specializations` have already been utilized by `toposort` above
-                        }
-                    } = match &node {
-                        Node::Def(def_id) => main_apis.remove(def_id).unwrap(),
-                        Node::Specialization(spec) => specializations.remove(spec).unwrap(),
-                    };
-
-            fwd_decls.extend(inner_fwd_decls.difference(&already_declared).copied());
-            already_declared.extend(inner_fwd_decls);
-            // We don't need to do this for specializations.
-            if let Node::Def(def_id) = node {
-                already_declared.insert(def_id);
+                        prereqs:
+                            CcPrerequisites {
+                                includes: mut inner_includes,
+                                fwd_decls: inner_fwd_decls,
+                                ..
+                            },
+                    }) => {
+                        fwd_decls.extend(inner_fwd_decls.difference(&already_declared).copied());
+                        already_declared.extend(inner_fwd_decls);
+                        already_declared.insert(*def_id);
+                        includes.append(&mut inner_includes);
+                        ordered_main_apis.push((node, cc_tokens));
+                    }
+                },
+                Node::Specialization(spec) => {
+                    let CcSnippet {
+                        tokens: cc_tokens,
+                        prereqs:
+                            CcPrerequisites {
+                                includes: mut inner_includes,
+                                fwd_decls: inner_fwd_decls,
+                                .. // `defs` and `specializations` have already been utilized by `toposort` above
+                            },
+                    } = specializations.remove(spec).unwrap();
+                    fwd_decls.extend(inner_fwd_decls.difference(&already_declared).copied());
+                    already_declared.extend(inner_fwd_decls);
+                    includes.append(&mut inner_includes);
+                    ordered_main_apis.push((node, cc_tokens));
+                }
             }
-
-            includes.append(&mut inner_includes);
-            ordered_main_apis.push((node, cc_tokens));
         }
 
         let fwd_decls = fwd_decls
@@ -1847,12 +1909,16 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                 let use_leading_colons = db
                     .crate_features(details.def_id.krate)
                     .contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
+                let mut namespaces =
+                    Vec::with_capacity(cpp_top_level_ns.len() + details.namespace.namespaces.len());
+                namespaces.extend_from_slice(&cpp_top_level_ns);
+                match details.namespace {
+                    Cow::Borrowed(ns) => namespaces.extend_from_slice(&ns.namespaces),
+                    Cow::Owned(ns) => namespaces.extend(ns.namespaces),
+                }
                 (
                     tcx.opt_parent(details.def_id),
-                    NamespaceQualifier::new(
-                        cpp_top_level_ns.iter().cloned().chain(details.namespace.namespaces),
-                        use_leading_colons,
-                    ),
+                    NamespaceQualifier::new(namespaces, use_leading_colons),
                     details.tokens,
                 )
             }))

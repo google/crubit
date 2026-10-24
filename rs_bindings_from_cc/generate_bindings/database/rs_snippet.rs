@@ -15,6 +15,7 @@ use flagset::FlagSet;
 use ir::*;
 use proc_macro2::{Delimiter, Group, Ident, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
+use std::borrow::Cow;
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
 use std::rc::Rc;
@@ -742,7 +743,7 @@ pub enum RsTypeKind<'a> {
         /// If this record is an instantiation of a `UniformReprTemplateType`, this will be set.
         uniform_repr_template_type: Option<Rc<UniformReprTemplateType<'a>>>,
         owned_ptr_type: Option<Rc<str>>,
-        lifetimes: Vec<Lifetime>,
+        lifetimes: Rc<[Lifetime]>,
         customize_methods: Option<Rc<CustomizeMethodsKind<'a>>>,
     },
     Enum {
@@ -753,7 +754,7 @@ pub enum RsTypeKind<'a> {
         type_alias: Rc<TypeAlias<'a>>,
         underlying_type: Rc<RsTypeKind<'a>>,
         crate_path: Rc<CratePath>,
-        lifetimes: Vec<Lifetime>,
+        lifetimes: Rc<[Lifetime]>,
     },
     Primitive(Primitive),
     /// Types that require custom logic to translate.
@@ -1365,8 +1366,9 @@ impl<'a> RsTypeKind<'a> {
         let ir = db.ir();
         let mut underlying_cc_type = type_alias.underlying_type().clone();
         if underlying_cc_type.explicit_lifetimes().is_empty() {
-            *underlying_cc_type.explicit_lifetimes_mut() =
-                lifetimes.iter().map(|lt| lt.0.clone()).collect();
+            underlying_cc_type.set_explicit_lifetimes(
+                lifetimes.iter().map(|lt| lt.0.clone()).collect::<Rc<[_]>>(),
+            );
         }
         let underlying_type =
             db.rs_type_kind_with_lifetime_elision(underlying_cc_type, *options)?;
@@ -1397,7 +1399,7 @@ impl<'a> RsTypeKind<'a> {
             type_alias,
             crate_path,
             underlying_type: Rc::new(underlying_type),
-            lifetimes: lifetimes.to_vec(),
+            lifetimes: lifetimes.into(),
         })
     }
 
@@ -1449,7 +1451,7 @@ impl<'a> RsTypeKind<'a> {
                 .map(|cfg| Rc::from(cfg.owned_ptr_type())),
             record,
             crate_path,
-            lifetimes: lifetimes.to_vec(),
+            lifetimes: lifetimes.into(),
             customize_methods,
         })
     }
@@ -2657,7 +2659,10 @@ fn all_static_lifetimes_internal<'a>(
                 })
             }),
             owned_ptr_type: owned_ptr_type.clone(),
-            lifetimes: lifetimes.iter().map(|_| Lifetime::new("static")).collect(),
+            lifetimes: lifetimes
+                .iter()
+                .map(|_| Lifetime::new("static"))
+                .collect::<Rc<[Lifetime]>>(),
             customize_methods: customize_methods.as_ref().map(|customize_methods| {
                 Rc::new(match customize_methods.as_ref() {
                     CustomizeMethodsKind::AbslFlatHashMap { key_type, value_type } => {
@@ -2682,7 +2687,10 @@ fn all_static_lifetimes_internal<'a>(
                     type_alias: type_alias.clone(),
                     underlying_type: all_static_lifetimes_internal(underlying_type, strip_aliases),
                     crate_path: crate_path.clone(),
-                    lifetimes: lifetimes.iter().map(|_| Lifetime::new("static")).collect(),
+                    lifetimes: lifetimes
+                        .iter()
+                        .map(|_| Lifetime::new("static"))
+                        .collect::<Rc<[Lifetime]>>(),
                 })
             }
         }
@@ -3140,9 +3148,9 @@ impl<'a> RsTypeKind<'a> {
                             .map(|ident| quote! { ::#ident })
                             .unwrap_or_else(|| quote! { ::co });
                         let result_type_tokens = if result_type.is_void() {
-                            quote! { () }
+                            Cow::Borrowed(&db.tokens().unit)
                         } else {
-                            result_type.to_token_stream(db)
+                            Cow::Owned(result_type.to_token_stream(db))
                         };
                         // When there are reference parameters, the coroutine must finish before they are
                         // invalidated (http://shortn/_XPma06AwZh).
@@ -3693,7 +3701,7 @@ mod tests {
             type_alias: Rc::new(TypeAlias::try_from(alias_proto.as_view()).unwrap()),
             underlying_type: Rc::new(incomplete_record_proto_to_rs_type_kind(proto.as_view())),
             crate_path: make_crate_path(),
-            lifetimes: vec![],
+            lifetimes: Rc::new([]),
         };
 
         expect_that!(alias_incomplete_record.allowed_behind_single_element_ptr(), eq(true));
@@ -3949,3 +3957,6 @@ mod tests {
         );
     }
 }
+
+impl memoized::CheapClone for UnsafeReason {}
+impl memoized::CheapClone for RsTypeKind<'_> {}

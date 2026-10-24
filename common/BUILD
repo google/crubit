@@ -27,6 +27,7 @@ rust_library(
     srcs = ["arc_anyhow.rs"],
     edition = "2024",
     deps = [
+        ":memoized",
         "@crate_index//:anyhow",  # v1
     ],
 )
@@ -84,6 +85,7 @@ rust_library(
         ":arc_anyhow",
         ":crubit_feature",
         ":dyn_format",
+        ":memoized",
         "@crate_index//:flagset",  # v0_4
         "@crate_index//:heck",  # v0_5
         "@crate_index//:phf",  # v0_14
@@ -124,6 +126,7 @@ rust_library(
     srcs = ["dyn_format.rs"],
     edition = "2024",
     deps = [
+        ":memoized",
         "@crate_index//:anyhow",  # v1
     ],
 )

@@ -87,7 +87,8 @@ fn test_format_item_with_features_impl(
         let local_def_id = find_def_id_by_name(tcx, name);
         let result =
             bindings_db_for_tests_with_features(tcx, features, with_kythe_annotations, None)
-                .generate_item(local_def_id.to_def_id());
+                .generate_item(local_def_id.to_def_id())
+                .cloned();
 
         // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
         // To print causes as well [...], use the alternate selector “{:#}”.
@@ -171,9 +172,9 @@ fn build_test_db<'tcx>(tcx: TyCtxt<'tcx>, options: TestDbOptions<'_>) -> Binding
         /* kythe_annotations= */ with_kythe_annotations,
         /* portable_abi_compatible= */ true,
         /* enable_rmeta_interface= */ false,
-        Rc::new(crate_name_to_include_paths),
-        Rc::new(crate_name_to_features),
-        Rc::new(crate_name_to_namespace),
+        crate_name_to_include_paths,
+        crate_name_to_features,
+        crate_name_to_namespace,
         /* crate_renames= */ HashMap::default().into(),
         errors,
         fatal_errors,

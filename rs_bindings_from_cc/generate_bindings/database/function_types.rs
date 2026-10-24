@@ -318,3 +318,5 @@ pub enum ImplFor<'a> {
     /// Implement the trait for an explicit type.
     Type(Rc<RsTypeKind<'a>>),
 }
+
+impl memoized::CheapClone for GeneratedFunction {}

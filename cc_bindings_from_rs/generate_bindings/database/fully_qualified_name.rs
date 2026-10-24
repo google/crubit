@@ -15,7 +15,7 @@ use std::rc::Rc;
 
 /// Represents the unqualified name of a Rust item. For the fully qualified name
 // `std::collections::HashMap`, the unqualified name would be `HashMap`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct UnqualifiedName {
     /// Rust name of the item.
     /// For example, this would be:
@@ -333,6 +333,14 @@ impl PublicPaths {
     /// Turn `self` into a list of aliases for a definition defined in an external crate.
     /// External crate definitions should only be aliased, not used as the canonical definition.
     /// The returned vector is sorted.
+    pub fn aliases(&self) -> &[ExportedPath] {
+        &self.aliases
+    }
+
+    pub fn extern_aliases(&self) -> impl Iterator<Item = &ExportedPath> {
+        std::iter::once(&self.canonical_path).chain(self.aliases.iter())
+    }
+
     pub fn into_extern_aliases(mut self) -> Vec<ExportedPath> {
         self.aliases.insert(0, self.canonical_path);
         self.aliases

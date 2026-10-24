@@ -100,7 +100,7 @@ fn tie_record_type_to_lifetimes(ty: &mut CcType, record_id: ItemId, lifetimes: &
         return false;
     }
     let mut record_type = record_type.clone();
-    *record_type.explicit_lifetimes_mut() = lifetimes.to_vec();
+    record_type.set_explicit_lifetimes(lifetimes.to_vec());
     match ty.variant_mut() {
         // `ty` is a reference to the record.
         CcTypeVariant::Pointer(pty) => pty.set_pointee_type(Rc::new(record_type)),
@@ -497,7 +497,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 } else {
                     self.get_lifetime_for_state(&state)
                 };
-                *new_ty.explicit_lifetimes_mut() = explicit_lifetimes;
+                new_ty.set_explicit_lifetimes(explicit_lifetimes);
                 Ok(LifetimeResult { ty: new_ty, state, this_state: LifetimeState::Unseen })
             }
             CcTypeVariant::Pointer(pty) if is_this || pty.kind() == PointerTypeKind::LValueRef => {
@@ -526,7 +526,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     pty.lifetime(),
                     Rc::new(pointee_type),
                 ));
-                *new_ty.explicit_lifetimes_mut() = self.get_lifetime_for_state(&state);
+                new_ty.set_explicit_lifetimes(self.get_lifetime_for_state(&state));
                 if is_this {
                     Ok(LifetimeResult {
                         ty: new_ty,
@@ -595,24 +595,25 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 if self.decl_binds_lifetimes(id)? {
                     // If there's a previously-annotated lifetime, use that.
                     if !ty.explicit_lifetimes().is_empty() {
-                        *new_ty.explicit_lifetimes_mut() = ty
-                            .explicit_lifetimes()
-                            .iter()
-                            .map(|l| {
-                                self.bindings.get_or_push_new_binding(l, |name| {
-                                    new_bindings.push(name.clone())
+                        new_ty.set_explicit_lifetimes(
+                            ty.explicit_lifetimes()
+                                .iter()
+                                .map(|l| {
+                                    self.bindings.get_or_push_new_binding(l, |name| {
+                                        new_bindings.push(name.clone())
+                                    })
                                 })
-                            })
-                            .collect();
+                                .collect::<Vec<_>>(),
+                        );
                         if new_ty.explicit_lifetimes().iter().any(|l| l.as_ref() == "unknown") {
-                            new_ty.explicit_lifetimes_mut().clear();
+                            new_ty.clear_explicit_lifetimes();
                         }
                     } else if !lifetime_hint.is_empty() {
-                        *new_ty.explicit_lifetimes_mut() = lifetime_hint.clone();
+                        new_ty.set_explicit_lifetimes(lifetime_hint.clone());
                     } else if generate_fresh_if_empty {
                         let lifetime = self.bindings.push_fresh_binding(None);
                         new_bindings.push(lifetime.clone());
-                        *new_ty.explicit_lifetimes_mut() = vec![lifetime];
+                        new_ty.set_explicit_lifetimes(vec![lifetime]);
                     }
                 }
                 if let Some(elt) = self.type_arg_for_use(*id, template_args.as_deref()) {
@@ -631,14 +632,16 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 let mut new_ty = ty.clone();
                 // If there's a previously-annotated lifetime, use that.
                 if !ty.explicit_lifetimes().is_empty() {
-                    *new_ty.explicit_lifetimes_mut() = ty
-                        .explicit_lifetimes()
-                        .iter()
-                        .map(|l| {
-                            self.bindings
-                                .get_or_push_new_binding(l, |name| new_bindings.push(name.clone()))
-                        })
-                        .collect();
+                    new_ty.set_explicit_lifetimes(
+                        ty.explicit_lifetimes()
+                            .iter()
+                            .map(|l| {
+                                self.bindings.get_or_push_new_binding(l, |name| {
+                                    new_bindings.push(name.clone())
+                                })
+                            })
+                            .collect::<Vec<_>>(),
+                    );
                     // TODO(zarko): Recurse on pty.pointee_type and replace new_ty.variant.
                     return Ok(new_ty);
                 }
@@ -659,7 +662,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     pty.lifetime(),
                     Rc::new(pointee_type),
                 ));
-                *new_ty.explicit_lifetimes_mut() = lifetime_hint.clone();
+                new_ty.set_explicit_lifetimes(lifetime_hint.clone());
                 Ok(new_ty)
             }
             _ => Ok(ty.clone()),
@@ -686,7 +689,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             bail!("lifetime mismatch on implicit `this`: provided in code: {:#?} vs expected by inference: {:#?}", pty.pointee_type().explicit_lifetimes(), lifetimes);
         }
         let mut pointee_type = pty.pointee_type().clone();
-        *pointee_type.explicit_lifetimes_mut() = lifetimes.to_vec();
+        pointee_type.set_explicit_lifetimes(lifetimes.to_vec());
         pty.set_pointee_type(Rc::new(pointee_type));
         Ok(())
     }
@@ -771,7 +774,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 if is_member_function && ix == 0 && !this_lifetimebound_names.is_empty() {
                     self.inject_lifetimes_into_this(param, &return_lifetime)?;
                 } else {
-                    *param.type_mut().explicit_lifetimes_mut() = return_lifetime.clone();
+                    param.type_mut().set_explicit_lifetimes(return_lifetime.clone());
                 }
             }
         }
@@ -782,9 +785,9 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             // (effectively treating the return type as a raw type).
             let return_arity = self.get_lifetime_arity(func.return_type())?;
             if return_arity != return_lifetime.len() {
-                func.return_type_mut().explicit_lifetimes_mut().clear();
+                func.return_type_mut().clear_explicit_lifetimes();
             } else {
-                *func.return_type_mut().explicit_lifetimes_mut() = return_lifetime;
+                func.return_type_mut().set_explicit_lifetimes(return_lifetime);
             }
         }
         Ok(())
@@ -1018,14 +1021,13 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         if type_alias.underlying_type().explicit_lifetimes().is_empty()
             && let Ok(lifetime_arity) = self.get_lifetime_arity(type_alias.underlying_type())
         {
+            let mut explicit_lifetimes = Vec::with_capacity(lifetime_arity);
             for it in 0..lifetime_arity {
                 let new_name = self.bindings.push_new_binding(&Rc::from(format!("__alias{}", it)));
                 new_type_alias.lifetime_inputs_mut().push(new_name.clone());
-                new_type_alias
-                    .underlying_type_mut()
-                    .explicit_lifetimes_mut()
-                    .push(new_name.clone());
+                explicit_lifetimes.push(new_name);
             }
+            new_type_alias.underlying_type_mut().set_explicit_lifetimes(explicit_lifetimes);
         }
         Ok(new_type_alias)
     }

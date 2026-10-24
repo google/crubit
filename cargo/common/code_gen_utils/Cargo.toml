@@ -21,6 +21,7 @@ doctest = false
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 crubit_feature = { path = "../../../cargo/common/crubit_feature"}
 dyn_format = { path = "../../../cargo/common/dyn_format"}
+memoized = { path = "../../../cargo/common/memoized"}
 flagset.workspace = true
 heck.workspace = true
 phf.workspace = true

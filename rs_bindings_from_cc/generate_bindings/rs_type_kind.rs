@@ -267,8 +267,8 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                     ) {
                         let mut underlying_type = alias.underlying_type().clone();
                         if underlying_type.explicit_lifetimes().is_empty() {
-                            *underlying_type.explicit_lifetimes_mut() =
-                                ty.explicit_lifetimes().to_vec();
+                            underlying_type
+                                .set_explicit_lifetimes(ty.explicit_lifetimes().to_vec());
                         }
                         if let Ok(ty) =
                             db.rs_type_kind_with_lifetime_elision(underlying_type, lifetime_options)

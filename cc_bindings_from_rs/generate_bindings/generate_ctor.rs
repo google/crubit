@@ -58,7 +58,7 @@ pub fn generate_default_ctor<'tcx>(
             &[],
             core.common.self_ty,
             core.def_id,
-            core.rs_fully_qualified_name.clone(),
+            &core.rs_fully_qualified_name,
             /* is_constructor= */ true,
             /* within_template= */ false,
         )?;
@@ -174,7 +174,7 @@ pub fn generate_copy_ctor_and_assignment_operator<'tcx>(
                     &[],
                     core.common.self_ty,
                     core.def_id,
-                    core.rs_fully_qualified_name.clone(),
+                    &core.rs_fully_qualified_name,
                     /* is_constructor= */ true,
                     /* within_template= */ false,
                 )?;

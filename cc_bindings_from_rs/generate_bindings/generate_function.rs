@@ -15,7 +15,7 @@ extern crate rustc_span;
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
-use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, RsSnippet};
+use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, RsSnippet};
 use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail};
 use format_type::CcType;
@@ -48,6 +48,7 @@ use rustc_middle::mir::{self, Mutability};
 use rustc_middle::ty::{self, TraitRef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::{sym, Symbol};
+use std::borrow::Cow;
 use std::collections::BTreeSet;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -172,8 +173,8 @@ pub fn cc_param_to_c_abi<'tcx>(
                 // We need to encode it into a buffer, then send that over.
                 includes.insert(db.support_header("bridge.h"));
                 includes.insert(code_gen_utils::CcInclude::utility());
-                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                let crubit_abi_type_expr = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(crubit_abi_type);
+                let crubit_abi_type_expr = CrubitAbiTypeToCppExprTokens(crubit_abi_type);
 
                 let buffer_name = expect_format_cc_ident(&format!("{cc_ident}_buffer"));
                 // Create a buffer, encode it into the buffer, and then make the buffer be
@@ -254,7 +255,7 @@ pub fn cc_param_to_c_abi<'tcx>(
                 let slot_name = &expect_format_cc_ident(&format!("{cc_ident}_slot"));
                 let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
                     db.format_ty_for_cc(ty, TypeLocation::Other)?;
-                includes.extend(ty_prereqs.includes);
+                includes.extend(ty_prereqs.includes.iter().cloned());
                 statements.extend(quote! {
                     crubit::Slot<#cc_type> #slot_name;
                     ::std::move(#cc_ident).MoveToSlot(#slot_name);
@@ -324,11 +325,11 @@ fn cc_callable_param_to_c_abi<'tcx>(
         ty,
         TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
     )?;
-    includes.extend(fn_prereqs.includes);
+    includes.extend(fn_prereqs.includes.iter().cloned());
 
     let CcSnippet { tokens: ret_cc_type, prereqs } =
         db.format_ty_for_cc(info.return_ty, TypeLocation::ClosureReturn)?;
-    includes.extend(prereqs.includes);
+    includes.extend(prereqs.includes.iter().cloned());
 
     let mut invoker_params = vec![quote! { void* __data }];
     let mut fn_call_args = Vec::new();
@@ -337,7 +338,7 @@ fn cc_callable_param_to_c_abi<'tcx>(
         let arg_name = expect_format_cc_ident(&format!("__arg_{i}"));
         let CcSnippet { tokens: p_cc_tok, prereqs } =
             db.format_ty_for_cc(p_ty, TypeLocation::Other)?;
-        includes.extend(prereqs.includes);
+        includes.extend(prereqs.includes.iter().cloned());
 
         if is_c_abi_compatible_by_value(db, p_ty) {
             invoker_params.push(quote! { #p_cc_tok #arg_name });
@@ -372,7 +373,7 @@ fn cc_callable_param_to_c_abi<'tcx>(
         )
     } else {
         invoker_params.push(quote! { void* __ret_ptr });
-        (quote! { void }, quote! { new (__ret_ptr) #ret_cc_type(#fn_invocation); })
+        (&db.tokens().void, quote! { new (__ret_ptr) #ret_cc_type(#fn_invocation); })
     };
 
     let invoker_name = expect_format_cc_ident(&format!("__{cc_ident}_invoker"));
@@ -455,8 +456,8 @@ fn cc_return_value_from_c_abi<'tcx>(
                 // make the buffer space for it, then decode the buffer into a value
                 // ::crubit::internal::Decode<T>(buffer);
                 prereqs.includes.insert(db.support_header("bridge.h"));
-                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                let crubit_abi_type_expr = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(crubit_abi_type);
+                let crubit_abi_type_expr = CrubitAbiTypeToCppExprTokens(crubit_abi_type);
                 storage_statements.extend(quote! {
                     unsigned char #storage_name[#crubit_abi_type_tokens::kSize];
                 });
@@ -469,7 +470,7 @@ fn cc_return_value_from_c_abi<'tcx>(
             }
         },
         ValueAbi::ByValue => {
-            let cc_type = &db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(prereqs);
+            let cc_type = db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(prereqs);
             let local_name = &expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
             storage_statements.extend(quote! {
                 #cc_type #local_name;
@@ -617,9 +618,9 @@ fn export_name_and_no_mangle_attrs_of<'tcx>(
     (export_name, no_mangle)
 }
 
-pub struct Param<'tcx> {
+pub struct Param<'db, 'tcx> {
     pub cc_name: Ident,
-    pub cpp_type: CcParamTy<'tcx>,
+    pub cpp_type: CcParamTy<'db, 'tcx>,
     pub ty: Ty<'tcx>,
 }
 
@@ -639,9 +640,9 @@ fn can_shared_refs_to_ty_alias_mut_refs<'tcx>(tcx: TyCtxt<'tcx>, target_ty: Ty<'
 }
 
 #[derive(Default)]
-struct RefsToCheckForAliasing<'a, 'tcx> {
-    mutable: Vec<&'a Param<'tcx>>,
-    shared: Vec<&'a Param<'tcx>>,
+struct RefsToCheckForAliasing<'a, 'db, 'tcx> {
+    mutable: Vec<&'a Param<'db, 'tcx>>,
+    shared: Vec<&'a Param<'db, 'tcx>>,
 }
 
 /// Returns function parameters which need to be checked for possible illegal mutable aliasing.
@@ -649,10 +650,10 @@ struct RefsToCheckForAliasing<'a, 'tcx> {
 /// Rust does not allow mutable references to alias with other references (shared or mutable).
 /// C++ does not have this requirement, so we insert checks in the generated bindings to ensure that
 /// this requirement is not violated.
-fn refs_to_check_for_aliasing<'tcx, 'a>(
+fn refs_to_check_for_aliasing<'tcx, 'db, 'a>(
     db: &BindingsGenerator<'tcx>,
-    params: &'a [Param<'tcx>],
-) -> Option<RefsToCheckForAliasing<'a, 'tcx>> {
+    params: &'a [Param<'db, 'tcx>],
+) -> Option<RefsToCheckForAliasing<'a, 'db, 'tcx>> {
     let tcx = db.tcx();
     let mut refs = RefsToCheckForAliasing::default();
     // TODO: b/351876244 - Apply this check to public reference fields of ADTs, not just top-level
@@ -723,7 +724,7 @@ pub fn generate_thunk_call<'tcx>(
     thunk_name: Ident,
     rs_return_type: Ty<'tcx>,
     self_param: ThunkSelfParameter,
-    params: &[Param<'tcx>],
+    params: &[Param<'_, 'tcx>],
     is_async: bool,
 ) -> Result<CcSnippet<'tcx>> {
     let mut prereqs = CcPrerequisites::default();
@@ -764,13 +765,13 @@ pub fn generate_thunk_call<'tcx>(
         let mut_cpp_tys = refs_to_check
             .mutable
             .iter()
-            .map(|param| param.cpp_type.snippet.clone().into_tokens(&mut prereqs))
+            .map(|param| (&param.cpp_type.snippet).into_tokens(&mut prereqs))
             .collect::<Vec<_>>();
         let mut_cpp_names = refs_to_check.mutable.iter().map(|param| &param.cc_name);
         let shared_cpp_tys = refs_to_check
             .shared
             .iter()
-            .map(|param| param.cpp_type.snippet.clone().into_tokens(&mut prereqs))
+            .map(|param| (&param.cpp_type.snippet).into_tokens(&mut prereqs))
             .collect::<Vec<_>>();
         let shared_cpp_names = refs_to_check.shared.iter().map(|param| &param.cc_name);
         prereqs.includes.insert(db.support_header("internal/check_no_mutable_aliasing.h"));
@@ -1034,7 +1035,7 @@ pub fn generate_function<'tcx>(
             )?
             .into_tokens(&mut main_api_prereqs);
         main_api_prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
-        quote! { ::crubit::DynErasedFuture<#cc_ret_ty> }
+        Cow::Owned(quote! { ::crubit::DynErasedFuture<#cc_ret_ty> })
     } else {
         format_ret_ty_for_cc(db, &sig_mid)?.into_tokens(&mut main_api_prereqs)
     };
@@ -1147,13 +1148,13 @@ pub fn generate_function<'tcx>(
                 quote! {}
             };
             let cpp_type = if constrain_bool_param && ty.is_bool() {
-                quote! { __CrubitBoolT }
+                &db.tokens().crubit_bool_t
             } else if constrain_bool_param
                 && matches!(ty.kind(), ty::TyKind::Ref(_, inner, Mutability::Not) if inner.is_bool())
             {
-                quote! { __CrubitBoolT const& }
+                &db.tokens().crubit_bool_t_const_ref
             } else {
-                cpp_type.snippet.clone().into_tokens(&mut main_api_prereqs)
+                (&cpp_type.snippet).into_tokens(&mut main_api_prereqs)
             };
             quote! { #cpp_type #cc_name #annotation }
         })
@@ -1318,19 +1319,16 @@ pub fn generate_function<'tcx>(
         // Trait method
         let struct_name_tokens = if let Some(self_ty) = self_ty {
             let static_self_ty = format_type::replace_all_regions_with_static(db.tcx(), self_ty);
-            let formatted = db.format_ty_for_rs(static_self_ty)?;
-            Some(formatted)
+            Some(db.format_ty_for_rs(static_self_ty)?)
         } else {
             None
         };
 
         let fully_qualified_fn_name = if let Some(trait_ref) = trait_ref.as_ref() {
-            let struct_name_for_trait = if let Some(tokens) = struct_name_tokens.as_ref() {
-                tokens.clone()
+            let struct_name_for_trait = if let Some(tokens) = struct_name_tokens {
+                Cow::Borrowed(tokens)
             } else {
-                struct_name
-                    .clone()
-                    .map(|fully_qualified_name| fully_qualified_name.format_for_rs())?
+                Cow::Owned(struct_name.as_ref().map_err(Clone::clone)?.format_for_rs())
             };
             // `struct_name` names the ADT, which is what the C++ class is generated for. But for
             // an `impl Trait for &T` block the trait is implemented on the reference type, so
@@ -1338,10 +1336,10 @@ pub fn generate_function<'tcx>(
             // `generate_thunk_impl` erases all regions in the thunk signature to `'static`.
             let rs_self_ty = match trait_ref.self_ty().kind() {
                 ty::TyKind::Ref(_, _, Mutability::Not) => {
-                    quote! { & 'static #struct_name_for_trait }
+                    Cow::Owned(quote! { & 'static #struct_name_for_trait })
                 }
                 ty::TyKind::Ref(_, _, Mutability::Mut) => {
-                    quote! { & 'static mut #struct_name_for_trait }
+                    Cow::Owned(quote! { & 'static mut #struct_name_for_trait })
                 }
                 _ => struct_name_for_trait,
             };
