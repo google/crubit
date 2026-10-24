@@ -3919,3 +3919,106 @@ fn test_function_with_unsafe_template_param_existing_rust_type() -> Result<()> {
     assert!(doc.contains("`c`: template parameter is unsafe: raw pointer"));
     Ok(())
 }
+
+#[gtest]
+fn test_thread_safe_references_in_functions_and_methods() -> Result<()> {
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        struct [[clang::annotate("crubit_thread_safe")]] ThreadSafe final {
+            ~ThreadSafe();
+            int Method(ThreadSafe& other);
+        };
+        struct Regular final {
+            int Method(ThreadSafe& s);
+        };
+        inline int FreeFunc(ThreadSafe& s) { return 0; }
+        inline ThreadSafe& Identity(ThreadSafe& s) { return s; }
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ThreadSafe {
+                ...
+                #[inline(always)]
+                pub fn Method<'a, 'b>(&'a self, other: &'b Self) -> ::ffi_11::c_int {
+                    unsafe { self::thread_safe::Method(self, other) }
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl Regular {
+                ...
+                #[inline(always)]
+                pub fn Method<'a, 'b>(&'a mut self, s: &'b crate::ThreadSafe) -> ::ffi_11::c_int {
+                    unsafe { self::regular::Method(self, s) }
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub fn FreeFunc<'a>(s: &'a crate::ThreadSafe) -> ::ffi_11::c_int {
+                unsafe { crate::detail::...(s) }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub fn Identity<'a>(s: &'a crate::ThreadSafe) -> &'a crate::ThreadSafe {
+                unsafe { crate::detail::...(s) }
+            }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" int ...(struct ThreadSafe* s) { return FreeFunc(*s); }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" struct ThreadSafe* ...(struct ThreadSafe* s) { return std::addressof(Identity(*s)); }
+        }
+    );
+
+    let BindingsTokens { rs_api: assumed_rs_api, .. } =
+        generate_bindings_tokens_from_assumed_lifetimes_cc(
+            r#"
+        struct [[clang::annotate("crubit_thread_safe")]] ThreadSafe final {
+            ~ThreadSafe();
+            int Method(ThreadSafe& other);
+        };
+        int FreeFunc(ThreadSafe& s);
+        ThreadSafe& Identity(ThreadSafe& s);
+        "#,
+        )?;
+    assert_rs_matches!(
+        assumed_rs_api,
+        quote! {
+            #[inline(always)]
+            pub fn FreeFunc<'s>(s: &'s crate::ThreadSafe) -> ::ffi_11::c_int {
+                unsafe { crate::detail::...(s) }
+            }
+        }
+    );
+    assert_rs_matches!(
+        assumed_rs_api,
+        quote! {
+            #[inline(always)]
+            pub fn Identity<'s>(s: &'s crate::ThreadSafe) -> ::cref::CRef<'s, crate::ThreadSafe> {
+                unsafe { crate::detail::...(s) }
+            }
+        }
+    );
+    Ok(())
+}
