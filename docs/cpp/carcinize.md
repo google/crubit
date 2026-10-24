@@ -55,7 +55,7 @@ provides a standalone CLI mode that operates directly on C++ headers and source
 files without evaluating Bazel queries or mutating `BUILD` files:
 
 ```sh
-carcinize \
+bazel run //google_internal/carcinize:carcinize -- \
   --headers path/to/header.h \
   --srcs path/to/source.cc \
   --out path/to/output_rs.rs
@@ -82,7 +82,7 @@ bazel run //google_internal/carcinize:carcinize -- \
 In standalone mode:
 
 ```sh
-carcinize \
+bazel run //google_internal/carcinize:carcinize -- \
   --require_complete_migration \
   --headers path/to/header.h \
   --srcs path/to/source.cc \
@@ -90,14 +90,9 @@ carcinize \
 ```
 
 When `--require_complete_migration` is enabled and unsupported C++ declarations
-are present, Carcinize halts with an error:
-
-```
-Error: Target //math:math_utils contains unsupported C++ declarations:
-  - class template `math::UnsupportedTemplate` (Class templates are not yet supported)
-  - function template `math::Clamp` (Function templates are not yet supported)
-Migration aborted because --require_complete_migration was specified.
-```
+are present, the Crubit bindings build fails with an error for each unsupported
+declaration (for example, `Function templates are not yet supported`), and
+Carcinize halts.
 
 ### How Incomplete Migration works {#how_incomplete_works}
 
@@ -179,21 +174,12 @@ callers or unsupported features are migrated over time.
 
 However, if your team wants to enforce complete migration in a single change (or
 prevent unmigrated C++ declarations from being accidentally committed during
-local experimentation), you can pass `--macro_name DO_NOT_SUBMIT_CPP_DECL!`:
-
-```sh
-bazel run //google_internal/carcinize:carcinize -- \
-  --macro_name DO_NOT_SUBMIT_CPP_DECL! \
-  //path/to/pkg:my_target
-```
-
-Carcinize generates the fallback block wrapped in `DO_NOT_SUBMIT_CPP_DECL!`:
+local experimentation), you can rename the fallback `global_cpp!` block to
+`DO_NOT_SUBMIT_CPP_DECL!` by hand. C++ extraction treats it the same as
+`global_cpp!`:
 
 ```rust
-// Generated with --macro_name DO_NOT_SUBMIT_CPP_DECL!
 DO_NOT_SUBMIT_CPP_DECL! {
-    #include "math/math_utils.h"
-
     namespace math {
     template <typename T>
     T Clamp(T val, T min, T max) {
@@ -303,15 +289,10 @@ Rename or remove the existing target before running Carcinize.
 
 ### Unsupported C++ declarations {#error_unsupported}
 
-When `--require_complete_migration` is enabled, Carcinize halts with an error if
-any unbindable declarations are encountered:
-
-```
-Error: Target //math:math_utils contains unsupported C++ declarations:
-  - class template `math::UnsupportedTemplate` (Class templates are not yet supported)
-  - function template `math::Clamp` (Function templates are not yet supported)
-Migration aborted because --require_complete_migration was specified.
-```
+When `--require_complete_migration` is enabled and any unbindable declarations
+are encountered, the Crubit bindings build fails with an error for each
+unsupported declaration (for example,
+`Function templates are not yet supported`), and Carcinize halts.
 
 To proceed with migrating partially supported libraries without halting, omit
 `--require_complete_migration` to allow Carcinize to route those declarations

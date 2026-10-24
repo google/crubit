@@ -72,7 +72,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI LogWhenDestroyed {
 >  private:
 >   int x = 0;
 >   int* x_ptr = &x;
-> }
+> };
 > ```
 >
 > Types like this, if Rust-moved, will contain invalid pointers. Carefully
@@ -130,7 +130,7 @@ non-Rust-movable, one fix is to wrap it in a `unique_ptr`:
 struct Person {
   std::string name;
   int age;
-}
+};
 ```
 
 ```c++ {.good}
@@ -138,7 +138,7 @@ struct Person {
   // boxed to make Person rust-movable: crubit.rs/cpp/cookbook#boxing
   std::unique_ptr<std::string> name;
   int age;
-}
+};
 ```
 
 #### Raw pointers {#raw_ptr}
@@ -157,7 +157,7 @@ destructor (as if it were held by a `unique_ptr`).
 struct Person {
   std::string name;
   int age;
-}
+};
 ```
 
 ```c++ {.good}
@@ -169,7 +169,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Person {
   ~Person() {
     delete name;
   }
-}
+};
 ```
 
 (Note the use of `ABSL_ATTRIBUTE_TRIVIAL_ABI`: because we added a destructor, we
@@ -285,7 +285,7 @@ class FakeClock {
  public:
   CRUBIT_RUST_NAME("advance_mut")
   void Advance(int n) {
-    DoNotUseForRustOnlyAdvance(n);
+    InternalDoNotUseForRustOnlyAdvance(n);
   }
 
   CRUBIT_RUST_NAME("advance")
@@ -422,9 +422,9 @@ pub fn ReturnAfter() -> Ctor![After] {...}
 **Fix:** Preserve Rust-movability, as described above in
 [Making types Rust-movable](#rust_movable)
 
-```c++ {.good, .no-copy}
-class ABSL_ATTRIBUTE_TRIVIAL_ABI CompatibleAfter {
-  ~After() {}
+```c++ {.good .no-copy}
+struct ABSL_ATTRIBUTE_TRIVIAL_ABI CompatibleAfter {
+  ~CompatibleAfter() {}
 
   int x;
   std::unique_ptr<std::string> y;
@@ -440,7 +440,7 @@ destructor.
 
 ```c++ {.no-copy}
 class Before {};
-class After {~After(){}};
+class After { public: virtual ~After() {} };
 
 std::unique_ptr<Before> ReturnBefore();
 std::unique_ptr<After> ReturnAfter();
@@ -550,5 +550,5 @@ int CompatibleAfter(int x) {return After(x);}
 ```
 
 ```rust {.good .no-copy}
-pub fn After(_: c_int) -> c_int {...}
+pub fn CompatibleAfter(_: c_int) -> c_int {...}
 ```
