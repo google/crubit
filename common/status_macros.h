@@ -2,7 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Helper macros and methods to return and propagate errors with `absl::Status`.
+// Helper macros and methods to return and propagate errors with `absl::Status`
+// and `llvm::Error`.
 
 #ifndef CRUBIT_COMMON_STATUS_MACROS_H_
 #define CRUBIT_COMMON_STATUS_MACROS_H_
@@ -12,9 +13,66 @@
 #include "absl/base/optimization.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "common/status_absl_compat.h"
+#include "llvm/Support/Compiler.h"
+#include "llvm/Support/Error.h"
 
-// Evaluates an expression that produces a `absl::Status`. If the status is not
-// ok, returns it from the current function.
+namespace crubit {
+namespace status_macros_internal {
+
+inline bool IsOk(const absl::Status& status) { return status.ok(); }
+inline ErrorReturn TakeError(absl::Status& status) {
+  return ErrorReturn(FromAbslStatus(status));
+}
+
+template <typename T>
+inline bool IsOk(const absl::StatusOr<T>& status_or) {
+  return status_or.ok();
+}
+template <typename T>
+inline ErrorReturn TakeError(absl::StatusOr<T>& status_or) {
+  return ErrorReturn(FromAbslStatus(status_or.status()));
+}
+template <typename T>
+inline auto TakeValue(absl::StatusOr<T>& status_or)
+    -> decltype(std::move(status_or).value()) {
+  return std::move(status_or).value();
+}
+
+inline bool IsOk(llvm::Error& error) { return !error; }
+inline ErrorReturn TakeError(llvm::Error& error) {
+  return ErrorReturn(std::move(error));
+}
+
+template <typename T>
+inline bool IsOk(llvm::Expected<T>& expected) {
+  return (bool)expected;
+}
+template <typename T>
+inline ErrorReturn TakeError(llvm::Expected<T>& expected) {
+  return ErrorReturn(expected.takeError());
+}
+template <typename T>
+inline auto TakeValue(llvm::Expected<T>& expected)
+    -> decltype(std::move(*expected)) {
+  return std::move(*expected);
+}
+
+}  // namespace status_macros_internal
+
+// Some builds do not support C++14 fully yet, using C++11 constexpr technique.
+constexpr bool HasPotentialConditionalOperator(const char* lhs, int index) {
+  return (index == -1 ? false
+                      : (lhs[index] == '?' ? true
+                                           : HasPotentialConditionalOperator(
+                                                 lhs, index - 1)));
+}
+}  // namespace crubit
+
+// Evaluates an expression that produces an `absl::Status` or `llvm::Error`. If
+// it is not ok, returns it from the current function. The enclosing function
+// may return any of `absl::Status`, `absl::StatusOr<T>`, `llvm::Error`, or
+// `llvm::Expected<T>`; the error is converted as needed.
 //
 // For example:
 //   absl::Status MultiStepFunction() {
@@ -22,17 +80,25 @@
 //     CRUBIT_RETURN_IF_ERROR(foo.Method(args...));
 //     return absl::OkStatus();
 //   }
-#define CRUBIT_RETURN_IF_ERROR(expr)                   \
-  do {                                                 \
-    if (::absl::Status status = (expr); status.ok()) { \
-    } else {                                           \
-      return status;                                   \
-    }                                                  \
+#define CRUBIT_RETURN_IF_ERROR(expr) \
+  CRUBIT_RETURN_IF_ERROR_IMPL_(      \
+      CRUBIT_STATUS_MACROS_IMPL_CONCAT_(_status_macro_val, __COUNTER__), expr)
+
+// =================================================================
+// == Implementation details, do not rely on anything below here. ==
+// =================================================================
+#define CRUBIT_RETURN_IF_ERROR_IMPL_(val, expr)                        \
+  do {                                                                 \
+    auto val = (expr);                                                 \
+    if (LLVM_UNLIKELY(!::crubit::status_macros_internal::IsOk(val))) { \
+      return ::crubit::status_macros_internal::TakeError(val);         \
+    }                                                                  \
   } while (false)
 
-// Executes an expression `rexpr` that returns an `absl::StatusOr<T>`. On OK,
-// moves its value into the variable defined by `lhs`, otherwise returns
-// from the current function.
+// Executes an expression `rexpr` that returns an `absl::StatusOr<T>` or an
+// `llvm::Expected<T>`. On OK, moves its value into the variable defined by
+// `lhs`, otherwise returns from the current function (see
+// `CRUBIT_RETURN_IF_ERROR` for the supported return types).
 //
 // Interface:
 //
@@ -70,32 +136,15 @@
 // Example: Assigning to structured bindings (<internal link>/169). The same situation
 // with comma as in map, so wrap the statement in parentheses.
 //   CRUBIT_ASSIGN_OR_RETURN((auto [first, second]), GetPair());
-#define CRUBIT_ASSIGN_OR_RETURN(lhs, rexpr)                                \
-  CRUBIT_STATUS_MACROS_IMPL_ASSIGN_OR_RETURN_(                             \
-      CRUBIT_STATUS_MACROS_IMPL_CONCAT_(_status_or_value, __LINE__), lhs,  \
-      rexpr,                                                               \
-      return ::absl::Status(::std::move(CRUBIT_STATUS_MACROS_IMPL_CONCAT_( \
-                                            _status_or_value, __LINE__))   \
-                                .status()))
+#define CRUBIT_ASSIGN_OR_RETURN(lhs, rexpr)                                   \
+  CRUBIT_ASSIGN_OR_RETURN_IMPL_(                                              \
+      CRUBIT_STATUS_MACROS_IMPL_CONCAT_(_status_macro_val, __COUNTER__), lhs, \
+      rexpr)
 
-// =================================================================
-// == Implementation details, do not rely on anything below here. ==
-// =================================================================
-namespace crubit {
-// Some builds do not support C++14 fully yet, using C++11 constexpr technique.
-constexpr bool HasPotentialConditionalOperator(const char* lhs, int index) {
-  return (index == -1 ? false
-                      : (lhs[index] == '?' ? true
-                                           : HasPotentialConditionalOperator(
-                                                 lhs, index - 1)));
-}
-}  // namespace crubit
-
-#define CRUBIT_STATUS_MACROS_IMPL_ASSIGN_OR_RETURN_(statusor, lhs, rexpr,    \
-                                                    error_expression)        \
-  auto statusor = (rexpr);                                                   \
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) {                                  \
-    error_expression;                                                        \
+#define CRUBIT_ASSIGN_OR_RETURN_IMPL_(val, lhs, rexpr)                       \
+  auto val = (rexpr);                                                        \
+  if (LLVM_UNLIKELY(!::crubit::status_macros_internal::IsOk(val))) {         \
+    return ::crubit::status_macros_internal::TakeError(val);                 \
   }                                                                          \
   {                                                                          \
     static_assert(#lhs[0] != '(' || #lhs[sizeof(#lhs) - 2] != ')' ||         \
@@ -105,7 +154,7 @@ constexpr bool HasPotentialConditionalOperator(const char* lhs, int index) {
                   "using CRUBIT_ASSIGN_OR_RETURN");                          \
   }                                                                          \
   CRUBIT_STATUS_MACROS_IMPL_UNPARENTHESIZE_IF_PARENTHESIZED(lhs) =           \
-      ::std::move(statusor).value()
+      ::crubit::status_macros_internal::TakeValue(val)
 
 // Internal helpers for macro expansion.
 #define CRUBIT_STATUS_MACROS_IMPL_EAT(...)

@@ -10,12 +10,12 @@
 #include <string>
 #include <vector>
 
-#include "absl/functional/function_ref.h"
-#include "absl/strings/string_view.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace crubit {
 
@@ -38,18 +38,18 @@ class RecordingDiagnosticConsumer final : public clang::DiagnosticConsumer {
   const std::vector<Diagnostic>& GetDiagnostics() const {
     return diagnostics_;
   };
-  std::string ConcatenatedDiagnostics(absl::string_view prefix = "") const;
+  std::string ConcatenatedDiagnostics(llvm::StringRef prefix = "") const;
 
  private:
   friend RecordingDiagnosticConsumer RecordDiagnostics(
       clang::DiagnosticsEngine& diagnostic_engine,
-      absl::FunctionRef<void()> callback,
-      std::optional<absl::FunctionRef<void()>> on_error);
+      llvm::function_ref<void()> callback,
+      std::optional<llvm::function_ref<void()>> on_error);
 
   std::vector<Diagnostic> diagnostics_;
   // Invoked synchronously while each error (or fatal error) is reported. Only
   // set while `RecordDiagnostics` runs its callback.
-  std::optional<absl::FunctionRef<void()>> on_error_;
+  std::optional<llvm::function_ref<void()>> on_error_;
 };
 
 /// A function that records the diagnostics emitted by `diagnostic_engine` while
@@ -71,8 +71,8 @@ class RecordingDiagnosticConsumer final : public clang::DiagnosticConsumer {
 /// `clang::Sema::CodeSynthesisContexts`) is still live.
 RecordingDiagnosticConsumer RecordDiagnostics(
     clang::DiagnosticsEngine& diagnostic_engine,
-    absl::FunctionRef<void()> callback,
-    std::optional<absl::FunctionRef<void()>> on_error = std::nullopt);
+    llvm::function_ref<void()> callback,
+    std::optional<llvm::function_ref<void()>> on_error = std::nullopt);
 }  // namespace crubit
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_RECORDING_DIAGNOSTIC_CONSUMER_H_

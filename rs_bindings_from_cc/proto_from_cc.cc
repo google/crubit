@@ -4,7 +4,6 @@
 
 #include <utility>
 
-#include "absl/status/statusor.h"
 #include "common/ffi_types.h"
 #include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -22,15 +21,15 @@ extern "C" ffi::IRProto proto_from_cc_dependency(
     FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
     bool kythe_annotations, bool carcinize, bool lazy_import_alien_decls,
     bool check_importer_invariants) {
-  absl::StatusOr<IR> ir = IrFromCcDependency(
+  auto ir = IrFromCcDependency(
       target_triple, header_source, dependency_header_source, extra_feature,
       kythe_annotations,
       carcinize ? CarcinizeMode::kStrict : CarcinizeMode::kOff,
       lazy_import_alien_decls, check_importer_invariants);
 
-  if (!ir.ok()) {
+  if (!ir) {
     llvm::report_fatal_error(llvm::formatv("IrFromCc reported an error: {0}",
-                                           ir.status().message()));
+                                           llvm::toString(ir.takeError())));
   }
   return *std::move(ir);
 }

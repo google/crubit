@@ -11,8 +11,6 @@
 #include <string>
 #include <utility>
 
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_error.h"
@@ -38,6 +36,7 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/Error.h"
 
 namespace clang {
@@ -105,11 +104,13 @@ llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
 llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
     const clang::FunctionDecl* func, LifetimeSymbolTable& symbol_table,
     const clang::AnnotateAttr* attr) {
-  auto error = [func](absl::string_view detail = absl::string_view()) {
-    std::string msg = absl::StrCat("Invalid lifetime annotation for function ",
-                                   func->getNameAsString());
+  auto error = [func](llvm::StringRef detail = llvm::StringRef()) {
+    std::string msg =
+        (llvm::Twine("Invalid lifetime annotation for function ") +
+         llvm::Twine(func->getNameAsString()))
+            .str();
     if (!detail.empty()) {
-      absl::StrAppend(&msg, ": ", detail);
+      msg += (llvm::Twine(": ") + llvm::Twine(detail)).str();
     }
     return llvm::make_error<LifetimeError>(LifetimeError::Type::Other, msg);
   };
@@ -139,9 +140,10 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
         if (lifetime_annotation != nullptr) {
           return llvm::make_error<LifetimeError>(
               LifetimeError::Type::Other,
-              absl::StrCat("Can't extract lifetimes as '",
-                           func->getNameAsString(),
-                           "' has multiple lifetime annotations"));
+              (llvm::Twine("Can't extract lifetimes as '") +
+               llvm::Twine(func->getNameAsString()) +
+               llvm::Twine("' has multiple lifetime annotations"))
+                  .str());
         }
         lifetime_annotation = annotate;
       }
@@ -190,8 +192,9 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
                 clang::DeclarationName::CXXDestructorName) {
           return llvm::make_error<LifetimeError>(
               LifetimeError::Type::ElisionNotEnabled,
-              absl::StrCat("Lifetime elision not enabled for '",
-                           func_->getNameAsString(), "'"));
+              (llvm::Twine("Lifetime elision not enabled for '") +
+               llvm::Twine(func_->getNameAsString()) + llvm::Twine("'"))
+                  .str());
         }
 
         Lifetime lifetime = Lifetime::CreateVariable();
@@ -291,8 +294,9 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
             if (!elision_enabled_) {
               return llvm::make_error<LifetimeError>(
                   LifetimeError::Type::ElisionNotEnabled,
-                  absl::StrCat("Lifetime elision not enabled for '",
-                               func_->getNameAsString(), "'"));
+                  (llvm::Twine("Lifetime elision not enabled for '") +
+                   llvm::Twine(func_->getNameAsString()) + llvm::Twine("'"))
+                      .str());
             }
 
             // If we have a single input lifetime, its lifetime is assigned to
@@ -303,11 +307,12 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
               // Otherwise, we don't know how to elide the output lifetime.
               return llvm::make_error<LifetimeError>(
                   LifetimeError::Type::CannotElideOutputLifetimes,
-                  absl::StrCat("Cannot elide output lifetimes for '",
-                               func_->getNameAsString(),
-                               "' because it is a non-member function that "
+                  (llvm::Twine("Cannot elide output lifetimes for '") +
+                   llvm::Twine(func_->getNameAsString()) +
+                   llvm::Twine("' because it is a non-member function that "
                                "does not have "
-                               "exactly one input lifetime"));
+                               "exactly one input lifetime"))
+                      .str());
             }
           });
     }
