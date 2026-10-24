@@ -3426,6 +3426,49 @@ fn test_thunkless_accessors_virtual() -> Result<()> {
 }
 
 #[gtest]
+fn test_thunkless_accessors_pfp_pointer_field() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class NonStandardLayout {
+         public:
+          int* p() const { return p_; }
+          void set_p(int* p) { p_ = p; }
+          int x() const { return x_; }
+          void set_x(int x) { x_ = x; }
+          int pub_;
+         private:
+          int* p_;
+          int x_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // Under `-fexperimental-pointer-field-protection-abi`, non-standard-layout classes are PFP
+    // types whose pointer fields are signed and authenticated by C++ stores and loads, so pointer
+    // accessors must keep using a thunk.
+    assert_cc_matches!(rs_api_impl, quote! { __this->p() });
+    assert_cc_matches!(rs_api_impl, quote! { __this->set_p(p) });
+    assert_rs_not_matches!(rs_api, quote! { cast::<*mut ::ffi_11::c_int>() });
+    // Non-pointer fields of non-standard-layout classes are unaffected by PFP and remain thunkless.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (&raw const *__this).byte_add(16).cast::<::ffi_11::c_int>().read()
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (&raw mut *__this).byte_add(16).cast::<::ffi_11::c_int>().write(x)
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->x() });
+    assert_cc_not_matches!(rs_api_impl, quote! { __this->set_x(x) });
+    Ok(())
+}
+
+#[gtest]
 fn test_thunkless_accessors_underaligned_field() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
