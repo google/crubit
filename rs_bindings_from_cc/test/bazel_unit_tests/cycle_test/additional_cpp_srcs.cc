@@ -10,7 +10,7 @@ int MyTypeAdder(int a, int b) {
   return m.Add(a, b) + other_func();
 }
 
-// TODO(b/497927944): Rust APIs which use this type won't get bindings back into
+// Note: Rust APIs which use this type won't get bindings back into
 // C++, as this type has no C++ target / header, only the .cc definition inside
 // Crubit. (See `types_in_extra_cpp_srcs` golden test for details).
 struct MyStruct {
