@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include "absl/base/nullability.h"
 #include "support/annotations.h"
 
 namespace unique_ptr_test {
@@ -15,20 +16,24 @@ struct TwoWords {
   void* ptr2;
 };
 
-CRUBIT_MUST_BIND inline std::unique_ptr<int> create_unique_ptr() {
+CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<int> create_unique_ptr() {
   return std::make_unique<int>(1);
 }
-CRUBIT_MUST_BIND inline void destroy_unique_ptr(std::unique_ptr<int>) {}
-CRUBIT_MUST_BIND inline std::unique_ptr<char> create_unique_ptr_char() {
+CRUBIT_MUST_BIND inline void destroy_unique_ptr(
+    absl_nonnull std::unique_ptr<int>) {}
+CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<char>
+create_unique_ptr_char() {
   return std::make_unique<char>('a');
 }
-CRUBIT_MUST_BIND inline std::unique_ptr<short> create_unique_ptr_short() {
+CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<short>
+create_unique_ptr_short() {
   return std::make_unique<short>(static_cast<short>(1));
 }
-CRUBIT_MUST_BIND inline std::unique_ptr<void*> create_unique_ptr_void_ptr() {
+CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<void*>
+create_unique_ptr_void_ptr() {
   return std::make_unique<void*>(nullptr);
 }
-CRUBIT_MUST_BIND inline std::unique_ptr<TwoWords>
+CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<TwoWords>
 create_unique_ptr_two_words() {
   return std::make_unique<TwoWords>();
 }
@@ -43,7 +48,8 @@ struct Derived : public Base {
   bool is_derived() const override { return true; }
 };
 
-CRUBIT_MUST_BIND inline std::unique_ptr<Base> create_virtual_base() {
+CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<Base>
+create_virtual_base() {
   return std::make_unique<Derived>();
 }
 
@@ -59,7 +65,8 @@ struct CustomDelete {
   static inline int custom_delete_count = 0;
 };
 
-CRUBIT_MUST_BIND inline std::unique_ptr<CustomDelete> create_custom_delete() {
+CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<CustomDelete>
+create_custom_delete() {
   return std::make_unique<CustomDelete>();
 }
 

@@ -2,11 +2,16 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use cc_std::std::{shared_ptr, NonNull, TryDeref};
+use cc_std::std::{shared_ptr, NonNull, OptionLike, TryDeref};
 use googletest::{expect_eq, expect_false, expect_true, gtest};
 use std::marker::PhantomPinned;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+
+fn null_shared_ptr<T>() -> shared_ptr<T> {
+    // SAFETY: A null pointer with a null control block is a valid empty `shared_ptr`.
+    unsafe { shared_ptr::from_raw_parts(core::ptr::null(), core::ptr::null_mut()) }
+}
 
 #[gtest]
 fn test_layout() {
@@ -85,16 +90,23 @@ fn test_from_mut() {
     let nn_mut = NonNull::from_mut(&mut shared).unwrap();
     expect_eq!(**nn_mut, 1);
 
-    let mut null_shared = test_helpers::shared_ptr_test::create_shared_ptr_void_ptr();
+    let mut null_shared = null_shared_ptr::<core::ffi::c_void>();
     expect_true!(NonNull::from_mut(&mut null_shared).is_none());
+
+    let mut cpp_null_shared = test_helpers::shared_ptr_test::create_shared_ptr_void_ptr();
+    expect_true!(cpp_null_shared.as_option_mut().is_none());
 }
 
 #[gtest]
 fn test_shared_ptr_null_returns_none() {
-    let null_shared = test_helpers::shared_ptr_test::create_shared_ptr_void_ptr();
+    let null_shared = null_shared_ptr::<core::ffi::c_void>();
     expect_true!(null_shared.try_deref().is_none());
     expect_true!(NonNull::from_ref(&null_shared).is_none());
     expect_true!(NonNull::new(null_shared).is_none());
+
+    let cpp_null_shared = test_helpers::shared_ptr_test::create_shared_ptr_void_ptr();
+    expect_true!(cpp_null_shared.as_option().is_none());
+    expect_true!(cpp_null_shared.into_option().is_none());
 }
 
 #[gtest]
@@ -103,7 +115,7 @@ fn test_as_ptr_and_is_null() {
     expect_false!(shared_ptr::is_null(&shared));
     expect_eq!(unsafe { *shared_ptr::as_ptr(&shared) }, 1);
 
-    let null_shared = test_helpers::shared_ptr_test::create_shared_ptr_void_ptr();
+    let null_shared = null_shared_ptr::<core::ffi::c_void>();
     expect_true!(shared_ptr::is_null(&null_shared));
 }
 
@@ -153,7 +165,7 @@ fn test_const_shared_ptr_passed_to_const_param() {
 
 #[gtest]
 fn test_use_count_null() {
-    let null_shared = test_helpers::shared_ptr_test::create_shared_ptr_void_ptr();
+    let null_shared = null_shared_ptr::<core::ffi::c_void>();
     expect_eq!(shared_ptr::use_count(&null_shared), 0);
 }
 
@@ -398,7 +410,9 @@ fn test_from_unique_ptr() {
 
 #[gtest]
 fn test_from_unique_ptr_null() {
-    let u = test_helpers::shared_ptr_test::create_null_unique_ptr();
+    expect_true!(test_helpers::shared_ptr_test::create_null_unique_ptr().into_option().is_none());
+    // SAFETY: `from_raw` accepts a null pointer.
+    let u = unsafe { cc_std::std::unique_ptr::<i32>::from_raw(core::ptr::null_mut()) };
     let sp = shared_ptr::from_unique_ptr(u);
     expect_true!(shared_ptr::is_null(&sp));
     expect_eq!(shared_ptr::use_count(&sp), 0);
@@ -494,7 +508,15 @@ fn test_from_virtual_unique_ptr() {
 
 #[gtest]
 fn test_from_virtual_unique_ptr_null() {
-    let u = test_helpers::shared_ptr_test::create_null_virtual_unique_base();
+    expect_true!(test_helpers::shared_ptr_test::create_null_virtual_unique_base()
+        .into_option()
+        .is_none());
+    // SAFETY: `from_raw` accepts a null pointer.
+    let u = unsafe {
+        cc_std::std::virtual_unique_ptr::<test_helpers::shared_ptr_test::Base>::from_raw(
+            core::ptr::null_mut(),
+        )
+    };
     let sp = shared_ptr::from_virtual_unique_ptr(u);
     expect_true!(shared_ptr::is_null(&sp));
     expect_eq!(shared_ptr::use_count(&sp), 0);
@@ -513,8 +535,7 @@ fn test_debug() {
     let sp_foo = shared_ptr::new(Foo { a: 123 });
     expect_eq!(format!("{sp_foo:?}"), "Foo { a: 123 }");
 
-    let null_sp =
-        shared_ptr::from_unique_ptr(test_helpers::shared_ptr_test::create_null_unique_ptr());
+    let null_sp = null_shared_ptr::<i32>();
     expect_eq!(format!("{null_sp:?}"), "null");
     expect_eq!(format!("{null_sp:>8?}"), "    null");
     expect_eq!(format!("{null_sp:<8?}"), "null    ");

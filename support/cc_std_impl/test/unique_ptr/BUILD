@@ -12,9 +12,12 @@ crubit_test_cc_library(
     name = "test_helpers",
     testonly = 1,
     hdrs = ["test_helpers.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     visibility = ["//:__subpackages__"],
-    deps = ["//support:annotations"],
+    deps = [
+        "//support:annotations",
+        "@abseil-cpp//absl/base:nullability",
+    ],
 )
 
 rust_api_from_cpp(
