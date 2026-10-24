@@ -25,41 +25,6 @@ use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
 use std::rc::Rc;
 
-// TODO(b/492229823): This trait is a temporary artifact for refactoring. Remove this trait and
-// update the tests in this file.
-trait IrTestingExt<'pb> {
-    fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item<'pb>;
-    fn find_decl<'a, T>(&'a self, decl_id: ir::ItemId) -> Result<&'a T>
-    where
-        'pb: 'a,
-        &'a T: TryFrom<&'a ir::Item<'pb>>;
-}
-
-impl<'pb> IrTestingExt<'pb> for IR<'pb> {
-    #[track_caller]
-    fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item<'pb> {
-        let Some(item) = self.get_decl(decl_id) else {
-            panic!("Couldn't find decl_id {:?} in the IR:\n{:#?}", decl_id, self.tree_ir())
-        };
-        item
-    }
-
-    #[track_caller]
-    fn find_decl<'a, T>(&'a self, decl_id: ir::ItemId) -> Result<&'a T>
-    where
-        'pb: 'a,
-        &'a T: TryFrom<&'a ir::Item<'pb>>,
-    {
-        self.find_untyped_decl(decl_id).try_into().map_err(|_| {
-            arc_anyhow::anyhow!(
-                "DeclId {:?} doesn't refer to a {}",
-                decl_id,
-                std::any::type_name::<T>()
-            )
-        })
-    }
-}
-
 #[gtest]
 fn test_function() {
     let proto = ir_proto_from_cc("int f(int a, int b);").unwrap();
@@ -2421,7 +2386,10 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
         .functions()
         .filter(|f| *f.rs_name() == "MyMethod")
         .map(|f| {
-            ir.find_decl::<Rc<Record>>(f.enclosing_item_id().unwrap()).unwrap().rs_name().as_str()
+            let Some(Item::Record(r)) = ir.get_decl(f.enclosing_item_id().unwrap()) else {
+                panic!("Expected enclosing item to be a Record");
+            };
+            r.rs_name().as_str()
         })
         .collect_vec();
     assert_eq!(class_template_specialization_names, method_record_names);
@@ -4733,7 +4701,9 @@ fn test_operator_names() {
         .functions()
         .filter_map(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
-            let r = ir.find_decl::<Rc<Record>>(f.enclosing_item_id()?).ok()?;
+            let Some(Item::Record(r)) = ir.get_decl(f.enclosing_item_id()?) else {
+                return None;
+            };
             if r.rs_name().as_str() != "SomeStruct" {
                 return None;
             }
