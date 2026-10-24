@@ -672,6 +672,102 @@ pub mod derived_pointers {
     }
 }
 
+/// `NonStandardLayoutPointers` is not standard-layout because its fields have
+/// different access control. Under pointer field protection (PFP), its pointer
+/// fields may be signed and authenticated by C++ loads and stores, so `p` and
+/// `set_p` must keep using a thunk, while the non-pointer `x` and `set_x` remain
+/// thunkless.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "25NonStandardLayoutPointers"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=NonStandardLayoutPointers
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct NonStandardLayoutPointers {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    pub public_field_: ::ffi_11::c_int,
+    __padding1: [::core::mem::MaybeUninit<u8>; 4],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) p_: [::core::mem::MaybeUninit<u8>; 8],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) x_: [::core::mem::MaybeUninit<u8>; 8],
+}
+impl !Send for NonStandardLayoutPointers {}
+impl !Sync for NonStandardLayoutPointers {}
+unsafe impl ::cxx::ExternType for NonStandardLayoutPointers {
+    type Id = ::cxx::type_id!("NonStandardLayoutPointers");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NonStandardLayoutPointers"),
+    crate::NonStandardLayoutPointers
+);
+impl NonStandardLayoutPointers {
+    #[inline(always)]
+    pub fn p<'__this>(&'__this self) -> *const ::ffi_11::c_int {
+        unsafe { self::non_standard_layout_pointers::p(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_p<'__this>(&'__this mut self, p: *const ::ffi_11::c_int) {
+        unsafe { self::non_standard_layout_pointers::set_p(self, p) }
+    }
+    #[inline(always)]
+    pub fn x<'__this>(&'__this self) -> ::ffi_11::c_int {
+        unsafe { self::non_standard_layout_pointers::x(self) }
+    }
+    #[inline(always)]
+    pub fn set_x<'__this>(&'__this mut self, x: ::ffi_11::c_int) {
+        unsafe { self::non_standard_layout_pointers::set_x(self, x) }
+    }
+}
+
+impl Default for NonStandardLayoutPointers {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN25NonStandardLayoutPointersC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+pub mod non_standard_layout_pointers {
+    #[inline(always)]
+    pub(crate) fn p<'__this>(
+        __this: &'__this crate::NonStandardLayoutPointers,
+    ) -> *const ::ffi_11::c_int {
+        unsafe { crate::detail::__rust_thunk___ZNK25NonStandardLayoutPointers1pEv(__this) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_p<'__this>(
+        __this: &'__this mut crate::NonStandardLayoutPointers,
+        p: *const ::ffi_11::c_int,
+    ) {
+        unsafe { crate::detail::__rust_thunk___ZN25NonStandardLayoutPointers5set_pEPKi(__this, p) }
+    }
+    #[inline(always)]
+    pub(crate) fn x<'__this>(__this: &'__this crate::NonStandardLayoutPointers) -> ::ffi_11::c_int {
+        unsafe { (&raw const *__this).byte_add(16).cast::<::ffi_11::c_int>().read() }
+    }
+    #[inline(always)]
+    pub(crate) fn set_x<'__this>(
+        __this: &'__this mut crate::NonStandardLayoutPointers,
+        x: ::ffi_11::c_int,
+    ) {
+        unsafe { (&raw mut *__this).byte_add(16).cast::<::ffi_11::c_int>().write(x) }
+    }
+}
+
 forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Incomplete"));
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -871,6 +967,16 @@ mod detail {
             __this: &'__this mut crate::DerivedPointers,
             p: *const ::ffi_11::c_int,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN25NonStandardLayoutPointersC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZNK25NonStandardLayoutPointers1pEv<'__this>(
+            __this: &'__this crate::NonStandardLayoutPointers,
+        ) -> *const ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN25NonStandardLayoutPointers5set_pEPKi<'__this>(
+            __this: &'__this mut crate::NonStandardLayoutPointers,
+            p: *const ::ffi_11::c_int,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN12MorePointersC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN29StructWithRecordAndFreeGetterC1Ei(
             __this: *mut ::core::ffi::c_void,
@@ -929,6 +1035,13 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::DerivedPointers: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::DerivedPointers: Drop);
 
+    assert!(::core::mem::size_of::<crate::NonStandardLayoutPointers>() == 24);
+    assert!(::core::mem::align_of::<crate::NonStandardLayoutPointers>() == 8);
+    static_assertions::assert_impl_all!(crate::NonStandardLayoutPointers: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::NonStandardLayoutPointers: Drop);
+    assert!(::core::mem::offset_of!(crate::NonStandardLayoutPointers, public_field_) == 0);
+    assert!(::core::mem::offset_of!(crate::NonStandardLayoutPointers, p_) == 8);
+    assert!(::core::mem::offset_of!(crate::NonStandardLayoutPointers, x_) == 16);
     assert!(::core::mem::size_of::<crate::MorePointers>() == 16);
     assert!(::core::mem::align_of::<crate::MorePointers>() == 8);
     static_assertions::assert_impl_all!(crate::MorePointers: Copy,Clone);

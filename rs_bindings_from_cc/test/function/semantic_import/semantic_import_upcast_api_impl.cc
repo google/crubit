@@ -116,6 +116,32 @@ extern "C" void __rust_thunk___ZN15DerivedPointers5set_pEPKi(
 static_assert((void (::DerivedPointers::*)(int const*)) &
               ::DerivedPointers::set_p);
 
+static_assert(CRUBIT_SIZEOF(class NonStandardLayoutPointers) == 24);
+static_assert(alignof(class NonStandardLayoutPointers) == 8);
+static_assert(CRUBIT_OFFSET_OF(public_field_,
+                               class NonStandardLayoutPointers) == 0);
+
+extern "C" void __rust_thunk___ZN25NonStandardLayoutPointersC1Ev(
+    class NonStandardLayoutPointers* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" int const* __rust_thunk___ZNK25NonStandardLayoutPointers1pEv(
+    class NonStandardLayoutPointers const* __this) {
+  return __this->p();
+}
+
+static_assert((int const* (::NonStandardLayoutPointers::*)() const) &
+              ::NonStandardLayoutPointers::p);
+
+extern "C" void __rust_thunk___ZN25NonStandardLayoutPointers5set_pEPKi(
+    class NonStandardLayoutPointers* __this, int const* p) {
+  __this->set_p(p);
+}
+
+static_assert((void (::NonStandardLayoutPointers::*)(int const*)) &
+              ::NonStandardLayoutPointers::set_p);
+
 static_assert(CRUBIT_SIZEOF(class MorePointers) == 16);
 static_assert(alignof(class MorePointers) == 8);
 

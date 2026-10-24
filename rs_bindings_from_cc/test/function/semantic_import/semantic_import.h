@@ -102,6 +102,25 @@ class DerivedPointers : public Padding, public PointerBase {
   void set_p(const int* p) { base_p_ = p; }
 };
 
+// `NonStandardLayoutPointers` is not standard-layout because its fields have
+// different access control. Under pointer field protection (PFP), its pointer
+// fields may be signed and authenticated by C++ loads and stores, so `p` and
+// `set_p` must keep using a thunk, while the non-pointer `x` and `set_x` remain
+// thunkless.
+class NonStandardLayoutPointers {
+ public:
+  const int* p() const { return p_; }
+  void set_p(const int* p) { p_ = p; }
+  int x() const { return x_; }
+  void set_x(int x) { x_ = x; }
+
+  int public_field_ = 0;
+
+ private:
+  const int* p_ = nullptr;
+  int x_ = 0;
+};
+
 // A type which is never defined, so that `Incomplete*` below is a pointer to an
 // incomplete type.
 class Incomplete;

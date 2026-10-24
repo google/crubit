@@ -106,6 +106,21 @@ fn test_base_pointer_accessors() {
 }
 
 #[gtest]
+fn test_non_standard_layout_pointer_accessors() {
+    let mut nsl = semantic_import::NonStandardLayoutPointers::default();
+    assert_eq!(nsl.p(), core::ptr::null());
+    assert_eq!(nsl.x(), 0);
+    let x: i32 = 42;
+    unsafe {
+        nsl.set_p(&x);
+        assert_eq!(nsl.p(), &x as *const i32);
+        assert_eq!(*nsl.p(), 42);
+    }
+    nsl.set_x(99);
+    assert_eq!(nsl.x(), 99);
+}
+
+#[gtest]
 fn test_void_pointer_accessors() {
     let mut more = semantic_import::MorePointers::default();
     assert_eq!(more.v(), core::ptr::null_mut());

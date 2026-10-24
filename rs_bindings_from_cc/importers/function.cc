@@ -365,7 +365,8 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(
     return std::nullopt;
   }
 
-  auto* record_decl = field_decl->getParent();
+  const auto* record_decl =
+      clang::dyn_cast_or_null<clang::CXXRecordDecl>(field_decl->getParent());
   if (!record_decl || record_decl->isDependentContext() ||
       !record_decl->isCompleteDefinition()) {
     return std::nullopt;
@@ -374,6 +375,17 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(
   // is only meaningful if that is also the receiver's record (not a base).
   if (receiver_record == nullptr ||
       record_decl->getCanonicalDecl() != receiver_record->getCanonicalDecl()) {
+    return std::nullopt;
+  }
+  // Under `-fexperimental-pointer-field-protection-abi`, every class that is
+  // not standard-layout is a pointer-field-protection (PFP) type, and every
+  // pointer-typed field of a PFP type is signed on store and authenticated on
+  // load. Reading or writing such a field directly from Rust at its byte offset
+  // would bypass authentication and signing. Check `isStandardLayout()`
+  // unconditionally rather than `ASTContext::isPFPField()` so that generated
+  // bindings do not depend on target-specific PFP flags.
+  if (field_decl->getType()->isPointerType() &&
+      !record_decl->isStandardLayout()) {
     return std::nullopt;
   }
   CcType type = ictx.ConvertQualType(field_decl->getType(),
