@@ -757,13 +757,15 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
                             .iter()
                             .enumerate()
                             .filter_map(|(i, size)| {
-                                (*size > 0).then(|| {
+                                if *size > 0 {
                                     let field_ident = anonymous_field_ident(i);
                                     let expr = val(i, &field_ident);
-                                    quote! {
+                                    Some(quote! {
                                         ::std::construct_at(&this->#field_ident, #expr);
-                                    }
-                                })
+                                    })
+                                } else {
+                                    None
+                                }
                             })
                             .collect()
                     };
