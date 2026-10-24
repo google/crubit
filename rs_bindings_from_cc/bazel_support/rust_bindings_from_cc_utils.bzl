@@ -290,6 +290,8 @@ def generate_and_compile_bindings(
     else:
         name = dep_variant_info.crate_info.name
 
+    self_extra_named_deps = depset()
+
     # The headers, header modules, and linking information of the impl and its deps flow to
     # dependents as non-exported deps. Only `exported_cc_infos` (one level) and `support_cc_info`
     # (transitively) export their module maps, so that a dependent's `_rust_api_impl.cc` doesn't
@@ -311,7 +313,7 @@ def generate_and_compile_bindings(
                 direct = [file for (file, _) in extra_rs_srcs],
                 transitive = [additional_rust_srcs],
             ),
-            extra_named_deps = depset(),
+            extra_named_deps = self_extra_named_deps,
         ),
         GeneratedBindingsInfo(
             cc_file = cc_output,
@@ -335,8 +337,11 @@ def generate_and_compile_bindings(
         CcBindingsFromRustInfo(
             cc_info = dep_variant_info.cc_info,
             crate_key = crate_name,
+            encoded_crate_key = name,
+            extra_named_deps = self_extra_named_deps,
             headers = public_hdrs,
             features = [],
+            target_args = target_args,
             configuration = None,
             transitive_infos = depset(),
         ),

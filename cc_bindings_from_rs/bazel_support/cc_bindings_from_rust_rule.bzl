@@ -23,6 +23,7 @@ load(
 # buildifier: disable=bzl-visibility
 load(
     "@rules_rust//rust/private:rustc.bzl",
+    "AliasableDepInfo",
     "ExtraRustcFlagsInfo",
     "collect_deps",
     "collect_inputs",
@@ -70,6 +71,10 @@ load(
     "compile_rust",
 )
 load(
+    "//rs_bindings_from_cc/bazel_support:encode_raw_string_as_crate_name.bzl",
+    "encode_raw_string_as_crate_name",
+)
+load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "RustBindingsFromCcInfo",
 )
@@ -79,6 +84,79 @@ load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain", "use_c
 # Targets which do not receive C++ bindings at all.
 targets_to_remove = [
 ]
+
+def _encode_crate_key(crate_info, legacy_mangling_allowlist):
+    """Returns the label-encoded crate name for `crate_info`, or its plain name if exempt."""
+    owner_str = str(crate_info.owner)
+    if owner_str in legacy_mangling_allowlist or owner_str.endswith("/support/cc_std:cc_std"):
+        return crate_info.name
+    return encode_raw_string_as_crate_name(owner_str)
+
+def _dep_crate_key(dep_bindings_info, use_label_encoded_names_for_deps):
+    return dep_bindings_info.encoded_crate_key if use_label_encoded_names_for_deps else dep_bindings_info.crate_key
+
+def _aliasable_dep_to_file(aliasable_dep):
+    crate_info = aliasable_dep.dep
+    if crate_info.metadata and getattr(crate_info, "metadata_supports_pipelining", True):
+        return crate_info.metadata
+    return crate_info.output
+
+def _aliasable_dep_to_extern_flag(aliasable_dep):
+    return "--extern={}={}".format(aliasable_dep.name, _aliasable_dep_to_file(aliasable_dep).path)
+
+def _crates_to_aliasable_deps(crates, legacy_mangling_allowlist):
+    """Wraps each non-proc-macro `CrateInfo` in an `AliasableDepInfo` under its encoded name.
+
+    `crates` may contain either bare `CrateInfo`s or `AliasableDepInfo`s (as found in
+    `DepInfo.transitive_crates`); the latter are unwrapped first.
+    """
+    result = []
+    for raw in crates:
+        c = raw.dep if hasattr(raw, "dep") else raw
+        if "proc-macro" not in (c.type, getattr(c, "wrapped_crate_type", None)):
+            result.append(AliasableDepInfo(
+                name = _encode_crate_key(c, legacy_mangling_allowlist),
+                dep = c,
+            ))
+    return result
+
+def _collect_dep_extra_named_deps(target, attr, dep_info, legacy_mangling_allowlist):
+    """Returns a depset of `AliasableDepInfo`s for every Rust crate reachable from `target`'s deps."""
+    direct = []
+    transitive = []
+
+    for dep in getattr(attr, "deps", []) + getattr(attr, "cc_deps", []):
+        if CcBindingsFromRustInfo in dep:
+            transitive.append(dep[CcBindingsFromRustInfo].extra_named_deps)
+        elif RustBindingsFromCcInfo in dep and dep[RustBindingsFromCcInfo].dep_variant_info != None:
+            transitive.append(getattr(dep[RustBindingsFromCcInfo], "extra_named_deps", depset()))
+        elif CrateInfo in dep:
+            direct.extend(_crates_to_aliasable_deps(
+                [dep[CrateInfo]] + dep[DepInfo].transitive_crates.to_list(),
+                legacy_mangling_allowlist,
+            ))
+    return depset(direct = direct, transitive = transitive)
+
+def _make_target_args(label, h_file, dep_bindings_infos):
+    # Mark the headers as being owned by the (bindings for the) crate, so that
+    # rs_bindings_from_cc doesn't assume that they're owned by the current target or
+    # that they don't have bindings.
+    return depset(
+        direct = [
+            json.encode({
+                "t": str(label),
+                "h": [h_file.path],
+                # Note: the feature set is a lie, crubit won't run on this target.
+                # The "pun" we're relying on is that Crubit will think that
+                # "everything will get bindings if I run rs_bindings_from_cc on it".
+                # In fact, we _won't_ run rs_bindings_from_cc on it, but everything "will
+                # get bindings" because it was originally defined in Rust to begin with.
+                # TODO(jeanpierreda): Maybe define an assume_bindings/round_trip feature?
+                "f": ["all"],
+            }),
+        ],
+        transitive = [dep.target_args for dep in dep_bindings_infos],
+    )
 
 def _get_dep_bindings_infos(attr):
     """Returns `CcBindingsFromRustInfo`s of direct, non-transitive dependencies.
@@ -143,22 +221,19 @@ def _get_crate_dirname(crate):
         str: The directory name of the the output File that will be produced.
     """
     if hasattr(crate, "dep"):
-        return crate.dep.output.dirname
+        return _aliasable_dep_to_file(crate).dirname
     return crate.output.dirname
 
-def _filter_crubit_rustc_args(ctx, original_args, toolchain, dep_info):
-    """Returns a struct containing the crubit supported rustc args for the bindings crate.
-
-    Crubit supports a subset of rustc arguments. This function filters down to those arguments while
-    keeping the other arguments we use from the rules_rust (process_wrapper flags, rustc path, etc.).
+def _filter_crubit_rustc_args(ctx, toolchain, dep_info, dep_extra_named_deps = depset()):
+    """Returns an `Args` object containing the crubit-supported rustc flags for the bindings crate.
 
     Args:
       ctx: The rule context.
-      original_args: The original arguments from construct_arguments.
       toolchain: The rust toolchain.
       dep_info: The dep info.
+      dep_extra_named_deps: Additional `AliasableDepInfo`s to include in `-Ldependency`.
     Returns:
-      A struct containing our filtered arguments.
+      An `Args` object containing our filtered `rustc` flags.
     """
     rustc_flags = ctx.actions.args()
     rustc_flags.add_all(toolchain.rust_std_paths, before_each = "-L", format_each = "%s")
@@ -167,6 +242,7 @@ def _filter_crubit_rustc_args(ctx, original_args, toolchain, dep_info):
         transitive = [
             dep_info.direct_crates,
             dep_info.transitive_crates,
+            dep_extra_named_deps,
         ],
     )
     rustc_flags.add_all(
@@ -177,15 +253,9 @@ def _filter_crubit_rustc_args(ctx, original_args, toolchain, dep_info):
     )
     if toolchain._toolchain_generated_sysroot:
         rustc_flags.add(toolchain.sysroot, format = "--sysroot=%s")
-    args = struct(
-        process_wrapper_flags = original_args.process_wrapper_flags,
-        rustc_path = original_args.rustc_path,
-        rustc_flags = rustc_flags,
-        all = [original_args.process_wrapper_flags, original_args.rustc_path, rustc_flags],
-    )
-    return args
+    return rustc_flags
 
-def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, args, rustc_env, proto_crate_renames, self_rmeta, is_golden_test_override = None, target_denied_features = []):
+def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, process_wrapper_flags, rustc_flags, rustc_env, proto_crate_renames, self_rmeta, dep_extra_named_deps = depset(), use_label_encoded_names_for_deps = False, is_golden_test_override = None, target_denied_features = []):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
     Args:
@@ -198,10 +268,13 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
       crate_name: The name of the target crate.
       basename: The basename for the generated files
       inputs: `cc_bindings_from_rs` inputs specific to the target `crate`
-      args: `rustc` and `process_wrapper` arguments from construct_arguments.
+      process_wrapper_flags: `Args` object of `process_wrapper` arguments.
+      rustc_flags: `Args` object of `rustc` flags.
       rustc_env: `rustc` environment to use when running `cc_bindings_from_rs`
       proto_crate_renames: Mapping of the `rust_proto_library` to the `proto_library` crate name.
       self_rmeta: The rmeta file for the current crate.
+      dep_extra_named_deps: Depset of `AliasableDepInfo`s for label-encoded dependencies.
+      use_label_encoded_names_for_deps: Whether dependency crate keys use label-encoded names.
       is_golden_test_override: Overrides value of `--is-golden-test` flag instead of checking for the transition.
       target_denied_features: Features denied for this target by `SUPPORTED_FEATURE_DENYLISTS`, overriding `--default-features`.
 
@@ -229,12 +302,11 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
     crubit_args.add("--rustfmt-config-path", ctx.file._rustfmt_cfg)
 
     for dep_bindings_info in dep_bindings_infos:
+        dep_key = _dep_crate_key(dep_bindings_info, use_label_encoded_names_for_deps)
         for header in dep_bindings_info.headers:
-            arg = dep_bindings_info.crate_key + "=" + header.short_path
-            crubit_args.add("--crate-header", arg)
+            crubit_args.add("--crate-header", dep_key + "=" + header.short_path)
         for feature in dep_bindings_info.features:
-            arg = dep_bindings_info.crate_key + "=" + feature
-            crubit_args.add("--crate-feature", arg)
+            crubit_args.add("--crate-feature", dep_key + "=" + feature)
 
     toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"]
     if toolchain != None:
@@ -253,9 +325,10 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
     # Features denied by `SUPPORTED_FEATURE_DENYLISTS` would otherwise come back via
     # `--default-features`.
     for dep_bindings_info in dep_bindings_infos:
+        dep_key = _dep_crate_key(dep_bindings_info, use_label_encoded_names_for_deps)
         for feature in getattr(dep_bindings_info, "target_denied_features", []):
             if feature not in unsupported_features:
-                crubit_args.add("--crate-disabled-feature", dep_bindings_info.crate_key + "=" + feature)
+                crubit_args.add("--crate-disabled-feature", dep_key + "=" + feature)
     for feature in target_denied_features:
         if feature not in unsupported_features:
             crubit_args.add("--crate-disabled-feature", "self=" + feature)
@@ -286,6 +359,8 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
         if self_rmeta != None:
             crubit_args.add("--extern={}={}".format(self_crate_name, self_rmeta.path))
 
+    crubit_args.add_all(dep_extra_named_deps, uniquify = True, map_each = _aliasable_dep_to_extern_flag)
+
     crubit_args.add("--enable-rmeta-interface")
     crubit_args.add("--portable-abi-compatible")
     is_golden_test = is_golden_test_override if is_golden_test_override != None else ctx.attr._is_golden_test[BuildSettingInfo].value
@@ -304,10 +379,16 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
         )
     else:
         toolchain = toolchain.cc_bindings_from_rs_toolchain_info
+        tool_args = ctx.actions.args()
+        tool_args.add("--")
+        tool_args.add(toolchain.binary)
         ctx.actions.run(
             outputs = outputs,
             inputs = depset(
-                [f for f in [ctx.file._rustfmt_cfg, self_rmeta] if f != None],
+                [f for f in [ctx.file._rustfmt_cfg, self_rmeta] if f != None] + [
+                    _aliasable_dep_to_file(d)
+                    for d in dep_extra_named_deps.to_list()
+                ],
                 transitive = [inputs],
             ),
             env = rustc_env | verbose_log_env | _rustc_lib_env(ctx),
@@ -315,13 +396,13 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
             executable = ctx.executable._process_wrapper,
             mnemonic = "CcBindingsFromRust",
             progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
-            # We don't use `args.all` here, because we want to change the rustc path to instead
-            # point to crubit.
+            # We don't pass `construct_arguments(...).all` here, because we want to replace the
+            # rustc path with the path to crubit.
             #
             # That said, if we passed arguments to crubit via environment variables or via flags that
             # can be interleaved with rustc flags in any order, and if we used toolchain.binary
-            # as the tool_path for construct_arguments, then this could be `args.all` instead.
-            arguments = [args.process_wrapper_flags, "--", toolchain.binary.path, crubit_args, args.rustc_flags],
+            # as the tool_path for construct_arguments, then this could be `all` instead.
+            arguments = [process_wrapper_flags, tool_args, crubit_args, rustc_flags],
             toolchain = "//cc_bindings_from_rs/bazel_support:toolchain_type",
         )
 
@@ -339,6 +420,8 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, 
     Args:
       ctx: The rule context.
       h_out_file: The generated "..._cc_api.h" header file
+      extra_cc_hdrs: Additional C++ header files to expose as public headers.
+      extra_cc_srcs: Additional C++ source files to compile with the header.
       cc_infos: cc_infos for dependencies of the h_out_file - should include both:
           1) the target `crate` and
           2) the compiled Rust glue crate (`..._cc_api_impl.rs` file).
@@ -379,7 +462,7 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, 
         linking_context = linking_context,
     )
 
-def _compile_rs_out_file(ctx, attr, rs_out_file, crate_name, deps):
+def _compile_rs_out_file(ctx, attr, rs_out_file, crate_name, deps, aliases = {}, extra_named_deps = None):
     """Compiles the generated "..._cc_api_impl.rs" file.
 
     Args:
@@ -388,6 +471,8 @@ def _compile_rs_out_file(ctx, attr, rs_out_file, crate_name, deps):
       rs_out_file: The generated "..._cc_api_impl.rs" file
       crate_name: The name of the crate.
       deps: The dependencies of the target crate.
+      aliases: Crate aliases passed to `compile_rust`.
+      extra_named_deps: Optional depset of `AliasableDepInfo`s for label-encoded dependencies.
 
     Returns:
       DepVariantInfo for the generated "..._cc_api_impl.rs".
@@ -402,8 +487,11 @@ def _compile_rs_out_file(ctx, attr, rs_out_file, crate_name, deps):
         for dep in ctx.attr._rs_deps_for_bindings + deps
     ]
 
-    # The `..._cc_api_impl.rs` file needs to depend on all the deps of the target crate.
-    _deps += [dep for target in deps for dep in target[CrateInfo].deps.to_list()]
+    if extra_named_deps == None:
+        # The `..._cc_api_impl.rs` file needs to depend on all the deps of the target crate.
+        _deps += [dep for target in deps for dep in target[CrateInfo].deps.to_list()]
+        extra_named_deps = depset()
+
     return compile_rust(
         ctx,
         attr = attr,
@@ -412,6 +500,8 @@ def _compile_rs_out_file(ctx, attr, rs_out_file, crate_name, deps):
         deps = depset(_deps),
         crate_name = crate_name + "_cc_api_impl",
         include_coverage = True,
+        aliases = aliases,
+        extra_named_deps = extra_named_deps,
     )
 
 def _cc_bindings_from_rust_aspect_impl(target, ctx):
@@ -424,10 +514,34 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
     if str(target.label) in targets_to_remove:
         return []
 
+    cc_bindings_toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"]
+    toolchain_supports_label_encoded_deps = (
+        cc_bindings_toolchain != None and
+        cc_bindings_toolchain.cc_bindings_from_rs_toolchain_info.supports_label_encoded_deps
+    )
+    legacy_mangling_allowlist = ctx.attr._legacy_mangling_allowlist[BuildSettingInfo].value
+
+    # `enable_label_encoded_deps` controls whether label-encoded `extra_named_deps` are collected
+    # and propagated to dependents at all; `use_label_encoded_names_for_deps` controls whether
+    # *this* target's bindings are generated with label-encoded names. Allowlisted targets keep
+    # plain names themselves but still propagate `extra_named_deps` for their dependents.
+    enable_label_encoded_deps = (
+        ctx.attr._use_label_encoded_names_for_deps[BuildSettingInfo].value and
+        toolchain_supports_label_encoded_deps and
+        not ctx.attr._is_golden_test[BuildSettingInfo].value
+    )
+    use_label_encoded_names_for_deps = (
+        enable_label_encoded_deps and
+        str(target.label) not in legacy_mangling_allowlist
+    )
+
+    crate_info = target[CrateInfo]
+    encoded_crate_key = _encode_crate_key(crate_info, legacy_mangling_allowlist)
+    self_crate_key = encoded_crate_key if use_label_encoded_names_for_deps else crate_info.name
+
     proto_crate_renames = []
 
     toolchain = find_toolchain(ctx)
-    crate_info = target[CrateInfo]
     cc_toolchain = find_cpp_toolchain(ctx)
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
@@ -440,7 +554,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         aliases = crate_info.aliases,
     )
 
-    compile_inputs, out_dir, build_env_files, build_flags_files, linkstamp_outs, ambiguous_libs = collect_inputs(
+    compile_inputs, out_dir, build_env_files, _, linkstamp_outs, ambiguous_libs = collect_inputs(
         ctx = ctx,
         file = ctx.file,
         files = ctx.files,
@@ -460,6 +574,11 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
     # dependency into account.
     data_files = [target.files for target in getattr(ctx.rule.attr, "data", [])]
     compile_inputs = depset(transitive = [compile_inputs] + data_files)
+
+    dep_extra_named_deps = (
+        _collect_dep_extra_named_deps(target, ctx.rule.attr, dep_info, legacy_mangling_allowlist) if enable_label_encoded_deps else depset()
+    )
+    active_extra_named_deps = dep_extra_named_deps if use_label_encoded_names_for_deps else depset()
 
     original_args, env = construct_arguments(
         ctx = ctx,
@@ -488,7 +607,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         use_json_output = False,
         skip_expanding_rustc_env = True,
     )
-    args = _filter_crubit_rustc_args(ctx, original_args, toolchain, dep_info)
+    rustc_flags = _filter_crubit_rustc_args(ctx, toolchain, dep_info, active_extra_named_deps)
 
     if target[CrateInfo].metadata != None:
         rmeta = target[CrateInfo].metadata
@@ -513,10 +632,13 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         cli_flags.append("--ignore-symbols-from-files=" + file.path)
     stdlib_info = ctx.attr._stdlib_bindings[CcBindingsFromRustInfo]
     stdlib_bindings_infos = [stdlib_info] + stdlib_info.transitive_infos.to_list()
-    dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr) + stdlib_bindings_infos
+    user_dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr)
+    dep_bindings_infos = user_dep_bindings_infos + stdlib_bindings_infos
+
     config = crate_name_to_library_config(
         aspect_hints = ctx.rule.attr.aspect_hints,
         rust_infos = dep_bindings_infos,
+        use_label_encoded_names_for_deps = use_label_encoded_names_for_deps,
     )
     (extra_cc_hdrs, extra_cc_srcs) = get_additional_cc_hdrs_and_srcs(ctx.rule.attr.aspect_hints)
     for hdr in extra_cc_hdrs:
@@ -530,17 +652,28 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         label = target.label,
         features = features,
         cli_flags = cli_flags,
-        crate_name = crate_info.name,
+        crate_name = self_crate_key,
         basename = basename,
         inputs = compile_inputs,
-        args = args,
+        process_wrapper_flags = original_args.process_wrapper_flags,
+        rustc_flags = rustc_flags,
         rustc_env = env,
         proto_crate_renames = proto_crate_renames,
         self_rmeta = rmeta,
+        dep_extra_named_deps = active_extra_named_deps,
+        use_label_encoded_names_for_deps = use_label_encoded_names_for_deps,
         target_denied_features = target_denied_features,
     )
 
-    dep_variant_info = _compile_rs_out_file(ctx, ctx.rule.attr, bindings_info.rust_file, target[CrateInfo].name, [target])
+    dep_variant_info = _compile_rs_out_file(
+        ctx,
+        ctx.rule.attr,
+        bindings_info.rust_file,
+        crate_info.name,
+        [target],
+        aliases = {target: self_crate_key} if use_label_encoded_names_for_deps else {},
+        extra_named_deps = dep_extra_named_deps if use_label_encoded_names_for_deps else None,
+    )
 
     cc_info = _make_cc_info_for_h_out_file(
         ctx,
@@ -562,17 +695,20 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         CcBindingsFromRustInfo(
             cc_info = cc_info,
             crate_key = crate_info.name,
+            encoded_crate_key = encoded_crate_key,
             headers = [bindings_info.h_file],
             features = features,
+            target_args = _make_target_args(target.label, bindings_info.h_file, user_dep_bindings_infos),
             target_denied_features = target_denied_features,
             configuration = config,
             transitive_infos = depset(
                 direct = dep_bindings_infos,
-                transitive = [
-                    getattr(dep, "transitive_infos", depset())
-                    for dep in dep_bindings_infos
-                ],
+                transitive = [dep.transitive_infos for dep in dep_bindings_infos],
             ),
+            extra_named_deps = depset(
+                direct = [AliasableDepInfo(name = encoded_crate_key, dep = crate_info)],
+                transitive = [dep_extra_named_deps],
+            ) if enable_label_encoded_deps else depset(),
         ),
         bindings_info,
         OutputGroupInfo(out = output_depset, out_compiled = out_compiled),
@@ -649,6 +785,12 @@ private_common_attrs = {
     "_is_golden_test": attr.label(
         default = "//common/bazel_support:is_golden_test",
     ),
+    "_use_label_encoded_names_for_deps": attr.label(
+        default = "//common/bazel_support:use_label_encoded_names_for_deps",
+    ),
+    "_legacy_mangling_allowlist": attr.label(
+        default = "//rs_bindings_from_cc/bazel_support:legacy_mangling_allowlist",
+    ),
     "_globally_enabled_features": attr.label(
         default = "//common/bazel_support:globally_enabled_features",
     ),
@@ -691,25 +833,9 @@ def _cc_bindings_from_rust_rule_impl(ctx):
                 build_info = crate[BuildInfo] if BuildInfo in crate else None,
                 cc_info = crate[CcInfo] if CcInfo in crate else None,
             ),
+            extra_named_deps = crate[CcBindingsFromRustInfo].extra_named_deps,
             pass_through_dep_variant_infos = depset(),
-            target_args = depset([
-                # Mark the headers as being owned by the (bindings for the) crate, so that
-                # rs_bindings_from_cc doesn't assume that they're owned by the current target or
-                # that they don't have bindings.
-                json.encode(
-                    {
-                        "t": str(crate.label),
-                        "h": [h.path for h in crate[CcBindingsFromRustInfo].headers],
-                        # Note: the feature set is a lie, crubit won't run on this target.
-                        # The "pun" we're relying on is that Crubit will think that
-                        # "everything will get bindings if I run rs_bindings_from_cc on it".
-                        # In fact, we _won't_ run rs_bindings_from_cc on it, but everything "will
-                        # get bindings" because it was originally defined in Rust to begin with.
-                        # TODO(jeanpierreda): Maybe define an assume_bindings/round_trip feature?
-                        "f": ["all"],
-                    },
-                ),
-            ]),
+            target_args = crate[CcBindingsFromRustInfo].target_args,
             namespaces = None,
             additional_rust_srcs = depset(),
         ),
@@ -755,7 +881,6 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
 
     # This will be a depset of all the .rlib/.rmeta files in the stdlib.
     srcs = toolchain.rust_std
-    deps = ctx.attr.deps
 
     crate_info = rust_common.create_crate_info(
         name = crate_name,
@@ -791,13 +916,6 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
         rustc_flags.add(toolchain.sysroot, format = "--sysroot=%s")
 
     process_wrapper_flags = ctx.actions.args()
-    rustc_path = ctx.actions.args()
-    args = struct(
-        process_wrapper_flags = process_wrapper_flags,
-        rustc_path = rustc_path,
-        rustc_flags = rustc_flags,
-        all = [process_wrapper_flags, rustc_path, rustc_flags],
-    )
 
     env = {
         "CARGO_PKG_NAME": crate_name,
@@ -821,7 +939,8 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
         crate_name = crate_name,
         basename = basename,
         inputs = depset(transitive = [srcs, compile_inputs]),
-        args = args,
+        process_wrapper_flags = process_wrapper_flags,
+        rustc_flags = rustc_flags,
         rustc_env = env,
         proto_crate_renames = {},
         self_rmeta = None,
@@ -851,8 +970,10 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
     self_info = CcBindingsFromRustInfo(
         cc_info = cc_info,
         crate_key = crate_name,
+        encoded_crate_key = crate_name,
         headers = [bindings_info.h_file],
         features = features,
+        target_args = _make_target_args(ctx.label, bindings_info.h_file, dep_bindings_infos),
         configuration = config,
         transitive_infos = depset(
             direct = dep_bindings_infos,
@@ -861,6 +982,7 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
                 for dep in dep_bindings_infos
             ],
         ),
+        extra_named_deps = depset(),
     )
 
     return [

@@ -86,6 +86,16 @@ fn new_db<'tcx>(
     for file in &cmdline.ignore_symbols_from_files {
         ignore_symbols_from_files.insert(file.to_path_buf());
     }
+    let mut extern_crate_names = <HashMap<PathBuf, Rc<str>>>::new();
+    for (crate_name, metadata_path) in &cmdline.r#extern {
+        let name: Rc<str> = Rc::from(crate_name.as_str());
+        let path = PathBuf::from(metadata_path);
+        // Also key by the canonical path in case `rustc` reports a resolved form of the path.
+        if let Ok(canon) = path.canonicalize() {
+            extern_crate_names.insert(canon, name.clone());
+        }
+        extern_crate_names.insert(path, name);
+    }
     generate_bindings::new_database(
         tcx,
         cmdline.source_crate_name.as_ref().map(|s| s.clone().into()),
@@ -104,6 +114,7 @@ fn new_db<'tcx>(
         cmdline.is_golden_test,
         include_guard,
         ignore_symbols_from_files.into(),
+        extern_crate_names.into(),
     )
 }
 
@@ -226,7 +237,7 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
         let has_crate =
             |name: &str| used_crates.iter().any(|&c| tcx.crate_name(c).as_str() == name);
 
-        if !has_crate(crate_name) {
+        if used_crates.is_empty() {
             // If we can't load the metadata for the crate, we won't be able to generate
             // bindings for it and we'll generate the relevant error below.
             return Ok(());
@@ -259,6 +270,29 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     let mut input_str = crate_attrs.join("\n");
     if crate_name != "std" {
         input_str.push_str(&format!("\n\nextern crate r#{};\n", crate_name));
+    }
+
+    // Force `rustc` to load the metadata of every `--extern` crate so that `tcx.used_crates(())`
+    // enumerates all of them. Several `--extern`s may share an internal crate name (e.g. `dep`
+    // and `_y_pkg_z_dep`), or share it with the target crate, so a plain `extern crate r#<name>;`
+    // would fail with E0259. Wrapping each in an anonymous const block isolates the names from
+    // each other and from the root namespace, and `as _` avoids unused-extern-crate lints.
+    let mut seen_externs = HashSet::new();
+    for (ext_name, _) in &cmdline.r#extern {
+        if ext_name == "std" || ext_name == crate_name || !seen_externs.insert(ext_name.clone()) {
+            continue;
+        }
+
+        // `r#<name>` only works for identifiers other than the path keywords; anything else
+        // can't be named by an `extern crate` item at all.
+        let is_valid_ident = !ext_name.is_empty()
+            && !ext_name.starts_with(|c: char| c.is_ascii_digit())
+            && ext_name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+            && !["crate", "self", "super", "Self"].contains(&ext_name.as_str());
+
+        if is_valid_ident {
+            input_str.push_str(&format!("const _: () = {{ extern crate r#{ext_name} as _; }};\n"));
+        }
     }
 
     if let Err(e) =
@@ -939,6 +973,165 @@ unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
             .expect("Unstable target modifier flags with '-' should not cause an error");
         let cc_api = std::fs::read_to_string(&test_result.h_path)?;
         assert!(cc_api.contains("public_function"));
+        Ok(())
+    }
+
+    /// Compiles `rs_input` to an rmeta named `lib<out_filename>.rmeta` in `tempdir`, using the
+    /// given `--crate-name` (which may be shared between several rmetas).
+    fn build_rmeta(
+        tempdir: &std::path::Path,
+        target: Option<&str>,
+        crate_name: &str,
+        rs_input: &str,
+        out_filename: &str,
+        extra_rustc_args: &[String],
+    ) -> Result<PathBuf> {
+        let rs_path = tempdir.join(format!("{out_filename}.rs"));
+        std::fs::write(&rs_path, rs_input)?;
+        let rmeta_path = tempdir.join(format!("lib{out_filename}.rmeta"));
+        let mut rustc_args = vec![
+            "rustc".to_string(),
+            "--codegen=panic=abort".to_string(),
+            format!("--crate-name={crate_name}"),
+            format!("-Cmetadata={out_filename}"),
+            "--crate-type=lib".to_string(),
+            "--emit=metadata".to_string(),
+            "-o".to_string(),
+            rmeta_path.display().to_string(),
+            "-Zunstable-options".to_string(),
+            format!(
+                "-Cunsafe-allow-abi-mismatch={}",
+                run_compiler::target_modifier_flag_names().join(",")
+            ),
+            rs_path.display().to_string(),
+        ];
+        rustc_args.extend_from_slice(extra_rustc_args);
+        if let Some(sysroot) = sysroot_path() {
+            rustc_args.push(format!("--sysroot={}", sysroot.display()));
+        }
+        if let Some(target) = target {
+            rustc_args.push(format!("--target={target}"));
+        }
+        run_rustc(&rustc_args)?;
+        Ok(rmeta_path)
+    }
+
+    /// Runs `cc_bindings_from_rs` in rmeta mode with `extra_args` and returns the contents of the
+    /// generated `(.h, .rs)` files.
+    fn run_with_rmetas_for_testing(
+        tempdir: &std::path::Path,
+        target: Option<&str>,
+        extra_args: &[String],
+    ) -> Result<(String, String)> {
+        let h_out = tempdir.join("out.h");
+        let rs_out = tempdir.join("out.rs");
+        let mut args = vec![
+            "cc_bindings_from_rs".to_string(),
+            format!("--h-out={}", h_out.display()),
+            format!("--rs-out={}", rs_out.display()),
+            "--crubit-support-path-format=<crubit/support/{header}>".to_string(),
+            format!("--clang-format-exe-path={CLANG_FORMAT_EXE_PATH}"),
+            format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH}"),
+            "--enable-rmeta-interface".to_string(),
+            format!("-Ldependency={}", tempdir.display()),
+        ];
+        args.extend_from_slice(extra_args);
+        if let Some(sysroot) = sysroot_path() {
+            args.push(format!("--sysroot={}", sysroot.display()));
+        }
+        if let Some(target) = target {
+            args.push(format!("--target={target}"));
+        }
+        run_with_cmdline_args(&Cmdline::new(&args)?)?;
+        Ok((std::fs::read_to_string(&h_out)?, std::fs::read_to_string(&rs_out)?))
+    }
+
+    /// Three crates all named `dep` (two leaves and a parent depending on both), imported under
+    /// distinct label-encoded `--extern` names.
+    #[test]
+    fn test_rmeta_dependency_label_encoding() -> Result<()> {
+        let tempdir = tempdir()?;
+        let target = setup_rustc_target_for_testing(tempdir.path());
+        let target = target.as_deref();
+
+        let dep1_rmeta = build_rmeta(
+            tempdir.path(),
+            target,
+            "dep",
+            "pub struct Dep1Struct(pub i32);",
+            "dep1",
+            &[],
+        )?;
+        let dep2_rmeta = build_rmeta(
+            tempdir.path(),
+            target,
+            "dep",
+            "pub struct Dep2Struct(pub i32);",
+            "dep2",
+            &[],
+        )?;
+        let parent_rmeta = build_rmeta(
+            tempdir.path(),
+            target,
+            "dep",
+            "extern crate dep1; extern crate dep2; \
+             pub struct ParentStruct(pub i32); \
+             pub fn pass_dep1(x: dep1::Dep1Struct) -> dep1::Dep1Struct { x } \
+             pub fn pass_dep2(x: dep2::Dep2Struct) -> dep2::Dep2Struct { x }",
+            "parent",
+            &[
+                format!("--extern=dep1={}", dep1_rmeta.display()),
+                format!("--extern=dep2={}", dep2_rmeta.display()),
+            ],
+        )?;
+
+        let (h_content, rs_content) = run_with_rmetas_for_testing(
+            tempdir.path(),
+            target,
+            &[
+                "--default-features=supported".to_string(),
+                "--source-crate-name=_y__y_parent_z_dep".to_string(),
+                "--crate-namespace=self=parent_ns".to_string(),
+                "--crate-header=_y__y_pkg1_z_dep=dep1.h".to_string(),
+                "--crate-namespace=_y__y_pkg1_z_dep=dep1_ns".to_string(),
+                "--crate-header=_y__y_pkg2_z_dep=dep2.h".to_string(),
+                "--crate-namespace=_y__y_pkg2_z_dep=dep2_ns".to_string(),
+                format!("--extern=_y__y_parent_z_dep={}", parent_rmeta.display()),
+                format!("--extern=_y__y_pkg1_z_dep={}", dep1_rmeta.display()),
+                format!("--extern=_y__y_pkg2_z_dep={}", dep2_rmeta.display()),
+            ],
+        )?;
+
+        assert!(h_content.contains("namespace parent_ns"), "{h_content}");
+        assert!(h_content.contains("::dep1_ns::Dep1Struct"), "{h_content}");
+        assert!(h_content.contains("::dep2_ns::Dep2Struct"), "{h_content}");
+        assert!(rs_content.contains("::_y__y_parent_z_dep::ParentStruct"), "{rs_content}");
+        assert!(rs_content.contains("::_y__y_pkg1_z_dep::Dep1Struct"), "{rs_content}");
+        assert!(rs_content.contains("::_y__y_pkg2_z_dep::Dep2Struct"), "{rs_content}");
+        Ok(())
+    }
+
+    /// `#![no_std]` detection must still work when the source crate is imported under a
+    /// label-encoded name that differs from its `--crate-name`.
+    #[test]
+    fn test_rmeta_no_std_preservation() -> Result<()> {
+        let tempdir = tempdir()?;
+        let target = setup_rustc_target_for_testing(tempdir.path());
+        let target = target.as_deref();
+
+        let nostd_rmeta =
+            build_rmeta(tempdir.path(), target, "foo", "#![no_std] pub struct Foo;", "foo", &[])?;
+
+        let (_h_content, rs_content) = run_with_rmetas_for_testing(
+            tempdir.path(),
+            target,
+            &[
+                "--source-crate-name=_y__y_nostd_z_foo".to_string(),
+                format!("--extern=_y__y_nostd_z_foo={}", nostd_rmeta.display()),
+            ],
+        )?;
+
+        assert!(rs_content.contains("#![no_std]"), "{rs_content}");
         Ok(())
     }
 }

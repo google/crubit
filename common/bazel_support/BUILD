@@ -71,6 +71,7 @@ string_list_flag(
 cc_bindings_from_rs_toolchain(
     name = "cc_bindings_from_rs_on_demand_impl",
     binary = "//cc_bindings_from_rs:cc_bindings_from_rs",
+    supports_label_encoded_deps = True,
 )
 
 # rs_bindings_from_cc

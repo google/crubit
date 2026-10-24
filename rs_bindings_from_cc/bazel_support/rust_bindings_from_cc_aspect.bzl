@@ -408,8 +408,10 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         # crate_info.name unless overridden by `aliases`.
         for dep in all_deps:
             if RustBindingsFromCcInfo in dep:
-                if struct(label = dep.label) not in aliases:
-                    aliases[dep] = crubit_encode_raw_string_as_crate_name(str(dep.label))
+                dvi = dep[RustBindingsFromCcInfo].dep_variant_info
+                owner = dvi.crate_info.owner if dvi and dvi.crate_info else dep.label
+                if struct(label = owner) not in aliases:
+                    aliases[dep] = crubit_encode_raw_string_as_crate_name(str(owner))
 
         # Collect dependencies of manual bindings attached to this target.
         # The Rust sources of manual bindings expect their dependencies to be

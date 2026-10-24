@@ -122,6 +122,18 @@ memoized::query_group! {
       #[input]
       fn ignore_symbols_from_files(&self) -> Rc<HashSet<PathBuf>>;
 
+      #[input]
+      /// A map from the path of each `--extern` rmeta/rlib to the crate name it was passed under.
+      /// With label-encoded dependency names, this name differs from the crate's own
+      /// `#![crate_name]` and is the key used in `crate_name_to_*` maps.
+      fn extern_crate_names(&self) -> Rc<HashMap<PathBuf, Rc<str>>>;
+
+      /// The name `krate` was imported under on the command line (see `extern_crate_names`),
+      /// falling back to the crate's own name.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:imported_crate_name
+      fn imported_crate_name(&self, krate: CrateNum) -> rustc_span::Symbol;
+
       /// Computes all specializations specified in the crate.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:specializations
@@ -380,16 +392,29 @@ memoized::query_group! {
 }
 
 impl<'tcx> BindingsGenerator<'tcx> {
+    /// Looks up `krate` in a map keyed by crate name, as populated from `--crate-header`,
+    /// `--crate-feature`, `--crate-namespace`, etc.
+    ///
+    /// The source crate is keyed as `"self"`. Other crates are keyed by the name they were
+    /// imported under (see `imported_crate_name`), falling back to the crate's own name.
+    pub fn get_by_crate<'a, V>(
+        &self,
+        map: &'a HashMap<Rc<str>, V>,
+        krate: CrateNum,
+    ) -> Option<&'a V> {
+        if krate == self.source_crate_num() {
+            return map.get("self");
+        }
+        map.get(self.imported_crate_name(krate).as_str())
+            .or_else(|| map.get(self.tcx().crate_name(krate).as_str()))
+    }
+
     pub fn crate_features(
         &self,
         krate: CrateNum,
     ) -> flagset::FlagSet<crubit_feature::CrubitFeature> {
-        let crate_features = self.crate_name_to_features();
-        let features = if krate == self.source_crate_num() {
-            crate_features.get("self")
-        } else {
-            crate_features.get(self.tcx().crate_name(krate).as_str())
-        };
-        features.copied().unwrap_or_else(|| self.default_features())
+        self.get_by_crate(&self.crate_name_to_features(), krate)
+            .copied()
+            .unwrap_or_else(|| self.default_features())
     }
 }
