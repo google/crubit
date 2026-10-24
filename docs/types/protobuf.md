@@ -22,7 +22,7 @@ object from both languages. Crubit automatically generates the zero-cost glue
 code for us. For example, take this piece of a C++ header:
 
 ```c++
-MyProto Foo(); 
+MyProto Foo();
 ```
 
 This becomes available to Rust as:
@@ -36,14 +36,24 @@ convert from the C++ message type to the Rust message type.)
 
 ## Calling Rust APIs using Protobuf message types {#rust}
 
-| Rust          | C++              |
-| :------------ | :--------------- |
-| `Message`     | `Message`        |
-| `MessageView` | `const Message*` |
-| `MessageMut`  | `Message*`       |
+| Rust                          | C++                                 |
+| :---------------------------- | :---------------------------------- |
+| `Message`                     | `Message`                           |
+| `MessageView`                 | `const Message*`                    |
+| `MessageMut`                  | `Message*`                          |
+| `&Message`                    | `const proto::Rust<Message>&`       |
+| `*const Message`              | `const proto::Rust<Message>*`       |
+| `Message` (as a struct field) | `proto::Rust<Message>`              |
+| `Vec<Message>`                | `rs_std::Vec<proto::Rust<Message>>` |
 
 Protocol buffers are supported by value, and using the `View` and `Mut` view
 types, where they are mapped to C++ pointers.
+
+When an owned Rust `Message` appears in a layout-compatible position (such as a
+public struct field, behind a reference or pointer, or inside a generic
+container like `Vec`), it maps to `proto::Rust<Message>` in C++, a non-null
+handle providing `get()`, `operator->`, and `operator*` access to the underlying
+C++ `Message`.
 
 ## Calling C++ APIs using Protobuf message types {#cpp}
 
@@ -63,30 +73,30 @@ to the Rust message type, as you would expect.
 | `const Message&` | `MessageView` |
 | `Message&`       | `MessageMut`  |
 
-When `//features:proto_references` is enabled on a C++
-`cc_library` target (along with lifetime annotations / `assume_lifetimes`, which
-is enabled by default in `supported`), C++ protobuf references map directly to
-safe Rust `MessageView` and `MessageMut` types.
-
-NOTE: `//features:proto_references` will soon be enabled by
-default. Until then, add it explicitly to your C++ target's `aspect_hints`:
+C++ protobuf references map directly to safe Rust `MessageView` and `MessageMut`
+types. This relies on lifetime annotations (`assume_lifetimes`) and
+`//features:proto_references`, both of which are enabled by
+default, so no extra configuration is needed beyond the usual
+`rust_api_from_cpp` setup:
 
 ```starlark
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
+
 cc_library(
     name = "my_cpp_lib",
     hdrs = ["my_cpp_lib.h"],
-    aspect_hints = [
-        "//features:supported",
-        "//features:proto_references",
-        "//features:forward_declare", # for proto pointer support
-    ],
+    aspect_hints = [":my_cpp_lib_rust.hint"],
     deps = [":my_cc_proto"],
+)
+
+rust_api_from_cpp(
+    name = "my_cpp_lib_rust",
+    cpp_target = ":my_cpp_lib",
 )
 ```
 
-With `proto_references` enabled, no `cpp_coerce()` (or deprecated `cpp_cast()`)
-or `unsafe` block is required when calling C++ functions that take or return
-protobuf references:
+No `cpp_coerce()` (or deprecated `cpp_cast()`) or `unsafe` block is required
+when calling C++ functions that take or return protobuf references:
 
 ```rust
 // Pass an owned Rust proto using .as_view() / .as_mut(),
