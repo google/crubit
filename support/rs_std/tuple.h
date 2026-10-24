@@ -120,30 +120,6 @@ struct tuple_element<I, ::CRUBIT_RS_STD_PRIMARY_NS::Tuple<Ts...>> {
   using type = std::tuple_element_t<I, std::tuple<Ts...>>;
 };
 
-template <std::size_t I, typename... Ts>
-constexpr decltype(auto) get(
-    ::CRUBIT_RS_STD_PRIMARY_NS::Tuple<Ts...>& t) noexcept {
-  return t.template get<I>();
-}
-
-template <std::size_t I, typename... Ts>
-constexpr decltype(auto) get(
-    const ::CRUBIT_RS_STD_PRIMARY_NS::Tuple<Ts...>& t) noexcept {
-  return t.template get<I>();
-}
-
-template <std::size_t I, typename... Ts>
-constexpr decltype(auto) get(
-    ::CRUBIT_RS_STD_PRIMARY_NS::Tuple<Ts...>&& t) noexcept {
-  return std::move(t).template get<I>();
-}
-
-template <std::size_t I, typename... Ts>
-constexpr decltype(auto) get(
-    const ::CRUBIT_RS_STD_PRIMARY_NS::Tuple<Ts...>&& t) noexcept {
-  return std::move(t).template get<I>();
-}
-
 }  // namespace std
 
 #undef CRUBIT_RS_STD_PRIMARY_NS

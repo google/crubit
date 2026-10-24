@@ -217,19 +217,19 @@ TEST(TuplesTest, MemberGet) {
   EXPECT_EQ(t.template get<0>(), 100u);
 }
 
-TEST(TuplesTest, StdGet) {
+TEST(TuplesTest, RsGet) {
   rs::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
-  EXPECT_EQ(std::get<0>(t), 10u);
-  EXPECT_EQ(std::get<1>(t), 20u);
+  EXPECT_EQ(rs::get<0>(t), 10u);
+  EXPECT_EQ(rs::get<1>(t), 20u);
 
   const auto& const_t = t;
-  EXPECT_EQ(std::get<0>(const_t), 10u);
-  EXPECT_EQ(std::get<1>(const_t), 20u);
+  EXPECT_EQ(rs::get<0>(const_t), 10u);
+  EXPECT_EQ(rs::get<1>(const_t), 20u);
 
-  std::get<0>(t) = 100u;
-  std::get<1>(t) = 200u;
-  EXPECT_EQ(std::get<0>(t), 100u);
-  EXPECT_EQ(std::get<1>(t), 200u);
+  rs::get<0>(t) = 100u;
+  rs::get<1>(t) = 200u;
+  EXPECT_EQ(rs::get<0>(t), 100u);
+  EXPECT_EQ(rs::get<1>(t), 200u);
 }
 
 TEST(TuplesTest, StructuredBindingByValue) {
@@ -247,8 +247,8 @@ TEST(TuplesTest, StructuredBindingByReference) {
 
   r0 = 300u;
   r1 = 400u;
-  EXPECT_EQ(std::get<0>(t), 300u);
-  EXPECT_EQ(std::get<1>(t), 400u);
+  EXPECT_EQ(rs::get<0>(t), 300u);
+  EXPECT_EQ(rs::get<1>(t), 400u);
 }
 
 TEST(TuplesTest, StructuredBindingByConstReference) {
@@ -380,8 +380,8 @@ TEST(TuplesTest, StructWithOptionTuple) {
 
 TEST(TuplesTest, ElementConstructor) {
   rs::Tuple<uint32_t, uint32_t> t(10u, 20u);
-  EXPECT_EQ(std::get<0>(t), 10u);
-  EXPECT_EQ(std::get<1>(t), 20u);
+  EXPECT_EQ(rs::get<0>(t), 10u);
+  EXPECT_EQ(rs::get<1>(t), 20u);
 
   EXPECT_EQ(tuples::take_tuple_copy_no_default_1(
                 {tuples::CopyNoDefault::new_(42), std::uint8_t{10}}),
