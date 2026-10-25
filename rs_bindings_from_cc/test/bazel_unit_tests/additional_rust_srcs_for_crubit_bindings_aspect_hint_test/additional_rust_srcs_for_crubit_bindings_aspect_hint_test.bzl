@@ -7,6 +7,7 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_make_analysis_test",
@@ -184,15 +185,129 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_
 
 additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_test = crubit_make_analysis_test(_test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_impl)
 
+def _test_rust_api_from_cpp_srcs_set_crubit_target():
+    cc_library(
+        name = "cc_lib_for_crubit_target",
+        hdrs = ["empty.h"],
+        aspect_hints = [":cc_lib_for_crubit_target_rust.hint"],
+        tags = ["manual"],
+    )
+    rust_api_from_cpp(
+        name = "cc_lib_for_crubit_target_rust",
+        cpp_target = ":cc_lib_for_crubit_target",
+        srcs = ["stub.rs"],
+        tags = ["manual"],
+    )
+    attach_aspect(
+        name = "aspect_for_cc_lib_for_crubit_target",
+        dep = ":cc_lib_for_crubit_target",
+    )
+    crubit_target_env_test(
+        name = "rust_api_from_cpp_srcs_set_crubit_target_test",
+        target_under_test = ":aspect_for_cc_lib_for_crubit_target",
+        # Without `embedded_cpp`, the aspect falls back to the C++ target's label.
+        expected_crubit_target = str(native.package_relative_label(":cc_lib_for_crubit_target")),
+    )
+
+    cc_library(
+        name = "cc_lib_without_srcs_for_crubit_target",
+        hdrs = ["empty.h"],
+        aspect_hints = [":cc_lib_without_srcs_for_crubit_target_rust.hint"],
+        tags = ["manual"],
+    )
+    rust_api_from_cpp(
+        name = "cc_lib_without_srcs_for_crubit_target_rust",
+        cpp_target = ":cc_lib_without_srcs_for_crubit_target",
+        # Setting `root_namespaces` (like `srcs` or `deps`) makes `.hint` an
+        # `additional_rust_srcs_for_crubit_bindings` with empty `srcs`. Without it,
+        # `rust_api_from_cpp` makes `.hint` an alias of its single `crubit_features` hint, and the
+        # aspect never sees an `AdditionalRustSrcsProviderInfo`.
+        root_namespaces = ["unused"],
+        tags = ["manual"],
+    )
+    attach_aspect(
+        name = "aspect_for_cc_lib_without_srcs_for_crubit_target",
+        dep = ":cc_lib_without_srcs_for_crubit_target",
+    )
+    crubit_target_env_test(
+        name = "rust_api_from_cpp_without_srcs_no_crubit_target_test",
+        target_under_test = ":aspect_for_cc_lib_without_srcs_for_crubit_target",
+        expected_crubit_target = "",
+    )
+
+def _crubit_target_env_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+    rustc_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "Rustc"][0]
+    asserts.equals(
+        env,
+        ctx.attr.expected_crubit_target,
+        rustc_action.env.get("CRUBIT_TARGET", ""),
+        "Unexpected CRUBIT_TARGET in the bindings Rustc action env",
+    )
+    return analysistest.end(env)
+
+crubit_target_env_test = crubit_make_analysis_test(
+    _crubit_target_env_test_impl,
+    attrs = {"expected_crubit_target": attr.string()},
+)
+
+def _test_conflicting_crubit_targets_fail():
+    additional_rust_srcs_for_crubit_bindings(
+        name = "crubit_target_a_hint",
+        srcs = ["stub.rs"],
+        crubit_target = "//pkg:a",
+        tags = ["manual"],
+    )
+    additional_rust_srcs_for_crubit_bindings(
+        name = "crubit_target_b_hint",
+        srcs = ["inner.rs"],
+        crubit_target = "//pkg:b",
+        tags = ["manual"],
+    )
+    cc_library(
+        name = "cc_lib_with_conflicting_crubit_targets",
+        hdrs = ["empty.h"],
+        aspect_hints = [
+            ":crubit_target_a_hint",
+            ":crubit_target_b_hint",
+        ],
+        tags = ["manual"],
+    )
+    attach_aspect(
+        name = "aspect_for_cc_lib_with_conflicting_crubit_targets",
+        dep = ":cc_lib_with_conflicting_crubit_targets",
+        tags = ["manual"],
+    )
+    conflicting_crubit_targets_fail_test(
+        name = "conflicting_crubit_targets_fail_test",
+        target_under_test = ":aspect_for_cc_lib_with_conflicting_crubit_targets",
+    )
+
+def _conflicting_crubit_targets_fail_impl(ctx):
+    env = analysistest.begin(ctx)
+    asserts.expect_failure(env, "aspect hints set different `crubit_target` values")
+    return analysistest.end(env)
+
+conflicting_crubit_targets_fail_test = crubit_make_analysis_test(
+    _conflicting_crubit_targets_fail_impl,
+    expect_failure = True,
+)
+
 def additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite(name):
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli()
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_generates_bindings_when_no_public_headers()
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate()
+    _test_rust_api_from_cpp_srcs_set_crubit_target()
+    _test_conflicting_crubit_targets_fail()
     native.test_suite(
         name = name,
         tests = [
             ":additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli_test",
             ":test_additional_rust_srcs_for_crubit_bindings_aspect_hint_generates_bindings_when_no_public_headers_test",
             ":additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_test",
+            ":rust_api_from_cpp_srcs_set_crubit_target_test",
+            ":rust_api_from_cpp_without_srcs_no_crubit_target_test",
+            ":conflicting_crubit_targets_fail_test",
         ],
     )

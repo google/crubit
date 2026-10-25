@@ -14,6 +14,8 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+extern crate self as inline_cpp_generated_bindings;
+
 /// An example of a C++ struct that supports ownership via the raw pointer.
 ///
 /// The CRUBIT_OWNED_PTR_TYPE annotation is used to specify the Rust type that

@@ -14,6 +14,8 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+extern crate self as inline_cpp_generated_bindings;
+
 #[inline(always)]
 pub(crate) fn GetGlobalUnsupportedType(
 ) -> *mut ::forward_declare::Incomplete<::forward_declare::symbol!("UnsupportedType"), ()> {

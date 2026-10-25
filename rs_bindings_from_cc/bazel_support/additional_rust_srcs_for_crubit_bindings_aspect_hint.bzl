@@ -97,7 +97,8 @@ def make_additional_rust_srcs_provider(
         root_namespaces = [],
         aliases = {},
         link_deps = [],
-        compile_data = []):
+        compile_data = [],
+        crubit_target = ""):
     return AdditionalRustSrcsProviderInfo(
         srcs = srcs,
         compile_data = compile_data,
@@ -113,6 +114,7 @@ def make_additional_rust_srcs_provider(
         unstable_rust_features = unstable_rust_features,
         root_namespaces = root_namespaces,
         aliases = aliases,
+        crubit_target = crubit_target,
     )
 
 def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
@@ -162,6 +164,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         aliases = aliases,
         link_deps = ctx.attr.link_deps,
         compile_data = ctx.files.compile_data,
+        crubit_target = ctx.attr.crubit_target,
     )]
     crubit_features = []
     for hint in ctx.attr.crubit_features:
@@ -239,6 +242,12 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             mandatory = False,
             default = False,
         ),
+        "crubit_target": attr.string(
+            doc = "Internal, for extracting embedded C++ from `srcs`; don't set it directly. The " +
+                  "label that `extract_cpp` used, passed to rustc as `CRUBIT_TARGET`.",
+            mandatory = False,
+            default = "",
+        ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
     provides = [AdditionalRustSrcsProviderInfo],
@@ -260,6 +269,7 @@ def additional_rust_srcs_for_crubit_bindings(
         root_namespaces = [],
         aliases = {},
         warn_on_raw_cc_deps = False,
+        crubit_target = "",
         **kwargs):
     """
     Defines an aspect hint that is used to pass extra Rust source files to `rs_bindings_from_cc` tool's `extra_rs_srcs` CLI argument.
@@ -311,6 +321,8 @@ def additional_rust_srcs_for_crubit_bindings(
             The keys can be Rust libraries, or either C++ libraries (e.g. `cc_library`) or their corresponding
             generated Rust bindings (e.g. `rust_api_from_cpp`).
         warn_on_raw_cc_deps: Whether to emit a warning when a direct dependency in `deps` is a raw C++ library without Rust bindings.
+        crubit_target: Internal, for extracting embedded C++ from `srcs`; don't set it directly.
+            The label that `extract_cpp` used, passed to rustc as `CRUBIT_TARGET`.
         **kwargs: Args passed through to the underlying rule (visibility, etc.).
     """
     _additional_rust_srcs_for_crubit_bindings_rule(
@@ -332,6 +344,7 @@ def additional_rust_srcs_for_crubit_bindings(
         root_namespaces = root_namespaces,
         aliases = aliases,
         warn_on_raw_cc_deps = warn_on_raw_cc_deps,
+        crubit_target = crubit_target,
         **kwargs
     )
 
