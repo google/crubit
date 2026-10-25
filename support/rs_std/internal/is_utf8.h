@@ -40,6 +40,8 @@
  * written authorization of the copyright holder.
  */
 
+// IWYU pragma: private, include "support/rs/internal/is_utf8.h"
+
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_INTERNAL_IS_UTF8_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_INTERNAL_IS_UTF8_H_
 
