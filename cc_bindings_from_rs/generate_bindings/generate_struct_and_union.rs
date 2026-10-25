@@ -59,6 +59,7 @@ use rustc_abi::{Endian, FieldIdx, FieldsShape, LayoutData, VariantIdx, Variants}
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::mir::Mutability;
+use rustc_middle::ty::fast_reject::DeepRejectCtxt;
 use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
@@ -97,6 +98,11 @@ pub fn non_blanket_impls_for_ty<'tcx, 'a>(
 ) -> impl Iterator<Item = (DefId, ty::GenericArgsRef<'tcx>)> + 'a {
     let tcx = db.tcx();
     tcx.non_blanket_impls_for_ty(trait_def_id, self_ty).filter_map(move |impl_id| {
+        if !DeepRejectCtxt::relate_rigid_infer(tcx)
+            .types_may_unify(self_ty, tcx.type_of(impl_id).skip_binder())
+        {
+            return None;
+        }
         let impl_args = db.does_impl_apply(impl_id, self_ty)?;
         Some((impl_id, impl_args))
     })
@@ -418,6 +424,16 @@ fn does_impl_apply_inner<'tcx>(
     use rustc_infer::traits::{Obligation, ObligationCause};
     use rustc_trait_selection::infer::canonical::ir::TypingMode;
     use rustc_trait_selection::traits::ObligationCtxt;
+
+    let drcx = DeepRejectCtxt::relate_rigid_infer(tcx);
+    if match_first_trait_arg {
+        let uninstantiated_trait_ref = tcx.impl_trait_header(impl_id).trait_ref.skip_binder();
+        if !drcx.types_may_unify(target_ty, uninstantiated_trait_ref.args.type_at(1)) {
+            return None;
+        }
+    } else if !drcx.types_may_unify(target_ty, tcx.type_of(impl_id).skip_binder()) {
+        return None;
+    }
 
     let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
     let ocxt = ObligationCtxt::new_with_diagnostics(&infcx);
@@ -1055,22 +1071,31 @@ fn operator_impls_for_ty<'tcx>(
         .collect();
 
     let ref_to_self_ty = Ty::new_ref(tcx, tcx.lifetimes.re_erased, self_ty, Mutability::Not);
-    impls.extend(non_blanket_impls_for_ty(db, trait_def_id, ref_to_self_ty).filter(
-        |(impl_id, impl_args)| {
-            // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it also
-            // holds blanket impls like `impl<A, B> PartialEq<&B> for &A`. Exclude impls whose
-            // uninstantiated referent is a bare type parameter.
-            let uninstantiated_self_ty = tcx.type_of(*impl_id).skip_binder();
-            let is_blanket_ref_impl = matches!(
-                uninstantiated_self_ty.kind(),
-                ty::TyKind::Ref(_, referent_ty, _) if matches!(referent_ty.kind(), ty::TyKind::Param(_))
-            );
-            let trait_ref = get_instantiated_trait_ref(tcx, *impl_id, impl_args);
-            !is_blanket_ref_impl
-                && !overloads_covered_by_adt_impls
-                    .contains(&operator_rhs_ty(trait_ref).map(|ty| erase_regions(tcx, ty)))
-        },
-    ));
+    impls.extend(
+        tcx.non_blanket_impls_for_ty(trait_def_id, ref_to_self_ty)
+            .filter(|impl_id| {
+                // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it also
+                // holds blanket impls like `impl<A, B> PartialEq<&B> for &A` as well as `&U` impls
+                // for unrelated referent types. Exclude impls whose uninstantiated referent is a
+                // bare type parameter or cannot unify with `self_ty` before invoking trait
+                // inference in `does_impl_apply`.
+                let uninstantiated_self_ty = tcx.type_of(*impl_id).skip_binder();
+                let is_blanket_ref_impl = matches!(
+                    uninstantiated_self_ty.kind(),
+                    ty::TyKind::Ref(_, referent_ty, _) if matches!(referent_ty.kind(), ty::TyKind::Param(_))
+                );
+                !is_blanket_ref_impl
+                    && DeepRejectCtxt::relate_rigid_infer(tcx)
+                        .types_may_unify(ref_to_self_ty, uninstantiated_self_ty)
+            })
+            .filter_map(|impl_id| {
+                let impl_args = db.does_impl_apply(impl_id, ref_to_self_ty)?;
+                let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
+                (!overloads_covered_by_adt_impls
+                    .contains(&operator_rhs_ty(trait_ref).map(|ty| erase_regions(tcx, ty))))
+                .then_some((impl_id, impl_args))
+            }),
+    );
     impls
 }
 
