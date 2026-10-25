@@ -14,6 +14,7 @@ def _cc_bindings_from_rs_toolchain_impl(ctx):
         platform_common.ToolchainInfo(
             cc_bindings_from_rs_toolchain_info = CcBindingsFromRustToolchainInfo(
                 binary = ctx.executable.binary,
+                supports_label_encoded_deps = ctx.attr.supports_label_encoded_deps,
                 unsupported_features = ctx.attr.unsupported_features,
             ),
         ),
@@ -26,6 +27,10 @@ cc_bindings_from_rs_toolchain = rule(
             executable = True,
             allow_single_file = True,
             cfg = "exec",
+        ),
+        "supports_label_encoded_deps": attr.bool(
+            default = False,
+            doc = "Whether the cc_bindings_from_rs binary supports label-encoded --extern crate names for dependencies",
         ),
         "unsupported_features": attr.string_list(
             default = [],

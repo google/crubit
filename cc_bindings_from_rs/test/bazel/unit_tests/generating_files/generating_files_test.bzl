@@ -192,8 +192,8 @@ def _cmdline_flags_test_impl(ctx):
     )
     asserts.true(
         env,
-        _has_arg_with_prefix(cmdline, "--extern=rusty_lib"),
-        "Expected to find `--extern=rusty_lib` on the command line, got {}.".format(cmdline),
+        _has_arg_with_prefix(cmdline, "--extern=rusty_lib="),
+        "Expected to find `--extern=rusty_lib=` on the command line, got {}.".format(cmdline),
     )
 
     return analysistest.end(env)
