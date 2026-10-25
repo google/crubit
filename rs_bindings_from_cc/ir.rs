@@ -2935,7 +2935,7 @@ impl<'pb> Record<'pb> {
         );
         ensure!(
             !self.is_abstract(),
-            "`{}` can be used by-value because it has pure virtual functions that are not overridden",
+            "`{}` can't be used by-value because it has pure virtual functions that are not overridden",
             self.cc_name()
         );
         Ok(())
