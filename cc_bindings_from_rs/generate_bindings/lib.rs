@@ -233,56 +233,59 @@ fn source_crate_num(db: &BindingsGenerator<'_>) -> CrateNum {
 
 fn specializations<'tcx>(db: &crate::BindingsGenerator<'tcx>) -> Rc<[CppTypeSpecialization<'tcx>]> {
     let tcx = db.tcx();
-    let mut specializations = Vec::new();
 
-    let all_public_paths = db.all_public_paths_by_def_id();
-    for (adt_or_alias_def_id, paths) in all_public_paths {
-        specializations.extend(
-            std::iter::once(adt_or_alias_def_id)
-                .chain(
-                    paths
-                        .into_extern_aliases()
-                        .into_iter()
-                        .filter_map(|path| path.type_alias_def_id),
-                )
-                .filter_map(|def_id| {
-                    let rustc_hir::def::DefKind::TyAlias = tcx.def_kind(def_id) else {
-                        return None;
-                    };
-                    let attrs = crubit_attr::get_attrs(tcx, def_id)
-                        .map_err(|err| {
-                            db.fatal_errors().report(&format!(
-                                "Failed to parse Crubit attributes for `{}`: {err}",
-                                tcx.def_path_str(def_id)
-                            ));
-                        })
-                        .ok()?;
-                    if !attrs.specializes_cpp_type {
-                        return None;
-                    }
-                    let Some(cpp_type) = attrs.cpp_type else {
-                        let alias_name = tcx.def_path_str(def_id);
-                        db.fatal_errors().report(&format!(
-                            "Type alias `{alias_name}` marked with `specializes_cpp_type` must have \
-                                `cpp_type` attribute"
-                        ));
-                        return None;
-                    };
-                    let ty = crate::normalize_ty(
-                        tcx,
-                        tcx.param_env(def_id),
-                        tcx.type_of(def_id).instantiate_identity(),
-                    );
-                    let ty = tcx.erase_and_anonymize_regions(ty);
-                    Some(CppTypeSpecialization {
-                        ty,
-                        cpp_type: Rc::from(cpp_type.as_str()),
-                        include_paths: attrs.include_paths.iter().map(|s| Rc::from(s.as_str())).collect(),
-                    })
-                }),
-        );
-    }
-    specializations.into()
+    // Visit candidate aliases in a stable order: `format_type` uses the first specialization that
+    // matches a type, and `HashMap` iteration order changes from run to run. Sort by the alias
+    // itself, not by the type it's an alias of, so that the order of aliases of the same type, and
+    // of the errors reported below, is stable too.
+    let mut alias_def_ids: Vec<DefId> = db
+        .all_public_paths_by_def_id()
+        .into_iter()
+        .flat_map(|(adt_or_alias_def_id, paths)| {
+            std::iter::once(adt_or_alias_def_id).chain(
+                paths.into_extern_aliases().into_iter().filter_map(|path| path.type_alias_def_id),
+            )
+        })
+        .filter(|def_id| tcx.def_kind(*def_id) == DefKind::TyAlias)
+        .collect();
+    alias_def_ids.sort_by(|lhs, rhs| stable_def_id_cmp(tcx, *lhs, *rhs));
+    alias_def_ids.dedup();
+
+    alias_def_ids
+        .into_iter()
+        .filter_map(|def_id| {
+            let attrs = crubit_attr::get_attrs(tcx, def_id)
+                .map_err(|err| {
+                    db.fatal_errors().report(&format!(
+                        "Failed to parse Crubit attributes for `{}`: {err}",
+                        tcx.def_path_str(def_id)
+                    ));
+                })
+                .ok()?;
+            if !attrs.specializes_cpp_type {
+                return None;
+            }
+            let Some(cpp_type) = attrs.cpp_type else {
+                let alias_name = tcx.def_path_str(def_id);
+                db.fatal_errors().report(&format!(
+                    "Type alias `{alias_name}` marked with `specializes_cpp_type` must have \
+                        `cpp_type` attribute"
+                ));
+                return None;
+            };
+            let ty = crate::normalize_ty(
+                tcx,
+                tcx.param_env(def_id),
+                tcx.type_of(def_id).instantiate_identity(),
+            );
+            let ty = tcx.erase_and_anonymize_regions(ty);
+            Some(CppTypeSpecialization {
+                ty,
+                cpp_type: Rc::from(cpp_type.as_str()),
+                include_paths: attrs.include_paths.iter().map(|s| Rc::from(s.as_str())).collect(),
+            })
+        })
+        .collect()
 }
 
 pub fn new_database<'db>(
@@ -784,16 +787,18 @@ fn def_id_by_symbol(
     crate_num: CrateNum,
     name: Symbol,
 ) -> Option<DefId> {
+    let tcx = db.tcx();
     let public_paths = db.public_paths_by_def_id(crate_num);
-    public_paths.iter().find_map(
-        |(def_id, paths)| {
-            if paths.canonical().name == name {
-                Some(*def_id)
-            } else {
-                None
-            }
-        },
-    )
+    // Only structs are looked up by name (callers pass the result to `tcx.adt_def`). If several
+    // share `name`, pick one in a stable order rather than in `HashMap` iteration order, which
+    // changes from run to run.
+    public_paths
+        .iter()
+        .filter(|(def_id, paths)| {
+            paths.canonical().name == name && tcx.def_kind(**def_id) == DefKind::Struct
+        })
+        .map(|(def_id, _)| *def_id)
+        .min_by(|lhs, rhs| stable_def_id_cmp(tcx, *lhs, *rhs))
 }
 
 fn module_children(tcx: TyCtxt<'_>, parent: DefId) -> &[ModChild] {
