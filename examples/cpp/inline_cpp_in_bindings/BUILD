@@ -4,10 +4,7 @@
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
-load(
-    "//common:crubit_wrapper_macros_oss.bzl",
-    "crubit_rust_test",
-)
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 licenses(["notice"])
 
