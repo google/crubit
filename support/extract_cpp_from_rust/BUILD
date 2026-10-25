@@ -1,3 +1,4 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_binary",
@@ -8,6 +9,12 @@ load(
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
+
+bzl_library(
+    name = "extract_cpp_bzl",
+    srcs = ["extract_cpp.bzl"],
+    visibility = ["//:__subpackages__"],
+)
 
 rust_library(
     name = "parse_inline_cpp_macros",

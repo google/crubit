@@ -31,69 +31,35 @@ You can use embedded C++ in two ways:
 
 If you maintain a `cc_library` and want to provide hand-written Rust helper
 methods or trait implementations alongside your generated Crubit API, you can
-pass custom Rust source files directly to `rust_api_from_cpp` via `srcs`.
+pass custom Rust source files directly to `rust_api_from_cpp` via `srcs`. Set
+`embedded_cpp = True` to allow `global_cpp!` and `inline_cpp!` in those files:
 
-Given a C++ header containing a template method that cannot be natively bound by
-Crubit:
-
-```cpp
-// widget.h
-namespace widget {
-class Widget {
- public:
-  template <typename T = void>
-  static std::unique_ptr<Widget> Create(absl::string_view name);
- private:
-  Widget(absl::string_view name);
-};
-}  // namespace widget
+```live-snippet
+cs/file:examples/cpp/inline_cpp_in_bindings/BUILD symbol:^(widget|widget_rust)$
 ```
 
-You can define the `BUILD` targets as follows:
+The Rust source must `#include` the C++ library's headers in a `global_cpp!`
+block, just like any other header the embedded C++ uses:
 
-```python
-load(
-    "//bazel:rust_api_from_cpp.bzl",
-    "rust_api_from_cpp",
-)
-
-cc_library(
-    name = "widget",
-    hdrs = ["widget.h"],
-    srcs = ["widget.cc"],
-    aspect_hints = [":widget_rust.hint"],
-    deps = [
-        "@abseil-cpp//absl/strings",
-    ],
-)
-
-rust_api_from_cpp(
-    name = "widget_rust",
-    cpp_target = ":widget",
-    root_namespaces = ["widget"],
-    srcs = ["widget_custom.rs"],
-)
+```live-snippet
+cs/file:examples/cpp/inline_cpp_in_bindings/widget_custom.rs content:^\s*global_cpp!\s*\{[\s\S]*?^\}
 ```
 
-Inside `widget_custom.rs`, you can use `inline_cpp!` to bridge the C++ template
-factory method directly into the crate's public API:
-
-```rust
-// widget_custom.rs (compiled directly into the widget_rust crate)
-use inline_cpp_macro::inline_cpp;
-
-impl Widget {
-    /// Ergonomic Rust wrapper over a C++ factory function template.
-    pub fn new_with_name(name: &str) -> cpp_std::unique_ptr<Widget> {
-        let make_widget = inline_cpp! {
-            (rs::StrRef name) -> std::unique_ptr<widget::Widget> {
-                return widget::Widget::Create(name.to_string_view());
-            }
-        };
-        make_widget(name)
-    }
-}
+```live-snippet
+cs/file:examples/cpp/inline_cpp_in_bindings/widget_custom.rs function:twice_int
 ```
+
+Include only headers of the wrapped `cc_library` or of
+`generated_cpp_support_deps`; to use another library's headers (e.g.
+`rs_std/str_ref.h`), add that library to `generated_cpp_support_deps`. Other
+headers build today, but will break once the generated C++ is compiled with
+`layering_check` (b/573160050).
+
+Note: With `embedded_cpp = True`, the generated `_rust_api_impl.cc` is compiled
+without precompiled header modules (slower) and without `layering_check`.
+
+For a complete runnable example, see
+[examples/cpp/inline_cpp_in_bindings/](https://github.com/google/crubit/tree/main/examples/cpp/inline_cpp_in_bindings/).
 
 ### 2. Using embedded C++ in a standalone `rust_library` or `rust_test` target {#build}
 

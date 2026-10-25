@@ -14,6 +14,8 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+extern crate self as inline_cpp_generated_bindings;
+
 // error: class `TemplateType` could not be bound
 //   Class templates are not yet supported
 

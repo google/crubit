@@ -77,6 +77,9 @@ pub fn inline_cpp(_input: TokenStream) -> TokenStream {
     let name_str = inline_cpp_utils::compute_thunk_name(&target, &file, line, col);
     let thunk_name = quote::format_ident!("{}", name_str);
 
+    // `inline_cpp_generated_bindings` is the crate with the generated thunks: an alias of the
+    // extracted bindings crate for `rust_library_with_embedded_cpp`, or the bindings crate itself
+    // (via `extern crate self as`) for `rust_api_from_cpp(embedded_cpp = True)`.
     let expanded = quote! {
         inline_cpp_generated_bindings::#thunk_name
     };

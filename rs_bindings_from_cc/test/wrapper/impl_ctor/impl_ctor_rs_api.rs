@@ -14,6 +14,8 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+extern crate self as inline_cpp_generated_bindings;
+
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "10Nontrivial"]
 #[repr(C)]

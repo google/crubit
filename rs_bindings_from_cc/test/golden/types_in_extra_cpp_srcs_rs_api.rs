@@ -14,6 +14,8 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+extern crate self as inline_cpp_generated_bindings;
+
 /// TODO(b/497927944): This golden test demonstrates that when a type
 /// (like MyStruct) is defined inside an extra `cpp_srcs` file instead of a
 /// normal header, Crubit successfully generates the forward Rust binding

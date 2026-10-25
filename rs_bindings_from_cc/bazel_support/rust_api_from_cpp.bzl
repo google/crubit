@@ -36,6 +36,7 @@ load("//cc_bindings_from_rs/bazel_support:providers.bzl", "CcBindingsFromRustInf
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl", "additional_rust_srcs_for_crubit_bindings")
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl", "GeneratedBindingsInfo", "RustBindingsFromCcInfo")
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl", "rust_bindings_from_cc_aspect")
+load("//support/extract_cpp_from_rust:extract_cpp.bzl", "extract_cpp")
 
 def _rust_api_from_cpp_generate_bindings_impl(ctx):
     """Implementation of the `rust_bindings_from_cc` rule."""
@@ -87,6 +88,7 @@ def rust_api_from_cpp(
         types_only = False,
         aliases = {},
         warn_on_raw_cc_deps = True,
+        embedded_cpp = False,
         **kwargs):
     """Generates Rust bindings for a C++ target.
 
@@ -109,7 +111,8 @@ def rust_api_from_cpp(
         `compile_data` attribute of `rust_library`.
       cpp_srcs: Additional C++ source files (e.g. from inline_cpp!). Note: if
         `cpp_srcs` is non-empty, the generated `_rust_api_impl.cc` is compiled
-        textually, without precompiled header modules, which is slower.
+        textually, without precompiled header modules (slower) and without
+        `layering_check` (b/573160050).
         Other than the wrapped library's own headers, headers included by
         `cpp_srcs` should come from `generated_cpp_support_deps`.
       deps: Dependencies for the Rust API.
@@ -130,6 +133,13 @@ def rust_api_from_cpp(
             The keys can be Rust libraries, or either C++ libraries (e.g. `cc_library`) or their corresponding
             generated Rust bindings (e.g. `rust_api_from_cpp`).
       warn_on_raw_cc_deps: Whether to emit a warning when a direct dependency in `deps` is a raw C++ library without Rust bindings.
+      embedded_cpp: If True, `srcs` may contain `global_cpp!` and `inline_cpp!` blocks. The
+        embedded C++ is extracted and added to `cpp_srcs` (see there for the build cost).
+        `inline_cpp!` in `srcs` fails to compile without it. `global_cpp!` blocks must
+        `#include` every header the embedded C++ uses, including the headers of `cpp_target`.
+        Include only headers of `cpp_target` or `generated_cpp_support_deps`: other headers
+        build today, but will break once `cpp_srcs` is compiled with `layering_check`
+        (b/573160050).
       **kwargs: Additional arguments passed to the underlying rule.
     """
 
@@ -158,6 +168,23 @@ def rust_api_from_cpp(
             for f in crubit_features
         ]
 
+    target_label = "//{}:{}".format(native.package_name(), name)
+
+    # Must match the `target` passed to `extract_cpp`: `inline_cpp!` hashes it into thunk names.
+    crubit_target = target_label if embedded_cpp else ""
+    if embedded_cpp:
+        if not srcs:
+            fail("In rust_api_from_cpp target '%s': `embedded_cpp = True` requires `srcs`." % name)
+        extracted_cpp = name + "_embedded_cpp"
+        extract_cpp(
+            name = extracted_cpp,
+            srcs = srcs,
+            out = extracted_cpp + ".cc",
+            target = target_label,
+            **hint_kwargs
+        )
+        cpp_srcs = cpp_srcs + [":" + extracted_cpp]
+
     hint_name = name + ".hint"
     if not srcs and not compile_data and not cpp_srcs and not deps and not link_deps and not root_namespaces and len(crubit_features) == 1:
         native.alias(
@@ -180,6 +207,7 @@ def rust_api_from_cpp(
             crubit_features = crubit_features,
             aliases = aliases,
             warn_on_raw_cc_deps = warn_on_raw_cc_deps,
+            crubit_target = crubit_target,
             **hint_kwargs
         )
 

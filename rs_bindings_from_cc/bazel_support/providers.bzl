@@ -25,6 +25,9 @@ generated Rust bindings of this C++ target.
         "cpp_srcs": "List of C++ source files to be concatenated to the Crubit-generated C++ source.",
         "root_namespaces": "List of C++ namespaces to re-export at the root of the generated Rust bindings.",
         "aliases": "A label-to-string dictionary mapping targets to their crate names for renaming.",
+        "crubit_target": "The label (string) that `extract_cpp` used for the embedded C++ in " +
+                         "`srcs`, passed to rustc as `CRUBIT_TARGET`. Empty if the embedded C++ " +
+                         "isn't extracted.",
     },
 )
 
