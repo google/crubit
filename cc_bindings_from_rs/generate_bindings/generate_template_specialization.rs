@@ -1864,7 +1864,7 @@ fn add_specialization_prereqs<'tcx>(
     if canonical_name.unqualified.cpp_type.is_some() {
         let attrs = crubit_attr::get_attrs(db.tcx(), def_id)?;
         for path in &attrs.include_paths {
-            prereqs.includes.insert(CcInclude::from_path(path.as_str()));
+            prereqs.includes.insert(format_type::include_from_path(db, path.as_str()));
         }
     } else if canonical_name.krate_num == db.source_crate_num() {
         prereqs.fwd_decls.insert(def_id);

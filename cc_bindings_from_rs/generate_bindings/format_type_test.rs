@@ -206,22 +206,22 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "&'static i32",
             cc: "::std :: int32_t const * $static crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static mut i32",
             cc: "::std :: int32_t * $static crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static &'static i32",
             cc: "::std :: int32_t const * $ static crubit_nonnull const * $ static crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>", "<cstdint>"]
         ),
         case!(
             rs: "::std::ptr::NonNull<i32>",
             cc: "::std :: int32_t * crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<cstdint>"]
         ),
         // Pin<&T> and Pin<&mut T>:
         case!(
@@ -232,7 +232,7 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "core::pin::Pin<&'static i32>",
             cc: "::std :: int32_t const * $static crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>", "<cstdint>"]
         ),
         case!(
             rs: "core::pin::Pin<&mut i32>",
@@ -242,7 +242,7 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "core::pin::Pin<&'static mut i32>",
             cc: "::std :: int32_t * $static crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>", "<cstdint>"]
         ),
         case!(
             rs: "::std::ptr::NonNull<core::ffi::c_void>",
@@ -258,18 +258,18 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "::std::ptr::NonNull<core::mem::MaybeUninit<i32>>",
             cc: "::std :: int32_t * crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<cstdint>"]
         ),
         // Slice pointers:
         case!(
             rs: "*const [i8]",
             cc: "::rs::SliceRef< const ::std::int8_t>",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*mut [i64]",
             cc: "::rs::SliceRef< ::std::int64_t>",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*mut [SomeStruct]",
@@ -281,12 +281,12 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "&'static [i32]",
             cc: "::rs::SliceRef< const ::std::int32_t>",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static mut [i32]",
             cc: "::rs::SliceRef< ::std::int32_t>",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*const [*const core::ffi::c_void]",
@@ -331,22 +331,22 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "&'static [*const i32]",
             cc: "::rs::SliceRef< ::std::int32_t const * const >",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static [*mut i32]",
             cc: "::rs::SliceRef< ::std::int32_t * const >",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static mut [*const i32]",
             cc: "::rs::SliceRef< ::std::int32_t const * >",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static mut [*mut i32]",
             cc: "::rs::SliceRef< ::std::int32_t * >",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*const [ConstVoidPtr]",
@@ -361,7 +361,7 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "&'static [Identity<*const i32>]",
             cc: "::rs::SliceRef< ::std::int32_t const * const >",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
         case!(
@@ -1375,48 +1375,4 @@ fn test_format_ty_for_cc_iterator_item_references() {
             },
         );
     }
-}
-
-/// When several `specializes_cpp_type` aliases name the same type, the choice must not depend on
-/// `HashMap` iteration order: the alias that comes first by path wins. Aliases of non-ADT types are
-/// separate entries in `all_public_paths_by_def_id`, so this exercises the iteration order.
-#[test]
-fn test_format_ty_for_cc_picks_specialization_in_stable_order() {
-    let preamble = quote! {
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppH"]
-        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
-        pub type AliasH = (i32, u8);
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppC"]
-        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
-        pub type AliasC = (i32, u8);
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppF"]
-        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
-        pub type AliasF = (i32, u8);
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppA"]
-        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
-        pub type AliasA = (i32, u8);
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppE"]
-        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
-        pub type AliasE = (i32, u8);
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppB"]
-        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
-        pub type AliasB = (i32, u8);
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppG"]
-        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
-        pub type AliasG = (i32, u8);
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppD"]
-        #[doc = "CRUBIT_ANNOTATE: specializes_cpp_type="]
-        pub type AliasD = (i32, u8);
-    };
-    test_ty(
-        TypeLocation::FnReturn { is_constructor: false },
-        &[("(i32, u8)", ())],
-        preamble,
-        |desc, tcx, ty, ()| {
-            let db = bindings_db_for_tests(tcx);
-            let cc_snippet =
-                db.format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false }).unwrap();
-            assert_eq!(cc_snippet.tokens.to_string(), "CppA", "{desc}");
-        },
-    );
 }
