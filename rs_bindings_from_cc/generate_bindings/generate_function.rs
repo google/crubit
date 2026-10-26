@@ -20,7 +20,7 @@ use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail, ErrorList};
 use errors::{bail_to_errors, Errors, ErrorsOr};
 use flagset::FlagSet;
-use generate_comment::{generate_doc_comment, parse_extended_source_loc};
+use generate_comment::{generate_doc_comment, kythe_name_location};
 use generate_function_thunk::{
     generate_function_assertion, generate_function_thunk, generate_function_thunk_impl,
     generate_inline_cpp_call, ident_fragment_from_mangled_name, thunk_ident,
@@ -790,7 +790,7 @@ fn record_type_of_compound_assignment<'a, 'b>(
 /// Reports a fatal error generating bindings for a function.
 /// Fatal errors should only be reported
 fn report_fatal_func_error(db: &BindingsGenerator<'_>, func: &Func<'_>, msg: &str) {
-    db.fatal_errors().report(&format!("{}: {}", func.source_loc(), msg));
+    db.fatal_errors().report(&format!("{}: {}", DeclLocationOrUnknown(func.decl_loc()), msg));
 }
 
 fn api_func_shape_for_operator<'a>(
@@ -2229,8 +2229,9 @@ pub fn generate_function<'a>(
     // Check to see if we can get precise location information. If it's not available, emit a stub
     // capture tag so we don't ascribe definitions to the wrong location.
     let capture_tags = if db.kythe_annotations()
-        && let Some((file_name, start, end)) = parse_extended_source_loc(func.as_ref().source_loc())
+        && let Some((file_name, start, end)) = kythe_name_location(func.as_ref().decl_loc())
     {
+        let (start, end) = (start.to_string(), end.to_string());
         quote! { __CAPTURE_TAG__ #file_name #start #end }
     } else if db.kythe_annotations() {
         quote! { __CAPTURE_TAG__ "" "0" "0" }
@@ -2241,7 +2242,7 @@ pub fn generate_function<'a>(
     let doc_comment = generate_doc_comment(
         func.doc_comment(),
         generate_func_safety_doc(db, &func, &impl_kind, &param_idents, &param_types).as_deref(),
-        Some(func.as_ref().source_loc()),
+        func.as_ref().decl_loc(),
         db.is_golden_test(),
         db.kythe_annotations(),
     );

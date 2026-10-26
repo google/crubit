@@ -938,7 +938,7 @@ pub fn generate_record<'a>(
         doc_comment_attr: generate_doc_comment(
             record.doc_comment(),
             record_safety.as_deref(),
-            Some(record.as_ref().source_loc()),
+            record.as_ref().decl_loc(),
             db.is_golden_test(),
             db.kythe_annotations(),
         ),

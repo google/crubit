@@ -520,6 +520,19 @@ impl Display for DeclLocation<'_> {
     }
 }
 
+/// Displays an `Option<DeclLocation>`, falling back to `<unknown location>` when `None`.
+#[derive(Clone, Copy)]
+pub struct DeclLocationOrUnknown<'pb>(pub Option<DeclLocation<'pb>>);
+
+impl Display for DeclLocationOrUnknown<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.0 {
+            Some(decl_loc) => write!(f, "{decl_loc}"),
+            None => f.write_str("<unknown location>"),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct HeaderName<'pb> {
     pub(crate) name: &'pb str,
@@ -3705,7 +3718,13 @@ impl<'pb> GenericItem<'pb> for TypeAlias<'pb> {
 
 impl Display for TypeAlias<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} ({}, {})", self.rs_name(), self.owning_target(), self.source_loc())
+        write!(
+            f,
+            "{} ({}, {})",
+            self.rs_name(),
+            self.owning_target(),
+            DeclLocationOrUnknown(self.decl_loc())
+        )
     }
 }
 

@@ -17,7 +17,8 @@ use lifetime_defaults_transform::lifetime_defaults_transform_func;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use std::borrow::Cow;
-use std::fmt::Write;
+use std::fmt::{Display, Write};
+use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use unicode_ident::is_xid_continue;
 
@@ -291,12 +292,30 @@ pub fn ident_fragment_from_mangled_name(mangled_name: &str) -> Cow<'_, str> {
     ident_name.into()
 }
 
+/// Hashes the `Display` output of `T`, without building a `String`.
+///
+/// The bytes are fed to the hasher as is: unlike `str`'s `Hash`, nothing marks where the text
+/// ends, so hashing `HashDisplay(x)` is the same as `hasher.write(x.to_string().as_bytes())`.
+struct HashDisplay<T: Display>(T);
+
+impl<T: Display> Hash for HashDisplay<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        struct HasherWriter<'a, H: Hasher>(&'a mut H);
+        impl<H: Hasher> Write for HasherWriter<'_, H> {
+            fn write_str(&mut self, s: &str) -> std::fmt::Result {
+                self.0.write(s.as_bytes());
+                Ok(())
+            }
+        }
+        write!(HasherWriter(state), "{}", self.0).expect("Display failed");
+    }
+}
+
 /// Returns a string with a hash of the given function's mangled name and source location.
 /// Using only 32 bits of the hash improves the readability of the resulting identifiers,
 /// but should still keep collisions fairly unlikely.
 fn compute_disambiguator_hash(func: &Func) -> String {
     use rustc_stable_hash::{FromStableHash, SipHasher128Hash, StableSipHasher128};
-    use std::hash::Hasher;
 
     struct Hash64(u64);
     impl FromStableHash for Hash64 {
@@ -308,7 +327,11 @@ fn compute_disambiguator_hash(func: &Func) -> String {
 
     let mut hasher = StableSipHasher128::new();
     hasher.write(func.owning_target().as_str().as_bytes());
-    hasher.write(func.source_loc().as_bytes());
+    // Hash the location as it's displayed, so that the hash (and the thunk names it's part of)
+    // stays stable.
+    if let Some(decl_loc) = func.decl_loc() {
+        HashDisplay(decl_loc).hash(&mut hasher);
+    }
     let hash: Hash64 = hasher.finish();
     format!("{:08x}_", hash.0 as u32)
 }

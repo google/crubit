@@ -12,7 +12,7 @@ use database::code_snippet::{
 };
 use database::BindingsGenerator;
 use flagset::FlagSet;
-use generate_comment::{generate_doc_comment, parse_extended_source_loc};
+use generate_comment::{generate_doc_comment, kythe_name_location};
 use ir::Enum;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -95,13 +95,14 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
     let doc_comment = generate_doc_comment(
         enum_.doc_comment(),
         None,
-        Some(enum_.source_loc()),
+        enum_.decl_loc(),
         db.is_golden_test(),
         db.kythe_annotations(),
     );
     let capture_tags = if db.kythe_annotations()
-        && let Some((file_name, start, end)) = parse_extended_source_loc(enum_.source_loc())
+        && let Some((file_name, start, end)) = kythe_name_location(enum_.decl_loc())
     {
+        let (start, end) = (start.to_string(), end.to_string());
         quote! { __CAPTURE_TAG__ #file_name #start #end }
     } else if db.kythe_annotations() {
         quote! { __CAPTURE_TAG__ "" "0" "0" }

@@ -6,9 +6,7 @@
 
 use database::code_snippet::{ApiSnippets, DocCommentAttr, GeneratedItem};
 use database::{intern, BindingsGenerator};
-use ir::{Comment, GenericItem, UnsupportedItem, IR};
-use once_cell::sync::Lazy;
-use regex::Regex;
+use ir::{Comment, DeclLocation, GenericItem, UnsupportedItem, IR};
 use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::rc::Rc;
@@ -64,39 +62,31 @@ pub fn generate_top_level_comment(ir: &IR, is_golden_test: bool) -> String {
     result
 }
 
-static SOURCE_LOC_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"([^;]+);l=\d+\[(\d+),(\d+)\]").unwrap());
-
-pub fn parse_extended_source_loc(source_loc: &str) -> Option<(&str, &str, &str)> {
-    if !source_loc.starts_with("Generated from: ") {
-        // We don't currently support macro positions.
-        return None;
-    }
-    let captures = SOURCE_LOC_RE.captures_iter(source_loc).last()?;
-    let file = captures.get(1)?.as_str();
-    let offset = captures.get(2)?.as_str();
-    let end_offset = captures.get(3)?.as_str();
-    Some((file, offset, end_offset))
+/// Returns the file and the byte offsets of the name of the declaration at `decl_loc`, for Kythe
+/// annotations, or None if they aren't available.
+///
+/// For a declaration produced by a macro expansion, this is the expansion location with offsets
+/// `0, 0`.
+pub fn kythe_name_location<'pb>(
+    decl_loc: Option<DeclLocation<'pb>>,
+) -> Option<(&'pb str, u32, u32)> {
+    // Open-source builds don't emit Kythe byte offsets.
+    let _ = decl_loc;
+    None
 }
 
 pub fn generate_doc_comment(
     comment: Option<&str>,
     safety: Option<&str>,
-    source_loc: Option<&str>,
+    mut decl_loc: Option<DeclLocation<'_>>,
     is_golden_test: bool,
     kythe_annotations: bool,
 ) -> Option<DocCommentAttr> {
-    let source_loc = if !is_golden_test {
-        source_loc
-    } else {
-        if kythe_annotations {
-            source_loc
-        } else {
-            None
-        }
-    };
+    if is_golden_test && !kythe_annotations {
+        decl_loc = None;
+    }
 
-    if comment.is_none() && safety.is_none() && source_loc.is_none() {
+    if comment.is_none() && safety.is_none() && decl_loc.is_none() {
         return None;
     }
 
@@ -113,8 +103,8 @@ pub fn generate_doc_comment(
         write!(doc, "{separator}# Safety\n\n{}", safety.trim()).unwrap();
         separator = "\n\n";
     }
-    if let Some(source_loc) = source_loc {
-        write!(doc, "{separator}{source_loc}").unwrap();
+    if let Some(decl_loc) = decl_loc {
+        write!(doc, "{separator}{decl_loc}").unwrap();
     }
     Some(DocCommentAttr(doc.replace('\n', "\n ").into()))
 }
@@ -128,8 +118,12 @@ pub fn generate_unsupported<'db>(
 
     // Avoid generating unsupported item comments for standard library templates.
     if !item.must_bind() {
-        let defined_in_libcxx =
-            item.source_loc().map(|loc| loc.contains("libcxx")).unwrap_or(false);
+        let defined_in_libcxx = item.decl_loc().is_some_and(|decl_loc| {
+            [decl_loc.spelling(), decl_loc.expansion()]
+                .into_iter()
+                .flatten()
+                .any(|location| location.path().contains("libcxx"))
+        });
         if defined_in_libcxx {
             return ApiSnippets::default();
         }
@@ -139,7 +133,7 @@ pub fn generate_unsupported<'db>(
         db.errors().report(error);
     }
 
-    let source_loc = item.source_loc();
+    let source_loc = item.decl_loc().map(|decl_loc| decl_loc.to_string());
     let source_loc = match source_loc.as_deref() {
         Some(loc) if !db.is_golden_test() => loc,
         _ => "",
