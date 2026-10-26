@@ -975,8 +975,7 @@ fn test_format_item_static_method_with_generic_type_parameters() {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         let unsupported_msg =
-            "Error generating bindings for associated function `SomeStruct::generic_method` \
-                               defined at <crubit_unittests.rs>;l=12: \
+            "Error generating bindings for associated function `SomeStruct::generic_method`: \
                                No valid non-generic replacement for generic type param `T`";
         assert_cc_matches!(
             main_api.tokens,
@@ -1318,8 +1317,7 @@ fn test_format_item_method_taking_self_by_arc() {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         let unsupported_msg =
-            "Error generating bindings for associated function `SomeStruct::get_f32` \
-                               defined at <crubit_unittests.rs>;l=7: \
+            "Error generating bindings for associated function `SomeStruct::get_f32`: \
                                Unsupported `self` type `std::sync::Arc<SomeStruct>`";
         assert_cc_matches!(
             main_api.tokens,
@@ -1355,8 +1353,7 @@ fn test_format_item_method_taking_self_by_pinned_mut_ref() {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         let unsupported_msg =
-            "Error generating bindings for associated function `SomeStruct::set_f32` \
-                               defined at <crubit_unittests.rs>;l=7: \
+            "Error generating bindings for associated function `SomeStruct::set_f32`: \
                                Unsupported `self` type `std::pin::Pin<&'__anon1 mut SomeStruct>`";
         assert_cc_matches!(
             main_api.tokens,
@@ -2963,25 +2960,19 @@ fn test_error_scope_with_generic_args_reports_distinct_specializations() {
             )
         };
 
-        let point_i32_unsupported_msg = "Error generating bindings for struct `Point<i32>` \
-             defined at <crubit_unittests.rs>;l=2: \
+        let point_i32_unsupported_msg = "Error generating bindings for struct `Point<i32>`: \
              Generic types are not supported";
-        let point_u32_unsupported_msg = "Error generating bindings for struct `Point<u32>` \
-             defined at <crubit_unittests.rs>;l=2: \
+        let point_u32_unsupported_msg = "Error generating bindings for struct `Point<u32>`: \
              Generic types are not supported";
         let i32_unsupported_msg =
-            "Error generating bindings for associated function `Point::<i32>::generic_method` \
-             defined at <crubit_unittests.rs>;l=8: \
+            "Error generating bindings for associated function `Point::<i32>::generic_method`: \
              Generic functions are not supported";
         let u32_unsupported_msg =
-            "Error generating bindings for associated function `Point::<u32>::generic_method` \
-             defined at <crubit_unittests.rs>;l=8: \
+            "Error generating bindings for associated function `Point::<u32>::generic_method`: \
              Generic functions are not supported";
-        let fn_i32_unsupported_msg = "Error generating bindings for function `generic_fn::<i32>` \
-             defined at <crubit_unittests.rs>;l=11: \
+        let fn_i32_unsupported_msg = "Error generating bindings for function `generic_fn::<i32>`: \
              Generic functions are not supported";
-        let fn_u32_unsupported_msg = "Error generating bindings for function `generic_fn::<u32>` \
-             defined at <crubit_unittests.rs>;l=11: \
+        let fn_u32_unsupported_msg = "Error generating bindings for function `generic_fn::<u32>`: \
              Generic functions are not supported";
         assert_cc_matches!(
             point_i32_snippet.tokens,
@@ -3107,15 +3098,12 @@ fn test_error_scope_with_only_lifetime_args_omits_lifetimes() {
             )
         };
 
-        let borrowed_unsupported_msg = "Error generating bindings for struct `Borrowed` \
-             defined at <crubit_unittests.rs>;l=2: \
+        let borrowed_unsupported_msg = "Error generating bindings for struct `Borrowed`: \
              Lifetime types are not supported";
         let method_unsupported_msg =
-            "Error generating bindings for associated function `Borrowed::<'a>::generic_method` \
-             defined at <crubit_unittests.rs>;l=7: \
+            "Error generating bindings for associated function `Borrowed::<'a>::generic_method`: \
              Lifetime functions are not supported";
-        let fn_unsupported_msg = "Error generating bindings for function `lifetime_fn` \
-             defined at <crubit_unittests.rs>;l=10: \
+        let fn_unsupported_msg = "Error generating bindings for function `lifetime_fn`: \
              Lifetime functions are not supported";
         assert_cc_matches!(
             borrowed_snippet.tokens,
@@ -3259,28 +3247,22 @@ fn test_error_scope_with_lifetime_and_non_lifetime_args_reports_distinct_special
         };
 
         let point_i32_unsupported_msg =
-            "Error generating bindings for struct `BorrowedPoint<'static, i32>` \
-             defined at <crubit_unittests.rs>;l=2: \
+            "Error generating bindings for struct `BorrowedPoint<'static, i32>`: \
              Generic types are not supported";
         let point_u32_unsupported_msg =
-            "Error generating bindings for struct `BorrowedPoint<'static, u32>` \
-             defined at <crubit_unittests.rs>;l=2: \
+            "Error generating bindings for struct `BorrowedPoint<'static, u32>`: \
              Generic types are not supported";
         let method_i32_unsupported_msg = "Error generating bindings for associated function \
-             `BorrowedPoint::<'static, i32>::generic_method` \
-             defined at <crubit_unittests.rs>;l=8: \
+             `BorrowedPoint::<'static, i32>::generic_method`: \
              Generic functions are not supported";
         let method_u32_unsupported_msg = "Error generating bindings for associated function \
-             `BorrowedPoint::<'static, u32>::generic_method` \
-             defined at <crubit_unittests.rs>;l=8: \
+             `BorrowedPoint::<'static, u32>::generic_method`: \
              Generic functions are not supported";
         let fn_i32_unsupported_msg =
-            "Error generating bindings for function `borrowed_generic_fn::<'static, i32>` \
-             defined at <crubit_unittests.rs>;l=11: \
+            "Error generating bindings for function `borrowed_generic_fn::<'static, i32>`: \
              Generic functions are not supported";
         let fn_u32_unsupported_msg =
-            "Error generating bindings for function `borrowed_generic_fn::<'static, u32>` \
-             defined at <crubit_unittests.rs>;l=11: \
+            "Error generating bindings for function `borrowed_generic_fn::<'static, u32>`: \
              Generic functions are not supported";
         assert_cc_matches!(
             point_i32_snippet.tokens,

@@ -386,22 +386,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
 
   static MyEnum MakeF();
 
-  // Error generating bindings for variant `enums_golden::repr_c::MyEnum::Z`
-  // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=15:
+  // Error generating bindings for variant `enums_golden::repr_c::MyEnum::Z`:
   // Tuple type `()` is not supported in this context
 
   static MyEnum MakeG();
 
-  // Error generating bindings for variant `enums_golden::repr_c::MyEnum::B`
-  // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=17:
+  // Error generating bindings for variant `enums_golden::repr_c::MyEnum::B`:
   // Constructing non-tuple, struct-like enum variants is not supported:
   // b/487357254
 
-  // Error generating bindings for variant `enums_golden::repr_c::MyEnum::C`
-  // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=18:
+  // Error generating bindings for variant `enums_golden::repr_c::MyEnum::C`:
   // Constructing non-tuple, struct-like enum variants is not supported:
   // b/487357254
 
@@ -700,10 +694,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   CloneCount();
 
   // Error generating bindings for variant
-  // `enums_golden::repr_c_clone_counter::CloneCount::A` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=114:
-  // Constructing non-tuple, struct-like enum variants is not supported:
-  // b/487357254
+  // `enums_golden::repr_c_clone_counter::CloneCount::A`: Constructing
+  // non-tuple, struct-like enum variants is not supported: b/487357254
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~CloneCount() = default;
@@ -762,10 +754,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static DropMe MakeQ();
 
   // Error generating bindings for variant
-  // `enums_golden::repr_c_drop::DropMe::C` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=93:
-  // Constructing non-tuple, struct-like enum variants is not supported:
-  // b/487357254
+  // `enums_golden::repr_c_drop::DropMe::C`: Constructing non-tuple, struct-like
+  // enum variants is not supported: b/487357254
 
   // Drop::drop
   ~DropMe();
@@ -971,9 +961,7 @@ UnbindableFieldPayload final {
   UnbindableFieldPayload() = delete;
 
   // Error generating bindings for variant
-  // `enums_golden::repr_c_variant_alignment::UnbindableFieldPayload::A` defined
-  // at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=507:
+  // `enums_golden::repr_c_variant_alignment::UnbindableFieldPayload::A`:
   // Generic types are not supported yet (b/259749095)
 
   static ::enums::repr_c_variant_alignment::UnbindableFieldPayload MakeB(
@@ -1257,10 +1245,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       ::std::int32_t __param_0, ::std::int32_t __param_1);
 
   // Error generating bindings for variant
-  // `enums_golden::repr_rust::RustReprEnum::StructPayloadVariant` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=180:
-  // Constructing non-tuple, struct-like enum variants is not supported:
-  // b/487357254
+  // `enums_golden::repr_rust::RustReprEnum::StructPayloadVariant`: Constructing
+  // non-tuple, struct-like enum variants is not supported: b/487357254
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~RustReprEnum() = default;
@@ -1303,21 +1289,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   RustReprWithNamingConflictBetweenCtorsAndMethods() = delete;
 
   // Error generating bindings for variant
-  // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::NoPayloadVariant`
-  // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=230:
+  // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::NoPayloadVariant`:
   // Conflicting member function name: MakeNoPayloadVariant
 
   // Error generating bindings for variant
-  // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::TuplePayloadVariant`
-  // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=231:
+  // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::TuplePayloadVariant`:
   // Conflicting member function name: MakeTuplePayloadVariant
 
   // Error generating bindings for variant
-  // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::StructPayloadVariant`
-  // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=232:
+  // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::StructPayloadVariant`:
   // Constructing non-tuple, struct-like enum variants is not supported:
   // b/487357254
 
@@ -1371,9 +1351,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // Error generating bindings for enum
-// `enums_golden::repr_rust::RustReprWithSingleNoPayloadVariant` defined at
-// cc_bindings_from_rs/test/enums/enums.rs;l=211:
-// Zero-sized types (ZSTs) are not supported (b/258259459)
+// `enums_golden::repr_rust::RustReprWithSingleNoPayloadVariant`: Zero-sized
+// types (ZSTs) are not supported (b/258259459)
 
 //  This enum is not a "ZST" (Zero-Sized Type), because of the payload.
 //  There is no tag / discriminant field, because there is only one variant.
@@ -1452,11 +1431,10 @@ struct ::rs::impl<::enums::qr_error::QrError, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
-  // `<enums_golden::qr_error::QrError as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=347:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // `<enums_golden::qr_error::QrError as std::fmt::Debug>::fmt`: Error
+  // formatting function return type `std::result::Result<(), std::fmt::Error>`:
+  // Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  // types (ZSTs) are not supported (b/258259459)
 };
 
 template <>
@@ -1470,9 +1448,7 @@ struct ::rs::impl<::enums::qr_error::StructuredQrError,
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
-  // `<enums_golden::qr_error::StructuredQrError as std::fmt::Debug>::fmt`
-  // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=363:
+  // `<enums_golden::qr_error::StructuredQrError as std::fmt::Debug>::fmt`:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Failed to format type for the definition of
   // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)

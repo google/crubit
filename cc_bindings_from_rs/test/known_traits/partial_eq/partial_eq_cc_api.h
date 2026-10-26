@@ -139,10 +139,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // Error generating bindings for implementation
   // `<partial_eq_golden::str_and_ref_str_rhs::MyStruct as
-  // std::cmp::PartialEq<&str>>` defined at
-  // cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=115:
-  // PartialEq implementation for `&str` is not supported when `PartialEq<str>`
-  // is implemented as it may overlap.
+  // std::cmp::PartialEq<&str>>`: PartialEq implementation for `&str` is not
+  // supported when `PartialEq<str>` is implemented as it may overlap.
 
  private:
   // Field type has been replaced with a blob of bytes: Field is private
@@ -179,9 +177,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // Error generating bindings for implementation
   // `<partial_eq_golden::tuple_collision::MyStruct as std::cmp::PartialEq<(u64,
-  // bool)>>` defined at
-  // cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=52:
-  // PartialEq implementation for `(u64, bool)` is not supported when
+  // bool)>>`: PartialEq implementation for `(u64, bool)` is not supported when
   // `PartialEq<(usize, bool)>` is implemented as it may overlap.
 
   bool operator==(::rs::Tuple<::std::uint64_t, bool> const& _other) const;

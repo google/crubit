@@ -119,11 +119,10 @@ struct ::rs::impl<::rs_ops::MyBorrowedInt, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
-  // `<rs_ops_golden::MyBorrowedInt as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/known_traits/ops/rs_ops.rs;l=171:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // `<rs_ops_golden::MyBorrowedInt as std::fmt::Debug>::fmt`: Error formatting
+  // function return type `std::result::Result<(), std::fmt::Error>`: Failed to
+  // format type for the definition of `std::fmt::Error`: Zero-sized types
+  // (ZSTs) are not supported (b/258259459)
 };
 
 template <>
@@ -136,11 +135,10 @@ struct ::rs::impl<::rs_ops::MyInt, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function `<rs_ops_golden::MyInt as
-  // std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/known_traits/ops/rs_ops.rs;l=13:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // std::fmt::Debug>::fmt`: Error formatting function return type
+  // `std::result::Result<(), std::fmt::Error>`: Failed to format type for the
+  // definition of `std::fmt::Error`: Zero-sized types (ZSTs) are not supported
+  // (b/258259459)
 };
 
 namespace rs_ops {

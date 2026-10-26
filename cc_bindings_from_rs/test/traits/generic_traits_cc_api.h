@@ -48,14 +48,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for struct `generic_traits_golden::StructWithAlias`
-// defined at
-// cc_bindings_from_rs/test/traits/generic_traits.rs;l=60:
-// Zero-sized types (ZSTs) are not supported (b/258259459)
+// Error generating bindings for struct
+// `generic_traits_golden::StructWithAlias`: Zero-sized types (ZSTs) are not
+// supported (b/258259459)
 
-// Error generating bindings for trait `generic_traits_golden::TraitWithConst`
-// defined at
-// cc_bindings_from_rs/test/traits/generic_traits.rs;l=49:
+// Error generating bindings for trait `generic_traits_golden::TraitWithConst`:
 // Trait is not yet supported
 
 template <typename T0>
@@ -76,9 +73,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // Error generating bindings for implementation
 // `<generic_traits_golden::AnotherStruct as
-// generic_traits_golden::TraitWithTwoGenerics<i32, U>>` defined at
-// cc_bindings_from_rs/test/traits/generic_traits.rs;l=42:
-// Implementation of traits must specify all types to receive bindings.
+// generic_traits_golden::TraitWithTwoGenerics<i32, U>>`: Implementation of
+// traits must specify all types to receive bindings.
 
 template <>
 struct ::rs::impl<::generic_traits::StructGeneric,
@@ -146,11 +142,9 @@ inline void ::generic_traits::StructGeneric::
   static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 
-// Error generating bindings for trait `generic_traits_golden::TraitWithGeneric`
-// defined at
-// cc_bindings_from_rs/test/traits/generic_traits.rs;l=5:
-// Aliases to generic trait `generic_traits_golden::TraitWithGeneric` are not
-// supported.
+// Error generating bindings for trait
+// `generic_traits_golden::TraitWithGeneric`: Aliases to generic trait
+// `generic_traits_golden::TraitWithGeneric` are not supported.
 
 }  // namespace generic_traits
 

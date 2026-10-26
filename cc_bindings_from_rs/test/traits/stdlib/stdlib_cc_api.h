@@ -133,10 +133,8 @@ struct ::rs::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
       ::std::int32_t;
 
   // Error generating bindings for associated function `<stdlib_golden::MyStruct
-  // as std::future::Future>::poll` defined at
-  // cc_bindings_from_rs/test/traits/stdlib/stdlib.rs;l=72:
-  // Unsupported `self` type `std::pin::Pin<&'__anon1 mut
-  // stdlib_golden::MyStruct>`
+  // as std::future::Future>::poll`: Unsupported `self` type
+  // `std::pin::Pin<&'__anon1 mut stdlib_golden::MyStruct>`
 };
 
 template <>

@@ -83,11 +83,10 @@ static constexpr ::std::intptr_t RUST_USIZE_MAX = INT64_C(9223372036854775807);
 static constexpr ::std::intptr_t RUST_USIZE_MIN = INT64_MIN;
 static constexpr ::std::uintptr_t SLICE_LENGTH = 11;
 
-// Error generating bindings for constant `consts_golden::STRUCT_WITH_REF_CONST`
-// defined at
-// cc_bindings_from_rs/test/consts/consts.rs;l=129:
-// const of type `consts_golden::StructWithRef<'static>` cannot be generated as
-// it is not a C++ aggregate: Field `r` is not default-constructible in C++
+// Error generating bindings for constant
+// `consts_golden::STRUCT_WITH_REF_CONST`: const of type
+// `consts_golden::StructWithRef<'static>` cannot be generated as it is not a
+// C++ aggregate: Field `r` is not default-constructible in C++
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithArray") alignas(
     4) [[clang::trivial_abi]] StructWithArray final {
@@ -204,9 +203,8 @@ TyWithAssocConsts final {
 static constexpr ::std::uint32_t UNSIGNED_INT = UINT32_C(4294967295);
 
 // Error generating bindings for function
-// `consts_golden::fn_with_unreturnable_const` defined at
-// cc_bindings_from_rs/test/consts/consts.rs;l=117:
-// Function contains a const block that cannot return
+// `consts_golden::fn_with_unreturnable_const`: Function contains a const block
+// that cannot return
 
 }  // namespace consts
 
@@ -220,11 +218,10 @@ struct ::rs::impl<::consts::NestedStruct, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
-  // `<consts_golden::NestedStruct as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=77:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // `<consts_golden::NestedStruct as std::fmt::Debug>::fmt`: Error formatting
+  // function return type `std::result::Result<(), std::fmt::Error>`: Failed to
+  // format type for the definition of `std::fmt::Error`: Zero-sized types
+  // (ZSTs) are not supported (b/258259459)
 };
 
 template <>
@@ -237,11 +234,10 @@ struct ::rs::impl<::consts::Point, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function `<consts_golden::Point as
-  // std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=56:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // std::fmt::Debug>::fmt`: Error formatting function return type
+  // `std::result::Result<(), std::fmt::Error>`: Failed to format type for the
+  // definition of `std::fmt::Error`: Zero-sized types (ZSTs) are not supported
+  // (b/258259459)
 };
 
 template <>
@@ -254,11 +250,10 @@ struct ::rs::impl<::consts::StructWithArray, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
-  // `<consts_golden::StructWithArray as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=92:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // `<consts_golden::StructWithArray as std::fmt::Debug>::fmt`: Error
+  // formatting function return type `std::result::Result<(), std::fmt::Error>`:
+  // Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  // types (ZSTs) are not supported (b/258259459)
 };
 
 template <>
@@ -271,11 +266,10 @@ struct ::rs::impl<::consts::StructWithRef, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
-  // `<consts_golden::StructWithRef<'a> as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=123:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // `<consts_golden::StructWithRef<'a> as std::fmt::Debug>::fmt`: Error
+  // formatting function return type `std::result::Result<(), std::fmt::Error>`:
+  // Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  // types (ZSTs) are not supported (b/258259459)
 };
 
 template <>
@@ -288,11 +282,10 @@ struct ::rs::impl<::consts::StructWithStr, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
-  // `<consts_golden::StructWithStr<'a> as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=102:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // `<consts_golden::StructWithStr<'a> as std::fmt::Debug>::fmt`: Error
+  // formatting function return type `std::result::Result<(), std::fmt::Error>`:
+  // Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  // types (ZSTs) are not supported (b/258259459)
 };
 
 template <>
@@ -305,11 +298,10 @@ struct ::rs::impl<::consts::TupleStruct, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
-  // `<consts_golden::TupleStruct as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=71:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // `<consts_golden::TupleStruct as std::fmt::Debug>::fmt`: Error formatting
+  // function return type `std::result::Result<(), std::fmt::Error>`: Failed to
+  // format type for the definition of `std::fmt::Error`: Zero-sized types
+  // (ZSTs) are not supported (b/258259459)
 };
 
 namespace consts {

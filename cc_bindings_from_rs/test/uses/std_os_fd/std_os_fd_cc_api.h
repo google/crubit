@@ -19,15 +19,11 @@
 namespace std_os_fd {
 
 // Error generating bindings for function
-// `std_os_fd_golden::raw_fd_via_reexport` defined at
-// cc_bindings_from_rs/test/uses/std_os_fd/std_os_fd.rs;l=15:
-// Error handling parameter #0 of type `std::os::fd::BorrowedFd<'__anon1>`: Only
-// reachable through a transitive re-export of the standard library
-// (b/262052635).
+// `std_os_fd_golden::raw_fd_via_reexport`: Error handling parameter #0 of type
+// `std::os::fd::BorrowedFd<'__anon1>`: Only reachable through a transitive
+// re-export of the standard library (b/262052635).
 
-// Error generating bindings for function `std_os_fd_golden::raw_fd_via_std`
-// defined at
-// cc_bindings_from_rs/test/uses/std_os_fd/std_os_fd.rs;l=11:
+// Error generating bindings for function `std_os_fd_golden::raw_fd_via_std`:
 // Error handling parameter #0 of type `std::os::fd::BorrowedFd<'__anon1>`: Only
 // reachable through a transitive re-export of the standard library
 // (b/262052635).

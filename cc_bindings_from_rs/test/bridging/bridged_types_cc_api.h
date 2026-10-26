@@ -24,9 +24,7 @@
 namespace bridged_types::test_format_bridged_func_arg_by_pointer {
 
 // Error generating bindings for struct
-// `bridged_types_golden::test_format_bridged_func_arg_by_pointer::RustTypeView`
-// defined at
-// cc_bindings_from_rs/test/bridging/bridged_types.rs;l=11:
+// `bridged_types_golden::test_format_bridged_func_arg_by_pointer::RustTypeView`:
 // Type bindings for
 // bridged_types_golden::test_format_bridged_func_arg_by_pointer::RustTypeView
 // suppressed due to being mapped to an existing C++ type (CppType const*)
@@ -38,10 +36,8 @@ void test_format_bridged_func_arg_by_pointer(CppType const* __param_0);
 namespace bridged_types::test_format_bridged_func_arg_by_value {
 
 // Error generating bindings for struct
-// `bridged_types_golden::test_format_bridged_func_arg_by_value::RustType`
-// defined at
-// cc_bindings_from_rs/test/bridging/bridged_types.rs;l=24:
-// Type bindings for
+// `bridged_types_golden::test_format_bridged_func_arg_by_value::RustType`: Type
+// bindings for
 // bridged_types_golden::test_format_bridged_func_arg_by_value::RustType
 // suppressed due to being mapped to an existing C++ type (cpp_ns::CppType)
 
@@ -52,9 +48,7 @@ void test_format_bridged_func_arg_by_value(cpp_ns::CppType _a);
 namespace bridged_types::test_format_bridged_return_type_by_pointer {
 
 // Error generating bindings for struct
-// `bridged_types_golden::test_format_bridged_return_type_by_pointer::RustTypeOwned`
-// defined at
-// cc_bindings_from_rs/test/bridging/bridged_types.rs;l=37:
+// `bridged_types_golden::test_format_bridged_return_type_by_pointer::RustTypeOwned`:
 // Type bindings for
 // bridged_types_golden::test_format_bridged_return_type_by_pointer::RustTypeOwned
 // suppressed due to being mapped to an existing C++ type (CppType*)
@@ -66,9 +60,7 @@ CppType* test_format_bridged_return_type_by_pointer();
 namespace bridged_types::test_format_bridged_return_type_by_value {
 
 // Error generating bindings for struct
-// `bridged_types_golden::test_format_bridged_return_type_by_value::RustType`
-// defined at
-// cc_bindings_from_rs/test/bridging/bridged_types.rs;l=52:
+// `bridged_types_golden::test_format_bridged_return_type_by_value::RustType`:
 // Type bindings for
 // bridged_types_golden::test_format_bridged_return_type_by_value::RustType
 // suppressed due to being mapped to an existing C++ type (cpp_ns::CppType)

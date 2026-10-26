@@ -285,10 +285,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
         t);
 
 // Error generating bindings for function
-// `functions_golden::generic_fn_tests::ctor_trait_tests::return_ctor` defined
-// at
-// cc_bindings_from_rs/test/functions/functions.rs;l=367:
-// Error formatting function return type `impl ctor::Ctor<Output =
+// `functions_golden::generic_fn_tests::ctor_trait_tests::return_ctor`: Error
+// formatting function return type `impl ctor::Ctor<Output =
 // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>`: The
 // following Rust type is not supported yet: impl ctor::Ctor<Output =
 // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>
@@ -327,9 +325,7 @@ namespace functions::generic_fn_tests::into_trait_tests {
 ::std::int32_t reused_generic_param(::std::int32_t x, ::std::int32_t y);
 
 // Error generating bindings for function
-// `functions_golden::generic_fn_tests::into_trait_tests::unused_generic_param`
-// defined at
-// cc_bindings_from_rs/test/functions/functions.rs;l=237:
+// `functions_golden::generic_fn_tests::into_trait_tests::unused_generic_param`:
 // No support for replacing an _unused_ generic type param: `T`
 
 ::std::int32_t where_clause(::std::int32_t x);
@@ -439,25 +435,19 @@ struct ::rs::impl<
   // Error generating bindings for associated type
   // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as
   // ctor::CtorNew<ctor::RvalueReference<'a,
-  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::CtorType`
-  // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=334:
+  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::CtorType`:
   // Generic types are not supported yet (b/259749095)
 
   // Error generating bindings for associated type
   // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as
   // ctor::CtorNew<ctor::RvalueReference<'a,
-  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::Error`
-  // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=335:
+  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::Error`:
   // The never type `!` is only supported as a return type (b/254507801)
 
   // Error generating bindings for associated function
   // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as
   // ctor::CtorNew<ctor::RvalueReference<'a,
-  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::ctor_new`
-  // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=336:
+  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::ctor_new`:
   // Error formatting function return type
   // `ctor::RustMoveCtor<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>`:
   // Generic types are not supported yet (b/259749095)

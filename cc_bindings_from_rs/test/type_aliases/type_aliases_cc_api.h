@@ -35,8 +35,7 @@ using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
 namespace type_aliases::test_generics_matching {
 
 // Error generating bindings for type alias
-// `type_aliases_golden::test_generics_matching::FlippedAlias` defined at
-// cc_bindings_from_rs/test/type_aliases/type_aliases.rs;l=21:
+// `type_aliases_golden::test_generics_matching::FlippedAlias`:
 // crubit.rs/errors/unsupported_type: Generic type parameter `T` is not
 // supported without monomorphization
 
@@ -197,8 +196,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace type_aliases::test_generics_matching {
 
-// Error generating bindings for enum `std::result::Result` defined at
-// third_party/rust_toolchain/library/core/src/result.rs;l=558:
+// Error generating bindings for enum `std::result::Result`:
 // crubit.rs/errors/unsupported_type: Generic types are not supported yet
 // (b/259749095)
 

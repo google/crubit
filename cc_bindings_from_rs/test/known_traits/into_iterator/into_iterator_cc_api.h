@@ -43,8 +43,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::std::int32_t begin() const;
 
   // Error generating bindings for struct
-  // `into_iterator_rust_golden::ContainerWithInherentBegin` defined at
-  // cc_bindings_from_rs/test/known_traits/into_iterator/into_iterator.rs;l=100:
+  // `into_iterator_rust_golden::ContainerWithInherentBegin`:
   // into_iterator_rust_golden::ContainerWithInherentBegin has a method named
   // `begin`, `end`, or `into_iter`, which prevents binding methods for
   // IntoIterator.
@@ -79,8 +78,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                            ContainerWithRefIntoIter&& value);
 
   // Error generating bindings for struct
-  // `into_iterator_rust_golden::ContainerWithRefIntoIter` defined at
-  // cc_bindings_from_rs/test/known_traits/into_iterator/into_iterator.rs;l=88:
+  // `into_iterator_rust_golden::ContainerWithRefIntoIter`:
   // IntoIterator/Iterator impls with generic type or const parameters are not
   // supported yet.
 

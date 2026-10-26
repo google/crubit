@@ -140,12 +140,10 @@ struct ::rs::impl<::lifetimes::StructWithLifetime, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
-  // `<lifetimes_golden::StructWithLifetime<'a> as std::fmt::Debug>::fmt`
-  // defined at
-  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=8:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // `<lifetimes_golden::StructWithLifetime<'a> as std::fmt::Debug>::fmt`: Error
+  // formatting function return type `std::result::Result<(), std::fmt::Error>`:
+  // Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  // types (ZSTs) are not supported (b/258259459)
 };
 
 namespace lifetimes {

@@ -18,9 +18,7 @@
 
 namespace unit_structs {
 
-// Error generating bindings for struct `unit_structs_golden::UnitStruct`
-// defined at
-// cc_bindings_from_rs/test/structs/unit_structs/unit_structs.rs;l=8:
+// Error generating bindings for struct `unit_structs_golden::UnitStruct`:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 }

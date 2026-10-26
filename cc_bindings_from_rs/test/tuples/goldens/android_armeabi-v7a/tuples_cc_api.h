@@ -182,11 +182,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for constant `tuples_golden::TUPLE_CONSTANT`
-// defined at
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=200:
-// const of type `(i32,)` cannot be generated as only scalars, string
-// references, and simple aggregate types are supported.
+// Error generating bindings for constant `tuples_golden::TUPLE_CONSTANT`: const
+// of type `(i32,)` cannot be generated as only scalars, string references, and
+// simple aggregate types are supported.
 
 // CRUBIT_ANNOTATE: must_bind=
 void assert_non_cpp_movable_drop_count(::std::uint8_t drop_count);
@@ -423,11 +421,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
   TupleStruct(::crubit::UnsafeRelocateTag, TupleStruct&& value);
 
   // Error generating bindings for associated function
-  // `tuples_golden::TupleStruct::tuple_not_by_value` defined at
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=195:
-  // Error formatting function return type `*const ()`: Failed to format the
-  // pointee of the pointer type `*const ()`: Tuple type `()` is not supported
-  // in this context
+  // `tuples_golden::TupleStruct::tuple_not_by_value`: Error formatting function
+  // return type `*const ()`: Failed to format the pointee of the pointer type
+  // `*const ()`: Tuple type `()` is not supported in this context
 
   union {
     ::rs::Tuple<::std::int32_t> tuple_field;

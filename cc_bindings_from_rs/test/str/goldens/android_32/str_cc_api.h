@@ -28,8 +28,7 @@
 namespace str {
 static constexpr ::rs::StrRef CONST_STR_FOO = ::rs::StrRef("foo");
 
-// Error generating bindings for static `str_golden::STATIC_STR_FOO` defined at
-// cc_bindings_from_rs/test/str/str.rs;l=43:
+// Error generating bindings for static `str_golden::STATIC_STR_FOO`:
 // Unsupported rustc_hir::hir::DefKind: Static { safety: Safe, mutability: Not,
 // nested: false }
 

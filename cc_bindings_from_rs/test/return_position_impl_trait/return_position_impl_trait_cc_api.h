@@ -60,37 +60,31 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // Error generating bindings for function
-// `return_position_impl_trait_golden::return_impl_drop` defined at
-// cc_bindings_from_rs/test/return_position_impl_trait/return_position_impl_trait.rs;l=25:
-// Error formatting function return type `impl std::ops::Drop + 'static`: The
-// following Rust type is not supported yet: impl std::ops::Drop + 'static
+// `return_position_impl_trait_golden::return_impl_drop`: Error formatting
+// function return type `impl std::ops::Drop + 'static`: The following Rust type
+// is not supported yet: impl std::ops::Drop + 'static
 
 // Error generating bindings for function
-// `return_position_impl_trait_golden::return_impl_future_trivial` defined at
-// cc_bindings_from_rs/test/return_position_impl_trait/return_position_impl_trait.rs;l=41:
-// Error formatting function return type `impl std::future::Future<Output = i32>
-// + 'static`: The following Rust type is not supported yet: impl
+// `return_position_impl_trait_golden::return_impl_future_trivial`: Error
+// formatting function return type `impl std::future::Future<Output = i32> +
+// 'static`: The following Rust type is not supported yet: impl
 // std::future::Future<Output = i32> + 'static
 
 // Error generating bindings for function
-// `return_position_impl_trait_golden::return_impl_future_with_drop` defined at
-// cc_bindings_from_rs/test/return_position_impl_trait/return_position_impl_trait.rs;l=31:
-// Error formatting function return type `impl std::future::Future<Output = ()>
-// + 'static`: The following Rust type is not supported yet: impl
+// `return_position_impl_trait_golden::return_impl_future_with_drop`: Error
+// formatting function return type `impl std::future::Future<Output = ()> +
+// 'static`: The following Rust type is not supported yet: impl
 // std::future::Future<Output = ()> + 'static
 
 // Error generating bindings for function
-// `return_position_impl_trait_golden::return_impl_iterator_trivial` defined at
-// cc_bindings_from_rs/test/return_position_impl_trait/return_position_impl_trait.rs;l=56:
-// Error formatting function return type `impl std::iter::Iterator<Item = i32> +
+// `return_position_impl_trait_golden::return_impl_iterator_trivial`: Error
+// formatting function return type `impl std::iter::Iterator<Item = i32> +
 // 'static`: The following Rust type is not supported yet: impl
 // std::iter::Iterator<Item = i32> + 'static
 
 // Error generating bindings for function
-// `return_position_impl_trait_golden::return_impl_iterator_with_drop` defined
-// at
-// cc_bindings_from_rs/test/return_position_impl_trait/return_position_impl_trait.rs;l=47:
-// Error formatting function return type `impl std::iter::Iterator<Item = ()> +
+// `return_position_impl_trait_golden::return_impl_iterator_with_drop`: Error
+// formatting function return type `impl std::iter::Iterator<Item = ()> +
 // 'static`: The following Rust type is not supported yet: impl
 // std::iter::Iterator<Item = ()> + 'static
 

@@ -149,16 +149,14 @@ function_with_nested_drop_default_arrays(
     ::std::array<::std::array<::arrays::HasDropAndDefault, 2>, 2> array);
 
 // Error generating bindings for function
-// `arrays_golden::function_with_nested_droponly_arrays` defined at
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=98:
-// b/260128806 - nested array [arrays_golden::HasDrop; 2] is not supported
-// because it contains a type that implements Drop but not Default
+// `arrays_golden::function_with_nested_droponly_arrays`: b/260128806 - nested
+// array [arrays_golden::HasDrop; 2] is not supported because it contains a type
+// that implements Drop but not Default
 
 // Error generating bindings for function
-// `arrays_golden::function_with_nested_nested_droponly_arrays` defined at
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=104:
-// b/260128806 - nested array [[arrays_golden::HasDrop; 2]; 2] is not supported
-// because it contains a type that implements Drop but not Default
+// `arrays_golden::function_with_nested_nested_droponly_arrays`: b/260128806 -
+// nested array [[arrays_golden::HasDrop; 2]; 2] is not supported because it
+// contains a type that implements Drop but not Default
 
 ::std::array<::rs::Tuple<::std::int32_t, ::std::int32_t>, 2>
 function_with_tuple_array_id(

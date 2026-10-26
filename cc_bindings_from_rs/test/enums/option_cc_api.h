@@ -40,10 +40,9 @@
 namespace option {
 struct HasOptions;
 
-// Error generating bindings for struct `option_golden::BridgedType` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=234:
-// Type bindings for option_golden::BridgedType suppressed due to being mapped
-// to an existing C++ type (decltype(char(0)))
+// Error generating bindings for struct `option_golden::BridgedType`: Type
+// bindings for option_golden::BridgedType suppressed due to being mapped to an
+// existing C++ type (decltype(char(0)))
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
@@ -180,8 +179,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for struct `option_golden::OptUninhabited` defined
-// at cc_bindings_from_rs/test/enums/option.rs;l=201:
+// Error generating bindings for struct `option_golden::OptUninhabited`:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -213,13 +211,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for enum `option_golden::UninhabitedEnum` defined
-// at cc_bindings_from_rs/test/enums/option.rs;l=199:
+// Error generating bindings for enum `option_golden::UninhabitedEnum`:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
-// Error generating bindings for struct `option_golden::Unit` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=206:
-// Zero-sized types (ZSTs) are not supported (b/258259459)
+// Error generating bindings for struct `option_golden::Unit`: Zero-sized types
+// (ZSTs) are not supported (b/258259459)
 
 using Voidpf CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: Voidpf") = void*;
 

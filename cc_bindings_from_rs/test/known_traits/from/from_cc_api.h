@@ -163,10 +163,9 @@ CollidingConstructor final {
                        CollidingConstructor&& value);
 
   // Error generating bindings for implementation
-  // `<from_golden::CollidingConstructor as std::convert::From<u64>>` defined at
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=190:
-  // From implementation for `u64` is not supported when `From<usize>` is
-  // implemented as it may overlap.
+  // `<from_golden::CollidingConstructor as std::convert::From<u64>>`: From
+  // implementation for `u64` is not supported when `From<usize>` is implemented
+  // as it may overlap.
 
   explicit CollidingConstructor(::std::uintptr_t value);
 

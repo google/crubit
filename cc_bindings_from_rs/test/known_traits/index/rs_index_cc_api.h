@@ -62,10 +62,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
       __anon1) CRUBIT_LIFETIME_BOUND;
 
   // Error generating bindings for implementation `<rs_index_golden::IntPair as
-  // std::ops::Index<u64>>` defined at
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=44:
-  // Index implementation for `u64` is not supported when `Index<usize>` is
-  // implemented as it may overlap.
+  // std::ops::Index<u64>>`: Index implementation for `u64` is not supported
+  // when `Index<usize>` is implemented as it may overlap.
 
   ::std::int32_t const& $(__anon1) operator[](
       ::rs_index::CustomIndex index) const& $(__anon1) CRUBIT_LIFETIME_BOUND;
@@ -74,10 +72,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
       $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   // Error generating bindings for implementation `<rs_index_golden::IntPair as
-  // std::ops::IndexMut<u64>>` defined at
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=56:
-  // IndexMut implementation for `u64` is not supported when `IndexMut<usize>`
-  // is implemented as it may overlap.
+  // std::ops::IndexMut<u64>>`: IndexMut implementation for `u64` is not
+  // supported when `IndexMut<usize>` is implemented as it may overlap.
 
   ::std::int32_t& $(__anon1) operator[](::rs_index::CustomIndex index) &
       $(__anon1) CRUBIT_LIFETIME_BOUND;
@@ -119,10 +115,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(8)
       const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   // Error generating bindings for associated function `<rs_index_golden::Map as
-  // std::ops::IndexMut<(usize, usize)>>::index_mut` defined at
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=122:
-  // Error formatting function return type `&'__anon1 mut str`: Mutable
-  // references to `str` are not yet supported.
+  // std::ops::IndexMut<(usize, usize)>>::index_mut`: Error formatting function
+  // return type `&'__anon1 mut str`: Mutable references to `str` are not yet
+  // supported.
 
  private:
   // Field type has been replaced with a blob of bytes: Field is private

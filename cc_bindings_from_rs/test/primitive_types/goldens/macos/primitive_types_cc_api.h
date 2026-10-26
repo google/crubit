@@ -169,10 +169,9 @@ decltype(char(0)) c_char();
 decltype(char(0)) const* c_char_const_ptr();
 
 // Error generating bindings for function
-// `primitive_types_golden::return_types::c_char_func` defined at
-// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=162:
-// Error formatting function return type `extern "C" fn(ffi_11::c_char)`:
-// Function pointers can't have a thunk: Type of parameter #0 requires a thunk
+// `primitive_types_golden::return_types::c_char_func`: Error formatting
+// function return type `extern "C" fn(ffi_11::c_char)`: Function pointers can't
+// have a thunk: Type of parameter #0 requires a thunk
 
 decltype(char(0))* c_char_mut_ptr();
 

@@ -98,10 +98,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 CollidingOperators final {
  public:
   // Error generating bindings for implementation
-  // `<into_golden::CollidingOperators as std::convert::Into<u64>>` defined at
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=215:
-  // Conversion to `u64` is not supported when conversion to `usize` is
-  // implemented as they may overlap in C++.
+  // `<into_golden::CollidingOperators as std::convert::Into<u64>>`: Conversion
+  // to `u64` is not supported when conversion to `usize` is implemented as they
+  // may overlap in C++.
 
   explicit operator ::std::uintptr_t();
 

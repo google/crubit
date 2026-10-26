@@ -26,38 +26,32 @@
 namespace layout_equivalent_generics {
 
 // Error generating bindings for struct
-// `layout_equivalent_generics_golden::ByValueBridged` defined at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=197:
-// Type bindings for layout_equivalent_generics_golden::ByValueBridged
-// suppressed due to being mapped to an existing C++ type
-// (crubit::test::SomeCppType)
+// `layout_equivalent_generics_golden::ByValueBridged`: Type bindings for
+// layout_equivalent_generics_golden::ByValueBridged suppressed due to being
+// mapped to an existing C++ type (crubit::test::SomeCppType)
 
 // Error generating bindings for struct
-// `layout_equivalent_generics_golden::MyOptional` defined at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=12:
-// Type bindings for layout_equivalent_generics_golden::MyOptional suppressed
-// due to being mapped to an existing C++ type (crubit::test::MyOptional<{T}>)
+// `layout_equivalent_generics_golden::MyOptional`: Type bindings for
+// layout_equivalent_generics_golden::MyOptional suppressed due to being mapped
+// to an existing C++ type (crubit::test::MyOptional<{T}>)
 
 // Error generating bindings for struct
-// `layout_equivalent_generics_golden::MyPair` defined at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=133:
-// Type bindings for layout_equivalent_generics_golden::MyPair suppressed due to
-// being mapped to an existing C++ type (crubit::test::MyPair<{T1}, {T2}>)
+// `layout_equivalent_generics_golden::MyPair`: Type bindings for
+// layout_equivalent_generics_golden::MyPair suppressed due to being mapped to
+// an existing C++ type (crubit::test::MyPair<{T1}, {T2}>)
 
 using MyStatusAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: layout_equivalent_generics_golden :: MyStatusAlias") =
     crubit::test::MyStatus;
 
 // Error generating bindings for struct
-// `layout_equivalent_generics_golden::MyStatusOr` defined at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=79:
-// Type bindings for layout_equivalent_generics_golden::MyStatusOr suppressed
-// due to being mapped to an existing C++ type (crubit::test::MyStatusOr<{T}>)
+// `layout_equivalent_generics_golden::MyStatusOr`: Type bindings for
+// layout_equivalent_generics_golden::MyStatusOr suppressed due to being mapped
+// to an existing C++ type (crubit::test::MyStatusOr<{T}>)
 
 // Error generating bindings for type alias
-// `layout_equivalent_generics_golden::UnitAlias` defined at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=107:
-// Tuple type `()` is not supported in this context
+// `layout_equivalent_generics_golden::UnitAlias`: Tuple type `()` is not
+// supported in this context
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t accept_optional_by_reference(
@@ -68,10 +62,8 @@ using MyStatusAlias CRUBIT_INTERNAL_RUST_TYPE(
     crubit::test::MyOptional<::std::int32_t> opt);
 
 // Error generating bindings for function
-// `layout_equivalent_generics_golden::accept_optional_by_value_bridged` defined
-// at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=207:
-// Error handling parameter #0 of type
+// `layout_equivalent_generics_golden::accept_optional_by_value_bridged`: Error
+// handling parameter #0 of type
 // `layout_equivalent_generics_golden::MyOptional<layout_equivalent_generics_golden::ByValueBridged>`:
 // `layout_equivalent_generics_golden::ByValueBridged` has no layout-compatible
 // C++ type, but is used as a generic parameter

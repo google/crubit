@@ -446,9 +446,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace structs::dynamically_sized_type {
 
 // Error generating bindings for struct
-// `structs_golden::dynamically_sized_type::DynamicallySizedStruct` defined at
-// cc_bindings_from_rs/test/structs/structs.rs;l=309:
-// Bindings for dynamically sized types are not supported.
+// `structs_golden::dynamically_sized_type::DynamicallySizedStruct`: Bindings
+// for dynamically sized types are not supported.
 
 }
 
@@ -725,19 +724,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace structs::zst_fields {
 
-// Error generating bindings for struct `structs_golden::zst_fields::Zst1`
-// defined at
-// cc_bindings_from_rs/test/structs/structs.rs;l=88:
+// Error generating bindings for struct `structs_golden::zst_fields::Zst1`:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
-// Error generating bindings for struct `structs_golden::zst_fields::Zst2`
-// defined at
-// cc_bindings_from_rs/test/structs/structs.rs;l=89:
+// Error generating bindings for struct `structs_golden::zst_fields::Zst2`:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
-// Error generating bindings for struct `structs_golden::zst_fields::Zst3`
-// defined at
-// cc_bindings_from_rs/test/structs/structs.rs;l=90:
+// Error generating bindings for struct `structs_golden::zst_fields::Zst3`:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -786,12 +779,10 @@ struct ::rs::impl<::structs::display::DisplayStruct, ::rs::core::fmt::Display> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
-  // `<structs_golden::display::DisplayStruct as std::fmt::Display>::fmt`
-  // defined at
-  // cc_bindings_from_rs/test/structs/structs.rs;l=410:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // `<structs_golden::display::DisplayStruct as std::fmt::Display>::fmt`: Error
+  // formatting function return type `std::result::Result<(), std::fmt::Error>`:
+  // Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  // types (ZSTs) are not supported (b/258259459)
 };
 
 template <>
@@ -800,12 +791,11 @@ struct ::rs::impl<::structs::interior_mutability::SomeStruct,
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
-  // `<structs_golden::interior_mutability::SomeStruct as std::fmt::Debug>::fmt`
-  // defined at
-  // cc_bindings_from_rs/test/structs/structs.rs;l=358:
-  // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Failed to format type for the definition of
-  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+  // `<structs_golden::interior_mutability::SomeStruct as
+  // std::fmt::Debug>::fmt`: Error formatting function return type
+  // `std::result::Result<(), std::fmt::Error>`: Failed to format type for the
+  // definition of `std::fmt::Error`: Zero-sized types (ZSTs) are not supported
+  // (b/258259459)
 };
 
 namespace structs::abi_classification {
