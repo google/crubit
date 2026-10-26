@@ -1390,3 +1390,54 @@ fn test_format_ty_for_cc_iterator_item_references() {
         );
     }
 }
+
+#[test]
+fn test_format_ty_for_rs_cpp_specialization_alias() {
+    let preamble = quote! {
+        pub mod internal {
+            #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatusOr<{T}>"]
+            #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h"]
+            #[repr(C)]
+            pub struct MyStatusOr<T> {
+                pub has_value: bool,
+                pub value: T,
+            }
+        }
+
+        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatus"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h"]
+        #[doc="CRUBIT_ANNOTATE: specializes_cpp_type ="]
+        pub type MyStatus = internal::MyStatusOr<()>;
+
+        mod private_mod {
+            #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatusOr<{T}>"]
+            #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h"]
+            #[repr(C)]
+            pub struct UnexportedStatusOr<T> {
+                pub has_value: bool,
+                pub value: T,
+            }
+        }
+
+        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatus"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h"]
+        #[doc="CRUBIT_ANNOTATE: specializes_cpp_type ="]
+        #[allow(private_interfaces)]
+        pub type ReexportedStatusOnly = private_mod::UnexportedStatusOr<()>;
+    };
+    test_ty(
+        TypeLocation::FnReturn { is_constructor: false },
+        &[
+            ("MyStatus", ":: rust_out :: internal :: MyStatusOr < () >"),
+            ("internal::MyStatusOr<i32>", ":: rust_out :: internal :: MyStatusOr < i32 >"),
+            ("ReexportedStatusOnly", ":: rust_out :: ReexportedStatusOnly"),
+        ],
+        preamble,
+        |desc, tcx, ty, expected| {
+            let db = bindings_db_for_tests(tcx);
+            let actual = db.format_ty_for_rs(ty).unwrap().to_string();
+            let expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(actual, expected, "{desc}");
+        },
+    );
+}
