@@ -68,7 +68,10 @@ crubit_cc_test(
         "verify_iwyu_export_test.cc",
     ],
     # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
-    tags = ["no_windows"],
+    tags = [
+        "no_test_android_x86",
+        "no_windows",
+    ],
     deps = [
         ":library_with_embedded_cpp_cc_api",
         "@googletest//:gtest_main",

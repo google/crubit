@@ -81,7 +81,11 @@ crubit_cc_test(
     name = "lifetime_annotations_test",
     srcs = ["lifetime_annotations_test.cc"],
     # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
-    tags = ["no_windows"],
+    tags = [
+        "no_ios",
+        "no_test_android_arm",
+        "no_windows",
+    ],
     deps = [
         ":lifetime_annotations",
         ":lifetime_error",

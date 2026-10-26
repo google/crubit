@@ -74,10 +74,6 @@ golden_test(
 crubit_cc_test(
     name = "trait_impl_test",
     srcs = ["trait_impl_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     # TODO(b/522829368): remove `no_windows` to enable.
     tags = ["no_windows"],
     deps = [

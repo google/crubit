@@ -67,10 +67,6 @@ cc_library(
 crubit_cc_test(
     name = "multiple_crate_versions_test",
     srcs = ["multiple_crate_versions_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     # TODO(b/522829368): remove `no_windows` to enable.
     tags = ["no_windows"],
     deps = [

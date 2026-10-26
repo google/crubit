@@ -52,7 +52,9 @@ crubit_cc_test(
     # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
     # TODO(b/575815022): Re-enable once `cc_std` links on macOS.
     tags = [
+        "no_ios",
         "no_macos",
+        "no_test_android_x86",
         "no_windows",
     ],
     deps = [

@@ -53,7 +53,11 @@ crubit_cc_test(
     name = "int_test",
     srcs = ["int_test.cc"],
     # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
+    tags = [
+        "no_android",
+        "no_ios",
+        "no_windows",
+    ],
     deps = [
         ":int",
         "@fuzztest//:fuzztest_gtest_main",
@@ -75,7 +79,11 @@ crubit_cc_test(
     srcs = ["char_test.cc"],
     # TODO(b/522829368): `char_::encode_utf8` returns the wrong bytes on Windows
     # (`EncodedIsUtf8BytesTest` fails on x86_64 and x86).
-    tags = ["no_windows"],
+    tags = [
+        "no_android",
+        "no_ios",
+        "no_windows",
+    ],
     deps = [
         ":char",
         ":str_ref",
@@ -170,6 +178,8 @@ crubit_cc_test(
     name = "slice_ref_test",
     srcs = ["slice_ref_test.cc"],
     tags = [
+        "no_android",
+        "no_ios",
         # TODO(b/522829368): remove `no_windows` to enable.
         "no_windows",
         # Continuous fuzzing (autofuzz) is not supported for Crubit targets because crubit_cc_test uses
@@ -210,7 +220,11 @@ crubit_cc_test(
     name = "str_ref_test",
     srcs = ["str_ref_test.cc"],
     # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
+    tags = [
+        "no_android",
+        "no_ios",
+        "no_windows",
+    ],
     deps = [
         ":str_ref",
         "@abseil-cpp//absl/strings",
@@ -252,7 +266,11 @@ crubit_cc_test(
     name = "dyn_callable_test",
     srcs = ["dyn_callable_test.cc"],
     # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
+    tags = [
+        "no_android",
+        "no_ios",
+        "no_windows",
+    ],
     deps = [
         ":dyn_callable",
         "@abseil-cpp//absl/functional:any_invocable",
@@ -273,7 +291,11 @@ crubit_cc_test(
     name = "fn_ref_test",
     srcs = ["fn_ref_test.cc"],
     # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
+    tags = [
+        "no_android",
+        "no_ios",
+        "no_windows",
+    ],
     deps = [
         ":fn_ref",
         "@fuzztest//:fuzztest_gtest_main",
@@ -293,7 +315,11 @@ crubit_cc_test(
     name = "fn_test",
     srcs = ["fn_test.cc"],
     # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
+    tags = [
+        "no_android",
+        "no_ios",
+        "no_windows",
+    ],
     deps = [
         ":fn",
         "//support:movable",
@@ -333,7 +359,11 @@ crubit_cc_test(
     name = "iterator_adapter_test",
     srcs = ["iterator_adapter_test.cc"],
     # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
+    tags = [
+        "no_android",
+        "no_ios",
+        "no_windows",
+    ],
     deps = [
         ":iterator_adapter",
         "@fuzztest//:fuzztest_gtest_main",
@@ -415,7 +445,11 @@ crubit_cc_test(
     name = "unit_test",
     srcs = ["unit_test.cc"],
     # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
+    tags = [
+        "no_android",
+        "no_ios",
+        "no_windows",
+    ],
     deps = [
         ":unit",
         "@fuzztest//:fuzztest_gtest_main",
@@ -444,7 +478,11 @@ crubit_cc_test(
     name = "enum_tag_encoding_test",
     srcs = ["enum_tag_encoding_test.cc"],
     # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
+    tags = [
+        "no_android",
+        "no_ios",
+        "no_windows",
+    ],
     deps = [
         ":enum",
         "@fuzztest//:fuzztest_gtest_main",
@@ -457,7 +495,11 @@ crubit_cc_test(
     srcs = ["enum_storage_test.cc"],
     # TODO(b/522829368): x86 doesn't build: a tag-encoding static_assert fails on
     # 32-bit Windows (`SomeRef` is narrower than the 8-byte niche tag).
-    tags = ["no_windows"],
+    tags = [
+        "no_android",
+        "no_ios",
+        "no_windows",
+    ],
     deps = [
         ":enum",
         "@fuzztest//:fuzztest_gtest_main",
@@ -473,6 +515,8 @@ crubit_cc_test(
     ],
     # TODO(b/522829368): remove `no_windows` to enable.
     tags = [
+        "no_android",
+        "no_ios",
         "no_macos",
         "no_windows",
     ],

@@ -45,10 +45,6 @@ golden_test(
 crubit_cc_test(
     name = "stdlib_test",
     srcs = ["stdlib_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     # TODO(b/522829368): The generated rs_std.h declares `stdin()`, `stdout()` and
     # `stderr()`, which the Windows UCRT defines as macros.
     tags = ["no_windows"],

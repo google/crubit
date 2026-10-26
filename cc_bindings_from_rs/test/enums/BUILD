@@ -54,10 +54,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "enums_test",
     srcs = ["enums_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     # TODO(b/522829368): remove `no_windows` to enable.
     tags = ["no_windows"],
     deps = [
@@ -99,10 +95,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "cpp_enums_test",
     srcs = ["cpp_enums_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     # TODO(b/522829368): remove `no_windows` to enable.
     tags = ["no_windows"],
     deps = [
@@ -146,10 +138,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "option_test",
     srcs = ["option_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     # TODO(b/522829368): The generated rs_std.h declares `stdin()`, `stdout()` and
     # `stderr()`, which the Windows UCRT defines as macros.
     tags = ["no_windows"],
@@ -195,10 +183,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "result_test",
     srcs = ["result_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     # TODO(b/522829368): remove `no_windows` to enable.
     tags = ["no_windows"],
     deps = [

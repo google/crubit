@@ -29,10 +29,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "needs_feature_test",
     srcs = ["needs_feature_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     # TODO(b/522829368): remove `no_windows` to enable.
     tags = ["no_windows"],
     deps = [
