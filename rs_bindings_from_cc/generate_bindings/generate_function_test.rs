@@ -3426,6 +3426,45 @@ fn test_thunkless_accessors_virtual() -> Result<()> {
 }
 
 #[gtest]
+fn test_thunkless_accessors_constructor() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          explicit S(int x) { x_ = x; }
+         private:
+          int x_;
+        };
+        class N {
+         public:
+          explicit N(int x) { x_ = x; }
+          ~N() {}
+         private:
+          int x_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // The bodies of these constructors have the same shape as a setter's, but a constructor
+    // initializes a new object rather than updating an existing one, so both keep their thunk.
+    assert_rs_matches!(rs_api, quote! { crate::detail::...(&raw mut tmp as *mut _, x); });
+    assert_rs_matches!(
+        rs_api,
+        quote! { crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, x); }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! { extern "C" void ...(class S* __this, int x) { crubit::construct_at(__this, x); } }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! { extern "C" void ...(class N* __this, int x) { crubit::construct_at(__this, x); } }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_thunkless_accessors_underaligned_field() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"

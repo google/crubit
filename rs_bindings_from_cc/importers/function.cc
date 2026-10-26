@@ -418,6 +418,12 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(
 
 std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
     ImportContext& ictx, const clang::FunctionDecl* function_decl) {
+  // A constructor initializes a new object rather than updating an existing
+  // one, so it is never a setter, even if its body has the same shape as a
+  // setter's: `S(int x) { x_ = x; }`.
+  if (clang::isa<clang::CXXConstructorDecl>(function_decl)) {
+    return std::nullopt;
+  }
   auto* method_decl = clang::dyn_cast<clang::CXXMethodDecl>(function_decl);
   bool is_instance_method = method_decl && method_decl->isInstance();
   // Matches single-parameter free functions taking a record reference:
