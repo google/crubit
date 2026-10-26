@@ -30,6 +30,20 @@ fn test_thread_safe_struct_methods_via_shared_self_ref() {
 }
 
 #[gtest]
+fn test_thread_safe_struct_in_parameters() {
+    use thread_safe::crubit::test::{FreeFuncTakingThreadSafe, RegularStruct};
+    let s = emplace!(ThreadSafeStruct::ctor_new(()));
+    assert_eq!(s.MethodTakingThreadSafe(&s), 0);
+    assert_eq!(FreeFuncTakingThreadSafe(&s), 0);
+
+    let r = RegularStruct::default();
+    let r_ptr: *const RegularStruct = &r;
+    unsafe {
+        assert_eq!(RegularStruct::MethodTakingThreadSafe(r_ptr, &s), 0);
+    }
+}
+
+#[gtest]
 fn test_regular_struct_is_not_send_or_sync() {
     assert_not_impl_any!(thread_safe::crubit::test::RegularStruct: Send, Sync);
 }
