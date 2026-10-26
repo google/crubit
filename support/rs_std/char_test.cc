@@ -8,6 +8,7 @@
 
 #include <array>
 #include <optional>
+#include <string>
 #include <type_traits>
 
 #include "gtest/gtest.h"
@@ -186,7 +187,9 @@ FUZZ_TEST(ExpectEncodedIsUtf8FuzzTest, ExpectEncodedIsUtf8);
 
 struct EncodeTestCase {
   uint32_t data;
-  absl::Span<const char> expected_utf8_bytes;
+  // Using string instead of Span over a braced list in `testing::Values(...)`
+  // Span would dangle once the expression ends.
+  std::string expected_utf8_bytes;
 };
 
 class EncodedIsUtf8BytesTest : public testing::TestWithParam<EncodeTestCase> {};
@@ -200,16 +203,16 @@ TEST_P(EncodedIsUtf8BytesTest, EncodedIsUtf8Bytes) {
   std::array<uint8_t, 4> buffer;
   rs_std::StrRef str = c->encode_utf8(absl::MakeSpan(buffer));
   EXPECT_TRUE(rs::internal::IsUtf8(str.to_string_view()));
-  EXPECT_EQ(absl::MakeSpan(str), expected_utf8_bytes);
+  EXPECT_EQ(str.to_string_view(), expected_utf8_bytes);
 }
 
 INSTANTIATE_TEST_SUITE_P(
     EncodedIsUtf8BytesTests, EncodedIsUtf8BytesTest,
-    testing::Values(EncodeTestCase{0x00, {0x00}}, EncodeTestCase{0x01, {0x01}},
-                    EncodeTestCase{'x', {0x78}},
-                    EncodeTestCase{0xe9, {0xc3, 0xa9}},
-                    EncodeTestCase{0xa66e, {0xea, 0x99, 0xae}},
-                    EncodeTestCase{0x1f4a9, {0xf0, 0x9f, 0x92, 0xa9}}));
+    testing::Values(EncodeTestCase{0x00, std::string("\x00", 1)},
+                    EncodeTestCase{0x01, "\x01"}, EncodeTestCase{0x78, "\x78"},
+                    EncodeTestCase{0xe9, "\xc3\xa9"},
+                    EncodeTestCase{0xa66e, "\xea\x99\xae"},
+                    EncodeTestCase{0x1f4a9, "\xf0\x9f\x92\xa9"}));
 
 TEST(CharTest, AbslStringify) {
   EXPECT_EQ(absl::StrCat(rs_std::char_('x')), "x");
