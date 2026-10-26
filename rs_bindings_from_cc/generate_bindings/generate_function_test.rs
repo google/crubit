@@ -1827,6 +1827,184 @@ fn test_impl_all_relational_operators_only_binds_lt() -> Result<()> {
     Ok(())
 }
 
+/// A minimal stand-in for `<compare>`, which is not available in these tests.
+const FAKE_COMPARE_HEADER: &str = r#"
+    namespace std {
+    struct strong_ordering { signed char value; };
+    }  // namespace std
+"#;
+
+#[gtest]
+fn test_impl_spaceship_operator() -> Result<()> {
+    let proto = ir_proto_from_cc(&format!(
+        r#"#pragma clang lifetime_elision
+        {FAKE_COMPARE_HEADER}
+        struct SomeStruct final {{
+            bool operator==(const SomeStruct& other) const;
+            std::strong_ordering operator<=>(const SomeStruct& other) const;
+            int i;
+        }};"#
+    ))?;
+
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl PartialOrd for SomeStruct {
+                #[inline(always)]
+                fn partial_cmp<'a, 'b>(&'a self, other: &'b Self) -> Option<core::cmp::Ordering> {
+                    unsafe {
+                        match crate::detail::...(self, other) {
+                            -1 => Some(core::cmp::Ordering::Less),
+                            0 => Some(core::cmp::Ordering::Equal),
+                            1 => Some(core::cmp::Ordering::Greater),
+                            _ => None,
+                        }
+                    }
+                }
+            }
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { fn lt });
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" signed char ...(struct SomeStruct const * __this, struct SomeStruct const * other) {
+                return [](auto __crubit_ordering) -> signed char {
+                    if (__crubit_ordering < 0) return -1;
+                    if (__crubit_ordering == 0) return 0;
+                    if (__crubit_ordering > 0) return 1;
+                    return 2;
+                }(__this->operator<=>(*other));
+            }
+        }
+    );
+    Ok(())
+}
+
+/// If the C++ importer captures the source text of `operator<=>` (e.g. for `carcinize`), then the
+/// body of `operator<=>` is copied into `inline_cpp!`, instead of calling a thunk in `rs_api_impl`.
+/// This code path generates both the C++ call and the Rust function body separately from the
+/// thunk path (e.g. it doesn't use `generate_func_body`), so it needs separate coverage for the
+/// encoding (in C++) and decoding (in Rust) of the comparison result.
+#[gtest]
+fn test_impl_spaceship_operator_with_inline_cpp() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc_with_inline_cpp(&format!(
+        r#"{FAKE_COMPARE_HEADER}
+        struct SomeStruct final {{
+            bool operator==(const SomeStruct& other) const {{ return i == other.i; }}
+            std::strong_ordering operator<=>(const SomeStruct& other) const {{
+                return std::strong_ordering{{0}};
+            }}
+            int i;
+        }};"#
+    ))?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            match unsafe {
+                (::inline_cpp_macro::inline_cpp! {
+                    (struct SomeStruct const* __this, struct SomeStruct const* __other)
+                        -> signed char {
+                      auto&& other = *__other;
+                      {
+                        return [](auto __crubit_ordering) -> signed char {
+                          if (__crubit_ordering < 0) return -1;
+                          if (__crubit_ordering == 0) return 0;
+                          if (__crubit_ordering > 0) return 1;
+                          return 2;
+                        }(([&]() { return std::strong_ordering{0}; })());
+                      }
+                    }
+                })(...)
+            } {
+                -1 => Some(core::cmp::Ordering::Less),
+                0 => Some(core::cmp::Ordering::Equal),
+                1 => Some(core::cmp::Ordering::Greater),
+                _ => None,
+            }
+        }
+    );
+    Ok(())
+}
+
+/// A renamed `operator<=>` is bound like any other function: it doesn't implement `PartialOrd`,
+/// and its thunk doesn't encode the result.
+#[gtest]
+fn test_renamed_spaceship_operator() -> Result<()> {
+    let proto = ir_proto_from_cc(&format!(
+        r#"#pragma clang lifetime_elision
+        {FAKE_COMPARE_HEADER}
+        struct SomeStruct final {{
+            bool operator==(const SomeStruct& other) const;
+            [[clang::annotate("crubit_rust_name", "compare")]]
+            std::strong_ordering operator<=>(const SomeStruct& other) const;
+            int i;
+        }};"#
+    ))?;
+
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(rs_api, quote! { impl PartialOrd });
+    assert_rs_matches!(rs_api, quote! { pub fn compare });
+    assert_cc_matches!(rs_api_impl, quote! { __this->operator<=>(*other) });
+    assert_cc_not_matches!(rs_api_impl, quote! { __crubit_ordering });
+    Ok(())
+}
+
+/// `operator<=>` is preferred over the relational operators.
+#[gtest]
+fn test_impl_spaceship_operator_preferred_over_lt() -> Result<()> {
+    let proto = ir_proto_from_cc(&format!(
+        r#"#pragma clang lifetime_elision
+        {FAKE_COMPARE_HEADER}
+        struct SomeStruct final {{
+            bool operator==(const SomeStruct& other) const;
+            std::strong_ordering operator<=>(const SomeStruct& other) const;
+            bool operator<(const SomeStruct& other) const;
+            int i;
+        }};"#
+    ))?;
+
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
+    assert_rs_not_matches!(rs_api, quote! { fn lt });
+    expect_that!(
+        rs_api.to_string(),
+        contains_substring(
+            "Bindings for operator< were omitted because PartialOrd is already implemented via operator<=>"
+        )
+    );
+    Ok(())
+}
+
+/// `operator<=>` is only bound if it returns a comparison category type.
+#[gtest]
+fn test_impl_spaceship_operator_returning_int() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"#pragma clang lifetime_elision
+        struct SomeStruct final {
+            bool operator==(const SomeStruct& other) const;
+            int operator<=>(const SomeStruct& other) const;
+            int i;
+        };"#,
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_not_matches!(rs_api, quote! { impl PartialOrd });
+    expect_that!(
+        rs_api.to_string(),
+        contains_substring(
+            "operator<=> is only supported if it returns std::strong_ordering, std::weak_ordering, or std::partial_ordering"
+        )
+    );
+    Ok(())
+}
+
 /// When `operator<` is absent, `operator>` is the next most preferred relational operator and
 /// is bound in its place, while `<=` and `>=` defer to it.
 #[gtest]
