@@ -2426,48 +2426,6 @@ pub fn adt_needs_bindings<'tcx>(
         );
     }
 
-    if query_compiler::has_non_lifetime_generics(tcx, def_id) {
-        let generics = tcx.generics_of(def_id);
-        if generics
-            .own_params
-            .iter()
-            .any(|p| matches!(p.kind, ty::GenericParamDefKind::Const { .. }))
-        {
-            bail!("crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)");
-        }
-        let cpp_name = format_cc_ident(db, fully_qualified_name.unqualified.cpp_name.as_str())
-            .context("Error formatting item name")?;
-        #[rustversion::before(2026-04-19)]
-        let self_ty = erase_regions(tcx, tcx.type_of(def_id).instantiate_identity());
-        #[rustversion::since(2026-04-19)]
-        let self_ty = erase_regions(
-            tcx,
-            normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity()),
-        );
-        let rs_fully_qualified_name =
-            db.format_ty_for_rs(replace_all_regions_with_static(tcx, self_ty))?;
-        let cc_fully_qualified_name = quote! { todo!() };
-
-        let keyword = match tcx.adt_def(def_id).adt_kind() {
-            ty::AdtKind::Struct => quote! { struct },
-            ty::AdtKind::Enum => quote! { struct },
-            ty::AdtKind::Union => quote! { union },
-        };
-
-        return Ok(Rc::new(AdtCoreBindings {
-            common: Rc::new(CoreBindingsCommon {
-                keyword,
-                cc_short_name: quote! { #cpp_name },
-                cc_fully_qualified_name,
-                self_ty,
-                alignment_in_bytes: 1,
-                size_in_bytes: 1,
-            }),
-            def_id: Some(def_id),
-            rs_fully_qualified_name,
-        }));
-    }
-
     db.generate_adt_core(def_id)
 }
 
@@ -2490,6 +2448,7 @@ fn adt_cc_keyword(adt_def: ty::AdtDef<'_>, crubit_attrs: &crubit_attr::CrubitAtt
 }
 
 pub struct GenericAdtHeader {
+    pub canonical_name: database::FullyQualifiedName,
     pub keyword: TokenStream,
     pub cpp_name: Ident,
     pub fully_qualified_cc_name: TokenStream,
@@ -2531,7 +2490,13 @@ pub fn get_generic_adt_header<'tcx>(
 
     ensure!(!template_args.is_empty(), "Generic ADT must have at least one type parameter");
 
-    Ok(GenericAdtHeader { keyword, cpp_name, fully_qualified_cc_name, template_args })
+    Ok(GenericAdtHeader {
+        canonical_name,
+        keyword,
+        cpp_name,
+        fully_qualified_cc_name,
+        template_args,
+    })
 }
 
 /// Formats a forward declaration for a generic ADT.

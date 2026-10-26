@@ -18,7 +18,7 @@ extern crate rustc_span;
 extern crate rustc_type_ir;
 
 use arc_anyhow::{Context, Result};
-use code_gen_utils::CcInclude;
+use code_gen_utils::{CcInclude, NamespaceQualifier};
 use crubit_abi_type::CrubitAbiType;
 use crubit_attr::{CppConvertibleAttrs, CppLayoutEquivalentAttrs};
 use crubit_feature::CrubitFeature;
@@ -2570,4 +2570,42 @@ impl AsRef<str> for CcType {
             CcType::Other(cpp_type) | CcType::Pointer(cpp_type) => cpp_type.as_str(),
         }
     }
+}
+
+pub fn format_with_cc_body(
+    db: &BindingsGenerator,
+    ns: &NamespaceQualifier,
+    mut tokens: TokenStream,
+    attributes: Vec<TokenStream>,
+) -> Result<TokenStream> {
+    if tokens.is_empty() {
+        return Ok(quote! {});
+    }
+    let mut namespaces = ns.parts().map(|s| format_cc_ident(db, s)).collect::<Result<Vec<_>>>()?;
+
+    // Nested namespace syntax does not accept attributes (see b/445613694), so we have to split out
+    // the with-attribute decl to contain only the trailing namespace.
+    // TODO: b/455882065 - Figure out the correct way to handle top level aliases of deprecated
+    // definitions and remove this workaround.
+    if !attributes.is_empty() && !namespaces.is_empty() {
+        let innermost_namespace = namespaces
+            .pop()
+            .expect("there should be at least one namespace if there are attributes");
+        tokens = quote! {
+            __NEWLINE__
+            namespace #(#attributes)* #innermost_namespace { __NEWLINE__
+                #tokens __NEWLINE__
+            } __NEWLINE__
+        };
+    }
+
+    if !namespaces.is_empty() {
+        tokens = quote! {
+            __NEWLINE__
+            namespace #(#namespaces)::* { __NEWLINE__
+                #tokens __NEWLINE__
+            } __NEWLINE__
+        };
+    }
+    Ok(tokens)
 }

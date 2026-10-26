@@ -765,10 +765,17 @@ fn test_format_ty_for_rs_failures() {
             "CppTypeConstGenericStruct<42>",
             "crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)",
         ),
+        (
+            "ConstGenericStruct<42>",
+            "crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)",
+        ),
     ];
     let preamble = quote! {
         #[doc = "CRUBIT_ANNOTATE: cpp_type=CppTypeConstGenericStruct"]
         pub struct CppTypeConstGenericStruct<const N: usize> {
+            pub arr: [u8; N],
+        }
+        pub struct ConstGenericStruct<const N: usize> {
             pub arr: [u8; N],
         }
     };
@@ -777,7 +784,14 @@ fn test_format_ty_for_rs_failures() {
         &testcases,
         preamble,
         |desc, tcx, ty, expected_err| {
-            let db = bindings_db_for_tests(tcx);
+            let db = bindings_db_for_tests_with_features(
+                tcx,
+                crubit_feature::CrubitFeature::Experimental
+                    | crubit_feature::CrubitFeature::Supported
+                    | crubit_feature::CrubitFeature::Generics,
+                /* with_kythe_annotations= */ false,
+                None,
+            );
             let anyhow_err =
                 db.format_ty_for_rs(ty).expect_err(&format!("Expecting error for: {desc}"));
             let actual_err = format!("{anyhow_err:#}");

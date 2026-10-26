@@ -261,6 +261,51 @@ fn test_generated_bindings_prereq_fwd_decls_no_duplication() {
     });
 }
 
+#[test]
+fn test_generated_bindings_prereq_fwd_decls_for_generic_struct() {
+    let test_src = r#"
+            #![allow(dead_code, non_camel_case_types)]
+
+            pub fn f1(_: *const s<i32>) {}
+            pub fn f2(_: *const s<i32>) {}
+
+            pub struct s<T> {
+                pub x: T,
+            }
+        "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Experimental
+                | crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::Generics,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace rust_out {
+                    ...
+                    template <typename T>
+                    struct s;
+                    ...
+                    void f1(::rust_out::s<::std::int32_t> const* __param_0);
+                    ...
+                    void f2(::rust_out::s<::std::int32_t> const* __param_0);
+                    ...
+                    template <typename T>
+                    struct s {
+                        static_assert(false, "This template can only be used via a specialization");
+                    };
+                    ...
+                }
+            }
+        );
+    });
+}
+
 /// This test verifies that forward declarations are emitted in a
 /// deterministic order. The particular order doesn't matter _that_
 /// much, but it definitely shouldn't change every time
@@ -3502,6 +3547,251 @@ fn test_iterator_item_references() {
                     using Item CRUBIT_INTERNAL_RUST_TYPE(...) = ::std::int32_t const& $a;
                     static ::rs::Option<::std::int32_t const* $static crubit_nonnull> next(::rust_out::RefIter& self);
                 };
+                ...
+            }
+        );
+    });
+}
+
+#[test]
+fn test_user_defined_generic_adt_specialization() {
+    let test_src = r#"
+            pub struct Point<T> {
+                pub x: T,
+                pub y: T,
+            }
+
+            pub fn create_point() -> Point<i32> {
+                Point { x: 10, y: 20 }
+            }
+        "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Experimental
+                | crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::Generics,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace rust_out {
+                    ...
+                    template <typename T>
+                    struct Point {
+                        static_assert(false, "This template can only be used via a specialization");
+                    };
+                    ...
+                }
+                ...
+                template <>
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Point < i32 >") alignas(4)
+                [[clang::trivial_abi]] ::rust_out::Point<::std::int32_t> final {
+                    public:
+                        ...
+                        ::std::int32_t x{};
+                        ::std::int32_t y{};
+                        ...
+                };
+                ...
+                namespace rust_out {
+                    ...
+                    inline ::rust_out::Point<::std::int32_t> create_point() { ... }
+                    ...
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_generic_adt_unsupported_method_reports_errors_per_specialization() {
+    let test_src = r#"
+            pub struct Point<T> {
+                pub x: T,
+                pub y: T,
+            }
+
+            impl<T> Point<T> {
+                #[doc = "CRUBIT_ANNOTATE: must_bind="]
+                pub fn generic_method<U>(&self, _u: U) {}
+            }
+
+            pub fn create_i32_point() -> Point<i32> {
+                Point { x: 1, y: 2 }
+            }
+
+            pub fn create_u32_point() -> Point<u32> {
+                Point { x: 1, y: 2 }
+            }
+        "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Experimental
+                    | crubit_feature::CrubitFeature::Supported
+                    | crubit_feature::CrubitFeature::Generics,
+            );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        let i32_unsupported_msg =
+            "Error generating bindings for associated function `Point::<i32>::generic_method`: \
+             Generic methods are not supported";
+        let u32_unsupported_msg =
+            "Error generating bindings for associated function `Point::<u32>::generic_method`: \
+             Generic methods are not supported";
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                template <>
+                struct ... ::rust_out::Point<::std::int32_t> final {
+                    public:
+                        ...
+                        __COMMENT__ #i32_unsupported_msg
+                        ...
+                };
+                ...
+                template <>
+                struct ... ::rust_out::Point<::std::uint32_t> final {
+                    public:
+                        ...
+                        __COMMENT__ #u32_unsupported_msg
+                        ...
+                };
+                ...
+            }
+        );
+
+        let report_json = error_report.to_json_string();
+        assert!(
+            report_json.contains("\"name\": \"rust_out::Point::<i32>::generic_method\""),
+            "Expected error report to contain entry for Point::<i32>::generic_method, got:\n{report_json}"
+        );
+        assert!(
+            report_json.contains("\"name\": \"rust_out::Point::<u32>::generic_method\""),
+            "Expected error report to contain entry for Point::<u32>::generic_method, got:\n{report_json}"
+        );
+
+        assert!(
+            fatal_msg.contains(
+                "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                 `Point::<i32>::generic_method`"
+            ),
+            "Expected fatal_errors to record must_bind error for Point::<i32>::generic_method, got:\n{fatal_msg}"
+        );
+        assert!(
+            fatal_msg.contains(
+                "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                 `Point::<u32>::generic_method`"
+            ),
+            "Expected fatal_errors to record must_bind error for Point::<u32>::generic_method, got:\n{fatal_msg}"
+        );
+    });
+}
+
+#[test]
+fn test_generic_adt_into_constructor_emits_thunk_when_src_into_is_recursive() {
+    let test_src = r#"
+        #![allow(dead_code)]
+        pub struct Wrapper<T>(pub T);
+
+        pub struct Target<T> {
+            val: T,
+        }
+
+        impl<T> Into<Target<Wrapper<T>>> for Wrapper<T> {
+            fn into(self) -> Target<Wrapper<T>> {
+                Target { val: self }
+            }
+        }
+
+        pub fn instantiate() -> Target<Wrapper<i32>> {
+            Target { val: Wrapper(42) }
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Experimental
+                | crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::Generics,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                template <>
+                struct ... ::rust_out::Target<::rust_out::Wrapper<::std::int32_t>> final {
+                    public:
+                        ...
+                        explicit Target(::rust_out::Wrapper<::std::int32_t> value);
+                        ...
+                };
+                ...
+            }
+        );
+        assert_rs_matches!(
+            bindings.cc_api_impl,
+            quote! {
+                ...
+                <::rust_out::Wrapper<i32> as ::core::convert::Into<
+                    ::rust_out::Target<::rust_out::Wrapper<i32>>
+                >>::into
+                ...
+            }
+        );
+    });
+}
+
+#[test]
+fn test_generic_adt_type_arg_with_lifetime_or_hrtb_fn_ptr() {
+    let test_src = r#"
+        #![allow(dead_code)]
+        pub struct GenericStruct<T>(pub T);
+
+        pub struct Borrowing<'a>(pub &'a i32);
+
+        pub fn with_borrowing_adt<'a>(x: Borrowing<'a>) -> GenericStruct<Borrowing<'a>> {
+            GenericStruct(x)
+        }
+
+        pub fn with_hrtb_fn_ptr(f: extern "C" fn(&i32)) -> GenericStruct<extern "C" fn(&i32)> {
+            GenericStruct(f)
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Experimental
+                | crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::Generics,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        let borrowing_err = "Error generating bindings for function `with_borrowing_adt`: \
+            Error formatting function return type \
+            `GenericStruct<Borrowing<'a>>`: \
+            Generic type arguments containing references or lifetimes are not supported yet (b/259749095)";
+        let fn_ptr_err = "Error generating bindings for function `with_hrtb_fn_ptr`: \
+            Error formatting function return type \
+            `GenericStruct<for<'a> extern \"C\" fn(&'a i32)>`: \
+            Generic function pointers are not supported yet (b/259749023)";
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                __COMMENT__ #borrowing_err
+                ...
+                __COMMENT__ #fn_ptr_err
                 ...
             }
         );

@@ -25,21 +25,23 @@ use database::code_snippet::{
 use database::{
     AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, StaticMethodMode, TypeLocation,
 };
-use error_report::anyhow;
-use format_type::replace_all_regions_with_static;
+use error_report::{anyhow, ensure};
+use format_type::{format_with_cc_body, replace_all_regions_with_static};
 use generate_ctor::{
     generate_copy_ctor_and_assignment_operator, generate_default_ctor,
     generate_move_ctor_and_assignment_operator,
 };
 use generate_enum::{anonymous_field_ident, scalar_value_to_string};
 use generate_struct_and_union::{
-    generate_associated_item, generate_fields, generate_relocating_ctor, has_type_or_const_vars,
+    are_generics_enabled, generate_adt, generate_adt_core_for_ty, generate_associated_item,
+    generate_fields, generate_relocating_ctor, get_generic_adt_header, has_type_or_const_vars,
+    GenericAdtHeader,
 };
 use generate_unsupported::{generate_unsupported_def, generate_unsupported_def_with_args};
 use itertools::Itertools;
 use proc_macro2::Literal;
 use proc_macro2::TokenStream;
-use query_compiler::{self, get_layout, normalize_ty};
+use query_compiler::{self, get_layout, get_validated_layout, normalize_ty};
 use quote::{format_ident, quote};
 #[rustversion::since(2026-04-22)]
 use rustc_abi::LayoutData;
@@ -112,6 +114,7 @@ fn parse_adt_def_template_specialization<'tcx>(
     use database::code_snippet::EnumSpecializationKind;
     use format_type::BridgedBuiltin;
     let tcx = db.tcx();
+
     BridgedBuiltin::new(db, adt).map(|bridged_builtin| {
         match bridged_builtin {
             BridgedBuiltin::Option => {
@@ -166,13 +169,13 @@ fn parse_adt_def_template_specialization<'tcx>(
                         substs.type_at(0),
                         TypeLocation::TemplateArg,
                         db,
-                    ))?;
+                ))?;
                 let err_ty = parse_unit_in_specialization(db, substs.type_at(1))
                     .unwrap_or_else(|| FormattedTy::try_from_ty(
                         substs.type_at(1),
                         TypeLocation::TemplateArg,
                         db,
-                    ))?;
+                ))?;
 
                 let layout = get_layout(tcx, self_ty)?;
                 let tag = match layout.variants() {
@@ -190,11 +193,7 @@ fn parse_adt_def_template_specialization<'tcx>(
                     this specialization, so this case should not occur in practice."
                         )
                     }
-                    rustc_abi::Variants::Multiple { tag, .. } => {
-                        // We only need to check the tag now. We'll use the rest of the fields
-                        // in `generate_template_specialization` below.
-                        tag
-                    }
+                    rustc_abi::Variants::Multiple { tag, .. } => tag,
                 };
 
                 let tag_type_rs = tag.primitive().to_int_ty(tcx);
@@ -241,6 +240,64 @@ fn parse_adt_def_template_specialization<'tcx>(
                 })
             }
         }
+    }).or_else(|| parse_user_defined_adt_template_specialization(db, self_ty, adt, substs))
+}
+
+fn parse_user_defined_adt_template_specialization<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    self_ty: Ty<'tcx>,
+    adt: ty::AdtDef<'tcx>,
+    substs: ty::GenericArgsRef<'tcx>,
+) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
+    let tcx = db.tcx();
+    if !query_compiler::has_non_lifetime_generics(tcx, adt.did()) {
+        return None;
+    }
+    if !are_generics_enabled(db, adt.did().krate) {
+        return None;
+    }
+    // Types annotated with `cpp_type` should not be specialized. They will be handled by the
+    // logic for cpp_type.
+    if crubit_attr::get_attrs(tcx, adt.did()).ok()?.cpp_type.is_some() {
+        return None;
+    }
+    Some(build_user_defined_adt_template_specialization(db, self_ty, adt, substs))
+}
+
+fn build_user_defined_adt_template_specialization<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    self_ty: Ty<'tcx>,
+    adt: ty::AdtDef<'tcx>,
+    substs: ty::GenericArgsRef<'tcx>,
+) -> Result<AdtTemplateSpecialization<'tcx>> {
+    let tcx = db.tcx();
+    let GenericAdtHeader { fully_qualified_cc_name: adt_cc_name, .. } =
+        get_generic_adt_header(db, adt.did())?;
+
+    let mut arg_cc_tokens = Vec::new();
+    let mut prereqs = CcPrerequisites::default();
+
+    for arg_ty in substs.types() {
+        ensure!(
+            !arg_ty.walk().any(|t| {
+                t.as_region().is_some_and(|r| !matches!(r.kind(), ty::RegionKind::ReBound(..)))
+            }),
+            "Generic type arguments containing references or lifetimes are not supported yet (b/259749095)"
+        );
+        let formatted_arg = FormattedTy::try_from_ty(arg_ty, TypeLocation::TemplateArg, db)?;
+        arg_cc_tokens.push(formatted_arg.for_cc.into_tokens(&mut prereqs));
+        prereqs.forward_declare_type(arg_ty);
+    }
+    prereqs.depend_on_def(db, adt.did())?;
+
+    let self_ty_cc = CcSnippet { tokens: quote! { #adt_cc_name<#(#arg_cc_tokens),*> }, prereqs };
+    let layout = get_validated_layout(tcx, self_ty)?;
+
+    Ok(AdtTemplateSpecialization {
+        layout,
+        self_ty_rs: self_ty,
+        self_ty_cc,
+        args: AdtSpecializationArgs::UserDefinedAdt,
     })
 }
 
@@ -756,14 +813,13 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
                         element_sizes
                             .iter()
                             .enumerate()
-                            .filter_map(|(i, size)| {
-                                (*size > 0).then(|| {
-                                    let field_ident = anonymous_field_ident(i);
-                                    let expr = val(i, &field_ident);
-                                    quote! {
-                                        ::std::construct_at(&this->#field_ident, #expr);
-                                    }
-                                })
+                            .filter(|&(_, size)| *size > 0)
+                            .map(|(i, _)| {
+                                let field_ident = anonymous_field_ident(i);
+                                let expr = val(i, &field_ident);
+                                quote! {
+                                    ::std::construct_at(&this->#field_ident, #expr);
+                                }
                             })
                             .collect()
                     };
@@ -1676,9 +1732,51 @@ impl<'tcx> TemplateSpecializationExt<'tcx> for AdtTemplateSpecialization<'tcx> {
                 snippets.main_api.prereqs.forward_declare_type(inner_ty_ty);
                 snippets
             }
-            AdtSpecializationArgs::UserDefinedAdt => ApiSnippets::default(),
+            AdtSpecializationArgs::UserDefinedAdt => specialize_user_defined_adt(db, self),
         }
     }
+}
+
+fn specialize_user_defined_adt<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    spec: &AdtTemplateSpecialization<'tcx>,
+) -> ApiSnippets<'tcx> {
+    let self_ty = spec.self_ty_rs;
+    let ty::TyKind::Adt(adt_def, substs) = self_ty.kind() else {
+        panic!("Self type is not an ADT");
+    };
+    generate_unsupported::error_scope!(db, adt_def.did(), substs);
+    let core = match generate_adt_core_for_ty(db, self_ty, &spec.self_ty_cc) {
+        Ok(c) => c,
+        Err(err) => {
+            return generate_unsupported_def_with_args(db, adt_def.did(), substs, err)
+                .into_main_api();
+        }
+    };
+    let GenericAdtHeader {
+        canonical_name,
+        fully_qualified_cc_name: template_name,
+        ..
+    } = get_generic_adt_header(db, adt_def.did()).expect(
+        "Generic ADT header should have been checked in parse_user_defined_adt_template_specialization",
+    );
+
+    let mut snippets = generate_adt(db, core);
+    snippets.main_api.prereqs += spec.self_ty_cc.prereqs.clone();
+    let ns = canonical_name.cpp_ns_qualifier(db);
+    let main_tokens = snippets.main_api.tokens;
+    let cc_details_tokens = format_with_cc_body(db, &ns, snippets.cc_details.tokens, vec![])
+        .expect("Namespace formatting should have been checked in parse_user_defined_adt_template_specialization");
+    let (main_tokens, cc_details_tokens) = ifdef_guard_specialization(
+        db,
+        template_name,
+        substs.types(),
+        main_tokens,
+        cc_details_tokens,
+    );
+    snippets.main_api.tokens = main_tokens;
+    snippets.cc_details.tokens = cc_details_tokens;
+    snippets
 }
 
 /// Collect trait implementations and map them to `TemplateSpecialization::TraitImpl`.
