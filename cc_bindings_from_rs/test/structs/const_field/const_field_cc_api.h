@@ -63,18 +63,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(
-        ::rs::OptionForwardConstructible<Option, ::struct_with_const_field, U>)
+    requires ::rs::OptionForwardConstructible<Option, ::struct_with_const_field,
+                                              U>
   Option(U&& value) noexcept;
   template <typename U>
-    requires(
-        ::rs::OptionForwardConstructible<Option, ::struct_with_const_field, U>)
+    requires ::rs::OptionForwardConstructible<Option, ::struct_with_const_field,
+                                              U>
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(::rs::OptionFromStdOptional<::struct_with_const_field, Opt>)
+    requires ::rs::OptionFromStdOptional<::struct_with_const_field, Opt>
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(::rs::OptionFromStdOptional<::struct_with_const_field, Opt>)
+    requires ::rs::OptionFromStdOptional<::struct_with_const_field, Opt>
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -248,26 +248,24 @@ inline constexpr ::rs::Option<::struct_with_const_field>& ::rs::Option<
   return *this;
 }
 template <typename U>
-  requires(
-      ::rs::OptionForwardConstructible<::rs::Option<::struct_with_const_field>,
-                                       ::struct_with_const_field, U>)
+  requires ::rs::OptionForwardConstructible<
+      ::rs::Option<::struct_with_const_field>, ::struct_with_const_field, U>
 inline ::rs::Option<::struct_with_const_field>::Option(U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(
-      ::rs::OptionForwardConstructible<::rs::Option<::struct_with_const_field>,
-                                       ::struct_with_const_field, U>)
+  requires ::rs::OptionForwardConstructible<
+      ::rs::Option<::struct_with_const_field>, ::struct_with_const_field, U>
 inline ::rs::Option<::struct_with_const_field>& ::rs::Option<
     ::struct_with_const_field>::operator=(U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires(::rs::OptionFromStdOptional<::struct_with_const_field, Opt>)
+  requires ::rs::OptionFromStdOptional<::struct_with_const_field, Opt>
 inline ::rs::Option<::struct_with_const_field>::Option(Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires(::rs::OptionFromStdOptional<::struct_with_const_field, Opt>)
+  requires ::rs::OptionFromStdOptional<::struct_with_const_field, Opt>
 inline ::rs::Option<::struct_with_const_field>& ::rs::Option<
     ::struct_with_const_field>::operator=(Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));

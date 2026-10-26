@@ -330,19 +330,19 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                 constexpr Option& operator=(::std::nullopt_t) noexcept;
 
                 template <typename U>
-                  requires(::rs::OptionForwardConstructible<Option, #arg_ty, U>)
+                  requires ::rs::OptionForwardConstructible<Option, #arg_ty, U>
                 Option(U&& value) noexcept;
 
                 template <typename U>
-                  requires(::rs::OptionForwardConstructible<Option, #arg_ty, U>)
+                  requires ::rs::OptionForwardConstructible<Option, #arg_ty, U>
                 Option& operator=(U&& value) noexcept;
 
                 template <typename Opt>
-                  requires(::rs::OptionFromStdOptional<#arg_ty, Opt>)
+                  requires ::rs::OptionFromStdOptional<#arg_ty, Opt>
                 Option(Opt&& value) noexcept;
 
                 template <typename Opt>
-                  requires(::rs::OptionFromStdOptional<#arg_ty, Opt>)
+                  requires ::rs::OptionFromStdOptional<#arg_ty, Opt>
                 Option& operator=(Opt&& value) noexcept;
 
                 template <typename... Args>
@@ -391,22 +391,22 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                     } __NEWLINE__
 
                     template <typename U>
-                      requires(::rs::OptionForwardConstructible<#full_self_ty, #arg_ty, U>)
+                      requires ::rs::OptionForwardConstructible<#full_self_ty, #arg_ty, U>
                     inline #full_self_ty::Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {} __NEWLINE__
 
                     template <typename U>
-                      requires(::rs::OptionForwardConstructible<#full_self_ty, #arg_ty, U>)
+                      requires ::rs::OptionForwardConstructible<#full_self_ty, #arg_ty, U>
                     inline #full_self_ty& #full_self_ty::operator=(U&& value) noexcept {
                         base_type::operator=(::std::forward<U>(value));
                         return *this;
                     } __NEWLINE__
 
                     template <typename Opt>
-                      requires(::rs::OptionFromStdOptional<#arg_ty, Opt>)
+                      requires ::rs::OptionFromStdOptional<#arg_ty, Opt>
                     inline #full_self_ty::Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {} __NEWLINE__
 
                     template <typename Opt>
-                      requires(::rs::OptionFromStdOptional<#arg_ty, Opt>)
+                      requires ::rs::OptionFromStdOptional<#arg_ty, Opt>
                     inline #full_self_ty& #full_self_ty::operator=(Opt&& value) noexcept {
                         base_type::operator=(::std::forward<Opt>(value));
                         return *this;

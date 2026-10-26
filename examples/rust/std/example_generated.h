@@ -56,16 +56,16 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(::rs::OptionForwardConstructible<Option, ::rs::StrRef, U>)
+    requires ::rs::OptionForwardConstructible<Option, ::rs::StrRef, U>
   Option(U&& value) noexcept;
   template <typename U>
-    requires(::rs::OptionForwardConstructible<Option, ::rs::StrRef, U>)
+    requires ::rs::OptionForwardConstructible<Option, ::rs::StrRef, U>
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(::rs::OptionFromStdOptional<::rs::StrRef, Opt>)
+    requires ::rs::OptionFromStdOptional<::rs::StrRef, Opt>
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(::rs::OptionFromStdOptional<::rs::StrRef, Opt>)
+    requires ::rs::OptionFromStdOptional<::rs::StrRef, Opt>
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -226,24 +226,24 @@ inline constexpr ::rs::Option<::rs::StrRef>& ::rs::Option<
   return *this;
 }
 template <typename U>
-  requires(::rs::OptionForwardConstructible<::rs::Option<::rs::StrRef>,
-                                            ::rs::StrRef, U>)
+  requires ::rs::OptionForwardConstructible<::rs::Option<::rs::StrRef>,
+                                            ::rs::StrRef, U>
 inline ::rs::Option<::rs::StrRef>::Option(U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(::rs::OptionForwardConstructible<::rs::Option<::rs::StrRef>,
-                                            ::rs::StrRef, U>)
+  requires ::rs::OptionForwardConstructible<::rs::Option<::rs::StrRef>,
+                                            ::rs::StrRef, U>
 inline ::rs::Option<::rs::StrRef>& ::rs::Option<::rs::StrRef>::operator=(
     U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires(::rs::OptionFromStdOptional<::rs::StrRef, Opt>)
+  requires ::rs::OptionFromStdOptional<::rs::StrRef, Opt>
 inline ::rs::Option<::rs::StrRef>::Option(Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires(::rs::OptionFromStdOptional<::rs::StrRef, Opt>)
+  requires ::rs::OptionFromStdOptional<::rs::StrRef, Opt>
 inline ::rs::Option<::rs::StrRef>& ::rs::Option<::rs::StrRef>::operator=(
     Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
