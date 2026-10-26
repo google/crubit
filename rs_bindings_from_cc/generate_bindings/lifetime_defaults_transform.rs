@@ -261,9 +261,11 @@ fn decl_lifetime_arity_impl(
             bail!("Incomplete records unhandled for lifetimes: {:?}", item.cc_name_as_str())
         }
         Item::Enum(_ec) => bail!("Enums unhandled for lifetimes: {:?}", item.cc_name_as_str()),
-        Item::ExistingRustType(_ec) => {
-            bail!("Existing Rust types unhandled for lifetimes: {:?}", item.cc_name_as_str())
-        }
+        // An existing Rust type (`CRUBIT_INTERNAL_RUST_TYPE`, e.g. `absl::StatusOr<T>` under
+        // `CRUBIT_NEW_STATUS`) is spelled verbatim, and its template arguments are converted
+        // without use-site lifetimes (see `RsTypeKind::new_existing_rust_type`), so it never takes
+        // lifetime arguments.
+        Item::ExistingRustType(_) => Ok(0),
         Item::Func(_) => {
             bail!("Unexpected function found in type position: {:?}", item.cc_name_as_str())
         }

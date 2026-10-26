@@ -319,6 +319,50 @@ fn test_lifetimebound_param_with_decl_type() -> Result<()> {
 }
 
 #[gtest]
+fn test_lifetimebound_param_with_existing_rust_type_return() -> Result<()> {
+    // Regression test for b/572982724: an existing Rust type (such as `absl::StatusOr<T>` under
+    // `CRUBIT_NEW_STATUS`) returned from a function with a `[[clang::lifetimebound]]` parameter
+    // used to fail with "Existing Rust types unhandled for lifetimes".
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct [[clang::annotate("crubit_internal_rust_type", "i32")]] Existing final {
+        int x;
+      };
+      Existing f(int& i1 [[clang::lifetimebound]]);
+      "#),
+    )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: [] ... }, ...
+                ...
+                params: [
+                    FuncParam {
+                       type_: CcType { ... explicit_lifetimes: ["i1"] ... },
+                       identifier: "i1", ...
+                       ...
+                       clang_lifetimebound: true,
+                       ...
+                    }
+                ],
+                ...
+                lifetime_inputs: ["i1"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_lifetimebound_param_with_fnptr_type() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
