@@ -36,34 +36,35 @@ follows:
 The C++ binary operators below are mapped one-way into the corresponding Rust
 traits as follows:
 
-C++ API       | Rust bindings
-------------- | --------------
-`operator==`  | `PartialEq`
-`operator<=>` | `PartialOrd`
-`operator<`   | `PartialOrd`
-`operator>`   | `PartialOrd`
-`operator<=`  | `PartialOrd`
-`operator>=`  | `PartialOrd`
-`operator+`   | `Add`
-`operator-`   | `Sub`
-`operator*`   | `Mul`
-`operator/`   | `Div`
-`operator%`   | `Rem`
-`operator&`   | `BitAnd`
-`operator\|`  | `BitOr`
-`operator^`   | `BitXor`
-`operator<<`  | `Shl`
-`operator>>`  | `Shr`
-`operator+=`  | `AddAssign`
-`operator-=`  | `SubAssign`
-`operator*=`  | `MulAssign`
-`operator/=`  | `DivAssign`
-`operator%=`  | `RemAssign`
-`operator&=`  | `BitAndAssign`
-`operator\|=` | `BitOrAssign`
-`operator^=`  | `BitXorAssign`
-`operator<<=` | `ShlAssign`
-`operator>>=` | `ShrAssign`
+| C++ API       | Rust bindings                             |
+| ------------- | ----------------------------------------- |
+| `operator==`  | `PartialEq`                               |
+| `operator<=>` | `PartialOrd` (and opt-in `Eq` + `Ord` for |
+:               : `std\:\:strong_ordering`)                 :
+| `operator<`   | `PartialOrd`                              |
+| `operator>`   | `PartialOrd`                              |
+| `operator<=`  | `PartialOrd`                              |
+| `operator>=`  | `PartialOrd`                              |
+| `operator+`   | `Add`                                     |
+| `operator-`   | `Sub`                                     |
+| `operator*`   | `Mul`                                     |
+| `operator/`   | `Div`                                     |
+| `operator%`   | `Rem`                                     |
+| `operator&`   | `BitAnd`                                  |
+| `operator\|`  | `BitOr`                                   |
+| `operator^`   | `BitXor`                                  |
+| `operator<<`  | `Shl`                                     |
+| `operator>>`  | `Shr`                                     |
+| `operator+=`  | `AddAssign`                               |
+| `operator-=`  | `SubAssign`                               |
+| `operator*=`  | `MulAssign`                               |
+| `operator/=`  | `DivAssign`                               |
+| `operator%=`  | `RemAssign`                               |
+| `operator&=`  | `BitAndAssign`                            |
+| `operator\|=` | `BitOrAssign`                             |
+| `operator^=`  | `BitXorAssign`                            |
+| `operator<<=` | `ShlAssign`                               |
+| `operator>>=` | `ShrAssign`                               |
 
 The C++ unary operators below are mapped one-way into the corresponding Rust
 traits as follows:
@@ -89,6 +90,21 @@ with `operator==`.
 
 A `PartialOrd` impl is only generated if `operator==` is also available for the
 same operand types, and if the left- and right-hand operands have the same type.
+
+### `Eq` and `Ord`
+
+If `operator<=>` returns `std::strong_ordering` (and Crubit implements
+`PartialOrd` with it), then Crubit also implements `Eq` and `Ord`. This lets you
+use the type in a `BTreeMap` or `BTreeSet`, and sort it with `sort()`.
+
+For now, this requires the `strong_ordering_traits` Crubit feature
+,
+which is also part of `experimental`. This lets existing Crubit users migrate
+gradually, if they have manual `Eq` or `Ord` impls that conflict with the
+generated impls.
+
+Crubit doesn't implement `Eq` and `Ord` for `std::weak_ordering` and
+`std::partial_ordering`.
 
 ### Operators inherited from base classes
 

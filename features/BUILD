@@ -379,6 +379,18 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set under which C++ types whose `operator<=>` returns `std::strong_ordering` also
+# implement `Eq` and `Ord` (in addition to `PartialOrd`). This flag only impacts rust_api_from_cpp
+# users.
+#
+# See crubit.rs/cpp/operator_overloading
+crubit_feature_hint(
+    name = "strong_ordering_traits",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["strong_ordering_traits"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

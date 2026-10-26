@@ -113,6 +113,7 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "spaceship",
     hdrs = ["spaceship.h"],
+    aspect_hints = ["//features:strong_ordering_traits"],
 )
 
 rust_api_from_cpp(

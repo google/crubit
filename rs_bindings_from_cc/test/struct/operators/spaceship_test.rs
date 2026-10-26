@@ -80,3 +80,34 @@ fn test_spaceship_returning_not_an_ordering() {
     static_assertions::assert_impl_all!(SpaceshipReturningNotAnOrdering: PartialEq);
     static_assertions::assert_not_impl_any!(SpaceshipReturningNotAnOrdering: PartialOrd);
 }
+
+#[gtest]
+fn test_eq_and_ord_only_for_strong_ordering() {
+    static_assertions::assert_impl_all!(DefaultedStrongOrdering: Eq, Ord);
+    static_assertions::assert_impl_all!(FriendStrongOrdering: Eq, Ord);
+    static_assertions::assert_not_impl_any!(CustomWeakOrdering: Eq, Ord);
+    static_assertions::assert_not_impl_any!(DefaultedPartialOrdering: Eq, Ord);
+}
+
+#[gtest]
+fn test_strong_ordering_cmp() {
+    let s1 = DefaultedStrongOrdering { i: 1 };
+    let s2 = DefaultedStrongOrdering { i: 2 };
+
+    expect_eq!(s1.cmp(&s2), Ordering::Less);
+    expect_eq!(s2.cmp(&s1), Ordering::Greater);
+    expect_eq!(s1.cmp(&s1), Ordering::Equal);
+    expect_eq!(core::cmp::max(s1, s2).i, 2);
+}
+
+#[gtest]
+fn test_strong_ordering_in_collections() {
+    let mut v: Vec<DefaultedStrongOrdering> =
+        [3, 1, 2].into_iter().map(|i| DefaultedStrongOrdering { i }).collect();
+    v.sort();
+    expect_eq!(v.iter().map(|s| s.i).collect::<Vec<_>>(), [1, 2, 3]);
+
+    let set: std::collections::BTreeSet<FriendStrongOrdering> =
+        [3, 1, 2, 1].into_iter().map(|i| FriendStrongOrdering { i }).collect();
+    expect_eq!(set.iter().map(|s| s.i).collect::<Vec<_>>(), [1, 2, 3]);
+}

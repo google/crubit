@@ -1543,6 +1543,21 @@ fn thunkless_accessor<'a>(
     }
 }
 
+/// Returns whether `func` returns `std::strong_ordering`.
+///
+/// This only checks the name of the returned record. This is sufficient for `operator<=>`, because
+/// the C++ importer only imports `operator<=>` if it returns a comparison category type from the
+/// `std` namespace.
+fn returns_strong_ordering(db: &BindingsGenerator<'_>, func: &Func<'_>) -> bool {
+    let Ok(return_type) = db.rs_type_kind(func.return_type().clone()) else {
+        return false;
+    };
+    matches!(
+        return_type.unalias(),
+        RsTypeKind::Record { record, .. } if record.cc_name().as_str() == "strong_ordering"
+    )
+}
+
 /// Adjusts `thunk_result` (an expression that calls the C++ function, either through a thunk or
 /// through `inline_cpp!`) to match the generated Rust function, if needed:
 ///
@@ -2887,6 +2902,31 @@ pub fn generate_function<'a>(
                         &unsatisfied_where_clause,
                         trait_name,
                     )?
+                }
+                // `std::strong_ordering` implies that equal values are substitutable, so the
+                // type also gets `Eq` and `Ord`.
+                TraitName::PartialOrd { op: PartialOrdOp::Spaceship, param }
+                    if reportable_status.is_ok()
+                        && **param == self_type_for_extra
+                        && db
+                            .ir()
+                            .target_crubit_features(func.as_ref().owning_target())
+                            .contains(crubit_feature::CrubitFeature::StrongOrderingTraits)
+                        && returns_strong_ordering(db, &func) =>
+                {
+                    quote! {
+                        impl #formatted_trait_generic_params Eq for #formatted_impl_for {}
+
+                        impl #formatted_trait_generic_params Ord for #formatted_impl_for {
+                            #[inline(always)]
+                            fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+                                match self.partial_cmp(other) {
+                                    Some(ordering) => ordering,
+                                    None => unreachable!("`std::strong_ordering` is never unordered"),
+                                }
+                            }
+                        }
+                    }
                 }
                 _ => quote! {},
             };
