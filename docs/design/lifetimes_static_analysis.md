@@ -323,7 +323,7 @@ private:
 
 We should be able to infer the lifetimes of `begin()` and `end()` from the
 template itself. These member functions operate only on pointers to `T`, and the
-lifetime behavior of a pointer to `T` is independent of the type `T` itself[^3].
+lifetime behavior of a pointer to `T` is independent of the type `T` itself[^2].
 
 On the other hand, we cannot infer the lifetimes of the copy constructor. It
 calls the copy constructor of `T`, and as
@@ -472,7 +472,5 @@ at runtime.
 [^1]: The following documents provide more background material:
     [doc 1](https://groups.seas.harvard.edu/courses/cs252/2011sp/slides/Lec06-PointerAnalysis.pdf),
     [doc 2](https://yanniss.github.io/points-to-tutorial15.pdf).
-[^2]: Unless converting constructors and conversion constructors are used to
-    simulate variance.
-[^3]: Note, however, that Clang is currently very conservative in assigning
+[^2]: Note, however, that Clang is currently very conservative in assigning
     types to type-dependent expressions.
