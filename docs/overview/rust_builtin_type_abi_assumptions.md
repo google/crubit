@@ -14,11 +14,12 @@ below.
 (and can return `char` values). (Note that this section talks about the Rust
 `char` type which is different from the C++ `char` type.)
 
-[Rust documentation says](https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#char)
+[Rust documentation
+says](https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#char)
 that “Rust char is 32-bit wide” and
-[that](https://doc.rust-lang.org/reference/type-layout.html)
-`size_of::<char>() == 4` . Additionally,
-[Rust documentation describes](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)
+[that](https://doc.rust-lang.org/reference/type-layout.html) `size_of::<char>()
+== 4` . Additionally, [Rust documentation
+describes](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)
 some invalid bit patterns that may result in undefined behavior: “a value in a
 `char` which is a surrogate or above `char::MAX`”.
 
@@ -33,19 +34,20 @@ and ABI as `uint32_t` (and therefore the same ABI as `rs::char_` from
 
 The assumptions are verified by assertions that verify the properties of the
 target architecture when `cc_bindings_from_rs` runs (`layout.align()`,
-`layout.size()`, and `layout.abi()` assertions in `format_type.rs`). Similar assertions are verified on C++ side
-in `support/rs_std/char_test.cc`. These assertions seem unlikely to fail, but if
-they do, then hopefully `char_` can just be tweaked to wrap another of the C++
-integer types.
+`layout.size()`, and `layout.abi()` assertions in `format_type.rs`). Similar
+assertions are verified on C++ side in `support/rs_std/char_test.cc`. These
+assertions seem unlikely to fail, but if they do, then hopefully `char_` can
+just be tweaked to wrap another of the C++ integer types.
 
 ## Rust built-in `[T]` slice type
 
-`extern “C”` thunks generated in `..._cc_api_impl.rs` can take `&[T]`,
-`&mut [T]`, `*const [T]` and similar arguments (or return them).
+`extern “C”` thunks generated in `..._cc_api_impl.rs` can take `&[T]`, `&mut
+[T]`, `*const [T]` and similar arguments (or return them).
 
-[Rust documentation describes](https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html)
-the layout of references and pointers to arrays and slices and
-[also documents](https://doc.rust-lang.org/std/primitive.slice.html) that slice
+[Rust documentation
+describes](https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html)
+the layout of references and pointers to arrays and slices and [also
+documents](https://doc.rust-lang.org/std/primitive.slice.html) that slice
 references are “represented as a pointer and a length”.
 
 Rust does *not* document the ABI of slice references (i.e. if the pointer comes
@@ -68,18 +70,18 @@ non-null pointer as appropriate.
 
 ## Rust built-in `&str` string reference
 
-`extern “C”` thunks generated in `..._cc_api_impl.rs` can take
-`&str` and similar arguments (or return them).
-[Rust documentation says](https://doc.rust-lang.org/std/primitive.str.html) that
-“a &str is made up of two components: a pointer to some bytes, and a length”,
-but no additional ABI guarantees are specified.
+`extern “C”` thunks generated in `..._cc_api_impl.rs` can take `&str` and
+similar arguments (or return them). [Rust documentation
+says](https://doc.rust-lang.org/std/primitive.str.html) that “a \&str is made up
+of two components: a pointer to some bytes, and a length”, but no additional ABI
+guarantees are specified.
 
 `cc_bindings_from_rs` assumes that `&str` has the same ABI as `&[u8]` (see the
-previous section) with
-[the additional requirement](https://doc.rust-lang.org/std/primitive.str.html)
-that the contents of `[u8]` “are always valid UTF-8”. The `rs::StrRef` type
-enforces the UTF-8 guarantees. Runtime assertions (`check_slice_layout`) further
-verify these ABI layout assumptions.
+previous section) with [the additional
+requirement](https://doc.rust-lang.org/std/primitive.str.html) that the contents
+of `[u8]` “are always valid UTF-8”. The `rs::StrRef` type enforces the UTF-8
+guarantees. Runtime assertions (`check_slice_layout`) further verify these ABI
+layout assumptions.
 
 `cc_bindings_from_rs` does *not* assume that `&str` and `rs::StrRef` have the
 same ABI as

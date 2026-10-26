@@ -17,10 +17,10 @@ Lifetime analysis has two goals:
     attributes described in [this doc](lifetime_annotations_cpp.md).
 *   Verify lifetime-correctness of function bodies.
 
-To infer and verify lifetimes, we perform a
-[pointer analysis](https://en.wikipedia.org/wiki/Pointer_analysis)[^1]. For each
-pointer or other reference-like type, a pointer analysis determines a points-to
-set consisting of the storage locations it may point to.
+To infer and verify lifetimes, we perform a [pointer
+analysis](https://en.wikipedia.org/wiki/Pointer_analysis)[^1]. For
+each pointer or other reference-like type, a pointer analysis determines a
+points-to set consisting of the storage locations it may point to.
 
 There are different approaches to pointer analysis that can be classified
 according to various properties. The pointer analysis we perform here has the
@@ -80,8 +80,8 @@ verification. b) It allows us to associate a different points-to set with
 different local variables of reference-like type, and this is required to make
 the analysis precise enough.
 
-We perform a data-flow analysis using the
-[Clang dataflow framework](https://github.com/llvm/llvm-project/tree/main/clang/include/clang/Analysis/FlowSensitive)
+We perform a data-flow analysis using the [Clang dataflow
+framework](https://github.com/llvm/llvm-project/tree/main/clang/include/clang/Analysis/FlowSensitive)
 ([documentation](https://clang.llvm.org/docs/DataFlowAnalysisIntro.html)) to
 propagate points-to sets through the function. After the analysis is complete,
 we produce lifetime annotations from the points-to sets; if these lifetime
@@ -140,7 +140,7 @@ void foo(int* from, int** to) {
 TODO: Explain. Also talk about why, after the assignment `*to = from`, we keep
 `to_pointee_pointee` in the points-to set and how we can, in some cases,
 eliminate it. (Distinguish between scalar and aggregate pointees -- the latter
-are arrays, for example. We can only delete existing pointees if *to has a
+are arrays, for example. We can only delete existing pointees if \*to has a
 single pointee and it's scalar.)
 
 ```c++
@@ -323,7 +323,8 @@ private:
 
 We should be able to infer the lifetimes of `begin()` and `end()` from the
 template itself. These member functions operate only on pointers to `T`, and the
-lifetime behavior of a pointer to `T` is independent of the type `T` itself[^2].
+lifetime behavior of a pointer to `T` is independent of the type `T`
+itself[^2].
 
 On the other hand, we cannot infer the lifetimes of the copy constructor. It
 calls the copy constructor of `T`, and as
@@ -469,8 +470,8 @@ at runtime.
 
 ## Notes
 
-[^1]: The following documents provide more background material:
-    [doc 1](https://groups.seas.harvard.edu/courses/cs252/2011sp/slides/Lec06-PointerAnalysis.pdf),
+[^1]: The following documents provide more background material: [doc
+    1](https://groups.seas.harvard.edu/courses/cs252/2011sp/slides/Lec06-PointerAnalysis.pdf),
     [doc 2](https://yanniss.github.io/points-to-tutorial15.pdf).
 [^2]: Note, however, that Clang is currently very conservative in assigning
     types to type-dependent expressions.

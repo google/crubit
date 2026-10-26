@@ -108,9 +108,10 @@ Pros:
 Cons:
 
 -   **Assumes a particular ABI** - a function template specialization uses the
-    calling convention prescribed by the platform C++ ABI. We know that
-    [the Itanium ABI maps C++ signatures to the C ABI](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#functions)
-    and therefore will be compatible with the calling convention expected by the
+    calling convention prescribed by the platform C++ ABI. We know that [the
+    Itanium ABI maps C++ signatures to the C
+    ABI](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#functions) and
+    therefore will be compatible with the calling convention expected by the
     generated `..._rs_api.rs`. Further research is needed to investigate the
     guarantees offered by other platforms (e.g., the MSVC ABI).
 -   **Requires extra complexity** to calculate the mangled name of the function
@@ -122,8 +123,8 @@ Cons:
     -   Reimplementing `clang::MangleContext::mangleName` in Crubit seems
         fragile. One risk is bugs in Crubit's code that would make it behave
         differently from Clang (e.g. code review of the initial prototype
-        identified that
-        [mangling compression](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling-compression)
+        identified that [mangling
+        compression](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling-compression)
         was missing). Another risk is having to implement not just
         `ItaniumMangleContext`, but also `MicrosoftMangleContext`.
     -   One idea to avoid reimpliementing mangling is to explicitly specify the

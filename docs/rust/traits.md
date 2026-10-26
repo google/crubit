@@ -1,8 +1,8 @@
 # C++ bindings for Rust traits
 
-Crubit allows C++ callers to invoke Rust trait implementations. For each
-`trait SomeTrait`, Crubit generates a matching C++ `struct SomeTrait`. To call a
-trait method `SomeTrait::some_fn` implemented by `SomeType`, C++ callers can use
+Crubit allows C++ callers to invoke Rust trait implementations. For each `trait
+SomeTrait`, Crubit generates a matching C++ `struct SomeTrait`. To call a trait
+method `SomeTrait::some_fn` implemented by `SomeType`, C++ callers can use
 `SomeTrait::impl<SomeType>::some_fn(args...)`.
 
 ## Example

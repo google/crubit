@@ -2,8 +2,8 @@
 
 A C++ `class` or `struct` is mapped to a Rust `struct` with the same fields. If
 any subobject of the class cannot be represented in Rust, the class itself will
-still have bindings, but
-[the relevant subobject will be private](#opaque_fields).
+still have bindings, but [the relevant subobject will be
+private](#opaque_fields).
 
 ## Example
 
@@ -36,9 +36,9 @@ The fields on the Rust struct type are the corresponding Rust types:
     field uses the corresponding Rust type.
 *   Similarly, if the C++ field has [pointer type](../types/pointer.md), then
     the Rust field has the corresponding Rust pointer type.
-*   If the field has a user-defined type, such as a
-    [class type](classes_and_structs.md) or [enum](enums.md), then the Rust
-    field uses the bindings for that type.
+*   If the field has a user-defined type, such as a [class
+    type](classes_and_structs.md) or [enum](enums.md), then the Rust field uses
+    the bindings for that type.
 
 ### Unsupported fields {#opaque_fields}
 
@@ -69,8 +69,8 @@ be used as normal.
 
 Public static data members get bindings: compile-time integer, `bool`, integer
 array, and string_view constants become associated `const`s of the Rust struct,
-and other static data members become Rust `static`s. See
-[Static data members](static_data_members.md) for details.
+and other static data members become Rust `static`s. See [Static data
+members](static_data_members.md) for details.
 
 <span id="trivially_relocatable"></span>
 
@@ -120,10 +120,10 @@ Some examples of types that are **not** Rust-movable:
 ## Base classes {#inheritance}
 
 Rust has no inheritance, so a derived class and its base classes become
-unrelated Rust structs. The base class subobject is an
-[opaque blob](#opaque_fields), so base class fields aren't accessible through
-the derived struct. With `oo_casting`, Rust code can
-[upcast](#inherited_methods) to the base class and read the fields there.
+unrelated Rust structs. The base class subobject is an [opaque
+blob](#opaque_fields), so base class fields aren't accessible through the
+derived struct. With `oo_casting`, Rust code can [upcast](#inherited_methods) to
+the base class and read the fields there.
 
 ### Inherited methods {#inherited_methods}
 
@@ -149,6 +149,7 @@ To get inherited methods, add `//features:oo_casting` to the
     public base classes, so `derived.IsValid()` works in Rust. This only covers
     base classes defined in the same `cc_library` as the derived class, and
     leaves out methods whose name comes from more than one base class.
+
 *   The derived struct implements `oops::Inherits<Base>` for each public base
     class, including base classes from other `cc_library` targets. Rust code can
     then use the `oops::Upcast` trait to convert a `&Derived`, `*const Derived`,

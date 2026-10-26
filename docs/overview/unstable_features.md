@@ -107,11 +107,13 @@ For each feature we use, we document the following:
 ### `cfg_accessible`, `stmt_expr_attributes`, `proc_macro_hygiene`
 
 *   **Crubit feature:** N/A, used internally by Crubit
+
 *   **Use case:** Crubit uses rustc as a library, which is subject to
     backwards-incompatible changes. `cfg_accessible` makes it much easier to
     write code which is compatible with two versions of rustc at the same time.
     `stmt_expr_attributes`, `proc_macro_hygiene` lets us handle
     backwards-incompatible changes affecting individual expressions.
+
 *   **Exit strategy:** If `cfg_accessible` changes during the very same update
     we are trying to be compatible with, we can't use it in the first place. If
     it changes in a future version, then the update has already completed
@@ -234,7 +236,7 @@ struct Foo {
 
 [`disjoint_associated_types`](https://github.com/rust-lang/rfcs/pull/1672) was
 closed, but not necessarily permanently. See also
-https://github.com/rust-lang/rust/issues/20400.
+<https://github.com/rust-lang/rust/issues/20400>.
 
 Not every C++ type supports the Rust move operation. For more on this, see
 [Classes and Structs](../cpp/classes_and_structs.md#rust_movable).
@@ -249,10 +251,10 @@ Instead, these objects support lazy construction, in the same style as
 [`ctor.rs`](https://github.com/google/crubit/blob/main/support/ctor.rs). This
 results in, for example, the following API differences:
 
-`X` is rust-movable  | `X` is not rust-movable
--------------------- | ------------------------------------------
-`pub fn foo() -> X`  | `pub fn foo() -> impl Ctor<Output=X, ...>`
-`impl Add<X> for &C` | `impl<T: Ctor<Output=X>> Add<T> for &C`
+| `X` is rust-movable  | `X` is not rust-movable                    |
+| :------------------- | :----------------------------------------- |
+| `pub fn foo() -> X`  | `pub fn foo() -> impl Ctor<Output=X, ...>` |
+| `impl Add<X> for &C` | `impl<T: Ctor<Output=X>> Add<T> for &C`    |
 
 The problem comes in with operator overloading: the following is valid:
 

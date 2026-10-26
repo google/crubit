@@ -136,8 +136,8 @@ Crubit generates bindings using Bazel
 [**aspects**](https://bazel.build/extending/aspects): given an arbitrary C++
 Bazel target, Crubit generates, in an aspect, the Rust library which wraps it.
 
-This is necessary for the same reason that it's necessary for
-[protocol buffers](https://bazel.build/extending/aspects): to support transitive
+This is necessary for the same reason that it's necessary for [protocol
+buffers](https://bazel.build/extending/aspects): to support transitive
 dependencies (if A depends on B, then bindings(A) must depend on bindings(B) so
 that bindings(A) can use types from B).
 
@@ -183,7 +183,7 @@ build graph: if `B` uses a type from `A`, then `bindings(B)` uses a type from
 
 If we were to point `my_lib` directly to `my_lib_rust` via `aspect_hints`, and
 `my_lib_rust` depended on `my_lib` (to trigger bindings generation), we would
-create a dependency cycle: `my_lib_rust` -> `my_lib` -> `my_lib_rust`.
+create a dependency cycle: `my_lib_rust` -\> `my_lib` -\> `my_lib_rust`.
 
 To avoid this, the `rust_api_from_cpp` macro splits the definition into two
 parts:
@@ -195,7 +195,7 @@ parts:
 The `cc_library` target (`my_lib`) then references the configuration target
 (`my_lib_rust.hint`) in its `aspect_hints`.
 
-The dependency flow is: `my_lib_rust` -> `my_lib` -> `my_lib_rust.hint`
+The dependency flow is: `my_lib_rust` -\> `my_lib` -\> `my_lib_rust.hint`
 
 Since `my_lib_rust.hint` does not depend on `my_lib_rust` or `my_lib`, the cycle
 is broken.
@@ -271,6 +271,7 @@ type).
     flexibility, as the type becomes usable in almost every context. But if that
     is not possible, writing a new "wrapper" type can keep Rust programmers
     productive.
+
 *   Some Rust types have very special semantics, which are impossible to
     implement in the bindings for a C++ type. For example, Rust has special
     support for `Result` and `Option` in error handling via the `?` operator,

@@ -28,23 +28,23 @@ behavior of each function’s implementation.
 
 While the annotation scheme can express a large subset of Rust’s lifetime
 semantics, we have omitted some constructs that we do not expect to be necessary
-for our purposes. For example,
-[lifetime bounds](https://doc.rust-lang.org/reference/trait-bounds.html#lifetime-bounds)
+for our purposes. For example, [lifetime
+bounds](https://doc.rust-lang.org/reference/trait-bounds.html#lifetime-bounds)
 (e.g. `'a: 'b` or `T: 'a`) may be needed rarely enough that we can do without
-them, and
-[higher-ranked trait bounds](https://doc.rust-lang.org/reference/trait-bounds.html#higher-ranked-trait-bounds)
+them, and [higher-ranked trait
+bounds](https://doc.rust-lang.org/reference/trait-bounds.html#higher-ranked-trait-bounds)
 (e.g. `where for<'a> F: Fn(&'a i32)`) are possible only for function types,
 which is what they are usually needed for.
 
 We are aware of two existing schemes for annotating lifetimes and flagging
-lifetime violations in C++; we describe them in the sections
-“[Alternative considered: `[[clang::lifetimebound]]`](#alternative-considered-clang-lifetimebound)”
-and
-“[Alternative considered: P1179 / `-Wdangling-gsl`](#alternative-considered-p1179-wdangling-gsl)”
-below. Both of these schemes have limitations that make them unsuitable for our
-purposes. We plan to enable our lifetime analysis to understand the existing
-annotations by translating them into our annotation syntax internally (where
-possible).
+lifetime violations in C++; we describe them in the sections “[Alternative
+considered:
+`[[clang::lifetimebound]]`](#alternative-considered-clang-lifetimebound)” and
+“[Alternative considered: P1179 /
+`-Wdangling-gsl`](#alternative-considered-p1179-wdangling-gsl)” below. Both of
+these schemes have limitations that make them unsuitable for our purposes. We
+plan to enable our lifetime analysis to understand the existing annotations by
+translating them into our annotation syntax internally (where possible).
 
 ## Proposal {#proposal}
 
@@ -146,10 +146,10 @@ memory; rather, it can be used to refer to a specific member of any object of a
 given type. In implementation terms, a pointer to member is not an address but
 an offset.
 
-Lifetimes are annotated using the new attribute `lifetime`[^1]. The attribute
-takes one or several lifetime names as arguments.
-[Appendix A](#appendix-a-lifetime-attribute-specification) contains a formal
-description of the attribute syntax.
+Lifetimes are annotated using the new attribute `lifetime`[^1]. The
+attribute takes one or several lifetime names as arguments. [Appendix
+A](#appendix-a-lifetime-attribute-specification) contains a formal description
+of the attribute syntax.
 
 For brevity, lifetimes may be implicitly inferred in some situations; this is
 referred to as *lifetime elision*, and we describe the specific rules for this
@@ -169,7 +169,7 @@ certain situations:
 *   *Local lifetime*: The lifetime of a pointer to a variable with automatic
     storage duration.
 *   *Unknown lifetime*: A lifetime that has not been annotated and cannot be
-    implicitly inferred. \
+    implicitly inferred.\
     The concept of unknown lifetimes is important because it allows us to
     migrate a codebase to lifetime annotations incrementally. Tools that verify
     lifetime correctness should assume that operations involving unknown
@@ -244,8 +244,8 @@ means for one lifetime to *outlive* another:
 
 Note that no variable lifetime `a` outlives any other variable lifetime `b`; our
 annotation scheme does not permit specifying lifetime bounds between lifetimes
-in the way that
-[Rust does](https://doc.rust-lang.org/reference/trait-bounds.html#lifetime-bounds).
+in the way that [Rust
+does](https://doc.rust-lang.org/reference/trait-bounds.html#lifetime-bounds).
 
 Here are the rules for the correctness of lifetime conversions:
 
@@ -263,8 +263,8 @@ Here are the rules for the correctness of lifetime conversions:
     pointers.
 *   An object of a class `T` with lifetime parameters may not be converted to an
     object of the same class `T` but with different lifetime parameters; see
-    also the sections on [variance](#variance) and
-    [special member functions](#special-member-functions).
+    also the sections on [variance](#variance) and [special member
+    functions](#special-member-functions).
 
 We will describe the lifetime-correctness rules for certain other constructs in
 the specific sections that deal with those constructs below.
@@ -273,9 +273,9 @@ the specific sections that deal with those constructs below.
 
 To permit building safe abstractions on top of APIs that use unsafe lifetimes,
 we provide a way to cast unsafe lifetimes to safe lifetimes and vice versa using
-a function template called `lifetime_cast`[^2]. A `lifetime_cast` is similar to
-C++ cast operations such as `const_cast` and `static_cast` but may only be used
-to change lifetimes.
+a function template called `lifetime_cast`[^2]. A `lifetime_cast` is
+similar to C++ cast operations such as `const_cast` and `static_cast` but may
+only be used to change lifetimes.
 
 Obviously, code that uses `lifetime_cast` must guarantee that the operation is
 actually lifetime-correct, i.e. that there is no risk of a use-after-free. Like
@@ -310,13 +310,13 @@ scoped inside a namespace.
 
 To reduce verbosity, we suggest providing a macro with a short name that expands
 to the actual lifetime attribute. The single-character macro name “`$`” is not
-in widespread use in many codebases[^3]; a codebase maintainer would obviously
-want to consider carefully what to use it for, but we think lifetimes could be a
-worthwhile use. In addition to a general <code>$(<em>lifetime</em>)</code>
-macro, we could also define lifetime macros <code>$a</code> through
-<code>$z</code> to allow an even more concise annotation. As an example, this is
-what the <code>smaller()</code> example from the beginning would look like with
-this concise syntax:
+in widespread use in many codebases[^3]; a codebase maintainer would
+obviously want to consider carefully what to use it for, but we think lifetimes
+could be a worthwhile use. In addition to a general
+<code>$(<em>lifetime</em>)</code> macro, we could also define lifetime macros
+<code>$a</code> through <code>$z</code> to allow an even more concise
+annotation. As an example, this is what the <code>smaller()</code> example from
+the beginning would look like with this concise syntax:
 
 ```c++
 const std::string &$a smaller(
@@ -324,9 +324,9 @@ const std::string &$a smaller(
     const std::string &$a s2);
 ```
 
-For a more extensive example, see
-[appendix B](#appendix-b-std-string_view-with-lifetime-annotations), which shows
-what `std::string_view` would look like with these annotations.
+For a more extensive example, see [appendix
+B](#appendix-b-std-string_view-with-lifetime-annotations), which shows what
+`std::string_view` would look like with these annotations.
 
 Every codebase can of course define its own macro shortcuts that work within the
 context of the codebase. A more traditional and still concise macro name would
@@ -390,8 +390,8 @@ void AddCallback(std::function<int *$a(int *$a) [[lifetime_param(a)]]> f);
 void AddCallback(std::function<int *$a(int *$a)> f, int *$a p);
 ```
 
-Lifetime parameters on function types are analogous to
-[higher-ranked trait bounds](https://doc.rust-lang.org/reference/trait-bounds.html#higher-ranked-trait-bounds)
+Lifetime parameters on function types are analogous to [higher-ranked trait
+bounds](https://doc.rust-lang.org/reference/trait-bounds.html#higher-ranked-trait-bounds)
 in Rust; unlike Rust, however, we only allow this concept in the context of
 function types, which is where it is typically required.
 
@@ -462,11 +462,11 @@ int *$a return_ptr(int *$b p) {
 }
 ```
 
-Again, the `copy` pointer has lifetime `$a`. If we choose the substitution
-`$x` = `$a`, we can lifetime-convert the second argument but not the first
-argument (we need an `int *$a` but we have an `int *$b`). If we choose `$x` =
-`$b`, we can lifetime-convert the first argument but not the second argument (we
-need an `int *$b *` but we have an `int *$a *`).
+Again, the `copy` pointer has lifetime `$a`. If we choose the substitution `$x`
+\= `$a`, we can lifetime-convert the second argument but not the first argument
+(we need an `int *$a` but we have an `int *$b`). If we choose `$x` = `$b`, we
+can lifetime-convert the first argument but not the second argument (we need an
+`int *$b *` but we have an `int *$a *`).
 
 Because there is no substitution we can make for `$x` that allows a
 lifetime-correct conversion of the arguments of `copy_ptr` to the respective
@@ -481,10 +481,9 @@ regular lifetime patterns. Elided lifetimes are treated exactly as if they had
 been spelled out explicitly; in particular, they are subject to lifetime
 verification, so they are just as safe as explicitly annotated lifetimes.
 
-We adopt the same
-[lifetime elision rules](https://doc.rust-lang.org/reference/lifetime-elision.html)
-as Rust. We will expand on the rationale for this below, but first let us
-present the rules.
+We adopt the same [lifetime elision
+rules](https://doc.rust-lang.org/reference/lifetime-elision.html) as Rust. We
+will expand on the rationale for this below, but first let us present the rules.
 
 We call lifetimes on parameters *input lifetimes* and lifetimes on return values
 *output lifetimes*. There are three rules:
@@ -567,9 +566,9 @@ variable has automatic storage duration, the pointer has a local lifetime.
 A class may be annotated with one or several lifetime parameters by placing the
 new attribute `lifetime_param` in the class declaration, and a class annotated
 in this way is considered to be a reference-like type. All declarations of a
-class must be annotated with the same lifetime parameters. (See
-[appendix A](#appendix-a-lifetime-attribute-specification) for a formal
-description of the attribute syntax.)
+class must be annotated with the same lifetime parameters. (See [appendix
+A](#appendix-a-lifetime-attribute-specification) for a formal description of the
+attribute syntax.)
 
 When lifetime parameters are substituted with constant lifetime arguments, all
 of these lifetime arguments must outlive the lifetime of the object they are
@@ -586,7 +585,8 @@ are examples of this.
 The lifetime parameters may be used in the declarations of non-static member
 functions and non-static member variables of the class.
 
-As an example, here is how parts of `std::string_view` might be annotated[^5]:
+As an example, here is how parts of `std::string_view` might be
+annotated[^5]:
 
 ```c++
 class [[lifetime_param(a)]] string_view {
@@ -886,8 +886,8 @@ specific rules differ slightly from Rust.
 The last two rules differ from Rust, which
 [infers](https://rustc-dev-guide.rust-lang.org/variance.html) the variance of
 type and lifetime parameters on user-defined types. Unlike Rust generics, C++
-class templates are invariant with respect to their type parameters[^6], and we
-want to be consistent with this.
+class templates are invariant with respect to their type
+parameters[^6], and we want to be consistent with this.
 
 Regarding lifetime parameters on types, we restrict ourselves to invariance for
 simplicity. Rust infers the variance of lifetime parameters from the way they
@@ -902,7 +902,8 @@ annotating the variance of lifetime parameters.
 ## Alternative considered: `[[clang::lifetimebound]]` {#alternative-considered-clang-lifetimebound}
 
 Clang already provides a limited ability to annotate lifetimes with the
-[`[[clang::lifetimebound]]` attribute](https://clang.llvm.org/docs/AttributeReference.html#lifetimebound)[^7].
+[`[[clang::lifetimebound]]`
+attribute](https://clang.llvm.org/docs/AttributeReference.html#lifetimebound)[^7].
 Quoting from the documentation:
 
 > The `lifetimebound` attribute on a function parameter or implicit object
@@ -941,10 +942,13 @@ The `[[clang::lifetimebound]]` attribute provides a way to express lifetimes in
 many common scenarios, but it does have its limitations:
 
 *   There is no way to differentiate between different lifetimes.
+
 *   There is no way to annotate a static lifetime.
+
 *   The attribute attaches to function parameters and always implicitly refers
-    to the outermost reference-like type[^8]; it is not possible to attach it to
-    part of a type (e.g. to the `T *` in a `const std::vector<T *> &`).
+    to the outermost reference-like type[^8]; it is not possible to
+    attach it to part of a type (e.g. to the `T *` in a `const std::vector<T *>
+    &`).
 
 *   The single lifetime is implicitly applied to the outermost reference-like
     type in the function’s return type (or the value of the constructed object,
@@ -1028,8 +1032,8 @@ This attribute may be applied to the following:
     (specifically, the attribute-specifier-seq following the identifier)
 
 The attribute takes one or more arguments. Each of these arguments must be an
-identifier[^9]; each argument defines a lifetime parameter for the corresponding
-class.
+identifier[^9]; each argument defines a lifetime parameter for the
+corresponding class.
 
 If the class definition or alias declaration is nested within a class that
 itself has a `lifetime_param` attribute, none of the lifetime parameter names of
@@ -1041,8 +1045,8 @@ definition or alias declaration.
 This attribute may be applied to the following:
 
 *   **Types and pointer operators in a function declaration, member function
-    declaration, non-static member variable declaration, or alias
-    declaration** \
+    declaration, non-static member variable declaration, or alias declaration**
+      
     More formally, within the return type, the
     [trailing-return-type](https://eel.is/c++draft/dcl.dcl#nt:trailing-return-type)
     or the
@@ -1060,7 +1064,7 @@ This attribute may be applied to the following:
         within a [declarator](https://eel.is/c++draft/dcl.dcl#nt:declarator) and
         an
         [abstract-declarator](https://eel.is/c++draft/dcl.dcl#nt:abstract-declarator))
-*   **A non-static member function declaration** \
+*   **A non-static member function declaration**\
     More formally, within a
     [member-declarator](https://eel.is/c++draft/class.mem.general#nt:member-declarator)
     for a non-static member function, the attribute may appear in the
@@ -1117,7 +1121,7 @@ In addition, the following constraints apply:
 
 To illustrate how lifetime annotations work on a larger code sample, here is an
 annotated version of interesting parts of `std::string_view`. To keep the code
-clear, we have omitted basic\_string\_view and simply stamped out `string_view`
+clear, we have omitted basic_string_view and simply stamped out `string_view`
 for the template arguments used in its definition.
 
 ```c++

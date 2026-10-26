@@ -18,13 +18,13 @@ same as Rust references or pointer to `T`. In all other contexts, including when
 passing or returning a `MaybeUninit<T>` by value, `MaybeUninit<T>` does not map
 to any C++ type[^cpp_maybeuninit].
 
-Rust                    | C++
------------------------ | -----------
-`&MaybeUninit<T>`       | `const T&`
-`&mut MaybeUninit<T>`   | `T&`
-`*const MaybeUninit<T>` | `const T*`
-`*mut MaybeUninit<T>`   | `T*`
-`MaybeUninit<T>`        | no bindings
+| Rust                    | C++         |
+| :---------------------- | :---------- |
+| `&MaybeUninit<T>`       | `const T&`  |
+| `&mut MaybeUninit<T>`   | `T&`        |
+| `*const MaybeUninit<T>` | `const T*`  |
+| `*mut MaybeUninit<T>`   | `T*`        |
+| `MaybeUninit<T>`        | no bindings |
 
 ## Why only by pointer/reference?
 

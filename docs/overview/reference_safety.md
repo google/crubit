@@ -1,15 +1,15 @@
 # Reference Safety
 
-The Rust reference documents
-[Undefined Behavior (UB)](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)
+The Rust reference documents [Undefined Behavior
+(UB)](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)
 and says that "it is the programmer's responsibility when writing unsafe code to
 ensure that any safe code interacting with the unsafe code cannot trigger these
-[undefined] behaviors". A programmer using Crubit bindings has the same
+\[undefined\] behaviors". A programmer using Crubit bindings has the same
 responsibility: Crubit is implicitly "unsafe", and incorrect usage can cause UB.
 The sections below document requirements for safely using Crubit when working
 with Rust and C++ references and pointers. The requirements are the same as the
-ones
-[documented in the Rust reference](https://doc.rust-lang.org/reference/behavior-considered-undefined.html),
+ones [documented in the Rust
+reference](https://doc.rust-lang.org/reference/behavior-considered-undefined.html),
 but are rephrased below from Crubit perspective.
 
 The safety requirements below focus on avoiding UB related to Rust references
@@ -49,10 +49,10 @@ references are safe from the mutation risk.
 
 ## Dangling or null references
 
-All references and
-[`NonNull` pointers](https://doc.rust-lang.org/std/ptr/struct.NonNull.html) must
-not be null, and if they point to a nonzero span of memory, must not be
-dangling. (The behavior of a program which violates these rules is undefined.)
+All references and [`NonNull`
+pointers](https://doc.rust-lang.org/std/ptr/struct.NonNull.html) must not be
+null, and if they point to a nonzero span of memory, must not be dangling. (The
+behavior of a program which violates these rules is undefined.)
 
 C++ doesn't share these rules, and care must be taken when converting Rust
 references to and from C++ pointers.

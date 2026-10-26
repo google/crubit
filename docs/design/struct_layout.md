@@ -42,10 +42,9 @@ Rust does not guarantee that distinct elements have distinct addresses.)
 In C++, in some circumstances, the requirement that objects do not overlap is
 relaxed: base classes and `[[no_unique_address]]` member variables can have
 subsequent objects live inside of their tail padding. The most famous instance
-of this is the
-[empty base class optimization (EBCO)](https://en.cppreference.com/w/cpp/language/ebo):
-a base class with no data members is permitted to take up zero space inside of
-derived classes.
+of this is the [empty base class optimization
+(EBCO)](https://en.cppreference.com/w/cpp/language/ebo): a base class with no
+data members is permitted to take up zero space inside of derived classes.
 
 NOTE: This has other, non-layout consequences for Rust: for example, it is not
 safe to obtain two `&mut` references to overlapping objects, unless they are of

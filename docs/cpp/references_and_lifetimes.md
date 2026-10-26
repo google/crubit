@@ -9,19 +9,19 @@ lifetimes. Crubit gets them from:
 *   [Rust's lifetime elision rules](#elision), or
 *   [Explicit lifetime annotations](#explicit) in the C++ code.
 
-This page also explains what happens if lifetime elision
-[doesn't apply](#elision_fails) or [gives wrong lifetimes](#elision_wrong), and
-describes the [`CRef` and `CMut` types](#cref_and_cmut) that Crubit uses for
-references returned from C++.
+This page also explains what happens if lifetime elision [doesn't
+apply](#elision_fails) or [gives wrong lifetimes](#elision_wrong), and describes
+the [`CRef` and `CMut` types](#cref_and_cmut) that Crubit uses for references
+returned from C++.
 
 NOTE: C++ pointers don't have lifetimes in the generated bindings. They map to
 Rust raw pointers. See [Pointer types](../types/pointer.md).
 
 ## Lifetime elision {#elision}
 
-Crubit applies
-[Rust's lifetime elision rules](https://doc.rust-lang.org/reference/lifetime-elision.html)
-to C++ references. For example, given the following C++ header:
+Crubit applies [Rust's lifetime elision
+rules](https://doc.rust-lang.org/reference/lifetime-elision.html) to C++
+references. For example, given the following C++ header:
 
 ```live-snippet
 cs/file:examples/cpp/references_and_lifetimes/example.h class:Counter
@@ -45,8 +45,8 @@ cs/file:examples/cpp/references_and_lifetimes/example_generated.rs function:\bAd
 
 Lifetime elision doesn't apply to some functions. For example, in Rust, `fn
 smaller(x: &i32, y: &i32) -> &i32` doesn't compile (error `E0106`), because the
-result can refer to `x` or to `y`. See also
-["Generic Lifetimes in Functions"](https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html#generic-lifetimes-in-functions)
+result can refer to `x` or to `y`. See also ["Generic Lifetimes in
+Functions"](https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html#generic-lifetimes-in-functions)
 in the Rust Book.
 
 For such C++ functions, Crubit generates bindings that return a raw pointer
@@ -145,10 +145,10 @@ Today Crubit binds `this` as `&self` or `&mut self` (rather than as `self:
 CRef<Self>` or `self: CMut<Self>`).
 
 Future Rust language features may make `CRef` and `CMut` more ergonomic to use
-as method receivers (see
-[arbitrary self types](https://rust-lang.github.io/rfcs/3519-arbitrary-self-types-v2.html)
-and [autoref](https://rust-lang.github.io/beyond-refs/autoref.html) in the
-["Beyond Rust References"](https://rust-lang.github.io/beyond-refs/)
-initiative). Once that happens, Crubit may start binding `this` as `CRef<Self>`
-or `CMut<Self>` (at least for inherent methods - trait methods may still require
-`&self` or `&mut self`).
+as method receivers (see [arbitrary self
+types](https://rust-lang.github.io/rfcs/3519-arbitrary-self-types-v2.html) and
+[autoref](https://rust-lang.github.io/beyond-refs/autoref.html) in the ["Beyond
+Rust References"](https://rust-lang.github.io/beyond-refs/) initiative). Once
+that happens, Crubit may start binding `this` as `CRef<Self>` or `CMut<Self>`
+(at least for inherent methods - trait methods may still require `&self` or
+`&mut self`).

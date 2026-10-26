@@ -26,8 +26,8 @@ cs/file:examples/rust/enum/example_generated.h class:CRUBIT_INTERNAL_RUST_TYPE|C
 
 A `repr(i32)` or fieldless `repr(C)` `enum` is very similar to a C++ `enum`.
 However, Rust enums are exhaustive: any value not explicitly listed in the
-`enum` declaration does not exist, and it is
-[undefined behavior](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)
+`enum` declaration does not exist, and it is [undefined
+behavior](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)
 to attempt to create one.
 
 C++ `enum`s, in contrast, are "non-exhaustive": a C++ `enum` can have *any*

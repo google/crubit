@@ -59,7 +59,7 @@ Foo* CreateComplete();
 void ConsumeComplete(Foo*);
 ```
 
-### 1. Dependency Graph {#dependency-graph}
+### 1\. Dependency Graph {#dependency-graph}
 
 The libraries must be usable standalone. For each of these headers, it must be
 possible to use the header from Rust without modifying any of them to become
@@ -68,7 +68,7 @@ aware of the others. In C++, it would be valid for `complete` to depend on
 require modifications of the dependency graph without grappling with dependency
 cycles and a global analysis of the codebase.
 
-### 2. Fidelity {#fidelity}
+### 2\. Fidelity {#fidelity}
 
 The functions must be usable. Users must be able to call every combination of
 functions from these three libraries, though perhaps not with the same syntax as
@@ -86,7 +86,7 @@ C++. For example:
 
 <!-- mdformat on -->
 
-### 3. Code Maintenance {#code-maintenance}
+### 3\. Code Maintenance {#code-maintenance}
 
 To the greatest extent possible, backwards compatible changes in C++ should also
 be backwards-compatible in Rust. This means that changing from a forward
@@ -105,7 +105,7 @@ compile and behave the same way if we perform any of the following changes:
 *   C→E (Incomplete→Complete, change source to Complete)
 *   D→E (Complete→Incomplete, change destination to Complete)
 
-### 4. Type Aliases {#type-aliases}
+### 4\. Type Aliases {#type-aliases}
 
 This is a bit of an aside, but it is tricky to get right. In general, when
 analyzing the source code for a C++ header, you cannot actually know if a type
@@ -231,8 +231,8 @@ follows:
 
 In theory we could have dropped the requirement for `.cpp_cast()` from case B,
 but this would make it a backwards-**incompatible** change to do any of B→C or
-B→D, which was called out as a requirement above in
-[3. Code Maintenance](#code-maintenance)
+B→D, which was called out as a requirement above in [3. Code
+Maintenance](#code-maintenance)
 
 ### Mutable Details
 
@@ -349,9 +349,9 @@ alternative of explicitly defining a new type:
 3.  Extends easily to "comprehensive fallbacks": if a function is private, it
     can use `Incomplete<Name, ()>`. For understandable architectural reasons, it
     is simpler to *use* a type from deep within our bindings generation logic,
-    than to compel Crubit to define a new type, and so "comprehensive
-    fallbacks" -- where we substitute in a forward declaration any time we see
-    an unsupported type -- is much easier to support if we can reuse an existing
+    than to compel Crubit to define a new type, and so "comprehensive fallbacks"
+    -- where we substitute in a forward declaration any time we see an
+    unsupported type -- is much easier to support if we can reuse an existing
     type.
 
 As well as the following downsides:

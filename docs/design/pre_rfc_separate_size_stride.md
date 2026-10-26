@@ -1,4 +1,4 @@
-# [Pre-RFC] Allow stride != size
+# \[Pre-RFC\] Allow stride != size
 
 ## Summary
 
@@ -158,10 +158,10 @@ arbitrary generic type today, that type has identical size and stride.
 
 This means that if we want to allow for data size and stride to be different,
 they must not be different for any generic type as written today. Existing code
-without trait bounds can call `from_ref`! So we must add an implicit trait bound
-on `AlignSized : Sized`, which, like `Sized`, guarantees that the data size and
-the stride are the same. This trait would be automatically implemented for all
-pre-existing types, which retain their current layout rules.
+without trait bounds can call `from_ref`! So we must add an implicit trait
+bound on `AlignSized : Sized`, which, like `Sized`, guarantees that the data
+size and the stride are the same. This trait would be automatically implemented
+for all pre-existing types, which retain their current layout rules.
 
 In other words, the following two generics are equivalent:
 
@@ -333,9 +333,9 @@ all work out.
 
 ### It's yet another (implicit) size/alignment trait
 
-There is also some desire for
-[an `Aligned` trait](https://internals.rust-lang.org/t/aligned-trait/17443) or
-[a `DynSized` trait](https://github.com/rust-lang/rust/issues/43467#issuecomment-317733674).
+There is also some desire for [an `Aligned`
+trait](https://internals.rust-lang.org/t/aligned-trait/17443) or [a `DynSized`
+trait](https://github.com/rust-lang/rust/issues/43467#issuecomment-317733674).
 This would be yet another one, which may require changes throughout the Rust
 standard library and ecosystem to support everywhere one would ideally hope.
 
@@ -362,8 +362,8 @@ struct PadlessRefMut<'a, T>(*mut T, PhantomData<&'a mut T>);
 ```
 
 Unfortunately, today, a generic type like `PadlessRefMut` is difficult to use:
-you cannot use it as a `self` type for methods, for instance, though
-[there are workarounds](https://rust-lang.zulipchat.com/#narrow/stream/122651-general/topic/Extending.20.60arbitrary_self_types.60.20with.20.60UnsafeDeref.60).
+you cannot use it as a `self` type for methods, for instance, though [there are
+workarounds](https://rust-lang.zulipchat.com/#narrow/stream/122651-general/topic/Extending.20.60arbitrary_self_types.60.20with.20.60UnsafeDeref.60).
 
 Even there, various bits of the Rust ecosystem expect references: for instance,
 you can't return a `PadlessRef` or `PadlessRefMut` from an `Index` or `IndexMut`
@@ -397,9 +397,9 @@ impl Foo {
 
 This is especially easy to do when writing a bindings generator, since you can
 automatically query the other language's to find the struct layout, and
-automatically generate the corresponding Rust.) But otherwise, it's quite a
-pain -- one would hope, perhaps, for a proc macro to automate this, similar to
-how Rust automatically infers layout for paddingful structs and types.
+automatically generate the corresponding Rust.) But otherwise, it's quite a pain
+-- one would hope, perhaps, for a proc macro to automate this, similar to how
+Rust automatically infers layout for paddingful structs and types.
 
 #### Conclusion: manual layout is unpleasant
 
@@ -439,16 +439,16 @@ objects may be placed inside the tail padding of the previous object when that
 previous object is a subobject in the same struct (not, for instance, a separate
 local variable), and it is either a base class subobject (so-called "EBO"), or a
 `[[no_unique_address]]` data member ("field"). In practice, however, the
-compiler is free to not reuse the tail padding for some types. In the
-[Itanium ABI](https://itanium-cxx-abi.github.io/cxx-abi/abi.html), C-like
-structs ("POD" types, with
-[an Itanium-ABI-specific definition of "POD"](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#POD))
-do not allow their tail padding to be reused.
+compiler is free to not reuse the tail padding for some types. In the [Itanium
+ABI](https://itanium-cxx-abi.github.io/cxx-abi/abi.html), C-like structs ("POD"
+types, with [an Itanium-ABI-specific definition of
+"POD"](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#POD)) do not allow
+their tail padding to be reused.
 
 ### Papers and blog posts
 
 *   I worked around this in Crubit, a C++/Rust bindings generator. The design is
-    here: https://github.com/google/crubit/blob/main/docs/design/unpin.md .
+    here: <https://github.com/google/crubit/blob/main/docs/design/unpin.md> .
     tl;dr: if we assume that the only source of this layout phenomenon is base
     classes, then only non-`final` classes needed to get the uncomfortable
     `Pin`-like API. Unfortunately, this does not work if `[[no_unique_address]]`
@@ -466,8 +466,8 @@ do not allow their tail padding to be reused.
 -   How free should Rust be to represent fields compactly in `repr(Rust)` types?
 -   Is `repr(C)` allowed to use this new layout strategy with specially marked
     fields using a new attribute, or do we need a new `repr`? The documentation
-    is
-    [very prescriptive](https://doc.rust-lang.org/std/mem/fn.size_of.html#size-of-reprc-items).
+    is [very
+    prescriptive](https://doc.rust-lang.org/std/mem/fn.size_of.html#size-of-reprc-items).
 -   This is part of a family of issues with interop, where Rust reference
     semantics do not match other languages' reference semantics. (The other
     prominent member of the family is "aliasing".) Part of the reason for

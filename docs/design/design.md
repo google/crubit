@@ -191,9 +191,9 @@ Examples of additional information that interop tooling will need:
 *   **There may be headers that we cannot (or would not want to) change**, for
     example, headers in third-party code, headers that are open-sourced, or when
     first-party owners are not cooperating.
-    *   We can apply the
-        [sidecar strategy](#additional-information-is-stored-in-sidecar-files)
-        to these headers.
+    *   We can apply the [sidecar
+        strategy](#additional-information-is-stored-in-sidecar-files) to these
+        headers.
 
 #### Additional information is stored in sidecar files
 
@@ -214,10 +214,10 @@ language, as that provides the most natural way to define Rust APIs.
 
 **Cons**
 
-*   Like in the
-    [Use Rust code to customize API projection into Rust](#use-rust-code-to-customize-api-projection-into-rust)
-    alternative, **some part of C++ API information is duplicated**, which is a
-    burden for the C++ API owners.
+*   Like in the [Use Rust code to customize API projection into
+    Rust](#use-rust-code-to-customize-api-projection-into-rust) alternative,
+    **some part of C++ API information is duplicated**, which is a burden for
+    the C++ API owners.
 *   The projection of C++ APIs to Rust is defined in a new language.
     *   C++ API owners and Rust users will have to learn this language.
     *   If we expect wide adoption of sidecar files, we will need to create
@@ -495,8 +495,8 @@ Firefox.
 **Pros**
 
 *   **The oldest and the most mature** of the existing C++ interop tools
-    (developed
-    [since Feb 2012](https://github.com/rust-lang/rust-bindgen/commit/9fe92b0cfd48d5ebd1c82af8b1ff041f8c416a65)).
+    (developed [since Feb
+    2012](https://github.com/rust-lang/rust-bindgen/commit/9fe92b0cfd48d5ebd1c82af8b1ff041f8c416a65)).
 
 **Cons**
 
@@ -508,8 +508,8 @@ Firefox.
         meaning. Adding overloads can change the numbering and hence break Rust
         callers.
 *   It is **impossible to use C++ inline functions and templates** from Rust
-    because of bindgen’s architecture[^1]. The architecture is unlikely to
-    change, and therefore, this is a dealbreaker.
+    because of bindgen’s architecture[^1]. The architecture is
+    unlikely to change, and therefore, this is a dealbreaker.
 
 **Evaluation**
 
@@ -525,26 +525,27 @@ C++ headers for Rust libraries which expose a public C API**.
 
 **Pros**
 
-*   **An old and mature tool** (developed
-    [since March 2017](https://github.com/eqrion/cbindgen/commit/215d3a987b223d4a1a878e2385c8677d5ae3a80b)).
+*   **An old and mature tool** (developed [since March
+    2017](https://github.com/eqrion/cbindgen/commit/215d3a987b223d4a1a878e2385c8677d5ae3a80b)).
 
 **Cons**
 
 *   **Shallow understanding of Rust's modules and types**.
 
-    *   [`cbindgen`'s docs](https://github.com/eqrion/cbindgen/blob/master/docs.md)
-        point out that "A major limitation of cbindgen is that it does not
-        understand Rust's module system or namespacing. This means that if
-        cbindgen sees that it needs the definition for MyType and there exists
-        two things in your project with the type name MyType, it won't know what
-        to do. Currently, cbindgen's behaviour is unspecified if this happens."
+    *   [`cbindgen`'s
+        docs](https://github.com/eqrion/cbindgen/blob/master/docs.md) point out
+        that "A major limitation of cbindgen is that it does not understand
+        Rust's module system or namespacing. This means that if cbindgen sees
+        that it needs the definition for MyType and there exists two things in
+        your project with the type name MyType, it won't know what to do.
+        Currently, cbindgen's behaviour is unspecified if this happens."
     *   This limitation seems mostly caused by building `cbindgen` on top of
         [the `syn` crate](https://docs.rs/syn). `syn` is able to parse Rust
         source code into an AST, but there is no facility at the `syn` level for
         type deduction or module traversal. Building such functionality would
         require replicating parts of the `rustc` compiler into `cbindgen`, or
-        alternatively rewriting `cbindgen` on top of
-        [the `rustc_driver` crate](https://doc.rust-lang.org/stable/nightly-rustc/rustc_driver/)).
+        alternatively rewriting `cbindgen` on top of [the `rustc_driver`
+        crate](https://doc.rust-lang.org/stable/nightly-rustc/rustc_driver/)).
 
 *   **Support of only `extern "C"` functions**.
 
@@ -592,8 +593,9 @@ risk and cost is likely going to be acceptable.
 
 Build determinism requires that the Rust compiler produces the same output for
 the same set of inputs (the same compiler version, the same command-line flags,
-the same sources, etc.). This means that (despite
-[conservative reservations about layout determinism](https://rust-lang.github.io/unsafe-code-guidelines/layout/structs-and-tuples.html#default-layout-repr-rust:~:text=A%20note%20on%20determinism))
+the same sources, etc.). This means that (despite [conservative reservations
+about layout
+determinism](https://rust-lang.github.io/unsafe-code-guidelines/layout/structs-and-tuples.html#default-layout-repr-rust:~:text=A%20note%20on%20determinism))
 it should be okay to assume that `cc_bindings_from_rs` and `rustc` invocations
 will observe the same memory layout of structs, but this requires that
 `cc_bindings_from_rs` is built against exactly the same version of
@@ -606,9 +608,9 @@ compile-time assertions in the generated FFI layer.)
 from an **interface definition language (IDL) included inline in Rust source
 code.** cxx generates Rust and C++ source code from IDL definitions. To check
 that the IDL definitions match the actual C++ API, cxx inserts static
-assertions[^2] into the generated C++ code; it does not, however, read the C++
-headers itself. cxx contains built-in bindings for various Rust and C++ standard
-library types that are not customizable.
+assertions[^2] into the generated C++ code; it does not, however,
+read the C++ headers itself. cxx contains built-in bindings for various Rust and
+C++ standard library types that are not customizable.
 
 As far as we understand, cxx has the following design constraints and goals:
 
@@ -675,8 +677,8 @@ cxx itself would provide, for example to support passing POD types by value.
 autocxx consumes C++ headers indirectly by first running bindgen on them and
 then parsing the Rust code output by bindgen.
 
-autocxx’s
-[design goals](https://www.chromium.org/Home/chromium-security/memory-safety/rust-and-c-interoperability)
+autocxx’s [design
+goals](https://www.chromium.org/Home/chromium-security/memory-safety/rust-and-c-interoperability)
 are similar to our own in this document.
 
 We did a case study on using an existing project's C++ API from Rust using

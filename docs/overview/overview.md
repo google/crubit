@@ -144,7 +144,7 @@ bindings that Crubit generates:
     `rs_bindings_from_cc` to include `From` trait implementations from
     `crubit/support/cc_std_impl/string_view.rs`).
 
---------------------------------------------------------------------------------
+-----
 
 TODO: Help users make an informed decision when to use Crubit rather than other
 FFI tools. (This probably should become a separate sub-chapter of the overview.

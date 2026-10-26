@@ -1,9 +1,8 @@
 # Generating C++ `enum`s from Rust `enum`s
 
-By default, a Rust `enum` is mapped to an opaque C++ type (see
-[C++ bindings for Rust `enum`s](enums.md)). However, Crubit can try to map Rust
-`enum`s to C++ `enum`s if requested using the
-`#[crubit_annotate::cpp_enum(kind = "enum")]` or
+By default, a Rust `enum` is mapped to an opaque C++ type (see [C++ bindings for
+Rust `enum`s](enums.md)). However, Crubit can try to map Rust `enum`s to C++
+`enum`s if requested using the `#[crubit_annotate::cpp_enum(kind = "enum")]` or
 `#[crubit_annotate::cpp_enum(kind = "enum class")]` attribute. C++ code can use
 such enums like any other C++ enum.
 

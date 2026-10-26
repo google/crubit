@@ -3,10 +3,10 @@
 C++ defines two categories of pointer types, while Rust adds a third. They are:
 
 *   Pointers to some (non-function) object, without lifetime information. C++
-    calls these
-    [object pointers](https://en.cppreference.com/w/cpp/language/pointer#Pointers_to_objects),
-    while Rust calls them
-    [raw pointers](https://doc.rust-lang.org/reference/types/pointer.html#raw-pointers-const-and-mut).
+    calls these [object
+    pointers](https://en.cppreference.com/w/cpp/language/pointer#Pointers_to_objects),
+    while Rust calls them [raw
+    pointers](https://doc.rust-lang.org/reference/types/pointer.html#raw-pointers-const-and-mut).
 *   Function pointers
     ([C++](https://en.cppreference.com/w/cpp/language/pointer#Pointers_to_functions),
     [Rust](https://doc.rust-lang.org/reference/types/function-pointer.html)).
@@ -24,10 +24,10 @@ An "object pointer" is the C++ terminology for any pointer that is not a
 function pointer. Rust would call these "raw pointers". These are mapped to each
 other bidirectionally:
 
-C++        | Rust
----------- | ----------
-`const T*` | `*const T`
-`T*`       | `*mut T`
+| C++        | Rust       |
+| :--------- | :--------- |
+| `const T*` | `*const T` |
+| `T*`       | `*mut T`   |
 
 ### C++ pointers with lifetime {#object_lifetime}
 
@@ -36,7 +36,8 @@ pointers. There are two competing annotations for this:
 
 *   `[[clang::lifetimebound]]`: Crubit honors this on references (with
     `assume_lifetimes`, see [Rust references](#rust_references)).
-*   [Lifetime attributes](https://discourse.llvm.org/t/rfc-lifetime-annotations-for-c/61377):
+*   [Lifetime
+    attributes](https://discourse.llvm.org/t/rfc-lifetime-annotations-for-c/61377):
     not supported.
 
 ## Function pointers {#function}
@@ -44,11 +45,11 @@ pointers. There are two competing annotations for this:
 C++ function pointers map to Rust `extern "C" fn(...) -> ...` function pointers,
 and vice versa:
 
-C++                                   | Rust
-------------------------------------- | -------------------------------
-`void(&)(int32_t)`                    | `extern "C" fn(i32)`
-`void(*)(int32_t)`                    | `Option<extern "C" fn(i32)>`
-`std::type_identity_t<void(int32_t)>` | Not supported [^function_types]
+| C++                                   | Rust                           |
+| :------------------------------------ | :----------------------------- |
+| `void(&)(int32_t)`                    | `extern "C" fn(i32)`           |
+| `void(*)(int32_t)`                    | `Option<extern "C" fn(i32)>`   |
+| `std::type_identity_t<void(int32_t)>` | Not supported [^function_types] |
 
 If the corresponding C++ function definition would be `unsafe` in Rust (per the
 rules for [C++ function declarations](../cpp/functions.md#unsafe)), then so is
@@ -71,11 +72,11 @@ shorter than `'static` (e.g., JIT compilation, or dynamic loading and unloading
 of shared libraries at runtime), the developer is responsible for managing the
 lifetime of the function pointer.
 
-[^function_types]: C++ has plain
-    [function types](https://en.cppreference.com/w/cpp/types/is_function): the
-    type pointed to by function pointers. There is no Rust equivalent. However,
-    since C++ functions implicitly coerce to function pointers, this only comes
-    up in template classes like
+[^function_types]: C++ has plain [function
+    types](https://en.cppreference.com/w/cpp/types/is_function): the type
+    pointed to by function pointers. There is no Rust equivalent. However, since
+    C++ functions implicitly coerce to function pointers, this only comes up in
+    template classes like
     [`std::function`](https://en.cppreference.com/w/cpp/utility/functional/function)
     or
     [`absl::AnyInvocable`](https://github.com/abseil/abseil-cpp/blob/master/absl/functional/any_invocable.h).

@@ -62,5 +62,5 @@ a wildcard branch. Within the defining crate, `non_exhaustive` has no effect. It
 remains undefined behavior to `transmute` from integers not declared by the
 enum.
 
-[ne]: https://doc.rust-lang.org/reference/attributes/type_system.html#the-non_exhaustive-attribute
 [ub]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
+[ne]: https://doc.rust-lang.org/reference/attributes/type_system.html#the-non_exhaustive-attribute

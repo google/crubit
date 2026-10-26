@@ -5,16 +5,16 @@ parameter and return types are supported by Crubit:
 
 *   If a parameter or return type is a [primitive type](../types/primitive.md),
     then the bindings for the function use the corresponding Rust type.
-*   Similarly, if a parameter or return type is a
-    [pointer type](../types/pointer.md), then the bindings for the function use
-    the corresponding Rust pointer type.
+*   Similarly, if a parameter or return type is a [pointer
+    type](../types/pointer.md), then the bindings for the function use the
+    corresponding Rust pointer type.
 *   If a parameter or return type is a C++ reference type, then the bindings for
     the function use a Rust reference (if the lifetime was either explicitly
     specified or elided and inferred) or a Rust pointer (otherwise). See
     [References and lifetimes](references_and_lifetimes.md).
-*   If the type is a user-defined type, such as a
-    [class type](classes_and_structs.md) or [enum](enums.md), then the bindings
-    for the function use the bindings for that type.
+*   If the type is a user-defined type, such as a [class
+    type](classes_and_structs.md) or [enum](enums.md), then the bindings for the
+    function use the bindings for that type.
 
 Additionally, code can call member functions defined in C++ if the parameter and
 return types are supported by Crubit (see above). Non-static member functions
@@ -67,8 +67,8 @@ Which can be used like this:
 cs/file:examples/cpp/method/main.rs function:main
 ```
 
-The `this` parameter of a method becomes `&self` or `&mut self`. See
-[References and lifetimes](references_and_lifetimes.md) for more details.
+The `this` parameter of a method becomes `&self` or `&mut self`. See [References
+and lifetimes](references_and_lifetimes.md) for more details.
 
 ### `unsafe` functions {#unsafe}
 
@@ -139,10 +139,10 @@ class MyClass {
 ```
 
 This is especially useful when providing handwritten Rust APIs via the `srcs`
-attribute of `rust_api_from_cpp` (see
-[Best Practices](best_practices.md#limiting-cpp-function-visibility-to-srcs)).
-The custom Rust code in `srcs` can call the `pub(crate)` functions or methods,
-while keeping them hidden from downstream crates.
+attribute of `rust_api_from_cpp` (see [Best
+Practices](best_practices.md#limiting-cpp-function-visibility-to-srcs)). The
+custom Rust code in `srcs` can call the `pub(crate)` functions or methods, while
+keeping them hidden from downstream crates.
 
 `CRUBIT_PUB_CRATE` is only valid on functions and methods; applying it to types
 will produce an error.

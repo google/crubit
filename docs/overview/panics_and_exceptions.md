@@ -5,7 +5,7 @@ panics into aborts.
 
 ## Unwinding and Aborting
 
-> "Alright so I'm panicking, what else is there to do?" \
+> "Alright so I'm panicking, what else is there to do?"\
 > -- "The Hitchhiker’s Guide to the Galaxy" by Douglas Adams
 
 Rust and C++ both support a form of unwinding exception/panic, where ordinary
@@ -33,7 +33,7 @@ behavior is defined.
 
 > "Who said anything about panicking?" snapped Arthur. "This is still just the
 > culture shock. You wait till I've settled down into the situation and found my
-> bearings. Then I'll start panicking." \
+> bearings. Then I'll start panicking."\
 > -- "The Hitchhiker’s Guide to the Galaxy" by Douglas Adams
 
 **Rust:** Crubit can create bindings for libraries built with either

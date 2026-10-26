@@ -27,7 +27,7 @@ You can use embedded C++ in two ways:
     target**: When authoring a standalone Rust library or test with embedded C++
     without an underlying `cc_library`.
 
-### 1. Using embedded C++ in a `rust_api_from_cpp` target {#rust_api_from_cpp}
+### 1\. Using embedded C++ in a `rust_api_from_cpp` target {#rust_api_from_cpp}
 
 If you maintain a `cc_library` and want to provide hand-written Rust helper
 methods or trait implementations alongside your generated Crubit API, you can
@@ -95,7 +95,7 @@ impl Widget {
 }
 ```
 
-### 2. Using embedded C++ in a standalone `rust_library` or `rust_test` target {#build}
+### 2\. Using embedded C++ in a standalone `rust_library` or `rust_test` target {#build}
 
 To write a standalone Rust library or test that uses embedded C++ without an
 underlying `cc_library`, define your target with
@@ -178,12 +178,16 @@ templates. With embedded C++, you can:
 *   **Instantiate library templates**: Call templated functions or classes from
     included C++ headers inside `inline_cpp!`:
 
+<!-- end list -->
+
 ```live-snippet
 cs/file:examples/cpp/inline_cpp/clamp.rs function:clamp_value
 ```
 
 *   **Define helper templates in `global_cpp!`**: Define C++ template helpers at
     module scope, then instantiate them with concrete types in `inline_cpp!`:
+
+<!-- end list -->
 
 ```live-snippet
 cs/file:examples/cpp/inline_cpp/math_helper.rs function:multiply_ints

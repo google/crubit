@@ -122,9 +122,8 @@ cs/file:examples/cpp/carcinize/math_utils_rs.rs content:^\s*global_cpp!\s*\{[\s\
 ### Caller access {#incomplete_downstream}
 
 `rust_library_with_embedded_cpp` extracts the companion C++ code from
-`global_cpp!` and compiles it into a companion C++ header.
-`cpp_api_from_rust` re-exports both the Rust bindings and the companion
-header back to C++ callers.
+`global_cpp!` and compiles it into a companion C++ header. `cpp_api_from_rust`
+re-exports both the Rust bindings and the companion header back to C++ callers.
 
 *   **C++ callers** retain access to all declarations, including templates
     (`Clamp<T>`).
@@ -148,11 +147,10 @@ declarations with Rust implementations over time using one of these strategies:
 cs/file:examples/cpp/carcinize/math_utils_rs.rs function:clamp
 ```
 
-> NOTE: `cpp_api_from_rust` does not currently generate C++ function
-> templates from Rust generic functions. If existing C++ callers still require
-> the C++ template, keep the declaration in the `global_cpp!` block (or provide
-> concrete C++ wrappers as shown below) until downstream C++ callers are
-> migrated.
+> NOTE: `cpp_api_from_rust` does not currently generate C++ function templates
+> from Rust generic functions. If existing C++ callers still require the C++
+> template, keep the declaration in the `global_cpp!` block (or provide concrete
+> C++ wrappers as shown below) until downstream C++ callers are migrated.
 
 #### Strategy 2: Wrap specific instantiations with `inline_cpp!`
 
@@ -273,8 +271,8 @@ cs/file:examples/cpp/carcinize/point_refactored.rs function:GetX
 ## Common errors {#errors}
 
 Carcinize and `inline_cpp!` use Crubit under the hood, so any Crubit error can
-occur during migration. See crubit.rs/errors and
-[Inline C++ in Crubit](inline_cpp.md) for related diagnostic guidance.
+occur during migration. See crubit.rs/errors and [Inline C++ in
+Crubit](inline_cpp.md) for related diagnostic guidance.
 
 ### Target collision: `<target>_rs already exists` {#error_collision}
 
@@ -291,8 +289,8 @@ Rename or remove the existing target before running Carcinize.
 
 When `--require_complete_migration` is enabled and any unbindable declarations
 are encountered, the Crubit bindings build fails with an error for each
-unsupported declaration (for example,
-`Function templates are not yet supported`), and Carcinize halts.
+unsupported declaration (for example, `Function templates are not yet
+supported`), and Carcinize halts.
 
 To proceed with migrating partially supported libraries without halting, omit
 `--require_complete_migration` to allow Carcinize to route those declarations

@@ -51,8 +51,8 @@ Unpin`). While C++ `std::unique_ptr` is only shallow-const (i.e. `const
 std::unique_ptr<T>&` allows mutating the underlying `T`), it is conventionally
 treated as deep-const. In order for `&unique_ptr<T>` to be usable at all from
 Rust, we treat it as deep-const. C++ code which mutates a value of type `T`
-while Rust has obtained a `&T` via `&unique_ptr<T>` -> `&T` deref will result in
-undefined behavior.
+while Rust has obtained a `&T` via `&unique_ptr<T>` -\> `&T` deref will result
+in undefined behavior.
 
 API: support/cc_std_impl/unique_ptr.rs
 
