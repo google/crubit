@@ -192,6 +192,83 @@ environment variables.
     $ cargo build --locked -p rs_bindings_from_cc
     ```
 
+### Building with CMake
+
+The CMake project in `cmake/rs_bindings_from_cc` builds `rs_bindings_from_cc`.
+It provides the C++ dependencies and then runs Cargo. For each
+dependency, it uses one that's already installed if it's suitable, and
+otherwise gets one itself:
+
+*   **LLVM/Clang**: uses the install you pass with `-DCRUBIT_LLVM_ROOT=<path>`,
+    or else an LLVM 23.1.3 that `find_package(LLVM)` finds (for example through
+    `CMAKE_PREFIX_PATH` or `LLVM_DIR`). Either one must contain
+    `bin/llvm-config`, the headers and the static Clang and LLVM libraries.
+    Otherwise, it downloads the official LLVM 23.1.3 release for your platform.
+    LLVM doesn't publish releases for x86_64 macOS, so on those machines you
+    must provide LLVM explicitly.
+*   **Abseil and Protobuf**: uses the installed packages that
+    `find_package(protobuf)` finds, if they are static libraries and Protobuf
+    is exactly version 36.1, which the `protobuf` crate in `Cargo.toml` needs.
+    Otherwise, it builds both from source, at the versions that the Bazel build
+    uses. Most system packages are shared libraries or a different Protobuf
+    version, so expect it to build them.
+
+Every download is checked against a pinned SHA-256 hash. If you change
+`CRUBIT_LLVM_VERSION` or `CRUBIT_LLVM_URL`, set `CRUBIT_LLVM_URL_HASH` too;
+otherwise the build warns that the download isn't verified.
+
+You need CMake 3.24 or later, Ninja, a C++20 compiler, and `rustup`. On Linux and
+macOS, run from the root of the checkout:
+
+```sh
+$ cmake -S cmake/rs_bindings_from_cc -B cmake_build -G Ninja
+$ cmake --build cmake_build
+$ ./cmake_build/bin/rs_bindings_from_cc --help
+```
+
+The build also writes `cmake_build/crubit-cargo-env.sh`, which sets the environment
+variables described [below](#custom-build-systems-chromium-android-or-other-projects).
+After one CMake build, you can run Cargo yourself:
+
+```sh
+$ source cmake_build/crubit-cargo-env.sh
+$ cargo build --release -p rs_bindings_from_cc
+```
+
+Useful cache variables:
+
+*   `CRUBIT_LLVM_ROOT`: an existing LLVM install to use.
+*   `CRUBIT_LLVM_URL` and `CRUBIT_LLVM_URL_HASH`: a different LLVM archive to
+    download, and its hash as `SHA256=<hex>`.
+*   `CRUBIT_LLVM_DEV_DATE`: the date (`YYYYMMDD`) of the LLVM commit. It is
+    detected for LLVM 23 releases; set it for any other LLVM.
+*   `CRUBIT_FIND_DEPENDENCIES`: whether to look for installed Abseil and
+    Protobuf packages (default `ON`). Set it to `OFF` to always build them.
+*   `CRUBIT_CARGO_PROFILE`: the Cargo profile to build with (default
+    `release`).
+
+To use the tool from another CMake project, add this project with
+`add_subdirectory()`. Because it's outside that project's source tree, also
+give it a build directory:
+
+```cmake
+add_subdirectory(<crubit>/cmake/rs_bindings_from_cc crubit_rs_bindings_from_cc)
+```
+
+It defines the imported executable target `crubit::rs_bindings_from_cc`. Use `$<TARGET_FILE:crubit::rs_bindings_from_cc>`
+in custom commands and list the target in their `DEPENDS`, so that the tool is
+built first. `cmake --install` installs the binary to `bin/`.
+
+Cargo uses a copy of `Cargo.lock` in the build directory (through
+`CARGO_RESOLVER_LOCKFILE_PATH`), because the checked-in `Cargo.lock` also lists
+crates that only Bazel uses, which Cargo would remove. The copy keeps the pinned
+versions, and the checked-in file stays untouched.
+
+When the LLVM install includes `clang` and `lld`, the build uses them to
+compile C code and to link. LLVM releases ship their static libraries as LTO
+bitcode, which only a linker of the same LLVM version can read.
+
+
 ### Custom Build Systems (Chromium, Android, or Other Projects)
 
 When integrating `rs_bindings_from_cc` into custom build systems (such as
