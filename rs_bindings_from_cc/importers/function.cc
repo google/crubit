@@ -35,6 +35,7 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir.pb.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
@@ -388,6 +389,16 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(
   // is only meaningful if that is also the receiver's record (not a base).
   if (receiver_record == nullptr ||
       record_decl->getCanonicalDecl() != receiver_record->getCanonicalDecl()) {
+    return std::nullopt;
+  }
+  // Under pointer field protection (PFP), a protected field holds a signed
+  // pointer: C++ loads authenticate it and C++ stores sign it. A direct access
+  // from Rust would read the signed bits as a pointer, or store a pointer that
+  // the next C++ load fails to authenticate. Such fields are only accessed
+  // through a thunk. Bindings are generated with the same compiler flags as the
+  // C++ code (in particular `-fexperimental-pointer-field-protection-abi`), so
+  // this matches the layout that C++ uses.
+  if (clang::ASTContext::isPFPField(field_decl)) {
     return std::nullopt;
   }
   CcType type = ictx.ConvertQualType(field_decl->getType(),

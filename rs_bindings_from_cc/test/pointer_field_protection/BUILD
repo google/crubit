@@ -1,4 +1,4 @@
-"""End-to-end test of Rust moves of C++ types that use pointer field protection (PFP)."""
+"""End-to-end tests of Rust moves of, and accessors for, C++ types that use pointer field protection (PFP)."""
 
 load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
@@ -56,6 +56,47 @@ crubit_rust_test(
     tags = ["manual"],
     deps = [
         ":pointer_field_protection_rust",
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
+    name = "accessors",
+    srcs = ["accessors.cc"],
+    hdrs = ["accessors.h"],
+    aspect_hints = [
+        "//features:supported",
+        "//features:thunkless_accessors",
+    ],
+
+    # Only `-abi`, which is what the `pointer_field_protection` crosstool
+    # feature passes. See `pointer_field_protection` above for the other flags.
+    copts = select({
+        "@platforms//cpu:aarch64": [
+            "-fexperimental-pointer-field-protection-abi",
+        ],
+        "//conditions:default": [],
+    }),
+
+    # The flag above changes the language options, so the prebuilt header
+    # modules (e.g. the one for the C++ standard library) cannot be used.
+    features = ["-use_header_modules"],
+)
+
+rust_api_from_cpp(
+    name = "accessors_rust",
+    cpp_target = ":accessors",
+)
+
+crubit_rust_test(
+    name = "accessors_test",
+    srcs = ["accessors_test.rs"],
+
+    # PFP only has an effect on AArch64, and only with `-c opt` (see above), so
+    # this test only checks anything with `--cpu=arm -c opt`.
+    tags = ["manual"],
+    deps = [
+        ":accessors_rust",
         "@crate_index//:googletest",
     ],
 )
