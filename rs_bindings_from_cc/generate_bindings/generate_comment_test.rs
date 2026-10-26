@@ -80,7 +80,6 @@ fn test_generate_doc_comment_with_safety() {
 }
 
 struct TestItem {
-    source_loc: Option<&'static str>,
     decl_loc: Option<DeclLocation<'static>>,
     must_bind: bool,
 }
@@ -107,9 +106,6 @@ impl<'a> ir::GenericItem<'a> for TestItem {
     fn owning_target(&self) -> Option<BazelLabel> {
         None
     }
-    fn source_loc(&self) -> Option<&'a str> {
-        self.source_loc
-    }
     fn decl_loc(&self) -> Option<DeclLocation<'a>> {
         self.decl_loc
     }
@@ -130,7 +126,6 @@ fn make_factory() -> TestDbFactory<'static> {
         None,
         UnsupportedItemKind::Other,
         TEST_ITEM_ID,
-        Some("Generated from: some/header;l=1"),
         Some(test_decl_loc()),
         None,
         false,
@@ -159,11 +154,7 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
     let actual = generate_unsupported(
         &db,
         db.new_unsupported_item_with_static_message(
-            &TestItem {
-                source_loc: Some("Generated from: some/header;l=1"),
-                decl_loc: Some(test_decl_loc()),
-                must_bind: false,
-            },
+            &TestItem { decl_loc: Some(test_decl_loc()), must_bind: false },
             /* path= */ None,
             "unsupported_message",
         )
@@ -193,11 +184,7 @@ fn test_generate_unsupported_item_with_global_cpp() -> Result<()> {
         },
     );
     let mut unsupported_item = db.new_unsupported_item_with_static_message(
-        &TestItem {
-            source_loc: Some("Generated from: some/header;l=1"),
-            decl_loc: Some(test_decl_loc()),
-            must_bind: false,
-        },
+        &TestItem { decl_loc: Some(test_decl_loc()), must_bind: false },
         /* path= */ None,
         "unsupported_message",
     );
@@ -233,11 +220,7 @@ fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result
         },
     );
     let mut unsupported_item = db.new_unsupported_item_with_static_message(
-        &TestItem {
-            source_loc: Some("Generated from: some/header;l=1"),
-            decl_loc: Some(test_decl_loc()),
-            must_bind: false,
-        },
+        &TestItem { decl_loc: Some(test_decl_loc()), must_bind: false },
         /* path= */ None,
         "unsupported_message",
     );
@@ -248,7 +231,7 @@ fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result
     Ok(())
 }
 
-/// Not all items currently have source_loc(), e.g. comments.
+/// Not all items currently have decl_loc(), e.g. comments.
 ///
 /// For these, we omit the mention of the location.
 #[gtest]
@@ -267,7 +250,7 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
     let actual = generate_unsupported(
         &db,
         db.new_unsupported_item_with_static_message(
-            &TestItem { source_loc: None, decl_loc: None, must_bind: false },
+            &TestItem { decl_loc: None, must_bind: false },
             /* path= */ None,
             "unsupported_message",
         )
@@ -296,11 +279,7 @@ fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
     let actual = generate_unsupported(
         &db,
         db.new_unsupported_item_with_static_message(
-            &TestItem {
-                source_loc: Some("Generated from: some/header;l=1"),
-                decl_loc: Some(test_decl_loc()),
-                must_bind: false,
-            },
+            &TestItem { decl_loc: Some(test_decl_loc()), must_bind: false },
             /* path= */ None,
             "unsupported_message",
         )
@@ -327,11 +306,7 @@ fn test_generate_unsupported_function_template_with_global_cpp() -> Result<()> {
         },
     );
     let mut unsupported_item = db.new_unsupported_item_with_static_message(
-        &TestItem {
-            source_loc: Some("Generated from: some/header;l=1"),
-            decl_loc: Some(test_decl_loc()),
-            must_bind: false,
-        },
+        &TestItem { decl_loc: Some(test_decl_loc()), must_bind: false },
         /* path= */ None,
         "unsupported_message",
     );
@@ -372,11 +347,7 @@ fn test_generate_unsupported_function_template_strict_mode_fatal_error() -> Resu
         },
     );
     let mut unsupported_item = db.new_unsupported_item_with_static_message(
-        &TestItem {
-            source_loc: Some("Generated from: some/header;l=1"),
-            decl_loc: Some(test_decl_loc()),
-            must_bind: true,
-        },
+        &TestItem { decl_loc: Some(test_decl_loc()), must_bind: true },
         /* path= */ None,
         "unsupported_message",
     );

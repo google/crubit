@@ -297,6 +297,8 @@ message MemberFuncSemantic {
 }
 
 message Func {
+  reserved 22;
+  reserved source_loc;
   reserved 19;
   UnqualifiedIdentifier cc_name = 1;
   UnqualifiedIdentifier rs_name = 2;
@@ -318,7 +320,6 @@ message Func {
   string unknown_attr = 18;
   bool is_member_or_descendant_of_class_template = 20;
   SafetyAnnotation safety_annotation = 21;
-  string source_loc = 22;
   uint64 id = 23;
   uint64 enclosing_item_id = 24;
   // The enclosing record that this function is a friend of.
@@ -519,6 +520,8 @@ message ArrayValue {
 
 // A constant value (constexpr or const with constant initializer).
 message Constant {
+  reserved 7;
+  reserved source_loc;
   oneof kind {
     // A scalar integer or boolean value.
     IntegerConstant value = 1;
@@ -532,7 +535,6 @@ message Constant {
   string unique_name = 4;
   uint64 id = 5;
   string owning_target = 6;
-  string source_loc = 7;
   // The type of the constant. Set for `value` (the scalar type) and
   // `array_value` (the innermost element type); unset for
   // `string_view_value`, whose Rust type is determined from the bytes
@@ -629,6 +631,8 @@ message OwnedPtrConfig {
 }
 
 message Record {
+  reserved 12;
+  reserved source_loc;
   // `rs_name` and `cc_name` are typically equal, but they may be different for
   // template instantiations.
   Identifier rs_name = 1;
@@ -647,7 +651,6 @@ message Record {
   string doc_comment = 9;
   BridgeType bridge_type = 10;
   OwnedPtrConfig owned_ptr_config = 11;
-  string source_loc = 12;
   repeated BaseClass unambiguous_public_bases = 13;
   repeated Field fields = 14;
   repeated LifetimeName lifetime_params = 15;
@@ -739,12 +742,13 @@ message Enumerator {
 }
 
 message Enum {
+  reserved 6;
+  reserved source_loc;
   Identifier cc_name = 1;
   Identifier rs_name = 2;
   string unique_name = 3;
   uint64 id = 4;
   string owning_target = 5;
-  string source_loc = 6;
   CcType underlying_type = 7;
   repeated Enumerator enumerators = 8;
   string unknown_attr = 9;
@@ -761,12 +765,13 @@ message Enum {
 }
 
 message GlobalVar {
+  reserved 6;
+  reserved source_loc;
   Identifier cc_name = 1;
   Identifier rs_name = 2;
   string unique_name = 3;
   uint64 id = 4;
   string owning_target = 5;
-  string source_loc = 6;
   string mangled_name = 7;
   CcType type = 8;
   string unknown_attr = 9;
@@ -780,6 +785,8 @@ message GlobalVar {
 
 // A type alias (defined either using `typedef` or `using`).
 message TypeAlias {
+  reserved 9;
+  reserved source_loc;
   Identifier cc_name = 1;
   Identifier rs_name = 2;
   string unique_name = 3;
@@ -788,7 +795,6 @@ message TypeAlias {
   string doc_comment = 6;
   string unknown_attr = 7;
   CcType underlying_type = 8;
-  string source_loc = 9;
   uint64 enclosing_item_id = 10;
   bool must_bind = 11;
   string deprecated = 12;
@@ -800,6 +806,8 @@ message TypeAlias {
 
 // A placeholder for an item that we can't generate bindings for (yet)
 message UnsupportedItem {
+  reserved 6;
+  reserved source_loc;
   enum Kind {
     KIND_UNSPECIFIED = 0;
     FUNC = 1;
@@ -824,7 +832,6 @@ message UnsupportedItem {
   Kind kind = 3;
   Path path = 4;
   repeated FormattedError errors = 5;
-  string source_loc = 6;
   uint64 id = 7;
   // Whether the item required binding (was annotated with `CRUBIT_MUST_BIND`).
   bool must_bind = 8;

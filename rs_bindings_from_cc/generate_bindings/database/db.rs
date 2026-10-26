@@ -525,7 +525,7 @@ impl<'db> BindingsGenerator<'db> {
                 return intern!(
                     self.interner(),
                     "<[internal] comment at {}>",
-                    c.source_loc().unwrap_or("<unknown loc>")
+                    ir::DeclLocationOrUnknown(c.decl_loc())
                 );
             }
             ir::Item::UseMod(u) => {
@@ -670,7 +670,6 @@ impl<'db> BindingsGenerator<'db> {
             item.unique_name(),
             item.unsupported_kind(),
             item.id(),
-            item.source_loc(),
             item.decl_loc(),
             self.defining_target(item.id()),
             must_bind,

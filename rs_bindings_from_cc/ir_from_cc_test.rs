@@ -113,7 +113,6 @@ fn test_function() {
                 call_conv: Some(C),
                 is_member_or_descendant_of_class_template: false,
                 safety_annotation: Unannotated,
-                source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3",
                 decl_loc: Some(DeclLocation {
                     spelling: Some(SourceLocation { path: "ir_from_cc_virtual_header.h", line: 3, }),
                     ...
@@ -5923,191 +5922,107 @@ fn test_visibility_attribute_on_user_declarations() {
     );
 }
 
-#[gtest]
-fn test_source_location_with_macro() {
-    let assert_matches = |cc_snippet: &str, expected: proc_macro2::TokenStream| {
-        let proto = ir_proto_from_cc(cc_snippet).unwrap();
+/// Returns how the location of each item that has one is displayed in doc comments.
+fn displayed_decl_locs(ir: &IR<'_>) -> Vec<String> {
+    ir.items().filter_map(|item| item.decl_loc()).map(|decl_loc| decl_loc.to_string()).collect()
+}
 
-        let ir = ir_testing::make_test_ir(&proto).unwrap();
-        assert_ir_matches!(ir, expected);
-    };
-    let loc = "Generated from: ir_from_cc_virtual_header.h;l=5\n\
-        Expanded at: ir_from_cc_virtual_header.h;l=7";
-    assert_matches(
-        r#"
+#[gtest]
+fn test_displayed_decl_location() -> Result<()> {
+    let loc = "Generated from: ir_from_cc_virtual_header.h;l=3";
+    for header in [
+        "void no_op_func_to_test_source_location();",
+        "typedef float SomeTypedefToTestSourceLocation;",
+        "template <typename T> void unsupported_templated_func_to_test_source_location() {}",
+        "enum SomeEmptyEnumToTestSourceLocation {};",
+        "struct SomeEmptyStructToTestSourceLocation {};",
+        "int global_var_to_test_source_location = 1;",
+    ] {
+        let proto = ir_proto_from_cc(header)?;
+        let ir = ir_testing::make_test_ir(&proto)?;
+        expect_that!(displayed_decl_locs(&ir), contains(eq(loc)), "for {header}");
+    }
+    Ok(())
+}
+
+#[gtest]
+fn test_displayed_decl_location_with_macro() -> Result<()> {
+    for (header, loc) in [
+        (
+            r#"
 #define NO_OP_FUNC(func_name) \
   void fun_name();
 
 NO_OP_FUNC(no_op_func_to_test_source_location_with_macro);"#,
-        quote! {Func { ... source_loc: #loc, ... } },
-    );
-
-    let loc = "Generated from: ir_from_cc_virtual_header.h;l=4\n\
-        Expanded at: ir_from_cc_virtual_header.h;l=5";
-    assert_matches(
-        r#"
+            "Generated from: ir_from_cc_virtual_header.h;l=5\n\
+             Expanded at: ir_from_cc_virtual_header.h;l=7",
+        ),
+        (
+            r#"
 #define TYPE_ALIAS_TO_INT(type_alias) using type_alias = int;
 TYPE_ALIAS_TO_INT(MyIntToTestSourceLocationWithMacro);"#,
-        quote! {TypeAlias { ... source_loc: #loc, ... } },
-    );
-    let loc = "Generated from: ir_from_cc_virtual_header.h;l=4\n\
-        Expanded at: ir_from_cc_virtual_header.h;l=6";
-    assert_matches(
-        r#"
+            "Generated from: ir_from_cc_virtual_header.h;l=4\n\
+             Expanded at: ir_from_cc_virtual_header.h;l=5",
+        ),
+        (
+            r#"
 #define TEMPLATE_NO_OP_FUNC(func_name) \
 template <typename T> void func_name() {};
   TEMPLATE_NO_OP_FUNC(unsupported_templated_no_op_func_to_test_source_location_with_macro);"#,
-        quote! {UnsupportedItem { ... source_loc: Some(#loc,), ... } },
-    );
-
-    let loc = "Generated from: ir_from_cc_virtual_header.h;l=5\n\
-        Expanded at: ir_from_cc_virtual_header.h;l=6";
-    assert_matches(
-        r#"
+            "Generated from: ir_from_cc_virtual_header.h;l=4\n\
+             Expanded at: ir_from_cc_virtual_header.h;l=6",
+        ),
+        (
+            r#"
 #define DEFINE_EMPTY_ENUM(enum_name) \
   enum enum_name {};
 DEFINE_EMPTY_ENUM(EmptyEnumToTestSourceLocationWithMacro);"#,
-        quote! {Enum { ... source_loc: #loc, ... } },
-    );
-
-    let loc = "Generated from: ir_from_cc_virtual_header.h;l=5\n\
-        Expanded at: ir_from_cc_virtual_header.h;l=6";
-    assert_matches(
-        r#"
+            "Generated from: ir_from_cc_virtual_header.h;l=5\n\
+             Expanded at: ir_from_cc_virtual_header.h;l=6",
+        ),
+        (
+            r#"
 #define DEFINE_EMPTY_STRUCT(struct_name) \
   struct struct_name {};
 DEFINE_EMPTY_STRUCT(EmptyStructToTestSourceLocationWithMacro);"#,
-        quote! {Record { ... source_loc: #loc, ... } },
-    );
+            "Generated from: ir_from_cc_virtual_header.h;l=5\n\
+             Expanded at: ir_from_cc_virtual_header.h;l=6",
+        ),
+    ] {
+        let proto = ir_proto_from_cc(header)?;
+        let ir = ir_testing::make_test_ir(&proto)?;
+        expect_that!(displayed_decl_locs(&ir), contains(eq(loc)), "for {header}");
+    }
+    Ok(())
 }
 
 #[gtest]
-fn test_source_location() {
-    let assert_matches = |cc_snippet: &str, expected: proc_macro2::TokenStream| {
-        let proto = ir_proto_from_cc(cc_snippet).unwrap();
-
-        let ir = ir_testing::make_test_ir(&proto).unwrap();
-        assert_ir_matches!(ir, expected);
-    };
-    assert_matches(
-        "void no_op_func_to_test_source_location();",
-        quote! {Func { ... source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
-    );
-    assert_matches(
-        r#"typedef float SomeTypedefToTestSourceLocation;"#,
-        quote! {TypeAlias { ... source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
-    );
-    assert_matches(
-        r#"  template <typename T> void unsupported_templated_func_to_test_source_location() {}"#,
-        quote! {UnsupportedItem { ... source_loc: Some("Generated from: ir_from_cc_virtual_header.h;l=3"), ... } },
-    );
-    assert_matches(
-        r#"enum SomeEmptyEnumToTestSourceLocation {};"#,
-        quote! {Enum { ... source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
-    );
-    assert_matches(
-        r#"struct SomeEmptyStructToTestSourceLocation {};"#,
-        quote! {Record { ... source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
-    );
-}
-
-#[gtest]
-fn test_source_location_with_macro_defined_in_another_file() {
+fn test_displayed_decl_location_with_macro_defined_in_another_file() -> Result<()> {
     let dependency_header = r#"
 #define MyIntTypeAliasToTestSourceLocation(type_alias_name) using type_alias_name = int;"#;
     let header = "MyIntTypeAliasToTestSourceLocation(my_int);";
-    let proto = ir_proto_from_cc_dependency(header, dependency_header).unwrap();
+    let proto = ir_proto_from_cc_dependency(header, dependency_header)?;
 
-    let ir = ir_testing::make_test_ir_dependency(&proto, None).unwrap();
-    let expected_source_loc = "Generated from: test/dependency_header.h;l=2\n\
-                               Expanded at: ir_from_cc_virtual_header.h;l=3";
-    assert_ir_matches!(
-        ir,
-        quote! {
-        ...
-        TypeAlias {
-          ...
-            source_loc: #expected_source_loc,
-          ...
-          }
-        ...
-        }
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
+    expect_that!(
+        displayed_decl_locs(&ir),
+        contains(eq("Generated from: test/dependency_header.h;l=2\n\
+                     Expanded at: ir_from_cc_virtual_header.h;l=3"))
     );
+    Ok(())
 }
 
 #[gtest]
-fn test_source_location_class_template_specialization() {
+fn test_displayed_decl_location_class_template_specialization() -> Result<()> {
     let cc_snippet = "template <typename T> class MyClassTemplateToTestSourceLocation { T t_; };
     using MyClassTemplateSpecializationToTestSourceLocation = MyClassTemplateToTestSourceLocation<bool>;";
-    let proto = ir_proto_from_cc(cc_snippet).unwrap();
+    let proto = ir_proto_from_cc(cc_snippet)?;
 
-    let ir = ir_testing::make_test_ir(&proto).unwrap();
-    let expected_source_loc = "Generated from: ir_from_cc_virtual_header.h;l=4";
-    assert_ir_matches!(
-        ir,
-        quote! {
-        ...
-        TypeAlias {
-          ...
-            source_loc: #expected_source_loc,
-          ...
-          }
-        ...
-        }
+    let ir = ir_testing::make_test_ir(&proto)?;
+    expect_that!(
+        displayed_decl_locs(&ir),
+        contains(eq("Generated from: ir_from_cc_virtual_header.h;l=4"))
     );
-}
-
-/// Returns the `source_loc()` of each item that has one, with how its `decl_loc()` is displayed.
-fn source_locs_and_displayed_decl_locs(ir: &IR<'_>) -> Vec<(String, Option<String>)> {
-    ir.items()
-        .filter_map(|item| {
-            let decl_loc = item.decl_loc().map(|decl_loc| decl_loc.to_string());
-            Some((item.source_loc()?.to_string(), decl_loc))
-        })
-        .collect()
-}
-
-#[gtest]
-fn test_decl_location_displays_as_source_loc() -> Result<()> {
-    let headers = [
-        r#"
-        void Func();
-        struct Record { int field; };
-        enum Enum { kEnumerator };
-        using Alias = int;
-        int global_var = 1;
-        constexpr int kConstant = 1;
-        template <typename T> void Template() {}
-        "#,
-        r#"
-#define DECLARE_FUNC(name) void name();
-DECLARE_FUNC(FuncFromMacro)
-#define DECLARE_STRUCT(name) struct name {};
-DECLARE_STRUCT(StructFromMacro)
-#define DECLARE_TEMPLATE(name) template <typename T> void name() {}
-DECLARE_TEMPLATE(TemplateFromMacro)
-        "#,
-        "DEPENDENCY_MACRO(AliasFromDependencyMacro);",
-    ];
-    let dependency_header = "#define DEPENDENCY_MACRO(name) using name = int;";
-    for kythe_annotations in [false, true] {
-        for header in headers {
-            let proto = ir_testing::ir_proto_from_cc_dependency(
-                test_platform(),
-                header,
-                dependency_header,
-                None,
-                kythe_annotations,
-                /* carcinize= */ false,
-            )?;
-            let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
-            let locs = source_locs_and_displayed_decl_locs(&ir);
-            expect_that!(locs, not(is_empty()), "for {header}");
-            for (source_loc, decl_loc) in &locs {
-                expect_that!(decl_loc.as_deref(), some(eq(source_loc.as_str())), "for {header}");
-            }
-        }
-    }
     Ok(())
 }
 

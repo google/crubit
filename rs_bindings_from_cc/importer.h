@@ -125,9 +125,6 @@ class Importer final : public ImportContext {
   absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
       const clang::NamedDecl& named_decl) const override;
   std::optional<std::string> GetComment(const clang::Decl& decl) const override;
-  std::string ConvertSourceLocation(
-      clang::SourceLocation loc,
-      clang::DeclarationNameInfo* absl_nullable name_info) const override;
   ir_proto::DeclLocation ConvertDeclLocation(
       clang::SourceLocation loc,
       clang::DeclarationNameInfo* absl_nullable name_info) const override;

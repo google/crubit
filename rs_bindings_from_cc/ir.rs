@@ -168,9 +168,6 @@ pub trait GenericItem<'pb> {
     /// (type, function, module).
     fn unsupported_kind(&self) -> UnsupportedItemKind;
 
-    /// The recorded source location, or None if none is present.
-    fn source_loc(&self) -> Option<&'pb str>;
-
     /// Where the item is declared, or None if unknown.
     fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
         None
@@ -204,9 +201,6 @@ where
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         (**self).unsupported_kind()
-    }
-    fn source_loc(&self) -> Option<&'pb str> {
-        (**self).source_loc()
     }
     fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
         (**self).decl_loc()
@@ -1746,7 +1740,6 @@ impl<'pb> ProtoToIr for FuncView<'pb> {
         self.deprecated_opt().into_option().validate()?;
         self.unknown_attr_opt().into_option().validate()?;
         self.safety_annotation().validate()?;
-        self.source_loc().validate()?;
         self.decl_loc_opt().into_option().validate()?;
         for s in self.lifetime_inputs().iter() {
             s.validate()?;
@@ -1892,10 +1885,6 @@ derive_debug_partialeq_eq_hash! {
             self.proto.safety_annotation().to_ir()
         }
 
-        pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
-        }
-
         pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
             self.proto.decl_loc_opt().into_option().to_ir()
         }
@@ -1967,9 +1956,6 @@ impl<'pb> GenericItem<'pb> for Func<'pb> {
         } else {
             UnsupportedItemKind::Func
         }
-    }
-    fn source_loc(&self) -> Option<&'pb str> {
-        Some(self.source_loc())
     }
     fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
         Self::decl_loc(self)
@@ -2322,9 +2308,6 @@ impl<'pb> GenericItem<'pb> for IncompleteRecord<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.record_type.unsupported_item_kind()
     }
-    fn source_loc(&self) -> Option<&'pb str> {
-        None
-    }
     fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr()
     }
@@ -2631,7 +2614,6 @@ impl<'pb> ProtoToIr for RecordView<'pb> {
             let _ = BridgeType::try_from(bt)?;
         }
         self.owned_ptr_config_opt().into_option().validate()?;
-        self.source_loc().validate()?;
         self.decl_loc_opt().into_option().validate()?;
         for base in self.unambiguous_public_bases().iter() {
             base.validate()?;
@@ -2758,10 +2740,6 @@ derive_debug_partialeq_eq_hash! {
 
         pub fn owned_ptr_config(&self) -> Option<OwnedPtrConfig<'pb>> {
             self.proto.owned_ptr_config_opt().into_option().to_ir()
-        }
-
-        pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
         }
 
         pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
@@ -2923,9 +2901,6 @@ impl<'pb> GenericItem<'pb> for Record<'pb> {
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.record_type().unsupported_item_kind()
-    }
-    fn source_loc(&self) -> Option<&'pb str> {
-        Some(self.source_loc())
     }
     fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
         Self::decl_loc(self)
@@ -3115,7 +3090,6 @@ impl<'pb> ProtoToIr for ConstantView<'pb> {
         self.rs_name().validate()?;
         self.unique_name().validate()?;
         self.owning_target().validate()?;
-        self.source_loc().validate()?;
         self.decl_loc_opt().into_option().validate()?;
         match self.kind() {
             ::ir_rust_proto::constant::KindOneof::Value(value) => {
@@ -3183,10 +3157,6 @@ derive_debug_partialeq_eq_hash! {
             &self.owning_target
         }
 
-        pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
-        }
-
         pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
             self.proto.decl_loc_opt().into_option().to_ir()
         }
@@ -3232,9 +3202,6 @@ impl<'pb> GenericItem<'pb> for Constant<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::GlobalVar
     }
-    fn source_loc(&self) -> Option<&'pb str> {
-        Some(self.source_loc())
-    }
     fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
         Self::decl_loc(self)
     }
@@ -3264,7 +3231,6 @@ impl<'pb> ProtoToIr for GlobalVarView<'pb> {
         self.rs_name().validate()?;
         self.unique_name().validate()?;
         self.owning_target().validate()?;
-        self.source_loc().validate()?;
         self.decl_loc_opt().into_option().validate()?;
         self.unknown_attr_opt().into_option().validate()?;
         self.mangled_name_opt().into_option().validate()?;
@@ -3301,10 +3267,6 @@ derive_debug_partialeq_eq_hash! {
 
         pub fn owning_target(&self) -> &BazelLabel {
             &self.owning_target
-        }
-
-        pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
         }
 
         pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
@@ -3357,9 +3319,6 @@ impl<'pb> GenericItem<'pb> for GlobalVar<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::GlobalVar
     }
-    fn source_loc(&self) -> Option<&'pb str> {
-        Some(self.source_loc())
-    }
     fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
         Self::decl_loc(self)
     }
@@ -3391,7 +3350,6 @@ impl<'pb> ProtoToIr for EnumView<'pb> {
         self.unique_name().validate()?;
         self.mangled_cc_name().validate()?;
         self.owning_target().validate()?;
-        self.source_loc().validate()?;
         self.decl_loc_opt().into_option().validate()?;
         let _ = CcType::try_from(self.underlying_type())?;
         if !self.is_incomplete() {
@@ -3439,10 +3397,6 @@ derive_debug_partialeq_eq_hash! {
 
         pub fn owning_target(&self) -> &BazelLabel {
             &self.owning_target
-        }
-
-        pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
         }
 
         pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
@@ -3509,9 +3463,6 @@ impl<'pb> GenericItem<'pb> for Enum<'pb> {
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Enum
-    }
-    fn source_loc(&self) -> Option<&'pb str> {
-        Some(self.source_loc())
     }
     fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
         Self::decl_loc(self)
@@ -3595,7 +3546,6 @@ impl<'pb> ProtoToIr for TypeAliasView<'pb> {
         self.doc_comment_opt().into_option().validate()?;
         self.unknown_attr_opt().into_option().validate()?;
         let _ = CcType::try_from(self.underlying_type())?;
-        self.source_loc().validate()?;
         self.decl_loc_opt().into_option().validate()?;
         self.deprecated_opt().into_option().validate()?;
         for lifetime in self.lifetime_inputs().iter() {
@@ -3648,10 +3598,6 @@ derive_debug_partialeq_eq_hash! {
             &self.underlying_type
         }
 
-        pub fn source_loc(&self) -> &'pb str {
-            self.proto.source_loc().to_ir()
-        }
-
         pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
             self.proto.decl_loc_opt().into_option().to_ir()
         }
@@ -3698,9 +3644,6 @@ impl<'pb> GenericItem<'pb> for TypeAlias<'pb> {
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::TypeAlias
-    }
-    fn source_loc(&self) -> Option<&'pb str> {
-        Some(self.source_loc())
     }
     fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
         Self::decl_loc(self)
@@ -3872,7 +3815,6 @@ pub struct UnsupportedItem<'pb> {
     pub(crate) kind: UnsupportedItemKind,
     pub(crate) path: Option<UnsupportedItemPath<'pb>>,
     pub(crate) errors: Vec<Rc<FormattedError>>,
-    pub(crate) source_loc: Option<&'pb str>,
     pub(crate) decl_loc: Option<DeclLocation<'pb>>,
     pub(crate) id: ItemId,
     pub(crate) must_bind: bool,
@@ -3893,7 +3835,6 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::UnsupportedItemView<'pb> {
         for e in self.errors().iter() {
             e.validate()?;
         }
-        self.source_loc_opt().into_option().validate()?;
         self.decl_loc_opt().into_option().validate()?;
         self.defining_target_opt().into_option().validate()?;
         self.inline_cpp_source_text_opt().into_option().validate()
@@ -3905,7 +3846,6 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::UnsupportedItemView<'pb> {
         let kind = self.kind().to_ir();
         let path = self.path_opt().into_option().map(|p| p.to_ir());
         let errors = self.errors().iter().map(|e| Rc::new(e.to_ir())).collect();
-        let source_loc = self.source_loc_opt().into_option().to_ir();
         let decl_loc = self.decl_loc_opt().into_option().to_ir();
         let id = ItemId(self.id() as usize);
         let must_bind = self.must_bind();
@@ -3920,7 +3860,6 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::UnsupportedItemView<'pb> {
             kind,
             path,
             errors,
-            source_loc,
             decl_loc,
             id,
             must_bind,
@@ -3953,10 +3892,6 @@ derive_debug_partialeq_eq_hash! {
 
         pub fn errors(&self) -> &[Rc<FormattedError>] {
             self.errors.as_slice()
-        }
-
-        pub fn source_loc(&self) -> Option<&'pb str> {
-            self.source_loc
         }
 
         pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
@@ -4004,9 +3939,6 @@ impl<'pb> GenericItem<'pb> for UnsupportedItem<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.kind
     }
-    fn source_loc(&self) -> Option<&'pb str> {
-        self.source_loc()
-    }
     fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
         UnsupportedItem::decl_loc(self)
     }
@@ -4025,7 +3957,6 @@ impl<'pb> UnsupportedItem<'pb> {
         unique_name: Option<&'pb str>,
         kind: UnsupportedItemKind,
         id: ItemId,
-        source_loc: Option<&'pb str>,
         decl_loc: Option<DeclLocation<'pb>>,
         defining_target: Option<BazelLabel>,
         must_bind: bool,
@@ -4038,7 +3969,6 @@ impl<'pb> UnsupportedItem<'pb> {
             errors: error.into_iter().collect(),
             kind,
             path,
-            source_loc,
             decl_loc,
             id,
             must_bind,
@@ -4093,9 +4023,6 @@ impl<'pb> GenericItem<'pb> for Comment<'pb> {
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
-    }
-    fn source_loc(&self) -> Option<&'pb str> {
-        None
     }
     fn unknown_attr(&self) -> Option<&'pb str> {
         None
@@ -4223,9 +4150,6 @@ impl<'pb> GenericItem<'pb> for Namespace<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Namespace
     }
-    fn source_loc(&self) -> Option<&'pb str> {
-        None
-    }
     fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr()
     }
@@ -4287,9 +4211,6 @@ impl<'pb> GenericItem<'pb> for UseMod<'pb> {
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
-    }
-    fn source_loc(&self) -> Option<&'pb str> {
-        None
     }
     fn unknown_attr(&self) -> Option<&'pb str> {
         None
@@ -4412,9 +4333,6 @@ impl<'pb> GenericItem<'pb> for ExistingRustType<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
     }
-    fn source_loc(&self) -> Option<&'pb str> {
-        None
-    }
     fn unknown_attr(&self) -> Option<&'pb str> {
         None
     }
@@ -4484,13 +4402,6 @@ impl<'pb> GenericItem<'pb> for Item<'pb> {
         forward_item! {
             match self {
                 _(x) => x.unsupported_kind()
-            }
-        }
-    }
-    fn source_loc(&self) -> Option<&'pb str> {
-        forward_item! {
-            match self {
-                _(x) => x.source_loc()
             }
         }
     }

@@ -3626,7 +3626,6 @@ mod tests {
                 mangled_cc_name: "6MyEnum",
                 id: 0,
                 owning_target: "//foo/bar",
-                source_loc: "some_file.h:123",
                 underlying_type: ir_rust_proto::CcType {
                     primitive: ir_rust_proto::cc_type::Primitive {
                         spelling: "int",
@@ -3688,7 +3687,6 @@ mod tests {
                         spelling: "int",
                     },
                 },
-                source_loc: "some_file.h:123",
             }
         };
         let alias_incomplete_record = RsTypeKind::TypeAlias {

@@ -1558,7 +1558,6 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   if (owned_ptr_config.has_value()) {
     owned_ptr_config->WriteToProto(*record->mutable_owned_ptr_config());
   }
-  record->set_source_loc(ictx_.ConvertSourceLocation(source_loc, nullptr));
   *record->mutable_decl_loc() = ictx_.ConvertDeclLocation(source_loc, nullptr);
   for (auto& base : GetUnambiguousPublicBases(*record_decl)) {
     *record->add_unambiguous_public_bases() = std::move(base);

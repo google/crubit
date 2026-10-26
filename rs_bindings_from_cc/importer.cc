@@ -34,7 +34,6 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
-#include "absl/strings/substitute.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
 #include "common/string_view_conversion.h"
@@ -2197,8 +2196,6 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
           clang::dyn_cast<clang::NamedDecl>(&original_decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
-  std::string source_loc =
-      ConvertSourceLocation(original_decl.getBeginLoc(), nullptr);
   std::optional<std::string> inline_cpp_source_text;
   if (invocation_.allow_incomplete_migration()) {
     clang::SourceManager& sm = ctx_.getSourceManager();
@@ -2223,7 +2220,6 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
   for (const auto& err : errors) {
     err.WriteToProto(*unsupported->add_errors());
   }
-  unsupported->set_source_loc(std::move(source_loc));
   *unsupported->mutable_decl_loc() =
       ConvertDeclLocation(original_decl.getBeginLoc(), nullptr);
   unsupported->set_id(GenerateItemId(original_decl).value());
@@ -2268,44 +2264,6 @@ std::optional<std::string> Importer::GetComment(const clang::Decl& decl) const {
       absl::StrSplit(raw_comment_text, '\n', ShouldKeepCommentLine), "\n");
   if (cleaned_comment_text.empty()) return {};
   return cleaned_comment_text;
-}
-
-std::string Importer::ConvertSourceLocation(
-    clang::SourceLocation loc,
-    clang::DeclarationNameInfo* absl_nullable name_info) const {
-  bool kythe_annotations = invocation_.kythe_annotations();
-  // TODO(b/261185414): The path format should probably come from a command
-  // line argument.
-  // TODO(b/261185414): Consider linking to the symbol instead of to the line
-  // number to avoid wrong links while generated files have not caught up.
-  constexpr absl::string_view kGeneratedFrom = "Generated from";
-  constexpr absl::string_view kExpandedAt = "Expanded at";
-  constexpr auto kSourceLocationFunc = [](bool kythe_annotations,
-                                          absl::string_view origin,
-                                          absl::string_view filename,
-                                          uint32_t line, uint32_t begin,
-                                          uint32_t end) {
-    return absl::Substitute("$0: $1;l=$2", origin, filename, line);
-  };
-  constexpr absl::string_view kSourceLocUnknown = "<unknown location>";
-  ir_proto::DeclLocation decl_loc = ConvertDeclLocation(loc, name_info);
-  std::string spelling_loc_str(kSourceLocUnknown);
-  if (decl_loc.has_spelling()) {
-    spelling_loc_str = kSourceLocationFunc(
-        kythe_annotations, kGeneratedFrom, decl_loc.spelling().path(),
-        decl_loc.spelling().line(), decl_loc.name_range().begin(),
-        decl_loc.name_range().end());
-  }
-  if (!loc.isMacroID()) {
-    return spelling_loc_str;
-  }
-  std::string expansion_loc_str(kSourceLocUnknown);
-  if (decl_loc.has_expansion()) {
-    expansion_loc_str = kSourceLocationFunc(kythe_annotations, kExpandedAt,
-                                            decl_loc.expansion().path(),
-                                            decl_loc.expansion().line(), 0, 0);
-  }
-  return absl::StrCat(spelling_loc_str, "\n", expansion_loc_str);
 }
 
 ir_proto::DeclLocation Importer::ConvertDeclLocation(
