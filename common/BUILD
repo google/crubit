@@ -54,6 +54,8 @@ cc_library(
 crubit_cc_test(
     name = "annotation_reader_test",
     srcs = ["annotation_reader_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":annotation_reader",
         ":status_test_matchers",

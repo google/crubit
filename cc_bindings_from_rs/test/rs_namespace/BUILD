@@ -31,6 +31,8 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "rs_namespace_test",
     srcs = ["rs_namespace_test.cc"],
+    # Not yet verified in the Windows VM.
+    tags = ["no_windows"],
     deps = [
         ":rs_namespace_cc_api",
         "//support/rs_std",

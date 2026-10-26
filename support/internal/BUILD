@@ -44,6 +44,8 @@ cc_test(
 crubit_cc_test(
     name = "memswap_test",
     srcs = ["memswap_test.cc"],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":bindings_support",
         "@googletest//:gtest_main",
@@ -53,6 +55,8 @@ crubit_cc_test(
 crubit_cc_test(
     name = "offsetof_test",
     srcs = ["offsetof_test.cc"],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":bindings_support",
         "@googletest//:gtest_main",
@@ -62,6 +66,8 @@ crubit_cc_test(
 crubit_cc_test(
     name = "slot_test",
     srcs = ["slot_test.cc"],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":bindings_support",
         "@abseil-cpp//absl/base:core_headers",
@@ -73,6 +79,8 @@ crubit_cc_test(
 crubit_cc_test(
     name = "sizeof_test",
     srcs = ["sizeof_test.cc"],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":bindings_support",
         "@googletest//:gtest_main",

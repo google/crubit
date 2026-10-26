@@ -47,6 +47,8 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "shared_ptr_test",
     srcs = ["shared_ptr_test.cc"],
+    # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
+    tags = ["no_windows"],
     deps = [
         ":shared_ptr_cc_api",
         "@googletest//:gtest_main",

@@ -40,6 +40,8 @@ cc_proto_library(
 crubit_cc_test(
     name = "rust_test",
     srcs = ["rust_test.cc"],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":rust",
         ":test_cc_proto",

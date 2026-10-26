@@ -50,6 +50,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":no_std_cc_api",
         "@googletest//:gtest_main",
@@ -60,6 +62,8 @@ crubit_stdlib_cc_test(
     name = "no_std_test_on_alloc",
     srcs = ["no_std_test.cc"],
     stdlib = "alloc",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":no_std_cc_api",
         "@googletest//:gtest_main",
@@ -98,6 +102,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":no_core_cc_api",
         "@googletest//:gtest_main",
@@ -108,6 +114,8 @@ crubit_stdlib_cc_test(
     name = "no_core_test_on_core",
     srcs = ["no_core_test.cc"],
     stdlib = "core",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":no_core_cc_api",
         "@googletest//:gtest_main",
