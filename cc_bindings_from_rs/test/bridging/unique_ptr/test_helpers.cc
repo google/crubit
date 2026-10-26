@@ -8,17 +8,21 @@
 #include <memory>
 #include <utility>
 
+#include "absl/base/nullability.h"
+
 namespace unique_ptr_test {
 
 Target::Target(std::shared_ptr<int32_t> token) : token(std::move(token)) {}
 
-std::unique_ptr<Target> create_target(std::shared_ptr<int32_t> token) {
+absl_nonnull std::unique_ptr<Target> create_target(
+    absl_nonnull std::shared_ptr<int32_t> token) {
   return std::make_unique<Target>(std::move(token));
 }
 
 Derived::Derived(std::shared_ptr<int32_t> token) : token(std::move(token)) {}
 
-std::unique_ptr<Base> create_virtual_base(std::shared_ptr<int32_t> token) {
+absl_nonnull std::unique_ptr<Base> create_virtual_base(
+    absl_nonnull std::shared_ptr<int32_t> token) {
   return std::make_unique<Derived>(std::move(token));
 }
 

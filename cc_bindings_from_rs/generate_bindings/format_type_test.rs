@@ -998,8 +998,7 @@ fn test_format_ty_for_cc_unique_ptr_with_delete_fails() {
 fn nonnull_bindings_db_for_tests(tcx: TyCtxt<'_>) -> BindingsGenerator<'_> {
     bindings_db_for_tests_with_features(
         tcx,
-        crubit_feature::CrubitFeature::Experimental
-            | crubit_feature::CrubitFeature::Supported
+        crubit_feature::CrubitFeature::Supported
             | crubit_feature::CrubitFeature::NonnullSmartPointers,
         /* with_kythe_annotations= */ false,
         None,
@@ -1208,10 +1207,9 @@ fn test_is_bridged_type_never_bridges_vec_or_result() {
             pub x: i32,
         }
     };
-    let supported =
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported;
+    let supported = crubit_feature::CrubitFeature::Supported;
     for features in [
-        supported,
+        supported.into(),
         supported | crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust,
     ] {
         test_ty(
@@ -1315,8 +1313,7 @@ fn test_repr_transparent_cpp_type_is_not_c_abi_compatible_by_value_without_same_
 
 #[test]
 fn test_format_ty_for_cc_iterator_item_references() {
-    let default_features =
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported;
+    let default_features = crubit_feature::CrubitFeature::Supported;
     let enabled_features = default_features | crubit_feature::CrubitFeature::IteratorItemReferences;
 
     for (
@@ -1358,7 +1355,7 @@ fn test_format_ty_for_cc_iterator_item_references() {
             |desc, tcx, ty, &(expected_disabled, expected_enabled)| {
                 let db_disabled = bindings_db_for_tests_with_features(
                     tcx,
-                    default_features,
+                    default_features.into(),
                     /* with_kythe_annotations= */ false,
                     None,
                 );

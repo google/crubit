@@ -20,9 +20,6 @@ rust_library(
     name = "impls",
     testonly = 1,
     srcs = ["impls.rs"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
     edition = "2024",
 )
 

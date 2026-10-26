@@ -874,7 +874,7 @@ unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
     fn test_crate_features() -> Result<()> {
         let test_args = TestArgs::default_args()?.with_extra_crubit_args(&[
             "--default-features=supported",
-            "--crate-feature=self=experimental",
+            "--crate-feature=self=ctor_plain_values",
         ]);
         let test_result = test_args.run()?;
         let cc_api = std::fs::read_to_string(&test_result.h_path)?;
@@ -882,7 +882,7 @@ unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
             &cc_api,
             "// Automatically @generated C++ bindings for the following Rust crate:\n\
             // test_crate\n\
-            // Features: experimental, impl_cxx_extern_type, supported, types",
+            // Features: ctor_plain_values, impl_cxx_extern_type, supported, types",
         );
         Ok(())
     }
@@ -890,8 +890,8 @@ unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
     #[test]
     fn test_crate_disabled_features() -> Result<()> {
         let test_args = TestArgs::default_args()?.with_extra_crubit_args(&[
-            "--default-features=supported,experimental",
-            "--crate-disabled-feature=self=experimental",
+            "--default-features=supported,ctor_plain_values",
+            "--crate-disabled-feature=self=ctor_plain_values",
         ]);
         let test_result = test_args.run()?;
         let cc_api = std::fs::read_to_string(&test_result.h_path)?;

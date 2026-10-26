@@ -555,9 +555,7 @@ fn test_generic_adt_pub_use_preserves_doc_deprecated_and_kythe() {
     run_compiler_for_testing(test_src, |tcx| {
         let db = test_helpers::bindings_db_for_tests_with_features(
             tcx,
-            crubit_feature::CrubitFeature::Experimental
-                | crubit_feature::CrubitFeature::Supported
-                | crubit_feature::CrubitFeature::Generics,
+            crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
             /* with_kythe_annotations= */ true,
             None,
         );
@@ -1723,7 +1721,7 @@ fn test_format_item_type_alias_with_kythe_annotations() {
     test_format_item_with_features(
         test_src,
         "TypeAlias",
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        crubit_feature::CrubitFeature::Supported,
         /* with_kythe_annotations= */ true,
         |result| {
             let result = result.unwrap().unwrap();
@@ -2774,9 +2772,7 @@ fn test_is_cpp_constexpr_move_constructible() {
     run_compiler_for_testing(test_src, |tcx| {
         let db = bindings_db_for_tests_with_features(
             tcx,
-            crubit_feature::CrubitFeature::Experimental
-                | crubit_feature::CrubitFeature::Supported
-                | crubit_feature::CrubitFeature::EnumApiV2,
+            crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::EnumApiV2,
             /* with_kythe_annotations= */ false,
             None,
         );
@@ -2832,8 +2828,7 @@ fn test_method_returning_self_in_tuple() {
     run_compiler_for_testing(test_src, |tcx| {
         let db = test_helpers::bindings_db_for_tests_with_features(
             tcx,
-            crubit_feature::CrubitFeature::Experimental
-                | crubit_feature::CrubitFeature::Supported
+            crubit_feature::CrubitFeature::Supported
                 | crubit_feature::CrubitFeature::LayoutCompatTuple,
             /* with_kythe_annotations= */ false,
             None,
@@ -3487,8 +3482,7 @@ fn test_iterator_item_references() {
     run_compiler_for_testing(test_src, |tcx| {
         let db = test_helpers::bindings_db_for_tests_with_features(
             tcx,
-            crubit_feature::CrubitFeature::Experimental
-                | crubit_feature::CrubitFeature::Supported
+            crubit_feature::CrubitFeature::Supported
                 | crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
                 | crubit_feature::CrubitFeature::IteratorItemReferences,
             /* with_kythe_annotations= */ false,

@@ -141,7 +141,7 @@ fn test_format_struct_cpp_name_with_kythe_annotations() {
     test_format_item_with_features(
         test_src,
         "Foo",
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        crubit_feature::CrubitFeature::Supported,
         /* with_kythe_annotations= */ true,
         |result| {
             let result = result.unwrap().unwrap();
@@ -487,7 +487,7 @@ fn test_format_item_enum_with_kythe_annotations() {
     test_format_item_with_features(
         test_src,
         "SomeEnum",
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        crubit_feature::CrubitFeature::Supported,
         /* with_kythe_annotations= */ true,
         |result| {
             let result = result.unwrap().unwrap();
@@ -719,9 +719,7 @@ fn test_cpp_enum_fails_for_generic_struct() {
     test_format_item_with_features(
         test_src,
         "Color",
-        crubit_feature::CrubitFeature::Experimental
-            | crubit_feature::CrubitFeature::Supported
-            | crubit_feature::CrubitFeature::Generics,
+        crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
         /* with_kythe_annotations= */ false,
         |result| {
             let err = result.unwrap_err();
@@ -1997,9 +1995,7 @@ fn test_format_item_repr_c_union_non_final_private_field() {
 }
 
 fn enum_api_v2_features() -> flagset::FlagSet<crubit_feature::CrubitFeature> {
-    crubit_feature::CrubitFeature::Experimental
-        | crubit_feature::CrubitFeature::Supported
-        | crubit_feature::CrubitFeature::EnumApiV2
+    crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::EnumApiV2
 }
 
 /// With `enum_api_v2`, a directly-tagged enum gets a struct per variant, each storing its own tag.

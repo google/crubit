@@ -21,9 +21,6 @@ rust_library(
     name = "consts",
     testonly = 1,
     srcs = ["consts.rs"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
     edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",

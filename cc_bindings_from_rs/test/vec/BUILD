@@ -17,9 +17,6 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "vec",
     srcs = ["vec.rs"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
     edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",

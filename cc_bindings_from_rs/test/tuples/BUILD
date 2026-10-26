@@ -21,7 +21,6 @@ rust_library(
     name = "tuples",
     srcs = ["tuples.rs"],
     aspect_hints = [
-        "//features:experimental",
         "//features:movable_return_values",
     ],
     edition = "2024",

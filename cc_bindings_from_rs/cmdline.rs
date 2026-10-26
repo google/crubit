@@ -82,7 +82,7 @@ pub struct Cmdline {
     /// behavior is undefined. As a special case, the crate name `self`
     /// refers to the current crate, whose bindings are being generated.
     ///
-    /// Example: "--crate-feature=foo=experimental".
+    /// Example: "--crate-feature=foo=ctor_plain_values".
     #[clap(long = "crate-feature", value_parser = parse_crate_feature,
            value_name = "CRATE_NAME=CRUBIT_FEATURE")]
     pub crate_features: Vec<(String, flagset::FlagSet<crubit_feature::CrubitFeature>)>,
@@ -487,8 +487,8 @@ mod tests {
             "--clang-format-exe-path=clang-format.exe",
             "--rustfmt-exe-path=rustfmt.exe",
             "--crate-feature=dep1=supported",
-            "--crate-feature=dep1=experimental",
-            "--crate-feature=dep2=experimental",
+            "--crate-feature=dep1=ctor_plain_values",
+            "--crate-feature=dep2=ctor_plain_values",
         ])
         .unwrap();
 
@@ -503,14 +503,14 @@ mod tests {
         assert_eq!("dep1", cmdline.crate_features[1].0);
         assert_eq!(
             flagset::FlagSet::<crubit_feature::CrubitFeature>::from(
-                crubit_feature::CrubitFeature::Experimental
+                crubit_feature::CrubitFeature::CtorPlainValues
             ),
             cmdline.crate_features[1].1
         );
         assert_eq!("dep2", cmdline.crate_features[2].0);
         assert_eq!(
             flagset::FlagSet::<crubit_feature::CrubitFeature>::from(
-                crubit_feature::CrubitFeature::Experimental
+                crubit_feature::CrubitFeature::CtorPlainValues
             ),
             cmdline.crate_features[2].1
         );
