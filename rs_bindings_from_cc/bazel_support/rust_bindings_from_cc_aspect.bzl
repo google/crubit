@@ -153,6 +153,32 @@ def _get_unstable_rust_features(aspect_ctx):
             features.extend(hint[AdditionalRustSrcsProviderInfo].unstable_rust_features)
     return collections.uniq(features)
 
+def _get_rustc_env(aspect_ctx, extra_rs_srcs):
+    """Returns the rustc env for the bindings crate.
+
+    `CRUBIT_TARGET` is read by the `inline_cpp!` macro to compute thunk names. It is set whenever
+    the crate has extra Rust srcs, so that `inline_cpp!` there fails to compile (missing thunk)
+    instead of expanding to its `unreachable!()` placeholder and panicking if called. It must
+    match the label used by `extract_cpp` only if a hint extracts the embedded C++; otherwise any
+    value works.
+    """
+    if not extra_rs_srcs:
+        return {}
+    hints_by_crubit_target = {}
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            crubit_target = getattr(hint[AdditionalRustSrcsProviderInfo], "crubit_target", "")
+            if crubit_target:
+                hints_by_crubit_target.setdefault(crubit_target, []).append(str(hint.label))
+    if len(hints_by_crubit_target) > 1:
+        fail(("In {}: aspect hints set different `crubit_target` values; only one " +
+              "`rust_api_from_cpp` per C++ target can extract embedded C++: {}").format(
+            aspect_ctx.label,
+            hints_by_crubit_target,
+        ))
+    crubit_targets = hints_by_crubit_target.keys()
+    return {"CRUBIT_TARGET": crubit_targets[0] if crubit_targets else str(aspect_ctx.label)}
+
 def _get_root_namespaces(aspect_ctx):
     root_namespaces = []
     for hint in aspect_ctx.rule.attr.aspect_hints:
@@ -481,6 +507,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
         extra_rs_compile_data = extra_rs_compile_data,
+        rustc_env = _get_rustc_env(ctx, extra_rs_srcs),
         unstable_rust_features = unstable_rust_features,
         deps_for_cc_file = [target[CcInfo]] + [
             d.cc_info
