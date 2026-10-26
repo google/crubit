@@ -666,6 +666,17 @@ pub fn generate_bindings_tokens(
             .then(|| quote! { extern crate alloc; __NEWLINE__ __NEWLINE__  })
     };
 
+    // Handwritten `srcs` may call `inline_cpp!`, which expands to
+    // `inline_cpp_generated_bindings::<thunk>`. With `rust_api_from_cpp(embedded_cpp = True)`, the
+    // thunks are generated into this crate, so make that path resolve here.
+    //
+    // TODO: `--carcinize` emits `inline_cpp!` into the generated bindings themselves, and
+    // `extract_cpp` only scans `srcs`. A carcinize target that also has `srcs` gets
+    // `CRUBIT_TARGET` set, so those calls fail to compile instead of expanding to `unreachable!()`.
+    let extern_crate_self = ir.items().any(|item| matches!(item, Item::UseMod(_))).then(
+        || quote! { extern crate self as inline_cpp_generated_bindings; __NEWLINE__ __NEWLINE__ },
+    );
+
     // when we go through the main_api, we want to go through one at a time.
     // if the parent is none, we're responsible.
     // each thing needs to go through all its children.
@@ -777,6 +788,8 @@ pub fn generate_bindings_tokens(
             #![deny(warnings)] __NEWLINE__
 
             #extern_crate_alloc
+
+            #extern_crate_self
 
             #( #reexports __NEWLINE__ )*
 
