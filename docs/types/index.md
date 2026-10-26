@@ -31,9 +31,10 @@ categories ranging from "most widely supported" to "most restricted":
     Rust.
 *   **Layout-compatible**: these types have equivalent in-memory representations
     in C++ and Rust but cannot be represented using standard C ABI. These types
-    will only be usable as by-value function arguments if they are C++-movable.
-    For example, `Box<i32>` is not C++-movable because it has no `nullptr` /
-    moved-from representation.
+    are usable directly as by-value function arguments only if they are
+    C++-movable; otherwise they are passed as `rs::Movable<T>`. For example,
+    `Box<i32>` is not C++-movable because it has no `nullptr` / moved-from
+    representation.
 *   **Bridged**: these types may have different in-memory representations in C++
     and Rust, and so can only be passed by-value between the two languages.
     Examples include Rust tuples, which are bridged by-value into C++
@@ -43,12 +44,13 @@ Level of Support            | Example             | Pass by-reference | Pass by-
 --------------------------- | ------------------- | :---------------: | :-----------------: | :-----------------: | :----: | :-----------------------:
 ABI Compatible              | `i32`               | Y                 | Y                   | Y                   | Y      | Y
 Layout-compatible C++ type  | `absl::string_view` | Y                 | if Rust-movable[^1] | if Rust-movable[^2] | Y      | N
-Layout-compatible Rust type | `UserDefinedStruct` | Y                 | if C++ movable[^3]  | Y                   | Y      | N
+Layout-compatible Rust type | `UserDefinedStruct` | Y                 | Y[^3]               | Y                   | Y      | N
 Bridged                     | `(i32, i32)`        | N                 | Y                   | Y                   | N      | N
 
 [^1]: See <http://crubit.rs/cpp/classes_and_structs#trivially_relocatable>
 [^2]: See <http://crubit.rs/cpp/classes_and_structs#trivially_relocatable>
-[^3]: See <http://crubit.rs/rust/movable_types>
+[^3]: Directly if C++-movable, otherwise as `rs::Movable<T>`. See
+    <http://crubit.rs/rust/movable_types>.
 
 NOTE: All primitive and pointer types are ABI-compatible. However, due to
 b/369895805, all non-bridged user-defined types are **only** layout-compatible.
