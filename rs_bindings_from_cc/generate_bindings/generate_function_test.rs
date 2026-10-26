@@ -282,6 +282,57 @@ fn test_non_pod_param_and_return_with_inline_cpp() -> Result<()> {
     Ok(())
 }
 
+/// `PartialEq::eq` is implemented by negating the result of `operator!=`, including when
+/// `operator!=` is called through `inline_cpp!`.
+#[gtest]
+fn test_operator_ne_with_inline_cpp() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc_with_inline_cpp(
+        "struct SomeStruct final { \
+             inline bool operator!=(const SomeStruct& other) const { return i != other.i; } \
+             int i; \
+         };",
+    )?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl PartialEq for SomeStruct {
+                #[inline(always)]
+                fn eq ... -> bool {
+                    !unsafe {
+                        (::inline_cpp_macro::inline_cpp! { ... })(...)
+                    }
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+/// The result of a compound assignment operator is dropped, including when the operator is called
+/// through `inline_cpp!`.
+#[gtest]
+fn test_compound_assignment_with_inline_cpp() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc_with_inline_cpp(
+        "struct SomeStruct final { \
+             inline SomeStruct& operator+=(const SomeStruct& other) { i += other.i; return *this; } \
+             int i; \
+         };",
+    )?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            fn add_assign ... {
+                unsafe {
+                    (::inline_cpp_macro::inline_cpp! { ... })(...)
+                };
+            }
+        }
+    );
+    Ok(())
+}
+
 #[gtest]
 fn test_simple_function_with_types_from_other_target() -> Result<()> {
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc_dependency(

@@ -1543,30 +1543,41 @@ fn thunkless_accessor<'a>(
     }
 }
 
-/// Decodes `thunk_result` (an encoded comparison result) into an `Option<core::cmp::Ordering>`,
-/// if `impl_kind` is backed by `operator<=>`. See `spaceship_thunk_return_type`.
+/// Adjusts `thunk_result` (an expression that calls the C++ function, either through a thunk or
+/// through `inline_cpp!`) to match the generated Rust function, if needed:
 ///
-/// TODO(cl/1005897843): Unify thunk result post-processing with the negation for `operator!=` and
-/// with `drop_return` (e.g. for compound assignment operators). The `inline_cpp!` path doesn't do
-/// these 2 adjustments yet.
-fn decode_spaceship_result_if_needed(
+/// * Negates the result of `operator!=`, when it implements `PartialEq::eq`.
+/// * Discards the result, if `drop_return` is set (e.g. for compound assignment operators).
+/// * Decodes the result of `operator<=>` into an `Option<core::cmp::Ordering>`. See
+///   `spaceship_thunk_return_type`.
+fn adjust_thunk_result_if_needed(
     impl_kind: &ImplKind<'_>,
+    return_type: &RsTypeKind<'_>,
     thunk_result: TokenStream,
 ) -> TokenStream {
-    let ImplKind::Trait {
-        trait_name: TraitName::PartialOrd { op: PartialOrdOp::Spaceship, .. },
-        ..
-    } = impl_kind
-    else {
+    let ImplKind::Trait { trait_name, drop_return, .. } = impl_kind else {
         return thunk_result;
     };
-    quote! {
-        match #thunk_result {
-            -1 => Some(core::cmp::Ordering::Less),
-            0 => Some(core::cmp::Ordering::Equal),
-            1 => Some(core::cmp::Ordering::Greater),
-            _ => None,
+    match trait_name {
+        TraitName::PartialEq { negate_thunk_result: true, .. } => quote! { ! #thunk_result },
+        TraitName::PartialOrd { op: PartialOrdOp::Spaceship, .. } => quote! {
+            match #thunk_result {
+                -1 => Some(core::cmp::Ordering::Less),
+                0 => Some(core::cmp::Ordering::Equal),
+                1 => Some(core::cmp::Ordering::Greater),
+                _ => None,
+            }
+        },
+        _ if *drop_return => {
+            if return_type.is_unpin() {
+                // The trailing `;` discards the result.
+                quote! { #thunk_result; }
+            } else {
+                // A `!Unpin` result needs to be constructed before it can be discarded.
+                quote! { let _ = ::ctor::emplace!(#thunk_result); }
+            }
         }
+        _ => thunk_result,
     }
 }
 
@@ -1673,17 +1684,8 @@ fn generate_func_body<'a>(
         _ => {
             let mut body = match return_type.passing_convention() {
                 PassingConvention::AbiCompatible | PassingConvention::Void => {
-                    let negate_symbol = if let ImplKind::Trait {
-                        trait_name: TraitName::PartialEq { negate_thunk_result: true, .. },
-                        ..
-                    } = &impl_kind
-                    {
-                        Some(quote! { ! })
-                    } else {
-                        None
-                    };
                     quote! {
-                        #negate_symbol #crate_root_path::detail::#thunk_ident(
+                        #crate_root_path::detail::#thunk_ident(
                             #( #clone_prefixes #thunk_args #clone_suffixes ),*
                         )
                     }
@@ -1747,24 +1749,7 @@ fn generate_func_body<'a>(
                     }
                 }
             };
-            // Discard the return value if requested (for example, when calling a C++
-            // operator that returns a value from a Rust trait that returns
-            // unit).
-            if let ImplKind::Trait { drop_return: true, .. } = impl_kind {
-                if return_type.is_unpin() {
-                    // If it's unpin, just discard it:
-                    body = quote! { #body; };
-                } else {
-                    // Otherwise, in order to discard the return value and return void, we
-                    // need to run the constructor.
-                    body = quote! {let _ = ::ctor::emplace!(#body);};
-                }
-
-                // We would need to do this, but it's no longer used:
-                //    return_type = RsTypeKind::Primitive(PrimitiveType::Unit);
-                let _ = return_type; // proof that we don't need to update it.
-            }
-            body = decode_spaceship_result_if_needed(impl_kind, body);
+            body = adjust_thunk_result_if_needed(impl_kind, return_type, body);
             // Rust 2024 requires that bodies of unsafe functions are not exempt from having unsafe
             // blocks.
             body = quote! { unsafe { #body } };
@@ -2229,7 +2214,11 @@ pub fn generate_function<'a>(
                 && let Some(inline_cpp_body) =
                     generate_inline_cpp_call(db, &func, &thunk_args, body_tokens)?
             {
-                return Ok(decode_spaceship_result_if_needed(&impl_kind, inline_cpp_body));
+                return Ok(adjust_thunk_result_if_needed(
+                    &impl_kind,
+                    &return_type,
+                    inline_cpp_body,
+                ));
             }
             generate_func_body(
                 db,
