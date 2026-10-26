@@ -49,6 +49,7 @@
 -   [References and Lifetimes](./cpp/references_and_lifetimes.md)
 -   [Enums](./cpp/enums.md)
 -   [Inline C++](./cpp/inline_cpp.md)
+-   [Standard Library Types](./cpp/std.md)
 
 # Errors
 
