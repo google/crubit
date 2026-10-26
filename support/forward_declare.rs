@@ -607,13 +607,24 @@ pub trait CppCoerce<T> {
     fn cpp_coerce(self) -> T;
 }
 
+#[cold]
+#[inline(never)]
+#[track_caller]
+fn cpp_coerce_size_mismatch(lhs: usize, rhs: usize) -> ! {
+    assert_eq!(lhs, rhs);
+    unreachable!()
+}
+
 impl<T, U> CppCoerce<U> for T
 where
     T: CppType,
     U: CppType<Name = T::Name>,
 {
+    #[track_caller]
     fn cpp_coerce(self) -> U {
-        assert_eq!(std::mem::size_of::<T>(), std::mem::size_of::<U>());
+        if std::mem::size_of::<T>() != std::mem::size_of::<U>() {
+            cpp_coerce_size_mismatch(std::mem::size_of::<T>(), std::mem::size_of::<U>());
+        }
         let x = std::mem::ManuallyDrop::new(self);
         unsafe { std::mem::transmute_copy(&*x) }
     }

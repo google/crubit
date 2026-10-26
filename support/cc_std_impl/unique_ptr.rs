@@ -63,6 +63,20 @@ unsafe impl<T: Sized + Send> Send for unique_ptr<T> {}
 // to prove safety.
 unsafe impl<T: Sized + Sync> Sync for unique_ptr<T> {}
 
+#[cold]
+#[inline(never)]
+#[track_caller]
+fn into_box_null_failed() -> ! {
+    panic!("attempted to convert null `unique_ptr` into `Box`");
+}
+
+#[cold]
+#[inline(never)]
+#[track_caller]
+fn into_pin_box_null_failed() -> ! {
+    panic!("attempted to convert null `unique_ptr` into `Pin<Box>`");
+}
+
 impl<T: Sized> unique_ptr<T> {
     /// Allocates a new `unique_ptr` that owns the given object.
     pub fn new(value: T) -> Self {
@@ -157,7 +171,9 @@ impl<T: Sized> unique_ptr<T> {
     where
         T: Unpin,
     {
-        assert!(!unique_ptr::is_null(&this), "attempted to convert null `unique_ptr` into `Box`");
+        if unique_ptr::is_null(&this) {
+            into_box_null_failed();
+        }
         // SAFETY: `value` is exclusively owned by this `unique_ptr`, and `Box::from_raw`
         // preserves the pointer's alignment and size. The pointee is not pinned.
         unsafe { Box::from_raw_in(unique_ptr::into_raw(this), Allocator) }
@@ -172,10 +188,9 @@ impl<T: Sized> unique_ptr<T> {
     /// Panics if `this` is null.
     #[track_caller]
     pub fn into_pin_box(this: Self) -> Pin<Box<T, Allocator>> {
-        assert!(
-            !unique_ptr::is_null(&this),
-            "attempted to convert null `unique_ptr` into `Pin<Box>`"
-        );
+        if unique_ptr::is_null(&this) {
+            into_pin_box_null_failed();
+        }
         // SAFETY: `value` is exclusively owned by this `unique_ptr`, and `Box::from_raw`
         // preserves the pointer's alignment and size.
         unsafe { Pin::new_unchecked(Box::from_raw_in(unique_ptr::into_raw(this), Allocator)) }
