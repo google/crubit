@@ -1236,7 +1236,8 @@ void Importer::Import(
   // class A { class B; };   // declares A::B
   // class A::B { ... };  // defines A::B
   std::vector<std::pair<SourceOrderKey, const clang::Decl*>> ordered_children;
-  for (const auto& [decl, entry] : import_cache_) {
+  for (const clang::Decl* decl : import_cache_insertion_order_) {
+    const ItemCacheEntry& entry = import_cache_.at(decl);
     if (entry.proto_item == nullptr) continue;
     if (auto* parent_record_decl =
             llvm::dyn_cast<clang::CXXRecordDecl>(decl->getDeclContext())) {
@@ -1249,6 +1250,10 @@ void Importer::Import(
     }
   }
 
+  // The sort is stable and starts from insertion order, so that ties (which
+  // are common with header modules, where all copies of a declaration share
+  // the source range of the representative copy) don't depend on the hash
+  // seed.
   SourceLocationComparator compare_locations(sm);
   llvm::stable_sort(ordered_children, compare_locations);
 
@@ -1287,14 +1292,18 @@ void Importer::Import(
   //     generated bindings depend on the hash seed.
   //
   // We therefore snapshot the decls of interest into a vector and sort them by
-  // source order before doing any work that can import. This terminates
-  // because `import_cache_` only ever grows, and is bounded by the number of
-  // decls in the translation unit.
+  // source order before doing any work that can import. The snapshot is taken
+  // in insertion order and the sort is stable, so that ties in source order
+  // (e.g. the copies of a namespace block from several header modules, which
+  // all have the source range of the representative copy) are broken
+  // deterministically too. This terminates because `import_cache_` only ever
+  // grows, and is bounded by the number of decls in the translation unit.
   while (invocation_.lazy_import_alien_decls()) {
     const size_t cache_size_before_refresh = import_cache_.size();
     std::vector<std::pair<SourceOrderKey, clang::NamespaceDecl*>>
         namespaces_to_refresh;
-    for (const auto& [decl, entry] : import_cache_) {
+    for (const clang::Decl* decl : import_cache_insertion_order_) {
+      const ItemCacheEntry& entry = import_cache_.at(decl);
       if (entry.proto_item == nullptr) continue;
       if (const auto* ns_decl = llvm::dyn_cast<clang::NamespaceDecl>(decl)) {
         namespaces_to_refresh.push_back(
@@ -1335,7 +1344,10 @@ void Importer::Import(
   for (const auto& comment_item : comment_items) {
     id_to_item[ItemId(comment_item->comment().id())] = comment_item.get();
   }
-  for (const auto& [decl, entry] : import_cache_) {
+  // In insertion order, so that if several decls map to the same `ItemId`, the
+  // one that wins doesn't depend on the hash seed.
+  for (const clang::Decl* decl : import_cache_insertion_order_) {
+    const ItemCacheEntry& entry = import_cache_.at(decl);
     if (entry.proto_item != nullptr) {
       id_to_item[GenerateItemId(*decl)] = entry.proto_item.get();
     }
@@ -1525,12 +1537,16 @@ const ir_proto::Item* absl_nullable Importer::GetDeclItem(
   // any null entries introduced by cycles.
 
   ItemId id = GenerateItemId(*decl);
-  import_cache_.try_emplace(decl,
-                            ItemCacheEntry{
-                                .status = ItemCacheEntry::Status::kInProgress,
-                                .id = id,
-                                .proto_item = nullptr,
-                            });
+  if (import_cache_
+          .try_emplace(decl,
+                       ItemCacheEntry{
+                           .status = ItemCacheEntry::Status::kInProgress,
+                           .id = id,
+                           .proto_item = nullptr,
+                       })
+          .second) {
+    import_cache_insertion_order_.push_back(decl);
+  }
 
   std::unique_ptr<ir_proto::Item> result = ImportDecl(decl);
   const ir_proto::Item* item_ptr = result.get();

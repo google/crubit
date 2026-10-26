@@ -284,6 +284,11 @@ class Importer final : public ImportContext {
   // another C++ ABI (e.g. the Microsoft ABI).  See `GetMangledName` for why.
   std::unique_ptr<clang::MangleContext> itanium_tag_name_mangler_;
   absl::flat_hash_map<const clang::Decl*, ItemCacheEntry> import_cache_;
+  // The keys of `import_cache_`, in the order they were inserted. Entries are
+  // never removed from `import_cache_`. Its iteration order is randomized
+  // between processes, so code whose result depends on the order in which it
+  // visits the cache iterates this instead.
+  std::vector<const clang::Decl*> import_cache_insertion_order_;
   absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
       class_template_instantiations_;
   // Memoizes the outcome of the eager instantiation attempts performed by
