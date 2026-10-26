@@ -32,7 +32,6 @@ rust_library(
         "//common:kythe_metadata",
         "//common:token_stream_printer",
         "@crate_index//:flagset",  # v0_4
-        "@crate_index//:itertools",  # v0_13
         "@crate_index//:quote",  # v1
     ],
 )
@@ -93,12 +92,17 @@ crubit_rust_test(
 
 crubit_rust_test(
     name = "cc_bindings_from_rs_test",
-    crate = ":cpp_api_from_rust_lib",
+    srcs = ["cc_bindings_from_rs_test.rs"],
     # We don't yet support running cc_bindings_from_rs itself on macOS (we only target macOS).
     tags = ["not_run:mac"],
     deps = [
+        ":cmdline",
+        ":cpp_api_from_rust_lib",
+        ":run_compiler",
         ":run_compiler_test_support",
+        "//common:arc_anyhow",
         "//common:external_binaries",
+        "@crate_index//:googletest",
         "@crate_index//:regex",  # v1
         "@crate_index//:tempfile",  # v3
     ],
