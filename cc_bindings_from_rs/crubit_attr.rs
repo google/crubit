@@ -397,8 +397,8 @@ pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
     }
     if crubit_attrs.do_not_bind {
         ensure!(
-            matches!(tcx.def_kind(did), DefKind::Fn | DefKind::AssocFn),
-            "`do_not_bind` is explicitly only permitted on functions and methods"
+            matches!(tcx.def_kind(did), DefKind::Fn | DefKind::AssocFn | DefKind::Struct),
+            "`do_not_bind` is explicitly only permitted on functions, methods, and structs"
         )
     }
     if crubit_attrs.field_drop_order_does_not_matter {

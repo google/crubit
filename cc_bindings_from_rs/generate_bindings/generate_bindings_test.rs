@@ -2601,17 +2601,27 @@ fn test_should_receive_bindings_do_not_bind() {
         #[doc="CRUBIT_ANNOTATE: do_not_bind="]
         pub fn fn_do_not_bind() {}
         pub fn fn_allowed() {}
+        #[doc="CRUBIT_ANNOTATE: do_not_bind="]
+        pub struct StructDoNotBind;
+        pub struct StructAllowed;
     "#;
     run_compiler_for_testing(test_src, |tcx| {
         let db = bindings_db_for_tests(tcx);
-        let def_id = find_def_id_by_name(tcx, "fn_do_not_bind");
-        let err = generate_bindings::should_receive_bindings(&db, def_id.to_def_id()).unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("does not receive bindings because it is marked `#[do_not_bind]`"));
+        for name in ["fn_do_not_bind", "StructDoNotBind"] {
+            let def_id = find_def_id_by_name(tcx, name);
+            let err =
+                generate_bindings::should_receive_bindings(&db, def_id.to_def_id()).unwrap_err();
+            assert!(err
+                .to_string()
+                .contains("does not receive bindings because it is marked `#[do_not_bind]`"));
+        }
 
-        let allowed_def_id = find_def_id_by_name(tcx, "fn_allowed");
-        assert!(generate_bindings::should_receive_bindings(&db, allowed_def_id.to_def_id()).is_ok());
+        for name in ["fn_allowed", "StructAllowed"] {
+            let allowed_def_id = find_def_id_by_name(tcx, name);
+            assert!(
+                generate_bindings::should_receive_bindings(&db, allowed_def_id.to_def_id()).is_ok()
+            );
+        }
     });
 }
 

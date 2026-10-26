@@ -10,6 +10,30 @@ pub struct Struct {
     pub value: i32,
 }
 
+#[derive(Default)]
+#[crubit_annotate::do_not_bind]
+pub struct SuppressedStruct {
+    pub value: i32,
+}
+
+impl SuppressedStruct {
+    pub fn method(&self) -> i32 {
+        self.value
+    }
+}
+
+impl Trait for SuppressedStruct {
+    fn suppressed_trait_method(&self) -> i32 {
+        7
+    }
+
+    fn bound_trait_method(&self) -> i32 {
+        8
+    }
+}
+
+pub fn fn_taking_suppressed_struct(_: SuppressedStruct) {}
+
 pub trait Trait {
     fn suppressed_trait_method(&self) -> i32;
     fn bound_trait_method(&self) -> i32;

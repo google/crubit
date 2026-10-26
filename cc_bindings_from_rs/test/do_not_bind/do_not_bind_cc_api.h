@@ -42,6 +42,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: do_not_bind_golden :: Trait") Trait {
 
 ::std::int32_t bound_free_fn();
 
+// Error generating bindings for function
+// `do_not_bind_golden::fn_taking_suppressed_struct`: Error handling parameter
+// #0 of type `do_not_bind_golden::SuppressedStruct`:
+// `do_not_bind_golden::SuppressedStruct` does not receive bindings because it
+// is marked `#[do_not_bind]`.
+
 }  // namespace do_not_bind
 
 template <>

@@ -142,26 +142,31 @@ fn test_do_not_bind() {
     let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: do_not_bind="]
             pub fn foo() {}
-    "#;
-    run_compiler_for_testing(test_src, |tcx| {
-        let attrs = attrs_for_named_def(tcx, "foo").unwrap();
-        let mut expected_attrs = CrubitAttrs::default();
-        expected_attrs.do_not_bind = true;
-        assert_eq!(attrs, expected_attrs);
-    });
-}
 
-#[test]
-fn test_do_not_bind_invalid_on_struct() {
-    let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: do_not_bind="]
             pub struct SomeStruct;
     "#;
     run_compiler_for_testing(test_src, |tcx| {
-        let err = attrs_for_named_def(tcx, "SomeStruct").unwrap_err();
+        for name in ["foo", "SomeStruct"] {
+            let attrs = attrs_for_named_def(tcx, name).unwrap();
+            let mut expected_attrs = CrubitAttrs::default();
+            expected_attrs.do_not_bind = true;
+            assert_eq!(attrs, expected_attrs, "Failed for {name}");
+        }
+    });
+}
+
+#[test]
+fn test_do_not_bind_invalid_on_enum() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: do_not_bind="]
+            pub enum SomeEnum {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let err = attrs_for_named_def(tcx, "SomeEnum").unwrap_err();
         assert_eq!(
             err.to_string(),
-            "`do_not_bind` is explicitly only permitted on functions and methods"
+            "`do_not_bind` is explicitly only permitted on functions, methods, and structs"
         );
     });
 }
