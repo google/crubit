@@ -24,11 +24,23 @@
 
 <section class="multicol">
 
-<section class="table-header">**C++**</section>
+<section class="table-header">
 
-<section class="table-header">**Rust (Non-Rust-movable)**</section>
+**C++**
 
-<section class="table-header">**Rust (Rust-movable)**</section>
+</section>
+
+<section class="table-header">
+
+**Rust (Non-Rust-movable)**
+
+</section>
+
+<section class="table-header">
+
+**Rust (Rust-movable)**
+
+</section>
 
 </section>
 
@@ -184,11 +196,23 @@ const T&
 
 <section class="multicol">
 
-<section class="table-header">**C++**</section>
+<section class="table-header">
 
-<section class="table-header">**Rust (Non-Rust-movable)**</section>
+**C++**
 
-<section class="table-header">**Rust (Rust-movable)**</section>
+</section>
+
+<section class="table-header">
+
+**Rust (Non-Rust-movable)**
+
+</section>
+
+<section class="table-header">
+
+**Rust (Rust-movable)**
+
+</section>
 
 </section>
 
@@ -501,11 +525,23 @@ fn Sink(x: T) {
 
 <section class="multicol">
 
-<section class="table-header">**C++**</section>
+<section class="table-header">
 
-<section class="table-header">**Rust (Non-Rust-movable)**</section>
+**C++**
 
-<section class="table-header">**Rust (Rust-movable)**</section>
+</section>
+
+<section class="table-header">
+
+**Rust (Non-Rust-movable)**
+
+</section>
+
+<section class="table-header">
+
+**Rust (Rust-movable)**
+
+</section>
 
 </section>
 
@@ -656,11 +692,23 @@ let x = T2(y);
 
 <section class="multicol">
 
-<section class="table-header">**C++**</section>
+<section class="table-header">
 
-<section class="table-header">**Rust (Non-Rust-movable)**</section>
+**C++**
 
-<section class="table-header">**Rust (Rust-movable)**</section>
+</section>
+
+<section class="table-header">
+
+**Rust (Non-Rust-movable)**
+
+</section>
+
+<section class="table-header">
+
+**Rust (Rust-movable)**
+
+</section>
 
 </section>
 
@@ -892,4 +940,4 @@ x.y = …;
 
 </section>
 
---------------------------------------------------------------------------------
+-----

@@ -63,9 +63,9 @@ safety guarantee, it promises to do so without invalidating the object.
 #### Unpin {#unpin}
 
 If `T` is relocatable, `Pin<&mut T>` etc. is pointless: it isn't protecting
-against anything. Therefore, for such a type, Rust allows you to
-[undo the Pin](https://doc.rust-lang.org/std/pin/struct.Pin.html#method.into_inner)
-in safe code.
+against anything. Therefore, for such a type, Rust allows you to [undo the
+Pin](https://doc.rust-lang.org/std/pin/struct.Pin.html#method.into_inner) in
+safe code.
 
 #### Immutable access {#immutable-access}
 
@@ -99,7 +99,7 @@ implicit and part of the language, but `Pin` is a library type, and requires
 doing it by hand. Callers will use `.as_mut()` frequently, as it's required
 whenever mutating and then continuing to use a pinned pointer.
 
---------------------------------------------------------------------------------
+-----
 
 ## Storage of pinned values {#storage-of-pinned-values}
 
@@ -238,11 +238,11 @@ steps:
 3.  Initialize in place.
 
 This is all wrapped up in a macro. The `ctor!` macro returns an `impl Ctor`
-(step #1), the implementation of which looks up the different fields (step #2),
-and initializes them using user-provided `Ctor`s (#3). Since relocatable types
-like `u32` are their own `Ctor`, this looks much like normal initialization,
-generalized to work in-place with custom `Ctor` implementations for
-non-Rust-movable types:
+(step #1), the implementation of which looks up the different fields (step
+\#2), and initializes them using user-provided `Ctor`s (#3). Since relocatable
+types like `u32` are their own `Ctor`, this looks much like normal
+initialization, generalized to work in-place with custom `Ctor` implementations
+for non-Rust-movable types:
 
 ```rust
 let sub_ctor = …; // a Ctor<Output=T>
@@ -328,7 +328,7 @@ elsewhere. And if it is in a struct, then that struct itself becomes
 non-Rust-movable. If we are forced to store a value in something which requires
 relocatability, we must heap-allocate the storage.
 
---------------------------------------------------------------------------------
+-----
 
 ## Moving and mutating {#moving-and-mutating}
 
@@ -493,8 +493,8 @@ x.as_mut().assign(copy(z));  // or assign(&*z)
 ```
 
 `Copy<P>` (returned by the `copy` function) implements `Ctor<Output=P::Target>`,
-for copy-constructible `P::Target` so that you can just
-`let x = emplace!(copy(y));` where in C++ you would `auto x = y`. Conversely,
+for copy-constructible `P::Target` so that you can just `let x =
+emplace!(copy(y));` where in C++ you would `auto x = y`. Conversely,
 copy-assignable `T` implements `Assign<Copy<P>>` for all `P: Deref<Target=T>`,
 so that you can `x.assign(copy(y))` where in C++ you would `x = y;` – although
 `&*y` works as well and is preferable.
@@ -535,9 +535,17 @@ automatic derivations might expand to, using `ctor!` and
 
 <section class="multicol">
 
-<section class="table-header">**C++**</section>
+<section class="table-header">
 
-<section class="table-header">**Rust**</section>
+**C++**
+
+</section>
+
+<section class="table-header">
+
+**Rust**
+
+</section>
 
 </section>
 
