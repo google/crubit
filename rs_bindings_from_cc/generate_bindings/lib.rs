@@ -1093,11 +1093,16 @@ fn unsupported_item_errors<'db>(
     item.errors()
         .iter()
         .map(|e| {
-            error_report::FormattedError::new(
+            let error: Error = error_report::FormattedError::new(
                 e.fmt.to_string().into(),
                 e.message.to_string().into(),
             )
-            .into()
+            .into();
+            // Keep displaying the message, but report the cause it was formatted from.
+            match &e.cause {
+                Some(cause) => error_report::because(error, cause.clone()),
+                None => error,
+            }
         })
         .collect()
 }

@@ -650,7 +650,7 @@ impl<'db> BindingsGenerator<'db> {
         self.new_unsupported_item(
             item,
             path,
-            Some(Rc::new(ir::FormattedError { fmt: Rc::clone(&message), message })),
+            Some(Rc::new(ir::FormattedError { fmt: Rc::clone(&message), message, cause: None })),
             item.must_bind(),
         )
     }
@@ -665,7 +665,11 @@ impl<'db> BindingsGenerator<'db> {
         self.new_unsupported_item(
             item,
             path,
-            Some(Rc::new(ir::FormattedError { fmt: Rc::clone(&message), message })),
+            Some(Rc::new(ir::FormattedError {
+                fmt: Rc::clone(&message),
+                message,
+                cause: Some(cause),
+            })),
             item.must_bind(),
         )
     }

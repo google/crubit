@@ -324,6 +324,7 @@ rust_test(
         "//rs_bindings_from_cc/generate_bindings/database",
         "@crate_index//:googletest",
         "@crate_index//:quote",  # v1
+        "@crate_index//:serde_json",  # v1
         "@protobuf//rust:protobuf",
     ],
 )

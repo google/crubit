@@ -41,3 +41,4 @@ database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/dat
 googletest.workspace = true
 protobuf.workspace = true
 quote.workspace = true
+serde_json.workspace = true

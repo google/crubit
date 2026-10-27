@@ -3672,10 +3672,28 @@ impl Display for TypeAlias<'_> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct FormattedError {
     pub fmt: Rc<str>,
     pub message: Rc<str>,
+    /// The error that `message` was formatted from, if this error was produced during bindings
+    /// generation (and not by the importer).
+    ///
+    /// The error report reports this instead of `fmt` and `message`, so that the reasons inside
+    /// it, and the items without bindings that caused them, are kept.
+    pub cause: Option<Error>,
+}
+
+impl Debug for FormattedError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut debug_struct = f.debug_struct("FormattedError");
+        debug_struct.field("fmt", &self.fmt).field("message", &self.message);
+        // Omitted if unset, as it always is for errors from the importer.
+        if let Some(cause) = &self.cause {
+            debug_struct.field("cause", cause);
+        }
+        debug_struct.finish()
+    }
 }
 
 impl<'pb> ProtoToIr for ::ir_rust_proto::FormattedErrorView<'pb> {
@@ -3690,6 +3708,7 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::FormattedErrorView<'pb> {
         FormattedError {
             fmt: Rc::from(self.fmt().to_ir()),
             message: Rc::from(self.message().to_ir()),
+            cause: None,
         }
     }
 }

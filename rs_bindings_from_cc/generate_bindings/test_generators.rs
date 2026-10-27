@@ -156,6 +156,9 @@ impl<'pb> TestDbFactory<'pb> {
             &self.interner,
         )
     }
+    pub fn errors(&self) -> &ErrorReport {
+        &self.errors
+    }
     pub fn fatal_errors(&self) -> &FatalErrors {
         &self.fatal_errors
     }

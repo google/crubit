@@ -135,6 +135,7 @@ fn make_factory() -> TestDbFactory<'static> {
         Some(Rc::new(ir::FormattedError {
             fmt: "unsupported_message".into(),
             message: "unsupported_message".into(),
+            cause: None,
         })),
     );
     TestDbFactory::new(make_ir_from_items([test_item.into()]))
@@ -365,5 +366,49 @@ fn test_generate_unsupported_function_template_strict_mode_fatal_error() -> Resu
     ));
     let _ = generate_unsupported(&db, unsupported_item.into());
     assert!(!factory.fatal_errors().take_string().is_empty());
+    Ok(())
+}
+
+#[gtest]
+fn test_generate_unsupported_item_reports_cause() -> Result<()> {
+    let factory = make_factory();
+    let db = factory.make_db();
+    let cause = arc_anyhow::Error::from(error_report::ErrorList::from(vec![
+        error_report::anyhow!("first {}", "reason"),
+        error_report::anyhow!("second reason"),
+    ]));
+    let actual = {
+        let _scope = error_report::ItemScope::new(
+            db.errors(),
+            error_report::ItemName {
+                name: "test_item".into(),
+                id: TEST_ITEM_ID.as_u64(),
+                unique_name: None,
+                defining_target: None,
+                source_loc: Some(TEST_ITEM_REPORT_SOURCE_LOC.into()),
+            },
+        );
+        let unsupported_item = db.new_unsupported_item_with_cause(
+            &TestItem { decl_loc: Some(test_decl_loc()), must_bind: false },
+            /* path= */ None,
+            cause,
+        );
+        generate_unsupported(&db, unsupported_item.into()).generated_items
+    };
+
+    // The comment shows the whole message, as before...
+    let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
+    let expected = format!(
+        "{}\nerror: item `test_item` could not be bound\n  first reason\n  second reason",
+        test_decl_loc()
+    );
+    assert_rs_matches!(quote! { #actual }, quote! { __COMMENT__ #expected});
+
+    // ...but the report has each reason it was formatted from, with its own format string.
+    let entries: Vec<error_report::ErrorReportEntry> =
+        serde_json::from_str(&factory.errors().to_json_string())?;
+    let errors: Vec<(&str, &str)> =
+        entries[0].errors.iter().map(|e| (e.fmt(), e.full_error())).collect();
+    assert_eq!(errors, [("first {}", "first reason"), ("second reason", "")]);
     Ok(())
 }

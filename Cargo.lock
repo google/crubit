@@ -1698,6 +1698,7 @@ dependencies = [
  "rs_bindings_from_cc_ir_rust_proto",
  "rs_bindings_from_cc_ir_testing",
  "rs_bindings_from_cc_test_generators",
+ "serde_json",
  "token_stream_matchers",
 ]
 
