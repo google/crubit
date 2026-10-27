@@ -49,6 +49,11 @@ struct ItemCacheEntry {
 // invocation object.
 class Importer final : public ImportContext {
  public:
+  // Maps each declaration to its representative copy. See
+  // `representative_copy_cache_`.
+  using RepresentativeCopyCache =
+      absl::flat_hash_map<const clang::Decl*, const clang::Decl*>;
+
   explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
                     clang::Sema& sema);
 
@@ -205,6 +210,23 @@ class Importer final : public ImportContext {
       clang::Decl* absl_nonnull decl) const;
   const clang::Decl* absl_nullable CanonicalizeDecl(
       const clang::Decl& decl) const;
+  // Like `CanonicalizeDecl`, but only considers the redeclaration chain of
+  // `decl`, and not other declarations of the same entity that Clang did not
+  // merge into it. See `CanonicalizeUnmergedDuplicates`.
+  const clang::Decl* absl_nullable CanonicalizeDeclInRedeclChain(
+      const clang::Decl& decl) const;
+  // Given the result of `CanonicalizeDeclInRedeclChain`, returns a single
+  // representative of all the declarations of the same entity in the same
+  // namespace, even if Clang didn't merge them into one redeclaration chain.
+  // The representative is the same no matter which of them `decl` is.
+  //
+  // This happens when a header is both parsed textually and loaded from a
+  // precompiled header module (e.g. because the header belongs to both the
+  // current target and to a dependency): Clang merges declarations with
+  // external linkage, but not e.g. typedefs, or variables with internal
+  // linkage.
+  const clang::Decl* absl_nonnull CanonicalizeUnmergedDuplicates(
+      const clang::Decl* absl_nonnull decl) const;
 
   std::vector<clang::Decl*> GetCanonicalChildren(
       const clang::DeclContext& decl_context) const;
@@ -311,6 +333,13 @@ class Importer final : public ImportContext {
   //
   // Note that this includes non-TypeDecls in the form of using decls.
   absl::flat_hash_set<const clang::NamedDecl*> known_type_decls_;
+  // Memoizes `CanonicalizeUnmergedDuplicates`.
+  mutable absl::flat_hash_map<const clang::Decl*, const clang::Decl*>
+      unmerged_duplicates_cache_;
+  // Memoizes the representative copy of each declaration (with header modules,
+  // the copy whose source locations are used for comments and for ordering).
+  // See `GetRepresentativeCopy` in importer.cc.
+  mutable RepresentativeCopyCache representative_copy_cache_;
 
   clang::QualType rs_core_fmt_debug_;
   const clang::ClassTemplateDecl* absl_nullable rs_impl_;
