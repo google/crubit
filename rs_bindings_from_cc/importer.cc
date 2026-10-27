@@ -675,6 +675,25 @@ class Importer::SourceLocationComparator {
   const clang::SourceManager& sm_;
 };
 
+// Returns the definitions of `record` that Clang demoted to declarations when
+// it merged them into the (kept) definition `record` (see
+// `PreferMemberOfKeptDefinition`), in redeclaration order. Empty without header
+// modules.
+static std::vector<const clang::CXXRecordDecl*> GetDemotedDefinitions(
+    const clang::CXXRecordDecl& record) {
+  std::vector<const clang::CXXRecordDecl*> result;
+  if (record.getASTContext().getExternalSource() == nullptr ||
+      !record.isThisDeclarationADefinition()) {
+    return result;
+  }
+  for (const clang::TagDecl* redecl : record.redecls()) {
+    if (redecl != &record && redecl->isThisDeclarationADemotedDefinition()) {
+      result.push_back(clang::cast<clang::CXXRecordDecl>(redecl));
+    }
+  }
+  return result;
+}
+
 std::vector<clang::Decl*> Importer::GetCanonicalChildren(
     const clang::DeclContext& decl_context) const {
   std::vector<clang::Decl*> result;
@@ -682,7 +701,60 @@ std::vector<clang::Decl*> Importer::GetCanonicalChildren(
       llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&decl_context);
   bool is_always_instantiate =
       spec_decl == nullptr || IsAlwaysInstantiate(*spec_decl);
-  for (clang::Decl* decl : decl_context.decls()) {
+  // With header modules, the implicit special members of a merged class
+  // definition can be lexically declared only in a definition that Clang
+  // demoted to a declaration: e.g. a template instantiation whose implicit
+  // default constructor was declared in only one of the modules. (Clang merges
+  // the flags that say which special members were declared, so it doesn't
+  // declare them again in the kept definition.) They are children of the kept
+  // definition, too.
+  //
+  // Only implicit members are taken from demoted definitions: all other members
+  // are the same in all copies of the definition (or else there is an ODR
+  // violation), so the kept definition has them too. Implicit members that are
+  // declared in several definitions are merged into one redeclaration chain,
+  // and `CanonicalizeDecl` (below) keeps only one of them.
+  //
+  // The children are sorted by source order afterwards, so the order in which
+  // they are collected here only matters for ties, and it is deterministic.
+  std::vector<clang::Decl*> children(decl_context.decls_begin(),
+                                     decl_context.decls_end());
+  if (const auto* record = llvm::dyn_cast<clang::CXXRecordDecl>(&decl_context);
+      record != nullptr) {
+    for (const clang::CXXRecordDecl* demoted : GetDemotedDefinitions(*record)) {
+      for (clang::Decl* member : demoted->decls()) {
+        if (member->isImplicit() && clang::isa<clang::CXXMethodDecl>(member)) {
+          children.push_back(member);
+        }
+      }
+    }
+    // Implicit special members that were declared in another module's copy of
+    // the definition can also be merged into the kept definition's lookup
+    // table without being in its `decls()`. Which ones are depends on which
+    // copy Clang kept, i.e. on the order in which the modules were loaded, so
+    // find them all by name lookup.
+    if (record->getASTContext().getExternalSource() != nullptr &&
+        record->isThisDeclarationADefinition()) {
+      clang::CanQualType type = ctx_.getCanonicalTagType(record);
+      const clang::DeclarationName names[] = {
+          ctx_.DeclarationNames.getCXXConstructorName(type),
+          ctx_.DeclarationNames.getCXXDestructorName(type),
+          ctx_.DeclarationNames.getCXXOperatorName(clang::OO_Equal),
+      };
+      for (const clang::DeclarationName& name : names) {
+        for (clang::NamedDecl* member : record->lookup(name)) {
+          if (!member->isImplicit() ||
+              !clang::isa<clang::CXXMethodDecl>(member))
+            continue;
+          clang::Decl* canonical = CanonicalizeDecl(member);
+          if (canonical != nullptr &&
+              !absl::c_linear_search(children, canonical))
+            children.push_back(canonical);
+        }
+      }
+    }
+  }
+  for (clang::Decl* decl : children) {
     if (!is_always_instantiate) {
       if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(decl)) {
         if (!llvm::isa<clang::CXXConstructorDecl>(decl) &&
@@ -745,6 +817,34 @@ std::vector<clang::Decl*> Importer::GetCanonicalChildren(
     }
   }
   return result;
+}
+
+// If `decl` is lexically declared in a class definition that Clang demoted to
+// a declaration when merging it with an equivalent definition from another
+// (header) module, returns the redeclaration of `decl` that is lexically
+// declared in the kept definition. Otherwise returns `decl`.
+//
+// When the same class (e.g. an implicit instantiation like
+// `std::allocator<std::string>`) is defined in several modules, Clang keeps one
+// definition and merges each member of the other definitions into the
+// redeclaration chain of the corresponding member of the kept definition. The
+// canonical declaration of a member may thus be lexically inside a demoted
+// definition, which we never visit (we only visit the children of the kept
+// definition).
+static const clang::Decl* absl_nonnull PreferMemberOfKeptDefinition(
+    const clang::Decl* absl_nonnull decl) {
+  const auto* lexical_record =
+      clang::dyn_cast<clang::TagDecl>(decl->getLexicalDeclContext());
+  if (lexical_record == nullptr ||
+      !lexical_record->isThisDeclarationADemotedDefinition()) {
+    return decl;
+  }
+  const clang::TagDecl* definition = lexical_record->getDefinition();
+  if (definition == nullptr) return decl;
+  for (const clang::Decl* redecl : decl->redecls()) {
+    if (redecl->getLexicalDeclContext() == definition) return redecl;
+  }
+  return decl;
 }
 
 const clang::Decl* absl_nullable Importer::CanonicalizeDecl(
@@ -903,7 +1003,7 @@ const clang::Decl* absl_nullable Importer::CanonicalizeDeclInRedeclChain(
   }
   if (const auto* function_decl = llvm::dyn_cast<clang::FunctionDecl>(decl)) {
     if (llvm::isa<clang::CXXMethodDecl>(function_decl)) {
-      return function_decl->getCanonicalDecl();
+      return PreferMemberOfKeptDefinition(function_decl->getCanonicalDecl());
     }
     const auto* canonical = function_decl->getCanonicalDecl();
     if (canonical->getLexicalDeclContext()->isRecord()) {
@@ -915,7 +1015,7 @@ const clang::Decl* absl_nullable Importer::CanonicalizeDeclInRedeclChain(
     }
     return canonical;
   }
-  return decl->getCanonicalDecl();
+  return PreferMemberOfKeptDefinition(decl->getCanonicalDecl());
 }
 
 clang::Decl* absl_nullable Importer::CanonicalizeDecl(

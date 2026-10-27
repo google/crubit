@@ -7,6 +7,7 @@
 
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "absl/container/flat_hash_set.h"
 #include "absl/functional/function_ref.h"
@@ -201,6 +202,22 @@ RecordingDiagnosticConsumer RecordDiagnosticsAndMarkFailedInstantiations(
 // declaration instances can't hide like templates can.
 std::string GetInvalidCallTarget(ImportContext& ictx,
                                  clang::FunctionDecl* function_decl);
+
+// Returns all (non-template) constructors of `record`: first those returned by
+// `record.ctors()`, in declaration order, followed by any additional ones that
+// are only found by name lookup.
+//
+// The additional constructors matter when `record` was merged from several
+// definitions loaded from different (header) modules - e.g. a class template
+// specialization like `std::allocator<std::string>` that was implicitly
+// instantiated independently in several modules. Clang keeps only one of the
+// definitions, but the implicit special members declared in the other
+// ("demoted") definitions stay lexically inside them. Those members are
+// therefore missing from `ctors()` / `methods()` of the kept definition, even
+// though name lookup finds them (and the definition data, e.g.
+// `needsImplicitCopyConstructor()`, reports them as already declared).
+std::vector<clang::CXXConstructorDecl*> GetAllConstructors(
+    const clang::CXXRecordDecl& record);
 
 // An RAII guard that sets a fake TU scope for the duration of its lifetime
 // and restores the previous TU scope when it goes out of scope.

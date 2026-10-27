@@ -946,20 +946,39 @@ bool IsRustMovable(const clang::CXXRecordDecl& record_decl) {
     has_non_deleted_copy_or_move = true;
   }
 
-  // The checks above only cover the *implicit* special members.  The
-  // user-declared ones are checked one by one below, because a class may
-  // declare several copy or move constructors (e.g. both `S(const S&)` and
-  // `S(S&)`) and the `hasTrivial...ForCall` checks above only report whether
-  // *some* of them are trivial for calls.
+  // The checks above only cover the *implicit* special members that have not
+  // been declared yet.  The declared ones are checked one by one below,
+  // because a class may declare several copy or move constructors (e.g. both
+  // `S(const S&)` and `S(S&)`) and the `hasTrivial...ForCall` checks above
+  // only report whether *some* of them are trivial for calls.
+  //
+  // `GetAllConstructors` (rather than `ctors()`) and `getDestructor()` (in
+  // addition to `methods()`) also find special members that live in a merged
+  // ("demoted") definition loaded from another header module.
+  for (const clang::CXXConstructorDecl* ctor :
+       GetAllConstructors(record_decl)) {
+    if (ctor->isDeleted() || ctor->isIneligibleOrNotSelected()) continue;
+    if (!ctor->isCopyOrMoveConstructor()) continue;
+    if (!ctor->isTrivialForCall()) return false;
+    has_non_deleted_copy_or_move = true;
+  }
   for (const clang::CXXMethodDecl* method : record_decl.methods()) {
     if (method->isDeleted() || method->isIneligibleOrNotSelected()) continue;
-
-    if (const auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(method);
-        ctor != nullptr && ctor->isCopyOrMoveConstructor()) {
-      if (!method->isTrivialForCall()) return false;
-      has_non_deleted_copy_or_move = true;
-    } else if (clang::isa<clang::CXXDestructorDecl>(method)) {
-      if (!method->isTrivialForCall()) return false;
+    if (clang::isa<clang::CXXDestructorDecl>(method) &&
+        !method->isTrivialForCall()) {
+      return false;
+    }
+  }
+  // `getDestructor()` uses name lookup, which returns the most recent
+  // redeclaration (e.g. an out-of-line definition). Use the canonical
+  // declaration, because only the declaration in the class carries the
+  // trivial-for-call bit (e.g. from `[[clang::trivial_abi]]`).
+  if (const clang::CXXDestructorDecl* dtor = record_decl.getDestructor();
+      dtor != nullptr) {
+    dtor = dtor->getCanonicalDecl();
+    if (!dtor->isDeleted() && !dtor->isIneligibleOrNotSelected() &&
+        !dtor->isTrivialForCall()) {
+      return false;
     }
   }
 
