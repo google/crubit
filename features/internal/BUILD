@@ -20,8 +20,8 @@ crubit_feature_hint(
 
 # A feature set with a stable expansion, only for use in Bazel unit tests.
 crubit_feature_hint(
-    name = "testonly_experimental",
+    name = "testonly_types",
     compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = ["experimental"],
+    crubit_features = ["types"],
     visibility = ["//:__subpackages__"],
 )

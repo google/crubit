@@ -287,7 +287,7 @@ TEST(CmdlineTest, TargetArgsEmptyFeature) {
 
 TEST(CmdlineTest, TargetArgsIntInsteadOfFeature) {
   ASSERT_THAT(
-      TestCmdlineArgs({"h1"}, R"([{"t": "t1", "f": [123, "experimental"]}])"),
+      TestCmdlineArgs({"h1"}, R"([{"t": "t1", "f": [123, "supported"]}])"),
       StatusIs(absl::StatusCode::kInvalidArgument,
                AllOf(HasSubstr("--target_args"), HasSubstr(".f"),
                      HasSubstr("string"))));

@@ -22,30 +22,6 @@ crubit_rust_test(
     srcs = ["nonunpin_test.rs"],
     deps = [
         ":nonunpin_rust",
-        "//support:ctor",
-        "@crate_index//:googletest",
-    ],
-)
-
-crubit_test_cc_library(
-    name = "nonunpin_experimental",
-    hdrs = ["nonunpin.h"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
-    deps = ["@abseil-cpp//absl/log:check"],
-)
-
-rust_api_from_cpp(
-    name = "nonunpin_experimental_rust",
-    cpp_target = ":nonunpin_experimental",
-)
-
-crubit_rust_test(
-    name = "nonunpin_experimental_test",
-    srcs = ["nonunpin_experimental_test.rs"],
-    deps = [
-        ":nonunpin_experimental_rust",
         "//support:cref",
         "//support:ctor",
         "@crate_index//:googletest",

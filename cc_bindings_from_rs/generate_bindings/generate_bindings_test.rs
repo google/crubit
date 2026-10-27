@@ -276,9 +276,7 @@ fn test_generated_bindings_prereq_fwd_decls_for_generic_struct() {
     run_compiler_for_testing(test_src, |tcx| {
         let db = test_helpers::bindings_db_for_tests_with_features(
             tcx,
-            crubit_feature::CrubitFeature::Experimental
-                | crubit_feature::CrubitFeature::Supported
-                | crubit_feature::CrubitFeature::Generics,
+            crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
             /* with_kythe_annotations= */ false,
             None,
         );
@@ -3568,9 +3566,7 @@ fn test_user_defined_generic_adt_specialization() {
     run_compiler_for_testing(test_src, |tcx| {
         let db = test_helpers::bindings_db_for_tests_with_features(
             tcx,
-            crubit_feature::CrubitFeature::Experimental
-                | crubit_feature::CrubitFeature::Supported
-                | crubit_feature::CrubitFeature::Generics,
+            crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
             /* with_kythe_annotations= */ false,
             None,
         );
@@ -3632,9 +3628,7 @@ fn test_generic_adt_unsupported_method_reports_errors_per_specialization() {
         let (db, error_report, fatal_errors) =
             test_helpers::bindings_db_for_tests_with_error_report(
                 tcx,
-                crubit_feature::CrubitFeature::Experimental
-                    | crubit_feature::CrubitFeature::Supported
-                    | crubit_feature::CrubitFeature::Generics,
+                crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
             );
         let bindings = generate_bindings::generate_bindings(&db).unwrap();
         let fatal_msg = fatal_errors.take_string();
@@ -3717,9 +3711,7 @@ fn test_generic_adt_into_constructor_emits_thunk_when_src_into_is_recursive() {
     run_compiler_for_testing(test_src, |tcx| {
         let db = test_helpers::bindings_db_for_tests_with_features(
             tcx,
-            crubit_feature::CrubitFeature::Experimental
-                | crubit_feature::CrubitFeature::Supported
-                | crubit_feature::CrubitFeature::Generics,
+            crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
             /* with_kythe_annotations= */ false,
             None,
         );
@@ -3770,9 +3762,7 @@ fn test_generic_adt_type_arg_with_lifetime_or_hrtb_fn_ptr() {
     run_compiler_for_testing(test_src, |tcx| {
         let db = test_helpers::bindings_db_for_tests_with_features(
             tcx,
-            crubit_feature::CrubitFeature::Experimental
-                | crubit_feature::CrubitFeature::Supported
-                | crubit_feature::CrubitFeature::Generics,
+            crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
             /* with_kythe_annotations= */ false,
             None,
         );

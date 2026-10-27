@@ -786,9 +786,7 @@ fn test_format_ty_for_rs_failures() {
         |desc, tcx, ty, expected_err| {
             let db = bindings_db_for_tests_with_features(
                 tcx,
-                crubit_feature::CrubitFeature::Experimental
-                    | crubit_feature::CrubitFeature::Supported
-                    | crubit_feature::CrubitFeature::Generics,
+                crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
                 /* with_kythe_annotations= */ false,
                 None,
             );
