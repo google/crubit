@@ -9,6 +9,7 @@ use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::fmt::{self, Arguments, Display, Formatter};
 use std::rc::Rc;
+use std::sync::Arc;
 
 use serde::{ser::SerializeSeq, Deserialize, Serialize, Serializer};
 
@@ -58,6 +59,11 @@ pub struct FormattedError {
     /// If this is identical to the `fmt` value, this will be empty.
     #[serde(default, skip_serializing_if = "str::is_empty")]
     full_error: Cow<'static, str>,
+    /// The item without bindings that directly caused this error, if any: if `void F(A*)` fails
+    /// because `A` has no bindings, which in turn is because of `B`, then `F`'s error is blocked
+    /// by `A`, and `A`'s error is blocked by `B`. See `blocked_by()`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    blocked_by: Option<Blocker>,
 }
 
 impl FormattedError {
@@ -65,7 +71,7 @@ impl FormattedError {
         if full_error == fmt {
             full_error = Cow::Borrowed("")
         }
-        Self { fmt, full_error }
+        Self { fmt, full_error, blocked_by: None }
     }
 
     pub fn new_static(fmt: &'static str, args: Arguments) -> arc_anyhow::Error {
@@ -94,6 +100,11 @@ impl FormattedError {
     pub fn full_error(&self) -> &str {
         &self.full_error
     }
+
+    /// The item without bindings that caused this error, if any. See the field documentation.
+    pub fn blocked_by(&self) -> Option<&Blocker> {
+        self.blocked_by.as_ref()
+    }
 }
 
 impl Display for FormattedError {
@@ -107,6 +118,43 @@ impl Display for FormattedError {
 }
 
 impl std::error::Error for FormattedError {}
+
+/// Returns an error that displays like `error`, and is reported as blocked by `item`.
+///
+/// Use this where `item` having no bindings, for the reason `error`, causes an error in another
+/// item. Only the message of `error` is kept: its own errors are reported for `item`.
+pub fn blocked_by(item: Blocker, error: arc_anyhow::Error) -> arc_anyhow::Error {
+    let error = FormattedError {
+        fmt: Cow::Owned(error.to_string()),
+        full_error: Cow::Borrowed(""),
+        blocked_by: Some(item),
+    };
+    arc_anyhow::Error::from(anyhow::Error::from(error))
+}
+
+/// An error with the message `message`, which is caused by `cause`. See `because()`.
+#[derive(Debug, Clone)]
+struct Because {
+    message: arc_anyhow::Error,
+    cause: arc_anyhow::Error,
+}
+
+impl Display for Because {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for Because {}
+
+/// Returns an error that displays as `message`, but is reported as `cause`.
+///
+/// Use this when formatting an error into a new one, e.g.
+/// `because(anyhow!("Return type is not supported: {err}"), err)`, so that the errors in `cause`
+/// are still reported, with what they are blocked by.
+pub fn because(message: arc_anyhow::Error, cause: arc_anyhow::Error) -> arc_anyhow::Error {
+    arc_anyhow::Error::from(anyhow::Error::from(Because { message, cause }))
+}
 
 /// Evaluates to an [`arc_anyhow::Error`].
 ///
@@ -240,6 +288,25 @@ pub struct ItemName {
     pub source_loc: Option<Rc<str>>,
 }
 
+/// A reference to an item without bindings, which caused an error in another item.
+///
+/// (This uses `Arc` because it is stored inside errors, which must be `Send` and `Sync`.)
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct Blocker {
+    /// The human-readable qualified name of the item.
+    pub name: Arc<str>,
+    /// A unique name for log aggregation purposes. For C++ items, this is a clang Unified Symbol
+    /// Resolution (USR) string.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unique_name: Option<Arc<str>>,
+    /// The Bazel label or Rust crate that defines the item, if known.
+    ///
+    /// For C++ items declared in a header that isn't a public header of any direct dependency,
+    /// this is a `//_unknown_target:<header>` pseudo-label.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub defining_target: Option<Arc<str>>,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SourceLanguage {
     Cpp,
@@ -363,24 +430,31 @@ impl ErrorReport {
     }
 
     /// Implementation of `ErrorReporting::report`.
-    fn report_error(&self, error: &arc_anyhow::Error) {
+    ///
+    /// `context` is the message of the innermost `because` that `error` is the cause of, if any.
+    fn report_error(&self, error: &arc_anyhow::Error, context: Option<&arc_anyhow::Error>) {
         let root_cause = error.root_cause();
-        let reported_error = if let Some(error) = root_cause.downcast_ref::<FormattedError>() {
-            FormattedError::new(
-                error.fmt.clone(),
-                Cow::Owned(hide_unstable_details(&error.full_error)),
-            )
-        } else if let Some(error_list) = root_cause.downcast_ref::<ErrorList>() {
+        if let Some(error_list) = root_cause.downcast_ref::<ErrorList>() {
             for error in &error_list.errors {
-                self.report_error(error);
+                self.report_error(error, context);
             }
             return;
-        } else {
-            FormattedError::new(
-                Cow::Borrowed("{}"),
-                Cow::Owned(hide_unstable_details(&format!("{error}"))),
-            )
-        };
+        }
+        if let Some(because) = root_cause.downcast_ref::<Because>() {
+            self.report_error(&because.cause, Some(&because.message));
+            return;
+        }
+        let mut reported_error = reported_message(error);
+        if let Some(blocker) =
+            root_cause.downcast_ref::<FormattedError>().and_then(|e| e.blocked_by.as_ref())
+        {
+            // The message of a blocked error is the reason for the blocker, which is reported for
+            // the blocker. Report where it occurred in this item instead.
+            if let Some(context) = context {
+                reported_error = reported_message(context);
+            }
+            reported_error.blocked_by = Some(blocker.clone());
+        }
         self.map
             .borrow_mut()
             .entry(self.current_item().id)
@@ -390,6 +464,20 @@ impl ErrorReport {
             })
             .errors
             .push(reported_error);
+    }
+}
+
+/// Returns the message to report for `error`.
+fn reported_message(error: &arc_anyhow::Error) -> FormattedError {
+    match error.root_cause().downcast_ref::<FormattedError>() {
+        Some(error) => FormattedError::new(
+            error.fmt.clone(),
+            Cow::Owned(hide_unstable_details(&error.full_error)),
+        ),
+        None => FormattedError::new(
+            Cow::Borrowed("{}"),
+            Cow::Owned(hide_unstable_details(&format!("{error}"))),
+        ),
     }
 }
 
@@ -405,7 +493,7 @@ thread_local! {
 
 impl ErrorReporting for ErrorReport {
     fn report(&self, error: &arc_anyhow::Error) {
-        self.report_error(error);
+        self.report_error(error, None);
     }
 
     fn enter_item(&self, item: ItemName) -> Option<ItemName> {
@@ -901,6 +989,66 @@ mod tests {
                         },
                         {
                             "fmt": "hijk"
+                        },
+                    ]
+                },
+            ]),
+        );
+    }
+
+    fn blocker(name: &str) -> Blocker {
+        Blocker {
+            name: name.into(),
+            unique_name: Some(format!("c:@S@{name}").into()),
+            defining_target: Some("//dep:dep".into()),
+        }
+    }
+
+    #[gtest]
+    fn blocked_by_and_because_display_like_the_error() {
+        let error = anyhow!("abc{}", "def");
+        expect_eq!(blocked_by(blocker("A"), error.clone()).to_string(), "abcdef");
+        expect_eq!(because(error, anyhow!("cause")).to_string(), "abcdef");
+    }
+
+    #[gtest]
+    fn test_blocked_by_is_reported() {
+        let report = ErrorReport::new(SourceLanguage::Cpp);
+        // Without a `because`, a blocked error is reported with its own message.
+        report.report(&blocked_by(blocker("A"), anyhow!("A is unsupported")));
+        // A `because` is reported as its cause, and gives blocked errors their message.
+        let cause = arc_anyhow::Error::from(ErrorList::from(vec![
+            blocked_by(blocker("B"), anyhow!("B is unsupported")),
+            anyhow!("long double is unsupported"),
+        ]));
+        let cause = arc_anyhow::Context::context(Err::<(), _>(cause), "context").unwrap_err();
+        report.report(&because(anyhow!("Parameter #{} is not supported", 0), cause));
+        expect_eq!(
+            serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
+            serde_json::json!([
+                {
+                    "source_language": "Cpp",
+                    "name": "",
+                    "errors": [
+                        {
+                            "fmt": "A is unsupported",
+                            "blocked_by": {
+                                "name": "A",
+                                "unique_name": "c:@S@A",
+                                "defining_target": "//dep:dep",
+                            },
+                        },
+                        {
+                            "fmt": "Parameter #{} is not supported",
+                            "full_error": "Parameter #0 is not supported",
+                            "blocked_by": {
+                                "name": "B",
+                                "unique_name": "c:@S@B",
+                                "defining_target": "//dep:dep",
+                            },
+                        },
+                        {
+                            "fmt": "long double is unsupported"
                         },
                     ]
                 },
