@@ -12,15 +12,12 @@ a given C++ type if that type is [is `Unpin`](../../unpin.md).
 
 The following special member functions and traits are mapped bidirectionally:
 
-| C++                          | Rust      | Notes                             |
-| ---------------------------- | --------- | --------------------------------- |
-| Default constructor          | `Default` |                                   |
-| Trivial copy constructor     | `Copy`    | Rust bindings for C++ require     |
-:                              :           : that the C++ type is non-abstract :
-:                              :           : and has a public, trivial copy    :
-:                              :           : constructor and destructor.       :
-| Non-trivial copy constructor | `Clone`   |                                   |
-| Destructor                   | `Drop`    |                                   |
+| C++                          | Rust      | Notes                                                                                                                      |
+| :--------------------------- | :-------- | :------------------------------------------------------------------------------------------------------------------------- |
+| Default constructor          | `Default` |                                                                                                                            |
+| Trivial copy constructor     | `Copy`    | Rust bindings for C++ require that the C++ type is non-abstract and has a public, trivial copy constructor and destructor. |
+| Non-trivial copy constructor | `Clone`   |                                                                                                                            |
+| Destructor                   | `Drop`    |                                                                                                                            |
 
 ## One-way map of C++ special member functions into Rust traits
 
@@ -28,51 +25,49 @@ If the C++ type [is `Unpin`](../../unpin.md), then the C++ special member
 functions below are mapped one-way into the corresponding Rust traits as
 follows:
 
-| C++ API                   | Rust bindings | Notes                            |
-| ------------------------- | ------------- | -------------------------------- |
-| Constructor taking single | `From<T>`     | Regardless if the constructor is |
-: parameter of type `T`     :               : `explicit` in the C++ API or not :
+| C++ API                                         | Rust bindings | Notes                                                             |
+| :---------------------------------------------- | :------------ | :---------------------------------------------------------------- |
+| Constructor taking single parameter of type `T` | `From<T>`     | Regardless if the constructor is `explicit` in the C++ API or not |
 
 The C++ binary operators below are mapped one-way into the corresponding Rust
 traits as follows:
 
-| C++ API       | Rust bindings                             |
-| ------------- | ----------------------------------------- |
-| `operator==`  | `PartialEq`                               |
-| `operator<=>` | `PartialOrd` (and opt-in `Eq` + `Ord` for |
-:               : `std\:\:strong_ordering`)                 :
-| `operator<`   | `PartialOrd`                              |
-| `operator>`   | `PartialOrd`                              |
-| `operator<=`  | `PartialOrd`                              |
-| `operator>=`  | `PartialOrd`                              |
-| `operator+`   | `Add`                                     |
-| `operator-`   | `Sub`                                     |
-| `operator*`   | `Mul`                                     |
-| `operator/`   | `Div`                                     |
-| `operator%`   | `Rem`                                     |
-| `operator&`   | `BitAnd`                                  |
-| `operator\|`  | `BitOr`                                   |
-| `operator^`   | `BitXor`                                  |
-| `operator<<`  | `Shl`                                     |
-| `operator>>`  | `Shr`                                     |
-| `operator+=`  | `AddAssign`                               |
-| `operator-=`  | `SubAssign`                               |
-| `operator*=`  | `MulAssign`                               |
-| `operator/=`  | `DivAssign`                               |
-| `operator%=`  | `RemAssign`                               |
-| `operator&=`  | `BitAndAssign`                            |
-| `operator\|=` | `BitOrAssign`                             |
-| `operator^=`  | `BitXorAssign`                            |
-| `operator<<=` | `ShlAssign`                               |
-| `operator>>=` | `ShrAssign`                               |
+| C++ API       | Rust bindings                                                     |
+| :------------ | :---------------------------------------------------------------- |
+| `operator==`  | `PartialEq`                                                       |
+| `operator<=>` | `PartialOrd` (and opt-in `Eq` + `Ord` for `std::strong_ordering`) |
+| `operator<`   | `PartialOrd`                                                      |
+| `operator>`   | `PartialOrd`                                                      |
+| `operator<=`  | `PartialOrd`                                                      |
+| `operator>=`  | `PartialOrd`                                                      |
+| `operator+`   | `Add`                                                             |
+| `operator-`   | `Sub`                                                             |
+| `operator*`   | `Mul`                                                             |
+| `operator/`   | `Div`                                                             |
+| `operator%`   | `Rem`                                                             |
+| `operator&`   | `BitAnd`                                                          |
+| `operator\|`  | `BitOr`                                                           |
+| `operator^`   | `BitXor`                                                          |
+| `operator<<`  | `Shl`                                                             |
+| `operator>>`  | `Shr`                                                             |
+| `operator+=`  | `AddAssign`                                                       |
+| `operator-=`  | `SubAssign`                                                       |
+| `operator*=`  | `MulAssign`                                                       |
+| `operator/=`  | `DivAssign`                                                       |
+| `operator%=`  | `RemAssign`                                                       |
+| `operator&=`  | `BitAndAssign`                                                    |
+| `operator\|=` | `BitOrAssign`                                                     |
+| `operator^=`  | `BitXorAssign`                                                    |
+| `operator<<=` | `ShlAssign`                                                       |
+| `operator>>=` | `ShrAssign`                                                       |
 
 The C++ unary operators below are mapped one-way into the corresponding Rust
 traits as follows:
 
-C++ API     | Rust bindings
------------ | -------------
-`operator-` | `Neg`
-`operator!` | `Not`
+| C++ API     | Rust bindings |
+| :---------- | :------------ |
+| `operator-` | `Neg`         |
+| `operator!` | `Not`         |
 
 ### `PartialOrd`
 
@@ -97,8 +92,8 @@ If `operator<=>` returns `std::strong_ordering` (and Crubit implements
 `PartialOrd` with it), then Crubit also implements `Eq` and `Ord`. This lets you
 use the type in a `BTreeMap` or `BTreeSet`, and sort it with `sort()`.
 
-For now, this requires the `strong_ordering_traits` Crubit feature
-,
+For now, this requires the `strong_ordering_traits` Crubit
+feature ,
 which is also part of `experimental`. This lets existing Crubit users migrate
 gradually, if they have manual `Eq` or `Ord` impls that conflict with the
 generated impls.
@@ -123,9 +118,9 @@ struct S final : EqualityMixin<S> { ... };
 
 Argument-dependent lookup finds such operators for `S`, even though `S` doesn't
 declare them itself. To map them into Rust traits as well (e.g. `PartialEq` for
-`S`), enable the `inherited_friend_operators` Crubit feature
-on
-the target that defines `S`. Only operators whose first parameter is (a
+`S`), enable the `inherited_friend_operators` Crubit
+feature
+on the target that defines `S`. Only operators whose first parameter is (a
 reference to) `S` are mapped.
 
 This is opt-in, because the generated trait implementations conflict with any
