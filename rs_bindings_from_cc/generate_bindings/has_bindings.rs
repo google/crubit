@@ -30,6 +30,7 @@ fn cc_type_has_bindings<'a>(
             } else if let Err(no_bindings) = db.has_bindings(underlying_item.clone()) {
                 return Err(NoBindingsReason::DependencyFailed {
                     type_name: db.debug_name(alias_id),
+                    blocker: Some(db.blocker(*id)),
                     source: no_bindings.into(),
                 });
             }
@@ -81,6 +82,7 @@ pub fn has_bindings<'a>(
         if let Err(no_parent_bindings) = db.has_bindings(parent.clone()) {
             return Err(NoBindingsReason::DependencyFailed {
                 type_name: db.debug_name(item.id()),
+                blocker: Some(db.blocker(parent.id())),
                 source: no_parent_bindings.into(),
             });
         }
@@ -167,6 +169,7 @@ pub fn has_bindings<'a>(
         if let Err(error) = db.rs_type_kind(enum_.underlying_type().clone()) {
             return Err(NoBindingsReason::DependencyFailed {
                 type_name: db.debug_name(enum_.id()),
+                blocker: None,
                 source: error,
             });
         }
@@ -178,6 +181,7 @@ pub fn has_bindings<'a>(
     {
         return Err(NoBindingsReason::DependencyFailed {
             type_name: db.debug_name(constant.id()),
+            blocker: None,
             source: error,
         });
     }
@@ -231,6 +235,7 @@ pub fn has_bindings<'a>(
                 }
                 Err(error) => Err(NoBindingsReason::DependencyFailed {
                     type_name: db.debug_name(item.id()),
+                    blocker: None,
                     source: error,
                 }),
             }
@@ -240,6 +245,7 @@ pub fn has_bindings<'a>(
             Ok(_) => Ok(()),
             Err(error) => Err(NoBindingsReason::DependencyFailed {
                 type_name: db.debug_name(item.id()),
+                blocker: None,
                 source: error,
             }),
         },
@@ -309,6 +315,7 @@ fn func_has_bindings<'a>(
         if let Err(source) = db.rs_type_kind(sig_type.clone()) {
             return Err(NoBindingsReason::DependencyFailed {
                 type_name: db.debug_name(func.id()),
+                blocker: None,
                 source,
             });
         }

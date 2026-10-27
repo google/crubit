@@ -1951,7 +1951,12 @@ fn rs_type_kinds_for_func<'a>(
                 )
                 .map_err(|err| {
                     // Use a shared aggregation fmt key for all "parameter not supported" errors.
-                    let fail = |parameter| anyhow!("{parameter} is not supported: {err}");
+                    let fail = |parameter| {
+                        error_report::because(
+                            anyhow!("{parameter} is not supported: {err}"),
+                            err.clone(),
+                        )
+                    };
                     if i == 0 && func.is_instance_method() {
                         fail(format_args!("`this` parameter"))
                     } else {
@@ -1988,7 +1993,9 @@ fn rs_type_kinds_for_func<'a>(
                     requires_layout_compatible: false,
                 },
             )
-            .map_err(|err| anyhow!("Return type is not supported: {err}")),
+            .map_err(|err| {
+                error_report::because(anyhow!("Return type is not supported: {err}"), err)
+            }),
         )
     };
 

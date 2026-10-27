@@ -250,9 +250,15 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
 
             if let Err(no_bindings_reason) = db.has_bindings(item.clone()) {
                 let error: Error;
+                // This is where a decl without bindings becomes an error in its user, so record
+                // that the error is caused by the decl. The decl's own errors are reported for
+                // the decl itself.
                 let unsupported_alias_error = || {
                     use ir::GenericItem;
-                    anyhow!("Unsupported type alias {name}", name = db.debug_name(item.id()))
+                    error_report::blocked_by(
+                        db.blocker(item.id()),
+                        anyhow!("Unsupported type alias {name}", name = db.debug_name(item.id())),
+                    )
                 };
                 // Alias fallbacks: type aliases are unique among items, in that if the item
                 // defining the alias fails to receive bindings, we can still use the aliased type.
@@ -284,7 +290,8 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                     // "Alias does not exist", not "decltype(declval<T>().x()) does not exist".
                     error = unsupported_alias_error();
                 } else {
-                    error = no_bindings_reason.into();
+                    error =
+                        error_report::blocked_by(db.blocker(item.id()), no_bindings_reason.into());
                 }
                 // Comprehensive fallbacks: if we can delay reifying the error, delay it.
                 if let Ok(symbol) = cpp_type_name::tagless_cpp_type_name_for_item(item, db) {

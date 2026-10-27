@@ -9,7 +9,7 @@ use crate::rs_snippet::{LifetimeOptions, PrimitiveName, RsTypeKind};
 use arc_anyhow::{Error, Result};
 use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, CcInclude};
 use crubit_feature::CrubitFeature;
-use error_report::{anyhow, bail, ensure};
+use error_report::{anyhow, bail, ensure, Blocker, ErrorList};
 use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
 use heck::ToSnakeCase;
@@ -170,7 +170,10 @@ pub fn missing_feature_descriptions<'a>(
     let join_missing_with_context = |context: &str, missing: &[Error]| -> Error {
         let desc = missing.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n");
         let desc = desc.replace('\n', "\n  ");
-        anyhow!("{context}:\n  {desc}")
+        error_report::because(
+            anyhow!("{context}:\n  {desc}"),
+            Error::from(ErrorList::from(missing.to_vec())),
+        )
     };
 
     if !have_feature(CrubitFeature::Experimental)
@@ -297,6 +300,11 @@ pub enum NoBindingsReason {
     DependencyFailed {
         /// The name of the item that cannot be bound.
         type_name: Rc<str>,
+        /// The dependency without bindings, if the failure is due to a single item (e.g. the
+        /// enclosing record of a nested item, or the type that a type alias refers to).
+        ///
+        /// If this is `None`, the dependency is described by `source` (e.g. the item's type).
+        blocker: Option<Blocker>,
         /// Why the dependency cannot be bound.
         source: Error,
     },
@@ -340,10 +348,18 @@ impl From<NoBindingsReason> for Error {
             NoBindingsReason::MissingRequiredFeatures { missing_features } => {
                 let message =
                     missing_features.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n");
-                anyhow!(message)
+                error_report::because(
+                    anyhow!(message),
+                    Error::from(ErrorList::from(missing_features)),
+                )
             }
-            NoBindingsReason::DependencyFailed { type_name, source } => {
-                anyhow!("depends on `{type_name}` which cannot be bound because {source}")
+            NoBindingsReason::DependencyFailed { type_name, blocker, source } => {
+                let message =
+                    anyhow!("depends on `{type_name}` which cannot be bound because {source}");
+                match blocker {
+                    Some(blocker) => error_report::blocked_by(blocker, message),
+                    None => error_report::because(message, source),
+                }
             }
             NoBindingsReason::LeadingDunder { name } => {
                 anyhow!("Skipping generating bindings for '{name}' because it has a leading `__`")

@@ -1277,9 +1277,12 @@ fn new_c9_co_record<'a>(
     if let RsTypeKind::Error { error, .. } = arg_type_kind {
         let element_name = db.cc_type_debug_name(&element_type);
         let desc = error.to_string().replace("\n", "\n  ");
-        return Err(anyhow!(
-            "`c9::Co<{element_name}>` is unsupported because `{element_name}` is unavailable:\n\
-              {desc}"
+        return Err(error_report::because(
+            anyhow!(
+                "`c9::Co<{element_name}>` is unsupported because `{element_name}` is unavailable:\n\
+                  {desc}"
+            ),
+            error.clone(),
         ));
     };
     let lifetime = if options.assume_lifetimes {
@@ -2043,7 +2046,12 @@ impl<'a> RsTypeKind<'a> {
         match self.unalias() {
             RsTypeKind::Error { error, symbol, .. } => {
                 let desc = error.to_string().replace("\n", "\n  ");
-                bail!("Cannot use an error type `{symbol}` by value:\n  {desc}")
+                Err(error_report::because(
+                    error_report::anyhow!(
+                        "Cannot use an error type `{symbol}` by value:\n  {desc}"
+                    ),
+                    error.clone(),
+                ))
             }
             RsTypeKind::Record { record, .. } => record.check_by_value(),
             RsTypeKind::IncompleteRecord { incomplete_record, .. } => {

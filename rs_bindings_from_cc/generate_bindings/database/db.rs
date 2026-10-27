@@ -16,6 +16,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Arguments, Write as _};
 use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Default)]
 struct InternerImpl {
@@ -686,6 +687,23 @@ impl<'db> BindingsGenerator<'db> {
                 .decl_loc()
                 .and_then(|decl_loc| decl_loc.spelling())
                 .map(|spelling| intern!(self.interner(), "{spelling}")),
+        }
+    }
+
+    /// Returns a reference to `item_id` for the error report, for use when its lack of bindings
+    /// causes an error in another item.
+    ///
+    /// Unlike in `error_item_name`, the defining target is always set if known: it is the target
+    /// that defines the template for template instantiations, and the owning target otherwise.
+    pub fn blocker(&self, item_id: ir::ItemId) -> error_report::Blocker {
+        let item = self.find_untyped_decl(item_id);
+        error_report::Blocker {
+            name: Arc::from(&*self.debug_name(item_id)),
+            unique_name: item.unique_name().map(Arc::from),
+            defining_target: self
+                .defining_target(item_id)
+                .or_else(|| item.owning_target())
+                .map(|label| label.as_str().into()),
         }
     }
 

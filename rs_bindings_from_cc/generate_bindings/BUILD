@@ -157,7 +157,9 @@ multiplatform_rust_test(
         ":multiplatform_ir_testing",
         ":test_generators",
         "//common:arc_anyhow",
+        "//common:crubit_feature",
         "//common:error_report",
+        "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc:ir_testing",
         "@crate_index//:googletest",
         "@crate_index//:serde_json",  # v1

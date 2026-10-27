@@ -1324,9 +1324,10 @@ fn crubit_abi_type<'a>(
     rs_type_kind: RsTypeKind<'a>,
 ) -> Result<CrubitAbiType> {
     match rs_type_kind {
-        RsTypeKind::Error { symbol, error, .. } => {
-            bail!("Type '{symbol}' has an error and cannot be bridged: {error}")
-        }
+        RsTypeKind::Error { symbol, error, .. } => Err(error_report::because(
+            error_report::anyhow!("Type '{symbol}' has an error and cannot be bridged: {error}"),
+            error.clone(),
+        )),
         RsTypeKind::TypeAlias { underlying_type, .. } => {
             // We don't actually _have_ to expand the type alias here
             db.crubit_abi_type(underlying_type.as_ref().clone())
