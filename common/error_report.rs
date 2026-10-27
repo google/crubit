@@ -236,6 +236,8 @@ pub struct ItemName {
     pub unique_name: Option<Rc<str>>,
     /// The Bazel label or Rust crate that defines this item, if it's not the current one.
     pub defining_target: Option<Rc<str>>,
+    /// The source location of the item's declaration, if known, e.g. `path/to/header.h;l=12`.
+    pub source_loc: Option<Rc<str>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -367,6 +369,7 @@ thread_local! {
         id: 0,
         unique_name: None,
         defining_target: None,
+        source_loc: None,
     };
 }
 
@@ -414,6 +417,7 @@ impl ErrorReporting for ErrorReport {
                     name: item.name.clone(),
                     unique_name: item.unique_name.clone(),
                     defining_target: item.defining_target.clone(),
+                    source_loc: item.source_loc.clone(),
                     ..Default::default()
                 });
             }
@@ -485,6 +489,13 @@ pub struct ErrorReportEntry {
     /// The Bazel label or Rust crate that defines this item, if it's not the current one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub defining_target: Option<Rc<str>>,
+
+    /// The source location of the item's declaration, if known, e.g. `path/to/header.h;l=12`.
+    ///
+    /// The path is relative to the workspace root. For declarations produced by a macro expansion,
+    /// this is the location that the declaration is spelled at.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_loc: Option<Rc<str>>,
 }
 
 fn is_default<T: Default + PartialEq>(value: &T) -> bool {
@@ -780,7 +791,13 @@ mod tests {
         {
             let _scope = ItemScope::new(
                 &report,
-                ItemName { name: "foo".into(), id: 1, unique_name: None, defining_target: None },
+                ItemName {
+                    name: "foo".into(),
+                    id: 1,
+                    unique_name: None,
+                    defining_target: None,
+                    source_loc: None,
+                },
             );
             report.report(&anyhow!("error in {}", "item 1"));
         }
@@ -792,6 +809,7 @@ mod tests {
                     id: 2,
                     unique_name: Some("abc123".into()),
                     defining_target: Some("//other:target".into()),
+                    source_loc: Some("other/target.h;l=12".into()),
                 },
             );
             report.report(&anyhow!("error in {}", "item 2"));
@@ -811,6 +829,7 @@ mod tests {
                     ],
                     "unique_name": "abc123",
                     "defining_target": "//other:target",
+                    "source_loc": "other/target.h;l=12",
                 },
                 {
                     "source_language": "Rust",
@@ -834,7 +853,13 @@ mod tests {
         for (name, id) in [("b", 10), ("c", 30), ("a", 20), ("b", 10)] {
             let _scope = ItemScope::new(
                 &report,
-                ItemName { name: name.into(), id, unique_name: None, defining_target: None },
+                ItemName {
+                    name: name.into(),
+                    id,
+                    unique_name: None,
+                    defining_target: None,
+                    source_loc: None,
+                },
             );
             report.report(&anyhow!("error"));
         }
@@ -842,6 +867,16 @@ mod tests {
         let names: Vec<&str> =
             json.as_array().unwrap().iter().map(|e| e["name"].as_str().unwrap()).collect();
         expect_eq!(names, vec!["a", "b", "c"]);
+    }
+
+    #[gtest]
+    fn error_report_entry_deserializes_without_new_fields() {
+        // Reports written before newer optional fields were added must still parse.
+        let entries: Vec<ErrorReportEntry> =
+            serde_json::from_str(r#"[{"source_language": "Cpp", "name": "foo"}]"#).unwrap();
+        expect_eq!(entries.len(), 1);
+        expect_eq!(&*entries[0].name, "foo");
+        expect_eq!(entries[0].source_loc, None);
     }
 
     #[gtest]

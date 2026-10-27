@@ -678,6 +678,10 @@ impl<'db> BindingsGenerator<'db> {
             id: item.id().as_u64(),
             unique_name: item.unique_name().map(Rc::from),
             defining_target: self.defining_target(item.id()).map(|label| label.as_str().into()),
+            source_loc: item
+                .decl_loc()
+                .and_then(|decl_loc| decl_loc.spelling())
+                .map(|spelling| intern!(self.interner(), "{spelling}")),
         }
     }
 

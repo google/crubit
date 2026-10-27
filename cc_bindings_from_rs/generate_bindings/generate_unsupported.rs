@@ -73,7 +73,7 @@ pub fn item_name_for_error_report<'tcx>(
     } else {
         Some(crate_name.to_string().into())
     };
-    error_report::ItemName { name, id, unique_name: None, defining_target }
+    error_report::ItemName { name, id, unique_name: None, defining_target, source_loc: None }
 }
 
 #[doc(hidden)]

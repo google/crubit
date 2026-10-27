@@ -146,6 +146,24 @@ multiplatform_rust_test(
     ],
 )
 
+multiplatform_rust_test(
+    name = "error_report_test",
+    srcs = ["error_report_test.rs"],
+    tags = [
+        "not_run:arm",
+        "not_run:mac",
+    ],
+    deps = [
+        ":multiplatform_ir_testing",
+        ":test_generators",
+        "//common:arc_anyhow",
+        "//common:error_report",
+        "//rs_bindings_from_cc:ir_testing",
+        "@crate_index//:googletest",
+        "@crate_index//:serde_json",  # v1
+    ],
+)
+
 rust_library(
     name = "cpp_type_name",
     srcs = ["cpp_type_name.rs"],

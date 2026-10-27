@@ -95,6 +95,8 @@ fn test_decl_loc() -> DeclLocation<'static> {
 }
 
 const TEST_ITEM_ID: ItemId = ItemId::new_for_testing(123);
+/// The spelling location of `test_decl_loc()`, as it appears in the error report.
+const TEST_ITEM_REPORT_SOURCE_LOC: &str = "some/header;l=1";
 
 impl<'a> ir::GenericItem<'a> for TestItem {
     fn id(&self) -> ItemId {
@@ -149,6 +151,7 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
             id: TEST_ITEM_ID.as_u64(),
             unique_name: None,
             defining_target: None,
+            source_loc: Some(TEST_ITEM_REPORT_SOURCE_LOC.into()),
         },
     );
     let actual = generate_unsupported(
@@ -181,6 +184,7 @@ fn test_generate_unsupported_item_with_global_cpp() -> Result<()> {
             id: TEST_ITEM_ID.as_u64(),
             unique_name: None,
             defining_target: None,
+            source_loc: Some(TEST_ITEM_REPORT_SOURCE_LOC.into()),
         },
     );
     let mut unsupported_item = db.new_unsupported_item_with_static_message(
@@ -217,6 +221,7 @@ fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result
             id: TEST_ITEM_ID.as_u64(),
             unique_name: None,
             defining_target: None,
+            source_loc: Some(TEST_ITEM_REPORT_SOURCE_LOC.into()),
         },
     );
     let mut unsupported_item = db.new_unsupported_item_with_static_message(
@@ -245,6 +250,7 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
             id: TEST_ITEM_ID.as_u64(),
             unique_name: None,
             defining_target: None,
+            source_loc: Some(TEST_ITEM_REPORT_SOURCE_LOC.into()),
         },
     );
     let actual = generate_unsupported(
@@ -274,6 +280,7 @@ fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
             id: TEST_ITEM_ID.as_u64(),
             unique_name: None,
             defining_target: None,
+            source_loc: Some(TEST_ITEM_REPORT_SOURCE_LOC.into()),
         },
     );
     let actual = generate_unsupported(
@@ -303,6 +310,7 @@ fn test_generate_unsupported_function_template_with_global_cpp() -> Result<()> {
             id: TEST_ITEM_ID.as_u64(),
             unique_name: None,
             defining_target: None,
+            source_loc: Some(TEST_ITEM_REPORT_SOURCE_LOC.into()),
         },
     );
     let mut unsupported_item = db.new_unsupported_item_with_static_message(
@@ -344,6 +352,7 @@ fn test_generate_unsupported_function_template_strict_mode_fatal_error() -> Resu
             id: TEST_ITEM_ID.as_u64(),
             unique_name: None,
             defining_target: None,
+            source_loc: Some(TEST_ITEM_REPORT_SOURCE_LOC.into()),
         },
     );
     let mut unsupported_item = db.new_unsupported_item_with_static_message(

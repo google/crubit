@@ -103,6 +103,30 @@ pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR<'_>) -> Result<
     Ok(tokens)
 }
 
+/// Generates bindings for `ir` and returns the resulting error report, serialized as JSON.
+///
+/// The JSON has the same format as the `*_rust_api_error_report.json` files produced by the
+/// build, i.e. a sequence of `error_report::ErrorReportEntry`.
+pub fn generate_error_report_json_for_test(ir: IR<'_>) -> Result<String> {
+    let errors = ErrorReport::new(SourceLanguage::Cpp);
+    let fatal_errors = FatalErrors::new();
+    generate_bindings_tokens(
+        &ir,
+        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"]).unwrap(),
+        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support/internal", &["unused"])
+            .unwrap(),
+        &errors,
+        &fatal_errors,
+        false,
+        /* kythe_annotations= */ false,
+    )?;
+    let fatal = fatal_errors.take_string();
+    if !fatal.is_empty() {
+        bail!("Fatal errors:{}", fatal)
+    }
+    Ok(errors.to_json_string())
+}
+
 pub struct TestDbFactory<'pb> {
     ir: IR<'pb>,
     errors: ErrorReport,
