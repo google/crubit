@@ -83,7 +83,10 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/Specifiers.h"
+#include "clang/Lex/HeaderSearch.h"
+#include "clang/Lex/HeaderSearchOptions.h"
 #include "clang/Lex/Lexer.h"
+#include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
 #include "clang/UnifiedSymbolResolution/USRGeneration.h"
 #include "llvm/ADT/STLExtras.h"
@@ -1288,6 +1291,30 @@ std::vector<ItemId> Importer::GetOrderedItemIdsOfTemplateInstantiations()
     ordered_item_ids.push_back(ordered_item.second);
   }
   return ordered_item_ids;
+}
+
+bool Importer::IsInSystemHeader(clang::SourceLocation location) const {
+  const clang::SourceManager& sm = ctx_.getSourceManager();
+  if (location.isInvalid()) return false;
+  location = sm.getExpansionLoc(location);
+  bool is_in_system_header = sm.isInSystemHeader(location);
+  if (!sm.isLoadedSourceLocation(location)) return is_in_system_header;
+  // The file was loaded from a precompiled header module. Apply the
+  // `--system-header-prefix` and `--no-system-header-prefix` options like
+  // `HeaderSearch::LookupFile` does when the file is included textually: the
+  // last matching option wins.
+  std::optional<llvm::StringRef> filename =
+      sm.getNonBuiltinFilenameForID(sm.getFileID(location));
+  if (!filename.has_value()) return is_in_system_header;
+  filename->consume_front("./");
+  const auto& prefixes = sema_.getPreprocessor()
+                             .getHeaderSearchInfo()
+                             .getHeaderSearchOpts()
+                             .SystemHeaderPrefixes;
+  for (auto it = prefixes.rbegin(); it != prefixes.rend(); ++it) {
+    if (filename->starts_with(it->Prefix)) return it->IsSystemHeader;
+  }
+  return is_in_system_header;
 }
 
 void Importer::ImportFreeComments() {
@@ -3355,8 +3382,7 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     return ConvertTypeDecl(tag_type->getDecl()->getDefinitionOrSelf());
   } else if (const auto* typedef_type =
                  type.getAsAdjusted<clang::TypedefType>()) {
-    if (!ctx_.getSourceManager().isInSystemHeader(
-            typedef_type->getDecl()->getLocation()) &&
+    if (!IsInSystemHeader(typedef_type->getDecl()->getLocation()) &&
         EnsureSuccessfullyImported(typedef_type->getDecl())) {
       return ConvertTypeDecl(typedef_type->getDecl());
     }

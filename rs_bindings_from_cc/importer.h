@@ -111,6 +111,7 @@ class Importer final : public ImportContext {
   bool IsFromCurrentTargetAndNotUnderSpecialization(
       const clang::Decl& decl) const;
   bool IsFromProtoTarget(const clang::Decl& decl) const override;
+  bool IsInSystemHeader(clang::SourceLocation location) const override;
   bool IsCrubitEnabledForTarget(const BazelLabel& label) const override;
   bool AreAssumedLifetimesEnabledForTarget(
       const BazelLabel& label) const override;

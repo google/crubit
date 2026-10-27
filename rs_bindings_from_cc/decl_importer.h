@@ -330,6 +330,13 @@ class ImportContext {
   // other redeclarations of the decl.
   virtual bool IsFromProtoTarget(const clang::Decl& decl) const = 0;
 
+  // Like `clang::SourceManager::isInSystemHeader`, but also correct for files
+  // loaded from precompiled header modules. (Clang only applies
+  // `--system-header-prefix` when it looks up an `#include`, which doesn't
+  // happen for the headers of a module when it is built, so these are
+  // otherwise classified differently than when they are parsed textually.)
+  virtual bool IsInSystemHeader(clang::SourceLocation location) const = 0;
+
   // Returns true iff `label` has opted in to crubit support.
   virtual bool IsCrubitEnabledForTarget(const BazelLabel& label) const = 0;
 
