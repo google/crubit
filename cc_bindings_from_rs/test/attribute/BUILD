@@ -37,6 +37,8 @@ golden_test(
         "macos",
     ],
     rust_library = "cpp_name",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
@@ -79,6 +81,8 @@ golden_test(
         "macos",
     ],
     rust_library = "must_bind",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(

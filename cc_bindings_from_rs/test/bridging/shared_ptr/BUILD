@@ -36,6 +36,8 @@ golden_test(
     golden_h = "shared_ptr_cc_api.h",
     golden_rs = "shared_ptr_cc_api_impl.rs",
     rust_library = "shared_ptr",
+    # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
+    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
