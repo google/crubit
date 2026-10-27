@@ -1234,8 +1234,10 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
                    clang::isa<clang::LockReturnedAttr>(attr) ||
                    clang::isa<clang::AbiTagAttr>(attr) ||
                    clang::isa<clang::LocksExcludedAttr>(attr) ||
+                   clang::isa<clang::AvailabilityAttr>(attr) ||
                    IsDefaultVisibilityAttr(attr)) {
-          // These attributes don't affect Rust.
+          // These attributes don't affect Rust (`AvailabilityAttr` is already
+          // checked via `Decl::isUnavailable` and `Decl::isWeakImported`).
           return true;
         }
         return false;

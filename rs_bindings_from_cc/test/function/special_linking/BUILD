@@ -12,7 +12,7 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "special_linking",
     hdrs = ["special_linking.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
 )
 
 rust_api_from_cpp(
