@@ -2,15 +2,15 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::code_snippet::{ApiSnippets, BindingsInfo, NoBindingsReason, ResolvedName, Visibility};
+use crate::code_snippet::{ApiSnippets, NoBindingsReason, ResolvedName};
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::{LifetimeOptions, RsTypeKind, UnsafeReason};
-use arc_anyhow::{anyhow, Error, Result};
+use arc_anyhow::{Error, Result};
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiType;
 use error_report::{bail, ensure, ErrorReporting, ReportFatalError};
 use heck::ToSnakeCase;
-use ir::{BazelLabel, CcType, Enum, Field, Func, GenericItem, Record, UnqualifiedIdentifier, IR};
+use ir::{CcType, Enum, Field, Func, GenericItem, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -145,21 +145,13 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:record_safety
         fn record_safety(&self, record: Rc<Record<'db>>) -> Option<UnsafeReason>;
 
-        /// Returns the bindings info for the given item, or an error if the item is not supported.
+        /// Returns whether the given item has bindings, or an error if the item is not supported.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:has_bindings
-        fn has_bindings(&self, item: ir::Item<'db>) -> Result<BindingsInfo, NoBindingsReason>;
+        fn has_bindings(&self, item: ir::Item<'db>) -> Result<(), NoBindingsReason>;
 
         /// Returns the Rust type kind of the given C++ type, optionally filling in missing
         /// reference lifetimes with the elided lifetime (`'_`).
-        ///
-        /// An `Ok()` return value does not necessarily imply that the resulting `RsTypeKind` is
-        /// usable in APIs: callers must also check the result of `type_visibility()` for
-        /// the type, to see if it is usable within a specific crate. Eventually, all types will
-        /// have a successful non-error return value, even if the type is not generally usable.
-        /// Instead, restrictions will always be done via `type_visibility`.
-        ///
-        /// TODO(jeanpierreda): never return `Err` here, instead check `type_visibility`. See b/409128537.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/rs_type_kind.rs?q=function:rs_type_kind_with_lifetime_elision
         fn rs_type_kind_with_lifetime_elision(&self, cc_type: CcType, lifetime_options: LifetimeOptions) -> Result<RsTypeKind<'db>>;
@@ -223,9 +215,6 @@ memoized::query_group! {
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:crubit_abi_type
         fn crubit_abi_type(&self, rs_type_kind: RsTypeKind<'db>) -> Result<CrubitAbiType>;
-
-        // You should probably use `type_visibility()` instead of this function.
-        fn type_target_restriction(&self, rs_type_kind: RsTypeKind<'db>) -> Result<Option<BazelLabel>>;
 
         /// Resolves names to a map from name to ResolvedName.
         ///
@@ -421,33 +410,6 @@ impl<'db> BindingsGenerator<'db> {
         let conflicts_counter =
             self.mangled_name_counts().get(func.mangled_name()).copied().unwrap_or(0);
         conflicts_counter > 1
-    }
-
-    /// Returns the `Visibility` of the `rs_type_kind` in the given `library`.
-    pub fn type_visibility(
-        &self,
-        library: &BazelLabel,
-        rs_type_kind: RsTypeKind<'db>,
-    ) -> Result<Visibility> {
-        match self.type_target_restriction(rs_type_kind.clone())? {
-            Some(label) if &label != library => {
-                let rs_type_kind = rs_type_kind.display(self);
-                Err(anyhow!(
-                    "crubit.rs/errors/visibility: Support for `{rs_type_kind}` is experimental.\n\
-                      Its use is restricted to `pub(crate)` in defining target:\n\
-                      `{label}`"
-                ))
-            }
-            Some(_) => Ok(Visibility::PubCrate),
-            None => {
-                for subtype in rs_type_kind.dfs_iter() {
-                    if let RsTypeKind::Error { visibility_override, .. } = subtype {
-                        return Ok(visibility_override.unwrap_or(Visibility::PubCrate));
-                    }
-                }
-                Ok(Visibility::Public)
-            }
-        }
     }
 
     /// Returns the target that this item was defined in, if it was defined somewhere other than

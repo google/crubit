@@ -4,14 +4,12 @@
 
 use arc_anyhow::Result;
 use crubit_feature::CrubitFeature;
-use database::code_snippet::{
-    missing_feature_descriptions, BindingsInfo, NoBindingsReason, ResolvedName, Visibility,
-};
+use database::code_snippet::{missing_feature_descriptions, NoBindingsReason, ResolvedName};
 use database::rs_snippet::{LifetimeOptions, RsTypeKind};
 use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail};
 use heck::ToSnakeCase;
-use ir::{BazelLabel, CcType, CcTypeVariant, Func, GenericItem, Item, ItemId, Record};
+use ir::{CcType, CcTypeVariant, Func, GenericItem, Item, ItemId, Record};
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -61,7 +59,7 @@ fn cc_type_has_bindings<'a>(
 pub fn has_bindings<'a>(
     db: &BindingsGenerator<'a>,
     item: Item<'a>,
-) -> Result<BindingsInfo, NoBindingsReason> {
+) -> Result<(), NoBindingsReason> {
     if let Some(name) = item.cc_name_as_str() {
         // Dunder namespaces are allowed for now.
         if name.starts_with("__") && !matches!(item, Item::Namespace(_)) {
@@ -188,8 +186,7 @@ pub fn has_bindings<'a>(
     match item {
         // Functions receive bindings based on their parameter and return types.
         Item::Func(func) => func_has_bindings(db, func),
-        // Types receive bindings with the same visibility (and success) as the RsTypeKind that
-        // they are the definition for.
+        // Types receive bindings if the RsTypeKind that they are the definition for succeeds.
         Item::IncompleteRecord(_)
         | Item::Record(_)
         | Item::Enum(_)
@@ -230,8 +227,7 @@ pub fn has_bindings<'a>(
                             cpp_type = db.debug_name(item.id()),
                         )));
                     }
-                    let visibility = type_visibility(db, &item, rs_type_kind)?;
-                    Ok(BindingsInfo { visibility })
+                    Ok(())
                 }
                 Err(error) => Err(NoBindingsReason::DependencyFailed {
                     type_name: db.debug_name(item.id()),
@@ -239,12 +235,9 @@ pub fn has_bindings<'a>(
                 }),
             }
         }
-        // Global variables receive bindings if the underlying type is visible.
+        // Global variables receive bindings if the underlying type has bindings.
         Item::GlobalVar(ref global_var) => match db.rs_type_kind(global_var.type_().clone()) {
-            Ok(rs_type_kind) => {
-                let visibility = type_visibility(db, &item, rs_type_kind)?;
-                Ok(BindingsInfo { visibility })
-            }
+            Ok(_) => Ok(()),
             Err(error) => Err(NoBindingsReason::DependencyFailed {
                 type_name: db.debug_name(item.id()),
                 source: error,
@@ -255,7 +248,7 @@ pub fn has_bindings<'a>(
         | Item::Constant(_)
         | Item::Namespace(_)
         | Item::UnsupportedItem(_)
-        | Item::UseMod(_) => Ok(BindingsInfo { visibility: Visibility::Public }),
+        | Item::UseMod(_) => Ok(()),
     }
 }
 
@@ -263,7 +256,7 @@ pub fn has_bindings<'a>(
 fn func_has_bindings<'a>(
     db: &BindingsGenerator<'a>,
     func: Rc<Func<'a>>,
-) -> Result<BindingsInfo, NoBindingsReason> {
+) -> Result<(), NoBindingsReason> {
     if func.is_consteval() {
         return Err(NoBindingsReason::Unsupported(anyhow!(
             "consteval functions are not supported"
@@ -310,168 +303,22 @@ fn func_has_bindings<'a>(
         ));
     }
 
-    let mut visibility = Visibility::Public;
     let sig_types =
         func.params().iter().map(|p| p.type_()).chain(std::iter::once(func.return_type()));
     for sig_type in sig_types {
-        let rs_type_kind = match db.rs_type_kind(sig_type.clone()) {
-            Ok(ty) => ty,
-            Err(source) => {
-                return Err(NoBindingsReason::DependencyFailed {
-                    type_name: db.debug_name(func.id()),
-                    source,
-                });
-            }
-        };
-        match type_visibility(db, &func, rs_type_kind) {
-            Ok(vis) => {
-                visibility = visibility.or(vis);
-            }
-            Err(NoBindingsReason::MissingRequiredFeatures {
-                missing_features: new_missing_features,
-            }) => {
-                missing_features.extend(new_missing_features);
-                // Keep going using public for now, we're not going to generate bindings anyway.
-            }
-            Err(other_reason) => return Err(other_reason),
-        };
+        if let Err(source) = db.rs_type_kind(sig_type.clone()) {
+            return Err(NoBindingsReason::DependencyFailed {
+                type_name: db.debug_name(func.id()),
+                source,
+            });
+        }
     }
 
     if !missing_features.is_empty() {
         return Err(NoBindingsReason::MissingRequiredFeatures { missing_features });
     }
 
-    if func.is_pub_crate() {
-        visibility = Visibility::PubCrate;
-    }
-
-    Ok(BindingsInfo { visibility })
-}
-
-/// Returns the set of crates which can use the type due it depending on a `pub(crate)` item.
-///
-/// - If no subtype is `pub(crate)`, returns `None`.
-/// - If more than one subtype is `pub(crate)`, for two or more crates, returns `Err`.
-/// - Otherwise, returns the crate which owns the `pub(crate)` subtype.
-///
-/// For example, if two targets `//foo:crate1` and `//foo:crate2` independently define a type
-/// `pub(crate) struct X;`, then `&crate1::X` has a restriction of Ok(Some("//foo:crate1")),
-/// while `(crate1::X, crate2::X)` is `Err` (because no crate can use both).
-//
-// Implementation notes:
-//
-// This in some amount duplicates the logic in `RsTypeKind::required_crubit_features`, but
-// is kept distinct. In particular, for example, some types are going to be restricted in
-// which features they require (e.g. `Wrapper` and above), and _separately_, are going to
-// be `pub(crate)` when enabled. That logic does not need to be separated -- in principle,
-// we could produce both results at once -- but because `required_crubit_features` is used
-// to collect useful error messages, while this is used to compute visibility, they end up
-// structured a bit differently, and it's difficult to share the code.
-//
-// YMMV: feel free to unify the two functions later.
-pub fn type_target_restriction<'a>(
-    db: &BindingsGenerator<'a>,
-    rs_type_kind: RsTypeKind<'a>,
-) -> Result<Option<BazelLabel>> {
-    let mut dfs_iter = rs_type_kind.dfs_iter();
-    // `unwrap()` is safe because we know there is at least the `Self type.
-    let mut most_restricted_subtype = type_target_restriction_shallow(db, dfs_iter.next().unwrap());
-    for child_type in dfs_iter {
-        intersect_target_restrictions(
-            db,
-            &rs_type_kind,
-            &mut most_restricted_subtype,
-            type_target_restriction_shallow(db, child_type),
-        )?;
-    }
-    Ok(most_restricted_subtype.map(|r| r.target))
-}
-
-/// A visibility restriction indicating that a type is `pub(crate)` within a specific target.
-struct TargetRestriction<'a> {
-    /// The target which provides the `pub(crate)` type.
-    target: BazelLabel,
-    /// The type which is `pub(crate)`, used for error messages.
-    exemplar_type: RsTypeKind<'a>,
-}
-
-/// Updates `old_restriction`: if `new_restriction` is `pub(crate)` while
-/// `old_restriction` is not, then `old_restriction` is updated to be `new_restriction`.
-///
-/// Returns an error if both are `pub(crate)`, and the two types are owned by different crates.
-/// The error contains just a list of the types it found that are incompatible.
-fn intersect_target_restrictions<'a>(
-    db: &BindingsGenerator<'a>,
-    original_type: &RsTypeKind<'a>,
-    old_restriction: &mut Option<TargetRestriction<'a>>,
-    new_restriction: Option<TargetRestriction<'a>>,
-) -> Result<()> {
-    if let Some(old_restriction) = old_restriction.as_ref()
-        && let Some(new_restriction) = new_restriction.as_ref()
-        && let old_target = &old_restriction.target
-        && let new_target = &new_restriction.target
-        && old_target != new_target
-    {
-        let original_type = original_type.display(db);
-        let old_type = old_restriction.exemplar_type.display(db);
-        let new_type = new_restriction.exemplar_type.display(db);
-        // The top-line error message is built in the caller, with these as
-        // a list of causes.
-        return Err(anyhow!(
-            "`{original_type}` depends on `pub(crate)` types from other targets:\n\
-              {old_type} is `pub(crate)` in {old_target}\n\
-              {new_type} is `pub(crate)` in {new_target}\n\
-              See http://crubit.rs/errors/visibility"
-        ));
-    }
-    if old_restriction.is_none() {
-        *old_restriction = new_restriction;
-    }
     Ok(())
-}
-
-/// Without recursing, returns the visibility restriction of the top-level compound data type.
-///
-/// For example, the top level visibility restriction of `*mut T` is `None` for all `T`, because
-/// pointers are never `pub(crate)`, only their pointees can be.
-fn type_target_restriction_shallow<'a>(
-    db: &BindingsGenerator<'a>,
-    rs_type_kind: &RsTypeKind<'a>,
-) -> Option<TargetRestriction<'a>> {
-    let rs_type_kind = rs_type_kind.unalias();
-    let RsTypeKind::Record { record, .. } = rs_type_kind else {
-        // All non-record types are `pub` if they receive bindings.
-        return None;
-    };
-    let target = record.as_ref().owning_target();
-    // Template types (except for the special-cased ones like `[w]string_view`)
-    // are the only types whose bindings have restrictions, and they do not have
-    // unique owning targets.
-    if record.has_unique_owning_target()
-        || db.ir().target_crubit_features(target).contains(CrubitFeature::TemplateInstantiation)
-    {
-        return None;
-    }
-    // Instantiations of UniformReprTemplateTypes are unrestricted.
-    if let RsTypeKind::Record { uniform_repr_template_type: Some(_), .. } = rs_type_kind {
-        return None;
-    }
-    // Targets with experimental features generate `pub` bindings (for now?), no matter what.
-    if db.ir().target_crubit_features(target).contains(CrubitFeature::Experimental) {
-        return None;
-    }
-    Some(TargetRestriction { target: target.clone(), exemplar_type: rs_type_kind.clone() })
-}
-
-fn type_visibility<'a>(
-    db: &BindingsGenerator<'a>,
-    item: &dyn GenericItem,
-    rs_type_kind: RsTypeKind<'a>,
-) -> Result<Visibility, NoBindingsReason> {
-    let Some(target) = item.owning_target() else {
-        return Ok(Visibility::Public);
-    };
-    db.type_visibility(&target, rs_type_kind.clone()).map_err(NoBindingsReason::Visibility)
 }
 
 enum NameConflictAction {

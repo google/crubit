@@ -152,7 +152,7 @@ fn generate_type_alias<'a>(
     //
     // Since rs_type_kind() can succeed even if this alias is unsupported (it is "seen through"),
     // we only do so after rs_type_kind() fails.
-    let Ok(rs_type_kind) = db.rs_type_kind(type_alias.into()) else {
+    let Ok(_rs_type_kind) = db.rs_type_kind(type_alias.into()) else {
         // Return the un-hidden raw error from has_bindings().
         let Err(e) = db.has_bindings(ir::Item::TypeAlias(raw_type_alias)) else {
             unreachable!(
@@ -192,9 +192,6 @@ fn generate_type_alias<'a>(
             db.is_golden_test(),
             db.kythe_annotations(),
         ),
-        visibility: db
-            .type_visibility(type_alias.owning_target(), rs_type_kind)
-            .unwrap_or_default(),
         ident: make_rs_ident(type_alias.rs_name().as_str()),
         underlying_type: underlying_type.to_token_stream(db),
         underlying_nested_module_path,
@@ -338,7 +335,6 @@ fn generate_global_var(db: &BindingsGenerator, var: &GlobalVar) -> Result<ApiSni
                 is_mut: !var.type_().is_const(),
                 ident: make_rs_ident(var.rs_name().as_str()),
                 type_tokens: type_.to_token_stream(db),
-                visibility: db.type_visibility(var.owning_target(), type_).unwrap_or_default(),
                 deprecated_attr: var.deprecated().map(|s| DeprecatedAttr(Rc::from(s))),
             },
         )]),
@@ -535,7 +531,6 @@ pub fn new_database<'db>(
         generate_function::get_binding,
         generate_struct_and_union::collect_unqualified_member_functions,
         crubit_abi_type,
-        has_bindings::type_target_restriction,
         has_bindings::resolve_names,
         generate_function::mangled_name_counts,
         unsupported_item_errors,

@@ -481,7 +481,6 @@ fn generate_cc_operator_index_nonmut_impls<'a>(
         drop_return: false,
         associated_return_type: Some(make_rs_ident("Output")),
         force_const_reference_params: false,
-        always_public: false,
     };
     Ok((func_name, impl_kind))
 }
@@ -526,7 +525,6 @@ fn generate_cc_operator_index_mut_impls<'a>(
         drop_return: false,
         associated_return_type: Some(make_rs_ident("Output")),
         force_const_reference_params: false,
-        always_public: false,
     };
     Ok((func_name, impl_kind))
 }
@@ -659,12 +657,6 @@ fn api_func_shape_for_operator_assign<'a>(
         drop_return: true,
         associated_return_type: None,
         force_const_reference_params: false,
-        // OK to always be public: the only type in the param list
-        // depends on self, so it's only usable within the current
-        // crate. Also, the trait is owned by Crubit, and callers
-        // have no reason to define their own impl given that it's
-        // not usable outside this crate.
-        always_public: true,
     };
     Some((func_name, impl_kind))
 }
@@ -850,7 +842,6 @@ fn api_func_shape_for_operator<'a>(
                     drop_return: true,
                     associated_return_type: None,
                     force_const_reference_params: false,
-                    always_public: false,
                 };
                 Some((func_name, impl_kind))
             } else {
@@ -869,7 +860,6 @@ fn api_func_shape_for_operator<'a>(
                     drop_return: false,
                     associated_return_type: Some(make_rs_ident("Output")),
                     force_const_reference_params: false,
-                    always_public: false,
                 };
                 Some((func_name, impl_kind))
             }
@@ -954,8 +944,6 @@ fn api_func_shape_for_destructor<'a>(
             drop_return: false,
             associated_return_type: None,
             force_const_reference_params: false,
-            // OK to be always_public: canonical case.
-            always_public: true,
         };
         Some((func_name, impl_kind))
     } else {
@@ -973,8 +961,6 @@ fn api_func_shape_for_destructor<'a>(
             drop_return: false,
             associated_return_type: None,
             force_const_reference_params: false,
-            // OK to be always_public: canonical case.
-            always_public: true,
         };
         Some((func_name, impl_kind))
     }
@@ -1084,9 +1070,6 @@ fn api_func_shape_for_constructor<'a>(
             drop_return: false,
             associated_return_type: Some(make_rs_ident("CtorType")),
             force_const_reference_params: false,
-            // OK to be always public: the trait only has a static method,
-            // meaning it's only usable within the current target anyway.
-            always_public: true,
         };
         return Some((make_rs_ident("ctor_new"), impl_kind));
     }
@@ -1235,7 +1218,6 @@ fn api_func_shape_for_conversion_operator<'a>(
         drop_return: false,
         associated_return_type,
         force_const_reference_params: false,
-        always_public: true,
     };
     Some((func_name, impl_kind))
 }
@@ -2127,8 +2109,7 @@ pub fn generate_function<'a>(
             };
             let Some(base_item) = db.ir().get_decl(enclosing_id) else { return false };
             let Item::Record(_) = base_item else { return false };
-            let Ok(bindings_info) = db.has_bindings(base_item.clone()) else { return false };
-            bindings_info.visibility == Visibility::Public
+            db.has_bindings(base_item.clone()).is_ok()
         }
     }();
 
@@ -2289,9 +2270,7 @@ pub fn generate_function<'a>(
     let deprecated_attr = func.deprecated().map(|s| DeprecatedAttr(Rc::from(s)));
     let must_use_attr = func.nodiscard().map(|s| MustUseAttr(Rc::from(s)));
 
-    // If there are no bindings, use `Public` for the sake of "keeping on going" when
-    // collecting errors for items that will not actually be generated.
-    let visibility = db.has_bindings(ir::Item::Func(func.clone())).unwrap_or_default().visibility;
+    let visibility = if func.is_pub_crate() { Visibility::PubCrate } else { Visibility::Public };
     let unsafety = if impl_kind.is_unsafe() {
         quote! { unsafe }
     } else {
@@ -2573,13 +2552,12 @@ pub fn generate_function<'a>(
         ImplKind::Trait {
             record: ref trait_record,
             ref trait_name,
-            always_public,
             ref impl_for,
             ref associated_return_type,
             ..
         } => {
-            if !always_public && visibility == Visibility::PubCrate {
-                bail!("Implementation of {trait_name} cannot be restricted to wrappers with pub(crate)")
+            if visibility == Visibility::PubCrate {
+                bail!("Implementation of {trait_name} cannot be restricted with pub(crate)")
             }
             // When the impl block is for some kind of reference to T, consider the lifetime
             // parameters on the self parameter to be trait lifetimes so they can be

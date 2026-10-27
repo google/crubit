@@ -239,21 +239,6 @@ pub enum ImplKind<'a> {
         /// For example, the traits for == and < only accept const reference
         /// parameters, but C++ allows values.
         force_const_reference_params: bool,
-
-        /// Whether this trait impl should be globally visible, even when the type is `pub(crate)`
-        /// in a `:wrapper` target.
-        ///
-        /// Set this to true when:
-        ///
-        /// * The implementation will not change in backwards-incompatible ways when features are
-        ///   added to Crubit.
-        /// * The implementation is well-known and not subject to being overwritten by the
-        ///   `:wrapper` library owner.
-        ///
-        /// For example, `Drop` and `PinnedDrop` are perfect instances of this: there is only one
-        /// logical implementation, which won't change over time, and it's not permitted for
-        /// library owners to change it to something else.
-        always_public: bool,
     },
 }
 impl<'a> ImplKind<'a> {
@@ -271,7 +256,6 @@ impl<'a> ImplKind<'a> {
             drop_return: false,
             associated_return_type: None,
             force_const_reference_params,
-            always_public: false,
         }
     }
     pub fn format_first_param_as_self(&self) -> bool {

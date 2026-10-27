@@ -58,7 +58,6 @@
 -   [Unsupported types](./errors/unsupported_type.md)
 -   [Unknown targets](./errors/unknown_target.md)
 -   [Nested types](./errors/nested_type.md)
--   [Visibility](./errors/visibility.md)
 -   [Unknown attributes](./errors/unknown_attribute.md)
 -   [Bridge types as struct fields](./errors/bridge_field.md)
 -   [Compound types containing bridge types](./errors/bridge_compound_type.md)

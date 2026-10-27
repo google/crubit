@@ -59,11 +59,6 @@ pub fn generate_incomplete_record<'a>(
 ) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::NonMovable);
 
-    // If the record won't have bindings, we default to `public` to keep going anyway.
-    let visibility = db
-        .has_bindings(ir::Item::IncompleteRecord(incomplete_record.clone()))
-        .unwrap_or_default()
-        .visibility;
     let features = db.ir().target_crubit_features(&incomplete_record.owning_target().unwrap());
     let cc_type = format_nonportable_cc_type_name(incomplete_record.cc_name().as_str())
         .expect("IncompleteRecord has invalid type name");
@@ -72,7 +67,6 @@ pub fn generate_incomplete_record<'a>(
         generated_items: HashMap::from([(
             incomplete_record.id(),
             GeneratedItem::ForwardDeclare {
-                visibility,
                 ident: make_rs_ident(incomplete_record.rs_name().as_str()),
                 symbol: quote! {#namespace_qualifier #cc_type}.to_string(),
             },
@@ -435,8 +429,7 @@ fn field_definition<'a>(
         && field_rs_type_kind.is_ok()
         && !field_has_repr_align_in_packed
     {
-        db.type_visibility(record.owning_target(), field_rs_type_kind.clone().unwrap())
-            .unwrap_or_default()
+        Visibility::Public
     } else {
         Visibility::PubCrate
     };
@@ -1028,10 +1021,6 @@ pub fn generate_record<'a>(
             }
             annotations
         },
-        visibility: db
-            .has_bindings(ir::Item::Record(record.clone()))
-            .unwrap_or_default()
-            .visibility,
         struct_or_union: if record.is_union() {
             StructOrUnion::Union
         } else {

@@ -701,8 +701,7 @@ pub enum RustPtrKind {
 pub enum RsTypeKind<'a> {
     /// An error occurred while generating the type.
     ///
-    /// Error types are only exposed in `:wrapper` mode, where they become
-    /// opaque types, or where a visibility override is specified.
+    /// Error types are only exposed where a visibility override is specified.
     Error {
         symbol: Rc<str>,
         error: arc_anyhow::Error,

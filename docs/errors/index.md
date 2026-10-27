@@ -13,8 +13,6 @@ libraries](../rust/index.md#examine).
     target owns it.
 *   [Nested types](nested_type.md): C++ types nested inside other types, when
     the snake_case module Crubit generates for them collides with another name.
-*   [Visibility](visibility.md): types whose bindings are `pub(crate)` and so
-    aren't available outside their own library.
 *   [Unknown attributes](unknown_attribute.md): C++ or Rust attributes that
     Crubit doesn't understand, which cause it to skip the item.
 *   [Bridge types as struct fields](bridge_field.md): struct or union fields

@@ -277,19 +277,6 @@ pub enum Visibility {
     PubCrate,
 }
 
-impl Visibility {
-    /// Returns the least of two visibilities.
-    #[must_use]
-    pub fn or(self, other: Visibility) -> Visibility {
-        match (self, other) {
-            (Visibility::Public, Visibility::Public) => Visibility::Public,
-            (Visibility::Public, Visibility::PubCrate)
-            | (Visibility::PubCrate, Visibility::Public)
-            | (Visibility::PubCrate, Visibility::PubCrate) => Visibility::PubCrate,
-        }
-    }
-}
-
 impl ToTokens for Visibility {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
@@ -297,15 +284,6 @@ impl ToTokens for Visibility {
             Visibility::PubCrate => quote! {pub(crate)}.to_tokens(tokens),
         }
     }
-}
-
-/// Information about the bindings that this item will have.
-///
-/// When this is returned, and the item is not a `Func`, then the bindings are
-/// guaranteed to exist.
-#[derive(Copy, Clone, PartialEq, Eq, Default)]
-pub struct BindingsInfo {
-    pub visibility: Visibility,
 }
 
 /// Information about why bindings do not exist.
@@ -325,7 +303,6 @@ pub enum NoBindingsReason {
     LeadingDunder {
         name: String,
     },
-    Visibility(Error),
     /// This is directly unsupported.
     Unsupported(Error),
     /// This item's parent was a record, but no nested items module could be generated because
@@ -371,7 +348,7 @@ impl From<NoBindingsReason> for Error {
             NoBindingsReason::LeadingDunder { name } => {
                 anyhow!("Skipping generating bindings for '{name}' because it has a leading `__`")
             }
-            NoBindingsReason::Visibility(error) | NoBindingsReason::Unsupported(error) => error,
+            NoBindingsReason::Unsupported(error) => error,
             NoBindingsReason::ParentModuleNameNotUnique {
                 conflicting_name,
                 parent_names_that_map_to_same_name,
@@ -543,7 +520,6 @@ pub fn generated_items_to_tokens<'db>(
                     pack,
                     internally_mutable_unknown_fields,
                     crubit_annotations,
-                    visibility,
                     struct_or_union,
                     ident,
                     id,
@@ -731,7 +707,7 @@ pub fn generated_items_to_tokens<'db>(
                     #cfi_encoding_attr
                     #[repr(#(#repr_attrs),*)]
                     #(#crubit_annotations)*
-                    #visibility #struct_or_union #ident #type_param_tokens {
+                    pub #struct_or_union #ident #type_param_tokens {
                         #struct_body
                     }
 
@@ -908,10 +884,10 @@ pub fn generated_items_to_tokens<'db>(
                     .to_tokens(tokens);
                 }
             }
-            GeneratedItem::ForwardDeclare { visibility, ident, symbol } => {
+            GeneratedItem::ForwardDeclare { ident, symbol } => {
                 quote! {
                     forward_declare::forward_declare!(
-                        #visibility #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#symbol)
+                        pub #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#symbol)
                     );
                 }
                 .to_tokens(tokens);
@@ -928,14 +904,7 @@ pub fn generated_items_to_tokens<'db>(
                 pub const #ident: #type_tokens = #value;
             }
             .to_tokens(tokens),
-            GeneratedItem::GlobalVar {
-                link_name,
-                visibility,
-                is_mut,
-                ident,
-                type_tokens,
-                deprecated_attr,
-            } => {
+            GeneratedItem::GlobalVar { link_name, is_mut, ident, type_tokens, deprecated_attr } => {
                 let link_name_attr =
                     link_name.as_deref().map(|link_name| quote! { #[link_name = #link_name] });
                 let mut_kw = if *is_mut { Some(quote! { mut }) } else { None };
@@ -943,14 +912,13 @@ pub fn generated_items_to_tokens<'db>(
                     unsafe extern "C" {
                         #link_name_attr
                         #deprecated_attr
-                        #visibility static #mut_kw #ident: #type_tokens;
+                        pub static #mut_kw #ident: #type_tokens;
                     }
                 }
                 .to_tokens(tokens);
             }
             GeneratedItem::TypeAlias {
                 doc_comment,
-                visibility,
                 ident,
                 underlying_type,
                 underlying_nested_module_path,
@@ -966,7 +934,7 @@ pub fn generated_items_to_tokens<'db>(
                 quote! {
                     #doc_comment
                     #deprecated_attr
-                    #visibility type #ident #type_param_tokens = #underlying_type;
+                    pub type #ident #type_param_tokens = #underlying_type;
                 }
                 .to_tokens(tokens);
 
@@ -979,7 +947,7 @@ pub fn generated_items_to_tokens<'db>(
 
                     if &aliased_nested_module_name != ident {
                         quote! {
-                            #visibility use #underlying_nested_module_path as #aliased_nested_module_name;
+                            pub use #underlying_nested_module_path as #aliased_nested_module_name;
                         }
                         .to_tokens(tokens);
                     }
@@ -1017,7 +985,6 @@ pub enum GeneratedItem {
         deprecated_attr: Option<DeprecatedAttr>,
     },
     ForwardDeclare {
-        visibility: Visibility,
         ident: Ident,
         symbol: String,
     },
@@ -1027,7 +994,6 @@ pub enum GeneratedItem {
     },
     GlobalVar {
         link_name: Option<Rc<str>>,
-        visibility: Visibility,
         is_mut: bool,
         ident: Ident,
         type_tokens: TokenStream,
@@ -1035,7 +1001,6 @@ pub enum GeneratedItem {
     },
     TypeAlias {
         doc_comment: Option<DocCommentAttr>,
-        visibility: Visibility,
         ident: Ident,
         underlying_type: TokenStream,
         underlying_nested_module_path: Option<TokenStream>,
@@ -1105,7 +1070,6 @@ pub struct Record {
     pub pack: Option<usize>,
     pub internally_mutable_unknown_fields: bool,
     pub crubit_annotations: Vec<DocCommentAttr>,
-    pub visibility: Visibility,
     pub struct_or_union: StructOrUnion,
     pub ident: Ident,
     pub id: ItemId,
