@@ -60,13 +60,15 @@ cs/file:examples/cpp/function/BUILD symbol:example_lib_broken
 To enable Crubit on a C++ target, you must define a `rust_api_from_cpp` target
 associated with it, and link them using `aspect_hints`.
 
-Behind the scenes, Rust APIs are generated via Bazel aspects[^aspects] which run
-on the `cc_library` target. When examining a `cc_library`, Rust API generation
-looks for the `aspect_hints` so that it can find the corresponding
+Behind the scenes, Rust APIs are generated via Bazel aspects[^aspects]
+which run on the `cc_library` target. When examining a `cc_library`, Rust API
+generation looks for the `aspect_hints` so that it can find the corresponding
 `rust_api_from_cpp` target.
 
 Define a `rust_api_from_cpp` target in the same `BUILD` file as your
-`cc_library` (loaded via `load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")`), and add its `.hint` target to the `aspect_hints` of the
+`cc_library` (loaded via
+`load("//bazel:rust_api_from_cpp.bzl",
+"rust_api_from_cpp")`), and add its `.hint` target to the `aspect_hints` of the
 `cc_library`:
 
 ```live-snippet
@@ -190,9 +192,9 @@ See crubit.rs/errors
 ### Unsupported features
 
 Some features are either unsupported, or else only supported with experimental
-feature flags
-. In
-order to get bindings for a C++ interface, that interface must only use the
+feature
+flags .
+In order to get bindings for a C++ interface, that interface must only use the
 subset of features currently supported.
 
 The way to work around this kind of problem, in all cases, is to wrap or hide

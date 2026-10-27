@@ -20,21 +20,25 @@ The rest of this document goes over how to create a Rust library that can be
 called from C++, and how to actually use it from C++. The quick summary is:
 
 *   All `rust_library` targets can receive C++ bindings.
+
 *   To use the bindings for a target `//path/to:example_crate`, you must create
     a C++ rule exporting the bindings, using
     `cpp_api_from_rust(name="any_name_here", crate=":example_crate")`.
+
 *   The header name is the Rust target's label with a `.h` appended: to include
     the header for the Rust library `//path/to:example_crate`, you use `#include
     "path/to/example_crate.h"`.
+
 *   The namespace name is the Rust target name, e.g. `example_crate`. To change
     the namespace, use `cc_bindings_from_rust_library_config`, described below.
+
 *   To see the generated C++ API, right click the `"path/to/example_crate.h"`
     include in Cider, and select "Go to Definition".
 
     NOTE: In some cases the generated file in Cider may be out of date. If it
     isn't refreshing, you can manually inspect the bindings using `bazel build
-    //path/to:example_crate --config=crubit-genfiles`. See
-    [Look at the generated bindings](#examine).
+    //path/to:example_crate --config=crubit-genfiles`. See [Look at the
+    generated bindings](#examine).
 
 ### Write a `rust_library` target {#rust_library}
 
@@ -46,7 +50,9 @@ cs/file:examples/rust/function/example.rs content:^[^/].*
 ```
 
 In the BUILD file, in addition to defining the `rust_library`, you should also
-define the `cpp_api_from_rust` target (loaded via `load("//bazel:cpp_api_from_rust.bzl", "cpp_api_from_rust")`) to make it easier to use from C++:
+define the `cpp_api_from_rust` target (loaded via
+`load("//bazel:cpp_api_from_rust.bzl", "cpp_api_from_rust")`)
+to make it easier to use from C++:
 
 ```live-snippet
 cs/file:examples/rust/function/BUILD symbol:example_crate|example_crate_cc_api
@@ -123,17 +129,17 @@ itself; fix or wrap that type, and the function gets bindings too.
 To make a missing item fail the build instead, annotate it with
 `#[crubit_annotate::must_bind]`. `crubit_annotate` is a procedural macro crate,
 so add `//support:crubit_annotate` to your `rust_library`'s
-`proc_macro_deps` (see
-[Attributes to fine-tune generated bindings](customizing.md)).
+`proc_macro_deps` (see [Attributes to fine-tune generated
+bindings](customizing.md)).
 
 ## Common Errors {#errors}
 
 ### Unsupported features
 
 Some features are either unsupported, or else only supported with experimental
-feature flags
-. In
-order to get bindings for a Rust interface, that interface must only use the
+feature
+flags .
+In order to get bindings for a Rust interface, that interface must only use the
 subset of features currently supported.
 
 For a particularly notable example, references are supported as function

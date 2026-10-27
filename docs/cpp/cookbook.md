@@ -12,9 +12,9 @@ the recommended practices to evolve over time, as Crubit's capabilities expand!
 > close to the interop boundary.
 >
 > If possible, solve the same problem while staying within more typical C++
-> style. For example: you may be able to
-> [add `ABSL_ATTRIBUTE_TRIVIAL_ABI`](#trivial_abi) to a type you control,
-> instead of [boxing the type in a pointer](#boxing).
+> style. For example: you may be able to [add
+> `ABSL_ATTRIBUTE_TRIVIAL_ABI`](#trivial_abi) to a type you control, instead of
+> [boxing the type in a pointer](#boxing).
 
 ## Making types Rust-movable {#rust_movable}
 
@@ -118,10 +118,10 @@ the type is under your control, it *may* be as easy as adding
 NOTE: The following is non-portable, and only works in libc++ with the unstable
 ABI. If you aren't sure about whether you are using the unstable ABI, it is likely that you are not, but you might want to check in with your local toolchain maintainer.
 
-If you tightly control your dependencies, you might be using
-libc++'s unstable ABI. The unstable ABI, among other things, makes
-`unique_ptr<T>` (and `shared_ptr<T>`) Rust-movable. In fact, it is Rust-movable
-even if `T` itself is not.
+If you tightly control your dependencies, you might be using libc++'s unstable
+ABI. The unstable ABI, among other things, makes `unique_ptr<T>` (and
+`shared_ptr<T>`) Rust-movable. In fact, it is Rust-movable even if `T` itself is
+not.
 
 This means that if a particular field is making its parent type
 non-Rust-movable, one fix is to wrap it in a `unique_ptr`:
@@ -395,6 +395,8 @@ was Rust-movable:
     without specifying `ABSL_ATTRIBUTE_TRIVIAL_ABI`.
 *   Adding a non-Rust-movable field or base class (such as `std::string`).
 
+<!-- end list -->
+
 ```c++ {.no-copy}
 struct Before {
   int x;
@@ -419,8 +421,8 @@ pub fn ReturnBefore() -> Before {...}
 pub fn ReturnAfter() -> Ctor![After] {...}
 ```
 
-**Fix:** Preserve Rust-movability, as described above in
-[Making types Rust-movable](#rust_movable)
+**Fix:** Preserve Rust-movability, as described above in [Making types
+Rust-movable](#rust_movable)
 
 ```c++ {.good .no-copy}
 struct ABSL_ATTRIBUTE_TRIVIAL_ABI CompatibleAfter {

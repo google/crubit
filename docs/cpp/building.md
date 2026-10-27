@@ -1,5 +1,9 @@
+<!-- disableFinding(LINK_RELATIVE_G3DOC) -->
+
 <!-- Part of the Crubit project, under the Apache License v2.0 with LLVM -->
+
 <!-- Exceptions. See /LICENSE for license information. -->
+
 <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
 
 # Building
@@ -12,22 +16,22 @@ libraries](../rust/building.md) instead.
 
 `rust_api_from_cpp` is available in **Bazel**, through the `rules_crubit`
 module. See [Bazel](../overview/bazel.md#rust_api_from_cpp) for setup
-instructions. Bazel builds the `rs_bindings_from_cc` tool for you, including
-the LLVM libraries it depends on, so there is nothing else to install.
+instructions. Bazel builds the `rs_bindings_from_cc` tool for you, including the
+LLVM libraries it depends on, so there is nothing else to install.
 
 <!-- TODO(b/574505910): Link to a rust_api_from_cpp example and CI job once
 examples/build_systems/bazel covers it. -->
 
-CMake and Cargo integrations for `rust_api_from_cpp` are planned
-<!-- TODO(b/539627008) --> but not available yet. See
-[Build System Integrations](../overview/build_systems.md) for the current
-status of every build system.
+CMake and Cargo integrations for `rust_api_from_cpp` are
+planned <!-- TODO(b/539627008) --> but not available yet. See [Build System
+Integrations](../overview/build_systems.md) for the current status of every
+build system.
 
 ## Building `rs_bindings_from_cc` yourself
 
 If you're integrating Crubit into another build system, you can build the
-`rs_bindings_from_cc` binary yourself and run it the way the
-[Bazel rules](https://github.com/google/crubit/tree/main/rs_bindings_from_cc/bazel_support)
+`rs_bindings_from_cc` binary yourself and run it the way the [Bazel
+rules](https://github.com/google/crubit/tree/main/rs_bindings_from_cc/bazel_support)
 do.
 
 `rs_bindings_from_cc` is a Rust program that links against Clang's C++
@@ -46,8 +50,8 @@ toolchains, and it builds LLVM from source at the commit pinned in
 Because it builds LLVM, the first build takes a long time.
 
 Prerequisites: `bazelisk`, `python3`, and the development headers for zlib,
-libxml2, and zstd in `/usr/include`. On Debian or Ubuntu, install them with
-`apt install zlib1g-dev libxml2-dev libzstd-dev`.
+libxml2, and zstd in `/usr/include`. On Debian or Ubuntu, install them with `apt
+install zlib1g-dev libxml2-dev libzstd-dev`.
 
 ```sh
 git clone https://github.com/google/crubit.git
@@ -55,8 +59,8 @@ cd crubit
 bazelisk build //rs_bindings_from_cc:rs_bindings_from_cc_main
 ```
 
-To build against a different `llvm-project` commit, set the
-`CRUBIT_LLVM_COMMIT` environment variable to the full commit SHA.
+To build against a different `llvm-project` commit, set the `CRUBIT_LLVM_COMMIT`
+environment variable to the full commit SHA.
 
 ### Cargo, with your own LLVM, Abseil, and Protobuf
 
@@ -65,10 +69,10 @@ Chromium. CI doesn't test it.
 
 #### Prerequisites
 
-*   LLVM and Clang libraries, built and installed from the `llvm-project`
-    commit pinned in `MODULE.bazel` (or one close to it).
-    *   They must be built with compression support (zlib), which is the
-        default build config.
+*   LLVM and Clang libraries, built and installed from the `llvm-project` commit
+    pinned in `MODULE.bazel` (or one close to it).
+    *   They must be built with compression support (zlib), which is the default
+        build config.
 *   Abseil libraries, built and installed.
 *   Protobuf libraries and the `protoc` compiler (v27.1 or later), installed.
     Crubit's CI uses Protobuf 36.1.
@@ -113,6 +117,8 @@ Windows-specific setup:
     not compile and will change over time.
 *   All commands must be run from a development shell, where MSVC environment
     variables are set up.
+
+<!-- end list -->
 
 ```sh
 # We use clang compiler (clang-cl); MSVC may work too but is unsupported.
@@ -170,7 +176,8 @@ export CXXFLAGS="$CXXFLAGS -DCRUBIT_LLVM_DEV_DATE=${LLVM_DATE}"
 cargo build --locked --release -p rs_bindings_from_cc
 ```
 
-[Cargo build of Crubit](../overview/cargo_build.md#custom-build-systems-chromium-android-or-other-projects)
+[Cargo build of
+Crubit](../overview/cargo_build.md#custom-build-systems-chromium-android-or-other-projects)
 explains each of these variables in more detail.
 
 If you need to build LLVM and Clang yourself, here is an example:
