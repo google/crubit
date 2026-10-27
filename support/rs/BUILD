@@ -8,7 +8,7 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "box",
     hdrs = ["box.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
     deps = [
@@ -23,7 +23,7 @@ cc_library(
 cc_library(
     name = "pin_box",
     hdrs = ["pin_box.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
     deps = [
@@ -38,7 +38,7 @@ cc_library(
 cc_library(
     name = "slice_box",
     hdrs = ["slice_box.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
     deps = [
@@ -53,7 +53,7 @@ cc_library(
 cc_library(
     name = "str_box",
     hdrs = ["str_box.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
     deps = [

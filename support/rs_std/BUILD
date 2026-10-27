@@ -16,7 +16,7 @@ cc_library(
     srcs = ["char.cc"],
     hdrs = ["char.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
@@ -38,7 +38,7 @@ cc_library(
 cc_library(
     name = "int",
     hdrs = ["int.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
@@ -151,7 +151,7 @@ cc_library(
     name = "slice_ref",
     hdrs = ["slice_ref.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
 
@@ -189,7 +189,7 @@ cc_library(
     name = "str_ref",
     hdrs = ["str_ref.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
 
@@ -236,7 +236,7 @@ cc_library(
     name = "dyn_callable",
     hdrs = ["dyn_callable.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:supported",
     ],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
@@ -264,7 +264,7 @@ crubit_cc_test(
 cc_library(
     name = "fn_ref",
     hdrs = ["fn_ref.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
 )
@@ -284,7 +284,7 @@ crubit_cc_test(
 cc_library(
     name = "fn",
     hdrs = ["fn.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
 )
@@ -305,7 +305,7 @@ crubit_cc_test(
 cc_library(
     name = "traits",
     hdrs = ["traits.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
@@ -318,7 +318,7 @@ cc_library(
 cc_library(
     name = "iterator_adapter",
     hdrs = ["iterator_adapter.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
@@ -344,7 +344,7 @@ crubit_cc_test(
 cc_library(
     name = "option",
     hdrs = ["option.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
@@ -359,7 +359,7 @@ cc_library(
 cc_library(
     name = "result",
     hdrs = ["result.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
@@ -374,7 +374,7 @@ cc_library(
 cc_library(
     name = "vec",
     hdrs = ["vec.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
@@ -388,7 +388,7 @@ cc_library(
 cc_library(
     name = "tuple",
     hdrs = ["tuple.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
@@ -401,7 +401,7 @@ cc_library(
 cc_library(
     name = "unit",
     hdrs = ["unit.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
