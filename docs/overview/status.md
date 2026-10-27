@@ -28,65 +28,37 @@ ABI-compatible, layout-compatible, or bridged.
 The following table summarizes the mapping and compatibility of types between
 C++ and Rust:
 
-| Conceptual Type                                | C++ Type                    | Rust Type                 | Compatibility | Notes                       |
-| :--------------------------------------------- | :-------------------------- | :------------------------ | :------------ | :-------------------------- |
-| **Primitives**                                 |                             |                           |               |                             |
-| Integers                                       | `int32_t`, `int64_t`, etc.  | `i32`, `i64`, etc.        | ABI           | C++ `__int128` and          |
-:                                                :                             :                           : compatible    : `unsigned __int128` map to  :
-:                                                :                             :                           :               : `i128`/`u128`, but not the  :
-:                                                :                             :                           :               : reverse (b/254094650)       :
-| Floating point                                 | `float`, `double`           | `f32`, `f64`              | ABI           |                             |
-:                                                :                             :                           : compatible    :                             :
-| **Pointers & Refs**                            |                             |                           |               |                             |
-| Raw pointers                                   | `T*`, `const T*`            | `*mut T`, `*const T`      | ABI           | If `T` is compatible        |
-:                                                :                             :                           : compatible    :                             :
-| References                                     | `const T&` / `T&`           | `&T` / `&mut T`           | Layout        | Supported as function       |
-:                                                :                             :                           : compatible    : parameters and return types :
-| String slices                                  | `rs::StrRef`                | `&str`                    | Layout        |                             |
-:                                                :                             :                           : compatible    :                             :
-| Slices                                         | `rs::SliceRef<T>`           | `&[T]`, `&mut [T]`        | Layout        |                             |
-:                                                :                             :                           : compatible    :                             :
-| **Smart Pointers**                             |                             |                           |               |                             |
-| [Unique                                        | `std::unique_ptr<T>`        | `cpp_std::unique_ptr<T>`  | Layout        |                             |
-: pointer](http\://crubit.rs/cpp/std#unique_ptr) :                             :                           : compatible    :                             :
-| [Shared                                        | `std::shared_ptr<T>`        | `cpp_std::shared_ptr<T>`  | Layout        | Not directly constructible  |
-: pointer](http\://crubit.rs/cpp/std#shared_ptr) :                             :                           : compatible    : from Rust yet.              :
-| **Containers**                                 |                             |                           |               |                             |
-| [Vector                                        | `std::vector<T>`            | `cpp_std::vector<T>`      | Layout        | C++ `std::vector` in Rust   |
-: (C++)](http\://crubit.rs/cpp/std#vector)       :                             :                           : compatible    :                             :
-| Vec (Rust)                                     | `rs::Vec<T>`                | `Vec<T>`                  | Layout        | Rust `Vec` in C++           |
-:                                                :                             :                           : compatible    :                             :
-| Fixed-size array                               | `std::array<T, N>`          | `[T; N]`                  | Layout        |                             |
-:                                                :                             :                           : compatible    :                             :
-| **Strings**                                    |                             |                           |               |                             |
-| [String                                        | `std::string_view`          | `cpp_std::string_view`    | Layout        |                             |
-: view](http\://crubit.rs/cpp/std#string_view)   :                             :                           : compatible    :                             :
-| [Growable string                               | `std::string`               | `cpp_std::string_wrapper` | Bridged       |                             |
-: (C++)](http\://crubit.rs/cpp/std#string)       :                             :                           :               :                             :
-| Growable string (Rust)                         | `rs::alloc::string::String` | `String`                  | Layout        |                             |
-:                                                :                             :                           : compatible    :                             :
-| **Option & Result**                            |                             |                           |               |                             |
-| [Optional                                      | `std::optional<T>`          | `cpp_std::optional<T>`    | Layout        | Converts to/from            |
-: (C++)](http\://crubit.rs/cpp/std#optional)     :                             :                           : compatible    : `Option<T>`. Uses           :
-:                                                :                             :                           :               : `trivial_optional<T>` if    :
-:                                                :                             :                           :               : `T\: Copy`                  :
-| Option (Rust)                                  | `rs::Option<T>`             | `Option<T>`               | Layout        | Converts to/from            |
-:                                                :                             :                           : compatible    : `std\:\:optional<T>` in C++ :
-| Result                                         | `rs::Result<T, E>`          | `Result<T, E>`            | Layout        |                             |
-:                                                :                             :                           : compatible    :                             :
-| **Other**                                      |                             |                           |               |                             |
-| User-defined types                             | `struct`/`class`            | `struct`/`enum`/`union`   | Layout        | Must be rust-movable        |
-:                                                :                             :                           : compatible    : (trivially copyable or      :
-:                                                :                             :                           :               : `[[clang\:\:trivial_abi]]`) :
-| Tuples                                         | `rs::Tuple<T1, T2, ...>`    | `(T1, T2, ...)`           | Layout        | Rust tuples in C++ only.    |
-:                                                :                             :                           : compatible    : Not supported in C++ APIs   :
-:                                                :                             :                           :               : used from Rust; use a named :
-:                                                :                             :                           :               : struct (b/557569186)        :
-| Protocol Buffers                               | C++ Proto                   | Rust Proto                | Bridged       |                             |
-| Status                                         | `absl::Status`              | `status::Status`          | Layout        |                             |
-:                                                :                             :                           : compatible    :                             :
-| StatusOr                                       | `absl::StatusOr<T>`         | `status::StatusOr<T>`     | Layout        |                             |
-:                                                :                             :                           : compatible    :                             :
+| Conceptual Type                                          | C++ Type                    | Rust Type                 | Compatibility     | Notes                                                                                               |
+| :------------------------------------------------------- | :-------------------------- | :------------------------ | :---------------- | :-------------------------------------------------------------------------------------------------- |
+| **Primitives**                                           |                             |                           |                   |                                                                                                     |
+| Integers                                                 | `int32_t`, `int64_t`, etc.  | `i32`, `i64`, etc.        | ABI compatible    | C++ `__int128` and `unsigned __int128` map to `i128`/`u128`, but not the reverse (b/254094650)      |
+| Floating point                                           | `float`, `double`           | `f32`, `f64`              | ABI compatible    |                                                                                                     |
+| **Pointers & Refs**                                      |                             |                           |                   |                                                                                                     |
+| Raw pointers                                             | `T*`, `const T*`            | `*mut T`, `*const T`      | ABI compatible    | If `T` is compatible                                                                                |
+| References                                               | `const T&` / `T&`           | `&T` / `&mut T`           | Layout compatible | Supported as function parameters and return types                                                   |
+| String slices                                            | `rs::StrRef`                | `&str`                    | Layout compatible |                                                                                                     |
+| Slices                                                   | `rs::SliceRef<T>`           | `&[T]`, `&mut [T]`        | Layout compatible |                                                                                                     |
+| **Smart Pointers**                                       |                             |                           |                   |                                                                                                     |
+| [Unique pointer](http://crubit.rs/cpp/std#unique_ptr)    | `std::unique_ptr<T>`        | `cpp_std::unique_ptr<T>`  | Layout compatible |                                                                                                     |
+| [Shared pointer](http://crubit.rs/cpp/std#shared_ptr)    | `std::shared_ptr<T>`        | `cpp_std::shared_ptr<T>`  | Layout compatible | Not directly constructible from Rust yet.                                                           |
+| **Containers**                                           |                             |                           |                   |                                                                                                     |
+| [Vector (C++)](http://crubit.rs/cpp/std#vector)          | `std::vector<T>`            | `cpp_std::vector<T>`      | Layout compatible | C++ `std::vector` in Rust                                                                           |
+| Vec (Rust)                                               | `rs::Vec<T>`                | `Vec<T>`                  | Layout compatible | Rust `Vec` in C++                                                                                   |
+| Fixed-size array                                         | `std::array<T, N>`          | `[T; N]`                  | Layout compatible |                                                                                                     |
+| **Strings**                                              |                             |                           |                   |                                                                                                     |
+| [String view](http://crubit.rs/cpp/std#string_view)      | `std::string_view`          | `cpp_std::string_view`    | Layout compatible |                                                                                                     |
+| [Growable string (C++)](http://crubit.rs/cpp/std#string) | `std::string`               | `cpp_std::string_wrapper` | Bridged           |                                                                                                     |
+| Growable string (Rust)                                   | `rs::alloc::string::String` | `String`                  | Layout compatible |                                                                                                     |
+| **Option & Result**                                      |                             |                           |                   |                                                                                                     |
+| [Optional (C++)](http://crubit.rs/cpp/std#optional)      | `std::optional<T>`          | `cpp_std::optional<T>`    | Layout compatible | Converts to/from `Option<T>`. Uses `trivial_optional<T>` if `T: Copy`                               |
+| Option (Rust)                                            | `rs::Option<T>`             | `Option<T>`               | Layout compatible | Converts to/from `std::optional<T>` in C++                                                          |
+| Result                                                   | `rs::Result<T, E>`          | `Result<T, E>`            | Layout compatible |                                                                                                     |
+| **Other**                                                |                             |                           |                   |                                                                                                     |
+| User-defined types                                       | `struct`/`class`            | `struct`/`enum`/`union`   | Layout compatible | Must be rust-movable (trivially copyable or `[[clang::trivial_abi]]`)                               |
+| Tuples                                                   | `rs::Tuple<T1, T2, ...>`    | `(T1, T2, ...)`           | Layout compatible | Rust tuples in C++ only. Not supported in C++ APIs used from Rust; use a named struct (b/557569186) |
+| Protocol Buffers                                         | C++ Proto                   | Rust Proto                | Bridged           |                                                                                                     |
+| Status                                                   | `absl::Status`              | `status::Status`          | Layout compatible |                                                                                                     |
+| StatusOr                                                 | `absl::StatusOr<T>`         | `status::StatusOr<T>`     | Layout compatible |                                                                                                     |
 
 ### Experimental Type Support
 
@@ -228,8 +200,8 @@ This can be resolved by using rmeta files as inputs, instead of source code.
 
 > TODO:
 >
-> *   rs_bindings_from_idl and idl_from_cc exist, and Crubit can be used with
->     IDL inputs
+> *   rs_bindings_from_idl and idl_from_cc exist, and Crubit can be used
+>     with IDL inputs
 > *   cc_bindings_from_rs can accept rmeta inputs
 
 ### Crate Ecosystem
@@ -248,8 +220,8 @@ This can be resolved by using rmeta files as inputs, instead of source code.
 
 See [Build System Integrations](build_systems.md) for details. In summary:
 
-*   **Bazel:** `cpp_api_from_rust` and `rust_api_from_cpp` are available
-    through the `rules_crubit` module.
+*   **Bazel:** `cpp_api_from_rust` and `rust_api_from_cpp` are available through
+    the `rules_crubit` module.
 *   **CMake:** `cpp_api_from_rust` is available through Corrosion.
 *   **Cargo:** The `cargo cpp_api_from_rust` subcommand builds a Cargo library
     package and outputs a C++ header and static library.
