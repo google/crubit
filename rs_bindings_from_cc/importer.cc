@@ -1977,14 +1977,67 @@ void Importer::ImportMacroConstants() {
     return a.first->getName() < b.first->getName();
   });
   for (const auto& [identifier, macro_info] : macros) {
-    if (std::optional<MacroConstant> macro_constant =
-            SynthesizeMacroConstant(sema_, *identifier, *macro_info)) {
-      // The variable must not be found by name lookup: it is not a real C++
-      // declaration.
-      translation_unit->addHiddenDecl(macro_constant->var_decl);
-      macro_constant_is_typed_.insert(
-          {macro_constant->var_decl, macro_constant->is_typed});
+    std::optional<MacroConstant> macro_constant =
+        SynthesizeMacroConstant(sema_, *identifier, *macro_info);
+    if (!macro_constant.has_value()) continue;
+    // The type of the constant may be a typedef (e.g. due to a cast like
+    // `(Foo)1`). If that typedef can't be bound, e.g. because it belongs to a
+    // target without Crubit, skip the macro like any other unsupported macro,
+    // rather than reporting an error.
+    if (!IsBindableMacroConstantType(macro_constant->var_decl->getType())) {
+      continue;
     }
+    // The variable must not be found by name lookup: it is not a real C++
+    // declaration.
+    translation_unit->addHiddenDecl(macro_constant->var_decl);
+    macro_constant_is_typed_.insert(
+        {macro_constant->var_decl, macro_constant->is_typed});
+  }
+}
+
+bool Importer::IsBindableMacroConstantType(clang::QualType type) {
+  CcType cc_type =
+      ConvertQualType(type, /*lifetimes=*/nullptr,
+                      /*nullable=*/true, /*assume_lifetimes=*/false);
+  if (cc_type.variant().has_error()) return false;
+  if (!cc_type.variant().has_decl()) return true;
+
+  for (uint64_t id = cc_type.variant().decl();;) {
+    auto it = import_cache_.find(reinterpret_cast<clang::Decl*>(id));
+    if (it == import_cache_.end() || it->second.proto_item == nullptr ||
+        !it->second.proto_item->has_type_alias()) {
+      return false;
+    }
+    const BazelLabel target = GetOwningTarget(*it->first);
+    const auto& type_alias = it->second.proto_item->type_alias();
+    if (!IsCrubitEnabledForTarget(target) ||
+        type_alias.cc_name().identifier().starts_with("__") ||
+        (type_alias.has_unknown_attr() &&
+         !IsFeatureEnabledForTarget(target, "experimental") &&
+         !IsFeatureEnabledForTarget(target, "all"))) {
+      return false;
+    }
+    for (const clang::DeclContext* dc = it->first->getDeclContext();
+         !dc->isTranslationUnit(); dc = dc->getParent()) {
+      const auto* ns = clang::dyn_cast<clang::NamespaceDecl>(dc);
+      if (ns == nullptr || ns->isAnonymousNamespace()) return false;
+      if (auto identifier = GetTranslatedIdentifier(*ns); !identifier) {
+        llvm::consumeError(identifier.takeError());
+        return false;
+      }
+      if (auto unknown_attrs = CollectUnknownAttrs(
+              *ns,
+              [](const clang::Attr& attr) {
+                return clang::isa<clang::DeprecatedAttr>(&attr) ||
+                       IsDefaultVisibilityAttr(attr);
+              });
+          !unknown_attrs) {
+        llvm::consumeError(unknown_attrs.takeError());
+        return false;
+      }
+    }
+    if (!type_alias.underlying_type().variant().has_decl()) return true;
+    id = type_alias.underlying_type().variant().decl();
   }
 }
 

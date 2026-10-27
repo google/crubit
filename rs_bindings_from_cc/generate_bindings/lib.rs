@@ -262,12 +262,32 @@ fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiS
 /// If the C++ macro is untyped (`MacroKind::UntypedMacro`), the Rust macro expands to an
 /// unsuffixed literal, which can be used as any Rust integer type. Otherwise, it expands to a value
 /// of the constant's type.
+///
+/// String macros expand to a string literal, or to a byte string literal if the string isn't valid
+/// UTF-8.
 fn generate_macro_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiSnippets> {
     // `has_bindings` also checks this, so that the error is reported instead of being fatal.
     let ident = try_make_rs_ident(constant.rs_name().as_str())
         .map_err(|_| anyhow!("`{}` is not a valid Rust macro name", constant.rs_name().as_str()))?;
-    let ConstantValue::Integer(value) = constant.value() else {
-        bail!("macro constants must be integers");
+    let value = match constant.value() {
+        ConstantValue::Integer(value) => value,
+        ConstantValue::StringView(bytes) => {
+            let value = match core::str::from_utf8(bytes) {
+                Ok(s) => quote! { #s },
+                Err(_) => {
+                    let literal = proc_macro2::Literal::byte_string(bytes);
+                    quote! { #literal }
+                }
+            };
+            return Ok(ApiSnippets {
+                generated_items: HashMap::from([(
+                    constant.id(),
+                    GeneratedItem::MacroConstant { ident, value },
+                )]),
+                ..Default::default()
+            });
+        }
+        _ => bail!("macro constants must be integers or strings"),
     };
     let type_ = db.rs_type_kind(constant.type_().unwrap().clone())?;
     let value_tokens = if constant.macro_kind() == MacroKind::UntypedMacro || type_.is_bool() {

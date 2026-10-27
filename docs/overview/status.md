@@ -72,12 +72,16 @@ Crubit generates Rust bindings for everyday C++ APIs:
     [explicit lifetime annotations](../cpp/references_and_lifetimes.md).
 *   Type aliases, forward-declared types, and concrete class template
     specializations such as `MyTemplate<int>`.
-*   Object-like macros which expand to simple integral constants, such as
-    `#define FOO 4`, with the `macro_constants` feature. They are bound as
-    `macro_rules!`, so `FOO` is used as `FOO!()`.
-    *   If the macro contains a literal with a suffix (e.g. `42u` or `1L`), or a
-        `u'x'` or `U'x'` character literal, `FOO!()` has the type of the C++
-        constant, e.g. `::ffi_11::c_uint`.
+*   Object-like macros which expand to simple integral or string constants, such
+    as `#define FOO 4`, `#define BAR (FOO + 3)`, or `#define NAME "foo"`, with
+    the `macro_constants` feature. They are bound as `macro_rules!`, so `FOO` is
+    used as `FOO!()`.
+    *   String macros (ordinary or UTF-8 string literals) expand to a string
+        literal (`&'static str`), or to a byte string literal
+        (`&'static [u8; N]`) if the string isn't valid UTF-8.
+    *   If the macro (or a macro that it refers to) contains a literal with a
+        suffix (e.g. `42u` or `1L`), or a `u'x'` or `U'x'` character literal,
+        `FOO!()` has the type of the C++ constant, e.g. `::ffi_11::c_uint`.
     *   Otherwise, `FOO!()` is an untyped literal, which can be used as any
         integer type, e.g. as an `i64` or `usize`, or as an array length. Values
         that don't fit the type are silently truncated, because rustc doesn't

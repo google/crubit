@@ -70,6 +70,7 @@ DEPS = {
         "forward_declaration",
     ],
     "inherited_friend_operators": ["operator_mixins"],
+    "macro_constants": ["not_crubit_exposed"],
     "macro_constants_user": ["macro_constants"],
     "uses_not_crubit_exposed": ["not_crubit_exposed"],
     "depends_on_nested_types": ["nested_types"],

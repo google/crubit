@@ -8,7 +8,8 @@
 #include "rs_bindings_from_cc/test/golden/macro_constants.h"
 
 // Only the macros defined in this target's headers receive bindings here, not
-// the ones from `macro_constants.h`.
-#define USER_CONSTANT 5
+// the ones from `macro_constants.h`, even though they are visible and can be
+// used.
+#define USER_CONSTANT (INT_CONSTANT + 1)
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_MACRO_CONSTANTS_USER_H_
