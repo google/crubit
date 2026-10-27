@@ -1,5 +1,5 @@
 {
-  "checksum": "2f4b4540b4f3e3562a8590247e8a106c865d9a89bd0bea2bea15a9e9e26c553d",
+  "checksum": "f32e938c2dde033514fb0b24cded6e30653859a73cabe501f971b475ad33c34d",
   "crates": {
     "aho-corasick 1.1.5": {
       "name": "aho-corasick",
@@ -1037,6 +1037,62 @@
       "license_ids": [],
       "license_file": "../../../LICENSE"
     },
+    "cc_bindings_from_rs_avoid_colliding_types 0.0.0": {
+      "name": "cc_bindings_from_rs_avoid_colliding_types",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cc_bindings_from_rs_avoid_colliding_types",
+            "crate_root": "../../../../cc_bindings_from_rs/generate_bindings/avoid_colliding_types.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cc_bindings_from_rs_avoid_colliding_types",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "flagset 0.4.7",
+              "target": "flagset"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "proc-macro2 1.0.107",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.47",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.119",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../../LICENSE"
+    },
     "cc_bindings_from_rs_cmdline 0.0.0": {
       "name": "cc_bindings_from_rs_cmdline",
       "version": "0.0.0",
@@ -1251,6 +1307,62 @@
       "license_ids": [],
       "license_file": "../../../../../LICENSE"
     },
+    "cc_bindings_from_rs_format_type 0.0.0": {
+      "name": "cc_bindings_from_rs_format_type",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cc_bindings_from_rs_format_type",
+            "crate_root": "../../../../cc_bindings_from_rs/generate_bindings/format_type.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cc_bindings_from_rs_format_type",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "flagset 0.4.7",
+              "target": "flagset"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "proc-macro2 1.0.107",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.47",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.119",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../../LICENSE"
+    },
     "cc_bindings_from_rs_generate_bindings 0.0.0": {
       "name": "cc_bindings_from_rs_generate_bindings",
       "version": "0.0.0",
@@ -1271,6 +1383,519 @@
         }
       ],
       "library_target_name": "cc_bindings_from_rs_generate_bindings",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "flagset 0.4.7",
+              "target": "flagset"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "proc-macro2 1.0.107",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.47",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.119",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "googletest 0.14.3",
+              "target": "googletest"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../../LICENSE"
+    },
+    "cc_bindings_from_rs_generate_comment 0.0.0": {
+      "name": "cc_bindings_from_rs_generate_comment",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cc_bindings_from_rs_generate_comment",
+            "crate_root": "../../../../cc_bindings_from_rs/generate_bindings/generate_comment.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cc_bindings_from_rs_generate_comment",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "flagset 0.4.7",
+              "target": "flagset"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "proc-macro2 1.0.107",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.47",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.119",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../../LICENSE"
+    },
+    "cc_bindings_from_rs_generate_ctor 0.0.0": {
+      "name": "cc_bindings_from_rs_generate_ctor",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cc_bindings_from_rs_generate_ctor",
+            "crate_root": "../../../../cc_bindings_from_rs/generate_bindings/generate_ctor.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cc_bindings_from_rs_generate_ctor",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "flagset 0.4.7",
+              "target": "flagset"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "proc-macro2 1.0.107",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.47",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.119",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../../LICENSE"
+    },
+    "cc_bindings_from_rs_generate_enum 0.0.0": {
+      "name": "cc_bindings_from_rs_generate_enum",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cc_bindings_from_rs_generate_enum",
+            "crate_root": "../../../../cc_bindings_from_rs/generate_bindings/generate_enum.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cc_bindings_from_rs_generate_enum",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "flagset 0.4.7",
+              "target": "flagset"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "proc-macro2 1.0.107",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.47",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.119",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../../LICENSE"
+    },
+    "cc_bindings_from_rs_generate_function 0.0.0": {
+      "name": "cc_bindings_from_rs_generate_function",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cc_bindings_from_rs_generate_function",
+            "crate_root": "../../../../cc_bindings_from_rs/generate_bindings/generate_function.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cc_bindings_from_rs_generate_function",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "flagset 0.4.7",
+              "target": "flagset"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "proc-macro2 1.0.107",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.47",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.119",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../../LICENSE"
+    },
+    "cc_bindings_from_rs_generate_function_thunk 0.0.0": {
+      "name": "cc_bindings_from_rs_generate_function_thunk",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cc_bindings_from_rs_generate_function_thunk",
+            "crate_root": "../../../../cc_bindings_from_rs/generate_bindings/generate_function_thunk.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cc_bindings_from_rs_generate_function_thunk",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "flagset 0.4.7",
+              "target": "flagset"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "proc-macro2 1.0.107",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.47",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.119",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../../LICENSE"
+    },
+    "cc_bindings_from_rs_generate_struct_and_union 0.0.0": {
+      "name": "cc_bindings_from_rs_generate_struct_and_union",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cc_bindings_from_rs_generate_struct_and_union",
+            "crate_root": "../../../../cc_bindings_from_rs/generate_bindings/generate_struct_and_union.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cc_bindings_from_rs_generate_struct_and_union",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "flagset 0.4.7",
+              "target": "flagset"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "proc-macro2 1.0.107",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.47",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.119",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../../LICENSE"
+    },
+    "cc_bindings_from_rs_generate_template_specialization 0.0.0": {
+      "name": "cc_bindings_from_rs_generate_template_specialization",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cc_bindings_from_rs_generate_template_specialization",
+            "crate_root": "../../../../cc_bindings_from_rs/generate_bindings/generate_template_specialization.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cc_bindings_from_rs_generate_template_specialization",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "flagset 0.4.7",
+              "target": "flagset"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "proc-macro2 1.0.107",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.47",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.119",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../../LICENSE"
+    },
+    "cc_bindings_from_rs_generate_unsupported 0.0.0": {
+      "name": "cc_bindings_from_rs_generate_unsupported",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cc_bindings_from_rs_generate_unsupported",
+            "crate_root": "../../../../cc_bindings_from_rs/generate_bindings/generate_unsupported.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cc_bindings_from_rs_generate_unsupported",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "flagset 0.4.7",
+              "target": "flagset"
+            },
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            },
+            {
+              "id": "proc-macro2 1.0.107",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.47",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.119",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../../LICENSE"
+    },
+    "cc_bindings_from_rs_get_generic_args 0.0.0": {
+      "name": "cc_bindings_from_rs_get_generic_args",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "cc_bindings_from_rs_get_generic_args",
+            "crate_root": "../../../../cc_bindings_from_rs/generate_bindings/get_generic_args.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "cc_bindings_from_rs_get_generic_args",
       "common_attrs": {
         "compile_data_glob": [
           "**"
@@ -1331,6 +1956,15 @@
         "compile_data_glob": [
           "**"
         ],
+        "deps": {
+          "common": [
+            {
+              "id": "itertools 0.13.0",
+              "target": "itertools"
+            }
+          ],
+          "selects": {}
+        },
         "edition": "2024",
         "version": "0.0.0"
       },
@@ -11888,11 +12522,22 @@
     "arc_anyhow 0.0.0": "cargo/common/arc_anyhow",
     "cargo-cpp_api_from_rust 0.0.0": "cargo/cc_bindings_from_rs/cargo-cpp_api_from_rust",
     "cc_bindings_from_rs 0.0.0": "cargo/cc_bindings_from_rs/cc_bindings_from_rs",
+    "cc_bindings_from_rs_avoid_colliding_types 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/avoid_colliding_types",
     "cc_bindings_from_rs_cmdline 0.0.0": "cargo/cc_bindings_from_rs/cmdline",
     "cc_bindings_from_rs_cpp_api_from_rust_lib 0.0.0": "cargo/cc_bindings_from_rs/cpp_api_from_rust_lib",
     "cc_bindings_from_rs_crubit_attr 0.0.0": "cargo/cc_bindings_from_rs/crubit_attr",
     "cc_bindings_from_rs_database 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/database/database",
+    "cc_bindings_from_rs_format_type 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/format_type",
     "cc_bindings_from_rs_generate_bindings 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/generate_bindings",
+    "cc_bindings_from_rs_generate_comment 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/generate_comment",
+    "cc_bindings_from_rs_generate_ctor 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/generate_ctor",
+    "cc_bindings_from_rs_generate_enum 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/generate_enum",
+    "cc_bindings_from_rs_generate_function 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/generate_function",
+    "cc_bindings_from_rs_generate_function_thunk 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/generate_function_thunk",
+    "cc_bindings_from_rs_generate_struct_and_union 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/generate_struct_and_union",
+    "cc_bindings_from_rs_generate_template_specialization 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/generate_template_specialization",
+    "cc_bindings_from_rs_generate_unsupported 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/generate_unsupported",
+    "cc_bindings_from_rs_get_generic_args 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/get_generic_args",
     "cc_bindings_from_rs_query_compiler 0.0.0": "cargo/cc_bindings_from_rs/generate_bindings/query_compiler",
     "cc_bindings_from_rs_run_compiler 0.0.0": "cargo/cc_bindings_from_rs/run_compiler",
     "cc_bindings_from_rs_run_compiler_test_support 0.0.0": "cargo/cc_bindings_from_rs/run_compiler_test_support",

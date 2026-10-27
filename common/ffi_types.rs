@@ -23,7 +23,8 @@ use std::slice;
 ///    * function passes ownership of the returned value to the caller
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn AllocFfiU8SliceBox(input: FfiU8Slice) -> FfiU8SliceBox {
-    FfiU8SliceBox::from_boxed_slice(Box::<[u8]>::from(input.as_slice()))
+    catch_unwind(|| FfiU8SliceBox::from_boxed_slice(Box::<[u8]>::from(input.as_slice())))
+        .unwrap_or_else(|_| process::abort())
 }
 
 /// Frees `FfiU8SliceBox` allocated by Rust.
@@ -45,6 +46,43 @@ pub unsafe extern "C" fn FreeFfiU8SliceBox(sb: FfiU8SliceBox) {
     .unwrap_or_else(|_| process::abort())
 }
 
+/// Allocates `size` bytes with alignment `align` using the Rust global allocator.
+///
+/// # Safety
+///
+/// `align` must be a non-zero power of two, and `size` rounded up to `align` must not overflow
+/// `isize::MAX`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn AllocFfiBytes(size: usize, align: usize) -> *mut u8 {
+    let Ok(layout) = std::alloc::Layout::from_size_align(size, align) else {
+        process::abort();
+    };
+    if size == 0 {
+        return align as *mut u8;
+    }
+    let ptr = unsafe { std::alloc::alloc(layout) };
+    if ptr.is_null() {
+        std::alloc::handle_alloc_error(layout);
+    }
+    ptr
+}
+
+/// Frees memory previously allocated by `AllocFfiBytes`.
+///
+/// # Safety
+///
+/// `ptr` must have been returned by `AllocFfiBytes(size, align)` (or be null / have `size == 0`).
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn FreeFfiBytes(ptr: *mut u8, size: usize, align: usize) {
+    if size == 0 || ptr.is_null() {
+        return;
+    }
+    let Ok(layout) = std::alloc::Layout::from_size_align(size, align) else {
+        process::abort();
+    };
+    unsafe { std::alloc::dealloc(ptr, layout) };
+}
+
 #[repr(C)]
 pub struct FfiU8Slice {
     ptr: *const u8,
@@ -59,6 +97,9 @@ impl FfiU8Slice {
 
     /// Borrows data pointed to by this `FfiU8Slice` as a slice.
     pub fn as_slice(&self) -> &[u8] {
+        if self.size == 0 {
+            return &[];
+        }
         // Safety:
         // Instances of `FfiU8Slice` are only created by FFI functions, which are unsafe
         // themselves so it's their responsibility to maintain safety.
@@ -80,11 +121,14 @@ impl FfiU8SliceBox {
 
     /// Consumes self and returns boxed slice.
     pub fn into_boxed_slice(self) -> Box<[u8]> {
+        if self.size == 0 {
+            return Box::from([]);
+        }
         // Safety:
         // Instances of `FfiU8SliceBox` are either created by `from_boxed_slice`, which
         // is safe, or by FFI functions, which are unsafe themselves so it's
         // their responsibility to maintain safety.
-        unsafe { Box::from_raw(slice::from_raw_parts_mut(self.ptr as *mut u8, self.size)) }
+        unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(self.ptr as *mut u8, self.size)) }
     }
 }
 
