@@ -9,7 +9,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "require_explicit_init",
     hdrs = ["require_explicit_init.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     deps = ["@abseil-cpp//absl/base:core_headers"],
 )
 

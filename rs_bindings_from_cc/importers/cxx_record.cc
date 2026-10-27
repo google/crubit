@@ -1716,6 +1716,8 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
             return true;
           } else if (clang::isa<clang::UnusedAttr>(attr)) {
             return true;
+          } else if (clang::isa<clang::ExplicitInitAttr>(attr)) {
+            return true;
           }
           return false;
         });
