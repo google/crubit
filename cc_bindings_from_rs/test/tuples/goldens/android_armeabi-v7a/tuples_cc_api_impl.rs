@@ -274,7 +274,7 @@ unsafe extern "C" fn __crubit_thunk_param_uffi_ualias_uin_utuple(
 ) -> () {
     unsafe {
         let five = ({
-            let five_0: u8 = ((*five)[0usize] as *const u8).read();
+            let five_0: i8 = ((*five)[0usize] as *const i8).read();
             five_0
         },);
         ::tuples_golden::param_ffi_alias_in_tuple(five)

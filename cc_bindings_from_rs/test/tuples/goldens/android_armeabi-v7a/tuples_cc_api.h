@@ -199,7 +199,7 @@ void param_adt_in_tuple(::std::tuple<::tuples::AdtHoldingFiveAndSix> adt);
 void param_c_abi_compatible_five_in_tuple(::std::tuple<::std::int32_t> five);
 
 // CRUBIT_ANNOTATE: must_bind=
-void param_ffi_alias_in_tuple(::std::tuple<::std::uint8_t> five);
+void param_ffi_alias_in_tuple(::std::tuple<::std::int8_t> five);
 
 // CRUBIT_ANNOTATE: must_bind=
 void param_nested_tuple_with_non_cpp_movable_at_2nd(
@@ -261,7 +261,7 @@ void reset_non_cpp_movable_drop_count();
 ::std::tuple<::std::int32_t> return_c_abi_compatible_five_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
-::std::tuple<::std::uint8_t> return_ffi_alias_in_tuple();
+::std::tuple<::std::int8_t> return_ffi_alias_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::tuple<
@@ -3053,7 +3053,7 @@ inline void param_c_abi_compatible_five_in_tuple(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_param_uffi_ualias_uin_utuple(void**);
 }
-inline void param_ffi_alias_in_tuple(::std::tuple<::std::uint8_t> five) {
+inline void param_ffi_alias_in_tuple(::std::tuple<::std::int8_t> five) {
   auto&& five_0 = ::std::get<0>(five);
   auto&& five_cabi_0 = five_0;
   void* five_cabi[] = {&five_cabi_0};
@@ -3280,9 +3280,9 @@ inline ::std::tuple<::std::int32_t> return_c_abi_compatible_five_in_tuple() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uffi_ualias_uin_utuple(void** __ret_ptr);
 }
-inline ::std::tuple<::std::uint8_t> return_ffi_alias_in_tuple() {
-  ::std::uint8_t __return_value_0_ret_val_holder;
-  ::std::uint8_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
+inline ::std::tuple<::std::int8_t> return_ffi_alias_in_tuple() {
+  ::std::int8_t __return_value_0_ret_val_holder;
+  ::std::int8_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
   void* __return_value_storage[] = {__return_value_0_storage};
   __crubit_internal::__crubit_thunk_return_uffi_ualias_uin_utuple(
       __return_value_storage);
