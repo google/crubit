@@ -19,14 +19,19 @@ mod outer_type {
 }
 ```
 
-This will fail if the `mod outer_type` name is not unique.
+If `mod outer_type` is already in use (for example, because `OuterType` is
+already `snake_case`, because `namespace outer_type` exists, or because another
+type in the same scope `snake_case`s to `outer_type`), Crubit disambiguates the
+module name by appending `_items` (and additional trailing `_` characters if
+needed, such as `mod outer_type_items`).
 
 ### Disambiguate the names {#disambiguate}
 
-A solution which works, but affects the C++ API in a stronger way, is to
-disambiguate the names. For example, if there is an existing `namespace
-outer_type`, one can rename either `OuterType` or `outer_type`. Or, if there are
-two types which `snake_case` to the same name, one of them can be renamed.
+To avoid the disambiguated `_items` suffix (or if an older version of Crubit
+reports a module name collision), you can disambiguate the C++ names directly.
+For example, if there is an existing `namespace outer_type`, one can rename
+either `OuterType` or `outer_type`. Or, if there are two types which
+`snake_case` to the same name, one of them can be renamed.
 
 Aliasing can also be used here:
 
