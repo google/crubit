@@ -1,5 +1,9 @@
+<!-- disableFinding(LINK_RELATIVE_G3DOC) -->
+
 <!-- Part of the Crubit project, under the Apache License v2.0 with LLVM -->
+
 <!-- Exceptions. See /LICENSE for license information. -->
+
 <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
 
 # Building
@@ -10,15 +14,15 @@ libraries](../cpp/building.md) instead.
 
 `cpp_api_from_rust` is available in these build systems:
 
-Build system                   | How                                                           | Example
-:----------------------------- | :------------------------------------------------------------ | :------
-[Bazel](../overview/bazel.md)  | The `cpp_api_from_rust` rule from the `rules_crubit` module   | [`examples/build_systems/bazel`](https://github.com/google/crubit/tree/main/examples/build_systems/bazel)
-[CMake](../overview/cmake.md)  | `corrosion_experimental_crubit()` from [Corrosion](https://github.com/corrosion-rs/corrosion) | [`examples/build_systems/cmake`](https://github.com/google/crubit/tree/main/examples/build_systems/cmake)
+| Build system                  | How                                                                                           | Example                                                                                          |
+| :---------------------------- | :-------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------- |
+| [Bazel](../overview/bazel.md) | The `cpp_api_from_rust` rule from the `rules_crubit` module                                   | [`examples/build_systems/bazel`](https://github.com/google/crubit/tree/main/examples/build_systems/bazel) |
+| [CMake](../overview/cmake.md) | `corrosion_experimental_crubit()` from [Corrosion](https://github.com/corrosion-rs/corrosion) | [`examples/build_systems/cmake`](https://github.com/google/crubit/tree/main/examples/build_systems/cmake) |
 
 Each build system page above walks through the setup. Other build systems can
 use the `cargo cpp_api_from_rust` subcommand, which writes a C++ header and a
-static library for a Cargo package; see
-[Build System Integrations](../overview/build_systems.md#other-build-systems).
+static library for a Cargo package; see [Build System
+Integrations](../overview/build_systems.md#other-build-systems).
 
 ## Quick start
 
@@ -72,6 +76,6 @@ for details.
 ## Building `cc_bindings_from_rs` yourself
 
 The Bazel and CMake integrations build Crubit for you. If you're integrating
-Crubit into another build system, see
-[Cargo build of Crubit](../overview/cargo_build.md#cc_bindings_from_rs) for how
-to build the `cc_bindings_from_rs` binary from source.
+Crubit into another build system, see [Cargo build of
+Crubit](../overview/cargo_build.md#cc_bindings_from_rs) for how to build the
+`cc_bindings_from_rs` binary from source.

@@ -39,12 +39,12 @@ categories ranging from "most widely supported" to "most restricted":
     Examples include Rust tuples, which are bridged by-value into C++
     `std::tuple`.
 
-Level of Support            | Example             | Pass by-reference | Pass by-value       | Return by-value     | Fields | In Function Pointer Types
---------------------------- | ------------------- | :---------------: | :-----------------: | :-----------------: | :----: | :-----------------------:
-ABI Compatible              | `i32`               | Y                 | Y                   | Y                   | Y      | Y
-Layout-compatible C++ type  | `absl::string_view` | Y                 | if Rust-movable[^1] | if Rust-movable[^2] | Y      | N
-Layout-compatible Rust type | `UserDefinedStruct` | Y                 | if C++ movable[^3]  | Y                   | Y      | N
-Bridged                     | `(i32, i32)`        | N                 | Y                   | Y                   | N      | N
+| Level of Support            | Example             | Pass by-reference | Pass by-value                   | Return by-value                 | Fields | In Function Pointer Types |
+| :-------------------------- | :------------------ | :---------------: | :-----------------------------: | :-----------------------------: | :----: | :-----------------------: |
+| ABI Compatible              | `i32`               | Y                 | Y                               | Y                               | Y      | Y                         |
+| Layout-compatible C++ type  | `absl::string_view` | Y                 | if Rust-movable[^1] | if Rust-movable[^2] | Y      | N                         |
+| Layout-compatible Rust type | `UserDefinedStruct` | Y                 | if C++ movable[^3]  | Y                               | Y      | N                         |
+| Bridged                     | `(i32, i32)`        | N                 | Y                               | Y                               | N      | N                         |
 
 [^1]: See <http://crubit.rs/cpp/classes_and_structs#trivially_relocatable>
 [^2]: See <http://crubit.rs/cpp/classes_and_structs#trivially_relocatable>
@@ -57,9 +57,9 @@ In the following examples, `foo` receives bindings, but `bad_foo` will not
 receive bindings, because while the types it uses in its function signature are
 supported by Crubit, they are not supported in this particular context.
 
-<section class="tabs" markdown=1>
+<section class="tabs">
 
-#### C++ {.new-tab}
+<h4 class="new-tab">C++</h4>
 
 ```c++ {.good}
 void foo(int32_t);
@@ -78,7 +78,7 @@ struct LayoutCompatibleType {
 void bad_foo(void (*)(LayoutCompatibleType));
 ```
 
-#### Rust {.new-tab}
+<h4 class="new-tab">Rust</h4>
 
 ```rust {.good}
 pub fn foo1(_: i32) {}
