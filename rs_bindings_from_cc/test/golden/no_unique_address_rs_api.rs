@@ -31,12 +31,12 @@ pub struct Struct {
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
     pub(crate) field1: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
     pub(crate) field2: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync1: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for Struct {}
-impl !Sync for Struct {}
 unsafe impl ::cxx::ExternType for Struct {
     type Id = ::cxx::type_id!("Struct");
     type Kind = ::cxx::kind::Trivial;
@@ -94,9 +94,8 @@ pub struct PaddingBetweenFields {
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
     pub(crate) field2: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync1: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for PaddingBetweenFields {}
-impl !Sync for PaddingBetweenFields {}
 unsafe impl ::cxx::ExternType for PaddingBetweenFields {
     type Id = ::cxx::type_id!("PaddingBetweenFields");
     type Kind = ::cxx::kind::Trivial;
@@ -154,8 +153,6 @@ pub struct FieldInTailPadding_InnerStruct {
     /// size: 1, alignment: 1 => offset: 4
     pub inner_char_field: ::ffi_11::c_char,
 }
-impl !Send for FieldInTailPadding_InnerStruct {}
-impl !Sync for FieldInTailPadding_InnerStruct {}
 unsafe impl ::cxx::ExternType for FieldInTailPadding_InnerStruct {
     type Id = ::cxx::type_id!("FieldInTailPadding_InnerStruct");
     type Kind = ::cxx::kind::Opaque;
@@ -245,11 +242,10 @@ pub struct FieldInTailPadding {
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
     pub(crate) inner_struct: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 5],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     /// offset: 5 (dsize of `s`).
     pub char_in_tail_padding_of_prev_field: ::ffi_11::c_char,
 }
-impl !Send for FieldInTailPadding {}
-impl !Sync for FieldInTailPadding {}
 unsafe impl ::cxx::ExternType for FieldInTailPadding {
     type Id = ::cxx::type_id!("FieldInTailPadding");
     type Kind = ::cxx::kind::Opaque;

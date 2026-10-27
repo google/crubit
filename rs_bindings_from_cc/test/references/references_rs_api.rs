@@ -22,8 +22,6 @@
 pub struct TypeWithPtrConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for TypeWithPtrConstructor {}
-impl !Sync for TypeWithPtrConstructor {}
 unsafe impl ::cxx::ExternType for TypeWithPtrConstructor {
     type Id = ::cxx::type_id!("TypeWithPtrConstructor");
     type Kind = ::cxx::kind::Trivial;
@@ -64,8 +62,6 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
 pub struct TypeWithNonNullPtrConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for TypeWithNonNullPtrConstructor {}
-impl !Sync for TypeWithNonNullPtrConstructor {}
 unsafe impl ::cxx::ExternType for TypeWithNonNullPtrConstructor {
     type Id = ::cxx::type_id!("TypeWithNonNullPtrConstructor");
     type Kind = ::cxx::kind::Trivial;
@@ -106,8 +102,6 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstruct
 pub struct TypeWithReferenceConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for TypeWithReferenceConstructor {}
-impl !Sync for TypeWithReferenceConstructor {}
 unsafe impl ::cxx::ExternType for TypeWithReferenceConstructor {
     type Id = ::cxx::type_id!("TypeWithReferenceConstructor");
     type Kind = ::cxx::kind::Trivial;

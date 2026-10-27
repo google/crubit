@@ -22,8 +22,6 @@
 pub struct PlainStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for PlainStruct {}
-impl !Sync for PlainStruct {}
 unsafe impl ::cxx::ExternType for PlainStruct {
     type Id = ::cxx::type_id!("PlainStruct");
     type Kind = ::cxx::kind::Trivial;
@@ -51,9 +49,8 @@ pub struct StructWithLifetimeboundMemberFunction {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for StructWithLifetimeboundMemberFunction {}
-impl !Sync for StructWithLifetimeboundMemberFunction {}
 unsafe impl ::cxx::ExternType for StructWithLifetimeboundMemberFunction {
     type Id = ::cxx::type_id!("StructWithLifetimeboundMemberFunction");
     type Kind = ::cxx::kind::Trivial;
@@ -108,10 +105,9 @@ pub struct StructWithLifetimeboundRefMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
 }
-impl<'__implicit> !Send for StructWithLifetimeboundRefMemberFunction<'__implicit> {}
-impl<'__implicit> !Sync for StructWithLifetimeboundRefMemberFunction<'__implicit> {}
 unsafe impl<'__implicit> ::cxx::ExternType
     for StructWithLifetimeboundRefMemberFunction<'__implicit>
 {
@@ -162,9 +158,8 @@ pub struct DropClassWithLifetimeboundMemberFunction {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for DropClassWithLifetimeboundMemberFunction {}
-impl !Sync for DropClassWithLifetimeboundMemberFunction {}
 unsafe impl ::cxx::ExternType for DropClassWithLifetimeboundMemberFunction {
     type Id = ::cxx::type_id!("DropClassWithLifetimeboundMemberFunction");
     type Kind = ::cxx::kind::Opaque;
@@ -267,10 +262,9 @@ pub struct DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
 }
-impl<'__implicit> !Send for DropClassWithLifetimeboundRefMemberFunction<'__implicit> {}
-impl<'__implicit> !Sync for DropClassWithLifetimeboundRefMemberFunction<'__implicit> {}
 unsafe impl<'__implicit> ::cxx::ExternType
     for DropClassWithLifetimeboundRefMemberFunction<'__implicit>
 {
@@ -388,9 +382,8 @@ pub struct StructWithLifetimeboundCtor {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for StructWithLifetimeboundCtor {}
-impl !Sync for StructWithLifetimeboundCtor {}
 unsafe impl ::cxx::ExternType for StructWithLifetimeboundCtor {
     type Id = ::cxx::type_id!("StructWithLifetimeboundCtor");
     type Kind = ::cxx::kind::Trivial;
@@ -434,10 +427,9 @@ pub struct StructWithLifetimeboundRefCtor<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
 }
-impl<'__implicit> !Send for StructWithLifetimeboundRefCtor<'__implicit> {}
-impl<'__implicit> !Sync for StructWithLifetimeboundRefCtor<'__implicit> {}
 unsafe impl<'__implicit> ::cxx::ExternType for StructWithLifetimeboundRefCtor<'__implicit> {
     type Id = ::cxx::type_id!("StructWithLifetimeboundRefCtor");
     type Kind = ::cxx::kind::Trivial;
@@ -485,9 +477,8 @@ pub struct DropStructWithLifetimeboundCtor {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for DropStructWithLifetimeboundCtor {}
-impl !Sync for DropStructWithLifetimeboundCtor {}
 unsafe impl ::cxx::ExternType for DropStructWithLifetimeboundCtor {
     type Id = ::cxx::type_id!("DropStructWithLifetimeboundCtor");
     type Kind = ::cxx::kind::Opaque;
@@ -577,10 +568,9 @@ pub struct DropStructWithLifetimeboundRefCtor<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
 }
-impl<'__implicit> !Send for DropStructWithLifetimeboundRefCtor<'__implicit> {}
-impl<'__implicit> !Sync for DropStructWithLifetimeboundRefCtor<'__implicit> {}
 unsafe impl<'__implicit> ::cxx::ExternType for DropStructWithLifetimeboundRefCtor<'__implicit> {
     type Id = ::cxx::type_id!("DropStructWithLifetimeboundRefCtor");
     type Kind = ::cxx::kind::Opaque;
@@ -692,10 +682,9 @@ pub struct DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
 }
-impl<'__implicit> !Send for DropStructWithRefCtorAndRefMemberFunction<'__implicit> {}
-impl<'__implicit> !Sync for DropStructWithRefCtorAndRefMemberFunction<'__implicit> {}
 unsafe impl<'__implicit> ::cxx::ExternType
     for DropStructWithRefCtorAndRefMemberFunction<'__implicit>
 {
@@ -828,9 +817,8 @@ pub struct DropStructWithCtorAndMemberFunction {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for DropStructWithCtorAndMemberFunction {}
-impl !Sync for DropStructWithCtorAndMemberFunction {}
 unsafe impl ::cxx::ExternType for DropStructWithCtorAndMemberFunction {
     type Id = ::cxx::type_id!("DropStructWithCtorAndMemberFunction");
     type Kind = ::cxx::kind::Opaque;
@@ -939,9 +927,8 @@ pub struct DropStructWithCtorAndRefMemberFunction {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for DropStructWithCtorAndRefMemberFunction {}
-impl !Sync for DropStructWithCtorAndRefMemberFunction {}
 unsafe impl ::cxx::ExternType for DropStructWithCtorAndRefMemberFunction {
     type Id = ::cxx::type_id!("DropStructWithCtorAndRefMemberFunction");
     type Kind = ::cxx::kind::Opaque;
@@ -1047,10 +1034,9 @@ pub struct DropStructWithRefCtorAndMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
 }
-impl<'__implicit> !Send for DropStructWithRefCtorAndMemberFunction<'__implicit> {}
-impl<'__implicit> !Sync for DropStructWithRefCtorAndMemberFunction<'__implicit> {}
 unsafe impl<'__implicit> ::cxx::ExternType for DropStructWithRefCtorAndMemberFunction<'__implicit> {
     type Id = ::cxx::type_id!("DropStructWithRefCtorAndMemberFunction");
     type Kind = ::cxx::kind::Opaque;

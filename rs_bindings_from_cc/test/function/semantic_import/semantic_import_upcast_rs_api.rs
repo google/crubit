@@ -24,9 +24,8 @@ pub struct S {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) x_: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for S {}
-impl !Sync for S {}
 unsafe impl ::cxx::ExternType for S {
     type Id = ::cxx::type_id!("S");
     type Kind = ::cxx::kind::Trivial;
@@ -89,12 +88,12 @@ pub mod s {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct T {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) y_: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for T {}
-impl !Sync for T {}
 unsafe impl ::cxx::ExternType for T {
     type Id = ::cxx::type_id!("T");
     type Kind = ::cxx::kind::Trivial;
@@ -174,15 +173,16 @@ pub struct Chars {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) c_: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) sc_: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync1: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) uc_: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync2: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for Chars {}
-impl !Sync for Chars {}
 unsafe impl ::cxx::ExternType for Chars {
     type Id = ::cxx::type_id!("Chars");
     type Kind = ::cxx::kind::Trivial;
@@ -263,9 +263,8 @@ pub struct Bools {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) b_: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for Bools {}
-impl !Sync for Bools {}
 unsafe impl ::cxx::ExternType for Bools {
     type Id = ::cxx::type_id!("Bools");
     type Kind = ::cxx::kind::Trivial;
@@ -314,12 +313,12 @@ pub struct Pointers {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p_: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) mut_p_: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync1: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for Pointers {}
-impl !Sync for Pointers {}
 unsafe impl ::cxx::ExternType for Pointers {
     type Id = ::cxx::type_id!("Pointers");
     type Kind = ::cxx::kind::Trivial;
@@ -405,12 +404,12 @@ pub struct NonTrivial {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) mut_p_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __do_not_auto_impl_send_sync1: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for NonTrivial {}
-impl !Sync for NonTrivial {}
 unsafe impl ::cxx::ExternType for NonTrivial {
     type Id = ::cxx::type_id!("NonTrivial");
     type Kind = ::cxx::kind::Opaque;
@@ -556,8 +555,6 @@ pub mod non_trivial {
 pub struct Padding {
     pub pad_: ::ffi_11::c_long,
 }
-impl !Send for Padding {}
-impl !Sync for Padding {}
 unsafe impl ::cxx::ExternType for Padding {
     type Id = ::cxx::type_id!("Padding");
     type Kind = ::cxx::kind::Trivial;
@@ -585,9 +582,8 @@ pub struct PointerBase {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) base_p_: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for PointerBase {}
-impl !Sync for PointerBase {}
 unsafe impl ::cxx::ExternType for PointerBase {
     type Id = ::cxx::type_id!("PointerBase");
     type Kind = ::cxx::kind::Trivial;
@@ -647,9 +643,8 @@ pub mod pointer_base {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct DerivedPointers {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for DerivedPointers {}
-impl !Sync for DerivedPointers {}
 unsafe impl ::cxx::ExternType for DerivedPointers {
     type Id = ::cxx::type_id!("DerivedPointers");
     type Kind = ::cxx::kind::Trivial;
@@ -758,12 +753,12 @@ pub struct MorePointers {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) v_: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) i_: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync1: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for MorePointers {}
-impl !Sync for MorePointers {}
 unsafe impl ::cxx::ExternType for MorePointers {
     type Id = ::cxx::type_id!("MorePointers");
     type Kind = ::cxx::kind::Trivial;
@@ -850,9 +845,8 @@ pub struct StructWithRecordAndFreeGetter {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) s_: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for StructWithRecordAndFreeGetter {}
-impl !Sync for StructWithRecordAndFreeGetter {}
 unsafe impl ::cxx::ExternType for StructWithRecordAndFreeGetter {
     type Id = ::cxx::type_id!("StructWithRecordAndFreeGetter");
     type Kind = ::cxx::kind::Trivial;

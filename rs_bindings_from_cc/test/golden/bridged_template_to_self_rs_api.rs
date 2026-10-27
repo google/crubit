@@ -29,8 +29,6 @@ pub mod ns {
     pub struct Member {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for Member {}
-    impl !Sync for Member {}
     unsafe impl ::cxx::ExternType for Member {
         type Id = ::cxx::type_id!("ns :: Member");
         type Kind = ::cxx::kind::Trivial;
@@ -69,8 +67,6 @@ pub mod ns {
     pub struct Instruction {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for Instruction {}
-    impl !Sync for Instruction {}
     unsafe impl ::cxx::ExternType for Instruction {
         type Id = ::cxx::type_id!("ns :: Instruction");
         type Kind = ::cxx::kind::Trivial;
@@ -126,8 +122,6 @@ pub mod ns {
     pub struct Region {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for Region {}
-    impl !Sync for Region {}
     unsafe impl ::cxx::ExternType for Region {
         type Id = ::cxx::type_id!("ns :: Region");
         type Kind = ::cxx::kind::Trivial;

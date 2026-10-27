@@ -21,8 +21,6 @@
 pub struct Nonmovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for Nonmovable {}
-impl !Sync for Nonmovable {}
 unsafe impl ::cxx::ExternType for Nonmovable {
     type Id = ::cxx::type_id!("Nonmovable");
     type Kind = ::cxx::kind::Opaque;
@@ -53,8 +51,6 @@ impl ::ctor::CtorNew<()> for Nonmovable {
 pub struct Base {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for Base {}
-impl !Sync for Base {}
 unsafe impl ::cxx::ExternType for Base {
     type Id = ::cxx::type_id!("Base");
     type Kind = ::cxx::kind::Trivial;
@@ -224,9 +220,8 @@ pub mod base {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for Derived {}
-impl !Sync for Derived {}
 unsafe impl ::cxx::ExternType for Derived {
     type Id = ::cxx::type_id!("Derived");
     type Kind = ::cxx::kind::Trivial;

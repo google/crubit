@@ -33,8 +33,6 @@ pub struct HasPointerToIncompleteTypedefs {
     pub incomplete_extern_c: *mut crate::IncompleteExternC,
     pub incomplete: *mut crate::Incomplete,
 }
-impl !Send for HasPointerToIncompleteTypedefs {}
-impl !Sync for HasPointerToIncompleteTypedefs {}
 unsafe impl ::cxx::ExternType for HasPointerToIncompleteTypedefs {
     type Id = ::cxx::type_id!("HasPointerToIncompleteTypedefs");
     type Kind = ::cxx::kind::Trivial;

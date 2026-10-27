@@ -22,8 +22,6 @@
 pub struct DisplayableStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for DisplayableStruct {}
-impl !Sync for DisplayableStruct {}
 unsafe impl ::cxx::ExternType for DisplayableStruct {
     type Id = ::cxx::type_id!("DisplayableStruct");
     type Kind = ::cxx::kind::Trivial;

@@ -25,8 +25,6 @@ pub mod ns {
     pub struct Trivial {
         pub trivial_field: ::ffi_11::c_int,
     }
-    impl !Send for Trivial {}
-    impl !Sync for Trivial {}
     unsafe impl ::cxx::ExternType for Trivial {
         type Id = ::cxx::type_id!("ns :: Trivial");
         type Kind = ::cxx::kind::Trivial;

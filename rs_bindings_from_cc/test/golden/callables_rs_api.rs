@@ -85,8 +85,6 @@ pub fn map_bridged(
 pub struct ABICompatible {
     pub x: ::ffi_11::c_int,
 }
-impl !Send for ABICompatible {}
-impl !Sync for ABICompatible {}
 unsafe impl ::cxx::ExternType for ABICompatible {
     type Id = ::cxx::type_id!("ABICompatible");
     type Kind = ::cxx::kind::Trivial;
@@ -132,9 +130,8 @@ pub struct LayoutCompatible {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) private_: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for LayoutCompatible {}
-impl !Sync for LayoutCompatible {}
 unsafe impl ::cxx::ExternType for LayoutCompatible {
     type Id = ::cxx::type_id!("LayoutCompatible");
     type Kind = ::cxx::kind::Trivial;

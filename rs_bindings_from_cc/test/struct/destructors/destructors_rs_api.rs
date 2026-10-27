@@ -23,9 +23,8 @@ pub struct DestructionOrderRecorder {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) int_field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for DestructionOrderRecorder {}
-impl !Sync for DestructionOrderRecorder {}
 unsafe impl ::cxx::ExternType for DestructionOrderRecorder {
     type Id = ::cxx::type_id!("DestructionOrderRecorder");
     type Kind = ::cxx::kind::Trivial;
@@ -143,15 +142,16 @@ pub struct FieldDestructionOrderTester {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) field1_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) field2_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    __do_not_auto_impl_send_sync1: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) field3_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    __do_not_auto_impl_send_sync2: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for FieldDestructionOrderTester {}
-impl !Sync for FieldDestructionOrderTester {}
 unsafe impl ::cxx::ExternType for FieldDestructionOrderTester {
     type Id = ::cxx::type_id!("FieldDestructionOrderTester");
     type Kind = ::cxx::kind::Trivial;
@@ -285,9 +285,8 @@ pub struct PrivateOperatorDelete {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) int_field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for PrivateOperatorDelete {}
-impl !Sync for PrivateOperatorDelete {}
 unsafe impl ::cxx::ExternType for PrivateOperatorDelete {
     type Id = ::cxx::type_id!("PrivateOperatorDelete");
     type Kind = ::cxx::kind::Trivial;

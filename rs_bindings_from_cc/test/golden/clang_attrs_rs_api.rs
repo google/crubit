@@ -21,9 +21,8 @@
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct HasCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for HasCustomAlignment {}
-impl !Sync for HasCustomAlignment {}
 unsafe impl ::cxx::ExternType for HasCustomAlignment {
     type Id = ::cxx::type_id!("HasCustomAlignment");
     type Kind = ::cxx::kind::Trivial;
@@ -52,8 +51,6 @@ impl Default for HasCustomAlignment {
 pub struct HasFieldWithCustomAlignment {
     pub field: crate::HasCustomAlignment,
 }
-impl !Send for HasFieldWithCustomAlignment {}
-impl !Sync for HasFieldWithCustomAlignment {}
 unsafe impl ::cxx::ExternType for HasFieldWithCustomAlignment {
     type Id = ::cxx::type_id!("HasFieldWithCustomAlignment");
     type Kind = ::cxx::kind::Trivial;
@@ -83,9 +80,8 @@ impl Default for HasFieldWithCustomAlignment {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct InheritsFromBaseWithCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for InheritsFromBaseWithCustomAlignment {}
-impl !Sync for InheritsFromBaseWithCustomAlignment {}
 unsafe impl ::cxx::ExternType for InheritsFromBaseWithCustomAlignment {
     type Id = ::cxx::type_id!("InheritsFromBaseWithCustomAlignment");
     type Kind = ::cxx::kind::Trivial;
@@ -115,9 +111,8 @@ impl Default for InheritsFromBaseWithCustomAlignment {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct HasCustomAlignmentWithGnuAttr {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for HasCustomAlignmentWithGnuAttr {}
-impl !Sync for HasCustomAlignmentWithGnuAttr {}
 unsafe impl ::cxx::ExternType for HasCustomAlignmentWithGnuAttr {
     type Id = ::cxx::type_id!("HasCustomAlignmentWithGnuAttr");
     type Kind = ::cxx::kind::Trivial;
@@ -166,8 +161,6 @@ pub mod template_with_preferred_name {
 pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {}
-impl !Sync for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("template_with_preferred_name :: SomeTemplate < int >"),
     crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE

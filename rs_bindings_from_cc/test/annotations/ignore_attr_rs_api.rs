@@ -27,8 +27,6 @@ pub mod crubit {
         pub struct MyStruct {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
-        impl !Send for MyStruct {}
-        impl !Sync for MyStruct {}
         unsafe impl ::cxx::ExternType for MyStruct {
             type Id = ::cxx::type_id!("crubit :: test :: MyStruct");
             type Kind = ::cxx::kind::Trivial;
@@ -60,8 +58,6 @@ pub mod crubit {
             pub x: ::ffi_11::c_char,
             pub y: ::ffi_11::c_char,
         }
-        impl !Send for PackedStruct {}
-        impl !Sync for PackedStruct {}
         unsafe impl ::cxx::ExternType for PackedStruct {
             type Id = ::cxx::type_id!("crubit :: test :: PackedStruct");
             type Kind = ::cxx::kind::Trivial;
@@ -92,8 +88,6 @@ pub mod crubit {
         pub struct PointerStruct {
             pub x: ::ffi_11::c_int,
         }
-        impl !Send for PointerStruct {}
-        impl !Sync for PointerStruct {}
         unsafe impl ::cxx::ExternType for PointerStruct {
             type Id = ::cxx::type_id!("crubit :: test :: PointerStruct");
             type Kind = ::cxx::kind::Trivial;

@@ -23,8 +23,6 @@ pub mod test_namespace_bindings {
     pub struct S {
         pub i: ::ffi_11::c_int,
     }
-    impl !Send for S {}
-    impl !Sync for S {}
     unsafe impl ::cxx::ExternType for S {
         type Id = ::cxx::type_id!("test_namespace_bindings :: S");
         type Kind = ::cxx::kind::Trivial;
@@ -111,8 +109,6 @@ pub mod test_namespace_bindings_reopened {
         pub struct S {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
-        impl !Send for S {}
-        impl !Sync for S {}
         unsafe impl ::cxx::ExternType for S {
             type Id = ::cxx::type_id!("test_namespace_bindings_reopened :: inner :: S");
             type Kind = ::cxx::kind::Trivial;
@@ -161,8 +157,6 @@ pub mod test_namespace_bindings_inline {
         pub struct StructInInlineNamespace {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
-        impl !Send for StructInInlineNamespace {}
-        impl !Sync for StructInInlineNamespace {}
         unsafe impl ::cxx::ExternType for StructInInlineNamespace {
             type Id = ::cxx::type_id!(
                 "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
@@ -235,8 +229,6 @@ pub mod ns_with_type_visibility {
     pub struct S {
         pub x: ::ffi_11::c_int,
     }
-    impl !Send for S {}
-    impl !Sync for S {}
     unsafe impl ::cxx::ExternType for S {
         type Id = ::cxx::type_id!("ns_with_type_visibility :: S");
         type Kind = ::cxx::kind::Trivial;
@@ -271,8 +263,6 @@ pub mod ns_with_visibility {
     pub struct S {
         pub x: ::ffi_11::c_int,
     }
-    impl !Send for S {}
-    impl !Sync for S {}
     unsafe impl ::cxx::ExternType for S {
         type Id = ::cxx::type_id!("ns_with_visibility :: S");
         type Kind = ::cxx::kind::Trivial;

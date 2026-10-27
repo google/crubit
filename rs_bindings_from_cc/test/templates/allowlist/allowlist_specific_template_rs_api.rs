@@ -43,8 +43,6 @@ pub fn NotBoundCaller(i: crate::__CcTemplateInst10NotBoundTsIifE) {
 pub struct __CcTemplateInst13AlwaysBoundTsIifE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInst13AlwaysBoundTsIifE {}
-impl !Sync for __CcTemplateInst13AlwaysBoundTsIifE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AlwaysBoundTs < int , float >"),
     crate::__CcTemplateInst13AlwaysBoundTsIifE
@@ -103,8 +101,6 @@ pub mod cc_template_inst13_always_bound_ts_iif_e {
 pub struct __CcTemplateInst10NotBoundTsIifE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInst10NotBoundTsIifE {}
-impl !Sync for __CcTemplateInst10NotBoundTsIifE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NotBoundTs < int , float >"),
     crate::__CcTemplateInst10NotBoundTsIifE

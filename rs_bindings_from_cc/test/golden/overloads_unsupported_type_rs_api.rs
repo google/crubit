@@ -26,8 +26,6 @@
 pub struct SomeClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for SomeClass {}
-impl !Sync for SomeClass {}
 unsafe impl ::cxx::ExternType for SomeClass {
     type Id = ::cxx::type_id!("SomeClass");
     type Kind = ::cxx::kind::Trivial;

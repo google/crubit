@@ -30,8 +30,6 @@ pub struct RawThing {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub value: i32,
 }
-impl !Send for RawThing {}
-impl !Sync for RawThing {}
 unsafe impl ::cxx::ExternType for RawThing {
     type Id = ::cxx::type_id!("Thing");
     type Kind = ::cxx::kind::Trivial;
@@ -107,8 +105,6 @@ pub struct CustomRawThing {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub value: i32,
 }
-impl !Send for CustomRawThing {}
-impl !Sync for CustomRawThing {}
 unsafe impl ::cxx::ExternType for CustomRawThing {
     type Id = ::cxx::type_id!("CustomThing");
     type Kind = ::cxx::kind::Trivial;

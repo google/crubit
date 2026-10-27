@@ -26,9 +26,8 @@ pub mod test_namespace_bindings {
         /// Reason for representing this field as a blob of bytes:
         /// Types of non-public C++ fields can be elided away
         pub(crate) private_member_variable_: [::core::mem::MaybeUninit<u8>; 4],
+        __do_not_auto_impl_send_sync1: ::core::marker::PhantomData<*mut ()>,
     }
-    impl !Send for SomeClass {}
-    impl !Sync for SomeClass {}
     unsafe impl ::cxx::ExternType for SomeClass {
         type Id = ::cxx::type_id!("test_namespace_bindings :: SomeClass");
         type Kind = ::cxx::kind::Trivial;

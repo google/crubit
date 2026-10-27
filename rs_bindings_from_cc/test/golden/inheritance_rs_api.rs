@@ -25,8 +25,6 @@
 pub struct Base0 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for Base0 {}
-impl !Sync for Base0 {}
 unsafe impl ::cxx::ExternType for Base0 {
     type Id = ::cxx::type_id!("Base0");
     type Kind = ::cxx::kind::Trivial;
@@ -54,12 +52,12 @@ pub struct Base1 {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) b1_1_: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) b1_2_: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync1: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for Base1 {}
-impl !Sync for Base1 {}
 unsafe impl ::cxx::ExternType for Base1 {
     type Id = ::cxx::type_id!("Base1");
     type Kind = ::cxx::kind::Trivial;
@@ -87,9 +85,8 @@ pub struct Base2 {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) b2_1_: [::core::mem::MaybeUninit<u8>; 2],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for Base2 {}
-impl !Sync for Base2 {}
 unsafe impl ::cxx::ExternType for Base2 {
     type Id = ::cxx::type_id!("Base2");
     type Kind = ::cxx::kind::Trivial;
@@ -114,10 +111,9 @@ impl Default for Base2 {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 12],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
     pub derived_1: ::ffi_11::c_char,
 }
-impl !Send for Derived {}
-impl !Sync for Derived {}
 unsafe impl ::cxx::ExternType for Derived {
     type Id = ::cxx::type_id!("Derived");
     type Kind = ::cxx::kind::Trivial;
@@ -142,9 +138,8 @@ impl Default for Derived {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct VirtualBase1 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for VirtualBase1 {}
-impl !Sync for VirtualBase1 {}
 unsafe impl ::cxx::ExternType for VirtualBase1 {
     type Id = ::cxx::type_id!("VirtualBase1");
     type Kind = ::cxx::kind::Opaque;
@@ -247,9 +242,8 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase1 {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct VirtualBase2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for VirtualBase2 {}
-impl !Sync for VirtualBase2 {}
 unsafe impl ::cxx::ExternType for VirtualBase2 {
     type Id = ::cxx::type_id!("VirtualBase2");
     type Kind = ::cxx::kind::Opaque;
@@ -352,9 +346,8 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase2 {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct VirtualDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for VirtualDerived {}
-impl !Sync for VirtualDerived {}
 unsafe impl ::cxx::ExternType for VirtualDerived {
     type Id = ::cxx::type_id!("VirtualDerived");
     type Kind = ::cxx::kind::Opaque;
@@ -458,9 +451,8 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualDerived {
 ///CRUBIT_ANNOTATE: cpp_type=MyAbstractClass
 pub struct MyAbstractClass {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for MyAbstractClass {}
-impl !Sync for MyAbstractClass {}
 unsafe impl ::cxx::ExternType for MyAbstractClass {
     type Id = ::cxx::type_id!("MyAbstractClass");
     type Kind = ::cxx::kind::Opaque;
@@ -494,8 +486,6 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for MyAbstractClass {
 pub struct MethodBase1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for MethodBase1 {}
-impl !Sync for MethodBase1 {}
 unsafe impl ::cxx::ExternType for MethodBase1 {
     type Id = ::cxx::type_id!("MethodBase1");
     type Kind = ::cxx::kind::Trivial;
@@ -569,8 +559,6 @@ pub mod method_base1 {
 pub struct MethodBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for MethodBase2 {}
-impl !Sync for MethodBase2 {}
 unsafe impl ::cxx::ExternType for MethodBase2 {
     type Id = ::cxx::type_id!("MethodBase2");
     type Kind = ::cxx::kind::Trivial;
@@ -616,9 +604,8 @@ pub mod method_base2 {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct MethodDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for MethodDerived {}
-impl !Sync for MethodDerived {}
 unsafe impl ::cxx::ExternType for MethodDerived {
     type Id = ::cxx::type_id!("MethodDerived");
     type Kind = ::cxx::kind::Trivial;

@@ -25,8 +25,6 @@
 pub struct CompatibleType {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for CompatibleType {}
-impl !Sync for CompatibleType {}
 unsafe impl ::cxx::ExternType for CompatibleType {
     type Id = ::cxx::type_id!("CompatibleType");
     type Kind = ::cxx::kind::Opaque;

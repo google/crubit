@@ -22,8 +22,6 @@
 pub struct S {
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for S {}
-impl !Sync for S {}
 unsafe impl ::cxx::ExternType for S {
     type Id = ::cxx::type_id!("S");
     type Kind = ::cxx::kind::Trivial;

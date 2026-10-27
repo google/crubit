@@ -27,8 +27,6 @@ pub fn free_function<'p1>(p1: &'p1 mut ::ffi_11::c_int) -> ::cref::CMut<'p1, ::f
 pub struct S {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for S {}
-impl !Sync for S {}
 unsafe impl ::cxx::ExternType for S {
     type Id = ::cxx::type_id!("S");
     type Kind = ::cxx::kind::Trivial;
@@ -90,8 +88,6 @@ pub mod s {
 pub struct TriviallyCopyableButNontriviallyDestructible {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for TriviallyCopyableButNontriviallyDestructible {}
-impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
 unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
     type Id = ::cxx::type_id!("TriviallyCopyableButNontriviallyDestructible");
     type Kind = ::cxx::kind::Opaque;
@@ -167,9 +163,8 @@ pub struct WrappedValue {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for WrappedValue {}
-impl !Sync for WrappedValue {}
 unsafe impl ::cxx::ExternType for WrappedValue {
     type Id = ::cxx::type_id!("WrappedValue");
     type Kind = ::cxx::kind::Trivial;

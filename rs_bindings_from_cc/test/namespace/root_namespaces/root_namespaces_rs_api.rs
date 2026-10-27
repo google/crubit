@@ -24,8 +24,6 @@ pub mod test_namespace {
     pub struct Foo {
         pub x: ::ffi_11::c_int,
     }
-    impl !Send for Foo {}
-    impl !Sync for Foo {}
     unsafe impl ::cxx::ExternType for Foo {
         type Id = ::cxx::type_id!("test_namespace :: Foo");
         type Kind = ::cxx::kind::Trivial;

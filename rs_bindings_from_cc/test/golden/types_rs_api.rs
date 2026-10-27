@@ -28,8 +28,6 @@
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for SomeStruct {}
-impl !Sync for SomeStruct {}
 unsafe impl ::cxx::ExternType for SomeStruct {
     type Id = ::cxx::type_id!("SomeStruct");
     type Kind = ::cxx::kind::Trivial;
@@ -81,6 +79,7 @@ pub struct FieldTypeTestStruct {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'wchar_t': Unsupported builtin type
     pub(crate) wchar_t_field: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync6: ::core::marker::PhantomData<*mut ()>,
     pub short_field: ::ffi_11::c_short,
     pub int_field: ::ffi_11::c_int,
     pub long_field: ::ffi_11::c_long,
@@ -96,9 +95,11 @@ pub struct FieldTypeTestStruct {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type alias PtrDiff
     pub(crate) ptrdiff_t_field: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync19: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type alias Size
     pub(crate) size_t_field: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync20: ::core::marker::PhantomData<*mut ()>,
     pub float_field: f32,
     pub double_field: f64,
     pub ptr_field: *mut ::ffi_11::c_int,
@@ -116,8 +117,6 @@ pub struct FieldTypeTestStruct {
     pub forward_declared_ptr_field: *mut crate::ForwardDeclaredStruct,
     pub cyclic_ptr_field: *mut crate::FieldTypeTestStruct,
 }
-impl !Send for FieldTypeTestStruct {}
-impl !Sync for FieldTypeTestStruct {}
 unsafe impl ::cxx::ExternType for FieldTypeTestStruct {
     type Id = ::cxx::type_id!("FieldTypeTestStruct");
     type Kind = ::cxx::kind::Trivial;

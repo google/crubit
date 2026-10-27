@@ -61,8 +61,6 @@ pub struct ExistingRustTypeFieldTypes {
     pub my_i8_alias: i8,
     pub error: crate::TooFewArgs,
 }
-impl !Send for ExistingRustTypeFieldTypes {}
-impl !Sync for ExistingRustTypeFieldTypes {}
 unsafe impl ::cxx::ExternType for ExistingRustTypeFieldTypes {
     type Id = ::cxx::type_id!("ExistingRustTypeFieldTypes");
     type Kind = ::cxx::kind::Trivial;
@@ -152,8 +150,6 @@ pub struct NonRustMovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub x: ::ffi_11::c_int,
 }
-impl !Send for NonRustMovable {}
-impl !Sync for NonRustMovable {}
 unsafe impl ::cxx::ExternType for NonRustMovable {
     type Id = ::cxx::type_id!("NonRustMovable");
     type Kind = ::cxx::kind::Opaque;

@@ -105,8 +105,6 @@ pub fn CallIntMapper(
 pub struct Widget {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for Widget {}
-impl !Sync for Widget {}
 unsafe impl ::cxx::ExternType for Widget {
     type Id = ::cxx::type_id!("Widget");
     type Kind = ::cxx::kind::Trivial;

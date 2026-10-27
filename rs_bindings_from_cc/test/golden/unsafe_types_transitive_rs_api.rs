@@ -27,8 +27,6 @@
 pub struct PublicPointer {
     pub p: *mut ::ffi_11::c_int,
 }
-impl !Send for PublicPointer {}
-impl !Sync for PublicPointer {}
 unsafe impl ::cxx::ExternType for PublicPointer {
     type Id = ::cxx::type_id!("PublicPointer");
     type Kind = ::cxx::kind::Trivial;
@@ -56,9 +54,8 @@ pub struct PrivatePointer {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p_: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for PrivatePointer {}
-impl !Sync for PrivatePointer {}
 unsafe impl ::cxx::ExternType for PrivatePointer {
     type Id = ::cxx::type_id!("PrivatePointer");
     type Kind = ::cxx::kind::Trivial;
@@ -90,8 +87,6 @@ pub struct TransitivePublicPointer {
     pub r#pub: crate::PublicPointer,
     pub r#priv: crate::PrivatePointer,
 }
-impl !Send for TransitivePublicPointer {}
-impl !Sync for TransitivePublicPointer {}
 unsafe impl ::cxx::ExternType for TransitivePublicPointer {
     type Id = ::cxx::type_id!("TransitivePublicPointer");
     type Kind = ::cxx::kind::Trivial;
@@ -125,8 +120,6 @@ pub union Union {
     pub i: ::ffi_11::c_int,
     pub f: f32,
 }
-impl !Send for Union {}
-impl !Sync for Union {}
 unsafe impl ::cxx::ExternType for Union {
     type Id = ::cxx::type_id!("Union");
     type Kind = ::cxx::kind::Trivial;

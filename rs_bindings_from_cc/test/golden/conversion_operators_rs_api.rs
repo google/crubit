@@ -22,8 +22,6 @@
 pub struct DstLocalMovable {
     pub val: ::ffi_11::c_int,
 }
-impl !Send for DstLocalMovable {}
-impl !Sync for DstLocalMovable {}
 unsafe impl ::cxx::ExternType for DstLocalMovable {
     type Id = ::cxx::type_id!("DstLocalMovable");
     type Kind = ::cxx::kind::Trivial;
@@ -52,8 +50,6 @@ pub struct DstLocalNonMovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub val: ::ffi_11::c_int,
 }
-impl !Send for DstLocalNonMovable {}
-impl !Sync for DstLocalNonMovable {}
 unsafe impl ::cxx::ExternType for DstLocalNonMovable {
     type Id = ::cxx::type_id!("DstLocalNonMovable");
     type Kind = ::cxx::kind::Opaque;
@@ -71,8 +67,6 @@ forward_declare::unsafe_define!(
 pub struct Src {
     pub value: ::ffi_11::c_int,
 }
-impl !Send for Src {}
-impl !Sync for Src {}
 unsafe impl ::cxx::ExternType for Src {
     type Id = ::cxx::type_id!("Src");
     type Kind = ::cxx::kind::Trivial;

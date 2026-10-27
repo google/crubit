@@ -27,9 +27,8 @@ pub struct StructWithBridgeField {
     /// Reason for representing this field as a blob of bytes:
     /// crubit.rs/errors/bridge_field: 'crate::RustStruct' is not layout-compatible between Rust and C++.
     pub(crate) bridge_field: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for StructWithBridgeField {}
-impl !Sync for StructWithBridgeField {}
 unsafe impl ::cxx::ExternType for StructWithBridgeField {
     type Id = ::cxx::type_id!("StructWithBridgeField");
     type Kind = ::cxx::kind::Trivial;
@@ -80,8 +79,6 @@ pub struct Vec3 {
     pub y: f32,
     pub z: f32,
 }
-impl !Send for Vec3 {}
-impl !Sync for Vec3 {}
 unsafe impl ::cxx::ExternType for Vec3 {
     type Id = ::cxx::type_id!("Vec3");
     type Kind = ::cxx::kind::Trivial;

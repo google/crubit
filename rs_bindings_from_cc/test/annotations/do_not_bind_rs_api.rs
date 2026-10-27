@@ -24,8 +24,6 @@ pub mod crubit {
         pub struct ArgumentToBoundOverload {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
-        impl !Send for ArgumentToBoundOverload {}
-        impl !Sync for ArgumentToBoundOverload {}
         unsafe impl ::cxx::ExternType for ArgumentToBoundOverload {
             type Id = ::cxx::type_id!("crubit :: test :: ArgumentToBoundOverload");
             type Kind = ::cxx::kind::Trivial;
@@ -56,8 +54,6 @@ pub mod crubit {
         pub struct ArgumentToUnboundOverload {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
-        impl !Send for ArgumentToUnboundOverload {}
-        impl !Sync for ArgumentToUnboundOverload {}
         unsafe impl ::cxx::ExternType for ArgumentToUnboundOverload {
             type Id = ::cxx::type_id!("crubit :: test :: ArgumentToUnboundOverload");
             type Kind = ::cxx::kind::Trivial;
@@ -99,8 +95,6 @@ pub mod crubit {
         pub struct StructWithDoNotBindConstructor {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
-        impl !Send for StructWithDoNotBindConstructor {}
-        impl !Sync for StructWithDoNotBindConstructor {}
         unsafe impl ::cxx::ExternType for StructWithDoNotBindConstructor {
             type Id = ::cxx::type_id!("crubit :: test :: StructWithDoNotBindConstructor");
             type Kind = ::cxx::kind::Trivial;
@@ -141,8 +135,6 @@ pub mod crubit {
         pub struct StructWithDoNotBindMethod {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
-        impl !Send for StructWithDoNotBindMethod {}
-        impl !Sync for StructWithDoNotBindMethod {}
         unsafe impl ::cxx::ExternType for StructWithDoNotBindMethod {
             type Id = ::cxx::type_id!("crubit :: test :: StructWithDoNotBindMethod");
             type Kind = ::cxx::kind::Trivial;
