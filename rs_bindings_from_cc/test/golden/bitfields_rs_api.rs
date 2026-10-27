@@ -33,11 +33,10 @@ pub struct WithBitfields {
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
     pub(crate) f7: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync5: ::core::marker::PhantomData<*mut ()>,
     /// * `f8` : 2 bits.
     __bitfields6: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for WithBitfields {}
-impl !Sync for WithBitfields {}
 unsafe impl ::cxx::ExternType for WithBitfields {
     type Id = ::cxx::type_id!("WithBitfields");
     type Kind = ::cxx::kind::Trivial;
@@ -73,8 +72,6 @@ pub struct AlignmentRegressionTest {
     /// * `status` : 1 bits.
     __bitfields0: [::core::mem::MaybeUninit<u8>; 4],
 }
-impl !Send for AlignmentRegressionTest {}
-impl !Sync for AlignmentRegressionTest {}
 unsafe impl ::cxx::ExternType for AlignmentRegressionTest {
     type Id = ::cxx::type_id!("AlignmentRegressionTest");
     type Kind = ::cxx::kind::Trivial;

@@ -31,9 +31,8 @@
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct CannotUpcastInCrubit {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for CannotUpcastInCrubit {}
-impl !Sync for CannotUpcastInCrubit {}
 unsafe impl ::cxx::ExternType for CannotUpcastInCrubit {
     type Id = ::cxx::type_id!("CannotUpcastInCrubit");
     type Kind = ::cxx::kind::Trivial;

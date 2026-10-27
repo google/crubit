@@ -25,8 +25,6 @@
 pub struct TopLevel {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for TopLevel {}
-impl !Sync for TopLevel {}
 unsafe impl ::cxx::ExternType for TopLevel {
     type Id = ::cxx::type_id!("TopLevel");
     type Kind = ::cxx::kind::Trivial;
@@ -65,8 +63,6 @@ pub mod test_namespace_bindings {
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for Inner {}
-    impl !Sync for Inner {}
     unsafe impl ::cxx::ExternType for Inner {
         type Id = ::cxx::type_id!("test_namespace_bindings :: Inner");
         type Kind = ::cxx::kind::Trivial;
@@ -108,9 +104,8 @@ pub struct __CcTemplateInst10MyTemplateI8TopLevelE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInst10MyTemplateI8TopLevelE {}
-impl !Sync for __CcTemplateInst10MyTemplateI8TopLevelE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < struct TopLevel >"),
     crate::__CcTemplateInst10MyTemplateI8TopLevelE
@@ -139,9 +134,8 @@ pub struct __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {}
-impl !Sync for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < struct test_namespace_bindings :: Inner >"),
     crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
@@ -168,9 +162,8 @@ pub struct __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInst10MyTemplateIS_I8TopLevelEE {}
-impl !Sync for __CcTemplateInst10MyTemplateIS_I8TopLevelEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < class MyTemplate < struct TopLevel >>"),
     crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
@@ -199,9 +192,8 @@ pub struct __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {}
-impl !Sync for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(
         "MyTemplate < class MyTemplate < struct test_namespace_bindings :: Inner >>"
@@ -230,9 +222,8 @@ pub struct __CcTemplateInst10MyTemplateIbE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInst10MyTemplateIbE {}
-impl !Sync for __CcTemplateInst10MyTemplateIbE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < bool >"),
     crate::__CcTemplateInst10MyTemplateIbE
@@ -259,9 +250,8 @@ pub struct __CcTemplateInst10MyTemplateIcE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInst10MyTemplateIcE {}
-impl !Sync for __CcTemplateInst10MyTemplateIcE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < char >"),
     crate::__CcTemplateInst10MyTemplateIcE
@@ -288,9 +278,8 @@ pub struct __CcTemplateInst10MyTemplateIdE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 8],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInst10MyTemplateIdE {}
-impl !Sync for __CcTemplateInst10MyTemplateIdE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < double >"),
     crate::__CcTemplateInst10MyTemplateIdE
@@ -317,9 +306,8 @@ pub struct __CcTemplateInst10MyTemplateIfE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInst10MyTemplateIfE {}
-impl !Sync for __CcTemplateInst10MyTemplateIfE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < float >"),
     crate::__CcTemplateInst10MyTemplateIfE
@@ -346,9 +334,8 @@ pub struct __CcTemplateInst10MyTemplateIiE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInst10MyTemplateIiE {}
-impl !Sync for __CcTemplateInst10MyTemplateIiE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < int >"),
     crate::__CcTemplateInst10MyTemplateIiE

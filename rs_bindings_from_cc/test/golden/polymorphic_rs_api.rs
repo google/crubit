@@ -20,9 +20,8 @@
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase
 pub struct PolymorphicBase {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for PolymorphicBase {}
-impl !Sync for PolymorphicBase {}
 unsafe impl ::cxx::ExternType for PolymorphicBase {
     type Id = ::cxx::type_id!("PolymorphicBase");
     type Kind = ::cxx::kind::Opaque;
@@ -105,9 +104,8 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase {
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase2
 pub struct PolymorphicBase2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for PolymorphicBase2 {}
-impl !Sync for PolymorphicBase2 {}
 unsafe impl ::cxx::ExternType for PolymorphicBase2 {
     type Id = ::cxx::type_id!("PolymorphicBase2");
     type Kind = ::cxx::kind::Opaque;
@@ -204,9 +202,8 @@ pub mod polymorphic_base2 {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct PolymorphicDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for PolymorphicDerived {}
-impl !Sync for PolymorphicDerived {}
 unsafe impl ::cxx::ExternType for PolymorphicDerived {
     type Id = ::cxx::type_id!("PolymorphicDerived");
     type Kind = ::cxx::kind::Opaque;

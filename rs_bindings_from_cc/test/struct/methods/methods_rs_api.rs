@@ -22,8 +22,6 @@
 pub struct SomeClass {
     pub int_var: ::ffi_11::c_int,
 }
-impl !Send for SomeClass {}
-impl !Sync for SomeClass {}
 unsafe impl ::cxx::ExternType for SomeClass {
     type Id = ::cxx::type_id!("SomeClass");
     type Kind = ::cxx::kind::Trivial;
@@ -101,8 +99,6 @@ pub mod some_class {
 pub struct InstanceMethods {
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for InstanceMethods {}
-impl !Sync for InstanceMethods {}
 unsafe impl ::cxx::ExternType for InstanceMethods {
     type Id = ::cxx::type_id!("InstanceMethods");
     type Kind = ::cxx::kind::Trivial;

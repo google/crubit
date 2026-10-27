@@ -23,8 +23,6 @@ pub mod example {
     pub struct Counter {
         pub value: ::ffi_11::c_int,
     }
-    impl !Send for Counter {}
-    impl !Sync for Counter {}
     unsafe impl ::cxx::ExternType for Counter {
         type Id = ::cxx::type_id!("example :: Counter");
         type Kind = ::cxx::kind::Trivial;
@@ -117,8 +115,6 @@ pub mod example {
     pub struct Number {
         pub value: ::ffi_11::c_int,
     }
-    impl !Send for Number {}
-    impl !Sync for Number {}
     unsafe impl ::cxx::ExternType for Number {
         type Id = ::cxx::type_id!("example :: Number");
         type Kind = ::cxx::kind::Trivial;

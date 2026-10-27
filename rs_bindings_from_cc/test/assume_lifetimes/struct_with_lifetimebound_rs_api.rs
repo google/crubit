@@ -22,8 +22,6 @@
 pub struct PlainStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for PlainStruct {}
-impl !Sync for PlainStruct {}
 unsafe impl ::cxx::ExternType for PlainStruct {
     type Id = ::cxx::type_id!("PlainStruct");
     type Kind = ::cxx::kind::Trivial;
@@ -49,8 +47,6 @@ impl Default for PlainStruct {
 pub struct StructWithLifetimeboundMemberFunction {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for StructWithLifetimeboundMemberFunction {}
-impl !Sync for StructWithLifetimeboundMemberFunction {}
 unsafe impl ::cxx::ExternType for StructWithLifetimeboundMemberFunction {
     type Id = ::cxx::type_id!("StructWithLifetimeboundMemberFunction");
     type Kind = ::cxx::kind::Trivial;
@@ -103,8 +99,6 @@ pub mod struct_with_lifetimebound_member_function {
 pub struct StructWithLifetimeboundRefMemberFunction {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for StructWithLifetimeboundRefMemberFunction {}
-impl !Sync for StructWithLifetimeboundRefMemberFunction {}
 unsafe impl ::cxx::ExternType for StructWithLifetimeboundRefMemberFunction {
     type Id = ::cxx::type_id!("StructWithLifetimeboundRefMemberFunction");
     type Kind = ::cxx::kind::Trivial;
@@ -151,8 +145,6 @@ pub mod struct_with_lifetimebound_ref_member_function {
 pub struct DropClassWithLifetimeboundMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for DropClassWithLifetimeboundMemberFunction {}
-impl !Sync for DropClassWithLifetimeboundMemberFunction {}
 unsafe impl ::cxx::ExternType for DropClassWithLifetimeboundMemberFunction {
     type Id = ::cxx::type_id!("DropClassWithLifetimeboundMemberFunction");
     type Kind = ::cxx::kind::Opaque;
@@ -253,8 +245,6 @@ pub mod drop_class_with_lifetimebound_member_function {
 pub struct DropClassWithLifetimeboundRefMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for DropClassWithLifetimeboundRefMemberFunction {}
-impl !Sync for DropClassWithLifetimeboundRefMemberFunction {}
 unsafe impl ::cxx::ExternType for DropClassWithLifetimeboundRefMemberFunction {
     type Id = ::cxx::type_id!("DropClassWithLifetimeboundRefMemberFunction");
     type Kind = ::cxx::kind::Opaque;
@@ -352,8 +342,6 @@ pub mod drop_class_with_lifetimebound_ref_member_function {
 pub struct StructWithLifetimeboundCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for StructWithLifetimeboundCtor {}
-impl !Sync for StructWithLifetimeboundCtor {}
 unsafe impl ::cxx::ExternType for StructWithLifetimeboundCtor {
     type Id = ::cxx::type_id!("StructWithLifetimeboundCtor");
     type Kind = ::cxx::kind::Trivial;
@@ -395,8 +383,6 @@ impl ::ctor::CtorNew<crate::PlainStruct> for StructWithLifetimeboundCtor {
 pub struct StructWithLifetimeboundRefCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for StructWithLifetimeboundRefCtor {}
-impl !Sync for StructWithLifetimeboundRefCtor {}
 unsafe impl ::cxx::ExternType for StructWithLifetimeboundRefCtor {
     type Id = ::cxx::type_id!("StructWithLifetimeboundRefCtor");
     type Kind = ::cxx::kind::Trivial;
@@ -436,8 +422,6 @@ impl<'s> ::ctor::CtorNew<&'s crate::PlainStruct> for StructWithLifetimeboundRefC
 pub struct DropStructWithLifetimeboundCtor {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for DropStructWithLifetimeboundCtor {}
-impl !Sync for DropStructWithLifetimeboundCtor {}
 unsafe impl ::cxx::ExternType for DropStructWithLifetimeboundCtor {
     type Id = ::cxx::type_id!("DropStructWithLifetimeboundCtor");
     type Kind = ::cxx::kind::Opaque;
@@ -525,8 +509,6 @@ impl ::ctor::PinnedDrop for DropStructWithLifetimeboundCtor {
 pub struct DropStructWithLifetimeboundRefCtor {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for DropStructWithLifetimeboundRefCtor {}
-impl !Sync for DropStructWithLifetimeboundRefCtor {}
 unsafe impl ::cxx::ExternType for DropStructWithLifetimeboundRefCtor {
     type Id = ::cxx::type_id!("DropStructWithLifetimeboundRefCtor");
     type Kind = ::cxx::kind::Opaque;
@@ -610,8 +592,6 @@ impl ::ctor::PinnedDrop for DropStructWithLifetimeboundRefCtor {
 pub struct DropStructWithRefCtorAndRefMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for DropStructWithRefCtorAndRefMemberFunction {}
-impl !Sync for DropStructWithRefCtorAndRefMemberFunction {}
 unsafe impl ::cxx::ExternType for DropStructWithRefCtorAndRefMemberFunction {
     type Id = ::cxx::type_id!("DropStructWithRefCtorAndRefMemberFunction");
     type Kind = ::cxx::kind::Opaque;
@@ -716,8 +696,6 @@ pub mod drop_struct_with_ref_ctor_and_ref_member_function {
 pub struct DropStructWithCtorAndMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for DropStructWithCtorAndMemberFunction {}
-impl !Sync for DropStructWithCtorAndMemberFunction {}
 unsafe impl ::cxx::ExternType for DropStructWithCtorAndMemberFunction {
     type Id = ::cxx::type_id!("DropStructWithCtorAndMemberFunction");
     type Kind = ::cxx::kind::Opaque;
@@ -824,8 +802,6 @@ pub mod drop_struct_with_ctor_and_member_function {
 pub struct DropStructWithCtorAndRefMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for DropStructWithCtorAndRefMemberFunction {}
-impl !Sync for DropStructWithCtorAndRefMemberFunction {}
 unsafe impl ::cxx::ExternType for DropStructWithCtorAndRefMemberFunction {
     type Id = ::cxx::type_id!("DropStructWithCtorAndRefMemberFunction");
     type Kind = ::cxx::kind::Opaque;
@@ -929,8 +905,6 @@ pub mod drop_struct_with_ctor_and_ref_member_function {
 pub struct DropStructWithRefCtorAndMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for DropStructWithRefCtorAndMemberFunction {}
-impl !Sync for DropStructWithRefCtorAndMemberFunction {}
 unsafe impl ::cxx::ExternType for DropStructWithRefCtorAndMemberFunction {
     type Id = ::cxx::type_id!("DropStructWithRefCtorAndMemberFunction");
     type Kind = ::cxx::kind::Opaque;
@@ -1041,8 +1015,6 @@ pub mod drop_struct_with_ref_ctor_and_member_function {
 pub struct Impossible {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for Impossible {}
-impl !Sync for Impossible {}
 unsafe impl ::cxx::ExternType for Impossible {
     type Id = ::cxx::type_id!("Impossible");
     type Kind = ::cxx::kind::Opaque;

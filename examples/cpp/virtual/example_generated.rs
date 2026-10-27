@@ -21,12 +21,12 @@
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct RustDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) rust_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for RustDerived {}
-impl !Sync for RustDerived {}
 unsafe impl ::cxx::ExternType for RustDerived {
     type Id = ::cxx::type_id!("RustDerived");
     type Kind = ::cxx::kind::Opaque;

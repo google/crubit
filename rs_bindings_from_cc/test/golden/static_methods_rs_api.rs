@@ -24,9 +24,8 @@ pub struct SomeClass {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for SomeClass {}
-impl !Sync for SomeClass {}
 unsafe impl ::cxx::ExternType for SomeClass {
     type Id = ::cxx::type_id!("SomeClass");
     type Kind = ::cxx::kind::Trivial;

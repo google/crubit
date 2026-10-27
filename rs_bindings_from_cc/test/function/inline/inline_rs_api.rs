@@ -29,8 +29,6 @@ pub fn hello_world_inline() -> ::ffi_11::c_int {
 pub struct SomeStruct {
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for SomeStruct {}
-impl !Sync for SomeStruct {}
 unsafe impl ::cxx::ExternType for SomeStruct {
     type Id = ::cxx::type_id!("SomeStruct");
     type Kind = ::cxx::kind::Trivial;

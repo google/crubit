@@ -28,8 +28,6 @@ pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
 }
-impl !Send for Nontrivial {}
-impl !Sync for Nontrivial {}
 unsafe impl ::cxx::ExternType for Nontrivial {
     type Id = ::cxx::type_id!("Nontrivial");
     type Kind = ::cxx::kind::Opaque;
@@ -342,8 +340,6 @@ pub struct NontrivialInline {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
 }
-impl !Send for NontrivialInline {}
-impl !Sync for NontrivialInline {}
 unsafe impl ::cxx::ExternType for NontrivialInline {
     type Id = ::cxx::type_id!("NontrivialInline");
     type Kind = ::cxx::kind::Opaque;
@@ -532,8 +528,6 @@ pub mod nontrivial_inline {
 pub struct NontrivialMembers {
     pub nontrivial_member: crate::Nontrivial,
 }
-impl !Send for NontrivialMembers {}
-impl !Sync for NontrivialMembers {}
 unsafe impl ::cxx::ExternType for NontrivialMembers {
     type Id = ::cxx::type_id!("NontrivialMembers");
     type Kind = ::cxx::kind::Opaque;
@@ -645,8 +639,6 @@ pub struct NontrivialUnpin {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
 }
-impl !Send for NontrivialUnpin {}
-impl !Sync for NontrivialUnpin {}
 unsafe impl ::cxx::ExternType for NontrivialUnpin {
     type Id = ::cxx::type_id!("NontrivialUnpin");
     type Kind = ::cxx::kind::Trivial;
@@ -953,8 +945,6 @@ pub fn TakesUnpinByConstRvalueReference(
 pub struct NontrivialByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for NontrivialByValue {}
-impl !Sync for NontrivialByValue {}
 unsafe impl ::cxx::ExternType for NontrivialByValue {
     type Id = ::cxx::type_id!("NontrivialByValue");
     type Kind = ::cxx::kind::Trivial;
@@ -1009,8 +999,6 @@ where
 pub struct Nonmovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for Nonmovable {}
-impl !Sync for Nonmovable {}
 unsafe impl ::cxx::ExternType for Nonmovable {
     type Id = ::cxx::type_id!("Nonmovable");
     type Kind = ::cxx::kind::Opaque;

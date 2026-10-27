@@ -50,6 +50,11 @@ SUPPORTED_FEATURE_DENYLISTS = {
     "always_specialize_generics_in_cpp_api_from_rust": [
         "//cc_bindings_from_rs/test/bridging/composable:composable_bridging",
     ],
+    "infer_send_sync": [
+        # Tests the pre-`infer_send_sync` default (unannotated records are `!Send + !Sync`), which
+        # denylisted targets still get.
+        "//rs_bindings_from_cc/test/types/thread_safety/...",
+    ],
     # Some denylists (e.g. `nonnull_smart_pointers`) are stored as one file per entry instead, in
     # `internal/<feature>/`. See `denylist_dir.bzl`.
 }

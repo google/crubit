@@ -29,8 +29,6 @@ pub mod crubit {
         pub struct StructNewName {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
-        impl !Send for StructNewName {}
-        impl !Sync for StructNewName {}
         unsafe impl ::cxx::ExternType for StructNewName {
             type Id = ::cxx::type_id!("crubit :: test :: StructOldName");
             type Kind = ::cxx::kind::Trivial;
@@ -62,8 +60,6 @@ pub mod crubit {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             pub field_new_name: ::ffi_11::c_int,
         }
-        impl !Send for SomeStruct {}
-        impl !Sync for SomeStruct {}
         unsafe impl ::cxx::ExternType for SomeStruct {
             type Id = ::cxx::type_id!("crubit :: test :: SomeStruct");
             type Kind = ::cxx::kind::Trivial;

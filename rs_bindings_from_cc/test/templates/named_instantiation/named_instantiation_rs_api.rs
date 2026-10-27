@@ -35,8 +35,6 @@ pub fn SomeApi<'i>(i: &'i crate::NiIF) {
 pub struct __CcTemplateInst2NiIifE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInst2NiIifE {}
-impl !Sync for __CcTemplateInst2NiIifE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("Ni < int , float >"),
     crate::__CcTemplateInst2NiIifE

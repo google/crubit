@@ -36,8 +36,6 @@ pub fn ReturnsValue() -> crate::MyOption<crate::__CcTemplateInst5ValueIiE> {
 pub struct __CcTemplateInst5ValueIiE {
     pub value: ::ffi_11::c_int,
 }
-impl !Send for __CcTemplateInst5ValueIiE {}
-impl !Sync for __CcTemplateInst5ValueIiE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("Value < int >"),
     crate::__CcTemplateInst5ValueIiE

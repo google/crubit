@@ -27,8 +27,6 @@ pub struct DocCommentSlashes {
     /// A field.
     pub i: ::ffi_11::c_int,
 }
-impl !Send for DocCommentSlashes {}
-impl !Sync for DocCommentSlashes {}
 unsafe impl ::cxx::ExternType for DocCommentSlashes {
     type Id = ::cxx::type_id!("DocCommentSlashes");
     type Kind = ::cxx::kind::Trivial;
@@ -132,8 +130,6 @@ pub struct DocCommentBang {
     /// A field
     pub i: ::ffi_11::c_int,
 }
-impl !Send for DocCommentBang {}
-impl !Sync for DocCommentBang {}
 unsafe impl ::cxx::ExternType for DocCommentBang {
     type Id = ::cxx::type_id!("DocCommentBang");
     type Kind = ::cxx::kind::Trivial;
@@ -163,8 +159,6 @@ pub struct MultilineCommentTwoStars {
     /// A field
     pub i: ::ffi_11::c_int,
 }
-impl !Send for MultilineCommentTwoStars {}
-impl !Sync for MultilineCommentTwoStars {}
 unsafe impl ::cxx::ExternType for MultilineCommentTwoStars {
     type Id = ::cxx::type_id!("MultilineCommentTwoStars");
     type Kind = ::cxx::kind::Trivial;
@@ -197,8 +191,6 @@ pub struct LineComment {
     /// A field
     pub i: ::ffi_11::c_int,
 }
-impl !Send for LineComment {}
-impl !Sync for LineComment {}
 unsafe impl ::cxx::ExternType for LineComment {
     type Id = ::cxx::type_id!("LineComment");
     type Kind = ::cxx::kind::Trivial;
@@ -228,8 +220,6 @@ pub struct MultilineOneStar {
     /// A field
     pub i: ::ffi_11::c_int,
 }
-impl !Send for MultilineOneStar {}
-impl !Sync for MultilineOneStar {}
 unsafe impl ::cxx::ExternType for MultilineOneStar {
     type Id = ::cxx::type_id!("MultilineOneStar");
     type Kind = ::cxx::kind::Trivial;
@@ -315,8 +305,6 @@ pub struct __CcTemplateInst10MyTemplateIiE {
     /// Data member.
     pub value: ::ffi_11::c_int,
 }
-impl !Send for __CcTemplateInst10MyTemplateIiE {}
-impl !Sync for __CcTemplateInst10MyTemplateIiE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < int >"),
     crate::__CcTemplateInst10MyTemplateIiE
@@ -345,8 +333,6 @@ pub struct __CcTemplateInst10MyTemplateIfE {
     /// Data member in a specialization.
     pub value: f32,
 }
-impl !Send for __CcTemplateInst10MyTemplateIfE {}
-impl !Sync for __CcTemplateInst10MyTemplateIfE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < float >"),
     crate::__CcTemplateInst10MyTemplateIfE
@@ -374,8 +360,6 @@ impl Default for __CcTemplateInst10MyTemplateIfE {
 pub struct __CcTemplateInst13OuterTemplateIiE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInst13OuterTemplateIiE {}
-impl !Sync for __CcTemplateInst13OuterTemplateIiE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("OuterTemplate < int >"),
     crate::__CcTemplateInst13OuterTemplateIiE

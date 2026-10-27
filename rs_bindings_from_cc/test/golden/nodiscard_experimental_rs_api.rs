@@ -23,8 +23,6 @@
 pub struct NoDiscard {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for NoDiscard {}
-impl !Sync for NoDiscard {}
 unsafe impl ::cxx::ExternType for NoDiscard {
     type Id = ::cxx::type_id!(":: NoDiscard");
     type Kind = ::cxx::kind::Trivial;
@@ -56,8 +54,6 @@ impl Default for NoDiscard {
 pub struct NoDiscardWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for NoDiscardWithMessage {}
-impl !Sync for NoDiscardWithMessage {}
 unsafe impl ::cxx::ExternType for NoDiscardWithMessage {
     type Id = ::cxx::type_id!(":: NoDiscardWithMessage");
     type Kind = ::cxx::kind::Trivial;
@@ -144,8 +140,6 @@ pub fn crubit_nodiscard_message() -> *mut ::ffi_11::c_void {
 pub struct NodiscardCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for NodiscardCtor {}
-impl !Sync for NodiscardCtor {}
 unsafe impl ::cxx::ExternType for NodiscardCtor {
     type Id = ::cxx::type_id!(":: NodiscardCtor");
     type Kind = ::cxx::kind::Trivial;
@@ -185,8 +179,6 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
 pub struct NodiscardCtorWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for NodiscardCtorWithMessage {}
-impl !Sync for NodiscardCtorWithMessage {}
 unsafe impl ::cxx::ExternType for NodiscardCtorWithMessage {
     type Id = ::cxx::type_id!(":: NodiscardCtorWithMessage");
     type Kind = ::cxx::kind::Trivial;

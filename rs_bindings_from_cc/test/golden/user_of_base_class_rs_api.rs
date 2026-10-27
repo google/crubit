@@ -26,10 +26,9 @@
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Derived2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 20],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
     pub derived_1: ::ffi_11::c_char,
 }
-impl !Send for Derived2 {}
-impl !Sync for Derived2 {}
 unsafe impl ::cxx::ExternType for Derived2 {
     type Id = ::cxx::type_id!("Derived2");
     type Kind = ::cxx::kind::Opaque;
@@ -132,9 +131,8 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Derived2 {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct VirtualDerived2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for VirtualDerived2 {}
-impl !Sync for VirtualDerived2 {}
 unsafe impl ::cxx::ExternType for VirtualDerived2 {
     type Id = ::cxx::type_id!("VirtualDerived2");
     type Kind = ::cxx::kind::Opaque;

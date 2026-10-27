@@ -21,8 +21,6 @@
 pub struct TypeAliasCtor {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for TypeAliasCtor {}
-impl !Sync for TypeAliasCtor {}
 unsafe impl ::cxx::ExternType for TypeAliasCtor {
     type Id = ::cxx::type_id!("TypeAliasCtor");
     type Kind = ::cxx::kind::Opaque;

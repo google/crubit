@@ -46,8 +46,6 @@ pub fn bridge_alias_to_inst() -> crate::Bridge<crate::__CcTemplateInst12Template
 pub struct __CcTemplateInst12TemplateTypeIiE {
     pub value: ::ffi_11::c_int,
 }
-impl !Send for __CcTemplateInst12TemplateTypeIiE {}
-impl !Sync for __CcTemplateInst12TemplateTypeIiE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TemplateType < int >"),
     crate::__CcTemplateInst12TemplateTypeIiE

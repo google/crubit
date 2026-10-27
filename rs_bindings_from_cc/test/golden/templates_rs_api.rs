@@ -22,8 +22,6 @@
 pub struct DifferentScope {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for DifferentScope {}
-impl !Sync for DifferentScope {}
 unsafe impl ::cxx::ExternType for DifferentScope {
     type Id = ::cxx::type_id!("DifferentScope");
     type Kind = ::cxx::kind::Trivial;
@@ -58,8 +56,6 @@ pub mod test_namespace_bindings {
     pub struct TemplateParam {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for TemplateParam {}
-    impl !Sync for TemplateParam {}
     unsafe impl ::cxx::ExternType for TemplateParam {
         type Id = ::cxx::type_id!("test_namespace_bindings :: TemplateParam");
         type Kind = ::cxx::kind::Trivial;
@@ -165,8 +161,6 @@ pub mod private_classes {
     pub struct HasPrivateType {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for HasPrivateType {}
-    impl !Sync for HasPrivateType {}
     unsafe impl ::cxx::ExternType for HasPrivateType {
         type Id = ::cxx::type_id!("private_classes :: HasPrivateType");
         type Kind = ::cxx::kind::Trivial;
@@ -189,9 +183,8 @@ pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentSco
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) value_: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("test_namespace_bindings :: MyTemplate < struct DifferentScope >"),
     crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
@@ -218,9 +211,8 @@ pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateP
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) value_: [::core::mem::MaybeUninit<u8>; 1],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(
         "test_namespace_bindings :: MyTemplate < struct test_namespace_bindings :: TemplateParam >"
@@ -249,9 +241,8 @@ pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
+    __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("test_namespace_bindings :: MyTemplate < int >"),
     crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
@@ -279,8 +270,6 @@ pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0
     pub value1: crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
     pub value2: ::ffi_11::c_int,
 }
-impl !Send for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {}
 forward_declare::unsafe_define!(forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < struct test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"),crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE);
 
 impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {
@@ -303,8 +292,6 @@ pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifE
     pub value1: ::ffi_11::c_int,
     pub value2: f32,
 }
-impl !Send for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < int , float >"),
     crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
@@ -330,8 +317,6 @@ pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiE
     pub value1: ::ffi_11::c_int,
     pub value2: ::ffi_11::c_int,
 }
-impl !Send for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < int , int >"),
     crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
@@ -358,8 +343,6 @@ impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoPara
 pub struct __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("test_namespace_bindings :: MyStruct < char >"),
     crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE
@@ -386,8 +369,6 @@ impl Default for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
 pub struct __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE {
     pub value: crate::test_namespace_bindings::TemplateParam,
 }
-impl !Send for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE {}
-impl !Sync for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(
         "MyTopLevelTemplate < struct test_namespace_bindings :: TemplateParam >"
@@ -416,8 +397,6 @@ forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = 
 pub struct __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {}
-impl !Sync for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(
         "template_template_params :: MyTemplate < template_template_params :: Policy >"

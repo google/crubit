@@ -60,8 +60,6 @@ pub fn AlsoTemplateOverload() {
 pub struct Foo {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for Foo {}
-impl !Sync for Foo {}
 unsafe impl ::cxx::ExternType for Foo {
     type Id = ::cxx::type_id!("Foo");
     type Kind = ::cxx::kind::Trivial;
@@ -131,8 +129,6 @@ pub mod foo {
 pub struct __CcTemplateInst6SizeofIfE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInst6SizeofIfE {}
-impl !Sync for __CcTemplateInst6SizeofIfE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("Sizeof < float >"),
     crate::__CcTemplateInst6SizeofIfE
@@ -160,8 +156,6 @@ impl Default for __CcTemplateInst6SizeofIfE {
 pub struct __CcTemplateInst6SizeofIiE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInst6SizeofIiE {}
-impl !Sync for __CcTemplateInst6SizeofIiE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("Sizeof < int >"),
     crate::__CcTemplateInst6SizeofIiE

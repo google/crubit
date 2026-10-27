@@ -24,8 +24,6 @@ pub struct Position {
     pub x: ::ffi_11::c_int,
     pub y: ::ffi_11::c_int,
 }
-impl !Send for Position {}
-impl !Sync for Position {}
 unsafe impl ::cxx::ExternType for Position {
     type Id = ::cxx::type_id!("Position");
     type Kind = ::cxx::kind::Trivial;

@@ -102,9 +102,8 @@ pub mod crubit {
             /// Reason for representing this field as a blob of bytes:
             /// Types of non-public C++ fields can be elided away
             pub(crate) x_: [::core::mem::MaybeUninit<u8>; 4],
+            __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
         }
-        impl !Send for RegularStruct {}
-        impl !Sync for RegularStruct {}
         unsafe impl ::cxx::ExternType for RegularStruct {
             type Id = ::cxx::type_id!("crubit :: test :: RegularStruct");
             type Kind = ::cxx::kind::Trivial;

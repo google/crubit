@@ -26,8 +26,6 @@
 pub struct Equatable {
     pub value: ::ffi_11::c_int,
 }
-impl !Send for Equatable {}
-impl !Sync for Equatable {}
 unsafe impl ::cxx::ExternType for Equatable {
     type Id = ::cxx::type_id!("Equatable");
     type Kind = ::cxx::kind::Trivial;
@@ -62,9 +60,8 @@ impl PartialEq for crate::Equatable {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct DerivedFromEquatable {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for DerivedFromEquatable {}
-impl !Sync for DerivedFromEquatable {}
 unsafe impl ::cxx::ExternType for DerivedFromEquatable {
     type Id = ::cxx::type_id!("DerivedFromEquatable");
     type Kind = ::cxx::kind::Trivial;
@@ -94,8 +91,6 @@ impl Default for DerivedFromEquatable {
 pub struct Comparable {
     pub value: ::ffi_11::c_int,
 }
-impl !Send for Comparable {}
-impl !Sync for Comparable {}
 unsafe impl ::cxx::ExternType for Comparable {
     type Id = ::cxx::type_id!("Comparable");
     type Kind = ::cxx::kind::Trivial;
@@ -158,8 +153,6 @@ pub mod ns {
     pub struct NamespacedEquatable {
         pub value: ::ffi_11::c_int,
     }
-    impl !Send for NamespacedEquatable {}
-    impl !Sync for NamespacedEquatable {}
     unsafe impl ::cxx::ExternType for NamespacedEquatable {
         type Id = ::cxx::type_id!("ns :: NamespacedEquatable");
         type Kind = ::cxx::kind::Trivial;
@@ -202,8 +195,6 @@ pub mod ns {
 pub struct Outer {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for Outer {}
-impl !Sync for Outer {}
 unsafe impl ::cxx::ExternType for Outer {
     type Id = ::cxx::type_id!("Outer");
     type Kind = ::cxx::kind::Trivial;
@@ -230,8 +221,6 @@ pub mod outer {
     pub struct NestedEquatable {
         pub value: ::ffi_11::c_int,
     }
-    impl !Send for NestedEquatable {}
-    impl !Sync for NestedEquatable {}
     unsafe impl ::cxx::ExternType for NestedEquatable {
         type Id = ::cxx::type_id!("Outer :: NestedEquatable");
         type Kind = ::cxx::kind::Trivial;
@@ -270,8 +259,6 @@ pub mod outer {
 pub struct NonTrivialEquatable {
     pub value: ::ffi_11::c_int,
 }
-impl !Send for NonTrivialEquatable {}
-impl !Sync for NonTrivialEquatable {}
 unsafe impl ::cxx::ExternType for NonTrivialEquatable {
     type Id = ::cxx::type_id!("NonTrivialEquatable");
     type Kind = ::cxx::kind::Opaque;
@@ -358,8 +345,6 @@ impl PartialEq for crate::NonTrivialEquatable {
 pub struct NotEquatable {
     pub value: ::ffi_11::c_int,
 }
-impl !Send for NotEquatable {}
-impl !Sync for NotEquatable {}
 unsafe impl ::cxx::ExternType for NotEquatable {
     type Id = ::cxx::type_id!("NotEquatable");
     type Kind = ::cxx::kind::Trivial;
@@ -387,8 +372,6 @@ impl Default for NotEquatable {
 pub struct IntEquatable {
     pub value: ::ffi_11::c_int,
 }
-impl !Send for IntEquatable {}
-impl !Sync for IntEquatable {}
 unsafe impl ::cxx::ExternType for IntEquatable {
     type Id = ::cxx::type_id!("IntEquatable");
     type Kind = ::cxx::kind::Trivial;
@@ -416,9 +399,8 @@ impl Default for IntEquatable {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct MissingMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
 }
-impl !Send for MissingMember {}
-impl !Sync for MissingMember {}
 unsafe impl ::cxx::ExternType for MissingMember {
     type Id = ::cxx::type_id!("MissingMember");
     type Kind = ::cxx::kind::Trivial;

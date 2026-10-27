@@ -152,8 +152,6 @@ pub mod foo {
 pub struct StructWithAnonEnum {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for StructWithAnonEnum {}
-impl !Sync for StructWithAnonEnum {}
 unsafe impl ::cxx::ExternType for StructWithAnonEnum {
     type Id = ::cxx::type_id!("StructWithAnonEnum");
     type Kind = ::cxx::kind::Trivial;
@@ -188,8 +186,6 @@ impl Default for StructWithAnonEnum {
 pub struct StructWithStaticMembers {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for StructWithStaticMembers {}
-impl !Sync for StructWithStaticMembers {}
 unsafe impl ::cxx::ExternType for StructWithStaticMembers {
     type Id = ::cxx::type_id!("StructWithStaticMembers");
     type Kind = ::cxx::kind::Trivial;

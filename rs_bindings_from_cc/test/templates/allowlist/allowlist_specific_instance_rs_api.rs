@@ -47,8 +47,6 @@ pub fn ShortDoubleCaller(i: crate::__CcTemplateInst2TsIsdE) {
 pub struct __CcTemplateInst2TsIifE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInst2TsIifE {}
-impl !Sync for __CcTemplateInst2TsIifE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("Ts < int , float >"),
     crate::__CcTemplateInst2TsIifE
@@ -103,8 +101,6 @@ pub mod cc_template_inst2_ts_iif_e {
 pub struct __CcTemplateInst2TsIsdE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInst2TsIsdE {}
-impl !Sync for __CcTemplateInst2TsIsdE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("Ts < short , double >"),
     crate::__CcTemplateInst2TsIsdE

@@ -25,8 +25,6 @@ pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub value: ::ffi_11::c_int,
 }
-impl !Send for Nontrivial {}
-impl !Sync for Nontrivial {}
 unsafe impl ::cxx::ExternType for Nontrivial {
     type Id = ::cxx::type_id!("Nontrivial");
     type Kind = ::cxx::kind::Opaque;
