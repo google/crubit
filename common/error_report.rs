@@ -361,6 +361,36 @@ impl ErrorReport {
     fn current_item(&self) -> ItemName {
         self.current_item.borrow().clone().unwrap_or_else(|| DEFAULT_ITEM.with(|item| item.clone()))
     }
+
+    /// Implementation of `ErrorReporting::report`.
+    fn report_error(&self, error: &arc_anyhow::Error) {
+        let root_cause = error.root_cause();
+        let reported_error = if let Some(error) = root_cause.downcast_ref::<FormattedError>() {
+            FormattedError::new(
+                error.fmt.clone(),
+                Cow::Owned(hide_unstable_details(&error.full_error)),
+            )
+        } else if let Some(error_list) = root_cause.downcast_ref::<ErrorList>() {
+            for error in &error_list.errors {
+                self.report_error(error);
+            }
+            return;
+        } else {
+            FormattedError::new(
+                Cow::Borrowed("{}"),
+                Cow::Owned(hide_unstable_details(&format!("{error}"))),
+            )
+        };
+        self.map
+            .borrow_mut()
+            .entry(self.current_item().id)
+            .or_insert_with(|| ErrorReportEntry {
+                source_language: Some(self.source_language),
+                ..Default::default()
+            })
+            .errors
+            .push(reported_error);
+    }
 }
 
 thread_local! {
@@ -375,35 +405,7 @@ thread_local! {
 
 impl ErrorReporting for ErrorReport {
     fn report(&self, error: &arc_anyhow::Error) {
-        let root_cause = error.root_cause();
-        let reported_error;
-        if let Some(error) = root_cause.downcast_ref::<FormattedError>() {
-            reported_error = Some(FormattedError::new(
-                error.fmt.clone(),
-                Cow::Owned(hide_unstable_details(&error.full_error)),
-            ));
-        } else if let Some(error) = root_cause.downcast_ref::<ErrorList>() {
-            for error in &error.errors {
-                self.report(error);
-            }
-            reported_error = None;
-        } else {
-            reported_error = Some(FormattedError::new(
-                Cow::Borrowed("{}"),
-                Cow::Owned(hide_unstable_details(&format!("{error}"))),
-            ));
-        }
-        if let Some(reported_error) = reported_error {
-            self.map
-                .borrow_mut()
-                .entry(self.current_item().id)
-                .or_insert_with(|| ErrorReportEntry {
-                    source_language: Some(self.source_language),
-                    ..Default::default()
-                })
-                .errors
-                .push(reported_error);
-        }
+        self.report_error(error);
     }
 
     fn enter_item(&self, item: ItemName) -> Option<ItemName> {
