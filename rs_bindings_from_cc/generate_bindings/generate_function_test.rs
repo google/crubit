@@ -3241,27 +3241,6 @@ fn test_unsafe_constructor_nonunpin() -> Result<()> {
 }
 
 #[gtest]
-fn test_function_using_error_type_by_value() -> Result<()> {
-    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
-        r#"
-        struct __DunderName {};
-        void foo(__DunderName x);
-        "#,
-    )?;
-
-    assert_rs_matches!(
-        rs_api,
-        quote! {
-            #[diagnostic::on_unimplemented(
-                message = "binding generation for function failed\nCannot use an error type `__DunderName` by value:\n  Skipping generating bindings for '__DunderName' because it has a leading `__`"
-            )]
-            pub trait ... {}
-        }
-    );
-    Ok(())
-}
-
-#[gtest]
 fn test_thunkless_accessors_enabled() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"

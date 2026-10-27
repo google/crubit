@@ -13,43 +13,36 @@ load(
 package(default_applicable_licenses = ["//:license"])
 
 crubit_test_cc_library(
-    name = "unsupported_library",
-    hdrs = ["unsupported_library.h"],
-    aspect_hints = [],
-)
-
-crubit_test_cc_library(
-    name = "wrapper_library",
-    hdrs = ["wrapper_library.h"],
+    name = "impl_ctor",
+    hdrs = ["impl_ctor.h"],
     aspect_hints = [
-        ":wrapper_library_extra",
-        "//features:wrapper",
+        ":impl_ctor_extra",
+        "//features:supported",
     ],
-    deps = [":unsupported_library"],
 )
 
 rust_api_from_cpp(
-    name = "wrapper_library_rust",
-    cpp_target = ":wrapper_library",
+    name = "impl_ctor_rust",
+    cpp_target = ":impl_ctor",
 )
 
 additional_rust_srcs_for_crubit_bindings(
-    name = "wrapper_library_extra",
-    srcs = ["wrapper_library_extra.rs"],
+    name = "impl_ctor_extra",
+    srcs = ["impl_ctor_extra.rs"],
 )
 
 crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
     deps = [
-        ":wrapper_library_rust",
+        ":impl_ctor_rust",
         "@crate_index//:googletest",
     ],
 )
 
 golden_test(
-    name = "wrapper_library_golden_test",
-    basename = "wrapper_library",
-    cc_library = "wrapper_library",
-    golden_rs = "wrapper_library_rs_api.rs",
+    name = "impl_ctor_golden_test",
+    basename = "impl_ctor",
+    cc_library = "impl_ctor",
+    golden_rs = "impl_ctor_rs_api.rs",
 )

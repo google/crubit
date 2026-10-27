@@ -27,21 +27,21 @@ pub mod crubit {
         pub type MapWithThreeParams = crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE;
 
         // error: type alias `crubit::test::MapWithBridgedKey` could not be bound
-        //   depends on `crubit::test::MapWithBridgedKey` which cannot be bound because `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
+        //   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
         //   See crubit.rs/types.
 
         // error: type alias `crubit::test::MapWithBridgedValue` could not be bound
-        //   depends on `crubit::test::MapWithBridgedValue` which cannot be bound because `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
+        //   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
         //   See crubit.rs/types.
 
         // error: class `crubit::test::Incomplete` could not be bound
         //   incomplete type
 
         // error: type alias `crubit::test::MapWithIncompleteKey` could not be bound
-        //   depends on `crubit::test::MapWithIncompleteKey` which cannot be bound because incomplete type
+        //   incomplete type
 
         // error: type alias `crubit::test::MapWithIncompleteValue` could not be bound
-        //   depends on `crubit::test::MapWithIncompleteValue` which cannot be bound because incomplete type
+        //   incomplete type
 
         #[::ctor::recursively_pinned]
         #[cfi_encoding = "N6crubit4test12NoDestructorE"]
@@ -83,10 +83,10 @@ pub mod crubit {
         }
 
         // error: type alias `crubit::test::MapWithNoDestructorKey` could not be bound
-        //   depends on `crubit::test::MapWithNoDestructorKey` which cannot be bound because `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor
+        //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor
 
         // error: type alias `crubit::test::MapWithNoDestructorValue` could not be bound
-        //   depends on `crubit::test::MapWithNoDestructorValue` which cannot be bound because `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor
+        //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor
 
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test8NoDeleteE"]
@@ -122,10 +122,10 @@ pub mod crubit {
         }
 
         // error: type alias `crubit::test::MapWithNoDeleteKey` could not be bound
-        //   depends on `crubit::test::MapWithNoDeleteKey` which cannot be bound because `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public operator delete
+        //   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public operator delete
 
         // error: type alias `crubit::test::MapWithNoDeleteValue` could not be bound
-        //   depends on `crubit::test::MapWithNoDeleteValue` which cannot be bound because `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public operator delete
+        //   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public operator delete
     }
 }
 

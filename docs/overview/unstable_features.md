@@ -141,7 +141,7 @@ For each feature we use, we document the following:
 
 ### `super_let`
 
-*   **Crubit feature:** `wrapper`
+*   **Crubit feature:** `supported`
 *   **Use case:** Less painfully awkward syntax for in-place initialization.
 *   **Exit strategy:** Migrate all calls like `let x = emplace!(y)` to
     `emplace!{let x = y;}`.
@@ -167,7 +167,7 @@ previously used to implement `pin!` in the standard library.
 
 ### `allow_internal_unstable`
 
-*   **Crubit feature:** `wrapper`
+*   **Crubit feature:** `supported`
 *   **Use case:** Allow callers of the super_let version of `emplace` not to
     require the feature.
 *   **Exit strategy:** Add `feature(super_let)` to all callers.

@@ -16,8 +16,6 @@ flagset::flags! {
     pub enum CrubitFeature : u64 {
         Supported,
 
-        Wrapper,
-
         /// Enable support for forward-declared types: b/489120100
         /// We intend for this feature to be turned on by default.
         ForwardDeclarations,
@@ -151,7 +149,6 @@ impl CrubitFeature {
     pub fn short_name(&self) -> &'static str {
         match self {
             Self::Supported => "supported",
-            Self::Wrapper => "wrapper",
             Self::ForwardDeclarations => "forward_declare",
             Self::Types => "types",
             Self::Experimental => "experimental",
@@ -195,7 +192,6 @@ impl CrubitFeature {
     pub fn aspect_hint(&self) -> &'static str {
         match self {
             Self::Supported => "//features:supported",
-            Self::Wrapper => "//features:wrapper",
             Self::ForwardDeclarations => "//features:forward_declare",
             Self::Types => "//features:types",
             Self::Experimental => "//features:experimental",
@@ -278,7 +274,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"supported" => {
             CrubitFeature::Supported | CrubitFeature::Types | CrubitFeature::ImplCxxExternType
         }
-        b"wrapper" => CrubitFeature::Wrapper | CrubitFeature::ForwardDeclarations,
         b"forward_declare" => CrubitFeature::ForwardDeclarations.into(),
         b"types" => CrubitFeature::Types | CrubitFeature::ImplCxxExternType,
         b"experimental" => CrubitFeature::Experimental.into(),
@@ -508,7 +503,6 @@ mod tests {
         assert_eq!(
             features,
             CrubitFeature::Supported
-                | CrubitFeature::Wrapper
                 | CrubitFeature::Types
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
@@ -552,7 +546,6 @@ mod tests {
         assert_eq!(
             features,
             CrubitFeature::Supported
-                | CrubitFeature::Wrapper
                 | CrubitFeature::Types
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
@@ -578,7 +571,6 @@ mod tests {
         assert_eq!(
             features,
             CrubitFeature::Supported
-                | CrubitFeature::Wrapper
                 | CrubitFeature::Types
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
@@ -606,7 +598,6 @@ mod tests {
         assert_eq!(
             features,
             CrubitFeature::Supported
-                | CrubitFeature::Wrapper
                 | CrubitFeature::Types
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeThisLifetimes
@@ -633,7 +624,6 @@ mod tests {
         assert_eq!(
             features,
             CrubitFeature::Supported
-                | CrubitFeature::Wrapper
                 | CrubitFeature::Types
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes
@@ -660,7 +650,6 @@ mod tests {
         assert_eq!(
             features,
             CrubitFeature::Supported
-                | CrubitFeature::Wrapper
                 | CrubitFeature::Types
                 | CrubitFeature::Experimental
                 | CrubitFeature::AssumeLifetimes

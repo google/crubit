@@ -73,43 +73,6 @@ See crubit.rs/cpp for documentation on what this includes.
 
 This is a no-op on Rust targets.
 
-### `"//features:wrapper"` {#wrapper}
-
-> WARNING: `wrapper` produces highly unstable bindings, and is by allowlist
-> only, as it can and will break during crubit releases and when other libraries
-> enable Crubit.
->
-> The intention is that this is mainly for use in high-touch core libraries, in
-> partnership with the Rust team.
-
-The `wrapper` feature enables "comprehensive fallbacks" for wrapper libraries.
-Instead of failing to generate bindings for a function if it uses types that it
-doesn't know about, we replace them with the moral equivalent of a `void*` and
-keep going, allowing at least *something* usable to be generated.
-
-This also enables bindings for features that are not yet in `:supported`, for
-early adoption (e.g. forward declarations), and for templates, which are not
-currently implemented in a way that is usable broadly.
-
-When bindings are generated for `:wrapper` that are not generated for
-`:supported`, they are marked `pub(crate)` and only usable with
-`additional_rust_srcs_for_crubit_bindings`.
-
-See crubit.rs-comprehensive-fallbacks for more detail.
-
-As a result of all of these, the `:wrapper` feature is very unstable. For
-instance, if `absl::Cord` does not enable Crubit, or if Crubit is missing a
-feature necessary to generate bindings for the type, then `Cord` pointers will
-become opaque pointers: a `const absl::Cord*` parameter in C++ might be `*const
-Incomplete<symbol!("absl::Cord"), ()>` in Rust. Then if `Cord` enables Crubit,
-it becomes `*const absl::Cord` as you'd expect.
-
-This is the only place where adding support for more features and more types is
-a backwards-compatibility break. In order to keep the compatibility hazards
-scaling at O(1), the breakage-prone APIs are `pub(crate)`, and `:wrapper` is
-gated behind an allowlist. The primary intended user of the feature is the Rust
-team itself, as part of producing bindings for high-touch core libraries.
-
 ### `"//features:experimental"` {#experimental}
 
 WARNING: `experimental` is deprecated, visibility-restricted to Crubit itself,
@@ -118,7 +81,7 @@ described in [Other features](#other) instead.
 
 ### Other features {#other}
 
-The other features float over time, as new features are taken from `:wrapper` or
+The other features float over time, as new features are taken from
 `:experimental` and moved into a separate, individual feature, and then released
 as part of `:supported` in a Bazel configuration change.
 

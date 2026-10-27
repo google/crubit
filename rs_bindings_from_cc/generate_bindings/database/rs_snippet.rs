@@ -1902,10 +1902,7 @@ impl<'a> RsTypeKind<'a> {
             match rs_type_kind {
                 RsTypeKind::Error { error, visibility_override, .. } => {
                     if visibility_override.is_none() {
-                        require_any_feature(
-                            <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Wrapper),
-                            &|| error.clone(),
-                        )
+                        require_any_feature(flagset::FlagSet::empty(), &|| error.clone());
                     }
                 }
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
@@ -1945,10 +1942,9 @@ impl<'a> RsTypeKind<'a> {
 
                     if uniform_repr_template_type.is_none() && !record.has_unique_owning_target() {
                         require_any_feature(
-                            <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Wrapper)
-                                | <flagset::FlagSet<CrubitFeature>>::from(
-                                    CrubitFeature::TemplateInstantiation,
-                                ),
+                            <flagset::FlagSet<CrubitFeature>>::from(
+                                CrubitFeature::TemplateInstantiation,
+                            ),
                             &|| {
                                 error_report::anyhow!("template instantiation is not yet supported")
                             },

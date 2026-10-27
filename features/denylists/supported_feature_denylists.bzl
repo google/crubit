@@ -45,8 +45,6 @@ SUPPORTED_FEATURE_DENYLISTS = {
         "//rs_bindings_from_cc/test/struct/methods/...",
         "//rs_bindings_from_cc/test/struct/operator_and/...",
         "//rs_bindings_from_cc/test/templates/allowlist/...",
-        "//rs_bindings_from_cc/test/wrapper/fallback_bridge_types:wrapper_library",
-        "//rs_bindings_from_cc/test/wrapper/fallback_types:wrapper_library",
         "//support/cc_std_impl/test/string_view/...",
     ],
     "always_specialize_generics_in_cpp_api_from_rust": [

@@ -28,25 +28,6 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-_WRAPPER_FEATURES = [
-    "wrapper",
-]
-
-# A feature set containing wrapper-library Crubit features, in addition to the officially supported
-# features.
-#
-# NOTE: New usage of wrapper mode is discouraged.
-#
-# See crubit.rs-features#wrapper
-crubit_feature_hint(
-    name = "wrapper",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = SUPPORTED_FEATURES + _WRAPPER_FEATURES,
-    visibility = [
-        "//rs_bindings_from_cc/test/wrapper:__subpackages__",
-    ],
-)
-
 # A feature set enabling forward declaration support.
 crubit_feature_hint(
     name = "forward_declare",
