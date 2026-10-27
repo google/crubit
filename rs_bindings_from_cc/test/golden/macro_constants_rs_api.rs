@@ -14,12 +14,39 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+// Used only by macros, which ClangTidy doesn't expand.
+
+// IWYU pragma: keep
+
 // A simple integer constant.
 
 #[macro_export]
 macro_rules! INT_CONSTANT {
     () => {
         4
+    };
+}
+
+// Constants which refer to other macro constants.
+
+#[macro_export]
+macro_rules! REFERS_TO_OTHER_CONSTANT {
+    () => {
+        7
+    };
+}
+
+#[macro_export]
+macro_rules! DEFINED_BEFORE_ITS_DEPENDENCY {
+    () => {
+        42
+    };
+}
+
+#[macro_export]
+macro_rules! DEFINED_AFTER_ITS_DEPENDENT {
+    () => {
+        21
     };
 }
 
@@ -78,6 +105,15 @@ macro_rules! BOOL_CONSTANT {
 macro_rules! FALSE_CONSTANT {
     () => {
         false
+    };
+}
+
+// A suffix in a nested macro makes the macro typed, too.
+
+#[macro_export]
+macro_rules! REFERS_TO_UNSIGNED_CONSTANT {
+    () => {
+        ::ffi_11::new_c_uint(43)
     };
 }
 
@@ -334,9 +370,157 @@ macro_rules! SHIFT_VS_ADD_CONSTANT {
     };
 }
 
+/// Typedefs used by the casts below, instead of e.g. `uint32_t`, because goldens
+/// can't include standard library headers.
+pub type MacroUint32 = ::ffi_11::c_uint;
+
+pub mod macro_constants_ns {
+    pub type Byte = ::ffi_11::c_uchar;
+
+    pub type Int64 = ::ffi_11::c_longlong;
+
+    // NOLINT(runtime/int)
+}
+
+// namespace macro_constants_ns
+
+// Casts. These are the casts under test, so cpplint findings about casting
+// style and C integer types are suppressed with `NOLINT`.
+
+#[macro_export]
+macro_rules! C_STYLE_CAST {
+    () => {
+        ::ffi_11::new_c_uchar(1)
+    };
+}
+
+#[macro_export]
+macro_rules! C_STYLE_CAST_TO_TYPEDEF {
+    () => {
+        ::ffi_11::new_c_uint(2147483648)
+    };
+}
+
+#[macro_export]
+macro_rules! FUNCTIONAL_CAST {
+    () => {
+        ::ffi_11::new_c_uint(4294967295)
+    };
+}
+
+#[macro_export]
+macro_rules! FUNCTIONAL_CAST_TO_QUALIFIED_TYPEDEF {
+    () => {
+        ::ffi_11::new_c_longlong(1099511627776)
+    };
+}
+
+// NOLINT(readability/casting)
+
+#[macro_export]
+macro_rules! STATIC_CAST {
+    () => {
+        ::ffi_11::new_c_short(7)
+    };
+}
+
+#[macro_export]
+macro_rules! CAST_TO_BOOL {
+    () => {
+        true
+    };
+}
+
+#[macro_export]
+macro_rules! GLOBAL_QUALIFIED_CAST {
+    () => {
+        ::ffi_11::new_c_uint(1)
+    };
+}
+
+#[macro_export]
+macro_rules! NAMESPACE_ALIAS_CAST {
+    () => {
+        ::ffi_11::new_c_uchar(44)
+    };
+}
+
+#[macro_export]
+macro_rules! NESTED_CAST {
+    () => {
+        ::ffi_11::new_c_int(44)
+    };
+}
+
+#[macro_export]
+macro_rules! NEGATED_CAST {
+    () => {
+        ::ffi_11::new_c_int(-1)
+    };
+}
+
+// Casts bind more tightly than binary operators.
+
+#[macro_export]
+macro_rules! CAST_PRECEDENCE {
+    () => {
+        ::ffi_11::new_c_int(256)
+    };
+}
+
+// cv-qualifiers may appear wherever C++ allows them.
+
+#[macro_export]
+macro_rules! CONST_CAST_TO_KEYWORDS {
+    () => {
+        ::ffi_11::new_c_uint(1)
+    };
+}
+
+#[macro_export]
+macro_rules! CONST_VOLATILE_CAST_TO_TYPEDEF {
+    () => {
+        ::ffi_11::new_c_uint(1)
+    };
+}
+
+#[macro_export]
+macro_rules! STATIC_CAST_TO_CONST {
+    () => {
+        ::ffi_11::new_c_short(1)
+    };
+}
+
 // The following macros are not supported, and are silently ignored.
 
 // Incomplete conditionals, which fail partway through parsing.
+
+// Casts to class types are rejected without being checked by the compiler.
+
+// Typedefs that don't receive bindings, e.g. because their target doesn't
+// enable Crubit.
+
+// error: type alias `LocalAliasToNonCrubitTypedef` could not be bound
+//   Unsupported type alias NotCrubitExposedInt
+
+// error: type alias `__LeadingDunderInt` could not be bound
+//   Skipping generating bindings for '__LeadingDunderInt' because it has a leading `__`
+
+// error: type alias `UnknownAttrInt` could not be bound
+//   crubit.rs/errors/unknown_attribute: unknown attribute(s): gnu::aligned
+
+// error: namespace `crate` could not be bound
+//   Namespace name is not supported: Unescapable identifier: crate
+
+// namespace crate
+
+// NOLINT(runtime/int)
+
+// NOLINT(readability/casting)
+
+// Invalid cv-qualifiers, as in C++.
+
+// NOLINT(readability/casting)
 
 // The following macros have names that can't be bound, and are reported as
 // errors.
