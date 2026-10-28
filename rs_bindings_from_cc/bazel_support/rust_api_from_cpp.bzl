@@ -31,6 +31,8 @@ By default, `bazel build` will compile the bindings.
 You can request bindings generation only via `--output_groups=sources`.
 """
 
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_rust//rust:rust_common.bzl", "CrateInfo", "DepInfo")
 load("//cc_bindings_from_rs/bazel_support:providers.bzl", "CcBindingsFromRustInfo")
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl", "additional_rust_srcs_for_crubit_bindings")
@@ -44,17 +46,38 @@ def _rust_api_from_cpp_generate_bindings_impl(ctx):
     variant = ctx.attr.target[RustBindingsFromCcInfo].dep_variant_info
     if not variant or not OutputGroupInfo in ctx.attr.target:
         fail("No bindings generated for target: %s" % ctx.attr.target.label)
+    extra_cc_infos = [dep[CcInfo] for dep in ctx.attr.cpp_api_deps]
+    cc_info = variant.cc_info
+    if extra_cc_infos:
+        cc_info = cc_common.merge_cc_infos(
+            direct_cc_infos = extra_cc_infos,
+            cc_infos = [cc_info],
+        )
     providers = [
         variant.crate_info,
         variant.dep_info,
-        variant.cc_info,
+        cc_info,
         DefaultInfo(files = ctx.attr.target[OutputGroupInfo]["out_compiled"]),
         OutputGroupInfo(sources = ctx.attr.target[OutputGroupInfo]["out"]),
     ]
     if GeneratedBindingsInfo in ctx.attr.target:
         providers.append(ctx.attr.target[GeneratedBindingsInfo])
     if CcBindingsFromRustInfo in ctx.attr.target:
-        providers.append(ctx.attr.target[CcBindingsFromRustInfo])
+        cc_bindings_info = ctx.attr.target[CcBindingsFromRustInfo]
+        if extra_cc_infos:
+            cc_bindings_info = CcBindingsFromRustInfo(
+                cc_info = cc_common.merge_cc_infos(
+                    direct_cc_infos = extra_cc_infos,
+                    cc_infos = [cc_bindings_info.cc_info],
+                ),
+                crate_key = cc_bindings_info.crate_key,
+                headers = cc_bindings_info.headers,
+                features = cc_bindings_info.features,
+                target_denied_features = getattr(cc_bindings_info, "target_denied_features", []),
+                configuration = cc_bindings_info.configuration,
+                transitive_infos = cc_bindings_info.transitive_infos,
+            )
+        providers.append(cc_bindings_info)
     return providers
 
 _rust_api_from_cpp_generate_bindings = rule(
@@ -69,6 +92,10 @@ _rust_api_from_cpp_generate_bindings = rule(
             providers = [RustBindingsFromCcInfo],
             aspects = [rust_bindings_from_cc_aspect],
         ),
+        "cpp_api_deps": attr.label_list(
+            doc = "Additional C++ dependencies propagated to C++ bindings generated from Rust crates that depend on this target.",
+            providers = [CcInfo],
+        ),
     },
 )
 
@@ -80,6 +107,7 @@ def rust_api_from_cpp(
         cpp_srcs = [],
         deps = [],
         link_deps = [],
+        cpp_api_deps = [],
         srcs_mod = "",
         root_namespaces = [],
         generated_cpp_support_deps = [],
@@ -117,6 +145,11 @@ def rust_api_from_cpp(
         `cpp_srcs` should come from `generated_cpp_support_deps`.
       deps: Dependencies for the Rust API.
       link_deps: Native C++ dependencies to link into the Rust library.
+      cpp_api_deps: Additional C++ dependencies propagated to `cpp_api_from_rust`
+        bindings for Rust crates that depend on this target (for example, C++
+        libraries whose headers are referenced via `CRUBIT_ANNOTATE: include_path=...`
+        in `srcs` and cannot be added to `cpp_target` or `<name>.hint` without
+        creating a dependency cycle).
       srcs_mod: Controls which module inside the Rust crate the additional rust sources are added to.
       root_namespaces: List of C++ namespaces to re-export at the root of the generated Rust bindings.
       generated_cpp_support_deps: C++ dependencies of the generated C++ target (e.g. ABI support libraries required by the generated bindings).
@@ -216,5 +249,6 @@ def rust_api_from_cpp(
     _rust_api_from_cpp_generate_bindings(
         name = name,
         target = cpp_target,
+        cpp_api_deps = cpp_api_deps,
         **kwargs
     )
