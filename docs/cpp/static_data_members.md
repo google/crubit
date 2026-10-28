@@ -3,7 +3,7 @@
 Public static data members of a class receive bindings. Which kind depends on
 the member's type and whether its value is a compile-time constant:
 
-*   A member of integer, `bool`, integer array, or
+*   A member of integer, `bool`, C array of integer or `bool`, or
     `std::string_view`/`absl::string_view` type whose value is a compile-time
     constant (because it is `constexpr`, or `const` or `inline` with a constant
     initializer) becomes an associated `const` of the Rust struct. Its value is

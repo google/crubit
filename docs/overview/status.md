@@ -93,6 +93,8 @@ features**, used in public interfaces:
 *   non-overloaded member functions, (overloaded) constructors and assignment
     operators
 *   static data members
+*   simple `constexpr` / `const` constants (integers, `bool`, C arrays of
+    integers or `bool`, and `string_view`)
 *   forward-declared (incomplete) types
 *   class template specializations, such as
     `MyTemplate<int>`
@@ -116,7 +118,8 @@ The following features are **not** supported yet, among many others:
 *   non-type `using` aliases
     *   using enum
     *   using namespace
-*   constants
+*   more complex `constexpr` / `const` constants (such as floating-point or
+    class types)
 *   macros
 
 ## Rust

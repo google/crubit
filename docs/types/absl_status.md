@@ -90,11 +90,19 @@ zero-cost passing across the FFI boundary. However, this layout compatibility
 requires that the inner payload type `T` is **also layout-compatible** between
 C++ and Rust.
 
-Types that are bridged across the FFI boundary via runtime conversions (such as
-[Protocol Buffers](protobuf.md), which are not layout-compatible between C++ and
-Rust; see b/534900713, or `std::string`) do not share the same in-memory
-representation between C++ and Rust. Because `T` is stored directly inside
-`StatusOr<T>`, `absl::StatusOr<T>` cannot be used with these types.
+When `std::string` or `std::optional<T>` is used as a template argument to
+`absl::StatusOr<T>`, Crubit automatically uses its layout-compatible
+representation (`cpp_std::string`, `cpp_std::optional<T>`, or
+`cpp_std::trivial_optional<T>`) rather than a bridged representation, so
+`absl::StatusOr<std::string>` and `absl::StatusOr<std::optional<T>>` receive
+bindings automatically (for example, `absl::StatusOr<std::string>` is passed via
+`ctor::Ctor![status::StatusOr<cpp_std::string>]`).
+
+However, types that are only bridged across the FFI boundary via runtime
+conversions (such as C++ [Protocol Buffers](protobuf.md), which are not
+layout-compatible between C++ and Rust; see b/534900713) do not share the same
+in-memory representation between C++ and Rust. Because `T` is stored directly
+inside `StatusOr<T>`, `absl::StatusOr<T>` cannot be used with these types.
 
 As a result, functions that accept or return `absl::StatusOr<MyProto>` (or
 `c9::Co<absl::StatusOr<MyProto>>`) cannot be bound directly by Crubit.
