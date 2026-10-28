@@ -1248,6 +1248,10 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   }
   clang::CallingConv call_conv =
       function_decl->getType()->getAs<clang::FunctionType>()->getCallConv();
+  bool is_default_call_conv =
+      call_conv == ictx_.ctx_.getDefaultCallingConvention(
+                       function_decl->isVariadic(),
+                       /*IsCXXMethod=*/instance_metadata.has_value());
 
   absl::StatusOr<CallingConv> cc_call_conv =
       ConvertCcCallConvToSupportedCallingConv(call_conv);
@@ -1378,6 +1382,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   if (cc_call_conv.ok()) {
     func->set_call_conv(*cc_call_conv);
   }
+  func->set_is_default_call_conv(is_default_call_conv);
   func->set_is_member_or_descendant_of_class_template(
       is_member_or_descendant_of_class_template);
   func->set_safety_annotation(safety_annotation);

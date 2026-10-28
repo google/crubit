@@ -1880,6 +1880,13 @@ derive_debug_partialeq_eq_hash! {
             self.proto.call_conv_opt().into_option().to_ir()
         }
 
+        /// Whether `call_conv` is the default calling convention for this kind
+        /// of function on the target platform (i.e. the calling convention that
+        /// the function has without a calling convention attribute).
+        pub fn is_default_call_conv(&self) -> bool {
+            self.proto.is_default_call_conv()
+        }
+
 
         pub fn is_member_or_descendant_of_class_template(&self) -> bool {
             self.proto.is_member_or_descendant_of_class_template()

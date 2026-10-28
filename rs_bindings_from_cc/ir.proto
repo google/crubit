@@ -338,6 +338,11 @@ message Func {
   bool is_always_inline = 33;
   // Where the item is declared.
   DeclLocation decl_loc = 34;
+  // Whether `call_conv` is the default calling convention for this kind of
+  // function on the target platform (i.e. the calling convention that the
+  // function has without a calling convention attribute).  For example,
+  // `__thiscall` is the default for instance methods on 32-bit x86 Windows.
+  bool is_default_call_conv = 35;
 }
 
 // Access specifier for a member or base class.

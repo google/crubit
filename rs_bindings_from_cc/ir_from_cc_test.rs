@@ -111,6 +111,7 @@ fn test_function() {
                 deprecated: None,
                 unknown_attr: None,
                 call_conv: Some(C),
+                is_default_call_conv: true,
                 is_member_or_descendant_of_class_template: false,
                 safety_annotation: Unannotated,
                 decl_loc: Some(DeclLocation {
@@ -395,10 +396,48 @@ fn test_function_with_custom_calling_convention() {
         quote! {
             Func {
                 cc_name: "f_vectorcall", ...
-                call_conv: Some(X86VectorCall), ...
+                call_conv: Some(X86VectorCall),
+                is_default_call_conv: false, ...
             }
         }
     );
+}
+
+/// On 32-bit x86 Windows, `__thiscall` is the default calling convention of
+/// non-variadic instance methods.  `is_default_call_conv` should be `true` for
+/// them, but `false` for an explicit `[[clang::vectorcall]]`.
+#[gtest]
+fn test_default_calling_convention_of_i686_windows_methods() -> Result<()> {
+    let proto = ir_testing::ir_proto_from_cc(
+        multiplatform_testing::Platform::I686Windows,
+        r#"
+        struct SomeStruct final {
+            int InstanceMethod() const;
+            int VariadicInstanceMethod(int, ...) const;
+            static int StaticMethod();
+            [[clang::vectorcall]] int VectorcallInstanceMethod() const;
+        };
+        "#,
+    )?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    for (name, call_conv, is_default) in [
+        ("InstanceMethod", quote! { X86ThisCall }, true),
+        ("VariadicInstanceMethod", quote! { C }, true),
+        ("StaticMethod", quote! { C }, true),
+        ("VectorcallInstanceMethod", quote! { X86VectorCall }, false),
+    ] {
+        assert_ir_matches!(
+            ir,
+            quote! {
+                Func {
+                    cc_name: #name, ...
+                    call_conv: Some(#call_conv),
+                    is_default_call_conv: #is_default, ...
+                }
+            }
+        );
+    }
+    Ok(())
 }
 
 #[gtest]

@@ -223,7 +223,12 @@ pub fn missing_feature_descriptions<'a>(
                     ));
                 }
                 if !have_feature(CrubitFeature::Experimental) {
-                    if !func.has_c_calling_convention() {
+                    // A C++ thunk is used for functions that don't use the C calling convention
+                    // (see `can_skip_cc_thunk`).  Therefore only an explicit, non-default
+                    // calling convention (e.g. `[[clang::vectorcall]]`) is experimental, but
+                    // not the platform default (e.g. `__thiscall` for instance methods on
+                    // 32-bit x86 Windows).
+                    if !func.has_c_calling_convention() && !func.is_default_call_conv() {
                         missing_features.push(anyhow!("non-C calling convention"));
                     }
                     if func.is_variadic() {

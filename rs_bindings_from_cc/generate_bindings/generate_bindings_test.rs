@@ -328,6 +328,46 @@ mod custom_abi_tests {
         assert_cc_not_matches!(rs_api_impl, quote! { f_c_calling_convention ( ... ) });
         Ok(())
     }
+
+    /// On 32-bit x86 Windows, `__thiscall` is the default calling convention
+    /// of instance methods (including constructors and operators).  Such
+    /// methods get bindings with the `supported` feature set, because a C++
+    /// thunk takes care of the calling convention.  An explicit calling
+    /// convention attribute still requires the `experimental` feature.
+    #[gtest]
+    fn test_default_thiscall_with_supported_features() -> Result<()> {
+        let proto = ir_testing::ir_proto_from_cc(
+            multiplatform_testing::Platform::I686Windows,
+            r#"
+            struct SomeStruct final {
+                SomeStruct();
+                int GetValue() const { return value; }
+                bool operator==(const SomeStruct& other) const;
+                [[clang::vectorcall]] int GetValueVectorcall() const { return value; }
+                int value;
+            };
+            "#,
+        )?;
+        let mut ir = make_test_ir(&proto)?;
+        enable_supported(&mut ir);
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+
+        assert_rs_matches!(rs_api, quote! { impl Default for SomeStruct });
+        assert_cc_matches!(rs_api_impl, quote! { crubit::construct_at(__this); });
+
+        assert_rs_matches!(
+            rs_api,
+            quote! { pub unsafe fn GetValue(__this: *const Self) -> ::ffi_11::c_int }
+        );
+        assert_cc_matches!(rs_api_impl, quote! { return __this->GetValue(); });
+
+        assert_rs_matches!(rs_api, quote! { impl PartialEq for SomeStruct });
+        assert_cc_matches!(rs_api_impl, quote! { return __this->operator==(*other); });
+
+        assert_rs_not_matches!(rs_api, quote! { pub fn GetValueVectorcall });
+        assert_cc_not_matches!(rs_api_impl, quote! { __this->GetValueVectorcall() });
+        Ok(())
+    }
 }
 
 #[gtest]

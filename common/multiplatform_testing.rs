@@ -16,6 +16,9 @@ pub enum Platform {
     X86MacOS,
     ArmMacOS,
     X86Windows,
+    // TODO(b/561578105): Also cover `I686Windows` platform via
+    // `multiplatform_rust_test`.  This requires fixing failing tests first.
+    I686Windows,
 }
 
 impl Platform {
@@ -26,6 +29,7 @@ impl Platform {
             Platform::X86MacOS => "x86_64-apple-darwin",
             Platform::ArmMacOS => "arm64-apple-darwin",
             Platform::X86Windows => "x86_64-pc-windows-msvc",
+            Platform::I686Windows => "i686-pc-windows-msvc",
         }
     }
 
@@ -34,7 +38,7 @@ impl Platform {
     /// the underlying type of an unfixed `enum`, so some test expectations
     /// have to differ.
     pub fn uses_msvc_cxx_abi(self) -> bool {
-        matches!(self, Platform::X86Windows)
+        matches!(self, Platform::X86Windows | Platform::I686Windows)
     }
 
     /// Returns the spelling of the `no_unique_address` attribute.
@@ -66,18 +70,21 @@ impl Platform {
     /// on ones currently supported by Crubit;  I hear that UEFI/x86 doesn't
     /// support `vectorcall`).
     pub fn supports_vectorcall(self) -> bool {
-        matches!(self, Platform::X86Linux | Platform::X86MacOS | Platform::X86Windows)
+        matches!(
+            self,
+            Platform::X86Linux | Platform::X86MacOS | Platform::X86Windows | Platform::I686Windows
+        )
     }
 
     /// Returns the prefix that Clang adds to the mangled name of a function
     /// declared with an asm label (e.g. `int f() asm("foo");`).
     ///
-    /// On targets where symbol names get a global prefix (e.g. `_` on Mach-O),
-    /// Clang adds a `'\u{1}'` prefix to tell LLVM not to add the global prefix
-    /// to the asm label.
+    /// On targets where symbol names get a global prefix (e.g. `_` on Mach-O
+    /// and on 32-bit x86 Windows), Clang adds a `'\u{1}'` prefix to tell LLVM
+    /// not to add the global prefix to the asm label.
     pub fn asm_label_mangled_name_prefix(self) -> &'static str {
         match self {
-            Platform::X86MacOS | Platform::ArmMacOS => "\u{1}",
+            Platform::X86MacOS | Platform::ArmMacOS | Platform::I686Windows => "\u{1}",
             Platform::X86Linux | Platform::ArmLinux | Platform::X86Windows => "",
         }
     }
