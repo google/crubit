@@ -20,7 +20,7 @@
 /// is non-trivial.
 #[cfi_encoding = "34StructWithUserProvidedConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: StructWithUserProvidedConstructors
+///CRUBIT_ANNOTATE: cpp_type=StructWithUserProvidedConstructors
 pub struct StructWithUserProvidedConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -28,17 +28,13 @@ pub struct StructWithUserProvidedConstructors {
 impl !Send for StructWithUserProvidedConstructors {}
 impl !Sync for StructWithUserProvidedConstructors {}
 unsafe impl ::cxx::ExternType for StructWithUserProvidedConstructors {
-    type Id = ::cxx::type_id!(":: StructWithUserProvidedConstructors");
+    type Id = ::cxx::type_id!("StructWithUserProvidedConstructors");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for StructWithUserProvidedConstructors {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("StructWithUserProvidedConstructors")
-            .field("int_field", &self.int_field)
-            .finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithUserProvidedConstructors"),
+    crate::StructWithUserProvidedConstructors
+);
 
 impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithUserProvidedConstructors {
     #[inline(always)]
@@ -87,7 +83,7 @@ impl Clone for StructWithUserProvidedConstructors {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "39StructWithExplicitConversionConstructor"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: StructWithExplicitConversionConstructor
+///CRUBIT_ANNOTATE: cpp_type=StructWithExplicitConversionConstructor
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithExplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
@@ -96,17 +92,13 @@ pub struct StructWithExplicitConversionConstructor {
 impl !Send for StructWithExplicitConversionConstructor {}
 impl !Sync for StructWithExplicitConversionConstructor {}
 unsafe impl ::cxx::ExternType for StructWithExplicitConversionConstructor {
-    type Id = ::cxx::type_id!(":: StructWithExplicitConversionConstructor");
+    type Id = ::cxx::type_id!("StructWithExplicitConversionConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for StructWithExplicitConversionConstructor {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("StructWithExplicitConversionConstructor")
-            .field("int_field", &self.int_field)
-            .finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithExplicitConversionConstructor"),
+    crate::StructWithExplicitConversionConstructor
+);
 
 /// Testing `impl From<int> for /*...*/` when the constructor is `explicit`.
 impl From<::ffi_11::c_int> for StructWithExplicitConversionConstructor {
@@ -135,7 +127,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithExplicitConversionConstructo
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "30StructWithMultipleConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: StructWithMultipleConstructors
+///CRUBIT_ANNOTATE: cpp_type=StructWithMultipleConstructors
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithMultipleConstructors {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
@@ -144,17 +136,13 @@ pub struct StructWithMultipleConstructors {
 impl !Send for StructWithMultipleConstructors {}
 impl !Sync for StructWithMultipleConstructors {}
 unsafe impl ::cxx::ExternType for StructWithMultipleConstructors {
-    type Id = ::cxx::type_id!(":: StructWithMultipleConstructors");
+    type Id = ::cxx::type_id!("StructWithMultipleConstructors");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for StructWithMultipleConstructors {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("StructWithMultipleConstructors")
-            .field("int_field", &self.int_field)
-            .finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithMultipleConstructors"),
+    crate::StructWithMultipleConstructors
+);
 
 impl From<::ffi_11::c_int> for StructWithMultipleConstructors {
     #[inline(always)]
@@ -233,7 +221,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)>
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "39StructWithImplicitConversionConstructor"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: StructWithImplicitConversionConstructor
+///CRUBIT_ANNOTATE: cpp_type=StructWithImplicitConversionConstructor
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithImplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
@@ -242,17 +230,13 @@ pub struct StructWithImplicitConversionConstructor {
 impl !Send for StructWithImplicitConversionConstructor {}
 impl !Sync for StructWithImplicitConversionConstructor {}
 unsafe impl ::cxx::ExternType for StructWithImplicitConversionConstructor {
-    type Id = ::cxx::type_id!(":: StructWithImplicitConversionConstructor");
+    type Id = ::cxx::type_id!("StructWithImplicitConversionConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for StructWithImplicitConversionConstructor {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("StructWithImplicitConversionConstructor")
-            .field("int_field", &self.int_field)
-            .finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithImplicitConversionConstructor"),
+    crate::StructWithImplicitConversionConstructor
+);
 
 /// Testing `impl From<int> for /*...*/` when the constructor is *not* `explicit`.
 impl From<::ffi_11::c_int> for StructWithImplicitConversionConstructor {
@@ -281,7 +265,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithImplicitConversionConstructo
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "17OtherSimpleStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: OtherSimpleStruct
+///CRUBIT_ANNOTATE: cpp_type=OtherSimpleStruct
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct OtherSimpleStruct {
     pub int_field: ::ffi_11::c_int,
@@ -289,14 +273,13 @@ pub struct OtherSimpleStruct {
 impl !Send for OtherSimpleStruct {}
 impl !Sync for OtherSimpleStruct {}
 unsafe impl ::cxx::ExternType for OtherSimpleStruct {
-    type Id = ::cxx::type_id!(":: OtherSimpleStruct");
+    type Id = ::cxx::type_id!("OtherSimpleStruct");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for OtherSimpleStruct {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter.debug_struct("OtherSimpleStruct").field("int_field", &self.int_field).finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("OtherSimpleStruct"),
+    crate::OtherSimpleStruct
+);
 
 impl Default for OtherSimpleStruct {
     #[inline(always)]
@@ -312,7 +295,7 @@ impl Default for OtherSimpleStruct {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "41StructWithImplicitConversionFromReference"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: StructWithImplicitConversionFromReference
+///CRUBIT_ANNOTATE: cpp_type=StructWithImplicitConversionFromReference
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithImplicitConversionFromReference {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
@@ -321,17 +304,13 @@ pub struct StructWithImplicitConversionFromReference {
 impl !Send for StructWithImplicitConversionFromReference {}
 impl !Sync for StructWithImplicitConversionFromReference {}
 unsafe impl ::cxx::ExternType for StructWithImplicitConversionFromReference {
-    type Id = ::cxx::type_id!(":: StructWithImplicitConversionFromReference");
+    type Id = ::cxx::type_id!("StructWithImplicitConversionFromReference");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for StructWithImplicitConversionFromReference {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("StructWithImplicitConversionFromReference")
-            .field("int_field", &self.int_field)
-            .finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithImplicitConversionFromReference"),
+    crate::StructWithImplicitConversionFromReference
+);
 
 /// Testing `impl<'b> From<&'b OtherSimpleStruct> for /*...*/`.
 impl<'other> From<&'other crate::OtherSimpleStruct> for StructWithImplicitConversionFromReference {
@@ -360,7 +339,7 @@ impl<'other> ::ctor::CtorNew<&'other crate::OtherSimpleStruct>
 /// `generate_rs_api_impl`.
 #[cfi_encoding = "28StructWithInlineConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: StructWithInlineConstructors
+///CRUBIT_ANNOTATE: cpp_type=StructWithInlineConstructors
 pub struct StructWithInlineConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -368,17 +347,13 @@ pub struct StructWithInlineConstructors {
 impl !Send for StructWithInlineConstructors {}
 impl !Sync for StructWithInlineConstructors {}
 unsafe impl ::cxx::ExternType for StructWithInlineConstructors {
-    type Id = ::cxx::type_id!(":: StructWithInlineConstructors");
+    type Id = ::cxx::type_id!("StructWithInlineConstructors");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for StructWithInlineConstructors {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("StructWithInlineConstructors")
-            .field("int_field", &self.int_field)
-            .finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithInlineConstructors"),
+    crate::StructWithInlineConstructors
+);
 
 impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithInlineConstructors {
     #[inline(always)]
@@ -446,7 +421,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithInlineConstructors {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "29StructWithDeletedConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: StructWithDeletedConstructors
+///CRUBIT_ANNOTATE: cpp_type=StructWithDeletedConstructors
 pub struct StructWithDeletedConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -454,17 +429,13 @@ pub struct StructWithDeletedConstructors {
 impl !Send for StructWithDeletedConstructors {}
 impl !Sync for StructWithDeletedConstructors {}
 unsafe impl ::cxx::ExternType for StructWithDeletedConstructors {
-    type Id = ::cxx::type_id!(":: StructWithDeletedConstructors");
+    type Id = ::cxx::type_id!("StructWithDeletedConstructors");
     type Kind = ::cxx::kind::Opaque;
 }
-impl ::core::fmt::Debug for StructWithDeletedConstructors {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("StructWithDeletedConstructors")
-            .field("int_field", &self.int_field)
-            .finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithDeletedConstructors"),
+    crate::StructWithDeletedConstructors
+);
 
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstructors {
     #[inline(always)]
@@ -478,7 +449,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstruct
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "29StructWithPrivateConstructors"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=:: StructWithPrivateConstructors
+///CRUBIT_ANNOTATE: cpp_type=StructWithPrivateConstructors
 pub struct StructWithPrivateConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -488,14 +459,13 @@ pub struct StructWithPrivateConstructors {
 impl !Send for StructWithPrivateConstructors {}
 impl !Sync for StructWithPrivateConstructors {}
 unsafe impl ::cxx::ExternType for StructWithPrivateConstructors {
-    type Id = ::cxx::type_id!(":: StructWithPrivateConstructors");
+    type Id = ::cxx::type_id!("StructWithPrivateConstructors");
     type Kind = ::cxx::kind::Opaque;
 }
-impl ::core::fmt::Debug for StructWithPrivateConstructors {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter.debug_struct("StructWithPrivateConstructors").finish_non_exhaustive()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithPrivateConstructors"),
+    crate::StructWithPrivateConstructors
+);
 
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithPrivateConstructors {
     #[inline(always)]
@@ -509,7 +479,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithPrivateConstruct
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "41StructWithExplicitlyDefaultedConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: StructWithExplicitlyDefaultedConstructors
+///CRUBIT_ANNOTATE: cpp_type=StructWithExplicitlyDefaultedConstructors
 pub struct StructWithExplicitlyDefaultedConstructors {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field_with_explicit_initializer: ::ffi_11::c_int,
@@ -518,18 +488,13 @@ pub struct StructWithExplicitlyDefaultedConstructors {
 impl !Send for StructWithExplicitlyDefaultedConstructors {}
 impl !Sync for StructWithExplicitlyDefaultedConstructors {}
 unsafe impl ::cxx::ExternType for StructWithExplicitlyDefaultedConstructors {
-    type Id = ::cxx::type_id!(":: StructWithExplicitlyDefaultedConstructors");
+    type Id = ::cxx::type_id!("StructWithExplicitlyDefaultedConstructors");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for StructWithExplicitlyDefaultedConstructors {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("StructWithExplicitlyDefaultedConstructors")
-            .field("field_with_explicit_initializer", &self.field_with_explicit_initializer)
-            .field("field_with_no_initializer", &self.field_with_no_initializer)
-            .finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithExplicitlyDefaultedConstructors"),
+    crate::StructWithExplicitlyDefaultedConstructors
+);
 
 impl Default for StructWithExplicitlyDefaultedConstructors {
     #[inline(always)]
@@ -549,7 +514,7 @@ impl Default for StructWithExplicitlyDefaultedConstructors {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "32NonTrivialStructWithConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: NonTrivialStructWithConstructors
+///CRUBIT_ANNOTATE: cpp_type=NonTrivialStructWithConstructors
 pub struct NonTrivialStructWithConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -557,17 +522,13 @@ pub struct NonTrivialStructWithConstructors {
 impl !Send for NonTrivialStructWithConstructors {}
 impl !Sync for NonTrivialStructWithConstructors {}
 unsafe impl ::cxx::ExternType for NonTrivialStructWithConstructors {
-    type Id = ::cxx::type_id!(":: NonTrivialStructWithConstructors");
+    type Id = ::cxx::type_id!("NonTrivialStructWithConstructors");
     type Kind = ::cxx::kind::Opaque;
 }
-impl ::core::fmt::Debug for NonTrivialStructWithConstructors {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("NonTrivialStructWithConstructors")
-            .field("int_field", &self.int_field)
-            .finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NonTrivialStructWithConstructors"),
+    crate::NonTrivialStructWithConstructors
+);
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NonTrivialStructWithConstructors {
     type CtorType = ::ctor::Ctor![Self];
@@ -664,7 +625,7 @@ impl ::ctor::PinnedDrop for NonTrivialStructWithConstructors {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "27StructWithUnsafeConstructor"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: StructWithUnsafeConstructor
+///CRUBIT_ANNOTATE: cpp_type=StructWithUnsafeConstructor
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithUnsafeConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
@@ -673,17 +634,13 @@ pub struct StructWithUnsafeConstructor {
 impl !Send for StructWithUnsafeConstructor {}
 impl !Sync for StructWithUnsafeConstructor {}
 unsafe impl ::cxx::ExternType for StructWithUnsafeConstructor {
-    type Id = ::cxx::type_id!(":: StructWithUnsafeConstructor");
+    type Id = ::cxx::type_id!("StructWithUnsafeConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for StructWithUnsafeConstructor {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("StructWithUnsafeConstructor")
-            .field("ptr_field", &self.ptr_field)
-            .finish()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithUnsafeConstructor"),
+    crate::StructWithUnsafeConstructor
+);
 
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
     #[inline(always)]
@@ -710,7 +667,7 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor
 
 #[cfi_encoding = "48CopyCtorHasUnevaluatableExprInUnevaluatedContext"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=:: CopyCtorHasUnevaluatableExprInUnevaluatedContext
+///CRUBIT_ANNOTATE: cpp_type=CopyCtorHasUnevaluatableExprInUnevaluatedContext
 pub struct CopyCtorHasUnevaluatableExprInUnevaluatedContext {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -720,16 +677,13 @@ pub struct CopyCtorHasUnevaluatableExprInUnevaluatedContext {
 impl !Send for CopyCtorHasUnevaluatableExprInUnevaluatedContext {}
 impl !Sync for CopyCtorHasUnevaluatableExprInUnevaluatedContext {}
 unsafe impl ::cxx::ExternType for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
-    type Id = ::cxx::type_id!(":: CopyCtorHasUnevaluatableExprInUnevaluatedContext");
+    type Id = ::cxx::type_id!("CopyCtorHasUnevaluatableExprInUnevaluatedContext");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("CopyCtorHasUnevaluatableExprInUnevaluatedContext")
-            .finish_non_exhaustive()
-    }
-}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("CopyCtorHasUnevaluatableExprInUnevaluatedContext"),
+    crate::CopyCtorHasUnevaluatableExprInUnevaluatedContext
+);
 
 impl Drop for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
     #[inline(always)]

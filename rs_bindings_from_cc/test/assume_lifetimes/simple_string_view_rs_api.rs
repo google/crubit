@@ -17,7 +17,7 @@
 #[derive(Clone, Copy)]
 #[cfi_encoding = "2SV"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: SV
+///CRUBIT_ANNOTATE: cpp_type=SV
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct SV<'a> {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
@@ -26,7 +26,7 @@ pub struct SV<'a> {
 impl<'a> !Send for SV<'a> {}
 impl<'a> !Sync for SV<'a> {}
 unsafe impl<'a> ::cxx::ExternType for SV<'a> {
-    type Id = ::cxx::type_id!(":: SV");
+    type Id = ::cxx::type_id!("SV");
     type Kind = ::cxx::kind::Trivial;
 }
 impl ::core::fmt::Display for SV<'_> {
@@ -41,11 +41,7 @@ impl ::core::fmt::Display for SV<'_> {
         }
     }
 }
-impl ::core::fmt::Debug for SV<'_> {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter.debug_struct("SV").finish()
-    }
-}
+forward_declare::unsafe_define!(forward_declare::symbol!("SV"), crate::SV<'_>);
 
 impl<'a> Default for SV<'a> {
     #[inline(always)]

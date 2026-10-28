@@ -61,8 +61,8 @@ cc_library(
     name = "derived_debuggables",
     hdrs = ["derived_debuggables.h"],
     aspect_hints = [
-        "//features:experimental",
         "//features:oo_casting",
+        "//features:record_impl_debug",
     ],
     deps = [
         "//support:annotations",
@@ -77,9 +77,6 @@ rust_api_from_cpp(
 crubit_rust_test(
     name = "derived_debuggables_test",
     srcs = ["derived_debuggables_test.rs"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
     deps = [
         ":derived_debuggables_rust",
         "@crate_index//:googletest",

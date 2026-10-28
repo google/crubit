@@ -9,7 +9,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "struct_fields",
     hdrs = ["struct_fields.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     deps = ["//support:annotations"],
 )
 

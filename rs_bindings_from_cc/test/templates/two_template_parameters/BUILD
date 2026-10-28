@@ -9,7 +9,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "two_template_parameters",
     hdrs = ["two_template_parameters.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
 )
 
 rust_api_from_cpp(

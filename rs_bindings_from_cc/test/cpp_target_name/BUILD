@@ -16,12 +16,12 @@ cc_library(
     # the target (and it truncates `/.` from the target name).
     name = "!./%-@^#$&()*-+,;<=>?[]{|}~",
     hdrs = ["header.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
 )
 
 cc_library(
     name = "intermediate",
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     deps = [
         ":!./%-@^#$&()*-+,;<=>?[]{|}~",
     ],
@@ -29,7 +29,7 @@ cc_library(
 
 cc_library(
     name = "crubit_disabled_cc_library_with_invalid_character_in_transitive_deps",
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:supported"],
     deps = [
         ":intermediate",
     ],

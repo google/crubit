@@ -8,7 +8,7 @@ crubit_test_cc_library(
     name = "crate_derive",
     hdrs = ["crate_derive.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:record_impl_debug",
     ],
     deps = [
         "//support/internal:bindings_support",
