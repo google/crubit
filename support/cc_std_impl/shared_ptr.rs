@@ -71,18 +71,25 @@ impl<T: Sized> shared_ptr<T> {
     /// This function performs a single heap allocation (similar to `std::make_shared`),
     /// co-allocating the control block and the `value`.
     pub fn new(value: T) -> Self {
-        let mut inner = Box::leak(Box::new(SharedInner {
+        let inner: *mut SharedInner<T> = Box::into_raw(Box::new(SharedInner {
             cntrl: MaybeUninit::uninit(),
             value: ManuallyDrop::new(value),
         }));
 
-        // SAFETY: `this.cntrl.as_mut_ptr()` is a valid location to write a `DynControlBlock` to,
-        // and `SharedInner::<T>::deleter` satisfies the C++ deleter callback preconditions.
+        // SAFETY: `(*inner).cntrl` is a valid location to write a `DynControlBlock` to, and
+        // `SharedInner::<T>::deleter` satisfies the C++ deleter callback preconditions, because
+        // `value` is initialized and `inner` was leaked from a `Box` via `Box::into_raw`
+        // (preserving provenance over the entire `SharedInner<T>` allocation).
         let cntrl = unsafe {
-            DynControlBlock::Emplace(inner.cntrl.as_mut_ptr(), Some(SharedInner::<T>::deleter))
+            DynControlBlock::Emplace(
+                (&raw mut (*inner).cntrl).cast::<DynControlBlock>(),
+                Some(SharedInner::<T>::deleter),
+            )
         };
 
-        shared_ptr { ptr: &*inner.value, cntrl }
+        // SAFETY: `inner` points to a live `SharedInner<T>`.
+        let ptr = unsafe { (&raw const (*inner).value).cast::<T>() };
+        shared_ptr { ptr, cntrl }
     }
 
     /// Creates a new `shared_ptr` and initializes the managed object in place from `ctor`.
