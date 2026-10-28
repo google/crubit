@@ -1446,8 +1446,17 @@ enum ThunklessImpl<'a> {
     Getter { offset: usize },
     /// A setter which writes the underlying field.
     Setter { field_type: RsTypeKind<'a>, offset: usize },
-    /// A constructor which zero-fills the object.
-    ZeroedConstructor,
+    /// A constructor which zero-fills the object, then writes some of its parameters into fields.
+    Constructor { field_inits: Vec<ThunklessFieldInit<'a>> },
+}
+
+/// A write of a constructor parameter into a field, see `ThunklessImpl::Constructor`.
+struct ThunklessFieldInit<'a> {
+    /// The index of the parameter in the C++ constructor, not counting `this`.
+    param_index: usize,
+    field_type: RsTypeKind<'a>,
+    /// The offset of the field in bits.
+    offset: usize,
 }
 
 /// Returns whether a getter returning `return_type` from a field of type `field_type` can be
@@ -1511,7 +1520,28 @@ fn thunkless_impl<'a>(
             }
             Some(ThunklessImpl::Setter { field_type, offset: setter.offset })
         }
-        MemberFuncSemantic::Constructor => Some(ThunklessImpl::ZeroedConstructor),
+        MemberFuncSemantic::Constructor(constructor) => {
+            let field_inits = constructor
+                .field_inits
+                .iter()
+                .map(|init| {
+                    let field_type = db.rs_type_kind(init.type_.clone()).ok()?;
+                    // `param_types[0]` is `__this`.
+                    let param_type = param_types.get(init.param_index.checked_add(1)?)?;
+                    // The parameter is written into the field as is, so the same restrictions as
+                    // for a setter apply.
+                    if !can_use_thunkless_setter(&field_type, param_type) {
+                        return None;
+                    }
+                    Some(ThunklessFieldInit {
+                        param_index: init.param_index,
+                        field_type,
+                        offset: init.offset,
+                    })
+                })
+                .collect::<Option<Vec<_>>>()?;
+            Some(ThunklessImpl::Constructor { field_inits })
+        }
     }
 }
 
@@ -1643,18 +1673,55 @@ fn generate_func_body<'a>(
                     (&raw mut *#self_ref) #byte_add .cast::<#field_type_tokens>().write(#val_arg)
                 }
             }
-            // The importer only marks a constructor as zeroed if it is a trivial default
-            // constructor, and if zero-initializing the object produces all zero bytes. The C++
-            // thunk value-initializes the object, which for such a constructor is the same as
-            // zero-filling it.
-            ThunklessImpl::ZeroedConstructor if return_type.is_unpin() => {
-                quote! { ::core::mem::MaybeUninit::<#return_type_or_self>::zeroed().assume_init() }
+            // The importer only gives a constructor this semantic if zero-initializing the object
+            // produces all zero bytes, and if the constructor is either a trivial default
+            // constructor (which the C++ thunk implements by value-initializing the object, i.e.
+            // zero-filling it), or only copies some of its scalar parameters into fields, which
+            // are then written below. `thunk_args` doesn't contain `__this`, so the C++ parameter
+            // at index `i` is `thunk_args[i]`.
+            ThunklessImpl::Constructor { field_inits } if field_inits.is_empty() => {
+                if return_type.is_unpin() {
+                    quote! {
+                        ::core::mem::MaybeUninit::<#return_type_or_self>::zeroed().assume_init()
+                    }
+                } else {
+                    quote! {
+                        ::ctor::FnCtor::new(move |__crubit_dest: *mut #return_type_or_self| {
+                            __crubit_dest.write_bytes(0, 1);
+                        })
+                    }
+                }
             }
-            ThunklessImpl::ZeroedConstructor => {
-                quote! {
-                    ::ctor::FnCtor::new(move |__crubit_dest: *mut #return_type_or_self| {
-                        __crubit_dest.write_bytes(0, 1);
-                    })
+            ThunklessImpl::Constructor { field_inits } => {
+                let writes = |dest: &TokenStream| -> Vec<TokenStream> {
+                    field_inits
+                        .iter()
+                        .map(|ThunklessFieldInit { param_index, field_type, offset }| {
+                            let byte_add = byte_add(*offset);
+                            let field_type_tokens = field_type.to_token_stream(db);
+                            let arg = &thunk_args[*param_index];
+                            quote! {
+                                #dest #byte_add .cast::<#field_type_tokens>().write(#arg);
+                            }
+                        })
+                        .collect()
+                };
+                if return_type.is_unpin() {
+                    let writes = writes(&quote! { __crubit_tmp.as_mut_ptr() });
+                    quote! {
+                        let mut __crubit_tmp =
+                            ::core::mem::MaybeUninit::<#return_type_or_self>::zeroed();
+                        #( #writes )*
+                        __crubit_tmp.assume_init()
+                    }
+                } else {
+                    let writes = writes(&quote! { __crubit_dest });
+                    quote! {
+                        ::ctor::FnCtor::new(move |__crubit_dest: *mut #return_type_or_self| {
+                            __crubit_dest.write_bytes(0, 1);
+                            #( #writes )*
+                        })
+                    }
                 }
             }
         };

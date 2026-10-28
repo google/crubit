@@ -230,8 +230,19 @@ impl TryFrom<::ir_rust_proto::MemberFuncSemanticView<'_>> for MemberFuncSemantic
                     offset: g.offset() as usize,
                 }))
             }
-            ::ir_rust_proto::member_func_semantic::VariantOneof::Constructor(_) => {
-                Ok(MemberFuncSemantic::Constructor)
+            ::ir_rust_proto::member_func_semantic::VariantOneof::Constructor(c) => {
+                let field_inits = c
+                    .field_inits()
+                    .iter()
+                    .map(|init| {
+                        Ok(FieldInit {
+                            type_: CcType::try_from(init.r#type())?,
+                            offset: usize::try_from(init.offset())?,
+                            param_index: usize::try_from(init.param_index())?,
+                        })
+                    })
+                    .collect::<Result<Vec<_>>>()?;
+                Ok(MemberFuncSemantic::Constructor(Constructor { field_inits }))
             }
             _ => bail!("unmapped VariantOneof: {:?}", proto.variant()),
         }
