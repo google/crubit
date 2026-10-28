@@ -372,6 +372,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling generating Rust bindings for constant-size C-style arrays (`T[N]`).
+#
+# See b/575922365
+crubit_feature_hint(
+    name = "constant_arrays",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["constant_arrays"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

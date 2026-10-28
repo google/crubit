@@ -137,6 +137,10 @@ flagset::flags! {
         /// Implement `Eq` and `Ord` for C++ types whose `operator<=>` returns
         /// `std::strong_ordering`. Only affects rust_api_from_cpp.
         StrongOrderingTraits,
+
+        /// Generate Rust bindings for constant-size C-style arrays (`T[N]`) as `[T; N]` when
+        /// layout-compatible, instead of an opaque byte blob (b/575922365).
+        ConstantArrays,
     }
 }
 
@@ -183,6 +187,7 @@ impl CrubitFeature {
             Self::UnsafeTemplateParams => "unsafe_template_params",
             Self::MovableReturnValues => "movable_return_values",
             Self::StrongOrderingTraits => "strong_ordering_traits",
+            Self::ConstantArrays => "constant_arrays",
         }
     }
 
@@ -236,6 +241,7 @@ impl CrubitFeature {
             Self::UnsafeTemplateParams => "//features:unsafe_template_params",
             Self::MovableReturnValues => "//features:movable_return_values",
             Self::StrongOrderingTraits => "//features:strong_ordering_traits",
+            Self::ConstantArrays => "//features:constant_arrays",
         }
     }
 }
@@ -308,6 +314,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"unsafe_template_params" => CrubitFeature::UnsafeTemplateParams.into(),
         b"movable_return_values" => CrubitFeature::MovableReturnValues.into(),
         b"strong_ordering_traits" => CrubitFeature::StrongOrderingTraits.into(),
+        b"constant_arrays" => CrubitFeature::ConstantArrays.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -498,6 +505,13 @@ mod tests {
     }
 
     #[gtest]
+    fn test_serialized_crubit_feature_constant_arrays() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"constant_arrays\"").unwrap();
+        assert_eq!(features, CrubitFeature::ConstantArrays);
+    }
+
+    #[gtest]
     fn test_serialized_crubit_feature_all() {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"all\"").unwrap();
         assert_eq!(
@@ -518,6 +532,7 @@ mod tests {
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
+                | CrubitFeature::ConstantArrays
         );
     }
 
@@ -561,6 +576,7 @@ mod tests {
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
+                | CrubitFeature::ConstantArrays
         );
     }
 
@@ -586,6 +602,7 @@ mod tests {
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
+                | CrubitFeature::ConstantArrays
         );
     }
 
@@ -612,6 +629,7 @@ mod tests {
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
+                | CrubitFeature::ConstantArrays
         );
     }
 
@@ -638,6 +656,7 @@ mod tests {
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
+                | CrubitFeature::ConstantArrays
         );
     }
 
@@ -664,6 +683,7 @@ mod tests {
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
+                | CrubitFeature::ConstantArrays
         );
     }
 }
