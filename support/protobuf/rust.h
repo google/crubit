@@ -11,9 +11,11 @@
 
 #include "support/unsafe_relocate_tag.h"
 
-namespace proto2 {
-
+namespace google::protobuf {
 class MessageLite;
+}  // namespace google::protobuf
+
+namespace proto2 {
 
 // `proto2::Rust<T>` (aliased as `proto::Rust<T>`) wraps a Rust-owned Protobuf
 // message of C++ type `T`.

@@ -276,23 +276,11 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
 
   // NOLINTNEXTLINE(google-explicit-constructor)
   operator absl::AnyInvocable<Sig>() && {
-#ifdef CRUBIT_INTERNAL_RS_NAMESPACE
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#endif
-    return ::rs_std::DynCallable<Sig>::ToAnyInvocable(::std::move(*this));
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
-#else
-    auto* manager = this->manager_;
-    auto* invoker = this->invoker_;
-    this->manager_ =
-        ::CRUBIT_RS_STD_PRIMARY_NS::internal_dyn_callable::EmptyManager;
-    this->invoker_ = nullptr;
-    return absl::AnyInvocable<Sig>(&this->storage_, manager, invoker);
-#endif
+    if (!*this) {
+      return nullptr;
+    }
+    return absl::AnyInvocable<Sig>(std::in_place_type<DynCallable<Sig>>,
+                                   std::move(*this));
   }
 
   // Returns `true` if `f` is empty.

@@ -8,7 +8,7 @@ crubit_rust_test(
         "__cc_template_instantiations_rs_api.rs",
         "cc_template_integration_test.rs",
     ],
-    data = ["__cc_template_instantiations.json"],
+    compile_data = ["__cc_template_instantiations.json"],
     proc_macro_deps = ["//support/cc_template:cc_template"],
     rustc_env = {
         "CRUBIT_INSTANTIATIONS_FILE": "$(location __cc_template_instantiations.json)",
