@@ -4,8 +4,8 @@
 
 use debuggables::{
     has_anonymous_union, rust_keywords, Abstract, AliasedDebuggable, ArrayDebuggable, Debuggable,
-    Enum, EnumArrayDebuggable, Exhaustive, HasAnonymousUnion, HasNonDebuggable,
-    MixedOpaqueArrayDebuggable, OptOut, RustKeywords, Union, UnscopedDebugEnum,
+    Enum, EnumArrayDebuggable, Exhaustive, HasAnonymousUnion, HasMutableFields, HasNonDebuggable,
+    MixedOpaqueArrayDebuggable, NonCopy, OptOut, RustKeywords, Union, UnscopedDebugEnum,
 };
 use existing_rust_debuggable::ExistingRustDebuggable;
 use googletest::{expect_eq, gtest};
@@ -111,5 +111,14 @@ fn test_array_debuggable_including_large_and_mixed_opaque_arrays() {
          unscoped: [UnscopedDebugEnum(10), UnscopedDebugEnum(20)], \
          scoped: [Enum(1), Enum(5)], \
          matrix: [[Enum(1), Enum(2)], [Enum(3), Enum(1)]] }"
+    );
+}
+
+#[gtest]
+fn test_has_mutable_fields() {
+    expect_eq!(format!("{:?}", NonCopy::default()), "NonCopy");
+    expect_eq!(
+        format!("{:?}", HasMutableFields::default()),
+        "HasMutableFields { i: Cell { value: 0 }, .. }"
     );
 }
