@@ -51,10 +51,10 @@ impl From<::ffi_11::c_int> for S {
     #[inline(always)]
     fn from(args: ::ffi_11::c_int) -> Self {
         let mut x = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN1SC1Ei(&raw mut tmp as *mut _, x);
-            tmp.assume_init()
+            let mut __crubit_tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            __crubit_tmp.as_mut_ptr().cast::<::ffi_11::c_int>().write(x);
+            __crubit_tmp.assume_init()
         }
     }
 }
@@ -945,14 +945,245 @@ impl ::ctor::PinnedDrop for TrivialDefaultNotUnpin {
     }
 }
 
+/// The constructor of this class is implemented by zero-filling it, then writing
+/// its parameters into the fields, without a C++ thunk.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "13FieldInitCtor"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=FieldInitCtor
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct FieldInitCtor {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) a_: [::core::mem::MaybeUninit<u8>; 4],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) unset_: [::core::mem::MaybeUninit<u8>; 4],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) p_: [::core::mem::MaybeUninit<u8>; 8],
+}
+impl !Send for FieldInitCtor {}
+impl !Sync for FieldInitCtor {}
+unsafe impl ::cxx::ExternType for FieldInitCtor {
+    type Id = ::cxx::type_id!("FieldInitCtor");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("FieldInitCtor"), crate::FieldInitCtor);
+impl FieldInitCtor {
+    #[inline(always)]
+    pub fn a<'__this>(&'__this self) -> ::ffi_11::c_int {
+        unsafe { self::field_init_ctor::a(self) }
+    }
+    #[inline(always)]
+    pub fn unset<'__this>(&'__this self) -> f32 {
+        unsafe { self::field_init_ctor::unset(self) }
+    }
+    #[inline(always)]
+    pub fn p<'__this>(&'__this self) -> *const ::ffi_11::c_int {
+        unsafe { self::field_init_ctor::p(self) }
+    }
+}
+
+impl ::ctor::UnsafeFrom<(::ffi_11::c_int, *const ::ffi_11::c_int)> for FieldInitCtor {
+    #[inline(always)]
+    unsafe fn unsafe_from(args: (::ffi_11::c_int, *const ::ffi_11::c_int)) -> Self {
+        let (mut a, mut p) = args;
+        unsafe {
+            let mut __crubit_tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            __crubit_tmp.as_mut_ptr().cast::<::ffi_11::c_int>().write(a);
+            __crubit_tmp.as_mut_ptr().byte_add(8).cast::<*const ::ffi_11::c_int>().write(p);
+            __crubit_tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::UnsafeCtorNew<(::ffi_11::c_int, *const ::ffi_11::c_int)> for FieldInitCtor {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    unsafe fn ctor_new(args: (::ffi_11::c_int, *const ::ffi_11::c_int)) -> Self::CtorType {
+        unsafe {
+            <Self as ::ctor::UnsafeFrom<(::ffi_11::c_int, *const ::ffi_11::c_int)>>::unsafe_from(
+                args,
+            )
+        }
+    }
+}
+
+pub mod field_init_ctor {
+    #[inline(always)]
+    pub(crate) fn a<'__this>(__this: &'__this crate::FieldInitCtor) -> ::ffi_11::c_int {
+        unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
+    }
+    #[inline(always)]
+    pub(crate) fn unset<'__this>(__this: &'__this crate::FieldInitCtor) -> f32 {
+        unsafe { (&raw const *__this).byte_add(4).cast::<f32>().read() }
+    }
+    #[inline(always)]
+    pub(crate) fn p<'__this>(__this: &'__this crate::FieldInitCtor) -> *const ::ffi_11::c_int {
+        unsafe { (&raw const *__this).byte_add(8).cast::<*const ::ffi_11::c_int>().read() }
+    }
+}
+
+/// Like `FieldInitCtor`, but `!Unpin`.
+#[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "21FieldInitCtorNotUnpin"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=FieldInitCtorNotUnpin
+pub struct FieldInitCtorNotUnpin {
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) a_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) unset_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) p_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+}
+impl !Send for FieldInitCtorNotUnpin {}
+impl !Sync for FieldInitCtorNotUnpin {}
+unsafe impl ::cxx::ExternType for FieldInitCtorNotUnpin {
+    type Id = ::cxx::type_id!("FieldInitCtorNotUnpin");
+    type Kind = ::cxx::kind::Opaque;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("FieldInitCtorNotUnpin"),
+    crate::FieldInitCtorNotUnpin
+);
+impl FieldInitCtorNotUnpin {
+    #[inline(always)]
+    pub fn a<'__this>(&'__this self) -> ::ffi_11::c_int {
+        unsafe { self::field_init_ctor_not_unpin::a(self) }
+    }
+    #[inline(always)]
+    pub fn unset<'__this>(&'__this self) -> f32 {
+        unsafe { self::field_init_ctor_not_unpin::unset(self) }
+    }
+    #[inline(always)]
+    pub fn p<'__this>(&'__this self) -> *const ::ffi_11::c_int {
+        unsafe { self::field_init_ctor_not_unpin::p(self) }
+    }
+}
+
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for FieldInitCtorNotUnpin {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
+                crate::detail::__rust_thunk___ZN21FieldInitCtorNotUnpinC1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for FieldInitCtorNotUnpin {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
+
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for FieldInitCtorNotUnpin {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN21FieldInitCtorNotUnpinaSERKS_(self, __param_0);
+        }
+    }
+}
+
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `p`: raw pointer
+impl ::ctor::UnsafeCtorNew<(::ffi_11::c_int, *const ::ffi_11::c_int)> for FieldInitCtorNotUnpin {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    unsafe fn ctor_new(args: (::ffi_11::c_int, *const ::ffi_11::c_int)) -> Self::CtorType {
+        let (mut a, mut p) = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                __crubit_dest.write_bytes(0, 1);
+                __crubit_dest.cast::<::ffi_11::c_int>().write(a);
+                __crubit_dest.byte_add(8).cast::<*const ::ffi_11::c_int>().write(p);
+            })
+        }
+    }
+}
+
+impl ::ctor::PinnedDrop for FieldInitCtorNotUnpin {
+    #[inline(always)]
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN21FieldInitCtorNotUnpinD1Ev(self) }
+    }
+}
+
+pub mod field_init_ctor_not_unpin {
+    #[inline(always)]
+    pub(crate) fn a<'__this>(__this: &'__this crate::FieldInitCtorNotUnpin) -> ::ffi_11::c_int {
+        unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
+    }
+    #[inline(always)]
+    pub(crate) fn unset<'__this>(__this: &'__this crate::FieldInitCtorNotUnpin) -> f32 {
+        unsafe { (&raw const *__this).byte_add(4).cast::<f32>().read() }
+    }
+    #[inline(always)]
+    pub(crate) fn p<'__this>(
+        __this: &'__this crate::FieldInitCtorNotUnpin,
+    ) -> *const ::ffi_11::c_int {
+        unsafe { (&raw const *__this).byte_add(8).cast::<*const ::ffi_11::c_int>().read() }
+    }
+}
+
+/// A user-provided default constructor with an empty body is implemented by
+/// zero-filling the object, without a C++ thunk.
+///
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * Document why the following public unsafe fields of this type cannot be misused by callee:
+///   * `p`: raw pointer
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "9EmptyCtor"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=EmptyCtor
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct EmptyCtor {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    pub a: ::ffi_11::c_int,
+    pub p: *const ::ffi_11::c_int,
+}
+impl !Send for EmptyCtor {}
+impl !Sync for EmptyCtor {}
+unsafe impl ::cxx::ExternType for EmptyCtor {
+    type Id = ::cxx::type_id!("EmptyCtor");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("EmptyCtor"), crate::EmptyCtor);
+
+impl Default for EmptyCtor {
+    #[inline(always)]
+    fn default() -> Self {
+        unsafe { ::core::mem::MaybeUninit::<Self>::zeroed().assume_init() }
+    }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN1SC1Ei(
-            __this: *mut ::core::ffi::c_void,
-            x: ::ffi_11::c_int,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN1TC1Eif(
             __this: *mut ::core::ffi::c_void,
             x: ::ffi_11::c_int,
@@ -1000,6 +1231,17 @@ mod detail {
         ) -> ::core::pin::Pin<&'__this mut crate::TrivialDefaultNotUnpin>;
         pub(crate) unsafe fn __rust_thunk___ZN22TrivialDefaultNotUnpinD1Ev<'__this>(
             __this: ::core::pin::Pin<&'__this mut crate::TrivialDefaultNotUnpin>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN21FieldInitCtorNotUnpinC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::FieldInitCtorNotUnpin,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN21FieldInitCtorNotUnpinaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::FieldInitCtorNotUnpin>,
+            __param_0: &'__param_0 crate::FieldInitCtorNotUnpin,
+        ) -> ::core::pin::Pin<&'__this mut crate::FieldInitCtorNotUnpin>;
+        pub(crate) unsafe fn __rust_thunk___ZN21FieldInitCtorNotUnpinD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::FieldInitCtorNotUnpin>,
         );
     }
 }
@@ -1079,4 +1321,24 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::TrivialDefaultNotUnpin, p) == 8);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     static_assertions::assert_impl_all!(*const::ffi_11::c_int: Copy);
+    assert!(::core::mem::size_of::<crate::FieldInitCtor>() == 16);
+    assert!(::core::mem::align_of::<crate::FieldInitCtor>() == 8);
+    static_assertions::assert_impl_all!(crate::FieldInitCtor: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::FieldInitCtor: Drop);
+    assert!(::core::mem::offset_of!(crate::FieldInitCtor, a_) == 0);
+    assert!(::core::mem::offset_of!(crate::FieldInitCtor, unset_) == 4);
+    assert!(::core::mem::offset_of!(crate::FieldInitCtor, p_) == 8);
+    assert!(::core::mem::size_of::<crate::FieldInitCtorNotUnpin>() == 16);
+    assert!(::core::mem::align_of::<crate::FieldInitCtorNotUnpin>() == 8);
+    static_assertions::assert_impl_all!(crate::FieldInitCtorNotUnpin: Drop);
+    static_assertions::assert_not_impl_any!(crate::FieldInitCtorNotUnpin: Copy);
+    assert!(::core::mem::offset_of!(crate::FieldInitCtorNotUnpin, a_) == 0);
+    assert!(::core::mem::offset_of!(crate::FieldInitCtorNotUnpin, unset_) == 4);
+    assert!(::core::mem::offset_of!(crate::FieldInitCtorNotUnpin, p_) == 8);
+    assert!(::core::mem::size_of::<crate::EmptyCtor>() == 16);
+    assert!(::core::mem::align_of::<crate::EmptyCtor>() == 8);
+    static_assertions::assert_impl_all!(crate::EmptyCtor: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::EmptyCtor: Drop);
+    assert!(::core::mem::offset_of!(crate::EmptyCtor, a) == 0);
+    assert!(::core::mem::offset_of!(crate::EmptyCtor, p) == 8);
 };

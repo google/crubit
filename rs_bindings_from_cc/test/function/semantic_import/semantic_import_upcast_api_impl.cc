@@ -21,10 +21,6 @@
 static_assert(CRUBIT_SIZEOF(class S) == 4);
 static_assert(alignof(class S) == 4);
 
-extern "C" void __rust_thunk___ZN1SC1Ei(class S* __this, int x) {
-  crubit::construct_at(__this, x);
-}
-
 static_assert(CRUBIT_SIZEOF(class T) == 8);
 static_assert(alignof(class T) == 4);
 
@@ -164,5 +160,39 @@ extern "C" void __rust_thunk___ZN22TrivialDefaultNotUnpinD1Ev(
     struct TrivialDefaultNotUnpin* __this) {
   std::destroy_at(__this);
 }
+
+static_assert(CRUBIT_SIZEOF(class FieldInitCtor) == 16);
+static_assert(alignof(class FieldInitCtor) == 8);
+
+static_assert(CRUBIT_SIZEOF(class FieldInitCtorNotUnpin) == 16);
+static_assert(alignof(class FieldInitCtorNotUnpin) == 8);
+
+extern "C" void __rust_thunk___ZN21FieldInitCtorNotUnpinC1ERKS_(
+    class FieldInitCtorNotUnpin* __this,
+    class FieldInitCtorNotUnpin const* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+
+extern "C" class FieldInitCtorNotUnpin*
+__rust_thunk___ZN21FieldInitCtorNotUnpinaSERKS_(
+    class FieldInitCtorNotUnpin* __this,
+    class FieldInitCtorNotUnpin const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+static_assert(
+    (class FieldInitCtorNotUnpin &
+     (::FieldInitCtorNotUnpin::*)(class FieldInitCtorNotUnpin const&)) &
+    ::FieldInitCtorNotUnpin::operator=);
+
+extern "C" void __rust_thunk___ZN21FieldInitCtorNotUnpinD1Ev(
+    class FieldInitCtorNotUnpin* __this) {
+  std::destroy_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(struct EmptyCtor) == 16);
+static_assert(alignof(struct EmptyCtor) == 8);
+static_assert(CRUBIT_OFFSET_OF(a, struct EmptyCtor) == 0);
+static_assert(CRUBIT_OFFSET_OF(p, struct EmptyCtor) == 8);
 
 #pragma clang diagnostic pop

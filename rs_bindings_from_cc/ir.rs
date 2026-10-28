@@ -1598,12 +1598,29 @@ pub struct Getter {
     pub offset: usize,
 }
 
+/// `field = param` for one field, as part of a `Constructor`.
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct FieldInit {
+    /// The type of the field.
+    pub type_: CcType,
+    /// The offset of the field in bits.
+    pub offset: usize,
+    /// The index of the parameter, not counting `this`.
+    pub param_index: usize,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct Constructor {
+    pub field_inits: Vec<FieldInit>,
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum MemberFuncSemantic {
     Setter(Setter),
     Getter(Getter),
-    /// A constructor that can be implemented by filling the object with zero bytes.
-    Constructor,
+    /// A constructor that can be implemented by filling the object with zero bytes, then copying
+    /// some of its parameters into fields.
+    Constructor(Constructor),
 }
 
 #[derive(Clone)]

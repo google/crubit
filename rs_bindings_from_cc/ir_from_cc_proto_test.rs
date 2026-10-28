@@ -250,7 +250,34 @@ fn test_member_func_semantic_proto() -> Result<()> {
         protobuf::proto!(ir_rust_proto::MemberFuncSemantic { constructor: __ {} });
     let semantic_constructor = MemberFuncSemantic::try_from(semantic_constructor_proto.as_view())
         .expect("should convert successfully");
-    assert_eq!(semantic_constructor, MemberFuncSemantic::Constructor);
+    assert_eq!(
+        semantic_constructor,
+        MemberFuncSemantic::Constructor(ir::Constructor { field_inits: vec![] })
+    );
+
+    let semantic_constructor_with_inits_proto =
+        protobuf::proto!(ir_rust_proto::MemberFuncSemantic {
+            constructor: __ {
+                field_inits: [__ {
+                    r#type: __ { primitive: __ { spelling: "int" } },
+                    offset: 32,
+                    param_index: 1,
+                }],
+            },
+        });
+    let semantic_constructor_with_inits =
+        MemberFuncSemantic::try_from(semantic_constructor_with_inits_proto.as_view())
+            .expect("should convert successfully");
+    let MemberFuncSemantic::Constructor(c) = semantic_constructor_with_inits else {
+        panic!("expected Constructor");
+    };
+    assert_eq!(c.field_inits.len(), 1);
+    assert_eq!(c.field_inits[0].offset, 32);
+    assert_eq!(c.field_inits[0].param_index, 1);
+    assert!(matches!(
+        c.field_inits[0].type_.variant(),
+        ir::CcTypeVariant::Primitive(ir::Primitive::Int)
+    ));
     Ok(())
 }
 

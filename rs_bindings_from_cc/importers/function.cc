@@ -346,48 +346,17 @@ struct PropertyFieldInfo {
   clang::QualType qual_type;
 };
 
-std::optional<PropertyFieldInfo> GetPropertyFieldInfo(
-    ImportContext& ictx, const clang::CXXRecordDecl* receiver_record,
-    const clang::Expr* expr, const clang::ParmVarDecl* self_param = nullptr) {
-  // Matches: `<a>.<b>` or `<a>-><b>` (or implicit `<b>` for `this-><b>`).
-  auto* member_expr = clang::dyn_cast_or_null<clang::MemberExpr>(expr);
-  if (!member_expr) {
-    return std::nullopt;
-  }
-
-  if (!member_expr->isImplicitAccess()) {
-    const clang::Expr* base = member_expr->getBase()->IgnoreParenImpCasts();
-    if (self_param != nullptr) {
-      // Matches free-function receiver access: `<self_param>.<b>`.
-      const auto* decl_ref = clang::dyn_cast<clang::DeclRefExpr>(base);
-      if (!decl_ref || decl_ref->getDecl() != self_param) {
-        return std::nullopt;
-      }
-    } else if (!clang::isa<clang::CXXThisExpr>(base)) {
-      // Matches explicit `this` access in a member function: `this-><b>`.
-      return std::nullopt;
-    }
-  } else if (self_param != nullptr) {
-    // Free functions cannot have implicit `this-><b>` member access.
-    return std::nullopt;
-  }
-
-  // Matches direct non-bitfield data member access: `<a>.<field>`.
-  auto* field_decl =
-      clang::dyn_cast_or_null<clang::FieldDecl>(member_expr->getMemberDecl());
-  if (!field_decl || field_decl->isBitField()) {
+// Returns the information needed to access `field_decl` directly (without a
+// thunk), or `std::nullopt` if it can't be accessed directly.
+std::optional<PropertyFieldInfo> GetFieldInfo(
+    ImportContext& ictx, const clang::FieldDecl* field_decl) {
+  if (field_decl->isBitField()) {
     return std::nullopt;
   }
 
   auto* record_decl = field_decl->getParent();
   if (!record_decl || record_decl->isDependentContext() ||
       !record_decl->isCompleteDefinition()) {
-    return std::nullopt;
-  }
-  // The offset below is relative to the record that declares the field, so it
-  // is only meaningful if that is also the receiver's record (not a base).
-  if (receiver_record == nullptr ||
-      record_decl->getCanonicalDecl() != receiver_record->getCanonicalDecl()) {
     return std::nullopt;
   }
   // Under pointer field protection (PFP), a protected field holds a signed
@@ -440,6 +409,48 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(
   };
 }
 
+std::optional<PropertyFieldInfo> GetPropertyFieldInfo(
+    ImportContext& ictx, const clang::CXXRecordDecl* receiver_record,
+    const clang::Expr* expr, const clang::ParmVarDecl* self_param = nullptr) {
+  // Matches: `<a>.<b>` or `<a>-><b>` (or implicit `<b>` for `this-><b>`).
+  auto* member_expr = clang::dyn_cast_or_null<clang::MemberExpr>(expr);
+  if (!member_expr) {
+    return std::nullopt;
+  }
+
+  if (!member_expr->isImplicitAccess()) {
+    const clang::Expr* base = member_expr->getBase()->IgnoreParenImpCasts();
+    if (self_param != nullptr) {
+      // Matches free-function receiver access: `<self_param>.<b>`.
+      const auto* decl_ref = clang::dyn_cast<clang::DeclRefExpr>(base);
+      if (!decl_ref || decl_ref->getDecl() != self_param) {
+        return std::nullopt;
+      }
+    } else if (!clang::isa<clang::CXXThisExpr>(base)) {
+      // Matches explicit `this` access in a member function: `this-><b>`.
+      return std::nullopt;
+    }
+  } else if (self_param != nullptr) {
+    // Free functions cannot have implicit `this-><b>` member access.
+    return std::nullopt;
+  }
+
+  // Matches direct non-bitfield data member access: `<a>.<field>`.
+  auto* field_decl =
+      clang::dyn_cast_or_null<clang::FieldDecl>(member_expr->getMemberDecl());
+  if (!field_decl) {
+    return std::nullopt;
+  }
+  // The offset of the field is relative to the record that declares it, so it
+  // is only meaningful if that is also the receiver's record (not a base).
+  if (receiver_record == nullptr ||
+      field_decl->getParent()->getCanonicalDecl() !=
+          receiver_record->getCanonicalDecl()) {
+    return std::nullopt;
+  }
+  return GetFieldInfo(ictx, field_decl);
+}
+
 bool ZeroInitIsAllZeroBytes(const clang::ASTContext& ast_context,
                             const clang::CXXRecordDecl& record_decl);
 
@@ -490,24 +501,168 @@ bool ZeroInitIsAllZeroBytes(const clang::ASTContext& ast_context,
   return true;
 }
 
+// Returns true if `init` is an implicit initializer that calls a trivial
+// default constructor, which leaves the base or member uninitialized.
+bool IsImplicitTrivialDefaultInit(const clang::CXXCtorInitializer& init) {
+  if (init.isWritten()) {
+    return false;
+  }
+  const auto* construct_expr = clang::dyn_cast_or_null<clang::CXXConstructExpr>(
+      init.getInit() ? init.getInit()->IgnoreImplicit() : nullptr);
+  if (construct_expr == nullptr) {
+    return false;
+  }
+  const clang::CXXConstructorDecl* ctor = construct_expr->getConstructor();
+  return ctor != nullptr && ctor->isDefaultConstructor() && ctor->isTrivial();
+}
+
+// Returns the `FieldInit` for `init` if it has the form `field(param)` (or
+// `field{param}`), where `param` is a parameter of `ctor_def` whose type is the
+// type of the field, and the field can be accessed directly.
+std::optional<ir_proto::MemberFuncSemantic::Constructor::FieldInit>
+GetFieldInit(ImportContext& ictx, const clang::CXXConstructorDecl& ctor_def,
+             const clang::CXXCtorInitializer& init) {
+  // Base, delegating, and indirect (anonymous union member) initializers are
+  // not supported.
+  if (!init.isWritten() || !init.isMemberInitializer()) {
+    return std::nullopt;
+  }
+  const clang::FieldDecl* field_decl = init.getMember();
+  if (field_decl == nullptr ||
+      field_decl->getParent()->getCanonicalDecl() !=
+          ctor_def.getParent()->getCanonicalDecl() ||
+      field_decl->getType().isVolatileQualified()) {
+    return std::nullopt;
+  }
+  const clang::Expr* expr = init.getInit();
+  if (const auto* init_list = clang::dyn_cast_or_null<clang::InitListExpr>(
+          expr ? expr->IgnoreImplicit() : nullptr);
+      init_list != nullptr) {
+    if (init_list->getNumInits() != 1) {
+      return std::nullopt;
+    }
+    expr = init_list->getInit(0);
+  }
+  if (expr == nullptr) {
+    return std::nullopt;
+  }
+  const auto* decl_ref =
+      clang::dyn_cast<clang::DeclRefExpr>(expr->IgnoreParenImpCasts());
+  if (decl_ref == nullptr) {
+    return std::nullopt;
+  }
+  const auto* param_decl =
+      clang::dyn_cast<clang::ParmVarDecl>(decl_ref->getDecl());
+  if (param_decl == nullptr) {
+    return std::nullopt;
+  }
+  unsigned param_index = param_decl->getFunctionScopeIndex();
+  if (param_index >= ctor_def.getNumParams() ||
+      ctor_def.getParamDecl(param_index) != param_decl) {
+    return std::nullopt;
+  }
+  // No conversions: the parameter is copied into the field as is.
+  clang::ASTContext& ast_context = ctor_def.getASTContext();
+  if (!ast_context.hasSameUnqualifiedType(field_decl->getType(),
+                                          param_decl->getType())) {
+    return std::nullopt;
+  }
+  std::optional<PropertyFieldInfo> field_info = GetFieldInfo(ictx, field_decl);
+  if (!field_info.has_value()) {
+    return std::nullopt;
+  }
+  ir_proto::MemberFuncSemantic::Constructor::FieldInit field_init;
+  field_info->type.WriteToProto(*field_init.mutable_type());
+  field_init.set_offset(field_info->offset);
+  field_init.set_param_index(static_cast<int32_t>(param_index));
+  return field_init;
+}
+
 // Returns the semantic of a constructor, if any.
 //
 // A trivial default constructor leaves the object uninitialized. The C++ thunk
 // for it value-initializes the object instead (`crubit::construct_at(p)`),
 // which zero-initializes it. If that produces all zero bytes, the constructor
 // can be implemented without a thunk, by filling the object with zero bytes.
+//
+// A user-provided constructor whose body is empty, and whose only written
+// initializers copy scalar parameters into fields, is implemented the same way,
+// followed by a write of each of those parameters into its field:
+//
+// ```
+// S(int a, const int* p) : a_(a), p_(p) {}
+// ```
+//
+// The fields that the constructor doesn't initialize are left with an
+// indeterminate value by C++, so zero is as good a value for them as any. C++
+// initializes the fields in declaration order rather than initializer order,
+// which is unobservable here because the initializers have no side effects.
 std::optional<ir_proto::MemberFuncSemantic> GetConstructorSemantic(
-    const clang::CXXConstructorDecl* ctor_decl) {
-  if (!ctor_decl->isDefaultConstructor() || !ctor_decl->isTrivial() ||
-      ctor_decl->isDeleted()) {
+    ImportContext& ictx, const clang::CXXConstructorDecl* ctor_decl) {
+  if (ctor_decl->isDeleted()) {
     return std::nullopt;
   }
   const clang::CXXRecordDecl* record_decl = ctor_decl->getParent();
-  if (!ZeroInitIsAllZeroBytes(record_decl->getASTContext(), *record_decl)) {
+  if (ctor_decl->isDefaultConstructor() && ctor_decl->isTrivial()) {
+    if (!ZeroInitIsAllZeroBytes(record_decl->getASTContext(), *record_decl)) {
+      return std::nullopt;
+    }
+    ir_proto::MemberFuncSemantic semantic;
+    semantic.mutable_constructor();
+    return semantic;
+  }
+
+  // Also rejects `= default`, which is either trivial (above) or has implicit
+  // initializers that this function doesn't analyze.
+  if (!ctor_decl->isUserProvided() || ctor_decl->isVariadic() ||
+      ctor_decl->isDelegatingConstructor()) {
     return std::nullopt;
   }
+  const clang::FunctionDecl* def = nullptr;
+  if (!ctor_decl->hasBody(def) || def == nullptr ||
+      !FunctionBodyIsDefinedInHeader(ictx, def)) {
+    return std::nullopt;
+  }
+  const auto* ctor_def = clang::dyn_cast<clang::CXXConstructorDecl>(def);
+  if (ctor_def == nullptr || ctor_def->isDefaulted()) {
+    return std::nullopt;
+  }
+  // Also rejects function-try-blocks.
+  const auto* body =
+      clang::dyn_cast_or_null<clang::CompoundStmt>(ctor_def->getBody());
+  if (body == nullptr || !body->body_empty()) {
+    return std::nullopt;
+  }
+  // References and records are excluded: their initializers may run arbitrary
+  // code, and they don't have a direct Rust equivalent that can be written
+  // into the field.
+  for (const clang::ParmVarDecl* param : ctor_def->parameters()) {
+    if (!param->getType()->isScalarType()) {
+      return std::nullopt;
+    }
+  }
+  if (record_decl->isPolymorphic() || record_decl->getNumVBases() != 0 ||
+      !ZeroInitIsAllZeroBytes(record_decl->getASTContext(), *record_decl)) {
+    return std::nullopt;
+  }
+
   ir_proto::MemberFuncSemantic semantic;
-  semantic.mutable_constructor();
+  ir_proto::MemberFuncSemantic::Constructor& constructor =
+      *semantic.mutable_constructor();
+  for (const clang::CXXCtorInitializer* init : ctor_def->inits()) {
+    if (init == nullptr) {
+      return std::nullopt;
+    }
+    if (IsImplicitTrivialDefaultInit(*init)) {
+      continue;
+    }
+    std::optional<ir_proto::MemberFuncSemantic::Constructor::FieldInit>
+        field_init = GetFieldInit(ictx, *ctor_def, *init);
+    if (!field_init.has_value()) {
+      return std::nullopt;
+    }
+    *constructor.add_field_inits() = *std::move(field_init);
+  }
   return semantic;
 }
 
@@ -518,7 +673,7 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
   // as a setter's: `S(int x) { x_ = x; }`.
   if (const auto* ctor_decl =
           clang::dyn_cast<clang::CXXConstructorDecl>(function_decl)) {
-    return GetConstructorSemantic(ctor_decl);
+    return GetConstructorSemantic(ictx, ctor_decl);
   }
   auto* method_decl = clang::dyn_cast<clang::CXXMethodDecl>(function_decl);
   bool is_instance_method = method_decl && method_decl->isInstance();

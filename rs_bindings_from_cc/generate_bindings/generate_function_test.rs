@@ -3902,7 +3902,6 @@ fn test_thunkless_constructor_nontrivial() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct WithInitializer { int x = 1; };
-        struct UserProvided { UserProvided() {} int x; };
         struct Polymorphic { virtual ~Polymorphic(); int x; };
         "#,
     )?;
@@ -3919,15 +3918,92 @@ fn test_thunkless_constructor_nontrivial() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void ...(struct UserProvided* __this) { crubit::construct_at(__this); }
-        }
-    );
-    assert_cc_matches!(
-        rs_api_impl,
-        quote! {
             extern "C" void ...(struct Polymorphic* __this) { crubit::construct_at(__this); }
         }
     );
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_constructor_field_inits() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct UserProvided { UserProvided() {} int x; };
+        class FieldInits {
+         public:
+          FieldInits(int a, const int* p) : p_(p), a_(a) {}
+         private:
+          int a_;
+          const int* p_;
+        };
+        struct NotUnpin {
+          explicit NotUnpin(int a) : a_(a) {}
+          ~NotUnpin() {}
+          int a_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl Default for UserProvided {
+                #[inline(always)]
+                fn default() -> Self {
+                    unsafe { ::core::mem::MaybeUninit::<Self>::zeroed().assume_init() }
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            let mut __crubit_tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            __crubit_tmp.as_mut_ptr().cast::<::ffi_11::c_int>().write(a);
+            __crubit_tmp.as_mut_ptr().byte_add(8).cast::<*const ::ffi_11::c_int>().write(p);
+            __crubit_tmp.assume_init()
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                __crubit_dest.write_bytes(0, 1);
+                __crubit_dest.cast::<::ffi_11::c_int>().write(a);
+            })
+        }
+    );
+    // Only the copy constructor of `NotUnpin` still needs a thunk.
+    assert_cc_not_matches!(rs_api_impl, quote! { crubit::construct_at(__this) });
+    assert_cc_not_matches!(rs_api_impl, quote! { crubit::construct_at(__this, a ...) });
+    assert_cc_not_matches!(rs_api_impl, quote! { crubit::construct_at(__this, p ...) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_constructor_field_inits_unsupported_type() -> Result<()> {
+    // An enum parameter is not written directly, because `can_use_thunkless_setter` doesn't accept
+    // it.
+    let proto = ir_proto_from_cc(
+        r#"
+        enum E { kA };
+        struct S { S(E e) : e_(e) {} E e_; };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(rs_api, quote! { __crubit_tmp });
+    assert_cc_matches!(rs_api_impl, quote! { crubit::construct_at(__this, e) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_constructor_field_inits_disabled() -> Result<()> {
+    let BindingsTokens { rs_api, rs_api_impl } =
+        generate_bindings_tokens_from_cc("struct S { S(int a) : a_(a) {} int a_; };")?;
+    assert_rs_not_matches!(rs_api, quote! { __crubit_tmp });
+    assert_cc_matches!(rs_api_impl, quote! { crubit::construct_at(__this, a) });
     Ok(())
 }
 

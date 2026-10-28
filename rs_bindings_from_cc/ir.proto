@@ -291,8 +291,19 @@ message MemberFuncSemantic {
     int64 offset = 2;
   }
   // A constructor that can be implemented by filling the object with zero
-  // bytes.
-  message Constructor {}
+  // bytes, then copying some of its parameters into fields.
+  message Constructor {
+    // `field = param` for one field.
+    message FieldInit {
+      // The type of the field (and of the parameter, modulo cv-qualifiers).
+      CcType type = 1;
+      // The offset of the field in bits.
+      int64 offset = 2;
+      // The index of the parameter, not counting `this`.
+      int32 param_index = 3;
+    }
+    repeated FieldInit field_inits = 1;
+  }
   oneof variant {
     Setter setter = 1;
     Getter getter = 2;
