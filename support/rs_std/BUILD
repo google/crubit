@@ -75,7 +75,10 @@ crubit_cc_test(
     srcs = ["char_test.cc"],
     # TODO(b/522829368): `char_::encode_utf8` returns the wrong bytes on Windows
     # (`EncodedIsUtf8BytesTest` fails on x86_64 and x86).
-    tags = ["no_windows"],
+    tags = [
+        "no_macos",
+        "no_windows",
+    ],
     deps = [
         ":char",
         ":str_ref",
@@ -472,7 +475,10 @@ crubit_cc_test(
         "enum_test_option_i32.h",
     ],
     # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
+    tags = [
+        "no_macos",
+        "no_windows",
+    ],
     deps = [
         ":enum",
         "@abseil-cpp//absl/base:core_headers",

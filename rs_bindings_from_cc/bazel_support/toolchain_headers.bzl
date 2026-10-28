@@ -107,9 +107,12 @@ def _bindings_for_toolchain_headers_impl(ctx):
         else:
             extra_rs_srcs.extend([(f, "") for f in target.files.to_list()])
     public_hdrs = public_libc_files + public_libcxx_files + ctx.files.extra_hdrs
+
+    attr = ctx.attr
+
     bindings_providers = generate_and_compile_bindings(
         ctx,
-        ctx.attr,
+        attr,
         compilation_context = stl_compilation_context,
         public_hdrs = public_hdrs,
         header_includes = header_includes,

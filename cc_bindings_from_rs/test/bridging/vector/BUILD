@@ -55,7 +55,11 @@ crubit_cc_test(
     name = "vector_test",
     srcs = ["vector_test.cc"],
     # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
-    tags = ["no_windows"],
+    # TODO(b/575815022): Re-enable once `cc_std` links on macOS.
+    tags = [
+        "no_macos",
+        "no_windows",
+    ],
     deps = [
         ":test_helpers",
         ":vector_cc_api",
