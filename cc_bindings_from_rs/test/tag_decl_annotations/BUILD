@@ -52,10 +52,6 @@ golden_test(
 crubit_cc_test(
     name = "tag_decl_annotations_test",
     srcs = ["tag_decl_annotations_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     # TODO(b/522829368): remove `no_windows` to enable.
     tags = ["no_windows"],
     deps = [

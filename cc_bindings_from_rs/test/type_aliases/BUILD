@@ -53,10 +53,6 @@ golden_test(
 crubit_cc_test(
     name = "type_aliases_test",
     srcs = ["type_aliases_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     # TODO(b/522829368): remove `no_windows` to enable.
     tags = ["no_windows"],
     deps = [

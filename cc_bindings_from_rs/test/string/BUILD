@@ -26,10 +26,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "string_test",
     srcs = ["string_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     # TODO(b/522829368): The generated rs_std.h declares `stdin()`, `stdout()` and
     # `stderr()`, which the Windows UCRT defines as macros.
     tags = ["no_windows"],

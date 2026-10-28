@@ -105,11 +105,11 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "cc_test",
     srcs = ["cc_test.cc"],
-    platforms = [
-        "ios",
-    ],
     # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
-    tags = ["no_windows"],
+    tags = [
+        "no_test_android_x86",
+        "no_windows",
+    ],
     deps = [
         ":leaf_cc_lib",
         ":middle_rs_lib_cc_api",

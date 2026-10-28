@@ -154,6 +154,8 @@ crubit_cc_test(
     srcs = ["generate_bindings_and_metadata_test.cc"],
     local_defines = EXTERNAL_BINARIES,
     tags = [
+        "no_android",
+        "no_ios",
         # This test uses e.g. rustfmt and is difficult to run cross-platform. We could run it using
         # cross-compilation, but it's mostly uninteresting from a multi-platform POV.
         "not_run:arm",
@@ -223,6 +225,8 @@ crubit_cc_test(
     # only exist where `absl::string_view` is `std::string_view` (not with Apple's libc++).
     # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
     tags = [
+        "no_android",
+        "no_ios",
         "no_macos",
         "no_windows",
     ],
@@ -325,7 +329,10 @@ crubit_cc_test(
     name = "cmdline_test",
     srcs = ["cmdline_test.cc"],
     # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
-    tags = ["no_windows"],
+    tags = [
+        "no_test_android_arm",
+        "no_windows",
+    ],
     deps = [
         ":bazel_types",
         ":cc_ir",
@@ -865,6 +872,8 @@ crubit_cc_test(
     # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
     # See `ast_util_test`.
     tags = [
+        "no_android",
+        "no_ios",
         "no_macos",
         "no_windows",
     ],
