@@ -472,10 +472,7 @@ crubit_cc_test(
         "enum_test_option_i32.h",
     ],
     # TODO(b/522829368): remove `no_windows` to enable.
-    tags = [
-        "no_macos",
-        "no_windows",
-    ],
+    tags = ["no_windows"],
     deps = [
         ":enum",
         "@abseil-cpp//absl/base:core_headers",
