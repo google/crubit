@@ -26,6 +26,7 @@ cc_library(
     deps = [
         "//common:annotation_reader",
         "//common:status_macros",
+        "//common:string_view_conversion",
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc:ast_convert",
         "//rs_bindings_from_cc:ast_util",

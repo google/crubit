@@ -25,12 +25,13 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/LLVM.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/MD5.h"
 
 namespace crubit {
 namespace {
 
-std::string ProtoMessageToRustModName(absl::string_view message_name) {
+std::string ProtoMessageToRustModName(llvm::StringRef message_name) {
   std::string mod_name = "";
   for (char c : message_name) {
     // Underscore in MessageName implies nested item which maps to a nested

@@ -219,13 +219,8 @@ cc_library(
 crubit_cc_test(
     name = "ast_util_test",
     srcs = ["ast_util_test.cc"],
-    # rs_bindings_from_cc relies on `llvm::StringRef` <-> `absl::string_view` conversions, which
-    # only exist where `absl::string_view` is `std::string_view` (not with Apple's libc++).
     # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
-    tags = [
-        "no_macos",
-        "no_windows",
-    ],
+    tags = ["no_windows"],
     deps = [
         ":ast_util",
         "@abseil-cpp//absl/status",
@@ -863,11 +858,7 @@ crubit_cc_test(
     name = "collect_namespaces_test",
     srcs = ["collect_namespaces_test.cc"],
     # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
-    # See `ast_util_test`.
-    tags = [
-        "no_macos",
-        "no_windows",
-    ],
+    tags = ["no_windows"],
     deps = [
         ":cc_ir",
         ":collect_namespaces",

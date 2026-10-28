@@ -32,6 +32,7 @@
 #include "absl/strings/strip.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
+#include "common/string_view_conversion.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "rs_bindings_from_cc/ast_util.h"
@@ -361,7 +362,8 @@ std::string GetProto2MessageRustName(ImportContext& ictx,
   const clang::DeclContext* dc = record_decl.getDeclContext();
   return internal::GetProto2MessageRustNameImpl(
       record_decl.getNameAsString(), [&ictx, dc](absl::string_view prefix) {
-        clang::IdentifierInfo& ii = ictx.ctx_.Idents.get(prefix);
+        clang::IdentifierInfo& ii =
+            ictx.ctx_.Idents.get(StringRefFromStringView(prefix));
         for (clang::NamedDecl* decl : dc->lookup(&ii)) {
           if (auto* outer_record =
                   clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
