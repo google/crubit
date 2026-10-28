@@ -138,3 +138,17 @@ fn test_record_and_free_getter() {
     assert_eq!(wrapper.s().x(), 77);
     assert_eq!(semantic_import::free_get_s(&wrapper).x(), 77);
 }
+
+#[gtest]
+fn test_trivial_default_constructor() {
+    let t = semantic_import::TrivialDefault::default();
+    assert_eq!(t.a, 0);
+    assert_eq!(t.p, core::ptr::null());
+}
+
+#[gtest]
+fn test_trivial_default_constructor_not_unpin() {
+    let t = emplace!(semantic_import::TrivialDefaultNotUnpin::ctor_new(()));
+    assert_eq!(t.a, 0);
+    assert_eq!(t.p, core::ptr::null());
+}

@@ -245,6 +245,12 @@ fn test_member_func_semantic_proto() -> Result<()> {
     };
     assert_eq!(g.offset, 32);
     assert!(matches!(g.type_.variant(), ir::CcTypeVariant::Primitive(ir::Primitive::Int)));
+
+    let semantic_constructor_proto =
+        protobuf::proto!(ir_rust_proto::MemberFuncSemantic { constructor: __ {} });
+    let semantic_constructor = MemberFuncSemantic::try_from(semantic_constructor_proto.as_view())
+        .expect("should convert successfully");
+    assert_eq!(semantic_constructor, MemberFuncSemantic::Constructor);
     Ok(())
 }
 

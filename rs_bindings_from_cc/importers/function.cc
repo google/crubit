@@ -440,13 +440,85 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(
   };
 }
 
+bool ZeroInitIsAllZeroBytes(const clang::ASTContext& ast_context,
+                            const clang::CXXRecordDecl& record_decl);
+
+// Returns true if zero-initializing an object of type `type` is known to
+// produce all zero bytes. This is not the case for:
+//
+// * pointers to members, whose null value is not all zero bytes in common ABIs
+//   (for example, a null pointer to data member is -1 in the Itanium C++ ABI),
+// * pointers whose null value is not all zero bytes on the target, and
+// * fields protected by pointer field protection, which are stored in an
+//   encoded form.
+//
+// The check looks through arrays, fields, and base classes. It is similar to
+// `clang::CodeGen::CodeGenTypes::isZeroInitializable`, which is not available
+// outside of Clang's code generation, but conservatively treats all pointers to
+// members as not zero-initializable.
+bool ZeroInitIsAllZeroBytes(const clang::ASTContext& ast_context,
+                            clang::QualType type) {
+  type = ast_context.getBaseElementType(type).getCanonicalType();
+  if (type->isMemberPointerType()) {
+    return false;
+  }
+  if (type->isPointerType() || type->isNullPtrType()) {
+    return ast_context.getTargetNullPointerValue(type) == 0;
+  }
+  const clang::CXXRecordDecl* record_decl = type->getAsCXXRecordDecl();
+  if (record_decl == nullptr) {
+    return true;
+  }
+  record_decl = record_decl->getDefinition();
+  return record_decl != nullptr &&
+         ZeroInitIsAllZeroBytes(ast_context, *record_decl);
+}
+
+bool ZeroInitIsAllZeroBytes(const clang::ASTContext& ast_context,
+                            const clang::CXXRecordDecl& record_decl) {
+  for (const clang::CXXBaseSpecifier& base : record_decl.bases()) {
+    if (!ZeroInitIsAllZeroBytes(ast_context, base.getType())) {
+      return false;
+    }
+  }
+  for (const clang::FieldDecl* field : record_decl.fields()) {
+    if (clang::ASTContext::isPFPField(field) ||
+        !ZeroInitIsAllZeroBytes(ast_context, field->getType())) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Returns the semantic of a constructor, if any.
+//
+// A trivial default constructor leaves the object uninitialized. The C++ thunk
+// for it value-initializes the object instead (`crubit::construct_at(p)`),
+// which zero-initializes it. If that produces all zero bytes, the constructor
+// can be implemented without a thunk, by filling the object with zero bytes.
+std::optional<ir_proto::MemberFuncSemantic> GetConstructorSemantic(
+    const clang::CXXConstructorDecl* ctor_decl) {
+  if (!ctor_decl->isDefaultConstructor() || !ctor_decl->isTrivial() ||
+      ctor_decl->isDeleted()) {
+    return std::nullopt;
+  }
+  const clang::CXXRecordDecl* record_decl = ctor_decl->getParent();
+  if (!ZeroInitIsAllZeroBytes(record_decl->getASTContext(), *record_decl)) {
+    return std::nullopt;
+  }
+  ir_proto::MemberFuncSemantic semantic;
+  semantic.mutable_constructor();
+  return semantic;
+}
+
 std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
     ImportContext& ictx, const clang::FunctionDecl* function_decl) {
   // A constructor initializes a new object rather than updating an existing
-  // one, so it is never a setter, even if its body has the same shape as a
-  // setter's: `S(int x) { x_ = x; }`.
-  if (clang::isa<clang::CXXConstructorDecl>(function_decl)) {
-    return std::nullopt;
+  // one, so it is never a getter or setter, even if its body has the same shape
+  // as a setter's: `S(int x) { x_ = x; }`.
+  if (const auto* ctor_decl =
+          clang::dyn_cast<clang::CXXConstructorDecl>(function_decl)) {
+    return GetConstructorSemantic(ctor_decl);
   }
   auto* method_decl = clang::dyn_cast<clang::CXXMethodDecl>(function_decl);
   bool is_instance_method = method_decl && method_decl->isInstance();

@@ -3837,6 +3837,113 @@ fn test_thunkless_accessors_free_getter_receiver() -> Result<()> {
 }
 
 #[gtest]
+fn test_thunkless_constructor_trivial() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct Implicit { int x; const int* p; };
+        struct Defaulted { Defaulted() = default; int x; };
+        struct NotUnpin { ~NotUnpin() {} int x; };
+        template <typename T> struct Template { T x; };
+        using TemplateInt = Template<int>;
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl Default for Implicit {
+                #[inline(always)]
+                fn default() -> Self {
+                    unsafe { ::core::mem::MaybeUninit::<Self>::zeroed().assume_init() }
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl Default for Defaulted {
+                #[inline(always)]
+                fn default() -> Self {
+                    unsafe { ::core::mem::MaybeUninit::<Self>::zeroed().assume_init() }
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                    __crubit_dest.write_bytes(0, 1);
+                })
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl Default for __CcTemplateInst8TemplateIiE {
+                #[inline(always)]
+                fn default() -> Self {
+                    unsafe { ::core::mem::MaybeUninit::<Self>::zeroed().assume_init() }
+                }
+            }
+        }
+    );
+    // None of the default constructors needs a thunk.
+    assert_cc_not_matches!(rs_api_impl, quote! { crubit::construct_at(__this) });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_constructor_nontrivial() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct WithInitializer { int x = 1; };
+        struct UserProvided { UserProvided() {} int x; };
+        struct Polymorphic { virtual ~Polymorphic(); int x; };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(rs_api, quote! { zeroed().assume_init() });
+    assert_rs_not_matches!(rs_api, quote! { write_bytes });
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" void ...(struct WithInitializer* __this) { crubit::construct_at(__this); }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" void ...(struct UserProvided* __this) { crubit::construct_at(__this); }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" void ...(struct Polymorphic* __this) { crubit::construct_at(__this); }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_constructor_disabled() -> Result<()> {
+    let BindingsTokens { rs_api, rs_api_impl } =
+        generate_bindings_tokens_from_cc("struct S { int x; };")?;
+    assert_rs_not_matches!(rs_api, quote! { zeroed().assume_init() });
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! { extern "C" void ...(struct S* __this) { crubit::construct_at(__this); } }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_variadic_requiring_cc_thunk_skipped() -> Result<()> {
     let BindingsTokens { rs_api, rs_api_impl } =
         generate_bindings_tokens_from_cc("inline void variadic_fn(const char* s, ...) {}")?;

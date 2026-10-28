@@ -1602,6 +1602,8 @@ pub struct Getter {
 pub enum MemberFuncSemantic {
     Setter(Setter),
     Getter(Getter),
+    /// A constructor that can be implemented by filling the object with zero bytes.
+    Constructor,
 }
 
 #[derive(Clone)]

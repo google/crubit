@@ -131,4 +131,19 @@ class StructWithRecordAndFreeGetter {
   S s_;
 };
 
+// The trivial default constructor of this struct is implemented by zero-filling
+// it, without a C++ thunk.
+struct TrivialDefault {
+  int a;
+  const int* p;
+};
+
+// Like `TrivialDefault`, but `!Unpin`.
+struct TrivialDefaultNotUnpin {
+  // NOLINTNEXTLINE(modernize-use-equals-default)
+  ~TrivialDefaultNotUnpin() {}
+  int a;
+  const int* p;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_SEMANTIC_IMPORT_SEMANTIC_IMPORT_H_

@@ -831,6 +831,120 @@ pub mod struct_with_record_and_free_getter {
     }
 }
 
+/// The trivial default constructor of this struct is implemented by zero-filling
+/// it, without a C++ thunk.
+///
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * Document why the following public unsafe fields of this type cannot be misused by callee:
+///   * `p`: raw pointer
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "14TrivialDefault"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=TrivialDefault
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct TrivialDefault {
+    pub a: ::ffi_11::c_int,
+    pub p: *const ::ffi_11::c_int,
+}
+impl !Send for TrivialDefault {}
+impl !Sync for TrivialDefault {}
+unsafe impl ::cxx::ExternType for TrivialDefault {
+    type Id = ::cxx::type_id!("TrivialDefault");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("TrivialDefault"), crate::TrivialDefault);
+
+impl Default for TrivialDefault {
+    #[inline(always)]
+    fn default() -> Self {
+        unsafe { ::core::mem::MaybeUninit::<Self>::zeroed().assume_init() }
+    }
+}
+
+/// Like `TrivialDefault`, but `!Unpin`.
+///
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * Document why the following public unsafe fields of this type cannot be misused by callee:
+///   * `p`: raw pointer
+#[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "22TrivialDefaultNotUnpin"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=TrivialDefaultNotUnpin
+pub struct TrivialDefaultNotUnpin {
+    pub a: ::ffi_11::c_int,
+    pub p: *const ::ffi_11::c_int,
+}
+impl !Send for TrivialDefaultNotUnpin {}
+impl !Sync for TrivialDefaultNotUnpin {}
+unsafe impl ::cxx::ExternType for TrivialDefaultNotUnpin {
+    type Id = ::cxx::type_id!("TrivialDefaultNotUnpin");
+    type Kind = ::cxx::kind::Opaque;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TrivialDefaultNotUnpin"),
+    crate::TrivialDefaultNotUnpin
+);
+
+impl ::ctor::CtorNew<()> for TrivialDefaultNotUnpin {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                __crubit_dest.write_bytes(0, 1);
+            })
+        }
+    }
+}
+
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for TrivialDefaultNotUnpin {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
+                crate::detail::__rust_thunk___ZN22TrivialDefaultNotUnpinC1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for TrivialDefaultNotUnpin {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
+
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for TrivialDefaultNotUnpin {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN22TrivialDefaultNotUnpinaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl ::ctor::PinnedDrop for TrivialDefaultNotUnpin {
+    #[inline(always)]
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN22TrivialDefaultNotUnpinD1Ev(self) }
+    }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -875,6 +989,17 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN29StructWithRecordAndFreeGetterC1Ei(
             __this: *mut ::core::ffi::c_void,
             x: ::ffi_11::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN22TrivialDefaultNotUnpinC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::TrivialDefaultNotUnpin,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN22TrivialDefaultNotUnpinaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::TrivialDefaultNotUnpin>,
+            __param_0: &'__param_0 crate::TrivialDefaultNotUnpin,
+        ) -> ::core::pin::Pin<&'__this mut crate::TrivialDefaultNotUnpin>;
+        pub(crate) unsafe fn __rust_thunk___ZN22TrivialDefaultNotUnpinD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::TrivialDefaultNotUnpin>,
         );
     }
 }
@@ -940,4 +1065,18 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::StructWithRecordAndFreeGetter: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::StructWithRecordAndFreeGetter: Drop);
     assert!(::core::mem::offset_of!(crate::StructWithRecordAndFreeGetter, s_) == 0);
+    assert!(::core::mem::size_of::<crate::TrivialDefault>() == 16);
+    assert!(::core::mem::align_of::<crate::TrivialDefault>() == 8);
+    static_assertions::assert_impl_all!(crate::TrivialDefault: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::TrivialDefault: Drop);
+    assert!(::core::mem::offset_of!(crate::TrivialDefault, a) == 0);
+    assert!(::core::mem::offset_of!(crate::TrivialDefault, p) == 8);
+    assert!(::core::mem::size_of::<crate::TrivialDefaultNotUnpin>() == 16);
+    assert!(::core::mem::align_of::<crate::TrivialDefaultNotUnpin>() == 8);
+    static_assertions::assert_impl_all!(crate::TrivialDefaultNotUnpin: Drop);
+    static_assertions::assert_not_impl_any!(crate::TrivialDefaultNotUnpin: Copy);
+    assert!(::core::mem::offset_of!(crate::TrivialDefaultNotUnpin, a) == 0);
+    assert!(::core::mem::offset_of!(crate::TrivialDefaultNotUnpin, p) == 8);
+    static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
+    static_assertions::assert_impl_all!(*const::ffi_11::c_int: Copy);
 };

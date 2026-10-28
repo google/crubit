@@ -58,11 +58,7 @@ impl SomeClass {
 impl Default for SomeClass {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
+        unsafe { ::core::mem::MaybeUninit::<Self>::zeroed().assume_init() }
     }
 }
 
@@ -92,7 +88,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z14function_win64i(
             a: ::ffi_11::c_int,
         ) -> ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClass19function_vectorcallEff<'__this>(
             __this: &'__this mut crate::SomeClass,
             a: f32,

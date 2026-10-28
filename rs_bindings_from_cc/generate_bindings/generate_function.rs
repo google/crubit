@@ -1440,17 +1440,14 @@ fn adjust_param_types_for_trait_impl<'a>(
     ParamValueAdjustments { clone_prefixes, clone_suffixes }
 }
 
-/// A getter or setter which can be implemented by directly reading or writing the underlying
-/// field, instead of by calling a C++ thunk.
-struct ThunklessAccessor<'a> {
-    kind: ThunklessAccessorKind,
-    field_type: RsTypeKind<'a>,
-    offset: usize,
-}
-
-enum ThunklessAccessorKind {
-    Getter,
-    Setter,
+/// A function which can be implemented directly in Rust, instead of by calling a C++ thunk.
+enum ThunklessImpl<'a> {
+    /// A getter which reads the underlying field.
+    Getter { offset: usize },
+    /// A setter which writes the underlying field.
+    Setter { field_type: RsTypeKind<'a>, offset: usize },
+    /// A constructor which zero-fills the object.
+    ZeroedConstructor,
 }
 
 /// Returns whether a getter returning `return_type` from a field of type `field_type` can be
@@ -1486,12 +1483,12 @@ fn can_use_thunkless_setter(field_type: &RsTypeKind, param_type: &RsTypeKind) ->
         )
 }
 
-fn thunkless_accessor<'a>(
+fn thunkless_impl<'a>(
     db: &BindingsGenerator<'a>,
     func: &Func<'a>,
     param_types: &[RsTypeKind<'a>],
     return_type: &RsTypeKind<'a>,
-) -> Option<ThunklessAccessor<'a>> {
+) -> Option<ThunklessImpl<'a>> {
     if !db
         .ir()
         .target_crubit_features(func.owning_target())
@@ -1505,23 +1502,16 @@ fn thunkless_accessor<'a>(
             if !can_use_thunkless_getter(&field_type, return_type) {
                 return None;
             }
-            Some(ThunklessAccessor {
-                kind: ThunklessAccessorKind::Getter,
-                field_type,
-                offset: getter.offset,
-            })
+            Some(ThunklessImpl::Getter { offset: getter.offset })
         }
         MemberFuncSemantic::Setter(setter) => {
             let field_type = db.rs_type_kind(setter.type_.clone()).ok()?;
             if !can_use_thunkless_setter(&field_type, param_types.get(1)?) {
                 return None;
             }
-            Some(ThunklessAccessor {
-                kind: ThunklessAccessorKind::Setter,
-                field_type,
-                offset: setter.offset,
-            })
+            Some(ThunklessImpl::Setter { field_type, offset: setter.offset })
         }
+        MemberFuncSemantic::Constructor => Some(ThunklessImpl::ZeroedConstructor),
     }
 }
 
@@ -1586,7 +1576,7 @@ fn generate_func_body<'a>(
     return_type: &RsTypeKind<'a>,
     param_types: &[RsTypeKind<'a>],
     param_value_adjustments: &ParamValueAdjustments,
-    thunkless_accessor: Option<&ThunklessAccessor<'a>>,
+    thunkless_impl: Option<&ThunklessImpl<'a>>,
     thunk_ident: Ident,
     mut thunk_prepare: TokenStream,
     thunk_args: Vec<TokenStream>,
@@ -1610,26 +1600,31 @@ fn generate_func_body<'a>(
         return_type.to_token_stream_replacing_by_self(db, self_type.as_ref())
     };
 
-    if let Some(ThunklessAccessor { kind, field_type, offset }) = thunkless_accessor {
-        let self_arg = &thunk_args[0];
+    if let Some(thunkless_impl) = thunkless_impl {
         // The field is addressed by its offset rather than by name: the Rust struct may represent
         // it as an opaque blob of bytes, or it may belong to a base class.
-        let offset_bytes = offset / 8;
-        let byte_add = if offset_bytes == 0 {
-            quote! {}
-        } else {
-            let offset_bytes = syn::Index::from(offset_bytes);
-            quote! { .byte_add(#offset_bytes) }
+        let byte_add = |offset: usize| {
+            let offset_bytes = offset / 8;
+            if offset_bytes == 0 {
+                quote! {}
+            } else {
+                let offset_bytes = syn::Index::from(offset_bytes);
+                quote! { .byte_add(#offset_bytes) }
+            }
         };
-        let body = match kind {
-            ThunklessAccessorKind::Getter => {
+        let body = match thunkless_impl {
+            ThunklessImpl::Getter { offset } => {
+                let self_arg = &thunk_args[0];
+                let byte_add = byte_add(*offset);
                 // `&raw const`, rather than `&*`, so as not to materialize a reference to the
                 // whole record: `#self_arg` may be a raw pointer.
                 quote! {
                     (&raw const *#self_arg) #byte_add .cast::<#return_type_or_self>().read()
                 }
             }
-            ThunklessAccessorKind::Setter => {
+            ThunklessImpl::Setter { field_type, offset } => {
+                let self_arg = &thunk_args[0];
+                let byte_add = byte_add(*offset);
                 let val_arg = &thunk_args[1];
                 let field_type_tokens = field_type.to_token_stream(db);
                 let is_pinned_mut_ref = match param_types.first() {
@@ -1646,6 +1641,20 @@ fn generate_func_body<'a>(
                 // `write`, rather than an assignment, which would first drop the old value.
                 quote! {
                     (&raw mut *#self_ref) #byte_add .cast::<#field_type_tokens>().write(#val_arg)
+                }
+            }
+            // The importer only marks a constructor as zeroed if it is a trivial default
+            // constructor, and if zero-initializing the object produces all zero bytes. The C++
+            // thunk value-initializes the object, which for such a constructor is the same as
+            // zero-filling it.
+            ThunklessImpl::ZeroedConstructor if return_type.is_unpin() => {
+                quote! { ::core::mem::MaybeUninit::<#return_type_or_self>::zeroed().assume_init() }
+            }
+            ThunklessImpl::ZeroedConstructor => {
+                quote! {
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut #return_type_or_self| {
+                        __crubit_dest.write_bytes(0, 1);
+                    })
                 }
             }
         };
@@ -2096,13 +2105,13 @@ pub fn generate_function<'a>(
 
     // Skip thunk generation if the function is a method on a public base class,
     // as the base class thunk will already have been generated, or if we generate
-    // a direct Rust getter or setter implementation.
+    // a direct Rust implementation (`ThunklessImpl`).
     //
     // Note that this must be computed before `param_types` and `return_type` are adjusted below
     // to match the shape of the generated API: the same value is passed to `generate_func_body`,
     // so that the body cannot end up calling a thunk which was never generated.
-    let thunkless_accessor = thunkless_accessor(db, &func, &param_types, &return_type);
-    let skip_thunk_generation: bool = thunkless_accessor.is_some() || {
+    let thunkless_impl = thunkless_impl(db, &func, &param_types, &return_type);
+    let skip_thunk_generation: bool = thunkless_impl.is_some() || {
         || {
             // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when
             // `carcinize` is enabled.
@@ -2230,7 +2239,7 @@ pub fn generate_function<'a>(
                 &return_type,
                 &param_types,
                 &param_value_adjustments,
-                thunkless_accessor.as_ref(),
+                thunkless_impl.as_ref(),
                 thunk_ident(db, &func),
                 thunk_prepare,
                 thunk_args,
@@ -2404,7 +2413,7 @@ pub fn generate_function<'a>(
                         &free_return_type,
                         &free_param_types,
                         &param_value_adjustments,
-                        thunkless_accessor.as_ref(),
+                        thunkless_impl.as_ref(),
                         thunk_ident(db, &func),
                         free_thunk_prepare,
                         free_thunk_args,

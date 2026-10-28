@@ -290,9 +290,13 @@ message MemberFuncSemantic {
     CcType type = 1;
     int64 offset = 2;
   }
+  // A constructor that can be implemented by filling the object with zero
+  // bytes.
+  message Constructor {}
   oneof variant {
     Setter setter = 1;
     Getter getter = 2;
+    Constructor constructor = 3;
   }
 }
 

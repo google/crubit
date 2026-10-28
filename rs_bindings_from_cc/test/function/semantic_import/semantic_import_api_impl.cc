@@ -132,4 +132,37 @@ extern "C" void __rust_thunk___ZN29StructWithRecordAndFreeGetterC1Ei(
   crubit::construct_at(__this, x);
 }
 
+static_assert(CRUBIT_SIZEOF(struct TrivialDefault) == 16);
+static_assert(alignof(struct TrivialDefault) == 8);
+static_assert(CRUBIT_OFFSET_OF(a, struct TrivialDefault) == 0);
+static_assert(CRUBIT_OFFSET_OF(p, struct TrivialDefault) == 8);
+
+static_assert(CRUBIT_SIZEOF(struct TrivialDefaultNotUnpin) == 16);
+static_assert(alignof(struct TrivialDefaultNotUnpin) == 8);
+static_assert(CRUBIT_OFFSET_OF(a, struct TrivialDefaultNotUnpin) == 0);
+static_assert(CRUBIT_OFFSET_OF(p, struct TrivialDefaultNotUnpin) == 8);
+
+extern "C" void __rust_thunk___ZN22TrivialDefaultNotUnpinC1ERKS_(
+    struct TrivialDefaultNotUnpin* __this,
+    struct TrivialDefaultNotUnpin const* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+
+extern "C" struct TrivialDefaultNotUnpin*
+__rust_thunk___ZN22TrivialDefaultNotUnpinaSERKS_(
+    struct TrivialDefaultNotUnpin* __this,
+    struct TrivialDefaultNotUnpin const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+static_assert(
+    (struct TrivialDefaultNotUnpin &
+     (::TrivialDefaultNotUnpin::*)(struct TrivialDefaultNotUnpin const&)) &
+    ::TrivialDefaultNotUnpin::operator=);
+
+extern "C" void __rust_thunk___ZN22TrivialDefaultNotUnpinD1Ev(
+    struct TrivialDefaultNotUnpin* __this) {
+  std::destroy_at(__this);
+}
+
 #pragma clang diagnostic pop

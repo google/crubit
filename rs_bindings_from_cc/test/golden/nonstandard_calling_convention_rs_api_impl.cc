@@ -34,10 +34,6 @@ static_assert((int(__attribute__((ms_abi)) *)(int)) & ::function_win64);
 static_assert(sizeof(class ::SomeClass) == 1);
 static_assert(alignof(class ::SomeClass) == 1);
 
-extern "C" void __rust_thunk___ZN9SomeClassC1Ev(class ::SomeClass* __this) {
-  crubit::construct_at(__this);
-}
-
 extern "C" float __rust_thunk___ZN9SomeClass19function_vectorcallEff(
     class ::SomeClass* __this, float a, float b) {
   return __this->function_vectorcall(a, b);
