@@ -74,36 +74,3 @@ golden_test(
     golden_cc = "opt_out_api_impl.cc",
     golden_rs = "opt_out_rs_api.rs",
 )
-
-crubit_test_cc_library(
-    name = "experimental",
-    hdrs = ["experimental.h"],
-    aspect_hints = [
-        "//features:experimental",
-    ],
-)
-
-golden_test(
-    name = "experimental_golden_test",
-    basename = "experimental",
-    cc_library = "experimental",
-    golden_cc = "experimental_api_impl.cc",
-    golden_rs = "experimental_rs_api.rs",
-)
-
-crubit_test_cc_library(
-    name = "experimental_opt_out",
-    hdrs = ["experimental_opt_out.h"],
-    aspect_hints = [
-        "//features:experimental",
-        "//features:no_assume_lifetimes",
-    ],
-)
-
-golden_test(
-    name = "experimental_opt_out_golden_test",
-    basename = "experimental_opt_out",
-    cc_library = "experimental_opt_out",
-    golden_cc = "experimental_opt_out_api_impl.cc",
-    golden_rs = "experimental_opt_out_rs_api.rs",
-)

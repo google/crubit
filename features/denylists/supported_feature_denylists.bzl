@@ -30,8 +30,6 @@ SUPPORTED_FEATURE_DENYLISTS = {
         "//rs_bindings_from_cc/test/annotations/...",
         "//rs_bindings_from_cc/test/assume_lifetimes/release/blocklisted_subpackage/...",
         "//rs_bindings_from_cc/test/assume_lifetimes/release/subpackage",
-        "//rs_bindings_from_cc/test/assume_lifetimes/release/subpackage:experimental",
-        "//rs_bindings_from_cc/test/assume_lifetimes/release/subpackage:experimental_opt_out",
         "//rs_bindings_from_cc/test/assume_lifetimes/release/subpackage:opt_in",
         "//rs_bindings_from_cc/test/assume_lifetimes/release/subpackage:opt_out",
         "//rs_bindings_from_cc/test/assume_lifetimes/release/subpackage:supported",
