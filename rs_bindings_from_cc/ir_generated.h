@@ -43,6 +43,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI FuncParam;
 struct ABSL_ATTRIBUTE_TRIVIAL_ABI InstanceMethodMetadata;
 namespace member_func_semantic { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Setter; }
 namespace member_func_semantic { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Getter; }
+namespace member_func_semantic { struct ABSL_ATTRIBUTE_TRIVIAL_ABI FieldInit; }
+namespace member_func_semantic { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Constructor; }
 struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic;
 struct ABSL_ATTRIBUTE_TRIVIAL_ABI Func;
 struct ABSL_ATTRIBUTE_TRIVIAL_ABI StatusOrOptionalString;
@@ -770,9 +772,37 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Getter {
 };
 }  // namespace member_func_semantic
 
+namespace member_func_semantic {
+struct ABSL_ATTRIBUTE_TRIVIAL_ABI FieldInit {
+  const ::crubit::ffi::CcType& type() const { return type_; }
+  ::crubit::ffi::CcType* mutable_type() { return &type_; }
+  size_t offset() const { return offset_; }
+  void set_offset(size_t value) { offset_ = value; }
+  size_t param_index() const { return param_index_; }
+  void set_param_index(size_t value) { param_index_ = value; }
+  friend bool operator==(const FieldInit&, const FieldInit&) = default;
+  ::crubit::ffi::CcType type_{};
+  size_t offset_{};
+  size_t param_index_{};
+};
+}  // namespace member_func_semantic
+
+namespace member_func_semantic {
+struct ABSL_ATTRIBUTE_TRIVIAL_ABI Constructor {
+  const FfiVec<::crubit::ffi::member_func_semantic::FieldInit>& field_inits() const { return field_inits_; }
+  FfiVec<::crubit::ffi::member_func_semantic::FieldInit>* mutable_field_inits() { return &field_inits_; }
+  void clear_field_inits() { field_inits_.Clear(); }
+  ::crubit::ffi::member_func_semantic::FieldInit* add_field_inits() { return field_inits_.Add(); }
+  friend bool operator==(const Constructor&, const Constructor&) = default;
+  FfiVec<::crubit::ffi::member_func_semantic::FieldInit> field_inits_{};
+};
+}  // namespace member_func_semantic
+
 struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
   using Setter = ::crubit::ffi::member_func_semantic::Setter;
   using Getter = ::crubit::ffi::member_func_semantic::Getter;
+  using FieldInit = ::crubit::ffi::member_func_semantic::FieldInit;
+  using Constructor = ::crubit::ffi::member_func_semantic::Constructor;
   enum Case : uint32_t {
     kSetter = 0,
     kGetter = 1,
@@ -794,7 +824,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
   MemberFuncSemantic(::crubit::ffi::member_func_semantic::Setter value) : tag_(kSetter), payload_(kSetter) { new (&payload_.setter_) ::crubit::ffi::member_func_semantic::Setter(std::move(value)); }
   // NOLINTNEXTLINE(google-explicit-constructor)
   MemberFuncSemantic(::crubit::ffi::member_func_semantic::Getter value) : tag_(kGetter), payload_(kGetter) { new (&payload_.getter_) ::crubit::ffi::member_func_semantic::Getter(std::move(value)); }
-  static MemberFuncSemantic Constructor() { MemberFuncSemantic res; res.set_constructor(); return res; }
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  MemberFuncSemantic(::crubit::ffi::member_func_semantic::Constructor value) : tag_(kConstructor), payload_(kConstructor) { new (&payload_.constructor_) ::crubit::ffi::member_func_semantic::Constructor(std::move(value)); }
   void Clear() {
     Destroy();
     tag_ = kSetter;
@@ -822,13 +853,21 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
     return &payload_.getter_;
   }
   bool has_constructor() const { return tag_ == kConstructor; }
-  void set_constructor() { Destroy(); tag_ = kConstructor; }
+  const ::crubit::ffi::member_func_semantic::Constructor& constructor() const { return has_constructor() ? payload_.constructor_ : DefaultValue<::crubit::ffi::member_func_semantic::Constructor>(); }
+  ::crubit::ffi::member_func_semantic::Constructor* mutable_constructor() {
+    if (!has_constructor()) {
+      Destroy();
+      tag_ = kConstructor;
+      new (&payload_.constructor_) ::crubit::ffi::member_func_semantic::Constructor();
+    }
+    return &payload_.constructor_;
+  }
   friend bool operator==(const MemberFuncSemantic& lhs, const MemberFuncSemantic& rhs) {
     if (lhs.tag_ != rhs.tag_) return false;
     switch (lhs.tag_) {
       case kSetter: return lhs.payload_.setter_ == rhs.payload_.setter_;
       case kGetter: return lhs.payload_.getter_ == rhs.payload_.getter_;
-      case kConstructor: return true;
+      case kConstructor: return lhs.payload_.constructor_ == rhs.payload_.constructor_;
       default: CRUBIT_CHECK(false);
     }
     return false;
@@ -838,7 +877,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
     switch (tag_) {
       case kSetter: std::destroy_at(&payload_.setter_); break;
       case kGetter: std::destroy_at(&payload_.getter_); break;
-      case kConstructor: break;
+      case kConstructor: std::destroy_at(&payload_.constructor_); break;
       default: CRUBIT_CHECK(false);
     }
   }
@@ -848,7 +887,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
     switch (tag_) {
       case kSetter: new (&payload_.setter_) ::crubit::ffi::member_func_semantic::Setter(other.payload_.setter_); break;
       case kGetter: new (&payload_.getter_) ::crubit::ffi::member_func_semantic::Getter(other.payload_.getter_); break;
-      case kConstructor: break;
+      case kConstructor: new (&payload_.constructor_) ::crubit::ffi::member_func_semantic::Constructor(other.payload_.constructor_); break;
       default: CRUBIT_CHECK(false);
     }
   }
@@ -858,7 +897,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
     switch (tag_) {
       case kSetter: new (&payload_.setter_) ::crubit::ffi::member_func_semantic::Setter(std::move(other.payload_.setter_)); break;
       case kGetter: new (&payload_.getter_) ::crubit::ffi::member_func_semantic::Getter(std::move(other.payload_.getter_)); break;
-      case kConstructor: break;
+      case kConstructor: new (&payload_.constructor_) ::crubit::ffi::member_func_semantic::Constructor(std::move(other.payload_.constructor_)); break;
       default: CRUBIT_CHECK(false);
     }
     other.Clear();
@@ -873,6 +912,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
     char empty_;
     ::crubit::ffi::member_func_semantic::Setter setter_;
     ::crubit::ffi::member_func_semantic::Getter getter_;
+    ::crubit::ffi::member_func_semantic::Constructor constructor_;
   } payload_;
 };
 
@@ -3359,6 +3399,14 @@ static_assert(std::is_standard_layout_v<member_func_semantic::Getter>);
 static_assert(sizeof(size_t) != 8 || (sizeof(member_func_semantic::Getter) == 144 && alignof(member_func_semantic::Getter) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(member_func_semantic::Getter, type_) == 0);
 static_assert(sizeof(size_t) != 8 || offsetof(member_func_semantic::Getter, offset_) == 136);
+static_assert(std::is_standard_layout_v<member_func_semantic::FieldInit>);
+static_assert(sizeof(size_t) != 8 || (sizeof(member_func_semantic::FieldInit) == 152 && alignof(member_func_semantic::FieldInit) == 8));
+static_assert(sizeof(size_t) != 8 || offsetof(member_func_semantic::FieldInit, type_) == 0);
+static_assert(sizeof(size_t) != 8 || offsetof(member_func_semantic::FieldInit, offset_) == 136);
+static_assert(sizeof(size_t) != 8 || offsetof(member_func_semantic::FieldInit, param_index_) == 144);
+static_assert(std::is_standard_layout_v<member_func_semantic::Constructor>);
+static_assert(sizeof(size_t) != 8 || (sizeof(member_func_semantic::Constructor) == 24 && alignof(member_func_semantic::Constructor) == 8));
+static_assert(sizeof(size_t) != 8 || offsetof(member_func_semantic::Constructor, field_inits_) == 0);
 static_assert(std::is_standard_layout_v<MemberFuncSemantic>);
 static_assert(sizeof(size_t) != 8 || (sizeof(MemberFuncSemantic) == 152 && alignof(MemberFuncSemantic) == 8));
 static_assert(std::is_standard_layout_v<Func>);

@@ -83,6 +83,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, expansion, $($arg:tt)*) => { $msg.set_expansion($($arg)*) };
     ($msg:ident, explicit_lifetimes, $($arg:tt)*) => { $msg.set_explicit_lifetimes($($arg)*) };
     ($msg:ident, fatal_errors, $($arg:tt)*) => { $msg.set_fatal_errors($($arg)*) };
+    ($msg:ident, field_inits, $($arg:tt)*) => { $msg.set_field_inits($($arg)*) };
     ($msg:ident, fields, $($arg:tt)*) => { $msg.set_fields($($arg)*) };
     ($msg:ident, filler, $($arg:tt)*) => { $msg.set_filler($($arg)*) };
     ($msg:ident, first_type, $($arg:tt)*) => { $msg.set_first_type($($arg)*) };
@@ -168,6 +169,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, owning_target, $($arg:tt)*) => { $msg.set_owning_target($($arg)*) };
     ($msg:ident, pack, $($arg:tt)*) => { $msg.set_pack($($arg)*) };
     ($msg:ident, param_and_return_types, $($arg:tt)*) => { $msg.set_param_and_return_types($($arg)*) };
+    ($msg:ident, param_index, $($arg:tt)*) => { $msg.set_param_index($($arg)*) };
     ($msg:ident, param_types, $($arg:tt)*) => { $msg.set_param_types($($arg)*) };
     ($msg:ident, params, $($arg:tt)*) => { $msg.set_params($($arg)*) };
     ($msg:ident, path, $($arg:tt)*) => { $msg.set_path($($arg)*) };
@@ -1263,7 +1265,7 @@ mod __defs {
     pub enum MemberFuncSemantic {
         Setter(member_func_semantic::Setter) = 0,
         Getter(member_func_semantic::Getter) = 1,
-        Constructor = 2,
+        Constructor(member_func_semantic::Constructor) = 2,
     }
 
     impl Default for MemberFuncSemantic {
@@ -1291,8 +1293,12 @@ mod __defs {
             };
             inner
         }
-        pub fn set_constructor(&mut self) {
-            *self = Self::Constructor;
+        pub fn set_constructor(&mut self, val: member_func_semantic::Constructor) -> &mut member_func_semantic::Constructor {
+            *self = Self::Constructor(val);
+            let Self::Constructor(ref mut inner) = *self else {
+                unreachable!()
+            };
+            inner
         }
     }
     #[cfg(target_pointer_width = "64")]
@@ -6302,6 +6308,93 @@ mod __defs {
             assert!(core::mem::align_of::<Getter>() == 8);
             assert!(core::mem::offset_of!(Getter, type_) == 0);
             assert!(core::mem::offset_of!(Getter, offset) == 136);
+        };
+
+        #[repr(C)]
+        #[derive(Debug,Clone, PartialEq, Eq, Hash)]
+        pub struct FieldInit {
+            pub type_: super::CcType,
+            pub offset: usize,
+            pub param_index: usize,
+        }
+
+        impl super::FfiDefault for FieldInit {
+            const EMPTY_REF: &'static Self = &Self::EMPTY;
+        }
+        impl Default for FieldInit {
+            fn default() -> Self {
+                Self::EMPTY
+            }
+        }
+
+        impl FieldInit {
+            pub const EMPTY: Self = Self {
+                type_: super::CcType::EMPTY,
+                offset: 0,
+                param_index: 0,
+            };
+            pub fn type_(&self) -> &super::CcType {
+                &self.type_
+            }
+            pub fn offset(&self) -> usize {
+                self.offset
+            }
+            pub fn param_index(&self) -> usize {
+                self.param_index
+            }
+            pub fn set_type(&mut self, val: super::CcType) -> &mut super::CcType {
+                self.type_ = val;
+                &mut self.type_
+            }
+            pub fn set_offset(&mut self, val: usize) -> &mut usize {
+                self.offset = val;
+                &mut self.offset
+            }
+            pub fn set_param_index(&mut self, val: usize) -> &mut usize {
+                self.param_index = val;
+                &mut self.param_index
+            }
+        }
+        #[cfg(target_pointer_width = "64")]
+        const _: () = {
+            assert!(core::mem::size_of::<FieldInit>() == 152);
+            assert!(core::mem::align_of::<FieldInit>() == 8);
+            assert!(core::mem::offset_of!(FieldInit, type_) == 0);
+            assert!(core::mem::offset_of!(FieldInit, offset) == 136);
+            assert!(core::mem::offset_of!(FieldInit, param_index) == 144);
+        };
+
+        #[repr(C)]
+        #[derive(Debug,Clone, PartialEq, Eq, Hash)]
+        pub struct Constructor {
+            pub field_inits: FfiVec<super::member_func_semantic::FieldInit>,
+        }
+
+        impl super::FfiDefault for Constructor {
+            const EMPTY_REF: &'static Self = &Self::EMPTY;
+        }
+        impl Default for Constructor {
+            fn default() -> Self {
+                Self::EMPTY
+            }
+        }
+
+        impl Constructor {
+            pub const EMPTY: Self = Self {
+                field_inits: FfiVec::EMPTY,
+            };
+            pub fn field_inits(&self) -> &[super::member_func_semantic::FieldInit] {
+                self.field_inits.as_slice()
+            }
+            pub fn set_field_inits(&mut self, val: FfiVec<super::member_func_semantic::FieldInit>) {
+                self.field_inits = val;
+            }
+        }
+        #[cfg(target_pointer_width = "64")]
+        const _: () = {
+            assert!(core::mem::size_of::<Constructor>() == 24);
+            assert!(core::mem::align_of::<Constructor>() == 8);
+            assert!(core::mem::offset_of!(Constructor, field_inits) == 0);
         };
     }
 

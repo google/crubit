@@ -146,4 +146,44 @@ struct TrivialDefaultNotUnpin {
   const int* p;
 };
 
+// The constructor of this class is implemented by zero-filling it, then writing
+// its parameters into the fields, without a C++ thunk.
+class FieldInitCtor {
+ public:
+  FieldInitCtor(int a, const int* p) : a_(a), p_(p) {}
+  int a() const { return a_; }
+  float unset() const { return unset_; }
+  const int* p() const { return p_; }
+
+ private:
+  int a_;
+  float unset_;
+  const int* p_;
+};
+
+// Like `FieldInitCtor`, but `!Unpin`.
+class FieldInitCtorNotUnpin {
+ public:
+  FieldInitCtorNotUnpin(int a, const int* p) : a_(a), p_(p) {}
+  // NOLINTNEXTLINE(modernize-use-equals-default)
+  ~FieldInitCtorNotUnpin() {}
+  int a() const { return a_; }
+  float unset() const { return unset_; }
+  const int* p() const { return p_; }
+
+ private:
+  int a_;
+  float unset_;
+  const int* p_;
+};
+
+// A user-provided default constructor with an empty body is implemented by
+// zero-filling the object, without a C++ thunk.
+struct EmptyCtor {
+  // NOLINTNEXTLINE(modernize-use-equals-default)
+  EmptyCtor() {}
+  int a;
+  const int* p;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_SEMANTIC_IMPORT_SEMANTIC_IMPORT_H_

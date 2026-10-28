@@ -229,10 +229,20 @@ pub(crate) fn schema() -> Schema {
             type: CcType,
             offset: Usize,
         }
+        #[scope("MemberFuncSemantic")]
+        struct FieldInit {
+            type: CcType,
+            offset: Usize,
+            param_index: Usize,
+        }
+        #[scope("MemberFuncSemantic")]
+        struct Constructor {
+            field_inits: Vec(member_func_semantic::FieldInit),
+        }
         enum MemberFuncSemantic {
             Setter(member_func_semantic::Setter),
             Getter(member_func_semantic::Getter),
-            Constructor,
+            Constructor(member_func_semantic::Constructor),
         }
         struct Func {
             cc_name: UnqualifiedIdentifier,
