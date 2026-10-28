@@ -133,11 +133,6 @@ memoized::query_group! {
       /// This will be `LOCAL_CRATE` if no `source_crate_name` was provided.
       fn source_crate_num(&self) -> CrateNum;
 
-      /// Returns the include for the given Crubit runtime support header.
-      ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:support_header
-      fn support_header(&self, suffix: &'tcx str) -> CcInclude;
-
       /// Returns the list of traits that should appear in the generated bindings.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:supported_traits
@@ -382,6 +377,11 @@ memoized::query_group! {
 }
 
 impl<'tcx> BindingsGenerator<'tcx> {
+    /// Returns the include for the given Crubit runtime support header.
+    pub fn support_header(&self, suffix: &str) -> CcInclude {
+        CcInclude::support_lib_header(self.crubit_support_path_format(), suffix.into())
+    }
+
     pub fn crate_features(
         &self,
         krate: CrateNum,

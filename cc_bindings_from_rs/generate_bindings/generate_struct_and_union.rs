@@ -1091,7 +1091,7 @@ fn generate_trait_operator_impls<'tcx>(
     let query_trait_impls = |trait_def_id: DefId,
                              method_name: &str,
                              operator_name: &'static str|
-     -> Vec<ApiSnippets<'_>> {
+     -> ApiSnippets<'tcx> {
         let trait_name = tcx.item_name(trait_def_id).to_string();
 
         operator_impls_for_ty(db, trait_def_id, core.common.self_ty)
@@ -1302,7 +1302,6 @@ fn generate_trait_operator_impls<'tcx>(
         ),
     ]
     .into_iter()
-    .flatten()
     .collect()
 }
 
@@ -1315,17 +1314,14 @@ fn generate_ord_and_partialord_impls<'tcx>(
     let partial_ord_trait_id =
         tcx.get_diagnostic_item(sym::PartialOrd).expect("Could not find PartialOrd trait");
 
-    let mut snippets = Vec::new();
+    let mut snippets = ApiSnippets::default();
 
     // Handle Ord impls (Rhs is always Self)
     for (impl_id, impl_args) in non_blanket_impls_for_ty(db, ord_trait_id, core.common.self_ty) {
         generate_unsupported::error_scope!(db, impl_id, impl_args);
-        match generate_ord_impls(db, core) {
-            Ok(s) => snippets.push(s),
-            Err(err) => snippets.push(
-                generate_unsupported_def_with_args(db, impl_id, impl_args, err).into_main_api(),
-            ),
-        }
+        snippets += generate_ord_impls(db, core).unwrap_or_else(|err| {
+            generate_unsupported_def_with_args(db, impl_id, impl_args, err).into_main_api()
+        });
     }
 
     // Handle PartialOrd impls
@@ -1353,15 +1349,12 @@ fn generate_ord_and_partialord_impls<'tcx>(
         }
 
         generate_unsupported::error_scope!(db, impl_id, impl_args);
-        match generate_partial_ord_impls(db, core, rhs_ty) {
-            Ok(s) => snippets.push(s),
-            Err(err) => snippets.push(
-                generate_unsupported_def_with_args(db, impl_id, impl_args, err).into_main_api(),
-            ),
-        }
+        snippets += generate_partial_ord_impls(db, core, rhs_ty).unwrap_or_else(|err| {
+            generate_unsupported_def_with_args(db, impl_id, impl_args, err).into_main_api()
+        });
     }
 
-    snippets.into_iter().collect()
+    snippets
 }
 
 fn generate_ord_impls<'tcx>(
@@ -2396,16 +2389,11 @@ pub fn generate_adt<'tcx>(
     };
     let rs_details = {
         let adt_rs_name = &core.rs_fully_qualified_name;
-        [
-            RsSnippet::new(quote! {
-                const _: () = assert!(::core::mem::size_of::<#adt_rs_name>() == #size);
-                const _: () = assert!(::core::mem::align_of::<#adt_rs_name>() == #alignment);
-            }),
-            public_functions_rs_details,
-            fields_rs_details,
-        ]
-        .into_iter()
-        .collect()
+        RsSnippet::new(quote! {
+            const _: () = assert!(::core::mem::size_of::<#adt_rs_name>() == #size);
+            const _: () = assert!(::core::mem::align_of::<#adt_rs_name>() == #alignment);
+        }) + public_functions_rs_details
+            + fields_rs_details
     };
     ApiSnippets { main_api, cc_details, rs_details }
 }

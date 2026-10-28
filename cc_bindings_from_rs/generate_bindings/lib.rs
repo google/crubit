@@ -75,11 +75,6 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::PathBuf;
 use std::rc::Rc;
 
-/// Implementation of `BindingsGenerator::support_header`.
-fn support_header<'tcx>(db: &BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcInclude {
-    CcInclude::support_lib_header(db.crubit_support_path_format(), suffix.into())
-}
-
 fn check_unbindable_type(db: &BindingsGenerator, def_id: DefId) {
     let tcx = db.tcx();
     let def_kind = tcx.def_kind(def_id);
@@ -328,7 +323,6 @@ pub fn new_database<'db>(
         ignore_symbols_from_files,
         specializations,
         source_crate_num,
-        support_header,
         supported_traits,
         symbol_unqualified_name,
         symbol_canonical_name,

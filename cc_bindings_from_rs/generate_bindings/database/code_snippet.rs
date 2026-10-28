@@ -277,18 +277,18 @@ impl<'tcx> CcPrerequisites<'tcx> {
             .extend(std::mem::take(&mut self.template_specializations));
     }
 
-    /// Move any definitions that appear in `ty` to the forward declarations of `prereqs`.
+    /// Move any definitions that appear in `ty` to the forward declarations of `self`.
     pub fn forward_declare_type(&mut self, ty: Ty<'tcx>) {
-        let mut adts = HashSet::new();
-        for arg in ty.walk() {
-            let Some(adt) = arg.as_type().and_then(|ty| ty.ty_adt_def()) else {
-                continue;
-            };
-            adts.insert(adt.did());
+        if self.defs.is_empty() {
+            return;
         }
-
-        self.fwd_decls.extend(self.defs.intersection(&adts));
-        self.defs = self.defs.difference(&adts).cloned().collect();
+        for arg in ty.walk() {
+            if let Some(adt) = arg.as_type().and_then(|ty| ty.ty_adt_def())
+                && self.defs.remove(&adt.did())
+            {
+                self.fwd_decls.insert(adt.did());
+            }
+        }
     }
 
     /// Include the definition as a prerequisite. For a local definition, this is adding it to the
@@ -462,6 +462,15 @@ impl<'tcx> AddAssign for CcSnippet<'tcx> {
     }
 }
 
+impl<'tcx> Add for CcSnippet<'tcx> {
+    type Output = Self;
+
+    fn add(mut self, rhs: Self) -> Self {
+        self += rhs;
+        self
+    }
+}
+
 /// Holds the declaration of an extern "C" function.
 ///
 /// ADTs can be annotated with conversion functions that adhere to the C calling
@@ -597,6 +606,15 @@ impl AddAssign for RsSnippet {
     }
 }
 
+impl Add for RsSnippet {
+    type Output = Self;
+
+    fn add(mut self, rhs: Self) -> Self {
+        self += rhs;
+        self
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct ApiSnippets<'tcx> {
     /// Main API - for example:
@@ -627,13 +645,29 @@ impl<'tcx> ApiSnippets<'tcx> {
     }
 }
 
+impl<'tcx> AddAssign for ApiSnippets<'tcx> {
+    fn add_assign(&mut self, rhs: Self) {
+        let Self { main_api, cc_details, rs_details } = rhs;
+        self.main_api += main_api;
+        self.cc_details += cc_details;
+        self.rs_details += rs_details;
+    }
+}
+
+impl<'tcx> Add for ApiSnippets<'tcx> {
+    type Output = Self;
+
+    fn add(mut self, rhs: Self) -> Self {
+        self += rhs;
+        self
+    }
+}
+
 impl<'tcx> FromIterator<ApiSnippets<'tcx>> for ApiSnippets<'tcx> {
     fn from_iter<I: IntoIterator<Item = ApiSnippets<'tcx>>>(iter: I) -> Self {
         let mut result = ApiSnippets::default();
-        for ApiSnippets { main_api, cc_details, rs_details } in iter.into_iter() {
-            result.main_api += main_api;
-            result.cc_details += cc_details;
-            result.rs_details += rs_details;
+        for item in iter {
+            result += item;
         }
         result
     }
