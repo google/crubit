@@ -207,3 +207,11 @@ fn test_display_impl() {
     let sv = string_view::from(s);
     assert_eq!(sv.display().to_string(), "A�B�C");
 }
+
+#[gtest]
+fn test_default() {
+    let sv: string_view = Default::default();
+    assert_eq!(sv.len(), 0);
+    assert!(sv.is_empty());
+    assert_eq!(sv.as_bytes(), b"");
+}

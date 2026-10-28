@@ -33,7 +33,7 @@ use std::os::unix::ffi::{OsStrExt, OsStringExt};
 #[repr(transparent)]
 #[doc = "CRUBIT_ANNOTATE: cpp_type=::std::string_view"]
 #[doc = "CRUBIT_ANNOTATE: include_path=<string_view>"]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub struct string_view<'a> {
     raw: raw_string_view,
     phantom_data: core::marker::PhantomData<&'a ()>,
