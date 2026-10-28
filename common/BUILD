@@ -456,9 +456,7 @@ rust_library(
     name = "error_report",
     srcs = ["error_report.rs"],
     edition = "2024",
-    visibility = [
-        "//:__subpackages__",
-    ],
+    visibility = ["//:__subpackages__"],
     deps = [
         ":arc_anyhow",
         "@crate_index//:anyhow",  # v1
