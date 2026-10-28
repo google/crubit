@@ -245,12 +245,6 @@ unsafe extern "C" fn __crubit_thunk_Value_ui32(
 const _: () = assert!(::core::mem::size_of::<::generics_golden::GenericStruct<[i32; 4]>>() == 16);
 const _: () = assert!(::core::mem::align_of::<::generics_golden::GenericStruct<[i32; 4]>>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_is_udefault_u_x0000005bi32_x0000003b_x000000204_x0000005d(
-    __self: &'static ::generics_golden::GenericStruct<[i32; 4]>,
-) -> bool {
-    unsafe { <::generics_golden::GenericStruct<[i32; 4]>>::is_default(__self) }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new_u_x0000005bi32_x0000003b_x000000204_x0000005d(
     value: *mut [i32; 4],
     __ret_ptr: *mut ::generics_golden::GenericStruct<[i32; 4]>,
@@ -290,6 +284,12 @@ unsafe extern "C" fn __crubit_thunk_into_uinner_u_x0000005bi32_x0000003b_x000000
 unsafe extern "C" fn __crubit_thunk_type_usize_u_x0000005bi32_x0000003b_x000000204_x0000005d(
 ) -> usize {
     unsafe { <::generics_golden::GenericStruct<[i32; 4]>>::type_size() }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_udefault_u_x0000005bi32_x0000003b_x000000204_x0000005d(
+    __self: &'static ::generics_golden::GenericStruct<[i32; 4]>,
+) -> bool {
+    unsafe { <::generics_golden::GenericStruct<[i32; 4]>>::is_default(__self) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_borrow_uwith_uexplicit_ult_u_x0000005bi32_x0000003b_x000000204_x0000005d(
@@ -490,26 +490,6 @@ const _: () = assert!(
     ) == 4
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_deref_uvalue_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
-    __self: &'static ::generics_golden::GenericStruct<::generics_golden::PartialEqAndDefault>,
-) -> &'static i32 {
-    unsafe {
-        <::generics_golden::GenericStruct<::generics_golden::PartialEqAndDefault>>::deref_value(
-            __self,
-        )
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_is_udefault_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
-    __self: &'static ::generics_golden::GenericStruct<::generics_golden::PartialEqAndDefault>,
-) -> bool {
-    unsafe {
-        <::generics_golden::GenericStruct<::generics_golden::PartialEqAndDefault>>::is_default(
-            __self,
-        )
-    }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
     value: *mut ::generics_golden::PartialEqAndDefault,
     __ret_ptr: *mut ::generics_golden::GenericStruct<::generics_golden::PartialEqAndDefault>,
@@ -563,6 +543,26 @@ unsafe extern "C" fn __crubit_thunk_type_usize_ugenerics_ugolden_x0000003a_x0000
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_udefault_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
+    __self: &'static ::generics_golden::GenericStruct<::generics_golden::PartialEqAndDefault>,
+) -> bool {
+    unsafe {
+        <::generics_golden::GenericStruct<::generics_golden::PartialEqAndDefault>>::is_default(
+            __self,
+        )
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_deref_uvalue_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
+    __self: &'static ::generics_golden::GenericStruct<::generics_golden::PartialEqAndDefault>,
+) -> &'static i32 {
+    unsafe {
+        <::generics_golden::GenericStruct<::generics_golden::PartialEqAndDefault>>::deref_value(
+            __self,
+        )
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_borrow_uwith_uexplicit_ult_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
     __self: &'static ::generics_golden::GenericStruct<::generics_golden::PartialEqAndDefault>,
 ) -> &'static ::generics_golden::PartialEqAndDefault {
@@ -578,12 +578,6 @@ const _: () = assert!(
 );
 const _: () = assert!(::core::mem::size_of::<::generics_golden::GenericStruct<i32>>() == 4);
 const _: () = assert!(::core::mem::align_of::<::generics_golden::GenericStruct<i32>>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_is_udefault_ui32(
-    __self: &'static ::generics_golden::GenericStruct<i32>,
-) -> bool {
-    unsafe { <::generics_golden::GenericStruct<i32>>::is_default(__self) }
-}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new_ui32(
     value: i32,
@@ -618,6 +612,12 @@ unsafe extern "C" fn __crubit_thunk_into_uinner_ui32(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_type_usize_ui32() -> usize {
     unsafe { <::generics_golden::GenericStruct<i32>>::type_size() }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_udefault_ui32(
+    __self: &'static ::generics_golden::GenericStruct<i32>,
+) -> bool {
+    unsafe { <::generics_golden::GenericStruct<i32>>::is_default(__self) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_borrow_uwith_uexplicit_ult_ui32(
@@ -673,12 +673,6 @@ const _: () = assert!(::core::mem::offset_of!(::generics_golden::GenericStruct<i
 const _: () = assert!(::core::mem::size_of::<::generics_golden::GenericStruct<i64>>() == 8);
 const _: () = assert!(::core::mem::align_of::<::generics_golden::GenericStruct<i64>>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_is_udefault_ui64(
-    __self: &'static ::generics_golden::GenericStruct<i64>,
-) -> bool {
-    unsafe { <::generics_golden::GenericStruct<i64>>::is_default(__self) }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new_ui64(
     value: i64,
     __ret_ptr: *mut ::generics_golden::GenericStruct<i64>,
@@ -712,6 +706,12 @@ unsafe extern "C" fn __crubit_thunk_into_uinner_ui64(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_type_usize_ui64() -> usize {
     unsafe { <::generics_golden::GenericStruct<i64>>::type_size() }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_udefault_ui64(
+    __self: &'static ::generics_golden::GenericStruct<i64>,
+) -> bool {
+    unsafe { <::generics_golden::GenericStruct<i64>>::is_default(__self) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_borrow_uwith_uexplicit_ult_ui64(
@@ -761,12 +761,6 @@ const _: () = assert!(::core::mem::offset_of!(::generics_golden::GenericStruct<i
 const _: () = assert!(::core::mem::size_of::<::generics_golden::GenericStruct<u32>>() == 4);
 const _: () = assert!(::core::mem::align_of::<::generics_golden::GenericStruct<u32>>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_is_udefault_uu32(
-    __self: &'static ::generics_golden::GenericStruct<u32>,
-) -> bool {
-    unsafe { <::generics_golden::GenericStruct<u32>>::is_default(__self) }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new_uu32(
     value: u32,
     __ret_ptr: *mut ::generics_golden::GenericStruct<u32>,
@@ -800,6 +794,12 @@ unsafe extern "C" fn __crubit_thunk_into_uinner_uu32(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_type_usize_uu32() -> usize {
     unsafe { <::generics_golden::GenericStruct<u32>>::type_size() }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_udefault_uu32(
+    __self: &'static ::generics_golden::GenericStruct<u32>,
+) -> bool {
+    unsafe { <::generics_golden::GenericStruct<u32>>::is_default(__self) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_borrow_uwith_uexplicit_ult_uu32(

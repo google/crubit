@@ -352,16 +352,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     [[clang::trivial_abi]] ::generics::GenericStruct<
         ::std::array<::std::int32_t, 4>> final {
  public:
-  bool is_default() const;
-
-  // Error generating bindings for associated function
-  // `generics_golden::GenericStruct::<[i32; 4]>::to_unbound`: Error formatting
-  // function return type
-  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
-  // Failed to format type for the definition of
-  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
-  // supported (b/258259459)
-
   static ::generics::GenericStruct<::std::array<::std::int32_t, 4>> new_(
       ::std::array<::std::int32_t, 4> value);
 
@@ -374,6 +364,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static constexpr ::std::uintptr_t VALUE_SIZE = 16;
 
   static ::std::uintptr_t type_size();
+
+  bool is_default() const;
 
   // Error generating bindings for associated function
   // `generics_golden::GenericStruct::<[i32; 4]>::t_iter`: Inherent methods with
@@ -389,6 +381,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::generics::MultiGenericStruct<::std::array<::std::int32_t, 4>,
                                  ::std::array<::std::int32_t, 4>>
   into_multi() const;
+
+  // Error generating bindings for associated function
+  // `generics_golden::GenericStruct::<[i32; 4]>::to_unbound`: Error formatting
+  // function return type
+  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
+  // Failed to format type for the definition of
+  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
+  // supported (b/258259459)
 
   // Constructor from `<generics_golden::GenericStruct<T> as
   // std::convert::From<T>>` is suppressed because `GenericStruct` is a C++
@@ -412,14 +412,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     [[clang::trivial_abi]] ::generics::GenericStruct<
         ::generics::NotPartialEqOrDefault> final {
  public:
-  // Error generating bindings for associated function
-  // `generics_golden::GenericStruct::<generics_golden::NotPartialEqOrDefault>::to_unbound`:
-  // Error formatting function return type
-  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
-  // Failed to format type for the definition of
-  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
-  // supported (b/258259459)
-
   static ::generics::GenericStruct<::generics::NotPartialEqOrDefault> new_(
       ::generics::NotPartialEqOrDefault value);
 
@@ -444,6 +436,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::generics::NotPartialEqOrDefault const& $(__anon1)
       borrow_with_explicit_lt() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
+  // Error generating bindings for associated function
+  // `generics_golden::GenericStruct::<generics_golden::NotPartialEqOrDefault>::to_unbound`:
+  // Error formatting function return type
+  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
+  // Failed to format type for the definition of
+  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
+  // supported (b/258259459)
+
   // Constructor from `<generics_golden::GenericStruct<T> as
   // std::convert::From<T>>` is suppressed because `GenericStruct` is a C++
   // aggregate.
@@ -466,19 +466,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     [[clang::trivial_abi]] ::generics::GenericStruct<
         ::generics::PartialEqAndDefault> final {
  public:
-  ::std::int32_t const& $(__anon1)
-      deref_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
-
-  bool is_default() const;
-
-  // Error generating bindings for associated function
-  // `generics_golden::GenericStruct::<generics_golden::PartialEqAndDefault>::to_unbound`:
-  // Error formatting function return type
-  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
-  // Failed to format type for the definition of
-  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
-  // supported (b/258259459)
-
   static ::generics::GenericStruct<::generics::PartialEqAndDefault> new_(
       ::generics::PartialEqAndDefault value);
 
@@ -492,6 +479,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   static ::std::uintptr_t type_size();
 
+  bool is_default() const;
+
+  ::std::int32_t const& $(__anon1)
+      deref_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+
   // Error generating bindings for associated function
   // `generics_golden::GenericStruct::<generics_golden::PartialEqAndDefault>::t_iter`:
   // Inherent methods with their own predicates are not supported
@@ -502,6 +494,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   ::generics::PartialEqAndDefault const& $(__anon1)
       borrow_with_explicit_lt() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+
+  // Error generating bindings for associated function
+  // `generics_golden::GenericStruct::<generics_golden::PartialEqAndDefault>::to_unbound`:
+  // Error formatting function return type
+  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
+  // Failed to format type for the definition of
+  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
+  // supported (b/258259459)
 
   // Constructor from `<generics_golden::GenericStruct<T> as
   // std::convert::From<T>>` is suppressed because `GenericStruct` is a C++
@@ -523,16 +523,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generics_golden :: GenericStruct < i32 >") alignas(4)
     [[clang::trivial_abi]] ::generics::GenericStruct<::std::int32_t> final {
  public:
-  bool is_default() const;
-
-  // Error generating bindings for associated function
-  // `generics_golden::GenericStruct::<i32>::to_unbound`: Error formatting
-  // function return type
-  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
-  // Failed to format type for the definition of
-  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
-  // supported (b/258259459)
-
   static ::generics::GenericStruct<::std::int32_t> new_(::std::int32_t value);
 
   ::std::int32_t const& $(__anon1)
@@ -544,6 +534,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static constexpr ::std::uintptr_t VALUE_SIZE = 4;
 
   static ::std::uintptr_t type_size();
+
+  bool is_default() const;
 
   // Error generating bindings for associated function
   // `generics_golden::GenericStruct::<i32>::t_iter`: Inherent methods with
@@ -558,6 +550,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   ::generics::MultiGenericStruct<::std::int32_t, ::std::int32_t> into_multi()
       const;
+
+  // Error generating bindings for associated function
+  // `generics_golden::GenericStruct::<i32>::to_unbound`: Error formatting
+  // function return type
+  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
+  // Failed to format type for the definition of
+  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
+  // supported (b/258259459)
+
   static const ::generics::GenericStruct<::std::int32_t> ZERO;
 
   ::std::int32_t add_one() const;
@@ -605,16 +606,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generics_golden :: GenericStruct < i64 >") alignas(4)
     [[clang::trivial_abi]] ::generics::GenericStruct<::std::int64_t> final {
  public:
-  bool is_default() const;
-
-  // Error generating bindings for associated function
-  // `generics_golden::GenericStruct::<i64>::to_unbound`: Error formatting
-  // function return type
-  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
-  // Failed to format type for the definition of
-  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
-  // supported (b/258259459)
-
   static ::generics::GenericStruct<::std::int64_t> new_(::std::int64_t value);
 
   ::std::int64_t const& $(__anon1)
@@ -626,6 +617,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static constexpr ::std::uintptr_t VALUE_SIZE = 8;
 
   static ::std::uintptr_t type_size();
+
+  bool is_default() const;
 
   // Error generating bindings for associated function
   // `generics_golden::GenericStruct::<i64>::t_iter`: Inherent methods with
@@ -640,6 +633,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   ::generics::MultiGenericStruct<::std::int64_t, ::std::int64_t> into_multi()
       const;
+
+  // Error generating bindings for associated function
+  // `generics_golden::GenericStruct::<i64>::to_unbound`: Error formatting
+  // function return type
+  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
+  // Failed to format type for the definition of
+  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
+  // supported (b/258259459)
 
   static ::std::int32_t concrete_id();
 
@@ -684,16 +685,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generics_golden :: GenericStruct < u32 >") alignas(4)
     [[clang::trivial_abi]] ::generics::GenericStruct<::std::uint32_t> final {
  public:
-  bool is_default() const;
-
-  // Error generating bindings for associated function
-  // `generics_golden::GenericStruct::<u32>::to_unbound`: Error formatting
-  // function return type
-  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
-  // Failed to format type for the definition of
-  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
-  // supported (b/258259459)
-
   static ::generics::GenericStruct<::std::uint32_t> new_(::std::uint32_t value);
 
   ::std::uint32_t const& $(__anon1)
@@ -705,6 +696,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static constexpr ::std::uintptr_t VALUE_SIZE = 4;
 
   static ::std::uintptr_t type_size();
+
+  bool is_default() const;
 
   // Error generating bindings for associated function
   // `generics_golden::GenericStruct::<u32>::t_iter`: Inherent methods with
@@ -719,6 +712,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   ::generics::MultiGenericStruct<::std::uint32_t, ::std::uint32_t> into_multi()
       const;
+
+  // Error generating bindings for associated function
+  // `generics_golden::GenericStruct::<u32>::to_unbound`: Error formatting
+  // function return type
+  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
+  // Failed to format type for the definition of
+  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
+  // supported (b/258259459)
 
   ::generics::GenericStruct<::std::uint32_t> operator+(
       ::generics::GenericStruct<::std::uint32_t> rhs) &&;
@@ -763,14 +764,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     [[clang::trivial_abi]] ::generics::GenericStruct<
         ::generics::GenericStruct<::std::uint32_t>> final {
  public:
-  // Error generating bindings for associated function
-  // `generics_golden::GenericStruct::<generics_golden::GenericStruct<u32>>::to_unbound`:
-  // Error formatting function return type
-  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
-  // Failed to format type for the definition of
-  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
-  // supported (b/258259459)
-
   static ::generics::GenericStruct<::generics::GenericStruct<::std::uint32_t>>
   new_(::generics::GenericStruct<::std::uint32_t> value);
 
@@ -794,6 +787,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   ::generics::GenericStruct<::std::uint32_t> const& $(__anon1)
       borrow_with_explicit_lt() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+
+  // Error generating bindings for associated function
+  // `generics_golden::GenericStruct::<generics_golden::GenericStruct<u32>>::to_unbound`:
+  // Error formatting function return type
+  // `generics_golden::GenericStruct<generics_golden::ZeroSizedUnboundType>`:
+  // Failed to format type for the definition of
+  // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
+  // supported (b/258259459)
 
   ::generics::GenericStruct<::generics::GenericStruct<::std::uint32_t>>
   operator+(
@@ -1970,20 +1971,6 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::generics::GenericStruct<::std::array<::std::int32_t, 4>>>);
 namespace __crubit_internal {
-extern "C" bool
-__crubit_thunk_is_udefault_u_x0000005bi32_x0000003b_x000000204_x0000005d(
-    ::generics::GenericStruct<::std::array<::std::int32_t, 4>> const&);
-}
-inline bool(
-    ::generics::GenericStruct<::std::array<::std::int32_t, 4>>::is_default)()
-    const {
-  auto&& self = *this;
-  return __crubit_internal::
-      __crubit_thunk_is_udefault_u_x0000005bi32_x0000003b_x000000204_x0000005d(
-          self);
-}
-
-namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_new_u_x0000005bi32_x0000003b_x000000204_x0000005d(
     void*,
@@ -2054,6 +2041,20 @@ inline ::std::uintptr_t(
     ::generics::GenericStruct<::std::array<::std::int32_t, 4>>::type_size)() {
   return __crubit_internal::
       __crubit_thunk_type_usize_u_x0000005bi32_x0000003b_x000000204_x0000005d();
+}
+
+namespace __crubit_internal {
+extern "C" bool
+__crubit_thunk_is_udefault_u_x0000005bi32_x0000003b_x000000204_x0000005d(
+    ::generics::GenericStruct<::std::array<::std::int32_t, 4>> const&);
+}
+inline bool(
+    ::generics::GenericStruct<::std::array<::std::int32_t, 4>>::is_default)()
+    const {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_is_udefault_u_x0000005bi32_x0000003b_x000000204_x0000005d(
+          self);
 }
 
 namespace __crubit_internal {
@@ -2388,34 +2389,6 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::generics::GenericStruct<::generics::PartialEqAndDefault>>);
 namespace __crubit_internal {
-extern "C" ::std::int32_t const& $(__anon1)
-    __crubit_thunk_deref_uvalue_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
-        ::generics::GenericStruct<::generics::PartialEqAndDefault> const&);
-}
-inline ::std::int32_t const& $(__anon1)(
-    ::generics::GenericStruct<::generics::PartialEqAndDefault>::deref_value)()
-    const& $(__anon1) CRUBIT_LIFETIME_BOUND {
-  auto&& self = *this;
-  return __crubit_internal::
-      __crubit_thunk_deref_uvalue_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
-          self);
-}
-
-namespace __crubit_internal {
-extern "C" bool
-__crubit_thunk_is_udefault_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
-    ::generics::GenericStruct<::generics::PartialEqAndDefault> const&);
-}
-inline bool(
-    ::generics::GenericStruct<::generics::PartialEqAndDefault>::is_default)()
-    const {
-  auto&& self = *this;
-  return __crubit_internal::
-      __crubit_thunk_is_udefault_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
-          self);
-}
-
-namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_new_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
     ::generics::PartialEqAndDefault*,
@@ -2490,6 +2463,34 @@ inline ::std::uintptr_t(
 }
 
 namespace __crubit_internal {
+extern "C" bool
+__crubit_thunk_is_udefault_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
+    ::generics::GenericStruct<::generics::PartialEqAndDefault> const&);
+}
+inline bool(
+    ::generics::GenericStruct<::generics::PartialEqAndDefault>::is_default)()
+    const {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_is_udefault_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
+          self);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t const& $(__anon1)
+    __crubit_thunk_deref_uvalue_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
+        ::generics::GenericStruct<::generics::PartialEqAndDefault> const&);
+}
+inline ::std::int32_t const& $(__anon1)(
+    ::generics::GenericStruct<::generics::PartialEqAndDefault>::deref_value)()
+    const& $(__anon1) CRUBIT_LIFETIME_BOUND {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_deref_uvalue_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
+          self);
+}
+
+namespace __crubit_internal {
 extern "C" ::generics::PartialEqAndDefault const& $(__anon1)
     __crubit_thunk_borrow_uwith_uexplicit_ult_ugenerics_ugolden_x0000003a_x0000003aPartialEqAndDefault(
         ::generics::GenericStruct<::generics::PartialEqAndDefault> const&);
@@ -2529,15 +2530,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::generics::GenericStruct<::std::int32_t>>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::generics::GenericStruct<::std::int32_t>>);
-namespace __crubit_internal {
-extern "C" bool __crubit_thunk_is_udefault_ui32(
-    ::generics::GenericStruct<::std::int32_t> const&);
-}
-inline bool(::generics::GenericStruct<::std::int32_t>::is_default)() const {
-  auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_is_udefault_ui32(self);
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new_ui32(
     ::std::int32_t, ::generics::GenericStruct<::std::int32_t>* __ret_ptr);
@@ -2588,6 +2580,15 @@ extern "C" ::std::uintptr_t __crubit_thunk_type_usize_ui32();
 inline ::std::uintptr_t(
     ::generics::GenericStruct<::std::int32_t>::type_size)() {
   return __crubit_internal::__crubit_thunk_type_usize_ui32();
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_udefault_ui32(
+    ::generics::GenericStruct<::std::int32_t> const&);
+}
+inline bool(::generics::GenericStruct<::std::int32_t>::is_default)() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_is_udefault_ui32(self);
 }
 
 namespace __crubit_internal {
@@ -2689,15 +2690,6 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::generics::GenericStruct<::std::int64_t>>);
 namespace __crubit_internal {
-extern "C" bool __crubit_thunk_is_udefault_ui64(
-    ::generics::GenericStruct<::std::int64_t> const&);
-}
-inline bool(::generics::GenericStruct<::std::int64_t>::is_default)() const {
-  auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_is_udefault_ui64(self);
-}
-
-namespace __crubit_internal {
 extern "C" void __crubit_thunk_new_ui64(
     ::std::int64_t, ::generics::GenericStruct<::std::int64_t>* __ret_ptr);
 }
@@ -2747,6 +2739,15 @@ extern "C" ::std::uintptr_t __crubit_thunk_type_usize_ui64();
 inline ::std::uintptr_t(
     ::generics::GenericStruct<::std::int64_t>::type_size)() {
   return __crubit_internal::__crubit_thunk_type_usize_ui64();
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_udefault_ui64(
+    ::generics::GenericStruct<::std::int64_t> const&);
+}
+inline bool(::generics::GenericStruct<::std::int64_t>::is_default)() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_is_udefault_ui64(self);
 }
 
 namespace __crubit_internal {
@@ -2836,15 +2837,6 @@ static_assert(::std::is_trivially_move_constructible_v<
 static_assert(::std::is_trivially_move_assignable_v<
               ::generics::GenericStruct<::std::uint32_t>>);
 namespace __crubit_internal {
-extern "C" bool __crubit_thunk_is_udefault_uu32(
-    ::generics::GenericStruct<::std::uint32_t> const&);
-}
-inline bool(::generics::GenericStruct<::std::uint32_t>::is_default)() const {
-  auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_is_udefault_uu32(self);
-}
-
-namespace __crubit_internal {
 extern "C" void __crubit_thunk_new_uu32(
     ::std::uint32_t, ::generics::GenericStruct<::std::uint32_t>* __ret_ptr);
 }
@@ -2894,6 +2886,15 @@ extern "C" ::std::uintptr_t __crubit_thunk_type_usize_uu32();
 inline ::std::uintptr_t(
     ::generics::GenericStruct<::std::uint32_t>::type_size)() {
   return __crubit_internal::__crubit_thunk_type_usize_uu32();
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_udefault_uu32(
+    ::generics::GenericStruct<::std::uint32_t> const&);
+}
+inline bool(::generics::GenericStruct<::std::uint32_t>::is_default)() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_is_udefault_uu32(self);
 }
 
 namespace __crubit_internal {

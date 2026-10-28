@@ -2703,3 +2703,49 @@ fn test_format_item_enum_api_v2_feature_disabled() {
         assert_cc_not_matches!(result.main_api.tokens, quote! { enum_api_v2 });
     });
 }
+
+/// Multiple inherent `impl` blocks on the same type share an identical `def_path_str` and must be
+/// ordered by their `DefKey` disambiguator (source definition order) rather than `DefPathHash`
+/// (which is seeded with `StableCrateId` and changes across `rustc` version upgrades).
+#[test]
+fn test_multiple_inherent_impl_blocks_ordered_by_disambiguator() {
+    let test_src = r#"
+        pub struct MultipleImpls(pub i32);
+
+        impl MultipleImpls {
+            pub fn from_first_impl(&self) -> i32 { self.0 }
+        }
+
+        impl MultipleImpls {
+            pub fn from_second_impl(&self) -> i32 { self.0 }
+        }
+
+        impl MultipleImpls {
+            pub fn from_third_impl(&self) -> i32 { self.0 }
+        }
+
+        impl MultipleImpls {
+            pub fn from_fourth_impl(&self) -> i32 { self.0 }
+        }
+    "#;
+    test_format_item(test_src, "MultipleImpls", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                struct ... MultipleImpls final {
+                    public:
+                    ...
+                    ::std::int32_t from_first_impl() const;
+                    ...
+                    ::std::int32_t from_second_impl() const;
+                    ...
+                    ::std::int32_t from_third_impl() const;
+                    ...
+                    ::std::int32_t from_fourth_impl() const;
+                    ...
+                };
+            }
+        );
+    });
+}

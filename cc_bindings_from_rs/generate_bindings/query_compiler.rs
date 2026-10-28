@@ -503,11 +503,18 @@ pub fn matches_qualified_name(db: &BindingsGenerator<'_>, item_did: DefId, name:
         .all(|(sym, expected)| sym == expected)
 }
 
-/// Compares two `DefId` s by their path and then by their path hash, which is stable across
-/// compilations (the same ordering as `NodeSortKey` in `generate_bindings`).
+/// Compares two `DefId`s by their path, `DefKey` disambiguator (which orders items with identical
+/// printed paths, such as multiple inherent `impl` blocks on the same type, in deterministic HIR
+/// definition order independent of `rustc` version), and finally their `DefPathHash` (the same
+/// ordering as `NodeSortKey` in `generate_bindings`).
 pub fn stable_def_id_cmp<'tcx>(tcx: TyCtxt<'tcx>, lhs_id: DefId, rhs_id: DefId) -> Ordering {
-    let sort_key =
-        |def_id: DefId| (tcx.def_path_str(def_id), tcx.def_path_hash(def_id).local_hash().as_u64());
+    let sort_key = |def_id: DefId| {
+        (
+            tcx.def_path_str(def_id),
+            tcx.def_key(def_id).disambiguated_data.disambiguator,
+            tcx.def_path_hash(def_id).local_hash().as_u64(),
+        )
+    };
     sort_key(lhs_id).cmp(&sort_key(rhs_id))
 }
 

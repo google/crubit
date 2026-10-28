@@ -1559,17 +1559,18 @@ fn formatted_items_in_crate<'tcx>(
 }
 
 /// Key used to sort template specializations.
-/// Hash is produced by
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct NodeSortKey {
-    hash: u64,
     path_str: String,
+    disambiguator: u32,
+    hash: u64,
 }
 impl NodeSortKey {
     fn from_def_id(tcx: TyCtxt<'_>, def_id: DefId) -> Self {
         let path_str = tcx.def_path_str(def_id);
+        let disambiguator = tcx.def_key(def_id).disambiguated_data.disambiguator;
         let hash = tcx.def_path_hash(def_id).local_hash().as_u64();
-        NodeSortKey { hash, path_str }
+        NodeSortKey { path_str, disambiguator, hash }
     }
 
     fn new<'tcx>(tcx: TyCtxt<'tcx>, spec: &TemplateSpecialization<'tcx>) -> Self {
@@ -1597,10 +1598,11 @@ impl NodeSortKey {
                 });
 
                 Self {
-                    hash,
                     // Ty's Display implementation uses FmtPrinter to pretty print the type, so this
                     // will be a reasonable representation of the underlying tree structure.
                     path_str: ty.to_string(),
+                    disambiguator: 0,
+                    hash,
                 }
             }
             TemplateSpecialization::TraitImpl(t) => Self::from_def_id(tcx, t.trait_impl),
@@ -1610,37 +1612,25 @@ impl NodeSortKey {
                 // type-trait impl combination, auto trait impls do not have this, so we construct
                 // a path string manually.
                 let path_str = format!("{} as !{trait_name}", tcx.def_path_str(u.self_def_id));
+                let disambiguator = tcx.def_key(u.self_def_id).disambiguated_data.disambiguator;
                 let hash = tcx.def_path_hash(u.self_def_id).local_hash().as_u64();
-                NodeSortKey { hash, path_str }
+                NodeSortKey { path_str, disambiguator, hash }
             }
             TemplateSpecialization::StdHash(h) => {
                 let path_str = format!("{} as std::hash::Hash", h.self_ty);
-                let hash = if let Some(adt) = h.self_ty.ty_adt_def() {
-                    tcx.def_path_hash(adt.did()).local_hash().as_u64()
+                let (disambiguator, hash) = if let Some(adt) = h.self_ty.ty_adt_def() {
+                    (
+                        tcx.def_key(adt.did()).disambiguated_data.disambiguator,
+                        tcx.def_path_hash(adt.did()).local_hash().as_u64(),
+                    )
                 } else {
-                    0
+                    (0, 0)
                 };
-                NodeSortKey { hash, path_str }
+                NodeSortKey { path_str, disambiguator, hash }
             }
         }
     }
 }
-impl Ord for NodeSortKey {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.path_str.cmp(&other.path_str).then_with(|| self.hash.cmp(&other.hash))
-    }
-}
-impl PartialOrd for NodeSortKey {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-impl PartialEq for NodeSortKey {
-    fn eq(&self, other: &Self) -> bool {
-        self.hash == other.hash && self.path_str == other.path_str
-    }
-}
-impl Eq for NodeSortKey {}
 
 /// Formats all public items from the Rust crate being compiled.
 fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
