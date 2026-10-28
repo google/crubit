@@ -11,6 +11,9 @@
 
 extern crate alloc;
 extern crate core;
+const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::InnerX>() == 4);
+const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::InnerX>() == 4);
+const _: () = assert!(::core::mem::offset_of!(::uses_reexport_golden::InnerX, field) == 0);
 const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::Bar>() == 4);
 const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::Bar>() == 4);
 const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::Foo>() == 8);
@@ -28,12 +31,17 @@ unsafe extern "C" fn __crubit_thunk_bar(__ret_ptr: *mut ::uses_reexport_golden::
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::uses_reexport_golden::Foo, bar) == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_g1() -> i32 {
+    unsafe { ::uses_reexport_golden::g1() }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_g2() -> i32 {
+    unsafe { ::uses_reexport_golden::g2() }
+}
 const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::G>() == 4);
 const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::G>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::uses_reexport_golden::G, field) == 0);
-const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::InnerX>() == 4);
-const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::InnerX>() == 4);
-const _: () = assert!(::core::mem::offset_of!(::uses_reexport_golden::InnerX, field) == 0);
 const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::X1>() == 4);
 const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::X1>() == 4);
 #[unsafe(no_mangle)]
@@ -43,12 +51,4 @@ unsafe extern "C" fn __crubit_thunk_f1() -> i32 {
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_f2() -> i32 {
     unsafe { ::uses_reexport_golden::f2() }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_g1() -> i32 {
-    unsafe { ::uses_reexport_golden::g1() }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_g2() -> i32 {
-    unsafe { ::uses_reexport_golden::g2() }
 }

@@ -27,6 +27,19 @@
 
 namespace uses_reexport {
 
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX") alignas(4)
+    [[clang::trivial_abi]] InnerX final {
+ public:
+  ::std::int32_t field{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace uses_reexport
+
+namespace uses_reexport {
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Bar") alignas(4)
     [[clang::trivial_abi]] Bar final {
  public:
@@ -86,25 +99,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Foo") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
+::std::int32_t g1();
+
+::std::int32_t g2();
+
 }  // namespace uses_reexport
 
 namespace uses_reexport {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G") alignas(4)
     [[clang::trivial_abi]] G final {
- public:
-  ::std::int32_t field{};
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-}  // namespace uses_reexport
-
-namespace uses_reexport {
-
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX") alignas(4)
-    [[clang::trivial_abi]] InnerX final {
  public:
   ::std::int32_t field{};
 
@@ -148,9 +152,23 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: X1") alignas(4)
 
 namespace uses_reexport {
 
-::std::int32_t g1();
+static_assert(
+    sizeof(::uses_reexport::InnerX) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::uses_reexport::InnerX) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<::uses_reexport::InnerX>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::uses_reexport::InnerX>);
+static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::InnerX>);
+inline void ::uses_reexport::InnerX::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::uses_reexport::InnerX;
+  static_assert(0 == offsetof(__crubit_assert_type, field));
+}
+}  // namespace uses_reexport
 
-::std::int32_t g2();
+namespace uses_reexport {
 
 static_assert(
     sizeof(::uses_reexport::Bar) == 4,
@@ -205,6 +223,16 @@ inline void ::uses_reexport::Foo::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(__crubit_assert_type, i));
   static_assert(4 == offsetof(__crubit_assert_type, bar_));
 }
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_g1();
+}
+inline ::std::int32_t g1() { return __crubit_internal::__crubit_thunk_g1(); }
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_g2();
+}
+inline ::std::int32_t g2() { return __crubit_internal::__crubit_thunk_g2(); }
+
 }  // namespace uses_reexport
 
 namespace uses_reexport::test_mod {
@@ -226,24 +254,6 @@ static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::G>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::G>);
 inline void ::uses_reexport::G::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::uses_reexport::G;
-  static_assert(0 == offsetof(__crubit_assert_type, field));
-}
-}  // namespace uses_reexport
-
-namespace uses_reexport {
-
-static_assert(
-    sizeof(::uses_reexport::InnerX) == 4,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    alignof(::uses_reexport::InnerX) == 4,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<::uses_reexport::InnerX>);
-static_assert(
-    ::std::is_trivially_move_constructible_v<::uses_reexport::InnerX>);
-static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::InnerX>);
-inline void ::uses_reexport::InnerX::__crubit_field_offset_assertions() {
-  using __crubit_assert_type = ::uses_reexport::InnerX;
   static_assert(0 == offsetof(__crubit_assert_type, field));
 }
 }  // namespace uses_reexport
@@ -297,20 +307,6 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_f2();
 }
 inline ::std::int32_t f2() { return __crubit_internal::__crubit_thunk_f2(); }
-
-}  // namespace uses_reexport
-
-namespace uses_reexport {
-
-namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_g1();
-}
-inline ::std::int32_t g1() { return __crubit_internal::__crubit_thunk_g1(); }
-
-namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_g2();
-}
-inline ::std::int32_t g2() { return __crubit_internal::__crubit_thunk_g2(); }
 
 }  // namespace uses_reexport
 

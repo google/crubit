@@ -503,12 +503,60 @@ pub fn matches_qualified_name(db: &BindingsGenerator<'_>, item_did: DefId, name:
         .all(|(sym, expected)| sym == expected)
 }
 
-/// Compares two `DefId` s by their path and then by their path hash, which is stable across
-/// compilations (the same ordering as `NodeSortKey` in `generate_bindings`).
+fn cmp_def_path_segment(
+    lhs: &rustc_hir::definitions::DisambiguatedDefPathData,
+    rhs: &rustc_hir::definitions::DisambiguatedDefPathData,
+) -> Ordering {
+    use rustc_hir::definitions::{DefPathData, DefPathDataName};
+    let (DefPathDataName::Named(lhs_name) | DefPathDataName::Anon { namespace: lhs_name }) =
+        lhs.data.name();
+    let (DefPathDataName::Named(rhs_name) | DefPathDataName::Anon { namespace: rhs_name }) =
+        rhs.data.name();
+    let ns_rank = |data: &DefPathData| match data {
+        DefPathData::TypeNs(_) => 0,
+        DefPathData::ValueNs(_) => 1,
+        DefPathData::MacroNs(_) => 2,
+        DefPathData::LifetimeNs(_) => 3,
+        DefPathData::OpaqueLifetime(_) => 4,
+        _ => 5,
+    };
+    lhs_name
+        .as_str()
+        .cmp(rhs_name.as_str())
+        .then_with(|| match (&lhs.data, &rhs.data) {
+            (DefPathData::AnonAssocTy(lhs_m), DefPathData::AnonAssocTy(rhs_m)) => {
+                lhs_m.as_str().cmp(rhs_m.as_str())
+            }
+            (DefPathData::AnonAssocTy(_), _) => Ordering::Greater,
+            (_, DefPathData::AnonAssocTy(_)) => Ordering::Less,
+            _ => Ordering::Equal,
+        })
+        .then_with(|| ns_rank(&lhs.data).cmp(&ns_rank(&rhs.data)))
+        .then_with(|| lhs.disambiguator.cmp(&rhs.disambiguator))
+}
+
+/// Compares two `DefId`s by their crate name and `DefPath` (`DisambiguatedDefPathData` segments).
+///
+/// Unlike `DefPathHash`, `DefPath` is independent of `StableCrateId` (and therefore stable across
+/// `rustc` version upgrades) while still uniquely ordering every `DefId` in HIR definition order
+/// when path names match (such as multiple `impl` blocks in the same module).
 pub fn stable_def_id_cmp<'tcx>(tcx: TyCtxt<'tcx>, lhs_id: DefId, rhs_id: DefId) -> Ordering {
-    let sort_key =
-        |def_id: DefId| (tcx.def_path_str(def_id), tcx.def_path_hash(def_id).local_hash().as_u64());
-    sort_key(lhs_id).cmp(&sort_key(rhs_id))
+    if lhs_id == rhs_id {
+        return Ordering::Equal;
+    }
+    let lhs_path = tcx.def_path(lhs_id);
+    let rhs_path = tcx.def_path(rhs_id);
+    tcx.crate_name(lhs_path.krate).as_str().cmp(tcx.crate_name(rhs_path.krate).as_str()).then_with(
+        || {
+            lhs_path
+                .data
+                .iter()
+                .zip(rhs_path.data.iter())
+                .map(|(lhs_seg, rhs_seg)| cmp_def_path_segment(lhs_seg, rhs_seg))
+                .find(|&ord| ord != Ordering::Equal)
+                .unwrap_or_else(|| lhs_path.data.len().cmp(&rhs_path.data.len()))
+        },
+    )
 }
 
 pub trait SortedByDef: Iterator + Sized {

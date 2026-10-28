@@ -11,7 +11,6 @@ extern crate rustc_ast;
 #[rustversion::since(2026-09-27)]
 extern crate rustc_attr_ir;
 extern crate rustc_attr_parsing;
-extern crate rustc_data_structures;
 extern crate rustc_hir;
 extern crate rustc_infer;
 extern crate rustc_middle;
@@ -1553,48 +1552,27 @@ fn formatted_items_in_crate<'tcx>(
 }
 
 /// Key used to sort template specializations.
-/// Hash is produced by
-#[derive(Debug, Clone)]
-struct NodeSortKey {
-    hash: u64,
+#[derive(Clone)]
+struct NodeSortKey<'tcx> {
+    tcx: TyCtxt<'tcx>,
     path_str: String,
+    def_id: Option<DefId>,
 }
-impl NodeSortKey {
-    fn from_def_id(tcx: TyCtxt<'_>, def_id: DefId) -> Self {
-        let path_str = tcx.def_path_str(def_id);
-        let hash = tcx.def_path_hash(def_id).local_hash().as_u64();
-        NodeSortKey { hash, path_str }
+impl<'tcx> NodeSortKey<'tcx> {
+    fn from_def_id(tcx: TyCtxt<'tcx>, def_id: DefId) -> Self {
+        NodeSortKey { tcx, path_str: tcx.def_path_str(def_id), def_id: Some(def_id) }
     }
 
-    fn new<'tcx>(tcx: TyCtxt<'tcx>, spec: &TemplateSpecialization<'tcx>) -> Self {
+    fn new(tcx: TyCtxt<'tcx>, spec: &TemplateSpecialization<'tcx>) -> Self {
         match spec {
             TemplateSpecialization::Adt(e) => {
                 let ty = e.self_ty_rs;
-
-                #[cfg_accessible(rustc_data_structures::stable_hash)]
-                use rustc_data_structures::stable_hash;
-                #[cfg_accessible(rustc_data_structures::stable_hasher)]
-                use rustc_data_structures::stable_hasher as stable_hash;
-
-                let hash = tcx.with_stable_hashing_context(|mut hcx| {
-                    let mut hasher = stable_hash::StableHasher::new();
-
-                    #[cfg_accessible(stable_hash::HashStable)]
-                    stable_hash::HashStable::hash_stable(&ty, &mut hcx, &mut hasher);
-                    #[cfg_accessible(stable_hash::StableHash)]
-                    stable_hash::StableHash::stable_hash(&ty, &mut hcx, &mut hasher);
-
-                    hasher
-                        .finish::<rustc_data_structures::fingerprint::Fingerprint>()
-                        .to_smaller_hash()
-                        .as_u64()
-                });
-
                 Self {
-                    hash,
+                    tcx,
                     // Ty's Display implementation uses FmtPrinter to pretty print the type, so this
                     // will be a reasonable representation of the underlying tree structure.
                     path_str: ty.to_string(),
+                    def_id: ty.ty_adt_def().map(|adt| adt.did()),
                 }
             }
             TemplateSpecialization::TraitImpl(t) => Self::from_def_id(tcx, t.trait_impl),
@@ -1604,37 +1582,37 @@ impl NodeSortKey {
                 // type-trait impl combination, auto trait impls do not have this, so we construct
                 // a path string manually.
                 let path_str = format!("{} as !{trait_name}", tcx.def_path_str(u.self_def_id));
-                let hash = tcx.def_path_hash(u.self_def_id).local_hash().as_u64();
-                NodeSortKey { hash, path_str }
+                NodeSortKey { tcx, path_str, def_id: Some(u.self_def_id) }
             }
             TemplateSpecialization::StdHash(h) => {
                 let path_str = format!("{} as std::hash::Hash", h.self_ty);
-                let hash = if let Some(adt) = h.self_ty.ty_adt_def() {
-                    tcx.def_path_hash(adt.did()).local_hash().as_u64()
-                } else {
-                    0
-                };
-                NodeSortKey { hash, path_str }
+                let def_id = h.self_ty.ty_adt_def().map(|adt| adt.did());
+                NodeSortKey { tcx, path_str, def_id }
             }
         }
     }
 }
-impl Ord for NodeSortKey {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.path_str.cmp(&other.path_str).then_with(|| self.hash.cmp(&other.hash))
+impl<'tcx> PartialEq for NodeSortKey<'tcx> {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == Ordering::Equal
     }
 }
-impl PartialOrd for NodeSortKey {
+impl<'tcx> Eq for NodeSortKey<'tcx> {}
+impl<'tcx> PartialOrd for NodeSortKey<'tcx> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
-impl PartialEq for NodeSortKey {
-    fn eq(&self, other: &Self) -> bool {
-        self.hash == other.hash && self.path_str == other.path_str
+impl<'tcx> Ord for NodeSortKey<'tcx> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.path_str.cmp(&other.path_str).then_with(|| match (self.def_id, other.def_id) {
+            (Some(lhs), Some(rhs)) => stable_def_id_cmp(self.tcx, lhs, rhs),
+            (None, Some(_)) => Ordering::Less,
+            (Some(_), None) => Ordering::Greater,
+            (None, None) => Ordering::Equal,
+        })
     }
 }
-impl Eq for NodeSortKey {}
 
 /// Formats all public items from the Rust crate being compiled.
 fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
@@ -1784,7 +1762,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                 })
                 .collect::<Vec<_>>();
 
-            let spec_keys: HashMap<&TemplateSpecialization<'_>, NodeSortKey> =
+            let spec_keys: HashMap<&TemplateSpecialization<'_>, NodeSortKey<'_>> =
                 specializations.keys().map(|spec| (spec, NodeSortKey::new(tcx, spec))).collect();
 
             toposort::toposort(nodes, deps, move |lhs_id, rhs_id| {
