@@ -4251,3 +4251,46 @@ fn test_function_with_unsafe_template_param_existing_rust_type() -> Result<()> {
     assert!(doc.contains("`c`: template parameter is unsafe: raw pointer"));
     Ok(())
 }
+
+#[gtest]
+fn test_std_pair_preserves_explicit_lifetime_on_element() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        namespace std {
+            template <typename T1, typename T2>
+            struct pair {
+                T1 first;
+                T2 second;
+            };
+        }
+
+        struct LIFETIME_PARAMS("a") View final {
+            int value;
+        };
+
+        std::pair<int* _Nonnull, View $a> P1(int& $a x);
+        void P2(std::pair<int* _Nonnull, View $a> p);
+        void P3(std::pair<int*, View $a> p);
+        "#,
+    )?;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            fn P1<'a>(x: &'a mut ::ffi_11::c_int) -> (*mut ::ffi_11::c_int, crate::View<'a>)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            fn P2<'a>(p: (*mut ::ffi_11::c_int, crate::View<'a>))
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            fn P3<'a>(p: (*mut ::ffi_11::c_int, crate::View<'a>))
+        }
+    );
+    Ok(())
+}

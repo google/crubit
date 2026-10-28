@@ -574,7 +574,8 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     fn type_arg_for_use(&mut self, id: ItemId, template_args: Option<&[CcType]>) -> Option<CcType> {
         let decl_arg = self.type_arg_from_decl_id(id)?;
         match template_args {
-            Some([as_written]) => Some(as_written.clone()),
+            // The rewritten specializations take their element type first.
+            Some([as_written, ..]) => Some(as_written.clone()),
             _ => Some(decl_arg),
         }
     }

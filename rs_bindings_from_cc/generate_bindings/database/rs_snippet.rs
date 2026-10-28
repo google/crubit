@@ -356,15 +356,15 @@ fn wrap_in_nullable(smart_pointer: TokenStream, is_nullable: bool) -> TokenStrea
     }
 }
 
+/// Chooses the first template argument: from `ts`, the arguments as written at the use site (see
+/// `WithAsWrittenTemplateArgs` in `importer.cc`), if any were recorded, or `t` otherwise.
+///
+/// Only the first argument is used: the template specializations which call this (e.g.
+/// `std::unique_ptr<T, Deleter>` or `std::vector<T, Allocator>`) take their element type first.
 fn choose_one_type(t: &CcType, ts: &Option<Rc<[CcType]>>) -> Result<CcType> {
-    match ts {
-        Some(ts) => {
-            if ts.len() == 1 {
-                Ok(ts[0].clone())
-            } else {
-                Err(anyhow!("Internal error: overriding template arguments with wrong arity"))
-            }
-        }
+    match ts.as_deref() {
+        Some([first, ..]) => Ok(first.clone()),
+        Some([]) => Err(anyhow!("Internal error: overriding template arguments with wrong arity")),
         None => Ok(t.clone()),
     }
 }
@@ -1096,6 +1096,9 @@ impl<'a> BridgeRsTypeKind<'a> {
                 BridgeRsTypeKind::StdOptional(Rc::new(inner))
             }
             BridgeType::StdPair(t1, t2) => {
+                // Prefer the arguments as written at the use site (which carry e.g. their
+                // nullability) over the specialization's.
+                let [t1, t2] = choose_types(&[&t1, &t2], template_args);
                 // TODO(b/570673464, b/493911621): Eliminate composable bridging fallback once
                 // all inner types support layout-compatible template arguments; see
                 // `bridge_type_args_if_not_layout_compatible`.

@@ -1721,8 +1721,8 @@ fn test_nonnull_file_default_pragma_template_argument() {
     );
 }
 
-/// Defaulted arguments are not written, so they don't count against the single-argument limit:
-/// e.g. `std::vector<T>` has one written argument.
+/// Defaulted arguments are not written, so only the written arguments are recorded: e.g.
+/// `std::vector<T>` has one written argument.
 #[gtest]
 fn test_template_args_ignore_defaulted_arguments() {
     let proto = ir_proto_from_cc(
@@ -1753,13 +1753,17 @@ fn test_template_args_ignore_defaulted_arguments() {
     );
 }
 
-/// Only a single written argument is recorded, because consumers of `template_args` assume one.
+/// When any written argument carries nullability or (under `assume_lifetimes`) an explicit
+/// lifetime, all written type arguments are recorded.
 #[gtest]
-fn test_template_args_not_recorded_for_multiple_arguments() {
-    let proto = ir_proto_from_cc(
+fn test_template_args_recorded_for_multiple_arguments() {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
+        struct LIFETIME_PARAMS("a") View {};
         template <class T, class U> struct W { T t; U u; };
-        void f(W<int* _Nonnull, int> x);
+        void f(W<int* _Nonnull, int> nonnull,
+               W<int* _Nonnull, View $a> both,
+               W<int*, View $a> lifetime_only);
         "#,
     )
     .unwrap();
@@ -1768,16 +1772,47 @@ fn test_template_args_not_recorded_for_multiple_arguments() {
     assert_ir_matches!(
         ir,
         quote! {
-            FuncParam {
-                type_: CcType {
-                    variant: Decl {
+            params: [
+                FuncParam {
+                    type_: CcType {
+                        variant: Decl {
+                            ...
+                            template_args: Some([
+                                CcType { ... is_nonnull: true, ... },
+                                CcType { variant: Primitive(Int), ... },
+                            ]),
+                        },
                         ...
-                        template_args: None,
                     },
-                    ...
+                    identifier: "nonnull", ...
                 },
-                identifier: "x", ...
-            }
+                FuncParam {
+                    type_: CcType {
+                        variant: Decl {
+                            ...
+                            template_args: Some([
+                                CcType { ... is_nonnull: true, ... },
+                                CcType { ... explicit_lifetimes: ["a"], ... },
+                            ]),
+                        },
+                        ...
+                    },
+                    identifier: "both", ...
+                },
+                FuncParam {
+                    type_: CcType {
+                        variant: Decl {
+                            ...
+                            template_args: Some([
+                                CcType { ... is_nonnull: false, ... },
+                                CcType { ... explicit_lifetimes: ["a"], ... },
+                            ]),
+                        },
+                        ...
+                    },
+                    identifier: "lifetime_only", ...
+                },
+            ]
         }
     );
 }

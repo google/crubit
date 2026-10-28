@@ -3007,17 +3007,15 @@ CcType Importer::WithAsWrittenTemplateArgs(
   // The specialization decl is shared by every use with the same canonical
   // arguments, so it cannot carry anything that differs between uses: e.g.
   // the nullability in `std::vector<absl_nonnull std::unique_ptr<T>>`, or the
-  // lifetime in `absl::Span<View $a>`. Record the argument as written here,
-  // and let consumers prefer it over the decl's.
+  // lifetime in `absl::Span<View $a>`. Record the arguments as written here,
+  // and let consumers prefer them over the decl's.
   //
-  // Only a single argument, written as a type, is recorded: every consumer of
-  // `template_args` today assumes a single type argument (see
-  // `choose_one_type` in `rs_snippet.rs`). This still covers `std::vector<T>`
-  // and friends, because defaulted arguments (like the allocator) are not
-  // written, and so are not counted.
-  //
-  // TODO(zarko): broaden to arity > 1 once the consumers above no longer
-  // assume a single argument.
+  // Only arguments written as types are recorded, and only when all of them
+  // are. Defaulted arguments (like `std::vector`'s allocator) are not written,
+  // and so are not counted. Consumers that only look at one argument (see
+  // `choose_one_type` in `rs_snippet.rs`) use the first, and binding a
+  // specialization's own lifetime parameter (see `AddTemplateArgumentLifetime`)
+  // is still limited to a single argument.
   if (!std::holds_alternative<ItemId>(converted.variant)) return converted;
 
   // An alias template specialization carries the arguments of the alias, not
@@ -3033,39 +3031,54 @@ CcType Importer::WithAsWrittenTemplateArgs(
 
   llvm::ArrayRef<clang::TemplateArgument> args =
       specialization_type->template_arguments();
-  if (args.size() != 1) return converted;
-  if (args[0].getKind() != clang::TemplateArgument::Type) return converted;
-  clang::QualType arg_type = args[0].getAsType();
+  if (args.empty()) return converted;
+  for (const clang::TemplateArgument& arg : args) {
+    if (arg.getKind() != clang::TemplateArgument::Type) return converted;
+  }
 
-  // Only convert the argument if it can say something the decl's argument does
-  // not. Converting it is not free: it imports whatever the argument names into
-  // the current target, which can change that target's bindings (e.g. which
-  // support headers its generated code includes).
+  // Only convert the arguments if one of them can say something the decl's
+  // arguments do not. Converting them is not free: it imports whatever the
+  // arguments name into the current target, which can change that target's
+  // bindings (e.g. which support headers its generated code includes).
   const bool has_explicit_lifetimes =
-      assume_lifetimes && ContainsExplicitLifetimes(arg_type);
-  if (!has_explicit_lifetimes && !ContainsKnownNullability(arg_type)) {
-    return converted;
-  }
+      assume_lifetimes &&
+      absl::c_any_of(args, [this](const clang::TemplateArgument& arg) {
+        return ContainsExplicitLifetimes(arg.getAsType());
+      });
+  const bool has_known_nullability =
+      absl::c_any_of(args, [this](const clang::TemplateArgument& arg) {
+        return ContainsKnownNullability(arg.getAsType());
+      });
+  if (!has_explicit_lifetimes && !has_known_nullability) return converted;
 
-  CcType converted_arg = ConvertQualType(arg_type, /*lifetimes=*/nullptr,
-                                         /*nullable=*/true, assume_lifetimes);
-  if (const auto* error = std::get_if<FormattedError>(&converted_arg.variant)) {
-    // A malformed lifetime annotation surfaces here as an error type, rather
-    // than being silently dropped: the lifetime was written down in the
-    // source, so dropping it would produce bindings that disagree with the
-    // header.
-    if (has_explicit_lifetimes) {
-      return CcType(FormattedError::Substitute(
-          "Failed to convert the template argument of '$0', which carries an "
-          "explicit lifetime: $1",
-          clang::QualType(&type, 0).getAsString(), error->message()));
+  std::vector<CcType> converted_args;
+  converted_args.reserve(args.size());
+  for (const clang::TemplateArgument& arg : args) {
+    CcType converted_arg =
+        ConvertQualType(arg.getAsType(), /*lifetimes=*/nullptr,
+                        /*nullable=*/true, assume_lifetimes);
+    if (const auto* error =
+            std::get_if<FormattedError>(&converted_arg.variant)) {
+      // A malformed lifetime annotation surfaces here as an error type, rather
+      // than being silently dropped: the lifetime was written down in the
+      // source, so dropping it would produce bindings that disagree with the
+      // header.
+      if (has_explicit_lifetimes) {
+        return CcType(FormattedError::Substitute(
+            "Failed to convert a template argument of '$0', which carries "
+            "an explicit lifetime: $1",
+            clang::QualType(&type, 0).getAsString(), error->message()));
+      }
+      // Otherwise, fall back to the decl's arguments. They were converted
+      // successfully when the specialization was imported, so this only loses
+      // information that is specific to this use.
+      return converted;
     }
-    // Otherwise, fall back to the decl's argument. It was converted
-    // successfully when the specialization was imported, so this only loses
-    // information that is specific to this use.
-    return converted;
+    converted_args.push_back(std::move(converted_arg));
   }
-  converted.template_args.push_back(std::move(converted_arg));
+  for (CcType& converted_arg : converted_args) {
+    converted.template_args.push_back(std::move(converted_arg));
+  }
   return converted;
 }
 
