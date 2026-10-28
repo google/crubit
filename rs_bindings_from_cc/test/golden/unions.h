@@ -29,6 +29,7 @@ union NonEmptyUnion {
   char char_field;
   int int_field;
   long long long_long_field;
+  int int_array_field[2];
 };
 
 union NonCopyUnion {
@@ -42,7 +43,7 @@ union NonCopyUnion2 {
 };
 
 union UnionWithOpaqueField {
-  char constant_array_field_not_yet_supported[42];
+  volatile char volatile_array_field_not_yet_supported[42];
 };
 
 struct TrivialButInheritable {

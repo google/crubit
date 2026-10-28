@@ -131,6 +131,16 @@ pub fn format_cpp_type_inner(
         RsTypeKind::TypeAlias { type_alias, .. } => {
             tagless_cpp_type_name_for_item(&Item::TypeAlias(Rc::clone(type_alias)), db)
         }
+        RsTypeKind::CArray { element_type, num_elements } => {
+            let elem = format_cpp_type_inner(element_type, db, references_ok)?;
+            let len = proc_macro2::Literal::usize_unsuffixed(*num_elements);
+            // Wrapping each array layer in `crubit::type_identity_t<...>` avoids C's inside-out
+            // declarator precedence rules both when forming pointers/references (`T *` expands to
+            // `int (*)[4]` instead of invalid `int [4] *`) and when nesting multidimensional
+            // arrays (`[[c_int; 4]; 2]` expands outer-to-inner to `int[2][4]` rather than
+            // reversed `int[4][2]`).
+            Ok(quote! { crubit::type_identity_t<#elem [#len]> })
+        }
         RsTypeKind::Primitive(primitive) => Ok(quote! { #primitive }),
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             BridgeRsTypeKind::ProtoMessageBridge { kind, .. } => match kind {

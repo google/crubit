@@ -4401,3 +4401,61 @@ fn test_std_pair_preserves_explicit_lifetime_on_element() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_c_array_function_decay_and_omission() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        using Arr = int[4];
+        void take_decayed(int x[4]);
+        void take_decayed_const(const int x[4]);
+        void take_decayed_alias(Arr x);
+
+        void take_array_ref(int (&x)[4]);
+        void take_const_array_ref(const int (&x)[4]);
+        void take_array_ptr(int (*x)[4]);
+        void take_multidim_param(int x[2][4]);
+        void take_alias_ref(Arr& x);
+        void take_alias_ptr(Arr* x);
+        Arr* return_array_ptr();
+        void take_fn_ptr_with_array(void (*cb)(int (&)[4]));
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+
+    // 1D C++ array value parameters decay to raw pointers and remain supported.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub unsafe fn take_decayed(x: *mut ::ffi_11::c_int) { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub unsafe fn take_decayed_const(x: *const ::ffi_11::c_int) { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub unsafe fn take_decayed_alias(x: *mut ::ffi_11::c_int) { ... }
+        }
+    );
+
+    // Non-decayed array references, pointers to arrays, multidimensional array parameters,
+    // and function pointers containing array types are not supported and are omitted.
+    assert_rs_not_matches!(rs_api, quote! { fn take_array_ref });
+    assert_rs_not_matches!(rs_api, quote! { fn take_const_array_ref });
+    assert_rs_not_matches!(rs_api, quote! { fn take_array_ptr });
+    assert_rs_not_matches!(rs_api, quote! { fn take_multidim_param });
+    assert_rs_not_matches!(rs_api, quote! { fn take_alias_ref });
+    assert_rs_not_matches!(rs_api, quote! { fn take_alias_ptr });
+    assert_rs_not_matches!(rs_api, quote! { fn return_array_ptr });
+    assert_rs_not_matches!(rs_api, quote! { fn take_fn_ptr_with_array });
+    Ok(())
+}
