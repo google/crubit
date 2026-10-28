@@ -3759,7 +3759,16 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
         return absl::UnimplementedError("Unsupported builtin type");
     }
   } else if (const auto* tag_type = type.getAsAdjusted<clang::TagType>()) {
-    return ConvertTypeDecl(tag_type->getDecl()->getDefinitionOrSelf());
+    // With precompiled header modules, the definition may come from a module
+    // that was loaded, but not imported by the headers of the current target.
+    // Such a definition can't be used in the generated C++ code, so the type is
+    // treated as incomplete instead (see also `CXXRecordDeclImporter::Import`).
+    clang::TagDecl* tag_decl = tag_type->getDecl();
+    if (clang::TagDecl* definition = tag_decl->getDefinition();
+        definition != nullptr && sema_.hasReachableDefinition(definition)) {
+      tag_decl = definition;
+    }
+    return ConvertTypeDecl(tag_decl);
   } else if (const auto* typedef_type =
                  type.getAsAdjusted<clang::TypedefType>()) {
     if (!IsInSystemHeader(typedef_type->getDecl()->getLocation()) &&

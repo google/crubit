@@ -1404,7 +1404,14 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   }
 
   ictx_.MarkAsSuccessfullyImported(*record_decl);
-  if (!record_decl->isCompleteDefinition()) {
+  // With precompiled header modules, the definition may come from a module
+  // that was loaded (because the include scanner found an `#include` of its
+  // header), but that isn't imported by the headers of the current target.
+  // Such a definition is not reachable, and the generated C++ code can't use
+  // it, so the record is treated as incomplete. Without modules, every
+  // definition is reachable.
+  if (!record_decl->isCompleteDefinition() ||
+      !ictx_.sema_.hasReachableDefinition(record_decl)) {
     auto item = std::make_unique<ir_proto::Item>();
     auto* incomplete = item->mutable_incomplete_record();
     incomplete->mutable_cc_name()->set_identifier(cc_name);
