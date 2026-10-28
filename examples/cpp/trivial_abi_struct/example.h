@@ -5,11 +5,11 @@
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_CPP_TRIVIAL_ABI_STRUCT_EXAMPLE_H_
 #define THIRD_PARTY_CRUBIT_EXAMPLES_CPP_TRIVIAL_ABI_STRUCT_EXAMPLE_H_
 
-#include "absl/base/attributes.h"
+#include "support/annotations.h"
 
 // Because this class has a destructor, it will not receive Rust bindings
-// without ABSL_ATTRIBUTE_TRIVIAL_ABI.
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Position {
+// without CRUBIT_TRIVIAL_ABI.
+struct CRUBIT_TRIVIAL_ABI Position {
   int x;
   int y;
 

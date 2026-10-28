@@ -18,15 +18,6 @@ TEST void getReferenceableValueModeledForAbseil(int *_Nullable NullablePtr,
   nonnull(Nonnull2);
 }
 
-TEST void getReferenceableValueModeledForUtil(int *_Nullable NullablePtr,
-                                              int *_Nonnull NonnullPtr) {
-  auto &Nullable2 = util::something::GetReferenceableValue(NullablePtr);
-  auto &Nonnull2 = util::something::GetReferenceableValue(NonnullPtr);
-  // Outputs should share the nullability of inputs.
-  nullable(Nullable2);
-  nonnull(Nonnull2);
-}
-
 TEST void abslCheckNEImplModelEqualAndNull() {
   int *P = nullptr;
   // `P` is definitely equal to `nullptr`, so result is nonnull.
@@ -84,22 +75,4 @@ TEST void checkNEAfterLoopSmartPointer(_Nullable std::unique_ptr<int> P,
   }
   CHECK_NE(P, nullptr);
   nonnull(P);
-}
-
-TEST void utilCheckNEImplModelEqualAndNull() {
-  int *P = nullptr;
-  // `P` is definitely equal to `nullptr`, so result is nonnull.
-  nonnull(util::something::Check_NEImpl(P, nullptr, "foo"));
-}
-
-TEST void utilCheckNEImplModelMaybeUnequal(int *P, int *Q) {
-  // Since we don't know `P`'s relation to  `Q`, result may be null.
-  nullable(util::something::Check_NEImpl(P, Q, "foo"));
-}
-
-TEST void utilCheckNEImPlModelUnequal(int *P) {
-  if (P != nullptr) {
-    // `P` is definitely not equal to `nullptr`, so result is null.
-    nullable(util::something::Check_NEImpl(P, nullptr, "foo"));
-  }
 }

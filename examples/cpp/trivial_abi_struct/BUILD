@@ -14,7 +14,9 @@ cc_library(
 
     # Opt into using Crubit.
     aspect_hints = ["//features:supported"],
-    deps = ["@abseil-cpp//absl/base:core_headers"],
+    deps = [
+        "//support:annotations",
+    ],
 )
 
 rust_api_from_cpp(
