@@ -27,6 +27,40 @@ fn test_macro_arguments() {
     accept_some_args(&x, &mut y);
 }
 
+#[gtest]
+fn test_pinned_and_cref_into_cref_cmut() {
+    struct PinnedValue {
+        value: i32,
+        _pin: core::marker::PhantomPinned,
+    }
+
+    fn accept_pinned<'a, 'b>(
+        a: CRefTo!('a, PinnedValue),
+        b: CMutTo!('b, PinnedValue),
+    ) -> (*const PinnedValue, *mut PinnedValue) {
+        let cref_val: CRef<'a, PinnedValue> = cref::CRefLike::into_cref(a);
+        let cmut_val: CMut<'b, PinnedValue> = cref::CMutLike::into_cmut(b);
+        (CRef::as_ptr(cref_val), CMut::as_mut_ptr(cmut_val))
+    }
+
+    let x = core::pin::pin!(PinnedValue { value: 10, _pin: core::marker::PhantomPinned });
+    let mut y = core::pin::pin!(PinnedValue { value: 20, _pin: core::marker::PhantomPinned });
+    assert_eq!(x.value, 10);
+    assert_eq!(y.value, 20);
+    let expected_x: *const PinnedValue = &*x;
+    let expected_y: *const PinnedValue = &*y;
+
+    let (px, py) = accept_pinned(x.as_ref(), y.as_mut());
+    assert_eq!(px, expected_x);
+    assert_eq!(py.cast_const(), expected_y);
+
+    let cref_x = CRef::from_pin(x.as_ref());
+    let cmut_y = CMut::from_pin(y.as_mut());
+    let (px2, py2) = accept_pinned(cref_x, cmut_y);
+    assert_eq!(px2, expected_x);
+    assert_eq!(py2.cast_const(), expected_y);
+}
+
 // `CRef` and `CMut` have the layout of a thin pointer, and so does `Option` of each.
 const _: () = {
     assert!(size_of::<CRef<'static, i32>>() == size_of::<*const i32>());

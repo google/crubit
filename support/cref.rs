@@ -290,7 +290,7 @@ mod private {
 /// Types which implement this trait must be freely transmutable to a `CRef<Target>`.
 pub unsafe trait CRefLike<'a>: private::Sealed {
     /// The type of the value being referenced.
-    type Target: ?Sized;
+    type Target;
 
     /// Converts `self` to a `CRef<'a, Self::Target>` as if by `transmute`.
     fn into_cref(self) -> CRef<'a, Self::Target>
@@ -352,37 +352,37 @@ macro_rules! CMutTo {
     }
 }
 
-impl<'a, T: ?Sized> private::Sealed for CRef<'a, T> {}
-impl<'a, T: ?Sized> private::Sealed for CMut<'a, T> {}
-impl<T: ?Sized> private::Sealed for &T {}
-impl<T: ?Sized> private::Sealed for &mut T {}
-impl<T: ?Sized> private::Sealed for Pin<&T> {}
-impl<T: ?Sized> private::Sealed for Pin<&mut T> {}
+impl<'a, T> private::Sealed for CRef<'a, T> {}
+impl<'a, T> private::Sealed for CMut<'a, T> {}
+impl<T> private::Sealed for &T {}
+impl<T> private::Sealed for &mut T {}
+impl<T> private::Sealed for Pin<&T> {}
+impl<T> private::Sealed for Pin<&mut T> {}
 
-unsafe impl<'a, T: ?Sized> CRefLike<'a> for CRef<'a, T> {
+unsafe impl<'a, T> CRefLike<'a> for CRef<'a, T> {
     type Target = T;
 }
-unsafe impl<'a, T: ?Sized> CRefLike<'a> for CMut<'a, T> {
+unsafe impl<'a, T> CRefLike<'a> for CMut<'a, T> {
     type Target = T;
 }
-unsafe impl<'a, T: ?Sized> CMutLike<'a> for CMut<'a, T> {}
-unsafe impl<'a, T: ?Sized> CRefLike<'a> for &'a T
+unsafe impl<'a, T> CMutLike<'a> for CMut<'a, T> {}
+unsafe impl<'a, T> CRefLike<'a> for &'a T
 where
     T: Unpin,
 {
     type Target = T;
 }
-unsafe impl<'a, T: ?Sized> CRefLike<'a> for &'a mut T
+unsafe impl<'a, T> CRefLike<'a> for &'a mut T
 where
     T: Unpin,
 {
     type Target = T;
 }
-unsafe impl<'a, T: ?Sized> CMutLike<'a> for &'a mut T where T: Unpin {}
-unsafe impl<'a, T: ?Sized> CRefLike<'a> for Pin<&'a T> {
+unsafe impl<'a, T> CMutLike<'a> for &'a mut T where T: Unpin {}
+unsafe impl<'a, T> CRefLike<'a> for Pin<&'a T> {
     type Target = T;
 }
-unsafe impl<'a, T: ?Sized> CRefLike<'a> for Pin<&'a mut T> {
+unsafe impl<'a, T> CRefLike<'a> for Pin<&'a mut T> {
     type Target = T;
 }
-unsafe impl<'a, T: ?Sized> CMutLike<'a> for Pin<&'a mut T> {}
+unsafe impl<'a, T> CMutLike<'a> for Pin<&'a mut T> {}
