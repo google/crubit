@@ -336,6 +336,17 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling Rust constants for object-like C++ macros that expand to simple constant
+# expressions, e.g. `#define FOO 4` or `#define BAR (FOO + 3)`.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "macro_constants",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["macro_constants"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set where parameter types with unsafe template arguments are treated as unsafe.
 #
 # See b/573613918
