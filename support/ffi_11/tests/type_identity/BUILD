@@ -36,8 +36,6 @@ golden_test(
     basename = "rust_api",
     golden_h = "rust_api_cc_api.h",
     rust_library = "rust_api",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 crubit_cc_test(
