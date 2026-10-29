@@ -23,6 +23,29 @@ macro_rules! INT_CONSTANT {
     };
 }
 
+// Constants which refer to other macro constants.
+
+#[macro_export]
+macro_rules! REFERS_TO_OTHER_CONSTANT {
+    () => {
+        7
+    };
+}
+
+#[macro_export]
+macro_rules! DEFINED_BEFORE_ITS_DEPENDENCY {
+    () => {
+        42
+    };
+}
+
+#[macro_export]
+macro_rules! DEFINED_AFTER_ITS_DEPENDENT {
+    () => {
+        21
+    };
+}
+
 // The types follow the C++ rules.
 
 #[macro_export]
@@ -78,6 +101,15 @@ macro_rules! BOOL_CONSTANT {
 macro_rules! FALSE_CONSTANT {
     () => {
         false
+    };
+}
+
+// A suffix in a nested macro makes the macro typed, too.
+
+#[macro_export]
+macro_rules! REFERS_TO_UNSIGNED_CONSTANT {
+    () => {
+        ::ffi_11::new_c_uint(43)
     };
 }
 
@@ -149,6 +181,27 @@ macro_rules! SHIFTED_CONSTANT {
 macro_rules! BITWISE_CONSTANT {
     () => {
         252
+    };
+}
+
+#[macro_export]
+macro_rules! CONDITIONAL_CONSTANT {
+    () => {
+        10
+    };
+}
+
+#[macro_export]
+macro_rules! NESTED_CONDITIONAL_CONSTANT {
+    () => {
+        1
+    };
+}
+
+#[macro_export]
+macro_rules! CONDITIONAL_PRECEDENCE_CONSTANT {
+    () => {
+        2
     };
 }
 
@@ -314,6 +367,8 @@ macro_rules! SHIFT_VS_ADD_CONSTANT {
 }
 
 // The following macros are not supported, and are silently ignored.
+
+// Incomplete conditionals, which fail partway through parsing.
 
 // The following macros have names that can't be bound, and are reported as
 // errors.
