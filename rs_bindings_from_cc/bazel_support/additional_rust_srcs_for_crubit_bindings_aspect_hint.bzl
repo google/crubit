@@ -325,6 +325,7 @@ def additional_rust_srcs_for_crubit_bindings(
             The label that `extract_cpp` used, passed to rustc as `CRUBIT_TARGET`.
         **kwargs: Args passed through to the underlying rule (visibility, etc.).
     """
+
     _additional_rust_srcs_for_crubit_bindings_rule(
         name = name,
         srcs = srcs,
