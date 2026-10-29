@@ -559,13 +559,78 @@ fn pipe_string_through_process<'a>(
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
+/// Options passed to a targeted second `rustfmt` pass for items that bailed out in the first pass.
+/// Raising `max_width` prevents `rustfmt` from giving up on items with long generated type or thunk
+/// identifiers, while explicit width-heuristic caps keep calls and literals inside those items
+/// wrapped cleanly.
+const RUSTFMT_RETRY_CONFIG: &str = concat!(
+    "--config=max_width=10000,",
+    "fn_call_width=60,",
+    "attr_fn_like_width=70,",
+    "struct_lit_width=18,",
+    "struct_variant_width=35,",
+    "array_width=60,",
+    "chain_width=60,",
+    "single_line_if_else_max_width=50,",
+    "single_line_let_else_max_width=50",
+);
+
+/// Returns whether `line` in `rustfmt` output contains an item or block where `rustfmt` bailed out
+/// on `tokens_to_string` output because an unbreakable identifier exceeded `max_width = 100`.
+fn is_unformatted_rustfmt_line(line: &str) -> bool {
+    let trimmed = line.trim_start();
+    if trimmed.starts_with("//") {
+        return false;
+    }
+    if trimmed.starts_with("#[") {
+        return trimmed.starts_with("#[doc =") || (line.len() > 100 && !trimmed.ends_with(']'));
+    }
+    if line.len() <= 100 || line.contains("!(") || line.contains("! {") {
+        return false;
+    }
+    line.contains("{ ")
+        || line.ends_with(" }")
+        || (!line.starts_with(' ') && line.ends_with(','))
+        || (line.ends_with('{') && !trimmed.starts_with('{') && !line.ends_with(" {"))
+}
+
 fn rustfmt(input: String, config: &RustfmtConfig) -> Result<String> {
-    pipe_string_through_process(
+    let formatted = pipe_string_through_process(
         input,
         "rustfmt",
         &config.exe_path,
         config.cmdline_args.iter().map(OsString::as_os_str),
-    )
+    )?;
+    let lines: Vec<&str> = formatted.lines().collect();
+    let mut file_lines = Vec::new();
+    for (idx, &line) in lines.iter().enumerate() {
+        if !is_unformatted_rustfmt_line(line) {
+            continue;
+        }
+        let lo = idx + 1;
+        let hi = if line.ends_with('{') {
+            let indent = &line[..line.len() - line.trim_start().len()];
+            lines[idx + 1..]
+                .iter()
+                .position(|next| next.strip_prefix(indent) == Some("}"))
+                .map_or(lo, |offset| lo + 1 + offset)
+        } else {
+            lo
+        };
+        file_lines.push(format!(r#"{{"file":"stdin","range":[{lo},{hi}]}}"#));
+    }
+    if file_lines.is_empty() {
+        return Ok(formatted);
+    }
+    let file_lines_json = format!("[{}]", file_lines.join(","));
+    let retry_args = config.cmdline_args.iter().map(OsString::as_os_str).chain([
+        OsStr::new("--unstable-features"),
+        OsStr::new("--file-lines"),
+        OsStr::new(&file_lines_json),
+        OsStr::new(RUSTFMT_RETRY_CONFIG),
+    ]);
+    Ok(pipe_string_through_process(formatted.clone(), "rustfmt", &config.exe_path, retry_args)
+        .unwrap_or(formatted))
 }
 
 fn clang_format(input: String, clang_format_exe_path: &Path) -> Result<String> {
@@ -929,6 +994,75 @@ void bar() {}
             r#"a // test " - quote
 "#
         );
+        Ok(())
+    }
+
+    #[gtest]
+    fn test_rustfmt_formats_struct_with_overlong_field_without_affecting_siblings() -> Result<()> {
+        let input = quote! {
+            pub mod my_module {
+                #[doc = " Generated from: example.h;l=27"]
+                pub struct RequestParams {
+                    #[doc = " Field doc comment."]
+                    pub options: ::some_deeply_nested_crate_with_a_very_long_escaped_target_name_exceeding_one_hundred_columns::ns::RequestOptions,
+                }
+                pub fn sibling_fn(
+                    first_parameter_name: i32,
+                    second_parameter_name: i32,
+                    third_parameter_name: i32,
+                ) -> i32 {
+                    first_parameter_name + second_parameter_name + third_parameter_name
+                }
+            }
+        };
+
+        assert_eq!(
+            rs_tokens_to_formatted_string_for_tests(input)?,
+            r#"pub mod my_module {
+    /// Generated from: example.h;l=27
+    pub struct RequestParams {
+        /// Field doc comment.
+        pub options: ::some_deeply_nested_crate_with_a_very_long_escaped_target_name_exceeding_one_hundred_columns::ns::RequestOptions,
+    }
+    pub fn sibling_fn(
+        first_parameter_name: i32,
+        second_parameter_name: i32,
+        third_parameter_name: i32,
+    ) -> i32 {
+        first_parameter_name + second_parameter_name + third_parameter_name
+    }
+}
+"#
+        );
+        Ok(())
+    }
+
+    #[gtest]
+    fn test_rustfmt_formats_fn_with_overlong_signature_and_thunk_call() -> Result<()> {
+        let input = quote! {
+            #[must_use]
+            #[inline(always)]
+            pub(crate) fn first<'__this>(
+                __this: &'__this crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,
+                __count: usize,
+            ) -> crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE {
+                unsafe {
+                    let mut __crubit_return = ::core::mem::MaybeUninit::<
+                        crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE,
+                    >::uninit();
+                    crate::detail::__rust_thunk__eb5fa8a1__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE5firstEm(
+                        &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                        __this,
+                        __count,
+                    );
+                    __crubit_return.assume_init()
+                }
+            }
+        };
+
+        let output = rs_tokens_to_formatted_string_for_tests(input)?;
+        assert!(output.contains("#[inline(always)]\npub(crate) fn first<'__this>"), "{output}");
+        assert!(output.contains("__this,\n            __count,\n"), "{output}");
         Ok(())
     }
 }
