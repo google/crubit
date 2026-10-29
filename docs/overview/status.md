@@ -72,6 +72,8 @@ Crubit generates Rust bindings for everyday C++ APIs:
     [explicit lifetime annotations](../cpp/references_and_lifetimes.md).
 *   Type aliases, forward-declared types, and concrete class template
     specializations such as `MyTemplate<int>`.
+*   Object-like macros which expand to simple integral constants, such as
+    `#define FOO 4`, with the `macro_constants` feature.
 
 Unreleased: non-virtual inheritance (upcasting, downcasting, inherited methods).
 
@@ -80,7 +82,8 @@ and overriding C++ methods from Rust (b/313733992), checking that C++ code
 actually honors the elided or annotated lifetimes, C++ templates with generic
 (non-concrete) type parameters (see [Generics and
 Templates](limits.md#generics)), non-type `using` aliases, constants of other
-types (e.g. floating-point or class types), and macros.
+types (e.g. floating-point or class types), and macros other than simple
+constants.
 
 ## C++ bindings for Rust libraries
 

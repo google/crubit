@@ -141,6 +141,10 @@ flagset::flags! {
         /// Generate Rust bindings for constant-size C-style arrays (`T[N]`) as `[T; N]` when
         /// layout-compatible, instead of an opaque byte blob (b/575922365).
         ConstantArrays,
+
+        /// Generate Rust constants for object-like C++ macros which expand to simple constant
+        /// expressions, e.g. `#define FOO 4` or `#define BAR (FOO + 3)`.
+        MacroConstants,
     }
 }
 
@@ -188,6 +192,7 @@ impl CrubitFeature {
             Self::MovableReturnValues => "movable_return_values",
             Self::StrongOrderingTraits => "strong_ordering_traits",
             Self::ConstantArrays => "constant_arrays",
+            Self::MacroConstants => "macro_constants",
         }
     }
 
@@ -242,6 +247,7 @@ impl CrubitFeature {
             Self::MovableReturnValues => "//features:movable_return_values",
             Self::StrongOrderingTraits => "//features:strong_ordering_traits",
             Self::ConstantArrays => "//features:constant_arrays",
+            Self::MacroConstants => "//features:macro_constants",
         }
     }
 }
@@ -315,6 +321,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"movable_return_values" => CrubitFeature::MovableReturnValues.into(),
         b"strong_ordering_traits" => CrubitFeature::StrongOrderingTraits.into(),
         b"constant_arrays" => CrubitFeature::ConstantArrays.into(),
+        b"macro_constants" => CrubitFeature::MacroConstants.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -512,6 +519,13 @@ mod tests {
     }
 
     #[gtest]
+    fn test_serialized_crubit_feature_macro_constants() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"macro_constants\"").unwrap();
+        assert_eq!(features, CrubitFeature::MacroConstants);
+    }
+
+    #[gtest]
     fn test_serialized_crubit_feature_all() {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"all\"").unwrap();
         assert_eq!(
@@ -533,6 +547,7 @@ mod tests {
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
+                | CrubitFeature::MacroConstants
         );
     }
 
@@ -577,6 +592,7 @@ mod tests {
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
+                | CrubitFeature::MacroConstants
         );
     }
 
@@ -603,6 +619,7 @@ mod tests {
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
+                | CrubitFeature::MacroConstants
         );
     }
 
@@ -630,6 +647,7 @@ mod tests {
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
+                | CrubitFeature::MacroConstants
         );
     }
 
@@ -657,6 +675,7 @@ mod tests {
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
+                | CrubitFeature::MacroConstants
         );
     }
 
@@ -684,6 +703,7 @@ mod tests {
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
+                | CrubitFeature::MacroConstants
         );
     }
 }
