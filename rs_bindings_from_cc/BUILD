@@ -397,8 +397,14 @@ cc_library(
 
 cc_library(
     name = "importer",
-    srcs = ["importer.cc"],
-    hdrs = ["importer.h"],
+    srcs = [
+        "importer.cc",
+        "macro_constants.cc",
+    ],
+    hdrs = [
+        "importer.h",
+        "macro_constants.h",
+    ],
     deps = [
         ":annotations_consumer",
         ":ast_util",
