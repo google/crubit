@@ -1184,6 +1184,7 @@ pub struct DebugField {
 
 #[derive(Clone, Debug)]
 pub struct DebugImpl {
+    pub type_name: String,
     pub ident: Ident,
     pub stubbed_lifetime_params: TokenStream,
     pub fields: Vec<DebugField>,
@@ -1192,8 +1193,7 @@ pub struct DebugImpl {
 
 impl ToTokens for DebugImpl {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let Self { ident, stubbed_lifetime_params, fields, is_exhaustive } = self;
-        let type_name_str = ident.to_string();
+        let Self { type_name, ident, stubbed_lifetime_params, fields, is_exhaustive } = self;
         let field_calls = fields.iter().map(|f| {
             let DebugField { name, expr } = f;
             quote! { .field(#name, #expr) }
@@ -1206,7 +1206,7 @@ impl ToTokens for DebugImpl {
         quote! {
             impl ::core::fmt::Debug for #ident #stubbed_lifetime_params {
                 fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    formatter.debug_struct(#type_name_str)
+                    formatter.debug_struct(#type_name)
                         #(#field_calls)*
                         #finish_call
                 }
