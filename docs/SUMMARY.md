@@ -52,6 +52,10 @@
 -   [Inline C++](./cpp/inline_cpp.md)
 -   [Standard Library Types](./cpp/std.md)
 
+-   [Non-Rust-Movable Types](./types/non_rust_movable/intro_short.md)
+    -   [Advanced Introduction](./types/non_rust_movable/intro_advanced.md)
+    -   [Cheat Sheet](./types/non_rust_movable/cheat_sheet.md)
+
 # Errors
 
 -   [Overview](./errors/index.md)
