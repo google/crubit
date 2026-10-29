@@ -26,6 +26,8 @@ use token_stream_matchers::{
 };
 use token_stream_printer::rs_tokens_to_formatted_string_for_tests;
 
+const PROTOBUF_NAMESPACE: &str = "google::protobuf";
+
 #[gtest]
 fn test_disable_thread_safety_warnings() -> Result<()> {
     let rs_api_impl = generate_bindings_tokens_from_cc("inline void foo() {}")?.rs_api_impl;
@@ -1624,24 +1626,24 @@ fn test_interpolate_spelled_rust_type() {
 
 #[gtest]
 fn test_existing_rust_type_with_bridge_type_template_arg_fails() -> Result<()> {
-    let proto = ir_proto_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(&format!(
         r#"
-            namespace crubit::rust_type {
+            namespace crubit::rust_type {{
             template <typename...>
-            struct Args {};
-            }
+            struct Args {{}};
+            }}
             template <typename T>
-            struct [[clang::annotate("crubit_internal_rust_type", "RustContainer<{}>", crubit::rust_type::Args<T>())]] Container {};
+            struct [[clang::annotate("crubit_internal_rust_type", "RustContainer<{{}}>", crubit::rust_type::Args<T>())]] Container {{}};
 
-            namespace proto2 {
-            struct MessageLite {};
-            struct Message : public MessageLite {};
-            }
-            class MyMessage : public google::protobuf::Message {};
+            namespace {PROTOBUF_NAMESPACE} {{
+            struct MessageLite {{}};
+            struct Message : public MessageLite {{}};
+            }}
+            class MyMessage : public {PROTOBUF_NAMESPACE}::Message {{}};
 
             void Accept(Container<MyMessage> a);
-        "#,
-    )?;
+        "#
+    ))?;
     let ir = make_test_ir(&proto)?;
     let db_factory = TestDbFactory::new(ir);
     let db = db_factory.make_db();
@@ -2268,16 +2270,18 @@ fn test_std_optional_of_owned_proto_with_layout_compat_feature() -> Result<()> {
         r#"
         void takes_optional_message(std::optional<MyMessage> o);
         "#,
-        r#"
-        namespace proto2 {
-        struct MessageLite {};
-        struct Message : public MessageLite {};
-        }
-        class MyMessage : public google::protobuf::Message {};
-        namespace std {
-            template <typename T> class optional { T t; bool b; };
-        }
-        "#,
+        &format!(
+            r#"
+            namespace {PROTOBUF_NAMESPACE} {{
+            struct MessageLite {{}};
+            struct Message : public MessageLite {{}};
+            }}
+            class MyMessage : public {PROTOBUF_NAMESPACE}::Message {{}};
+            namespace std {{
+                template <typename T> class optional {{ T t; bool b; }};
+            }}
+            "#
+        ),
     )?;
     let mut ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let target = ir.current_target().clone();
@@ -2304,13 +2308,15 @@ fn test_proto_message_references() -> Result<()> {
         void takes_mut_ref(MyMessage& msg);
         const MyMessage& returns_const_ref(const MyMessage& msg);
         "#,
-        r#"
-        namespace proto2 {
-        struct MessageLite {};
-        struct Message : public MessageLite {};
-        }
-        class MyMessage : public google::protobuf::Message {};
-        "#,
+        &format!(
+            r#"
+            namespace {PROTOBUF_NAMESPACE} {{
+            struct MessageLite {{}};
+            struct Message : public MessageLite {{}};
+            }}
+            class MyMessage : public {PROTOBUF_NAMESPACE}::Message {{}};
+            "#
+        ),
     )?;
     let mut ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let target = ir.current_target().clone();

@@ -9,6 +9,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "common/status_test_matchers.h"  // IWYU pragma: keep
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 

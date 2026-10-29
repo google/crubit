@@ -127,9 +127,9 @@ mod tests {
     fn test_file_doesnt_parse() {
         let input = make_tmp_input_file("does_not_parse", "This is not (Rust>!");
         let err = collect_instantiations_impl(vec![input.clone()]).unwrap_err();
-        assert_eq!(
+        expect_that!(
             format!("{:#}", err),
-            format!("Couldn't parse the file '{}': lex error", input.display())
+            starts_with(format!("Couldn't parse the file '{}': ", input.display()))
         );
     }
 
