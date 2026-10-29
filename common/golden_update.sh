@@ -14,7 +14,7 @@ fi
 TEST_FLAGS=(
   --test_tag_filters=crubit_golden_test,-manual
   --build_tag_filters=crubit_golden_test,-manual
-  --config=llvm-unstable
+  --config=crubit-unstable
   --test_strategy=local
   --test_env=WRITE_GOLDENS=1
   --cache_test_results=no
