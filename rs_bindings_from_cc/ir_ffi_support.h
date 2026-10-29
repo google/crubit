@@ -354,6 +354,14 @@ static_assert(sizeof(FfiVec<uint8_t>) == 3 * sizeof(size_t));
 static_assert(alignof(FfiVec<uint8_t>) == alignof(size_t));
 static_assert(std::is_standard_layout_v<FfiVec<uint8_t>>);
 
+// Returns a process-lifetime default-constructed instance of `T` for empty
+// union and `FfiRc<T>` getters.
+template <typename T>
+const T& DefaultValue() {
+  static const T& kDefault = *new T();
+  return kDefault;
+}
+
 // Control block allocated via `AllocFfiBytes` and shared with `FfiRc<T>` in
 // Rust. Reference counting is single-threaded (non-atomic), matching Rust's
 // `!Send + !Sync` `FfiRc<T>`.
@@ -430,6 +438,10 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiRc {
     return &ptr_->value;
   }
 
+  const T& get_or_default() const {
+    return ptr_ != nullptr ? ptr_->value : DefaultValue<T>();
+  }
+
   T& get_or_init() {
     if (ptr_ == nullptr) {
       void* mem = AllocFfiBytes(sizeof(FfiRcInner<T>), alignof(FfiRcInner<T>));
@@ -453,11 +465,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiRc {
   template <typename U = T>
   friend bool operator==(const FfiRc& lhs, const FfiRc<U>& rhs) {
     if (lhs.ptr_ == rhs.ptr_) return true;
-    static const T& kDefaultLhs = *new T();
-    static const U& kDefaultRhs = *new U();
-    const T& l = lhs.ptr_ != nullptr ? lhs.ptr_->value : kDefaultLhs;
-    const U& r = rhs.ptr_ != nullptr ? rhs.ptr_->value : kDefaultRhs;
-    return l == r;
+    return lhs.get_or_default() == rhs.get_or_default();
   }
   template <typename U = T>
   friend bool operator!=(const FfiRc& lhs, const FfiRc<U>& rhs) {

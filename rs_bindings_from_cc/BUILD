@@ -8,6 +8,7 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load(
     "//common:multiplatform_testing.bzl",
     "multiplatform_rust_test",
@@ -464,12 +465,54 @@ rust_proto_library(
     deps = [":ir_proto"],
 )
 
+crubit_rust_binary(
+    name = "ir_codegen",
+    srcs = [
+        "ir_codegen.rs",
+        "ir_schema.rs",
+    ],
+    deps = [
+        "@crate_index//:genco",  # v0_17
+        "@crate_index//:heck",  # v0_5
+    ],
+)
+
+genrule(
+    name = "generate_ir_files",
+    outs = [
+        "ir_generated.h.gen",
+        "ir_generated.rs.gen",
+    ],
+    cmd = "$(execpath :ir_codegen) $(execpath ir_generated.h.gen) $(execpath ir_generated.rs.gen)",
+    tools = [":ir_codegen"],
+)
+
+sh_test(
+    name = "ir_generated_golden_test",
+    srcs = ["//common:golden_test.sh"],
+    args = [
+        "$(rootpath ir_generated.h)",
+        "$(rootpath :ir_generated.h.gen)",
+        "$(rootpath ir_generated.rs)",
+        "$(rootpath :ir_generated.rs.gen)",
+    ],
+    data = [
+        "ir_generated.h",
+        "ir_generated.rs",
+        ":ir_generated.h.gen",
+        ":ir_generated.rs.gen",
+        "//common:LICENSE_HEADER",
+    ],
+    tags = ["crubit_golden_test"],
+)
+
 cc_library(
     name = "cc_ir",
     srcs = ["ir.cc"],
     hdrs = [
         "ir.h",
         "ir_ffi_support.h",
+        "ir_generated.h",
     ],
     visibility = ["//:__subpackages__"],
     deps = [
@@ -505,6 +548,7 @@ rust_library(
     srcs = [
         "ir.rs",
         "ir_ffi_support.rs",
+        "ir_generated.rs",
         "proto_to_ir.rs",
     ],
     edition = "2024",
