@@ -248,6 +248,12 @@ class Importer final : public ImportContext {
   clang::SourceLocation TranslateToCommentFile(
       clang::SourceLocation location) const;
 
+  // If the `macro_constants` feature is enabled, synthesizes `constexpr`
+  // variables for the object-like macros of this target that expand to simple
+  // constants (see `SynthesizeMacroConstant`). The variables are then imported
+  // like any other constant.
+  void ImportMacroConstants();
+
   clang::Decl* absl_nullable CanonicalizeDecl(
       clang::Decl* absl_nonnull decl) const;
   const clang::Decl* absl_nullable CanonicalizeDecl(
