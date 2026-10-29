@@ -12,7 +12,7 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Testing/TestAST.h"
-#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
