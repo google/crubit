@@ -716,6 +716,31 @@ impl<'db> BindingsGenerator<'db> {
         self.namespace_qualifier_from_id(item.id())
     }
 
+    /// Like `namespace_qualifier`, but for formatting the C++ name of `item`.
+    ///
+    /// A class template instantiation that is named after a type alias is placed in the namespace
+    /// of that alias in Rust (see `Record::mangled_rs_name`), but its C++ name stays the
+    /// fully-qualified name of the instantiation. So the namespaces are omitted for it, and for
+    /// the items nested in it.
+    pub fn cc_namespace_qualifier<'a>(
+        &self,
+        item: &impl ir::GenericItem<'a>,
+    ) -> code_gen_utils::NamespaceQualifier {
+        let mut namespace_qualifier = self.namespace_qualifier_from_id(item.id());
+        let mut id = Some(item.id());
+        while let Some(current_id) = id {
+            let current_item = self.find_untyped_decl(current_id);
+            if let ir::Item::Record(record) = current_item
+                && record.mangled_rs_name().is_some()
+            {
+                namespace_qualifier.namespaces.clear();
+                break;
+            }
+            id = current_item.enclosing_item_id();
+        }
+        namespace_qualifier
+    }
+
     #[track_caller]
     pub fn namespace_qualifier_from_id(
         &self,

@@ -19,20 +19,6 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-extern "C" void __rust_thunk___Z14IntFloatCaller2TsIifE(
-    struct Ts<int, float>* i) {
-  IntFloatCaller(crubit::UnsafeTakeValue(i));
-}
-
-static_assert((void (*)(struct Ts<int, float>)) & ::IntFloatCaller);
-
-extern "C" void __rust_thunk___Z17ShortDoubleCaller2TsIsdE(
-    struct Ts<short, double>* i) {
-  ShortDoubleCaller(crubit::UnsafeTakeValue(i));
-}
-
-static_assert((void (*)(struct Ts<short, double>)) & ::ShortDoubleCaller);
-
 static_assert(sizeof(struct Ts<int, float>) == 1);
 static_assert(alignof(struct Ts<int, float>) == 1);
 
@@ -55,5 +41,19 @@ extern "C" void __rust_thunk__ca694370__ZN2TsIsdEC1Esd(
     struct Ts<short, double>* __this, short t, double s) {
   crubit::construct_at(__this, t, s);
 }
+
+extern "C" void __rust_thunk___Z14IntFloatCaller2TsIifE(
+    struct Ts<int, float>* i) {
+  IntFloatCaller(crubit::UnsafeTakeValue(i));
+}
+
+static_assert((void (*)(struct Ts<int, float>)) & ::IntFloatCaller);
+
+extern "C" void __rust_thunk___Z17ShortDoubleCaller2TsIsdE(
+    struct Ts<short, double>* i) {
+  ShortDoubleCaller(crubit::UnsafeTakeValue(i));
+}
+
+static_assert((void (*)(struct Ts<short, double>)) & ::ShortDoubleCaller);
 
 #pragma clang diagnostic pop

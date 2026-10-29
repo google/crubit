@@ -132,6 +132,10 @@ fn generate_type_alias<'a>(
     db: &BindingsGenerator<'a>,
     raw_type_alias: Rc<TypeAlias<'a>>,
 ) -> Result<ApiSnippets> {
+    if raw_type_alias.names_template_instantiation() {
+        // The class template instantiation is generated under the name of this alias instead.
+        return Ok(ApiSnippets::default());
+    }
     let assume_lifetimes = db
         .ir()
         .target_crubit_features(raw_type_alias.as_ref().owning_target())
@@ -691,6 +695,27 @@ pub fn generate_bindings_tokens(
     let main_api =
         code_snippet::generated_items_to_token_stream(&generated_items, &db, &top_level_ids);
 
+    // Class template instantiations that are named after a type alias keep their mangled name as a
+    // hidden alias in the crate root, which is where they would have been otherwise.
+    let crate_root_path = ir.crate_root_path_tokens();
+    let mangled_name_aliases = ir
+        .records()
+        .filter(|record| {
+            ir.is_current_target(record.as_ref().owning_target())
+                && matches!(generated_items.get(&record.id()), Some(GeneratedItem::Record(_)))
+        })
+        .filter_map(|record| {
+            let mangled_ident = make_rs_ident(record.mangled_rs_name()?);
+            let ident = make_rs_ident(record.rs_name().as_str());
+            let namespace_qualifier = db.namespace_qualifier(record).format_for_rs();
+            Some(quote! {
+                #[doc(hidden)]
+                pub type #mangled_ident = #crate_root_path:: #namespace_qualifier #ident;
+                __NEWLINE__ __NEWLINE__
+            })
+        })
+        .collect::<TokenStream>();
+
     let cc_details = CppDetails {
         includes: generate_rs_api_impl_includes(
             &db,
@@ -789,6 +814,8 @@ pub fn generate_bindings_tokens(
             #( #reexports __NEWLINE__ )*
 
             #main_api
+
+            #mangled_name_aliases
 
             #mod_detail __NEWLINE__ __NEWLINE__
 
@@ -1443,7 +1470,7 @@ fn crubit_abi_type<'a>(
                 let rust_abi_path =
                     make_rust_abi_path_from_str("ProtoMessageRustBridge", ir, &target);
 
-                let cpp_namespace_qualifier = db.namespace_qualifier(original_type.as_ref());
+                let cpp_namespace_qualifier = db.cc_namespace_qualifier(original_type.as_ref());
 
                 // Rust message types are exported to crate root, but we need the full namespace for
                 // the C++ ABI.
@@ -2236,7 +2263,7 @@ fn make_cpp_type_from_item<'a>(
     cc_name: &str,
     db: &BindingsGenerator,
 ) -> Result<TokenStream> {
-    let namespace_qualifier = db.namespace_qualifier(item);
+    let namespace_qualifier = db.cc_namespace_qualifier(item);
     let namespace_parts = namespace_qualifier.parts().map(|part| make_rs_ident(part));
     let cpp_type = cc_name
         .parse::<TokenStream>()

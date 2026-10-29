@@ -146,8 +146,31 @@ pub mod template_with_preferred_name {
 
     /// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
     /// definition of the `string_view` type alias.
-    pub type SpecializedTypeAlias =
-        crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE;
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=template_with_preferred_name :: SomeTemplate < int >
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct SpecializedTypeAlias {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for SpecializedTypeAlias {}
+    impl !Sync for SpecializedTypeAlias {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("template_with_preferred_name :: SomeTemplate < int >"),
+        crate::template_with_preferred_name::SpecializedTypeAlias
+    );
+
+    impl Default for SpecializedTypeAlias {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__90355363__ZN28template_with_preferred_name12SomeTemplateIiEC1Ev(&raw mut tmp as*mut _);
+                tmp.assume_init()
+            }
+        }
+    }
 
     // Based on `llvm/include/c++/v1/string_view` - mimics definition of
     // `basic_string_view` class template (focusing on the attributes related to the
@@ -156,33 +179,9 @@ pub mod template_with_preferred_name {
 
 // namespace template_with_preferred_name
 
-/// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
-/// forward declaration of `basic_string_view` class template.
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=template_with_preferred_name :: SomeTemplate < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {}
-impl !Sync for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("template_with_preferred_name :: SomeTemplate < int >"),
-    crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
-);
-
-impl Default for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__90355363__ZN28template_with_preferred_name12SomeTemplateIiEC1Ev(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
+#[doc(hidden)]
+pub type __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE =
+    crate::template_with_preferred_name::SpecializedTypeAlias;
 
 mod detail {
     #[allow(unused_imports)]
@@ -228,15 +227,11 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::HasCustomAlignmentWithGnuAttr: Drop);
 
     assert!(
-        ::core::mem::size_of::<
-            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-        >() == 1
+        ::core::mem::size_of::<crate::template_with_preferred_name::SpecializedTypeAlias>() == 1
     );
     assert!(
-        ::core::mem::align_of::<
-            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-        >() == 1
+        ::core::mem::align_of::<crate::template_with_preferred_name::SpecializedTypeAlias>() == 1
     );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE: Drop);
+    static_assertions::assert_impl_all!(crate::template_with_preferred_name::SpecializedTypeAlias: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::template_with_preferred_name::SpecializedTypeAlias: Drop);
 };

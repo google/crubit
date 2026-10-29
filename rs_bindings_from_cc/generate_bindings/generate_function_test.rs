@@ -3884,7 +3884,7 @@ fn test_thunkless_constructor_trivial() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            impl Default for __CcTemplateInst8TemplateIiE {
+            impl Default for TemplateInt {
                 #[inline(always)]
                 fn default() -> Self {
                     unsafe { ::core::mem::MaybeUninit::<Self>::zeroed().assume_init() }
