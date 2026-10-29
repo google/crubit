@@ -55,8 +55,6 @@ crubit_cc_test(
         "android",
         "ios",
     ],
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
     deps = [
         ":struct_with_conflicting_fields_and_member_functions_cc_api",
         "@googletest//:gtest_main",
