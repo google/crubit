@@ -5,8 +5,9 @@
 use core::cmp::Ordering;
 use googletest::prelude::*;
 use spaceship::{
-    CustomWeakOrdering, DefaultedPartialOrdering, DefaultedStrongOrdering, FriendStrongOrdering,
-    SpaceshipAndLessThan, SpaceshipReturningNotAnOrdering,
+    CompareWithOtherRecord, CustomWeakOrdering, DefaultedPartialOrdering, DefaultedStrongOrdering,
+    FriendStrongOrdering, OtherRecord, SpaceshipAndLessThan, SpaceshipReturningNotAnOrdering,
+    SpaceshipWithoutEq,
 };
 
 #[gtest]
@@ -110,4 +111,38 @@ fn test_strong_ordering_in_collections() {
     let set: std::collections::BTreeSet<FriendStrongOrdering> =
         [3, 1, 2, 1].into_iter().map(|i| FriendStrongOrdering { i }).collect();
     expect_eq!(set.iter().map(|s| s.i).collect::<Vec<_>>(), [1, 2, 3]);
+}
+
+#[gtest]
+fn test_spaceship_with_rhs_of_different_type() {
+    let one = CompareWithOtherRecord { i: 1 };
+
+    expect_eq!(one.partial_cmp(&OtherRecord { i: 2 }), Some(Ordering::Less));
+    expect_eq!(one.partial_cmp(&OtherRecord { i: 1 }), Some(Ordering::Equal));
+    expect_eq!(one.partial_cmp(&OtherRecord { i: 0 }), Some(Ordering::Greater));
+    expect_true!(one < OtherRecord { i: 2 });
+    expect_true!(one >= OtherRecord { i: 1 });
+    expect_true!(one == OtherRecord { i: 1 });
+    expect_true!(one != OtherRecord { i: 2 });
+
+    // `Eq` and `Ord` only describe comparisons with `Self`.
+    static_assertions::assert_not_impl_any!(CompareWithOtherRecord: Eq, Ord);
+}
+
+#[gtest]
+fn test_spaceship_with_rhs_of_different_type_reversed() {
+    // The reversed operators are declared separately, off by one relative to the members.
+    let two = OtherRecord { i: 2 };
+
+    expect_eq!(two.partial_cmp(&CompareWithOtherRecord { i: 1 }), Some(Ordering::Equal));
+    expect_eq!(two.partial_cmp(&CompareWithOtherRecord { i: 2 }), Some(Ordering::Less));
+    expect_true!(two == CompareWithOtherRecord { i: 1 });
+    expect_true!(two > CompareWithOtherRecord { i: 0 });
+}
+
+#[gtest]
+fn test_spaceship_with_rhs_of_different_type_without_eq() {
+    // `PartialOrd<OtherRecord>` requires `PartialEq<OtherRecord>`, which isn't declared.
+    static_assertions::assert_not_impl_any!(SpaceshipWithoutEq: PartialOrd<OtherRecord>);
+    static_assertions::assert_not_impl_any!(SpaceshipWithoutEq: PartialEq<OtherRecord>);
 }

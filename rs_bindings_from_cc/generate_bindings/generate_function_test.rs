@@ -2141,6 +2141,216 @@ fn test_impl_spaceship_operator_returning_int() -> Result<()> {
     Ok(())
 }
 
+/// Unlike the relational operators, `operator<=>` may compare different types:
+/// `operator<=>(const SomeStruct&, const Other&)` implements `PartialOrd<Other>` for `SomeStruct`,
+/// alongside the `PartialEq<Other>` from the matching `operator==`.
+#[gtest]
+fn test_impl_spaceship_operator_with_rhs_of_different_type() -> Result<()> {
+    let proto = ir_proto_from_cc(&format!(
+        r#"#pragma clang lifetime_elision
+        {FAKE_COMPARE_HEADER}
+        struct Other final {{ int i; }};
+        struct SomeStruct final {{
+            bool operator==(const Other& other) const;
+            std::strong_ordering operator<=>(const Other& other) const;
+            int i;
+        }};"#
+    ))?;
+
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(rs_api, quote! { impl PartialEq<crate::Other> for SomeStruct });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl PartialOrd<crate::Other> for SomeStruct {
+                #[inline(always)]
+                fn partial_cmp<'a, 'b>(&'a self, other: &'b crate::Other) -> Option<core::cmp::Ordering> {
+                    unsafe {
+                        match crate::detail::...(self, other) {
+                            -1 => Some(core::cmp::Ordering::Less),
+                            0 => Some(core::cmp::Ordering::Equal),
+                            1 => Some(core::cmp::Ordering::Greater),
+                            _ => None,
+                        }
+                    }
+                }
+            }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" signed char ...(struct SomeStruct const * __this, struct Other const * other) {
+                return [](auto __crubit_ordering) -> signed char {
+                    ...
+                }(__this->operator<=>(*other));
+            }
+        }
+    );
+    // Nothing is implemented for the reversed operands.
+    assert_rs_not_matches!(rs_api, quote! { impl PartialOrd<crate::SomeStruct> for Other });
+    assert_rs_not_matches!(rs_api, quote! { impl PartialOrd<SomeStruct> for crate::Other });
+    Ok(())
+}
+
+/// A free `operator<=>` comparing different records, taking them by value (they are cloned into
+/// the call, as for `operator==`).
+#[gtest]
+fn test_impl_spaceship_operator_free_function_with_records_of_different_types_by_value(
+) -> Result<()> {
+    let proto = ir_proto_from_cc(&format!(
+        r#"#pragma clang lifetime_elision
+        {FAKE_COMPARE_HEADER}
+        struct Other final {{ int i; }};
+        struct SomeStruct final {{ int i; }};
+        bool operator==(SomeStruct lhs, Other rhs);
+        std::strong_ordering operator<=>(SomeStruct lhs, Other rhs);"#
+    ))?;
+
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl PartialOrd<crate::Other> for crate::SomeStruct {
+                #[inline(always)]
+                fn partial_cmp(&self, rhs: &crate::Other) -> Option<core::cmp::Ordering> {
+                    unsafe {
+                        match crate::detail::...(&mut self.clone(), &mut rhs.clone()) {
+                            -1 => Some(core::cmp::Ordering::Less),
+                            0 => Some(core::cmp::Ordering::Equal),
+                            1 => Some(core::cmp::Ordering::Greater),
+                            _ => None,
+                        }
+                    }
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+/// Generates bindings for `SomeStruct`, which declares `operator<=>(const Other&)`, together with
+/// the given declarations (e.g. some `operator==`), and checks that `operator<=>` doesn't
+/// implement `PartialOrd<Other>` for lack of `PartialEq<Other>`.
+fn expect_spaceship_operator_with_rhs_of_different_type_missing_eq(
+    declarations: &str,
+) -> Result<BindingsTokens> {
+    let proto = ir_proto_from_cc(&format!(
+        r#"#pragma clang lifetime_elision
+        {FAKE_COMPARE_HEADER}
+        struct Other final {{ int i; }};
+        struct SomeStruct final {{
+            std::strong_ordering operator<=>(const Other& other) const;
+            int i;
+        }};
+        {declarations}"#
+    ))?;
+
+    let ir = make_test_ir(&proto)?;
+    let tokens = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(tokens.rs_api, quote! { impl PartialOrd });
+    expect_that!(
+        tokens.rs_api.to_string(),
+        contains_substring("operator<=> where operator== is missing")
+    );
+    Ok(tokens)
+}
+
+/// `PartialOrd<Other>` requires `PartialEq<Other>`, so `operator<=>` alone doesn't implement it.
+#[gtest]
+fn test_impl_spaceship_operator_with_rhs_of_different_type_without_eq() -> Result<()> {
+    let rs_api = expect_spaceship_operator_with_rhs_of_different_type_missing_eq("")?.rs_api;
+    assert_rs_not_matches!(rs_api, quote! { impl PartialEq });
+    Ok(())
+}
+
+/// An `operator==` comparing `SomeStruct` with itself doesn't provide `PartialEq<Other>`.
+#[gtest]
+fn test_impl_spaceship_operator_with_rhs_of_different_type_with_eq_for_self_only() -> Result<()> {
+    let rs_api = expect_spaceship_operator_with_rhs_of_different_type_missing_eq(
+        "bool operator==(const SomeStruct& lhs, const SomeStruct& rhs);",
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialEq for crate::SomeStruct });
+    Ok(())
+}
+
+/// An `operator==` comparing `SomeStruct` with yet another type doesn't provide
+/// `PartialEq<Other>` either.
+#[gtest]
+fn test_impl_spaceship_operator_with_rhs_of_different_type_with_eq_for_another_type() -> Result<()>
+{
+    let rs_api = expect_spaceship_operator_with_rhs_of_different_type_missing_eq(
+        r#"struct Third final { int i; };
+        bool operator==(const SomeStruct& lhs, const Third& rhs);"#,
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialEq<crate::Third> for crate::SomeStruct });
+    Ok(())
+}
+
+/// An `operator==` with the operands reversed provides `PartialEq<SomeStruct>` for `Other`, not
+/// `PartialEq<Other>` for `SomeStruct`.
+#[gtest]
+fn test_impl_spaceship_operator_with_rhs_of_different_type_with_reversed_eq_only() -> Result<()> {
+    let rs_api = expect_spaceship_operator_with_rhs_of_different_type_missing_eq(
+        "bool operator==(const Other& lhs, const SomeStruct& rhs);",
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialEq<crate::SomeStruct> for crate::Other });
+    Ok(())
+}
+
+/// The `operator==` that provides `PartialEq<Other>` must take the operands like `operator<=>`
+/// does: here it takes them by value, while `operator<=>` takes them by const reference.
+#[gtest]
+fn test_impl_spaceship_operator_with_rhs_of_different_type_with_eq_by_value() -> Result<()> {
+    let rs_api = expect_spaceship_operator_with_rhs_of_different_type_missing_eq(
+        "bool operator==(SomeStruct lhs, Other rhs);",
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialEq<crate::Other> for crate::SomeStruct });
+    Ok(())
+}
+
+/// A `PartialEq<Other>` impl that comes from `operator!=` doesn't count: as for operands of the
+/// same type, `PartialOrd` requires `operator==`.
+#[gtest]
+fn test_impl_spaceship_operator_with_rhs_of_different_type_with_ne_only() -> Result<()> {
+    let rs_api = expect_spaceship_operator_with_rhs_of_different_type_missing_eq(
+        "bool operator!=(const SomeStruct& lhs, const Other& rhs);",
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialEq<crate::Other> for crate::SomeStruct });
+    Ok(())
+}
+
+/// `Eq` and `Ord` only describe comparisons with `Self`, so an `operator<=>` comparing with a
+/// different type doesn't implement them, even if it returns `std::strong_ordering`.
+#[gtest]
+fn test_impl_spaceship_operator_with_rhs_of_different_type_does_not_implement_eq_nor_ord(
+) -> Result<()> {
+    let proto = ir_proto_from_cc(&format!(
+        r#"#pragma clang lifetime_elision
+        {FAKE_COMPARE_HEADER}
+        struct Other final {{ int i; }};
+        struct SomeStruct final {{
+            bool operator==(const Other& other) const;
+            std::strong_ordering operator<=>(const Other& other) const;
+            int i;
+        }};"#
+    ))?;
+
+    let ir = make_test_ir_dependency(&proto, Some("strong_ordering_traits"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialOrd<crate::Other> for SomeStruct });
+    assert_rs_not_matches!(rs_api, quote! { impl Eq });
+    assert_rs_not_matches!(rs_api, quote! { impl Ord });
+    Ok(())
+}
+
 /// When `operator<` is absent, `operator>` is the next most preferred relational operator and
 /// is bound in its place, while `<=` and `>=` defer to it.
 #[gtest]
