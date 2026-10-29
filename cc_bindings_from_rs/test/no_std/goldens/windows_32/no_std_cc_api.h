@@ -1,0 +1,81 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// no_std_golden
+
+// clang-format off
+#ifndef CC_BINDINGS_FROM_RS_TEST_NO_STD_NO_STD_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_NO_STD_NO_STD_GOLDEN
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
+#include "support/annotations_internal.h"
+#include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
+#include "support/rs_std/str_ref.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <utility>
+
+#include "support/rs_std/rs_alloc.h"
+
+namespace no_std {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(4)
+    [[clang::trivial_abi]] NoStdStruct final {
+ public:
+  static ::no_std::NoStdStruct new_(::std::int32_t x, float y);
+
+  rs::StrRef display() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+
+  ::rs::alloc::string::String test{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+static_assert(
+    sizeof(::no_std::NoStdStruct) == 12,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::no_std::NoStdStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::std::int32_t, float,
+                                   ::no_std::NoStdStruct* __ret_ptr);
+}
+inline ::no_std::NoStdStruct(NoStdStruct::new_)(::std::int32_t x, float y) {
+  crubit::Slot<::no_std::NoStdStruct> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(x, y, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_display(::no_std::NoStdStruct const&,
+                                       rs::StrRef* __ret_ptr);
+}
+inline rs::StrRef(NoStdStruct::display)() const& $(__anon1)
+    CRUBIT_LIFETIME_BOUND {
+  auto&& self = *this;
+  crubit::Slot<rs::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_display(self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void ::no_std::NoStdStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::no_std::NoStdStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, test));
+}
+}  // namespace no_std
+
+#pragma clang diagnostic pop
+#endif  // CC_BINDINGS_FROM_RS_TEST_NO_STD_NO_STD_GOLDEN

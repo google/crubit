@@ -44,6 +44,4 @@ golden_test(
         "macos",
     ],
     rust_library = "return_position_impl_trait",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
