@@ -511,6 +511,12 @@ pub(crate) fn schema() -> Schema {
             record_type: RecordType,
             is_aggregate: Bool,
             is_canonical_alias: Bool,
+            // If this is a class template instantiation that was renamed after a type
+            // alias in the current target (see
+            // `Importer::NameTemplateInstantiationsAfterTypeAliases`), the mangled
+            // `__CcTemplateInst...` name that it would have had otherwise.
+            #[optional]
+            mangled_rs_name: Str,
             #[optional]
             enclosing_item_id: ItemId,
             must_bind: Bool,
@@ -611,6 +617,11 @@ pub(crate) fn schema() -> Schema {
             decl_loc: DeclLocation,
             #[optional]
             enclosing_item_id: ItemId,
+            // True if the class template instantiation that this alias refers to was
+            // renamed after this alias (see `Record::mangled_rs_name`). No Rust type
+            // alias is generated for such an alias, because the struct itself has its
+            // name.
+            names_template_instantiation: Bool,
             must_bind: Bool,
             #[optional]
             deprecated: Str,
