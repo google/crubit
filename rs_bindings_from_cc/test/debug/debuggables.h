@@ -15,6 +15,12 @@ using AliasedDebuggable CRUBIT_MUST_BIND = Debuggable;
 
 struct CRUBIT_MUST_BIND CRUBIT_OVERRIDE_DEBUG(false) OptOut {};
 
+template <bool b>
+struct CRUBIT_OVERRIDE_DEBUG(b) Templated {};
+
+using TemplatedOptIn CRUBIT_MUST_BIND = Templated<true>;
+using TemplatedOptOutSpecialization CRUBIT_MUST_BIND = Templated<false>;
+
 enum class CRUBIT_MUST_BIND Enum { kOne = 1 };
 
 union CRUBIT_MUST_BIND Union {

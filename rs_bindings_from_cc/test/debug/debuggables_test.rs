@@ -4,7 +4,8 @@
 
 use debuggables::{
     has_anonymous_union, rust_keywords, Abstract, AliasedDebuggable, Debuggable, Enum, Exhaustive,
-    HasAnonymousUnion, HasNonDebuggable, OptOut, RustKeywords, Union,
+    HasAnonymousUnion, HasNonDebuggable, OptOut, RustKeywords, TemplatedOptIn,
+    TemplatedOptOutSpecialization, Union,
 };
 use existing_rust_debuggable::ExistingRustDebuggable;
 use googletest::{expect_eq, gtest};
@@ -83,4 +84,14 @@ fn test_abstract_opt_in() {
 #[gtest]
 fn test_opt_out() {
     assert_not_impl_any!(OptOut: Debug);
+}
+
+#[gtest]
+fn test_templated_opt_in() {
+    expect_eq!(format!("{:?}", TemplatedOptIn::default()), "Templated<true>");
+}
+
+#[gtest]
+fn test_templated_opt_out() {
+    assert_not_impl_any!(TemplatedOptOutSpecialization: Debug);
 }

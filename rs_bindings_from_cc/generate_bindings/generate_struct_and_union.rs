@@ -938,6 +938,7 @@ pub fn generate_record<'a>(
         });
 
         Some(database::code_snippet::DebugImpl {
+            type_name: record.cc_name().to_string(),
             ident: ident.clone(),
             stubbed_lifetime_params: stubbed_lifetime_params.clone(),
             fields,
