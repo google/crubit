@@ -127,7 +127,7 @@ Cons:
         compression](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling-compression)
         was missing). Another risk is having to implement not just
         `ItaniumMangleContext`, but also `MicrosoftMangleContext`.
-    -   One idea to avoid reimpliementing mangling is to explicitly specify the
+    -   One idea to avoid reimplementing mangling is to explicitly specify the
         name for the function template instantiation using `__asm__("abc")`
         (sadly this doesn't seem to work - it may be a Clang bug).
 
@@ -152,7 +152,7 @@ Pros:
 
 -   All the "pros" of the "Encoding target name in the thunk name" approach
     (simplicity + correctness of behavior)
--   All the "pros" of the "Function template" template approach (deduplication)
+-   All the "pros" of the "Function template" approach (deduplication)
 
 Cons:
 
