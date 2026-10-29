@@ -11,17 +11,24 @@ Crubit supports bidirectional function callbacks across C++ and Rust:
 
 ## Type mappings
 
-| Direction       | C++ type                                 | Rust type                                                  | Semantics                                        |
-| :-------------- | :--------------------------------------- | :--------------------------------------------------------- | :----------------------------------------------- |
-| C++ $\\to$ Rust | `absl::AnyInvocable<R(...) const>`       | `Box<dyn Fn(...) -> R + Send + Sync>`                      | Multiple invocations                             |
-| C++ $\\to$ Rust | `absl::AnyInvocable<R(...) &&>`          | `Box<dyn FnOnce(...) -> R + Send>`                         | Single-use invocation                            |
-| C++ $\\to$ Rust | `absl::AnyInvocable<R(...)>` (non-const) | `Box<dyn Fn(...) -> R + Send + Sync>`                      | Promoted to `Fn`                                 |
-| Rust $\\to$ C++ | `rs::FnRef<R(...) const>`                | `&dyn Fn(...) -> R` / `impl Fn(...) -> R`                  | Borrowed, zero allocation                        |
-| Rust $\\to$ C++ | `rs::FnRef<R(...)>`                      | `&mut dyn FnMut(...) -> R` / `impl FnMut(...) -> R`        | Borrowed mutable, zero allocation                |
-| Rust $\\to$ C++ | `rs::Fn<R(...) const>`                   | `Box<dyn Fn(...) -> R>`                                    | Owned                                            |
-| Rust $\\to$ C++ | `rs::Fn<R(...)>`                         | `Box<dyn FnMut(...) -> R>`                                 | Owned mutable                                    |
-| Rust $\\to$ C++ | `rs::Fn<R(...) &&>`                      | `Box<dyn FnOnce(...) -> R>` / `impl FnOnce(...) + 'static` | Owned, single-use (`std::move`)                  |
-| Rust $\\to$ C++ | `rs::DynCallable<Sig>`                   | (Rust callback in struct)                                  | Implicitly converts to `absl::AnyInvocable<Sig>` |
+### C++ callbacks in Rust
+
+| C++ type                                 | Rust type                             | Semantics             |
+| :--------------------------------------- | :------------------------------------ | :-------------------- |
+| `absl::AnyInvocable<R(...) const>`       | `Box<dyn Fn(...) -> R + Send + Sync>` | Multiple invocations  |
+| `absl::AnyInvocable<R(...) &&>`          | `Box<dyn FnOnce(...) -> R + Send>`    | Single-use invocation |
+| `absl::AnyInvocable<R(...)>` (non-const) | `Box<dyn Fn(...) -> R + Send + Sync>` | Promoted to `Fn`      |
+
+### Rust callbacks in C++
+
+| C++ type                  | Rust type                                                  | Semantics                                        |
+| :------------------------ | :--------------------------------------------------------- | :----------------------------------------------- |
+| `rs::FnRef<R(...) const>` | `&dyn Fn(...) -> R` / `impl Fn(...) -> R`                  | Borrowed, zero allocation                        |
+| `rs::FnRef<R(...)>`       | `&mut dyn FnMut(...) -> R` / `impl FnMut(...) -> R`        | Borrowed mutable, zero allocation                |
+| `rs::Fn<R(...) const>`    | `Box<dyn Fn(...) -> R>`                                    | Owned                                            |
+| `rs::Fn<R(...)>`          | `Box<dyn FnMut(...) -> R>`                                 | Owned mutable                                    |
+| `rs::Fn<R(...) &&>`       | `Box<dyn FnOnce(...) -> R>` / `impl FnOnce(...) + 'static` | Owned, single-use (`std::move`)                  |
+| `rs::DynCallable<Sig>`    | (Rust callback in struct)                                  | Implicitly converts to `absl::AnyInvocable<Sig>` |
 
 ## Examples
 

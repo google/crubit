@@ -3,7 +3,7 @@
 <!-- mdformat-off -->
 
 [Home](./index.md)
-[Are We Crubit Yet?](./overview/status.md) <!-- mdformat-on -->
+[Supported Features](./overview/status.md) <!-- mdformat-on -->
 
 # Types
 
@@ -70,8 +70,12 @@
     -   [CMake](./overview/cmake.md)
 -   [Cargo build](./overview/cargo_build.md)
     -   [Protobuf in the Cargo build](./overview/cargo_build_protobuf.md)
--   [Limitations](./overview/limits.md)
 -   [Required unstable features of Rust](./overview/unstable_features.md)
+-   [Memory Safety](./overview/safety.md)
+
+# Future Functionality
+
+-   [Limitations](./overview/limits.md)
 
 # Design
 

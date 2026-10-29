@@ -3,34 +3,43 @@
  * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  */
 
+/* The classes below are applied to links, so `!important` is needed to override
+ * the theme's link colors (e.g. docs's `.csh-reset a:link`), which are
+ * otherwise unreadable on the pastel cell backgrounds in dark mode.
+ */
+
 td:has(> .ga) {
+  color: #1f1f1f;
   background-color: #e0f2f1;
 }
 
 .ga {
-  color: #267769;
+  color: #267769 !important;
 }
 
 td:has(> .😊) {
+  color: #1f1f1f;
   background-color: #e1f5fe;
 }
 
 .😊 {
-  color: #1a6ebb;
+  color: #1a6ebb !important;
 }
 
 td:has(> .😑) {
+  color: #1f1f1f;
   background-color: #fefee1ff;
 }
 
 .😑 {
-  color: #53370b;
+  color: #53370b !important;
 }
 
 td:has(> .🙁) {
+  color: #1f1f1f;
   background-color: #ffefe1;
 }
 
 .🙁 {
-  color: #ad0303;
+  color: #ad0303 !important;
 }

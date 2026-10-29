@@ -12,12 +12,16 @@ a given C++ type if that type is [is `Unpin`](../../unpin.md).
 
 The following special member functions and traits are mapped bidirectionally:
 
-| C++                          | Rust      | Notes                                                                                                                      |
-| :--------------------------- | :-------- | :------------------------------------------------------------------------------------------------------------------------- |
-| Default constructor          | `Default` |                                                                                                                            |
-| Trivial copy constructor     | `Copy`    | Rust bindings for C++ require that the C++ type is non-abstract and has a public, trivial copy constructor and destructor. |
-| Non-trivial copy constructor | `Clone`   |                                                                                                                            |
-| Destructor                   | `Drop`    |                                                                                                                            |
+| C++                          | Rust      |
+| :--------------------------- | :-------- |
+| Default constructor          | `Default` |
+| Trivial copy constructor     | `Copy`    |
+| Non-trivial copy constructor | `Clone`   |
+| Destructor                   | `Drop`    |
+
+> [!NOTE]
+> Rust bindings for a C++ type only implement `Copy` if the C++ type
+> is non-abstract and has a public, trivial copy constructor and destructor.
 
 ## One-way map of C++ special member functions into Rust traits
 
@@ -25,9 +29,13 @@ If the C++ type [is `Unpin`](../../unpin.md), then the C++ special member
 functions below are mapped one-way into the corresponding Rust traits as
 follows:
 
-| C++ API                                         | Rust bindings | Notes                                                             |
-| :---------------------------------------------- | :------------ | :---------------------------------------------------------------- |
-| Constructor taking single parameter of type `T` | `From<T>`     | Regardless if the constructor is `explicit` in the C++ API or not |
+| C++ API                                   | Rust bindings |
+| :---------------------------------------- | :------------ |
+| Constructor taking a single `T` parameter | `From<T>`     |
+
+> [!NOTE]
+> This applies regardless of whether the constructor is `explicit` in
+> the C++ API.
 
 The C++ binary operators below are mapped one-way into the corresponding Rust
 traits as follows:
