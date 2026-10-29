@@ -168,6 +168,11 @@ class Importer final : public ImportContext {
   class SourceOrderKey;
   class SourceLocationComparator;
 
+  // Returns the owning target of the file containing `source_location`. See
+  // `GetOwningTarget`.
+  BazelLabel GetOwningTargetOfLocation(
+      clang::SourceLocation source_location) const;
+
   // Returns a SourceOrderKey for the given `decl` that should be used for
   // ordering Items.
   SourceOrderKey GetSourceOrderKey(const clang::Decl& decl) const;

@@ -2469,10 +2469,14 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl& decl) const {
     return BazelLabel("//:virtual_clang_resource_dir_target");
   }
 
-  clang::SourceManager& source_manager = ctx_.getSourceManager();
-  auto source_location = decl.getLocation();
+  return GetOwningTargetOfLocation(decl.getLocation());
+}
 
-  // If the header this decl comes from is not associated with a target,
+BazelLabel Importer::GetOwningTargetOfLocation(
+    clang::SourceLocation source_location) const {
+  clang::SourceManager& source_manager = ctx_.getSourceManager();
+
+  // If the header this location comes from is not associated with a target,
   // and appears to be a textual header, then we go up the include stack
   // until we find a header that has an owning target.
 
