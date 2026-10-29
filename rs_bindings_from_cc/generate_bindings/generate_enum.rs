@@ -25,7 +25,7 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
     db.errors().add_category(error_report::Category::Type);
     let features = db.ir().target_crubit_features(enum_.owning_target());
     let ident = format_nonportable_cc_ident(enum_.cc_name().as_str())?;
-    let namespace_qualifier = db.namespace_qualifier(enum_.as_ref()).format_for_cc(features)?;
+    let namespace_qualifier = db.cc_namespace_qualifier(enum_.as_ref()).format_for_cc(features)?;
     let fully_qualified_cc_name = quote! { #namespace_qualifier #ident };
     let name = make_rs_ident(enum_.rs_name().as_str());
     let underlying_type = db.rs_type_kind(enum_.underlying_type().clone())?;

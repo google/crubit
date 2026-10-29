@@ -269,10 +269,64 @@ pub type MyTypeAlias = crate::DocCommentSlashes;
 // Data member in a specialization.
 
 /// Type alias to template instantiation.
-pub type MyInstantiation = crate::__CcTemplateInst10MyTemplateIiE;
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct MyInstantiation {
+    /// Data member.
+    pub value: ::ffi_11::c_int,
+}
+impl !Send for MyInstantiation {}
+impl !Sync for MyInstantiation {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < int >"),
+    crate::MyInstantiation
+);
+
+impl Default for MyInstantiation {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__c114dea5__ZN10MyTemplateIiEC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+// A non-static member function.
 
 /// Type alias to instantiation of a template specialization.
-pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst10MyTemplateIfE"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=MyTemplate < float >
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct MySpecializedInstantiation {
+    /// Data member in a specialization.
+    pub value: f32,
+}
+impl !Send for MySpecializedInstantiation {}
+impl !Sync for MySpecializedInstantiation {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < float >"),
+    crate::MySpecializedInstantiation
+);
+
+impl Default for MySpecializedInstantiation {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__2a6ef96a__ZN10MyTemplateIfEC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+// A non-static member function in a specialization.
 
 // error: class `OuterTemplate` could not be bound
 //   Class templates are not yet supported
@@ -305,67 +359,8 @@ impl From<DocCommentEnum> for ::ffi_11::c_uint {
     }
 }
 
-/// Class template.
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst10MyTemplateIiE {
-    /// Data member.
-    pub value: ::ffi_11::c_int,
-}
-impl !Send for __CcTemplateInst10MyTemplateIiE {}
-impl !Sync for __CcTemplateInst10MyTemplateIiE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate < int >"),
-    crate::__CcTemplateInst10MyTemplateIiE
-);
-
-impl Default for __CcTemplateInst10MyTemplateIiE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__c114dea5__ZN10MyTemplateIiEC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
-// A non-static member function.
-
-/// Class template specialization.
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst10MyTemplateIfE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < float >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst10MyTemplateIfE {
-    /// Data member in a specialization.
-    pub value: f32,
-}
-impl !Send for __CcTemplateInst10MyTemplateIfE {}
-impl !Sync for __CcTemplateInst10MyTemplateIfE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate < float >"),
-    crate::__CcTemplateInst10MyTemplateIfE
-);
-
-impl Default for __CcTemplateInst10MyTemplateIfE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__2a6ef96a__ZN10MyTemplateIfEC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
-// A non-static member function in a specialization.
-
 /// Class template with nested struct inside.
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst13OuterTemplateIiE"]
 #[repr(C)]
@@ -398,6 +393,12 @@ impl Default for __CcTemplateInst13OuterTemplateIiE {
 //   b/485949049: type definitions nested inside templated records are not yet supported
 
 // Data member in a nested struct.
+
+#[doc(hidden)]
+pub type __CcTemplateInst10MyTemplateIiE = crate::MyInstantiation;
+
+#[doc(hidden)]
+pub type __CcTemplateInst10MyTemplateIfE = crate::MySpecializedInstantiation;
 
 mod detail {
     #[allow(unused_imports)]
@@ -473,16 +474,16 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::MultilineOneStar: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::MultilineOneStar: Drop);
     assert!(::core::mem::offset_of!(crate::MultilineOneStar, i) == 0);
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
-    assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value) == 0);
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
-    assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIfE, value) == 0);
+    assert!(::core::mem::size_of::<crate::MyInstantiation>() == 4);
+    assert!(::core::mem::align_of::<crate::MyInstantiation>() == 4);
+    static_assertions::assert_impl_all!(crate::MyInstantiation: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::MyInstantiation: Drop);
+    assert!(::core::mem::offset_of!(crate::MyInstantiation, value) == 0);
+    assert!(::core::mem::size_of::<crate::MySpecializedInstantiation>() == 4);
+    assert!(::core::mem::align_of::<crate::MySpecializedInstantiation>() == 4);
+    static_assertions::assert_impl_all!(crate::MySpecializedInstantiation: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::MySpecializedInstantiation: Drop);
+    assert!(::core::mem::offset_of!(crate::MySpecializedInstantiation, value) == 0);
     assert!(::core::mem::size_of::<crate::__CcTemplateInst13OuterTemplateIiE>() == 1);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst13OuterTemplateIiE>() == 1);
     static_assertions::assert_impl_all!(crate::__CcTemplateInst13OuterTemplateIiE: Copy,Clone);

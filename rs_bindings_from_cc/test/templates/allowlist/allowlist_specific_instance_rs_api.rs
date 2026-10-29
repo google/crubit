@@ -23,48 +23,29 @@
 // error: namespace `(anonymous)` could not be bound
 //   Anonymous namespaces are not yet supported
 
-pub type TsIntFloat = crate::__CcTemplateInst2TsIifE;
-
-pub type TsShortDouble = crate::__CcTemplateInst2TsIsdE;
-
-#[inline(always)]
-pub fn IntFloatCaller(i: crate::__CcTemplateInst2TsIifE) {
-    let mut i = ::core::mem::MaybeUninit::new(i);
-    unsafe { crate::detail::__rust_thunk___Z14IntFloatCaller2TsIifE(i.as_mut_ptr()) }
-}
-
-#[inline(always)]
-pub fn ShortDoubleCaller(i: crate::__CcTemplateInst2TsIsdE) {
-    let mut i = ::core::mem::MaybeUninit::new(i);
-    unsafe { crate::detail::__rust_thunk___Z17ShortDoubleCaller2TsIsdE(i.as_mut_ptr()) }
-}
-
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst2TsIifE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Ts < int , float >
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst2TsIifE {
+pub struct TsIntFloat {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInst2TsIifE {}
-impl !Sync for __CcTemplateInst2TsIifE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("Ts < int , float >"),
-    crate::__CcTemplateInst2TsIifE
-);
-impl __CcTemplateInst2TsIifE {
+impl !Send for TsIntFloat {}
+impl !Sync for TsIntFloat {}
+forward_declare::unsafe_define!(forward_declare::symbol!("Ts < int , float >"), crate::TsIntFloat);
+impl TsIntFloat {
     /// # Safety
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn Member(__this: *mut Self) {
-        unsafe { self::cc_template_inst2_ts_iif_e::Member(__this) }
+        unsafe { self::ts_int_float::Member(__this) }
     }
 }
 
-impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst2TsIifE {
+impl From<(::ffi_11::c_int, f32)> for TsIntFloat {
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, f32)) -> Self {
         let (mut t, mut s) = args;
@@ -75,7 +56,7 @@ impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst2TsIifE {
         }
     }
 }
-impl ::ctor::CtorNew<(::ffi_11::c_int, f32)> for __CcTemplateInst2TsIifE {
+impl ::ctor::CtorNew<(::ffi_11::c_int, f32)> for TsIntFloat {
     type CtorType = Self;
     type Error = ::ctor::Infallible;
     #[inline(always)]
@@ -84,13 +65,13 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, f32)> for __CcTemplateInst2TsIifE {
     }
 }
 
-pub mod cc_template_inst2_ts_iif_e {
+pub mod ts_int_float {
     /// # Safety
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn Member(__this: *mut crate::__CcTemplateInst2TsIifE) {
+    pub(crate) unsafe fn Member(__this: *mut crate::TsIntFloat) {
         unsafe { crate::detail::__rust_thunk__f7010ef7__ZN2TsIifE6MemberEv(__this) }
     }
 }
@@ -100,17 +81,17 @@ pub mod cc_template_inst2_ts_iif_e {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Ts < short , double >
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst2TsIsdE {
+pub struct TsShortDouble {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInst2TsIsdE {}
-impl !Sync for __CcTemplateInst2TsIsdE {}
+impl !Send for TsShortDouble {}
+impl !Sync for TsShortDouble {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("Ts < short , double >"),
-    crate::__CcTemplateInst2TsIsdE
+    crate::TsShortDouble
 );
 
-impl From<(::ffi_11::c_short, f64)> for __CcTemplateInst2TsIsdE {
+impl From<(::ffi_11::c_short, f64)> for TsShortDouble {
     #[inline(always)]
     fn from(args: (::ffi_11::c_short, f64)) -> Self {
         let (mut t, mut s) = args;
@@ -121,7 +102,7 @@ impl From<(::ffi_11::c_short, f64)> for __CcTemplateInst2TsIsdE {
         }
     }
 }
-impl ::ctor::CtorNew<(::ffi_11::c_short, f64)> for __CcTemplateInst2TsIsdE {
+impl ::ctor::CtorNew<(::ffi_11::c_short, f64)> for TsShortDouble {
     type CtorType = Self;
     type Error = ::ctor::Infallible;
     #[inline(always)]
@@ -130,40 +111,56 @@ impl ::ctor::CtorNew<(::ffi_11::c_short, f64)> for __CcTemplateInst2TsIsdE {
     }
 }
 
+#[inline(always)]
+pub fn IntFloatCaller(i: crate::TsIntFloat) {
+    let mut i = ::core::mem::MaybeUninit::new(i);
+    unsafe { crate::detail::__rust_thunk___Z14IntFloatCaller2TsIifE(i.as_mut_ptr()) }
+}
+
+#[inline(always)]
+pub fn ShortDoubleCaller(i: crate::TsShortDouble) {
+    let mut i = ::core::mem::MaybeUninit::new(i);
+    unsafe { crate::detail::__rust_thunk___Z17ShortDoubleCaller2TsIsdE(i.as_mut_ptr()) }
+}
+
+#[doc(hidden)]
+pub type __CcTemplateInst2TsIifE = crate::TsIntFloat;
+
+#[doc(hidden)]
+pub type __CcTemplateInst2TsIsdE = crate::TsShortDouble;
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___Z14IntFloatCaller2TsIifE(
-            i: *mut crate::__CcTemplateInst2TsIifE,
-        );
-        pub(crate) unsafe fn __rust_thunk___Z17ShortDoubleCaller2TsIsdE(
-            i: *mut crate::__CcTemplateInst2TsIsdE,
-        );
         pub(crate) unsafe fn __rust_thunk__ca694370__ZN2TsIifEC1Eif(
             __this: *mut ::core::ffi::c_void,
             t: ::ffi_11::c_int,
             s: f32,
         );
         pub(crate) unsafe fn __rust_thunk__f7010ef7__ZN2TsIifE6MemberEv(
-            __this: *mut crate::__CcTemplateInst2TsIifE,
+            __this: *mut crate::TsIntFloat,
         );
         pub(crate) unsafe fn __rust_thunk__ca694370__ZN2TsIsdEC1Esd(
             __this: *mut ::core::ffi::c_void,
             t: ::ffi_11::c_short,
             s: f64,
         );
+        pub(crate) unsafe fn __rust_thunk___Z14IntFloatCaller2TsIifE(i: *mut crate::TsIntFloat);
+        pub(crate) unsafe fn __rust_thunk___Z17ShortDoubleCaller2TsIsdE(
+            i: *mut crate::TsShortDouble,
+        );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst2TsIifE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst2TsIifE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst2TsIifE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst2TsIifE: Drop);
+    assert!(::core::mem::size_of::<crate::TsIntFloat>() == 1);
+    assert!(::core::mem::align_of::<crate::TsIntFloat>() == 1);
+    static_assertions::assert_impl_all!(crate::TsIntFloat: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::TsIntFloat: Drop);
 
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst2TsIsdE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst2TsIsdE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst2TsIsdE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst2TsIsdE: Drop);
+    assert!(::core::mem::size_of::<crate::TsShortDouble>() == 1);
+    assert!(::core::mem::align_of::<crate::TsShortDouble>() == 1);
+    static_assertions::assert_impl_all!(crate::TsShortDouble: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::TsShortDouble: Drop);
 };

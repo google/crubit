@@ -444,6 +444,10 @@ pub fn resolve_names<'a>(
                     insert(Rc::from(enum_.rs_name().as_str()), ResolvedName::ExplicitItem(id))
                 }
                 Item::TypeAlias(type_alias) => {
+                    // The record that is named after this alias takes its place.
+                    if type_alias.names_template_instantiation() {
+                        continue;
+                    }
                     insert(Rc::from(type_alias.rs_name().as_str()), ResolvedName::ExplicitItem(id));
                 }
                 Item::Namespace(ns) => {

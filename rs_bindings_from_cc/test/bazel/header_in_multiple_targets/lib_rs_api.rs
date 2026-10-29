@@ -143,6 +143,7 @@ pub mod lib_ns {
 
 // namespace lib_ns
 
+#[doc(hidden)]
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE"]
 #[repr(C, align(8))]

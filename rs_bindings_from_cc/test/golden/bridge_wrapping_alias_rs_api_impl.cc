@@ -20,6 +20,15 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
+static_assert(CRUBIT_SIZEOF(struct TemplateType<int>) == 4);
+static_assert(alignof(struct TemplateType<int>) == 4);
+static_assert(CRUBIT_OFFSET_OF(value, struct TemplateType<int>) == 0);
+
+extern "C" void __rust_thunk__2f8f40d6__ZN12TemplateTypeIiEC1Ev(
+    struct TemplateType<int>* __this) {
+  crubit::construct_at(__this);
+}
+
 extern "C" void __rust_thunk___Z20bridge_alias_to_instv(
     unsigned char* __return_abi_buffer) {
   ::crubit::Encoder __return_encoder(
@@ -32,14 +41,5 @@ extern "C" void __rust_thunk___Z20bridge_alias_to_instv(
 
 static_assert((struct Bridge<struct TemplateType<int>> (*)()) &
               ::bridge_alias_to_inst);
-
-static_assert(CRUBIT_SIZEOF(struct TemplateType<int>) == 4);
-static_assert(alignof(struct TemplateType<int>) == 4);
-static_assert(CRUBIT_OFFSET_OF(value, struct TemplateType<int>) == 0);
-
-extern "C" void __rust_thunk__2f8f40d6__ZN12TemplateTypeIiEC1Ev(
-    struct TemplateType<int>* __this) {
-  crubit::construct_at(__this);
-}
 
 #pragma clang diagnostic pop

@@ -18,8 +18,6 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert((void (*)(NiIF const&)) & ::SomeApi);
-
 static_assert(sizeof(struct Ni<int, float>) == 1);
 static_assert(alignof(struct Ni<int, float>) == 1);
 
@@ -27,5 +25,7 @@ extern "C" void __rust_thunk__426ccee6__ZN2NiIifEC1Eif(
     struct Ni<int, float>* __this, int t, float s) {
   crubit::construct_at(__this, t, s);
 }
+
+static_assert((void (*)(NiIF const&)) & ::SomeApi);
 
 #pragma clang diagnostic pop

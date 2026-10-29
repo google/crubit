@@ -146,12 +146,14 @@ macro_rules! __proto_call_setter {
     ($msg:ident, line, $($arg:tt)*) => { $msg.set_line($($arg)*) };
     ($msg:ident, mangled_cc_name, $($arg:tt)*) => { $msg.set_mangled_cc_name($($arg)*) };
     ($msg:ident, mangled_name, $($arg:tt)*) => { $msg.set_mangled_name($($arg)*) };
+    ($msg:ident, mangled_rs_name, $($arg:tt)*) => { $msg.set_mangled_rs_name($($arg)*) };
     ($msg:ident, message, $($arg:tt)*) => { $msg.set_message($($arg)*) };
     ($msg:ident, mod_name, $($arg:tt)*) => { $msg.set_mod_name($($arg)*) };
     ($msg:ident, move_constructor, $($arg:tt)*) => { $msg.set_move_constructor($($arg)*) };
     ($msg:ident, must_bind, $($arg:tt)*) => { $msg.set_must_bind($($arg)*) };
     ($msg:ident, name, $($arg:tt)*) => { $msg.set_name($($arg)*) };
     ($msg:ident, name_range, $($arg:tt)*) => { $msg.set_name_range($($arg)*) };
+    ($msg:ident, names_template_instantiation, $($arg:tt)*) => { $msg.set_names_template_instantiation($($arg)*) };
     ($msg:ident, namespace_decl, $($arg:tt)*) => { $msg.set_namespace_decl($($arg)*) };
     ($msg:ident, nodiscard, $($arg:tt)*) => { $msg.set_nodiscard($($arg)*) };
     ($msg:ident, non_null, $($arg:tt)*) => { $msg.set_non_null($($arg)*) };
@@ -2723,6 +2725,7 @@ mod __defs {
         pub is_thread_safe: bool,
         pub is_explicit_class_template_instantiation_definition: bool,
         pub children: FfiVec<Item>,
+        pub mangled_rs_name: FfiString,
     }
 
     impl core::fmt::Debug for Record {
@@ -2773,6 +2776,7 @@ mod __defs {
                 .field("is_thread_safe", &self.is_thread_safe)
                 .field("is_explicit_class_template_instantiation_definition", &self.is_explicit_class_template_instantiation_definition)
                 .field("children", &self.children)
+                .field("mangled_rs_name", &self.mangled_rs_name())
                 .finish()
         }
     }
@@ -2834,6 +2838,7 @@ mod __defs {
             is_thread_safe: false,
             is_explicit_class_template_instantiation_definition: false,
             children: FfiVec::EMPTY,
+            mangled_rs_name: FfiString::EMPTY,
         };
         pub fn rs_name(&self) -> &Identifier {
             &self.rs_name
@@ -3040,6 +3045,16 @@ mod __defs {
         pub fn children(&self) -> &[Item] {
             self.children.as_slice()
         }
+        pub fn has_mangled_rs_name(&self) -> bool {
+            (self.has_bits & 0x400) != 0
+        }
+        pub fn clear_mangled_rs_name(&mut self) {
+            self.has_bits &= !0x400;
+            self.mangled_rs_name = FfiString::EMPTY;
+        }
+        pub fn mangled_rs_name(&self) -> Option<&str> {
+            self.has_mangled_rs_name().then(|| self.mangled_rs_name.as_str())
+        }
         pub fn set_rs_name(&mut self, val: Identifier) -> &mut Identifier {
             self.rs_name = val;
             &mut self.rs_name
@@ -3220,10 +3235,15 @@ mod __defs {
         pub fn set_children(&mut self, val: FfiVec<Item>) {
             self.children = val;
         }
+        pub fn set_mangled_rs_name(&mut self, val: FfiString) -> &mut FfiString {
+            self.has_bits |= 0x400;
+            self.mangled_rs_name = val;
+            &mut self.mangled_rs_name
+        }
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<Record>() == 1096);
+        assert!(core::mem::size_of::<Record>() == 1112);
         assert!(core::mem::align_of::<Record>() == 8);
         assert!(core::mem::offset_of!(Record, rs_name) == 8);
         assert!(core::mem::offset_of!(Record, cc_name) == 24);
@@ -3270,6 +3290,7 @@ mod __defs {
         assert!(core::mem::offset_of!(Record, is_thread_safe) == 1064);
         assert!(core::mem::offset_of!(Record, is_explicit_class_template_instantiation_definition) == 1065);
         assert!(core::mem::offset_of!(Record, children) == 1072);
+        assert!(core::mem::offset_of!(Record, mangled_rs_name) == 1096);
     };
 
     #[repr(C)]
@@ -4036,6 +4057,7 @@ mod __defs {
         pub must_bind: bool,
         pub deprecated: FfiString,
         pub lifetime_inputs: FfiVec<FfiString>,
+        pub names_template_instantiation: bool,
     }
 
     impl core::fmt::Debug for TypeAlias {
@@ -4054,6 +4076,7 @@ mod __defs {
                 .field("must_bind", &self.must_bind)
                 .field("deprecated", &self.deprecated())
                 .field("lifetime_inputs", &self.lifetime_inputs)
+                .field("names_template_instantiation", &self.names_template_instantiation)
                 .finish()
         }
     }
@@ -4083,6 +4106,7 @@ mod __defs {
             must_bind: false,
             deprecated: FfiString::EMPTY,
             lifetime_inputs: FfiVec::EMPTY,
+            names_template_instantiation: false,
         };
         pub fn cc_name(&self) -> &Identifier {
             &self.cc_name
@@ -4158,6 +4182,9 @@ mod __defs {
         pub fn lifetime_inputs(&self) -> &[FfiString] {
             self.lifetime_inputs.as_slice()
         }
+        pub fn names_template_instantiation(&self) -> bool {
+            self.names_template_instantiation
+        }
         pub fn set_cc_name(&mut self, val: Identifier) -> &mut Identifier {
             self.cc_name = val;
             &mut self.cc_name
@@ -4214,10 +4241,14 @@ mod __defs {
         pub fn set_lifetime_inputs(&mut self, val: FfiVec<FfiString>) {
             self.lifetime_inputs = val;
         }
+        pub fn set_names_template_instantiation(&mut self, val: bool) -> &mut bool {
+            self.names_template_instantiation = val;
+            &mut self.names_template_instantiation
+        }
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<TypeAlias>() == 368);
+        assert!(core::mem::size_of::<TypeAlias>() == 376);
         assert!(core::mem::align_of::<TypeAlias>() == 8);
         assert!(core::mem::offset_of!(TypeAlias, cc_name) == 8);
         assert!(core::mem::offset_of!(TypeAlias, rs_name) == 24);
@@ -4232,6 +4263,7 @@ mod __defs {
         assert!(core::mem::offset_of!(TypeAlias, must_bind) == 320);
         assert!(core::mem::offset_of!(TypeAlias, deprecated) == 328);
         assert!(core::mem::offset_of!(TypeAlias, lifetime_inputs) == 344);
+        assert!(core::mem::offset_of!(TypeAlias, names_template_instantiation) == 368);
     };
 
     #[repr(C)]

@@ -44,6 +44,7 @@ pub fn ImportedSecond(__param_0: crate::__CcTemplateInst10DoesNotUseIiE) {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10DoesNotUseIS_IiEE"]
 #[repr(C)]
@@ -72,6 +73,7 @@ impl Default for __CcTemplateInst10DoesNotUseIS_IiEE {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10DoesNotUseIiE"]
 #[repr(C)]

@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -40,5 +41,74 @@ extern "C" int const* __rust_thunk__758630aa__ZNK10MyTemplateIiE5valueEv(
 
 static_assert((int const& (::MyTemplate<int>::*)() const) &
               ::MyTemplate<int>::value);
+
+static_assert(CRUBIT_SIZEOF(class MyTemplate<float>) == 4);
+static_assert(alignof(class MyTemplate<float>) == 4);
+
+extern "C" void __rust_thunk__de4d35d3__ZN10MyTemplateIfEC1Ev(
+    class MyTemplate<float>* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk__5a9d55c6__ZN10MyTemplateIfE6CreateEf(
+    class MyTemplate<float>* __return, float value) {
+  new (__return) auto(MyTemplate<float>::Create(value));
+}
+
+static_assert((class MyTemplate<float> (*)(float)) &
+              ::MyTemplate<float>::Create);
+
+extern "C" float const* __rust_thunk__758630aa__ZNK10MyTemplateIfE5valueEv(
+    class MyTemplate<float> const* __this) {
+  return std::addressof(__this->value());
+}
+
+static_assert((float const& (::MyTemplate<float>::*)() const) &
+              ::MyTemplate<float>::value);
+
+extern "C" int __rust_thunk___Z8GetValue10MyTemplateIiE(
+    class MyTemplate<int>* s) {
+  return GetValue(crubit::UnsafeTakeValue(s));
+}
+
+static_assert((int (*)(class MyTemplate<int>)) & ::GetValue);
+
+extern "C" int __rust_thunk___Z13GetValueByRefRK10MyTemplateIiE(
+    MyTypeAlias const* s) {
+  return GetValueByRef(*s);
+}
+
+static_assert((int (*)(MyTypeAlias const&)) & ::GetValueByRef);
+
+extern "C" void __rust_thunk___Z13MakeUnaliasedd(
+    class MyTemplate<double>* __return, double value) {
+  new (__return) auto(MakeUnaliased(value));
+}
+
+static_assert((class MyTemplate<double> (*)(double)) & ::MakeUnaliased);
+
+static_assert(CRUBIT_SIZEOF(class MyTemplate<double>) == 8);
+static_assert(alignof(class MyTemplate<double>) == 8);
+
+extern "C" void __rust_thunk__de4d35d3__ZN10MyTemplateIdEC1Ev(
+    class MyTemplate<double>* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk__5a9d55c6__ZN10MyTemplateIdE6CreateEd(
+    class MyTemplate<double>* __return, double value) {
+  new (__return) auto(MyTemplate<double>::Create(value));
+}
+
+static_assert((class MyTemplate<double> (*)(double)) &
+              ::MyTemplate<double>::Create);
+
+extern "C" double const* __rust_thunk__758630aa__ZNK10MyTemplateIdE5valueEv(
+    class MyTemplate<double> const* __this) {
+  return std::addressof(__this->value());
+}
+
+static_assert((double const& (::MyTemplate<double>::*)() const) &
+              ::MyTemplate<double>::value);
 
 #pragma clang diagnostic pop
