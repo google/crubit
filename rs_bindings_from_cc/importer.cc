@@ -2025,12 +2025,6 @@ void Importer::Import(
   invocation_.top_level_item_ids_ =
       GetTopLevelItemIdsInSourceOrder(*translation_unit_decl);
 
-  // TODO(b/257302656): Consider placing the generated template instantiations
-  // into a separate namespace (maybe `crubit::instantiated_templates` ?).
-  llvm::copy(
-      GetOrderedItemIdsOfTemplateInstantiations(),
-      std::back_inserter(invocation_.top_level_item_ids_[invocation_.target_]));
-
   // TODO(b/530340081): This logic to build a representative tree IR
   // replaces BuildTree() in ir.cc. The latter should be deleted.
   //
@@ -2047,6 +2041,15 @@ void Importer::Import(
       id_to_item[GenerateItemId(*decl)] = entry.proto_item.get();
     }
   }
+
+  // TODO(b/257302656): Consider placing the generated template instantiations
+  // into a separate namespace (maybe `crubit::instantiated_templates` ?).
+  std::vector<ItemId> instantiation_ids =
+      GetOrderedItemIdsOfTemplateInstantiations();
+  NameTemplateInstantiationsAfterTypeAliases(id_to_item, instantiation_ids);
+  llvm::copy(
+      instantiation_ids,
+      std::back_inserter(invocation_.top_level_item_ids_[invocation_.target_]));
 
   // IR previously maintains a flat array of opaque items. To improve
   // readability, we enforce a nested IR structure by populating nested child
@@ -4183,6 +4186,84 @@ bool Importer::IsInvalidTemplateSpecialization(
   if (decl.isInvalidDecl()) return true;
   auto it = instantiation_attempts_.find(decl.getCanonicalDecl());
   return it != instantiation_attempts_.end() && it->second.has_value();
+}
+
+void Importer::NameTemplateInstantiationsAfterTypeAliases(
+    const absl::flat_hash_map<ItemId, ir_proto::Item* absl_nonnull>& id_to_item,
+    std::vector<ItemId>& instantiation_ids) {
+  auto get_item = [&](ItemId id) -> ir_proto::Item* absl_nullable {
+    auto it = id_to_item.find(id);
+    return it == id_to_item.end() ? nullptr : it->second;
+  };
+
+  // The instantiations that can be renamed. Instantiations that get special
+  // treatment from Crubit keep their mangled name: those in the standard
+  // library (at any depth, e.g. `std::chrono::duration`), bridge types, e.g.
+  // `std::vector` or `absl::Span`, and those with lifetimes.
+  absl::flat_hash_set<ItemId> renameable;
+  for (const clang::ClassTemplateSpecializationDecl* decl :
+       class_template_instantiations_) {
+    ItemId id = GenerateItemId(*decl);
+    const ir_proto::Item* item = get_item(id);
+    if (item == nullptr || !item->has_record()) continue;
+    const ir_proto::Record& record = item->record();
+    if (!record.has_template_specialization() ||
+        !record.template_specialization().has_non_special() ||
+        record.has_bridge_type() || record.lifetime_params_size() != 0 ||
+        record.lifetime_inputs_size() != 0) {
+      continue;
+    }
+    bool in_std = false;
+    for (const clang::DeclContext* dc = decl->getDeclContext(); dc != nullptr;
+         dc = dc->getParent()) {
+      in_std |= dc->isStdNamespace();
+    }
+    if (!in_std) renameable.insert(id);
+  }
+
+  // Visits the namespace-scope items in source order, so that the first alias
+  // for each instantiation names it, and places each renamed instantiation
+  // right after its alias.
+  absl::flat_hash_set<ItemId> renamed;
+  auto visit = [&](auto& self, std::vector<ItemId>& item_ids) -> void {
+    for (size_t i = 0; i < item_ids.size(); ++i) {
+      ir_proto::Item* item = get_item(item_ids[i]);
+      if (item == nullptr) continue;
+      if (item->has_namespace_decl()) {
+        if (auto it = invocation_.child_item_ids_.find(item_ids[i]);
+            it != invocation_.child_item_ids_.end()) {
+          self(self, it->second);
+        }
+        continue;
+      }
+      if (!item->has_type_alias()) continue;
+      ir_proto::TypeAlias& alias = *item->mutable_type_alias();
+      const ir_proto::CcType& type = alias.underlying_type();
+      if (!type.has_decl() || type.is_const() ||
+          alias.owning_target() != invocation_.target_.value() ||
+          alias.has_deprecated() || alias.has_unknown_attr() ||
+          alias.lifetime_inputs_size() != 0) {
+        continue;
+      }
+      ItemId id(type.decl());
+      if (!renameable.contains(id) || !renamed.insert(id).second) continue;
+
+      ir_proto::Record& record = *get_item(id)->mutable_record();
+      record.set_mangled_rs_name(record.rs_name().identifier());
+      *record.mutable_rs_name() = alias.rs_name();
+      if (alias.has_enclosing_item_id()) {
+        record.set_enclosing_item_id(alias.enclosing_item_id());
+      }
+      if (!alias.doc_comment().empty()) {
+        record.set_doc_comment(alias.doc_comment());
+      }
+      alias.set_names_template_instantiation(true);
+      item_ids.insert(item_ids.begin() + ++i, id);
+    }
+  };
+  visit(visit, invocation_.top_level_item_ids_[invocation_.target_]);
+  std::erase_if(instantiation_ids,
+                [&](ItemId id) { return renamed.contains(id); });
 }
 
 clang::TypedefNameDecl* absl_nullable Importer::GetTemplateSpecializationAlias(

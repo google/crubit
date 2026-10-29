@@ -195,6 +195,21 @@ class Importer final : public ImportContext {
   // called when `--check_importer_invariants` is set.
   void CheckLazyImportInvariants() const;
 
+  // Renames the class template instantiations in `instantiation_ids`, which
+  // would otherwise get a mangled `__CcTemplateInst...` name, after the first
+  // namespace-scope type alias for them (in source order) in the current
+  // target. Each renamed instantiation is moved into the alias's namespace and
+  // removed from `instantiation_ids`.
+  //
+  // The alias is kept in the IR (other items may refer to it), but is marked
+  // with `names_template_instantiation`, so that no Rust type alias is
+  // generated for it. The mangled name is kept in `Record::mangled_rs_name`, so
+  // that it can still be generated as a hidden alias of the renamed struct.
+  void NameTemplateInstantiationsAfterTypeAliases(
+      const absl::flat_hash_map<ItemId, ir_proto::Item* absl_nonnull>&
+          id_to_item,
+      std::vector<ItemId>& instantiation_ids);
+
   void FindAlwaysInstantiateSpecs(const clang::DeclContext& decl_context);
   bool IsAlwaysInstantiate(
       const clang::ClassTemplateSpecializationDecl& spec_decl) const;

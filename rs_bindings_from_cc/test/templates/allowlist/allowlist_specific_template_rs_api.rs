@@ -24,125 +24,133 @@
 //   Class templates are not yet supported
 
 #[inline(always)]
-pub fn IntFloatCaller(i: crate::__CcTemplateInst13AlwaysBoundTsIifE) {
+pub fn IntFloatCaller(i: crate::zz_template_instantiations::__CcTemplateInst13AlwaysBoundTsIifE) {
     let mut i = ::core::mem::MaybeUninit::new(i);
     unsafe { crate::detail::__rust_thunk___Z14IntFloatCaller13AlwaysBoundTsIifE(i.as_mut_ptr()) }
 }
 
 #[inline(always)]
-pub fn NotBoundCaller(i: crate::__CcTemplateInst10NotBoundTsIifE) {
+pub fn NotBoundCaller(i: crate::zz_template_instantiations::__CcTemplateInst10NotBoundTsIifE) {
     let mut i = ::core::mem::MaybeUninit::new(i);
     unsafe { crate::detail::__rust_thunk___Z14NotBoundCaller10NotBoundTsIifE(i.as_mut_ptr()) }
 }
 
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst13AlwaysBoundTsIifE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=AlwaysBoundTs < int , float >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst13AlwaysBoundTsIifE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInst13AlwaysBoundTsIifE {}
-impl !Sync for __CcTemplateInst13AlwaysBoundTsIifE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AlwaysBoundTs < int , float >"),
-    crate::__CcTemplateInst13AlwaysBoundTsIifE
-);
-impl __CcTemplateInst13AlwaysBoundTsIifE {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
-    #[inline(always)]
-    pub unsafe fn Member(__this: *mut Self) {
-        unsafe { self::cc_template_inst13_always_bound_ts_iif_e::Member(__this) }
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInst13AlwaysBoundTsIifE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=AlwaysBoundTs < int , float >
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInst13AlwaysBoundTsIifE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-}
+    impl !Send for __CcTemplateInst13AlwaysBoundTsIifE {}
+    impl !Sync for __CcTemplateInst13AlwaysBoundTsIifE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("AlwaysBoundTs < int , float >"),
+        crate::zz_template_instantiations::__CcTemplateInst13AlwaysBoundTsIifE
+    );
+    impl __CcTemplateInst13AlwaysBoundTsIifE {
+        /// # Safety
+        ///
+        /// The caller must ensure that the following unsafe arguments are not misused by the function:
+        /// * `__this`: raw pointer
+        #[inline(always)]
+        pub unsafe fn Member(__this: *mut Self) {
+            unsafe { self::cc_template_inst13_always_bound_ts_iif_e::Member(__this) }
+        }
+    }
 
-impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst13AlwaysBoundTsIifE {
-    #[inline(always)]
-    fn from(args: (::ffi_11::c_int, f32)) -> Self {
-        let (mut t, mut s) = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__23bcdcc7__ZN13AlwaysBoundTsIifEC1Eif(
-                &raw mut tmp as *mut _,
-                t,
-                s,
-            );
-            tmp.assume_init()
+    impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst13AlwaysBoundTsIifE {
+        #[inline(always)]
+        fn from(args: (::ffi_11::c_int, f32)) -> Self {
+            let (mut t, mut s) = args;
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__23bcdcc7__ZN13AlwaysBoundTsIifEC1Eif(
+                    &raw mut tmp as *mut _,
+                    t,
+                    s,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+    impl ::ctor::CtorNew<(::ffi_11::c_int, f32)> for __CcTemplateInst13AlwaysBoundTsIifE {
+        type CtorType = Self;
+        type Error = ::ctor::Infallible;
+        #[inline(always)]
+        fn ctor_new(args: (::ffi_11::c_int, f32)) -> Self::CtorType {
+            <Self as From<(::ffi_11::c_int, f32)>>::from(args)
+        }
+    }
+
+    pub mod cc_template_inst13_always_bound_ts_iif_e {
+        /// # Safety
+        ///
+        /// The caller must ensure that the following unsafe arguments are not misused by the function:
+        /// * `__this`: raw pointer
+        #[inline(always)]
+        pub(crate) unsafe fn Member(
+            __this: *mut crate::zz_template_instantiations::__CcTemplateInst13AlwaysBoundTsIifE,
+        ) {
+            unsafe { crate::detail::__rust_thunk__56d34d81__ZN13AlwaysBoundTsIifE6MemberEv(__this) }
+        }
+    }
+
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInst10NotBoundTsIifE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=NotBoundTs < int , float >
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInst10NotBoundTsIifE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for __CcTemplateInst10NotBoundTsIifE {}
+    impl !Sync for __CcTemplateInst10NotBoundTsIifE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("NotBoundTs < int , float >"),
+        crate::zz_template_instantiations::__CcTemplateInst10NotBoundTsIifE
+    );
+
+    impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst10NotBoundTsIifE {
+        #[inline(always)]
+        fn from(args: (::ffi_11::c_int, f32)) -> Self {
+            let (mut t, mut s) = args;
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__9053d357__ZN10NotBoundTsIifEC1Eif(
+                    &raw mut tmp as *mut _,
+                    t,
+                    s,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+    impl ::ctor::CtorNew<(::ffi_11::c_int, f32)> for __CcTemplateInst10NotBoundTsIifE {
+        type CtorType = Self;
+        type Error = ::ctor::Infallible;
+        #[inline(always)]
+        fn ctor_new(args: (::ffi_11::c_int, f32)) -> Self::CtorType {
+            <Self as From<(::ffi_11::c_int, f32)>>::from(args)
         }
     }
 }
-impl ::ctor::CtorNew<(::ffi_11::c_int, f32)> for __CcTemplateInst13AlwaysBoundTsIifE {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: (::ffi_11::c_int, f32)) -> Self::CtorType {
-        <Self as From<(::ffi_11::c_int, f32)>>::from(args)
-    }
-}
-
-pub mod cc_template_inst13_always_bound_ts_iif_e {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
-    #[inline(always)]
-    pub(crate) unsafe fn Member(__this: *mut crate::__CcTemplateInst13AlwaysBoundTsIifE) {
-        unsafe { crate::detail::__rust_thunk__56d34d81__ZN13AlwaysBoundTsIifE6MemberEv(__this) }
-    }
-}
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst10NotBoundTsIifE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NotBoundTs < int , float >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst10NotBoundTsIifE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInst10NotBoundTsIifE {}
-impl !Sync for __CcTemplateInst10NotBoundTsIifE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("NotBoundTs < int , float >"),
-    crate::__CcTemplateInst10NotBoundTsIifE
-);
-
-impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst10NotBoundTsIifE {
-    #[inline(always)]
-    fn from(args: (::ffi_11::c_int, f32)) -> Self {
-        let (mut t, mut s) = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__9053d357__ZN10NotBoundTsIifEC1Eif(
-                &raw mut tmp as *mut _,
-                t,
-                s,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<(::ffi_11::c_int, f32)> for __CcTemplateInst10NotBoundTsIifE {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: (::ffi_11::c_int, f32)) -> Self::CtorType {
-        <Self as From<(::ffi_11::c_int, f32)>>::from(args)
-    }
-}
+// Keeps the instantiations available at their old path.
+#[doc(hidden)]
+pub use self::zz_template_instantiations::*;
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z14IntFloatCaller13AlwaysBoundTsIifE(
-            i: *mut crate::__CcTemplateInst13AlwaysBoundTsIifE,
+            i: *mut crate::zz_template_instantiations::__CcTemplateInst13AlwaysBoundTsIifE,
         );
         pub(crate) unsafe fn __rust_thunk___Z14NotBoundCaller10NotBoundTsIifE(
-            i: *mut crate::__CcTemplateInst10NotBoundTsIifE,
+            i: *mut crate::zz_template_instantiations::__CcTemplateInst10NotBoundTsIifE,
         );
         pub(crate) unsafe fn __rust_thunk__23bcdcc7__ZN13AlwaysBoundTsIifEC1Eif(
             __this: *mut ::core::ffi::c_void,
@@ -150,7 +158,7 @@ mod detail {
             s: f32,
         );
         pub(crate) unsafe fn __rust_thunk__56d34d81__ZN13AlwaysBoundTsIifE6MemberEv(
-            __this: *mut crate::__CcTemplateInst13AlwaysBoundTsIifE,
+            __this: *mut crate::zz_template_instantiations::__CcTemplateInst13AlwaysBoundTsIifE,
         );
         pub(crate) unsafe fn __rust_thunk__9053d357__ZN10NotBoundTsIifEC1Eif(
             __this: *mut ::core::ffi::c_void,
@@ -161,13 +169,27 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst13AlwaysBoundTsIifE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst13AlwaysBoundTsIifE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst13AlwaysBoundTsIifE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst13AlwaysBoundTsIifE: Drop);
+    assert!(
+        ::core::mem::size_of::<
+            crate::zz_template_instantiations::__CcTemplateInst13AlwaysBoundTsIifE,
+        >() == 1
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::zz_template_instantiations::__CcTemplateInst13AlwaysBoundTsIifE,
+        >() == 1
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInst13AlwaysBoundTsIifE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInst13AlwaysBoundTsIifE: Drop);
 
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst10NotBoundTsIifE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst10NotBoundTsIifE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10NotBoundTsIifE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10NotBoundTsIifE: Drop);
+    assert!(
+        ::core::mem::size_of::<crate::zz_template_instantiations::__CcTemplateInst10NotBoundTsIifE>(
+        ) == 1
+    );
+    assert!(
+        ::core::mem::align_of::<crate::zz_template_instantiations::__CcTemplateInst10NotBoundTsIifE>(
+        ) == 1
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInst10NotBoundTsIifE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInst10NotBoundTsIifE: Drop);
 };

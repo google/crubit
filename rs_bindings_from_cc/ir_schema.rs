@@ -525,6 +525,8 @@ pub(crate) fn schema() -> Schema {
             is_thread_safe: Bool,
             is_explicit_class_template_instantiation_definition: Bool,
             children: Vec(Item),
+            #[optional]
+            mangled_rs_name: Str,
         }
         struct IncompleteRecord {
             cc_name: Identifier,
@@ -614,6 +616,7 @@ pub(crate) fn schema() -> Schema {
             #[optional]
             deprecated: Str,
             lifetime_inputs: Vec(Str),
+            names_template_instantiation: Bool,
         }
         #[scope("UnsupportedItem")]
         struct Path {

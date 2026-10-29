@@ -25,7 +25,9 @@
 
 /// Doc comment
 #[inline(always)]
-pub fn ImportedFirst(__param_0: crate::__CcTemplateInst10DoesNotUseIS_IiEE) {
+pub fn ImportedFirst(
+    __param_0: crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIS_IiEE,
+) {
     let mut __param_0 = ::core::mem::MaybeUninit::new(__param_0);
     unsafe {
         crate::detail::__rust_thunk___Z13ImportedFirst10DoesNotUseIS_IiEE(__param_0.as_mut_ptr())
@@ -37,76 +39,86 @@ pub fn ImportedFirst(__param_0: crate::__CcTemplateInst10DoesNotUseIS_IiEE) {
 
 /// Doc comment
 #[inline(always)]
-pub fn ImportedSecond(__param_0: crate::__CcTemplateInst10DoesNotUseIiE) {
+pub fn ImportedSecond(
+    __param_0: crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIiE,
+) {
     let mut __param_0 = ::core::mem::MaybeUninit::new(__param_0);
     unsafe {
         crate::detail::__rust_thunk___Z14ImportedSecond10DoesNotUseIiE(__param_0.as_mut_ptr())
     }
 }
 
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst10DoesNotUseIS_IiEE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DoesNotUse < struct DoesNotUse < int >>
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst10DoesNotUseIS_IiEE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInst10DoesNotUseIS_IiEE {}
-impl !Sync for __CcTemplateInst10DoesNotUseIS_IiEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("DoesNotUse < struct DoesNotUse < int >>"),
-    crate::__CcTemplateInst10DoesNotUseIS_IiEE
-);
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInst10DoesNotUseIS_IiEE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=DoesNotUse < struct DoesNotUse < int >>
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInst10DoesNotUseIS_IiEE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for __CcTemplateInst10DoesNotUseIS_IiEE {}
+    impl !Sync for __CcTemplateInst10DoesNotUseIS_IiEE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("DoesNotUse < struct DoesNotUse < int >>"),
+        crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIS_IiEE
+    );
 
-impl Default for __CcTemplateInst10DoesNotUseIS_IiEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__2e59fe08__ZN10DoesNotUseIS_IiEEC1Ev(
-                &raw mut tmp as *mut _,
-            );
-            tmp.assume_init()
+    impl Default for __CcTemplateInst10DoesNotUseIS_IiEE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__2e59fe08__ZN10DoesNotUseIS_IiEEC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInst10DoesNotUseIiE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=DoesNotUse < int >
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInst10DoesNotUseIiE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for __CcTemplateInst10DoesNotUseIiE {}
+    impl !Sync for __CcTemplateInst10DoesNotUseIiE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("DoesNotUse < int >"),
+        crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIiE
+    );
+
+    impl Default for __CcTemplateInst10DoesNotUseIiE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__2e59fe08__ZN10DoesNotUseIiEC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
         }
     }
 }
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst10DoesNotUseIiE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DoesNotUse < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst10DoesNotUseIiE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInst10DoesNotUseIiE {}
-impl !Sync for __CcTemplateInst10DoesNotUseIiE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("DoesNotUse < int >"),
-    crate::__CcTemplateInst10DoesNotUseIiE
-);
-
-impl Default for __CcTemplateInst10DoesNotUseIiE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__2e59fe08__ZN10DoesNotUseIiEC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Keeps the instantiations available at their old path.
+#[doc(hidden)]
+pub use self::zz_template_instantiations::*;
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z13ImportedFirst10DoesNotUseIS_IiEE(
-            __param_0: *mut crate::__CcTemplateInst10DoesNotUseIS_IiEE,
+            __param_0: *mut crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIS_IiEE,
         );
         pub(crate) unsafe fn __rust_thunk___Z14ImportedSecond10DoesNotUseIiE(
-            __param_0: *mut crate::__CcTemplateInst10DoesNotUseIiE,
+            __param_0: *mut crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIiE,
         );
         pub(crate) unsafe fn __rust_thunk__2e59fe08__ZN10DoesNotUseIS_IiEEC1Ev(
             __this: *mut ::core::ffi::c_void,
@@ -118,13 +130,27 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst10DoesNotUseIS_IiEE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst10DoesNotUseIS_IiEE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10DoesNotUseIS_IiEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10DoesNotUseIS_IiEE: Drop);
+    assert!(
+        ::core::mem::size_of::<
+            crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIS_IiEE,
+        >() == 1
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIS_IiEE,
+        >() == 1
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIS_IiEE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIS_IiEE: Drop);
 
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst10DoesNotUseIiE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst10DoesNotUseIiE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10DoesNotUseIiE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10DoesNotUseIiE: Drop);
+    assert!(
+        ::core::mem::size_of::<crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIiE>(
+        ) == 1
+    );
+    assert!(
+        ::core::mem::align_of::<crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIiE>(
+        ) == 1
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIiE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIiE: Drop);
 };

@@ -71,15 +71,20 @@ pub mod c9 { // error: class `c9::Co` could not be bound
 //       add that library as a direct dependency (and `#include` the header directly),
 //       or move the type to a public header.
 
-// error: class `c9::Co<struct NotCrubitExposed>` could not be bound
-//   `c9::Co<NotCrubitExposed>` is unsupported because `NotCrubitExposed` is unavailable:
-//   crubit.rs/errors/unknown_target: the type is defined in
-//       rs_bindings_from_cc/test/golden/not_crubit_exposed.h
-//     which is not a public header of any Crubit-enabled target that
-//       //rs_bindings_from_cc/test/golden:uses_not_crubit_exposed_cc
-//     depends on directly. Either enable Crubit on the library that provides the header,
-//     add that library as a direct dependency (and `#include` the header directly),
-//     or move the type to a public header.
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations { // error: class `zz_template_instantiations::c9::Co<struct NotCrubitExposed>` could not be bound
+                                     //   `c9::Co<NotCrubitExposed>` is unsupported because `NotCrubitExposed` is unavailable:
+                                     //   crubit.rs/errors/unknown_target: the type is defined in
+                                     //       rs_bindings_from_cc/test/golden/not_crubit_exposed.h
+                                     //     which is not a public header of any Crubit-enabled target that
+                                     //       //rs_bindings_from_cc/test/golden:uses_not_crubit_exposed_cc
+                                     //     depends on directly. Either enable Crubit on the library that provides the header,
+                                     //     add that library as a direct dependency (and `#include` the header directly),
+                                     //     or move the type to a public header.
+}
+// Keeps the instantiations available at their old path.
+#[doc(hidden)]
+pub use self::zz_template_instantiations::*;
 
 mod detail {
     #[allow(unused_imports)]

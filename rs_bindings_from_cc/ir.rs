@@ -2601,6 +2601,10 @@ derive_debug_partialeq_eq_hash! {
     }
 }
 
+/// The prefix of the Rust name of a class template instantiation which isn't
+/// named after a type alias. It is followed by the mangled C++ name.
+pub const CC_TEMPLATE_INST_PREFIX: &str = "__CcTemplateInst";
+
 #[derive(Clone)]
 pub struct Record<'pb> {
     pub(crate) proto: RecordView<'pb>,
@@ -2848,6 +2852,13 @@ derive_debug_partialeq_eq_hash! {
             self.proto.is_canonical_alias()
         }
 
+        /// If this class template instantiation is named after a type alias,
+        /// the mangled `__CcTemplateInst...` name that it would have had
+        /// otherwise.
+        pub fn mangled_rs_name(&self) -> Option<&'pb str> {
+            self.proto.mangled_rs_name_opt().into_option().to_ir()
+        }
+
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
             self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
         }
@@ -2973,6 +2984,13 @@ impl<'pb> Record<'pb> {
     /// docs/design/unpin.md for more details.
     pub fn is_unpin(&self) -> bool {
         self.is_rust_movable()
+    }
+
+    /// Whether `rs_name` is a mangled `__CcTemplateInst...` name, which is not
+    /// meant to be read (or written) by humans.
+    pub fn has_mangled_rs_name(&self) -> bool {
+        self.template_specialization().is_some()
+            && self.rs_name().as_str().starts_with(CC_TEMPLATE_INST_PREFIX)
     }
 
     // TODO(b/498977848): The record with cc_name
@@ -3624,6 +3642,13 @@ derive_debug_partialeq_eq_hash! {
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
             self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
+        }
+
+        /// Whether the class template instantiation that this alias refers to
+        /// was named after this alias, so that the struct takes the place of
+        /// the alias. See `Record::mangled_rs_name`.
+        pub fn names_template_instantiation(&self) -> bool {
+            self.proto.names_template_instantiation()
         }
 
         pub fn must_bind(&self) -> bool {

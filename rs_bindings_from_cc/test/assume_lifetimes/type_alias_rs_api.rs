@@ -95,113 +95,121 @@ impl ::ctor::PinnedDrop for TypeAliasCtor {
     }
 }
 
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE"]
-#[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const char *>
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    /// Reason for representing this field as a blob of bytes:
-    /// Types of non-public C++ fields can be elided away
-    pub(crate) current: [::core::mem::MaybeUninit<u8>; 8],
-}
-impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
-impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("std :: reverse_iterator < const char *>"),
-    crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE
-);
-impl __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
-    #[must_use]
-    #[inline(always)]
-    pub fn base<'__this>(&'__this self) -> *const ::ffi_11::c_char {
-        unsafe { self::cc_template_inst_n_st3_u16reverse_iterator_ip_kc_ee::base(self) }
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE"]
+    #[repr(C, align(8))]
+    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const char *>
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+        /// Reason for representing this field as a blob of bytes:
+        /// Types of non-public C++ fields can be elided away
+        pub(crate) current: [::core::mem::MaybeUninit<u8>; 8],
     }
-}
+    impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
+    impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("std :: reverse_iterator < const char *>"),
+        crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE
+    );
+    impl __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
+        #[must_use]
+        #[inline(always)]
+        pub fn base<'__this>(&'__this self) -> *const ::ffi_11::c_char {
+            unsafe { self::cc_template_inst_n_st3_u16reverse_iterator_ip_kc_ee::base(self) }
+        }
+    }
 
-impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__63d556e1__ZNSt3__u16reverse_iteratorIPKcEC1Ev(
-                &raw mut tmp as *mut _,
-            );
-            tmp.assume_init()
+    impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__63d556e1__ZNSt3__u16reverse_iteratorIPKcEC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+
+    impl ::ctor::UnsafeFrom<*const ::ffi_11::c_char>
+        for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE
+    {
+        #[inline(always)]
+        unsafe fn unsafe_from(args: *const ::ffi_11::c_char) -> Self {
+            let mut __x = args;
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__9cfa002e__ZNSt3__u16reverse_iteratorIPKcEC1ES2_(
+                    &raw mut tmp as *mut _,
+                    __x,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+    impl ::ctor::UnsafeCtorNew<*const ::ffi_11::c_char>
+        for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE
+    {
+        type CtorType = Self;
+        type Error = ::ctor::Infallible;
+        #[inline(always)]
+        unsafe fn ctor_new(args: *const ::ffi_11::c_char) -> Self::CtorType {
+            unsafe { <Self as ::ctor::UnsafeFrom<*const ::ffi_11::c_char>>::unsafe_from(args) }
+        }
+    }
+
+    pub mod cc_template_inst_n_st3_u16reverse_iterator_ip_kc_ee {
+        #[must_use]
+        #[inline(always)]
+        pub(crate) fn base<'__this>(
+            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
+        ) -> *const ::ffi_11::c_char {
+            unsafe {
+                crate::detail::__rust_thunk__1b6af95a__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(
+                    __this,
+                )
+            }
+        }
+    }
+
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE"]
+    #[repr(C, align(8))]
+    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const wchar_t *>
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+        /// Reason for representing this field as a blob of bytes:
+        /// Types of non-public C++ fields can be elided away
+        pub(crate) current: [::core::mem::MaybeUninit<u8>; 8],
+    }
+    impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
+    impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("std :: reverse_iterator < const wchar_t *>"),
+        crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE
+    );
+
+    impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__63d556e1__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
         }
     }
 }
-
-impl ::ctor::UnsafeFrom<*const ::ffi_11::c_char>
-    for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE
-{
-    #[inline(always)]
-    unsafe fn unsafe_from(args: *const ::ffi_11::c_char) -> Self {
-        let mut __x = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__9cfa002e__ZNSt3__u16reverse_iteratorIPKcEC1ES2_(
-                &raw mut tmp as *mut _,
-                __x,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::UnsafeCtorNew<*const ::ffi_11::c_char>
-    for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE
-{
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    unsafe fn ctor_new(args: *const ::ffi_11::c_char) -> Self::CtorType {
-        unsafe { <Self as ::ctor::UnsafeFrom<*const ::ffi_11::c_char>>::unsafe_from(args) }
-    }
-}
-
-pub mod cc_template_inst_n_st3_u16reverse_iterator_ip_kc_ee {
-    #[must_use]
-    #[inline(always)]
-    pub(crate) fn base<'__this>(
-        __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
-    ) -> *const ::ffi_11::c_char {
-        unsafe {
-            crate::detail::__rust_thunk__1b6af95a__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(__this)
-        }
-    }
-}
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE"]
-#[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const wchar_t *>
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    /// Reason for representing this field as a blob of bytes:
-    /// Types of non-public C++ fields can be elided away
-    pub(crate) current: [::core::mem::MaybeUninit<u8>; 8],
-}
-impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
-impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("std :: reverse_iterator < const wchar_t *>"),
-    crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE
-);
-
-impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__63d556e1__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
-                &raw mut tmp as *mut _,
-            );
-            tmp.assume_init()
-        }
-    }
-}
+// Keeps the instantiations available at their old path.
+#[doc(hidden)]
+pub use self::zz_template_instantiations::*;
 
 mod detail {
     #[allow(unused_imports)]
@@ -235,7 +243,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk__1b6af95a__ZNKSt3__u16reverse_iteratorIPKcE4baseEv<
             '__this,
         >(
-            __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
+            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
         ) -> *const ::ffi_11::c_char;
         pub(crate) unsafe fn __rust_thunk__63d556e1__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
             __this: *mut ::core::ffi::c_void,
@@ -249,20 +257,40 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::TypeAliasCtor: Drop);
     static_assertions::assert_not_impl_any!(crate::TypeAliasCtor: Copy);
 
-    assert!(::core::mem::size_of::<crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE>() == 8);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE>() == 8);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE: Drop);
     assert!(
-        ::core::mem::offset_of!(crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE, current)
-            == 0
+        ::core::mem::size_of::<
+            crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
+        >() == 8
     );
-    assert!(::core::mem::size_of::<crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE>() == 8);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE>() == 8);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE: Drop);
     assert!(
-        ::core::mem::offset_of!(crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE, current)
-            == 0
+        ::core::mem::align_of::<
+            crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
+        >() == 8
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE: Drop);
+    assert!(
+        ::core::mem::offset_of!(
+            crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
+            current
+        ) == 0
+    );
+    assert!(
+        ::core::mem::size_of::<
+            crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE,
+        >() == 8
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE,
+        >() == 8
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE: Drop);
+    assert!(
+        ::core::mem::offset_of!(
+            crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE,
+            current
+        ) == 0
     );
 };
