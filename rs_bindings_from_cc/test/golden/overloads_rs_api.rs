@@ -69,13 +69,16 @@ unsafe impl ::cxx::ExternType for Foo {
 forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 impl Foo {
     #[inline(always)]
-    pub fn BarBridgedInt<'__this>(&'__this mut self, __param_0: crate::__CcTemplateInst6SizeofIiE) {
+    pub fn BarBridgedInt<'__this>(
+        &'__this mut self,
+        __param_0: crate::zz_template_instantiations::__CcTemplateInst6SizeofIiE,
+    ) {
         unsafe { self::foo::BarBridgedInt(self, __param_0) }
     }
     #[inline(always)]
     pub fn BarBridgedFloat<'__this>(
         &'__this mut self,
-        __param_0: crate::__CcTemplateInst6SizeofIfE,
+        __param_0: crate::zz_template_instantiations::__CcTemplateInst6SizeofIfE,
     ) {
         unsafe { self::foo::BarBridgedFloat(self, __param_0) }
     }
@@ -100,7 +103,7 @@ pub mod foo {
     #[inline(always)]
     pub(crate) fn BarBridgedInt<'__this>(
         __this: &'__this mut crate::Foo,
-        __param_0: crate::__CcTemplateInst6SizeofIiE,
+        __param_0: crate::zz_template_instantiations::__CcTemplateInst6SizeofIiE,
     ) {
         let mut __param_0 = ::core::mem::MaybeUninit::new(__param_0);
         unsafe {
@@ -110,7 +113,7 @@ pub mod foo {
     #[inline(always)]
     pub(crate) fn BarBridgedFloat<'__this>(
         __this: &'__this mut crate::Foo,
-        __param_0: crate::__CcTemplateInst6SizeofIfE,
+        __param_0: crate::zz_template_instantiations::__CcTemplateInst6SizeofIfE,
     ) {
         let mut __param_0 = ::core::mem::MaybeUninit::new(__param_0);
         unsafe {
@@ -123,63 +126,69 @@ pub mod foo {
     }
 }
 
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst6SizeofIfE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Sizeof < float >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst6SizeofIfE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInst6SizeofIfE {}
-impl !Sync for __CcTemplateInst6SizeofIfE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("Sizeof < float >"),
-    crate::__CcTemplateInst6SizeofIfE
-);
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInst6SizeofIfE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=Sizeof < float >
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInst6SizeofIfE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for __CcTemplateInst6SizeofIfE {}
+    impl !Sync for __CcTemplateInst6SizeofIfE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("Sizeof < float >"),
+        crate::zz_template_instantiations::__CcTemplateInst6SizeofIfE
+    );
 
-impl Default for __CcTemplateInst6SizeofIfE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__4304ae3f__ZN6SizeofIfEC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
+    impl Default for __CcTemplateInst6SizeofIfE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__4304ae3f__ZN6SizeofIfEC1Ev(&raw mut tmp as *mut _);
+                tmp.assume_init()
+            }
         }
     }
-}
 
-// error: global variable `Sizeof<float>::size` could not be bound
-//   static data members of class template specializations are not supported
+    // error: global variable `Sizeof<float>::size` could not be bound
+    //   static data members of class template specializations are not supported
 
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst6SizeofIiE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Sizeof < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst6SizeofIiE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInst6SizeofIiE {}
-impl !Sync for __CcTemplateInst6SizeofIiE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("Sizeof < int >"),
-    crate::__CcTemplateInst6SizeofIiE
-);
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInst6SizeofIiE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=Sizeof < int >
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInst6SizeofIiE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for __CcTemplateInst6SizeofIiE {}
+    impl !Sync for __CcTemplateInst6SizeofIiE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("Sizeof < int >"),
+        crate::zz_template_instantiations::__CcTemplateInst6SizeofIiE
+    );
 
-impl Default for __CcTemplateInst6SizeofIiE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__4304ae3f__ZN6SizeofIiEC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
+    impl Default for __CcTemplateInst6SizeofIiE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__4304ae3f__ZN6SizeofIiEC1Ev(&raw mut tmp as *mut _);
+                tmp.assume_init()
+            }
         }
     }
-}
 
-// error: global variable `Sizeof<int>::size` could not be bound
-//   static data members of class template specializations are not supported
+    // error: global variable `Sizeof<int>::size` could not be bound
+    //   static data members of class template specializations are not supported
+}
+// Keeps the instantiations available at their old path.
+#[doc(hidden)]
+pub use self::zz_template_instantiations::*;
 
 mod detail {
     #[allow(unused_imports)]
@@ -193,11 +202,11 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN3FooC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN3Foo3BarE6SizeofIiE<'__this>(
             __this: &'__this mut crate::Foo,
-            __param_0: *mut crate::__CcTemplateInst6SizeofIiE,
+            __param_0: *mut crate::zz_template_instantiations::__CcTemplateInst6SizeofIiE,
         );
         pub(crate) unsafe fn __rust_thunk___ZN3Foo3BarE6SizeofIfE<'__this>(
             __this: &'__this mut crate::Foo,
-            __param_0: *mut crate::__CcTemplateInst6SizeofIfE,
+            __param_0: *mut crate::zz_template_instantiations::__CcTemplateInst6SizeofIfE,
         );
         #[link_name = "_ZN3Foo3BarEi"]
         pub(crate) unsafe fn __rust_thunk___ZN3Foo3BarEi<'__this>(
@@ -219,13 +228,25 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::Foo: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Foo: Drop);
 
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst6SizeofIfE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst6SizeofIfE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst6SizeofIfE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst6SizeofIfE: Drop);
+    assert!(
+        ::core::mem::size_of::<crate::zz_template_instantiations::__CcTemplateInst6SizeofIfE>()
+            == 1
+    );
+    assert!(
+        ::core::mem::align_of::<crate::zz_template_instantiations::__CcTemplateInst6SizeofIfE>()
+            == 1
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInst6SizeofIfE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInst6SizeofIfE: Drop);
 
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst6SizeofIiE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst6SizeofIiE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst6SizeofIiE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst6SizeofIiE: Drop);
+    assert!(
+        ::core::mem::size_of::<crate::zz_template_instantiations::__CcTemplateInst6SizeofIiE>()
+            == 1
+    );
+    assert!(
+        ::core::mem::align_of::<crate::zz_template_instantiations::__CcTemplateInst6SizeofIiE>()
+            == 1
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInst6SizeofIiE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInst6SizeofIiE: Drop);
 };

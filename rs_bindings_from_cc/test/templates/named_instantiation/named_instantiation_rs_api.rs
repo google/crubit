@@ -20,29 +20,19 @@
 // error: class `Ni` could not be bound
 //   Class templates are not yet supported
 
-pub type NiIF = crate::__CcTemplateInst2NiIifE;
-
-#[inline(always)]
-pub fn SomeApi<'i>(i: &'i crate::NiIF) {
-    unsafe { crate::detail::__rust_thunk___Z7SomeApiRK2NiIifE(i) }
-}
-
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst2NiIifE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Ni < int , float >
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst2NiIifE {
+pub struct NiIF {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for __CcTemplateInst2NiIifE {}
-impl !Sync for __CcTemplateInst2NiIifE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("Ni < int , float >"),
-    crate::__CcTemplateInst2NiIifE
-);
+impl !Send for NiIF {}
+impl !Sync for NiIF {}
+forward_declare::unsafe_define!(forward_declare::symbol!("Ni < int , float >"), crate::NiIF);
 
-impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst2NiIifE {
+impl From<(::ffi_11::c_int, f32)> for NiIF {
     #[inline(always)]
     fn from(args: (::ffi_11::c_int, f32)) -> Self {
         let (mut t, mut s) = args;
@@ -53,7 +43,7 @@ impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst2NiIifE {
         }
     }
 }
-impl ::ctor::CtorNew<(::ffi_11::c_int, f32)> for __CcTemplateInst2NiIifE {
+impl ::ctor::CtorNew<(::ffi_11::c_int, f32)> for NiIF {
     type CtorType = Self;
     type Error = ::ctor::Infallible;
     #[inline(always)]
@@ -62,23 +52,37 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, f32)> for __CcTemplateInst2NiIifE {
     }
 }
 
+#[inline(always)]
+pub fn SomeApi<'i>(i: &'i crate::NiIF) {
+    unsafe { crate::detail::__rust_thunk___Z7SomeApiRK2NiIifE(i) }
+}
+
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[doc(hidden)]
+    pub type __CcTemplateInst2NiIifE = crate::NiIF;
+}
+// Keeps the instantiations available at their old path.
+#[doc(hidden)]
+pub use self::zz_template_instantiations::*;
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        #[link_name = "_Z7SomeApiRK2NiIifE"]
-        pub(crate) unsafe fn __rust_thunk___Z7SomeApiRK2NiIifE<'i>(i: &'i crate::NiIF);
         pub(crate) unsafe fn __rust_thunk__426ccee6__ZN2NiIifEC1Eif(
             __this: *mut ::core::ffi::c_void,
             t: ::ffi_11::c_int,
             s: f32,
         );
+        #[link_name = "_Z7SomeApiRK2NiIifE"]
+        pub(crate) unsafe fn __rust_thunk___Z7SomeApiRK2NiIifE<'i>(i: &'i crate::NiIF);
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst2NiIifE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst2NiIifE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst2NiIifE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst2NiIifE: Drop);
+    assert!(::core::mem::size_of::<crate::NiIF>() == 1);
+    assert!(::core::mem::align_of::<crate::NiIF>() == 1);
+    static_assertions::assert_impl_all!(crate::NiIF: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::NiIF: Drop);
 };

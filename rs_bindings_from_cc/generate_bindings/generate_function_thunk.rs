@@ -413,7 +413,7 @@ fn generate_function_assertion_thunk_impl<'a>(
     unqualified_func_name: TokenStream,
 ) -> Result<ThunkImpl> {
     let features = db.ir().target_crubit_features(func.owning_target());
-    let mut namespace_qualifier = db.namespace_qualifier(func);
+    let mut namespace_qualifier = db.cc_namespace_qualifier(func);
     // Keep goldens the same.
     namespace_qualifier.use_leading_colons = true;
     let path_to_func = namespace_qualifier.format_for_cc(features)?;
@@ -569,7 +569,7 @@ pub fn generate_function_thunk_impl<'a>(
         UnqualifiedIdentifier::Identifier(id) => {
             let features = db.ir().target_crubit_features(func.owning_target());
             let fn_ident = format_nonportable_cc_ident(id.as_str())?;
-            let namespace_qualifier = db.namespace_qualifier(func).format_for_cc(features)?;
+            let namespace_qualifier = db.cc_namespace_qualifier(func).format_for_cc(features)?;
             if func.instance_method_metadata().is_some() || func.adl_enclosing_record().is_some() {
                 quote! {#fn_ident}
             } else {

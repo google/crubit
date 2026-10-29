@@ -722,6 +722,12 @@ message Record {
   int64 pack = 46;
   // Where the item is declared.
   DeclLocation decl_loc = 47;
+  // If this is a class template instantiation that was renamed after a type
+  // alias in the current target (see
+  // `Importer::NameTemplateInstantiationsAfterTypeAliases`), the mangled
+  // `__CcTemplateInst...` name that it would have had otherwise. Empty
+  // otherwise.
+  string mangled_rs_name = 48;
 }
 
 // A forward-declared record (e.g. `struct Foo;`)
@@ -806,6 +812,11 @@ message TypeAlias {
   repeated string lifetime_inputs = 13;
   // Where the item is declared.
   DeclLocation decl_loc = 14;
+  // True if the class template instantiation that this alias refers to was
+  // renamed after this alias (see `Record::mangled_rs_name`). No Rust type
+  // alias is generated for such an alias, because the struct itself has its
+  // name.
+  bool names_template_instantiation = 15;
 }
 
 // A placeholder for an item that we can't generate bindings for (yet)

@@ -16,10 +16,11 @@
 #![deny(warnings)]
 /// This library reproduces the issue in b/458678348.
 #[inline(always)]
-pub fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {
+pub fn GetMyTemplate() -> crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE {
     unsafe {
-        let mut __crubit_return =
-            ::core::mem::MaybeUninit::<crate::__CcTemplateInst10MyTemplateIiE>::uninit();
+        let mut __crubit_return = ::core::mem::MaybeUninit::<
+            crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE,
+        >::uninit();
         crate::detail::__rust_thunk___Z13GetMyTemplatev(
             &raw mut __crubit_return as *mut ::core::ffi::c_void,
         );
@@ -27,31 +28,39 @@ pub fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {
     }
 }
 
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst10MyTemplateIiE {
-    pub field: ::ffi_11::c_int,
-}
-impl !Send for __CcTemplateInst10MyTemplateIiE {}
-impl !Sync for __CcTemplateInst10MyTemplateIiE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate < int >"),
-    crate::__CcTemplateInst10MyTemplateIiE
-);
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInst10MyTemplateIiE {
+        pub field: ::ffi_11::c_int,
+    }
+    impl !Send for __CcTemplateInst10MyTemplateIiE {}
+    impl !Sync for __CcTemplateInst10MyTemplateIiE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("MyTemplate < int >"),
+        crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE
+    );
 
-impl Default for __CcTemplateInst10MyTemplateIiE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__19bb63af__ZN10MyTemplateIiEC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
+    impl Default for __CcTemplateInst10MyTemplateIiE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__19bb63af__ZN10MyTemplateIiEC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
         }
     }
 }
+// Keeps the instantiations available at their old path.
+#[doc(hidden)]
+pub use self::zz_template_instantiations::*;
 
 mod detail {
     #[allow(unused_imports)]
@@ -65,9 +74,20 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
-    assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, field) == 0);
+    assert!(
+        ::core::mem::size_of::<crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE>(
+        ) == 4
+    );
+    assert!(
+        ::core::mem::align_of::<crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE>(
+        ) == 4
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE: Drop);
+    assert!(
+        ::core::mem::offset_of!(
+            crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE,
+            field
+        ) == 0
+    );
 };

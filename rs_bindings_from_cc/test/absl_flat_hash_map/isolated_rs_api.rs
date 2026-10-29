@@ -22,9 +22,11 @@ pub mod absl { // error: class `absl::flat_hash_map` could not be bound
 
 pub mod crubit {
     pub mod test {
-        pub type MapWithTwoParams = crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE;
+        pub type MapWithTwoParams =
+            crate::zz_template_instantiations::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE;
 
-        pub type MapWithThreeParams = crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE;
+        pub type MapWithThreeParams =
+            crate::zz_template_instantiations::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE;
 
         // error: type alias `crubit::test::MapWithBridgedKey` could not be bound
         //   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
@@ -128,64 +130,70 @@ pub mod crubit {
 
 // namespace crubit::test
 
-// error: class `absl::flat_hash_map<class crubit::test::Incomplete, int, 42>` could not be bound
-//   Type `absl::flat_hash_map<class crubit::test::Incomplete, int, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    // error: class `zz_template_instantiations::absl::flat_hash_map<class crubit::test::Incomplete, int, 42>` could not be bound
+    //   Type `absl::flat_hash_map<class crubit::test::Incomplete, int, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
 
-// error: class `absl::flat_hash_map<class crubit::test::NoDestructor, int, 42>` could not be bound
-//   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor
+    // error: class `zz_template_instantiations::absl::flat_hash_map<class crubit::test::NoDestructor, int, 42>` could not be bound
+    //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor
 
-// error: class `absl::flat_hash_map<struct crubit::test::Bridged, int, 42>` could not be bound
-//   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
-//   See crubit.rs/types.
+    // error: class `zz_template_instantiations::absl::flat_hash_map<struct crubit::test::Bridged, int, 42>` could not be bound
+    //   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
+    //   See crubit.rs/types.
 
-// error: class `absl::flat_hash_map<class crubit::test::NoDelete, int, 42>` could not be bound
-//   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public operator delete
+    // error: class `zz_template_instantiations::absl::flat_hash_map<class crubit::test::NoDelete, int, 42>` could not be bound
+    //   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public operator delete
 
-// error: class `absl::flat_hash_map<int, class crubit::test::Incomplete, 42>` could not be bound
-//   Type `absl::flat_hash_map<int, class crubit::test::Incomplete, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
+    // error: class `zz_template_instantiations::absl::flat_hash_map<int, class crubit::test::Incomplete, 42>` could not be bound
+    //   Type `absl::flat_hash_map<int, class crubit::test::Incomplete, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
 
-// error: class `absl::flat_hash_map<int, class crubit::test::NoDestructor, 42>` could not be bound
-//   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor
+    // error: class `zz_template_instantiations::absl::flat_hash_map<int, class crubit::test::NoDestructor, 42>` could not be bound
+    //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor
 
-// error: class `absl::flat_hash_map<int, struct crubit::test::Bridged, 42>` could not be bound
-//   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
-//   See crubit.rs/types.
+    // error: class `zz_template_instantiations::absl::flat_hash_map<int, struct crubit::test::Bridged, 42>` could not be bound
+    //   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
+    //   See crubit.rs/types.
 
-// error: class `absl::flat_hash_map<int, class crubit::test::NoDelete, 42>` could not be bound
-//   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public operator delete
+    // error: class `zz_template_instantiations::absl::flat_hash_map<int, class crubit::test::NoDelete, 42>` could not be bound
+    //   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public operator delete
 
-/// An empty implementation of absl::flat_hash_map to test code generation
-/// without the absl dependency.
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=absl :: flat_hash_map < int , unsigned long , 42 >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {}
-impl !Sync for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("absl :: flat_hash_map < int , unsigned long , 42 >"),
-    crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE
-);
+    /// An empty implementation of absl::flat_hash_map to test code generation
+    /// without the absl dependency.
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=absl :: flat_hash_map < int , unsigned long , 42 >
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {}
+    impl !Sync for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("absl :: flat_hash_map < int , unsigned long , 42 >"),
+        crate::zz_template_instantiations::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE
+    );
 
-impl Default for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__25d7606d__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
-                &raw mut tmp as *mut _,
-            );
-            tmp.assume_init()
+    impl Default for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__25d7606d__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
         }
     }
-}
 
-// error: function `absl::flat_hash_map<int, unsigned long>::HarmlessTemplateFunction` could not be bound
-//   Function templates are not yet supported
+    // error: function `absl::flat_hash_map<int, unsigned long>::HarmlessTemplateFunction` could not be bound
+    //   Function templates are not yet supported
+}
+// Keeps the instantiations available at their old path.
+#[doc(hidden)]
+pub use self::zz_template_instantiations::*;
 
 mod detail {
     #[allow(unused_imports)]
@@ -217,8 +225,16 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::crubit::test::NoDelete: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::crubit::test::NoDelete: Drop);
 
-    assert!(::core::mem::size_of::<crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE: Drop);
+    assert!(
+        ::core::mem::size_of::<
+            crate::zz_template_instantiations::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE,
+        >() == 1
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::zz_template_instantiations::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE,
+        >() == 1
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE: Drop);
 };

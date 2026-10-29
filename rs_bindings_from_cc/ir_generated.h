@@ -2376,6 +2376,10 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   FfiVec<::crubit::ffi::Item>* mutable_children() { return &children_; }
   void clear_children() { children_.Clear(); }
   ::crubit::ffi::Item* add_children();
+  bool has_mangled_rs_name() const { return (has_bits_ & 0x400ULL) != 0; }
+  void clear_mangled_rs_name() { has_bits_ &= ~0x400ULL; mangled_rs_name_ = {}; }
+  absl::string_view mangled_rs_name() const { return mangled_rs_name_.AsView(); }
+  void set_mangled_rs_name(absl::string_view value) { has_bits_ |= 0x400ULL; mangled_rs_name_ = FfiString(value); }
   friend bool operator==(const Record&, const Record&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::Identifier rs_name_{};
@@ -2423,6 +2427,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   bool is_thread_safe_{};
   bool is_explicit_class_template_instantiation_definition_{};
   FfiVec<::crubit::ffi::Item> children_{};
+  FfiString mangled_rs_name_{};
 };
 
 struct ABSL_ATTRIBUTE_TRIVIAL_ABI IncompleteRecord {
@@ -2650,6 +2655,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TypeAlias {
   FfiVec<FfiString>* mutable_lifetime_inputs() { return &lifetime_inputs_; }
   void clear_lifetime_inputs() { lifetime_inputs_.Clear(); }
   void add_lifetime_inputs(absl::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
+  bool names_template_instantiation() const { return names_template_instantiation_; }
+  void set_names_template_instantiation(bool value) { names_template_instantiation_ = value; }
   friend bool operator==(const TypeAlias&, const TypeAlias&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::Identifier cc_name_{};
@@ -2665,6 +2672,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TypeAlias {
   bool must_bind_{};
   FfiString deprecated_{};
   FfiVec<FfiString> lifetime_inputs_{};
+  bool names_template_instantiation_{};
 };
 
 namespace unsupported_item {
@@ -3533,7 +3541,7 @@ inline Record& Record::operator=(Record&&) noexcept = default;
 inline Record::~Record() = default;
 inline ::crubit::ffi::Item* Record::add_children() { return children_.Add(); }
 static_assert(std::is_standard_layout_v<Record>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Record) == 1096 && alignof(Record) == 8));
+static_assert(sizeof(size_t) != 8 || (sizeof(Record) == 1112 && alignof(Record) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(Record, rs_name_) == 8);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, cc_name_) == 24);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, unique_name_) == 40);
@@ -3579,6 +3587,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(Record, deprecated_) == 1048);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, is_thread_safe_) == 1064);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, is_explicit_class_template_instantiation_definition_) == 1065);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, children_) == 1072);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, mangled_rs_name_) == 1096);
 static_assert(std::is_standard_layout_v<IncompleteRecord>);
 static_assert(sizeof(size_t) != 8 || (sizeof(IncompleteRecord) == 120 && alignof(IncompleteRecord) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, cc_name_) == 8);
@@ -3631,7 +3640,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, must_bind_) == 320);
 static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, deprecated_) == 328);
 static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, doc_comment_) == 344);
 static_assert(std::is_standard_layout_v<TypeAlias>);
-static_assert(sizeof(size_t) != 8 || (sizeof(TypeAlias) == 368 && alignof(TypeAlias) == 8));
+static_assert(sizeof(size_t) != 8 || (sizeof(TypeAlias) == 376 && alignof(TypeAlias) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, cc_name_) == 8);
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, rs_name_) == 24);
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, unique_name_) == 40);
@@ -3645,6 +3654,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, enclosing_item_id_) == 
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, must_bind_) == 320);
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, deprecated_) == 328);
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, lifetime_inputs_) == 344);
+static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, names_template_instantiation_) == 368);
 static_assert(std::is_standard_layout_v<unsupported_item::Path>);
 static_assert(sizeof(size_t) != 8 || (sizeof(unsupported_item::Path) == 40 && alignof(unsupported_item::Path) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(unsupported_item::Path, ident_) == 8);

@@ -137,38 +137,43 @@ forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Inc
 // error: function `CallIncompleteMapper` could not be bound
 //   Parameter #0 is not supported: Unsupported type 'absl::AnyInvocable<Incomplete (Incomplete) const>': Failed to create bindings for template specialization type absl::AnyInvocable<Incomplete (Incomplete) const>: Return type of callable is incomplete: struct Incomplete
 
-// error: class `absl::internal_any_invocable::CoreImpl<false, struct MyOption<int>, struct MyOption<int>>` could not be bound
-//   crubit.rs/errors/unknown_target: the type is defined in
-//     third_party/absl/functional/internal/any_invocable.h
-//   which is not a public header of any Crubit-enabled target that
-//     //rs_bindings_from_cc/test/consume_absl:absl_functional
-//   depends on directly. Either enable Crubit on the library that provides the header,
-//   add that library as a direct dependency (and `#include` the header directly),
-//   or move the type to a public header.
-//   template instantiation is not yet supported
-
-// error: class `absl::internal_any_invocable::CoreImpl<false, int, int>` could not be bound
-//   crubit.rs/errors/unknown_target: the type is defined in
-//     third_party/absl/functional/internal/any_invocable.h
-//   which is not a public header of any Crubit-enabled target that
-//     //rs_bindings_from_cc/test/consume_absl:absl_functional
-//   depends on directly. Either enable Crubit on the library that provides the header,
-//   add that library as a direct dependency (and `#include` the header directly),
-//   or move the type to a public header.
-//   template instantiation is not yet supported
-
-// error: class `absl::internal_any_invocable::CoreImpl<false, void>` could not be bound
-//   crubit.rs/errors/unknown_target: the type is defined in
-//     third_party/absl/functional/internal/any_invocable.h
-//   which is not a public header of any Crubit-enabled target that
-//     //rs_bindings_from_cc/test/consume_absl:absl_functional
-//   depends on directly. Either enable Crubit on the library that provides the header,
-//   add that library as a direct dependency (and `#include` the header directly),
-//   or move the type to a public header.
-//   template instantiation is not yet supported
-
 // error: class `absl::AnyInvocable` could not be bound
 //   Return type of callable is incomplete: struct Incomplete
+
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations { // error: class `zz_template_instantiations::absl::internal_any_invocable::CoreImpl<false, struct MyOption<int>, struct MyOption<int>>` could not be bound
+                                     //   crubit.rs/errors/unknown_target: the type is defined in
+                                     //     third_party/absl/functional/internal/any_invocable.h
+                                     //   which is not a public header of any Crubit-enabled target that
+                                     //     //rs_bindings_from_cc/test/consume_absl:absl_functional
+                                     //   depends on directly. Either enable Crubit on the library that provides the header,
+                                     //   add that library as a direct dependency (and `#include` the header directly),
+                                     //   or move the type to a public header.
+                                     //   template instantiation is not yet supported
+
+    // error: class `zz_template_instantiations::absl::internal_any_invocable::CoreImpl<false, int, int>` could not be bound
+    //   crubit.rs/errors/unknown_target: the type is defined in
+    //     third_party/absl/functional/internal/any_invocable.h
+    //   which is not a public header of any Crubit-enabled target that
+    //     //rs_bindings_from_cc/test/consume_absl:absl_functional
+    //   depends on directly. Either enable Crubit on the library that provides the header,
+    //   add that library as a direct dependency (and `#include` the header directly),
+    //   or move the type to a public header.
+    //   template instantiation is not yet supported
+
+    // error: class `zz_template_instantiations::absl::internal_any_invocable::CoreImpl<false, void>` could not be bound
+    //   crubit.rs/errors/unknown_target: the type is defined in
+    //     third_party/absl/functional/internal/any_invocable.h
+    //   which is not a public header of any Crubit-enabled target that
+    //     //rs_bindings_from_cc/test/consume_absl:absl_functional
+    //   depends on directly. Either enable Crubit on the library that provides the header,
+    //   add that library as a direct dependency (and `#include` the header directly),
+    //   or move the type to a public header.
+    //   template instantiation is not yet supported
+}
+// Keeps the instantiations available at their old path.
+#[doc(hidden)]
+pub use self::zz_template_instantiations::*;
 
 mod detail {
     #[allow(unused_imports)]
