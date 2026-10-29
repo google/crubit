@@ -40,8 +40,6 @@ golden_test(
         "macos",
     ],
     rust_library = "dep_crate",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 rust_library(
@@ -72,6 +70,4 @@ golden_test(
         "macos",
     ],
     rust_library = "reexport_crate",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )

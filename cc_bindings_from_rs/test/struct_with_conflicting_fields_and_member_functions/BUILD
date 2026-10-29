@@ -44,8 +44,6 @@ golden_test(
         "macos",
     ],
     rust_library = "struct_with_conflicting_fields_and_member_functions",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 crubit_cc_test(
