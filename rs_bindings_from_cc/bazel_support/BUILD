@@ -119,6 +119,7 @@ bzl_library(
     name = "generate_bindings_bzl",
     srcs = ["generate_bindings.bzl"],
     deps = [
+        ":encode_raw_string_as_crate_name_bzl",
         "@bazel_skylib//rules:common_settings",
         "@bazel_tools//tools/build_defs/cc:action_names",
         "@rules_cc//cc/common",

@@ -7,6 +7,10 @@
 
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
+load(
+    "@rules_crubit//rs_bindings_from_cc/bazel_support:encode_raw_string_as_crate_name.bzl",
+    "encode_raw_string_as_crate_name",
+)
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 
 def escape_cpp_target_name(package_name, crate_name):
@@ -90,10 +94,16 @@ def generate_bindings(
     Returns:
       tuple(cc_output, rs_output, namespaces_output, error_report_output): The generated source files.
     """
-    crate_name = escape_cpp_target_name(ctx.label.package, ctx.label.name)
-    cc_output = ctx.actions.declare_file(crate_name + "_rust_api_impl.cc")
-    rs_output = ctx.actions.declare_file(crate_name + "_rust_api.rs")
-    namespaces_output = ctx.actions.declare_file(crate_name + "_namespaces.json")
+
+    # The generated files are named after the target, encoded reversibly: the crate name's escaping
+    # maps different targets (e.g. `foo-bar` and `foo_bar`) to the same name, and the raw target
+    # name can contain `/` (names derived from the files' basenames would collide) and characters
+    # that don't belong in paths or flags. The encoding leaves names of letters, digits and `_`
+    # unchanged.
+    file_stem = encode_raw_string_as_crate_name(ctx.label.name)
+    cc_output = ctx.actions.declare_file(file_stem + "_rust_api_impl.cc")
+    rs_output = ctx.actions.declare_file(file_stem + "_rust_api.rs")
+    namespaces_output = ctx.actions.declare_file(file_stem + "_namespaces.json")
     error_report_output = None
 
     verbose_log_flags = []
@@ -120,7 +130,7 @@ def generate_bindings(
         rs_bindings_from_cc_flags.append("--lazy_import_alien_decls")
 
     if ctx.attr._generate_error_report[BuildSettingInfo].value:
-        error_report_output = ctx.actions.declare_file(crate_name + "_rust_api_error_report.json")
+        error_report_output = ctx.actions.declare_file(file_stem + "_rust_api_error_report.json")
         rs_bindings_from_cc_flags += [
             "--error_report_out",
             error_report_output.path,
