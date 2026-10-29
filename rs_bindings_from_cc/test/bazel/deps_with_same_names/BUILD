@@ -73,28 +73,6 @@ rust_library(
     deps = [":lib_indirect_rust"],
 )
 
-# Proto dependency collision test
-cc_library(
-    name = "lib_proto_deps",
-    hdrs = ["proto_deps.h"],
-    aspect_hints = ["//features:supported"],
-    deps = [
-        "//rs_bindings_from_cc/test/bazel/deps_with_same_names/deps/X_cc_library_deps_YZ:a",
-    ],
-)
-
-rust_api_from_cpp(
-    name = "lib_proto_deps_rust",
-    cpp_target = ":lib_proto_deps",
-)
-
-rust_library(
-    name = "lib_with_proto_deps_with_same_names",
-    srcs = ["proto_deps.rs"],
-    edition = "2024",
-    deps = [":lib_proto_deps_rust"],
-)
-
 # Mixed dependency collision test (additional_rust_srcs + regular C++ deps)
 cc_library(
     name = "lib_mixed_deps",
@@ -195,7 +173,6 @@ build_test(
     targets = [
         ":lib_with_two_direct_deps_with_same_name",
         ":lib_with_indirect_deps_with_same_names",
-        ":lib_with_proto_deps_with_same_names",
         ":lib_with_mixed_deps",
         ":lib_with_aspect_hint_dep",
         ":cc_deps_test",

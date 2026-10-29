@@ -8,6 +8,7 @@ package(default_applicable_licenses = ["//:license"])
 
 crubit_test_cc_library(
     name = "extern_definition",
+    srcs = ["extern_definition.cc"],
     hdrs = ["extern_definition.h"],
     aspect_hints = ["//features:supported"],
     deps = ["//support:annotations"],

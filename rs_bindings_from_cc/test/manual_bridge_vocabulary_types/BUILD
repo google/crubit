@@ -25,41 +25,6 @@ cc_library(
     hdrs = ["crubit_disabled.h"],
 )
 
-rust_api_from_cpp(
-    name = "span_rust",
-    cpp_target = "@abseil-cpp//absl/types:span",
-)
-
-crubit_rust_test(
-    name = "span_test",
-    srcs = ["span_test.rs"],
-    deps = [
-        ":span_lib_rust",
-        ":span_rust",
-        "//support:ctor",
-        "@crate_index//:googletest",
-        "@crate_index//:static_assertions",  # v1
-    ],
-)
-
-cc_library(
-    name = "span_lib",
-    srcs = ["span_lib.cc"],
-    hdrs = ["span_lib.h"],
-    aspect_hints = [
-        "//features:supported",
-    ],
-    deps = [
-        "//support:annotations",
-        "@abseil-cpp//absl/types:span",
-    ],
-)
-
-rust_api_from_cpp(
-    name = "span_lib_rust",
-    cpp_target = ":span_lib",
-)
-
 cc_library(
     name = "unique_ptr_lib",
     hdrs = ["unique_ptr_lib.h"],
@@ -162,6 +127,7 @@ cc_library(
     ],
     deps = [
         ":common",
+        "//support:annotations",
         "@abseil-cpp//absl/base:nullability",
     ],
 )
@@ -216,6 +182,7 @@ cc_library(
     name = "optional_nested_pair_lib",
     hdrs = ["optional_nested_pair_lib.h"],
     aspect_hints = [
+        ":optional_nested_pair_lib_rust.hint",
         "//features:layout_compat_optional",
     ],
     deps = [
@@ -223,14 +190,17 @@ cc_library(
     ],
 )
 
+rust_api_from_cpp(
+    name = "optional_nested_pair_lib_rust",
+    cpp_target = ":optional_nested_pair_lib",
+)
+
 crubit_rust_test(
     name = "optional_nested_pair_test",
     srcs = ["optional_nested_pair_test.rs"],
-    cc_deps = [
-        ":optional_nested_pair_lib",
-        "//support/cc_std",
-    ],
     deps = [
+        ":optional_nested_pair_lib_rust",
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )

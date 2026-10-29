@@ -19,12 +19,20 @@
 #endif
 #define crubit_nonnull _Nonnull
 #define crubit_nullable _Nullable
+// clang-format off
+#define CRUBIT_POINTERS_DEFAULT_NONNULL                     \
+  _Pragma("clang diagnostic push")                          \
+  _Pragma("clang diagnostic ignored \"-Wunknown-pragmas\"") \
+  _Pragma("nullability file_default nonnull")               \
+  _Pragma("clang diagnostic pop")
+// clang-format on
 #else
 #define CRUBIT_TRIVIAL_ABI
 #define CRUBIT_VIEW
 #define CRUBIT_LIFETIME_BOUND
 #define crubit_nonnull
 #define crubit_nullable
+#define CRUBIT_POINTERS_DEFAULT_NONNULL
 #endif
 
 #if defined(_MSC_VER) && !defined(__clang__)

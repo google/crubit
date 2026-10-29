@@ -8,9 +8,6 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "empty",
     hdrs = ["empty.h"],
-    # With this option Clang doesn't produce a `.dwo` file with --fission; a wrapper script
-    # takes care of creating an empty `.dwo` file to satisfy Bazel's expectations.
-    copts = ["-g0"],
 )
 
 rust_api_from_cpp(
