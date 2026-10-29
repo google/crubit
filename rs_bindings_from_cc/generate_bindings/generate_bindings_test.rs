@@ -2513,3 +2513,108 @@ fn test_existing_rust_type_single_ident_matching_target_name_does_not_infer_hint
     expect_eq!("crate :: testing_target", fmt);
     Ok(())
 }
+
+#[gtest]
+fn test_c_array_globals_and_type_aliases() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+        using IntRow = int[4];
+        using PtrToArr = int (*)[4];
+        using RefToArr = int (&)[4];
+        extern int global_arr[4];
+        extern const int const_global_arr[4];
+        extern IntRow global_alias_arr;
+        extern int normal_global;
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    // Type aliases to supported C-style arrays generate a public Rust type alias.
+    // Type aliases to pointers or references to C-style arrays are not yet supported.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub type IntRow = [::ffi_11::c_int; 4];
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { pub type PtrToArr });
+    assert_rs_not_matches!(rs_api, quote! { pub type RefToArr });
+
+    // Global variables of C-style array type (direct or aliased) are not supported and are omitted,
+    // while normal globals are supported.
+    assert_rs_not_matches!(rs_api, quote! { static mut global_arr });
+    assert_rs_not_matches!(rs_api, quote! { static const_global_arr });
+    assert_rs_not_matches!(rs_api, quote! { static mut global_alias_arr });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub static mut normal_global: ::ffi_11::c_int;
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_c_array_template_args() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+        template <typename T>
+        struct Wrapper {
+            T val;
+            T* ptr;
+        };
+        void use_wrapper(Wrapper<int[4]> w);
+        void use_matrix_wrapper(Wrapper<int[2][4]> w);
+
+        namespace crubit::rust_type {
+        template <typename...>
+        struct Args {};
+        }
+
+        template <typename T>
+        struct [[clang::annotate("crubit_internal_rust_type", "RustContainer<{}>",
+                 crubit::rust_type::Args<T>())]] Container {};
+        void use_generic_container(Container<int[4]> c);
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+
+    // Concrete monomorphized C++ class templates receive monomorphized struct bindings: direct
+    // array fields (`T val`) get typed `[T; N]` bindings, while pointers to arrays (`T* ptr`)
+    // fall back to opaque byte blobs. Generic Rust container instantiations with C-style array
+    // type parameters are not supported and are omitted.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct __CcTemplateInst7WrapperIA4_iE {
+                pub val: [::ffi_11::c_int; 4],
+                ...
+                pub(crate) ptr: [::core::mem::MaybeUninit<u8>; ...],
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct __CcTemplateInst7WrapperIA2_A4_iE {
+                pub val: [[::ffi_11::c_int; 4]; 2],
+                ...
+                pub(crate) ptr: [::core::mem::MaybeUninit<u8>; ...],
+            }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            static_assert(CRUBIT_SIZEOF(struct Wrapper<int[2][4]>) == ...);
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { pub unsafe fn use_generic_container });
+    assert!(
+        rs_api.to_string().contains("uses C-style array type `int[4]`"),
+        "expected diagnostic mentioning C-style array type in generic container: {rs_api}"
+    );
+    Ok(())
+}

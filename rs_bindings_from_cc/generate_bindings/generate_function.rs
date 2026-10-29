@@ -1958,6 +1958,19 @@ fn rs_type_kinds_for_func<'a>(
                         requires_layout_compatible: false,
                     },
                 )
+                .and_then(|ty| {
+                    // Keep in sync with `func_has_bindings` in `has_bindings.rs`: function codegen
+                    // evaluates `rs_type_kind_with_lifetime_elision` directly before calling
+                    // `func_has_bindings`, so reject C-style arrays here before thunk generation.
+                    if let Some(c_array) = ty.contains_c_array() {
+                        bail!(
+                            "C-style array types are not supported in function signatures yet: \
+                            {} (b/575922365)",
+                            c_array.display_cc_type_name_for_rs_type(),
+                        );
+                    }
+                    Ok(ty)
+                })
                 .map_err(|err| {
                     // Use a shared aggregation fmt key for all "parameter not supported" errors.
                     let fail = |parameter| {
@@ -2002,6 +2015,16 @@ fn rs_type_kinds_for_func<'a>(
                     requires_layout_compatible: false,
                 },
             )
+            .and_then(|ty| {
+                if let Some(c_array) = ty.contains_c_array() {
+                    bail!(
+                        "C-style array types are not supported in function signatures yet: \
+                        {} (b/575922365)",
+                        c_array.display_cc_type_name_for_rs_type(),
+                    );
+                }
+                Ok(ty)
+            })
             .map_err(|err| {
                 error_report::because(anyhow!("Return type is not supported: {err}"), err)
             }),

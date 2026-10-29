@@ -825,6 +825,22 @@ macro_rules! define_typed_tokens_enum {
             )+
         }
 
+        impl $Type {
+            pub const fn as_str(&self) -> &'static str {
+                match self {
+                    $(
+                        Self::$Variant => stringify!($($cpp_spelling)+),
+                    )+
+                }
+            }
+        }
+
+        impl std::fmt::Display for $Type {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str(self.as_str())
+            }
+        }
+
         impl quote::ToTokens for $Type {
             fn to_tokens(&self, tokens: &mut TokenStream) {
                 match self {

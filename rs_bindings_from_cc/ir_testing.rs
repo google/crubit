@@ -74,6 +74,7 @@ static TESTING_FEATURES: LazyLock<flagset::FlagSet<crubit_feature::CrubitFeature
             | crubit_feature::CrubitFeature::TemplateInstantiation
             | crubit_feature::CrubitFeature::OoCasting
             | crubit_feature::CrubitFeature::ImplCxxExternType
+            | crubit_feature::CrubitFeature::ConstantArrays
     });
 
 /// Update the IR to have common test-only items.
@@ -296,6 +297,7 @@ mod tests {
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::OoCasting
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::ConstantArrays
         );
         Ok(())
     }
@@ -312,6 +314,7 @@ mod tests {
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::OoCasting
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::ConstantArrays
         );
         Ok(())
     }

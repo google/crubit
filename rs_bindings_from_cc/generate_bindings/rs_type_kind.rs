@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use arc_anyhow::{anyhow, ensure, Error, Result};
+use arc_anyhow::{anyhow, bail, ensure, Error, Result};
 use database::code_snippet::{NoBindingsReason, Visibility};
 use database::intern;
 use database::rs_snippet::{
@@ -63,6 +63,39 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
     );
     match ty.variant() {
         CcTypeVariant::Primitive(primitive) => Ok(RsTypeKind::Primitive(*primitive)),
+        CcTypeVariant::ConstantArray(array) => {
+            let mut element_type = db.rs_type_kind_with_lifetime_elision(
+                array.element_type().clone(),
+                LifetimeOptions { requires_layout_compatible: true, ..lifetime_options },
+            )?;
+            element_type.force_layout_compatible();
+            if let RsTypeKind::Error { error, .. } = element_type.unalias() {
+                return Err(error.clone());
+            }
+            // For now we only support fixed-size C arrays whose leaf element type is a
+            // non-void primitive or enum. There is also some pre-filtering in `importer.cc` but
+            // this provides a more localized check.
+            let mut curr = &element_type;
+            let has_supported_leaf_element = loop {
+                match curr.unalias() {
+                    RsTypeKind::CArray { element_type, .. } => {
+                        curr = element_type;
+                    }
+                    RsTypeKind::Primitive(p) => break *p != ir::Primitive::Void,
+                    RsTypeKind::Enum { .. } => break true,
+                    _ => break false,
+                }
+            };
+            ensure!(
+                has_supported_leaf_element,
+                "C-style array element type `{}` is not supported yet; only arrays of primitive or enum types are currently supported (b/575922365)",
+                element_type.display(db),
+            );
+            Ok(RsTypeKind::CArray {
+                element_type: Rc::new(element_type),
+                num_elements: array.num_elements(),
+            })
+        }
         CcTypeVariant::Pointer(pointer) => {
             // In Rust, we have no such concept of a "const" type. All types can be either
             // mutable or immutable depending on the context. However, we do have mutable and
@@ -89,6 +122,13 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                     ..LifetimeOptions::default()
                 },
             )?;
+            if let Some(c_array) = pointee.contains_c_array() {
+                bail!(
+                    "Pointers or references to C-style arrays are not yet supported: \
+                    {} (b/575922365)",
+                    c_array.display_cc_type_name_for_rs_type(),
+                );
+            }
 
             pointee.force_layout_compatible();
 
@@ -231,6 +271,17 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                     )
                 })
                 .collect::<Result<Rc<[_]>>>()?;
+            if let Some(c_array) = param_types
+                .iter()
+                .chain(Some(return_type.as_ref()))
+                .find_map(RsTypeKind::contains_c_array)
+            {
+                bail!(
+                    "C-style array types are not supported in function pointers yet: \
+                    {} (b/575922365)",
+                    c_array.display_cc_type_name_for_rs_type(),
+                );
+            }
             ensure!(
                 param_types
                     .iter()
@@ -356,9 +407,5 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
             );
             Err(e.into())
         }
-        CcTypeVariant::ConstantArray(_) => Err(error_report::anyhow!(
-            "Unsupported ConstantArray type: {} (b/575922365)",
-            db.cc_type_debug_name(&ty)
-        )),
     }
 }
