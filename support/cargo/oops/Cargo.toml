@@ -1,0 +1,18 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "oops"
+version = "0.1.0"
+description = "Inheritance support for Crubit bindings."
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+path = "../../oops.rs"
+
+[dev-dependencies]
+googletest.workspace = true
