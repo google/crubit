@@ -51,6 +51,15 @@ __rust_thunk___Z29AcceptCppTypeWithTemplateArgs23CppTypeWithTemplateArgsIifLb1EE
 static_assert((void (*)(CppTypeWithTemplateArgs<int, float, true>)) &
               ::AcceptCppTypeWithTemplateArgs);
 
+extern "C" void
+__rust_thunk___Z33AcceptCppTypeWithIntConstGenerics27CppTypeWithIntConstGenericsIiLm3ELin5EE(
+    CppTypeWithIntConstGenerics<int, 3, -5>* cpp_type) {
+  AcceptCppTypeWithIntConstGenerics(crubit::UnsafeTakeValue(cpp_type));
+}
+
+static_assert((void (*)(CppTypeWithIntConstGenerics<int, 3, -5>)) &
+              ::AcceptCppTypeWithIntConstGenerics);
+
 extern "C" void __rust_thunk___Z15AcceptReordered11ConvertPtrsIfiE(
     ConvertPtrs<float, int>* x) {
   AcceptReordered(crubit::UnsafeTakeValue(x));

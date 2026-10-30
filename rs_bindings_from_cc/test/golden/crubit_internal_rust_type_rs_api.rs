@@ -107,6 +107,19 @@ pub fn AcceptCppTypeWithTemplateArgs(
     }
 }
 
+// error: class `CppTypeWithIntConstGenerics` could not be bound
+//   Class templates are not yet supported
+
+#[inline(always)]
+pub fn AcceptCppTypeWithIntConstGenerics(
+    cpp_type: crate::RustTypeWithIntConstGenerics<::ffi_11::c_int, 3, -5>,
+) {
+    let mut cpp_type = ::core::mem::MaybeUninit::new(cpp_type);
+    unsafe {
+        crate::detail::__rust_thunk___Z33AcceptCppTypeWithIntConstGenerics27CppTypeWithIntConstGenericsIiLm3ELin5EE(cpp_type.as_mut_ptr())
+    }
+}
+
 // error: class `ConvertPtrs` could not be bound
 //   Class templates are not yet supported
 
@@ -217,6 +230,8 @@ pub fn ReturnContainerOfNonRustMovable(
 
 // Type bindings for CppTypeWithTemplateArgs<int, float, true> suppressed due to being mapped to an existing Rust type (crate::RustTypeWithReorderedGenerics<::ffi_11::c_int,f32,true>)
 
+// Type bindings for CppTypeWithIntConstGenerics<int, 3, -5> suppressed due to being mapped to an existing Rust type (crate::RustTypeWithIntConstGenerics<::ffi_11::c_int,3,-5>)
+
 // Type bindings for ConvertPtrs<float, int> suppressed due to being mapped to an existing Rust type (crate::RustTypeReordered<f32,::ffi_11::c_int>)
 
 // Type bindings for WithDefault<float> suppressed due to being mapped to an existing Rust type (crate::RustTypeWithDefault<f32,::ffi_11::c_int>)
@@ -239,6 +254,9 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___Z29AcceptCppTypeWithTemplateArgs23CppTypeWithTemplateArgsIifLb1EE(
             cpp_type: *mut crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z33AcceptCppTypeWithIntConstGenerics27CppTypeWithIntConstGenericsIiLm3ELin5EE(
+            cpp_type: *mut crate::RustTypeWithIntConstGenerics<::ffi_11::c_int, 3, -5>,
         );
         pub(crate) unsafe fn __rust_thunk___Z15AcceptReordered11ConvertPtrsIfiE(
             x: *mut crate::RustTypeReordered<f32, ::ffi_11::c_int>,
@@ -298,6 +316,12 @@ const _: () = {
     assert!(
         ::core::mem::align_of::<crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>>()
             == 8
+    );
+    assert!(
+        ::core::mem::size_of::<crate::RustTypeWithIntConstGenerics<::ffi_11::c_int, 3, -5>>() == 12
+    );
+    assert!(
+        ::core::mem::align_of::<crate::RustTypeWithIntConstGenerics<::ffi_11::c_int, 3, -5>>() == 4
     );
     assert!(::core::mem::size_of::<crate::RustTypeReordered<f32, ::ffi_11::c_int>>() == 1);
     assert!(::core::mem::align_of::<crate::RustTypeReordered<f32, ::ffi_11::c_int>>() == 1);

@@ -1671,7 +1671,15 @@ impl RsTypeKind {
                             Some(rs_type_kind),
                         ))
                     }
-                    TemplateArg::Int(i) => Ok((i.to_token_stream(), true, None)),
+                    TemplateArg::Int(i) => {
+                        let tokens = if *i < 0 {
+                            let abs = Literal::u64_unsuffixed(i.unsigned_abs());
+                            quote! { -#abs }
+                        } else {
+                            Literal::u64_unsuffixed(*i as u64).into_token_stream()
+                        };
+                        Ok((tokens, true, None))
+                    }
                     TemplateArg::Bool(b) => Ok((b.to_token_stream(), true, None)),
                 }
             })

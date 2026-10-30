@@ -1,5 +1,8 @@
 load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_rust_test",
+)
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -64,6 +67,28 @@ crubit_rust_test(
         ":types_nonptr_rust",
         "//support:cref",
         "//support/ffi_11",
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
+    name = "types_const_generic",
+    hdrs = ["types_const_generic.h"],
+    aspect_hints = [":types_const_generic_rust.hint"],
+    deps = ["//support:annotations_internal"],
+)
+
+rust_api_from_cpp(
+    name = "types_const_generic_rust",
+    srcs = ["types_const_generic_rust_types.rs"],
+    cpp_target = ":types_const_generic",
+)
+
+crubit_rust_test(
+    name = "types_const_generic_test",
+    srcs = ["types_const_generic_test.rs"],
+    deps = [
+        ":types_const_generic_rust",
         "@crate_index//:googletest",
     ],
 )
