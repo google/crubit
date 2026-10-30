@@ -2521,6 +2521,46 @@ fn test_existing_rust_type_single_ident_matching_target_name_does_not_infer_hint
 }
 
 #[gtest]
+fn test_existing_rust_type_const_generic_int_is_unsuffixed() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+            namespace crubit::rust_type {
+            template <typename...>
+            struct Args {};
+            template <auto>
+            struct Const {};
+            }  // namespace crubit::rust_type
+
+            template <typename T, unsigned long N, int Tag, long long MinVal>
+            struct [[clang::annotate(
+                "crubit_internal_rust_type",
+                "crate::RustConstGeneric<{}, {}, {}, {}>",
+                crubit::rust_type::Args<
+                    T, crubit::rust_type::Const<N>,
+                    crubit::rust_type::Const<Tag>,
+                    crubit::rust_type::Const<MinVal>>())]]
+            CppConstGeneric {
+              T elements[N];
+            };
+
+            void Func(
+                CppConstGeneric<int, 3, -5, -9223372036854775807LL - 1LL> x);
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn Func(
+                x: crate::RustConstGeneric<::ffi_11::c_int, 3, -5, -9223372036854775808>
+            )
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_c_array_globals_and_type_aliases() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"

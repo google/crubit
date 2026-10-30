@@ -84,6 +84,18 @@ CppTypeWithTemplateArgs final {
 void AcceptCppTypeWithTemplateArgs(
     CppTypeWithTemplateArgs<int, float, true> cpp_type);
 
+template <typename T, unsigned long N, int Tag>
+struct [[clang::annotate(
+    "crubit_internal_rust_type", "RustTypeWithIntConstGenerics<{}, {}, {}>",
+    crubit::rust_type::Args<T, crubit::rust_type::Const<N>,
+                            crubit::rust_type::Const<Tag>>())]]
+CppTypeWithIntConstGenerics final {
+  T elements[N];
+};
+
+void AcceptCppTypeWithIntConstGenerics(
+    CppTypeWithIntConstGenerics<int, 3, -5> cpp_type);
+
 template <typename T, typename U>
 struct [[clang::annotate("crubit_internal_rust_type",
                          "RustTypeReordered<{}, {}>",
