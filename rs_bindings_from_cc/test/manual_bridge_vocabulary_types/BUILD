@@ -186,7 +186,6 @@ cc_library(
     name = "optional_lib",
     hdrs = ["optional_lib.h"],
     aspect_hints = [
-        "//features:layout_compat_optional",
         "//features:layout_compat_tuple",
     ],
     deps = [
@@ -215,9 +214,7 @@ crubit_rust_test(
 cc_library(
     name = "optional_nested_pair_lib",
     hdrs = ["optional_nested_pair_lib.h"],
-    aspect_hints = [
-        "//features:layout_compat_optional",
-    ],
+    aspect_hints = ["//features:supported"],
     deps = [
         "//support:annotations",
     ],

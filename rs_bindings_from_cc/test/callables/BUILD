@@ -12,7 +12,6 @@ crubit_test_cc_library(
     srcs = ["calls_back_to_rust.cc"],
     hdrs = ["calls_back_to_rust.h"],
     aspect_hints = [
-        "//features:layout_compat_optional",
         "//features:supported",
     ],
     deps = [
