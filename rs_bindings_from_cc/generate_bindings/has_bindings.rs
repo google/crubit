@@ -181,7 +181,6 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindings
         });
     }
 
-    // TODO(b/392882224): Records might not generated if an error occurs in generation.
     match item {
         // Functions receive bindings based on their parameter and return types.
         Item::Func(func) => func_has_bindings(db, func),
