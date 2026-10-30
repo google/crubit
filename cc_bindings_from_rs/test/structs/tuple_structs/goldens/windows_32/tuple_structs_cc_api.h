@@ -67,8 +67,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: CopyNoDefault") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuple_structs_golden :: CopyNoDefault")
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -114,8 +113,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: DefaultNoCopyNoClone") alignas(4)
-    [[clang::trivial_abi]] DefaultNoCopyNoClone final {
+    ":: tuple_structs_golden :: DefaultNoCopyNoClone") [[clang::trivial_abi]]
+DefaultNoCopyNoClone final {
  public:
   ::std::int32_t value{};
 
@@ -192,8 +191,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructOnePublicArg") alignas(4)
-    [[clang::trivial_abi]] TupleStructOnePublicArg final {
+    ":: tuple_structs_golden :: TupleStructOnePublicArg") [[clang::trivial_abi]]
+TupleStructOnePublicArg final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructOnePublicArg create(::std::int32_t arg);
@@ -300,7 +299,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructTwoPublicArgs") alignas(4)
+    ":: tuple_structs_golden :: TupleStructTwoPublicArgs")
     [[clang::trivial_abi]] TupleStructTwoPublicArgs final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -416,11 +415,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct
-    CRUBIT_INTERNAL_RUST_TYPE(
-        ":: tuple_structs_golden :: "
-        "TupleStructWithDefaultAndCloneNoUnpin") alignas(4)
-        [[clang::trivial_abi]] TupleStructWithDefaultAndCloneNoUnpin final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: tuple_structs_golden :: TupleStructWithDefaultAndCloneNoUnpin")
+    [[clang::trivial_abi]] TupleStructWithDefaultAndCloneNoUnpin final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin create();
@@ -436,7 +433,7 @@ struct
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructWithDefaultNoCopyNoClone") alignas(4)
+    ":: tuple_structs_golden :: TupleStructWithDefaultNoCopyNoClone")
     [[clang::trivial_abi]] TupleStructWithDefaultNoCopyNoClone final {
  public:
   ::tuple_structs::DefaultNoCopyNoClone __field0{};
@@ -447,7 +444,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructWithNoDefault") alignas(4)
+    ":: tuple_structs_golden :: TupleStructWithNoDefault")
     [[clang::trivial_abi]] TupleStructWithNoDefault final {
  public:
   ::tuple_structs::CopyNoDefault __field0{};
@@ -580,7 +577,7 @@ namespace tuple_structs {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructWithTupleFieldType") alignas(4)
+    ":: tuple_structs_golden :: TupleStructWithTupleFieldType")
     [[clang::trivial_abi]] TupleStructWithTupleFieldType final {
  public:
   // CRUBIT_ANNOTATE: must_bind=

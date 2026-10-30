@@ -27,7 +27,7 @@
 
 namespace uses_reexport {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX")
     [[clang::trivial_abi]] InnerX final {
  public:
   ::std::int32_t field{};
@@ -107,7 +107,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Foo") alignas(4)
 
 namespace uses_reexport {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G")
     [[clang::trivial_abi]] G final {
  public:
   ::std::int32_t field{};

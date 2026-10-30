@@ -150,7 +150,7 @@ NonCppMovable final {
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: Point") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: Point")
     [[clang::trivial_abi]] Point final {
  public:
   bool operator==(::callables::Point const& other) const;

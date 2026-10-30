@@ -56,8 +56,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 //  1. Implements both Send and Sync.
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: send_sync_types_golden :: SendAndSync") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: send_sync_types_golden :: SendAndSync")
     [[clang::trivial_abi]] SendAndSync final {
  public:
   ::std::int32_t __field0{};

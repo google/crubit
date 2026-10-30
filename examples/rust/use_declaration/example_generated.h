@@ -23,7 +23,7 @@
 
 namespace example_crate {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type")
     [[clang::trivial_abi]] Type final {
  public:
   ::std::int32_t x{};
