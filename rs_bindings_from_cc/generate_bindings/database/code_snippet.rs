@@ -14,8 +14,8 @@ use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
 use heck::ToSnakeCase;
 use ir::{
-    BazelLabel, FfiRc, GenericItem, IntegerConstant, Item, ItemId, Namespace, RecordType,
-    TraitImplPolarity, UnqualifiedIdentifier,
+    BazelLabel, CcCallingConv, FfiRc, GenericItem, IntegerConstant, Item, ItemId, Namespace,
+    RecordType, TraitImplPolarity, UnqualifiedIdentifier,
 };
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
@@ -220,8 +220,23 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator<'_>, item: &Item) -> 
                     ));
                 }
                 if !have_feature(CrubitFeature::Experimental) {
-                    if !func.has_c_calling_convention() {
-                        missing_features.push(anyhow!("non-C calling convention"));
+                    // Rust calls functions with a non-C calling convention through a C++ thunk
+                    // with the C calling convention (see `can_skip_cc_thunk`), so the Rust side
+                    // never depends on the calling convention of the C++ function.  Still, enabling
+                    // new bindings risks breaking existing users, and therefore only the calling
+                    // conventions below are supported for now:
+                    //
+                    // * `C` - the default calling convention on most targets.
+                    // * `__thiscall` / `X86ThisCall` - the default calling convention of instance
+                    //   methods in the Microsoft C++ ABI on 32-bit x86 (see also b/579403230).
+                    //
+                    // Other calling conventions (e.g. an explicit `[[clang::vectorcall]]`) require
+                    // the `experimental` feature for now.
+                    if !matches!(
+                        func.call_conv(),
+                        Some(CcCallingConv::C | CcCallingConv::X86ThisCall)
+                    ) {
+                        missing_features.push(anyhow!("unsupported calling convention"));
                     }
                     if func.is_variadic() {
                         missing_features.push(anyhow!("variadic function"));
