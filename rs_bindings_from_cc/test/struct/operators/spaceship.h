@@ -74,4 +74,43 @@ struct SpaceshipReturningNotAnOrdering final {
   bool operator==(const SpaceshipReturningNotAnOrdering&) const = default;
 };
 
+// `operator<=>` and `operator==` with a right-hand side of a different record
+// type. Should generate `impl PartialOrd<OtherRecord>` and
+// `impl PartialEq<OtherRecord>` for `CompareWithOtherRecord`, but no `Eq` nor
+// `Ord`, which only describe comparisons with `Self`. The comparisons with the
+// operands reversed are declared separately below.
+struct OtherRecord final {
+  int i;
+};
+struct CompareWithOtherRecord final {
+  int i;
+
+  std::strong_ordering operator<=>(const OtherRecord& other) const {
+    return i <=> other.i;
+  }
+  bool operator==(const OtherRecord& other) const { return i == other.i; }
+};
+
+// The reversed operands, as free functions taking the records by value.
+// Deliberately inconsistent with the members above (off by one), so that the
+// test can tell which operator is called.
+inline std::strong_ordering operator<=>(OtherRecord lhs,
+                                        CompareWithOtherRecord rhs) {
+  return lhs.i <=> rhs.i + 1;
+}
+inline bool operator==(OtherRecord lhs, CompareWithOtherRecord rhs) {
+  return lhs.i == rhs.i + 1;
+}
+
+// `operator<=>` with a right-hand side of a different record type, but no
+// matching `operator==`. `PartialOrd<OtherRecord>` requires
+// `PartialEq<OtherRecord>`, so shouldn't generate either.
+struct SpaceshipWithoutEq final {
+  int i;
+
+  std::strong_ordering operator<=>(const OtherRecord& other) const {
+    return i <=> other.i;
+  }
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_SPACESHIP_H_

@@ -576,14 +576,13 @@ fn api_func_shape_for_operator_partial_ord(
         errors,
     );
     let ((_, lhs_record), (param, rhs_record)) = (lhs_ty?, rhs_ty?);
-    // Even though Rust and C++ allow relational operators to be implemented on different
-    // types, we don't generate bindings for them at this moment. The
-    // issue is that our canonical implementation of partial_cmp relies
-    // on transitivity. This would require checking that both lt(&T1,
-    // &T2) and lt(&T2, &T1) are implemented. In other words, both lt
-    // implementations would need to query for the existence of the other, which
-    // would create a cyclic dependency.
-    if lhs_record != rhs_record {
+    // `operator<=>` implements `partial_cmp` with a single call, so it can implement
+    // `PartialOrd<Rhs>` for any `Rhs`. The relational operators can't, at this moment: our
+    // implementation of `partial_cmp` for them calls the operator with the operands in both
+    // orders, which would require checking that both lt(&T1, &T2) and lt(&T2, &T1) are
+    // implemented. In other words, both lt implementations would need to query for the existence
+    // of the other, which would create a cyclic dependency.
+    if op != PartialOrdOp::Spaceship && lhs_record != rhs_record {
         bail_to_errors!(
             errors,
             "operator{op_name} where lhs and rhs are not the same type. This is not yet supported."
