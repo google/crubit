@@ -292,7 +292,7 @@ pub struct LifetimeOptions {
     ///
     /// Types which have a layout-compatible representation in addition to a bridged one use it
     /// when this is set, regardless of which features the target enables. A target enables the
-    /// corresponding feature (e.g. `layout_compat_optional`) to additionally use it in
+    /// corresponding feature (e.g. `layout_compat_tuple`) to additionally use it in
     /// positions where the type would otherwise be bridged.
     pub requires_layout_compatible: bool,
 }
@@ -1087,14 +1087,14 @@ impl BridgeRsTypeKind {
                 }
             }
             BridgeType::StdOptional(t) => {
-                // TODO(b/570673464, b/493911621): Eliminate composable bridging fallback once
-                // all inner types support layout-compatible template arguments; see
+                // TODO(b/570673464): Eliminate composable bridging fallback once all inner types
+                // support layout-compatible template arguments; see
                 // `bridge_type_args_if_not_layout_compatible`.
                 let Some([inner]) = Self::bridge_type_args_if_not_layout_compatible(
                     db,
                     record,
                     options,
-                    CrubitFeature::LayoutCompatOptional,
+                    /* layout_compat_feature= */ None,
                     [t.inner_type().clone()],
                 )?
                 else {
@@ -1106,14 +1106,14 @@ impl BridgeRsTypeKind {
                 // Prefer the arguments as written at the use site (which carry e.g. their
                 // nullability) over the specialization's.
                 let [t1, t2] = choose_types(&[p.first_type(), p.second_type()], template_args);
-                // TODO(b/570673464, b/493911621): Eliminate composable bridging fallback once
-                // all inner types support layout-compatible template arguments; see
+                // TODO(b/570673464): Eliminate composable bridging fallback once all inner types
+                // support layout-compatible template arguments; see
                 // `bridge_type_args_if_not_layout_compatible`.
                 let Some([inner1, inner2]) = Self::bridge_type_args_if_not_layout_compatible(
                     db,
                     record,
                     options,
-                    CrubitFeature::LayoutCompatTuple,
+                    Some(CrubitFeature::LayoutCompatTuple),
                     [t1.clone(), t2.clone()],
                 )?
                 else {
@@ -1197,7 +1197,8 @@ impl BridgeRsTypeKind {
 
     /// Resolves the template type arguments `type_args` for a vocabulary type (such as
     /// `std::optional<T>` or `std::pair<T1, T2>`) that has a layout-compatible Rust representation
-    /// gated by `layout_compat_feature`, or returns `Ok(None)` when the type should use its
+    /// gated by `layout_compat_feature` (or always enabled if `None`), or returns `Ok(None)` when
+    /// the type should use its
     /// layout-compatible representation instead of composable bridging.
     ///
     /// Returning `None` makes `BridgeRsTypeKind::new` return `Ok(None)`, so the caller falls back
@@ -1208,10 +1209,11 @@ impl BridgeRsTypeKind {
     ///
     /// This is unconditional in positions which cannot hold a bridged type
     /// (`options.requires_layout_compatible`), where the alternative is opaque padding bytes or no
-    /// bindings at all. The feature additionally replaces the composable bridging (to `Option<T>`
-    /// or `(T1, T2)`) which targets may already depend on, so it stays opt-in.
+    /// bindings at all. Elsewhere, an enabled feature replaces the composable bridging (to
+    /// `(T1, T2)`) which targets may already depend on. `std::optional<T>` has completed that
+    /// migration, so it no longer needs a feature.
     ///
-    /// TODO(b/570673464, b/493911621): Eliminate the `keeps_bridging` fallback once all bridged
+    /// TODO(b/570673464): Eliminate the `keeps_bridging` fallback once all bridged
     /// types can be used as layout-compatible template arguments. Today, a type argument `T` can
     /// only be a template argument if it is layout-compatible. If any type argument is a bridged
     /// type with no layout-compatible form (e.g. an owned protobuf message, or a `CRUBIT_BRIDGE`
@@ -1221,7 +1223,7 @@ impl BridgeRsTypeKind {
         db: &BindingsGenerator<'_>,
         record: &Record,
         options: &LifetimeOptions,
-        layout_compat_feature: CrubitFeature,
+        layout_compat_feature: Option<CrubitFeature>,
         type_args: [CcType; N],
     ) -> Result<Option<[RsTypeKind; N]>> {
         let inners = type_args.map(|t| db.rs_type_kind(t));
@@ -1235,8 +1237,10 @@ impl BridgeRsTypeKind {
         if options.requires_layout_compatible {
             return Ok(None);
         }
-        if db.ir().target_crubit_features(db.ir().current_target()).contains(layout_compat_feature)
-        {
+        let layout_compat_enabled = layout_compat_feature.is_none_or(|feature| {
+            db.ir().target_crubit_features(db.ir().current_target()).contains(feature)
+        });
+        if layout_compat_enabled {
             let keeps_bridging = inners.iter().any(|inner| {
                 inner.as_ref().is_ok_and(|inner| {
                     let mut layout_compatible_inner = inner.clone();

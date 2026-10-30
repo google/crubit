@@ -42,7 +42,6 @@ crubit_test_cc_library(
     srcs = ["uses_anyinvocable.cc"],
     hdrs = ["uses_anyinvocable.h"],
     aspect_hints = [
-        "//features:layout_compat_optional",
         # Required to support incomplete types.
         "//features:forward_declare",
     ],

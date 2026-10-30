@@ -4313,7 +4313,7 @@ fn test_function_with_unsafe_template_param_std_optional() -> Result<()> {
         quote! {
             #[inline(always)]
             pub unsafe fn AcceptOptionalOfPointers(
-                opt: ::core::option::Option<*const ::ffi_11::c_int>
+                opt: ::cc_std::std::trivial_optional::<*const ::ffi_11::c_int>
             ) {
                 ...
             }

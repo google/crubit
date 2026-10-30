@@ -11,11 +11,10 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 
-// Note: This target does NOT enable `layout_compat_string` or
-// `layout_compat_optional`. `absl::StatusOr<std::string>`,
-// `absl::StatusOr<std::optional<int>>`, etc. should still automatically use
-// layout-compatible representations because `StatusOr` is a layout-compatible
-// generic.
+// Note: This target does NOT enable `layout_compat_string`.
+// `absl::StatusOr<std::string>`, `absl::StatusOr<std::optional<int>>`, etc.
+// should still automatically use layout-compatible representations because
+// `StatusOr` is a layout-compatible generic.
 inline absl::StatusOr<std::string> MakeStringOrError(bool is_ok) {
   if (is_ok) return std::string("hello");
   return absl::InvalidArgumentError("requested an error");

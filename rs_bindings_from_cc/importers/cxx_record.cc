@@ -1957,8 +1957,8 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
   };
 
   // Both `BridgeType::StdOptional` and `TemplateSpecialization::StdOptional`
-  // are recorded for `std::optional`; the bindings generator picks between them
-  // depending on whether the `layout_compat_optional` feature is enabled.
+  // are recorded for `std::optional`; the bindings generator uses the latter
+  // unless the inner type has no layout-compatible form (b/570673464).
   if (name == "optional") {
     BridgeType result;
     *result.mutable_std_optional()->mutable_inner_type() = cc_type_of_arg(0);

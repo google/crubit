@@ -14,8 +14,8 @@
 #include "absl/base/nullability.h"
 #include "support/annotations.h"
 
-// With the `layout_compat_optional` feature, `std::optional<T>` is
-// `cc_std::std::optional<T>` everywhere, including by value.
+// `std::optional<T>` is `cc_std::std::optional<T>` everywhere, including by
+// value.
 CRUBIT_MUST_BIND
 inline std::optional<int> MakeOptional(int value) { return value; }
 CRUBIT_MUST_BIND
