@@ -633,9 +633,14 @@ let x = T { field: y };
 
 <section class="multicol">
 
+<!-- mdformat-off -->
+
 <section style="background-color: #efefef">
 
-N/A: C++ doesn't have tuple-structs. </section>
+N/A: C++ doesn't have tuple-structs.
+
+</section>
+<!-- mdformat-on -->
 
 <section>
 
@@ -658,9 +663,14 @@ struct T2(U);
 
 <section class="multicol">
 
+<!-- mdformat-off -->
+
 <section style="background-color: #efefef">
 
-N/A: C++ doesn't have tuple-structs. </section>
+N/A: C++ doesn't have tuple-structs.
+
+</section>
+<!-- mdformat-on -->
 
 <section>
 

@@ -22,3 +22,6 @@ libraries](../rust/index.md#examine).
     contents.
 *   [The `Delete` trait](delete.md): using `virtual_unique_ptr<T>` with a type
     that has neither a virtual destructor nor a custom `operator delete`.
+*   [Visibility errors](visibility.md): using a type whose bindings are
+    restricted to `pub(crate)` visibility in `:wrapper` mode outside its
+    defining library.

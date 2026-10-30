@@ -6,7 +6,7 @@ traits from the Rust standard library (e.g., the `Clone` or `PartialEq` traits).
 
 Rust traits which return `Self` by value (e.g., `Default` or `Clone`) or use
 mutable references (e.g., `AddAssign`) are only implemented in Rust bindings for
-a given C++ type if that type is [is `Unpin`](../../unpin.md).
+a given C++ type if that type [is `Unpin`](../design/unpin.md).
 
 ## Bidirectional map
 
@@ -25,7 +25,7 @@ The following special member functions and traits are mapped bidirectionally:
 
 ## One-way map of C++ special member functions into Rust traits
 
-If the C++ type [is `Unpin`](../../unpin.md), then the C++ special member
+If the C++ type [is `Unpin`](../design/unpin.md), then the C++ special member
 functions below are mapped one-way into the corresponding Rust traits as
 follows:
 

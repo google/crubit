@@ -1,9 +1,10 @@
 # Summary
 
-<!-- mdformat-off -->
-
 [Home](./index.md)
-[Supported Features](./overview/status.md) <!-- mdformat-on -->
+
+[Supported Features](./overview/status.md)
+
+[Mascot](./mascot.md)
 
 # Types
 
@@ -14,11 +15,15 @@
 -   [`absl::Status`](./types/absl_status.md)
 -   [Box (`Box<T>`, `Pin<Box<T>>`, `Box<[T]>`, `Box<str>`)](./types/box.md)
 -   [Protobuf](./types/protobuf.md)
+-   [Non-Rust-Movable Types](./types/non_rust_movable/intro_short.md)
+    -   [Advanced Introduction](./types/non_rust_movable/intro_advanced.md)
+    -   [Cheat Sheet](./types/non_rust_movable/cheat_sheet.md)
 
 # C++ Bindings for Rust Libraries
 
 -   [Overview](./rust/index.md)
 -   [Building](./rust/building.md)
+-   [Customizing](./rust/customizing.md)
 -   [Functions](./rust/functions.md)
 -   [Callbacks (`Fn`, `FnMut`, `FnOnce`)](./rust/callbacks.md)
 -   [Structs](./rust/structs.md)
@@ -28,6 +33,7 @@
 -   [Type Aliases](./rust/type_aliases.md)
 -   [`use` Declarations](./rust/use_declarations.md)
 -   [Standard Library Types](./rust/std.md)
+-   [`MaybeUninit`](./rust/maybe_uninit.md)
 
 --------------------------------------------------------------------------------
 
@@ -44,6 +50,7 @@
 --------------------------------------------------------------------------------
 
 -   [Functions](./cpp/functions.md)
+    -   [Operator Overloading](./cpp/operator_overloading.md)
 -   [Callbacks (`absl::AnyInvocable`)](./cpp/callbacks.md)
 -   [Classes and Structs](./cpp/classes_and_structs.md)
 -   [Static Data Members](./cpp/static_data_members.md)
@@ -65,6 +72,7 @@
 
 # Integration notes
 
+-   [Overview](./overview/overview.md)
 -   [Build System Integrations](./overview/build_systems.md)
     -   [Bazel](./overview/bazel.md)
     -   [CMake](./overview/cmake.md)
@@ -72,6 +80,10 @@
     -   [Protobuf in the Cargo build](./overview/cargo_build_protobuf.md)
 -   [Required unstable features of Rust](./overview/unstable_features.md)
 -   [Memory Safety](./overview/safety.md)
+-   [Reference Safety](./overview/reference_safety.md)
+-   [Panics and Exceptions](./overview/panics_and_exceptions.md)
+-   [ABI Assumptions for Built-in Rust Types](./overview/rust_builtin_type_abi_assumptions.md)
+-   [Debugging](./overview/debugging.md)
 
 # Future Functionality
 
@@ -86,3 +98,4 @@
 -   [Thunks for class template member functions](./design/thunks_for_class_template_member_functions.md)
 -   [`Unpin` for C++ Types](./design/unpin.md)
 -   [Problem Description: forward-declared types](./design/forward_declarations.md)
+-   [Pre-RFC: Allow stride != size](./design/pre_rfc_separate_size_stride.md)

@@ -36,7 +36,6 @@
     *   [References and Lifetimes](/docs/cpp/references_and_lifetimes.md)
     *   [Enums](/docs/cpp/enums.md)
     *   [Inline C++](/docs/cpp/inline_cpp.md)
-    *   [Carcinize](/docs/cpp/carcinize.md)
     *   <hr>
     *   [The C++ Standard Library](/docs/cpp/std.md)
 
