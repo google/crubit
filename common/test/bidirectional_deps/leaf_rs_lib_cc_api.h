@@ -17,7 +17,6 @@
 #pragma clang diagnostic ignored "-Wshadow"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
-#include "support/rs_std/enum.h"
 
 #include <array>
 #include <cstddef>
@@ -34,6 +33,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   // `leaf_rs_lib_golden::LeafRsEnum` doesn't implement the `Default` trait
   LeafRsEnum() = delete;
 
+  static constexpr LeafRsEnum MakeKUnknown();
+
+  static constexpr LeafRsEnum MakeKValue1();
+
+  static constexpr LeafRsEnum MakeKValue2();
+
+  static constexpr LeafRsEnum MakeKValue3();
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~LeafRsEnum() = default;
   LeafRsEnum(LeafRsEnum&&) = default;
@@ -45,96 +52,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   LeafRsEnum& operator=(const LeafRsEnum&) = default;
   LeafRsEnum(::crubit::UnsafeRelocateTag, LeafRsEnum&& value);
 
- public:
-  using Discriminant = ::std::uint8_t;
-
-  struct KUnknown
-      : public ::crubit::internal::Variant<KUnknown, ::leaf_rs_lib::LeafRsEnum,
-                                           0> {
-   public:
-    constexpr explicit KUnknown(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    KUnknown(const KUnknown&) = default;
-    KUnknown(KUnknown&&) = default;
-    KUnknown& operator=(const KUnknown&) = default;
-    KUnknown& operator=(KUnknown&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 0;
-  };
-
-  struct KValue1
-      : public ::crubit::internal::Variant<KValue1, ::leaf_rs_lib::LeafRsEnum,
-                                           1> {
-   public:
-    constexpr explicit KValue1(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    KValue1(const KValue1&) = default;
-    KValue1(KValue1&&) = default;
-    KValue1& operator=(const KValue1&) = default;
-    KValue1& operator=(KValue1&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 1;
-  };
-
-  struct KValue2
-      : public ::crubit::internal::Variant<KValue2, ::leaf_rs_lib::LeafRsEnum,
-                                           2> {
-   public:
-    constexpr explicit KValue2(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    KValue2(const KValue2&) = default;
-    KValue2(KValue2&&) = default;
-    KValue2& operator=(const KValue2&) = default;
-    KValue2& operator=(KValue2&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 2;
-  };
-
-  struct KValue3
-      : public ::crubit::internal::Variant<KValue3, ::leaf_rs_lib::LeafRsEnum,
-                                           3> {
-   public:
-    constexpr explicit KValue3(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    KValue3(const KValue3&) = default;
-    KValue3(KValue3&&) = default;
-    KValue3& operator=(const KValue3&) = default;
-    KValue3& operator=(KValue3&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 3;
-  };
-
-  // Constructs the enum holding the variant `__Variant`, built in place from
-  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
-  template <typename __Variant, typename... __Args>
-    requires ::crubit::internal::ConstructibleVariantOf<
-        __Variant, ::leaf_rs_lib::LeafRsEnum, __Args...>
-  constexpr explicit LeafRsEnum(::std::in_place_type_t<__Variant> __variant,
-                                __Args&&... __args)
-      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
 
  private:
-  friend struct ::crubit::internal::EnumAccess;
-  ::crubit::internal::VariadicUnionStorage<
-      ::crubit::internal::tag_encoding::Direct<::std::uint8_t, 0>, KUnknown,
-      KValue1, KValue2, KValue3>
-      storage_;
+  struct PrivateBytesTag {};
+  constexpr LeafRsEnum(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
@@ -176,6 +105,30 @@ static_assert(
 static_assert(
     alignof(::leaf_rs_lib::LeafRsEnum) == 1,
     "Verify that ADT layout didn't change since this header got generated");
+
+// `static` constructor
+inline constexpr ::leaf_rs_lib::LeafRsEnum(
+    ::leaf_rs_lib::LeafRsEnum::MakeKUnknown)() {
+  return LeafRsEnum(PrivateBytesTag{}, {0});
+}
+
+// `static` constructor
+inline constexpr ::leaf_rs_lib::LeafRsEnum(
+    ::leaf_rs_lib::LeafRsEnum::MakeKValue1)() {
+  return LeafRsEnum(PrivateBytesTag{}, {1});
+}
+
+// `static` constructor
+inline constexpr ::leaf_rs_lib::LeafRsEnum(
+    ::leaf_rs_lib::LeafRsEnum::MakeKValue2)() {
+  return LeafRsEnum(PrivateBytesTag{}, {2});
+}
+
+// `static` constructor
+inline constexpr ::leaf_rs_lib::LeafRsEnum(
+    ::leaf_rs_lib::LeafRsEnum::MakeKValue3)() {
+  return LeafRsEnum(PrivateBytesTag{}, {3});
+}
 static_assert(::std::is_trivially_destructible_v<::leaf_rs_lib::LeafRsEnum>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsEnum>);
@@ -187,7 +140,12 @@ inline ::leaf_rs_lib::LeafRsEnum::LeafRsEnum(::crubit::UnsafeRelocateTag,
                                              LeafRsEnum&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-
+inline void ::leaf_rs_lib::LeafRsEnum::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::leaf_rs_lib::LeafRsEnum;
+    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+  }
+}
 using LeafRsTypeAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: leaf_rs_lib_golden :: LeafRsType") = ::leaf_rs_lib::LeafRsType;
 static_assert(
