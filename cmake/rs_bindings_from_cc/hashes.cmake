@@ -5,6 +5,9 @@
 # The SHA-256 hashes of the files this project downloads, and a function to
 # look them up. Pinning the hashes means a download can't silently change: if
 # a file doesn't match, the build stops.
+#
+# It also pins the commit date of each LLVM release this project knows. When
+# you update CRUBIT_LLVM_VERSION, you must update both.
 
 # SHA-256 hashes of the archives this project downloads by default. LLVM's are
 # the digests GitHub publishes for the release assets.
@@ -18,6 +21,11 @@ set(_crubit_sha256_abseil-cpp-20260526.0.tar.gz
   6e1aee535473414164bf83e4ebc40240dec71a4701f8a642d906e95bea1aea0c)
 set(_crubit_sha256_protobuf-36.1.tar.gz
   7a7baff8207a57f3fe5c233d432a09eba67bdfb55a3145839d0817cae8e807a4)
+
+# The date (YYYYMMDD) that each LLVM major version's release branch was
+# created, which is when its code last matched LLVM's main branch. Releases
+# from that branch (X.1.0 and later) use it as CRUBIT_LLVM_DEV_DATE.
+set(_crubit_llvm_branch_date_23 20260714)
 
 # _crubit_url_hash(<out_var> <file_name>)
 #

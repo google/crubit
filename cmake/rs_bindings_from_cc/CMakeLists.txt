@@ -35,7 +35,7 @@
 # cargo build --release -p rs_bindings_from_cc
 # ```
 
-cmake_minimum_required(VERSION 3.24...3.31)
+cmake_minimum_required(VERSION 3.22...3.31)
 
 project(crubit_rs_bindings_from_cc LANGUAGES C CXX)
 

@@ -104,7 +104,6 @@ function(_crubit_download_llvm out_root)
   FetchContent_Declare(crubit_llvm
     URL "${url}"
     ${hash}
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
   )
   FetchContent_MakeAvailable(crubit_llvm)
   set(${out_root} "${crubit_llvm_SOURCE_DIR}" PARENT_SCOPE)
@@ -114,17 +113,35 @@ endfunction()
 #
 # Sets <out_date> to the date (YYYYMMDD) of the LLVM commit that Crubit is
 # built against. Crubit's C++ code uses it to handle differences between LLVM
-# versions. It's CRUBIT_LLVM_DEV_DATE if that's set, otherwise the date that
-# the release branch of <llvm_version> was created.
+# versions. It's CRUBIT_LLVM_DEV_DATE if that's set. Otherwise, if
+# <llvm_version> is from a release branch that hashes.cmake knows, it's the
+# date that branch was created. Otherwise it stops with an error.
+#
+# LLVM's main branch has versions X.0.0, and its release branches have X.1.0
+# and later. So an X.0.0 LLVM is a snapshot of main from some unknown date,
+# even when the X release branch's date is known.
 function(_crubit_llvm_dev_date out_date llvm_version)
   if(CRUBIT_LLVM_DEV_DATE)
     set(date "${CRUBIT_LLVM_DEV_DATE}")
-  elseif(llvm_version MATCHES "^23\\.")
-    set(date "20260714")
   else()
-    message(FATAL_ERROR
-      "Don't know the LLVM commit date for LLVM ${llvm_version}. Set CRUBIT_LLVM_DEV_DATE=YYYYMMDD "
-      "(see cargo/build/get_llvm_commit_date.py).")
+    if(NOT llvm_version MATCHES "^([0-9]+)\\.([0-9]+)\\.")
+      message(FATAL_ERROR "Can't parse the LLVM version '${llvm_version}'.")
+    endif()
+    set(major "${CMAKE_MATCH_1}")
+    set(minor "${CMAKE_MATCH_2}")
+    if(minor EQUAL 0)
+      message(FATAL_ERROR
+        "LLVM ${llvm_version} is a snapshot of LLVM's main branch, so its "
+        "commit date isn't known. Set CRUBIT_LLVM_DEV_DATE=YYYYMMDD (see "
+        "cargo/build/get_llvm_commit_date.py).")
+    endif()
+    if(NOT DEFINED _crubit_llvm_branch_date_${major})
+      message(FATAL_ERROR
+        "Don't know the LLVM commit date for LLVM ${llvm_version}. Set "
+        "CRUBIT_LLVM_DEV_DATE=YYYYMMDD (see "
+        "cargo/build/get_llvm_commit_date.py).")
+    endif()
+    set(date "${_crubit_llvm_branch_date_${major}}")
   endif()
   message(STATUS "Using CRUBIT_LLVM_DEV_DATE=${date}")
   set(${out_date} "${date}" PARENT_SCOPE)

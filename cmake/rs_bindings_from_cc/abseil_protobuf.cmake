@@ -149,7 +149,6 @@ function(_crubit_build_abseil_protobuf)
   ExternalProject_Add(crubit_absl
     URL "https://github.com/abseil/abseil-cpp/archive/refs/tags/${CRUBIT_ABSL_VERSION}.tar.gz"
     ${absl_hash}
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     PREFIX "${deps_dir}/absl-build"
     INSTALL_DIR "${absl_prefix}"
     CMAKE_ARGS
@@ -166,7 +165,6 @@ function(_crubit_build_abseil_protobuf)
   ExternalProject_Add(crubit_protobuf
     URL "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v${CRUBIT_PROTOBUF_VERSION}.tar.gz"
     ${protobuf_hash}
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     PREFIX "${deps_dir}/protobuf-build"
     INSTALL_DIR "${protobuf_prefix}"
     DEPENDS crubit_absl

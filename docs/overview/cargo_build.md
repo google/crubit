@@ -218,7 +218,7 @@ Every download is checked against a pinned SHA-256 hash. If you change
 `CRUBIT_LLVM_VERSION` or `CRUBIT_LLVM_URL`, set `CRUBIT_LLVM_URL_HASH` too;
 otherwise the build warns that the download isn't verified.
 
-You need CMake 3.24 or later, Ninja, a C++20 compiler, and `rustup`. On Linux and
+You need CMake 3.22 or later, Ninja, a C++20 compiler, and `rustup`. On Linux and
 macOS, run from the root of the checkout:
 
 ```sh
@@ -242,7 +242,8 @@ Useful cache variables:
 *   `CRUBIT_LLVM_URL` and `CRUBIT_LLVM_URL_HASH`: a different LLVM archive to
     download, and its hash as `SHA256=<hex>`.
 *   `CRUBIT_LLVM_DEV_DATE`: the date (`YYYYMMDD`) of the LLVM commit. It is
-    detected for LLVM 23 releases; set it for any other LLVM.
+    detected for LLVM 23 releases (23.1.0 and later); set it for any other
+    LLVM, including builds of LLVM's main branch.
 *   `CRUBIT_FIND_DEPENDENCIES`: whether to look for installed Abseil and
     Protobuf packages (default `ON`). Set it to `OFF` to always build them.
 *   `CRUBIT_CARGO_PROFILE`: the Cargo profile to build with (default
