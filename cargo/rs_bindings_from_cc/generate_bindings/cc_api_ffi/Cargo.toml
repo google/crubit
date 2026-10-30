@@ -19,6 +19,4 @@ doctest = false
 
 [dependencies]
 cc_api = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/cc_api", package = "rs_bindings_from_cc_cc_api"}
-generate_bindings_rust_proto = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings_rust_proto", package = "rs_bindings_from_cc_generate_bindings_rust_proto"}
-ffi_types = { path = "../../../../cargo/common/ffi_types"}
-protobuf.workspace = true
+ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}

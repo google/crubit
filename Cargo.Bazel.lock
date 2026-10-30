@@ -1,5 +1,5 @@
 {
-  "checksum": "f32e938c2dde033514fb0b24cded6e30653859a73cabe501f971b475ad33c34d",
+  "checksum": "f6f30a3fa95b06f8d3631c2875f183ef9fc23509835c092d5c5d68ca1333c63c",
   "crates": {
     "aho-corasick 1.1.5": {
       "name": "aho-corasick",
@@ -4381,104 +4381,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "google-protobuf 0.36.1-release": {
-      "name": "google-protobuf",
-      "version": "0.36.1-release",
-      "package_url": null,
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/google-protobuf/0.36.1-release/download",
-          "sha256": "4c1b1799baa729b23385d7b48428279c3ecbd1222083e872a507ffb794631932"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "google_protobuf",
-            "crate_root": "src/shared.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "google_protobuf",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "google-protobuf 0.36.1-release",
-              "target": "build_script_build"
-            },
-            {
-              "id": "linkme 0.3.37",
-              "target": "linkme"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "paste-complete 1.0.15",
-              "target": "paste_complete",
-              "alias": "paste"
-            },
-            {
-              "id": "protobuf-macros 0.36.1-release",
-              "target": "protobuf_macros"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.36.1-release"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "cc 1.4.4",
-              "target": "cc"
-            }
-          ],
-          "selects": {}
-        },
-        "links": "upb"
-      },
-      "license": "BSD-3-Clause",
-      "license_ids": [
-        "BSD-3-Clause"
-      ],
-      "license_file": "LICENSE"
-    },
     "googletest 0.14.3": {
       "name": "googletest",
       "version": "0.14.3",
@@ -5281,169 +5183,6 @@
       "license_ids": [],
       "license_file": "../../../LICENSE"
     },
-    "linkme 0.3.37": {
-      "name": "linkme",
-      "version": "0.3.37",
-      "package_url": "https://github.com/dtolnay/linkme",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/linkme/0.3.37/download",
-          "sha256": "3045e122bd98aef8ec3ad58ce84f0791f64e70163d1a02710af4aa11a4d54cc5"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "linkme",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "linkme",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "linkme 0.3.37",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "linkme-impl 0.3.37",
-              "target": "linkme_impl"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.3.37"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "linkme-impl 0.3.37": {
-      "name": "linkme-impl",
-      "version": "0.3.37",
-      "package_url": "https://github.com/dtolnay/linkme",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/linkme-impl/0.3.37/download",
-          "sha256": "77060ebe535362c3da75682cd17b0431017b6e7c5661e714fc69a7ad017d1301"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "linkme_impl",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "linkme_impl",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "linkme-impl 0.3.37",
-              "target": "build_script_build"
-            },
-            {
-              "id": "proc-macro2 1.0.107",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.47",
-              "target": "quote"
-            },
-            {
-              "id": "syn 3.0.4",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.3.37"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "linux-raw-sys 0.12.1": {
       "name": "linux-raw-sys",
       "version": "0.12.1",
@@ -5990,77 +5729,6 @@
       ],
       "license_file": "LICENSE"
     },
-    "paste-complete 1.0.15": {
-      "name": "paste-complete",
-      "version": "1.0.15",
-      "package_url": "https://github.com/esrauch/paste",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/paste-complete/1.0.15/download",
-          "sha256": "3a4cf96a295ab7f0ec2334fa557745c0e9526595f6ebabbb129563a98dfc1b2a"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "paste_complete",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "paste_complete",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "paste-complete 1.0.15",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "1.0.15"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "phf 0.11.3": {
       "name": "phf",
       "version": "0.11.3",
@@ -6539,142 +6207,6 @@
         "MIT"
       ],
       "license_file": "LICENSE-APACHE"
-    },
-    "protobuf 4.36.1-release": {
-      "name": "protobuf",
-      "version": "4.36.1-release",
-      "package_url": null,
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/protobuf/4.36.1-release/download",
-          "sha256": "ee794de60d9736458ad4316aee4339f0761b87a7b6b10b2ac6d4c99b1c8af0ff"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "protobuf",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "protobuf",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "google-protobuf 0.36.1-release",
-              "target": "google_protobuf"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "4.36.1-release"
-      },
-      "license": "BSD-3-Clause",
-      "license_ids": [
-        "BSD-3-Clause"
-      ],
-      "license_file": "LICENSE"
-    },
-    "protobuf-codegen 4.36.1-release": {
-      "name": "protobuf-codegen",
-      "version": "4.36.1-release",
-      "package_url": null,
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/protobuf-codegen/4.36.1-release/download",
-          "sha256": "ea064ac566d3f94e5017da436d8c47d6afb8101febf62194055171b6ed4b5577"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "protobuf_codegen",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "protobuf_codegen",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2021",
-        "version": "4.36.1-release"
-      },
-      "license": "BSD-3-Clause",
-      "license_ids": [
-        "BSD-3-Clause"
-      ],
-      "license_file": "LICENSE"
-    },
-    "protobuf-macros 0.36.1-release": {
-      "name": "protobuf-macros",
-      "version": "0.36.1-release",
-      "package_url": null,
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/protobuf-macros/0.36.1-release/download",
-          "sha256": "16a4745e7f0a32c238439105b43ad064d6dbda6ed4d9f7f0c7957e573f10eb40"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "protobuf_macros",
-            "crate_root": "src/proto_proc_macro_impl.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "protobuf_macros",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "quote 1.0.47",
-              "target": "quote"
-            },
-            {
-              "id": "syn 2.0.119",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.36.1-release"
-      },
-      "license": "BSD-3-Clause",
-      "license_ids": [
-        "BSD-3-Clause"
-      ],
-      "license_file": "LICENSE"
     },
     "quote 1.0.47": {
       "name": "quote",
@@ -7448,15 +6980,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "deps": {
-          "common": [
-            {
-              "id": "protobuf 4.36.1-release",
-              "target": "protobuf"
-            }
-          ],
-          "selects": {}
-        },
         "edition": "2024",
         "version": "0.0.0"
       },
@@ -7488,15 +7011,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "deps": {
-          "common": [
-            {
-              "id": "protobuf 4.36.1-release",
-              "target": "protobuf"
-            }
-          ],
-          "selects": {}
-        },
         "edition": "2024",
         "version": "0.0.0"
       },
@@ -8040,6 +7554,15 @@
             {
               "id": "syn 2.0.119",
               "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "googletest 0.14.3",
+              "target": "googletest"
             }
           ],
           "selects": {}
@@ -8632,145 +8155,6 @@
       "license_ids": [],
       "license_file": "../../../LICENSE"
     },
-    "rs_bindings_from_cc_generate_bindings_cc_proto_sys 0.0.0": {
-      "name": "rs_bindings_from_cc_generate_bindings_cc_proto_sys",
-      "version": "0.0.0",
-      "package_url": "https://github.com/google/crubit",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rs_bindings_from_cc_generate_bindings_cc_proto_sys",
-            "crate_root": "lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "rs_bindings_from_cc_generate_bindings_cc_proto_sys",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "rs_bindings_from_cc_generate_bindings_cc_proto_sys 0.0.0",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2024",
-        "version": "0.0.0"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": null,
-      "license_ids": [],
-      "license_file": "../../../../LICENSE"
-    },
-    "rs_bindings_from_cc_generate_bindings_rust_proto 0.0.0": {
-      "name": "rs_bindings_from_cc_generate_bindings_rust_proto",
-      "version": "0.0.0",
-      "package_url": "https://github.com/google/crubit",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rs_bindings_from_cc_generate_bindings_rust_proto",
-            "crate_root": "lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "rs_bindings_from_cc_generate_bindings_rust_proto",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "protobuf 4.36.1-release",
-              "target": "protobuf"
-            },
-            {
-              "id": "rs_bindings_from_cc_generate_bindings_rust_proto 0.0.0",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2024",
-        "version": "0.0.0"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "protobuf-codegen 4.36.1-release",
-              "target": "protobuf_codegen"
-            }
-          ],
-          "selects": {}
-        }
-      },
-      "license": null,
-      "license_ids": [],
-      "license_file": "../../../../LICENSE"
-    },
     "rs_bindings_from_cc_generate_comment 0.0.0": {
       "name": "rs_bindings_from_cc_generate_comment",
       "version": "0.0.0",
@@ -9296,10 +8680,6 @@
               "target": "proc_macro2"
             },
             {
-              "id": "protobuf 4.36.1-release",
-              "target": "protobuf"
-            },
-            {
               "id": "quote 1.0.47",
               "target": "quote"
             },
@@ -9321,69 +8701,6 @@
         },
         "edition": "2024",
         "version": "0.0.0"
-      },
-      "license": null,
-      "license_ids": [],
-      "license_file": "../../../LICENSE"
-    },
-    "rs_bindings_from_cc_ir_cc_proto_sys 0.0.0": {
-      "name": "rs_bindings_from_cc_ir_cc_proto_sys",
-      "version": "0.0.0",
-      "package_url": "https://github.com/google/crubit",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rs_bindings_from_cc_ir_cc_proto_sys",
-            "crate_root": "lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "rs_bindings_from_cc_ir_cc_proto_sys",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "rs_bindings_from_cc_ir_cc_proto_sys 0.0.0",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2024",
-        "version": "0.0.0"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
       },
       "license": null,
       "license_ids": [],
@@ -9576,82 +8893,6 @@
       "license_ids": [],
       "license_file": "../../../LICENSE"
     },
-    "rs_bindings_from_cc_ir_rust_proto 0.0.0": {
-      "name": "rs_bindings_from_cc_ir_rust_proto",
-      "version": "0.0.0",
-      "package_url": "https://github.com/google/crubit",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rs_bindings_from_cc_ir_rust_proto",
-            "crate_root": "lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "rs_bindings_from_cc_ir_rust_proto",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "protobuf 4.36.1-release",
-              "target": "protobuf"
-            },
-            {
-              "id": "rs_bindings_from_cc_ir_rust_proto 0.0.0",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2024",
-        "version": "0.0.0"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "protobuf-codegen 4.36.1-release",
-              "target": "protobuf_codegen"
-            }
-          ],
-          "selects": {}
-        }
-      },
-      "license": null,
-      "license_ids": [],
-      "license_file": "../../../LICENSE"
-    },
     "rs_bindings_from_cc_ir_testing 0.0.0": {
       "name": "rs_bindings_from_cc_ir_testing",
       "version": "0.0.0",
@@ -9685,10 +8926,6 @@
             {
               "id": "itertools 0.13.0",
               "target": "itertools"
-            },
-            {
-              "id": "protobuf 4.36.1-release",
-              "target": "protobuf"
             }
           ],
           "selects": {}
@@ -12596,8 +11833,6 @@
     "rs_bindings_from_cc_function_template_sys 0.0.0": "cargo/rs_bindings_from_cc/importers/function_template_sys",
     "rs_bindings_from_cc_generate_bindings 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/generate_bindings",
     "rs_bindings_from_cc_generate_bindings_and_metadata_sys 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings_and_metadata_sys",
-    "rs_bindings_from_cc_generate_bindings_cc_proto_sys 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/generate_bindings_cc_proto_sys",
-    "rs_bindings_from_cc_generate_bindings_rust_proto 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/generate_bindings_rust_proto",
     "rs_bindings_from_cc_generate_comment 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/generate_comment",
     "rs_bindings_from_cc_generate_enum 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/generate_enum",
     "rs_bindings_from_cc_generate_function 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/generate_function",
@@ -12607,11 +11842,9 @@
     "rs_bindings_from_cc_impl_sys 0.0.0": "cargo/rs_bindings_from_cc/rs_bindings_from_cc_impl_sys",
     "rs_bindings_from_cc_importer_sys 0.0.0": "cargo/rs_bindings_from_cc/importer_sys",
     "rs_bindings_from_cc_ir 0.0.0": "cargo/rs_bindings_from_cc/ir",
-    "rs_bindings_from_cc_ir_cc_proto_sys 0.0.0": "cargo/rs_bindings_from_cc/ir_cc_proto_sys",
     "rs_bindings_from_cc_ir_from_cc_dependency_sys 0.0.0": "cargo/rs_bindings_from_cc/ir_from_cc_dependency_sys",
     "rs_bindings_from_cc_ir_from_cc_sys 0.0.0": "cargo/rs_bindings_from_cc/ir_from_cc_sys",
     "rs_bindings_from_cc_ir_matchers 0.0.0": "cargo/rs_bindings_from_cc/ir_matchers",
-    "rs_bindings_from_cc_ir_rust_proto 0.0.0": "cargo/rs_bindings_from_cc/ir_rust_proto",
     "rs_bindings_from_cc_ir_testing 0.0.0": "cargo/rs_bindings_from_cc/ir_testing",
     "rs_bindings_from_cc_lifetime_defaults_transform 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/lifetime_defaults_transform",
     "rs_bindings_from_cc_multiplatform_ir_testing 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/multiplatform_ir_testing",
@@ -12718,8 +11951,6 @@
     "once_cell 1.21.4",
     "phf 0.11.3",
     "proc-macro2 1.0.107",
-    "protobuf 4.36.1-release",
-    "protobuf-codegen 4.36.1-release",
     "quote 1.0.47",
     "regex 1.13.1",
     "rustc-stable-hash 0.1.2",

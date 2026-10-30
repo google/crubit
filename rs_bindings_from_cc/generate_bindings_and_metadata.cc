@@ -29,7 +29,7 @@
 
 namespace crubit {
 
-namespace ir_proto = ::crubit::rs_bindings_from_cc::ir_proto::flat;
+namespace ir_proto = ::crubit::ffi;
 
 const ir_proto::Namespace* absl_nullable FindNamespace(const IR& ir,
                                                        absl::string_view name) {
@@ -46,8 +46,8 @@ std::vector<const ir_proto::Record* absl_nonnull> FindInstantiationsInNamespace(
   absl::flat_hash_set<ItemId> record_ids;
   for (const auto* type_alias : get_items_if<ir_proto::TypeAlias>(ir)) {
     if (ItemId(type_alias->enclosing_item_id()) == namespace_id) {
-      CHECK(type_alias->underlying_type().has_decl());
-      record_ids.insert(ItemId(type_alias->underlying_type().decl()));
+      CHECK(type_alias->underlying_type().variant().has_decl());
+      record_ids.insert(ItemId(type_alias->underlying_type().variant().decl()));
     }
   }
 

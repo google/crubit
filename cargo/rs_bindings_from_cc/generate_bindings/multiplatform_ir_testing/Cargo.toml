@@ -21,5 +21,4 @@ doctest = false
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 multiplatform_testing = { path = "../../../../cargo/common/multiplatform_testing"}
 ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
-ir_rust_proto = { path = "../../../../cargo/rs_bindings_from_cc/ir_rust_proto", package = "rs_bindings_from_cc_ir_rust_proto"}
 ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/ir_testing", package = "rs_bindings_from_cc_ir_testing"}

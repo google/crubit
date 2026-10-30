@@ -42,7 +42,7 @@ fn struct_blocker(name: &str, target: &str) -> Blocker {
 
 /// Restricts the current target to the `supported` feature set, so that uses of types without
 /// bindings are errors rather than being tolerated as `wrapper` features.
-fn use_supported_features(ir: &mut IR<'_>) {
+fn use_supported_features(ir: &mut IR) {
     let current_target = ir.current_target().clone();
     *ir.target_crubit_features_mut(&current_target) =
         CrubitFeature::Supported | CrubitFeature::Types;

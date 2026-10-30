@@ -159,7 +159,7 @@ NamespacesHierarchy CollectNamespaces(const IR& ir) {
                      id_to_namespace);
   auto target_it = ir.top_level_items().find(ir.current_target());
   if (target_it != ir.top_level_items().end()) {
-    for (const auto& item : target_it->second.items()) {
+    for (const auto& item : target_it->second) {
       if (item.has_namespace_decl()) {
         auto it = id_to_namespace.find(ItemId(item.namespace_decl().id()));
         if (it != id_to_namespace.end()) {

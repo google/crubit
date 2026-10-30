@@ -17,7 +17,6 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-ir_cc_proto_sys = { path = "../../../cargo/rs_bindings_from_cc/ir_cc_proto_sys", package = "rs_bindings_from_cc_ir_cc_proto_sys"}
 cc_ffi_types_sys = { path = "../../../cargo/common/cc_ffi_types_sys"}
 
 

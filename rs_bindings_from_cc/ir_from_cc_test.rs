@@ -7,6 +7,7 @@ use arc_anyhow::Result;
 use googletest::matcher::Matcher;
 use googletest::matchers::{contains, eq, is_empty, not, pat, some};
 use googletest::{expect_eq, expect_that, expect_true, fail, gtest, OrFail};
+use ir::FfiRc as Rc;
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
 use ir_testing::{
@@ -23,21 +24,19 @@ use multiplatform_testing::test_platform;
 use quote::quote;
 use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
-use std::rc::Rc;
 
 // TODO(b/492229823): This trait is a temporary artifact for refactoring. Remove this trait and
 // update the tests in this file.
-trait IrTestingExt<'pb> {
-    fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item<'pb>;
+trait IrTestingExt {
+    fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item;
     fn find_decl<'a, T>(&'a self, decl_id: ir::ItemId) -> Result<&'a T>
     where
-        'pb: 'a,
-        &'a T: TryFrom<&'a ir::Item<'pb>>;
+        &'a T: TryFrom<&'a ir::Item>;
 }
 
-impl<'pb> IrTestingExt<'pb> for IR<'pb> {
+impl IrTestingExt for IR {
     #[track_caller]
-    fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item<'pb> {
+    fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item {
         let Some(item) = self.get_decl(decl_id) else {
             panic!("Couldn't find decl_id {:?} in the IR:\n{:#?}", decl_id, self.tree_ir())
         };
@@ -47,8 +46,7 @@ impl<'pb> IrTestingExt<'pb> for IR<'pb> {
     #[track_caller]
     fn find_decl<'a, T>(&'a self, decl_id: ir::ItemId) -> Result<&'a T>
     where
-        'pb: 'a,
-        &'a T: TryFrom<&'a ir::Item<'pb>>,
+        &'a T: TryFrom<&'a ir::Item>,
     {
         self.find_untyped_decl(decl_id).try_into().map_err(|_| {
             arc_anyhow::anyhow!(
@@ -995,7 +993,7 @@ fn test_struct_with_custom_trait_derives_keeps_source_order() -> googletest::Res
     let record =
         ir.records().find(|record| record.rs_name() == "RecordWithCustomDerives").or_fail()?;
     expect_eq!(
-        record.trait_derives().custom,
+        record.trait_derives().custom.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
         vec![
             "Zeta", "Alpha", "Mu", "Beta", "Omega", "Gamma", "Kappa", "Delta", "Sigma", "Epsilon",
             "Rho", "Eta", "Pi", "Theta", "Omicron", "Iota", "Xi", "Lambda", "Nu", "Tau",
@@ -4621,7 +4619,7 @@ fn test_member_function_constructor() {
     }
 }
 
-fn get_func_names<'pb>(proto: &'pb ir_rust_proto::IRProto) -> Vec<ir::UnqualifiedIdentifier<'pb>> {
+fn get_func_names(proto: &ir_rust_proto::IRProto) -> Vec<ir::UnqualifiedIdentifier> {
     let ir = ir_testing::make_test_ir(proto).unwrap();
     ir.functions().map(|f| f.rs_name().clone()).collect()
 }
@@ -5766,13 +5764,13 @@ const INHERITS_EQUALITY_SRC: &str = r#"
     struct DerivedFromS : S {};
     }  // namespace ns"#;
 
-fn eq_operators<'a, 'pb>(ir: &'a IR<'pb>) -> Vec<&'a Rc<Func<'pb>>> {
+fn eq_operators(ir: &IR) -> Vec<&Rc<Func>> {
     ir.functions()
         .filter(|f| matches!(f.rs_name(), UnqualifiedIdentifier::Operator(op) if op.name() == "=="))
         .collect()
 }
 
-fn check_inherited_friend_operator(ir: &IR<'_>) {
+fn check_inherited_friend_operator(ir: &IR) {
     let record = retrieve_record(ir, "S");
     let derived = retrieve_record(ir, "DerivedFromS");
 
@@ -5958,7 +5956,7 @@ fn test_visibility_attribute_on_user_declarations() {
 }
 
 /// Returns how the location of each item that has one is displayed in doc comments.
-fn displayed_decl_locs(ir: &IR<'_>) -> Vec<String> {
+fn displayed_decl_locs(ir: &IR) -> Vec<String> {
     ir.items().filter_map(|item| item.decl_loc()).map(|decl_loc| decl_loc.to_string()).collect()
 }
 
@@ -6731,7 +6729,7 @@ fn test_assumed_lifetimes_struct_with_explicit_binding() {
     );
 }
 
-fn expect_constant<'pb>(ir: &'pb ir::IR<'pb>) -> &'pb ir::Constant<'pb> {
+fn expect_constant(ir: &ir::IR) -> &ir::Constant {
     let constant = ir.items().find_map(|item| match item {
         Item::Constant(constant) => Some(constant),
         _ => None,
@@ -6743,7 +6741,7 @@ fn expect_constant<'pb>(ir: &'pb ir::IR<'pb>) -> &'pb ir::Constant<'pb> {
 }
 
 /// Matches the `value()` of a scalar constant with the given `wrapped_value`.
-fn integer_constant_value<'a>(wrapped_value: u64) -> impl Matcher<&'a ir::ConstantValue<'a>> {
+fn integer_constant_value<'a>(wrapped_value: u64) -> impl Matcher<&'a ir::ConstantValue> {
     pat!(ir::ConstantValue::Integer(property!(
         &ir::IntegerConstant.wrapped_value(),
         eq(wrapped_value)
@@ -6757,7 +6755,7 @@ fn test_top_level_constexpr_int() {
     let ir = ir_testing::make_test_ir(&proto).unwrap();
     let constant = expect_constant(&ir);
     expect_eq!(constant.cc_name(), "x");
-    expect_that!(&constant.value(), integer_constant_value(1));
+    expect_that!(constant.value(), integer_constant_value(1));
 }
 
 #[gtest]
@@ -6767,7 +6765,7 @@ fn test_top_level_constexpr_bool() {
     let ir = ir_testing::make_test_ir(&proto).unwrap();
     let constant = expect_constant(&ir);
     expect_eq!(constant.cc_name(), "x");
-    expect_that!(&constant.value(), integer_constant_value(0));
+    expect_that!(constant.value(), integer_constant_value(0));
 }
 
 /// A simplified `ir::ArrayValue`, for testing.
@@ -6786,7 +6784,7 @@ fn simplify_integer(value: &ir::IntegerConstant) -> i128 {
     }
 }
 
-fn simplify_array_value(value: ir::ArrayValue<'_>) -> TestArrayValue {
+fn simplify_array_value(value: &ir::ArrayValue) -> TestArrayValue {
     match value.kind() {
         ir::ArrayValueKind::Integers(integers) => TestArrayValue::Integers {
             elements: integers
@@ -6805,7 +6803,7 @@ fn simplify_array_value(value: ir::ArrayValue<'_>) -> TestArrayValue {
 }
 
 /// Returns the length of each dimension of `value`, outermost first.
-fn array_dimensions(value: ir::ArrayValue<'_>) -> Vec<u64> {
+fn array_dimensions(value: &ir::ArrayValue) -> Vec<u64> {
     let mut dimensions = vec![value.length()];
     if let ir::ArrayValueKind::Arrays(arrays) = value.kind() {
         // All elements, including the filler, have the same shape.
@@ -7142,7 +7140,7 @@ fn test_top_level_constexpr_std_string_view() {
     let string_views: Vec<(&str, &[u8])> = ir
         .constants()
         .filter_map(|c| match c.value() {
-            ir::ConstantValue::StringView(bytes) => Some((c.cc_name().as_str(), bytes)),
+            ir::ConstantValue::StringView(bytes) => Some((c.cc_name().as_str(), bytes.as_slice())),
             _ => None,
         })
         .collect();
@@ -7189,7 +7187,7 @@ fn test_top_level_constexpr_standalone_absl_string_view() {
     let ir = ir_testing::make_test_ir(&proto).unwrap();
     let constant = expect_constant(&ir);
     expect_eq!(constant.cc_name(), "x");
-    expect_eq!(constant.value(), ir::ConstantValue::StringView(b"absl"));
+    expect_eq!(constant.value(), &ir::ConstantValue::StringView((&b"absl"[..]).into()));
 }
 
 #[gtest]
@@ -7268,9 +7266,9 @@ fn test_anonymous_enum() {
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
     let kfoo = ir.constants().find(|c| c.cc_name() == "kFoo").unwrap();
-    expect_that!(&kfoo.value(), integer_constant_value(1));
+    expect_that!(kfoo.value(), integer_constant_value(1));
     let kbar = ir.constants().find(|c| c.cc_name() == "kBar").unwrap();
-    expect_that!(&kbar.value(), integer_constant_value(2));
+    expect_that!(kbar.value(), integer_constant_value(2));
 }
 
 #[gtest]
@@ -7281,7 +7279,7 @@ fn test_anonymous_enum_in_record() {
     let record = retrieve_record(&ir, "S");
     let constant = ir.constants().find(|c| c.cc_name() == "kFoo").unwrap();
     assert_eq!(constant.enclosing_item_id(), Some(record.id()));
-    expect_that!(&constant.value(), integer_constant_value(1));
+    expect_that!(constant.value(), integer_constant_value(1));
 }
 
 #[gtest]
@@ -7331,27 +7329,31 @@ fn test_absl_container_template_specialization_kind() {
     let record = retrieve_type_alias_record(&ir, "IntFloatMap");
     expect_that!(
         &record.template_specialization().map(|ts| ts.kind().clone()),
-        some(pat!(TemplateSpecializationKind::AbslFlatHashMap {
-            raw_key_type: property!(
-                &CcType.variant(),
-                pat!(CcTypeVariant::Primitive(eq(&Primitive::Int)))
-            ),
-            raw_value_type: property!(
-                &CcType.variant(),
-                pat!(CcTypeVariant::Primitive(eq(&Primitive::Float)))
-            ),
-        })),
+        some(pat!(TemplateSpecializationKind::AbslFlatHashMap(pat!(
+            ir_generated::template_specialization::AbslFlatHashMap {
+                key_type: property!(
+                    &CcType.variant(),
+                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Int)))
+                ),
+                value_type: property!(
+                    &CcType.variant(),
+                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Float)))
+                ),
+            }
+        )))),
     );
 
     let record = retrieve_type_alias_record(&ir, "DoubleSet");
     expect_that!(
         &record.template_specialization().map(|ts| ts.kind().clone()),
-        some(pat!(TemplateSpecializationKind::AbslFlatHashSet {
-            raw_element_type: property!(
-                &CcType.variant(),
-                pat!(CcTypeVariant::Primitive(eq(&Primitive::Double)))
-            ),
-        })),
+        some(pat!(TemplateSpecializationKind::AbslFlatHashSet(pat!(
+            ir_generated::template_specialization::AbslFlatHashSet {
+                element_type: property!(
+                    &CcType.variant(),
+                    pat!(CcTypeVariant::Primitive(eq(&Primitive::Double)))
+                ),
+            }
+        )))),
     );
 }
 

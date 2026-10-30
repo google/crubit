@@ -7,10 +7,9 @@ use code_gen_utils::format_nonportable_cc_type_name;
 use database::rs_snippet::{BridgeRsTypeKind, ProtoBridgeKind, RsTypeKind, RustPtrKind};
 use database::BindingsGenerator;
 use error_report::{anyhow, bail};
-use ir::{CcCallingConv, GenericItem, Item, PointerTypeKind, Record};
+use ir::{CcCallingConv, FfiRc, GenericItem, Item, PointerTypeKind, Record};
 use proc_macro2::TokenStream;
 use quote::quote;
-use std::rc::Rc;
 
 pub fn format_cpp_type(ty: &RsTypeKind, db: &BindingsGenerator<'_>) -> Result<TokenStream> {
     // Formatting *both* pointers *and* references as pointers, because:
@@ -121,15 +120,15 @@ pub fn format_cpp_type_inner(
             })
         }
         RsTypeKind::IncompleteRecord { incomplete_record, .. } => tagless_cpp_type_name_for_item(
-            &Item::IncompleteRecord(Rc::clone(incomplete_record)),
+            &Item::IncompleteRecord(FfiRc::clone(incomplete_record)),
             db,
         ),
         RsTypeKind::Record { record, .. } => cpp_type_name_for_record(record, db),
         RsTypeKind::Enum { enum_, .. } => {
-            tagless_cpp_type_name_for_item(&Item::Enum(Rc::clone(enum_)), db)
+            tagless_cpp_type_name_for_item(&Item::Enum(FfiRc::clone(enum_)), db)
         }
         RsTypeKind::TypeAlias { type_alias, .. } => {
-            tagless_cpp_type_name_for_item(&Item::TypeAlias(Rc::clone(type_alias)), db)
+            tagless_cpp_type_name_for_item(&Item::TypeAlias(FfiRc::clone(type_alias)), db)
         }
         RsTypeKind::CArray { element_type, num_elements } => {
             let elem = format_cpp_type_inner(element_type, db, references_ok)?;
@@ -167,7 +166,7 @@ pub fn format_cpp_type_inner(
             _ => cpp_type_name_for_record(original_type, db),
         },
         RsTypeKind::ExistingRustType { existing_rust_type, .. } => tagless_cpp_type_name_for_item(
-            &Item::ExistingRustType(Rc::clone(existing_rust_type)),
+            &Item::ExistingRustType(FfiRc::clone(existing_rust_type)),
             db,
         ),
     }

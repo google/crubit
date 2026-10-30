@@ -232,6 +232,7 @@ pub(crate) fn schema() -> Schema {
         enum MemberFuncSemantic {
             Setter(member_func_semantic::Setter),
             Getter(member_func_semantic::Getter),
+            Constructor,
         }
         struct Func {
             cc_name: UnqualifiedIdentifier,

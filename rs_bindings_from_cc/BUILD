@@ -107,6 +107,7 @@ cc_library(
         ":collect_namespaces",
         ":generate_bindings_and_metadata",
         ":profiling",
+        ":src_code_gen_ffi",
         "//common:file_io",
         "//common:status_macros",
         "@abseil-cpp//absl/cleanup",
@@ -117,7 +118,6 @@ cc_library(
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
         "@llvm-project//llvm:Support",
-        "@protobuf",
     ],
     alwayslink = 1,
 )
@@ -261,7 +261,7 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":cc_ir",
-        "@abseil-cpp//absl/container:flat_hash_set",
+        "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
     ],
@@ -346,7 +346,6 @@ cc_library(
         "cc_ir",
         ":bazel_types",
         ":cmdline_flags",
-        ":ir_cc_proto",
         "//lifetime_annotations",
         "//lifetime_annotations:type_lifetimes",
         "//nullability:pragma",
@@ -407,7 +406,6 @@ cc_library(
         ":clang_compat_macros",
         ":cmdline_flags",
         ":decl_importer",
-        ":ir_cc_proto",
         ":recording_diagnostic_consumer",
         ":type_map",
         "//common:annotation_reader",
@@ -517,7 +515,6 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":bazel_types",
-        ":ir_cc_proto",
         "//common:cc_ffi_types",
         "//common:strong_int",
         "//support/rs_std/internal:is_utf8",
@@ -549,14 +546,12 @@ rust_library(
         "ir.rs",
         "ir_ffi_support.rs",
         "ir_generated.rs",
-        "proto_to_ir.rs",
     ],
     edition = "2024",
     rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = ["//:__subpackages__"],
     deps = [
         ":bazel_label",
-        ":ir_rust_proto",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_feature",
@@ -567,7 +562,6 @@ rust_library(
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
         "@crate_index//:syn",  # v1
-        "@protobuf//rust:protobuf",
     ],
 )
 
@@ -608,7 +602,6 @@ rust_library(
     ],
     deps = [
         ":ir",
-        ":ir_rust_proto",
         ":proto_from_cc",
         "//common:arc_anyhow",
         "//common:crubit_feature",
@@ -616,7 +609,6 @@ rust_library(
         "//common:multiplatform_testing",
         "@crate_index//:flagset",  # v0_4
         "@crate_index//:itertools",  # v0_13
-        "@protobuf//rust:protobuf",
     ],
 )
 
@@ -708,7 +700,6 @@ multiplatform_rust_test(
     deps = [
         ":ir",
         ":ir_matchers",
-        ":ir_rust_proto",
         ":ir_testing",
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
@@ -720,18 +711,33 @@ multiplatform_rust_test(
     ],
 )
 
+multiplatform_rust_test(
+    name = "ir_from_cc_proto_test",
+    srcs = ["ir_from_cc_proto_test.rs"],
+    tags = [
+        "not_run:arm",
+        "not_run:mac",
+    ],
+    deps = [
+        ":ir",
+        ":ir_testing",
+        "//common:arc_anyhow",
+        "//common:multiplatform_testing",
+        "//rs_bindings_from_cc/generate_bindings:multiplatform_ir_testing",
+        "@crate_index//:googletest",
+    ],
+)
+
 cc_library(
     name = "src_code_gen_ffi",
     srcs = [
         "src_code_gen_ffi.cc",
-        "src_code_gen_ffi_serialized_proto.cc",
     ],
     hdrs = ["src_code_gen_ffi.h"],
     deps = [
+        ":cc_ir",
         ":profiling",
-        "//common:cc_ffi_types",
-        "//rs_bindings_from_cc/generate_bindings:generate_bindings_cc_proto",
-        "@abseil-cpp//absl/strings:string_view",
+        "//rs_bindings_from_cc/generate_bindings:cc_api_ffi",  # buildcleaner: keep
     ],
 )
 
@@ -744,11 +750,9 @@ cc_library(
         ":profiling",
         ":src_code_gen_ffi",
         "//rs_bindings_from_cc/generate_bindings:cc_api_ffi",  # buildcleaner: keep
-        "//rs_bindings_from_cc/generate_bindings:generate_bindings_cc_proto",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
-        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -816,7 +820,7 @@ crubit_rust_test(
         "not_run:mac",
     ],
     deps = [
-        ":ir_rust_proto",
+        ":ir",
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
         "@crate_index//:googletest",

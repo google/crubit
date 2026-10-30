@@ -126,9 +126,9 @@ absl::Status ConvertIntegerElement(const clang::APValue& value,
     return absl::InvalidArgumentError(
         "array element did not evaluate to an integer");
   }
-  CRUBIT_ASSIGN_OR_RETURN(IntegerConstant integer_constant,
-                          IntegerConstant::FromAPValue(value.getInt()));
-  integer_constant.WriteToProto(out);
+  CRUBIT_ASSIGN_OR_RETURN(ir_proto::IntegerConstant integer_constant,
+                          IntegerConstantFromAPValue(value.getInt()));
+  out = std::move(integer_constant);
   return absl::OkStatus();
 }
 
@@ -165,7 +165,7 @@ absl::Status ConvertArrayValue(const clang::APValue& value,
             ? nullptr
             : llvm::dyn_cast<clang::InitListExpr>(
                   char_array_init->IgnoreImplicit()->IgnoreParens());
-    auto* elements = out.mutable_array_elements();
+    auto* elements = out.mutable_kind()->mutable_array_elements();
     for (unsigned i = 0; i < num_initialized; ++i) {
       const clang::Expr* element_char_array_init =
           char_array_init_list != nullptr &&
@@ -187,11 +187,11 @@ absl::Status ConvertArrayValue(const clang::APValue& value,
 
   if (const clang::StringLiteral* string_literal =
           GetStringLiteralInit(char_array_init, size)) {
-    out.set_string_literal(string_literal->getBytes().str());
+    out.mutable_kind()->set_string_literal(string_literal->getBytes().str());
     return absl::OkStatus();
   }
 
-  auto* elements = out.mutable_integer_elements();
+  auto* elements = out.mutable_kind()->mutable_integer_elements();
   for (unsigned i = 0; i < num_initialized; ++i) {
     CRUBIT_RETURN_IF_ERROR(ConvertIntegerElement(
         value.getArrayInitializedElt(i), *elements->add_elements()));
@@ -432,7 +432,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
   if (mangled_name.has_value()) {
     global_var->set_mangled_name(std::move(*mangled_name));
   }
-  type.WriteToProto(*global_var->mutable_type());
+  *global_var->mutable_type() = std::move(type);
   if (unknown_attr->has_value()) {
     global_var->set_unknown_attr(std::move(**unknown_attr));
   }
@@ -494,7 +494,6 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
         *var_decl, std::nullopt,
         {FormattedError::Static("unable to evaluate constexpr value")});
   }
-
   if (is_array) {
     uint64_t num_initialized =
         CountInitializedElements(*value, dimensions.size());
@@ -522,7 +521,8 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
           *var_decl, std::nullopt,
           {FormattedError::FromStatus(std::move(string_view_value.status()))});
     }
-    constant->set_string_view_value(*std::move(string_view_value));
+    constant->mutable_kind()->set_string_view_value(
+        *std::move(string_view_value));
   } else if (!is_array) {
     if (!value->isInt()) {
       return ictx_.ImportUnsupportedItem(
@@ -530,14 +530,14 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
           {FormattedError::Static(
               "constexpr value did not evaluate to an integer")});
     }
-    absl::StatusOr<IntegerConstant> integer_constant =
-        IntegerConstant::FromAPValue(value->getInt());
+    absl::StatusOr<ir_proto::IntegerConstant> integer_constant =
+        IntegerConstantFromAPValue(value->getInt());
     if (!integer_constant.ok()) {
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
           {FormattedError::FromStatus(std::move(integer_constant.status()))});
     }
-    integer_constant->WriteToProto(*constant->mutable_value());
+    *constant->mutable_kind()->mutable_value() = *std::move(integer_constant);
   } else {
     // String-literal rows are only recorded for plain `char` arrays, which
     // Crubit maps to `ffi_11::c_char`.
@@ -545,7 +545,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
         IsPlainChar(value_type) ? var_decl->getInit() : nullptr;
     if (absl::Status status =
             ConvertArrayValue(*value, dimensions, char_array_init,
-                              *constant->mutable_array_value());
+                              *constant->mutable_kind()->mutable_array_value());
         !status.ok()) {
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
@@ -558,7 +558,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
         ictx_.ConvertQualType(value_type, nullptr, /*nullable=*/true,
                               ictx_.AreAssumedLifetimesEnabledForTarget(
                                   ictx_.GetOwningTarget(*var_decl)));
-    type.WriteToProto(*constant->mutable_type());
+    *constant->mutable_type() = std::move(type);
   }
 
   ictx_.MarkAsSuccessfullyImported(*var_decl);

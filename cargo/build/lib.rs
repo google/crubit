@@ -50,10 +50,15 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
 
     // ===== Protobuf =====
 
-    let proto_include_dirs = protobuf::collect_protobuf_includes();
-    let (proto_lib_dirs, proto_libs) = protobuf::collect_protobuf_libs();
-    let gen_proto_sources =
-        protobuf::collect_generated_proto_sources(proto_sources, &proto_include_dirs);
+    let (proto_include_dirs, proto_lib_dirs, proto_libs, gen_proto_sources) =
+        if proto_sources.is_empty() {
+            (Vec::new(), Vec::new(), Vec::new(), Vec::new())
+        } else {
+            let include_dirs = protobuf::collect_protobuf_includes();
+            let (lib_dirs, libs) = protobuf::collect_protobuf_libs();
+            let gen_srcs = protobuf::collect_generated_proto_sources(proto_sources, &include_dirs);
+            (include_dirs, lib_dirs, libs, gen_srcs)
+        };
 
     // ===== Linking directives =====
 

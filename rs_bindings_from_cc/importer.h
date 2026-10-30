@@ -22,7 +22,6 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "rs_bindings_from_cc/ir.pb.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
@@ -37,7 +36,7 @@
 
 namespace crubit {
 
-namespace ir_proto = rs_bindings_from_cc::ir_proto::flat;
+namespace ir_proto = ::crubit::ffi;
 
 // Stateful entry to prevent re-entrant imports, and to track the underlying
 // proto item we should store the AST node in.

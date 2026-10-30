@@ -4,7 +4,7 @@
 
 use arc_anyhow::Result;
 use googletest::gtest;
-use ir::MemberFuncSemantic;
+use ir::{ir_rust_proto, MemberFuncSemantic};
 use ir_testing::make_test_ir;
 use multiplatform_ir_testing::ir_proto_from_cc;
 use multiplatform_testing::test_platform;
@@ -224,32 +224,32 @@ fn test_type_alias_proto() -> Result<()> {
 
 #[gtest]
 fn test_member_func_semantic_proto() -> Result<()> {
-    let semantic_setter_proto = protobuf::proto!(ir_rust_proto::MemberFuncSemantic {
-        setter: __ { r#type: __ { primitive: __ { spelling: "int" } }, offset: 32 },
+    let semantic_setter = ir::proto!(ir_rust_proto::MemberFuncSemantic {
+        setter: __ {
+            r#type: __ { variant: __ { primitive: ir::Primitive::Int } },
+            offset: 32usize
+        },
     });
-    let semantic_setter = MemberFuncSemantic::try_from(semantic_setter_proto.as_view())
-        .expect("should convert successfully");
     let MemberFuncSemantic::Setter(s) = semantic_setter else {
         panic!("expected Setter");
     };
     assert_eq!(s.offset, 32);
     assert!(matches!(s.type_.variant(), ir::CcTypeVariant::Primitive(ir::Primitive::Int)));
 
-    let semantic_getter_proto = protobuf::proto!(ir_rust_proto::MemberFuncSemantic {
-        getter: __ { r#type: __ { primitive: __ { spelling: "int" } }, offset: 32 },
+    let semantic_getter = ir::proto!(ir_rust_proto::MemberFuncSemantic {
+        getter: __ {
+            r#type: __ { variant: __ { primitive: ir::Primitive::Int } },
+            offset: 32usize
+        },
     });
-    let semantic_getter = MemberFuncSemantic::try_from(semantic_getter_proto.as_view())
-        .expect("should convert successfully");
     let MemberFuncSemantic::Getter(g) = semantic_getter else {
         panic!("expected Getter");
     };
     assert_eq!(g.offset, 32);
     assert!(matches!(g.type_.variant(), ir::CcTypeVariant::Primitive(ir::Primitive::Int)));
 
-    let semantic_constructor_proto =
-        protobuf::proto!(ir_rust_proto::MemberFuncSemantic { constructor: __ {} });
-    let semantic_constructor = MemberFuncSemantic::try_from(semantic_constructor_proto.as_view())
-        .expect("should convert successfully");
+    let mut semantic_constructor = MemberFuncSemantic::EMPTY;
+    semantic_constructor.set_constructor();
     assert_eq!(semantic_constructor, MemberFuncSemantic::Constructor);
     Ok(())
 }

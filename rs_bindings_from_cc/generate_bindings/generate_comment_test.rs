@@ -10,10 +10,7 @@ use generate_comment::{generate_doc_comment, generate_unsupported};
 use googletest::prelude::gtest;
 use ir::{BazelLabel, DeclLocation, ItemId, UnsupportedItem, UnsupportedItemKind};
 use ir_testing::make_ir_from_items;
-use protobuf::proto;
 use quote::quote;
-use std::rc::Rc;
-use std::sync::LazyLock;
 use test_generators::TestDbFactory;
 use token_stream_matchers::{assert_rs_matches, assert_rs_not_matches};
 
@@ -25,16 +22,18 @@ fn test_generate_doc_comment_with_no_comment_with_no_source_loc_with_environment
 
 #[gtest]
 fn test_generate_doc_comment_with_no_comment_with_source_loc_with_environment_production() {
-    let actual = generate_doc_comment(None, None, Some(test_decl_loc()), false, false);
-    let expected = format!(" {}", test_decl_loc());
+    let decl_loc = test_decl_loc();
+    let actual = generate_doc_comment(None, None, Some(&decl_loc), false, false);
+    let expected = format!(" {decl_loc}");
     assert_rs_matches!(quote! { #actual }, quote! {#[doc = #expected]});
 }
 
 #[gtest]
 fn test_generate_doc_comment_with_comment_with_source_loc_with_environment_production() {
+    let decl_loc = test_decl_loc();
     let actual =
-        generate_doc_comment(Some("Some doc comment"), None, Some(test_decl_loc()), false, false);
-    let expected = format!(" Some doc comment\n \n {}", test_decl_loc());
+        generate_doc_comment(Some("Some doc comment"), None, Some(&decl_loc), false, false);
+    let expected = format!(" Some doc comment\n \n {decl_loc}");
     assert_rs_matches!(quote! { #actual }, quote! {#[doc = #expected]});
 }
 
@@ -52,14 +51,15 @@ fn test_no_generate_doc_comment_with_no_comment_with_no_source_loc_with_environm
 
 #[gtest]
 fn test_no_generate_doc_comment_with_no_comment_with_source_loc_with_environment_golden_test() {
-    let actual = generate_doc_comment(None, None, Some(test_decl_loc()), true, false);
+    let decl_loc = test_decl_loc();
+    let actual = generate_doc_comment(None, None, Some(&decl_loc), true, false);
     assert!(actual.is_none());
 }
 
 #[gtest]
 fn test_no_generate_doc_comment_with_comment_with_source_loc_with_environment_golden_test() {
-    let actual =
-        generate_doc_comment(Some("Some doc comment"), None, Some(test_decl_loc()), true, false);
+    let decl_loc = test_decl_loc();
+    let actual = generate_doc_comment(Some("Some doc comment"), None, Some(&decl_loc), true, false);
     assert_rs_matches!(quote! { #actual }, quote! {#[doc = " Some doc comment"]});
 }
 
@@ -80,38 +80,33 @@ fn test_generate_doc_comment_with_safety() {
 }
 
 struct TestItem {
-    decl_loc: Option<DeclLocation<'static>>,
+    decl_loc: Option<DeclLocation>,
     must_bind: bool,
 }
 
 /// The location of the test items: line 1 of `some/header`.
-fn test_decl_loc() -> DeclLocation<'static> {
-    static PROTO: LazyLock<ir_rust_proto::DeclLocation> = LazyLock::new(|| {
-        proto!(ir_rust_proto::DeclLocation {
-            spelling: ir_rust_proto::SourceLocation { path: "some/header", line: 1 },
-        })
-    });
-    DeclLocation::try_from(PROTO.as_view()).expect("the test location should be valid")
+fn test_decl_loc() -> DeclLocation {
+    ir::proto!(DeclLocation { spelling: __ { path: "some/header", line: 1u32 } })
 }
 
 const TEST_ITEM_ID: ItemId = ItemId::new_for_testing(123);
 /// The spelling location of `test_decl_loc()`, as it appears in the error report.
 const TEST_ITEM_REPORT_SOURCE_LOC: &str = "some/header;l=1";
 
-impl<'a> ir::GenericItem<'a> for TestItem {
+impl ir::GenericItem for TestItem {
     fn id(&self) -> ItemId {
         TEST_ITEM_ID
     }
-    fn unique_name(&self) -> Option<&'a str> {
+    fn unique_name(&self) -> Option<&str> {
         None
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         None
     }
-    fn decl_loc(&self) -> Option<DeclLocation<'a>> {
-        self.decl_loc
+    fn decl_loc(&self) -> Option<&DeclLocation> {
+        self.decl_loc.as_ref()
     }
-    fn unknown_attr(&self) -> Option<&'a str> {
+    fn unknown_attr(&self) -> Option<&str> {
         None
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
@@ -122,21 +117,20 @@ impl<'a> ir::GenericItem<'a> for TestItem {
     }
 }
 
-fn make_factory() -> TestDbFactory<'static> {
+fn make_factory() -> TestDbFactory {
     let test_item = UnsupportedItem::new_raw(
-        Rc::from("test_item"),
-        None,
+        "test_item",
+        None::<&str>,
         UnsupportedItemKind::Other,
         TEST_ITEM_ID,
         Some(test_decl_loc()),
         None,
         false,
         /* path= */ None,
-        Some(Rc::new(ir::FormattedError {
+        Some(ir::FormattedError {
             fmt: "unsupported_message".into(),
             message: "unsupported_message".into(),
-            cause: None,
-        })),
+        }),
     );
     TestDbFactory::new(make_ir_from_items([test_item.into()]))
 }
@@ -193,8 +187,7 @@ fn test_generate_unsupported_item_with_global_cpp() -> Result<()> {
         /* path= */ None,
         "unsupported_message",
     );
-    unsupported_item
-        .set_inline_cpp_source_text(Some("int Add(int a, int b) { return a + b; }".into()));
+    unsupported_item.set_inline_cpp_source_text("int Add(int a, int b) { return a + b; }".into());
     let actual = generate_unsupported(&db, unsupported_item.into()).generated_items;
     let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
     let expected_comment = format!(
@@ -230,7 +223,7 @@ fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result
         /* path= */ None,
         "unsupported_message",
     );
-    unsupported_item.set_inline_cpp_source_text(None);
+    unsupported_item.clear_inline_cpp_source_text();
     let actual = generate_unsupported(&db, unsupported_item.into()).generated_items;
     let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
     assert_rs_not_matches!(actual, quote! { ::inline_cpp_macro::global_cpp! });
@@ -319,9 +312,9 @@ fn test_generate_unsupported_function_template_with_global_cpp() -> Result<()> {
         /* path= */ None,
         "unsupported_message",
     );
-    unsupported_item.set_inline_cpp_source_text(Some(
+    unsupported_item.set_inline_cpp_source_text(
         "template <typename T> T Add(T a, T b) { return a + b; }".into(),
-    ));
+    );
     let actual = generate_unsupported(&db, unsupported_item.into()).generated_items;
     let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
     let expected_comment = format!(
@@ -361,9 +354,9 @@ fn test_generate_unsupported_function_template_strict_mode_fatal_error() -> Resu
         /* path= */ None,
         "unsupported_message",
     );
-    unsupported_item.set_inline_cpp_source_text(Some(
+    unsupported_item.set_inline_cpp_source_text(
         "template <typename T> T Add(T a, T b) { return a + b; }".into(),
-    ));
+    );
     let _ = generate_unsupported(&db, unsupported_item.into());
     assert!(!factory.fatal_errors().take_string().is_empty());
     Ok(())

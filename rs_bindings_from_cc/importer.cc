@@ -102,7 +102,7 @@
 
 namespace crubit {
 
-namespace ir_proto = rs_bindings_from_cc::ir_proto::flat;
+namespace ir_proto = ::crubit::ffi;
 
 namespace {
 
@@ -134,7 +134,7 @@ absl::Status CheckImportStatus(const ir_proto::Item* item) {
   if (item->has_unsupported_item()) {
     const auto& unsupported = item->unsupported_item();
     std::vector<absl::string_view> messages;
-    messages.reserve(unsupported.errors_size());
+    messages.reserve(unsupported.errors().size());
     for (const auto& error : unsupported.errors()) {
       messages.push_back(error.message());
     }
@@ -1848,22 +1848,43 @@ std::optional<std::string> Importer::GetTemplateArgumentLifetimeParam(
 }
 
 void SetMustBindItem(ir_proto::Item& item) {
-  if (item.has_record()) {
-    item.mutable_record()->set_must_bind(true);
-  } else if (item.has_func()) {
-    item.mutable_func()->set_must_bind(true);
-  } else if (item.has_enum_decl()) {
-    item.mutable_enum_decl()->set_must_bind(true);
-  } else if (item.has_type_alias()) {
-    item.mutable_type_alias()->set_must_bind(true);
-  } else if (item.has_comment()) {
-    item.mutable_comment()->set_must_bind(true);
-  } else if (item.has_unsupported_item()) {
-    item.mutable_unsupported_item()->set_must_bind(true);
-  } else if (item.has_namespace_decl()) {
-    item.mutable_namespace_decl()->set_must_bind(true);
-  } else if (item.has_use_mod()) {
-    item.mutable_use_mod()->set_must_bind(true);
+  switch (item.kind()) {
+    case ir_proto::Item::kFunc:
+      item.mutable_func()->set_must_bind(true);
+      break;
+    case ir_proto::Item::kRecord:
+      item.mutable_record()->set_must_bind(true);
+      break;
+    case ir_proto::Item::kIncompleteRecord:
+      item.mutable_incomplete_record()->set_must_bind(true);
+      break;
+    case ir_proto::Item::kEnum:
+      item.mutable_enum_decl()->set_must_bind(true);
+      break;
+    case ir_proto::Item::kConstant:
+      item.mutable_constant()->set_must_bind(true);
+      break;
+    case ir_proto::Item::kTypeAlias:
+      item.mutable_type_alias()->set_must_bind(true);
+      break;
+    case ir_proto::Item::kGlobalVar:
+      item.mutable_global_var()->set_must_bind(true);
+      break;
+    case ir_proto::Item::kUnsupportedItem:
+      item.mutable_unsupported_item()->set_must_bind(true);
+      break;
+    case ir_proto::Item::kComment:
+      item.mutable_comment()->set_must_bind(true);
+      break;
+    case ir_proto::Item::kNamespace:
+      item.mutable_namespace_decl()->set_must_bind(true);
+      break;
+    case ir_proto::Item::kUseMod:
+      item.mutable_use_mod()->set_must_bind(true);
+      break;
+    case ir_proto::Item::kExistingRustType:
+      item.mutable_existing_rust_type()->set_must_bind(true);
+      break;
   }
 }
 
@@ -2086,7 +2107,7 @@ void Importer::Import(
       for (ItemId child_id : child_ids_it->second) {
         auto child_it = id_to_item.find(child_id);
         if (child_it != id_to_item.end()) {
-          record->add_children()->CopyFrom(*child_it->second);
+          *record->add_children() = *child_it->second;
         }
       }
     } else if (parent_it->second->has_namespace_decl()) {
@@ -2095,7 +2116,7 @@ void Importer::Import(
       for (ItemId child_id : child_ids_it->second) {
         auto child_it = id_to_item.find(child_id);
         if (child_it != id_to_item.end()) {
-          ns->add_children()->CopyFrom(*child_it->second);
+          *ns->add_children() = *child_it->second;
         }
       }
     }
@@ -2113,7 +2134,7 @@ void Importer::Import(
       // target that are unsupported. You have to run it only if label is not
       // equal to the current target; you can skip the current target.
       if (it != id_to_item.end() && !IsUnsupportedAndAlien(id)) {
-        target_items.add_items()->CopyFrom(*it->second);
+        *target_items.Add() = *it->second;
       }
     }
   }
@@ -2638,7 +2659,7 @@ bool Importer::IsFeatureEnabledForTarget(const BazelLabel& label,
                                          absl::string_view feature) const {
   if (auto i = invocation_.ir_.crubit_features().find(label.value());
       i != invocation_.ir_.crubit_features().end()) {
-    for (const auto& f : i->second.features()) {
+    for (const auto& f : i->second) {
       if (f == feature) return true;
     }
   }
@@ -2848,7 +2869,7 @@ absl::StatusOr<std::optional<bool>> Importer::DetectFormatterForType(
 bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
   if (auto i = invocation_.ir_.crubit_features().find(label.value());
       i != invocation_.ir_.crubit_features().end()) {
-    return i->second.features_size() > 0;
+    return !i->second.empty();
   }
   // TODO(b/471240594): This is a hack for this specific header. We need to
   // properly fix target assignment for Crubit support libraries.
@@ -2937,7 +2958,7 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
     *unsupported->mutable_path() = std::move(*path);
   }
   for (const auto& err : errors) {
-    err.WriteToProto(*unsupported->add_errors());
+    *unsupported->add_errors() = err.AsFfi();
   }
   *unsupported->mutable_decl_loc() =
       ConvertDeclLocation(original_decl.getBeginLoc(), nullptr);
@@ -3287,7 +3308,7 @@ CcType Importer::WithAsWrittenTemplateArgs(
   // `choose_one_type` in `rs_snippet.rs`) use the first, and binding a
   // specialization's own lifetime parameter (see `AddTemplateArgumentLifetime`)
   // is still limited to a single argument.
-  if (!std::holds_alternative<ItemId>(converted.variant)) return converted;
+  if (!converted.variant().has_decl()) return converted;
 
   // An alias template specialization carries the arguments of the alias, not
   // of the class template it names: e.g. `c9::CoStatusOr<T>` is written with
@@ -3328,8 +3349,7 @@ CcType Importer::WithAsWrittenTemplateArgs(
     CcType converted_arg =
         ConvertQualType(arg.getAsType(), /*lifetimes=*/nullptr,
                         /*nullable=*/true, assume_lifetimes);
-    if (const auto* error =
-            std::get_if<FormattedError>(&converted_arg.variant)) {
+    if (converted_arg.variant().has_error()) {
       // A malformed lifetime annotation surfaces here as an error type, rather
       // than being silently dropped: the lifetime was written down in the
       // source, so dropping it would produce bindings that disagree with the
@@ -3338,7 +3358,8 @@ CcType Importer::WithAsWrittenTemplateArgs(
         return CcType(FormattedError::Substitute(
             "Failed to convert a template argument of '$0', which carries "
             "an explicit lifetime: $1",
-            clang::QualType(&type, 0).getAsString(), error->message()));
+            clang::QualType(&type, 0).getAsString(),
+            converted_arg.variant().error().message()));
       }
       // Otherwise, fall back to the decl's arguments. They were converted
       // successfully when the specialization was imported, so this only loses
@@ -3348,7 +3369,7 @@ CcType Importer::WithAsWrittenTemplateArgs(
     converted_args.push_back(std::move(converted_arg));
   }
   for (CcType& converted_arg : converted_args) {
-    converted.template_args.push_back(std::move(converted_arg));
+    *converted.add_template_args() = std::move(converted_arg);
   }
   return converted;
 }
@@ -3359,7 +3380,7 @@ CcType Importer::ConvertTypeDecl(clang::NamedDecl* absl_nonnull decl) {
         "No generated bindings found for '$0'", decl->getNameAsString()));
   }
 
-  return CcType(GenerateItemId(*decl));
+  return CcTypeDecl(GenerateItemId(*decl));
 }
 
 static bool IsSameCanonicalUnqualifiedType(clang::QualType type1,
@@ -3455,14 +3476,15 @@ absl::StatusOr<CcType> Importer::ConvertType(
         nullability = *default_nullability;
       }
     }
-    cpp_type->is_nonnull = nullability.has_value() &&
-                           *nullability == clang::NullabilityKind::NonNull;
+    cpp_type->set_is_nonnull(nullability.has_value() &&
+                             *nullability == clang::NullabilityKind::NonNull);
     // Raw pointers record non-nullness in their kind. Both kinds still map to
     // a Rust raw pointer; this only makes the information available to codegen.
-    if (auto* pointer = std::get_if<CcType::PointerType>(&cpp_type->variant);
-        pointer != nullptr && pointer->kind == PointerTypeKind::NULLABLE &&
-        cpp_type->is_nonnull) {
-      pointer->kind = PointerTypeKind::NON_NULL;
+    if (cpp_type->variant().has_pointer() &&
+        cpp_type->variant().pointer().kind() == PointerTypeKind::NULLABLE &&
+        cpp_type->is_nonnull()) {
+      cpp_type->mutable_variant()->mutable_pointer()->set_kind(
+          PointerTypeKind::NON_NULL);
     }
 
     std::optional<std::string> unknown_attr =
@@ -3487,18 +3509,15 @@ absl::StatusOr<CcType> Importer::ConvertType(
           }
         });
     if (unknown_attr.has_value()) {
-      cpp_type->unknown_attr = *unknown_attr;
+      cpp_type->set_unknown_attr(*unknown_attr);
     }
     if (assume_lifetimes) {
       CRUBIT_ASSIGN_OR_RETURN(
           std::vector<absl::string_view> explicit_lifetime_views,
           CollectExplicitLifetimes(ctx_, type));
-      cpp_type->explicit_lifetimes.reserve(explicit_lifetime_views.size());
-      absl::c_transform(explicit_lifetime_views,
-                        std::back_inserter(cpp_type->explicit_lifetimes),
-                        [](absl::string_view lifetime_view) {
-                          return std::string(lifetime_view);
-                        });
+      for (absl::string_view lifetime_view : explicit_lifetime_views) {
+        cpp_type->add_explicit_lifetimes(lifetime_view);
+      }
       CRUBIT_RETURN_IF_ERROR(AddTemplateArgumentLifetime(
           type, /*has_written_lifetimes=*/!explicit_lifetime_views.empty(),
           *cpp_type));
@@ -3542,14 +3561,13 @@ absl::Status Importer::AddTemplateArgumentLifetime(const clang::Type& type,
     const auto* specialization_decl =
         clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
             specialization_type->getAsCXXRecordDecl());
-    if (specialization_decl == nullptr ||
-        !std::holds_alternative<ItemId>(cpp_type.variant) ||
-        cpp_type.template_args.size() != 1 ||
+    if (specialization_decl == nullptr || !cpp_type.variant().has_decl() ||
+        cpp_type.template_args().size() != 1 ||
         !GetTemplateArgumentLifetimeParam(*specialization_decl).has_value()) {
       return absl::OkStatus();
     }
-    const std::vector<std::string>& arg_lifetimes =
-        cpp_type.template_args[0].explicit_lifetimes;
+    const auto& arg_lifetimes =
+        cpp_type.template_args()[0].explicit_lifetimes();
     if (arg_lifetimes.empty()) return absl::OkStatus();
     std::string type_string = clang::QualType(&type, 0).getAsString();
     if (has_written_lifetimes) {
@@ -3565,7 +3583,7 @@ absl::Status Importer::AddTemplateArgumentLifetime(const clang::Type& type,
           "the template argument of '", type_string,
           "' must have exactly one lifetime, but has ", arg_lifetimes.size()));
     }
-    cpp_type.explicit_lifetimes = arg_lifetimes;
+    *cpp_type.mutable_explicit_lifetimes() = arg_lifetimes;
     return absl::OkStatus();
   }
 
@@ -3585,7 +3603,7 @@ absl::Status Importer::AddTemplateArgumentLifetime(const clang::Type& type,
   // argument is itself a reference, e.g. `const T&` in `View<int&>`: the
   // references collapse into the argument's reference, so the type refers to
   // the same object as the argument.
-  if (!cpp_type.explicit_lifetimes.empty()) return absl::OkStatus();
+  if (!cpp_type.explicit_lifetimes().empty()) return absl::OkStatus();
   const clang::Type* parameter_type = &spelled_type;
   if (const auto* reference_type =
           clang::dyn_cast<clang::ReferenceType>(&spelled_type);
@@ -3604,7 +3622,8 @@ absl::Status Importer::AddTemplateArgumentLifetime(const clang::Type& type,
   if (specialization_decl == nullptr) return absl::OkStatus();
   if (std::optional<std::string> lifetime =
           GetTemplateArgumentLifetimeParam(*specialization_decl)) {
-    cpp_type.explicit_lifetimes = {*std::move(lifetime)};
+    cpp_type.clear_explicit_lifetimes();
+    cpp_type.add_explicit_lifetimes(*lifetime);
   }
   return absl::OkStatus();
 }
@@ -3654,8 +3673,10 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
           CallingConv cc_call_conv,
           ConvertCcCallConvToSupportedCallingConv(func_type->getCallConv()));
 
-      std::vector<CcType> param_and_return_types;
-      param_and_return_types.reserve(func_type->getNumParams() + 1);
+      CcType func_ptr_type;
+      auto* fp = func_ptr_type.mutable_variant()->mutable_func_pointer();
+      fp->set_non_null(type.isLValueReferenceType());
+      fp->set_call_conv(cc_call_conv);
       for (unsigned i = 0; i < func_type->getNumParams(); ++i) {
         const clang::tidy::lifetimes::ValueLifetimes* param_lifetimes = nullptr;
         if (pointee_lifetimes) {
@@ -3665,7 +3686,7 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
         CcType cpp_param_type =
             ConvertQualType(func_type->getParamType(i), param_lifetimes,
                             /*nullable=*/true, assume_lifetimes);
-        param_and_return_types.push_back(std::move(cpp_param_type));
+        *fp->add_param_and_return_types() = std::move(cpp_param_type);
       }
 
       const clang::tidy::lifetimes::ValueLifetimes* return_lifetimes = nullptr;
@@ -3676,14 +3697,10 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
       CcType cpp_return_type =
           ConvertQualType(func_type->getReturnType(), return_lifetimes,
                           /*nullable=*/true, assume_lifetimes);
-      param_and_return_types.push_back(std::move(cpp_return_type));
+      *fp->add_param_and_return_types() = std::move(cpp_return_type);
 
       CHECK(type.isPointerType() || type.isLValueReferenceType());
-      return CcType(CcType::FuncPointer{
-          .non_null = type.isLValueReferenceType(),
-          .call_conv = cc_call_conv,
-          .param_and_return_types = std::move(param_and_return_types),
-      });
+      return func_ptr_type;
     }
     CcType cpp_pointee_type = ConvertQualType(
         pointee_type, pointee_lifetimes, /*nullable=*/true, assume_lifetimes);
@@ -3692,16 +3709,15 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     // consumer to infer a lifetime where-appropriate (e.g. constructors).
     if (type.isPointerType()) {
       if (is_owned_ptr) {
-        return CcType::OwnedPointerTo(std::move(cpp_pointee_type), lifetime);
+        return OwnedPointerTo(std::move(cpp_pointee_type), lifetime);
       } else {
-        return CcType::PointerTo(std::move(cpp_pointee_type), lifetime,
-                                 nullable);
+        return PointerTo(std::move(cpp_pointee_type), lifetime, nullable);
       }
     } else if (type.isLValueReferenceType()) {
-      return CcType::LValueReferenceTo(std::move(cpp_pointee_type), lifetime);
+      return LValueReferenceTo(std::move(cpp_pointee_type), lifetime);
     } else {
       CHECK(type.isRValueReferenceType());
-      return CcType::RValueReferenceTo(std::move(cpp_pointee_type), lifetime);
+      return RValueReferenceTo(std::move(cpp_pointee_type), lifetime);
     }
   } else if (const auto* builtin_type =
                  // Use getAsAdjusted instead of getAs so we don't desugar
@@ -3709,56 +3725,56 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
              type.getAsAdjusted<clang::BuiltinType>()) {
     switch (builtin_type->getKind()) {
       case clang::BuiltinType::Bool:
-        return CcType(CcType::Primitive{"bool"});
+        return CcType(Primitive::BOOL);
       case clang::BuiltinType::Void:
-        return CcType(CcType::Primitive{"void"});
+        return CcType(Primitive::VOID);
 
       // Floating-point numbers
       //
       // TODO(b/255768062): Generated bindings should explicitly check if
       // `math.h` defines the `__STDC_IEC_559__` macro.
       case clang::BuiltinType::Float:
-        return CcType(CcType::Primitive{"float"});
+        return CcType(Primitive::FLOAT);
       case clang::BuiltinType::Double:
-        return CcType(CcType::Primitive{"double"});
+        return CcType(Primitive::DOUBLE);
 
       // `char`
       case clang::BuiltinType::Char_S:  // 'char' in targets where it's signed
       case clang::BuiltinType::Char_U:  // 'char' in targets where it's unsigned
-        return CcType(CcType::Primitive{"char"});
+        return CcType(Primitive::CHAR);
       case clang::BuiltinType::SChar:  // 'signed char', explicitly qualified
-        return CcType(CcType::Primitive{"signed char"});
+        return CcType(Primitive::SIGNED_CHAR);
       case clang::BuiltinType::UChar:  // 'unsigned char', explicitly qualified
-        return CcType(CcType::Primitive{"unsigned char"});
+        return CcType(Primitive::UNSIGNED_CHAR);
 
       // Signed integers
       case clang::BuiltinType::Short:
-        return CcType(CcType::Primitive{"short"});
+        return CcType(Primitive::SHORT);
       case clang::BuiltinType::Int:
-        return CcType(CcType::Primitive{"int"});
+        return CcType(Primitive::INT);
       case clang::BuiltinType::Long:
-        return CcType(CcType::Primitive{"long"});
+        return CcType(Primitive::LONG);
       case clang::BuiltinType::LongLong:
-        return CcType(CcType::Primitive{"long long"});
+        return CcType(Primitive::LONG_LONG);
       case clang::BuiltinType::Int128:
-        return CcType(CcType::Primitive{"__int128"});
+        return CcType(Primitive::INT128);
 
       // Unsigned integers
       case clang::BuiltinType::UShort:
-        return CcType(CcType::Primitive{"unsigned short"});
+        return CcType(Primitive::UNSIGNED_SHORT);
       case clang::BuiltinType::UInt:
-        return CcType(CcType::Primitive{"unsigned int"});
+        return CcType(Primitive::UNSIGNED_INT);
       case clang::BuiltinType::ULong:
-        return CcType(CcType::Primitive{"unsigned long"});
+        return CcType(Primitive::UNSIGNED_LONG);
       case clang::BuiltinType::ULongLong:
-        return CcType(CcType::Primitive{"unsigned long long"});
+        return CcType(Primitive::UNSIGNED_LONG_LONG);
       case clang::BuiltinType::UInt128:
-        return CcType(CcType::Primitive{"unsigned __int128"});
+        return CcType(Primitive::UNSIGNED_INT128);
 
       case clang::BuiltinType::Char16:
-        return CcType(CcType::Primitive{"char16_t"});
+        return CcType(Primitive::CHAR16_T);
       case clang::BuiltinType::Char32:
-        return CcType(CcType::Primitive{"char32_t"});
+        return CcType(Primitive::CHAR32_T);
       default:
         return absl::UnimplementedError("Unsupported builtin type");
     }
@@ -3834,10 +3850,11 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     CcType element_type =
         ConvertQualType(array_type->getElementType(), /*lifetimes=*/nullptr,
                         /*nullable=*/true, assume_lifetimes);
-    return CcType(CcType::ConstantArrayType{
-        .num_elements = *num_elements,
-        .element_type = std::make_shared<CcType>(std::move(element_type)),
-    });
+    CcType result;
+    auto* arr = result.mutable_variant()->mutable_constant_array();
+    arr->set_num_elements(static_cast<size_t>(*num_elements));
+    *arr->mutable_element_type() = std::move(element_type);
+    return result;
   }
 
   return absl::UnimplementedError(absl::StrCat(
@@ -3864,16 +3881,17 @@ CcType Importer::ConvertQualType(
     return CcType(FormattedError::Substitute(
         "Unsupported type '$0': $1", type_string, type.status().message()));
   }
-  if (auto* error = std::get_if<FormattedError>(&type->variant)) {
+  if (type->variant().has_error()) {
     // TODO(jeanpierreda): The most-specific type should go at the start, and
     // be something we can aggregate by somehow.
     // TODO(jeanpierreda): This produces pretty verbose errors.
-    return CcType(FormattedError::Substitute("Unsupported type '$0': $1",
-                                             type_string, error->message()));
+    return CcType(
+        FormattedError::Substitute("Unsupported type '$0': $1", type_string,
+                                   type->variant().error().message()));
   }
 
   // Handle cv-qualification.
-  type->is_const = qual_type.isConstQualified();
+  type->set_is_const(qual_type.isConstQualified());
   if (qual_type.isVolatileQualified()) {
     return CcType(FormattedError::PrefixedStrCat(
         "Unsupported `volatile` qualifier", type_string));
@@ -4015,10 +4033,9 @@ Importer::GetUnsupportedItemPathForTemplateDecl(
     return std::nullopt;
   }
   ir_proto::UnsupportedItem::Path path;
-  WriteToProto(names->cc_identifier, *path.mutable_ident());
+  *path.mutable_ident() = std::move(names->cc_identifier);
   if (enclosing_item_id->has_value()) {
-    path.set_enclosing_item_id(
-        static_cast<int64_t>((*enclosing_item_id)->value()));
+    path.set_enclosing_item_id((*enclosing_item_id)->value());
   }
   return path;
 }
@@ -4083,19 +4100,19 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
       }
 
       return TranslatedUnqualifiedIdentifier{
-          .cc_identifier = Identifier(name),
-          .crubit_rust_name = crubit_rust_name,
+          .cc_identifier = UnqualifiedIdentifier(Identifier(name)),
+          .crubit_rust_name = std::move(crubit_rust_name),
       };
     }
     case clang::DeclarationName::CXXConstructorName:
       return TranslatedUnqualifiedIdentifier{
-          .cc_identifier = SpecialName::CONSTRUCTOR,
-          .crubit_rust_name = crubit_rust_name,
+          .cc_identifier = UnqualifiedIdentifier::Constructor(),
+          .crubit_rust_name = std::move(crubit_rust_name),
       };
     case clang::DeclarationName::CXXDestructorName:
       return TranslatedUnqualifiedIdentifier{
-          .cc_identifier = SpecialName::DESTRUCTOR,
-          .crubit_rust_name = crubit_rust_name,
+          .cc_identifier = UnqualifiedIdentifier::Destructor(),
+          .crubit_rust_name = std::move(crubit_rust_name),
       };
     case clang::DeclarationName::CXXOperatorName:
       switch (named_decl.getDeclName().getCXXOverloadedOperator()) {
@@ -4107,8 +4124,8 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
         #define OVERLOADED_OPERATOR(name, spelling, ...)  \
         case clang::OO_##name: {                          \
           return TranslatedUnqualifiedIdentifier{ \
-            .cc_identifier = Operator(spelling), \
-            .crubit_rust_name = crubit_rust_name, \
+            .cc_identifier = UnqualifiedIdentifier(Operator(spelling)), \
+            .crubit_rust_name = std::move(crubit_rust_name), \
           }; \
         }
         #include "clang/Basic/OperatorKinds.def"
@@ -4118,8 +4135,8 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
       LOG(FATAL) << "The `switch` above should handle all cases";
     case clang::DeclarationName::CXXConversionFunctionName:
       return TranslatedUnqualifiedIdentifier{
-          .cc_identifier = ConversionOperator{},
-          .crubit_rust_name = crubit_rust_name,
+          .cc_identifier = UnqualifiedIdentifier::ConversionOperator(),
+          .crubit_rust_name = std::move(crubit_rust_name),
       };
     default:
       // There are also e.g. literal operators, deduction guides, etc., but
@@ -4134,27 +4151,24 @@ absl::StatusOr<TranslatedIdentifier> Importer::GetTranslatedIdentifier(
     const clang::NamedDecl& named_decl) const {
   CRUBIT_ASSIGN_OR_RETURN(TranslatedUnqualifiedIdentifier unqualified,
                           GetTranslatedName(named_decl));
-  Identifier* cc_identifier =
-      std::get_if<Identifier>(&unqualified.cc_identifier);
-  CHECK(cc_identifier) << "Incorrectly called with a special name";
+  CHECK(unqualified.cc_identifier.has_ident())
+      << "Incorrectly called with a special name";
+  Identifier cc_identifier(unqualified.cc_identifier.ident().identifier());
 
   TranslatedIdentifier translated_identifiers = {
-      .cc_identifier = *cc_identifier,
+      .cc_identifier = cc_identifier,
   };
 
   if (!unqualified.crubit_rust_name.has_value()) {
-    translated_identifiers.crubit_rust_name = *cc_identifier;
+    translated_identifiers.crubit_rust_name = std::move(cc_identifier);
     return translated_identifiers;
   }
 
-  if (!std::holds_alternative<Identifier>(*unqualified.crubit_rust_name)) {
-    CHECK(unqualified.crubit_rust_name)
-        << "Crubit rust name cannot be a special name";
-  }
+  CHECK(unqualified.crubit_rust_name->has_ident())
+      << "Crubit rust name cannot be a special name";
 
-  // TODO(yulanlin): potentially buggy
   translated_identifiers.crubit_rust_name =
-      std::move(std::get<Identifier>(*unqualified.crubit_rust_name));
+      Identifier(unqualified.crubit_rust_name->ident().identifier());
 
   return translated_identifiers;
 }

@@ -15,7 +15,6 @@ import subprocess
 import sys
 from typing import NoReturn
 
-import generate_proto_headers
 import get_llvm_commit_date
 
 Path = pathlib.Path
@@ -283,37 +282,15 @@ def main():
   absl_include_paths = [absl_src_dir]
   absl_lib_base = absl_bin_dir / "absl"
 
-  # 4. Protobuf paths
-  protobuf_src_dir, protobuf_bin_dir = resolve_external_repo(
-      "protobuf",
-      "@protobuf//:protobuf",
-      "@protobuf//:protoc",
-  )
-  protoc_path = protobuf_bin_dir / "protoc"
-  if not protoc_path.is_file():
-    fail(
-        f"protoc not found at expected path: {protoc_path}. Did you run"
-        " 'bazelisk build @protobuf//:protoc' first?"
-    )
-
-  # 5. Pre-generate proto headers upfront to avoid race conditions in parallel
-  # Cargo builds. For details, see docs/overview/cargo_build_protobuf.md.
-  proto_include_dir = bazel_outputs_dir / "include"
-  log(f"Pre-generating C++ Protobuf headers into {proto_include_dir}...")
-  generate_proto_headers.generate_protobuf_headers(
-      str(protoc_path), str(proto_include_dir), str(REPO_ROOT)
-  )
-
-  # 6. Hermetic Toolchain
+  # 4. Hermetic Toolchain
   toolchain = find_hermetic_toolchain()
   if not toolchain:
     fail("Hermetic toolchain or llvm-ar not found in toolchains_llvm.")
 
-  # 7. Merge static libraries into monolithic archives
+  # 5. Merge static libraries into monolithic archives
   archives_to_merge = [
       ("libabsl_monolithic.a", [absl_lib_base]),
       ("libclang_monolithic.a", clang_lib_paths),
-      ("libprotobuf.a", [protobuf_bin_dir]),
   ]
   for name, input_dirs in archives_to_merge:
     merge_archives(
@@ -322,26 +299,12 @@ def main():
         input_dirs,
     )
 
-  # 8. Environment variables
+  # 6. Environment variables
   env_vars = {
       "CLANG_INCLUDE_PATH": ",".join(str(p) for p in clang_include_paths),
       "CLANG_LIB_STATIC_PATH": str(bazel_outputs_dir),
       "ABSL_INCLUDE_PATH": ",".join(str(p) for p in absl_include_paths),
       "ABSL_LIB_STATIC_PATH": str(bazel_outputs_dir),
-      # PROTOC is required by protobuf-codegen during Cargo build to generate
-      # Rust Protobuf bindings (for ir_rust_proto and
-      # generate_bindings_rust_proto).
-      # For details, see docs/overview/cargo_build_protobuf.md.
-      "PROTOC": str(protoc_path),
-      "PROTOBUF_INCLUDE_PATH": ",".join(
-          str(p)
-          for p in [
-              proto_include_dir,
-              protobuf_src_dir / "src",
-              protobuf_src_dir / "third_party" / "utf8_range",
-          ]
-      ),
-      "PROTOBUF_LIB_STATIC_PATH": str(bazel_outputs_dir),
   }
 
   log(f"Found hermetic Clang: {toolchain['clang']}")

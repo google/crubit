@@ -9,7 +9,7 @@ use database::rs_snippet::{LifetimeOptions, RsTypeKind};
 use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail};
 use heck::ToSnakeCase;
-use ir::{CcType, CcTypeVariant, Func, GenericItem, Item, ItemId, Record};
+use ir::{CcType, CcTypeVariant, FfiRc, Func, GenericItem, Item, ItemId, Record};
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -23,7 +23,7 @@ fn cc_type_has_bindings<'a>(
     alias_id: ItemId,
 ) -> Result<(), NoBindingsReason> {
     match cc_type.variant() {
-        CcTypeVariant::Decl { id, template_args } => {
+        CcTypeVariant::Decl(id) => {
             let underlying_item = db.find_untyped_decl(*id);
             if let ir::Item::TypeAlias(inner_alias) = underlying_item {
                 cc_type_has_bindings(db, inner_alias.underlying_type(), alias_id)?;
@@ -34,10 +34,8 @@ fn cc_type_has_bindings<'a>(
                     source: no_bindings.into(),
                 });
             }
-            if let Some(args) = template_args {
-                for arg in args.iter() {
-                    cc_type_has_bindings(db, arg, alias_id)?;
-                }
+            for arg in cc_type.template_args().iter() {
+                cc_type_has_bindings(db, arg, alias_id)?;
             }
         }
         CcTypeVariant::Pointer(ptr) => {
@@ -46,8 +44,8 @@ fn cc_type_has_bindings<'a>(
         CcTypeVariant::ConstantArray(arr) => {
             cc_type_has_bindings(db, arr.element_type(), alias_id)?;
         }
-        CcTypeVariant::FuncPointer { param_and_return_types, .. } => {
-            for t in param_and_return_types.iter() {
+        CcTypeVariant::FuncPointer(fp) => {
+            for t in fp.param_and_return_types().iter() {
                 cc_type_has_bindings(db, t, alias_id)?;
             }
         }
@@ -57,10 +55,7 @@ fn cc_type_has_bindings<'a>(
 }
 
 /// Implementation of `BindingsGenerator::has_bindings`.
-pub fn has_bindings<'a>(
-    db: &BindingsGenerator<'a>,
-    item: Item<'a>,
-) -> Result<(), NoBindingsReason> {
+pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindingsReason> {
     if let Some(name) = item.cc_name_as_str() {
         // Dunder namespaces are allowed for now.
         if name.starts_with("__") && !matches!(item, Item::Namespace(_)) {
@@ -141,7 +136,7 @@ pub fn has_bindings<'a>(
                         parent_names_that_map_to_same_name: parent_records_that_map_to_this_name
                             .iter()
                             .map(|&parent_record_id| {
-                                db.find_decl::<Rc<Record>>(parent_record_id)
+                                db.find_decl::<FfiRc<Record>>(parent_record_id)
                                     .unwrap()
                                     .rs_name()
                                     .as_str()
@@ -268,10 +263,7 @@ pub fn has_bindings<'a>(
 }
 
 /// Returns function-specific `has_bindings` information.
-fn func_has_bindings<'a>(
-    db: &BindingsGenerator<'a>,
-    func: Rc<Func<'a>>,
-) -> Result<(), NoBindingsReason> {
+fn func_has_bindings(db: &BindingsGenerator, func: FfiRc<Func>) -> Result<(), NoBindingsReason> {
     if func.is_consteval() {
         return Err(NoBindingsReason::Unsupported(anyhow!(
             "consteval functions are not supported"
@@ -387,9 +379,9 @@ fn determine_name_conflict_action<'a>(
 /// Resolves names to a map from name to ResolvedName.
 ///
 /// This checks both type and value namespaces.
-pub fn resolve_names<'a>(
-    db: &BindingsGenerator<'a>,
-    parent: Rc<Record<'a>>,
+pub fn resolve_names(
+    db: &BindingsGenerator,
+    parent: FfiRc<Record>,
 ) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>> {
     let child_items = match parent.enclosing_item_id().map(|id| db.find_untyped_decl(id)) {
         Some(Item::Namespace(ns)) => ns.children().iter(),

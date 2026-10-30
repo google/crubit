@@ -35,10 +35,8 @@ error_report = { path = "../../../../cargo/common/error_report"}
 token_stream_matchers = { path = "../../../../cargo/common/token_stream_matchers"}
 ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 ir_matchers = { path = "../../../../cargo/rs_bindings_from_cc/ir_matchers", package = "rs_bindings_from_cc_ir_matchers"}
-ir_rust_proto = { path = "../../../../cargo/rs_bindings_from_cc/ir_rust_proto", package = "rs_bindings_from_cc_ir_rust_proto"}
 ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/ir_testing", package = "rs_bindings_from_cc_ir_testing"}
 database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}
 googletest.workspace = true
-protobuf.workspace = true
 quote.workspace = true
 serde_json.workspace = true

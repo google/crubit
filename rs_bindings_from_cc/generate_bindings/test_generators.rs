@@ -65,7 +65,7 @@ pub fn generate_bindings_tokens_from_assumed_lifetimes_cc_dependency(
     generate_bindings_tokens_for_test(ir)
 }
 
-pub fn generate_bindings_tokens_for_test(ir: IR<'_>) -> Result<BindingsTokens> {
+pub fn generate_bindings_tokens_for_test(ir: IR) -> Result<BindingsTokens> {
     let fatal_errors = FatalErrors::new();
     let tokens = generate_bindings_tokens(
         &ir,
@@ -84,7 +84,7 @@ pub fn generate_bindings_tokens_for_test(ir: IR<'_>) -> Result<BindingsTokens> {
     Ok(tokens)
 }
 
-pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR<'_>) -> Result<BindingsTokens> {
+pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR) -> Result<BindingsTokens> {
     let fatal_errors = FatalErrors::new();
     let tokens = generate_bindings_tokens(
         &ir,
@@ -107,7 +107,7 @@ pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR<'_>) -> Result<
 ///
 /// The JSON has the same format as the `*_rust_api_error_report.json` files produced by the
 /// build, i.e. a sequence of `error_report::ErrorReportEntry`.
-pub fn generate_error_report_json_for_test(ir: IR<'_>) -> Result<String> {
+pub fn generate_error_report_json_for_test(ir: IR) -> Result<String> {
     let errors = ErrorReport::new(SourceLanguage::Cpp);
     let fatal_errors = FatalErrors::new();
     generate_bindings_tokens(
@@ -127,15 +127,15 @@ pub fn generate_error_report_json_for_test(ir: IR<'_>) -> Result<String> {
     Ok(errors.to_json_string())
 }
 
-pub struct TestDbFactory<'pb> {
-    ir: IR<'pb>,
+pub struct TestDbFactory {
+    ir: IR,
     errors: ErrorReport,
     fatal_errors: FatalErrors,
     interner: Interner,
 }
 
-impl<'pb> TestDbFactory<'pb> {
-    pub fn new(ir: IR<'pb>) -> Self {
+impl TestDbFactory {
+    pub fn new(ir: IR) -> Self {
         Self {
             ir,
             errors: ErrorReport::new(SourceLanguage::Cpp),
@@ -143,10 +143,10 @@ impl<'pb> TestDbFactory<'pb> {
             interner: Interner::default(),
         }
     }
-    pub fn make_db(&self) -> BindingsGenerator {
+    pub fn make_db(&self) -> BindingsGenerator<'_> {
         self.make_db_with_golden_test(false)
     }
-    pub fn make_db_with_golden_test(&self, is_golden_test: bool) -> BindingsGenerator {
+    pub fn make_db_with_golden_test(&self, is_golden_test: bool) -> BindingsGenerator<'_> {
         new_database(
             &self.ir,
             &self.errors,
@@ -162,7 +162,7 @@ impl<'pb> TestDbFactory<'pb> {
     pub fn fatal_errors(&self) -> &FatalErrors {
         &self.fatal_errors
     }
-    pub fn ir(&self) -> &IR<'pb> {
+    pub fn ir(&self) -> &IR {
         &self.ir
     }
 }

@@ -5,7 +5,7 @@
 //! Utilities for generating IR for the `multiplatformat_testing::test_platform` in tests.
 
 use arc_anyhow::Result;
-use ir_rust_proto::IRProto;
+use ir::ir_rust_proto::IRProto;
 use ir_testing::with_full_lifetime_macros;
 use multiplatform_testing::test_platform;
 

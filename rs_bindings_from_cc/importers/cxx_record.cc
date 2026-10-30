@@ -384,12 +384,15 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
                     "crubit_bridge_abi_cpp"});
 
   if (crubit::IsProto2Message(record_decl)) {
-    return BridgeType{BridgeType::ProtoMessageBridge{
-        .rust_name = GetProto2MessageRustName(ictx, record_decl)}};
+    BridgeType result;
+    result.mutable_proto_message_bridge()->set_rust_name(
+        GetProto2MessageRustName(ictx, record_decl));
+    return result;
   }
 
   if (crubit_abi_values.has_value()) {
-    std::vector<CcType> template_args;
+    BridgeType result;
+    auto* b = result.mutable_bridge();
     // If this is a template specialization, need to iterate through the
     // template args
     if (const clang::ClassTemplateSpecializationDecl* specialization_decl =
@@ -398,32 +401,46 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
       for (const clang::TemplateArgument& template_arg :
            specialization_decl->getTemplateArgs().asArray()) {
         if (template_arg.getKind() == clang::TemplateArgument::ArgKind::Type) {
-          template_args.push_back(
+          *b->add_template_args() =
               ictx.ConvertQualType(template_arg.getAsType(),
                                    /*lifetimes=*/nullptr, /*nullable=*/true,
                                    ictx.AreAssumedLifetimesEnabledForTarget(
-                                       ictx.GetOwningTarget(record_decl))));
+                                       ictx.GetOwningTarget(record_decl)));
         }
       }
     }
     auto [rust_name, abi_rust, abi_cpp] = *crubit_abi_values;
-    std::optional<std::string> label_hint;
+    b->set_rust_name(std::move(rust_name));
+    b->set_abi_rust(std::move(abi_rust));
+    b->set_abi_cpp(std::move(abi_cpp));
     absl::StatusOr<std::optional<std::string>> hint_val =
         GetAnnotationWithStringArg(record_decl, "crubit_bridge_label_hint");
     CHECK_OK(hint_val);
     if (hint_val->has_value()) {
-      label_hint = **std::move(hint_val);
+      b->set_label_hint(**std::move(hint_val));
     }
-
-    return BridgeType{BridgeType::Bridge{
-        .rust_name = std::move(rust_name),
-        .abi_rust = std::move(abi_rust),
-        .abi_cpp = std::move(abi_cpp),
-        .template_args = std::move(template_args),
-        .label_hint = std::move(label_hint),
-    }};
+    return result;
   }
   return std::nullopt;
+}
+
+std::optional<TraitImplPolarity> GetTraitPolarity(const TraitDerives& derives,
+                                                  absl::string_view trait) {
+  // <internal link> start
+  if (trait == "Clone") return derives.clone();
+  if (trait == "Copy") return derives.copy();
+  if (trait == "Debug") return derives.debug();
+  // <internal link> end
+  return std::nullopt;
+}
+
+void SetTraitPolarity(TraitDerives& derives, absl::string_view trait,
+                      TraitImplPolarity polarity) {
+  // <internal link> start
+  if (trait == "Clone") derives.set_clone(polarity);
+  if (trait == "Copy") derives.set_copy(polarity);
+  if (trait == "Debug") derives.set_debug(polarity);
+  // <internal link> end
 }
 
 // Helper function for `GetTraitDerives` to populate the derived traits in
@@ -454,13 +471,17 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
       if (polarity == TraitImplPolarity::NEGATIVE) {
         // An explicit opt-out. This is the default unless the
         // `infer_send_sync` feature is enabled, but it is always allowed.
-        TraitImplPolarity& selected =
-            trait == "Send" ? result.send : result.sync;
+        TraitImplPolarity selected =
+            trait == "Send" ? result.send() : result.sync();
         if (selected != TraitImplPolarity::NONE) {
           return absl::InvalidArgumentError(
               absl::StrCat("Trait '", trait, "' is derived multiple times."));
         }
-        selected = TraitImplPolarity::NEGATIVE;
+        if (trait == "Send") {
+          result.set_send(TraitImplPolarity::NEGATIVE);
+        } else {
+          result.set_sync(TraitImplPolarity::NEGATIVE);
+        }
         continue;
       }
       return absl::InvalidArgumentError(
@@ -470,8 +491,8 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
                        trait, "\")` macro."));
     }
 
-    TraitImplPolarity* absl_nullable selected = result.Polarity(trait);
-    if (selected == nullptr) {
+    std::optional<TraitImplPolarity> selected = GetTraitPolarity(result, trait);
+    if (!selected.has_value()) {
       // Custom (unrecognized) trait.
       if (polarity == TraitImplPolarity::NEGATIVE) {
         return absl::InvalidArgumentError(absl::StrCat(
@@ -482,7 +503,7 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
         // Keep the order in which the traits were written: iterating
         // `custom_traits` would make the generated `#[derive(...)]` order
         // depend on the per-process hash seed.
-        result.custom.emplace_back(trait);
+        result.add_custom(trait);
         continue;
       }
 
@@ -492,7 +513,7 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
 
     if (*selected == TraitImplPolarity::NONE) {
       // Trait is not yet derived, happy path :)
-      *selected = polarity;
+      SetTraitPolarity(result, trait, polarity);
       continue;
     }
 
@@ -520,8 +541,8 @@ absl::Status AddUnsafeImpls(const clang::Decl& decl, TraitDerives& result) {
     CRUBIT_ASSIGN_OR_RETURN(const absl::string_view unsafe_impl,
                             GetExprAsStringLiteral(*arg, ast_context));
     if (unsafe_impl == "Send" || unsafe_impl == "Sync") {
-      TraitImplPolarity& selected =
-          unsafe_impl == "Send" ? result.send : result.sync;
+      TraitImplPolarity selected =
+          unsafe_impl == "Send" ? result.send() : result.sync();
       if (selected == TraitImplPolarity::POSITIVE) {
         return absl::InvalidArgumentError(
             absl::StrCat("Unsafe implementation '", unsafe_impl,
@@ -532,7 +553,11 @@ absl::Status AddUnsafeImpls(const clang::Decl& decl, TraitDerives& result) {
             absl::StrCat("Trait '", unsafe_impl,
                          "' is derived both positively and negatively."));
       }
-      selected = TraitImplPolarity::POSITIVE;
+      if (unsafe_impl == "Send") {
+        result.set_send(TraitImplPolarity::POSITIVE);
+      } else {
+        result.set_sync(TraitImplPolarity::POSITIVE);
+      }
     } else {
       return absl::InvalidArgumentError(absl::StrCat(
           "Unsafe implementation '", unsafe_impl, "' is not supported."));
@@ -544,6 +569,11 @@ absl::Status AddUnsafeImpls(const clang::Decl& decl, TraitDerives& result) {
 // Returns the set of traits to derive on the Rust type.
 absl::StatusOr<TraitDerives> GetTraitDerives(const clang::Decl& decl) {
   TraitDerives result;
+  result.set_clone(TraitImplPolarity::NONE);
+  result.set_copy(TraitImplPolarity::NONE);
+  result.set_debug(TraitImplPolarity::NONE);
+  result.set_send(TraitImplPolarity::NONE);
+  result.set_sync(TraitImplPolarity::NONE);
   CRUBIT_RETURN_IF_ERROR(AddTraitDerives(decl, result));
   CRUBIT_RETURN_IF_ERROR(AddUnsafeImpls(decl, result));
   return result;
@@ -609,9 +639,11 @@ bool HasPrivateOrDeletedOperatorDelete(clang::CXXRecordDecl& record_decl) {
   return false;
 }
 
-absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
+absl::Status PopulateTemplateSpecializationKind(
     ImportContext& ictx,
-    const clang::ClassTemplateSpecializationDecl* specialization_decl) {
+    const clang::ClassTemplateSpecializationDecl* specialization_decl,
+    TemplateSpecialization& ts) {
+  auto& kind = *ts.mutable_kind();
   const clang::CXXRecordDecl* templated_decl =
       specialization_decl->getSpecializedTemplate()->getTemplatedDecl();
 
@@ -624,9 +656,11 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
           ParameterizedByTAndStdTraitT(ictx.ctx_, specialization_decl,
                                        "char_traits"));
       if (t->isCharType()) {
-        return TemplateSpecialization::StdStringView();
+        kind.set_std_string_view();
+        return absl::OkStatus();
       } else if (t->isWideCharType()) {
-        return TemplateSpecialization::StdWStringView();
+        kind.set_std_w_string_view();
+        return absl::OkStatus();
       }
       // Other character types do not get special support.
     } else if (templated_decl->getName() == "unique_ptr") {
@@ -634,49 +668,50 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
           clang::QualType t,
           ParameterizedByTAndStdTraitT(ictx.ctx_, specialization_decl,
                                        "default_delete"));
-      return TemplateSpecialization::StdUniquePtr(
-          // TODO(b/454627672): is specialization_decl the right decl to check
-          // for assumed_lifetimes?
-          ictx.ConvertQualType(
-              t, /*lifetimes=*/nullptr, /*nullable=*/true,
-              ictx.AreAssumedLifetimesEnabledForTarget(
-                  ictx.GetOwningTarget(*specialization_decl))));
+      // TODO(b/454627672): is specialization_decl the right decl to check
+      // for assumed_lifetimes?
+      *kind.mutable_std_unique_ptr()->mutable_element_type() =
+          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(*specialization_decl)));
+      return absl::OkStatus();
     } else if (templated_decl->getName() == "shared_ptr") {
       if (specialization_decl->getTemplateArgs().size() != 1) {
         return absl::InvalidArgumentError(
             "std::shared_ptr must have exactly one template argument");
       }
       clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
-      return TemplateSpecialization::StdSharedPtr(
-          // TODO(b/454627672): is specialization_decl the right decl to check
-          // for assumed_lifetimes?
-          ictx.ConvertQualType(
-              t, /*lifetimes=*/nullptr, /*nullable=*/true,
-              ictx.AreAssumedLifetimesEnabledForTarget(
-                  ictx.GetOwningTarget(*specialization_decl))));
+      // TODO(b/454627672): is specialization_decl the right decl to check
+      // for assumed_lifetimes?
+      *kind.mutable_std_shared_ptr()->mutable_element_type() =
+          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(*specialization_decl)));
+      return absl::OkStatus();
     } else if (templated_decl->getName() == "optional") {
       if (specialization_decl->getTemplateArgs().size() != 1) {
         return absl::InvalidArgumentError(
             "std::optional must have exactly one template argument");
       }
       clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
-      return TemplateSpecialization::StdOptional(
-          // TODO(b/454627672): is specialization_decl the right decl to check
-          // for assumed_lifetimes?
-          ictx.ConvertQualType(
-              t, /*lifetimes=*/nullptr, /*nullable=*/true,
-              ictx.AreAssumedLifetimesEnabledForTarget(
-                  ictx.GetOwningTarget(*specialization_decl))));
+      // TODO(b/454627672): is specialization_decl the right decl to check
+      // for assumed_lifetimes?
+      *kind.mutable_std_optional()->mutable_element_type() =
+          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(*specialization_decl)));
+      return absl::OkStatus();
     } else if (templated_decl->getName() == "vector") {
       CRUBIT_ASSIGN_OR_RETURN(clang::QualType t,
                               ParameterizedByTAndStdTraitT(
                                   ictx.ctx_, specialization_decl, "allocator"));
       // TODO(b/454627672): is specialization_decl the right decl to check for
       // assumed_lifetimes?
-      return TemplateSpecialization::StdVector(ictx.ConvertQualType(
-          t, /*lifetimes=*/nullptr, /*nullable=*/true,
-          ictx.AreAssumedLifetimesEnabledForTarget(
-              ictx.GetOwningTarget(*specialization_decl))));
+      *kind.mutable_std_vector()->mutable_element_type() =
+          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(*specialization_decl)));
+      return absl::OkStatus();
     }
     if (templated_decl->getName() == "atomic") {
       if (specialization_decl->getTemplateArgs().size() != 1) {
@@ -712,13 +747,15 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
       }
 
       if (!supported) {
-        return TemplateSpecialization::NonSpecial();
+        kind.set_non_special();
+        return absl::OkStatus();
       }
 
-      return TemplateSpecialization::StdAtomic{ictx.ConvertQualType(
-          t, /*lifetimes=*/nullptr, /*nullable=*/true,
-          ictx.AreAssumedLifetimesEnabledForTarget(
-              ictx.GetOwningTarget(*specialization_decl)))};
+      *kind.mutable_std_atomic()->mutable_element_type() =
+          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(*specialization_decl)));
+      return absl::OkStatus();
     }
   } else if (top_level_namespace == "absl") {
     if (templated_decl->getName() == "Span") {
@@ -727,11 +764,12 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
       clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
       // TODO(b/454627672): is specialization_decl the right decl to check for
       // assumed_lifetimes?
-      return TemplateSpecialization::AbslSpan(ictx.ConvertQualType(
-          t,
-          /*lifetimes=*/nullptr, /*nullable=*/true,
-          ictx.AreAssumedLifetimesEnabledForTarget(
-              ictx.GetOwningTarget(*specialization_decl))));
+      *kind.mutable_absl_span()->mutable_element_type() =
+          ictx.ConvertQualType(t,
+                               /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(*specialization_decl)));
+      return absl::OkStatus();
     } else if (templated_decl->getName() == "flat_hash_map") {
       LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() < 2)
           << "absl::flat_hash_map should have at least two template args";
@@ -739,29 +777,30 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
       clang::QualType v = specialization_decl->getTemplateArgs()[1].getAsType();
       // TODO(b/454627672): is specialization_decl the right decl to check for
       // assumed_lifetimes?
-      return TemplateSpecialization::AbslFlatHashMap{
-          .key_type = ictx.ConvertQualType(
-              k,
-              /*lifetimes=*/nullptr, /*nullable=*/true,
-              ictx.AreAssumedLifetimesEnabledForTarget(
-                  ictx.GetOwningTarget(*specialization_decl))),
-          .value_type = ictx.ConvertQualType(
-              v,
-              /*lifetimes=*/nullptr, /*nullable=*/true,
-              ictx.AreAssumedLifetimesEnabledForTarget(
-                  ictx.GetOwningTarget(*specialization_decl)))};
+      auto* map = kind.mutable_absl_flat_hash_map();
+      *map->mutable_key_type() =
+          ictx.ConvertQualType(k,
+                               /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(*specialization_decl)));
+      *map->mutable_value_type() =
+          ictx.ConvertQualType(v,
+                               /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(*specialization_decl)));
+      return absl::OkStatus();
     } else if (templated_decl->getName() == "flat_hash_set") {
       LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() < 1)
           << "absl::flat_hash_set should have at least one template arg";
       clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
       // TODO(b/454627672): is specialization_decl the right decl to check for
       // assumed_lifetimes?
-      return TemplateSpecialization::AbslFlatHashSet{
-          .element_type = ictx.ConvertQualType(
-              t,
-              /*lifetimes=*/nullptr, /*nullable=*/true,
-              ictx.AreAssumedLifetimesEnabledForTarget(
-                  ictx.GetOwningTarget(*specialization_decl)))};
+      *kind.mutable_absl_flat_hash_set()->mutable_element_type() =
+          ictx.ConvertQualType(t,
+                               /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(*specialization_decl)));
+      return absl::OkStatus();
     }
   } else if (top_level_namespace == "c9") {
     if (templated_decl->getName() == "Co") {
@@ -778,15 +817,17 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
         return absl::InvalidArgumentError(absl::StrCat(
             "c9::Co return type is incomplete: ", t.getAsString()));
       }
-      return TemplateSpecialization::C9Co(ictx.ConvertQualType(
-          t,
-          /*lifetimes=*/nullptr, /*nullable=*/true,
-          ictx.AreAssumedLifetimesEnabledForTarget(
-              ictx.GetOwningTarget(*specialization_decl))));
+      *kind.mutable_c9_co()->mutable_element_type() =
+          ictx.ConvertQualType(t,
+                               /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(*specialization_decl)));
+      return absl::OkStatus();
     }
   }
 
-  return TemplateSpecialization::NonSpecial();
+  kind.set_non_special();
+  return absl::OkStatus();
 }
 
 // Returns the `DynCallable` information for the given `specialization_decl`.
@@ -805,10 +846,10 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
   BridgeType::Callable::BackingType backing_type;
   if ((top_level_namespace == "rs" || top_level_namespace == "rs_std") &&
       templated_decl->getName() == "DynCallable") {
-    backing_type = BridgeType::Callable::BackingType::kDynCallable;
+    backing_type = BridgeType::Callable::DYN_CALLABLE;
   } else if (top_level_namespace == "absl" &&
              templated_decl->getName() == "AnyInvocable") {
-    backing_type = BridgeType::Callable::BackingType::kAnyInvocable;
+    backing_type = BridgeType::Callable::ANY_INVOCABLE;
   } else {
     return std::nullopt;
   }
@@ -834,11 +875,11 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
   BridgeType::Callable::FnTrait fn_trait;
   if (sig_fn_type->getRefQualifier() == clang::RQ_RValue) {
     // Regardless of whether it's && or const &&, it's a FnOnce.
-    fn_trait = BridgeType::Callable::FnTrait::kFnOnce;
+    fn_trait = BridgeType::Callable::FN_ONCE;
   } else if (sig_fn_type->getMethodQuals().hasConst()) {
-    fn_trait = BridgeType::Callable::FnTrait::kFn;
+    fn_trait = BridgeType::Callable::FN;
   } else {
-    fn_trait = BridgeType::Callable::FnTrait::kFnMut;
+    fn_trait = BridgeType::Callable::FN_MUT;
   }
 
   // Convert the return type, ensuring that it is complete first.
@@ -885,12 +926,15 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
     param_types.push_back(std::move(param_cc_type));
   }
 
-  return BridgeType(BridgeType::Callable{
-      .backing_type = backing_type,
-      .fn_trait = fn_trait,
-      .return_type = std::make_shared<CcType>(std::move(return_type)),
-      .param_types = std::move(param_types),
-  });
+  BridgeType result;
+  auto* c = result.mutable_callable();
+  c->set_backing_type(backing_type);
+  c->set_fn_trait(fn_trait);
+  *c->mutable_return_type() = std::move(return_type);
+  for (auto& param : param_types) {
+    *c->add_param_types() = std::move(param);
+  }
+  return result;
 }
 
 // Returns whether Rust may move `record_decl` with `memcpy`, without running
@@ -1179,10 +1223,10 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
       drop_impl = args_vec[1];
     }
 
-    owned_ptr_config = OwnedPtrConfig{
-        .owned_ptr_type = std::move(owned_ptr_type),
-        .drop_impl = std::move(drop_impl),
-    };
+    OwnedPtrConfig cfg;
+    cfg.set_owned_ptr_type(std::move(owned_ptr_type));
+    cfg.set_drop_impl(std::move(drop_impl));
+    owned_ptr_config = std::move(cfg);
   }
 
   BazelLabel owning_target = ictx_.GetOwningTarget(*record_decl);
@@ -1224,14 +1268,13 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
 
     TemplateSpecialization& ts = template_specialization.emplace();
 
-    absl::StatusOr<TemplateSpecialization::Kind> status_or_ts_kind =
-        GetTemplateSpecializationKind(ictx_, specialization_decl);
-    if (!status_or_ts_kind.ok()) {
+    absl::Status ts_status =
+        PopulateTemplateSpecializationKind(ictx_, specialization_decl, ts);
+    if (!ts_status.ok()) {
       return ictx_.ImportUnsupportedItem(
           *record_decl, std::nullopt,
-          {FormattedError::FromStatus(std::move(status_or_ts_kind).status())});
+          {FormattedError::FromStatus(std::move(ts_status))});
     }
-    ts.kind = *std::move(status_or_ts_kind);
 
     doc_comment = ictx_.GetComment(*specialization_decl);
     if (!doc_comment.has_value()) {
@@ -1271,7 +1314,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
               "Class template instantiation forbidden by blocklist",
               record_decl->getQualifiedNameAsString())});
     }
-    ts.defining_target = ictx_.GetOwningTarget(*decl);
+    ts.set_defining_target(ictx_.GetOwningTarget(*decl).value());
     if (clang::TypedefNameDecl* alias_decl =
             ictx_.GetTemplateSpecializationAlias(specialization_decl)) {
       absl::StatusOr<TranslatedIdentifier> alias_name =
@@ -1465,8 +1508,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   // generated methods take &self (interior mutability) and it derives
   // Send+Sync.
   if (template_specialization.has_value() &&
-      std::holds_alternative<TemplateSpecialization::StdAtomic>(
-          template_specialization->kind)) {
+      template_specialization->kind().has_std_atomic()) {
     *is_thread_safe = true;
   }
 
@@ -1477,13 +1519,13 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   }
 
   if (*is_thread_safe) {
-    if (trait_derives->send == TraitImplPolarity::NEGATIVE ||
-        trait_derives->sync == TraitImplPolarity::NEGATIVE) {
+    if (trait_derives->send() == TraitImplPolarity::NEGATIVE ||
+        trait_derives->sync() == TraitImplPolarity::NEGATIVE) {
       return unsupported(FormattedError::Static(
           "CRUBIT_THREAD_SAFE types cannot opt out of `Send` or `Sync`."));
     }
-    trait_derives->send = TraitImplPolarity::POSITIVE;
-    trait_derives->sync = TraitImplPolarity::POSITIVE;
+    trait_derives->set_send(TraitImplPolarity::POSITIVE);
+    trait_derives->set_sync(TraitImplPolarity::POSITIVE);
   }
 
   absl::StatusOr<SafetyAnnotation> safety_annotation =
@@ -1535,7 +1577,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
 
   bool impl_debug = false;
   if (record_impl_debug_enabled) {
-    if (trait_derives->debug != TraitImplPolarity::NONE) {
+    if (trait_derives->debug() != TraitImplPolarity::NONE) {
       return unsupported(FormattedError::Static(
           "derive(Debug) is deprecated when record_impl_debug is enabled. "
           "Debug is implemented by default; use CRUBIT_OVERRIDE_DEBUG(false) "
@@ -1571,8 +1613,8 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   record->set_id(id.value());
   record->set_owning_target(owning_target.value());
   if (template_specialization.has_value()) {
-    template_specialization->WriteToProto(
-        *record->mutable_template_specialization());
+    *record->mutable_template_specialization() =
+        *std::move(template_specialization);
   }
   if (unknown_attr->has_value()) {
     record->set_unknown_attr(std::move(**unknown_attr));
@@ -1581,10 +1623,10 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
     record->set_doc_comment(std::move(*doc_comment));
   }
   if (bridge_type.has_value()) {
-    bridge_type->WriteToProto(*record->mutable_bridge_type());
+    *record->mutable_bridge_type() = *std::move(bridge_type);
   }
   if (owned_ptr_config.has_value()) {
-    owned_ptr_config->WriteToProto(*record->mutable_owned_ptr_config());
+    *record->mutable_owned_ptr_config() = *std::move(owned_ptr_config);
   }
   *record->mutable_decl_loc() = ictx_.ConvertDeclLocation(source_loc, nullptr);
   for (auto& base : GetUnambiguousPublicBases(*record_decl)) {
@@ -1599,7 +1641,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   if (pack.has_value()) {
     record->set_pack(*pack);
   }
-  trait_derives->WriteToProto(*record->mutable_trait_derives());
+  *record->mutable_trait_derives() = *std::move(trait_derives);
   record->set_is_derived_class(is_derived_class);
   record->set_has_virtual_bases(record_decl->getNumVBases() != 0);
   record->set_override_alignment(override_alignment);
@@ -1781,11 +1823,10 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
     if (auto comment = ictx_.GetComment(*field_decl); comment.has_value()) {
       proto_field.set_doc_comment(*comment);
     }
-    type.WriteToProto(*proto_field.mutable_type());
+    *proto_field.mutable_type() = std::move(type);
     proto_field.set_access(TranslateAccessSpecifier(access));
-    proto_field.set_offset(static_cast<int64_t>(
-        layout.getFieldOffset(field_decl->getFieldIndex())));
-    proto_field.set_size(static_cast<int64_t>(size));
+    proto_field.set_offset(layout.getFieldOffset(field_decl->getFieldIndex()));
+    proto_field.set_size(size);
     if (!unknown_attr.ok() || unknown_attr->has_value()) {
       *proto_field.mutable_unknown_attr() = ToFlatProto(unknown_attr);
     }
@@ -1919,19 +1960,17 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
   // are recorded for `std::optional`; the bindings generator picks between them
   // depending on whether the `layout_compat_optional` feature is enabled.
   if (name == "optional") {
-    CcType inner = cc_type_of_arg(0);
-    return BridgeType{BridgeType::StdOptional{
-        .inner_type = std::make_shared<CcType>(std::move(inner)),
-    }};
+    BridgeType result;
+    *result.mutable_std_optional()->mutable_inner_type() = cc_type_of_arg(0);
+    return result;
   }
 
   if (name == "pair") {
-    CcType first = cc_type_of_arg(0);
-    CcType second = cc_type_of_arg(1);
-    return BridgeType{BridgeType::StdPair{
-        .first_type = std::make_shared<CcType>(std::move(first)),
-        .second_type = std::make_shared<CcType>(std::move(second)),
-    }};
+    BridgeType result;
+    auto* p = result.mutable_std_pair();
+    *p->mutable_first_type() = cc_type_of_arg(0);
+    *p->mutable_second_type() = cc_type_of_arg(1);
+    return result;
   }
 
   if (name == "basic_string") {
@@ -1973,14 +2012,16 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
       if (is_char(char_type) &&
           is_std_specialization(traits_type, "char_traits", is_char_arg) &&
           is_std_specialization(allocator_type, "allocator", is_char_arg)) {
-        return BridgeType{BridgeType::StdString{}};
+        BridgeType result;
+        result.set_std_string();
+        return result;
       }
     }
     // HACK: restoring old behavior that hid a bug in our logic for std::wstring
     // TODO(b/468093766): Fail in the ordinary Record handling logic, not here.
     CcType char_type = cc_type_of_arg(0);
-    if (auto* error = std::get_if<FormattedError>(&char_type.variant)) {
-      return absl::InternalError(error->message());
+    if (char_type.variant().has_error()) {
+      return absl::InternalError(char_type.variant().error().message());
     }
   }
   // Add builtin bridge types here as needed.

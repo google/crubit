@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/function.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <memory>
@@ -33,7 +34,6 @@
 #include "rs_bindings_from_cc/clang_compat_macros.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "rs_bindings_from_cc/ir.pb.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
@@ -202,18 +202,18 @@ SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
 void ApplyRefQualifierToThisPointer(CcType& this_param_type,
                                     clang::RefQualifierKind ref_qualifier_kind,
                                     bool assumed_lifetimes_enabled) {
-  auto* pointer = std::get_if<CcType::PointerType>(&this_param_type.variant);
   // The CcType of `this` should always be a pointer.
-  CHECK(pointer != nullptr);
+  CHECK(this_param_type.variant().has_pointer());
+  auto* pointer = this_param_type.mutable_variant()->mutable_pointer();
 
   // Now we go back and fix the `this` parameter type to be a reference
   // if it was a rvalue ref qualified and had a lifetime.
-  if ((assumed_lifetimes_enabled || pointer->lifetime.has_value()) &&
+  if ((assumed_lifetimes_enabled || pointer->has_lifetime()) &&
       ref_qualifier_kind == clang::RefQualifierKind::RQ_RValue) {
     // It was just a non null pointer, but because of the rvalue ref
     // qualification, it should be an rvalue reference.
-    CHECK(pointer->kind == PointerTypeKind::NON_NULL);
-    pointer->kind = PointerTypeKind::R_VALUE_REF;
+    CHECK(pointer->kind() == PointerTypeKind::NON_NULL);
+    pointer->set_kind(PointerTypeKind::R_VALUE_REF);
   }
 }
 
@@ -342,7 +342,7 @@ bool FunctionBodyIsDefinedInHeader(const ImportContext& ictx,
 
 struct PropertyFieldInfo {
   CcType type;
-  int64_t offset;
+  size_t offset;
   clang::QualType qual_type;
 };
 
@@ -407,8 +407,7 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(
 
   const clang::ASTRecordLayout& layout =
       record_decl->getASTContext().getASTRecordLayout(record_decl);
-  int64_t offset =
-      static_cast<int64_t>(layout.getFieldOffset(field_decl->getFieldIndex()));
+  size_t offset = layout.getFieldOffset(field_decl->getFieldIndex());
 
   // A consumer of `MemberFuncSemantic` may read or write the field with a typed
   // access, which requires the field to be aligned for its type in every object
@@ -507,7 +506,7 @@ std::optional<ir_proto::MemberFuncSemantic> GetConstructorSemantic(
     return std::nullopt;
   }
   ir_proto::MemberFuncSemantic semantic;
-  semantic.mutable_constructor();
+  semantic.set_constructor();
   return semantic;
 }
 
@@ -638,7 +637,7 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
       return std::nullopt;
     }
     ir_proto::MemberFuncSemantic semantic;
-    field_info->type.WriteToProto(*semantic.mutable_getter()->mutable_type());
+    *semantic.mutable_getter()->mutable_type() = std::move(field_info->type);
     semantic.mutable_getter()->set_offset(field_info->offset);
     return semantic;
   } else {
@@ -700,7 +699,7 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
       return std::nullopt;
     }
     ir_proto::MemberFuncSemantic semantic;
-    field_info->type.WriteToProto(*semantic.mutable_setter()->mutable_type());
+    *semantic.mutable_setter()->mutable_type() = std::move(field_info->type);
     semantic.mutable_setter()->set_offset(field_info->offset);
     return semantic;
   }
@@ -1036,19 +1035,14 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
                 "Can't collect lifetimes for `this`",
                 this_lifetime_views.status().message()));
           } else if (!this_lifetime_views->empty() &&
-                     !this_param_type.explicit_lifetimes.empty()) {
+                     !this_param_type.explicit_lifetimes().empty()) {
             errors.Add(FormattedError::PrefixedStrCat(
                 "Extra explicit lifetimes on `this`",
                 absl::StrJoin(*this_lifetime_views, ", ")));
           } else {
-            this_param_type.explicit_lifetimes.reserve(
-                this_lifetime_views->size());
-            absl::c_transform(
-                *this_lifetime_views,
-                std::back_inserter(this_param_type.explicit_lifetimes),
-                [](absl::string_view lifetime_view) {
-                  return std::string(lifetime_view);
-                });
+            for (absl::string_view lifetime_view : *this_lifetime_views) {
+              this_param_type.add_explicit_lifetimes(lifetime_view);
+            }
           }
         }
       }
@@ -1056,7 +1050,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
                                      method_decl->getRefQualifier(),
                                      assumed_lifetimes_enabled);
       ir_proto::FuncParam this_param;
-      this_param_type.WriteToProto(*this_param.mutable_type());
+      *this_param.mutable_type() = std::move(this_param_type);
       this_param.mutable_identifier()->set_identifier("__this");
       // TODO(b/319524852): catch `[[clang::lifetimebound]]` on `this`.
       if (assumed_lifetimes_enabled && !method_decl->getType().isNull()) {
@@ -1109,7 +1103,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     }
 
     ir_proto::FuncParam proto_param;
-    param_type.WriteToProto(*proto_param.mutable_type());
+    *proto_param.mutable_type() = std::move(param_type);
     proto_param.mutable_identifier()->set_identifier(param_name->Ident());
     if (unknown_attr->has_value()) {
       proto_param.set_unknown_attr(std::move(**unknown_attr));
@@ -1342,15 +1336,15 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   auto name_info = function_decl->getNameInfo();
   auto item = std::make_unique<ir_proto::Item>();
   auto* func = item->mutable_func();
-  WriteToProto(translated_name->cc_identifier, *func->mutable_cc_name());
-  WriteToProto(translated_name->rs_identifier(), *func->mutable_rs_name());
+  *func->mutable_cc_name() = translated_name->cc_identifier;
+  *func->mutable_rs_name() = translated_name->rs_identifier();
   func->set_unique_name(ictx_.GetUniqueName(*function_decl));
   func->set_owning_target(ictx_.GetOwningTarget(*function_decl).value());
   if (doc_comment.has_value()) {
     func->set_doc_comment(*doc_comment);
   }
   func->set_mangled_name(ictx_.GetMangledName(*function_decl));
-  return_type->WriteToProto(*func->mutable_return_type());
+  *func->mutable_return_type() = *std::move(return_type);
   for (auto& param : params) {
     *func->add_params() = std::move(param);
   }

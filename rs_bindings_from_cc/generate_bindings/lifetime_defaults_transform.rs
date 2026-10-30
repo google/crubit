@@ -8,8 +8,8 @@ use arc_anyhow::Result;
 use database::BindingsGenerator;
 use error_report::bail;
 use ir::{
-    BazelLabel, CcType, CcTypeVariant, Func, Item, ItemId, PointerType, PointerTypeKind, Record,
-    TreeIR, TypeAlias, IR,
+    BazelLabel, CcType, CcTypeVariant, FfiRc, FfiString, Func, Item, ItemId, PointerType,
+    PointerTypeKind, Record, TreeIR, TypeAlias, IR,
 };
 use itertools::Itertools;
 use memoized::memoized;
@@ -34,10 +34,10 @@ fn lifetime_arity(db: &BindingsGenerator, ty: &CcType) -> Result<usize> {
     match ty.variant() {
         CcTypeVariant::Pointer(_) => Ok(1),
         CcTypeVariant::Primitive(_) => Ok(0),
-        CcTypeVariant::FuncPointer { .. } => {
+        CcTypeVariant::FuncPointer(_) => {
             bail!("TODO(b/454627672): function pointer returns are unsupported")
         }
-        CcTypeVariant::Decl { id, .. } => decl_lifetime_arity(db, *id),
+        CcTypeVariant::Decl(id) => decl_lifetime_arity(db, *id),
         CcTypeVariant::ConstantArray(arr) => lifetime_arity(db, arr.element_type()),
         CcTypeVariant::Error(msg) => bail!("encountered error type: {:?}", msg),
     }
@@ -74,36 +74,40 @@ fn strip_reference(ty: &CcType) -> &CcType {
 
 /// Returns true if `ty` names the record `record_id`.
 fn is_record_type(ty: &CcType, record_id: ItemId) -> bool {
-    matches!(ty.variant(), CcTypeVariant::Decl { id, .. } if *id == record_id)
+    matches!(ty.variant(), CcTypeVariant::Decl(id) if *id == record_id)
 }
 
 /// Returns true if the lifetime `name` is written anywhere in `ty`.
 fn mentions_lifetime(ty: &CcType, name: &str) -> bool {
-    if ty.explicit_lifetimes().iter().any(|l| l.as_ref() == name) {
+    if ty.explicit_lifetimes().iter().any(|l| l.as_str() == name) {
         return true;
     }
     match ty.variant() {
         CcTypeVariant::Pointer(pty) => mentions_lifetime(pty.pointee_type(), name),
         CcTypeVariant::ConstantArray(arr) => mentions_lifetime(arr.element_type(), name),
-        CcTypeVariant::Decl { template_args: Some(args), .. } => {
-            args.iter().any(|arg| mentions_lifetime(arg, name))
-        }
+        CcTypeVariant::Decl(_) => ty.template_args().iter().any(|arg| mentions_lifetime(arg, name)),
         _ => false,
     }
 }
 
 /// If `ty` is the record `record_id` (or a reference to it) without explicit lifetimes, gives it
 /// `lifetimes` and returns true.
-fn tie_record_type_to_lifetimes(ty: &mut CcType, record_id: ItemId, lifetimes: &[Rc<str>]) -> bool {
+fn tie_record_type_to_lifetimes(
+    ty: &mut CcType,
+    record_id: ItemId,
+    lifetimes: &[FfiString],
+) -> bool {
     let record_type = strip_reference(ty);
     if !is_record_type(record_type, record_id) || !record_type.explicit_lifetimes().is_empty() {
         return false;
     }
     let mut record_type = record_type.clone();
-    *record_type.explicit_lifetimes_mut() = lifetimes.to_vec();
+    *record_type.explicit_lifetimes_mut() = lifetimes.into();
     match ty.variant_mut() {
         // `ty` is a reference to the record.
-        CcTypeVariant::Pointer(pty) => pty.set_pointee_type(Rc::new(record_type)),
+        CcTypeVariant::Pointer(pty) => {
+            pty.set_pointee_type(record_type);
+        }
         _ => *ty = record_type,
     }
     true
@@ -111,10 +115,10 @@ fn tie_record_type_to_lifetimes(ty: &mut CcType, record_id: ItemId, lifetimes: &
 
 /// Returns the record `record_id`, if it has a lifetime parameter for its template argument (see
 /// `Record::has_template_argument_lifetime`).
-fn record_with_template_argument_lifetime<'ir>(
-    db: &BindingsGenerator<'ir>,
+fn record_with_template_argument_lifetime(
+    db: &BindingsGenerator<'_>,
     record_id: ItemId,
-) -> Option<Rc<Record<'ir>>> {
+) -> Option<FfiRc<Record>> {
     match db.find_untyped_decl(record_id) {
         Item::Record(record) if record.has_template_argument_lifetime() => Some(record.clone()),
         _ => None,
@@ -138,7 +142,7 @@ fn record_with_template_argument_lifetime<'ir>(
 fn tie_self_types_to_template_argument_lifetime(
     func: &mut Func,
     record_id: ItemId,
-    record_lifetimes: &[Rc<str>],
+    record_lifetimes: &[FfiString],
     is_friend: bool,
 ) -> bool {
     let mut tied = false;
@@ -242,8 +246,8 @@ fn decl_lifetime_arity_impl(
                 && matches!(
                     ts.kind(),
                     ir::TemplateSpecializationKind::StdStringView
-                        | ir::TemplateSpecializationKind::AbslSpan { .. }
-                        | ir::TemplateSpecializationKind::C9Co { .. }
+                        | ir::TemplateSpecializationKind::AbslSpan(_)
+                        | ir::TemplateSpecializationKind::C9Co(_)
                 )
             {
                 Ok(1)
@@ -414,15 +418,16 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     /// Returns a state representing the given `lifetime`.
     fn get_state_for_annotated_lifetime(
         &mut self,
-        lifetime: &[Rc<str>],
+        lifetime: &[FfiString],
         new_bindings: &mut Vec<Rc<str>>,
     ) -> LifetimeState {
         match lifetime {
             [] => LifetimeState::Unseen,
             [id] => {
+                let id_rc = Rc::from(id.as_str());
                 let binding = self
                     .bindings
-                    .get_or_push_new_binding(id, |name| new_bindings.push(name.clone()));
+                    .get_or_push_new_binding(&id_rc, |name| new_bindings.push(name.clone()));
                 if binding.as_ref() == "unknown" {
                     LifetimeState::Unknown
                 } else {
@@ -462,9 +467,9 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         this_lifetimebound_names: Option<&[Rc<str>]>,
     ) -> Result<LifetimeResult> {
         match ty.variant() {
-            CcTypeVariant::Decl { id, template_args } if self.decl_binds_lifetimes(id)? => {
+            CcTypeVariant::Decl(id) if self.decl_binds_lifetimes(id)? => {
                 let mut new_ty = ty.clone();
-                if let Some(type_arg) = self.type_arg_for_use(*id, template_args.as_deref()) {
+                if let Some(type_arg) = self.type_arg_for_use(*id, ty.decl_template_args()) {
                     let LifetimeResult { ty: type_arg, .. } = self.add_lifetime_to_input_type(
                         false,
                         name_hint,
@@ -472,8 +477,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                         &type_arg,
                         None,
                     )?;
-                    *new_ty.variant_mut() =
-                        CcTypeVariant::Decl { id: *id, template_args: Some(Rc::new([type_arg])) };
+                    *new_ty.template_args_mut() = [type_arg].into();
                 };
                 let mut state =
                     self.get_state_for_annotated_lifetime(ty.explicit_lifetimes(), new_bindings);
@@ -497,7 +501,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 } else {
                     self.get_lifetime_for_state(&state)
                 };
-                *new_ty.explicit_lifetimes_mut() = explicit_lifetimes;
+                *new_ty.explicit_lifetimes_mut() = explicit_lifetimes.into_iter().collect();
                 Ok(LifetimeResult { ty: new_ty, state, this_state: LifetimeState::Unseen })
             }
             CcTypeVariant::Pointer(pty) if is_this || pty.kind() == PointerTypeKind::LValueRef => {
@@ -524,9 +528,10 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 *new_ty.variant_mut() = CcTypeVariant::Pointer(PointerType::new(
                     kind,
                     pty.lifetime(),
-                    Rc::new(pointee_type),
+                    FfiRc::new(pointee_type),
                 ));
-                *new_ty.explicit_lifetimes_mut() = self.get_lifetime_for_state(&state);
+                *new_ty.explicit_lifetimes_mut() =
+                    self.get_lifetime_for_state(&state).into_iter().collect();
                 if is_this {
                     Ok(LifetimeResult {
                         ty: new_ty,
@@ -551,12 +556,10 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             Item::Record(record) => {
                 let ts = record.template_specialization()?;
                 match ts.kind() {
-                    ir::TemplateSpecializationKind::StdVector { raw_element_type, .. }
-                    | ir::TemplateSpecializationKind::StdUniquePtr { raw_element_type, .. }
-                    | ir::TemplateSpecializationKind::C9Co { raw_element_type, .. }
-                    | ir::TemplateSpecializationKind::AbslSpan { raw_element_type, .. } => {
-                        Some(raw_element_type.clone())
-                    }
+                    ir::TemplateSpecializationKind::StdVector(v) => Some(v.element_type.clone()),
+                    ir::TemplateSpecializationKind::StdUniquePtr(p) => Some(p.element_type.clone()),
+                    ir::TemplateSpecializationKind::C9Co(c) => Some(c.element_type.clone()),
+                    ir::TemplateSpecializationKind::AbslSpan(s) => Some(s.element_type.clone()),
                     _ => None,
                 }
             }
@@ -591,7 +594,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         ty: &CcType,
     ) -> Result<CcType> {
         match ty.variant() {
-            CcTypeVariant::Decl { id, template_args } => {
+            CcTypeVariant::Decl(id) => {
                 let mut new_ty = ty.clone();
                 if self.decl_binds_lifetimes(id)? {
                     // If there's a previously-annotated lifetime, use that.
@@ -600,31 +603,31 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                             .explicit_lifetimes()
                             .iter()
                             .map(|l| {
-                                self.bindings.get_or_push_new_binding(l, |name| {
+                                let l_rc = Rc::from(l.as_str());
+                                self.bindings.get_or_push_new_binding(&l_rc, |name| {
                                     new_bindings.push(name.clone())
                                 })
                             })
                             .collect();
-                        if new_ty.explicit_lifetimes().iter().any(|l| l.as_ref() == "unknown") {
+                        if new_ty.explicit_lifetimes().iter().any(|l| l.as_str() == "unknown") {
                             new_ty.explicit_lifetimes_mut().clear();
                         }
                     } else if !lifetime_hint.is_empty() {
-                        *new_ty.explicit_lifetimes_mut() = lifetime_hint.clone();
+                        *new_ty.explicit_lifetimes_mut() = lifetime_hint.iter().cloned().collect();
                     } else if generate_fresh_if_empty {
                         let lifetime = self.bindings.push_fresh_binding(None);
                         new_bindings.push(lifetime.clone());
-                        *new_ty.explicit_lifetimes_mut() = vec![lifetime];
+                        *new_ty.explicit_lifetimes_mut() = [FfiString::from(lifetime)].into();
                     }
                 }
-                if let Some(elt) = self.type_arg_for_use(*id, template_args.as_deref()) {
+                if let Some(elt) = self.type_arg_for_use(*id, ty.decl_template_args()) {
                     let elt_lowered = self.add_lifetime_to_output_type(
                         lifetime_hint,
                         generate_fresh_if_empty,
                         new_bindings,
                         &elt,
                     )?;
-                    *new_ty.variant_mut() =
-                        CcTypeVariant::Decl { id: *id, template_args: Some(Rc::new([elt_lowered])) }
+                    *new_ty.template_args_mut() = [elt_lowered].into();
                 };
                 Ok(new_ty)
             }
@@ -636,8 +639,10 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                         .explicit_lifetimes()
                         .iter()
                         .map(|l| {
-                            self.bindings
-                                .get_or_push_new_binding(l, |name| new_bindings.push(name.clone()))
+                            let l_rc = Rc::from(l.as_str());
+                            self.bindings.get_or_push_new_binding(&l_rc, |name| {
+                                new_bindings.push(name.clone())
+                            })
                         })
                         .collect();
                     // TODO(zarko): Recurse on pty.pointee_type and replace new_ty.variant.
@@ -658,9 +663,9 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 *new_ty.variant_mut() = CcTypeVariant::Pointer(PointerType::new(
                     kind,
                     pty.lifetime(),
-                    Rc::new(pointee_type),
+                    FfiRc::new(pointee_type),
                 ));
-                *new_ty.explicit_lifetimes_mut() = lifetime_hint.clone();
+                *new_ty.explicit_lifetimes_mut() = lifetime_hint.iter().cloned().collect();
                 Ok(new_ty)
             }
             _ => Ok(ty.clone()),
@@ -676,7 +681,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     fn inject_lifetimes_into_this(
         &mut self,
         param: &mut ir::FuncParam,
-        lifetimes: &[Rc<str>],
+        lifetimes: &[FfiString],
     ) -> Result<()> {
         let CcTypeVariant::Pointer(pty) = param.type_mut().variant_mut() else {
             bail!("the implicit `this` parameter did not have pointer type");
@@ -687,8 +692,8 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             bail!("lifetime mismatch on implicit `this`: provided in code: {:#?} vs expected by inference: {:#?}", pty.pointee_type().explicit_lifetimes(), lifetimes);
         }
         let mut pointee_type = pty.pointee_type().clone();
-        *pointee_type.explicit_lifetimes_mut() = lifetimes.to_vec();
-        pty.set_pointee_type(Rc::new(pointee_type));
+        *pointee_type.explicit_lifetimes_mut() = lifetimes.into();
+        pty.set_pointee_type(pointee_type);
         Ok(())
     }
 
@@ -702,7 +707,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         this_lifetimebound_names: &[Rc<str>],
     ) -> Result<()> {
         // TODO(b/475407556): Support lifetime_capture_by.
-        let mut return_lifetime: Vec<Rc<str>> = func.return_type().explicit_lifetimes().to_vec();
+        let mut return_lifetime: Vec<FfiString> = func.return_type().explicit_lifetimes().to_vec();
         let mut has_lifetimebound = false;
         let is_constructor = *func.cc_name() == ir::UnqualifiedIdentifier::Constructor;
         // First, check to see if there are any existing lifetime annotations that we need to
@@ -716,7 +721,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     // annotation.
                     return_lifetime = param.type_().explicit_lifetimes().to_vec();
                 } else if !param.type_().explicit_lifetimes().is_empty()
-                    && param.type_().explicit_lifetimes() != return_lifetime
+                    && param.type_().explicit_lifetimes() != return_lifetime.as_slice()
                 {
                     // If there's a conflict between what we believe is the [[lifetimebound]]
                     // lifetime and the one annotated on a parameter, return a diagnostic.
@@ -744,12 +749,14 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             // effectively require `L(x) = L(y)`.
             if is_constructor {
                 // Forall lifetimebound parameters P, L(P) : L(*this).
-                return_lifetime = this_lifetimebound_names.to_vec();
+                return_lifetime =
+                    this_lifetimebound_names.iter().cloned().map(FfiString::from).collect();
             } else if is_member_function && func.params()[0].clang_lifetimebound() {
                 // Here, the implicit object parameter was annotated with [[lifetimebound]].
                 if !this_lifetimebound_names.is_empty() {
                     // For view types, forall lifetimebound parameters P, L(*this) : L(P)
-                    return_lifetime = this_lifetimebound_names.to_vec();
+                    return_lifetime =
+                        this_lifetimebound_names.iter().cloned().map(FfiString::from).collect();
                 } else {
                     // For owning types (arity 0), the returned reference borrows from `this`
                     // (the reference &self itself), rather than from `*this`.
@@ -757,13 +764,16 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     if !this_param.type_().explicit_lifetimes().is_empty() {
                         return_lifetime = this_param.type_().explicit_lifetimes().to_vec();
                     } else {
-                        return_lifetime = vec![self.bindings.fresh_name_for(&Rc::from("__this"))];
+                        return_lifetime = vec![FfiString::from(
+                            self.bindings.fresh_name_for(&Rc::from("__this")),
+                        )];
                     }
                 }
             } else {
                 // Otherwise, for return value R and forall lifetimebound parameters P, L(P) : L(R).
                 for _ in 0..self.get_lifetime_arity(func.return_type())? {
-                    return_lifetime.push(self.bindings.fresh_name_for(&Rc::from("__rv")))
+                    return_lifetime
+                        .push(FfiString::from(self.bindings.fresh_name_for(&Rc::from("__rv"))))
                 }
             }
         }
@@ -772,7 +782,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 if is_member_function && ix == 0 && !this_lifetimebound_names.is_empty() {
                     self.inject_lifetimes_into_this(param, &return_lifetime)?;
                 } else {
-                    *param.type_mut().explicit_lifetimes_mut() = return_lifetime.clone();
+                    *param.type_mut().explicit_lifetimes_mut() = return_lifetime.as_slice().into();
                 }
             }
         }
@@ -785,7 +795,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             if return_arity != return_lifetime.len() {
                 func.return_type_mut().explicit_lifetimes_mut().clear();
             } else {
-                *func.return_type_mut().explicit_lifetimes_mut() = return_lifetime;
+                *func.return_type_mut().explicit_lifetimes_mut() = return_lifetime.into();
             }
         }
         Ok(())
@@ -803,7 +813,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         match item {
             Item::Func(func) => {
                 func.lifetime_inputs().iter().for_each(|name| {
-                    self.bindings.push_new_binding(name);
+                    self.bindings.push_new_binding(&Rc::from(name.as_str()));
                 });
             }
             Item::Record(record) => {
@@ -815,7 +825,8 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     }
                 } else {
                     record.lifetime_inputs().iter().for_each(|name| {
-                        this_lifetimebound_names.push(self.bindings.push_new_binding(name));
+                        this_lifetimebound_names
+                            .push(self.bindings.push_new_binding(&Rc::from(name.as_str())));
                     });
                 }
             }
@@ -867,7 +878,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             // Function pointers only ever have a 'static lifetime. Otherwise, if we can't
             // determine the arity, conservatively assume that the type carries lifetimes.
             let carries_lifetimes = match ty.variant() {
-                CcTypeVariant::FuncPointer { .. } => false,
+                CcTypeVariant::FuncPointer(_) => false,
                 _ => lifetime_arity(self.db, ty).unwrap_or(1) > 0,
             };
             if !carries_lifetimes {
@@ -886,7 +897,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     }
 
     /// Transforms a function to use default lifetime rules.
-    fn add_lifetime_to_func<'ir>(&mut self, func: &Func<'ir>) -> Result<Func<'ir>> {
+    fn add_lifetime_to_func(&mut self, func: &Func) -> Result<Func> {
         let template_argument_record = func
             .enclosing_item_id()
             .and_then(|record_id| record_with_template_argument_lifetime(self.db, record_id));
@@ -904,7 +915,9 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         let this_lifetimebound_names = self.bind_lifetime_inputs(func.enclosing_item_id())?;
         // Rename local bindings (and remember how we've renamed them).
         func.lifetime_inputs().iter().for_each(|name| {
-            new_func.lifetime_inputs_mut().push(self.bindings.push_new_binding(name))
+            new_func
+                .lifetime_inputs_mut()
+                .push(FfiString::from(self.bindings.push_new_binding(&Rc::from(name.as_str()))));
         });
         self.lower_clang_annotations(&mut new_func, &this_lifetimebound_names)?;
         if let Some(record) = &template_argument_record {
@@ -928,10 +941,13 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 std::slice::from_ref(lifetime),
                 /* is_friend= */ true,
             ) {
-                new_func.lifetime_inputs_mut().push(self.bindings.push_new_binding(lifetime));
+                new_func.lifetime_inputs_mut().push(FfiString::from(
+                    self.bindings.push_new_binding(&Rc::from(lifetime.as_str())),
+                ));
             }
         }
-        let mut lifetime_inputs = std::mem::take(new_func.lifetime_inputs_mut());
+        let mut lifetime_inputs: Vec<Rc<str>> =
+            new_func.lifetime_inputs().iter().map(|s| Rc::from(s.as_str())).collect();
         for (ix, param) in new_func.params_mut().iter_mut().enumerate() {
             let is_constructor = *func.cc_name() == ir::UnqualifiedIdentifier::Constructor;
             // `this` in a constructor is strange. The !is_constructor restriction fixes some
@@ -952,7 +968,6 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             this_state.update(&new_this_state);
             param.set_type(new_type);
         }
-        *new_func.lifetime_inputs_mut() = lifetime_inputs;
         let lifetime = match this_state {
             LifetimeState::Unseen => self.get_lifetime_for_state(&state),
             _ => self.get_lifetime_for_state(&this_state),
@@ -961,9 +976,10 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         let return_type = self.add_lifetime_to_output_type(
             &lifetime,
             state == LifetimeState::Unseen,
-            new_func.lifetime_inputs_mut(),
+            &mut lifetime_inputs,
             &return_type_val,
         )?;
+        *new_func.lifetime_inputs_mut() = lifetime_inputs.into_iter().collect();
         new_func.set_return_type(return_type);
         if had_this {
             // See if we can promote the type of `this` to a reference.
@@ -978,7 +994,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     }
 
     /// Transforms a record to use default lifetime rules.
-    fn add_lifetime_to_record<'ir>(&mut self, record: &Record<'ir>) -> Result<Record<'ir>> {
+    fn add_lifetime_to_record(&mut self, record: &Record) -> Result<Record> {
         let mut new_record = record.clone();
         self.bind_lifetime_inputs(record.enclosing_item_id())?;
         if new_record.lifetime_inputs().is_empty() {
@@ -987,23 +1003,22 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             for _ in 0..arity {
                 new_record
                     .lifetime_inputs_mut()
-                    .push(self.bindings.push_new_binding(&Rc::from("__implicit")));
+                    .push(FfiString::from(self.bindings.push_new_binding(&Rc::from("__implicit"))));
             }
         } else {
             new_record.lifetime_inputs_mut().clear();
             // Rename local bindings (and remember how we've renamed them).
             record.lifetime_inputs().iter().for_each(|name| {
-                new_record.lifetime_inputs_mut().push(self.bindings.push_new_binding(name))
+                new_record.lifetime_inputs_mut().push(FfiString::from(
+                    self.bindings.push_new_binding(&Rc::from(name.as_str())),
+                ));
             });
         }
         Ok(new_record)
     }
 
     /// Transforms a type alias to use default lifetime rules.
-    fn add_lifetime_to_type_alias<'ir>(
-        &mut self,
-        type_alias: &TypeAlias<'ir>,
-    ) -> Result<TypeAlias<'ir>> {
+    fn add_lifetime_to_type_alias(&mut self, type_alias: &TypeAlias) -> Result<TypeAlias> {
         let mut new_type_alias = type_alias.clone();
         self.bind_lifetime_inputs(type_alias.enclosing_item_id())?;
         // TODO(b/517949862): Right now we don't allow users to explicitly bind lifetime parameters.
@@ -1020,12 +1035,11 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             && let Ok(lifetime_arity) = self.get_lifetime_arity(type_alias.underlying_type())
         {
             for it in 0..lifetime_arity {
-                let new_name = self.bindings.push_new_binding(&Rc::from(format!("__alias{}", it)));
+                let new_name = FfiString::from(
+                    self.bindings.push_new_binding(&Rc::from(format!("__alias{}", it))),
+                );
                 new_type_alias.lifetime_inputs_mut().push(new_name.clone());
-                new_type_alias
-                    .underlying_type_mut()
-                    .explicit_lifetimes_mut()
-                    .push(new_name.clone());
+                new_type_alias.underlying_type_mut().explicit_lifetimes_mut().push(new_name);
             }
         }
         Ok(new_type_alias)
@@ -1034,7 +1048,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     /// Since we keep all item ids stable, we only have to deep-clone the objects that we need to
     /// change. We may need to introduce lifetime param binders whenever we see a type (but not on
     /// decls).
-    fn add_lifetime_to_item<'ir>(&mut self, item: &Item<'ir>) -> Result<Item<'ir>> {
+    fn add_lifetime_to_item(&mut self, item: &Item) -> Result<Item> {
         match item {
             Item::Func(func) => Ok(Item::Func(self.add_lifetime_to_func(func)?.into())),
             Item::Record(record) => Ok(Item::Record(self.add_lifetime_to_record(record)?.into())),
@@ -1047,42 +1061,33 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
 }
 
 /// Creates a copy of `func` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_func<'a>(
-    db: &BindingsGenerator<'_>,
-    func: &Func<'a>,
-) -> Result<Func<'a>> {
+pub fn lifetime_defaults_transform_func(db: &BindingsGenerator<'_>, func: &Func) -> Result<Func> {
     LifetimeDefaults::new(db).add_lifetime_to_func(func)
 }
 
 /// Creates a copy of `record` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_record<'a>(
+pub fn lifetime_defaults_transform_record(
     db: &BindingsGenerator<'_>,
-    record: &Record<'a>,
-) -> Result<Record<'a>> {
+    record: &Record,
+) -> Result<Record> {
     LifetimeDefaults::new(db).add_lifetime_to_record(record)
 }
 
 /// Creates a copy of `type_alias` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_type_alias<'a>(
+pub fn lifetime_defaults_transform_type_alias(
     db: &BindingsGenerator<'_>,
-    type_alias: &TypeAlias<'a>,
-) -> Result<TypeAlias<'a>> {
+    type_alias: &TypeAlias,
+) -> Result<TypeAlias> {
     LifetimeDefaults::new(db).add_lifetime_to_type_alias(type_alias)
 }
 
 /// Creates a copy of `item` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_item<'a>(
-    db: &BindingsGenerator<'_>,
-    item: &Item<'a>,
-) -> Result<Item<'a>> {
+pub fn lifetime_defaults_transform_item(db: &BindingsGenerator<'_>, item: &Item) -> Result<Item> {
     LifetimeDefaults::new(db).add_lifetime_to_item(item)
 }
 
 /// Helper to transform a slice of nested items.
-fn transform_children<'a>(
-    db: &BindingsGenerator<'_>,
-    children: &[Item<'a>],
-) -> Result<Vec<Item<'a>>> {
+fn transform_children(db: &BindingsGenerator<'_>, children: &[Item]) -> Result<Vec<Item>> {
     let mut transformed_children = Vec::with_capacity(children.len());
     for c in children {
         transformed_children.push(transform_item(db, c)?);
@@ -1091,20 +1096,20 @@ fn transform_children<'a>(
 }
 
 /// Recursively traverses and transforms an Item and its nested children.
-fn transform_item<'a>(db: &BindingsGenerator<'_>, item: &Item<'a>) -> Result<Item<'a>> {
+fn transform_item(db: &BindingsGenerator<'_>, item: &Item) -> Result<Item> {
     let mut transformed = LifetimeDefaults::new(db).add_lifetime_to_item(item)?;
 
     match &mut transformed {
         Item::Record(record) => {
-            let mut record = Rc::as_ref(record).clone();
+            let mut record = (**record).clone();
             let children = transform_children(db, record.children())?;
-            record.set_children(children);
-            transformed = Item::Record(Rc::new(record));
+            record.set_children(children.into());
+            transformed = Item::Record(FfiRc::new(record));
         }
         Item::Namespace(ns) => {
-            let mut ns = Rc::as_ref(ns).clone();
-            ns.set_children(transform_children(db, ns.children())?);
-            transformed = Item::Namespace(Rc::new(ns));
+            let mut ns = (**ns).clone();
+            ns.set_children(transform_children(db, ns.children())?.into());
+            transformed = Item::Namespace(FfiRc::new(ns));
         }
         _ => {}
     }
@@ -1113,11 +1118,8 @@ fn transform_item<'a>(db: &BindingsGenerator<'_>, item: &Item<'a>) -> Result<Ite
 
 /// Creates a copy of `ir` with default lifetimes filled in. This is mostly useful for testing;
 /// prefer to transform items on demand.
-pub fn lifetime_defaults_transform<'pb>(
-    db: &BindingsGenerator<'_>,
-    ir: &IR<'pb>,
-) -> Result<IR<'pb>> {
-    let mut top_level_items: BTreeMap<BazelLabel, Vec<Item<'pb>>> = BTreeMap::new();
+pub fn lifetime_defaults_transform(db: &BindingsGenerator<'_>, ir: &IR) -> Result<IR> {
+    let mut top_level_items: BTreeMap<BazelLabel, Vec<Item>> = BTreeMap::new();
     for (target, items) in &ir.tree_ir().top_level_items {
         let transformed_roots = items.iter().map(|item| transform_item(db, item)).try_collect()?;
         top_level_items.insert(target.clone(), transformed_roots);

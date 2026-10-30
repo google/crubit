@@ -106,14 +106,14 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
     }
 
     absl::StatusOr<IntegerConstant> value =
-        IntegerConstant::FromAPValue(enumerator->getInitVal());
+        IntegerConstantFromAPValue(enumerator->getInitVal());
     if (!value.ok()) {
       return unsupported(FormattedError::FromStatus(std::move(value.status())));
     }
     ir_proto::Enumerator proto_enum_val;
     proto_enum_val.mutable_identifier()->set_identifier(
         (*enumerator_name).rs_identifier().Ident());
-    value->WriteToProto(*proto_enum_val.mutable_value());
+    *proto_enum_val.mutable_value() = *std::move(value);
     if (unknown_attr->has_value()) {
       proto_enum_val.set_unknown_attr(std::move(**unknown_attr));
     }
@@ -210,14 +210,14 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
   proto_enum->set_owning_target(std::move(owning_target).value());
   *proto_enum->mutable_decl_loc() =
       ictx_.ConvertDeclLocation(enum_decl->getBeginLoc(), &name_info);
-  type->WriteToProto(*proto_enum->mutable_underlying_type());
+  *proto_enum->mutable_underlying_type() = *std::move(type);
   if (enum_decl->isCompleteDefinition()) {
+    // Mark `enumerators` present even for complete empty enums so forward
+    // declarations remain distinguishable via `!has_enumerators()`.
+    proto_enum->mutable_enumerators();
     for (auto& enumerator : enumerators) {
       *proto_enum->add_enumerators() = std::move(enumerator);
     }
-  } else {
-    // Forward declared enums must be distinguished from complete empty enums.
-    proto_enum->set_is_incomplete(true);
   }
   if (unknown_attr->has_value()) {
     proto_enum->set_unknown_attr(std::move(**unknown_attr));

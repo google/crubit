@@ -76,7 +76,7 @@ std::unique_ptr<ir_proto::Item> EnumConstantDeclImporter::Import(
 
   ictx_.MarkAsSuccessfullyImported(*enum_constant_decl);
   absl::StatusOr<IntegerConstant> value =
-      IntegerConstant::FromAPValue(enum_constant_decl->getInitVal());
+      IntegerConstantFromAPValue(enum_constant_decl->getInitVal());
   if (!value.ok()) {
     return ictx_.ImportUnsupportedItem(
         *enum_constant_decl, std::nullopt,
@@ -85,7 +85,7 @@ std::unique_ptr<ir_proto::Item> EnumConstantDeclImporter::Import(
 
   auto item = std::make_unique<ir_proto::Item>();
   auto* constant = item->mutable_constant();
-  value->WriteToProto(*constant->mutable_value());
+  *constant->mutable_kind()->mutable_value() = *std::move(value);
   constant->mutable_cc_name()->set_identifier(
       enumerator_name->cc_identifier.Ident());
   constant->mutable_rs_name()->set_identifier(
@@ -96,7 +96,7 @@ std::unique_ptr<ir_proto::Item> EnumConstantDeclImporter::Import(
       ictx_.GetOwningTarget(*enum_constant_decl).value());
   *constant->mutable_decl_loc() =
       ictx_.ConvertDeclLocation(enum_constant_decl->getBeginLoc(), nullptr);
-  type->WriteToProto(*constant->mutable_type());
+  *constant->mutable_type() = *std::move(type);
   if (unknown_attr->has_value()) {
     constant->set_unknown_attr(std::move(**unknown_attr));
   }

@@ -24,7 +24,7 @@ use unicode_ident::is_xid_continue;
 
 /// Returns whether `func` is a C++ spaceship operator (`operator<=>`) that hasn't been renamed
 /// with `CRUBIT_RUST_NAME`.
-pub fn is_spaceship_operator(func: &Func<'_>) -> bool {
+pub fn is_spaceship_operator(func: &Func) -> bool {
     let is_spaceship = |name: &UnqualifiedIdentifier| matches!(name, UnqualifiedIdentifier::Operator(op) if op.name() == "<=>");
     is_spaceship(func.cc_name()) && is_spaceship(func.rs_name())
 }
@@ -37,15 +37,12 @@ pub fn is_spaceship_operator(func: &Func<'_>) -> bool {
 /// returns an integer that encodes the result of the comparison: -1 (less), 0 (equal or
 /// equivalent), 1 (greater), or 2 (unordered). (This is the same encoding as used by
 /// `cc_bindings_from_rs`.) The generated `PartialOrd::partial_cmp` decodes the result.
-pub fn spaceship_thunk_return_type() -> RsTypeKind<'static> {
+pub fn spaceship_thunk_return_type() -> RsTypeKind {
     RsTypeKind::Primitive(Primitive::SignedChar)
 }
 
 /// Returns the type returned by the thunk of `func`.
-fn thunk_return_type_kind<'a>(
-    db: &BindingsGenerator<'a>,
-    func: &Func<'a>,
-) -> Result<RsTypeKind<'a>> {
+fn thunk_return_type_kind(db: &BindingsGenerator, func: &Func) -> Result<RsTypeKind> {
     if is_spaceship_operator(func) {
         Ok(spaceship_thunk_return_type())
     } else {
@@ -72,7 +69,7 @@ fn encode_spaceship_result(expr: TokenStream) -> TokenStream {
 /// If we know the original C++ function is codegenned and already compatible
 /// with `extern "C"` calling convention we skip creating/calling the C++ thunk
 /// since we can call the original C++ directly.
-pub fn can_skip_cc_thunk<'a>(db: &BindingsGenerator<'a>, func: &Func<'a>) -> bool {
+pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     // ## Spaceship operator
     //
     // The thunk converts the C++ comparison category type into an integer. See
@@ -132,7 +129,7 @@ pub fn can_skip_cc_thunk<'a>(db: &BindingsGenerator<'a>, func: &Func<'a>) -> boo
     if (func.cc_name().is_constructor() || func.cc_name().is_destructor())
         && func
             .enclosing_item_id()
-            .and_then(|id| db.find_decl::<Rc<Record>>(id).ok())
+            .and_then(|id| db.find_decl::<FfiRc<Record>>(id).ok())
             .is_some_and(|record| record.has_virtual_bases())
     {
         return false;
@@ -197,12 +194,12 @@ pub fn can_skip_cc_thunk<'a>(db: &BindingsGenerator<'a>, func: &Func<'a>) -> boo
 }
 
 #[cfg_attr(enable_heap_profiling, inline(never))]
-pub fn generate_function_thunk<'a>(
-    db: &BindingsGenerator<'a>,
-    func: &Func<'a>,
+pub fn generate_function_thunk(
+    db: &BindingsGenerator,
+    func: &Func,
     param_idents: &[Ident],
-    param_types: &[RsTypeKind<'a>],
-    return_type: &RsTypeKind<'a>,
+    param_types: &[RsTypeKind],
+    return_type: &RsTypeKind,
 ) -> Result<Thunk> {
     let assume_lifetimes = db
         .ir()
@@ -267,7 +264,7 @@ pub fn generate_function_thunk<'a>(
         }
     }
 
-    let mut all_types: Vec<RsTypeKind<'a>> = param_types.clone().cloned().collect();
+    let mut all_types: Vec<RsTypeKind> = param_types.clone().cloned().collect();
     all_types.push(return_type.clone());
 
     // Of the remaining lifetimes, put them in the generic parameters.
@@ -390,7 +387,7 @@ fn compute_disambiguator_hash(func: &Func) -> String {
     format!("{:08x}_", hash.0 as u32)
 }
 
-pub fn thunk_ident<'a>(db: &BindingsGenerator<'a>, func: &Func<'a>) -> Ident {
+pub fn thunk_ident(db: &BindingsGenerator, func: &Func) -> Ident {
     let disambiguator = {
         let need_disambiguation = db.has_conflicting_mangled_name(func)
             || func.is_member_or_descendant_of_class_template();
@@ -407,9 +404,9 @@ pub fn thunk_ident<'a>(db: &BindingsGenerator<'a>, func: &Func<'a>) -> Ident {
     )
 }
 
-fn generate_function_assertion_thunk_impl<'a>(
-    db: &BindingsGenerator<'a>,
-    func: &Func<'a>,
+fn generate_function_assertion_thunk_impl(
+    db: &BindingsGenerator,
+    func: &Func,
     unqualified_func_name: TokenStream,
 ) -> Result<ThunkImpl> {
     let features = db.ir().target_crubit_features(func.owning_target());
@@ -489,28 +486,28 @@ fn generate_function_assertion_thunk_impl<'a>(
     Ok(ThunkImpl::FunctionTypeAssertion { cc_function_type, implementation_function })
 }
 
-fn generate_function_assertion_for_identifier<'a>(
-    db: &BindingsGenerator<'a>,
-    func: &Func<'a>,
-    id: &Identifier<'a>,
+fn generate_function_assertion_for_identifier(
+    db: &BindingsGenerator,
+    func: &Func,
+    id: &Identifier,
 ) -> Result<ThunkImpl> {
     let fn_ident = format_nonportable_cc_ident(id.as_str())?;
     generate_function_assertion_thunk_impl(db, func, quote! { #fn_ident })
 }
 
-fn generate_function_assertion_for_operator<'a>(
-    db: &BindingsGenerator<'a>,
-    func: &Func<'a>,
-    op: &Operator<'a>,
+fn generate_function_assertion_for_operator(
+    db: &BindingsGenerator,
+    func: &Func,
+    op: &Operator,
 ) -> Result<ThunkImpl> {
     let op_cc_name = op.cc_name();
     let op_tokens = syn::parse_str::<TokenStream>(&op_cc_name)?;
     generate_function_assertion_thunk_impl(db, func, op_tokens)
 }
 
-pub fn generate_function_assertion<'a>(
-    db: &BindingsGenerator<'a>,
-    func: &Func<'a>,
+pub fn generate_function_assertion(
+    db: &BindingsGenerator,
+    func: &Func,
 ) -> Result<Option<ThunkImpl>> {
     if func.adl_enclosing_record().is_some() {
         // This is a friend function that is only reachable with ADL. We can't take the address.
@@ -537,7 +534,7 @@ pub fn generate_function_assertion<'a>(
 // Returns whether `func` is a copy constructor of `record_id`, assuming that `func` is a
 // constructor member function of `record_id`.
 // TODO(zarko): do we need to distinguish between non-const and const ctors? See b/436870965.
-fn is_copy_constructor(func: &Func<'_>, record_id: ItemId) -> bool {
+fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
     let [_, other] = func.params() else {
         return false;
     };
@@ -547,15 +544,15 @@ fn is_copy_constructor(func: &Func<'_>, record_id: ItemId) -> bool {
     if ptr.kind() != PointerTypeKind::LValueRef {
         return false;
     }
-    let CcTypeVariant::Decl { id, .. } = ptr.pointee_type().variant() else {
+    let CcTypeVariant::Decl(id) = ptr.pointee_type().variant() else {
         return false;
     };
     *id == record_id
 }
 
-pub fn generate_function_thunk_impl<'a>(
-    db: &BindingsGenerator<'a>,
-    func: &Func<'a>,
+pub fn generate_function_thunk_impl(
+    db: &BindingsGenerator,
+    func: &Func,
 ) -> Result<Option<ThunkImpl>> {
     if can_skip_cc_thunk(db, func) {
         return Ok(None);
@@ -584,7 +581,7 @@ pub fn generate_function_thunk_impl<'a>(
         // is. Similar arguments apply to `construct_at`.
         UnqualifiedIdentifier::Constructor => {
             if let Some(parent_id) = func.enclosing_item_id() {
-                let record: &Rc<Record> = db.find_decl(parent_id)?;
+                let record: &ir::FfiRc<Record> = db.find_decl(parent_id)?;
                 if is_copy_constructor(func, record.id())
                     && record.copy_constructor() == SpecialMemberFunc::Unavailable
                 {
@@ -649,9 +646,9 @@ pub enum ThunkCallKind {
 
 /// Lowers the parameters, return type, and C-ABI type conversions for a function
 /// thunk, returning the structured C++ parts needed to emit a C++ thunk definition.
-pub fn generate_cc_thunk_parts<'a>(
-    db: &BindingsGenerator<'a>,
-    func: &Func<'a>,
+pub fn generate_cc_thunk_parts(
+    db: &BindingsGenerator,
+    func: &Func,
     kind: ThunkCallKind,
 ) -> Result<CcThunkParts> {
     let features = db.ir().target_crubit_features(func.owning_target());
@@ -795,7 +792,7 @@ pub fn generate_cc_thunk_parts<'a>(
                     | PointerTypeKind::NonNull
                     | PointerTypeKind::Owned => Ok(quote! { #ident }),
                 },
-                CcTypeVariant::FuncPointer { non_null, .. } => {
+                CcTypeVariant::FuncPointer(FuncPointer { non_null, .. }) => {
                     if *non_null {
                         Ok(quote! { *#ident })
                     } else {
@@ -992,7 +989,7 @@ pub fn generate_cc_thunk_parts<'a>(
                                 return &lvalue
                             }
                         }
-                        CcTypeVariant::FuncPointer { non_null: true, .. } => {
+                        CcTypeVariant::FuncPointer(FuncPointer { non_null: true, .. }) => {
                             quote! { return & #return_expr }
                         }
                         _ => quote! { return #return_expr },
@@ -1017,9 +1014,9 @@ pub fn generate_cc_thunk_parts<'a>(
 ///
 /// Returns `Ok(None)` if the function cannot be emitted as an `inline_cpp!` expression,
 /// such as constructors and destructors which cannot be called directly as free expressions.
-pub fn generate_inline_cpp_call<'a>(
-    db: &BindingsGenerator<'a>,
-    func: &Func<'a>,
+pub fn generate_inline_cpp_call(
+    db: &BindingsGenerator,
+    func: &Func,
     thunk_args: &[TokenStream],
     body_tokens: TokenStream,
 ) -> Result<Option<TokenStream>> {

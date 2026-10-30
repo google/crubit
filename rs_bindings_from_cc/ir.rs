@@ -5,160 +5,51 @@
 //! Types and deserialization logic for IR. See docs in
 //! `rs_bindings_from_cc/ir.h` for more
 //! information.
-use arc_anyhow::{anyhow, bail, ensure, Context, Error, Result};
+use arc_anyhow::{bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
-use ir_rust_proto::{
-    BaseClassView, CommentView, ConstantView, DeclLocationView, EnumView, EnumeratorView,
-    ExistingRustTypeView, FieldView, FuncParamView, FuncView, GlobalVarView, HeaderNameView,
-    IdentifierView, IncompleteRecordView, InstanceMethodMetadataView, IntegerConstantView,
-    NamespaceView, OwnedPtrConfigView, RecordView, SizeAlignView, SourceLocationView,
-    StatusOrOptionalStringView, TypeAliasView, UseModView,
-};
+pub mod ir_ffi_support;
+pub mod ir_generated;
+pub use ir_generated as ir_rust_proto;
+
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
-use protobuf::{ProtoStr, ProxiedInRepeated, RepeatedView, View};
 use quote::{quote, ToTokens};
 use std::collections::hash_map::{Entry, HashMap};
 use std::collections::{BTreeMap, HashSet};
 use std::fmt::{self, Debug, Display};
-use std::hash::Hash;
-use std::rc::Rc;
 
-pub mod ir_ffi_support;
-pub mod ir_generated;
-mod proto_to_ir;
-pub use proto_to_ir::proto_to_ir;
-
-pub use ir_rust_proto::bridge_type::callable::{BackingType, FnTrait};
-
-/// Trait for converting from proto-native types to IR-native types.
-///
-/// This trait intentionally separates validation from construction to allow for eager validation
-/// and lazy construction. In particular, the entire proto can be recursively validated once when
-/// received, and then immutable views can be extracted lazily and infallibly later.
-trait ProtoToIr: Sized {
-    /// The IR type that this proto converts to.
-    type IrType;
-
-    /// Validates that the proto upholds the invariants that the IR expects.
-    fn validate(self) -> Result<()>;
-
-    /// Converts the proto to its associated IR type.
-    ///
-    /// # Panics
-    ///
-    /// If `self` wasn't previously validated, this method may panic, or methods on the returned
-    /// value may panic.
-    fn to_ir(self) -> Self::IrType;
-}
-
-impl<'pb> ProtoToIr for &'pb ProtoStr {
-    type IrType = &'pb str;
-
-    fn validate(self) -> Result<()> {
-        let _ = self.to_str()?;
-        Ok(())
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        self.to_str().expect("`&ProtoStr` should have been validated by `ProtoToIr::validate`")
-    }
-}
-
-impl<T: ProtoToIr> ProtoToIr for Option<T> {
-    type IrType = Option<T::IrType>;
-
-    fn validate(self) -> Result<()> {
-        if let Some(value) = self {
-            value.validate()?;
-        }
-        Ok(())
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        self.map(ProtoToIr::to_ir)
-    }
-}
-
-/// A repeated proto field, whose elements are lazily converted to IR when accessed.
-///
-/// This allows IR types to expose repeated fields without allocating, while still supporting
-/// `Debug`, `PartialEq`, `Eq` and `Hash` (e.g. for `derive_debug_partialeq_eq_hash!`).
-pub struct RepeatedIr<'pb, P: ProxiedInRepeated, T> {
-    proto: RepeatedView<'pb, P>,
-    to_ir: fn(View<'pb, P>) -> T,
-}
-
-impl<'pb, P: ProxiedInRepeated> ProtoToIr for RepeatedView<'pb, P>
-where
-    View<'pb, P>: ProtoToIr,
-{
-    type IrType = RepeatedIr<'pb, P, <View<'pb, P> as ProtoToIr>::IrType>;
-
-    fn validate(self) -> Result<()> {
-        self.iter().try_for_each(ProtoToIr::validate)
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        RepeatedIr { proto: self, to_ir: ProtoToIr::to_ir }
-    }
-}
-
-impl<'pb, P: ProxiedInRepeated, T> RepeatedIr<'pb, P, T> {
-    pub fn iter(&self) -> impl ExactSizeIterator<Item = T> + '_ {
-        self.proto.iter().map(self.to_ir)
-    }
-}
-
-impl<'pb, P: ProxiedInRepeated, T> Clone for RepeatedIr<'pb, P, T> {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-impl<'pb, P: ProxiedInRepeated, T> Copy for RepeatedIr<'pb, P, T> {}
-
-impl<P: ProxiedInRepeated, T: Debug> Debug for RepeatedIr<'_, P, T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_list().entries(self.iter()).finish()
-    }
-}
-
-impl<P: ProxiedInRepeated, T: PartialEq> PartialEq for RepeatedIr<'_, P, T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.iter().eq(other.iter())
-    }
-}
-
-impl<P: ProxiedInRepeated, T: Eq> Eq for RepeatedIr<'_, P, T> {}
-
-impl<P: ProxiedInRepeated, T: Hash> Hash for RepeatedIr<'_, P, T> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.iter().for_each(|element| element.hash(state));
-    }
-}
-
-/// Trait to convert optional protobuf getters, which are`protobuf::Optional<T>` under Cargo
-/// and `std::option::Option<T>` under Bazel into standard `Option<T>`.
-pub(crate) trait IntoOption {
-    type Target;
-    fn into_option(self) -> Option<Self::Target>;
-}
-
-impl<T> IntoOption for Option<T> {
-    type Target = T;
-    fn into_option(self) -> Option<T> {
-        self
-    }
-}
+pub use ir_ffi_support::{
+    BazelLabel, FfiMap, FfiRc, FfiRc as Rc, FfiString, FfiVec, ItemId, LifetimeId,
+};
+pub use ir_generated::array_value::{ArrayElements, IntegerElements, Kind as ArrayValueKind};
+pub use ir_generated::bridge_type::callable::{BackingType, FnTrait};
+pub use ir_generated::cc_type::{
+    ConstantArrayType, FuncPointer, PointerType, Variant as CcTypeVariant,
+};
+pub use ir_generated::constant::Kind as ConstantValue;
+pub use ir_generated::instance_method_metadata::ReferenceQualification;
+pub use ir_generated::member_func_semantic::{Getter, Setter};
+pub use ir_generated::template_specialization::Kind as TemplateSpecializationKind;
+pub use ir_generated::unsupported_item::{
+    Kind as UnsupportedItemKind, Path as UnsupportedItemPath,
+};
+pub use ir_generated::{
+    AccessSpecifier, ArrayValue, BaseClass, BridgeType, CallingConv as CcCallingConv, CcType,
+    Comment, Constant, DeclLocation, Enum, Enumerator, ExistingRustType, Field, FormattedError,
+    Func, FuncParam, GlobalVar, HeaderName, Identifier, IncompleteRecord, InstanceMethodMetadata,
+    IntegerConstant, Item, LifetimeName, MemberFuncSemantic, Namespace, Operator, OwnedPtrConfig,
+    PointerTypeKind, Primitive, Record, RecordType, SafetyAnnotation, SizeAlign, SourceLocation,
+    SpecialMemberFunc, StatusOrOptionalString, TemplateArg, TemplateSpecialization, TraitDerives,
+    TraitImplPolarity, TypeAlias, UnqualifiedIdentifier, UnsupportedItem, UseMod,
+};
 
 /// Common data about all items.
-pub trait GenericItem<'pb> {
+pub trait GenericItem {
     fn id(&self) -> ItemId;
 
     /// The unique name (probably the USR) of the item for log aggregation purposes.
-    fn unique_name(&self) -> Option<&'pb str>;
+    fn unique_name(&self) -> Option<&str>;
 
     /// The Bazel target which owns the bindings for this item.
     fn owning_target(&self) -> Option<BazelLabel>;
@@ -171,31 +62,31 @@ pub trait GenericItem<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind;
 
     /// Where the item is declared, or None if unknown.
-    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+    fn decl_loc(&self) -> Option<&DeclLocation> {
         None
     }
 
     /// A human-readable list of unknown attributes, or None if all attributes
     /// were understood.
-    fn unknown_attr(&self) -> Option<&'pb str>;
+    fn unknown_attr(&self) -> Option<&str>;
 
     /// Whether failure to generate binding should be treated as a hard error (`CRUBIT_MUST_BIND`).
     fn must_bind(&self) -> bool;
 
     /// Returns the C++ name of this item, if applicable.
-    fn cc_name_as_str(&self) -> Option<&'pb str> {
+    fn cc_name_as_str(&self) -> Option<&str> {
         None
     }
 }
 
-impl<'pb, T> GenericItem<'pb> for Rc<T>
+impl<T> GenericItem for FfiRc<T>
 where
-    T: GenericItem<'pb> + ?Sized,
+    T: GenericItem + ir_ffi_support::FfiDefault,
 {
     fn id(&self) -> ItemId {
         (**self).id()
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         (**self).unique_name()
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -204,16 +95,46 @@ where
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         (**self).unsupported_kind()
     }
-    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+    fn decl_loc(&self) -> Option<&DeclLocation> {
         (**self).decl_loc()
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         (**self).unknown_attr()
     }
     fn must_bind(&self) -> bool {
         (**self).must_bind()
     }
-    fn cc_name_as_str(&self) -> Option<&'pb str> {
+    fn cc_name_as_str(&self) -> Option<&str> {
+        (**self).cc_name_as_str()
+    }
+}
+
+impl<T> GenericItem for std::rc::Rc<T>
+where
+    T: GenericItem + ?Sized,
+{
+    fn id(&self) -> ItemId {
+        (**self).id()
+    }
+    fn unique_name(&self) -> Option<&str> {
+        (**self).unique_name()
+    }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        (**self).owning_target()
+    }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        (**self).unsupported_kind()
+    }
+    fn decl_loc(&self) -> Option<&DeclLocation> {
+        (**self).decl_loc()
+    }
+    fn unknown_attr(&self) -> Option<&str> {
+        (**self).unknown_attr()
+    }
+    fn must_bind(&self) -> bool {
+        (**self).must_bind()
+    }
+    fn cc_name_as_str(&self) -> Option<&str> {
         (**self).cc_name_as_str()
     }
 }
@@ -221,21 +142,21 @@ where
 /// A pre-order depth-first search iterator over the nested IR tree.
 /// Preserves C++ declaration order and allows bindings generator components (e.g., `has_bindings`)
 /// that expect a flat list of items to work in-place on the nested IR without a full rewrite.
-pub struct ItemsIterator<'pb, 'iter> {
-    stack: Vec<&'iter Item<'pb>>,
+pub struct ItemsIterator<'iter> {
+    stack: Vec<&'iter Item>,
     visited: HashSet<ItemId>,
 }
 
-impl<'pb, 'iter> ItemsIterator<'pb, 'iter> {
-    fn new(mut stack: Vec<&'iter Item<'pb>>) -> Self {
+impl<'iter> ItemsIterator<'iter> {
+    fn new(mut stack: Vec<&'iter Item>) -> Self {
         // Reverse so we pop roots in their original order.
         stack.reverse();
         Self { stack, visited: HashSet::new() }
     }
 }
 
-impl<'pb, 'iter> Iterator for ItemsIterator<'pb, 'iter> {
-    type Item = &'iter Item<'pb>;
+impl<'iter> Iterator for ItemsIterator<'iter> {
+    type Item = &'iter Item;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(item) = self.stack.pop() {
@@ -259,10 +180,7 @@ impl<'pb, 'iter> Iterator for ItemsIterator<'pb, 'iter> {
 }
 
 // Read-only traversal to populate the lookup cache with deserialized items.
-fn populate_item_id_to_item<'pb>(
-    item: &Item<'pb>,
-    item_id_to_item: &mut HashMap<ItemId, Item<'pb>>,
-) {
+fn populate_item_id_to_item(item: &Item, item_id_to_item: &mut HashMap<ItemId, Item>) {
     match item_id_to_item.entry(item.id()) {
         Entry::Vacant(vacant) => {
             vacant.insert(item.clone());
@@ -289,7 +207,7 @@ fn populate_item_id_to_item<'pb>(
 }
 
 #[cfg_attr(enable_heap_profiling, inline(never))]
-pub fn make_ir<'pb>(tree_ir: TreeIR<'pb>) -> IR<'pb> {
+pub fn make_ir(tree_ir: TreeIR) -> IR {
     let mut item_id_to_item = HashMap::new();
 
     for items in tree_ir.top_level_items.values() {
@@ -301,10 +219,10 @@ pub fn make_ir<'pb>(tree_ir: TreeIR<'pb>) -> IR<'pb> {
     let ordered_items =
         ItemsIterator::new(tree_ir.top_level_items.values().flat_map(|v| v.iter()).collect());
 
-    let mut lifetimes: HashMap<LifetimeId, LifetimeName<'pb>> = HashMap::new();
+    let mut lifetimes: HashMap<LifetimeId, LifetimeName> = HashMap::new();
     let mut namespace_id_to_number_of_reopened_namespaces = HashMap::new();
     let mut reopened_namespace_id_to_idx = HashMap::new();
-    let mut function_name_to_functions: HashMap<UnqualifiedIdentifier<'pb>, Vec<Rc<Func<'pb>>>> =
+    let mut function_name_to_functions: HashMap<UnqualifiedIdentifier, Vec<Rc<Func>>> =
         HashMap::new();
 
     for item in ordered_items {
@@ -354,147 +272,191 @@ pub fn make_ir<'pb>(tree_ir: TreeIR<'pb>) -> IR<'pb> {
     }
 }
 
-macro_rules! derive_debug_partialeq_eq_hash {
-    {
-        $(#[$impl_metas:meta]),*
-        impl<'pb> $name:ident<'pb> {
-            $(
-                $(#[$fn_metas:meta])*
-                $fn_vis:vis fn $fn_ident:ident(&$self_:ident) -> $ret:ty { $body:expr }
-            )*
+fn validate_array_value(value: &ArrayValue) -> Result<()> {
+    let length = value.length();
+    ensure!(length > 0, "ArrayValue has non-positive length {length}");
+    match value.kind() {
+        ArrayValueKind::Integers(elements) => {
+            validate_num_elements(elements.elements().len(), elements.has_filler(), length)?;
         }
-    } => {
-        $(#[$impl_metas])*
-        impl<'pb> $name<'pb> {
-            $(
-                $(#[$fn_metas])*
-                $fn_vis fn $fn_ident(&$self_) -> $ret { $body }
-            )*
-        }
-
-        impl std::fmt::Debug for $name<'_> {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                f.debug_struct(stringify!($name))
-                    $(
-                        .field(stringify!($fn_ident), &self.$fn_ident())
-                    )*
-                    .finish()
+        ArrayValueKind::Arrays(elements) => {
+            validate_num_elements(elements.elements().len(), elements.has_filler(), length)?;
+            for elem in elements.elements() {
+                validate_array_value(elem)?;
+            }
+            if let Some(filler) = elements.filler() {
+                validate_array_value(filler)?;
+            }
+            let mut first = None;
+            for element in elements.elements().iter().chain(elements.filler()) {
+                let first = *first.get_or_insert(element);
+                ensure!(
+                    array_dimensions(element).eq(array_dimensions(first)),
+                    "ArrayValue elements have different shapes: [{}] and [{}]",
+                    array_dimensions(first).format(", "),
+                    array_dimensions(element).format(", "),
+                );
             }
         }
+        ArrayValueKind::StringLiteral(bytes) => {
+            let len = bytes.len() as u64;
+            ensure!(
+                len < length,
+                "string literal of length {len} (plus NUL terminator) does not fit in an \
+                 array of length {length}"
+            );
+        }
+    }
+    Ok(())
+}
 
-        impl std::cmp::PartialEq for $name<'_> {
-            fn eq(&self, other: &Self) -> bool {
-                true
-                $(
-                    && self.$fn_ident() == other.$fn_ident()
-                )*
+fn validate_cc_type(ty: &CcType) -> Result<()> {
+    match ty.variant() {
+        CcTypeVariant::Pointer(p) => validate_cc_type(p.pointee_type())?,
+        CcTypeVariant::FuncPointer(fp) => {
+            for param_or_ret in fp.param_and_return_types() {
+                validate_cc_type(param_or_ret)?;
             }
         }
+        CcTypeVariant::ConstantArray(arr) => {
+            ensure!(
+                arr.num_elements() > 0,
+                "ConstantArrayType has non-positive num_elements: {}",
+                arr.num_elements()
+            );
+            validate_cc_type(arr.element_type())?;
+        }
+        CcTypeVariant::Primitive(_) | CcTypeVariant::Decl(_) | CcTypeVariant::Error(_) => {}
+    }
+    for arg in ty.template_args() {
+        validate_cc_type(arg)?;
+    }
+    Ok(())
+}
 
-        impl std::cmp::Eq for $name<'_> {}
-
-        impl std::hash::Hash for $name<'_> {
-            fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-                $(
-                    self.$fn_ident().hash(state);
-                )*
+fn validate_item(item: &Item) -> Result<()> {
+    match item {
+        Item::Func(func) => {
+            validate_cc_type(func.return_type())?;
+            for param in func.params() {
+                validate_cc_type(param.type_())?;
             }
         }
+        Item::Constant(constant) => {
+            if let Some(ty) = constant.type_() {
+                validate_cc_type(ty)?;
+            }
+            match constant.kind() {
+                ConstantValue::Integer(_) => {}
+                ConstantValue::Array(array_value) => validate_array_value(array_value)?,
+                ConstantValue::StringView(_) => {
+                    ensure!(
+                        !constant.has_type(),
+                        "StringViewValue Constant should not have a CcType"
+                    );
+                }
+            }
+        }
+        Item::GlobalVar(gv) => {
+            validate_cc_type(gv.type_())?;
+        }
+        Item::TypeAlias(ta) => {
+            validate_cc_type(ta.underlying_type())?;
+        }
+        Item::Record(record) => {
+            for field in record.fields() {
+                validate_cc_type(field.type_())?;
+            }
+            for child in record.children() {
+                validate_item(child)?;
+            }
+        }
+        Item::Namespace(ns) => {
+            for child in ns.children() {
+                validate_item(child)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+pub fn proto_to_ir(proto: &ir_rust_proto::IRProto) -> Result<IR> {
+    let public_headers = proto.public_headers().to_vec();
+
+    let crate_root_path = proto.crate_root_path().map(FfiString::from);
+
+    let crubit_features = proto
+        .crubit_features()
+        .iter()
+        .map(|(target, feature_set)| {
+            let mut features = flagset::FlagSet::<CrubitFeature>::default();
+            for feature_name in feature_set.iter() {
+                let feature_flags =
+                    crubit_feature::named_features(feature_name.as_str().as_bytes()).with_context(
+                        || format!("Invalid Crubit feature name: {:?}", feature_name.as_str()),
+                    )?;
+                features |= feature_flags;
+            }
+            Ok::<_, Error>((
+                BazelLabel::from(target.clone()),
+                crubit_feature::SerializedCrubitFeatures::resolved(features),
+            ))
+        })
+        .try_collect()?;
+
+    let unstable_rust_features = proto.unstable_rust_features().iter().map(String::from).collect();
+
+    let reexported_namespaces = proto.reexported_namespaces().to_vec();
+
+    let crate_names = proto
+        .crate_names()
+        .iter()
+        .map(|(target, name_str)| {
+            let ident = try_make_rs_ident(name_str.as_str()).with_context(|| {
+                format!("Invalid crate name identifier: {:?}", name_str.as_str())
+            })?;
+            Ok::<_, Error>((BazelLabel::from(target.clone()), ident))
+        })
+        .try_collect()?;
+
+    let top_level_items = proto
+        .top_level_items()
+        .iter()
+        .map(|(target, item_list)| {
+            for item in item_list.iter() {
+                validate_item(item)?;
+            }
+            Ok::<_, Error>((BazelLabel::from(target.clone()), item_list.to_vec()))
+        })
+        .try_collect()?;
+
+    let tree_ir = TreeIR {
+        public_headers,
+        current_target: BazelLabel::from(proto.current_target.clone()),
+        crate_root_path,
+        crubit_features,
+        crate_names,
+        unstable_rust_features,
+        reexported_namespaces,
+        top_level_items,
     };
+    Ok(make_ir(tree_ir))
 }
 
-/// A line in a source file.
-///
-/// Displays as `path/to/header.h;l=12`.
-#[derive(Clone, Copy)]
-pub struct SourceLocation<'pb> {
-    proto: SourceLocationView<'pb>,
-}
-
-impl<'pb> ProtoToIr for SourceLocationView<'pb> {
-    type IrType = SourceLocation<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.path().validate()
-    }
-
-    fn to_ir(self) -> SourceLocation<'pb> {
-        SourceLocation { proto: self }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> SourceLocation<'pb> {
-        /// The path of the file, relative to the workspace root (e.g. `path/to/header.h`).
-        pub fn path(&self) -> &'pb str {
-            self.proto.path().to_ir()
-        }
-
-        /// The 1-based line number.
-        pub fn line(&self) -> u32 {
-            self.proto.line()
-        }
-    }
-}
-
-impl Display for SourceLocation<'_> {
+impl Display for SourceLocation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{};l={}", self.path(), self.line())
     }
 }
 
-/// Where a declaration is in the source code.
-///
-/// Displays as the source location in generated doc comments, e.g.
-/// `Generated from: path/to/header.h;l=12`, followed by an `Expanded at:` line for macro
-/// expansions.
-#[derive(Clone, Copy)]
-pub struct DeclLocation<'pb> {
-    proto: DeclLocationView<'pb>,
-}
-
-impl<'pb> ProtoToIr for DeclLocationView<'pb> {
-    type IrType = DeclLocation<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.spelling_opt().into_option().validate()?;
-        self.expansion_opt().into_option().validate()
-    }
-
-    fn to_ir(self) -> DeclLocation<'pb> {
-        DeclLocation { proto: self }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> DeclLocation<'pb> {
-        /// Where the declaration is spelled, or None if unknown. For a declaration produced by a
-        /// macro expansion, this is inside the macro definition.
-        pub fn spelling(&self) -> Option<SourceLocation<'pb>> {
-            self.proto.spelling_opt().into_option().to_ir()
-        }
-
-        /// For a declaration produced by a macro expansion, where the macro is expanded. None
-        /// otherwise, or if unknown.
-        pub fn expansion(&self) -> Option<SourceLocation<'pb>> {
-            self.proto.expansion_opt().into_option().to_ir()
-        }
-
-        /// The `[begin, end)` byte offsets of the declaration's name in the `spelling()` file, for
-        /// Kythe. Only set when generating Kythe annotations; both offsets are 0 if unknown.
-        pub fn name_range(&self) -> Option<(u32, u32)> {
-            self.proto.name_range_opt().into_option().map(|range| (range.begin(), range.end()))
-        }
-    }
-}
-
-impl Display for DeclLocation<'_> {
+impl Display for DeclLocation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         /// Writes one line, e.g. `Generated from: path/to/header.h;l=12`.
         fn write_line(
             f: &mut fmt::Formatter<'_>,
             label: &str,
-            location: Option<SourceLocation<'_>>,
+            location: Option<&SourceLocation>,
             name_range: Option<(u32, u32)>,
         ) -> fmt::Result {
             let Some(location) = location else {
@@ -516,9 +478,9 @@ impl Display for DeclLocation<'_> {
     }
 }
 
-/// Displays an `Option<DeclLocation>`, falling back to `<unknown location>` when `None`.
+/// Displays an `Option<&DeclLocation>`, falling back to `<unknown location>` when `None`.
 #[derive(Clone, Copy)]
-pub struct DeclLocationOrUnknown<'pb>(pub Option<DeclLocation<'pb>>);
+pub struct DeclLocationOrUnknown<'a>(pub Option<&'a DeclLocation>);
 
 impl Display for DeclLocationOrUnknown<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -529,125 +491,44 @@ impl Display for DeclLocationOrUnknown<'_> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub struct HeaderName<'pb> {
-    pub(crate) name: &'pb str,
-}
-
-impl<'pb> ProtoToIr for HeaderNameView<'pb> {
-    type IrType = HeaderName<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.name().validate()
+impl HeaderName {
+    #[allow(clippy::should_implement_trait)]
+    pub fn from_str(name: &str) -> Self {
+        Self { name: FfiString::from(name) }
     }
-
-    fn to_ir(self) -> HeaderName<'pb> {
-        HeaderName { name: self.name().to_ir() }
-    }
-}
-
-impl<'pb> HeaderName<'pb> {
-    pub fn name(&self) -> &'pb str {
-        self.name
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub struct LifetimeId(pub i32);
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub struct LifetimeName<'pb> {
-    pub(crate) name: &'pb str,
-    pub(crate) id: LifetimeId,
-}
-
-impl<'pb> LifetimeName<'pb> {
-    pub fn name(&self) -> &'pb str {
-        self.name
-    }
-
-    pub fn id(&self) -> LifetimeId {
-        self.id
-    }
-}
-
-impl<'pb> ProtoToIr for ::ir_rust_proto::LifetimeNameView<'pb> {
-    type IrType = LifetimeName<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.name().validate()
-    }
-
-    fn to_ir(self) -> LifetimeName<'pb> {
-        LifetimeName { name: self.name().to_ir(), id: LifetimeId(self.id()) }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct CcType {
-    pub(crate) variant: CcTypeVariant,
-    pub(crate) is_const: bool,
-    // Whether this use of the type is promised to be non-null, via `_Nonnull` (e.g.
-    // `absl_nonnull`) or a `nonnull` file default.
-    pub(crate) is_nonnull: bool,
-    pub(crate) unknown_attr: Rc<str>,
-    // An ordered list of lifetime variable names applied to this type. It is valid for the same
-    // name to appear multiple times.
-    pub(crate) explicit_lifetimes: Vec<Rc<str>>,
 }
 
 impl CcType {
     pub fn new(
         variant: CcTypeVariant,
         is_const: bool,
-        unknown_attr: impl Into<Rc<str>>,
-        explicit_lifetimes: Vec<Rc<str>>,
+        unknown_attr: impl Into<FfiString>,
+        explicit_lifetimes: impl Into<FfiVec<FfiString>>,
     ) -> Self {
         Self {
             variant,
             is_const,
             is_nonnull: false,
             unknown_attr: unknown_attr.into(),
-            explicit_lifetimes,
+            explicit_lifetimes: explicit_lifetimes.into(),
+            template_args: FfiVec::default(),
         }
-    }
-
-    pub fn variant(&self) -> &CcTypeVariant {
-        &self.variant
     }
 
     pub fn variant_mut(&mut self) -> &mut CcTypeVariant {
         &mut self.variant
     }
 
-    pub fn is_const(&self) -> bool {
-        self.is_const
-    }
-
-    pub fn set_is_const(&mut self, is_const: bool) {
-        self.is_const = is_const;
-    }
-
-    /// Whether this use of the type is promised to be non-null: annotated `_Nonnull` (e.g. via
-    /// `absl_nonnull`), or unannotated under a `nonnull` file default (e.g.
-    /// `ABSL_POINTERS_DEFAULT_NONNULL`).
-    ///
-    /// This is recorded for every type that can carry a nullability annotation, but only smart
-    /// pointers currently act on it. See `RsTypeKind::into_nullable_smart_pointer`.
-    pub fn is_nonnull(&self) -> bool {
-        self.is_nonnull
-    }
-
-    pub fn unknown_attr(&self) -> &str {
-        &self.unknown_attr
-    }
-
-    pub fn explicit_lifetimes(&self) -> &[Rc<str>] {
-        &self.explicit_lifetimes
-    }
-
-    pub fn explicit_lifetimes_mut(&mut self) -> &mut Vec<Rc<str>> {
+    pub fn explicit_lifetimes_mut(&mut self) -> &mut FfiVec<FfiString> {
         &mut self.explicit_lifetimes
+    }
+
+    pub fn decl_template_args(&self) -> Option<&[CcType]> {
+        (!self.template_args.is_empty()).then_some(self.template_args.as_slice())
+    }
+
+    pub fn template_args_mut(&mut self) -> &mut FfiVec<CcType> {
+        &mut self.template_args
     }
 
     pub fn is_unit_type(&self) -> bool {
@@ -655,176 +536,72 @@ impl CcType {
     }
 }
 
-impl From<&Record<'_>> for CcType {
+impl From<&Record> for CcType {
     fn from(record: &Record) -> Self {
         CcType {
-            variant: CcTypeVariant::Decl { id: record.id(), template_args: None },
+            variant: CcTypeVariant::Decl(record.id()),
             is_const: false,
             is_nonnull: false,
-            unknown_attr: Rc::default(),
-            explicit_lifetimes: Vec::default(),
+            unknown_attr: FfiString::default(),
+            explicit_lifetimes: FfiVec::default(),
+            template_args: FfiVec::default(),
         }
     }
 }
 
-impl From<&TypeAlias<'_>> for CcType {
+impl From<&TypeAlias> for CcType {
     fn from(alias: &TypeAlias) -> Self {
         CcType {
-            variant: CcTypeVariant::Decl { id: alias.id(), template_args: None },
+            variant: CcTypeVariant::Decl(alias.id()),
             is_const: false,
             is_nonnull: false,
-            unknown_attr: Rc::default(),
-            explicit_lifetimes: Vec::default(),
+            unknown_attr: FfiString::default(),
+            explicit_lifetimes: FfiVec::default(),
+            template_args: FfiVec::default(),
         }
     }
 }
 
-impl From<&ExistingRustType<'_>> for CcType {
+impl From<&ExistingRustType> for CcType {
     fn from(existing_rust_type: &ExistingRustType) -> Self {
         CcType {
-            variant: CcTypeVariant::Decl { id: existing_rust_type.id(), template_args: None },
+            variant: CcTypeVariant::Decl(existing_rust_type.id()),
             is_const: false,
             is_nonnull: false,
-            unknown_attr: Rc::default(),
-            explicit_lifetimes: Vec::default(),
+            unknown_attr: FfiString::default(),
+            explicit_lifetimes: FfiVec::default(),
+            template_args: FfiVec::default(),
         }
     }
-}
-
-#[derive(Copy, Debug, PartialEq, Eq, Hash, Clone)]
-pub enum PointerTypeKind {
-    LValueRef,
-    RValueRef,
-    Nullable,
-    NonNull,
-    Owned,
-}
-
-impl ProtoToIr for ::ir_rust_proto::PointerTypeKind {
-    type IrType = PointerTypeKind;
-
-    fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::PointerTypeKind::LValueRef
-            | ::ir_rust_proto::PointerTypeKind::RValueRef
-            | ::ir_rust_proto::PointerTypeKind::Nullable
-            | ::ir_rust_proto::PointerTypeKind::NonNull
-            | ::ir_rust_proto::PointerTypeKind::Owned => Ok(()),
-            _ => bail!("Unspecified PointerTypeKind"),
-        }
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        match self {
-            ::ir_rust_proto::PointerTypeKind::LValueRef => PointerTypeKind::LValueRef,
-            ::ir_rust_proto::PointerTypeKind::RValueRef => PointerTypeKind::RValueRef,
-            ::ir_rust_proto::PointerTypeKind::Nullable => PointerTypeKind::Nullable,
-            ::ir_rust_proto::PointerTypeKind::NonNull => PointerTypeKind::NonNull,
-            ::ir_rust_proto::PointerTypeKind::Owned => PointerTypeKind::Owned,
-            _ => unreachable!(
-                "`PointerTypeKind` should have been validated by `ProtoToIr::validate`"
-            ),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct PointerType {
-    pub(crate) kind: PointerTypeKind,
-    pub(crate) lifetime: Option<LifetimeId>,
-    pub(crate) pointee_type: Rc<CcType>,
 }
 
 impl PointerType {
     pub fn new(
         kind: PointerTypeKind,
         lifetime: Option<LifetimeId>,
-        pointee_type: Rc<CcType>,
+        pointee_type: impl Into<FfiRc<CcType>>,
     ) -> Self {
-        Self { kind, lifetime, pointee_type }
-    }
-
-    pub fn kind(&self) -> PointerTypeKind {
-        self.kind
-    }
-
-    pub fn pointee_type(&self) -> &CcType {
-        &self.pointee_type
-    }
-
-    pub fn lifetime(&self) -> Option<LifetimeId> {
-        self.lifetime
-    }
-
-    pub fn set_kind(&mut self, kind: PointerTypeKind) {
-        self.kind = kind;
-    }
-
-    pub fn set_pointee_type(&mut self, pointee_type: Rc<CcType>) {
-        self.pointee_type = pointee_type;
-    }
-
-    pub fn set_lifetime(&mut self, lifetime: Option<LifetimeId>) {
-        self.lifetime = lifetime;
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct ConstantArrayType {
-    pub(crate) num_elements: usize,
-    pub(crate) element_type: Rc<CcType>,
-}
-
-impl<'pb> ProtoToIr for ::ir_rust_proto::cc_type::ConstantArrayTypeView<'pb> {
-    type IrType = ConstantArrayType;
-
-    fn validate(self) -> Result<()> {
-        ensure!(
-            self.num_elements() > 0,
-            "ConstantArrayType has non-positive num_elements: {}",
-            self.num_elements()
-        );
-        let _ = usize::try_from(self.num_elements())?;
-        let _ = CcType::try_from(self.element_type())?;
-        Ok(())
-    }
-
-    fn to_ir(self) -> ConstantArrayType {
-        let num_elements = usize::try_from(self.num_elements()).expect(
-            "`num_elements` should have been validated by `ConstantArrayTypeView::validate`",
-        );
-        let element_type = Rc::new(CcType::try_from(self.element_type()).expect(
-            "`element_type` should have been validated by `ConstantArrayTypeView::validate`",
-        ));
-        ConstantArrayType { num_elements, element_type }
+        let mut pt = Self {
+            has_bits: 0,
+            kind,
+            lifetime: LifetimeId::default(),
+            pointee_type: pointee_type.into(),
+        };
+        if let Some(lifetime) = lifetime {
+            pt.set_lifetime(lifetime);
+        }
+        pt
     }
 }
 
 impl ConstantArrayType {
-    pub fn new(num_elements: usize, element_type: Rc<CcType>) -> Self {
-        Self { num_elements, element_type }
-    }
-
-    pub fn num_elements(&self) -> usize {
-        self.num_elements
-    }
-
-    pub fn element_type(&self) -> &CcType {
-        &self.element_type
+    pub fn new(num_elements: usize, element_type: impl Into<FfiRc<CcType>>) -> Self {
+        Self { num_elements, element_type: element_type.into() }
     }
 }
 
-///// Generates an enum type that implements `ToTokens`, which quotes the contents of the braces.
-macro_rules! define_typed_tokens_enum {
-    {$(#[$ty_attr:meta])* $vis:vis enum $Type:ident {$($(#[$variant_attr:meta])* $Variant:ident = {$($cpp_spelling:tt)+},)+}} => {
-        $(#[$ty_attr])*
-        $vis enum $Type {
-            $(
-                $(#[$variant_attr])*
-                $Variant,
-            )+
-        }
-
+macro_rules! impl_typed_tokens_for_enum {
+    ($Type:ident { $($Variant:ident = { $($cpp_spelling:tt)+ },)+ }) => {
         impl $Type {
             pub const fn as_str(&self) -> &'static str {
                 match self {
@@ -850,24 +627,11 @@ macro_rules! define_typed_tokens_enum {
                 }
             }
         }
-
-        impl std::str::FromStr for $Type {
-            type Err = ::arc_anyhow::Error;
-            fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-                match s {
-                    $(
-                        stringify!($($cpp_spelling)+) => Ok($Type::$Variant),
-                    )+
-                    _ => ::arc_anyhow::bail!("Unknown {} spelling: {:?}", stringify!($Type), s),
-                }
-            }
-        }
-    }
+    };
 }
 
-define_typed_tokens_enum! {
-    #[derive(Copy, Debug, PartialEq, Eq, Hash, Clone)]
-    pub enum Primitive {
+impl_typed_tokens_for_enum! {
+    Primitive {
         Bool = {bool},
         Void = {void},
         Float = {float},
@@ -915,44 +679,14 @@ define_typed_tokens_enum! {
     }
 }
 
-define_typed_tokens_enum! {
-    /// The C++ calling convention of a function.
-    #[derive(Copy, Debug, PartialEq, Eq, Hash, Clone)]
-    pub enum CcCallingConv {
+impl_typed_tokens_for_enum! {
+    CcCallingConv {
         C = {cdecl},
         X86FastCall = {fastcall},
         X86VectorCall = {vectorcall},
         X86ThisCall = {thiscall},
         X86StdCall = {stdcall},
         Win64 = {ms_abi},
-    }
-}
-
-impl ProtoToIr for ::ir_rust_proto::CallingConv {
-    type IrType = CcCallingConv;
-
-    fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::CallingConv::CDecl
-            | ::ir_rust_proto::CallingConv::FastCall
-            | ::ir_rust_proto::CallingConv::VectorCall
-            | ::ir_rust_proto::CallingConv::ThisCall
-            | ::ir_rust_proto::CallingConv::StdCall
-            | ::ir_rust_proto::CallingConv::MsAbi => Ok(()),
-            _ => bail!("Unspecified CallingConv"),
-        }
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        match self {
-            ::ir_rust_proto::CallingConv::CDecl => CcCallingConv::C,
-            ::ir_rust_proto::CallingConv::FastCall => CcCallingConv::X86FastCall,
-            ::ir_rust_proto::CallingConv::VectorCall => CcCallingConv::X86VectorCall,
-            ::ir_rust_proto::CallingConv::ThisCall => CcCallingConv::X86ThisCall,
-            ::ir_rust_proto::CallingConv::StdCall => CcCallingConv::X86StdCall,
-            ::ir_rust_proto::CallingConv::MsAbi => CcCallingConv::Win64,
-            _ => unreachable!("`CallingConv` should have been validated by `ProtoToIr::validate`"),
-        }
     }
 }
 
@@ -1014,35 +748,6 @@ impl CcCallingConv {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum CcTypeVariant {
-    Primitive(Primitive),
-    Pointer(PointerType),
-    FuncPointer {
-        non_null: bool,
-        call_conv: CcCallingConv,
-
-        /// The parameter types, followed by the return type.
-        param_and_return_types: Rc<[CcType]>,
-
-        // Lifetime variable names bound by this function pointer.
-        lifetime_inputs: Vec<Rc<str>>,
-    },
-    Decl {
-        id: ItemId,
-        /// The type arguments to the type. These override any type arguments attached to the item.
-        template_args: Option<Rc<[CcType]>>,
-    },
-    ConstantArray(ConstantArrayType),
-    /// This type could not be translated to Rust.
-    ///
-    /// It's preferable to forward on a failed type conversion,
-    /// to defer errors as late as possible. For instance, struct
-    /// fields should become blobs of bytes, instead of failing
-    /// the whole struct.
-    Error(FormattedError),
-}
-
 impl CcTypeVariant {
     pub fn as_pointer(&self) -> Option<&PointerType> {
         match &self {
@@ -1050,9 +755,7 @@ impl CcTypeVariant {
             _ => None,
         }
     }
-}
 
-impl CcTypeVariant {
     pub fn as_primitive(&self) -> Option<Primitive> {
         match &self {
             CcTypeVariant::Primitive(primitive) => Some(*primitive),
@@ -1068,249 +771,43 @@ pub trait TypeWithDeclId {
 impl TypeWithDeclId for CcType {
     fn decl_id(&self) -> Option<ItemId> {
         match &self.variant {
-            CcTypeVariant::Decl { id, .. } => Some(*id),
+            CcTypeVariant::Decl(id) => Some(*id),
             _ => None,
         }
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
-pub struct Identifier<'pb> {
-    pub(crate) identifier: &'pb str,
-}
-
-impl<'pb> ProtoToIr for IdentifierView<'pb> {
-    type IrType = Identifier<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.identifier().validate()
+impl Identifier {
+    pub fn new(identifier: impl Into<FfiString>) -> Self {
+        Self { identifier: identifier.into() }
     }
 
-    fn to_ir(self) -> Identifier<'pb> {
-        Identifier { identifier: self.identifier().to_ir() }
+    pub fn as_str(&self) -> &str {
+        self.identifier.as_str()
     }
 }
 
-impl<'pb> Identifier<'pb> {
-    pub fn as_str(&self) -> &'pb str {
-        self.identifier
-    }
-}
-
-impl Display for Identifier<'_> {
+impl Display for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.as_str())
     }
 }
 
-impl Debug for Identifier<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "\"{}\"", self.as_str())
-    }
-}
-
-impl PartialEq<str> for Identifier<'_> {
+impl PartialEq<str> for Identifier {
     fn eq(&self, other: &str) -> bool {
         self.as_str() == other
     }
 }
 
-impl PartialEq<&str> for Identifier<'_> {
+impl PartialEq<&str> for Identifier {
     fn eq(&self, other: &&str) -> bool {
         self.eq(*other)
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub struct IntegerConstant {
-    pub(crate) is_negative: bool,
-    pub(crate) wrapped_value: u64,
-}
-
-impl<'pb> ProtoToIr for IntegerConstantView<'pb> {
-    type IrType = IntegerConstant;
-
-    fn validate(self) -> Result<()> {
-        Ok(())
-    }
-
-    fn to_ir(self) -> IntegerConstant {
-        IntegerConstant {
-            is_negative: self.is_negative(),
-            wrapped_value: self.wrapped_value() as u64,
-        }
-    }
-}
-
-impl IntegerConstant {
-    pub fn is_negative(&self) -> bool {
-        self.is_negative
-    }
-
-    pub fn wrapped_value(&self) -> u64 {
-        self.wrapped_value
-    }
-}
-
-/// The value of a `Constant`.
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum ConstantValue<'pb> {
-    /// A scalar integer or boolean value.
-    Integer(IntegerConstant),
-    /// A (possibly multidimensional) C-style array of integers or booleans.
-    Array(ArrayValue<'pb>),
-    /// A scalar `std::string_view` or `absl::string_view` value.
-    StringView(&'pb [u8]),
-}
-
-/// A (possibly multidimensional) C-style array of integers or booleans.
-///
-/// Only the elements that were explicitly initialized in the C++ source are recorded individually.
-/// The remaining elements are value-initialized, and their (shared) value is recorded as the
-/// `filler`, which is present if and only if there are fewer `elements` than the length of the
-/// array. For example, `int x[3][2] = {{1}, {3, 4}};` is recorded as:
-///
-/// ```text
-/// length: 3, Arrays {
-///     elements: [
-///         length: 2, Integers { elements: [1], filler: Some(0) },
-///         length: 2, Integers { elements: [3, 4], filler: None },
-///     ],
-///     filler: Some(length: 2, Integers { elements: [], filler: Some(0) }),
-/// }
-/// ```
-#[derive(Clone, Copy)]
-pub struct ArrayValue<'pb> {
-    proto: ::ir_rust_proto::ArrayValueView<'pb>,
-}
-
-impl<'pb> ProtoToIr for ::ir_rust_proto::ArrayValueView<'pb> {
-    type IrType = ArrayValue<'pb>;
-
-    fn validate(self) -> Result<()> {
-        use ::ir_rust_proto::array_value::KindOneof;
-        let length = u64::try_from(self.length())
-            .ok()
-            .filter(|&length| length > 0)
-            .ok_or_else(|| anyhow!("ArrayValue has non-positive length {}", self.length()))?;
-        match self.kind() {
-            KindOneof::IntegerElements(elements) => {
-                validate_num_elements(elements.elements().len(), elements.has_filler(), length)?;
-                elements.elements().validate()?;
-                elements.filler_opt().into_option().validate()
-            }
-            KindOneof::ArrayElements(elements) => {
-                validate_num_elements(elements.elements().len(), elements.has_filler(), length)?;
-                let mut first = None;
-                let filler = elements.filler_opt().into_option();
-                for element in elements.elements().iter().chain(filler) {
-                    element.validate()?;
-                    let first = *first.get_or_insert(element);
-                    ensure!(
-                        array_dimensions(element).eq(array_dimensions(first)),
-                        "ArrayValue elements have different shapes: [{}] and [{}]",
-                        array_dimensions(first).format(", "),
-                        array_dimensions(element).format(", "),
-                    );
-                }
-                Ok(())
-            }
-            KindOneof::StringLiteral(bytes) => {
-                let len = bytes.len() as u64;
-                ensure!(
-                    len < length,
-                    "string literal of length {len} (plus NUL terminator) does not fit in an \
-                     array of length {length}"
-                );
-                Ok(())
-            }
-            _ => bail!("unmapped ArrayValue KindOneof: {:?}", self.kind()),
-        }
-    }
-
-    fn to_ir(self) -> ArrayValue<'pb> {
-        ArrayValue { proto: self }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> ArrayValue<'pb> {
-        /// The length of the array. Always positive.
-        pub fn length(&self) -> u64 {
-            u64::try_from(self.proto.length())
-                .expect("`length` should have been validated by `ArrayValueView::validate`")
-        }
-
-        pub fn kind(&self) -> ArrayValueKind<'pb> {
-            match self.proto.kind() {
-                ::ir_rust_proto::array_value::KindOneof::IntegerElements(proto) => {
-                    ArrayValueKind::Integers(IntegerElements { proto })
-                }
-                ::ir_rust_proto::array_value::KindOneof::ArrayElements(proto) => {
-                    ArrayValueKind::Arrays(ArrayElements { proto })
-                }
-                ::ir_rust_proto::array_value::KindOneof::StringLiteral(bytes) => {
-                    ArrayValueKind::StringLiteral(bytes)
-                }
-                _ => unreachable!("`kind` should have been validated by `ArrayValueView::validate`"),
-            }
-        }
-    }
-}
-
-/// The kind of an `ArrayValue`.
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum ArrayValueKind<'pb> {
-    /// Used for the innermost dimension, unless it was initialized by a string literal.
-    Integers(IntegerElements<'pb>),
-    /// Used for all but the innermost dimension.
-    Arrays(ArrayElements<'pb>),
-    /// Used for the innermost dimension of arrays of plain `char` which were initialized by a
-    /// string literal (e.g. `char x[8] = "abc";`). Holds the bytes of the string literal,
-    /// excluding the implicit NUL terminator. The string literal and its NUL terminator always
-    /// fit, and the remainder of the row is NUL-filled.
-    StringLiteral(&'pb [u8]),
-}
-
-/// The elements of the innermost dimension of an array. See `ArrayValue`.
-#[derive(Clone, Copy)]
-pub struct IntegerElements<'pb> {
-    proto: ::ir_rust_proto::array_value::IntegerElementsView<'pb>,
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> IntegerElements<'pb> {
-        /// The explicitly initialized elements.
-        pub fn elements(&self)
-            -> RepeatedIr<'pb, ::ir_rust_proto::IntegerConstant, IntegerConstant> {
-            self.proto.elements().to_ir()
-        }
-
-        /// The value of the remaining elements, if any.
-        pub fn filler(&self) -> Option<IntegerConstant> {
-            self.proto.filler_opt().into_option().to_ir()
-        }
-    }
-}
-
-/// The elements of an outer dimension of an array, which all have the same shape. See
-/// `ArrayValue`.
-#[derive(Clone, Copy)]
-pub struct ArrayElements<'pb> {
-    proto: ::ir_rust_proto::array_value::ArrayElementsView<'pb>,
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> ArrayElements<'pb> {
-        /// The explicitly initialized elements.
-        pub fn elements(&self) -> RepeatedIr<'pb, ::ir_rust_proto::ArrayValue, ArrayValue<'pb>> {
-            self.proto.elements().to_ir()
-        }
-
-        /// The value of the remaining elements, if any.
-        pub fn filler(&self) -> Option<ArrayValue<'pb>> {
-            self.proto.filler_opt().into_option().to_ir()
-        }
+impl PartialEq<str> for &Identifier {
+    fn eq(&self, other: &str) -> bool {
+        self.as_str() == other
     }
 }
 
@@ -1318,11 +815,9 @@ derive_debug_partialeq_eq_hash! {
 ///
 /// `value` must already have been validated, so that all elements of each outer dimension have
 /// the same shape, and only the first element (or the filler) needs to be followed.
-fn array_dimensions(value: ::ir_rust_proto::ArrayValueView) -> impl Iterator<Item = i32> + '_ {
+fn array_dimensions(value: &ArrayValue) -> impl Iterator<Item = u64> + '_ {
     std::iter::successors(Some(value), |value| match value.kind() {
-        ::ir_rust_proto::array_value::KindOneof::ArrayElements(elements) => {
-            elements.elements().first().or(elements.filler_opt().into_option())
-        }
+        ArrayValueKind::Arrays(elements) => elements.elements().first().or(elements.filler()),
         _ => None,
     })
     .map(|value| value.length())
@@ -1344,18 +839,9 @@ fn validate_num_elements(num_elements: usize, has_filler: bool, size: u64) -> Re
     Ok(())
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
-pub struct Operator<'pb> {
-    pub(crate) name: &'pb str,
-}
-
-impl<'pb> Operator<'pb> {
-    pub fn new(name: &'pb str) -> Self {
-        Self { name }
-    }
-
-    pub fn name(&self) -> &'pb str {
-        self.name
+impl Operator {
+    pub fn new(name: impl Into<FfiString>) -> Self {
+        Self { name: name.into() }
     }
 
     pub fn cc_name(&self) -> String {
@@ -1367,147 +853,31 @@ impl<'pb> Operator<'pb> {
     }
 }
 
-impl<'pb> ProtoToIr for ::ir_rust_proto::OperatorView<'pb> {
-    type IrType = Operator<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.name().validate()
-    }
-
-    fn to_ir(self) -> Operator<'pb> {
-        Operator { name: self.name().to_ir() }
-    }
-}
-
-impl Debug for Operator<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "\"{}\"", self.cc_name())
-    }
-}
-
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
-pub struct ItemId(usize);
-
-impl Debug for ItemId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ItemId({:#x})", self.0)
-    }
-}
-
-impl ItemId {
-    pub fn as_u64(self) -> u64 {
-        self.0 as u64
-    }
-    pub const fn new_for_testing(value: usize) -> Self {
-        Self(value)
-    }
-}
-
-impl ToTokens for ItemId {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        use std::str::FromStr;
-        proc_macro2::Literal::from_str(&format!("{:#x}", self.0)).unwrap().to_tokens(tokens)
-    }
-}
-
-impl ToTokens for LifetimeId {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        use std::str::FromStr;
-        proc_macro2::Literal::from_str(&format!("{:#}", self.0)).unwrap().to_tokens(tokens)
-    }
-}
-pub use bazel_label::BazelLabel;
-
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
-pub enum UnqualifiedIdentifier<'pb> {
-    Identifier(Identifier<'pb>),
-    Operator(Operator<'pb>),
-    Constructor,
-    Destructor,
-    ConversionOperator,
-}
-
-impl<'pb> ProtoToIr for ::ir_rust_proto::UnqualifiedIdentifierView<'pb> {
-    type IrType = UnqualifiedIdentifier<'pb>;
-
-    fn validate(self) -> Result<()> {
-        match self.identifier() {
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Ident(id) => id.validate(),
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Oper(op) => op.validate(),
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::SpecialName(sn) => match sn {
-                ::ir_rust_proto::SpecialName::Constructor
-                | ::ir_rust_proto::SpecialName::Destructor => Ok(()),
-                _ => bail!("Unspecified SpecialName"),
-            },
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::ConversionOperator(_) => {
-                Ok(())
-            }
-            _ => bail!("unmapped IdentifierOneof: {:?}", self.identifier()),
-        }
-    }
-
-    fn to_ir(self) -> UnqualifiedIdentifier<'pb> {
-        match self.identifier() {
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Ident(id) => {
-                UnqualifiedIdentifier::Identifier(id.to_ir())
-            }
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Oper(op) => {
-                UnqualifiedIdentifier::Operator(op.to_ir())
-            }
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::SpecialName(sn) => match sn {
-                ::ir_rust_proto::SpecialName::Constructor => UnqualifiedIdentifier::Constructor,
-                ::ir_rust_proto::SpecialName::Destructor => UnqualifiedIdentifier::Destructor,
-                _ => unreachable!(
-                    "`SpecialName` should have been validated by `UnqualifiedIdentifierView::validate`"
-                ),
-            },
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::ConversionOperator(_) => {
-                UnqualifiedIdentifier::ConversionOperator
-            }
-            _ => unreachable!(
-                "`IdentifierOneof` should have been validated by `UnqualifiedIdentifierView::validate`"
-            ),
-        }
-    }
-}
-
-impl<'pb> UnqualifiedIdentifier<'pb> {
+impl UnqualifiedIdentifier {
     pub fn is_constructor(&self) -> bool {
         matches!(self, UnqualifiedIdentifier::Constructor)
     }
     pub fn is_destructor(&self) -> bool {
         matches!(self, UnqualifiedIdentifier::Destructor)
     }
-    pub fn as_identifier(&self) -> Option<&Identifier<'pb>> {
+    pub fn as_identifier(&self) -> Option<&Identifier> {
         match self {
             UnqualifiedIdentifier::Identifier(identifier) => Some(identifier),
             _ => None,
         }
     }
-    pub fn as_operator(&self) -> Option<&Operator<'pb>> {
+    pub fn as_operator(&self) -> Option<&Operator> {
         match self {
             UnqualifiedIdentifier::Operator(op) => Some(op),
             _ => None,
         }
     }
-    pub fn identifier_as_str(&self) -> Option<&'pb str> {
+    pub fn identifier_as_str(&self) -> Option<&str> {
         self.as_identifier().map(|id| id.as_str())
     }
 }
 
-impl Debug for UnqualifiedIdentifier<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            UnqualifiedIdentifier::Identifier(identifier) => Debug::fmt(identifier, f),
-            UnqualifiedIdentifier::Operator(op) => Debug::fmt(op, f),
-            UnqualifiedIdentifier::Constructor => f.write_str("Constructor"),
-            UnqualifiedIdentifier::Destructor => f.write_str("Destructor"),
-            UnqualifiedIdentifier::ConversionOperator => f.write_str("ConversionOperator"),
-        }
-    }
-}
-
-impl PartialEq<str> for UnqualifiedIdentifier<'_> {
+impl PartialEq<str> for UnqualifiedIdentifier {
     fn eq(&self, other: &str) -> bool {
         if let UnqualifiedIdentifier::Identifier(identifier) = self {
             identifier.as_str() == other
@@ -1517,71 +887,15 @@ impl PartialEq<str> for UnqualifiedIdentifier<'_> {
     }
 }
 
-impl PartialEq<&str> for UnqualifiedIdentifier<'_> {
+impl PartialEq<&str> for UnqualifiedIdentifier {
     fn eq(&self, other: &&str) -> bool {
         self.eq(*other)
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum ReferenceQualification {
-    LValue,
-    RValue,
-    Unqualified,
-}
-
-impl ProtoToIr for ::ir_rust_proto::instance_method_metadata::ReferenceQualification {
-    type IrType = ReferenceQualification;
-
-    fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::LValue
-            | ::ir_rust_proto::instance_method_metadata::ReferenceQualification::RValue
-            | ::ir_rust_proto::instance_method_metadata::ReferenceQualification::Unqualified => {
-                Ok(())
-            }
-            _ => bail!("Unspecified ReferenceQualification"),
-        }
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        match self {
-            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::LValue => {
-                ReferenceQualification::LValue
-            }
-            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::RValue => {
-                ReferenceQualification::RValue
-            }
-            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::Unqualified => {
-                ReferenceQualification::Unqualified
-            }
-            _ => unreachable!(
-                "`ReferenceQualification` should have been validated by `ProtoToIr::validate`"
-            ),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub struct InstanceMethodMetadata {
-    pub(crate) reference: ReferenceQualification,
-    pub(crate) is_const: bool,
-    pub(crate) is_virtual: bool,
-}
-
-impl<'pb> ProtoToIr for InstanceMethodMetadataView<'pb> {
-    type IrType = InstanceMethodMetadata;
-
-    fn validate(self) -> Result<()> {
-        self.reference().validate()
-    }
-
-    fn to_ir(self) -> InstanceMethodMetadata {
-        InstanceMethodMetadata {
-            reference: self.reference().to_ir(),
-            is_const: self.is_const(),
-            is_virtual: self.is_virtual(),
-        }
+impl PartialEq<str> for &UnqualifiedIdentifier {
+    fn eq(&self, other: &str) -> bool {
+        (*self).eq(other)
     }
 }
 
@@ -1589,382 +903,45 @@ impl InstanceMethodMetadata {
     pub fn new(reference: ReferenceQualification, is_const: bool, is_virtual: bool) -> Self {
         Self { reference, is_const, is_virtual }
     }
-
-    pub fn reference(&self) -> ReferenceQualification {
-        self.reference
-    }
-
-    pub fn is_const(&self) -> bool {
-        self.is_const
-    }
-
-    pub fn is_virtual(&self) -> bool {
-        self.is_virtual
-    }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Setter {
-    pub type_: CcType,
-    pub offset: usize,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Getter {
-    pub type_: CcType,
-    pub offset: usize,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum MemberFuncSemantic {
-    Setter(Setter),
-    Getter(Getter),
-    /// A constructor that can be implemented by filling the object with zero bytes.
-    Constructor,
-}
-
-#[derive(Clone)]
-pub struct FuncParam<'pb> {
-    proto: FuncParamView<'pb>,
-    pub(crate) type_: CcType,
-    pub(crate) clang_lifetime_capture_by: Vec<i32>,
-}
-
-impl<'pb> ProtoToIr for FuncParamView<'pb> {
-    type IrType = FuncParam<'pb>;
-
-    fn validate(self) -> Result<()> {
-        let _ = CcType::try_from(self.r#type())?;
-        self.identifier().validate()?;
-        self.unknown_attr_opt().into_option().validate()
-    }
-
-    fn to_ir(self) -> FuncParam<'pb> {
-        let type_ = CcType::try_from(self.r#type())
-            .expect("`type` should have been validated by `FuncParamView::validate`");
-        let clang_lifetime_capture_by = self.clang_lifetime_capture_by().iter().collect();
-        FuncParam { proto: self, type_, clang_lifetime_capture_by }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> FuncParam<'pb> {
-        pub fn type_(&self) -> &CcType {
-            &self.type_
-        }
-
-        pub fn identifier(&self) -> Identifier<'pb> {
-            self.proto.identifier().to_ir()
-        }
-
-        /// A list of parameter indices attached to this parameter by Clang's lifetime_capture_by.
-        /// In `f(x, y)`, `x` is parameter 0 and y is parameter 1. In the member function
-        /// `S::f(x, y)`, `this` is parameter 0, `x` is 1, and `y` is 2.
-        pub fn clang_lifetime_capture_by(&self) -> &[i32] {
-            &self.clang_lifetime_capture_by
-        }
-
-        /// True if this parameter was annotated with Clang's lifetimebound.
-        pub fn clang_lifetimebound(&self) -> bool {
-            self.proto.clang_lifetimebound()
-        }
-
-        /// A human-readable list of attributes that Crubit doesn't understand.
-        ///
-        /// Because attributes can change the behavior or semantics of function
-        /// parameters in ways that may affect interop, we default-closed and
-        /// do not expose functions with unknown attributes.
-        ///
-        /// One notable example is `lifetimebound`, which we might expect to map
-        /// to Rust lifetimes.
-        pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
-        }
-    }
-}
-
-impl<'pb> FuncParam<'pb> {
+impl FuncParam {
     pub fn type_mut(&mut self) -> &mut CcType {
         &mut self.type_
     }
-
-    pub fn set_type(&mut self, type_: CcType) {
-        self.type_ = type_;
-    }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum SafetyAnnotation {
-    DisableUnsafe,
-    Unsafe,
-    Unannotated,
-}
-
-impl ProtoToIr for ::ir_rust_proto::SafetyAnnotation {
-    type IrType = SafetyAnnotation;
-
-    fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::SafetyAnnotation::DisableUnsafe
-            | ::ir_rust_proto::SafetyAnnotation::Unsafe
-            | ::ir_rust_proto::SafetyAnnotation::Unannotated => Ok(()),
-            _ => bail!("Unspecified SafetyAnnotation"),
-        }
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        match self {
-            ::ir_rust_proto::SafetyAnnotation::DisableUnsafe => SafetyAnnotation::DisableUnsafe,
-            ::ir_rust_proto::SafetyAnnotation::Unsafe => SafetyAnnotation::Unsafe,
-            ::ir_rust_proto::SafetyAnnotation::Unannotated => SafetyAnnotation::Unannotated,
-            _ => unreachable!(
-                "`SafetyAnnotation` should have been validated by `ProtoToIr::validate`"
-            ),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct Func<'pb> {
-    pub(crate) proto: FuncView<'pb>,
-    pub(crate) cc_name: UnqualifiedIdentifier<'pb>,
-    pub(crate) rs_name: UnqualifiedIdentifier<'pb>,
-    pub(crate) owning_target: BazelLabel,
-    pub(crate) return_type: CcType,
-    pub(crate) params: Vec<FuncParam<'pb>>,
-    pub(crate) lifetime_params: Vec<LifetimeName<'pb>>,
-    pub(crate) inline_cpp_source_text: Option<Rc<str>>,
-    pub(crate) lifetime_inputs: Vec<Rc<str>>,
-    pub(crate) semantic: Option<MemberFuncSemantic>,
-}
-
-impl<'pb> ProtoToIr for FuncView<'pb> {
-    type IrType = Func<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.cc_name().validate()?;
-        self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.owning_target().validate()?;
-        self.mangled_name().validate()?;
-        self.doc_comment_opt().into_option().validate()?;
-        let _ = CcType::try_from(self.return_type())?;
-        for param in self.params().iter() {
-            param.validate()?;
-        }
-        for lifetime in self.lifetime_params().iter() {
-            lifetime.validate()?;
-        }
-        self.instance_method_metadata_opt().into_option().validate()?;
-        self.nodiscard_opt().into_option().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        self.unknown_attr_opt().into_option().validate()?;
-        self.safety_annotation().validate()?;
-        self.decl_loc_opt().into_option().validate()?;
-        for s in self.lifetime_inputs().iter() {
-            s.validate()?;
-        }
-        if let Some(sem) = self.semantic_opt().into_option() {
-            let _ = MemberFuncSemantic::try_from(sem)?;
-        }
-        self.inline_cpp_source_text_opt().into_option().validate()
-    }
-
-    fn to_ir(self) -> Func<'pb> {
-        let cc_name = self.cc_name().to_ir();
-        let rs_name = self.rs_name().to_ir();
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let return_type = CcType::try_from(self.return_type())
-            .expect("`return_type` should have been validated by `FuncView::validate`");
-        let params = self.params().iter().map(|p| p.to_ir()).collect();
-        let lifetime_params = self.lifetime_params().iter().map(|l| l.to_ir()).collect();
-        let lifetime_inputs = self.lifetime_inputs().iter().map(|s| Rc::from(s.to_ir())).collect();
-        let semantic = self.semantic_opt().into_option().map(|s| {
-            MemberFuncSemantic::try_from(s)
-                .expect("`semantic` should have been validated by `FuncView::validate`")
-        });
-        let inline_cpp_source_text =
-            self.inline_cpp_source_text_opt().into_option().to_ir().map(Rc::from);
-        Func {
-            proto: self,
-            cc_name,
-            rs_name,
-            owning_target,
-            return_type,
-            params,
-            lifetime_params,
-            inline_cpp_source_text,
-            lifetime_inputs,
-            semantic,
-        }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> Func<'pb> {
-        pub fn cc_name(&self) -> &UnqualifiedIdentifier<'pb> {
-            &self.cc_name
-        }
-
-        pub fn rs_name(&self) -> &UnqualifiedIdentifier<'pb> {
-            &self.rs_name
-        }
-
-        pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
-        }
-
-        pub fn owning_target(&self) -> &BazelLabel {
-            &self.owning_target
-        }
-
-        pub fn mangled_name(&self) -> &'pb str {
-            self.proto.mangled_name().to_ir()
-        }
-
-        pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
-        }
-
-        pub fn return_type(&self) -> &CcType {
-            &self.return_type
-        }
-
-        pub fn params(&self) -> &[FuncParam<'pb>] {
-            &self.params
-        }
-
-        /// For tests and internal use only.
-        ///
-        /// Prefer to reconstruct the lifetime params from the parameter types, as
-        /// needed. This allows new parameters and lifetimes to be added that were
-        /// not originally part of the IR.
-        pub fn lifetime_params(&self) -> &[LifetimeName<'pb>] {
-            &self.lifetime_params
-        }
-
-        pub fn is_inline(&self) -> bool {
-            self.proto.is_inline()
-        }
-
-        pub fn is_always_inline(&self) -> bool {
-            self.proto.is_always_inline()
-        }
-
-        pub fn instance_method_metadata(&self) -> Option<InstanceMethodMetadata> {
-            self.proto.instance_method_metadata_opt().into_option().to_ir()
-        }
-
-        pub fn is_extern_c(&self) -> bool {
-            self.proto.is_extern_c()
-        }
-
-        pub fn is_noreturn(&self) -> bool {
-            self.proto.is_noreturn()
-        }
-
-        pub fn is_variadic(&self) -> bool {
-            self.proto.is_variadic()
-        }
-
-        pub fn is_consteval(&self) -> bool {
-            self.proto.is_consteval()
-        }
-
-        /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
-        /// string is used.
-        pub fn nodiscard(&self) -> Option<&'pb str> {
-            self.proto.nodiscard_opt().into_option().to_ir()
-        }
-
-        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-        /// string is used.
-        pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
-        }
-
-        /// A human-readable list of attributes that Crubit doesn't understand.
-        ///
-        /// Because attributes can change the behavior or semantics of functions in
-        /// fairly significant ways, and in ways that may affect interop, we
-        /// default-closed and do not expose functions with unknown attributes.
-        pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
-        }
-
-        pub fn call_conv(&self) -> Option<CcCallingConv> {
-            self.proto.call_conv_opt().into_option().to_ir()
-        }
-
-
-        pub fn is_member_or_descendant_of_class_template(&self) -> bool {
-            self.proto.is_member_or_descendant_of_class_template()
-        }
-
-        pub fn safety_annotation(&self) -> SafetyAnnotation {
-            self.proto.safety_annotation().to_ir()
-        }
-
-        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
-            self.proto.decl_loc_opt().into_option().to_ir()
-        }
-
-        pub fn id(&self) -> ItemId {
-            ItemId(self.proto.id() as usize)
-        }
-
-        /// The enclosing item ID.
-        ///
-        /// If this is a free function, then this will be None or a namespace. If this is
-        /// a member function, it will be a record type in C++, but might be an
-        /// `ExistingRustType` if it was renamed.
-        pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
-        }
-
-        /// If this function was declared as a `friend` inside of a record
-        /// definition, this ItemId refers to the record containing the `friend`
-        /// function declaration.
-        ///
-        /// The record pointed to by `ItemId` must then be ADL-visible in order to
-        /// invoke this function.
-        pub fn adl_enclosing_record(&self) -> Option<ItemId> {
-            self.proto.adl_enclosing_record_opt().into_option().map(|id| ItemId(id as usize))
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.proto.must_bind()
-        }
-
-        pub fn inline_cpp_source_text(&self) -> Option<&str> {
-            self.inline_cpp_source_text.as_deref()
-        }
-
-        /// Lifetime variable names bound by this function.
-        pub fn lifetime_inputs(&self) -> &[Rc<str>] {
-            &self.lifetime_inputs
-        }
-
-        pub fn semantic(&self) -> Option<&MemberFuncSemantic> {
-            self.semantic.as_ref()
-        }
-
-        pub fn is_pub_crate(&self) -> bool {
-            self.proto.is_pub_crate()
-        }
-    }
-}
-impl<'pb> Func<'pb> {
+impl Func {
     pub fn has_c_calling_convention(&self) -> bool {
         self.call_conv() == Some(CcCallingConv::C)
     }
+
+    pub fn is_instance_method(&self) -> bool {
+        self.instance_method_metadata().is_some()
+    }
+
+    pub fn source_text_as_token_stream(&self) -> Option<proc_macro2::TokenStream> {
+        self.inline_cpp_source_text()?.parse::<proc_macro2::TokenStream>().ok()
+    }
+
+    pub fn return_type_mut(&mut self) -> &mut CcType {
+        &mut self.return_type
+    }
+
+    pub fn params_mut(&mut self) -> &mut FfiVec<FuncParam> {
+        &mut self.params
+    }
+
+    pub fn lifetime_inputs_mut(&mut self) -> &mut FfiVec<FfiString> {
+        &mut self.lifetime_inputs
+    }
 }
 
-impl<'pb> GenericItem<'pb> for Func<'pb> {
+impl GenericItem for Func {
     fn id(&self) -> ItemId {
         self.id()
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -1977,349 +954,31 @@ impl<'pb> GenericItem<'pb> for Func<'pb> {
             UnsupportedItemKind::Func
         }
     }
-    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+    fn decl_loc(&self) -> Option<&DeclLocation> {
         Self::decl_loc(self)
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         self.must_bind()
     }
-    fn cc_name_as_str(&self) -> Option<&'pb str> {
+    fn cc_name_as_str(&self) -> Option<&str> {
         self.cc_name.identifier_as_str()
     }
 }
 
-impl<'pb> Func<'pb> {
-    pub fn is_instance_method(&self) -> bool {
-        self.instance_method_metadata().is_some()
-    }
-
-    pub fn source_text_as_token_stream(&self) -> Option<proc_macro2::TokenStream> {
-        self.inline_cpp_source_text()?.parse::<proc_macro2::TokenStream>().ok()
-    }
-
-    pub fn set_inline_cpp_source_text(&mut self, text: Option<Rc<str>>) {
-        self.inline_cpp_source_text = text;
-    }
-
-    pub fn return_type_mut(&mut self) -> &mut CcType {
-        &mut self.return_type
-    }
-
-    pub fn set_return_type(&mut self, return_type: CcType) {
-        self.return_type = return_type;
-    }
-
-    pub fn params_mut(&mut self) -> &mut Vec<FuncParam<'pb>> {
-        &mut self.params
-    }
-
-    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
-        &mut self.lifetime_inputs
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub enum AccessSpecifier {
-    Public,
-    Protected,
-    Private,
-}
-
-impl ProtoToIr for ::ir_rust_proto::AccessSpecifier {
-    type IrType = AccessSpecifier;
-
-    fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::AccessSpecifier::Public
-            | ::ir_rust_proto::AccessSpecifier::Protected
-            | ::ir_rust_proto::AccessSpecifier::Private => Ok(()),
-            _ => bail!("Unspecified AccessSpecifier"),
-        }
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        match self {
-            ::ir_rust_proto::AccessSpecifier::Public => AccessSpecifier::Public,
-            ::ir_rust_proto::AccessSpecifier::Protected => AccessSpecifier::Protected,
-            ::ir_rust_proto::AccessSpecifier::Private => AccessSpecifier::Private,
-            _ => unreachable!(
-                "`AccessSpecifier` should have been validated by `ProtoToIr::validate`"
-            ),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct Field<'pb> {
-    proto: FieldView<'pb>,
-    pub(crate) type_: CcType,
-    pub(crate) unknown_attr: Result<Option<&'pb str>, String>,
-}
-
-impl<'pb> ProtoToIr for StatusOrOptionalStringView<'pb> {
-    type IrType = Result<Option<&'pb str>, String>;
-
-    fn validate(self) -> Result<()> {
-        match self.result() {
-            ::ir_rust_proto::status_or_optional_string::ResultOneof::OkValue(val) => val.validate(),
-            ::ir_rust_proto::status_or_optional_string::ResultOneof::Err(err) => err.validate(),
-            _ => Ok(()),
-        }
-    }
-
-    fn to_ir(self) -> Result<Option<&'pb str>, String> {
-        match self.result() {
-            ::ir_rust_proto::status_or_optional_string::ResultOneof::OkValue(val) => {
-                let s = val.to_ir();
-                Ok((!s.is_empty()).then_some(s))
-            }
-            ::ir_rust_proto::status_or_optional_string::ResultOneof::Err(err) => {
-                Err(err.to_ir().to_string())
-            }
-            _ => Ok(None),
-        }
-    }
-}
-
-impl<'pb> ProtoToIr for FieldView<'pb> {
-    type IrType = Field<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.rust_identifier_opt().into_option().validate()?;
-        self.cpp_identifier_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()?;
-        let _ = CcType::try_from(self.r#type())?;
-        self.access().validate()?;
-        self.unknown_attr().validate()?;
-        self.deprecated_opt().into_option().validate()
-    }
-
-    fn to_ir(self) -> Field<'pb> {
-        let type_ = CcType::try_from(self.r#type())
-            .expect("`type` should have been validated by `FieldView::validate`");
-        let unknown_attr = self.unknown_attr().to_ir();
-        Field { proto: self, type_, unknown_attr }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> Field<'pb> {
-        pub fn rust_identifier(&self) -> Option<Identifier<'pb>> {
-            self.proto.rust_identifier_opt().into_option().to_ir()
-        }
-
-        pub fn cpp_identifier(&self) -> Option<Identifier<'pb>> {
-            self.proto.cpp_identifier_opt().into_option().to_ir()
-        }
-
-        pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
-        }
-
-        pub fn type_(&self) -> &CcType {
-            &self.type_
-        }
-
-        pub fn access(&self) -> AccessSpecifier {
-            self.proto.access().to_ir()
-        }
-
-        pub fn offset(&self) -> usize {
-            self.proto.offset() as usize
-        }
-
-        pub fn size(&self) -> usize {
-            self.proto.size() as usize
-        }
-
-        /// A human-readable list of attributes that Crubit doesn't understand.
-        pub fn unknown_attr(&self) -> &Result<Option<&'pb str>, String> {
-            &self.unknown_attr
-        }
-
-        pub fn is_no_unique_address(&self) -> bool {
-            self.proto.is_no_unique_address()
-        }
-
-        pub fn is_bitfield(&self) -> bool {
-            self.proto.is_bitfield()
-        }
-
-        pub fn is_inheritable(&self) -> bool {
-            self.proto.is_inheritable()
-        }
-
-        pub fn is_mutable(&self) -> bool {
-            self.proto.is_mutable()
-        }
-
-        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-        /// string is used.
-        pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
-        }
-    }
-}
-
-impl<'pb> Field<'pb> {
+impl Field {
     pub fn type_mut(&mut self) -> &mut CcType {
         &mut self.type_
     }
-
-    pub fn set_type(&mut self, type_: CcType) {
-        self.type_ = type_;
-    }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum SpecialMemberFunc {
-    Trivial,
-    NontrivialMembers,
-    NontrivialUserDefined,
-    Unavailable,
-}
-
-impl ProtoToIr for ::ir_rust_proto::SpecialMemberFunc {
-    type IrType = SpecialMemberFunc;
-
-    fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::SpecialMemberFunc::Trivial
-            | ::ir_rust_proto::SpecialMemberFunc::NontrivialMembers
-            | ::ir_rust_proto::SpecialMemberFunc::NontrivialUserDefined
-            | ::ir_rust_proto::SpecialMemberFunc::Unavailable => Ok(()),
-            _ => bail!("Unspecified SpecialMemberFunc"),
-        }
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        match self {
-            ::ir_rust_proto::SpecialMemberFunc::Trivial => SpecialMemberFunc::Trivial,
-            ::ir_rust_proto::SpecialMemberFunc::NontrivialMembers => {
-                SpecialMemberFunc::NontrivialMembers
-            }
-            ::ir_rust_proto::SpecialMemberFunc::NontrivialUserDefined => {
-                SpecialMemberFunc::NontrivialUserDefined
-            }
-            ::ir_rust_proto::SpecialMemberFunc::Unavailable => SpecialMemberFunc::Unavailable,
-            _ => unreachable!(
-                "`SpecialMemberFunc` should have been validated by `ProtoToIr::validate`"
-            ),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub struct BaseClass {
-    pub(crate) base_record_id: ItemId,
-    pub(crate) offset: Option<i64>,
-}
-
-impl<'pb> ProtoToIr for BaseClassView<'pb> {
-    type IrType = BaseClass;
-
-    fn validate(self) -> Result<()> {
-        Ok(())
-    }
-
-    fn to_ir(self) -> BaseClass {
-        BaseClass {
-            base_record_id: ItemId(self.base_record_id() as usize),
-            offset: self.offset_opt().into_option(),
-        }
-    }
-}
-
-impl BaseClass {
-    pub fn base_record_id(&self) -> ItemId {
-        self.base_record_id
-    }
-
-    pub fn offset(&self) -> Option<i64> {
-        self.offset
-    }
-}
-
-#[derive(Clone)]
-pub struct IncompleteRecord<'pb> {
-    proto: IncompleteRecordView<'pb>,
-    pub(crate) owning_target: BazelLabel,
-    pub(crate) record_type: RecordType,
-}
-
-impl<'pb> ProtoToIr for IncompleteRecordView<'pb> {
-    type IrType = IncompleteRecord<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.cc_name().validate()?;
-        self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.owning_target().validate()?;
-        let _ = RecordType::try_from(self.record_type())?;
-        self.unknown_attr_opt().into_option().validate()
-    }
-
-    fn to_ir(self) -> IncompleteRecord<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let record_type = RecordType::try_from(self.record_type())
-            .expect("`record_type` should have been validated by `IncompleteRecordView::validate`");
-        IncompleteRecord { proto: self, owning_target, record_type }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> IncompleteRecord<'pb> {
-        pub fn cc_name(&self) -> Identifier<'pb> {
-            self.proto.cc_name().to_ir()
-        }
-
-        pub fn rs_name(&self) -> Identifier<'pb> {
-            self.proto.rs_name().to_ir()
-        }
-
-        pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
-        }
-
-        pub fn id(&self) -> ItemId {
-            ItemId(self.proto.id() as usize)
-        }
-
-        pub fn owning_target(&self) -> &BazelLabel {
-            &self.owning_target
-        }
-
-        /// A human-readable list of attributes that Crubit doesn't understand.
-        ///
-        /// Because attributes can change the behavior or semantics of types in
-        /// fairly significant ways, and in ways that may affect interop, we
-        /// default-closed and do not expose functions with unknown attributes.
-        pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
-        }
-
-        pub fn record_type(&self) -> RecordType {
-            self.record_type
-        }
-
-        pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.proto.must_bind()
-        }
-    }
-}
-
-impl<'pb> GenericItem<'pb> for IncompleteRecord<'pb> {
+impl GenericItem for IncompleteRecord {
     fn id(&self) -> ItemId {
         IncompleteRecord::id(self)
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -2328,43 +987,14 @@ impl<'pb> GenericItem<'pb> for IncompleteRecord<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.record_type.unsupported_item_kind()
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         IncompleteRecord::must_bind(self)
     }
-    fn cc_name_as_str(&self) -> Option<&'pb str> {
+    fn cc_name_as_str(&self) -> Option<&str> {
         Some(self.cc_name().as_str())
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub enum RecordType {
-    Struct,
-    Union,
-    Class,
-}
-
-impl ProtoToIr for ::ir_rust_proto::RecordType {
-    type IrType = RecordType;
-
-    fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::RecordType::Struct
-            | ::ir_rust_proto::RecordType::Union
-            | ::ir_rust_proto::RecordType::Class => Ok(()),
-            _ => bail!("Unspecified RecordType"),
-        }
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        match self {
-            ::ir_rust_proto::RecordType::Struct => RecordType::Struct,
-            ::ir_rust_proto::RecordType::Union => RecordType::Union,
-            ::ir_rust_proto::RecordType::Class => RecordType::Class,
-            _ => unreachable!("`RecordType` should have been validated by `ProtoToIr::validate`"),
-        }
     }
 }
 
@@ -2389,572 +1019,23 @@ impl ToTokens for RecordType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub struct SizeAlign {
-    pub(crate) size: usize,
-    pub(crate) alignment: usize,
-}
-
-impl<'pb> ProtoToIr for SizeAlignView<'pb> {
-    type IrType = SizeAlign;
-
-    fn validate(self) -> Result<()> {
-        Ok(())
-    }
-
-    fn to_ir(self) -> SizeAlign {
-        SizeAlign { size: self.size() as usize, alignment: self.alignment() as usize }
-    }
-}
-
-impl SizeAlign {
-    pub fn size(&self) -> usize {
-        self.size
-    }
-
-    pub fn alignment(&self) -> usize {
-        self.alignment
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum BridgeType<'pb> {
-    ProtoMessageBridge {
-        rust_name: &'pb str,
-    },
-    Bridge {
-        rust_name: &'pb str,
-        abi_rust: &'pb str,
-        abi_cpp: &'pb str,
-        template_args: Rc<[CcType]>,
-        label_hint: Option<&'pb str>,
-    },
-    StdOptional(CcType),
-    StdPair(CcType, CcType),
-    StdString,
-    Callable {
-        backing_type: BackingType,
-        fn_trait: FnTrait,
-        return_type: CcType,
-        param_types: Vec<CcType>,
-    },
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum TemplateArg {
-    Type(CcType),
-    Bool(bool),
-    Int(i64),
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct TemplateSpecialization {
-    pub(crate) defining_target: BazelLabel,
-
-    pub(crate) kind: TemplateSpecializationKind,
-}
-
 impl TemplateSpecialization {
-    /// The target containing the template definition
-    pub fn defining_target(&self) -> &BazelLabel {
-        &self.defining_target
-    }
-
-    /// The kind of template specialization.
-    pub fn kind(&self) -> &TemplateSpecializationKind {
-        &self.kind
-    }
-
     pub fn new_for_testing(defining_target: BazelLabel, kind: TemplateSpecializationKind) -> Self {
         Self { defining_target, kind }
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum TemplateSpecializationKind {
-    /// std::basic_string_view<char, std::char_traits<char>>
-    StdStringView,
-    /// std::basic_string_view<wchar_t, std::char_traits<wchar_t>>
-    StdWStringView,
-    /// std::vector<T, std::allocator<T>>
-    StdVector { raw_element_type: CcType },
-    /// std::optional<T>
-    StdOptional { raw_element_type: CcType },
-    /// std::shared_ptr<T>
-    StdSharedPtr { raw_element_type: CcType },
-    /// std::unique_ptr<T, std::default_delete<T>>
-    StdUniquePtr { raw_element_type: CcType },
-    /// c9::Co<T>
-    C9Co { raw_element_type: CcType },
-    /// std::atomic<T>
-    StdAtomic { raw_element_type: CcType },
-    /// absl::Span<T>
-    AbslSpan { raw_element_type: CcType },
-    /// absl::flat_hash_map<K, V, ...>
-    AbslFlatHashMap { raw_key_type: CcType, raw_value_type: CcType },
-    /// absl::flat_hash_set<T, ...>
-    AbslFlatHashSet { raw_element_type: CcType },
-    /// Some other template specialization.
-    NonSpecial,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub enum TraitImplPolarity {
-    Negative,
-    None,
-    Positive,
-}
-
-impl ProtoToIr for ::ir_rust_proto::TraitImplPolarity {
-    type IrType = TraitImplPolarity;
-
-    fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::TraitImplPolarity::Negative
-            | ::ir_rust_proto::TraitImplPolarity::None
-            | ::ir_rust_proto::TraitImplPolarity::Positive => Ok(()),
-            _ => bail!("Unspecified TraitImplPolarity"),
-        }
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        match self {
-            ::ir_rust_proto::TraitImplPolarity::Negative => TraitImplPolarity::Negative,
-            ::ir_rust_proto::TraitImplPolarity::None => TraitImplPolarity::None,
-            ::ir_rust_proto::TraitImplPolarity::Positive => TraitImplPolarity::Positive,
-            _ => unreachable!(
-                "`TraitImplPolarity` should have been validated by `ProtoToIr::validate`"
-            ),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct TraitDerives<'pb> {
-    // <internal link> start
-    pub clone: TraitImplPolarity,
-    pub copy: TraitImplPolarity,
-    pub debug: TraitImplPolarity,
-    // <internal link> end
-    /// `Positive` for `unsafe impl Send`, `Negative` for `impl !Send`, and `None` if the C++ type
-    /// has no annotation.
-    pub send: TraitImplPolarity,
-    /// Same as `send`, but for `Sync`.
-    pub sync: TraitImplPolarity,
-    pub custom: Vec<&'pb str>,
-}
-
-impl<'pb> ProtoToIr for ::ir_rust_proto::TraitDerivesView<'pb> {
-    type IrType = TraitDerives<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.clone().validate()?;
-        self.copy().validate()?;
-        self.debug().validate()?;
-        self.send_polarity().validate()?;
-        self.sync_polarity().validate()?;
-        for c in self.custom().iter() {
-            c.validate()?;
-        }
-        Ok(())
-    }
-
-    fn to_ir(self) -> TraitDerives<'pb> {
-        TraitDerives {
-            clone: self.clone().to_ir(),
-            copy: self.copy().to_ir(),
-            debug: self.debug().to_ir(),
-            send: self.send_polarity().to_ir(),
-            sync: self.sync_polarity().to_ir(),
-            custom: self.custom().iter().map(|s| s.to_ir()).collect(),
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub struct OwnedPtrConfig<'pb> {
-    proto: OwnedPtrConfigView<'pb>,
-}
-
-impl<'pb> ProtoToIr for OwnedPtrConfigView<'pb> {
-    type IrType = OwnedPtrConfig<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.owned_ptr_type().validate()?;
-        self.drop_impl().validate()
-    }
-
-    fn to_ir(self) -> OwnedPtrConfig<'pb> {
-        OwnedPtrConfig { proto: self }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> OwnedPtrConfig<'pb> {
-        pub fn owned_ptr_type(&self) -> &'pb str {
-            self.proto.owned_ptr_type().to_ir()
-        }
-
-        pub fn drop_impl(&self) -> &'pb str {
-            self.proto.drop_impl().to_ir()
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct Record<'pb> {
-    pub(crate) proto: RecordView<'pb>,
-    pub(crate) rs_name: Identifier<'pb>,
-    pub(crate) owning_target: BazelLabel,
-    pub(crate) template_specialization: Option<TemplateSpecialization>,
-    pub(crate) bridge_type: Option<BridgeType<'pb>>,
-    pub(crate) unambiguous_public_bases: Vec<BaseClass>,
-    pub(crate) fields: Vec<Field<'pb>>,
-    pub(crate) lifetime_params: Vec<LifetimeName<'pb>>,
-    pub(crate) trait_derives: TraitDerives<'pb>,
-    pub(crate) lifetime_inputs: Vec<Rc<str>>,
-    pub(crate) children: Vec<Item<'pb>>,
-}
-
-impl<'pb> ProtoToIr for RecordView<'pb> {
-    type IrType = Record<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.rs_name().validate()?;
-        self.cc_name().validate()?;
-        self.unique_name().validate()?;
-        self.mangled_cc_name().validate()?;
-        self.owning_target().validate()?;
-        if let Some(ts) = self.template_specialization_opt().into_option() {
-            let _ = TemplateSpecialization::try_from(ts)?;
-        }
-        self.unknown_attr_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()?;
-        if let Some(bt) = self.bridge_type_opt().into_option() {
-            let _ = BridgeType::try_from(bt)?;
-        }
-        self.owned_ptr_config_opt().into_option().validate()?;
-        self.decl_loc_opt().into_option().validate()?;
-        for base in self.unambiguous_public_bases().iter() {
-            base.validate()?;
-        }
-        for field in self.fields().iter() {
-            field.validate()?;
-        }
-        for lp in self.lifetime_params().iter() {
-            lp.validate()?;
-        }
-        self.trait_derives().validate()?;
-        self.safety_annotation().validate()?;
-        self.copy_constructor().validate()?;
-        self.move_constructor().validate()?;
-        self.destructor().validate()?;
-        self.nodiscard_opt().into_option().validate()?;
-        self.record_type().validate()?;
-        for li in self.lifetime_inputs().iter() {
-            li.validate()?;
-        }
-        self.deprecated_opt().into_option().validate()?;
-        for child in self.children().iter() {
-            let _ = Item::try_from(child)?;
-        }
-        Ok(())
-    }
-
-    fn to_ir(self) -> Record<'pb> {
-        let rs_name = self.rs_name().to_ir();
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let template_specialization = self.template_specialization_opt().into_option().map(|ts| {
-            TemplateSpecialization::try_from(ts).expect(
-                "`template_specialization` should have been validated by `RecordView::validate`",
-            )
-        });
-        let bridge_type = self.bridge_type_opt().into_option().map(|bt| {
-            BridgeType::try_from(bt)
-                .expect("`bridge_type` should have been validated by `RecordView::validate`")
-        });
-        let unambiguous_public_bases =
-            self.unambiguous_public_bases().iter().map(|b| b.to_ir()).collect();
-        let fields = self.fields().iter().map(|f| f.to_ir()).collect();
-        let lifetime_params = self.lifetime_params().iter().map(|lp| lp.to_ir()).collect();
-        let trait_derives = self.trait_derives().to_ir();
-        let lifetime_inputs = self.lifetime_inputs().iter().map(|s| Rc::from(s.to_ir())).collect();
-        let children = self
-            .children()
-            .iter()
-            .map(|c| {
-                Item::try_from(c)
-                    .expect("`children` should have been validated by `RecordView::validate`")
-            })
-            .collect();
-
-        Record {
-            proto: self,
-            rs_name,
-            owning_target,
-            template_specialization,
-            bridge_type,
-            unambiguous_public_bases,
-            fields,
-            lifetime_params,
-            trait_derives,
-            lifetime_inputs,
-            children,
-        }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> Record<'pb> {
-        pub fn rs_name(&self) -> &Identifier<'pb> {
-            &self.rs_name
-        }
-
-        /// The C++ name of the record. If the record is a template specialization, the fully qualified
-        /// name is used. Otherwise, the only the name of the record is used.
-        /// Today, cc_name is only used for debugging, checking for names starting in __, and generating
-        /// parent modules for nested items which are disallowed for template specializations in Crubit.
-        pub fn cc_name(&self) -> Identifier<'pb> {
-            self.proto.cc_name().to_ir()
-        }
-
-        pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
-        }
-
-        /// Mangled record names are used to 1) provide valid Rust identifiers for
-        /// C++ template specializations, and 2) help build unique names for virtual
-        /// upcast thunks.
-        pub fn mangled_cc_name(&self) -> &'pb str {
-            self.proto.mangled_cc_name().to_ir()
-        }
-
-        pub fn id(&self) -> ItemId {
-            ItemId(self.proto.id() as usize)
-        }
-
-        pub fn owning_target(&self) -> &BazelLabel {
-            &self.owning_target
-        }
-
-        pub fn template_specialization(&self) -> Option<&TemplateSpecialization> {
-            self.template_specialization.as_ref()
-        }
-
-        /// A human-readable list of attributes that Crubit doesn't understand.
-        ///
-        /// Because attributes can change the behavior or semantics of types in
-        /// fairly significant ways, and in ways that may affect interop, we
-        /// default-closed and do not expose functions with unknown attributes.
-        pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
-        }
-
-        pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
-        }
-
-        pub fn bridge_type(&self) -> Option<&BridgeType<'pb>> {
-            self.bridge_type.as_ref()
-        }
-
-        pub fn owned_ptr_config(&self) -> Option<OwnedPtrConfig<'pb>> {
-            self.proto.owned_ptr_config_opt().into_option().to_ir()
-        }
-
-        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
-            self.proto.decl_loc_opt().into_option().to_ir()
-        }
-
-        pub fn unambiguous_public_bases(&self) -> &[BaseClass] {
-            &self.unambiguous_public_bases
-        }
-
-        pub fn fields(&self) -> &[Field<'pb>] {
-            &self.fields
-        }
-
-        pub fn lifetime_params(&self) -> &[LifetimeName<'pb>] {
-            &self.lifetime_params
-        }
-
-        pub fn size_align(&self) -> SizeAlign {
-            self.proto.size_align().to_ir()
-        }
-
-        pub fn trait_derives(&self) -> &TraitDerives<'pb> {
-            &self.trait_derives
-        }
-
-        pub fn is_derived_class(&self) -> bool {
-            self.proto.is_derived_class()
-        }
-
-        pub fn has_virtual_bases(&self) -> bool {
-            self.proto.has_virtual_bases()
-        }
-
-        pub fn override_alignment(&self) -> bool {
-            self.proto.override_alignment()
-        }
-
-        pub fn pack(&self) -> Option<usize> {
-            self.proto.pack_opt().into_option().map(|x| x as usize)
-        }
-
-        pub fn safety_annotation(&self) -> SafetyAnnotation {
-            self.proto.safety_annotation().to_ir()
-        }
-
-        pub fn copy_constructor(&self) -> SpecialMemberFunc {
-            self.proto.copy_constructor().to_ir()
-        }
-
-        pub fn move_constructor(&self) -> SpecialMemberFunc {
-            self.proto.move_constructor().to_ir()
-        }
-
-        pub fn destructor(&self) -> SpecialMemberFunc {
-            self.proto.destructor().to_ir()
-        }
-
-        pub fn is_rust_movable(&self) -> bool {
-            self.proto.is_rust_movable()
-        }
-
-        pub fn is_inheritable(&self) -> bool {
-            self.proto.is_inheritable()
-        }
-
-        pub fn is_abstract(&self) -> bool {
-            self.proto.is_abstract()
-        }
-
-        /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
-        /// string is used.
-        pub fn nodiscard(&self) -> Option<&'pb str> {
-            self.proto.nodiscard_opt().into_option().to_ir()
-        }
-
-        pub fn record_type(&self) -> RecordType {
-            self.proto.record_type().to_ir()
-        }
-
-        pub fn is_aggregate(&self) -> bool {
-            self.proto.is_aggregate()
-        }
-
-        pub fn is_canonical_alias(&self) -> bool {
-            self.proto.is_canonical_alias()
-        }
-
-        pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.proto.must_bind()
-        }
-
-        /// Whether this type has an overload of `operator delete`.
-        pub fn overloads_operator_delete(&self) -> bool {
-            self.proto.overloads_operator_delete()
-        }
-
-        pub fn has_private_or_deleted_operator_delete(&self) -> bool {
-            self.proto.has_private_or_deleted_operator_delete()
-        }
-
-        /// Lifetime variable names bound by this record.
-        pub fn lifetime_inputs(&self) -> &[Rc<str>] {
-            &self.lifetime_inputs
-        }
-
-        pub fn impl_debug(&self) -> bool {
-            self.proto.impl_debug()
-        }
-
-        pub fn has_private_pointer_or_reference_fields(&self) -> bool {
-            self.proto.has_private_pointer_or_reference_fields()
-        }
-
-        /// Whether the last of `lifetime_inputs` is the lifetime of this class template
-        /// specialization's template argument, added by Crubit rather than written by the user.
-        pub fn has_template_argument_lifetime(&self) -> bool {
-            self.proto.has_template_argument_lifetime()
-        }
-
-        pub fn detected_formatter(&self) -> bool {
-            self.proto.detected_formatter()
-        }
-
-        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-        /// string is used.
-        pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
-        }
-
-        /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
-        pub fn is_thread_safe(&self) -> bool {
-            self.proto.is_thread_safe()
-        }
-
-        pub fn is_explicit_class_template_instantiation_definition(&self) -> bool {
-            self.proto.is_explicit_class_template_instantiation_definition()
-        }
-
-        pub fn children(&self) -> &[Item<'pb>] {
-            &self.children
-        }
-    }
-}
-
-impl<'pb> GenericItem<'pb> for Record<'pb> {
-    fn id(&self) -> ItemId {
-        Record::id(self)
-    }
-    fn unique_name(&self) -> Option<&'pb str> {
-        Some(self.unique_name())
-    }
-    fn owning_target(&self) -> Option<BazelLabel> {
-        Some(self.owning_target.clone())
-    }
-    fn unsupported_kind(&self) -> UnsupportedItemKind {
-        self.record_type().unsupported_item_kind()
-    }
-    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
-        Self::decl_loc(self)
-    }
-    fn unknown_attr(&self) -> Option<&'pb str> {
-        self.unknown_attr()
-    }
-    fn must_bind(&self) -> bool {
-        Record::must_bind(self)
-    }
-    fn cc_name_as_str(&self) -> Option<&'pb str> {
-        Some(self.cc_name().as_str())
-    }
-}
-
-impl<'pb> Record<'pb> {
+impl Record {
     pub fn is_packed(&self) -> bool {
         self.pack().is_some()
     }
 
-    pub fn set_rs_name(&mut self, rs_name: Identifier<'pb>) {
-        self.rs_name = rs_name;
-    }
-
-    pub fn fields_mut(&mut self) -> &mut Vec<Field<'pb>> {
+    pub fn fields_mut(&mut self) -> &mut FfiVec<Field> {
         &mut self.fields
     }
 
-    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
+    pub fn lifetime_inputs_mut(&mut self) -> &mut FfiVec<FfiString> {
         &mut self.lifetime_inputs
-    }
-
-    pub fn set_children(&mut self, children: Vec<Item<'pb>>) {
-        self.children = children;
     }
 
     /// Whether this type has Rust-like object semantics for mutating
@@ -2981,8 +1062,8 @@ impl<'pb> Record<'pb> {
     // TemplateSpecialization kind NonSpecial. This is unfortunate, since we want to exclude all
     // flavors of string_view because of our special-casing.
     pub fn is_string_view(&self) -> bool {
-        match &self.template_specialization {
-            Some(TemplateSpecialization { defining_target, kind, .. })
+        match self.template_specialization() {
+            Some(TemplateSpecialization { defining_target, kind })
                 if defining_target.is_cc_std() =>
             {
                 let is_string_view = *kind == TemplateSpecializationKind::StdStringView
@@ -3000,7 +1081,7 @@ impl<'pb> Record<'pb> {
     /// special-case this.
     pub fn is_raw_string_view(&self) -> bool {
         matches!(
-            self.template_specialization,
+            self.template_specialization(),
             Some(TemplateSpecialization { kind: TemplateSpecializationKind::StdStringView, .. })
         ) && self.rs_name().as_str() == "raw_string_view"
     }
@@ -3091,129 +1172,48 @@ impl<'pb> Record<'pb> {
     /// Notably, all records that have a unique owning target are supported, e.g. `std::string`, but
     /// not all supported records have a unique owning target, e.g. `std::vector<int>`.
     pub fn has_unique_owning_target(&self) -> bool {
-        self.template_specialization.is_none() || self.is_canonical_alias()
+        self.template_specialization().is_none() || self.is_canonical_alias()
     }
 }
 
-#[derive(Clone)]
-pub struct Constant<'pb> {
-    proto: ConstantView<'pb>,
-    pub(crate) owning_target: BazelLabel,
-    pub(crate) type_: Option<CcType>,
-}
-
-impl<'pb> ProtoToIr for ConstantView<'pb> {
-    type IrType = Constant<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.cc_name().validate()?;
-        self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.owning_target().validate()?;
-        self.decl_loc_opt().into_option().validate()?;
-        match self.kind() {
-            ::ir_rust_proto::constant::KindOneof::Value(value) => {
-                value.validate()?;
-                let _ = CcType::try_from(self.r#type())?;
-            }
-            ::ir_rust_proto::constant::KindOneof::ArrayValue(array_value) => {
-                array_value.validate()?;
-                let _ = CcType::try_from(self.r#type())?;
-            }
-            ::ir_rust_proto::constant::KindOneof::StringViewValue(_) => {
-                ensure!(!self.has_type(), "StringViewValue Constant should not have a CcType");
-            }
-            _ => bail!("unmapped Constant KindOneof: {:?}", self.kind()),
-        }
-        self.unknown_attr_opt().into_option().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()
+impl GenericItem for Record {
+    fn id(&self) -> ItemId {
+        Record::id(self)
     }
-
-    fn to_ir(self) -> Constant<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let type_ = self.r#type_opt().into_option().map(|t| {
-            CcType::try_from(t)
-                .expect("`type` should have been validated by `ConstantView::validate`")
-        });
-        Constant { proto: self, owning_target, type_ }
+    fn unique_name(&self) -> Option<&str> {
+        Some(self.unique_name())
+    }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        Some(self.owning_target.clone())
+    }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        self.record_type().unsupported_item_kind()
+    }
+    fn decl_loc(&self) -> Option<&DeclLocation> {
+        Self::decl_loc(self)
+    }
+    fn unknown_attr(&self) -> Option<&str> {
+        self.unknown_attr()
+    }
+    fn must_bind(&self) -> bool {
+        Record::must_bind(self)
+    }
+    fn cc_name_as_str(&self) -> Option<&str> {
+        Some(self.cc_name().as_str())
     }
 }
 
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> Constant<'pb> {
-        pub fn value(&self) -> ConstantValue<'pb> {
-            match self.proto.kind() {
-                ::ir_rust_proto::constant::KindOneof::Value(value) => {
-                    ConstantValue::Integer(value.to_ir())
-                }
-                ::ir_rust_proto::constant::KindOneof::ArrayValue(array_value) => {
-                    ConstantValue::Array(array_value.to_ir())
-                }
-                ::ir_rust_proto::constant::KindOneof::StringViewValue(bytes) => {
-                    ConstantValue::StringView(bytes)
-                }
-                _ => unreachable!("`kind` should have been validated by `ConstantView::validate`"),
-            }
-        }
-
-        pub fn cc_name(&self) -> Identifier<'pb> {
-            self.proto.cc_name().to_ir()
-        }
-
-        pub fn rs_name(&self) -> Identifier<'pb> {
-            self.proto.rs_name().to_ir()
-        }
-
-        pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
-        }
-
-        pub fn id(&self) -> ItemId {
-            ItemId(self.proto.id() as usize)
-        }
-
-        pub fn owning_target(&self) -> &BazelLabel {
-            &self.owning_target
-        }
-
-        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
-            self.proto.decl_loc_opt().into_option().to_ir()
-        }
-
-        pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
-        }
-
-        pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
-        }
-
-        pub fn type_(&self) -> Option<&CcType> {
-            self.type_.as_ref()
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.proto.must_bind()
-        }
-
-        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-        /// string is used.
-        pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
-        }
-
-        pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
-        }
+impl Constant {
+    pub fn value(&self) -> &ConstantValue {
+        self.kind()
     }
 }
 
-impl<'pb> GenericItem<'pb> for Constant<'pb> {
+impl GenericItem for Constant {
     fn id(&self) -> ItemId {
         Constant::id(self)
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -3222,115 +1222,25 @@ impl<'pb> GenericItem<'pb> for Constant<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::GlobalVar
     }
-    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+    fn decl_loc(&self) -> Option<&DeclLocation> {
         Self::decl_loc(self)
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         Constant::must_bind(self)
     }
-    fn cc_name_as_str(&self) -> Option<&'pb str> {
+    fn cc_name_as_str(&self) -> Option<&str> {
         Some(self.cc_name().as_str())
     }
 }
 
-#[derive(Clone)]
-pub struct GlobalVar<'pb> {
-    proto: GlobalVarView<'pb>,
-    pub(crate) owning_target: BazelLabel,
-    pub(crate) type_: CcType,
-}
-
-impl<'pb> ProtoToIr for GlobalVarView<'pb> {
-    type IrType = GlobalVar<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.cc_name().validate()?;
-        self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.owning_target().validate()?;
-        self.decl_loc_opt().into_option().validate()?;
-        self.unknown_attr_opt().into_option().validate()?;
-        self.mangled_name_opt().into_option().validate()?;
-        let _ = CcType::try_from(self.r#type())?;
-        self.deprecated_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()
-    }
-
-    fn to_ir(self) -> GlobalVar<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let type_ = CcType::try_from(self.r#type())
-            .expect("`type` should have been validated by `GlobalVarView::validate`");
-        GlobalVar { proto: self, owning_target, type_ }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> GlobalVar<'pb> {
-        pub fn cc_name(&self) -> Identifier<'pb> {
-            self.proto.cc_name().to_ir()
-        }
-
-        pub fn rs_name(&self) -> Identifier<'pb> {
-            self.proto.rs_name().to_ir()
-        }
-
-        pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
-        }
-
-        pub fn id(&self) -> ItemId {
-            ItemId(self.proto.id() as usize)
-        }
-
-        pub fn owning_target(&self) -> &BazelLabel {
-            &self.owning_target
-        }
-
-        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
-            self.proto.decl_loc_opt().into_option().to_ir()
-        }
-
-        /// A human-readable list of attributes that Crubit doesn't understand.
-        pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
-        }
-
-        pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
-        }
-
-        pub fn mangled_name(&self) -> Option<&'pb str> {
-            self.proto.mangled_name_opt().into_option().to_ir()
-        }
-
-        pub fn type_(&self) -> &CcType {
-            &self.type_
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.proto.must_bind()
-        }
-
-        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-        /// string is used.
-        pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
-        }
-
-        pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
-        }
-    }
-}
-
-impl<'pb> GenericItem<'pb> for GlobalVar<'pb> {
+impl GenericItem for GlobalVar {
     fn id(&self) -> ItemId {
         GlobalVar::id(self)
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -3339,143 +1249,25 @@ impl<'pb> GenericItem<'pb> for GlobalVar<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::GlobalVar
     }
-    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+    fn decl_loc(&self) -> Option<&DeclLocation> {
         Self::decl_loc(self)
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         GlobalVar::must_bind(self)
     }
-    fn cc_name_as_str(&self) -> Option<&'pb str> {
+    fn cc_name_as_str(&self) -> Option<&str> {
         Some(self.cc_name().as_str())
     }
 }
 
-#[derive(Clone)]
-pub struct Enum<'pb> {
-    proto: EnumView<'pb>,
-    pub(crate) owning_target: BazelLabel,
-    pub(crate) underlying_type: CcType,
-    pub(crate) enumerators: Option<Vec<Enumerator<'pb>>>,
-}
-
-impl<'pb> ProtoToIr for EnumView<'pb> {
-    type IrType = Enum<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.cc_name().validate()?;
-        self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.mangled_cc_name().validate()?;
-        self.owning_target().validate()?;
-        self.decl_loc_opt().into_option().validate()?;
-        let _ = CcType::try_from(self.underlying_type())?;
-        if !self.is_incomplete() {
-            for enumerator in self.enumerators().iter() {
-                enumerator.validate()?;
-            }
-        }
-        self.unknown_attr_opt().into_option().validate()?;
-        self.nodiscard_opt().into_option().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()
-    }
-
-    fn to_ir(self) -> Enum<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let underlying_type = CcType::try_from(self.underlying_type())
-            .expect("`underlying_type` should have been validated by `EnumView::validate`");
-        let enumerators =
-            (!self.is_incomplete()).then(|| self.enumerators().iter().map(|e| e.to_ir()).collect());
-        Enum { proto: self, owning_target, underlying_type, enumerators }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> Enum<'pb> {
-        pub fn cc_name(&self) -> Identifier<'pb> {
-            self.proto.cc_name().to_ir()
-        }
-
-        pub fn rs_name(&self) -> Identifier<'pb> {
-            self.proto.rs_name().to_ir()
-        }
-
-        pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
-        }
-
-        pub fn mangled_cc_name(&self) -> &'pb str {
-            self.proto.mangled_cc_name().to_ir()
-        }
-
-        pub fn id(&self) -> ItemId {
-            ItemId(self.proto.id() as usize)
-        }
-
-        pub fn owning_target(&self) -> &BazelLabel {
-            &self.owning_target
-        }
-
-        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
-            self.proto.decl_loc_opt().into_option().to_ir()
-        }
-
-        pub fn underlying_type(&self) -> &CcType {
-            &self.underlying_type
-        }
-
-        /// The enumerators. If None, this is a forward-declared (opaque) enum.
-        ///
-        /// That is, the difference between `enum X : int {};` and `enum X : int;`
-        /// is that the former has `Some(vec![])` for the enumerators, while the
-        /// latter has `None`.
-        pub fn enumerators(&self) -> Option<&[Enumerator<'pb>]> {
-            self.enumerators.as_deref()
-        }
-
-        /// A human-readable list of attributes that Crubit doesn't understand.
-        pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
-        }
-
-        pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.proto.must_bind()
-        }
-
-        pub fn detected_formatter(&self) -> bool {
-            self.proto.detected_formatter()
-        }
-
-        /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
-        /// string is used.
-        pub fn nodiscard(&self) -> Option<&'pb str> {
-            self.proto.nodiscard_opt().into_option().to_ir()
-        }
-
-        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-        /// string is used.
-        pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
-        }
-
-        pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
-        }
-    }
-}
-
-impl<'pb> GenericItem<'pb> for Enum<'pb> {
+impl GenericItem for Enum {
     fn id(&self) -> ItemId {
         Enum::id(self)
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -3484,179 +1276,35 @@ impl<'pb> GenericItem<'pb> for Enum<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Enum
     }
-    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+    fn decl_loc(&self) -> Option<&DeclLocation> {
         Self::decl_loc(self)
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         Enum::must_bind(self)
     }
-    fn cc_name_as_str(&self) -> Option<&'pb str> {
+    fn cc_name_as_str(&self) -> Option<&str> {
         Some(self.cc_name().as_str())
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct Enumerator<'pb> {
-    proto: EnumeratorView<'pb>,
-}
-
-impl<'pb> ProtoToIr for EnumeratorView<'pb> {
-    type IrType = Enumerator<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.identifier().validate()?;
-        self.value().validate()?;
-        self.unknown_attr_opt().into_option().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()
-    }
-
-    fn to_ir(self) -> Enumerator<'pb> {
-        Enumerator { proto: self }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> Enumerator<'pb> {
-        pub fn identifier(&self) -> Identifier<'pb> {
-            self.proto.identifier().to_ir()
-        }
-
-        pub fn value(&self) -> IntegerConstant {
-            self.proto.value().to_ir()
-        }
-
-        /// A human-readable list of attributes that Crubit doesn't understand.
-        pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
-        }
-
-        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-        /// string is used.
-        pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
-        }
-
-        pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct TypeAlias<'pb> {
-    proto: TypeAliasView<'pb>,
-    pub(crate) owning_target: BazelLabel,
-    pub(crate) underlying_type: CcType,
-    // Lifetime variable names bound by this type alias.
-    pub(crate) lifetime_inputs: Vec<Rc<str>>,
-}
-
-impl<'pb> ProtoToIr for TypeAliasView<'pb> {
-    type IrType = TypeAlias<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.cc_name().validate()?;
-        self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.owning_target().validate()?;
-        self.doc_comment_opt().into_option().validate()?;
-        self.unknown_attr_opt().into_option().validate()?;
-        let _ = CcType::try_from(self.underlying_type())?;
-        self.decl_loc_opt().into_option().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        for lifetime in self.lifetime_inputs().iter() {
-            lifetime.validate()?;
-        }
-        Ok(())
-    }
-
-    fn to_ir(self) -> TypeAlias<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let underlying_type = CcType::try_from(self.underlying_type())
-            .expect("`underlying_type` should have been validated by `TypeAliasView::validate`");
-        let lifetime_inputs = self.lifetime_inputs().iter().map(|p| Rc::from(p.to_ir())).collect();
-        TypeAlias { proto: self, owning_target, underlying_type, lifetime_inputs }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> TypeAlias<'pb> {
-        pub fn cc_name(&self) -> Identifier<'pb> {
-            self.proto.cc_name().to_ir()
-        }
-
-        pub fn rs_name(&self) -> Identifier<'pb> {
-            self.proto.rs_name().to_ir()
-        }
-
-        pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
-        }
-
-        pub fn id(&self) -> ItemId {
-            ItemId(self.proto.id() as usize)
-        }
-
-        pub fn owning_target(&self) -> &BazelLabel {
-            &self.owning_target
-        }
-
-        pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
-        }
-
-        /// A human-readable list of attributes that Crubit doesn't understand.
-        pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
-        }
-
-        pub fn underlying_type(&self) -> &CcType {
-            &self.underlying_type
-        }
-
-        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
-            self.proto.decl_loc_opt().into_option().to_ir()
-        }
-
-        pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.proto.must_bind()
-        }
-
-        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-        /// string is used.
-        pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
-        }
-
-        pub fn lifetime_inputs(&self) -> &[Rc<str>] {
-            &self.lifetime_inputs
-        }
-    }
-}
-
-impl<'pb> TypeAlias<'pb> {
+impl TypeAlias {
     pub fn underlying_type_mut(&mut self) -> &mut CcType {
         &mut self.underlying_type
     }
 
-    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
+    pub fn lifetime_inputs_mut(&mut self) -> &mut FfiVec<FfiString> {
         &mut self.lifetime_inputs
     }
 }
 
-impl<'pb> GenericItem<'pb> for TypeAlias<'pb> {
+impl GenericItem for TypeAlias {
     fn id(&self) -> ItemId {
         TypeAlias::id(self)
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -3665,21 +1313,21 @@ impl<'pb> GenericItem<'pb> for TypeAlias<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::TypeAlias
     }
-    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+    fn decl_loc(&self) -> Option<&DeclLocation> {
         Self::decl_loc(self)
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         TypeAlias::must_bind(self)
     }
-    fn cc_name_as_str(&self) -> Option<&'pb str> {
+    fn cc_name_as_str(&self) -> Option<&str> {
         Some(self.cc_name().as_str())
     }
 }
 
-impl Display for TypeAlias<'_> {
+impl Display for TypeAlias {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -3691,102 +1339,9 @@ impl Display for TypeAlias<'_> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
-pub struct FormattedError {
-    pub fmt: Rc<str>,
-    pub message: Rc<str>,
-    /// The error that `message` was formatted from, if this error was produced during bindings
-    /// generation (and not by the importer).
-    ///
-    /// The error report reports this instead of `fmt` and `message`, so that the reasons inside
-    /// it, and the items without bindings that caused them, are kept.
-    pub cause: Option<Error>,
-}
-
-impl Debug for FormattedError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut debug_struct = f.debug_struct("FormattedError");
-        debug_struct.field("fmt", &self.fmt).field("message", &self.message);
-        // Omitted if unset, as it always is for errors from the importer.
-        if let Some(cause) = &self.cause {
-            debug_struct.field("cause", cause);
-        }
-        debug_struct.finish()
-    }
-}
-
-impl<'pb> ProtoToIr for ::ir_rust_proto::FormattedErrorView<'pb> {
-    type IrType = FormattedError;
-
-    fn validate(self) -> Result<()> {
-        self.fmt().validate()?;
-        self.message().validate()
-    }
-
-    fn to_ir(self) -> FormattedError {
-        FormattedError {
-            fmt: Rc::from(self.fmt().to_ir()),
-            message: Rc::from(self.message().to_ir()),
-            cause: None,
-        }
-    }
-}
-
-/// Kind is used to indicate which item would cannot be wrapped.
-/// Need to be synced with UnsupportedItem::Kind in ir.h.
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub enum UnsupportedItemKind {
-    Func,
-    GlobalVar,
-    Struct,
-    Union,
-    Class,
-    Enum,
-    TypeAlias,
-    Namespace,
-    Constructor,
-    // Represents: Comment, Type Map (crubit_internal_rust_type),
-    // Use Mod, Hard Error in c++.
-    Other,
-}
-
-impl ProtoToIr for ::ir_rust_proto::unsupported_item::Kind {
-    type IrType = UnsupportedItemKind;
-
-    fn validate(self) -> Result<()> {
-        match self {
-            ::ir_rust_proto::unsupported_item::Kind::Func
-            | ::ir_rust_proto::unsupported_item::Kind::GlobalVar
-            | ::ir_rust_proto::unsupported_item::Kind::Struct
-            | ::ir_rust_proto::unsupported_item::Kind::Union
-            | ::ir_rust_proto::unsupported_item::Kind::Class
-            | ::ir_rust_proto::unsupported_item::Kind::Enum
-            | ::ir_rust_proto::unsupported_item::Kind::TypeAlias
-            | ::ir_rust_proto::unsupported_item::Kind::Namespace
-            | ::ir_rust_proto::unsupported_item::Kind::Constructor
-            | ::ir_rust_proto::unsupported_item::Kind::Other => Ok(()),
-            _ => bail!("Unspecified UnsupportedItemKind"),
-        }
-    }
-
-    fn to_ir(self) -> Self::IrType {
-        match self {
-            ::ir_rust_proto::unsupported_item::Kind::Func => UnsupportedItemKind::Func,
-            ::ir_rust_proto::unsupported_item::Kind::GlobalVar => UnsupportedItemKind::GlobalVar,
-            ::ir_rust_proto::unsupported_item::Kind::Struct => UnsupportedItemKind::Struct,
-            ::ir_rust_proto::unsupported_item::Kind::Union => UnsupportedItemKind::Union,
-            ::ir_rust_proto::unsupported_item::Kind::Class => UnsupportedItemKind::Class,
-            ::ir_rust_proto::unsupported_item::Kind::Enum => UnsupportedItemKind::Enum,
-            ::ir_rust_proto::unsupported_item::Kind::TypeAlias => UnsupportedItemKind::TypeAlias,
-            ::ir_rust_proto::unsupported_item::Kind::Namespace => UnsupportedItemKind::Namespace,
-            ::ir_rust_proto::unsupported_item::Kind::Constructor => {
-                UnsupportedItemKind::Constructor
-            }
-            ::ir_rust_proto::unsupported_item::Kind::Other => UnsupportedItemKind::Other,
-            _ => unreachable!(
-                "`UnsupportedItemKind` should have been validated by `ProtoToIr::validate`"
-            ),
-        }
+impl From<std::rc::Rc<FormattedError>> for FormattedError {
+    fn from(rc: std::rc::Rc<FormattedError>) -> Self {
+        (*rc).clone()
     }
 }
 
@@ -3813,163 +1368,57 @@ impl Display for UnsupportedItemKind {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct UnsupportedItemPath<'pb> {
-    pub(crate) ident: UnqualifiedIdentifier<'pb>,
-    pub(crate) enclosing_item_id: Option<ItemId>,
-}
-
-impl<'pb> UnsupportedItemPath<'pb> {
-    pub fn ident(&self) -> &UnqualifiedIdentifier<'pb> {
-        &self.ident
-    }
-
-    pub fn enclosing_item_id(&self) -> Option<ItemId> {
-        self.enclosing_item_id
-    }
-}
-
-impl<'pb> ProtoToIr for ::ir_rust_proto::unsupported_item::PathView<'pb> {
-    type IrType = UnsupportedItemPath<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.ident().validate()
-    }
-
-    fn to_ir(self) -> UnsupportedItemPath<'pb> {
-        UnsupportedItemPath {
-            ident: self.ident().to_ir(),
-            enclosing_item_id: self
-                .enclosing_item_id_opt()
-                .into_option()
-                .map(|id| ItemId(id as usize)),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct UnsupportedItem<'pb> {
-    pub(crate) name: Rc<str>,
-    pub(crate) unique_name: Option<&'pb str>,
-    pub(crate) kind: UnsupportedItemKind,
-    pub(crate) path: Option<UnsupportedItemPath<'pb>>,
-    pub(crate) errors: Vec<Rc<FormattedError>>,
-    pub(crate) decl_loc: Option<DeclLocation<'pb>>,
-    pub(crate) id: ItemId,
-    pub(crate) must_bind: bool,
-    pub(crate) defining_target: Option<BazelLabel>,
-    pub(crate) inline_cpp_source_text: Option<Rc<str>>,
-}
-
-impl<'pb> ProtoToIr for ::ir_rust_proto::UnsupportedItemView<'pb> {
-    type IrType = UnsupportedItem<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.name().validate()?;
-        self.unique_name_opt().into_option().validate()?;
-        self.kind().validate()?;
-        if let Some(path) = self.path_opt().into_option() {
-            path.validate()?;
-        }
-        for e in self.errors().iter() {
-            e.validate()?;
-        }
-        self.decl_loc_opt().into_option().validate()?;
-        self.defining_target_opt().into_option().validate()?;
-        self.inline_cpp_source_text_opt().into_option().validate()
-    }
-
-    fn to_ir(self) -> UnsupportedItem<'pb> {
-        let name = Rc::from(self.name().to_ir());
-        let unique_name = self.unique_name_opt().into_option().to_ir();
-        let kind = self.kind().to_ir();
-        let path = self.path_opt().into_option().map(|p| p.to_ir());
-        let errors = self.errors().iter().map(|e| Rc::new(e.to_ir())).collect();
-        let decl_loc = self.decl_loc_opt().into_option().to_ir();
-        let id = ItemId(self.id() as usize);
-        let must_bind = self.must_bind();
-        let defining_target =
-            self.defining_target_opt().into_option().to_ir().map(BazelLabel::from);
-        let inline_cpp_source_text =
-            self.inline_cpp_source_text_opt().into_option().to_ir().map(Rc::from);
-
-        UnsupportedItem {
-            name,
-            unique_name,
-            kind,
-            path,
-            errors,
-            decl_loc,
-            id,
-            must_bind,
-            defining_target,
-            inline_cpp_source_text,
-        }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> UnsupportedItem<'pb> {
-        /// Unlike other AST nodes that borrow from the protobuf memory, `UnsupportedItem` names are
-        /// dynamically formatted during Rust code generation. Storing `Rc<str>` here avoids requiring
-        /// unsafe string lifetime extensions at the cost of negligible string allocations.
-        pub fn name(&self) -> &str {
-            &self.name
-        }
-
-        pub fn unique_name(&self) -> Option<&'pb str> {
-            self.unique_name
-        }
-
-        pub fn kind(&self) -> UnsupportedItemKind {
-            self.kind
-        }
-
-        pub fn path(&self) -> Option<&UnsupportedItemPath<'pb>> {
-            self.path.as_ref()
-        }
-
-        pub fn errors(&self) -> &[Rc<FormattedError>] {
-            self.errors.as_slice()
-        }
-
-        pub fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
-            self.decl_loc
-        }
-
-        pub fn inline_cpp_source_text(&self) -> Option<&str> {
-            self.inline_cpp_source_text.as_deref()
-        }
-
-        pub fn id(&self) -> ItemId {
-            self.id
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.must_bind
-        }
-
-        pub fn defining_target(&self) -> Option<&BazelLabel> {
-            self.defining_target.as_ref()
-        }
-    }
-}
-
-impl<'pb> UnsupportedItem<'pb> {
+impl UnsupportedItem {
     pub fn source_text_as_token_stream(&self) -> Option<proc_macro2::TokenStream> {
         self.inline_cpp_source_text()?.parse::<proc_macro2::TokenStream>().ok()
     }
 
-    pub fn set_inline_cpp_source_text(&mut self, text: Option<Rc<str>>) {
-        self.inline_cpp_source_text = text;
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_raw(
+        name: impl Into<FfiString>,
+        unique_name: Option<impl Into<FfiString>>,
+        kind: UnsupportedItemKind,
+        id: ItemId,
+        decl_loc: Option<DeclLocation>,
+        defining_target: Option<BazelLabel>,
+        must_bind: bool,
+        path: Option<UnsupportedItemPath>,
+        error: Option<impl Into<FormattedError>>,
+    ) -> Self {
+        let mut item = Self {
+            has_bits: 0,
+            name: name.into(),
+            unique_name: FfiString::default(),
+            kind,
+            path: UnsupportedItemPath::default(),
+            errors: error.into_iter().map(Into::into).collect(),
+            decl_loc: DeclLocation::default(),
+            inline_cpp_source_text: FfiString::default(),
+            id,
+            must_bind,
+            defining_target: BazelLabel::default(),
+        };
+        if let Some(unique_name) = unique_name {
+            item.set_unique_name(unique_name.into());
+        }
+        if let Some(path) = path {
+            item.set_path(path);
+        }
+        if let Some(decl_loc) = decl_loc {
+            item.set_decl_loc(decl_loc);
+        }
+        if let Some(defining_target) = defining_target {
+            item.set_defining_target(defining_target);
+        }
+        item
     }
 }
 
-impl<'pb> GenericItem<'pb> for UnsupportedItem<'pb> {
+impl GenericItem for UnsupportedItem {
     fn id(&self) -> ItemId {
         UnsupportedItem::id(self)
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         self.unique_name()
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -3978,10 +1427,10 @@ impl<'pb> GenericItem<'pb> for UnsupportedItem<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.kind
     }
-    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
-        UnsupportedItem::decl_loc(self)
+    fn decl_loc(&self) -> Option<&DeclLocation> {
+        Self::decl_loc(self)
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         None
     }
     fn must_bind(&self) -> bool {
@@ -3989,72 +1438,11 @@ impl<'pb> GenericItem<'pb> for UnsupportedItem<'pb> {
     }
 }
 
-impl<'pb> UnsupportedItem<'pb> {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_raw(
-        name: impl Into<Rc<str>>,
-        unique_name: Option<&'pb str>,
-        kind: UnsupportedItemKind,
-        id: ItemId,
-        decl_loc: Option<DeclLocation<'pb>>,
-        defining_target: Option<BazelLabel>,
-        must_bind: bool,
-        path: Option<UnsupportedItemPath<'pb>>,
-        error: Option<Rc<FormattedError>>,
-    ) -> Self {
-        Self {
-            name: name.into(),
-            unique_name,
-            errors: error.into_iter().collect(),
-            kind,
-            path,
-            decl_loc,
-            id,
-            must_bind,
-            defining_target,
-            inline_cpp_source_text: None,
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub struct Comment<'pb> {
-    proto: CommentView<'pb>,
-}
-
-impl<'pb> ProtoToIr for CommentView<'pb> {
-    type IrType = Comment<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.text().validate()
-    }
-
-    fn to_ir(self) -> Comment<'pb> {
-        Comment { proto: self }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> Comment<'pb> {
-        pub fn text(&self) -> &'pb str {
-            self.proto.text().to_ir()
-        }
-
-        pub fn id(&self) -> ItemId {
-            ItemId(self.proto.id() as usize)
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.proto.must_bind()
-        }
-    }
-}
-
-impl<'pb> GenericItem<'pb> for Comment<'pb> {
+impl GenericItem for Comment {
     fn id(&self) -> ItemId {
         Comment::id(self)
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         None
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -4063,7 +1451,7 @@ impl<'pb> GenericItem<'pb> for Comment<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         None
     }
     fn must_bind(&self) -> bool {
@@ -4071,116 +1459,17 @@ impl<'pb> GenericItem<'pb> for Comment<'pb> {
     }
 }
 
-#[derive(Clone)]
-pub struct Namespace<'pb> {
-    proto: NamespaceView<'pb>,
-    pub(crate) owning_target: BazelLabel,
-    pub(crate) children: Vec<Item<'pb>>,
-}
-
-impl<'pb> ProtoToIr for NamespaceView<'pb> {
-    type IrType = Namespace<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.cc_name().validate()?;
-        self.rs_name().validate()?;
-        self.unique_name().validate()?;
-        self.unknown_attr_opt().into_option().validate()?;
-        self.owning_target().validate()?;
-        self.deprecated_opt().into_option().validate()?;
-        self.doc_comment_opt().into_option().validate()?;
-        for child in self.children().iter() {
-            let _ = Item::try_from(child)?;
-        }
-        Ok(())
-    }
-
-    fn to_ir(self) -> Namespace<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let children = self
-            .children()
-            .iter()
-            .map(|c| {
-                Item::try_from(c)
-                    .expect("`children` should have been validated by `NamespaceView::validate`")
-            })
-            .collect();
-        Namespace { proto: self, owning_target, children }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> Namespace<'pb> {
-        pub fn cc_name(&self) -> Identifier<'pb> {
-            self.proto.cc_name().to_ir()
-        }
-
-        pub fn rs_name(&self) -> Identifier<'pb> {
-            self.proto.rs_name().to_ir()
-        }
-
-        pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
-        }
-
-        pub fn id(&self) -> ItemId {
-            ItemId(self.proto.id() as usize)
-        }
-
-        pub fn canonical_namespace_id(&self) -> ItemId {
-            ItemId(self.proto.canonical_namespace_id() as usize)
-        }
-
-        /// A human-readable list of attributes that Crubit doesn't understand.
-        pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().into_option().to_ir()
-        }
-
-        pub fn owning_target(&self) -> &BazelLabel {
-            &self.owning_target
-        }
-
-        pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().into_option().map(|id| ItemId(id as usize))
-        }
-
-        pub fn is_inline(&self) -> bool {
-            self.proto.is_inline()
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.proto.must_bind()
-        }
-
-        pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().into_option().to_ir()
-        }
-
-        pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().into_option().to_ir()
-        }
-
-        pub fn children(&self) -> &[Item<'pb>] {
-            &self.children
-        }
-    }
-}
-
-impl<'pb> Namespace<'pb> {
-    pub fn children_mut(&mut self) -> &mut Vec<Item<'pb>> {
+impl Namespace {
+    pub fn children_mut(&mut self) -> &mut FfiVec<Item> {
         &mut self.children
     }
-
-    pub fn set_children(&mut self, children: Vec<Item<'pb>>) {
-        self.children = children;
-    }
 }
 
-impl<'pb> GenericItem<'pb> for Namespace<'pb> {
+impl GenericItem for Namespace {
     fn id(&self) -> ItemId {
         Namespace::id(self)
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -4189,60 +1478,22 @@ impl<'pb> GenericItem<'pb> for Namespace<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Namespace
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         Namespace::must_bind(self)
     }
-    fn cc_name_as_str(&self) -> Option<&'pb str> {
+    fn cc_name_as_str(&self) -> Option<&str> {
         Some(self.cc_name().as_str())
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct UseMod<'pb> {
-    proto: UseModView<'pb>,
-}
-
-impl<'pb> ProtoToIr for UseModView<'pb> {
-    type IrType = UseMod<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.path().validate()?;
-        self.mod_name().validate()
-    }
-
-    fn to_ir(self) -> UseMod<'pb> {
-        UseMod { proto: self }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> UseMod<'pb> {
-        pub fn path(&self) -> &'pb str {
-            self.proto.path().to_ir()
-        }
-
-        pub fn mod_name(&self) -> Identifier<'pb> {
-            self.proto.mod_name().to_ir()
-        }
-
-        pub fn id(&self) -> ItemId {
-            ItemId(self.proto.id() as usize)
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.proto.must_bind()
-        }
-    }
-}
-
-impl<'pb> GenericItem<'pb> for UseMod<'pb> {
+impl GenericItem for UseMod {
     fn id(&self) -> ItemId {
         UseMod::id(self)
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         None
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -4251,7 +1502,7 @@ impl<'pb> GenericItem<'pb> for UseMod<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         None
     }
     fn must_bind(&self) -> bool {
@@ -4259,111 +1510,11 @@ impl<'pb> GenericItem<'pb> for UseMod<'pb> {
     }
 }
 
-/// A C++ type annotated with CRUBIT_INTERNAL_RUST_TYPE, indicating that Crubit should use the
-/// existing Rust type instead of generating a new Rust type. Note that this corresponds to concrete
-/// types, meaning non-template types or template instantiations, but not uninstantiated template
-/// declarations.
-#[derive(Clone)]
-pub struct ExistingRustType<'pb> {
-    proto: ExistingRustTypeView<'pb>,
-    pub(crate) template_args: Vec<TemplateArg>,
-    pub(crate) owning_target: BazelLabel,
-    pub(crate) label_hint: Option<&'pb str>,
-}
-
-impl<'pb> ProtoToIr for ExistingRustTypeView<'pb> {
-    type IrType = ExistingRustType<'pb>;
-
-    fn validate(self) -> Result<()> {
-        self.rs_name().validate()?;
-        self.cc_name().validate()?;
-        self.unique_name().validate()?;
-        for template_arg in self.template_args().iter() {
-            let _ = TemplateArg::try_from(template_arg)?;
-        }
-        self.owning_target().validate()?;
-        self.size_align_opt().into_option().validate()?;
-        self.label_hint_opt().into_option().validate()
-    }
-
-    fn to_ir(self) -> ExistingRustType<'pb> {
-        let owning_target = BazelLabel::from(self.owning_target().to_ir());
-        let template_args = self
-            .template_args()
-            .iter()
-            .map(|a| {
-                TemplateArg::try_from(a).expect(
-                    "`template_args` should have been validated by `ExistingRustTypeView::validate`",
-                )
-            })
-            .collect();
-        let label_hint = self.label_hint_opt().into_option().to_ir();
-        ExistingRustType { proto: self, template_args, owning_target, label_hint }
-    }
-}
-
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> ExistingRustType<'pb> {
-        /// The name of the existing Rust type.
-        /// Note that it may contain interpolated type parameters, like `RustType<{T}>`.
-        /// This means that it's incorrect to directly parse as an Ident.
-        pub fn rs_name(&self) -> &'pb str {
-            self.proto.rs_name().to_ir()
-        }
-
-        pub fn cc_name(&self) -> &'pb str {
-            self.proto.cc_name().to_ir()
-        }
-
-        pub fn unique_name(&self) -> &'pb str {
-            self.proto.unique_name().to_ir()
-        }
-
-        /// The template arguments on this instance of the type instantiation (empty is no template
-        /// arguments). This list parallels `template_arg_names`.
-        pub fn template_args(&self) -> &[TemplateArg] {
-            &self.template_args
-        }
-
-        pub fn owning_target(&self) -> &BazelLabel {
-            &self.owning_target
-        }
-
-        pub fn size_align(&self) -> Option<SizeAlign> {
-            self.proto.size_align_opt().into_option().to_ir()
-        }
-
-        pub fn is_same_abi(&self) -> bool {
-            self.proto.is_same_abi()
-        }
-
-        pub fn id(&self) -> ItemId {
-            ItemId(self.proto.id() as usize)
-        }
-
-        pub fn must_bind(&self) -> bool {
-            self.proto.must_bind()
-        }
-
-        pub fn impl_debug(&self) -> bool {
-            self.proto.impl_debug()
-        }
-
-        pub fn label_hint(&self) -> Option<&'pb str> {
-            self.label_hint
-        }
-
-        pub fn is_trivially_copyable(&self) -> bool {
-            self.proto.is_trivially_copyable()
-        }
-    }
-}
-
-impl<'pb> GenericItem<'pb> for ExistingRustType<'pb> {
+impl GenericItem for ExistingRustType {
     fn id(&self) -> ItemId {
         ExistingRustType::id(self)
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -4372,28 +1523,12 @@ impl<'pb> GenericItem<'pb> for ExistingRustType<'pb> {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         None
     }
     fn must_bind(&self) -> bool {
         ExistingRustType::must_bind(self)
     }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum Item<'pb> {
-    Func(Rc<Func<'pb>>),
-    IncompleteRecord(Rc<IncompleteRecord<'pb>>),
-    Record(Rc<Record<'pb>>),
-    Enum(Rc<Enum<'pb>>),
-    Constant(Rc<Constant<'pb>>),
-    GlobalVar(Rc<GlobalVar<'pb>>),
-    TypeAlias(Rc<TypeAlias<'pb>>),
-    UnsupportedItem(Rc<UnsupportedItem<'pb>>),
-    Comment(Rc<Comment<'pb>>),
-    Namespace(Rc<Namespace<'pb>>),
-    UseMod(Rc<UseMod<'pb>>),
-    ExistingRustType(Rc<ExistingRustType<'pb>>),
 }
 
 macro_rules! forward_item {
@@ -4415,7 +1550,7 @@ macro_rules! forward_item {
     };
 }
 
-impl<'pb> GenericItem<'pb> for Item<'pb> {
+impl GenericItem for Item {
     fn id(&self) -> ItemId {
         forward_item! {
             match self {
@@ -4423,7 +1558,7 @@ impl<'pb> GenericItem<'pb> for Item<'pb> {
             }
         }
     }
-    fn unique_name(&self) -> Option<&'pb str> {
+    fn unique_name(&self) -> Option<&str> {
         forward_item! {
             match self {
                 _(x) => x.unique_name()
@@ -4444,14 +1579,14 @@ impl<'pb> GenericItem<'pb> for Item<'pb> {
             }
         }
     }
-    fn decl_loc(&self) -> Option<DeclLocation<'pb>> {
+    fn decl_loc(&self) -> Option<&DeclLocation> {
         forward_item! {
             match self {
                 _(x) => x.decl_loc()
             }
         }
     }
-    fn unknown_attr(&self) -> Option<&'pb str> {
+    fn unknown_attr(&self) -> Option<&str> {
         forward_item! {
             match self {
                 _(x) => x.unknown_attr()
@@ -4468,7 +1603,7 @@ impl<'pb> GenericItem<'pb> for Item<'pb> {
 
     /// Forwards C++ identifier extraction to the underlying AST item variant for compatibilty with
     /// golden tests/error messages. Returns None for non-named items like comments and imports.
-    fn cc_name_as_str(&self) -> Option<&'pb str> {
+    fn cc_name_as_str(&self) -> Option<&str> {
         forward_item! {
             match self {
                 _(x) => x.cc_name_as_str()
@@ -4477,7 +1612,7 @@ impl<'pb> GenericItem<'pb> for Item<'pb> {
     }
 }
 
-impl<'pb> Item<'pb> {
+impl Item {
     /// Returns true if this is an aggregate type (struct, union, class, or
     /// enum).
     pub fn is_aggregate_type(&self) -> bool {
@@ -4509,7 +1644,7 @@ impl<'pb> Item<'pb> {
             Item::TypeAlias(type_alias) => type_alias.enclosing_item_id(),
             Item::Comment(..) => None,
             Item::UnsupportedItem(unsupported) => {
-                unsupported.path.as_ref().and_then(|p| p.enclosing_item_id)
+                unsupported.path().and_then(|p| p.enclosing_item_id())
             }
             Item::UseMod(..) => None,
             Item::ExistingRustType(..) => None,
@@ -4536,7 +1671,7 @@ impl<'pb> Item<'pb> {
     }
 
     /// Returns the C++ identifier for this item, if it has one.
-    pub fn cc_name_as_str(&self) -> Option<&'pb str> {
+    pub fn cc_name_as_str(&self) -> Option<&str> {
         match self {
             Item::Func(func) => match &func.cc_name {
                 UnqualifiedIdentifier::Identifier(identifier) => Some(identifier.as_str()),
@@ -4603,124 +1738,60 @@ impl<'pb> Item<'pb> {
     }
 }
 
-impl<'pb> From<Func<'pb>> for Item<'pb> {
-    fn from(func: Func<'pb>) -> Item<'pb> {
-        Item::Func(Rc::new(func))
-    }
+macro_rules! impl_item_conversions {
+    ($($variant:ident($ty:ty)),* $(,)?) => {
+        $(
+            impl From<$ty> for Item {
+                fn from(val: $ty) -> Item {
+                    Item::$variant(Rc::new(val))
+                }
+            }
+
+            impl<'a> TryFrom<&'a Item> for &'a Rc<$ty> {
+                type Error = Error;
+                fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+                    if let Item::$variant(x) = value {
+                        Ok(x)
+                    } else {
+                        bail!("Not a {}: {:#?}", stringify!($ty), value)
+                    }
+                }
+            }
+        )*
+    };
 }
 
-impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<Func<'pb>> {
-    type Error = Error;
-    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
-        if let Item::Func(f) = value {
-            Ok(f)
-        } else {
-            bail!("Not a Func: {:#?}", value)
-        }
-    }
-}
-
-impl<'pb> From<Record<'pb>> for Item<'pb> {
-    fn from(record: Record<'pb>) -> Item<'pb> {
-        Item::Record(Rc::new(record))
-    }
-}
-
-impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<Record<'pb>> {
-    type Error = Error;
-    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
-        if let Item::Record(r) = value {
-            Ok(r)
-        } else {
-            bail!("Not a Record: {:#?}", value)
-        }
-    }
-}
-
-impl<'pb> From<UnsupportedItem<'pb>> for Item<'pb> {
-    fn from(unsupported: UnsupportedItem<'pb>) -> Item<'pb> {
-        Item::UnsupportedItem(Rc::new(unsupported))
-    }
-}
-
-impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<UnsupportedItem<'pb>> {
-    type Error = Error;
-    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
-        if let Item::UnsupportedItem(u) = value {
-            Ok(u)
-        } else {
-            bail!("Not an UnsupportedItem: {:#?}", value)
-        }
-    }
-}
-
-impl<'pb> From<Comment<'pb>> for Item<'pb> {
-    fn from(comment: Comment<'pb>) -> Item<'pb> {
-        Item::Comment(Rc::new(comment))
-    }
-}
-
-impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<Comment<'pb>> {
-    type Error = Error;
-    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
-        if let Item::Comment(c) = value {
-            Ok(c)
-        } else {
-            bail!("Not a Comment: {:#?}", value)
-        }
-    }
-}
-
-impl<'pb> From<Namespace<'pb>> for Item<'pb> {
-    fn from(ns: Namespace<'pb>) -> Item<'pb> {
-        Item::Namespace(Rc::new(ns))
-    }
-}
-
-impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<Namespace<'pb>> {
-    type Error = Error;
-    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
-        if let Item::Namespace(c) = value {
-            Ok(c)
-        } else {
-            bail!("Not a Namespace: {:#?}", value)
-        }
-    }
-}
-
-impl<'pb> From<ExistingRustType<'pb>> for Item<'pb> {
-    fn from(existing_rust_type: ExistingRustType<'pb>) -> Item<'pb> {
-        Item::ExistingRustType(Rc::new(existing_rust_type))
-    }
-}
-
-impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<ExistingRustType<'pb>> {
-    type Error = Error;
-    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
-        if let Item::ExistingRustType(r) = value {
-            Ok(r)
-        } else {
-            bail!("Not an ExistingRustType: {:#?}", value)
-        }
-    }
+impl_item_conversions! {
+    Func(Func),
+    IncompleteRecord(IncompleteRecord),
+    Record(Record),
+    Enum(Enum),
+    Constant(Constant),
+    GlobalVar(GlobalVar),
+    TypeAlias(TypeAlias),
+    UnsupportedItem(UnsupportedItem),
+    Comment(Comment),
+    Namespace(Namespace),
+    UseMod(UseMod),
+    ExistingRustType(ExistingRustType),
 }
 
 #[derive(PartialEq, Eq, Clone)]
-pub struct TreeIR<'pb> {
-    pub public_headers: Vec<HeaderName<'pb>>,
+pub struct TreeIR {
+    pub public_headers: Vec<HeaderName>,
     pub current_target: BazelLabel,
-    pub crate_root_path: Option<Rc<str>>,
+    pub crate_root_path: Option<FfiString>,
     pub crubit_features: BTreeMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
     pub crate_names: BTreeMap<BazelLabel, Ident>,
     pub unstable_rust_features: Vec<String>,
-    pub reexported_namespaces: Vec<Rc<str>>,
-    pub top_level_items: BTreeMap<BazelLabel, Vec<Item<'pb>>>,
+    pub reexported_namespaces: Vec<FfiString>,
+    pub top_level_items: BTreeMap<BazelLabel, Vec<Item>>,
 }
 
 /// A custom debug impl that wraps the HashMap in rustfmt-friendly notation.
 ///
 /// See b/272530008.
-impl<'pb> Debug for TreeIR<'pb> {
+impl Debug for TreeIR {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // BTreeMap has consistent ordering, unlike HashMap, so it's reasonable to rely on a
         // consistent Debug output.
@@ -4759,32 +1830,18 @@ impl<'pb> Debug for TreeIR<'pb> {
     }
 }
 
-#[derive(Debug)]
-pub struct IR<'pb> {
-    tree_ir: TreeIR<'pb>,
-    item_id_to_item: HashMap<ItemId, Item<'pb>>,
-    lifetimes: HashMap<LifetimeId, LifetimeName<'pb>>,
+#[derive(Debug, PartialEq, Eq)]
+pub struct IR {
+    tree_ir: TreeIR,
+    item_id_to_item: HashMap<ItemId, Item>,
+    lifetimes: HashMap<LifetimeId, LifetimeName>,
     namespace_id_to_number_of_reopened_namespaces: HashMap<ItemId, usize>,
     reopened_namespace_id_to_idx: HashMap<ItemId, usize>,
-    function_name_to_functions: HashMap<UnqualifiedIdentifier<'pb>, Vec<Rc<Func<'pb>>>>,
+    function_name_to_functions: HashMap<UnqualifiedIdentifier, Vec<Rc<Func>>>,
 }
 
-impl<'pb> PartialEq for IR<'pb> {
-    fn eq(&self, other: &Self) -> bool {
-        self.tree_ir == other.tree_ir
-            && self.item_id_to_item == other.item_id_to_item
-            && self.lifetimes == other.lifetimes
-            && self.namespace_id_to_number_of_reopened_namespaces
-                == other.namespace_id_to_number_of_reopened_namespaces
-            && self.reopened_namespace_id_to_idx == other.reopened_namespace_id_to_idx
-            && self.function_name_to_functions == other.function_name_to_functions
-    }
-}
-
-impl<'pb> Eq for IR<'pb> {}
-
-impl<'pb> IR<'pb> {
-    pub fn tree_ir(&self) -> &TreeIR<'pb> {
+impl IR {
+    pub fn tree_ir(&self) -> &TreeIR {
         &self.tree_ir
     }
 
@@ -4792,93 +1849,93 @@ impl<'pb> IR<'pb> {
         &self.tree_ir.unstable_rust_features
     }
 
-    pub fn get_decl(&self, id: ItemId) -> Option<&Item<'pb>> {
+    pub fn get_decl(&self, id: ItemId) -> Option<&Item> {
         self.item_id_to_item.get(&id)
     }
 
-    pub fn items(&self) -> impl Iterator<Item = &Item<'pb>> + '_ {
+    pub fn items(&self) -> impl Iterator<Item = &Item> + '_ {
         let roots = self.tree_ir.top_level_items.values().flat_map(|v| v.iter());
         ItemsIterator::new(roots.collect())
     }
 
-    pub fn lifetimes(&self) -> impl Iterator<Item = (&LifetimeId, &LifetimeName<'pb>)> {
+    pub fn lifetimes(&self) -> impl Iterator<Item = (&LifetimeId, &LifetimeName)> {
         self.lifetimes.iter()
     }
 
     /// Returns the top-level items of a target.
-    pub fn top_level_items_in_target(&self, target: &BazelLabel) -> &[Item<'pb>] {
+    pub fn top_level_items_in_target(&self, target: &BazelLabel) -> &[Item] {
         self.tree_ir.top_level_items.get(target).map(|v| v.as_slice()).unwrap_or_default()
     }
 
-    pub fn top_level_items(&self) -> &[Item<'pb>] {
+    pub fn top_level_items(&self) -> &[Item] {
         self.top_level_items_in_target(self.current_target())
     }
 
-    pub fn reexported_namespaces(&self) -> &[Rc<str>] {
+    pub fn reexported_namespaces(&self) -> &[FfiString] {
         &self.tree_ir.reexported_namespaces
     }
 
-    pub fn public_headers(&self) -> impl Iterator<Item = &HeaderName<'pb>> {
+    pub fn public_headers(&self) -> impl Iterator<Item = &HeaderName> {
         self.tree_ir.public_headers.iter()
     }
 
-    pub fn functions(&self) -> impl Iterator<Item = &Rc<Func<'pb>>> {
+    pub fn functions(&self) -> impl Iterator<Item = &Rc<Func>> {
         self.items().filter_map(|item| match item {
             Item::Func(func) => Some(func),
             _ => None,
         })
     }
 
-    pub fn type_aliases(&self) -> impl Iterator<Item = &Rc<TypeAlias<'pb>>> {
+    pub fn type_aliases(&self) -> impl Iterator<Item = &Rc<TypeAlias>> {
         self.items().filter_map(|item| match item {
             Item::TypeAlias(type_alias) => Some(type_alias),
             _ => None,
         })
     }
 
-    pub fn records(&self) -> impl Iterator<Item = &Rc<Record<'pb>>> {
+    pub fn records(&self) -> impl Iterator<Item = &Rc<Record>> {
         self.items().filter_map(|item| match item {
             Item::Record(record) => Some(record),
             _ => None,
         })
     }
 
-    pub fn enums(&self) -> impl Iterator<Item = &Rc<Enum<'pb>>> {
+    pub fn enums(&self) -> impl Iterator<Item = &Rc<Enum>> {
         self.items().filter_map(|item| match item {
             Item::Enum(enum_item) => Some(enum_item),
             _ => None,
         })
     }
 
-    pub fn constants(&self) -> impl Iterator<Item = &Rc<Constant<'pb>>> {
+    pub fn constants(&self) -> impl Iterator<Item = &Rc<Constant>> {
         self.items().filter_map(|item| match item {
             Item::Constant(constant) => Some(constant),
             _ => None,
         })
     }
 
-    pub fn unsupported_items(&self) -> impl Iterator<Item = &Rc<UnsupportedItem<'pb>>> {
+    pub fn unsupported_items(&self) -> impl Iterator<Item = &Rc<UnsupportedItem>> {
         self.items().filter_map(|item| match item {
             Item::UnsupportedItem(unsupported_item) => Some(unsupported_item),
             _ => None,
         })
     }
 
-    pub fn comments(&self) -> impl Iterator<Item = &Rc<Comment<'pb>>> {
+    pub fn comments(&self) -> impl Iterator<Item = &Rc<Comment>> {
         self.items().filter_map(|item| match item {
             Item::Comment(comment) => Some(comment),
             _ => None,
         })
     }
 
-    pub fn namespaces(&self) -> impl Iterator<Item = &Rc<Namespace<'pb>>> {
+    pub fn namespaces(&self) -> impl Iterator<Item = &Rc<Namespace>> {
         self.items().filter_map(|item| match item {
             Item::Namespace(ns) => Some(ns),
             _ => None,
         })
     }
 
-    pub fn existing_rust_types(&self) -> impl Iterator<Item = &Rc<ExistingRustType<'pb>>> {
+    pub fn existing_rust_types(&self) -> impl Iterator<Item = &Rc<ExistingRustType>> {
         self.items().filter_map(|item| match item {
             Item::ExistingRustType(existing_rust_type) => Some(existing_rust_type),
             _ => None,
@@ -4934,7 +1991,7 @@ impl<'pb> IR<'pb> {
         format!("{:?}", self.tree_ir)
     }
 
-    pub fn get_lifetime(&self, lifetime_id: LifetimeId) -> Option<&LifetimeName<'pb>> {
+    pub fn get_lifetime(&self, lifetime_id: LifetimeId) -> Option<&LifetimeName> {
         self.lifetimes.get(&lifetime_id)
     }
 
@@ -4971,8 +2028,8 @@ impl<'pb> IR<'pb> {
 
     pub fn get_functions_by_name(
         &self,
-        function_name: &UnqualifiedIdentifier<'pb>,
-    ) -> impl Iterator<Item = &Rc<Func<'pb>>> + '_ {
+        function_name: &UnqualifiedIdentifier,
+    ) -> impl Iterator<Item = &Rc<Func>> + '_ {
         self.function_name_to_functions.get(function_name).map_or([].iter(), |v| v.iter())
     }
 }
@@ -4981,7 +2038,7 @@ impl<'pb> IR<'pb> {
 // and returning the crate name, or similar.
 
 /// Returns Some(crate_ident) if this is an imported crate.
-pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR<'_>) -> Option<Ident> {
+pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ident> {
     if ir.is_current_target(owning_target) {
         None
     } else {
@@ -5002,15 +2059,13 @@ mod tests {
 
     #[gtest]
     fn test_identifier_debug_print() {
-        let proto = protobuf::proto!(ir_rust_proto::Identifier { identifier: "hello" });
-        let identifier = Identifier::try_from(proto.as_view()).unwrap();
+        let identifier = ir_rust_proto::proto!(ir_rust_proto::Identifier { identifier: "hello" });
         assert_eq!(format!("{identifier:?}"), "\"hello\"");
     }
 
     #[gtest]
     fn test_unqualified_identifier_debug_print() {
-        let proto = protobuf::proto!(ir_rust_proto::Identifier { identifier: "hello" });
-        let identifier = Identifier::try_from(proto.as_view()).unwrap();
+        let identifier = ir_rust_proto::proto!(ir_rust_proto::Identifier { identifier: "hello" });
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Identifier(identifier)), "\"hello\"");
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Constructor), "Constructor");
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Destructor), "Destructor");
@@ -5018,13 +2073,13 @@ mod tests {
 
     #[gtest]
     fn test_used_headers() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = ir_rust_proto::proto!(IRProto {
             public_headers: [__ { name: "foo/bar.h" }],
             current_target: "//foo:bar",
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(&proto).unwrap();
         let expected = TreeIR {
-            public_headers: vec![HeaderName { name: "foo/bar.h" }],
+            public_headers: vec![HeaderName::from_str("foo/bar.h")],
             current_target: "//foo:bar".into(),
             crate_root_path: None,
             crubit_features: Default::default(),
@@ -5038,19 +2093,19 @@ mod tests {
 
     #[gtest]
     fn test_empty_crate_root_path() {
-        let proto = protobuf::proto!(IRProto { current_target: "//foo:bar" });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let proto = ir_rust_proto::proto!(IRProto { current_target: "//foo:bar" });
+        let ir = proto_to_ir(&proto).unwrap();
         assert_eq!(ir.crate_root_path(), None);
     }
 
     #[gtest]
     fn test_crate_root_path() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = ir_rust_proto::proto!(IRProto {
             crate_root_path: "__cc_template_instantiations_rs_api",
             current_target: "//foo:bar",
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
-        assert_eq!(ir.crate_root_path().as_deref(), Some("__cc_template_instantiations_rs_api"));
+        let ir = proto_to_ir(&proto).unwrap();
+        assert_eq!(ir.crate_root_path(), Some("__cc_template_instantiations_rs_api"));
     }
 
     #[gtest]
@@ -5187,90 +2242,86 @@ mod tests {
 
     #[gtest]
     fn test_make_ir_happy_path() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = ir_rust_proto::proto!(IRProto {
             current_target: "//foo:bar",
             top_level_items: [(
                 "//foo:bar",
-                __ {
-                    items: [__ {
-                        namespace_decl: __ {
-                            cc_name: __ { identifier: "nsA" },
-                            rs_name: __ { identifier: "nsA" },
-                            unique_name: "nsA",
-                            id: 1,
-                            canonical_namespace_id: 1,
-                            owning_target: "//foo:bar",
-                            is_inline: false,
-                            must_bind: false,
-                            children: [__ {
-                                namespace_decl: __ {
-                                    cc_name: __ { identifier: "nsB" },
-                                    rs_name: __ { identifier: "nsB" },
-                                    unique_name: "nsB",
-                                    id: 2,
-                                    canonical_namespace_id: 2,
-                                    owning_target: "//foo:bar",
-                                    is_inline: false,
-                                    must_bind: false,
-                                    children: [__ {
-                                        comment: __ { text: "hello", id: 3, must_bind: false }
-                                    }]
-                                }
-                            }]
-                        }
-                    }]
-                }
+                [__ {
+                    namespace_decl: __ {
+                        cc_name: __ { identifier: "nsA" },
+                        rs_name: __ { identifier: "nsA" },
+                        unique_name: "nsA",
+                        id: 1u64,
+                        canonical_namespace_id: 1u64,
+                        owning_target: "//foo:bar",
+                        is_inline: false,
+                        must_bind: false,
+                        children: [__ {
+                            namespace_decl: __ {
+                                cc_name: __ { identifier: "nsB" },
+                                rs_name: __ { identifier: "nsB" },
+                                unique_name: "nsB",
+                                id: 2u64,
+                                canonical_namespace_id: 2u64,
+                                owning_target: "//foo:bar",
+                                is_inline: false,
+                                must_bind: false,
+                                children: [__ {
+                                    comment: __ { text: "hello", id: 3u64, must_bind: false }
+                                }]
+                            }
+                        }]
+                    }
+                }]
             )]
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(&proto).unwrap();
 
-        let ids: Vec<_> = ir.items().map(|item| item.id().0).collect();
+        let ids: Vec<_> = ir.items().map(|item| item.id().as_u64()).collect();
         assert_eq!(ids, vec![1, 2, 3]);
     }
 
     #[gtest]
     fn test_make_ir_redeclarations() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = ir_rust_proto::proto!(IRProto {
             current_target: "//foo:bar",
             top_level_items: [(
                 "//foo:bar",
-                __ {
-                    items: [
-                        __ {
-                            namespace_decl: __ {
-                                cc_name: __ { identifier: "ns1" },
-                                rs_name: __ { identifier: "ns1" },
-                                unique_name: "ns1",
-                                id: 100,
-                                canonical_namespace_id: 100,
-                                owning_target: "//foo:bar",
-                                is_inline: false,
-                                must_bind: false,
-                                children: [__ {
-                                    comment: __ { text: "hello", id: 200, must_bind: false }
-                                }]
-                            }
-                        },
-                        __ {
-                            namespace_decl: __ {
-                                cc_name: __ { identifier: "ns1" },
-                                rs_name: __ { identifier: "ns1" },
-                                unique_name: "ns1",
-                                id: 101,
-                                canonical_namespace_id: 100,
-                                owning_target: "//foo:bar",
-                                is_inline: false,
-                                must_bind: false,
-                                children: [__ {
-                                    comment: __ { text: "hello", id: 200, must_bind: false }
-                                }]
-                            }
+                [
+                    __ {
+                        namespace_decl: __ {
+                            cc_name: __ { identifier: "ns1" },
+                            rs_name: __ { identifier: "ns1" },
+                            unique_name: "ns1",
+                            id: 100u64,
+                            canonical_namespace_id: 100u64,
+                            owning_target: "//foo:bar",
+                            is_inline: false,
+                            must_bind: false,
+                            children: [__ {
+                                comment: __ { text: "hello", id: 200u64, must_bind: false }
+                            }]
                         }
-                    ]
-                }
+                    },
+                    __ {
+                        namespace_decl: __ {
+                            cc_name: __ { identifier: "ns1" },
+                            rs_name: __ { identifier: "ns1" },
+                            unique_name: "ns1",
+                            id: 101u64,
+                            canonical_namespace_id: 100u64,
+                            owning_target: "//foo:bar",
+                            is_inline: false,
+                            must_bind: false,
+                            children: [__ {
+                                comment: __ { text: "hello", id: 200u64, must_bind: false }
+                            }]
+                        }
+                    }
+                ]
             )]
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(&proto).unwrap();
 
         let comment_items: Vec<_> = ir.items().filter(|item| item.id() == ItemId(200)).collect();
 
@@ -5279,11 +2330,11 @@ mod tests {
 
     #[gtest]
     fn test_proto_crate_names() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = ir_rust_proto::proto!(IRProto {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "custom_crate")]
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(&proto).unwrap();
         assert_eq!(
             ir.crate_name(&"//dep:target".into()).map(|i| i.to_string()),
             Some("custom_crate".to_string())
@@ -5292,11 +2343,11 @@ mod tests {
 
     #[gtest]
     fn test_proto_crate_names_invalid_ident() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = ir_rust_proto::proto!(IRProto {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "invalid*crate")]
         });
-        let result = proto_to_ir(proto.as_view());
+        let result = proto_to_ir(&proto);
         assert!(result.is_err());
         let err_msg = result.unwrap_err().to_string();
         assert!(
@@ -5308,19 +2359,19 @@ mod tests {
 
     #[gtest]
     fn test_rs_imported_crate_name_with_custom_name() {
-        let proto = protobuf::proto!(IRProto {
+        let proto = ir_rust_proto::proto!(IRProto {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "custom_crate")],
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(&proto).unwrap();
         let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
         assert_eq!(crate_ident.to_string(), "custom_crate");
     }
 
     #[gtest]
     fn test_rs_imported_crate_name_without_custom_name() {
-        let proto = protobuf::proto!(IRProto { current_target: "//foo:bar" });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let proto = ir_rust_proto::proto!(IRProto { current_target: "//foo:bar" });
+        let ir = proto_to_ir(&proto).unwrap();
         let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
         assert_eq!(crate_ident.to_string(), "target");
     }
@@ -5344,44 +2395,64 @@ mod tests {
             // Negative case: an unrelated target.
             ("//rs_bindings_from_cc:ir", false),
         ] {
-            let proto = protobuf::proto!(::ir_rust_proto::Record {
+            let record = ir_rust_proto::proto!(crate::ir_rust_proto::Record {
                 rs_name: __ { identifier: "string_view" },
                 trait_derives: __ {
-                    clone: ::ir_rust_proto::TraitImplPolarity::None,
-                    copy: ::ir_rust_proto::TraitImplPolarity::None,
-                    debug: ::ir_rust_proto::TraitImplPolarity::None,
-                    send_polarity: ::ir_rust_proto::TraitImplPolarity::None,
-                    sync_polarity: ::ir_rust_proto::TraitImplPolarity::None,
+                    clone: crate::ir_rust_proto::TraitImplPolarity::None,
+                    copy: crate::ir_rust_proto::TraitImplPolarity::None,
+                    debug: crate::ir_rust_proto::TraitImplPolarity::None,
+                    send: crate::ir_rust_proto::TraitImplPolarity::None,
+                    sync: crate::ir_rust_proto::TraitImplPolarity::None,
                 },
                 template_specialization: __ {
                     defining_target: defining_target,
-                    std_string_view: __ {},
+                    kind: crate::TemplateSpecializationKind::StdStringView,
                 },
             });
-            let record = proto.as_view().to_ir();
             assert_eq!(record.is_string_view(), expected, "target={defining_target}");
         }
     }
 
     #[gtest]
     fn test_constant_array_type_validate_num_elements() {
-        for invalid_len in [0, -1] {
-            let proto = protobuf::proto!(::ir_rust_proto::cc_type::ConstantArrayType {
-                num_elements: invalid_len,
-                element_type: __ { primitive: __ { spelling: "int" } },
-            });
-            let err = ConstantArrayType::try_from(proto.as_view()).unwrap_err();
-            assert!(
-                err.to_string().contains("ConstantArrayType has non-positive num_elements"),
-                "unexpected error for num_elements={invalid_len}: {err}"
-            );
-        }
+        let make_proto = |num_elements: usize| {
+            ir_rust_proto::proto!(IRProto {
+                current_target: "//foo:bar",
+                top_level_items: [(
+                    "//foo:bar",
+                    [__ {
+                        type_alias: __ {
+                            cc_name: __ { identifier: "Arr" },
+                            rs_name: __ { identifier: "Arr" },
+                            owning_target: "//foo:bar",
+                            id: 1u64,
+                            underlying_type: __ {
+                                variant: __ {
+                                    constant_array: __ {
+                                        num_elements: num_elements,
+                                        element_type: __ {
+                                            variant: __ { primitive: Primitive::Int },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    }]
+                )],
+            })
+        };
 
-        let valid_proto = protobuf::proto!(::ir_rust_proto::cc_type::ConstantArrayType {
-            num_elements: 4,
-            element_type: __ { primitive: __ { spelling: "int" } },
-        });
-        let arr = ConstantArrayType::try_from(valid_proto.as_view()).unwrap();
+        let err = proto_to_ir(&make_proto(0)).unwrap_err();
+        assert!(
+            err.to_string().contains("ConstantArrayType has non-positive num_elements"),
+            "unexpected error for num_elements=0: {err}"
+        );
+
+        let valid_ir = proto_to_ir(&make_proto(4)).unwrap();
+        let ta = valid_ir.type_aliases().next().unwrap();
+        let CcTypeVariant::ConstantArray(arr) = ta.underlying_type().variant() else {
+            panic!("expected ConstantArray, got {:?}", ta.underlying_type());
+        };
         assert_eq!(arr.num_elements(), 4);
     }
 }

@@ -39,7 +39,6 @@ rust_library(
     name = "cc_api_ffi",
     srcs = [
         "cc_api_ffi.rs",
-        "cc_api_ffi_serialized_proto.rs",
     ],
     edition = "2024",
     visibility = [
@@ -48,9 +47,7 @@ rust_library(
     ],
     deps = [
         ":cc_api",
-        ":generate_bindings_rust_proto",
-        "//common:ffi_types",
-        "@protobuf//rust:protobuf",
+        "//rs_bindings_from_cc:ir",
     ],
 )
 
@@ -66,13 +63,10 @@ rust_library(
     ],
     deps = [
         ":generate_bindings",
-        ":generate_bindings_rust_proto",
         "//common:arc_anyhow",
         "//common:error_report",
         "//rs_bindings_from_cc:ir",
-        "//rs_bindings_from_cc:ir_rust_proto",
         "//rs_bindings_from_cc/generate_bindings/database",
-        "@protobuf//rust:protobuf",
     ],
 )
 
@@ -257,7 +251,6 @@ rust_library(
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
         "//rs_bindings_from_cc:ir",
-        "//rs_bindings_from_cc:ir_rust_proto",
         "//rs_bindings_from_cc:ir_testing",
     ],
 )
@@ -327,7 +320,6 @@ rust_test(
         "@crate_index//:googletest",
         "@crate_index//:quote",  # v1
         "@crate_index//:serde_json",  # v1
-        "@protobuf//rust:protobuf",
     ],
 )
 

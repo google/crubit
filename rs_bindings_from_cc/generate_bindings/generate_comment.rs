@@ -6,7 +6,7 @@
 
 use database::code_snippet::{ApiSnippets, DocCommentAttr, GeneratedItem};
 use database::{intern, BindingsGenerator};
-use ir::{Comment, DeclLocation, GenericItem, UnsupportedItem, IR};
+use ir::{Comment, DeclLocation, FfiRc, GenericItem, UnsupportedItem, IR};
 use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::rc::Rc;
@@ -67,9 +67,7 @@ pub fn generate_top_level_comment(ir: &IR, is_golden_test: bool) -> String {
 ///
 /// For a declaration produced by a macro expansion, this is the expansion location with offsets
 /// `0, 0`.
-pub fn kythe_name_location<'pb>(
-    decl_loc: Option<DeclLocation<'pb>>,
-) -> Option<(&'pb str, u32, u32)> {
+pub fn kythe_name_location(decl_loc: Option<&DeclLocation>) -> Option<(&str, u32, u32)> {
     // Open-source builds don't emit Kythe byte offsets.
     let _ = decl_loc;
     None
@@ -78,7 +76,7 @@ pub fn kythe_name_location<'pb>(
 pub fn generate_doc_comment(
     comment: Option<&str>,
     safety: Option<&str>,
-    mut decl_loc: Option<DeclLocation<'_>>,
+    mut decl_loc: Option<&DeclLocation>,
     is_golden_test: bool,
     kythe_annotations: bool,
 ) -> Option<DocCommentAttr> {
@@ -110,10 +108,7 @@ pub fn generate_doc_comment(
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.
-pub fn generate_unsupported<'db>(
-    db: &BindingsGenerator<'db>,
-    item: Rc<UnsupportedItem<'db>>,
-) -> ApiSnippets {
+pub fn generate_unsupported(db: &BindingsGenerator, item: FfiRc<UnsupportedItem>) -> ApiSnippets {
     db.assert_in_error_scope(item.id());
 
     // Avoid generating unsupported item comments for standard library templates.
@@ -129,7 +124,7 @@ pub fn generate_unsupported<'db>(
         }
     }
 
-    for error in db.unsupported_item_errors(Rc::clone(&item)).iter() {
+    for error in db.unsupported_item_errors(FfiRc::clone(&item)).iter() {
         db.errors().report(error);
     }
 
@@ -159,7 +154,7 @@ pub fn generate_unsupported<'db>(
         item.name()
     )
     .unwrap();
-    for (index, error) in db.unsupported_item_errors(Rc::clone(&item)).iter().enumerate() {
+    for (index, error) in db.unsupported_item_errors(FfiRc::clone(&item)).iter().enumerate() {
         if index != 0 {
             message.push_str("\n\n");
         }
@@ -191,7 +186,7 @@ pub fn generate_unsupported<'db>(
 }
 
 /// Generates Rust source code for a given `Comment`.
-pub fn generate_comment(comment: Rc<Comment>) -> ApiSnippets {
+pub fn generate_comment(comment: FfiRc<Comment>) -> ApiSnippets {
     ApiSnippets {
         generated_items: HashMap::from([(
             comment.id(),

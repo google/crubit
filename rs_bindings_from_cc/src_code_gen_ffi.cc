@@ -4,16 +4,29 @@
 
 #include "rs_bindings_from_cc/src_code_gen_ffi.h"
 
-#include <utility>
+#include <string>
+
+#include "rs_bindings_from_cc/ir_ffi_support.h"
+#include "rs_bindings_from_cc/ir_generated.h"
 
 namespace crubit {
 
-using rs_bindings_from_cc::generate_bindings::GenerateBindingsRequest;
-using rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse;
+extern "C" void GenerateBindingsImpl(ffi::GenerateBindingsRequest* request,
+                                     ffi::GenerateBindingsResponse* response);
 
-GenerateBindingsResponse GenerateBindingsProtoCall(
-    GenerateBindingsRequest&& request) {
-  return GenerateBindingsProtoCallSerialized(request);
+extern "C" void FormatIrDebugImpl(const ffi::IRProto* ir, ffi::FfiString* out);
+
+ffi::GenerateBindingsResponse GenerateBindingsCall(
+    ffi::GenerateBindingsRequest&& request) {
+  ffi::GenerateBindingsResponse response;
+  GenerateBindingsImpl(&request, &response);
+  return response;
+}
+
+std::string FormatIrDebug(const ffi::IRProto& ir) {
+  ffi::FfiString out;
+  FormatIrDebugImpl(&ir, &out);
+  return out.ToString();
 }
 
 }  // namespace crubit

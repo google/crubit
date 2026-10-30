@@ -235,53 +235,53 @@ macro_rules! __proto_fields {
     ($msg:ident $(,)?) => {};
     ($msg:ident, $field:ident : __ { $($inner:tt)* } $(, $($rest:tt)*)?) => {
         {
-            let __sub = $crate::__proto_call_setter!($msg, $field, Default::default());
-            $crate::__proto_fields!(__sub, $($inner)*);
+            let __sub = $crate::ir_generated::__proto_call_setter!($msg, $field, Default::default());
+            $crate::ir_generated::__proto_fields!(__sub, $($inner)*);
         }
-        $crate::__proto_fields!($msg, $($($rest)*)?);
+        $crate::ir_generated::__proto_fields!($msg, $($($rest)*)?);
     };
     ($msg:ident, $field:ident : [ $( __ { $($inner:tt)* } ),* $(,)? ] $(, $($rest:tt)*)?) => {
-        $crate::__proto_call_setter!($msg, $field, Default::default());
+        $crate::ir_generated::__proto_call_setter!($msg, $field, Default::default());
         $(
             {
                 let __elem = $msg.$field.push(Default::default());
-                $crate::__proto_fields!(__elem, $($inner)*);
+                $crate::ir_generated::__proto_fields!(__elem, $($inner)*);
             }
         )*
-        $crate::__proto_fields!($msg, $($($rest)*)?);
+        $crate::ir_generated::__proto_fields!($msg, $($($rest)*)?);
     };
     ($msg:ident, $field:ident : [ $( ( $k:expr, [ $( __ { $($inner:tt)* } ),* $(,)? ] ) ),* $(,)? ] $(, $($rest:tt)*)?) => {
-        $crate::__proto_call_setter!($msg, $field, Default::default());
+        $crate::ir_generated::__proto_call_setter!($msg, $field, Default::default());
         $(
             {
                 let __vec = $msg.$field.insert(($k).into(), Default::default());
                 $(
                     {
                         let __elem = __vec.push(Default::default());
-                        $crate::__proto_fields!(__elem, $($inner)*);
+                        $crate::ir_generated::__proto_fields!(__elem, $($inner)*);
                     }
                 )*
             }
         )*
-        $crate::__proto_fields!($msg, $($($rest)*)?);
+        $crate::ir_generated::__proto_fields!($msg, $($($rest)*)?);
     };
     ($msg:ident, $field:ident : [ $( ( $k:expr, __ { $($inner:tt)* } ) ),* $(,)? ] $(, $($rest:tt)*)?) => {
-        $crate::__proto_call_setter!($msg, $field, Default::default());
+        $crate::ir_generated::__proto_call_setter!($msg, $field, Default::default());
         $(
             {
                 let __val = $msg.$field.insert(($k).into(), Default::default());
-                $crate::__proto_fields!(__val, $($inner)*);
+                $crate::ir_generated::__proto_fields!(__val, $($inner)*);
             }
         )*
-        $crate::__proto_fields!($msg, $($($rest)*)?);
+        $crate::ir_generated::__proto_fields!($msg, $($($rest)*)?);
     };
     ($msg:ident, $field:ident : $($subty:ident)::+ { $($inner:tt)* } $(, $($rest:tt)*)?) => {
-        $crate::__proto_call_setter!($msg, $field, $crate::proto!($($subty)::+ { $($inner)* }));
-        $crate::__proto_fields!($msg, $($($rest)*)?);
+        $crate::ir_generated::__proto_call_setter!($msg, $field, $crate::ir_generated::proto!($($subty)::+ { $($inner)* }));
+        $crate::ir_generated::__proto_fields!($msg, $($($rest)*)?);
     };
     ($msg:ident, $field:ident : $val:expr $(, $($rest:tt)*)?) => {
-        $crate::__proto_call_setter!($msg, $field, ($val).into());
-        $crate::__proto_fields!($msg, $($($rest)*)?);
+        $crate::ir_generated::__proto_call_setter!($msg, $field, ($val).into());
+        $crate::ir_generated::__proto_fields!($msg, $($($rest)*)?);
     };
 }
 
@@ -290,11 +290,11 @@ macro_rules! __proto_fields {
 macro_rules! proto {
     ($($ty:ident)::+ { $($tt:tt)* }) => {{
         let mut __msg = <$($ty)::+>::EMPTY;
-        $crate::__proto_fields!(__msg, $($tt)*);
+        $crate::ir_generated::__proto_fields!(__msg, $($tt)*);
         __msg
     }};
 }
-pub use proto;
+pub use {__proto_call_setter, __proto_fields, proto};
 
 #[rustfmt::skip]
 mod __defs {
@@ -1263,6 +1263,7 @@ mod __defs {
     pub enum MemberFuncSemantic {
         Setter(member_func_semantic::Setter) = 0,
         Getter(member_func_semantic::Getter) = 1,
+        Constructor = 2,
     }
 
     impl Default for MemberFuncSemantic {
@@ -1289,6 +1290,9 @@ mod __defs {
                 unreachable!()
             };
             inner
+        }
+        pub fn set_constructor(&mut self) {
+            *self = Self::Constructor;
         }
     }
     #[cfg(target_pointer_width = "64")]
