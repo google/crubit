@@ -445,9 +445,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     (all_deps, target_args) = _make_all_deps_and_target_args(ctx, extra_rule_specific_deps, direct)
 
     header_includes = []
-    for hdr in public_hdrs:
-        # Use full `path`, instead of `short_path`, so that generated headers (e.g.,
-        # `empty_source_no_public_headers.h`) can be found.
+    for hdr in public_hdrs + extra_cpp_srcs:
+        # Use full `path`, instead of `short_path`, so that generated files (e.g.,
+        # `empty_source_no_public_headers.h` or generated `extra_cpp_srcs`) can be found.
         header_includes.append("-include")
         header_includes.append(hdr.path)
 
@@ -541,13 +541,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             direct = public_hdrs + (toolchain.builtin_headers if toolchain != None else []),
             transitive = [
                 ctx.attr._std[RustToolchainHeadersInfo].headers,
-            ] + (
-                # TODO(b/566567021): Once the IrFromCc deduplication of `-include`d
-                # files is released into the prebuilt Crosstool binary, pass
-                # `extra_cpp_srcs` via `header_includes` instead of including all
-                # `compilation_context.headers` in `action_inputs`.
-                [compilation_context.headers] if extra_cpp_srcs else []
-            ),
+            ],
         ),
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
