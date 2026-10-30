@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl", "additional_rust_srcs_for_crubit_bindings")
@@ -221,4 +223,57 @@ golden_test(
     cc_library = "thread_safe",
     golden_cc = "thread_safe_api_impl.cc",
     golden_rs = "thread_safe_rs_api.rs",
+)
+
+rust_library(
+    name = "rust_layout_equivalent_other_crate",
+    srcs = ["rust_layout_equivalent_other_crate.rs"],
+    edition = "2024",
+)
+
+cc_library(
+    name = "rust_layout_equivalent",
+    hdrs = ["rust_layout_equivalent.h"],
+    aspect_hints = [":rust_layout_equivalent_rust.hint"],
+    deps = [
+        "//support:annotations",
+    ],
+)
+
+rust_api_from_cpp(
+    name = "rust_layout_equivalent_rust",
+    srcs = ["rust_layout_equivalent_rust_types.rs"],
+    cpp_target = ":rust_layout_equivalent",
+    deps = [
+        ":rust_layout_equivalent_other_crate",
+        "//support:crubit_annotate",
+    ],
+)
+
+golden_test(
+    name = "rust_layout_equivalent_golden_test",
+    basename = "rust_layout_equivalent",
+    cc_library = "rust_layout_equivalent",
+    golden_cc = "rust_layout_equivalent_api_impl.cc",
+    golden_rs = "rust_layout_equivalent_rs_api.rs",
+)
+
+crubit_rust_test(
+    name = "rust_layout_equivalent_test",
+    srcs = ["rust_layout_equivalent_test.rs"],
+    deps = [
+        ":rust_layout_equivalent_other_crate",
+        ":rust_layout_equivalent_rust",
+        "@crate_index//:googletest",
+    ],
+)
+
+rust_test(
+    name = "rust_layout_equivalent_stable_test",
+    srcs = ["rust_layout_equivalent_test.rs"],
+    deps = [
+        ":rust_layout_equivalent_other_crate",
+        ":rust_layout_equivalent_rust",
+        "@crate_index//:googletest",
+    ],
 )
