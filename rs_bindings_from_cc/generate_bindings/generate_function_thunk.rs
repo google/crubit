@@ -407,6 +407,7 @@ pub fn thunk_ident(db: &BindingsGenerator, func: &Func) -> Ident {
 fn generate_function_assertion_thunk_impl(
     db: &BindingsGenerator,
     func: &Func,
+    call_conv: CcCallingConv,
     unqualified_func_name: TokenStream,
 ) -> Result<ThunkImpl> {
     let features = db.ir().target_crubit_features(func.owning_target());
@@ -469,11 +470,9 @@ fn generate_function_assertion_thunk_impl(
         return_type_name = quote! { #return_type_name const };
     }
 
-    let cc_calling_conv = {
-        match func.call_conv() {
-            Some(CcCallingConv::C) | None => quote! {},
-            Some(call_conv) => quote! { __attribute__((#call_conv)) },
-        }
+    let cc_calling_conv = match call_conv {
+        CcCallingConv::C => quote! {},
+        call_conv => quote! { __attribute__((#call_conv)) },
     };
 
     let cc_function_type = quote! {
@@ -489,20 +488,22 @@ fn generate_function_assertion_thunk_impl(
 fn generate_function_assertion_for_identifier(
     db: &BindingsGenerator,
     func: &Func,
+    call_conv: CcCallingConv,
     id: &Identifier,
 ) -> Result<ThunkImpl> {
     let fn_ident = format_nonportable_cc_ident(id.as_str())?;
-    generate_function_assertion_thunk_impl(db, func, quote! { #fn_ident })
+    generate_function_assertion_thunk_impl(db, func, call_conv, quote! { #fn_ident })
 }
 
 fn generate_function_assertion_for_operator(
     db: &BindingsGenerator,
     func: &Func,
+    call_conv: CcCallingConv,
     op: &Operator,
 ) -> Result<ThunkImpl> {
     let op_cc_name = op.cc_name();
     let op_tokens = syn::parse_str::<TokenStream>(&op_cc_name)?;
-    generate_function_assertion_thunk_impl(db, func, op_tokens)
+    generate_function_assertion_thunk_impl(db, func, call_conv, op_tokens)
 }
 
 pub fn generate_function_assertion(
@@ -514,16 +515,20 @@ pub fn generate_function_assertion(
         return Ok(None);
     }
 
-    if !func.has_c_calling_convention() && func.call_conv().is_none() {
+    // A calling convention without a `CcCallingConv` mapping (e.g. `swiftcall`)
+    // can't be spelled in the assertion.  The importer still imports such
+    // functions (with `call_conv() == None`), and they get bindings when the
+    // `experimental` feature is enabled.
+    let Some(call_conv) = func.call_conv() else {
         return Ok(None);
-    }
+    };
 
     match func.cc_name() {
         UnqualifiedIdentifier::Identifier(id) => {
-            Ok(Some(generate_function_assertion_for_identifier(db, func, id)?))
+            Ok(Some(generate_function_assertion_for_identifier(db, func, call_conv, id)?))
         }
         UnqualifiedIdentifier::Operator(op) => {
-            Ok(Some(generate_function_assertion_for_operator(db, func, op)?))
+            Ok(Some(generate_function_assertion_for_operator(db, func, call_conv, op)?))
         }
         UnqualifiedIdentifier::Constructor => Ok(None),
         UnqualifiedIdentifier::Destructor => Ok(None),
