@@ -1,0 +1,1443 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// callables_golden
+
+// clang-format off
+#ifndef CC_BINDINGS_FROM_RS_TEST_CALLABLES_CALLABLES_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_CALLABLES_CALLABLES_GOLDEN
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
+#include "support/annotations_internal.h"
+#include "support/internal/memswap.h"
+#include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
+#include "support/movable.h"
+#include "support/rs_std/fn.h"
+#include "support/rs_std/fn_ref.h"
+#include "support/rs_std/option.h"
+#include "support/rs_std/str_ref.h"
+#include "support/rs_std/traits.h"
+#include "support/rs_std/tuple.h"
+
+#include <array>
+#include <bit>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <new>
+#include <optional>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+#include "support/rs_std/rs_core.h"
+
+namespace callables {
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: callables_golden :: CallbackHolder") alignas(4) [[clang::trivial_abi]]
+CallbackHolder final {
+ public:
+  // Default::default
+  CallbackHolder();
+
+  // Drop::drop
+  ~CallbackHolder();
+
+  CallbackHolder(CallbackHolder&&) noexcept;
+  ::callables::CallbackHolder& operator=(CallbackHolder&&) noexcept;
+
+  // `callables_golden::CallbackHolder` doesn't implement the `Clone` trait
+  CallbackHolder(const CallbackHolder&) = delete;
+  CallbackHolder& operator=(const CallbackHolder&) = delete;
+  CallbackHolder(::crubit::UnsafeRelocateTag, CallbackHolder&& value);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  static ::callables::CallbackHolder new_();
+
+  // CRUBIT_ANNOTATE: must_bind=
+  void set_callback(::rs::Fn<void() const> f);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  void call() const;
+
+  // CRUBIT_ANNOTATE: must_bind=
+  void drop_callback();
+
+ private:
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 8> cb;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: callables_golden :: CppMovableDrop") alignas(4) [[clang::trivial_abi]]
+CppMovableDrop final {
+ public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
+  // Default::default
+  CppMovableDrop();
+
+  // Synthesized tuple constructor
+  explicit CppMovableDrop(::std::int32_t __field0)
+      : __field0(::std::move(__field0)) {}
+
+  // Drop::drop
+  ~CppMovableDrop();
+
+  CppMovableDrop(CppMovableDrop&&) noexcept;
+  ::callables::CppMovableDrop& operator=(CppMovableDrop&&) noexcept;
+
+  // `callables_golden::CppMovableDrop` doesn't implement the `Clone` trait
+  CppMovableDrop(const CppMovableDrop&) = delete;
+  CppMovableDrop& operator=(const CppMovableDrop&) = delete;
+  CppMovableDrop(::crubit::UnsafeRelocateTag, CppMovableDrop&& value);
+
+  union {
+    ::std::int32_t __field0;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: callables_golden :: NonCppMovable") alignas(4) [[clang::trivial_abi]]
+NonCppMovable final {
+ public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
+  // `callables_golden::NonCppMovable` doesn't implement the `Default` trait
+  NonCppMovable() = delete;
+
+  // Synthesized tuple constructor
+  explicit NonCppMovable(::std::int32_t __field0)
+      : __field0(::std::move(__field0)) {}
+
+  // Drop::drop
+  ~NonCppMovable();
+
+  // C++ move operations are unavailable for this type. See
+  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
+  // are C++ movable.
+  NonCppMovable(NonCppMovable&&) = delete;
+  ::callables::NonCppMovable& operator=(NonCppMovable&&) = delete;
+  // `callables_golden::NonCppMovable` doesn't implement the `Clone` trait
+  NonCppMovable(const NonCppMovable&) = delete;
+  NonCppMovable& operator=(const NonCppMovable&) = delete;
+  NonCppMovable(::crubit::UnsafeRelocateTag, NonCppMovable&& value);
+
+  union {
+    ::std::int32_t __field0;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: Point") alignas(4)
+    [[clang::trivial_abi]] Point final {
+ public:
+  bool operator==(::callables::Point const& other) const;
+
+  ::std::int32_t x{};
+  ::std::int32_t y{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// Error generating bindings for function
+// `callables_golden::call_and_return_borrowed_callable`: Function parameter #0
+// is a borrowed callable (`&'a (dyn std::ops::Fn(i32) -> i32 + 'a)`), whose
+// lifetime is captured by the return type `&'a i32`. This is not supported
+// because callable trampoline closures are temporary and cannot outlive the
+// function call.
+
+// CRUBIT_ANNOTATE: must_bind=
+::rs::Movable<::callables::NonCppMovable> call_and_return_non_movable(
+    ::rs::FnRef<::callables::NonCppMovable() const> f);
+
+// CRUBIT_ANNOTATE: must_bind=
+::rs::Movable<::callables::NonCppMovable> call_and_return_non_movable_box_fn(
+    ::rs::Fn<::callables::NonCppMovable() const> f);
+
+// CRUBIT_ANNOTATE: must_bind=
+::rs::Movable<::callables::NonCppMovable> call_and_return_non_movable_boxed(
+    ::rs::Fn<::callables::NonCppMovable() &&> f);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_box_dyn_fn(::rs::Fn<::std::int32_t(::std::int32_t) const> f,
+                               ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_box_dyn_fn_mut(::rs::Fn<::std::int32_t(::std::int32_t)> f,
+                                   ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_box_dyn_fn_once(
+    ::rs::Fn<::std::int32_t(::std::int32_t) &&> f, ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_dyn_fn(::rs::FnRef<::std::int32_t(::std::int32_t) const> f,
+                           ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_dyn_fn_mut(::rs::FnRef<::std::int32_t(::std::int32_t)> f,
+                               ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_impl_fn(::rs::FnRef<::std::int32_t(::std::int32_t) const> f,
+                            ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_impl_fn_mut(::rs::FnRef<::std::int32_t(::std::int32_t)> f,
+                                ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_impl_fn_once(::rs::FnRef<::std::int32_t(::std::int32_t)> f,
+                                 ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_impl_fn_once_static(
+    ::rs::Fn<::std::int32_t(::std::int32_t) &&> f, ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_impl_with_tuple_option(
+    ::rs::Fn<::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>(
+        ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>) &&>
+        f);
+
+// CRUBIT_ANNOTATE: must_bind=
+::callables::Point call_int_to_point(
+    ::rs::FnRef<::callables::Point(::std::int32_t) const> f, ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::callables::Point call_point_mut(
+    ::rs::FnRef<::callables::Point(::callables::Point)> f,
+    ::callables::Point pt);
+
+// CRUBIT_ANNOTATE: must_bind=
+::callables::Point call_point_once_static(
+    ::rs::Fn<::callables::Point(::callables::Point) &&> f,
+    ::callables::Point pt);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_point_to_int(
+    ::rs::FnRef<::std::int32_t(::callables::Point) const> f,
+    ::callables::Point pt);
+
+// CRUBIT_ANNOTATE: must_bind=
+void call_point_void(::rs::FnRef<void(::callables::Point) const> f,
+                     ::callables::Point pt);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_two_args(
+    ::rs::FnRef<::std::int32_t(::std::int32_t, ::std::int32_t) const> f,
+    ::std::int32_t a, ::std::int32_t b);
+
+// CRUBIT_ANNOTATE: must_bind=
+::callables::Point call_two_points(
+    ::rs::FnRef<::callables::Point(::callables::Point, ::callables::Point)
+                    const>
+        f,
+    ::callables::Point a, ::callables::Point b);
+
+// CRUBIT_ANNOTATE: must_bind=
+void call_void(::rs::FnRef<void(::std::int32_t) const> f, ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+void call_void_mut(::rs::FnRef<void(::std::int32_t)> f, ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+void call_void_once(::rs::FnRef<void(::std::int32_t)> f, ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_with_hrtb_str(
+    ::rs::FnRef<::std::int32_t(::rs::StrRef) const> f, ::rs::StrRef s);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::uintptr_t call_with_hrtb_str_to_str(
+    ::rs::FnRef<::rs::StrRef(::rs::StrRef) const> f, ::rs::StrRef s);
+
+// CRUBIT_ANNOTATE: must_bind=
+void call_with_movable_drop(
+    ::rs::FnRef<void(::callables::CppMovableDrop) const> f, ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+//  Same as [`call_with_ref_to_ref`], but for `&mut`.
+::std::int32_t call_with_mut_ref_to_mut_ref(
+    ::rs::FnRef<::callables::NonCppMovable *
+                $static crubit_nonnull(
+                    ::callables::NonCppMovable* $static crubit_nonnull) const>
+        f,
+    ::callables::NonCppMovable& x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_with_non_movable_ref(
+    ::rs::FnRef<void(::callables::NonCppMovable const* $static crubit_nonnull)
+                    const>
+        f,
+    ::callables::NonCppMovable const& x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::callables::Point call_with_point(
+    ::rs::FnRef<::callables::Point(::callables::Point) const> f,
+    ::callables::Point pt);
+
+// CRUBIT_ANNOTATE: must_bind=
+//  Regression test for cross-language CFI.
+//
+//  The generated `__invoker` is an `extern "C"` function pointer shared with
+//  C++, so a Rust reference in its signature has to be spelled as a raw
+//  pointer: rustc encodes references with a Rust-specific vendor extension
+//  (`u3refI..E`) whereas Clang encodes the equivalent C++ pointer as `P..`, and
+//  the mismatch makes the CFI check on the indirect call fail. This covers a
+//  reference in *return* position, which also exercises lifetime elision in the
+//  generated fn-pointer type.
+::std::int32_t call_with_ref_to_ref(
+    ::rs::FnRef<::callables::NonCppMovable const *
+                $static crubit_nonnull(::callables::NonCppMovable const* $static
+                                           crubit_nonnull) const>
+        f,
+    ::callables::NonCppMovable const& x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_with_str(::rs::FnRef<::std::int32_t(::rs::StrRef) const> f,
+                             ::rs::StrRef s);
+
+// CRUBIT_ANNOTATE: must_bind=
+::rs::StrRef call_with_str_to_str(
+    ::rs::FnRef<::rs::StrRef(::rs::StrRef) const> f, ::rs::StrRef s);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t call_with_tuple_option(
+    ::rs::Fn<::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>(
+        ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>) &&>
+        f);
+
+}  // namespace callables
+
+template <>
+struct ::rs::impl<::callables::Point, ::rs::core::cmp::Eq> {
+  static constexpr bool kIsImplemented = true;
+};
+
+template <>
+struct ::rs::impl<::callables::Point, ::rs::core::fmt::Debug> {
+  static constexpr bool kIsImplemented = true;
+
+  // Error generating bindings for associated function `<callables_golden::Point
+  // as std::fmt::Debug>::fmt`: Error formatting function return type
+  // `std::result::Result<(), std::fmt::Error>`: Failed to format type for the
+  // definition of `std::fmt::Error`: Zero-sized types (ZSTs) are not supported
+  // (b/258259459)
+};
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+template <>
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+    "core :: option :: Option < i32 >")::rs::Option<::std::int32_t>
+    : public ::rs::OptionBase<::rs::Option<::std::int32_t>, ::std::int32_t> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Option(const Option&) = default;
+  Option& operator=(const Option&) = default;
+  Option(Option&&) = default;
+  Option& operator=(Option&&) = default;
+
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
+  using base_type =
+      ::rs::OptionBase<::rs::Option<::std::int32_t>, ::std::int32_t>;
+  constexpr Option() = default;
+  constexpr Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
+  template <typename U>
+    requires ::rs::OptionForwardConstructible<Option, ::std::int32_t, U>
+  Option(U&& value) noexcept;
+  template <typename U>
+    requires ::rs::OptionForwardConstructible<Option, ::std::int32_t, U>
+  Option& operator=(U&& value) noexcept;
+  template <typename Opt>
+    requires ::rs::OptionFromStdOptional<::std::int32_t, Opt>
+  Option(Opt&& value) noexcept;
+  template <typename Opt>
+    requires ::rs::OptionFromStdOptional<::std::int32_t, Opt>
+  Option& operator=(Opt&& value) noexcept;
+  template <typename... Args>
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
+  ~Option() noexcept = default;
+
+ private:
+  friend base_type;
+  using tag_type = ::std::uint32_t;
+  static constexpr tag_type kNoneVal = 0;
+  ::std::int32_t* some_ptr() noexcept {
+    return reinterpret_cast<::std::int32_t*>(storage_ + 4);
+  }
+  ::std::int32_t const* some_const_ptr() const noexcept {
+    return reinterpret_cast<::std::int32_t const*>(storage_ + 4);
+  }
+  void set_some_tag() noexcept { set_tag(1); }
+  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
+  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
+  constexpr ::std::uint32_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
+
+ private:
+  unsigned char storage_[8];
+};
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+template <>
+struct alignas(4)
+    CRUBIT_INTERNAL_RUST_TYPE("(i32 , :: core :: option :: Option < i32 > ,)")::
+        rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>> {
+ public:
+  // Default::default
+  Tuple();
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Tuple(const Tuple&) = default;
+  Tuple& operator=(const Tuple&) = default;
+  Tuple(Tuple&&) = default;
+  Tuple& operator=(Tuple&&) = default;
+
+  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::int32_t __field0,
+        ::rs::Option<::std::int32_t> __field1) noexcept;
+  Tuple(::std::tuple<::std::int32_t, ::rs::Option<::std::int32_t>>&&
+            tuple) noexcept;
+  ~Tuple() = default;
+  operator ::std::tuple<::std::int32_t,
+                        ::rs::Option<::std::int32_t>>() && noexcept;
+  template <::std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <::std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <::std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return ::std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return ::std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <::std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return ::std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return ::std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  union {
+    ::std::int32_t __field0;
+  };
+  union {
+    ::rs::Option<::std::int32_t> __field1;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+#endif
+
+namespace callables {
+
+static_assert(
+    sizeof(::callables::CallbackHolder) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::callables::CallbackHolder) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Default_udefault_ucallables_ugolden_x0000003a_x0000003aCallbackHolder(
+    ::callables::CallbackHolder* __ret_ptr);
+}
+inline ::callables::CallbackHolder::CallbackHolder() {
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ucallables_ugolden_x0000003a_x0000003aCallbackHolder(
+          this);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCallbackHolder(
+    ::callables::CallbackHolder&);
+}
+inline ::callables::CallbackHolder::~CallbackHolder() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCallbackHolder(
+          *this);
+}
+inline ::callables::CallbackHolder::CallbackHolder(
+    CallbackHolder&& other) noexcept
+    : CallbackHolder() {
+  *this = ::std::move(other);
+}
+inline ::callables::CallbackHolder& ::callables::CallbackHolder::operator=(
+    CallbackHolder&& other) noexcept {
+  crubit::MemSwap(*this, other);
+  return *this;
+}
+inline ::callables::CallbackHolder::CallbackHolder(::crubit::UnsafeRelocateTag,
+                                                   CallbackHolder&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::callables::CallbackHolder* __ret_ptr);
+}
+inline ::callables::CallbackHolder(CallbackHolder::new_)() {
+  crubit::Slot<::callables::CallbackHolder> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_set_ucallback(::callables::CallbackHolder&,
+                                             ::rs::internal::FnPayload);
+}
+inline void(CallbackHolder::set_callback)(::rs::Fn<void() const> f) {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_set_ucallback(
+      self, ::std::move(f).release_payload());
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_call(::callables::CallbackHolder const&);
+}
+inline void(CallbackHolder::call)() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_call(self);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_drop_ucallback(::callables::CallbackHolder&);
+}
+inline void(CallbackHolder::drop_callback)() {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_drop_ucallback(self);
+}
+inline void ::callables::CallbackHolder::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::callables::CallbackHolder;
+  static_assert(0 == offsetof(__crubit_assert_type, cb));
+}
+static_assert(
+    sizeof(::callables::CppMovableDrop) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::callables::CppMovableDrop) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Default_udefault_ucallables_ugolden_x0000003a_x0000003aCppMovableDrop(
+    ::callables::CppMovableDrop* __ret_ptr);
+}
+inline ::callables::CppMovableDrop::CppMovableDrop() {
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_ucallables_ugolden_x0000003a_x0000003aCppMovableDrop(
+          this);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCppMovableDrop(
+    ::callables::CppMovableDrop&);
+}
+inline ::callables::CppMovableDrop::~CppMovableDrop() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCppMovableDrop(
+          *this);
+}
+inline ::callables::CppMovableDrop::CppMovableDrop(
+    CppMovableDrop&& other) noexcept
+    : CppMovableDrop() {
+  *this = ::std::move(other);
+}
+inline ::callables::CppMovableDrop& ::callables::CppMovableDrop::operator=(
+    CppMovableDrop&& other) noexcept {
+  crubit::MemSwap(*this, other);
+  return *this;
+}
+inline ::callables::CppMovableDrop::CppMovableDrop(::crubit::UnsafeRelocateTag,
+                                                   CppMovableDrop&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline void ::callables::CppMovableDrop::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::callables::CppMovableDrop;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+}
+static_assert(
+    sizeof(::callables::NonCppMovable) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::callables::NonCppMovable) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aNonCppMovable(
+    ::callables::NonCppMovable&);
+}
+inline ::callables::NonCppMovable::~NonCppMovable() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aNonCppMovable(
+          *this);
+}
+inline ::callables::NonCppMovable::NonCppMovable(::crubit::UnsafeRelocateTag,
+                                                 NonCppMovable&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline void ::callables::NonCppMovable::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::callables::NonCppMovable;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+}
+static_assert(
+    sizeof(::callables::Point) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::callables::Point) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<::callables::Point>);
+static_assert(::std::is_trivially_move_constructible_v<::callables::Point>);
+static_assert(::std::is_trivially_move_assignable_v<::callables::Point>);
+static_assert(::std::is_trivially_copy_constructible_v<::callables::Point>);
+static_assert(::std::is_trivially_copy_assignable_v<::callables::Point>);
+namespace __crubit_internal {
+extern "C" bool
+__crubit_thunk_PartialEq_ueq_ucallables_ugolden_x0000003a_x0000003aPoint_ucallables_ugolden_x0000003a_x0000003aPoint(
+    ::callables::Point const&, ::callables::Point const&);
+}
+inline bool(Point::operator==)(::callables::Point const& other) const {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_PartialEq_ueq_ucallables_ugolden_x0000003a_x0000003aPoint_ucallables_ugolden_x0000003a_x0000003aPoint(
+          self, other);
+}
+inline void ::callables::Point::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::callables::Point;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
+  static_assert(4 == offsetof(__crubit_assert_type, y));
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_uand_ureturn_unon_umovable_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable(
+    ::rs::internal::FnRefPayload, ::callables::NonCppMovable* __ret_ptr);
+}
+inline ::rs::Movable<::callables::NonCppMovable> call_and_return_non_movable(
+    ::rs::FnRef<::callables::NonCppMovable() const> f) {
+  auto __f_invoker = [](void* __data, void* __ret_ptr) -> void {
+    new (__ret_ptr)::callables::NonCppMovable(
+        (*reinterpret_cast<::rs::FnRef<::callables::NonCppMovable() const>*>(
+            __data))());
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  crubit::Slot<::callables::NonCppMovable> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_call_uand_ureturn_unon_umovable_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable(
+          __f_payload, __return_value_storage);
+  return ::rs::Movable<::callables::NonCppMovable>::TakeFromSlot(
+      ::std::move(__return_value_ret_val_holder));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_call_uand_ureturn_unon_umovable_ubox_ufn(
+    ::rs::internal::FnPayload, ::callables::NonCppMovable* __ret_ptr);
+}
+inline ::rs::Movable<::callables::NonCppMovable>
+call_and_return_non_movable_box_fn(
+    ::rs::Fn<::callables::NonCppMovable() const> f) {
+  auto* __f_heap_fn =
+      new ::rs::Fn<::callables::NonCppMovable() const>(::std::move(f));
+  auto __f_invoker = [](void* __data, void* __ret_ptr) -> void {
+    new (__ret_ptr)::callables::NonCppMovable(
+        (*reinterpret_cast<::rs::Fn<::callables::NonCppMovable() const>*>(
+            __data))());
+  };
+  auto __f_destroyer = [](void* __data) noexcept {
+    delete reinterpret_cast<::rs::Fn<::callables::NonCppMovable() const>*>(
+        __data);
+  };
+  ::rs::internal::FnPayload __f_payload{
+      __f_heap_fn,
+      reinterpret_cast<void (*)()>(+__f_invoker),
+      +__f_destroyer,
+  };
+  crubit::Slot<::callables::NonCppMovable> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_call_uand_ureturn_unon_umovable_ubox_ufn(
+      __f_payload, __return_value_storage);
+  return ::rs::Movable<::callables::NonCppMovable>::TakeFromSlot(
+      ::std::move(__return_value_ret_val_holder));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_call_uand_ureturn_unon_umovable_uboxed(
+    ::rs::internal::FnPayload, ::callables::NonCppMovable* __ret_ptr);
+}
+inline ::rs::Movable<::callables::NonCppMovable>
+call_and_return_non_movable_boxed(::rs::Fn<::callables::NonCppMovable() &&> f) {
+  auto* __f_heap_fn =
+      new ::rs::Fn<::callables::NonCppMovable() &&>(::std::move(f));
+  auto __f_invoker = [](void* __data, void* __ret_ptr) -> void {
+    new (__ret_ptr)::callables::NonCppMovable(::std::move(
+        *reinterpret_cast<::rs::Fn<::callables::NonCppMovable() &&>*>(
+            __data))());
+  };
+  auto __f_destroyer = [](void* __data) noexcept {
+    delete reinterpret_cast<::rs::Fn<::callables::NonCppMovable() &&>*>(__data);
+  };
+  ::rs::internal::FnPayload __f_payload{
+      __f_heap_fn,
+      reinterpret_cast<void (*)()>(+__f_invoker),
+      +__f_destroyer,
+  };
+  crubit::Slot<::callables::NonCppMovable> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_call_uand_ureturn_unon_umovable_uboxed(
+      __f_payload, __return_value_storage);
+  return ::rs::Movable<::callables::NonCppMovable>::TakeFromSlot(
+      ::std::move(__return_value_ret_val_holder));
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_call_ubox_udyn_ufn(
+    ::rs::internal::FnPayload, ::std::int32_t);
+}
+inline ::std::int32_t call_box_dyn_fn(
+    ::rs::Fn<::std::int32_t(::std::int32_t) const> f, ::std::int32_t x) {
+  return __crubit_internal::__crubit_thunk_call_ubox_udyn_ufn(
+      ::std::move(f).release_payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_call_ubox_udyn_ufn_umut(
+    ::rs::internal::FnPayload, ::std::int32_t);
+}
+inline ::std::int32_t call_box_dyn_fn_mut(
+    ::rs::Fn<::std::int32_t(::std::int32_t)> f, ::std::int32_t x) {
+  return __crubit_internal::__crubit_thunk_call_ubox_udyn_ufn_umut(
+      ::std::move(f).release_payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_call_ubox_udyn_ufn_uonce(
+    ::rs::internal::FnPayload, ::std::int32_t);
+}
+inline ::std::int32_t call_box_dyn_fn_once(
+    ::rs::Fn<::std::int32_t(::std::int32_t) &&> f, ::std::int32_t x) {
+  return __crubit_internal::__crubit_thunk_call_ubox_udyn_ufn_uonce(
+      ::std::move(f).release_payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_call_udyn_ufn(
+    ::rs::internal::FnRefPayload, ::std::int32_t);
+}
+inline ::std::int32_t call_dyn_fn(
+    ::rs::FnRef<::std::int32_t(::std::int32_t) const> f, ::std::int32_t x) {
+  return __crubit_internal::__crubit_thunk_call_udyn_ufn(f.payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_call_udyn_ufn_umut(
+    ::rs::internal::FnRefPayload, ::std::int32_t);
+}
+inline ::std::int32_t call_dyn_fn_mut(
+    ::rs::FnRef<::std::int32_t(::std::int32_t)> f, ::std::int32_t x) {
+  return __crubit_internal::__crubit_thunk_call_udyn_ufn_umut(f.payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_call_uimpl_ufn_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+    ::rs::internal::FnRefPayload, ::std::int32_t);
+}
+inline ::std::int32_t call_impl_fn(
+    ::rs::FnRef<::std::int32_t(::std::int32_t) const> f, ::std::int32_t x) {
+  return __crubit_internal::
+      __crubit_thunk_call_uimpl_ufn_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+          f.payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_call_uimpl_ufn_umut_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+    ::rs::internal::FnRefPayload, ::std::int32_t);
+}
+inline ::std::int32_t call_impl_fn_mut(
+    ::rs::FnRef<::std::int32_t(::std::int32_t)> f, ::std::int32_t x) {
+  return __crubit_internal::
+      __crubit_thunk_call_uimpl_ufn_umut_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+          f.payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_call_uimpl_ufn_uonce_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+    ::rs::internal::FnRefPayload, ::std::int32_t);
+}
+inline ::std::int32_t call_impl_fn_once(
+    ::rs::FnRef<::std::int32_t(::std::int32_t)> f, ::std::int32_t x) {
+  return __crubit_internal::
+      __crubit_thunk_call_uimpl_ufn_uonce_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+          f.payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_call_uimpl_ufn_uonce_ustatic_ustd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x00000028dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnOnce_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32_x00000020_x0000002b_x00000020_x00000027static_x00000029_x0000003e(
+    ::rs::internal::FnPayload, ::std::int32_t);
+}
+inline ::std::int32_t call_impl_fn_once_static(
+    ::rs::Fn<::std::int32_t(::std::int32_t) &&> f, ::std::int32_t x) {
+  return __crubit_internal::
+      __crubit_thunk_call_uimpl_ufn_uonce_ustatic_ustd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x00000028dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnOnce_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32_x00000020_x0000002b_x00000020_x00000027static_x00000029_x0000003e(
+          ::std::move(f).release_payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+    __crubit_thunk_call_uimpl_uwith_utuple_uoption_ustd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x00000028dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnOnce_x00000028_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029_x00000020_x0000002b_x00000020_x00000027static_x00000029_x0000003e(
+        ::rs::internal::FnPayload);
+}
+inline ::std::int32_t call_impl_with_tuple_option(
+    ::rs::Fn<::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>(
+        ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>) &&>
+        f) {
+  auto* __f_heap_fn =
+      new ::rs::Fn<::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>(
+          ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>) &&>(
+          ::std::move(f));
+  auto __f_invoker =
+      [](void* __data,
+         ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>* __arg_0,
+         void* __ret_ptr) -> void {
+    new (__ret_ptr)::rs::Tuple<::std::int32_t,
+                               ::rs::Option<::std::int32_t>>(::std::move(
+        *reinterpret_cast<::rs::Fn<::rs::Tuple<::std::int32_t,
+                                               ::rs::Option<::std::int32_t>>(
+            ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>) &&>*>(
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
+  };
+  auto __f_destroyer = [](void* __data) noexcept {
+    delete reinterpret_cast<
+        ::rs::Fn<::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>(
+            ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>) &&>*>(
+        __data);
+  };
+  ::rs::internal::FnPayload __f_payload{
+      __f_heap_fn,
+      reinterpret_cast<void (*)()>(+__f_invoker),
+      +__f_destroyer,
+  };
+  return __crubit_internal::
+      __crubit_thunk_call_uimpl_uwith_utuple_uoption_ustd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x00000028dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnOnce_x00000028_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029_x00000020_x0000002b_x00000020_x00000027static_x00000029_x0000003e(
+          __f_payload);
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_uint_uto_upoint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
+    ::rs::internal::FnRefPayload, ::std::int32_t,
+    ::callables::Point* __ret_ptr);
+}
+inline ::callables::Point call_int_to_point(
+    ::rs::FnRef<::callables::Point(::std::int32_t) const> f, ::std::int32_t x) {
+  auto __f_invoker = [](void* __data, ::std::int32_t __arg_0,
+                        void* __ret_ptr) -> void {
+    new (__ret_ptr)::callables::Point(
+        (*reinterpret_cast<
+            ::rs::FnRef<::callables::Point(::std::int32_t) const>*>(__data))(
+            ::std::move(__arg_0)));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  crubit::Slot<::callables::Point> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_call_uint_uto_upoint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
+          __f_payload, x, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_upoint_umut_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
+    ::rs::internal::FnRefPayload, ::callables::Point*,
+    ::callables::Point* __ret_ptr);
+}
+inline ::callables::Point call_point_mut(
+    ::rs::FnRef<::callables::Point(::callables::Point)> f,
+    ::callables::Point pt) {
+  auto __f_invoker = [](void* __data, ::callables::Point* __arg_0,
+                        void* __ret_ptr) -> void {
+    new (__ret_ptr)::callables::Point((
+        *reinterpret_cast<::rs::FnRef<::callables::Point(::callables::Point)>*>(
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  crubit::Slot<::callables::Point> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_call_upoint_umut_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
+          __f_payload, &pt, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_upoint_uonce_ustatic_ustd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x00000028dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnOnce_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint_x00000020_x0000002b_x00000020_x00000027static_x00000029_x0000003e(
+    ::rs::internal::FnPayload, ::callables::Point*,
+    ::callables::Point* __ret_ptr);
+}
+inline ::callables::Point call_point_once_static(
+    ::rs::Fn<::callables::Point(::callables::Point) &&> f,
+    ::callables::Point pt) {
+  auto* __f_heap_fn =
+      new ::rs::Fn<::callables::Point(::callables::Point) &&>(::std::move(f));
+  auto __f_invoker = [](void* __data, ::callables::Point* __arg_0,
+                        void* __ret_ptr) -> void {
+    new (__ret_ptr)::callables::Point(::std::move(
+        *reinterpret_cast<::rs::Fn<::callables::Point(::callables::Point) &&>*>(
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
+  };
+  auto __f_destroyer = [](void* __data) noexcept {
+    delete reinterpret_cast<
+        ::rs::Fn<::callables::Point(::callables::Point) &&>*>(__data);
+  };
+  ::rs::internal::FnPayload __f_payload{
+      __f_heap_fn,
+      reinterpret_cast<void (*)()>(+__f_invoker),
+      +__f_destroyer,
+  };
+  crubit::Slot<::callables::Point> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_call_upoint_uonce_ustatic_ustd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x00000028dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnOnce_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint_x00000020_x0000002b_x00000020_x00000027static_x00000029_x0000003e(
+          __f_payload, &pt, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_call_upoint_uto_uint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+    ::rs::internal::FnRefPayload, ::callables::Point*);
+}
+inline ::std::int32_t call_point_to_int(
+    ::rs::FnRef<::std::int32_t(::callables::Point) const> f,
+    ::callables::Point pt) {
+  auto __f_invoker = [](void* __data,
+                        ::callables::Point* __arg_0) -> ::std::int32_t {
+    return (*reinterpret_cast<
+            ::rs::FnRef<::std::int32_t(::callables::Point) const>*>(__data))(
+        ::crubit::UnsafeTakeValue(__arg_0));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  return __crubit_internal::
+      __crubit_thunk_call_upoint_uto_uint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+          __f_payload, &pt);
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_upoint_uvoid_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029(
+    ::rs::internal::FnRefPayload, ::callables::Point*);
+}
+inline void call_point_void(::rs::FnRef<void(::callables::Point) const> f,
+                            ::callables::Point pt) {
+  auto __f_invoker = [](void* __data, ::callables::Point* __arg_0) -> void {
+    (*reinterpret_cast<::rs::FnRef<void(::callables::Point) const>*>(__data))(
+        ::crubit::UnsafeTakeValue(__arg_0));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  return __crubit_internal::
+      __crubit_thunk_call_upoint_uvoid_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029(
+          __f_payload, &pt);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_call_utwo_uargs_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x0000002c_x00000020i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+    ::rs::internal::FnRefPayload, ::std::int32_t, ::std::int32_t);
+}
+inline ::std::int32_t call_two_args(
+    ::rs::FnRef<::std::int32_t(::std::int32_t, ::std::int32_t) const> f,
+    ::std::int32_t a, ::std::int32_t b) {
+  return __crubit_internal::
+      __crubit_thunk_call_utwo_uargs_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x0000002c_x00000020i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+          f.payload(), a, b);
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_utwo_upoints_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x0000002c_x00000020callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
+    ::rs::internal::FnRefPayload, ::callables::Point*, ::callables::Point*,
+    ::callables::Point* __ret_ptr);
+}
+inline ::callables::Point call_two_points(
+    ::rs::FnRef<::callables::Point(::callables::Point, ::callables::Point)
+                    const>
+        f,
+    ::callables::Point a, ::callables::Point b) {
+  auto __f_invoker = [](void* __data, ::callables::Point* __arg_0,
+                        ::callables::Point* __arg_1, void* __ret_ptr) -> void {
+    new (__ret_ptr)::callables::Point(
+        (*reinterpret_cast<::rs::FnRef<::callables::Point(
+             ::callables::Point, ::callables::Point) const>*>(__data))(
+            ::crubit::UnsafeTakeValue(__arg_0),
+            ::crubit::UnsafeTakeValue(__arg_1)));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  crubit::Slot<::callables::Point> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_call_utwo_upoints_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x0000002c_x00000020callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
+          __f_payload, &a, &b, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_uvoid_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x00000029(
+    ::rs::internal::FnRefPayload, ::std::int32_t);
+}
+inline void call_void(::rs::FnRef<void(::std::int32_t) const> f,
+                      ::std::int32_t x) {
+  return __crubit_internal::
+      __crubit_thunk_call_uvoid_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x00000029(
+          f.payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_uvoid_umut_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029(
+    ::rs::internal::FnRefPayload, ::std::int32_t);
+}
+inline void call_void_mut(::rs::FnRef<void(::std::int32_t)> f,
+                          ::std::int32_t x) {
+  return __crubit_internal::
+      __crubit_thunk_call_uvoid_umut_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029(
+          f.payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_uvoid_uonce_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029(
+    ::rs::internal::FnRefPayload, ::std::int32_t);
+}
+inline void call_void_once(::rs::FnRef<void(::std::int32_t)> f,
+                           ::std::int32_t x) {
+  return __crubit_internal::
+      __crubit_thunk_call_uvoid_uonce_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029(
+          f.payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_call_uwith_uhrtb_ustr_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+    ::rs::internal::FnRefPayload, ::rs::StrRef*);
+}
+inline ::std::int32_t call_with_hrtb_str(
+    ::rs::FnRef<::std::int32_t(::rs::StrRef) const> f, ::rs::StrRef s) {
+  auto __f_invoker = [](void* __data, ::rs::StrRef* __arg_0) -> ::std::int32_t {
+    return (*reinterpret_cast<::rs::FnRef<::std::int32_t(::rs::StrRef) const>*>(
+        __data))(::crubit::UnsafeTakeValue(__arg_0));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  return __crubit_internal::
+      __crubit_thunk_call_uwith_uhrtb_ustr_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+          __f_payload, &s);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t
+__crubit_thunk_call_uwith_uhrtb_ustr_uto_ustr_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026str(
+    ::rs::internal::FnRefPayload, ::rs::StrRef*);
+}
+inline ::std::uintptr_t call_with_hrtb_str_to_str(
+    ::rs::FnRef<::rs::StrRef(::rs::StrRef) const> f, ::rs::StrRef s) {
+  auto __f_invoker = [](void* __data, ::rs::StrRef* __arg_0,
+                        void* __ret_ptr) -> void {
+    new (__ret_ptr)::rs::StrRef(
+        (*reinterpret_cast<::rs::FnRef<::rs::StrRef(::rs::StrRef) const>*>(
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  return __crubit_internal::
+      __crubit_thunk_call_uwith_uhrtb_ustr_uto_ustr_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026str(
+          __f_payload, &s);
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_uwith_umovable_udrop_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aCppMovableDrop_x00000029(
+    ::rs::internal::FnRefPayload, ::std::int32_t);
+}
+inline void call_with_movable_drop(
+    ::rs::FnRef<void(::callables::CppMovableDrop) const> f, ::std::int32_t x) {
+  auto __f_invoker = [](void* __data,
+                        ::callables::CppMovableDrop* __arg_0) -> void {
+    (*reinterpret_cast<::rs::FnRef<void(::callables::CppMovableDrop) const>*>(
+        __data))(::crubit::UnsafeTakeValue(__arg_0));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  return __crubit_internal::
+      __crubit_thunk_call_uwith_umovable_udrop_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aCppMovableDrop_x00000029(
+          __f_payload, x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_call_uwith_umut_uref_uto_umut_uref_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020mut_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026mut_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable(
+    ::rs::internal::FnRefPayload, ::callables::NonCppMovable&);
+}
+inline ::std::int32_t call_with_mut_ref_to_mut_ref(
+    ::rs::FnRef<::callables::NonCppMovable *
+                $static crubit_nonnull(
+                    ::callables::NonCppMovable* $static crubit_nonnull) const>
+        f,
+    ::callables::NonCppMovable& x) {
+  return __crubit_internal::
+      __crubit_thunk_call_uwith_umut_uref_uto_umut_uref_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020mut_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026mut_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable(
+          f.payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_call_uwith_unon_umovable_uref_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable_x00000029(
+    ::rs::internal::FnRefPayload, ::callables::NonCppMovable const&);
+}
+inline ::std::int32_t call_with_non_movable_ref(
+    ::rs::FnRef<void(::callables::NonCppMovable const* $static crubit_nonnull)
+                    const>
+        f,
+    ::callables::NonCppMovable const& x) {
+  return __crubit_internal::
+      __crubit_thunk_call_uwith_unon_umovable_uref_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable_x00000029(
+          f.payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_uwith_upoint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
+    ::rs::internal::FnRefPayload, ::callables::Point*,
+    ::callables::Point* __ret_ptr);
+}
+inline ::callables::Point call_with_point(
+    ::rs::FnRef<::callables::Point(::callables::Point) const> f,
+    ::callables::Point pt) {
+  auto __f_invoker = [](void* __data, ::callables::Point* __arg_0,
+                        void* __ret_ptr) -> void {
+    new (__ret_ptr)::callables::Point(
+        (*reinterpret_cast<
+            ::rs::FnRef<::callables::Point(::callables::Point) const>*>(
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  crubit::Slot<::callables::Point> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_call_uwith_upoint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
+          __f_payload, &pt, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_call_uwith_uref_uto_uref_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026callables_ugolden_x0000003a_x0000003aNonCppMovable(
+    ::rs::internal::FnRefPayload, ::callables::NonCppMovable const&);
+}
+inline ::std::int32_t call_with_ref_to_ref(
+    ::rs::FnRef<::callables::NonCppMovable const *
+                $static crubit_nonnull(::callables::NonCppMovable const* $static
+                                           crubit_nonnull) const>
+        f,
+    ::callables::NonCppMovable const& x) {
+  return __crubit_internal::
+      __crubit_thunk_call_uwith_uref_uto_uref_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026callables_ugolden_x0000003a_x0000003aNonCppMovable(
+          f.payload(), x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_call_uwith_ustr_u_x00000027a_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+    ::rs::internal::FnRefPayload, ::rs::StrRef*);
+}
+inline ::std::int32_t call_with_str(
+    ::rs::FnRef<::std::int32_t(::rs::StrRef) const> f, ::rs::StrRef s) {
+  auto __f_invoker = [](void* __data, ::rs::StrRef* __arg_0) -> ::std::int32_t {
+    return (*reinterpret_cast<::rs::FnRef<::std::int32_t(::rs::StrRef) const>*>(
+        __data))(::crubit::UnsafeTakeValue(__arg_0));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  return __crubit_internal::
+      __crubit_thunk_call_uwith_ustr_u_x00000027a_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
+          __f_payload, &s);
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_call_uwith_ustr_uto_ustr_u_x00000027a_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026_x00000027a_x00000020str(
+    ::rs::internal::FnRefPayload, ::rs::StrRef*, ::rs::StrRef* __ret_ptr);
+}
+inline ::rs::StrRef call_with_str_to_str(
+    ::rs::FnRef<::rs::StrRef(::rs::StrRef) const> f, ::rs::StrRef s) {
+  auto __f_invoker = [](void* __data, ::rs::StrRef* __arg_0,
+                        void* __ret_ptr) -> void {
+    new (__ret_ptr)::rs::StrRef(
+        (*reinterpret_cast<::rs::FnRef<::rs::StrRef(::rs::StrRef) const>*>(
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  crubit::Slot<::rs::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_call_uwith_ustr_uto_ustr_u_x00000027a_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026_x00000027a_x00000020str(
+          __f_payload, &s, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_call_uwith_utuple_uoption(
+    ::rs::internal::FnPayload);
+}
+inline ::std::int32_t call_with_tuple_option(
+    ::rs::Fn<::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>(
+        ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>) &&>
+        f) {
+  auto* __f_heap_fn =
+      new ::rs::Fn<::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>(
+          ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>) &&>(
+          ::std::move(f));
+  auto __f_invoker =
+      [](void* __data,
+         ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>* __arg_0,
+         void* __ret_ptr) -> void {
+    new (__ret_ptr)::rs::Tuple<::std::int32_t,
+                               ::rs::Option<::std::int32_t>>(::std::move(
+        *reinterpret_cast<::rs::Fn<::rs::Tuple<::std::int32_t,
+                                               ::rs::Option<::std::int32_t>>(
+            ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>) &&>*>(
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
+  };
+  auto __f_destroyer = [](void* __data) noexcept {
+    delete reinterpret_cast<
+        ::rs::Fn<::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>(
+            ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>) &&>*>(
+        __data);
+  };
+  ::rs::internal::FnPayload __f_payload{
+      __f_heap_fn,
+      reinterpret_cast<void (*)()>(+__f_invoker),
+      +__f_destroyer,
+  };
+  return __crubit_internal::__crubit_thunk_call_uwith_utuple_uoption(
+      __f_payload);
+}
+
+}  // namespace callables
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029(
+    ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>* __ret_ptr);
+}
+inline ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>::Tuple() {
+  ::__crubit_internal::
+      __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029(
+          this);
+}
+static_assert(::std::is_trivially_copy_constructible_v<
+              ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>>);
+inline ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>::Tuple(
+    ::crubit::UnsafeRelocateTag, Tuple&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>::Tuple(
+    ::std::int32_t __field0, ::rs::Option<::std::int32_t> __field1) noexcept {
+  ::std::construct_at(&this->__field0, ::std::move(__field0));
+  ::std::construct_at(&this->__field1, ::std::move(__field1));
+}
+inline ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>::Tuple(
+    ::std::tuple<::std::int32_t, ::rs::Option<::std::int32_t>>&&
+        tuple) noexcept {
+  ::std::construct_at(&this->__field0, ::std::move(::std::get<0>(tuple)));
+  ::std::construct_at(&this->__field1, ::std::move(::std::get<1>(tuple)));
+}
+inline ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>::operator ::
+    std::tuple<::std::int32_t, ::rs::Option<::std::int32_t>>() && noexcept {
+  return ::std::tuple<::std::int32_t, ::rs::Option<::std::int32_t>>(
+      ::std::move(this->__field0), ::std::move(this->__field1));
+}
+
+inline void ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::rs::Tuple<::std::int32_t, ::rs::Option<::std::int32_t>>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
+}
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+static_assert(
+    ::std::is_trivially_copy_constructible_v<::rs::Option<::std::int32_t>>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<::rs::Option<::std::int32_t>>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::rs::Option<::std::int32_t>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::rs::Option<::std::int32_t>>);
+inline ::rs::Option<::std::int32_t>::Option(::crubit::UnsafeRelocateTag,
+                                            Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+static_assert(::std::is_trivially_destructible_v<::rs::Option<::std::int32_t>>);
+inline constexpr ::std::uint32_t(
+    ::rs::Option<::std::int32_t>::tag)() const& noexcept {
+  ::std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
+    __bytes[i] = storage_[0 + i];
+  }
+  return ::std::bit_cast<::std::uint32_t>(__bytes);
+}
+inline constexpr void(::rs::Option<::std::int32_t>::set_tag)(
+    ::std::uint32_t tag) noexcept {
+  auto __bytes =
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint32_t)>>(
+          tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
+    storage_[0 + i] = __bytes[i];
+  }
+}
+
+inline constexpr ::rs::Option<::std::int32_t>::Option(::std::nullopt_t) noexcept
+    : base_type(::std::nullopt) {}
+inline constexpr ::rs::Option<::std::int32_t>& ::rs::Option<
+    ::std::int32_t>::operator=(::std::nullopt_t) noexcept {
+  base_type::operator=(::std::nullopt);
+  return *this;
+}
+template <typename U>
+  requires ::rs::OptionForwardConstructible<::rs::Option<::std::int32_t>,
+                                            ::std::int32_t, U>
+inline ::rs::Option<::std::int32_t>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires ::rs::OptionForwardConstructible<::rs::Option<::std::int32_t>,
+                                            ::std::int32_t, U>
+inline ::rs::Option<::std::int32_t>& ::rs::Option<::std::int32_t>::operator=(
+    U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires ::rs::OptionFromStdOptional<::std::int32_t, Opt>
+inline ::rs::Option<::std::int32_t>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires ::rs::OptionFromStdOptional<::std::int32_t, Opt>
+inline ::rs::Option<::std::int32_t>& ::rs::Option<::std::int32_t>::operator=(
+    Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline ::rs::Option<::std::int32_t>::Option(::std::in_place_t ip,
+                                            Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+
+#endif
+
+#pragma clang diagnostic pop
+#endif  // CC_BINDINGS_FROM_RS_TEST_CALLABLES_CALLABLES_GOLDEN

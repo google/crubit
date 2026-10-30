@@ -51,8 +51,6 @@ golden_test(
         "ios",
     ],
     rust_library = "trait_definition",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 golden_test(
@@ -65,8 +63,6 @@ golden_test(
         "ios",
     ],
     rust_library = "trait_impl",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 crubit_cc_test(

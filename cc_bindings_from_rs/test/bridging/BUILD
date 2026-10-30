@@ -90,8 +90,6 @@ golden_test(
         "ios",
     ],
     rust_library = "layout_equivalent_generics",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 crubit_cc_test(
@@ -130,8 +128,6 @@ golden_test(
         "ios",
     ],
     rust_library = "bridged_types",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 rust_library(
@@ -153,8 +149,6 @@ golden_test(
         "ios",
     ],
     rust_library = "layout_equivalent_pointers",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 rust_library(
