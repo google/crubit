@@ -3787,3 +3787,37 @@ fn test_generic_adt_type_arg_with_lifetime_or_hrtb_fn_ptr() {
         );
     });
 }
+
+#[gtest]
+fn test_generate_source_location_placeholder_and_empty_spans() {
+    run_compiler_for_testing("", |tcx| {
+        let db = bindings_db_for_tests(tcx);
+        assert_eq!(
+            generate_bindings::generate_source_location(
+                &db,
+                rustc_span::def_id::LOCAL_CRATE.as_def_id()
+            ),
+            "unknown location"
+        );
+    });
+
+    run_compiler_for_testing("pub fn real_fn() {}\n", |tcx| {
+        let db = bindings_db_for_tests(tcx);
+        let prelude_def_id = tcx
+            .hir_crate_items(())
+            .free_items()
+            .map(|item_id| item_id.owner_id.to_def_id())
+            .find(|&def_id| tcx.def_span(def_id).is_dummy())
+            .expect("expected compiler-injected prelude item with placeholder span");
+        assert_eq!(
+            generate_bindings::generate_source_location(&db, prelude_def_id),
+            "unknown location"
+        );
+
+        let real_def_id = find_def_id_by_name(tcx, "real_fn").to_def_id();
+        assert_eq!(
+            generate_bindings::generate_source_location(&db, real_def_id),
+            "<crubit_unittests.rs>;l=1"
+        );
+    });
+}

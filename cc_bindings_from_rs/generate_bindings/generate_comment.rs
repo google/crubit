@@ -142,10 +142,16 @@ fn normalize_source_path(file_name: &str) -> Cow<'_, str> {
 pub fn generate_source_location(db: &BindingsGenerator, def_id: DefId) -> String {
     let tcx = db.tcx();
     let def_span = tcx.def_span(def_id);
+    if def_span.is_dummy() {
+        return "unknown location".to_string();
+    }
     let rustc_span::FileLines { file, lines } = match tcx.sess.source_map().span_to_lines(def_span)
     {
         Ok(filelines) => filelines,
         Err(_) => return "unknown location".to_string(),
+    };
+    let Some(first_line) = lines.first() else {
+        return "unknown location".to_string();
     };
     let file_name = file.name.prefer_local_unconditionally().to_string();
     // Virtual paths will have a "./" prefix that we don't want to display.
@@ -153,7 +159,7 @@ pub fn generate_source_location(db: &BindingsGenerator, def_id: DefId) -> String
     let file_name = normalize_source_path(file_name);
 
     // Note: line_index starts at 0, while most everything else starts indexing at 1.
-    let line_number = (lines[0].line_index + 1).to_string();
+    let line_number = (first_line.line_index + 1).to_string();
     if let (Some(path_format), true) = (db.crubit_debug_path_format(), file.name.is_real()) {
         return path_format.format(&[file_name.as_ref(), line_number.as_str()]);
     }

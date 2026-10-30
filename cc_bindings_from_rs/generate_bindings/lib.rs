@@ -36,6 +36,7 @@ use format_type::{
     crubit_abi_type_from_ty, format_cc_ident, format_cc_ident_symbol,
     format_top_level_ns_for_crate, format_with_cc_body,
 };
+pub use generate_comment::generate_source_location;
 use generate_comment::{generate_deprecated_tag, generate_doc_comment};
 use generate_ctor::{
     copy_ctor_and_assignment_operator_codegen_style, has_default_ctor, is_cpp_move_constructible,
