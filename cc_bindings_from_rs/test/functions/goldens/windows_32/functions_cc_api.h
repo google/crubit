@@ -1,0 +1,1231 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// functions_golden
+
+// clang-format off
+#ifndef CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
+#include "support/annotations_internal.h"
+#include "support/internal/check_no_mutable_aliasing.h"
+#include "support/internal/cxx20_backports.h"
+#include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
+#include "support/rs_std/char.h"
+#include "support/rs_std/slice_ref.h"
+#include "support/rs_std/traits.h"
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+#include "support/ctor.h"
+#include "support/rs_std/rs_core.h"
+
+namespace functions::fn_abi_tests {
+
+//  Testing `#[unsafe(export_name = ...)]` - the generated bindings need to
+//  forward/proxy the call into a function with a different name.
+::std::int32_t add_i32_via_extern_c_with_export_name(::std::int32_t x,
+                                                     ::std::int32_t y);
+
+//  Testing bindings for an `extern "C"` function (no thunk required) with a
+//  mangled name. This test verifies that:
+//  * `cc_bindings_from_rs` can correctly discover mangled names that `rustc`
+//  produces
+//  * Bazel support for `cc_bindings_from_rs` invokes it with the same command
+//  line flags as the
+//    ones used when invoking `rustc` when building the `functions` crate.
+//
+//  TODO(b/262904507): Bazel integration is currently broken and the
+//  coresponding test is commented out in `functions_test.cc`.
+::std::int32_t add_i32_via_extern_c_with_mangling(::std::int32_t x,
+                                                  ::std::int32_t y);
+
+//  Testing the default / Rust ABI (one used in absence of `extern "C"`).
+::std::int32_t add_i32_via_rust_abi(::std::int32_t x, ::std::int32_t y);
+
+//  Testing one of simpler function bindings:
+//  - `extern "C"` means that no thunk is required
+//  - `#[unsafe(no_mangle)]` means that the function is already exposed with the
+//  desired, public
+//    name (and just needs to be redeclared in C++).
+extern "C" double get_42_as_f64_via_no_mangle_extern_c();
+
+}  // namespace functions::fn_abi_tests
+
+namespace functions::fn_attribute_tests {
+
+[[deprecated("★ Deprecated note for add_i32 ★")]] ::std::int32_t add_i32(
+    ::std::int32_t x, ::std::int32_t y);
+
+}
+
+namespace functions::fn_must_use_tests {
+
+[[nodiscard("woohoo")]] ::std::int32_t msg_add(::std::int32_t x,
+                                               ::std::int32_t y);
+
+[[nodiscard]] ::std::int32_t no_msg_add(::std::int32_t x, ::std::int32_t y);
+
+}  // namespace functions::fn_must_use_tests
+
+namespace functions::fn_param_ty_tests {
+
+struct
+    CRUBIT_INTERNAL_RUST_TYPE(
+        ":: functions_golden :: fn_param_ty_tests :: "
+        "StructWithPinnedRefs") alignas(4) [[clang::trivial_abi]]
+    StructWithPinnedRefs final {
+ public:
+  // Type is not a C++ aggregate: Field `pinned_ref` is not
+  // default-constructible in C++
+
+  // `functions_golden::fn_param_ty_tests::StructWithPinnedRefs` doesn't
+  // implement the `Default` trait
+  StructWithPinnedRefs() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~StructWithPinnedRefs() = default;
+  StructWithPinnedRefs(StructWithPinnedRefs&&) = default;
+  StructWithPinnedRefs& operator=(StructWithPinnedRefs&&) = default;
+
+  // `functions_golden::fn_param_ty_tests::StructWithPinnedRefs` doesn't
+  // implement the `Clone` trait
+  StructWithPinnedRefs(const StructWithPinnedRefs&) = delete;
+  StructWithPinnedRefs& operator=(const StructWithPinnedRefs&) = delete;
+  StructWithPinnedRefs(::crubit::UnsafeRelocateTag,
+                       StructWithPinnedRefs&& value);
+
+  union {
+    ::std::int32_t const* crubit_nonnull pinned_ref;
+  };
+  union {
+    ::std::int32_t* crubit_nonnull pinned_mut_ref;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+//  Testing a type that maps to a built-in C++ type (spelled with a
+//  keyword). `float` is one such example.
+double add_f64(double x, double y);
+
+//  Testing a type that requires `#include`ing a standard C++ header.
+//  `std::int32_t` is one such example - it requires `#include <cstdint>`.
+::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y);
+
+void add_i32_via_ptr(::std::int32_t const* x, ::std::int32_t const* y,
+                     ::std::int32_t* sum);
+
+::std::int32_t apply_binary_i32_op(
+    ::std::int32_t x, ::std::int32_t y,
+    crubit::type_identity_t<::std::int32_t(::std::int32_t, ::std::int32_t)>& f);
+
+::rs::char_ char_to_ascii_lowercase(::rs::char_ c);
+
+::functions::fn_param_ty_tests::StructWithPinnedRefs
+create_struct_with_pinned_refs(
+    ::std::int32_t const* $a crubit_nonnull pinned_ref,
+    ::std::int32_t* $a crubit_nonnull pinned_mut_ref);
+
+::std::int32_t deref_pinned_int(::std::int32_t const& x);
+
+::std::int32_t const& $a
+get_identical_pinned_int_ref(::std::int32_t const* $a crubit_nonnull x);
+
+::std::int32_t& $a
+get_identical_pinned_mut_int_ref(::std::int32_t* $a crubit_nonnull x);
+
+::std::int32_t const& $(__anon1) get_identical_ref_with_inferred_lifetime(
+    ::std::int32_t const* $(__anon1) crubit_nonnull x CRUBIT_LIFETIME_BOUND);
+
+::std::int32_t const& $a
+get_ref_to_smaller_int(::std::int32_t const* $a crubit_nonnull x,
+                       ::std::int32_t const* $a crubit_nonnull y);
+
+void set_mut_ref_to_sum_of_ints(::std::int32_t& sum, ::std::int32_t x,
+                                ::std::int32_t y);
+
+void set_pinned_mut_ref_to_sum_of_ints(::std::int32_t& sum, ::std::int32_t x,
+                                       ::std::int32_t y);
+
+::std::uint32_t sum_bytes(::rs::SliceRef<const ::std::uint8_t> bytes);
+
+}  // namespace functions::fn_param_ty_tests
+
+namespace functions::generic_fn_tests::as_mut_trait_tests {
+
+void prefix_sums(::rs::SliceRef<::std::int32_t> arg);
+
+}
+
+namespace functions::generic_fn_tests::as_ref_trait_tests {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: functions_golden :: generic_fn_tests :: as_ref_trait_tests :: "
+    "MyStruct") alignas(4) [[clang::trivial_abi]] MyStruct final {
+ public:
+  // `functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct` doesn't
+  // implement the `Default` trait
+  MyStruct() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~MyStruct() = default;
+  MyStruct(MyStruct&&) = default;
+  MyStruct& operator=(MyStruct&&) = default;
+
+  // `functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct` doesn't
+  // implement the `Clone` trait
+  MyStruct(const MyStruct&) = delete;
+  MyStruct& operator=(const MyStruct&) = delete;
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
+
+  static ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct new_(
+      ::std::int32_t x);
+
+ private:
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field0;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+//  The substitution `impl AsRef<[i32]>` => `&[i32]` needs to "conjure" a new,
+//  late-bound lifetime/region.  The test below is an ad-hoc attempt to test
+//  that the new region doesn't somehow clobber/conflict with existing implicit
+//  or explicit lifetimes. `impl AsRef<[i32]>` is "sandwiched" in the middle to
+//  increase the chances that a conflict would be caught somehow.  The test
+//  never failed, so it's unclear how useful it is.
+void diverse_lifetimes(::rs::SliceRef<const ::std::int32_t> arg1,
+                       ::rs::SliceRef<const ::std::int32_t> arg2,
+                       ::rs::SliceRef<const ::std::int32_t> arg3,
+                       ::rs::SliceRef<::std::int32_t> result);
+
+::std::int32_t slice_ref_sum(::rs::SliceRef<const ::std::int32_t> arg);
+
+//  This is an attempt to trigger an error seen in
+//  https://play.rust-lang.org/?version=stable&mode=debug&edition=2024&gist=42303eaaafe4a3538ad259e9e9b67f05
+//
+//  Today the error doesn't happen in Crubit, because the thunks explicitly
+//  declare all their lifetimes as `'static` - see `fn
+//  replace_all_regions_with_static`.
+::std::int32_t static_lifetime_requirement(
+    ::rs::SliceRef<const ::std::int32_t> arg);
+
+::std::int32_t struct_ref(
+    ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& arg);
+
+//  The substitution `impl AsRef<[i32]>` => `&[i32]` needs to "conjure" a new,
+//  late-bound lifetime/region.  The test below is an ad-hoc attempt to test
+//  that nothing breaks if this substitution happens twice in a single function.
+::std::int32_t two_args(::rs::SliceRef<const ::std::int32_t> x,
+                        ::rs::SliceRef<const ::std::int32_t> y);
+
+}  // namespace functions::generic_fn_tests::as_ref_trait_tests
+
+namespace functions::generic_fn_tests::ctor_trait_tests {
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: functions_golden :: generic_fn_tests :: ctor_trait_tests :: "
+    "CppMovable") alignas(4) [[clang::trivial_abi]] CppMovable final {
+ public:
+  static ::functions::generic_fn_tests::ctor_trait_tests::CppMovable new_(
+      ::std::int32_t value);
+
+  ::std::int32_t value{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+::std::int32_t accept_ctor(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable c1,
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable c2);
+
+::std::int32_t accept_ctor_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                     crubit_nonnull,
+                 3>
+        a);
+
+::std::int32_t accept_ctor_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                 crubit_nonnull>
+        c);
+
+::std::int32_t accept_rvalue_ref(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c);
+
+::std::int32_t accept_rvalue_reference_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                     $(__anon1) crubit_nonnull,
+                 3>
+        a);
+
+::std::int32_t accept_rvalue_reference_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                 $(__anon1) crubit_nonnull>
+        t);
+
+// Error generating bindings for function
+// `functions_golden::generic_fn_tests::ctor_trait_tests::return_ctor`: Error
+// formatting function return type `impl ctor::Ctor<Output =
+// functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>`: The
+// following Rust type is not supported yet: impl ctor::Ctor<Output =
+// functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>
+
+::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&
+return_rvalue_reference(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c);
+
+::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                 $a crubit_nonnull,
+             1>
+return_rvalue_reference_array(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c);
+
+::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+             $a crubit_nonnull>
+return_rvalue_reference_tuple(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c);
+
+}  // namespace functions::generic_fn_tests::ctor_trait_tests
+
+namespace functions::generic_fn_tests::into_trait_tests {
+
+::std::int32_t basic_test(::std::int32_t arg);
+
+//  This test was initially added to cover/verify the call to
+//  `super_visit_with` from an `impl` of `GenericParamsFinder` in
+//  `get_generic_args.rs`.
+::std::int32_t generic_param_nested_deeper_in_param_ty(
+    ::std::array<::std::int32_t, 3> xs);
+
+::std::int32_t multiple_generic_params(::std::int32_t x, ::std::int32_t y);
+
+::std::int32_t return_type();
+
+::std::int32_t reused_generic_param(::std::int32_t x, ::std::int32_t y);
+
+// Error generating bindings for function
+// `functions_golden::generic_fn_tests::into_trait_tests::unused_generic_param`:
+// No support for replacing an _unused_ generic type param: `T`
+
+::std::int32_t where_clause(::std::int32_t x);
+
+}  // namespace functions::generic_fn_tests::into_trait_tests
+
+namespace functions::non_null_tests {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: functions_golden :: non_null_tests :: SomeStruct") alignas(4)
+    [[clang::trivial_abi]] SomeStruct final {
+ public:
+  ::std::int32_t value{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+::std::int32_t get_non_null_value(::std::int32_t* crubit_nonnull ptr);
+
+::std::int32_t* crubit_nonnull
+return_non_null(::std::int32_t* crubit_nonnull ptr);
+
+void* crubit_nonnull return_non_null_c_void(void* crubit_nonnull ptr);
+
+::std::int32_t* crubit_nonnull
+return_non_null_maybe_uninit(::std::int32_t* crubit_nonnull ptr);
+
+::functions::non_null_tests::SomeStruct* crubit_nonnull return_non_null_struct(
+    ::functions::non_null_tests::SomeStruct* crubit_nonnull ptr);
+
+void set_non_null_value(::std::int32_t* crubit_nonnull ptr,
+                        ::std::int32_t value);
+
+}  // namespace functions::non_null_tests
+
+namespace functions::other_fn_param_tests {
+
+::std::int32_t add_i32_via_rust_abi_with_duplicated_param_names(
+    ::std::int32_t x, ::std::int32_t y, ::std::int32_t __param_2,
+    ::std::int32_t __param_3);
+
+}
+
+namespace functions::thread_safety_tests {
+
+// CRUBIT_ANNOTATE: cpp_thread_safe=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: functions_golden :: thread_safety_tests :: ThreadSafeStruct") alignas(4)
+    [[clang::trivial_abi]] ThreadSafeStruct final {
+ public:
+  ::std::int32_t value{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+void accepts_thread_safe_ref(
+    ::functions::thread_safety_tests::ThreadSafeStruct& _x);
+
+::functions::thread_safety_tests::ThreadSafeStruct& $(__anon1)
+    returns_thread_safe_ref(
+        ::functions::thread_safety_tests::ThreadSafeStruct* $(__anon1)
+            crubit_nonnull x CRUBIT_LIFETIME_BOUND);
+
+}  // namespace functions::thread_safety_tests
+
+namespace functions::unit_ret_ty_tests {
+
+extern "C" ::std::int32_t get_global_i32_via_extern_c_with_export_name();
+
+void set_global_i32_via_extern_c_with_export_name(::std::int32_t x);
+
+}  // namespace functions::unit_ret_ty_tests
+
+namespace functions::unsafe_fn_tests {
+
+//  # Safety
+//
+//  This function has no safety requirements - it is only marked as `unsafe`
+//  to facilitate minimal testing of bindings generated for such functions.
+::std::int32_t unsafe_add(::std::int32_t x, ::std::int32_t y);
+
+}  // namespace functions::unsafe_fn_tests
+
+template <>
+struct ::rs::impl<
+    ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct,
+    ::rs::core::convert::AsRef<
+        ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>> {
+  static constexpr bool kIsImplemented = true;
+
+  static ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& $(
+      __anon1)
+      as_ref(::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const&
+                 self);
+};
+
+template <>
+struct ::rs::impl<
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable,
+    ::ctor::CtorNew<
+        ::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+        $a crubit_nonnull>> {
+  static constexpr bool kIsImplemented = true;
+
+  // Error generating bindings for associated type
+  // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as
+  // ctor::CtorNew<ctor::RvalueReference<'a,
+  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::CtorType`:
+  // Generic types are not supported yet (b/259749095)
+
+  // Error generating bindings for associated type
+  // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as
+  // ctor::CtorNew<ctor::RvalueReference<'a,
+  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::Error`:
+  // The never type `!` is only supported as a return type (b/254507801)
+
+  // Error generating bindings for associated function
+  // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as
+  // ctor::CtorNew<ctor::RvalueReference<'a,
+  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::ctor_new`:
+  // Error formatting function return type
+  // `ctor::RustMoveCtor<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>`:
+  // Generic types are not supported yet (b/259749095)
+};
+
+namespace functions::fn_abi_tests {
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t custom_export_name_for_add_i32(::std::int32_t,
+                                                         ::std::int32_t);
+}
+inline ::std::int32_t add_i32_via_extern_c_with_export_name(::std::int32_t x,
+                                                            ::std::int32_t y) {
+  return __crubit_internal::custom_export_name_for_add_i32(x, y);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_add_ui32_uvia_uextern_uc_uwith_umangling(::std::int32_t,
+                                                        ::std::int32_t);
+}
+inline ::std::int32_t add_i32_via_extern_c_with_mangling(::std::int32_t x,
+                                                         ::std::int32_t y) {
+  return __crubit_internal::
+      __crubit_thunk_add_ui32_uvia_uextern_uc_uwith_umangling(x, y);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_add_ui32_uvia_urust_uabi(
+    ::std::int32_t, ::std::int32_t);
+}
+inline ::std::int32_t add_i32_via_rust_abi(::std::int32_t x, ::std::int32_t y) {
+  return __crubit_internal::__crubit_thunk_add_ui32_uvia_urust_uabi(x, y);
+}
+
+}  // namespace functions::fn_abi_tests
+
+namespace functions::fn_attribute_tests {
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_add_ui32(::std::int32_t,
+                                                  ::std::int32_t);
+}
+inline ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y) {
+  return __crubit_internal::__crubit_thunk_add_ui32(x, y);
+}
+
+}  // namespace functions::fn_attribute_tests
+
+namespace functions::fn_must_use_tests {
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_msg_uadd(::std::int32_t,
+                                                  ::std::int32_t);
+}
+inline ::std::int32_t msg_add(::std::int32_t x, ::std::int32_t y) {
+  return __crubit_internal::__crubit_thunk_msg_uadd(x, y);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_no_umsg_uadd(::std::int32_t,
+                                                      ::std::int32_t);
+}
+inline ::std::int32_t no_msg_add(::std::int32_t x, ::std::int32_t y) {
+  return __crubit_internal::__crubit_thunk_no_umsg_uadd(x, y);
+}
+
+}  // namespace functions::fn_must_use_tests
+
+namespace functions::fn_param_ty_tests {
+
+static_assert(
+    sizeof(::functions::fn_param_ty_tests::StructWithPinnedRefs) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::functions::fn_param_ty_tests::StructWithPinnedRefs) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<
+              ::functions::fn_param_ty_tests::StructWithPinnedRefs>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::functions::fn_param_ty_tests::StructWithPinnedRefs>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::functions::fn_param_ty_tests::StructWithPinnedRefs>);
+inline ::functions::fn_param_ty_tests::StructWithPinnedRefs::
+    StructWithPinnedRefs(::crubit::UnsafeRelocateTag,
+                         StructWithPinnedRefs&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline void ::functions::fn_param_ty_tests::StructWithPinnedRefs::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::functions::fn_param_ty_tests::StructWithPinnedRefs;
+  static_assert(0 == offsetof(__crubit_assert_type, pinned_ref));
+  static_assert(4 == offsetof(__crubit_assert_type, pinned_mut_ref));
+}
+namespace __crubit_internal {
+extern "C" double __crubit_thunk_add_uf64(double, double);
+}
+inline double add_f64(double x, double y) {
+  return __crubit_internal::__crubit_thunk_add_uf64(x, y);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_add_ui32(::std::int32_t,
+                                                  ::std::int32_t);
+}
+inline ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y) {
+  return __crubit_internal::__crubit_thunk_add_ui32(x, y);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_add_ui32_uvia_uptr(::std::int32_t const*,
+                                                  ::std::int32_t const*,
+                                                  ::std::int32_t*);
+}
+inline void add_i32_via_ptr(::std::int32_t const* x, ::std::int32_t const* y,
+                            ::std::int32_t* sum) {
+  return __crubit_internal::__crubit_thunk_add_ui32_uvia_uptr(x, y, sum);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_apply_ubinary_ui32_uop(
+    ::std::int32_t, ::std::int32_t,
+    crubit::type_identity_t<::std::int32_t(::std::int32_t, ::std::int32_t)>&);
+}
+inline ::std::int32_t apply_binary_i32_op(
+    ::std::int32_t x, ::std::int32_t y,
+    crubit::type_identity_t<::std::int32_t(::std::int32_t, ::std::int32_t)>&
+        f) {
+  return __crubit_internal::__crubit_thunk_apply_ubinary_ui32_uop(x, y, f);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_char_uto_uascii_ulowercase(
+    ::rs::char_*, ::rs::char_* __ret_ptr);
+}
+inline ::rs::char_ char_to_ascii_lowercase(::rs::char_ c) {
+  crubit::Slot<::rs::char_> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_char_uto_uascii_ulowercase(
+      &c, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create_ustruct_uwith_upinned_urefs(
+    ::std::int32_t const* $a crubit_nonnull, ::std::int32_t* $a crubit_nonnull,
+    ::functions::fn_param_ty_tests::StructWithPinnedRefs* __ret_ptr);
+}
+inline ::functions::fn_param_ty_tests::StructWithPinnedRefs
+create_struct_with_pinned_refs(
+    ::std::int32_t const* $a crubit_nonnull pinned_ref,
+    ::std::int32_t* $a crubit_nonnull pinned_mut_ref) {
+  crubit::internal::CheckNoMutableAliasing(
+      crubit::internal::AsMutPtrDatas<::std::int32_t* $a crubit_nonnull>(
+          pinned_mut_ref),
+      crubit::internal::AsPtrDatas<::std::int32_t const * $a crubit_nonnull>(
+          pinned_ref));
+  crubit::Slot<::functions::fn_param_ty_tests::StructWithPinnedRefs>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create_ustruct_uwith_upinned_urefs(
+      pinned_ref, pinned_mut_ref, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_deref_upinned_uint(
+    ::std::int32_t const&);
+}
+inline ::std::int32_t deref_pinned_int(::std::int32_t const& x) {
+  return __crubit_internal::__crubit_thunk_deref_upinned_uint(x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t const& $a
+__crubit_thunk_get_uidentical_upinned_uint_uref(
+    ::std::int32_t const* $a crubit_nonnull);
+}
+inline ::std::int32_t const& $a
+get_identical_pinned_int_ref(::std::int32_t const* $a crubit_nonnull x) {
+  return __crubit_internal::__crubit_thunk_get_uidentical_upinned_uint_uref(x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t& $a
+__crubit_thunk_get_uidentical_upinned_umut_uint_uref(
+    ::std::int32_t* $a crubit_nonnull);
+}
+inline ::std::int32_t& $a
+get_identical_pinned_mut_int_ref(::std::int32_t* $a crubit_nonnull x) {
+  return __crubit_internal::
+      __crubit_thunk_get_uidentical_upinned_umut_uint_uref(x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t const& $(__anon1)
+    __crubit_thunk_get_uidentical_uref_uwith_uinferred_ulifetime(
+        ::std::int32_t const* $(__anon1) crubit_nonnull);
+}
+inline ::std::int32_t const& $(__anon1)
+    get_identical_ref_with_inferred_lifetime(::std::int32_t const* $(
+        __anon1) crubit_nonnull x CRUBIT_LIFETIME_BOUND) {
+  return __crubit_internal::
+      __crubit_thunk_get_uidentical_uref_uwith_uinferred_ulifetime(x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t const& $a __crubit_thunk_get_uref_uto_usmaller_uint(
+    ::std::int32_t const* $a crubit_nonnull,
+    ::std::int32_t const* $a crubit_nonnull);
+}
+inline ::std::int32_t const& $a
+get_ref_to_smaller_int(::std::int32_t const* $a crubit_nonnull x,
+                       ::std::int32_t const* $a crubit_nonnull y) {
+  return __crubit_internal::__crubit_thunk_get_uref_uto_usmaller_uint(x, y);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_set_umut_uref_uto_usum_uof_uints(::std::int32_t&,
+                                                                ::std::int32_t,
+                                                                ::std::int32_t);
+}
+inline void set_mut_ref_to_sum_of_ints(::std::int32_t& sum, ::std::int32_t x,
+                                       ::std::int32_t y) {
+  return __crubit_internal::__crubit_thunk_set_umut_uref_uto_usum_uof_uints(
+      sum, x, y);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_set_upinned_umut_uref_uto_usum_uof_uints(
+    ::std::int32_t&, ::std::int32_t, ::std::int32_t);
+}
+inline void set_pinned_mut_ref_to_sum_of_ints(::std::int32_t& sum,
+                                              ::std::int32_t x,
+                                              ::std::int32_t y) {
+  return __crubit_internal::
+      __crubit_thunk_set_upinned_umut_uref_uto_usum_uof_uints(sum, x, y);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uint32_t __crubit_thunk_sum_ubytes(
+    ::rs::SliceRef<const ::std::uint8_t>*);
+}
+inline ::std::uint32_t sum_bytes(::rs::SliceRef<const ::std::uint8_t> bytes) {
+  return __crubit_internal::__crubit_thunk_sum_ubytes(&bytes);
+}
+
+}  // namespace functions::fn_param_ty_tests
+
+namespace functions::generic_fn_tests::as_mut_trait_tests {
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_prefix_usums_u_x00000026mut_x00000020_x0000005bi32_x0000005d(
+    ::rs::SliceRef<::std::int32_t>*);
+}
+inline void prefix_sums(::rs::SliceRef<::std::int32_t> arg) {
+  return __crubit_internal::
+      __crubit_thunk_prefix_usums_u_x00000026mut_x00000020_x0000005bi32_x0000005d(
+          &arg);
+}
+
+}  // namespace functions::generic_fn_tests::as_mut_trait_tests
+
+namespace functions::generic_fn_tests::as_ref_trait_tests {
+
+static_assert(
+    sizeof(::functions::generic_fn_tests::as_ref_trait_tests::MyStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::functions::generic_fn_tests::as_ref_trait_tests::MyStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<
+              ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>);
+inline ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct::MyStruct(
+    ::crubit::UnsafeRelocateTag, MyStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(
+    ::std::int32_t,
+    ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct* __ret_ptr);
+}
+inline ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct(
+    MyStruct::new_)(::std::int32_t x) {
+  crubit::Slot<::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_diverse_ulifetimes_u_x00000026_x0000005bi32_x0000005d(
+    ::rs::SliceRef<const ::std::int32_t>*,
+    ::rs::SliceRef<const ::std::int32_t>*,
+    ::rs::SliceRef<const ::std::int32_t>*, ::rs::SliceRef<::std::int32_t>*);
+}
+inline void diverse_lifetimes(::rs::SliceRef<const ::std::int32_t> arg1,
+                              ::rs::SliceRef<const ::std::int32_t> arg2,
+                              ::rs::SliceRef<const ::std::int32_t> arg3,
+                              ::rs::SliceRef<::std::int32_t> result) {
+  crubit::internal::CheckNoMutableAliasing(
+      crubit::internal::AsMutPtrDatas<::rs::SliceRef<::std::int32_t>>(result),
+      crubit::internal::AsPtrDatas<::rs::SliceRef<const ::std::int32_t>,
+                                   ::rs::SliceRef<const ::std::int32_t>,
+                                   ::rs::SliceRef<const ::std::int32_t>>(
+          arg1, arg2, arg3));
+  return __crubit_internal::
+      __crubit_thunk_diverse_ulifetimes_u_x00000026_x0000005bi32_x0000005d(
+          &arg1, &arg2, &arg3, &result);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_slice_uref_usum_u_x00000026_x0000005bi32_x0000005d(
+    ::rs::SliceRef<const ::std::int32_t>*);
+}
+inline ::std::int32_t slice_ref_sum(::rs::SliceRef<const ::std::int32_t> arg) {
+  return __crubit_internal::
+      __crubit_thunk_slice_uref_usum_u_x00000026_x0000005bi32_x0000005d(&arg);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_static_ulifetime_urequirement_u_x00000026_x0000005bi32_x0000005d(
+    ::rs::SliceRef<const ::std::int32_t>*);
+}
+inline ::std::int32_t static_lifetime_requirement(
+    ::rs::SliceRef<const ::std::int32_t> arg) {
+  return __crubit_internal::
+      __crubit_thunk_static_ulifetime_urequirement_u_x00000026_x0000005bi32_x0000005d(
+          &arg);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_struct_uref_u_x00000026functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
+    ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const&);
+}
+inline ::std::int32_t struct_ref(
+    ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& arg) {
+  return __crubit_internal::
+      __crubit_thunk_struct_uref_u_x00000026functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
+          arg);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_two_uargs_u_x00000026_x0000005bi32_x0000005d_u_x00000026_x0000005bi32_x0000005d(
+    ::rs::SliceRef<const ::std::int32_t>*,
+    ::rs::SliceRef<const ::std::int32_t>*);
+}
+inline ::std::int32_t two_args(::rs::SliceRef<const ::std::int32_t> x,
+                               ::rs::SliceRef<const ::std::int32_t> y) {
+  return __crubit_internal::
+      __crubit_thunk_two_uargs_u_x00000026_x0000005bi32_x0000005d_u_x00000026_x0000005bi32_x0000005d(
+          &x, &y);
+}
+
+}  // namespace functions::generic_fn_tests::as_ref_trait_tests
+
+namespace functions::generic_fn_tests::ctor_trait_tests {
+
+static_assert(
+    sizeof(::functions::generic_fn_tests::ctor_trait_tests::CppMovable) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::functions::generic_fn_tests::ctor_trait_tests::CppMovable) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<
+              ::functions::generic_fn_tests::ctor_trait_tests::CppMovable>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::functions::generic_fn_tests::ctor_trait_tests::CppMovable>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::functions::generic_fn_tests::ctor_trait_tests::CppMovable>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(
+    ::std::int32_t,
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable* __ret_ptr);
+}
+inline ::functions::generic_fn_tests::ctor_trait_tests::CppMovable(
+    CppMovable::new_)(::std::int32_t value) {
+  crubit::Slot<::functions::generic_fn_tests::ctor_trait_tests::CppMovable>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void ::functions::generic_fn_tests::ctor_trait_tests::CppMovable::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::functions::generic_fn_tests::ctor_trait_tests::CppMovable;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
+}
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_accept_uctor_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&,
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&);
+}
+inline ::std::int32_t accept_ctor(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable c1,
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable c2) {
+  return __crubit_internal::
+      __crubit_thunk_accept_uctor_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
+          ::std::move(c1), ::std::move(c2));
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_accept_uctor_uarray_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
+    void*);
+}
+inline ::std::int32_t accept_ctor_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                     crubit_nonnull,
+                 3>
+        a) {
+  return __crubit_internal::
+      __crubit_thunk_accept_uctor_uarray_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
+          &a);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_accept_uctor_utuple_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
+    void**);
+}
+inline ::std::int32_t accept_ctor_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                 crubit_nonnull>
+        c) {
+  auto&& c_0 = ::std::get<0>(c);
+  auto&& c_cabi_0 = ::std::move(c_0);
+  void* c_cabi[] = {&c_cabi_0};
+  return __crubit_internal::
+      __crubit_thunk_accept_uctor_utuple_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
+          c_cabi);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_urvalue_uref(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&);
+}
+inline ::std::int32_t accept_rvalue_ref(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c) {
+  return __crubit_internal::__crubit_thunk_accept_urvalue_uref(::std::move(c));
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_urvalue_ureference_uarray(
+    void*);
+}
+inline ::std::int32_t accept_rvalue_reference_array(
+    ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                     $(__anon1) crubit_nonnull,
+                 3>
+        a) {
+  return __crubit_internal::__crubit_thunk_accept_urvalue_ureference_uarray(&a);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_accept_urvalue_ureference_utuple(
+    void**);
+}
+inline ::std::int32_t accept_rvalue_reference_tuple(
+    ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                 $(__anon1) crubit_nonnull>
+        t) {
+  auto&& t_0 = ::std::get<0>(t);
+  auto&& t_cabi_0 = ::std::move(t_0);
+  void* t_cabi[] = {&t_cabi_0};
+  return __crubit_internal::__crubit_thunk_accept_urvalue_ureference_utuple(
+      t_cabi);
+}
+
+namespace __crubit_internal {
+extern "C" ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&
+__crubit_thunk_return_urvalue_ureference(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&);
+}
+inline ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&
+return_rvalue_reference(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c) {
+  return __crubit_internal::__crubit_thunk_return_urvalue_ureference(
+      ::std::move(c));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_urvalue_ureference_uarray(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&,
+    void* __ret_ptr);
+}
+inline ::std::array<
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+        $a crubit_nonnull,
+    1>
+return_rvalue_reference_array(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c) {
+  crubit::Slot<
+      ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+                       $a crubit_nonnull,
+                   1>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_return_urvalue_ureference_uarray(
+      ::std::move(c), __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_urvalue_ureference_utuple(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&,
+    void** __ret_ptr);
+}
+inline ::std::tuple<
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
+    $a crubit_nonnull>
+return_rvalue_reference_tuple(
+    ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c) {
+  ::functions::generic_fn_tests::ctor_trait_tests::CppMovable* $a crubit_nonnull
+      __return_value_0_ret_val_holder;
+  ::functions::generic_fn_tests::ctor_trait_tests::CppMovable*
+      $a crubit_nonnull* __return_value_0_storage =
+          &__return_value_0_ret_val_holder;
+  void* __return_value_storage[] = {__return_value_0_storage};
+  __crubit_internal::__crubit_thunk_return_urvalue_ureference_utuple(
+      ::std::move(c), __return_value_storage);
+  return ::std::make_tuple(*__return_value_0_storage);
+}
+
+}  // namespace functions::generic_fn_tests::ctor_trait_tests
+
+namespace functions::generic_fn_tests::into_trait_tests {
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_basic_utest_ui32(::std::int32_t);
+}
+inline ::std::int32_t basic_test(::std::int32_t arg) {
+  return __crubit_internal::__crubit_thunk_basic_utest_ui32(arg);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_generic_uparam_unested_udeeper_uin_uparam_uty_ui32(void*);
+}
+inline ::std::int32_t generic_param_nested_deeper_in_param_ty(
+    ::std::array<::std::int32_t, 3> xs) {
+  return __crubit_internal::
+      __crubit_thunk_generic_uparam_unested_udeeper_uin_uparam_uty_ui32(&xs);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_multiple_ugeneric_uparams_ui32_ui32(
+    ::std::int32_t, ::std::int32_t);
+}
+inline ::std::int32_t multiple_generic_params(::std::int32_t x,
+                                              ::std::int32_t y) {
+  return __crubit_internal::__crubit_thunk_multiple_ugeneric_uparams_ui32_ui32(
+      x, y);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_return_utype_ui32();
+}
+inline ::std::int32_t return_type() {
+  return __crubit_internal::__crubit_thunk_return_utype_ui32();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_reused_ugeneric_uparam_ui32(
+    ::std::int32_t, ::std::int32_t);
+}
+inline ::std::int32_t reused_generic_param(::std::int32_t x, ::std::int32_t y) {
+  return __crubit_internal::__crubit_thunk_reused_ugeneric_uparam_ui32(x, y);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_where_uclause_ui32(::std::int32_t);
+}
+inline ::std::int32_t where_clause(::std::int32_t x) {
+  return __crubit_internal::__crubit_thunk_where_uclause_ui32(x);
+}
+
+}  // namespace functions::generic_fn_tests::into_trait_tests
+
+namespace functions::non_null_tests {
+
+static_assert(
+    sizeof(::functions::non_null_tests::SomeStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::functions::non_null_tests::SomeStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<
+              ::functions::non_null_tests::SomeStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::functions::non_null_tests::SomeStruct>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::functions::non_null_tests::SomeStruct>);
+inline void ::functions::non_null_tests::SomeStruct::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::functions::non_null_tests::SomeStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
+}
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_get_unon_unull_uvalue(
+    ::std::int32_t* crubit_nonnull);
+}
+inline ::std::int32_t get_non_null_value(::std::int32_t* crubit_nonnull ptr) {
+  return __crubit_internal::__crubit_thunk_get_unon_unull_uvalue(ptr);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t* crubit_nonnull
+__crubit_thunk_return_unon_unull(::std::int32_t* crubit_nonnull);
+}
+inline ::std::int32_t* crubit_nonnull
+return_non_null(::std::int32_t* crubit_nonnull ptr) {
+  return __crubit_internal::__crubit_thunk_return_unon_unull(ptr);
+}
+
+namespace __crubit_internal {
+extern "C" void* crubit_nonnull
+__crubit_thunk_return_unon_unull_uc_uvoid(void* crubit_nonnull);
+}
+inline void* crubit_nonnull return_non_null_c_void(void* crubit_nonnull ptr) {
+  return __crubit_internal::__crubit_thunk_return_unon_unull_uc_uvoid(ptr);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t* crubit_nonnull
+__crubit_thunk_return_unon_unull_umaybe_uuninit(::std::int32_t* crubit_nonnull);
+}
+inline ::std::int32_t* crubit_nonnull
+return_non_null_maybe_uninit(::std::int32_t* crubit_nonnull ptr) {
+  return __crubit_internal::__crubit_thunk_return_unon_unull_umaybe_uuninit(
+      ptr);
+}
+
+namespace __crubit_internal {
+extern "C" ::functions::non_null_tests::SomeStruct* crubit_nonnull
+__crubit_thunk_return_unon_unull_ustruct(
+    ::functions::non_null_tests::SomeStruct* crubit_nonnull);
+}
+inline ::functions::non_null_tests::SomeStruct* crubit_nonnull
+return_non_null_struct(
+    ::functions::non_null_tests::SomeStruct* crubit_nonnull ptr) {
+  return __crubit_internal::__crubit_thunk_return_unon_unull_ustruct(ptr);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_set_unon_unull_uvalue(
+    ::std::int32_t* crubit_nonnull, ::std::int32_t);
+}
+inline void set_non_null_value(::std::int32_t* crubit_nonnull ptr,
+                               ::std::int32_t value) {
+  return __crubit_internal::__crubit_thunk_set_unon_unull_uvalue(ptr, value);
+}
+
+}  // namespace functions::non_null_tests
+
+namespace functions::other_fn_param_tests {
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_add_ui32_uvia_urust_uabi_uwith_uduplicated_uparam_unames(
+    ::std::int32_t, ::std::int32_t, ::std::int32_t, ::std::int32_t);
+}
+inline ::std::int32_t add_i32_via_rust_abi_with_duplicated_param_names(
+    ::std::int32_t x, ::std::int32_t y, ::std::int32_t __param_2,
+    ::std::int32_t __param_3) {
+  return __crubit_internal::
+      __crubit_thunk_add_ui32_uvia_urust_uabi_uwith_uduplicated_uparam_unames(
+          x, y, __param_2, __param_3);
+}
+
+}  // namespace functions::other_fn_param_tests
+
+namespace functions::thread_safety_tests {
+
+static_assert(
+    sizeof(::functions::thread_safety_tests::ThreadSafeStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::functions::thread_safety_tests::ThreadSafeStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<
+              ::functions::thread_safety_tests::ThreadSafeStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::functions::thread_safety_tests::ThreadSafeStruct>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::functions::thread_safety_tests::ThreadSafeStruct>);
+inline void ::functions::thread_safety_tests::ThreadSafeStruct::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::functions::thread_safety_tests::ThreadSafeStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_accepts_uthread_usafe_uref(
+    ::functions::thread_safety_tests::ThreadSafeStruct&);
+}
+inline void accepts_thread_safe_ref(
+    ::functions::thread_safety_tests::ThreadSafeStruct& _x) {
+  return __crubit_internal::__crubit_thunk_accepts_uthread_usafe_uref(_x);
+}
+
+namespace __crubit_internal {
+extern "C" ::functions::thread_safety_tests::ThreadSafeStruct& $(__anon1)
+    __crubit_thunk_returns_uthread_usafe_uref(
+        ::functions::thread_safety_tests::ThreadSafeStruct* $(__anon1)
+            crubit_nonnull);
+}
+inline ::functions::thread_safety_tests::ThreadSafeStruct& $(__anon1)
+    returns_thread_safe_ref(
+        ::functions::thread_safety_tests::ThreadSafeStruct* $(__anon1)
+            crubit_nonnull x CRUBIT_LIFETIME_BOUND) {
+  return __crubit_internal::__crubit_thunk_returns_uthread_usafe_uref(x);
+}
+
+}  // namespace functions::thread_safety_tests
+
+namespace functions::unit_ret_ty_tests {
+
+namespace __crubit_internal {
+extern "C" void custom_export_name_for_get_global_i32(::std::int32_t);
+}
+inline void set_global_i32_via_extern_c_with_export_name(::std::int32_t x) {
+  return __crubit_internal::custom_export_name_for_get_global_i32(x);
+}
+
+}  // namespace functions::unit_ret_ty_tests
+
+namespace functions::unsafe_fn_tests {
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_unsafe_uadd(::std::int32_t,
+                                                     ::std::int32_t);
+}
+inline ::std::int32_t unsafe_add(::std::int32_t x, ::std::int32_t y) {
+  return __crubit_internal::__crubit_thunk_unsafe_uadd(x, y);
+}
+
+}  // namespace functions::unsafe_fn_tests
+
+namespace functions {
+namespace __crubit_internal {
+extern "C" ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& $(
+    __anon1)
+    __crubit_thunk_AsRef_uas_uref_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
+        ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const&);
+}
+}  // namespace functions
+inline ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& $(
+    __anon1)(::rs::impl<
+             ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct,
+             ::rs::core::convert::AsRef<
+                 ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>>::
+                 as_ref)(
+    ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& self) {
+  return functions::__crubit_internal::
+      __crubit_thunk_AsRef_uas_uref_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
+          self);
+}
+
+#pragma clang diagnostic pop
+#endif  // CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN
