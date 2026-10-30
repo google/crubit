@@ -3190,9 +3190,16 @@ fn test_unsafe_constructor_unpin() -> Result<()> {
             int* ptr_field;
         };"#,
     )?;
+    let expected_doc = concat!(
+        " # Safety\n \n",
+        " The caller must ensure that the following unsafe arguments are not misused by the function:\n",
+        " * `p`: raw pointer\n \n",
+        " Generated from: ir_from_cc_virtual_header.h;l=5"
+    );
     assert_rs_matches!(
         rs_api,
         quote! {
+            #[doc = #expected_doc]
             impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
                 #[inline(always)]
                 unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {
@@ -3219,9 +3226,16 @@ fn test_unsafe_constructor_nonunpin() -> Result<()> {
             int* ptr_field;
         };"#,
     )?;
+    let expected_doc = concat!(
+        " # Safety\n \n",
+        " The caller must ensure that the following unsafe arguments are not misused by the function:\n",
+        " * `p`: raw pointer\n \n",
+        " Generated from: ir_from_cc_virtual_header.h;l=5"
+    );
     assert_rs_matches!(
         rs_api,
         quote! {
+            #[doc = #expected_doc]
             impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for NonUnpinStructWithUnsafeConstructor {
                 type CtorType = ::ctor::Ctor![Self];
                 type Error = ::ctor::Infallible;

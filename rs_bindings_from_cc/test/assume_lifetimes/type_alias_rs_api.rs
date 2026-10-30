@@ -133,6 +133,10 @@ impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
     }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `__x`: raw pointer
 impl ::ctor::UnsafeFrom<*const ::ffi_11::c_char>
     for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE
 {

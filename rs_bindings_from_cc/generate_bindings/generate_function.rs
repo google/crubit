@@ -2056,11 +2056,10 @@ fn generate_func_safety_doc(
         }
     }
 
-    if impl_kind.is_unsafe() &&
-        // Skip safety doc for trait impls, since the trait itself
-        // should document its safety requirements.
-        (!matches!(impl_kind, ImplKind::Trait { .. }) ||
-         matches!(impl_kind, ImplKind::Trait { trait_name: TraitName::UnsafeCtorNew(_), .. }))
+    if impl_kind.is_unsafe()
+        // Skip safety doc for trait impls other than `UnsafeCtorNew` and `UnsafeFrom`,
+        // since the trait itself (e.g., `PinnedDrop`) documents its safety requirements.
+        && !matches!(impl_kind, ImplKind::Trait { trait_name: TraitName::Other { .. }, .. })
     {
         let mut doc = String::new();
         if let SafetyAnnotation::Unsafe = func.safety_annotation() {
