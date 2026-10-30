@@ -96,6 +96,7 @@ bzl_library(
         ":providers_bzl",
         "//cc_bindings_from_rs/bazel_support:providers_bzl",
         "//common/bazel_support:cc_info_util_bzl",
+        "@bazel_skylib//rules:common_settings",
         "@rules_cc//cc/common",
     ],
 )
@@ -201,6 +202,20 @@ bool_flag(
 bool_flag(
     name = "lazy_import_alien_decls",
     build_setting_default = True,
+    visibility = ["//visibility:public"],
+)
+
+# If true, `rs_bindings_from_cc` uses the precompiled `.pic.pcm` header modules
+# of the dependencies, for targets that use header modules (the
+# `use_header_modules` feature). Otherwise, it parses all transitive headers
+# from source. (The compile of the generated `*_rust_api_impl.cc` uses header
+# modules regardless of this flag.)
+#
+# TODO(b/573160048): Turn this on by default once a crosstool release contains
+# the corresponding changes to `rs_bindings_from_cc`.
+bool_flag(
+    name = "use_header_modules",
+    build_setting_default = False,
     visibility = ["//visibility:public"],
 )
 
