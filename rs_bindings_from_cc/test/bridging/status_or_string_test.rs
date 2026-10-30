@@ -22,7 +22,7 @@ fn test_status_or_string_without_layout_compat_string_feature() {
 }
 
 #[gtest]
-fn test_status_or_optional_without_layout_compat_optional_feature() {
+fn test_status_or_optional() {
     let ok = emplace!(MakeOptionalOrError(true));
     expect_that!(&*ok, is_ok(anything()));
     let res = &*ok;

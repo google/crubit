@@ -1948,58 +1948,10 @@ const FAKE_STD_OPTIONAL: &str = r#"
     }
 "#;
 
-/// Without `layout_compat_optional`, `std::optional<T>` is still bridged to `Option<T>` by
-/// value. In positions which cannot hold a bridged type it is layout-compatible regardless of
-/// the feature, since the alternative is opaque padding bytes or no bindings at all.
+/// `std::optional<T>` is layout-compatible in every position, including by value. `int` is
+/// `Copy`, so the binding is `trivial_optional<T>`.
 #[gtest]
-fn test_std_optional_without_layout_compat_feature() -> Result<()> {
-    let rs_api = generate_bindings_tokens_from_cc_dependency(
-        r#"
-        struct StructWithOptional final { std::optional<int> o; };
-        void takes_optional_by_value(std::optional<int> o);
-        void takes_optional_ref(const std::optional<int>& o);
-        "#,
-        FAKE_STD_OPTIONAL,
-    )?
-    .rs_api;
-
-    // Composable bridging by value is unaffected: this is what the feature opts out of.
-    assert_rs_matches!(
-        rs_api,
-        quote! {
-            pub fn takes_optional_by_value(
-                o: ::core::option::Option<::ffi_11::c_int>
-            )
-        }
-    );
-
-    // A field cannot hold a bridged type, so it is layout-compatible without the feature.
-    assert_rs_matches!(
-        rs_api,
-        quote! {
-            pub struct StructWithOptional {
-                pub o: ::cc_std::std::trivial_optional::<::ffi_11::c_int>,
-            }
-        }
-    );
-
-    // Neither can a pointee, which previously produced no bindings for the function.
-    assert_rs_matches!(
-        rs_api,
-        quote! {
-            pub unsafe fn takes_optional_ref(
-                o: *const ::cc_std::std::trivial_optional::<::ffi_11::c_int>
-            )
-        }
-    );
-    Ok(())
-}
-
-/// With `layout_compat_optional`, `std::optional<T>` is additionally layout-compatible in
-/// by-value positions, replacing the composable bridging to `Option<T>`. `int` is `Copy`, so the
-/// binding is `trivial_optional<T>`.
-#[gtest]
-fn test_std_optional_with_layout_compat_feature() -> Result<()> {
+fn test_std_optional_is_layout_compatible() -> Result<()> {
     let proto = ir_proto_from_cc_dependency(
         r#"
         struct StructWithOptional final { std::optional<int> o; };
@@ -2008,11 +1960,7 @@ fn test_std_optional_with_layout_compat_feature() -> Result<()> {
         "#,
         FAKE_STD_OPTIONAL,
     )?;
-    let mut ir = make_test_ir_dependency(&proto, None)?;
-    let target = ir.current_target().clone();
-    let features = ir.target_crubit_features(&target);
-    *ir.target_crubit_features_mut(&target) =
-        features | crubit_feature::CrubitFeature::LayoutCompatOptional;
+    let ir = make_test_ir_dependency(&proto, None)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
