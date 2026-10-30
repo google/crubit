@@ -1,0 +1,140 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// vec_golden
+
+#![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
+#![allow(improper_ctypes_definitions)]
+#![deny(warnings)]
+
+extern crate alloc;
+extern crate core;
+const _: () = assert!(::core::mem::size_of::<::vec_golden::RustVecOwner>() == 12);
+const _: () = assert!(::core::mem::align_of::<::vec_golden::RustVecOwner>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uvec_ugolden_x0000003a_x0000003aRustVecOwner(
+    __ret_ptr: *mut ::vec_golden::RustVecOwner,
+) -> () {
+    unsafe {
+        __ret_ptr.write(<::vec_golden::RustVecOwner as ::core::default::Default>::default());
+    }
+}
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aRustVecOwner(
+    __self: *mut ::vec_golden::RustVecOwner,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut ::vec_golden::RustVecOwner) -> () {
+    unsafe {
+        __ret_ptr.write(::vec_golden::RustVecOwner::new());
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_vec_umut(
+    __self: &'static mut ::vec_golden::RustVecOwner,
+) -> &'static mut ::alloc::vec::Vec<i32> {
+    unsafe { ::vec_golden::RustVecOwner::vec_mut(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_len(__self: &'static ::vec_golden::RustVecOwner) -> usize {
+    unsafe { ::vec_golden::RustVecOwner::len(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uempty(__self: &'static ::vec_golden::RustVecOwner) -> bool {
+    unsafe { ::vec_golden::RustVecOwner::is_empty(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_element(
+    __self: &'static ::vec_golden::RustVecOwner,
+    index: usize,
+) -> i32 {
+    unsafe { ::vec_golden::RustVecOwner::element(__self, index) }
+}
+const _: () = assert!(::core::mem::size_of::<::vec_golden::StructWithVec>() == 12);
+const _: () = assert!(::core::mem::align_of::<::vec_golden::StructWithVec>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(
+    val: i32,
+    __ret_ptr: *mut ::vec_golden::StructWithVec,
+) -> () {
+    unsafe {
+        __ret_ptr.write(::vec_golden::StructWithVec::new(val));
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::vec_golden::StructWithVec, v) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_drop_uvec(_v: *mut ::alloc::vec::Vec<i32>) -> () {
+    unsafe {
+        let _v = _v.read();
+        ::vec_golden::drop_vec(_v)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_ugrown_uvec(
+    __ret_ptr: *mut ::alloc::vec::Vec<i32>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(::vec_golden::return_grown_vec());
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uu8_uvec(__ret_ptr: *mut ::alloc::vec::Vec<u8>) -> () {
+    unsafe {
+        __ret_ptr.write(::vec_golden::return_u8_vec());
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uvec(__ret_ptr: *mut ::alloc::vec::Vec<i32>) -> () {
+    unsafe {
+        __ret_ptr.write(::vec_golden::return_vec());
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_rust_uadd_uelements(
+    v: &'static mut ::alloc::vec::Vec<i32>,
+) -> () {
+    unsafe { ::vec_golden::rust_add_elements(v) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_take_uvec(v: *mut ::alloc::vec::Vec<i32>) -> i32 {
+    unsafe {
+        let v = v.read();
+        ::vec_golden::take_vec(v)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
+    __self: &'static ::alloc::vec::Vec<i32>,
+    __ret_ptr: *mut ::alloc::vec::Vec<i32>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(<::alloc::vec::Vec<i32> as ::core::clone::Clone>::clone(__self));
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
+    __self: &'static mut ::alloc::vec::Vec<i32>,
+    source: &'static ::alloc::vec::Vec<i32>,
+) -> () {
+    unsafe { <::alloc::vec::Vec<i32> as ::core::clone::Clone>::clone_from(__self, source) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
+    __self: &'static ::alloc::vec::Vec<u8>,
+    __ret_ptr: *mut ::alloc::vec::Vec<u8>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(<::alloc::vec::Vec<u8> as ::core::clone::Clone>::clone(__self));
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
+    __self: &'static mut ::alloc::vec::Vec<u8>,
+    source: &'static ::alloc::vec::Vec<u8>,
+) -> () {
+    unsafe { <::alloc::vec::Vec<u8> as ::core::clone::Clone>::clone_from(__self, source) }
+}

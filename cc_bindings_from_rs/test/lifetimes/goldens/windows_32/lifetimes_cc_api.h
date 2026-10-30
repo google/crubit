@@ -1,0 +1,364 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// lifetimes_golden
+
+// clang-format off
+#ifndef CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN
+#define CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
+#include "support/annotations_internal.h"
+#include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
+#include "support/movable.h"
+#include "support/rs_std/traits.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <type_traits>
+#include <utility>
+
+#include "support/rs_std/rs_alloc.h"
+#include "support/rs_std/rs_core.h"
+
+namespace lifetimes {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: lifetimes_golden :: StructWithLifetime") alignas(4)
+    [[clang::trivial_abi]] StructWithLifetime final {
+ public:
+  // Type is not a C++ aggregate: Field `field_with_lifetime` is not
+  // default-constructible in C++
+
+  // `lifetimes_golden::StructWithLifetime` doesn't implement the `Default`
+  // trait
+  StructWithLifetime() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~StructWithLifetime() = default;
+  StructWithLifetime(StructWithLifetime&&) = default;
+  StructWithLifetime& operator=(StructWithLifetime&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  StructWithLifetime(const StructWithLifetime&) = default;
+  StructWithLifetime& operator=(const StructWithLifetime&) = default;
+  StructWithLifetime(::crubit::UnsafeRelocateTag, StructWithLifetime&& value);
+
+  static ::lifetimes::StructWithLifetime from_ref(
+      ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
+
+  ::std::int32_t const& $a into_ref() const;
+
+  ::std::int32_t value() const;
+
+  ::std::int32_t const& $(__anon1)
+      borrow_from_self() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+
+  static ::lifetimes::StructWithLifetime make_static_42();
+
+  static ::lifetimes::StructWithLifetime from_static_ref(
+      ::std::int32_t const* $static crubit_nonnull field_with_lifetime);
+
+  static ::lifetimes::StructWithLifetime from_static_ref_where_bound(
+      ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
+
+  ::std::int32_t const& $static borrow_from_static_self() const& $static;
+
+  explicit operator ::std::int32_t const& $a() const;
+
+  explicit operator ::std::int32_t() const;
+
+  explicit StructWithLifetime(::std::int32_t const* $a crubit_nonnull value);
+
+  union {
+    ::std::int32_t const* crubit_nonnull field_with_lifetime;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: lifetimes_golden :: StructWithLifetimeAndDropGlue") alignas(4)
+    [[clang::trivial_abi]] StructWithLifetimeAndDropGlue final {
+ public:
+  // Type is not a C++ aggregate: Field `field_with_lifetime` is not
+  // default-constructible in C++
+
+  // `lifetimes_golden::StructWithLifetimeAndDropGlue` doesn't implement the
+  // `Default` trait
+  StructWithLifetimeAndDropGlue() = delete;
+
+  // Drop::drop
+  ~StructWithLifetimeAndDropGlue();
+
+  // C++ move operations are unavailable for this type. See
+  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
+  // are C++ movable.
+  StructWithLifetimeAndDropGlue(StructWithLifetimeAndDropGlue&&) = delete;
+  ::lifetimes::StructWithLifetimeAndDropGlue& operator=(
+      StructWithLifetimeAndDropGlue&&) = delete;
+  // `lifetimes_golden::StructWithLifetimeAndDropGlue` doesn't implement the
+  // `Clone` trait
+  StructWithLifetimeAndDropGlue(const StructWithLifetimeAndDropGlue&) = delete;
+  StructWithLifetimeAndDropGlue& operator=(
+      const StructWithLifetimeAndDropGlue&) = delete;
+  StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
+                                StructWithLifetimeAndDropGlue&& value);
+
+  static ::rs::Movable<::lifetimes::StructWithLifetimeAndDropGlue>
+  make_static_42();
+
+  union {
+    ::rs::alloc::string::String field_with_drop_glue;
+  };
+  union {
+    ::std::int32_t const* crubit_nonnull field_with_lifetime;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+void function_with_trivial_unnamed_lifetime_param(
+    ::std::int32_t const& __param_0);
+
+}  // namespace lifetimes
+
+template <>
+struct ::rs::impl<::lifetimes::StructWithLifetime, ::rs::core::fmt::Debug> {
+  static constexpr bool kIsImplemented = true;
+
+  // Error generating bindings for associated function
+  // `<lifetimes_golden::StructWithLifetime<'a> as std::fmt::Debug>::fmt`: Error
+  // formatting function return type `std::result::Result<(), std::fmt::Error>`:
+  // Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  // types (ZSTs) are not supported (b/258259459)
+};
+
+namespace lifetimes {
+
+static_assert(
+    sizeof(::lifetimes::StructWithLifetime) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::lifetimes::StructWithLifetime) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    ::std::is_trivially_destructible_v<::lifetimes::StructWithLifetime>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::lifetimes::StructWithLifetime>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::lifetimes::StructWithLifetime>);
+static_assert(
+    ::std::is_trivially_copy_constructible_v<::lifetimes::StructWithLifetime>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<::lifetimes::StructWithLifetime>);
+inline ::lifetimes::StructWithLifetime::StructWithLifetime(
+    ::crubit::UnsafeRelocateTag, StructWithLifetime&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_from_uref_u_x00000027a(
+    ::std::int32_t const* $a crubit_nonnull,
+    ::lifetimes::StructWithLifetime* __ret_ptr);
+}
+inline ::lifetimes::StructWithLifetime(StructWithLifetime::from_ref)(
+    ::std::int32_t const* $a crubit_nonnull field_with_lifetime) {
+  crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_from_uref_u_x00000027a(
+      field_with_lifetime, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t const& $a
+__crubit_thunk_into_uref_u_x00000027a(::lifetimes::StructWithLifetime*);
+}
+inline ::std::int32_t const& $a(StructWithLifetime::into_ref)() const {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
+  return __crubit_internal::__crubit_thunk_into_uref_u_x00000027a(&self);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_value_u_x00000027a(
+    ::lifetimes::StructWithLifetime*);
+}
+inline ::std::int32_t(StructWithLifetime::value)() const {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
+  return __crubit_internal::__crubit_thunk_value_u_x00000027a(&self);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t const& $(__anon1)
+    __crubit_thunk_borrow_ufrom_uself_u_x00000027a(
+        ::lifetimes::StructWithLifetime const&);
+}
+inline ::std::int32_t const& $(__anon1)(StructWithLifetime::borrow_from_self)()
+    const& $(__anon1) CRUBIT_LIFETIME_BOUND {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_borrow_ufrom_uself_u_x00000027a(
+      self);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_make_ustatic_u42(
+    ::lifetimes::StructWithLifetime* __ret_ptr);
+}
+inline ::lifetimes::StructWithLifetime(StructWithLifetime::make_static_42)() {
+  crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_make_ustatic_u42(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_from_ustatic_uref(
+    ::std::int32_t const* $static crubit_nonnull,
+    ::lifetimes::StructWithLifetime* __ret_ptr);
+}
+inline ::lifetimes::StructWithLifetime(StructWithLifetime::from_static_ref)(
+    ::std::int32_t const* $static crubit_nonnull field_with_lifetime) {
+  crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_from_ustatic_uref(field_with_lifetime,
+                                                      __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_from_ustatic_uref_uwhere_ubound_u_x00000027a(
+    ::std::int32_t const* $a crubit_nonnull,
+    ::lifetimes::StructWithLifetime* __ret_ptr);
+}
+inline ::lifetimes::StructWithLifetime(
+    StructWithLifetime::from_static_ref_where_bound)(
+    ::std::int32_t const* $a crubit_nonnull field_with_lifetime) {
+  crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_from_ustatic_uref_uwhere_ubound_u_x00000027a(
+          field_with_lifetime, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t const& $static
+__crubit_thunk_borrow_ufrom_ustatic_uself(
+    ::lifetimes::StructWithLifetime const&);
+}
+inline ::std::int32_t const& $static(
+    StructWithLifetime::borrow_from_static_self)() const& $static {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_borrow_ufrom_ustatic_uself(self);
+}
+namespace __crubit_internal {
+extern "C" ::std::int32_t const& $a
+__crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
+    ::lifetimes::StructWithLifetime*);
+}
+inline ::lifetimes::StructWithLifetime::operator ::std::int32_t const&
+    $a() const {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
+  return __crubit_internal::
+      __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
+          &self);
+}
+namespace __crubit_internal {
+extern "C" ::std::int32_t
+__crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_ui32(
+    ::lifetimes::StructWithLifetime*);
+}
+inline ::lifetimes::StructWithLifetime::operator ::std::int32_t() const {
+  auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
+  return __crubit_internal::
+      __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_ui32(
+          &self);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_From_ufrom_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
+    ::std::int32_t const* $a crubit_nonnull,
+    ::lifetimes::StructWithLifetime* __ret_ptr);
+}
+inline ::lifetimes::StructWithLifetime::StructWithLifetime(
+    ::std::int32_t const* $a crubit_nonnull value) {
+  __crubit_internal::
+      __crubit_thunk_From_ufrom_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
+          value, this);
+}
+inline void ::lifetimes::StructWithLifetime::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::lifetimes::StructWithLifetime;
+  static_assert(0 == offsetof(__crubit_assert_type, field_with_lifetime));
+}
+static_assert(
+    sizeof(::lifetimes::StructWithLifetimeAndDropGlue) == 16,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::lifetimes::StructWithLifetimeAndDropGlue) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetimeAndDropGlue_x0000003c_x00000027_u_x0000003e(
+    ::lifetimes::StructWithLifetimeAndDropGlue&);
+}
+inline ::lifetimes::StructWithLifetimeAndDropGlue::
+    ~StructWithLifetimeAndDropGlue() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetimeAndDropGlue_x0000003c_x00000027_u_x0000003e(
+          *this);
+}
+inline ::lifetimes::StructWithLifetimeAndDropGlue::
+    StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
+                                  StructWithLifetimeAndDropGlue&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_make_ustatic_u42(
+    ::lifetimes::StructWithLifetimeAndDropGlue* __ret_ptr);
+}
+inline ::rs::Movable<::lifetimes::StructWithLifetimeAndDropGlue>(
+    StructWithLifetimeAndDropGlue::make_static_42)() {
+  crubit::Slot<::lifetimes::StructWithLifetimeAndDropGlue>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_make_ustatic_u42(__return_value_storage);
+  return ::rs::Movable<::lifetimes::StructWithLifetimeAndDropGlue>::
+      TakeFromSlot(::std::move(__return_value_ret_val_holder));
+}
+inline void ::lifetimes::StructWithLifetimeAndDropGlue::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::lifetimes::StructWithLifetimeAndDropGlue;
+  static_assert(0 == offsetof(__crubit_assert_type, field_with_drop_glue));
+  static_assert(12 == offsetof(__crubit_assert_type, field_with_lifetime));
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
+    ::std::int32_t const&);
+}
+inline void function_with_trivial_unnamed_lifetime_param(
+    ::std::int32_t const& __param_0) {
+  return __crubit_internal::
+      __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
+          __param_0);
+}
+
+}  // namespace lifetimes
+
+#pragma clang diagnostic pop
+#endif  // CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN

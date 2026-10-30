@@ -40,8 +40,6 @@ golden_test(
         "ios",
     ],
     rust_library = "enums",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
@@ -84,8 +82,6 @@ golden_test(
         "ios",
     ],
     rust_library = "cpp_enums",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
@@ -130,8 +126,6 @@ golden_test(
         "ios",
     ],
     rust_library = "option",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
@@ -178,8 +172,6 @@ golden_test(
         "ios",
     ],
     rust_library = "result",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
