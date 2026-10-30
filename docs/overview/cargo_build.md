@@ -195,20 +195,21 @@ environment variables.
 ### Building with CMake
 
 The CMake project in `cmake/rs_bindings_from_cc` builds `rs_bindings_from_cc`.
-It provides the C++ dependencies and then runs Cargo. For each
+It finds or builds the C++ dependencies and then runs Cargo. For each
 dependency, it uses one that's already installed if it's suitable, and
 otherwise gets one itself:
 
 *   **LLVM/Clang**: uses the install you pass with `-DCRUBIT_LLVM_ROOT=<path>`,
     or else an LLVM 23.1.3 that `find_package(LLVM)` finds (for example through
     `CMAKE_PREFIX_PATH` or `LLVM_DIR`). Either one must contain
-    `bin/llvm-config`, the headers and the static Clang and LLVM libraries.
-    Otherwise, it downloads the official LLVM 23.1.3 release for your platform.
-    LLVM doesn't publish releases for x86_64 macOS, so on those machines you
-    must provide LLVM explicitly.
+    `bin/llvm-config`, the headers and the static Clang and LLVM libraries,
+    and `llvm-ar` must be from the same LLVM version. Otherwise, it downloads
+    the official LLVM 23.1.3 release for your platform. On platforms that LLVM
+    doesn't publish releases for (such as x86_64 macOS), you must provide LLVM
+    explicitly.
 *   **Abseil and Protobuf**: uses the installed packages that
-    `find_package(protobuf)` finds, if they are static libraries and Protobuf
-    is exactly version 36.1, which the `protobuf` crate in `Cargo.toml` needs.
+    `find_package(protobuf)` finds, if they are static libraries and the
+    Protobuf version matches the `protobuf` crate dependency in `Cargo.toml`.
     Otherwise, it builds both from source, at the versions that the Bazel build
     uses. Most system packages are shared libraries or a different Protobuf
     version, so expect it to build them.
@@ -265,8 +266,11 @@ crates that only Bazel uses, which Cargo would remove. The copy keeps the pinned
 versions, and the checked-in file stays untouched.
 
 When the LLVM install includes `clang` and `lld`, the build uses them to
-compile C code and to link. LLVM releases ship their static libraries as LTO
-bitcode, which only a linker of the same LLVM version can read.
+compile C code and to link.
+
+> [!NOTE]
+> LLVM releases ship their static libraries as LTO bitcode, which only a linker
+> of the same LLVM version can read.
 
 
 ### Custom Build Systems (Chromium, Android, or Other Projects)

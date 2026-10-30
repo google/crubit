@@ -144,6 +144,55 @@ function(_crubit_llvm_config llvm_config out)
   set(${out} "${output}" PARENT_SCOPE)
 endfunction()
 
+# _crubit_check_llvm_config(<llvm_config>)
+#
+# Stops with an error if the llvm-config executable <llvm_config> doesn't run.
+# Without this check, a broken llvm-config (for example, one built for another
+# machine) would only fail with a bare "process failed" error.
+function(_crubit_check_llvm_config llvm_config)
+  execute_process(
+    COMMAND "${llvm_config}" --version
+    RESULT_VARIABLE result
+    OUTPUT_QUIET
+    ERROR_VARIABLE error
+  )
+  if(NOT result EQUAL 0)
+    message(FATAL_ERROR
+      "${llvm_config} doesn't run (${result}): ${error}")
+  endif()
+endfunction()
+
+# _crubit_check_llvm_ar(<llvm_ar> <llvm_version> <root>)
+#
+# Stops with an error unless the llvm-ar executable <llvm_ar> is of LLVM
+# version <llvm_version>. LLVM releases ship their static libraries as LTO
+# bitcode, which only an llvm-ar of the same LLVM version can read. A
+# mismatched llvm-ar can come from the PATH, when the LLVM install at <root>
+# doesn't have one.
+function(_crubit_check_llvm_ar llvm_ar llvm_version root)
+  execute_process(
+    COMMAND "${llvm_ar}" --version
+    RESULT_VARIABLE result
+    OUTPUT_VARIABLE output
+    ERROR_VARIABLE error
+  )
+  if(NOT result EQUAL 0)
+    message(FATAL_ERROR "${llvm_ar} doesn't run (${result}): ${error}")
+  endif()
+  # llvm-ar prints "LLVM version <version>", possibly after a vendor name such
+  # as "Homebrew".
+  if(NOT output MATCHES "LLVM version ([^ \t\r\n]+)")
+    message(FATAL_ERROR
+      "Can't tell the LLVM version of ${llvm_ar}. It printed:\n${output}")
+  endif()
+  if(NOT CMAKE_MATCH_1 STREQUAL llvm_version)
+    message(FATAL_ERROR
+      "${llvm_ar} is from LLVM ${CMAKE_MATCH_1}, but the LLVM install at "
+      "${root} is LLVM ${llvm_version}. They must be the same version. Put an "
+      "llvm-ar of LLVM ${llvm_version} in ${root}/bin or on the PATH.")
+  endif()
+endfunction()
+
 # _crubit_describe_llvm(<root>)
 #
 # Finds the tools in the LLVM install at <root>, and asks llvm-config about it.
@@ -152,7 +201,8 @@ endfunction()
 #   llvm_version, llvm_include_dir, llvm_lib_dir, llvm_dev_date
 #   llvm_libraries: the static libraries in llvm_lib_dir.
 #   llvm_system_libs: the system libraries that LLVM needs, as a list.
-#   llvm_ar: llvm-ar, from <root> if it has one, or else from the PATH.
+#   llvm_ar: llvm-ar, from <root> if it has one, or else from the PATH. It must
+#     be the same LLVM version as <root>.
 #   llvm_clang, llvm_lld: clang and lld from <root>, or a NOTFOUND value if
 #     <root> doesn't have them.
 function(_crubit_describe_llvm root)
@@ -166,15 +216,27 @@ function(_crubit_describe_llvm root)
   unset(found_llvm_clang)
   unset(found_llvm_lld)
   find_program(found_llvm_config llvm-config
-    PATHS "${root}/bin" NO_DEFAULT_PATH NO_CACHE REQUIRED)
+    PATHS "${root}/bin" NO_DEFAULT_PATH NO_CACHE)
+  if(NOT found_llvm_config)
+    message(FATAL_ERROR
+      "The LLVM install at ${root} has no bin/llvm-config.")
+  endif()
+  _crubit_check_llvm_config("${found_llvm_config}")
+  _crubit_llvm_config("${found_llvm_config}" version --version)
+
   find_program(found_llvm_ar llvm-ar PATHS "${root}/bin" NO_DEFAULT_PATH NO_CACHE)
   if(NOT found_llvm_ar)
-    find_program(found_llvm_ar llvm-ar NO_CACHE REQUIRED)
+    find_program(found_llvm_ar llvm-ar NO_CACHE)
   endif()
+  if(NOT found_llvm_ar)
+    message(FATAL_ERROR
+      "Found no llvm-ar in ${root}/bin or on the PATH. Crubit needs the "
+      "llvm-ar of LLVM ${version}.")
+  endif()
+  _crubit_check_llvm_ar("${found_llvm_ar}" "${version}" "${root}")
+
   find_program(found_llvm_clang clang PATHS "${root}/bin" NO_DEFAULT_PATH NO_CACHE)
   find_program(found_llvm_lld lld PATHS "${root}/bin" NO_DEFAULT_PATH NO_CACHE)
-
-  _crubit_llvm_config("${found_llvm_config}" version --version)
   _crubit_llvm_config("${found_llvm_config}" include_dir --includedir)
   _crubit_llvm_config("${found_llvm_config}" lib_dir --libdir)
   _crubit_llvm_config("${found_llvm_config}" has_rtti --has-rtti)
