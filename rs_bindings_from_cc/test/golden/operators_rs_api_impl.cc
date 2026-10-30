@@ -63,7 +63,7 @@ extern "C" void __rust_thunk___ZN13AddableFriendC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZplRK13AddableFriendS1_(
+extern "C" void __rust_thunk__d39cd4ab__ZplRK13AddableFriendS1_(
     class AddableFriend* __return, class AddableFriend const* lhs,
     class AddableFriend const* rhs) {
   new (__return) auto(operator+(*lhs, *rhs));
@@ -280,7 +280,7 @@ extern "C" void __rust_thunk___ZN22AddAssignFriendByValueC1Ev(
 }
 
 extern "C" struct AddAssignFriendByValue*
-__rust_thunk___ZpLR22AddAssignFriendByValueS_(
+__rust_thunk__c9a4e968__ZpLR22AddAssignFriendByValueS_(
     struct AddAssignFriendByValue* lhs, struct AddAssignFriendByValue* rhs) {
   return std::addressof(operator+=(*lhs, crubit::UnsafeTakeValue(rhs)));
 }
