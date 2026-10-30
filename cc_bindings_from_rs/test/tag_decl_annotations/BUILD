@@ -44,8 +44,6 @@ golden_test(
         "ios",
     ],
     rust_library = "tag_decl_annotations",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 crubit_cc_test(

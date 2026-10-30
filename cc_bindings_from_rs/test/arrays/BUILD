@@ -40,8 +40,6 @@ golden_test(
         "ios",
     ],
     rust_library = "arrays",
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
 )
 
 cpp_api_from_rust(
