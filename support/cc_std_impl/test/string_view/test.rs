@@ -4,7 +4,7 @@
 
 use cc_std::std::raw_string_view;
 use cc_std::std::string_view;
-use googletest::matchers::{contains_substring, StrMatcherConfigurator};
+use googletest::matchers::{contains_substring, eq, StrMatcherConfigurator};
 use googletest::{assert_that, gtest};
 use std::sync::LazyLock;
 use string_view_cc_apis::crubit_string_view::GetDefault;
@@ -214,4 +214,15 @@ fn test_default() {
     assert_eq!(sv.len(), 0);
     assert!(sv.is_empty());
     assert_eq!(sv.as_bytes(), b"");
+}
+
+#[gtest]
+fn test_partial_eq_with_str_and_byte_slice_references() {
+    let sv = string_view::from("foo");
+    assert_that!(sv == "foo", eq(true));
+    assert_that!("foo" == sv, eq(true));
+    assert_that!(sv == b"foo".as_slice(), eq(true));
+    assert_that!(b"foo".as_slice() == sv, eq(true));
+    assert_that!(sv == "bar", eq(false));
+    assert_that!(sv == b"bar".as_slice(), eq(false));
 }

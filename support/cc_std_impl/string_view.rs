@@ -182,8 +182,37 @@ impl PartialEq<[u8]> for string_view<'_> {
 }
 
 impl PartialEq<string_view<'_>> for [u8] {
+    #[inline]
     fn eq(&self, other: &string_view<'_>) -> bool {
         self == other.as_bytes()
+    }
+}
+
+impl PartialEq<&str> for string_view<'_> {
+    #[inline]
+    fn eq(&self, other: &&str) -> bool {
+        self.as_bytes() == other.as_bytes()
+    }
+}
+
+impl PartialEq<string_view<'_>> for &str {
+    #[inline]
+    fn eq(&self, other: &string_view<'_>) -> bool {
+        self.as_bytes() == other.as_bytes()
+    }
+}
+
+impl PartialEq<&[u8]> for string_view<'_> {
+    #[inline]
+    fn eq(&self, other: &&[u8]) -> bool {
+        self.as_bytes() == *other
+    }
+}
+
+impl PartialEq<string_view<'_>> for &[u8] {
+    #[inline]
+    fn eq(&self, other: &string_view<'_>) -> bool {
+        *self == other.as_bytes()
     }
 }
 
