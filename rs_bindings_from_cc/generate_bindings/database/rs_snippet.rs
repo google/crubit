@@ -1699,7 +1699,7 @@ impl RsTypeKind {
         let label_hint = if let Some(hint_str) = existing_rust_type.label_hint() {
             ensure!(
                 hint_str.starts_with("//"),
-                "Invalid CRUBIT_INTERNAL_RUST_TYPE label hint format: `{}`. Expected `//package:target` or `//package`",
+                "Invalid `CRUBIT_RUST_LAYOUT_EQUIVALENT_LABEL_HINT` (a.k.a. `CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT`) format: `{}`. Expected `//package:target` or `//package`",
                 hint_str
             );
             let label = BazelLabel::from(hint_str);
