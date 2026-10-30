@@ -1885,8 +1885,62 @@ impl RsTypeKind {
     }
 
     /// Returns a [`Display`]able C++ type name reconstructed from this [`RsTypeKind`].
+    ///
+    /// Note: This is a simplified counterpart to [`BindingsGenerator::cc_type_debug_name`] for
+    /// callers that only have an [`RsTypeKind`] rather than an [`ir::CcType`]; we may consider
+    /// de-duplicating the two in the future.
     pub fn display_cc_type_name_for_rs_type<'b>(&'b self) -> impl Display + use<'b> {
-        DisplayCcTypeNameForRsTypeKind(self)
+        std::fmt::from_fn(move |f| {
+            let mut cur = self;
+            while let RsTypeKind::CArray { element_type, .. } = cur.unalias() {
+                cur = element_type;
+            }
+            match cur.unalias() {
+                RsTypeKind::Primitive(p) => f.write_str(p.as_str())?,
+                RsTypeKind::Enum { enum_, crate_path } => write!(
+                    f,
+                    "{}{}",
+                    crate_path.namespace_qualifier.format_for_cc_debug(),
+                    enum_.cc_name()
+                )?,
+                RsTypeKind::Record { record, crate_path, .. } => write!(
+                    f,
+                    "{}{}",
+                    crate_path.namespace_qualifier.format_for_cc_debug(),
+                    record.cc_name()
+                )?,
+                RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => write!(
+                    f,
+                    "{}{}",
+                    crate_path.namespace_qualifier.format_for_cc_debug(),
+                    incomplete_record.cc_name()
+                )?,
+                RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
+                    f.write_str(existing_rust_type.cc_name())?
+                }
+                RsTypeKind::BridgeType { original_type, .. } => {
+                    write!(f, "{}", original_type.cc_name())?
+                }
+                RsTypeKind::Pointer { pointee, .. } => {
+                    write!(f, "{}*", pointee.display_cc_type_name_for_rs_type())?
+                }
+                RsTypeKind::Reference { referent, .. } => {
+                    write!(f, "{}&", referent.display_cc_type_name_for_rs_type())?
+                }
+                RsTypeKind::RvalueReference { referent, .. } => {
+                    write!(f, "{}&&", referent.display_cc_type_name_for_rs_type())?
+                }
+                RsTypeKind::FuncPtr { .. } => f.write_str("function pointer")?,
+                RsTypeKind::Error { symbol, .. } => f.write_str(symbol)?,
+                RsTypeKind::TypeAlias { .. } | RsTypeKind::CArray { .. } => unreachable!(),
+            }
+            let mut cur = self;
+            while let RsTypeKind::CArray { element_type, num_elements } = cur.unalias() {
+                write!(f, "[{num_elements}]")?;
+                cur = element_type;
+            }
+            Ok(())
+        })
     }
 
     pub fn is_proto_message_bridge_type(&self) -> bool {
@@ -2569,11 +2623,21 @@ impl RsTypeKind {
     }
 
     /// Returns a `Display`able type for this `RsTypeKind`.
+    ///
+    /// Formats the token stream of the RsTypeKind to a string. Note that this can include extra
+    /// whitespace, where we'd ideally remove it, but it is hard to remove whitespace without
+    /// invoking rustfmt.
     pub fn display<'a, 'b>(
         &'b self,
         db: &'b BindingsGenerator<'a>,
     ) -> impl std::fmt::Display + use<'a, 'b> {
-        DisplayRsTypeKind { rs_type_kind: self, db }
+        std::fmt::from_fn(move |f| match write_unformatted_tokens(f, self.to_token_stream(db)) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                // Honestly this should never happen, but we should spit out something.
+                write!(f, "<error: {e}>")
+            }
+        })
     }
 
     pub fn overloads_operator_delete(&self) -> bool {
@@ -2925,89 +2989,6 @@ pub enum PassingConvention {
     /// As input: this case is unreachable.
     /// As output: do nothing.
     Void,
-}
-
-/// A type that implements [`std::fmt::Display`] for [`RsTypeKind`], which
-/// requires a [`BindingsGenerator`] to be able to format the type.
-pub struct DisplayRsTypeKind<'a, 'b> {
-    rs_type_kind: &'a RsTypeKind,
-    db: &'a BindingsGenerator<'b>,
-}
-
-impl std::fmt::Display for DisplayRsTypeKind<'_, '_> {
-    // Formats the token stream of the RsTypeKind to a string. Note that this can
-    // include extra whitespace, where we'd ideally remove it, but it is hard to
-    // remove whitespace without invoking rustfmt.
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match write_unformatted_tokens(f, self.rs_type_kind.to_token_stream(self.db)) {
-            Ok(_) => Ok(()),
-            Err(e) => {
-                // Honestly this should never happen, but we should spit out something.
-                write!(f, "<error: {e}>")
-            }
-        }
-    }
-}
-
-/// A type that implements [`std::fmt::Display`] for [`RsTypeKind`], but displays the equivalent
-/// C++ type instead of the Rust type.
-struct DisplayCcTypeNameForRsTypeKind<'a>(&'a RsTypeKind);
-
-/// Note: This is a simplified counterpart to [`BindingsGenerator::cc_type_debug_name`] for
-/// callers that only have an [`RsTypeKind`] rather than an [`ir::CcType`]; we may consider
-/// de-duplicating the two in the future.
-impl Display for DisplayCcTypeNameForRsTypeKind<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut cur = self.0;
-        while let RsTypeKind::CArray { element_type, .. } = cur.unalias() {
-            cur = element_type;
-        }
-        match cur.unalias() {
-            RsTypeKind::Primitive(p) => f.write_str(p.as_str())?,
-            RsTypeKind::Enum { enum_, crate_path } => write!(
-                f,
-                "{}{}",
-                crate_path.namespace_qualifier.format_for_cc_debug(),
-                enum_.cc_name()
-            )?,
-            RsTypeKind::Record { record, crate_path, .. } => write!(
-                f,
-                "{}{}",
-                crate_path.namespace_qualifier.format_for_cc_debug(),
-                record.cc_name()
-            )?,
-            RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => write!(
-                f,
-                "{}{}",
-                crate_path.namespace_qualifier.format_for_cc_debug(),
-                incomplete_record.cc_name()
-            )?,
-            RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
-                f.write_str(existing_rust_type.cc_name())?
-            }
-            RsTypeKind::BridgeType { original_type, .. } => {
-                write!(f, "{}", original_type.cc_name())?
-            }
-            RsTypeKind::Pointer { pointee, .. } => {
-                write!(f, "{}*", pointee.display_cc_type_name_for_rs_type())?
-            }
-            RsTypeKind::Reference { referent, .. } => {
-                write!(f, "{}&", referent.display_cc_type_name_for_rs_type())?
-            }
-            RsTypeKind::RvalueReference { referent, .. } => {
-                write!(f, "{}&&", referent.display_cc_type_name_for_rs_type())?
-            }
-            RsTypeKind::FuncPtr { .. } => f.write_str("function pointer")?,
-            RsTypeKind::Error { symbol, .. } => f.write_str(symbol)?,
-            RsTypeKind::TypeAlias { .. } | RsTypeKind::CArray { .. } => unreachable!(),
-        }
-        let mut cur = self.0;
-        while let RsTypeKind::CArray { element_type, num_elements } = cur.unalias() {
-            write!(f, "[{num_elements}]")?;
-            cur = element_type;
-        }
-        Ok(())
-    }
 }
 
 pub enum PrimitiveName {

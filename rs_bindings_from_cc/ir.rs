@@ -1795,15 +1795,12 @@ impl Debug for TreeIR {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // BTreeMap has consistent ordering, unlike HashMap, so it's reasonable to rely on a
         // consistent Debug output.
-        struct DebugBTreeMap<T>(pub T);
 
         // Format as `[ (k, v) ]` instead of `map! { k: v }` because rustfmt fails on macros
         // with complicated contents (our nested items) which it cannot verify is valid Rust. This
         // ensures the output is parse-able for rustfmt on test failures. See b/272530008.
-        impl<K: Debug, V: Debug> Debug for DebugBTreeMap<&BTreeMap<K, V>> {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.debug_list().entries(self.0.iter()).finish()
-            }
+        fn debug_btree_map<K: Debug, V: Debug>(map: &BTreeMap<K, V>) -> impl Debug + '_ {
+            fmt::from_fn(move |f| f.debug_list().entries(map).finish())
         }
 
         // exhaustive-match so we don't forget to add fields to Debug when we add to TreeIR.
@@ -1821,11 +1818,11 @@ impl Debug for TreeIR {
             .field("public_headers", public_headers)
             .field("current_target", current_target)
             .field("crate_root_path", crate_root_path)
-            .field("crubit_features", &DebugBTreeMap(crubit_features))
-            .field("crate_names", &DebugBTreeMap(crate_names))
+            .field("crubit_features", &debug_btree_map(crubit_features))
+            .field("crate_names", &debug_btree_map(crate_names))
             .field("unstable_rust_features", unstable_rust_features)
             .field("reexported_namespaces", reexported_namespaces)
-            .field("top_level_items", &DebugBTreeMap(top_level_items))
+            .field("top_level_items", &debug_btree_map(top_level_items))
             .finish()
     }
 }

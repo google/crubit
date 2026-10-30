@@ -28,6 +28,7 @@ use database::code_snippet::{
 use database::BindingsGenerator;
 use database::{rename_c_stdlib_functions, rename_clang_builtin_macros, TypeLocation};
 use error_report::{anyhow, bail, ensure};
+use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
     get_layout, has_pointer_abi, is_c_abi_compatible_by_value, is_std_ptr_non_null,
@@ -605,7 +606,7 @@ fn escaping_bound_vars_err<'tcx>(tcx: TyCtxt<'tcx>, kind_str: &str, ty: Ty<'tcx>
     let vars_desc = if vars.is_empty() {
         String::new()
     } else {
-        format!(": {}", vars.into_iter().map(|v| format!("`{v}`")).collect::<Vec<_>>().join(", "))
+        format!(": {}", vars.iter().format_with(", ", |v, f| f(&format_args!("`{v}`"))))
     };
     format!(
         "Callable {kind_str} type `{ty}` references lifetimes or types that are bound at the function level{vars_desc}"

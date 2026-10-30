@@ -20,14 +20,6 @@ pub mod macro_internal {
     pub use std::format_args;
 }
 
-fn to_string_with_cause(error: &arc_anyhow::Error) -> String {
-    format!("{:#}", error)
-}
-
-fn errors_to_string(errors: &[arc_anyhow::Error]) -> String {
-    errors.iter().map(to_string_with_cause).collect::<Vec<_>>().join("\n")
-}
-
 /// A list of errors that, when converted to an `anyhow::Error`, can still be
 /// individually reported when used with `ErrorReport`.
 #[derive(Debug, Clone)]
@@ -43,7 +35,13 @@ impl From<Vec<arc_anyhow::Error>> for ErrorList {
 
 impl Display for ErrorList {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        f.write_str(&errors_to_string(&self.errors))
+        for (i, error) in self.errors.iter().enumerate() {
+            if i > 0 {
+                f.write_str("\n")?;
+            }
+            write!(f, "{error:#}")?;
+        }
+        Ok(())
     }
 }
 
