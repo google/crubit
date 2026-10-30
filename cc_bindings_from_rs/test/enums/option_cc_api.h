@@ -21,7 +21,6 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/movable.h"
-#include "support/rs_std/enum.h"
 #include "support/rs_std/option.h"
 #include "support/rs_std/result.h"
 #include "support/rs_std/str_ref.h"
@@ -109,6 +108,46 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
   // `option_golden::LessThan20U8` doesn't implement the `Default` trait
   LessThan20U8() = delete;
 
+  static constexpr LessThan20U8 MakeN0();
+
+  static constexpr LessThan20U8 MakeN1();
+
+  static constexpr LessThan20U8 MakeN2();
+
+  static constexpr LessThan20U8 MakeN3();
+
+  static constexpr LessThan20U8 MakeN4();
+
+  static constexpr LessThan20U8 MakeN5();
+
+  static constexpr LessThan20U8 MakeN6();
+
+  static constexpr LessThan20U8 MakeN7();
+
+  static constexpr LessThan20U8 MakeN8();
+
+  static constexpr LessThan20U8 MakeN9();
+
+  static constexpr LessThan20U8 MakeN10();
+
+  static constexpr LessThan20U8 MakeN11();
+
+  static constexpr LessThan20U8 MakeN12();
+
+  static constexpr LessThan20U8 MakeN13();
+
+  static constexpr LessThan20U8 MakeN14();
+
+  static constexpr LessThan20U8 MakeN15();
+
+  static constexpr LessThan20U8 MakeN16();
+
+  static constexpr LessThan20U8 MakeN17();
+
+  static constexpr LessThan20U8 MakeN18();
+
+  static constexpr LessThan20U8 MakeN19();
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~LessThan20U8() = default;
   LessThan20U8(LessThan20U8&&) = default;
@@ -126,365 +165,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
   // CRUBIT_ANNOTATE: must_bind=
   ::std::uint8_t value() const;
 
- public:
-  using Discriminant = ::std::uint8_t;
-
-  struct N0
-      : public ::crubit::internal::Variant<N0, ::option::LessThan20U8, 0> {
-   public:
-    constexpr explicit N0(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N0(const N0&) = default;
-    N0(N0&&) = default;
-    N0& operator=(const N0&) = default;
-    N0& operator=(N0&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 0;
-  };
-
-  struct N1
-      : public ::crubit::internal::Variant<N1, ::option::LessThan20U8, 1> {
-   public:
-    constexpr explicit N1(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N1(const N1&) = default;
-    N1(N1&&) = default;
-    N1& operator=(const N1&) = default;
-    N1& operator=(N1&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 1;
-  };
-
-  struct N2
-      : public ::crubit::internal::Variant<N2, ::option::LessThan20U8, 2> {
-   public:
-    constexpr explicit N2(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N2(const N2&) = default;
-    N2(N2&&) = default;
-    N2& operator=(const N2&) = default;
-    N2& operator=(N2&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 2;
-  };
-
-  struct N3
-      : public ::crubit::internal::Variant<N3, ::option::LessThan20U8, 3> {
-   public:
-    constexpr explicit N3(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N3(const N3&) = default;
-    N3(N3&&) = default;
-    N3& operator=(const N3&) = default;
-    N3& operator=(N3&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 3;
-  };
-
-  struct N4
-      : public ::crubit::internal::Variant<N4, ::option::LessThan20U8, 4> {
-   public:
-    constexpr explicit N4(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N4(const N4&) = default;
-    N4(N4&&) = default;
-    N4& operator=(const N4&) = default;
-    N4& operator=(N4&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 4;
-  };
-
-  struct N5
-      : public ::crubit::internal::Variant<N5, ::option::LessThan20U8, 5> {
-   public:
-    constexpr explicit N5(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N5(const N5&) = default;
-    N5(N5&&) = default;
-    N5& operator=(const N5&) = default;
-    N5& operator=(N5&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 5;
-  };
-
-  struct N6
-      : public ::crubit::internal::Variant<N6, ::option::LessThan20U8, 6> {
-   public:
-    constexpr explicit N6(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N6(const N6&) = default;
-    N6(N6&&) = default;
-    N6& operator=(const N6&) = default;
-    N6& operator=(N6&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 6;
-  };
-
-  struct N7
-      : public ::crubit::internal::Variant<N7, ::option::LessThan20U8, 7> {
-   public:
-    constexpr explicit N7(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N7(const N7&) = default;
-    N7(N7&&) = default;
-    N7& operator=(const N7&) = default;
-    N7& operator=(N7&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 7;
-  };
-
-  struct N8
-      : public ::crubit::internal::Variant<N8, ::option::LessThan20U8, 8> {
-   public:
-    constexpr explicit N8(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N8(const N8&) = default;
-    N8(N8&&) = default;
-    N8& operator=(const N8&) = default;
-    N8& operator=(N8&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 8;
-  };
-
-  struct N9
-      : public ::crubit::internal::Variant<N9, ::option::LessThan20U8, 9> {
-   public:
-    constexpr explicit N9(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N9(const N9&) = default;
-    N9(N9&&) = default;
-    N9& operator=(const N9&) = default;
-    N9& operator=(N9&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 9;
-  };
-
-  struct N10
-      : public ::crubit::internal::Variant<N10, ::option::LessThan20U8, 10> {
-   public:
-    constexpr explicit N10(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N10(const N10&) = default;
-    N10(N10&&) = default;
-    N10& operator=(const N10&) = default;
-    N10& operator=(N10&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 10;
-  };
-
-  struct N11
-      : public ::crubit::internal::Variant<N11, ::option::LessThan20U8, 11> {
-   public:
-    constexpr explicit N11(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N11(const N11&) = default;
-    N11(N11&&) = default;
-    N11& operator=(const N11&) = default;
-    N11& operator=(N11&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 11;
-  };
-
-  struct N12
-      : public ::crubit::internal::Variant<N12, ::option::LessThan20U8, 12> {
-   public:
-    constexpr explicit N12(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N12(const N12&) = default;
-    N12(N12&&) = default;
-    N12& operator=(const N12&) = default;
-    N12& operator=(N12&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 12;
-  };
-
-  struct N13
-      : public ::crubit::internal::Variant<N13, ::option::LessThan20U8, 13> {
-   public:
-    constexpr explicit N13(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N13(const N13&) = default;
-    N13(N13&&) = default;
-    N13& operator=(const N13&) = default;
-    N13& operator=(N13&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 13;
-  };
-
-  struct N14
-      : public ::crubit::internal::Variant<N14, ::option::LessThan20U8, 14> {
-   public:
-    constexpr explicit N14(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N14(const N14&) = default;
-    N14(N14&&) = default;
-    N14& operator=(const N14&) = default;
-    N14& operator=(N14&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 14;
-  };
-
-  struct N15
-      : public ::crubit::internal::Variant<N15, ::option::LessThan20U8, 15> {
-   public:
-    constexpr explicit N15(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N15(const N15&) = default;
-    N15(N15&&) = default;
-    N15& operator=(const N15&) = default;
-    N15& operator=(N15&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 15;
-  };
-
-  struct N16
-      : public ::crubit::internal::Variant<N16, ::option::LessThan20U8, 16> {
-   public:
-    constexpr explicit N16(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N16(const N16&) = default;
-    N16(N16&&) = default;
-    N16& operator=(const N16&) = default;
-    N16& operator=(N16&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 16;
-  };
-
-  struct N17
-      : public ::crubit::internal::Variant<N17, ::option::LessThan20U8, 17> {
-   public:
-    constexpr explicit N17(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N17(const N17&) = default;
-    N17(N17&&) = default;
-    N17& operator=(const N17&) = default;
-    N17& operator=(N17&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 17;
-  };
-
-  struct N18
-      : public ::crubit::internal::Variant<N18, ::option::LessThan20U8, 18> {
-   public:
-    constexpr explicit N18(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N18(const N18&) = default;
-    N18(N18&&) = default;
-    N18& operator=(const N18&) = default;
-    N18& operator=(N18&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 18;
-  };
-
-  struct N19
-      : public ::crubit::internal::Variant<N19, ::option::LessThan20U8, 19> {
-   public:
-    constexpr explicit N19(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    N19(const N19&) = default;
-    N19(N19&&) = default;
-    N19& operator=(const N19&) = default;
-    N19& operator=(N19&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 19;
-  };
-
-  // Constructs the enum holding the variant `__Variant`, built in place from
-  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
-  template <typename __Variant, typename... __Args>
-    requires ::crubit::internal::ConstructibleVariantOf<
-        __Variant, ::option::LessThan20U8, __Args...>
-  constexpr explicit LessThan20U8(::std::in_place_type_t<__Variant> __variant,
-                                  __Args&&... __args)
-      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
 
  private:
-  friend struct ::crubit::internal::EnumAccess;
-  ::crubit::internal::VariadicUnionStorage<
-      ::crubit::internal::tag_encoding::Direct<::std::uint8_t, 0>, N0, N1, N2,
-      N3, N4, N5, N6, N7, N8, N9, N10, N11, N12, N13, N14, N15, N16, N17, N18,
-      N19>
-      storage_;
+  struct PrivateBytesTag {};
+  constexpr LessThan20U8(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 
 // Error generating bindings for struct `option_golden::OptUninhabited`:
@@ -2478,6 +2170,106 @@ static_assert(
 static_assert(
     alignof(::option::LessThan20U8) == 1,
     "Verify that ADT layout didn't change since this header got generated");
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN0)() {
+  return LessThan20U8(PrivateBytesTag{}, {0});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN1)() {
+  return LessThan20U8(PrivateBytesTag{}, {1});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN2)() {
+  return LessThan20U8(PrivateBytesTag{}, {2});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN3)() {
+  return LessThan20U8(PrivateBytesTag{}, {3});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN4)() {
+  return LessThan20U8(PrivateBytesTag{}, {4});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN5)() {
+  return LessThan20U8(PrivateBytesTag{}, {5});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN6)() {
+  return LessThan20U8(PrivateBytesTag{}, {6});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN7)() {
+  return LessThan20U8(PrivateBytesTag{}, {7});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN8)() {
+  return LessThan20U8(PrivateBytesTag{}, {8});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN9)() {
+  return LessThan20U8(PrivateBytesTag{}, {9});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN10)() {
+  return LessThan20U8(PrivateBytesTag{}, {10});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN11)() {
+  return LessThan20U8(PrivateBytesTag{}, {11});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN12)() {
+  return LessThan20U8(PrivateBytesTag{}, {12});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN13)() {
+  return LessThan20U8(PrivateBytesTag{}, {13});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN14)() {
+  return LessThan20U8(PrivateBytesTag{}, {14});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN15)() {
+  return LessThan20U8(PrivateBytesTag{}, {15});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN16)() {
+  return LessThan20U8(PrivateBytesTag{}, {16});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN17)() {
+  return LessThan20U8(PrivateBytesTag{}, {17});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN18)() {
+  return LessThan20U8(PrivateBytesTag{}, {18});
+}
+
+// `static` constructor
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN19)() {
+  return LessThan20U8(PrivateBytesTag{}, {19});
+}
 static_assert(::std::is_trivially_destructible_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_move_constructible_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_move_assignable_v<::option::LessThan20U8>);
@@ -2508,7 +2300,12 @@ inline ::std::uint8_t(LessThan20U8::value)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_value(&self);
 }
-
+inline void ::option::LessThan20U8::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::LessThan20U8;
+    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+  }
+}
 static_assert(
     sizeof(::option::OptCloneNoDefault) == 2,
     "Verify that ADT layout didn't change since this header got generated");

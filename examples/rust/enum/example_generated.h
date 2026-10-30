@@ -17,12 +17,11 @@
 #pragma clang diagnostic ignored "-Wshadow"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
-#include "support/rs_std/enum.h"
 
-#include <cstdint>
+#include <array>
+#include <cstddef>
 #include <cstring>
 #include <type_traits>
-#include <utility>
 
 namespace example_crate {
 
@@ -31,6 +30,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
  public:
   // Default::default
   Color();
+
+  static constexpr Color MakeRed();
+
+  static constexpr Color MakeBlue();
+
+  static constexpr Color MakeGreen();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~Color() = default;
@@ -43,75 +48,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   Color& operator=(const Color&) = default;
   Color(::crubit::UnsafeRelocateTag, Color&& value);
 
- public:
-  using Discriminant = ::std::uint8_t;
-
-  struct Red
-      : public ::crubit::internal::Variant<Red, ::example_crate::Color, 0> {
-   public:
-    constexpr explicit Red(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    Red(const Red&) = default;
-    Red(Red&&) = default;
-    Red& operator=(const Red&) = default;
-    Red& operator=(Red&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 0;
-  };
-
-  struct Blue
-      : public ::crubit::internal::Variant<Blue, ::example_crate::Color, 1> {
-   public:
-    constexpr explicit Blue(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    Blue(const Blue&) = default;
-    Blue(Blue&&) = default;
-    Blue& operator=(const Blue&) = default;
-    Blue& operator=(Blue&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 1;
-  };
-
-  struct Green
-      : public ::crubit::internal::Variant<Green, ::example_crate::Color, 2> {
-   public:
-    constexpr explicit Green(::crubit::internal::VariantKey) {}
-
-   private:
-    // Variants can't be copied or moved on their own, only as part of the enum.
-    // See `::crubit::internal::Variant`.
-    template <typename...>
-    friend union ::crubit::internal::VariadicUnion;
-    Green(const Green&) = default;
-    Green(Green&&) = default;
-    Green& operator=(const Green&) = default;
-    Green& operator=(Green&&) = default;
-    [[maybe_unused]] ::std::uint8_t __crubit_tag = 2;
-  };
-
-  // Constructs the enum holding the variant `__Variant`, built in place from
-  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
-  template <typename __Variant, typename... __Args>
-    requires ::crubit::internal::ConstructibleVariantOf<
-        __Variant, ::example_crate::Color, __Args...>
-  constexpr explicit Color(::std::in_place_type_t<__Variant> __variant,
-                           __Args&&... __args)
-      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
 
  private:
-  friend struct ::crubit::internal::EnumAccess;
-  ::crubit::internal::VariadicUnionStorage<
-      ::crubit::internal::tag_encoding::Direct<::std::uint8_t, 0>, Red, Blue,
-      Green>
-      storage_;
+  struct PrivateBytesTag {};
+  constexpr Color(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 
 static_assert(
@@ -130,6 +78,20 @@ inline ::example_crate::Color::Color() {
       __crubit_thunk_Default_udefault_uexample_ucrate_ugolden_x0000003a_x0000003aColor(
           this);
 }
+// `static` constructor
+inline constexpr ::example_crate::Color(::example_crate::Color::MakeRed)() {
+  return Color(PrivateBytesTag{}, {0});
+}
+
+// `static` constructor
+inline constexpr ::example_crate::Color(::example_crate::Color::MakeBlue)() {
+  return Color(PrivateBytesTag{}, {1});
+}
+
+// `static` constructor
+inline constexpr ::example_crate::Color(::example_crate::Color::MakeGreen)() {
+  return Color(PrivateBytesTag{}, {2});
+}
 static_assert(::std::is_trivially_destructible_v<::example_crate::Color>);
 static_assert(::std::is_trivially_move_constructible_v<::example_crate::Color>);
 static_assert(::std::is_trivially_move_assignable_v<::example_crate::Color>);
@@ -139,7 +101,12 @@ inline ::example_crate::Color::Color(::crubit::UnsafeRelocateTag,
                                      Color&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-
+inline void ::example_crate::Color::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::example_crate::Color;
+    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+  }
+}
 }  // namespace example_crate
 
 #pragma clang diagnostic pop
