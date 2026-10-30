@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/enum.h"
 #include "support/rs_std/traits.h"
 
 #include <array>
@@ -30,10 +31,6 @@
 #include "support/rs_std/rs_alloc.h"
 #include "support/rs_std/rs_core.h"
 
-namespace enums::qr_error {
-struct StructuredQrError;
-}
-
 namespace enums::param_name_collisions {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -43,10 +40,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `enums_golden::param_name_collisions::FooBar` doesn't implement the
   // `Default` trait
   FooBar() = delete;
-
-  static constexpr FooBar MakeFoo();
-
-  static constexpr FooBar MakeBar();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~FooBar() = default;
@@ -61,18 +54,57 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   bool operator==(::enums::param_name_collisions::FooBar const& other) const;
 
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
+ public:
+  using Discriminant = ::std::uint8_t;
+
+  struct Foo : public ::crubit::internal::Variant<
+                   Foo, ::enums::param_name_collisions::FooBar, 0> {
+   public:
+    constexpr explicit Foo(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    Foo(const Foo&) = default;
+    Foo(Foo&&) = default;
+    Foo& operator=(const Foo&) = default;
+    Foo& operator=(Foo&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 0;
+  };
+
+  struct Bar : public ::crubit::internal::Variant<
+                   Bar, ::enums::param_name_collisions::FooBar, 1> {
+   public:
+    constexpr explicit Bar(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    Bar(const Bar&) = default;
+    Bar(Bar&&) = default;
+    Bar& operator=(const Bar&) = default;
+    Bar& operator=(Bar&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 1;
+  };
+
+  // Constructs the enum holding the variant `__Variant`, built in place from
+  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
+  template <typename __Variant, typename... __Args>
+    requires ::crubit::internal::ConstructibleVariantOf<
+        __Variant, ::enums::param_name_collisions::FooBar, __Args...>
+  constexpr explicit FooBar(::std::in_place_type_t<__Variant> __variant,
+                            __Args&&... __args)
+      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
 
  private:
-  struct PrivateBytesTag {};
-  constexpr FooBar(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
-
- private:
-  static void __crubit_field_offset_assertions();
+  friend struct ::crubit::internal::EnumAccess;
+  ::crubit::internal::VariadicUnionStorage<
+      ::crubit::internal::tag_encoding::Direct<::std::uint8_t, 0>, Foo, Bar>
+      storage_;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -82,10 +114,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `enums_golden::param_name_collisions::KeywordEnum` doesn't implement the
   // `Default` trait
   KeywordEnum() = delete;
-
-  static constexpr KeywordEnum Makematch();
-
-  static constexpr KeywordEnum Makeother();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~KeywordEnum() = default;
@@ -101,18 +129,57 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   bool operator==(
       ::enums::param_name_collisions::KeywordEnum const& other) const;
 
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
+ public:
+  using Discriminant = ::std::uint8_t;
+
+  struct match : public ::crubit::internal::Variant<
+                     match, ::enums::param_name_collisions::KeywordEnum, 0> {
+   public:
+    constexpr explicit match(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    match(const match&) = default;
+    match(match&&) = default;
+    match& operator=(const match&) = default;
+    match& operator=(match&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 0;
+  };
+
+  struct other : public ::crubit::internal::Variant<
+                     other, ::enums::param_name_collisions::KeywordEnum, 1> {
+   public:
+    constexpr explicit other(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    other(const other&) = default;
+    other(other&&) = default;
+    other& operator=(const other&) = default;
+    other& operator=(other&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 1;
+  };
+
+  // Constructs the enum holding the variant `__Variant`, built in place from
+  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
+  template <typename __Variant, typename... __Args>
+    requires ::crubit::internal::ConstructibleVariantOf<
+        __Variant, ::enums::param_name_collisions::KeywordEnum, __Args...>
+  constexpr explicit KeywordEnum(::std::in_place_type_t<__Variant> __variant,
+                                 __Args&&... __args)
+      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
 
  private:
-  struct PrivateBytesTag {};
-  constexpr KeywordEnum(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
-
- private:
-  static void __crubit_field_offset_assertions();
+  friend struct ::crubit::internal::EnumAccess;
+  ::crubit::internal::VariadicUnionStorage<
+      ::crubit::internal::tag_encoding::Direct<::std::uint8_t, 0>, match, other>
+      storage_;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -122,10 +189,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `enums_golden::param_name_collisions::OptionLike` doesn't implement the
   // `Default` trait
   OptionLike() = delete;
-
-  static constexpr OptionLike Makesome();
-
-  static constexpr OptionLike Makenone();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~OptionLike() = default;
@@ -143,18 +206,57 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   bool operator==(
       ::enums::param_name_collisions::OptionLike const& other) const;
 
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
+ public:
+  using Discriminant = ::std::uint8_t;
+
+  struct some : public ::crubit::internal::Variant<
+                    some, ::enums::param_name_collisions::OptionLike, 0> {
+   public:
+    constexpr explicit some(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    some(const some&) = default;
+    some(some&&) = default;
+    some& operator=(const some&) = default;
+    some& operator=(some&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 0;
+  };
+
+  struct none : public ::crubit::internal::Variant<
+                    none, ::enums::param_name_collisions::OptionLike, 1> {
+   public:
+    constexpr explicit none(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    none(const none&) = default;
+    none(none&&) = default;
+    none& operator=(const none&) = default;
+    none& operator=(none&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 1;
+  };
+
+  // Constructs the enum holding the variant `__Variant`, built in place from
+  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
+  template <typename __Variant, typename... __Args>
+    requires ::crubit::internal::ConstructibleVariantOf<
+        __Variant, ::enums::param_name_collisions::OptionLike, __Args...>
+  constexpr explicit OptionLike(::std::in_place_type_t<__Variant> __variant,
+                                __Args&&... __args)
+      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
 
  private:
-  struct PrivateBytesTag {};
-  constexpr OptionLike(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
-
- private:
-  static void __crubit_field_offset_assertions();
+  friend struct ::crubit::internal::EnumAccess;
+  ::crubit::internal::VariadicUnionStorage<
+      ::crubit::internal::tag_encoding::Direct<::std::uint8_t, 0>, some, none>
+      storage_;
 };
 
 bool check_both(::enums::param_name_collisions::OptionLike some,
@@ -175,24 +277,286 @@ bool is_some(::enums::param_name_collisions::OptionLike some);
 namespace enums::qr_error {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: enums_golden :: qr_error :: StructuredQrError") alignas(4)
+    [[clang::trivial_abi]] StructuredQrError final {
+ public:
+  // `enums_golden::qr_error::StructuredQrError` doesn't implement the `Default`
+  // trait
+  StructuredQrError() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~StructuredQrError() = default;
+  StructuredQrError(StructuredQrError&&) = default;
+  StructuredQrError& operator=(StructuredQrError&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  StructuredQrError(const StructuredQrError&) = default;
+  StructuredQrError& operator=(const StructuredQrError&) = default;
+  StructuredQrError(::crubit::UnsafeRelocateTag, StructuredQrError&& value);
+
+  bool operator==(::enums::qr_error::StructuredQrError const& other) const;
+
+ public:
+  using Discriminant = ::std::uint8_t;
+
+  struct AtLeast2Pieces
+      : public ::crubit::internal::Variant<
+            AtLeast2Pieces, ::enums::qr_error::StructuredQrError, 0> {
+   public:
+    constexpr explicit AtLeast2Pieces(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    AtLeast2Pieces(const AtLeast2Pieces&) = default;
+    AtLeast2Pieces(AtLeast2Pieces&&) = default;
+    AtLeast2Pieces& operator=(const AtLeast2Pieces&) = default;
+    AtLeast2Pieces& operator=(AtLeast2Pieces&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 0;
+  };
+
+  struct TotalMismatch
+      : public ::crubit::internal::Variant<
+            TotalMismatch, ::enums::qr_error::StructuredQrError, 1> {
+   public:
+    constexpr explicit TotalMismatch(::crubit::internal::VariantKey,
+                                     ::std::uintptr_t __field0)
+        : __field0(::std::move(__field0)) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    TotalMismatch(const TotalMismatch&) = default;
+    TotalMismatch(TotalMismatch&&) = default;
+    TotalMismatch& operator=(const TotalMismatch&) = default;
+    TotalMismatch& operator=(TotalMismatch&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 1;
+    [[maybe_unused]] unsigned char __crubit_padding0[3] = {};
+
+   public:
+    ::std::uintptr_t __field0;
+  };
+
+  struct MissingParts
+      : public ::crubit::internal::Variant<
+            MissingParts, ::enums::qr_error::StructuredQrError, 2> {
+   public:
+    constexpr explicit MissingParts(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    MissingParts(const MissingParts&) = default;
+    MissingParts(MissingParts&&) = default;
+    MissingParts& operator=(const MissingParts&) = default;
+    MissingParts& operator=(MissingParts&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 2;
+  };
+
+  struct Parity : public ::crubit::internal::Variant<
+                      Parity, ::enums::qr_error::StructuredQrError, 3> {
+   public:
+    constexpr explicit Parity(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    Parity(const Parity&) = default;
+    Parity(Parity&&) = default;
+    Parity& operator=(const Parity&) = default;
+    Parity& operator=(Parity&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 3;
+  };
+
+  struct TooShort : public ::crubit::internal::Variant<
+                        TooShort, ::enums::qr_error::StructuredQrError, 4> {
+   public:
+    constexpr explicit TooShort(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    TooShort(const TooShort&) = default;
+    TooShort(TooShort&&) = default;
+    TooShort& operator=(const TooShort&) = default;
+    TooShort& operator=(TooShort&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 4;
+  };
+
+  struct StructuredWrongMode
+      : public ::crubit::internal::Variant<
+            StructuredWrongMode, ::enums::qr_error::StructuredQrError, 5> {
+   public:
+    constexpr explicit StructuredWrongMode(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    StructuredWrongMode(const StructuredWrongMode&) = default;
+    StructuredWrongMode(StructuredWrongMode&&) = default;
+    StructuredWrongMode& operator=(const StructuredWrongMode&) = default;
+    StructuredWrongMode& operator=(StructuredWrongMode&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 5;
+  };
+
+  struct StructuredWrongEnc
+      : public ::crubit::internal::Variant<
+            StructuredWrongEnc, ::enums::qr_error::StructuredQrError, 6> {
+   public:
+    constexpr explicit StructuredWrongEnc(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    StructuredWrongEnc(const StructuredWrongEnc&) = default;
+    StructuredWrongEnc(StructuredWrongEnc&&) = default;
+    StructuredWrongEnc& operator=(const StructuredWrongEnc&) = default;
+    StructuredWrongEnc& operator=(StructuredWrongEnc&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 6;
+  };
+
+  struct SeqGreaterThanTotal
+      : public ::crubit::internal::Variant<
+            SeqGreaterThanTotal, ::enums::qr_error::StructuredQrError, 7> {
+   public:
+    constexpr explicit SeqGreaterThanTotal(::crubit::internal::VariantKey,
+                                           ::std::uint8_t __field0,
+                                           ::std::uint8_t __field1)
+        : __field0(::std::move(__field0)), __field1(::std::move(__field1)) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    SeqGreaterThanTotal(const SeqGreaterThanTotal&) = default;
+    SeqGreaterThanTotal(SeqGreaterThanTotal&&) = default;
+    SeqGreaterThanTotal& operator=(const SeqGreaterThanTotal&) = default;
+    SeqGreaterThanTotal& operator=(SeqGreaterThanTotal&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 7;
+
+   public:
+    ::std::uint8_t __field0;
+    ::std::uint8_t __field1;
+  };
+
+  struct LengthMismatch
+      : public ::crubit::internal::Variant<
+            LengthMismatch, ::enums::qr_error::StructuredQrError, 8> {
+   public:
+    constexpr explicit LengthMismatch(::crubit::internal::VariantKey,
+                                      ::std::uintptr_t __field0,
+                                      ::std::uintptr_t __field1)
+        : __field0(::std::move(__field0)), __field1(::std::move(__field1)) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    LengthMismatch(const LengthMismatch&) = default;
+    LengthMismatch(LengthMismatch&&) = default;
+    LengthMismatch& operator=(const LengthMismatch&) = default;
+    LengthMismatch& operator=(LengthMismatch&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 8;
+    [[maybe_unused]] unsigned char __crubit_padding0[3] = {};
+
+   public:
+    ::std::uintptr_t __field0;
+    ::std::uintptr_t __field1;
+  };
+
+  struct UnsupportedVersion
+      : public ::crubit::internal::Variant<
+            UnsupportedVersion, ::enums::qr_error::StructuredQrError, 9> {
+   public:
+    constexpr explicit UnsupportedVersion(::crubit::internal::VariantKey,
+                                          ::std::int16_t __field0)
+        : __field0(::std::move(__field0)) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    UnsupportedVersion(const UnsupportedVersion&) = default;
+    UnsupportedVersion(UnsupportedVersion&&) = default;
+    UnsupportedVersion& operator=(const UnsupportedVersion&) = default;
+    UnsupportedVersion& operator=(UnsupportedVersion&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 9;
+    [[maybe_unused]] unsigned char __crubit_padding0[1] = {};
+
+   public:
+    ::std::int16_t __field0;
+  };
+
+  struct SplitMax16
+      : public ::crubit::internal::Variant<
+            SplitMax16, ::enums::qr_error::StructuredQrError, 10> {
+   public:
+    constexpr explicit SplitMax16(::crubit::internal::VariantKey,
+                                  ::std::uintptr_t __field0)
+        : __field0(::std::move(__field0)) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    SplitMax16(const SplitMax16&) = default;
+    SplitMax16(SplitMax16&&) = default;
+    SplitMax16& operator=(const SplitMax16&) = default;
+    SplitMax16& operator=(SplitMax16&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 10;
+    [[maybe_unused]] unsigned char __crubit_padding0[3] = {};
+
+   public:
+    ::std::uintptr_t __field0;
+  };
+
+  // Constructs the enum holding the variant `__Variant`, built in place from
+  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
+  template <typename __Variant, typename... __Args>
+    requires ::crubit::internal::ConstructibleVariantOf<
+        __Variant, ::enums::qr_error::StructuredQrError, __Args...>
+  constexpr explicit StructuredQrError(
+      ::std::in_place_type_t<__Variant> __variant, __Args&&... __args)
+      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
+
+ private:
+  friend struct ::crubit::internal::EnumAccess;
+  ::crubit::internal::VariadicUnionStorage<
+      ::crubit::internal::tag_encoding::Direct<::std::uint8_t, 0>,
+      AtLeast2Pieces, TotalMismatch, MissingParts, Parity, TooShort,
+      StructuredWrongMode, StructuredWrongEnc, SeqGreaterThanTotal,
+      LengthMismatch, UnsupportedVersion, SplitMax16>
+      storage_;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: qr_error :: QrError") alignas(4) [[clang::trivial_abi]]
 QrError final {
  public:
   // `enums_golden::qr_error::QrError` doesn't implement the `Default` trait
   QrError() = delete;
-
-  static constexpr QrError MakeDataTooLong();
-
-  static constexpr QrError MakeInvalidVersion();
-
-  static constexpr QrError MakeUnsupportedCharacterSet();
-
-  static constexpr QrError MakeInvalidEciDesignator();
-
-  static constexpr QrError MakeInvalidCharacter();
-
-  static ::enums::qr_error::QrError MakeStructured(
-      ::enums::qr_error::StructuredQrError __param_0);
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~QrError() = default;
@@ -209,78 +573,139 @@ QrError final {
 
   bool operator==(::enums::qr_error::QrError const& other) const;
 
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 12> __opaque_blob_of_bytes;
-
- private:
-  struct PrivateBytesTag {};
-  constexpr QrError(PrivateBytesTag, ::std::array<unsigned char, 12> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: qr_error :: StructuredQrError") alignas(4)
-    [[clang::trivial_abi]] StructuredQrError final {
  public:
-  // `enums_golden::qr_error::StructuredQrError` doesn't implement the `Default`
-  // trait
-  StructuredQrError() = delete;
+  using Discriminant = ::std::uint8_t;
 
-  static constexpr StructuredQrError MakeAtLeast2Pieces();
+  struct DataTooLong
+      : public ::crubit::internal::Variant<DataTooLong,
+                                           ::enums::qr_error::QrError, 0> {
+   public:
+    constexpr explicit DataTooLong(::crubit::internal::VariantKey) {}
 
-  static ::enums::qr_error::StructuredQrError MakeTotalMismatch(
-      ::std::uintptr_t __param_0);
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    DataTooLong(const DataTooLong&) = default;
+    DataTooLong(DataTooLong&&) = default;
+    DataTooLong& operator=(const DataTooLong&) = default;
+    DataTooLong& operator=(DataTooLong&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 11;
+  };
 
-  static constexpr StructuredQrError MakeMissingParts();
+  struct InvalidVersion
+      : public ::crubit::internal::Variant<InvalidVersion,
+                                           ::enums::qr_error::QrError, 1> {
+   public:
+    constexpr explicit InvalidVersion(::crubit::internal::VariantKey) {}
 
-  static constexpr StructuredQrError MakeParity();
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    InvalidVersion(const InvalidVersion&) = default;
+    InvalidVersion(InvalidVersion&&) = default;
+    InvalidVersion& operator=(const InvalidVersion&) = default;
+    InvalidVersion& operator=(InvalidVersion&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 12;
+  };
 
-  static constexpr StructuredQrError MakeTooShort();
+  struct UnsupportedCharacterSet
+      : public ::crubit::internal::Variant<UnsupportedCharacterSet,
+                                           ::enums::qr_error::QrError, 2> {
+   public:
+    constexpr explicit UnsupportedCharacterSet(::crubit::internal::VariantKey) {
+    }
 
-  static constexpr StructuredQrError MakeStructuredWrongMode();
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    UnsupportedCharacterSet(const UnsupportedCharacterSet&) = default;
+    UnsupportedCharacterSet(UnsupportedCharacterSet&&) = default;
+    UnsupportedCharacterSet& operator=(const UnsupportedCharacterSet&) =
+        default;
+    UnsupportedCharacterSet& operator=(UnsupportedCharacterSet&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 13;
+  };
 
-  static constexpr StructuredQrError MakeStructuredWrongEnc();
+  struct InvalidEciDesignator
+      : public ::crubit::internal::Variant<InvalidEciDesignator,
+                                           ::enums::qr_error::QrError, 3> {
+   public:
+    constexpr explicit InvalidEciDesignator(::crubit::internal::VariantKey) {}
 
-  static ::enums::qr_error::StructuredQrError MakeSeqGreaterThanTotal(
-      ::std::uint8_t __param_0, ::std::uint8_t __param_1);
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    InvalidEciDesignator(const InvalidEciDesignator&) = default;
+    InvalidEciDesignator(InvalidEciDesignator&&) = default;
+    InvalidEciDesignator& operator=(const InvalidEciDesignator&) = default;
+    InvalidEciDesignator& operator=(InvalidEciDesignator&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 14;
+  };
 
-  static ::enums::qr_error::StructuredQrError MakeLengthMismatch(
-      ::std::uintptr_t __param_0, ::std::uintptr_t __param_1);
+  struct InvalidCharacter
+      : public ::crubit::internal::Variant<InvalidCharacter,
+                                           ::enums::qr_error::QrError, 4> {
+   public:
+    constexpr explicit InvalidCharacter(::crubit::internal::VariantKey) {}
 
-  static ::enums::qr_error::StructuredQrError MakeUnsupportedVersion(
-      ::std::int16_t __param_0);
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    InvalidCharacter(const InvalidCharacter&) = default;
+    InvalidCharacter(InvalidCharacter&&) = default;
+    InvalidCharacter& operator=(const InvalidCharacter&) = default;
+    InvalidCharacter& operator=(InvalidCharacter&&) = default;
+    [[maybe_unused]] ::std::uint8_t __crubit_tag = 15;
+  };
 
-  static ::enums::qr_error::StructuredQrError MakeSplitMax16(
-      ::std::uintptr_t __param_0);
+  struct Structured
+      : public ::crubit::internal::Variant<Structured,
+                                           ::enums::qr_error::QrError, 5> {
+   public:
+    constexpr explicit Structured(::crubit::internal::VariantKey,
+                                  ::enums::qr_error::StructuredQrError __field0)
+        : __field0(::std::move(__field0)) {}
 
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~StructuredQrError() = default;
-  StructuredQrError(StructuredQrError&&) = default;
-  StructuredQrError& operator=(StructuredQrError&&) = default;
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    Structured(const Structured&) = default;
+    Structured(Structured&&) = default;
+    Structured& operator=(const Structured&) = default;
+    Structured& operator=(Structured&&) = default;
 
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  StructuredQrError(const StructuredQrError&) = default;
-  StructuredQrError& operator=(const StructuredQrError&) = default;
-  StructuredQrError(::crubit::UnsafeRelocateTag, StructuredQrError&& value);
+   public:
+    ::enums::qr_error::StructuredQrError __field0;
+  };
 
-  bool operator==(::enums::qr_error::StructuredQrError const& other) const;
+  // Constructs the enum holding the variant `__Variant`, built in place from
+  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
+  template <typename __Variant, typename... __Args>
+    requires ::crubit::internal::ConstructibleVariantOf<
+        __Variant, ::enums::qr_error::QrError, __Args...>
+  constexpr explicit QrError(::std::in_place_type_t<__Variant> __variant,
+                             __Args&&... __args)
+      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
 
  private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 12> __opaque_blob_of_bytes;
-
- private:
-  struct PrivateBytesTag {};
-  constexpr StructuredQrError(PrivateBytesTag,
-                              ::std::array<unsigned char, 12> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
+  friend struct ::crubit::internal::EnumAccess;
+  ::crubit::internal::VariadicUnionStorage<
+      ::crubit::internal::tag_encoding::Niche<::std::uint8_t, 0, 5, 0, 4, 11>,
+      DataTooLong, InvalidVersion, UnsupportedCharacterSet,
+      InvalidEciDesignator, InvalidCharacter, Structured>
+      storage_;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -317,6 +742,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   bool is_max_i128() const;
 
+  // Not using the `enum_api_v2` bindings for this enum: 128-bit discriminants
+  // are not supported (b/254094650)
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
@@ -354,6 +781,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   bool is_max_u128() const;
 
+  // Not using the `enum_api_v2` bindings for this enum: 128-bit discriminants
+  // are not supported (b/254094650)
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
@@ -1097,10 +1526,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Default` trait
   IntReprEnumWithNoPayload() = delete;
 
-  static constexpr IntReprEnumWithNoPayload MakeNoPayload1();
-
-  static constexpr IntReprEnumWithNoPayload MakeNoPayload2();
-
   // No custom `Drop` impl and no custom "drop glue" required
   ~IntReprEnumWithNoPayload() = default;
   IntReprEnumWithNoPayload(IntReprEnumWithNoPayload&&) = default;
@@ -1117,19 +1542,60 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   bool is_no_payload2() const;
 
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 4> __opaque_blob_of_bytes;
+ public:
+  using Discriminant = ::std::uint32_t;
+
+  struct NoPayload1
+      : public ::crubit::internal::Variant<
+            NoPayload1, ::enums::repr_int::IntReprEnumWithNoPayload, 0> {
+   public:
+    constexpr explicit NoPayload1(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    NoPayload1(const NoPayload1&) = default;
+    NoPayload1(NoPayload1&&) = default;
+    NoPayload1& operator=(const NoPayload1&) = default;
+    NoPayload1& operator=(NoPayload1&&) = default;
+    [[maybe_unused]] ::std::uint32_t __crubit_tag = 0;
+  };
+
+  struct NoPayload2
+      : public ::crubit::internal::Variant<
+            NoPayload2, ::enums::repr_int::IntReprEnumWithNoPayload, 1234> {
+   public:
+    constexpr explicit NoPayload2(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    NoPayload2(const NoPayload2&) = default;
+    NoPayload2(NoPayload2&&) = default;
+    NoPayload2& operator=(const NoPayload2&) = default;
+    NoPayload2& operator=(NoPayload2&&) = default;
+    [[maybe_unused]] ::std::uint32_t __crubit_tag = 1234;
+  };
+
+  // Constructs the enum holding the variant `__Variant`, built in place from
+  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
+  template <typename __Variant, typename... __Args>
+    requires ::crubit::internal::ConstructibleVariantOf<
+        __Variant, ::enums::repr_int::IntReprEnumWithNoPayload, __Args...>
+  constexpr explicit IntReprEnumWithNoPayload(
+      ::std::in_place_type_t<__Variant> __variant, __Args&&... __args)
+      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
 
  private:
-  struct PrivateBytesTag {};
-  constexpr IntReprEnumWithNoPayload(PrivateBytesTag,
-                                     ::std::array<unsigned char, 4> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
-
- private:
-  static void __crubit_field_offset_assertions();
+  friend struct ::crubit::internal::EnumAccess;
+  ::crubit::internal::VariadicUnionStorage<
+      ::crubit::internal::tag_encoding::Direct<::std::uint32_t, 0>, NoPayload1,
+      NoPayload2>
+      storage_;
 };
 
 //  This enum is **not** a "ZST" (Zero-Sized Type), because of `#[repr(u32)]`
@@ -1143,8 +1609,6 @@ struct
   // `enums_golden::repr_int::IntReprWithSingleNoPayloadVariant` doesn't
   // implement the `Default` trait
   IntReprWithSingleNoPayloadVariant() = delete;
-
-  static constexpr IntReprWithSingleNoPayloadVariant MakeSingleVariant();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~IntReprWithSingleNoPayloadVariant() = default;
@@ -1164,19 +1628,44 @@ struct
 
   bool is_single_variant() const;
 
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 4> __opaque_blob_of_bytes;
+ public:
+  using Discriminant = ::std::uint32_t;
+
+  struct SingleVariant
+      : public ::crubit::internal::Variant<
+            SingleVariant, ::enums::repr_int::IntReprWithSingleNoPayloadVariant,
+            0> {
+   public:
+    constexpr explicit SingleVariant(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    SingleVariant(const SingleVariant&) = default;
+    SingleVariant(SingleVariant&&) = default;
+    SingleVariant& operator=(const SingleVariant&) = default;
+    SingleVariant& operator=(SingleVariant&&) = default;
+    [[maybe_unused]] ::std::uint32_t __crubit_tag = 0;
+  };
+
+  // Constructs the enum holding the variant `__Variant`, built in place from
+  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
+  template <typename __Variant, typename... __Args>
+    requires ::crubit::internal::ConstructibleVariantOf<
+        __Variant, ::enums::repr_int::IntReprWithSingleNoPayloadVariant,
+        __Args...>
+  constexpr explicit IntReprWithSingleNoPayloadVariant(
+      ::std::in_place_type_t<__Variant> __variant, __Args&&... __args)
+      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
 
  private:
-  struct PrivateBytesTag {};
-  constexpr IntReprWithSingleNoPayloadVariant(
-      PrivateBytesTag, ::std::array<unsigned char, 4> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
-
- private:
-  static void __crubit_field_offset_assertions();
+  friend struct ::crubit::internal::EnumAccess;
+  ::crubit::internal::VariadicUnionStorage<
+      ::crubit::internal::tag_encoding::Direct<::std::uint32_t, 0>,
+      SingleVariant>
+      storage_;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -1186,10 +1675,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `enums_golden::repr_int::NegReprIntEnum` doesn't implement the `Default`
   // trait
   NegReprIntEnum() = delete;
-
-  static constexpr NegReprIntEnum MakeMinusOne();
-
-  static constexpr NegReprIntEnum MakeMinusTwo();
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~NegReprIntEnum() = default;
@@ -1206,19 +1691,58 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   bool is_minus_two() const;
 
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
+ public:
+  using Discriminant = ::std::int8_t;
+
+  struct MinusOne : public ::crubit::internal::Variant<
+                        MinusOne, ::enums::repr_int::NegReprIntEnum, -1> {
+   public:
+    constexpr explicit MinusOne(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    MinusOne(const MinusOne&) = default;
+    MinusOne(MinusOne&&) = default;
+    MinusOne& operator=(const MinusOne&) = default;
+    MinusOne& operator=(MinusOne&&) = default;
+    [[maybe_unused]] ::std::int8_t __crubit_tag = -1;
+  };
+
+  struct MinusTwo : public ::crubit::internal::Variant<
+                        MinusTwo, ::enums::repr_int::NegReprIntEnum, -2> {
+   public:
+    constexpr explicit MinusTwo(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    MinusTwo(const MinusTwo&) = default;
+    MinusTwo(MinusTwo&&) = default;
+    MinusTwo& operator=(const MinusTwo&) = default;
+    MinusTwo& operator=(MinusTwo&&) = default;
+    [[maybe_unused]] ::std::int8_t __crubit_tag = -2;
+  };
+
+  // Constructs the enum holding the variant `__Variant`, built in place from
+  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
+  template <typename __Variant, typename... __Args>
+    requires ::crubit::internal::ConstructibleVariantOf<
+        __Variant, ::enums::repr_int::NegReprIntEnum, __Args...>
+  constexpr explicit NegReprIntEnum(::std::in_place_type_t<__Variant> __variant,
+                                    __Args&&... __args)
+      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
 
  private:
-  struct PrivateBytesTag {};
-  constexpr NegReprIntEnum(PrivateBytesTag,
-                           ::std::array<unsigned char, 1> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
-
- private:
-  static void __crubit_field_offset_assertions();
+  friend struct ::crubit::internal::EnumAccess;
+  ::crubit::internal::VariadicUnionStorage<
+      ::crubit::internal::tag_encoding::Direct<::std::int8_t, 0>, MinusOne,
+      MinusTwo>
+      storage_;
 };
 
 }  // namespace enums::repr_int
@@ -1233,20 +1757,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `enums_golden::repr_rust::RustReprEnum` doesn't implement the `Default`
   // trait
   RustReprEnum() = delete;
-
-  //  Doc comment of Variant1.
-  static constexpr RustReprEnum MakeVariant1();
-
-  static constexpr RustReprEnum MakeVariant2();
-
-  static constexpr RustReprEnum MakeVariant3();
-
-  static ::enums::repr_rust::RustReprEnum MakeTuplePayloadVariant(
-      ::std::int32_t __param_0, ::std::int32_t __param_1);
-
-  // Error generating bindings for variant
-  // `enums_golden::repr_rust::RustReprEnum::StructPayloadVariant`: Constructing
-  // non-tuple, struct-like enum variants is not supported: b/487357254
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~RustReprEnum() = default;
@@ -1264,15 +1774,125 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   ::std::int32_t get_first_item_from_tuple_payload() const;
 
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 12> __opaque_blob_of_bytes;
+ public:
+  using Discriminant = ::std::uint32_t;
+
+  //  Doc comment of Variant1.
+  struct Variant1 : public ::crubit::internal::Variant<
+                        Variant1, ::enums::repr_rust::RustReprEnum, 0> {
+   public:
+    constexpr explicit Variant1(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    Variant1(const Variant1&) = default;
+    Variant1(Variant1&&) = default;
+    Variant1& operator=(const Variant1&) = default;
+    Variant1& operator=(Variant1&&) = default;
+    [[maybe_unused]] ::std::uint32_t __crubit_tag = 0;
+  };
+
+  struct Variant2 : public ::crubit::internal::Variant<
+                        Variant2, ::enums::repr_rust::RustReprEnum, 1> {
+   public:
+    constexpr explicit Variant2(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    Variant2(const Variant2&) = default;
+    Variant2(Variant2&&) = default;
+    Variant2& operator=(const Variant2&) = default;
+    Variant2& operator=(Variant2&&) = default;
+    [[maybe_unused]] ::std::uint32_t __crubit_tag = 1;
+  };
+
+  struct Variant3 : public ::crubit::internal::Variant<
+                        Variant3, ::enums::repr_rust::RustReprEnum, 2> {
+   public:
+    constexpr explicit Variant3(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    Variant3(const Variant3&) = default;
+    Variant3(Variant3&&) = default;
+    Variant3& operator=(const Variant3&) = default;
+    Variant3& operator=(Variant3&&) = default;
+    [[maybe_unused]] ::std::uint32_t __crubit_tag = 2;
+  };
+
+  struct TuplePayloadVariant
+      : public ::crubit::internal::Variant<
+            TuplePayloadVariant, ::enums::repr_rust::RustReprEnum, 3> {
+   public:
+    constexpr explicit TuplePayloadVariant(::crubit::internal::VariantKey,
+                                           ::std::int32_t __field0,
+                                           ::std::int32_t __field1)
+        : __field0(::std::move(__field0)), __field1(::std::move(__field1)) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    TuplePayloadVariant(const TuplePayloadVariant&) = default;
+    TuplePayloadVariant(TuplePayloadVariant&&) = default;
+    TuplePayloadVariant& operator=(const TuplePayloadVariant&) = default;
+    TuplePayloadVariant& operator=(TuplePayloadVariant&&) = default;
+    [[maybe_unused]] ::std::uint32_t __crubit_tag = 3;
+
+   public:
+    ::std::int32_t __field0;
+    ::std::int32_t __field1;
+  };
+
+  struct StructPayloadVariant
+      : public ::crubit::internal::Variant<
+            StructPayloadVariant, ::enums::repr_rust::RustReprEnum, 4> {
+   public:
+    constexpr explicit StructPayloadVariant(::crubit::internal::VariantKey,
+                                            ::std::int32_t x, ::std::int32_t y)
+        : x(::std::move(x)), y(::std::move(y)) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    StructPayloadVariant(const StructPayloadVariant&) = default;
+    StructPayloadVariant(StructPayloadVariant&&) = default;
+    StructPayloadVariant& operator=(const StructPayloadVariant&) = default;
+    StructPayloadVariant& operator=(StructPayloadVariant&&) = default;
+    [[maybe_unused]] ::std::uint32_t __crubit_tag = 4;
+
+   public:
+    ::std::int32_t x;
+    ::std::int32_t y;
+  };
+
+  // Constructs the enum holding the variant `__Variant`, built in place from
+  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
+  template <typename __Variant, typename... __Args>
+    requires ::crubit::internal::ConstructibleVariantOf<
+        __Variant, ::enums::repr_rust::RustReprEnum, __Args...>
+  constexpr explicit RustReprEnum(::std::in_place_type_t<__Variant> __variant,
+                                  __Args&&... __args)
+      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
 
  private:
-  struct PrivateBytesTag {};
-  constexpr RustReprEnum(PrivateBytesTag, ::std::array<unsigned char, 12> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
+  friend struct ::crubit::internal::EnumAccess;
+  ::crubit::internal::VariadicUnionStorage<
+      ::crubit::internal::tag_encoding::Direct<::std::uint32_t, 0>, Variant1,
+      Variant2, Variant3, TuplePayloadVariant, StructPayloadVariant>
+      storage_;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1287,19 +1907,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods`
   // doesn't implement the `Default` trait
   RustReprWithNamingConflictBetweenCtorsAndMethods() = delete;
-
-  // Error generating bindings for variant
-  // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::NoPayloadVariant`:
-  // Conflicting member function name: MakeNoPayloadVariant
-
-  // Error generating bindings for variant
-  // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::TuplePayloadVariant`:
-  // Conflicting member function name: MakeTuplePayloadVariant
-
-  // Error generating bindings for variant
-  // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::StructPayloadVariant`:
-  // Constructing non-tuple, struct-like enum variants is not supported:
-  // b/487357254
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~RustReprWithNamingConflictBetweenCtorsAndMethods() = default;
@@ -1335,16 +1942,99 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   ::std::int32_t get_value() const;
 
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 8> __opaque_blob_of_bytes;
+ public:
+  using Discriminant = ::std::uint32_t;
+
+  struct NoPayloadVariant
+      : public ::crubit::internal::Variant<
+            NoPayloadVariant,
+            ::enums::repr_rust::
+                RustReprWithNamingConflictBetweenCtorsAndMethods,
+            0> {
+   public:
+    constexpr explicit NoPayloadVariant(::crubit::internal::VariantKey) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    NoPayloadVariant(const NoPayloadVariant&) = default;
+    NoPayloadVariant(NoPayloadVariant&&) = default;
+    NoPayloadVariant& operator=(const NoPayloadVariant&) = default;
+    NoPayloadVariant& operator=(NoPayloadVariant&&) = default;
+    [[maybe_unused]] ::std::uint32_t __crubit_tag = 0;
+  };
+
+  struct TuplePayloadVariant
+      : public ::crubit::internal::Variant<
+            TuplePayloadVariant,
+            ::enums::repr_rust::
+                RustReprWithNamingConflictBetweenCtorsAndMethods,
+            1> {
+   public:
+    constexpr explicit TuplePayloadVariant(::crubit::internal::VariantKey,
+                                           ::std::int32_t __field0)
+        : __field0(::std::move(__field0)) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    TuplePayloadVariant(const TuplePayloadVariant&) = default;
+    TuplePayloadVariant(TuplePayloadVariant&&) = default;
+    TuplePayloadVariant& operator=(const TuplePayloadVariant&) = default;
+    TuplePayloadVariant& operator=(TuplePayloadVariant&&) = default;
+    [[maybe_unused]] ::std::uint32_t __crubit_tag = 1;
+
+   public:
+    ::std::int32_t __field0;
+  };
+
+  struct StructPayloadVariant
+      : public ::crubit::internal::Variant<
+            StructPayloadVariant,
+            ::enums::repr_rust::
+                RustReprWithNamingConflictBetweenCtorsAndMethods,
+            2> {
+   public:
+    constexpr explicit StructPayloadVariant(::crubit::internal::VariantKey,
+                                            ::std::int32_t x)
+        : x(::std::move(x)) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    StructPayloadVariant(const StructPayloadVariant&) = default;
+    StructPayloadVariant(StructPayloadVariant&&) = default;
+    StructPayloadVariant& operator=(const StructPayloadVariant&) = default;
+    StructPayloadVariant& operator=(StructPayloadVariant&&) = default;
+    [[maybe_unused]] ::std::uint32_t __crubit_tag = 2;
+
+   public:
+    ::std::int32_t x;
+  };
+
+  // Constructs the enum holding the variant `__Variant`, built in place from
+  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
+  template <typename __Variant, typename... __Args>
+    requires ::crubit::internal::ConstructibleVariantOf<
+        __Variant,
+        ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods,
+        __Args...>
+  constexpr explicit RustReprWithNamingConflictBetweenCtorsAndMethods(
+      ::std::in_place_type_t<__Variant> __variant, __Args&&... __args)
+      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
 
  private:
-  struct PrivateBytesTag {};
-  constexpr RustReprWithNamingConflictBetweenCtorsAndMethods(
-      PrivateBytesTag, ::std::array<unsigned char, 8> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
+  friend struct ::crubit::internal::EnumAccess;
+  ::crubit::internal::VariadicUnionStorage<
+      ::crubit::internal::tag_encoding::Direct<::std::uint32_t, 0>,
+      NoPayloadVariant, TuplePayloadVariant, StructPayloadVariant>
+      storage_;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1365,9 +2055,6 @@ RustReprWithSingleTuplePayloadVariant final {
   // implement the `Default` trait
   RustReprWithSingleTuplePayloadVariant() = delete;
 
-  static ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant
-  MakeSingleVariant(::std::int32_t __param_0);
-
   // No custom `Drop` impl and no custom "drop glue" required
   ~RustReprWithSingleTuplePayloadVariant() = default;
   RustReprWithSingleTuplePayloadVariant(
@@ -1387,16 +2074,49 @@ RustReprWithSingleTuplePayloadVariant final {
 
   ::std::int32_t get_single_item_from_tuple_payload() const;
 
- private:
-  // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 4> __opaque_blob_of_bytes;
+ public:
+  using Discriminant = ::std::int32_t;
+
+  struct SingleVariant
+      : public ::crubit::internal::Variant<
+            SingleVariant,
+            ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant,
+            INT32_C(0)> {
+   public:
+    constexpr explicit SingleVariant(::crubit::internal::VariantKey,
+                                     ::std::int32_t __field0)
+        : __field0(::std::move(__field0)) {}
+
+   private:
+    // Variants can't be copied or moved on their own, only as part of the enum.
+    // See `::crubit::internal::Variant`.
+    template <typename...>
+    friend union ::crubit::internal::VariadicUnion;
+    SingleVariant(const SingleVariant&) = default;
+    SingleVariant(SingleVariant&&) = default;
+    SingleVariant& operator=(const SingleVariant&) = default;
+    SingleVariant& operator=(SingleVariant&&) = default;
+
+   public:
+    ::std::int32_t __field0;
+  };
+
+  // Constructs the enum holding the variant `__Variant`, built in place from
+  // `__args`. `__Variant::Make(__args...)` is shorthand for this.
+  template <typename __Variant, typename... __Args>
+    requires ::crubit::internal::ConstructibleVariantOf<
+        __Variant, ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant,
+        __Args...>
+  constexpr explicit RustReprWithSingleTuplePayloadVariant(
+      ::std::in_place_type_t<__Variant> __variant, __Args&&... __args)
+      : storage_(__variant, ::std::forward<__Args>(__args)...) {}
 
  private:
-  struct PrivateBytesTag {};
-  constexpr RustReprWithSingleTuplePayloadVariant(
-      PrivateBytesTag, ::std::array<unsigned char, 4> bytes)
-      : __opaque_blob_of_bytes(bytes) {}
+  friend struct ::crubit::internal::EnumAccess;
+  ::crubit::internal::VariadicUnionStorage<
+      ::crubit::internal::tag_encoding::Single<::std::int32_t, INT32_C(0)>,
+      SingleVariant>
+      storage_;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1462,18 +2182,6 @@ static_assert(
 static_assert(
     alignof(::enums::param_name_collisions::FooBar) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-
-// `static` constructor
-inline constexpr ::enums::param_name_collisions::FooBar(
-    ::enums::param_name_collisions::FooBar::MakeFoo)() {
-  return FooBar(PrivateBytesTag{}, {0});
-}
-
-// `static` constructor
-inline constexpr ::enums::param_name_collisions::FooBar(
-    ::enums::param_name_collisions::FooBar::MakeBar)() {
-  return FooBar(PrivateBytesTag{}, {1});
-}
 static_assert(
     ::std::is_trivially_destructible_v<::enums::param_name_collisions::FooBar>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -1502,31 +2210,13 @@ inline bool(FooBar::operator==)(
       __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aFooBar_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aFooBar(
           self, other);
 }
-inline void ::enums::param_name_collisions::FooBar::
-    __crubit_field_offset_assertions() {
-  {
-    using __crubit_assert_type = ::enums::param_name_collisions::FooBar;
-    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
-  }
-}
+
 static_assert(
     sizeof(::enums::param_name_collisions::KeywordEnum) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
     alignof(::enums::param_name_collisions::KeywordEnum) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-
-// `static` constructor
-inline constexpr ::enums::param_name_collisions::KeywordEnum(
-    ::enums::param_name_collisions::KeywordEnum::Makematch)() {
-  return KeywordEnum(PrivateBytesTag{}, {0});
-}
-
-// `static` constructor
-inline constexpr ::enums::param_name_collisions::KeywordEnum(
-    ::enums::param_name_collisions::KeywordEnum::Makeother)() {
-  return KeywordEnum(PrivateBytesTag{}, {1});
-}
 static_assert(::std::is_trivially_destructible_v<
               ::enums::param_name_collisions::KeywordEnum>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -1555,31 +2245,13 @@ inline bool(KeywordEnum::operator==)(
       __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aKeywordEnum_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aKeywordEnum(
           self, other);
 }
-inline void ::enums::param_name_collisions::KeywordEnum::
-    __crubit_field_offset_assertions() {
-  {
-    using __crubit_assert_type = ::enums::param_name_collisions::KeywordEnum;
-    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
-  }
-}
+
 static_assert(
     sizeof(::enums::param_name_collisions::OptionLike) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
     alignof(::enums::param_name_collisions::OptionLike) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-
-// `static` constructor
-inline constexpr ::enums::param_name_collisions::OptionLike(
-    ::enums::param_name_collisions::OptionLike::Makesome)() {
-  return OptionLike(PrivateBytesTag{}, {0});
-}
-
-// `static` constructor
-inline constexpr ::enums::param_name_collisions::OptionLike(
-    ::enums::param_name_collisions::OptionLike::Makenone)() {
-  return OptionLike(PrivateBytesTag{}, {1});
-}
 static_assert(::std::is_trivially_destructible_v<
               ::enums::param_name_collisions::OptionLike>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -1619,13 +2291,7 @@ inline bool(OptionLike::operator==)(
       __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aOptionLike_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aOptionLike(
           self, other);
 }
-inline void ::enums::param_name_collisions::OptionLike::
-    __crubit_field_offset_assertions() {
-  {
-    using __crubit_assert_type = ::enums::param_name_collisions::OptionLike;
-    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
-  }
-}
+
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_check_uboth(
     ::enums::param_name_collisions::OptionLike*,
@@ -1685,50 +2351,6 @@ static_assert(
 static_assert(
     alignof(::enums::qr_error::QrError) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-
-// `static` constructor
-inline constexpr ::enums::qr_error::QrError(
-    ::enums::qr_error::QrError::MakeDataTooLong)() {
-  return QrError(PrivateBytesTag{}, {11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-// `static` constructor
-inline constexpr ::enums::qr_error::QrError(
-    ::enums::qr_error::QrError::MakeInvalidVersion)() {
-  return QrError(PrivateBytesTag{}, {12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-// `static` constructor
-inline constexpr ::enums::qr_error::QrError(
-    ::enums::qr_error::QrError::MakeUnsupportedCharacterSet)() {
-  return QrError(PrivateBytesTag{}, {13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-// `static` constructor
-inline constexpr ::enums::qr_error::QrError(
-    ::enums::qr_error::QrError::MakeInvalidEciDesignator)() {
-  return QrError(PrivateBytesTag{}, {14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-// `static` constructor
-inline constexpr ::enums::qr_error::QrError(
-    ::enums::qr_error::QrError::MakeInvalidCharacter)() {
-  return QrError(PrivateBytesTag{}, {15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_Structured(
-    ::enums::qr_error::StructuredQrError*,
-    ::enums::qr_error::QrError* __ret_ptr);
-}
-inline ::enums::qr_error::QrError(QrError::MakeStructured)(
-    ::enums::qr_error::StructuredQrError __param_0) {
-  crubit::Slot<::enums::qr_error::QrError> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_Structured(&__param_0,
-                                               __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
 static_assert(::std::is_trivially_destructible_v<::enums::qr_error::QrError>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::enums::qr_error::QrError>);
@@ -1766,8 +2388,8 @@ inline bool(QrError::operator==)(
 }
 inline void ::enums::qr_error::QrError::__crubit_field_offset_assertions() {
   {
-    using __crubit_assert_type = ::enums::qr_error::QrError;
-    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+    using __crubit_assert_type = ::enums::qr_error::QrError::Structured;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
   }
 }
 static_assert(
@@ -1776,122 +2398,6 @@ static_assert(
 static_assert(
     alignof(::enums::qr_error::StructuredQrError) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-
-// `static` constructor
-inline constexpr ::enums::qr_error::StructuredQrError(
-    ::enums::qr_error::StructuredQrError::MakeAtLeast2Pieces)() {
-  return StructuredQrError(PrivateBytesTag{},
-                           {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_TotalMismatch(
-    ::std::uintptr_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
-}
-inline ::enums::qr_error::StructuredQrError(
-    StructuredQrError::MakeTotalMismatch)(::std::uintptr_t __param_0) {
-  crubit::Slot<::enums::qr_error::StructuredQrError>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_TotalMismatch(__param_0,
-                                                  __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-
-// `static` constructor
-inline constexpr ::enums::qr_error::StructuredQrError(
-    ::enums::qr_error::StructuredQrError::MakeMissingParts)() {
-  return StructuredQrError(PrivateBytesTag{},
-                           {2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-// `static` constructor
-inline constexpr ::enums::qr_error::StructuredQrError(
-    ::enums::qr_error::StructuredQrError::MakeParity)() {
-  return StructuredQrError(PrivateBytesTag{},
-                           {3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-// `static` constructor
-inline constexpr ::enums::qr_error::StructuredQrError(
-    ::enums::qr_error::StructuredQrError::MakeTooShort)() {
-  return StructuredQrError(PrivateBytesTag{},
-                           {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-// `static` constructor
-inline constexpr ::enums::qr_error::StructuredQrError(
-    ::enums::qr_error::StructuredQrError::MakeStructuredWrongMode)() {
-  return StructuredQrError(PrivateBytesTag{},
-                           {5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-// `static` constructor
-inline constexpr ::enums::qr_error::StructuredQrError(
-    ::enums::qr_error::StructuredQrError::MakeStructuredWrongEnc)() {
-  return StructuredQrError(PrivateBytesTag{},
-                           {6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_SeqGreaterThanTotal(
-    ::std::uint8_t, ::std::uint8_t,
-    ::enums::qr_error::StructuredQrError* __ret_ptr);
-}
-inline ::enums::qr_error::StructuredQrError(
-    StructuredQrError::MakeSeqGreaterThanTotal)(::std::uint8_t __param_0,
-                                                ::std::uint8_t __param_1) {
-  crubit::Slot<::enums::qr_error::StructuredQrError>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_SeqGreaterThanTotal(__param_0, __param_1,
-                                                        __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_LengthMismatch(
-    ::std::uintptr_t, ::std::uintptr_t,
-    ::enums::qr_error::StructuredQrError* __ret_ptr);
-}
-inline ::enums::qr_error::StructuredQrError(
-    StructuredQrError::MakeLengthMismatch)(::std::uintptr_t __param_0,
-                                           ::std::uintptr_t __param_1) {
-  crubit::Slot<::enums::qr_error::StructuredQrError>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_LengthMismatch(__param_0, __param_1,
-                                                   __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_UnsupportedVersion(
-    ::std::int16_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
-}
-inline ::enums::qr_error::StructuredQrError(
-    StructuredQrError::MakeUnsupportedVersion)(::std::int16_t __param_0) {
-  crubit::Slot<::enums::qr_error::StructuredQrError>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_UnsupportedVersion(__param_0,
-                                                       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_SplitMax16(
-    ::std::uintptr_t, ::enums::qr_error::StructuredQrError* __ret_ptr);
-}
-inline ::enums::qr_error::StructuredQrError(StructuredQrError::MakeSplitMax16)(
-    ::std::uintptr_t __param_0) {
-  crubit::Slot<::enums::qr_error::StructuredQrError>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_SplitMax16(__param_0,
-                                               __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
 static_assert(
     ::std::is_trivially_destructible_v<::enums::qr_error::StructuredQrError>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -1923,8 +2429,39 @@ inline bool(StructuredQrError::operator==)(
 inline void ::enums::qr_error::StructuredQrError::
     __crubit_field_offset_assertions() {
   {
-    using __crubit_assert_type = ::enums::qr_error::StructuredQrError;
-    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+    using __crubit_assert_type =
+        ::enums::qr_error::StructuredQrError::TotalMismatch;
+    static_assert(4 == offsetof(__crubit_assert_type, __field0));
+  }
+  {
+    using __crubit_assert_type =
+        ::enums::qr_error::StructuredQrError::SeqGreaterThanTotal;
+    static_assert(1 == offsetof(__crubit_assert_type, __field0));
+  }
+  {
+    using __crubit_assert_type =
+        ::enums::qr_error::StructuredQrError::SeqGreaterThanTotal;
+    static_assert(2 == offsetof(__crubit_assert_type, __field1));
+  }
+  {
+    using __crubit_assert_type =
+        ::enums::qr_error::StructuredQrError::LengthMismatch;
+    static_assert(4 == offsetof(__crubit_assert_type, __field0));
+  }
+  {
+    using __crubit_assert_type =
+        ::enums::qr_error::StructuredQrError::LengthMismatch;
+    static_assert(8 == offsetof(__crubit_assert_type, __field1));
+  }
+  {
+    using __crubit_assert_type =
+        ::enums::qr_error::StructuredQrError::UnsupportedVersion;
+    static_assert(2 == offsetof(__crubit_assert_type, __field0));
+  }
+  {
+    using __crubit_assert_type =
+        ::enums::qr_error::StructuredQrError::SplitMax16;
+    static_assert(4 == offsetof(__crubit_assert_type, __field0));
   }
 }
 }  // namespace enums::qr_error
@@ -2961,18 +3498,6 @@ static_assert(
 static_assert(
     alignof(::enums::repr_int::IntReprEnumWithNoPayload) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-
-// `static` constructor
-inline constexpr ::enums::repr_int::IntReprEnumWithNoPayload(
-    ::enums::repr_int::IntReprEnumWithNoPayload::MakeNoPayload1)() {
-  return IntReprEnumWithNoPayload(PrivateBytesTag{}, {0, 0, 0, 0});
-}
-
-// `static` constructor
-inline constexpr ::enums::repr_int::IntReprEnumWithNoPayload(
-    ::enums::repr_int::IntReprEnumWithNoPayload::MakeNoPayload2)() {
-  return IntReprEnumWithNoPayload(PrivateBytesTag{}, {210, 4, 0, 0});
-}
 static_assert(::std::is_trivially_destructible_v<
               ::enums::repr_int::IntReprEnumWithNoPayload>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -3001,25 +3526,13 @@ inline bool(IntReprEnumWithNoPayload::is_no_payload2)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_uno_upayload2(self);
 }
-inline void ::enums::repr_int::IntReprEnumWithNoPayload::
-    __crubit_field_offset_assertions() {
-  {
-    using __crubit_assert_type = ::enums::repr_int::IntReprEnumWithNoPayload;
-    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
-  }
-}
+
 static_assert(
     sizeof(::enums::repr_int::IntReprWithSingleNoPayloadVariant) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
     alignof(::enums::repr_int::IntReprWithSingleNoPayloadVariant) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-
-// `static` constructor
-inline constexpr ::enums::repr_int::IntReprWithSingleNoPayloadVariant(
-    ::enums::repr_int::IntReprWithSingleNoPayloadVariant::MakeSingleVariant)() {
-  return IntReprWithSingleNoPayloadVariant(PrivateBytesTag{}, {0, 0, 0, 0});
-}
 static_assert(::std::is_trivially_destructible_v<
               ::enums::repr_int::IntReprWithSingleNoPayloadVariant>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -3041,32 +3554,13 @@ inline bool(IntReprWithSingleNoPayloadVariant::is_single_variant)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_usingle_uvariant(self);
 }
-inline void ::enums::repr_int::IntReprWithSingleNoPayloadVariant::
-    __crubit_field_offset_assertions() {
-  {
-    using __crubit_assert_type =
-        ::enums::repr_int::IntReprWithSingleNoPayloadVariant;
-    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
-  }
-}
+
 static_assert(
     sizeof(::enums::repr_int::NegReprIntEnum) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
     alignof(::enums::repr_int::NegReprIntEnum) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-
-// `static` constructor
-inline constexpr ::enums::repr_int::NegReprIntEnum(
-    ::enums::repr_int::NegReprIntEnum::MakeMinusOne)() {
-  return NegReprIntEnum(PrivateBytesTag{}, {255});
-}
-
-// `static` constructor
-inline constexpr ::enums::repr_int::NegReprIntEnum(
-    ::enums::repr_int::NegReprIntEnum::MakeMinusTwo)() {
-  return NegReprIntEnum(PrivateBytesTag{}, {254});
-}
 static_assert(
     ::std::is_trivially_destructible_v<::enums::repr_int::NegReprIntEnum>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -3095,13 +3589,7 @@ inline bool(NegReprIntEnum::is_minus_two)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_uminus_utwo(self);
 }
-inline void ::enums::repr_int::NegReprIntEnum::
-    __crubit_field_offset_assertions() {
-  {
-    using __crubit_assert_type = ::enums::repr_int::NegReprIntEnum;
-    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
-  }
-}
+
 }  // namespace enums::repr_int
 
 namespace enums::repr_rust {
@@ -3112,38 +3600,6 @@ static_assert(
 static_assert(
     alignof(::enums::repr_rust::RustReprEnum) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-
-// `static` constructor
-inline constexpr ::enums::repr_rust::RustReprEnum(
-    ::enums::repr_rust::RustReprEnum::MakeVariant1)() {
-  return RustReprEnum(PrivateBytesTag{}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-// `static` constructor
-inline constexpr ::enums::repr_rust::RustReprEnum(
-    ::enums::repr_rust::RustReprEnum::MakeVariant2)() {
-  return RustReprEnum(PrivateBytesTag{}, {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-// `static` constructor
-inline constexpr ::enums::repr_rust::RustReprEnum(
-    ::enums::repr_rust::RustReprEnum::MakeVariant3)() {
-  return RustReprEnum(PrivateBytesTag{}, {2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_TuplePayloadVariant(
-    ::std::int32_t, ::std::int32_t,
-    ::enums::repr_rust::RustReprEnum* __ret_ptr);
-}
-inline ::enums::repr_rust::RustReprEnum(RustReprEnum::MakeTuplePayloadVariant)(
-    ::std::int32_t __param_0, ::std::int32_t __param_1) {
-  crubit::Slot<::enums::repr_rust::RustReprEnum> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_TuplePayloadVariant(__param_0, __param_1,
-                                                        __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
 static_assert(
     ::std::is_trivially_destructible_v<::enums::repr_rust::RustReprEnum>);
 static_assert(
@@ -3185,8 +3641,24 @@ inline ::std::int32_t(RustReprEnum::get_first_item_from_tuple_payload)() const {
 inline void ::enums::repr_rust::RustReprEnum::
     __crubit_field_offset_assertions() {
   {
-    using __crubit_assert_type = ::enums::repr_rust::RustReprEnum;
-    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+    using __crubit_assert_type =
+        ::enums::repr_rust::RustReprEnum::TuplePayloadVariant;
+    static_assert(4 == offsetof(__crubit_assert_type, __field0));
+  }
+  {
+    using __crubit_assert_type =
+        ::enums::repr_rust::RustReprEnum::TuplePayloadVariant;
+    static_assert(8 == offsetof(__crubit_assert_type, __field1));
+  }
+  {
+    using __crubit_assert_type =
+        ::enums::repr_rust::RustReprEnum::StructPayloadVariant;
+    static_assert(4 == offsetof(__crubit_assert_type, x));
+  }
+  {
+    using __crubit_assert_type =
+        ::enums::repr_rust::RustReprEnum::StructPayloadVariant;
+    static_assert(8 == offsetof(__crubit_assert_type, y));
   }
 }
 static_assert(
@@ -3293,9 +3765,14 @@ inline void ::enums::repr_rust::
     RustReprWithNamingConflictBetweenCtorsAndMethods::
         __crubit_field_offset_assertions() {
   {
-    using __crubit_assert_type =
-        ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods;
-    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+    using __crubit_assert_type = ::enums::repr_rust::
+        RustReprWithNamingConflictBetweenCtorsAndMethods::TuplePayloadVariant;
+    static_assert(4 == offsetof(__crubit_assert_type, __field0));
+  }
+  {
+    using __crubit_assert_type = ::enums::repr_rust::
+        RustReprWithNamingConflictBetweenCtorsAndMethods::StructPayloadVariant;
+    static_assert(4 == offsetof(__crubit_assert_type, x));
   }
 }
 static_assert(
@@ -3304,22 +3781,6 @@ static_assert(
 static_assert(
     alignof(::enums::repr_rust::RustReprWithSingleTuplePayloadVariant) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_SingleVariant(
-    ::std::int32_t,
-    ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant* __ret_ptr);
-}
-inline ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant(
-    RustReprWithSingleTuplePayloadVariant::MakeSingleVariant)(
-    ::std::int32_t __param_0) {
-  crubit::Slot<::enums::repr_rust::RustReprWithSingleTuplePayloadVariant>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_SingleVariant(__param_0,
-                                                  __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
 static_assert(::std::is_trivially_destructible_v<
               ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -3348,9 +3809,9 @@ inline ::std::int32_t(
 inline void ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant::
     __crubit_field_offset_assertions() {
   {
-    using __crubit_assert_type =
-        ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant;
-    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+    using __crubit_assert_type = ::enums::repr_rust::
+        RustReprWithSingleTuplePayloadVariant::SingleVariant;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
   }
 }
 }  // namespace enums::repr_rust
