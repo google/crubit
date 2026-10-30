@@ -62,8 +62,9 @@ pub mod test_namespace_bindings {
     }
 
     pub mod some_class {
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn public_method<'__this>(
+        pub fn public_method<'__this>(
             __this: &'__this mut crate::test_namespace_bindings::SomeClass,
         ) {
             unsafe {
@@ -72,8 +73,9 @@ pub mod test_namespace_bindings {
                 )
             }
         }
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn public_static_method() {
+        pub fn public_static_method() {
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv()
             }

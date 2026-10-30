@@ -52,12 +52,14 @@ impl Default for Struct {
 }
 
 pub mod r#struct {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn AccessNone<'__this>(__this: &'__this mut crate::Struct) {
+    pub fn AccessNone<'__this>(__this: &'__this mut crate::Struct) {
         unsafe { crate::detail::__rust_thunk___ZN6Struct10AccessNoneEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn AccessPublic<'__this>(__this: &'__this mut crate::Struct) {
+    pub fn AccessPublic<'__this>(__this: &'__this mut crate::Struct) {
         unsafe { crate::detail::__rust_thunk___ZN6Struct12AccessPublicEv(__this) }
     }
 }
@@ -96,8 +98,9 @@ impl Default for Class {
 }
 
 pub mod class {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn AccessPublic<'__this>(__this: &'__this mut crate::Class) {
+    pub fn AccessPublic<'__this>(__this: &'__this mut crate::Class) {
         unsafe { crate::detail::__rust_thunk___ZN5Class12AccessPublicEv(__this) }
     }
 }

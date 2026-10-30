@@ -57,8 +57,9 @@ impl Default for Same {
 }
 
 pub mod same_items {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Method<'__this>(__this: &'__this mut crate::Same) -> ::ffi_11::c_int {
+    pub fn Method<'__this>(__this: &'__this mut crate::Same) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN4Same6MethodEv(__this) }
     }
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -98,8 +99,9 @@ pub mod same_items {
     }
 
     pub mod nested_item {
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn NestedItemFunction<'__this>(
+        pub fn NestedItemFunction<'__this>(
             __this: &'__this mut crate::same_items::NestedItem,
         ) -> ::ffi_11::c_int {
             unsafe {
@@ -195,8 +197,9 @@ pub mod foo {
         }
 
         pub mod foo_items {
+            ///CRUBIT_ANNOTATE: do_not_bind=
             #[inline(always)]
-            pub(crate) fn BFunction() -> ::ffi_11::c_int {
+            pub fn BFunction() -> ::ffi_11::c_int {
                 unsafe { crate::detail::__rust_thunk___ZN3foo3Foo3foo9BFunctionEv() }
             }
             #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]

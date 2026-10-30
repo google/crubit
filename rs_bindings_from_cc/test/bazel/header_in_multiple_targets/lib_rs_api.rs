@@ -59,8 +59,9 @@ pub mod shared_ns {
 
     pub mod info {
         /// Returns the value.
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn value<'__this>(__this: &'__this crate::shared_ns::Info) -> ::ffi_11::c_int {
+        pub fn value<'__this>(__this: &'__this crate::shared_ns::Info) -> ::ffi_11::c_int {
             unsafe { crate::detail::__rust_thunk___ZNK9shared_ns4Info5valueEv(__this) }
         }
     }
@@ -286,8 +287,9 @@ impl ::ctor::PinnedDrop for __CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4Inf
 }
 
 pub mod cc_template_inst_n_st3_u8function_i_fi_rkn9shared_ns4_info_eeee {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn swap<'__f, '__this>(
+    pub fn swap<'__f, '__this>(
         __this: ::core::pin::Pin<
             &'__this mut crate::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE,
         >,
@@ -300,8 +302,9 @@ pub mod cc_template_inst_n_st3_u8function_i_fi_rkn9shared_ns4_info_eeee {
         }
     }
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn target_type<'__this>(
+    pub fn target_type<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE,
     ) -> ::cref::CRef<'__this, ::cc_std::std::type_info> {
         unsafe {

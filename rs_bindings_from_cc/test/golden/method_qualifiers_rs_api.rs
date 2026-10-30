@@ -64,24 +64,29 @@ impl Default for Noninline {
 }
 
 pub mod noninline {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn UnqualifiedMethod<'__this>(__this: &'__this mut crate::Noninline) {
+    pub fn UnqualifiedMethod<'__this>(__this: &'__this mut crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZN9Noninline17UnqualifiedMethodEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn LvalueMethod<'__this>(__this: &'__this mut crate::Noninline) {
+    pub fn LvalueMethod<'__this>(__this: &'__this mut crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNR9Noninline12LvalueMethodEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn LvalueMethodConst<'__this>(__this: &'__this crate::Noninline) {
+    pub fn LvalueMethodConst<'__this>(__this: &'__this crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNKR9Noninline17LvalueMethodConstEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn RvalueMethod<'__this>(__this: &'__this mut crate::Noninline) {
+    pub fn RvalueMethod<'__this>(__this: &'__this mut crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNO9Noninline12RvalueMethodEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn RvalueMethodConst<'__this>(__this: &'__this crate::Noninline) {
+    pub fn RvalueMethodConst<'__this>(__this: &'__this crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(__this) }
     }
 }
@@ -136,24 +141,29 @@ impl Default for Inline {
 }
 
 pub mod inline {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn UnqualifiedMethod<'__this>(__this: &'__this mut crate::Inline) {
+    pub fn UnqualifiedMethod<'__this>(__this: &'__this mut crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZN6Inline17UnqualifiedMethodEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn LvalueMethod<'__this>(__this: &'__this mut crate::Inline) {
+    pub fn LvalueMethod<'__this>(__this: &'__this mut crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNR6Inline12LvalueMethodEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn LvalueMethodConst<'__this>(__this: &'__this crate::Inline) {
+    pub fn LvalueMethodConst<'__this>(__this: &'__this crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNKR6Inline17LvalueMethodConstEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn RvalueMethod<'__this>(__this: &'__this mut crate::Inline) {
+    pub fn RvalueMethod<'__this>(__this: &'__this mut crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNO6Inline12RvalueMethodEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn RvalueMethodConst<'__this>(__this: &'__this crate::Inline) {
+    pub fn RvalueMethodConst<'__this>(__this: &'__this crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNKO6Inline17RvalueMethodConstEv(__this) }
     }
 }

@@ -83,8 +83,9 @@ impl Default for StructWithLifetimeboundMemberFunction {
 }
 
 pub mod struct_with_lifetimebound_member_function {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn f<'__this>(
+    pub fn f<'__this>(
         __this: &'__this crate::StructWithLifetimeboundMemberFunction,
     ) -> crate::PlainStruct {
         unsafe {
@@ -143,8 +144,9 @@ impl<'__implicit> Default for StructWithLifetimeboundRefMemberFunction<'__implic
 }
 
 pub mod struct_with_lifetimebound_ref_member_function {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn f<'__implicit, '__this>(
+    pub fn f<'__implicit, '__this>(
         __this: &'__this crate::StructWithLifetimeboundRefMemberFunction<'__implicit>,
     ) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
         unsafe {
@@ -243,8 +245,9 @@ impl ::ctor::PinnedDrop for DropClassWithLifetimeboundMemberFunction {
 }
 
 pub mod drop_class_with_lifetimebound_member_function {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn f<'__this>(
+    pub fn f<'__this>(
         __this: &'__this crate::DropClassWithLifetimeboundMemberFunction,
     ) -> crate::PlainStruct {
         unsafe {
@@ -366,8 +369,9 @@ impl<'__implicit> ::ctor::PinnedDrop for DropClassWithLifetimeboundRefMemberFunc
 }
 
 pub mod drop_class_with_lifetimebound_ref_member_function {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn f<'__implicit, '__this>(
+    pub fn f<'__implicit, '__this>(
         __this: &'__this crate::DropClassWithLifetimeboundRefMemberFunction<'__implicit>,
     ) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
         unsafe {
@@ -809,8 +813,9 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithRefCtorAndRefMemberFuncti
 }
 
 pub mod drop_struct_with_ref_ctor_and_ref_member_function {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn f<'__implicit, '__this>(
+    pub fn f<'__implicit, '__this>(
         __this: &'__this crate::DropStructWithRefCtorAndRefMemberFunction<'__implicit>,
     ) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
         unsafe {
@@ -915,8 +920,9 @@ impl ::ctor::PinnedDrop for DropStructWithCtorAndMemberFunction {
 }
 
 pub mod drop_struct_with_ctor_and_member_function {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn f<'__this>(
+    pub fn f<'__this>(
         __this: &'__this crate::DropStructWithCtorAndMemberFunction,
     ) -> crate::PlainStruct {
         unsafe {
@@ -1028,8 +1034,9 @@ impl ::ctor::PinnedDrop for DropStructWithCtorAndRefMemberFunction {
 }
 
 pub mod drop_struct_with_ctor_and_ref_member_function {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn f<'__this>(
+    pub fn f<'__this>(
         __this: &'__this crate::DropStructWithCtorAndRefMemberFunction,
     ) -> ::cref::CRef<'__this, crate::PlainStruct> {
         unsafe {
@@ -1164,8 +1171,9 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithRefCtorAndMemberFunction<
 
 pub mod drop_struct_with_ref_ctor_and_member_function {
     /// This is a degenerate case, since `PlainStruct` binds no lifetimes.
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn f<'__implicit, '__this>(
+    pub fn f<'__implicit, '__this>(
         __this: &'__this crate::DropStructWithRefCtorAndMemberFunction<'__implicit>,
     ) -> crate::PlainStruct {
         unsafe {

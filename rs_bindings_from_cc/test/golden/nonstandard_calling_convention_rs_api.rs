@@ -63,16 +63,18 @@ impl Default for SomeClass {
 }
 
 pub mod some_class {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn function_vectorcall<'__this>(
+    pub fn function_vectorcall<'__this>(
         __this: &'__this mut crate::SomeClass,
         a: f32,
         b: f32,
     ) -> f32 {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass19function_vectorcallEff(__this, a, b) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn function_win64<'__this>(
+    pub fn function_win64<'__this>(
         __this: &'__this mut crate::SomeClass,
         a: ::ffi_11::c_int,
     ) -> ::ffi_11::c_int {

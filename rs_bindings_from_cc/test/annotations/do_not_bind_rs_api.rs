@@ -183,8 +183,9 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
+            ///CRUBIT_ANNOTATE: do_not_bind=
             #[inline(always)]
-            pub(crate) unsafe fn DoNotBindMethod(
+            pub unsafe fn DoNotBindMethod(
                 __this: *mut crate::crubit::test::StructWithDoNotBindMethod,
                 __param_0: crate::crubit::test::ArgumentToBoundOverload,
             ) {

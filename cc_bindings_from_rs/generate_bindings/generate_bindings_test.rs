@@ -1712,6 +1712,34 @@ fn test_generate_bindings_use_glob() {
 }
 
 #[gtest]
+fn test_generate_bindings_use_glob_of_do_not_bind_fn() {
+    // `rs_bindings_from_cc` marks the free functions that it generates for C++ methods as
+    // `do_not_bind`. Re-exporting them must not generate anything in C++, not even an
+    // "unsupported" comment.
+    let test_src = r#"
+        pub mod test_mod {
+            #[doc="CRUBIT_ANNOTATE: do_not_bind="]
+            pub fn hidden_fn() {}
+
+            pub fn visible_fn() {}
+        }
+
+        pub use test_mod::*;
+        "#;
+
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(bindings.cc_api, quote! { visible_fn });
+        assert_cc_not_matches!(bindings.cc_api, quote! { hidden_fn });
+        assert!(
+            !bindings.cc_api.to_string().contains("hidden_fn"),
+            "Unexpected mention of `hidden_fn` in:\n{}",
+            bindings.cc_api
+        );
+    });
+}
+
+#[gtest]
 fn test_generate_bindings_use_external_crate_exports_header() {
     let test_src = r#"
         pub use std::string::String;

@@ -138,8 +138,9 @@ impl ::ctor::UnsafeCtorNew<*const ::ffi_11::c_char>
 
 pub mod cc_template_inst_n_st3_u16reverse_iterator_ip_kc_ee {
     #[must_use]
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn base<'__this>(
+    pub fn base<'__this>(
         __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
     ) -> *const ::ffi_11::c_char {
         unsafe {

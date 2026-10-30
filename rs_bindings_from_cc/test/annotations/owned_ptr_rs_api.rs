@@ -91,8 +91,9 @@ pub mod raw_thing {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn Close(__this: *mut crate::RawThing) {
+    pub unsafe fn Close(__this: *mut crate::RawThing) {
         unsafe { crate::detail::__rust_thunk___ZN5Thing5CloseEv(__this) }
     }
 }
@@ -168,8 +169,9 @@ pub mod custom_raw_thing {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn CustomDropImpl(__this: *mut crate::CustomRawThing) {
+    pub unsafe fn CustomDropImpl(__this: *mut crate::CustomRawThing) {
         unsafe { crate::detail::__rust_thunk___ZN11CustomThing14CustomDropImplEv(__this) }
     }
 }

@@ -95,15 +95,15 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for DocCommentSlashes {
 
 pub mod doc_comment_slashes {
     /// A non-static member function (`const` flavor).
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn get_field_value<'__this>(
-        __this: &'__this crate::DocCommentSlashes,
-    ) -> ::ffi_11::c_int {
+    pub fn get_field_value<'__this>(__this: &'__this crate::DocCommentSlashes) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(__this) }
     }
     /// A non-static member function (non-`const` flavor).
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn set_field_value<'__this>(
+    pub fn set_field_value<'__this>(
         __this: &'__this mut crate::DocCommentSlashes,
         new_value: ::ffi_11::c_int,
     ) {
@@ -114,8 +114,9 @@ pub mod doc_comment_slashes {
         }
     }
     /// A static method.
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn static_method() -> ::ffi_11::c_int {
+    pub fn static_method() -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
     }
 }

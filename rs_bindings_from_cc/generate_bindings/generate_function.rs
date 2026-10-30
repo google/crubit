@@ -2456,10 +2456,12 @@ pub fn generate_function(
                     #doc_comment
                     #deprecated_attr
                     #must_use_attr
+                    // C++ already has the original method, so `cc_bindings_from_rs` must not
+                    // generate C++ bindings for this Rust-only free function (e.g. when it is
+                    // reached through a `pub use` re-export).
+                    #[doc = "CRUBIT_ANNOTATE: do_not_bind="]
                     #[inline(always)]
-                    // TODO(b/503015646): Re-allow these function to have `#visibility` once we can
-                    // ensure that cc_bindings_from_rs will not generate bindings to them.
-                    pub(crate)
+                    #visibility
                     #unsafety
                     fn #bracketed_func_name #free_fn_generic_params(
                         #( #free_api_params ),*

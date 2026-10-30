@@ -3461,7 +3461,7 @@ fn test_thunkless_accessors_non_unpin_type() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) fn p<'a>(__this: &'a crate::NonTrivial) -> *mut crate::NonTrivial {
+            pub fn p<'a>(__this: &'a crate::NonTrivial) -> *mut crate::NonTrivial {
                 unsafe {
                     (&raw const *__this).cast::<*mut crate::NonTrivial>().read()
                 }
@@ -3471,7 +3471,7 @@ fn test_thunkless_accessors_non_unpin_type() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) fn mut_p<'a>(
+            pub fn mut_p<'a>(
                 __this: ::core::pin::Pin<&'a mut crate::NonTrivial>
             ) -> *mut crate::NonTrivial {
                 unsafe {
@@ -3483,7 +3483,7 @@ fn test_thunkless_accessors_non_unpin_type() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn set_p<'a>(
+            pub unsafe fn set_p<'a>(
                 __this: ::core::pin::Pin<&'a mut crate::NonTrivial>,
                 p: *mut crate::NonTrivial
             ) {
@@ -4040,6 +4040,29 @@ fn test_pub_crate_method() -> Result<()> {
         }
     );
     assert_rs_not_matches!(rs_api, quote! { pub unsafe fn Method });
+    Ok(())
+}
+
+#[gtest]
+fn test_method_free_function_is_do_not_bind() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
+        r#"
+        struct MyStruct {
+            void Method();
+        };
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub mod my_struct {
+                ...
+                #[doc = "CRUBIT_ANNOTATE: do_not_bind="]
+                #[inline(always)]
+                pub unsafe fn Method(__this: *mut crate::MyStruct) { ... }
+            }
+        }
+    );
     Ok(())
 }
 

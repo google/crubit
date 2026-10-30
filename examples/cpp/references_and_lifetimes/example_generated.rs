@@ -64,22 +64,26 @@ pub mod example {
     }
 
     pub mod counter {
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn Get<'__this>(__this: &'__this crate::example::Counter) -> ::ffi_11::c_int {
+        pub fn Get<'__this>(__this: &'__this crate::example::Counter) -> ::ffi_11::c_int {
             unsafe { crate::detail::__rust_thunk___ZNK7example7Counter3GetEv(__this) }
         }
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn Increment<'__this>(__this: &'__this mut crate::example::Counter) {
+        pub fn Increment<'__this>(__this: &'__this mut crate::example::Counter) {
             unsafe { crate::detail::__rust_thunk___ZN7example7Counter9IncrementEv(__this) }
         }
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn GetRef<'__this>(
+        pub fn GetRef<'__this>(
             __this: &'__this crate::example::Counter,
         ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
             unsafe { crate::detail::__rust_thunk___ZNK7example7Counter6GetRefEv(__this) }
         }
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn GetMutRef<'__this>(
+        pub fn GetMutRef<'__this>(
             __this: &'__this mut crate::example::Counter,
         ) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
             unsafe { crate::detail::__rust_thunk___ZN7example7Counter9GetMutRefEv(__this) }
@@ -161,16 +165,18 @@ pub mod example {
     pub mod number {
         /// The result may refer to `this` or to `other`, but lifetime elision ties the
         /// result only to `this`.
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn GetLarger<'__this, 'other>(
+        pub fn GetLarger<'__this, 'other>(
             __this: &'__this crate::example::Number,
             other: &'other ::ffi_11::c_int,
         ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
             unsafe { crate::detail::__rust_thunk___ZNK7example6Number9GetLargerERKi(__this, other) }
         }
         /// The result may refer to `this` or to `other`.
+        ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
-        pub(crate) fn GetLargerWithLifetimes<'a>(
+        pub fn GetLargerWithLifetimes<'a>(
             __this: &'a crate::example::Number,
             other: &'a ::ffi_11::c_int,
         ) -> ::cref::CRef<'a, ::ffi_11::c_int> {

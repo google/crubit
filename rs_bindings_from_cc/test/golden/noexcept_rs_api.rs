@@ -60,20 +60,24 @@ impl Default for SomeClass {
 }
 
 pub mod some_class {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn create(i: ::ffi_11::c_int, c: ::ffi_11::c_char) {
+    pub fn create(i: ::ffi_11::c_int, c: ::ffi_11::c_char) {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass6createEic(i, c) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn no_except_member<'__this>(__this: &'__this mut crate::SomeClass) {
+    pub fn no_except_member<'__this>(__this: &'__this mut crate::SomeClass) {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass16no_except_memberEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn no_except_true_member<'__this>(__this: &'__this mut crate::SomeClass) {
+    pub fn no_except_true_member<'__this>(__this: &'__this mut crate::SomeClass) {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass21no_except_true_memberEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn no_except_false_member<'__this>(__this: &'__this mut crate::SomeClass) {
+    pub fn no_except_false_member<'__this>(__this: &'__this mut crate::SomeClass) {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass22no_except_false_memberEv(__this) }
     }
 }

@@ -57,22 +57,22 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for CompatibleType {
 }
 
 pub mod compatible_type {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn renamed_default_constructor(__this: *mut crate::CompatibleType) {
+    pub fn renamed_default_constructor(__this: *mut crate::CompatibleType) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ev(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn renamed_copy_constructor<'__param_0>(
+    pub fn renamed_copy_constructor<'__param_0>(
         __this: *mut crate::CompatibleType,
         __param_0: &'__param_0 crate::CompatibleType,
     ) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1ERKS_(__this, __param_0) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn renamed_constructor(
-        __this: *mut crate::CompatibleType,
-        __param_0: ::ffi_11::c_int,
-    ) {
+    pub fn renamed_constructor(__this: *mut crate::CompatibleType, __param_0: ::ffi_11::c_int) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ei(__this, __param_0) }
     }
 }
