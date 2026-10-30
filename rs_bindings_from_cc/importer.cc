@@ -2871,13 +2871,6 @@ bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
       i != invocation_.ir_.crubit_features().end()) {
     return !i->second.empty();
   }
-  // TODO(b/471240594): This is a hack for this specific header. We need to
-  // properly fix target assignment for Crubit support libraries.
-  if (std::optional<absl::string_view> header = HeaderOfUnknownTarget(label);
-      header.has_value() &&
-      header->ends_with("crubit/support/rs_std/slice_ref.h")) {
-    return true;
-  }
   return false;
 }
 

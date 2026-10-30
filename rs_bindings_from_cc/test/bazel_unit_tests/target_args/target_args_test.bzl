@@ -365,6 +365,67 @@ def _test_target_features_nonempty():
         target_under_test = ":mylib_nonempty_features_with_aspect",
     )
 
+def _virtual_include_headers_in_target_args_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+    target_args = _get_target_args(target_under_test)
+
+    asserts.equals(env, 2, len(target_args))
+    asserts.equals(
+        env,
+        "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:mylib_with_include_prefix",
+        target_args[1]["t"],
+    )
+    headers = target_args[1]["h"]
+
+    # The original header and its `_virtual_includes` symlink, but not the symlink of the textual
+    # header, which is not mapped to the target.
+    asserts.equals(env, 2, len(headers), "headers: %s" % headers)
+    asserts.equals(
+        env,
+        "rs_bindings_from_cc/test/bazel_unit_tests/target_args/lib.h",
+        headers[0],
+    )
+    asserts.true(
+        env,
+        headers[1].startswith("bazel-out"),
+        "headers: %s" % headers,
+    )
+    asserts.true(
+        env,
+        "/_virtual_includes/" in headers[1],
+        "headers: %s" % headers,
+    )
+    asserts.true(
+        env,
+        headers[1].endswith("/some/prefix/target_args/lib.h"),
+        "headers: %s" % headers,
+    )
+
+    return analysistest.end(env)
+
+virtual_include_headers_in_target_args_test = crubit_make_analysis_test(
+    _virtual_include_headers_in_target_args_impl,
+)
+
+def _test_virtual_include_headers_in_target_args():
+    cc_library(
+        name = "mylib_with_include_prefix",
+        hdrs = [
+            "lib.h",
+            "textual_in_hdrs.inc",
+        ],
+        strip_include_prefix = "/rs_bindings_from_cc/test/bazel_unit_tests",
+        include_prefix = "some/prefix",
+        aspect_hints = ["//features/internal:testonly_supported"],
+    )
+    attach_aspect(name = "mylib_with_include_prefix_with_aspect", dep = ":mylib_with_include_prefix")
+
+    virtual_include_headers_in_target_args_test(
+        name = "virtual_include_headers_in_target_args_test",
+        target_under_test = ":mylib_with_include_prefix_with_aspect",
+    )
+
 def target_args_test(name):
     """Sets up rust_bindings_from_cc_aspect test suite.
 
@@ -378,6 +439,7 @@ def target_args_test(name):
     _test_generated_headers_specified_with_full_path()
     _test_target_features_empty()
     _test_target_features_nonempty()
+    _test_virtual_include_headers_in_target_args()
 
     native.test_suite(
         name = name,
@@ -390,5 +452,6 @@ def target_args_test(name):
             ":generated_headers_specified_with_full_path_test",
             ":target_features_empty_test",
             ":target_features_nonempty_test",
+            ":virtual_include_headers_in_target_args_test",
         ],
     )

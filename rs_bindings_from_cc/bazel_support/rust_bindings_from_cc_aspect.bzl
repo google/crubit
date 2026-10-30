@@ -263,6 +263,46 @@ def _collect_hdrs(ctx, crubit_features):
         return []
     return public_hdrs
 
+def _collect_virtual_include_aliases(target, public_hdrs):
+    """Returns symlink paths in `direct_public_headers` that point to `public_hdrs`.
+
+    When a C++ library sets `strip_include_prefix` or `include_prefix`, Bazel creates `Symlink`
+    actions for its headers under a `_virtual_includes` directory and exposes the symlinks in
+    `CcInfo.compilation_context.direct_public_headers`. Other headers `#include` them via those
+    symlinks, so Clang reports the symlink path rather than the original header path. The symlink
+    paths must therefore also be mapped to the owning target; otherwise, declarations in these
+    headers get assigned to an unknown target (b/471240594).
+
+    Args:
+        target: The target the aspect is being applied to.
+        public_hdrs: The (original, non-symlinked) headers that Crubit maps to `target`.
+
+    Returns:
+        A list of paths of symlinks in `direct_public_headers` whose target is in `public_hdrs`.
+    """
+    if not public_hdrs:
+        return []
+    symlink_actions = [a for a in target.actions if a.mnemonic == "Symlink"]
+    if not symlink_actions:
+        return []
+    public_hdrs_set = {hdr: True for hdr in public_hdrs}
+    direct_public_hdrs_set = {
+        hdr: True
+        for hdr in target[CcInfo].compilation_context.direct_public_headers
+    }
+    aliases = []
+    for action in symlink_actions:
+        inputs = action.inputs.to_list()
+        outputs = action.outputs.to_list()
+        if (
+            len(inputs) == 1 and
+            len(outputs) == 1 and
+            inputs[0] in public_hdrs_set and
+            outputs[0] in direct_public_hdrs_set
+        ):
+            aliases.append(outputs[0].path)
+    return sorted(aliases)
+
 def _make_all_deps_and_target_args(ctx, extra_rule_specific_deps, direct):
     all_deps = getattr(ctx.rule.attr, "deps", []) + extra_rule_specific_deps + [
         ctx.attr._std,
@@ -348,12 +388,17 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # Headers for which we will produce bindings.
     public_hdrs = []
 
+    # Additional paths under which `public_hdrs` may be included, e.g. `_virtual_includes` symlinks.
+    # These are only used to map headers to `target`, not to produce bindings.
+    public_hdr_aliases = []
+
     crubit_features = find_crubit_features(target, ctx)
 
     extra_cpp_srcs = _get_additional_cpp_srcs(ctx)
 
     if hasattr(ctx.rule.attr, "hdrs"):
         public_hdrs = _collect_hdrs(ctx, crubit_features)
+        public_hdr_aliases = _collect_virtual_include_aliases(target, public_hdrs)
 
     elif ctx.rule.kind == "cc_embed_data":
         # Only add to the list of headers we need to generate bindings for if Crubit is enabled for
@@ -385,7 +430,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     #    This requires changes to Bazel.
     direct_target_args = {}
     if public_hdrs:
-        direct_target_args["h"] = [h.path for h in public_hdrs]
+        direct_target_args["h"] = [h.path for h in public_hdrs] + public_hdr_aliases
     if crubit_features:
         direct_target_args["f"] = crubit_features
     if use_label_encoded_names_for_deps:
