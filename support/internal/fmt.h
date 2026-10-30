@@ -33,7 +33,7 @@ template <typename T, typename LossyFormatter>
 
 namespace lossy_formatter {
 // Forward declaration to avoid a dependency cycle.
-class LossyFormatter;
+struct LossyFormatter;
 }  // namespace lossy_formatter
 
 namespace crubit {
