@@ -88,7 +88,6 @@ golden_test(
     platforms = [
         "android",
         "ios",
-        "macos",
     ],
     rust_library = "layout_equivalent_generics",
     # TODO(b/522829368): remove `no_windows` to enable.
@@ -129,7 +128,6 @@ golden_test(
     platforms = [
         "android",
         "ios",
-        "macos",
     ],
     rust_library = "bridged_types",
     # TODO(b/522829368): remove `no_windows` to enable.
@@ -153,7 +151,6 @@ golden_test(
     platforms = [
         "android",
         "ios",
-        "macos",
     ],
     rust_library = "layout_equivalent_pointers",
     # TODO(b/522829368): remove `no_windows` to enable.

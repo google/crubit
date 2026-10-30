@@ -34,7 +34,6 @@ golden_test(
     platforms = [
         "android",
         "ios",
-        "macos",
     ],
     rust_library = "cpp_name",
     # TODO(b/522829368): remove `no_windows` to enable.
@@ -78,7 +77,6 @@ golden_test(
     platforms = [
         "android",
         "ios",
-        "macos",
     ],
     rust_library = "must_bind",
     # TODO(b/522829368): remove `no_windows` to enable.

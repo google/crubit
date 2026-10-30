@@ -39,7 +39,6 @@ golden_test(
     platforms = [
         "android",
         "ios",
-        "macos",
     ],
     rust_library = "callables",
     # TODO(b/522829368): remove `no_windows` to enable.
