@@ -274,7 +274,8 @@ std::unique_ptr<crubit::ffi::Item> ExistingRustTypeImporter::Import(
         // result in the generation of a Rust type, so we use the unnameable
         // kind.
         FormattedError::PrefixedStrCat(
-            "Invalid CRUBIT_INTERNAL_RUST_TYPE attribute",
+            "Invalid `CRUBIT_RUST_LAYOUT_EQUIVALENT` (a.k.a. "
+            "`CRUBIT_INTERNAL_RUST_TYPE`) attribute",
             llvm::toString(opt_attr.takeError())));
   }
   if (!opt_attr->has_value()) {
