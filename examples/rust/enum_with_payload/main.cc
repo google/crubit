@@ -8,9 +8,9 @@
 
 int main(int argc, char* argv[]) {
   example_crate::Color transparent_color =
-      example_crate::Color::Transparent::Make();
+      example_crate::Color::MakeTransparent();
 
-  example_crate::Color red_color = example_crate::Color::Rgb::Make(255, 0, 0);
+  example_crate::Color red_color = example_crate::Color::MakeRgb(255, 0, 0);
 
   std::ignore = transparent_color;
   std::ignore = red_color;
