@@ -10,10 +10,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/cord.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
+#include "common/check.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/SmallString.h"
 
@@ -33,7 +30,7 @@ CcType PointerOrReferenceTo(CcType pointee_type, PointerTypeKind pointer_kind,
 }
 }  // namespace
 
-absl::string_view PrimitiveSpelling(Primitive primitive) {
+llvm::StringRef PrimitiveSpelling(Primitive primitive) {
   switch (primitive) {
     case Primitive::BOOL:
       return "bool";
@@ -156,13 +153,14 @@ CcType RValueReferenceTo(CcType pointee_type,
                               PointerTypeKind::R_VALUE_REF, lifetime);
 }
 
-absl::StatusOr<IntegerConstant> IntegerConstantFromAPValue(
+llvm::Expected<IntegerConstant> IntegerConstantFromAPValue(
     const llvm::APSInt& value) {
   if (value.getSignificantBits() > 64) {
     llvm::SmallString<128> value_str;
     value.toString(value_str);
-    return absl::InvalidArgumentError(absl::StrCat(
-        "value is too large to fit in 64 bits: ", value_str.c_str()));
+    return crubit::InvalidArgumentError(
+        llvm::Twine("value is too large to fit in 64 bits: ") +
+        value_str.str());
   }
   IntegerConstant result;
   result.set_is_negative(value < 0);
@@ -188,16 +186,20 @@ Identifier& TranslatedIdentifier::rs_identifier() {
 }
 
 FormattedError FormattedError::FromStatus(absl::Status status) {
-  std::optional<absl::Cord> fmt_cord =
-      status.GetPayload(FormattedError::kFmtPayloadTypeUrl);
-  std::string fmt;
-  if (fmt_cord) {
-    fmt = std::string(*fmt_cord);
-  } else {
-    fmt = absl::StrCat("(unannotated `",
-                       absl::StatusCodeToString(status.code()), "` status)");
-  }
-  return FormattedError(fmt, status.message());
+  std::string fmt = (llvm::Twine("(unannotated `") +
+                     absl::StatusCodeToString(status.code()) + "` status)")
+                        .str();
+  std::string msg = std::string(status.message());
+  return FormattedError(fmt, std::move(msg));
+}
+
+FormattedError FormattedError::FromStatus(llvm::Error error) {
+  std::string fmt = (llvm::Twine("(unannotated `") +
+                     StatusCodeToString(GetStatusCode(error)) + "` status)")
+                        .str();
+  std::string msg = GetStatusMessage(error);
+  llvm::consumeError(std::move(error));
+  return FormattedError(fmt, std::move(msg));
 }
 
 }  // namespace crubit

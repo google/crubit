@@ -9,15 +9,8 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/attributes.h"
-#include "absl/base/nullability.h"
-#include "absl/functional/function_ref.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
+#include "common/status.h"
 #include "common/status_macros.h"
-#include "common/string_view_conversion.h"
 #include "clang/AST/APValue.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
@@ -29,7 +22,11 @@
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/APSInt.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
+#include "llvm/Support/FormatVariadic.h"
 
 namespace crubit {
 namespace {
@@ -44,10 +41,10 @@ namespace {
 // as `ast_context`.
 //
 // TODO(yongheng): Merge with lifetime_annotations/type_lifetimes.cc.
-static absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
+static llvm::Expected<llvm::StringRef> GetExprAsStringLiteral(
     const clang::Expr& expr,
-    const clang::ASTContext& ast_context ABSL_ATTRIBUTE_LIFETIME_BOUND,
-    absl::FunctionRef<absl::Status()> error) {
+    const clang::ASTContext& ast_context [[clang::lifetimebound]],
+    llvm::function_ref<llvm::Error()> error) {
   clang::Expr::EvalResult eval_result;
   if (!expr.EvaluateAsConstantExpr(eval_result, ast_context) ||
       !eval_result.Val.isLValue()) {
@@ -66,7 +63,7 @@ static absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
     return error();
   }
 
-  return StringViewFromStringRef(string_literal->getString());
+  return string_literal->getString();
 }
 
 // Returns the `AnnotateAttr` with the given `annotation_name` if it exists. If
@@ -81,32 +78,34 @@ static absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
 // GetAnnotateAttrSingleDecl(my_class_decl, "crubit_annotation_foo") will
 // return the `AnnotateAttr` with the annotation `crubit_annotation_foo`,
 // from which the "bar" argument can be extracted.
-static absl::StatusOr<const clang::AnnotateAttr*> GetAnnotateAttrSingleDecl(
-    const clang::Decl& decl, absl::string_view annotation_name) {
+static llvm::Expected<const clang::AnnotateAttr*> GetAnnotateAttrSingleDecl(
+    const clang::Decl& decl, llvm::StringRef annotation_name) {
   const clang::AnnotateAttr* found_attr = nullptr;
   for (clang::AnnotateAttr* attr : decl.specific_attrs<clang::AnnotateAttr>()) {
     if (attr->getAnnotation() != llvm::StringRef(annotation_name)) continue;
 
     if (found_attr != nullptr) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("Only one `", annotation_name,
-                       "` annotation may be placed on a declaration."));
+      return crubit::InvalidArgumentError(
+          (llvm::Twine("Only one `") + annotation_name +
+           "` annotation may be placed on a declaration.")
+              .str());
     }
     found_attr = attr;
   }
   return found_attr;
 }
 
-static absl::Status InconsistentAnnotationsError(
-    absl::string_view annotation_name) {
-  return absl::InvalidArgumentError(
-      absl::StrCat("Different declarations have inconsistent `",
-                   annotation_name, "` annotations."));
+static llvm::Error InconsistentAnnotationsError(
+    llvm::StringRef annotation_name) {
+  return crubit::InvalidArgumentError(
+      (llvm::Twine("Different declarations have inconsistent `") +
+       annotation_name + "` annotations.")
+          .str());
 }
 
-static absl::Status CheckExpressionsAreSameConstant(
+static llvm::Error CheckExpressionsAreSameConstant(
     const clang::Expr& expr1, const clang::Expr& expr2,
-    absl::string_view annotation_name, const clang::ASTContext& ast_context) {
+    llvm::StringRef annotation_name, const clang::ASTContext& ast_context) {
   if (!ast_context.hasSameType(expr1.getType(), expr2.getType())) {
     return InconsistentAnnotationsError(annotation_name);
   }
@@ -114,9 +113,10 @@ static absl::Status CheckExpressionsAreSameConstant(
   clang::Expr::EvalResult eval_result_1, eval_result_2;
   if (!expr1.EvaluateAsConstantExpr(eval_result_1, ast_context) ||
       !expr2.EvaluateAsConstantExpr(eval_result_2, ast_context)) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Arguments of `", annotation_name,
-                     "` annotation must be constant expressions."));
+    return crubit::InvalidArgumentError(
+        (llvm::Twine("Arguments of `") + annotation_name +
+         "` annotation must be constant expressions.")
+            .str());
   }
 
   const clang::APValue& value1 = eval_result_1.Val;
@@ -127,10 +127,11 @@ static absl::Status CheckExpressionsAreSameConstant(
   }
 
   auto must_be_int_or_string_error = [annotation_name]() {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Arguments of `", annotation_name,
-                     "` annotation must be of integral type, string literal, "
-                     "or constructor."));
+    return crubit::InvalidArgumentError(
+        (llvm::Twine("Arguments of `") + annotation_name +
+         "` annotation must be of integral type, string literal, "
+         "or constructor.")
+            .str());
   };
 
   switch (value1.getKind()) {
@@ -145,11 +146,11 @@ static absl::Status CheckExpressionsAreSameConstant(
       break;
     case clang::APValue::LValue: {
       CRUBIT_ASSIGN_OR_RETURN(
-          absl::string_view value1_string,
+          llvm::StringRef value1_string,
           GetExprAsStringLiteral(expr1, ast_context,
                                  must_be_int_or_string_error));
       CRUBIT_ASSIGN_OR_RETURN(
-          absl::string_view value2_string,
+          llvm::StringRef value2_string,
           GetExprAsStringLiteral(expr2, ast_context,
                                  must_be_int_or_string_error));
       if (value1_string != value2_string) {
@@ -161,21 +162,21 @@ static absl::Status CheckExpressionsAreSameConstant(
       return must_be_int_or_string_error();
   }
 
-  return absl::OkStatus();
+  return llvm::Error::success();
 }
 
-static absl::Status CheckAnnotationsConsistent(
+static llvm::Error CheckAnnotationsConsistent(
     const clang::AnnotateAttr* annotate1, const clang::AnnotateAttr* annotate2,
     const clang::ASTContext& ast_context) {
   if (annotate1->args_size() != annotate2->args_size())
-    return InconsistentAnnotationsError(
-        StringViewFromStringRef(annotate1->getAnnotation()));
+    return InconsistentAnnotationsError(annotate1->getAnnotation());
   for (int i = 0; i < annotate1->args_size(); ++i) {
-    CRUBIT_RETURN_IF_ERROR(CheckExpressionsAreSameConstant(
-        *annotate1->args_begin()[i], *annotate2->args_begin()[i],
-        StringViewFromStringRef(annotate1->getAnnotation()), ast_context));
+    if (auto err = CheckExpressionsAreSameConstant(
+            *annotate1->args_begin()[i], *annotate2->args_begin()[i],
+            annotate1->getAnnotation(), ast_context))
+      return err;
   }
-  return absl::OkStatus();
+  return llvm::Error::success();
 }
 
 // Returns the `clang::Decl` that should be used for reading annotations.
@@ -198,36 +199,36 @@ static const clang::Decl& DeclForAnnotations(const clang::Decl& decl) {
 
 }  // namespace
 
-absl::StatusOr<bool> GetExprAsBool(const clang::Expr& expr,
+llvm::Expected<bool> GetExprAsBool(const clang::Expr& expr,
                                    const clang::ASTContext& ast_context) {
   if (!expr.getType()->isBooleanType()) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "annotation expression must evaluate to a bool");
   }
   clang::Expr::EvalResult eval_result;
   if (!expr.EvaluateAsConstantExpr(eval_result, ast_context)) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "failed to evaluate annotation expression as a constant");
   }
   if (eval_result.Val.getKind() != clang::APValue::Int) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "annotation expression must evaluate to a bool");
   }
   const llvm::APSInt& int_value = eval_result.Val.getInt();
   return !int_value.isZero();
 }
 
-absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
+llvm::Expected<llvm::StringRef> GetExprAsStringLiteral(
     const clang::Expr& expr,
-    const clang::ASTContext& ast_context ABSL_ATTRIBUTE_LIFETIME_BOUND) {
+    const clang::ASTContext& ast_context [[clang::lifetimebound]]) {
   return GetExprAsStringLiteral(expr, ast_context, []() {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "cannot evaluate argument as a string literal");
   });
 }
 
-absl::StatusOr<std::optional<AnnotateArgs>> GetAnnotateAttrArgs(
-    const clang::Decl& decl, absl::string_view annotation_name) {
+llvm::Expected<std::optional<AnnotateArgs>> GetAnnotateAttrArgs(
+    const clang::Decl& decl, llvm::StringRef annotation_name) {
   const clang::AnnotateAttr* found_attr = nullptr;
 
   int num_found = 0;
@@ -263,26 +264,28 @@ absl::StatusOr<std::optional<AnnotateArgs>> GetAnnotateAttrArgs(
   return AnnotateArgs(found_attr->args_begin(), found_attr->args_end());
 }
 
-absl::StatusOr<bool> HasAnnotationWithoutArgs(const clang::Decl& decl,
-                                              absl::string_view annotation) {
-  absl::StatusOr<std::optional<AnnotateArgs>> maybe_args =
+llvm::Expected<bool> HasAnnotationWithoutArgs(const clang::Decl& decl,
+                                              llvm::StringRef annotation) {
+  llvm::Expected<std::optional<AnnotateArgs>> maybe_args =
       GetAnnotateAttrArgs(decl, annotation);
-  if (!maybe_args.ok()) {
-    return maybe_args.status();
+  if (!maybe_args) {
+    return maybe_args.takeError();
   }
   if (!maybe_args->has_value()) {
     return false;
   }
   if (!maybe_args->value().empty()) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Annotation ", annotation, " does not expect arguments."));
+    return crubit::InvalidArgumentError((llvm::Twine("Annotation ") +
+                                         annotation +
+                                         " does not expect arguments.")
+                                            .str());
   }
   return true;
 }
 
-absl::StatusOr<std::optional<std::vector<std::string>>>
+llvm::Expected<std::optional<std::vector<std::string>>>
 GetAnnotationWithStringArgs(const clang::Decl& decl,
-                            absl::string_view annotation_name) {
+                            llvm::StringRef annotation_name) {
   CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> maybe_args,
                           GetAnnotateAttrArgs(decl, annotation_name));
   if (!maybe_args.has_value()) {
@@ -292,37 +295,39 @@ GetAnnotationWithStringArgs(const clang::Decl& decl,
   std::vector<std::string> result;
   result.reserve(args.size());
   for (const clang::Expr* arg_expr : args) {
-    absl::StatusOr<absl::string_view> arg =
+    llvm::Expected<llvm::StringRef> arg =
         GetExprAsStringLiteral(*arg_expr, decl.getASTContext());
-    if (!arg.ok()) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("Annotation ", annotation_name,
-                       " arguments must be string literals."));
+    if (!arg) {
+      return crubit::InvalidArgumentError(
+          (llvm::Twine("Annotation ") + annotation_name +
+           " arguments must be string literals.")
+              .str());
     }
     result.push_back(std::string(*arg));
   }
   return result;
 }
 
-absl::StatusOr<std::optional<std::string>> GetAnnotationWithStringArg(
-    const clang::Decl& decl, absl::string_view annotation_name) {
+llvm::Expected<std::optional<std::string>> GetAnnotationWithStringArg(
+    const clang::Decl& decl, llvm::StringRef annotation_name) {
   CRUBIT_ASSIGN_OR_RETURN(std::optional<std::vector<std::string>> maybe_args,
                           GetAnnotationWithStringArgs(decl, annotation_name));
   if (!maybe_args.has_value()) {
     return std::nullopt;
   }
   if (maybe_args->size() != 1) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Annotation ", annotation_name,
-                     " must have a single string argument."));
+    return crubit::InvalidArgumentError((llvm::Twine("Annotation ") +
+                                         annotation_name +
+                                         " must have a single string argument.")
+                                            .str());
   }
   return std::move(maybe_args->front());
 }
 
-absl::StatusOr<const clang::AnnotateTypeAttr* absl_nullable>
-GetTypeAnnotationSingleDecl(const clang::Type* absl_nonnull type
-                                ABSL_ATTRIBUTE_LIFETIME_BOUND,
-                            absl::string_view annotation_name) {
+llvm::Expected<const clang::AnnotateTypeAttr* _Nullable>
+GetTypeAnnotationSingleDecl(const clang::Type* _Nonnull type
+                            [[clang::lifetimebound]],
+                            llvm::StringRef annotation_name) {
   const clang::Type* current_type = type;
   const clang::AnnotateTypeAttr* found_attr = nullptr;
   while (const auto* attributed_type =
@@ -332,9 +337,10 @@ GetTypeAnnotationSingleDecl(const clang::Type* absl_nonnull type
           clang::cast<clang::AnnotateTypeAttr>(attributed_type->getAttr());
       if (annotateAttr->getAnnotation() == llvm::StringRef(annotation_name)) {
         if (found_attr != nullptr) {
-          return absl::InvalidArgumentError(
-              absl::StrCat("Only one `", annotation_name,
-                           "` annotation may be placed on a type."));
+          return crubit::InvalidArgumentError(
+              (llvm::Twine("Only one `") + annotation_name +
+               "` annotation may be placed on a type.")
+                  .str());
         }
         found_attr = annotateAttr;
       }

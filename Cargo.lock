@@ -16,6 +16,7 @@ name = "annotation_reader_sys"
 version = "0.0.0"
 dependencies = [
  "crubit_build",
+ "status_sys",
 ]
 
 [[package]]
@@ -851,6 +852,7 @@ name = "file_io_sys"
 version = "0.0.0"
 dependencies = [
  "crubit_build",
+ "status_sys",
 ]
 
 [[package]]
@@ -1309,8 +1311,10 @@ name = "rs_bindings_from_cc_annotations_consumer_sys"
 version = "0.0.0"
 dependencies = [
  "annotation_reader_sys",
+ "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1339,6 +1343,7 @@ dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
  "rs_bindings_from_cc_recording_diagnostic_consumer_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1371,6 +1376,7 @@ dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_collect_instantiations",
+ "status_sys",
 ]
 
 [[package]]
@@ -1379,6 +1385,7 @@ version = "0.0.0"
 dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
+ "status_sys",
 ]
 
 [[package]]
@@ -1395,6 +1402,7 @@ version = "0.0.0"
 dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1514,6 +1522,7 @@ dependencies = [
  "lifetime_annotations_sys",
  "pragma_sys",
  "rs_bindings_from_cc_ast_consumer_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1777,6 +1786,7 @@ dependencies = [
  "rs_bindings_from_cc_type_alias_sys",
  "rs_bindings_from_cc_type_map_sys",
  "rs_bindings_from_cc_var_sys",
+ "status_sys",
  "type_lifetimes_sys",
 ]
 
@@ -1904,6 +1914,7 @@ name = "rs_bindings_from_cc_profiling_sys"
 version = "0.0.0"
 dependencies = [
  "crubit_build",
+ "status_sys",
 ]
 
 [[package]]
@@ -1914,6 +1925,7 @@ dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
  "rs_bindings_from_cc_ir_from_cc_dependency_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1986,8 +1998,10 @@ dependencies = [
 name = "rs_bindings_from_cc_type_map_sys"
 version = "0.0.0"
 dependencies = [
+ "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -2135,6 +2149,13 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "status_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+]
 
 [[package]]
 name = "strsim"

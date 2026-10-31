@@ -9,6 +9,7 @@
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -17,14 +18,8 @@
 
 #include "clang/Sema/Initialization.h"
 #include "clang/Sema/Template.h"
-#include "absl/algorithm/container.h"
-#include "absl/container/btree_set.h"
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_join.h"
 #include "common/annotation_reader.h"
+#include "common/check.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/lifetime_error.h"
@@ -59,7 +54,9 @@
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
@@ -70,13 +67,13 @@ namespace {
 // A collection of `FormattedError` values that enforces uniqueness.
 struct Errors {
   // `btree_set` is used to ensure stable ordering.
-  absl::btree_set<FormattedError> error_set;
+  std::set<FormattedError> error_set;
   void Add(FormattedError error) {
     auto result = error_set.insert(std::move(error));
-    CHECK(result.second) << "Duplicated error message";
+    CRUBIT_CHECK(result.second) << "Duplicated error message";
   }
-  void AddStatus(absl::Status status) {
-    Add(FormattedError::FromStatus(status));
+  void AddStatus(llvm::Error status) {
+    Add(FormattedError::FromStatus(std::move(status)));
   }
 };
 
@@ -109,7 +106,8 @@ void CollectExplicitInitFieldNames(const clang::CXXRecordDecl& record_decl,
     if (const clang::CXXRecordDecl* decl =
             as_explicit_init_record(base.getType())) {
       CollectExplicitInitFieldNames(
-          *decl, absl::StrCat(prefix, decl->getQualifiedNameAsString(), "::"),
+          *decl,
+          (llvm::Twine(prefix) + decl->getQualifiedNameAsString() + "::").str(),
           out);
     }
   }
@@ -124,24 +122,24 @@ void CollectExplicitInitFieldNames(const clang::CXXRecordDecl& record_decl,
       }
       continue;
     }
-    std::string name = absl::StrCat(prefix, std::string_view(field->getName()));
+    std::string name = (llvm::Twine(prefix) + field->getName()).str();
     if (field->hasAttr<clang::ExplicitInitAttr>()) {
       out.push_back(std::move(name));
       continue;
     }
     if (const clang::CXXRecordDecl* decl =
             as_explicit_init_record(field->getType())) {
-      CollectExplicitInitFieldNames(*decl, absl::StrCat(name, "."), out);
+      CollectExplicitInitFieldNames(*decl, (llvm::Twine(name) + ".").str(),
+                                    out);
     }
   }
 }
 
 SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
                                            Errors& errors) {
-  absl::StatusOr<std::optional<AnnotateArgs>> maybe_args =
-      GetAnnotateAttrArgs(decl, "crubit_override_unsafe");
-  if (!maybe_args.ok()) {
-    errors.AddStatus(std::move(maybe_args).status());
+  auto maybe_args = GetAnnotateAttrArgs(decl, "crubit_override_unsafe");
+  if (!maybe_args) {
+    errors.Add(FormattedError::FromStatus(maybe_args.takeError()));
     return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   }
   if (!maybe_args->has_value()) {
@@ -149,14 +147,13 @@ SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
   }
   const AnnotateArgs& args = **maybe_args;
   if (args.size() != 1) {
-    errors.AddStatus(absl::InvalidArgumentError(
+    errors.AddStatus(crubit::InvalidArgumentError(
         "`crubit_override_unsafe` annotation must have exactly one argument"));
     return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   }
-  absl::StatusOr<bool> is_unsafe =
-      GetExprAsBool(*args[0], decl.getASTContext());
-  if (!is_unsafe.ok()) {
-    errors.AddStatus(std::move(is_unsafe).status());
+  auto is_unsafe = GetExprAsBool(*args[0], decl.getASTContext());
+  if (!is_unsafe) {
+    errors.Add(FormattedError::FromStatus(is_unsafe.takeError()));
     return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   } else if (*is_unsafe) {
     return SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;
@@ -203,7 +200,7 @@ void ApplyRefQualifierToThisPointer(CcType& this_param_type,
                                     clang::RefQualifierKind ref_qualifier_kind,
                                     bool assumed_lifetimes_enabled) {
   // The CcType of `this` should always be a pointer.
-  CHECK(this_param_type.variant().has_pointer());
+  CRUBIT_CHECK(this_param_type.variant().has_pointer());
   auto* pointer = this_param_type.mutable_variant()->mutable_pointer();
 
   // Now we go back and fix the `this` parameter type to be a reference
@@ -212,7 +209,7 @@ void ApplyRefQualifierToThisPointer(CcType& this_param_type,
       ref_qualifier_kind == clang::RefQualifierKind::RQ_RValue) {
     // It was just a non null pointer, but because of the rvalue ref
     // qualification, it should be an rvalue reference.
-    CHECK(pointer->kind() == PointerTypeKind::NON_NULL);
+    CRUBIT_CHECK(pointer->kind() == PointerTypeKind::NON_NULL);
     pointer->set_kind(PointerTypeKind::R_VALUE_REF);
   }
 }
@@ -247,10 +244,11 @@ static bool IsInStdNamespace(const clang::FunctionDecl* decl) {
 Identifier FunctionDeclImporter::GetTranslatedParamName(
     const clang::ParmVarDecl* param_decl) {
   int param_pos = param_decl->getFunctionScopeIndex();
-  absl::StatusOr<TranslatedIdentifier> name =
+  llvm::Expected<TranslatedIdentifier> name =
       ictx_.GetTranslatedIdentifier(*param_decl);
-  if (!name.ok()) {
-    return {Identifier(absl::StrCat("__param_", param_pos))};
+  if (!name) {
+    return {
+        Identifier((llvm::Twine("__param_") + llvm::Twine(param_pos)).str())};
   }
   // Look through pointers, references and arrays: `const TArgs&... args` or
   // `TArgs*... args` expand to one parameter per pack element just like
@@ -260,8 +258,9 @@ Identifier FunctionDeclImporter::GetTranslatedParamName(
   if (auto* sttpt = type->getAs<clang::SubstTemplateTypeParmType>();
       sttpt && sttpt->getReplacedParameter()->isParameterPack()) {
     // Avoid giving the same name to all parameters expanded from a pack.
-    return {Identifier(
-        absl::StrCat("__", name->rs_identifier().Ident(), "_", param_pos))};
+    return {Identifier((llvm::Twine("__") + name->rs_identifier().Ident() +
+                        "_" + llvm::Twine(param_pos))
+                           .str())};
   }
   return Identifier(std::string((*name).rs_identifier().Ident()));
 }
@@ -337,7 +336,7 @@ bool FunctionBodyIsDefinedInHeader(const ImportContext& ictx,
   static constexpr llvm::StringRef kHeaderExtensions[] = {
       ".h", ".H", ".hh", ".hpp", ".hxx", ".h++", ".inc", ".inl", ".def", ".tcc",
   };
-  return absl::c_contains(kHeaderExtensions, ext);
+  return llvm::is_contained(kHeaderExtensions, ext);
 }
 
 struct PropertyFieldInfo {
@@ -495,7 +494,7 @@ bool ZeroInitIsAllZeroBytes(const clang::ASTContext& ast_context,
 // for it value-initializes the object instead (`crubit::construct_at(p)`),
 // which zero-initializes it. If that produces all zero bytes, the constructor
 // can be implemented without a thunk, by filling the object with zero bytes.
-std::optional<ir_proto::MemberFuncSemantic> GetConstructorSemantic(
+std::optional<crubit::ffi::MemberFuncSemantic> GetConstructorSemantic(
     const clang::CXXConstructorDecl* ctor_decl) {
   if (!ctor_decl->isDefaultConstructor() || !ctor_decl->isTrivial() ||
       ctor_decl->isDeleted()) {
@@ -505,12 +504,12 @@ std::optional<ir_proto::MemberFuncSemantic> GetConstructorSemantic(
   if (!ZeroInitIsAllZeroBytes(record_decl->getASTContext(), *record_decl)) {
     return std::nullopt;
   }
-  ir_proto::MemberFuncSemantic semantic;
+  crubit::ffi::MemberFuncSemantic semantic;
   semantic.set_constructor();
   return semantic;
 }
 
-std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
+std::optional<crubit::ffi::MemberFuncSemantic> GetMemberFuncSemantic(
     ImportContext& ictx, const clang::FunctionDecl* function_decl) {
   // A constructor initializes a new object rather than updating an existing
   // one, so it is never a getter or setter, even if its body has the same shape
@@ -636,7 +635,7 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
         field_info->qual_type.getCanonicalType()) {
       return std::nullopt;
     }
-    ir_proto::MemberFuncSemantic semantic;
+    crubit::ffi::MemberFuncSemantic semantic;
     *semantic.mutable_getter()->mutable_type() = std::move(field_info->type);
     semantic.mutable_getter()->set_offset(field_info->offset);
     return semantic;
@@ -698,7 +697,7 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
         field_info->qual_type.getCanonicalType()) {
       return std::nullopt;
     }
-    ir_proto::MemberFuncSemantic semantic;
+    crubit::ffi::MemberFuncSemantic semantic;
     *semantic.mutable_setter()->mutable_type() = std::move(field_info->type);
     semantic.mutable_setter()->set_offset(field_info->offset);
     return semantic;
@@ -732,7 +731,7 @@ std::optional<std::string> GetFunctionSourceText(
 
 }  // namespace
 
-std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
+std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
     clang::FunctionDecl* function_decl) {
   if (!ictx_.IsFromCurrentTarget(*function_decl)) return nullptr;
   if (function_decl->isDeleted()) return nullptr;
@@ -768,21 +767,22 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     }
   }
 
-  absl::StatusOr<TranslatedUnqualifiedIdentifier> translated_name =
+  llvm::Expected<TranslatedUnqualifiedIdentifier> translated_name =
       ictx_.GetTranslatedName(*function_decl);
-  if (!translated_name.ok()) {
+  if (!translated_name) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
-        {FormattedError::PrefixedStrCat("Function name is not supported",
-                                        translated_name.status().message())},
+        {FormattedError::PrefixedStrCat(
+            "Function name is not supported",
+            llvm::toString(translated_name.takeError()))},
         must_bind_);
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(function_decl);
-  if (!enclosing_item_id.ok()) {
+  if (!enclosing_item_id) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(enclosing_item_id).status())},
+        {FormattedError::FromStatus(enclosing_item_id.takeError())},
         must_bind_);
   }
 
@@ -820,10 +820,14 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     return unsupported(FormattedError::Substitute(
         "Cannot be default-constructed: fields $0 require explicit "
         "initialization.",
-        absl::StrJoin(field_names, ", ",
-                      [](std::string* out, const std::string& name) {
-                        absl::StrAppend(out, "`", name, "`");
-                      })));
+        [&]() {
+          std::string out;
+          for (size_t i = 0; i < field_names.size(); ++i) {
+            if (i > 0) out += ", ";
+            out += "`" + field_names[i] + "`";
+          }
+          return out;
+        }()));
   }
 
   // We should only import methods of class template specializations
@@ -954,14 +958,14 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   if (assumed_lifetimes_enabled) {
     auto lifetime_inputs_or_err =
         CollectLifetimeInputs(ictx_.sema_.getASTContext(), function_decl);
-    if (!lifetime_inputs_or_err.ok()) {
-      errors.Add(FormattedError::FromStatus(
-          std::move(lifetime_inputs_or_err).status()));
+    if (!lifetime_inputs_or_err) {
+      errors.Add(
+          FormattedError::FromStatus(lifetime_inputs_or_err.takeError()));
     } else {
       lifetime_inputs.reserve(lifetime_inputs_or_err->size());
       absl::c_transform(*lifetime_inputs_or_err,
                         std::back_inserter(lifetime_inputs),
-                        [](absl::string_view lifetime_view) {
+                        [](llvm::StringRef lifetime_view) {
                           return std::string(lifetime_view);
                         });
     }
@@ -1000,7 +1004,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     }
   }
 
-  std::vector<ir_proto::FuncParam> params;
+  std::vector<crubit::ffi::FuncParam> params;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (!ictx_.HasBeenAlreadySuccessfullyImported(*method_decl->getParent())) {
@@ -1030,17 +1034,17 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
           // where the first two AttributedTypes are meant to bind to `this`.
           auto this_lifetime_views = CollectExplicitLifetimes(
               ictx_.sema_.getASTContext(), *qual_type.getTypePtr());
-          if (!this_lifetime_views.ok()) {
+          if (!this_lifetime_views) {
             errors.Add(FormattedError::PrefixedStrCat(
                 "Can't collect lifetimes for `this`",
-                this_lifetime_views.status().message()));
+                llvm::toString(this_lifetime_views.takeError())));
           } else if (!this_lifetime_views->empty() &&
                      !this_param_type.explicit_lifetimes().empty()) {
             errors.Add(FormattedError::PrefixedStrCat(
                 "Extra explicit lifetimes on `this`",
-                absl::StrJoin(*this_lifetime_views, ", ")));
+                llvm::join(*this_lifetime_views, ", ")));
           } else {
-            for (absl::string_view lifetime_view : *this_lifetime_views) {
+            for (llvm::StringRef lifetime_view : *this_lifetime_views) {
               this_param_type.add_explicit_lifetimes(lifetime_view);
             }
           }
@@ -1049,7 +1053,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
       ApplyRefQualifierToThisPointer(this_param_type,
                                      method_decl->getRefQualifier(),
                                      assumed_lifetimes_enabled);
-      ir_proto::FuncParam this_param;
+      crubit::ffi::FuncParam this_param;
       *this_param.mutable_type() = std::move(this_param_type);
       this_param.mutable_identifier()->set_identifier("__this");
       // TODO(b/319524852): catch `[[clang::lifetimebound]]` on `this`.
@@ -1058,10 +1062,10 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
             CollectClangLifetimeAnnotationsForMemberFunctionType(
                 ictx_.sema_.getASTContext(),
                 *method_decl->getType().getTypePtr());
-        if (!clang_annotations.ok()) {
+        if (!clang_annotations) {
           errors.Add(FormattedError::PrefixedStrCat(
               "Can't collect clang lifetime annotations for `this`",
-              clang_annotations.status().message()));
+              llvm::toString(clang_annotations.takeError())));
         } else {
           if (clang_annotations->lifetimebound) {
             this_param.set_clang_lifetimebound(true);
@@ -1076,7 +1080,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   }
 
   if (lifetimes) {
-    CHECK(lifetimes->IsValidForDecl(function_decl));
+    CRUBIT_CHECK(lifetimes->IsValidForDecl(function_decl));
   }
 
   for (unsigned i = 0; i < function_decl->getNumParams(); ++i) {
@@ -1090,19 +1094,18 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
                               /*nullable=*/true, assumed_lifetimes_enabled);
 
     std::optional<Identifier> param_name = GetTranslatedParamName(param);
-    CHECK(param_name.has_value());  // No known failure cases.
+    CRUBIT_CHECK(param_name.has_value());  // No known failure cases.
 
-    absl::StatusOr<std::optional<std::string>> unknown_attr =
-        CollectUnknownAttrs(
-            *param, assumed_lifetimes_enabled
-                        ? IsClangLifetimeAnnotation
-                        : [](const clang::Attr& attr) { return false; });
-    if (!unknown_attr.ok()) {
-      errors.Add(FormattedError::FromStatus(std::move(unknown_attr).status()));
+    auto unknown_attr = CollectUnknownAttrs(
+        *param, assumed_lifetimes_enabled
+                    ? IsClangLifetimeAnnotation
+                    : [](const clang::Attr& attr) { return false; });
+    if (!unknown_attr) {
+      errors.Add(FormattedError::FromStatus(unknown_attr.takeError()));
       continue;
     }
 
-    ir_proto::FuncParam proto_param;
+    crubit::ffi::FuncParam proto_param;
     *proto_param.mutable_type() = std::move(param_type);
     proto_param.mutable_identifier()->set_identifier(param_name->Ident());
     if (unknown_attr->has_value()) {
@@ -1145,7 +1148,8 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
               "Diagnostics emitted:\n")));
     }
   }
-  absl::StatusOr<CcType> return_type;
+  llvm::Expected<CcType> return_type =
+      crubit::InvalidArgumentError("uninitialized");
   if (!undeduced_return_type) {
     const clang::tidy::lifetimes::ValueLifetimes* return_lifetimes = nullptr;
     if (lifetimes) {
@@ -1154,9 +1158,10 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     return_type =
         ictx_.ConvertQualType(function_decl->getReturnType(), return_lifetimes,
                               /*nullable=*/true, assumed_lifetimes_enabled);
-    if (!return_type.ok()) {
+    if (!return_type) {
       errors.Add(FormattedError::PrefixedStrCat(
-          "Return type is not supported", return_type.status().message()));
+          "Return type is not supported",
+          llvm::toString(return_type.takeError())));
     }
     // The generated bindings convert the result of `operator<=>` into an
     // integer, which requires a comparison category type.
@@ -1173,19 +1178,19 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     all_free_lifetimes = lifetimes->AllFreeLifetimes();
   }
 
-  std::vector<ir_proto::LifetimeName> lifetime_params;
+  std::vector<crubit::ffi::LifetimeName> lifetime_params;
   lifetime_params.reserve(all_free_lifetimes.size());
   for (clang::tidy::lifetimes::Lifetime lifetime : all_free_lifetimes) {
     std::optional<llvm::StringRef> name =
         lifetime_symbol_table.LookupLifetime(lifetime);
-    CHECK(name.has_value());
-    ir_proto::LifetimeName l_name;
+    CRUBIT_CHECK(name.has_value());
+    crubit::ffi::LifetimeName l_name;
     l_name.set_name(name->str());
     l_name.set_id(lifetime.Id());
     lifetime_params.push_back(std::move(l_name));
   }
-  llvm::sort(lifetime_params, [](const ir_proto::LifetimeName& l1,
-                                 const ir_proto::LifetimeName& l2) {
+  llvm::sort(lifetime_params, [](const crubit::ffi::LifetimeName& l1,
+                                 const crubit::ffi::LifetimeName& l2) {
     return l1.name() < l2.name();
   });
 
@@ -1212,20 +1217,20 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     errors.Add(FormattedError::Static("Inline function is not defined"));
   }
 
-  std::optional<ir_proto::InstanceMethodMetadata> instance_metadata;
+  std::optional<crubit::ffi::InstanceMethodMetadata> instance_metadata;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (method_decl->isInstance()) {
-      ir_proto::InstanceMethodMetadata meta;
+      crubit::ffi::InstanceMethodMetadata meta;
       switch (method_decl->getRefQualifier()) {
         case clang::RQ_LValue:
-          meta.set_reference(ir_proto::InstanceMethodMetadata::L_VALUE);
+          meta.set_reference(crubit::ffi::InstanceMethodMetadata::L_VALUE);
           break;
         case clang::RQ_RValue:
-          meta.set_reference(ir_proto::InstanceMethodMetadata::R_VALUE);
+          meta.set_reference(crubit::ffi::InstanceMethodMetadata::R_VALUE);
           break;
         case clang::RQ_None:
-          meta.set_reference(ir_proto::InstanceMethodMetadata::UNQUALIFIED);
+          meta.set_reference(crubit::ffi::InstanceMethodMetadata::UNQUALIFIED);
           break;
       }
       meta.set_is_const(method_decl->isConst());
@@ -1243,8 +1248,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   clang::CallingConv call_conv =
       function_decl->getType()->getAs<clang::FunctionType>()->getCallConv();
 
-  absl::StatusOr<CallingConv> cc_call_conv =
-      ConvertCcCallConvToSupportedCallingConv(call_conv);
+  auto cc_call_conv = ConvertCcCallConvToSupportedCallingConv(call_conv);
 
   bool is_member_or_descendant_of_class_template =
       IsFullClassTemplateSpecializationOrChild(function_decl);
@@ -1266,7 +1270,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
 
   std::optional<std::string> nodiscard;
   std::optional<std::string> deprecated;
-  absl::StatusOr<std::optional<std::string>> unknown_attr =
+  auto unknown_attr =
       CollectUnknownAttrs(*function_decl, [&](const clang::Attr& attr) {
         if (auto* unused_attr =
                 clang::dyn_cast<clang::WarnUnusedResultAttr>(&attr)) {
@@ -1308,16 +1312,15 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
         }
         return false;
       });
-  if (!unknown_attr.ok()) {
+  if (!unknown_attr) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, translated_name->cc_identifier, *enclosing_item_id,
-        {FormattedError::FromStatus(std::move(unknown_attr).status())},
-        must_bind_);
+        {FormattedError::FromStatus(unknown_attr.takeError())}, must_bind_);
   }
 
   // Silence ClangTidy, checked above: calling `errors.Add` if
-  // `!return_type.ok()` and returning early if `!errors.empty()`.
-  CHECK_OK(return_type);
+  // `!return_type` and returning early if `!errors.empty()`.
+  CRUBIT_CHECK(return_type) << llvm::toString(return_type.takeError());
 
   // We should unify FunctionDecl* generated from friend declarations with the
   // correct enclosing record.
@@ -1334,7 +1337,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
                             function_decl, ictx_.invocation_.is_carcinize());
 
   auto name_info = function_decl->getNameInfo();
-  auto item = std::make_unique<ir_proto::Item>();
+  auto item = std::make_unique<crubit::ffi::Item>();
   auto* func = item->mutable_func();
   *func->mutable_cc_name() = translated_name->cc_identifier;
   *func->mutable_rs_name() = translated_name->rs_identifier();
@@ -1369,8 +1372,8 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   if (unknown_attr->has_value()) {
     func->set_unknown_attr(std::move(**unknown_attr));
   }
-  if (cc_call_conv.ok()) {
-    func->set_call_conv(*cc_call_conv);
+  if ((bool)cc_call_conv) {
+    func->set_call_conv((*cc_call_conv));
   }
   func->set_is_member_or_descendant_of_class_template(
       is_member_or_descendant_of_class_template);
