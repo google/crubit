@@ -2,13 +2,14 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include "llvm/Support/Error.h"
+
 #ifndef CRUBIT_MIGRATOR_RS_FROM_CC_RS_FROM_CC_LIB_H_
 #define CRUBIT_MIGRATOR_RS_FROM_CC_RS_FROM_CC_LIB_H_
 
 #include <string>
 
 #include "absl/container/flat_hash_map.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 
@@ -22,7 +23,7 @@ namespace crubit_rs_from_cc {
 //   tests.
 // * `args`: additional command line arguments for Clang (if any)
 //
-absl::StatusOr<std::string> RsFromCc(
+llvm::Expected<std::string> RsFromCc(
     absl::string_view cc_file_content,
     absl::string_view cc_file_name = "testing/file_name.cc",
     absl::Span<const absl::string_view> args = {});
