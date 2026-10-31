@@ -8,10 +8,9 @@
 #include <utility>
 #include <vector>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/types/span.h"
 #include "common/ffi_types.h"
+#include "common/status.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
@@ -22,8 +21,8 @@ extern "C" crubit::FfiU8SliceBox CollectInstantiationsImpl(
 
 namespace crubit {
 
-absl::StatusOr<std::vector<std::string>> CollectInstantiations(
-    absl::Span<const std::string> rust_sources) {
+llvm::Expected<std::vector<std::string>> CollectInstantiations(
+    llvm::ArrayRef<std::string> rust_sources) {
   llvm::json::Value rust_sources_json = llvm::json::Array(rust_sources);
   std::string json = llvm::formatv("{0}", rust_sources_json);
   FfiU8SliceBox result = CollectInstantiationsImpl(MakeFfiU8Slice(json));
@@ -31,7 +30,8 @@ absl::StatusOr<std::vector<std::string>> CollectInstantiations(
   llvm::Expected<llvm::json::Value> expected_instantiations =
       llvm::json::parse(result_string);
   if (auto error = expected_instantiations.takeError()) {
-    return absl::InternalError(llvm::toString(std::move(error)));
+    return llvm::createStringError(llvm::inconvertibleErrorCode(),
+                                   llvm::toString(std::move(error)).c_str());
   }
 
   llvm::json::Value instantiations = *expected_instantiations;
@@ -41,7 +41,8 @@ absl::StatusOr<std::vector<std::string>> CollectInstantiations(
   if (llvm::json::fromJSON(instantiations, instantiations_vector, root)) {
     return instantiations_vector;
   }
-  return absl::InternalError(llvm::toString(root.getError()));
+  return llvm::createStringError(llvm::inconvertibleErrorCode(),
+                                 llvm::toString(root.getError()).c_str());
 }
 
 }  // namespace crubit

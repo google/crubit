@@ -16,19 +16,19 @@ namespace {
 using ::testing::Eq;
 
 TEST(CxxRecordTest, GetProto2MessageRustNameImpl_NoNesting) {
-  auto is_parent = [](absl::string_view) { return false; };
+  auto is_parent = [](llvm::StringRef) { return false; };
   EXPECT_THAT(internal::GetProto2MessageRustNameImpl("MyMessage", is_parent),
               Eq("MyMessage"));
 }
 
 TEST(CxxRecordTest, GetProto2MessageRustNameImpl_NestedOnce) {
-  auto is_parent = [](absl::string_view prefix) { return prefix == "Outer"; };
+  auto is_parent = [](llvm::StringRef prefix) { return prefix == "Outer"; };
   EXPECT_THAT(internal::GetProto2MessageRustNameImpl("Outer_Inner", is_parent),
               Eq("outer::Inner"));
 }
 
 TEST(CxxRecordTest, GetProto2MessageRustNameImpl_NestedTwice) {
-  auto is_parent = [](absl::string_view prefix) {
+  auto is_parent = [](llvm::StringRef prefix) {
     return prefix == "Outer" || prefix == "Outer_Inner";
   };
   EXPECT_THAT(
@@ -38,7 +38,7 @@ TEST(CxxRecordTest, GetProto2MessageRustNameImpl_NestedTwice) {
 
 TEST(CxxRecordTest, GetProto2MessageRustNameImpl_UnderscoreInName) {
   // A_B is a message, and A_B_C_D is a nested message.
-  auto is_parent = [](absl::string_view prefix) { return prefix == "A_B"; };
+  auto is_parent = [](llvm::StringRef prefix) { return prefix == "A_B"; };
   EXPECT_THAT(internal::GetProto2MessageRustNameImpl("A_B_C_D", is_parent),
               Eq("a_b::C_D"));
 }

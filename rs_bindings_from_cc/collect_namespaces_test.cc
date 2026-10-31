@@ -5,11 +5,8 @@
 #include "rs_bindings_from_cc/collect_namespaces.h"
 
 #include "gmock/gmock.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
-#include "common/status_test_matchers.h"  // IWYU pragma: keep
+#include "common/status.h"
+#include "common/status_test_matchers.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 
@@ -23,7 +20,7 @@ using ::testing::StrEq;
 MATCHER_P(NameIs, name, "") { return arg.name == name; }
 
 TEST(CollectNamespacesTest, Namespaces) {
-  absl::string_view file = R"(
+  llvm::StringRef file = R"(
     namespace top_level_one {
       namespace inner {}
     }
@@ -46,7 +43,7 @@ TEST(CollectNamespacesTest, Namespaces) {
 }
 
 TEST(CollectNamespacesTest, ReopenedNamespaces) {
-  absl::string_view file = R"(
+  llvm::StringRef file = R"(
     namespace top_level {
       namespace inner {}
     }
@@ -64,7 +61,7 @@ TEST(CollectNamespacesTest, ReopenedNamespaces) {
 }
 
 TEST(CollectNamespacesTest, InlineNamespaces) {
-  absl::string_view file = R"(
+  llvm::StringRef file = R"(
     inline namespace top_level {
       inline namespace inner {}
     }
@@ -79,7 +76,7 @@ TEST(CollectNamespacesTest, InlineNamespaces) {
 }
 
 TEST(CollectNamespacesTest, AnonymousNamespaces) {
-  absl::string_view file = R"(
+  llvm::StringRef file = R"(
     namespace {}
   )";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
@@ -90,7 +87,7 @@ TEST(CollectNamespacesTest, AnonymousNamespaces) {
 }
 
 TEST(CollectNamespacesTest, SameNameDifferentParent) {
-  absl::string_view file = R"(
+  llvm::StringRef file = R"(
     namespace top_level_one {
       namespace middle {
         namespace inner_one {}

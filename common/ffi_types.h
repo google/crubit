@@ -7,7 +7,7 @@
 
 #include <cstddef>
 
-#include "absl/strings/string_view.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace crubit {
 
@@ -25,10 +25,10 @@ struct FfiU8Slice {
 };
 
 // Returns an `FfiU8Slice` referencing the same data as `s`.
-FfiU8Slice MakeFfiU8Slice(absl::string_view s);
+FfiU8Slice MakeFfiU8Slice(llvm::StringRef s);
 
-// Returns a `string_view` referencing the same data as `ffi_u8_slice`.
-absl::string_view StringViewFromFfiU8Slice(FfiU8Slice ffi_u8_slice);
+// Returns a `StringRef` referencing the same data as `ffi_u8_slice`.
+llvm::StringRef StringViewFromFfiU8Slice(FfiU8Slice ffi_u8_slice);
 
 // Returns an `FfiU8SliceBox` containing a copy of the data in `ffi_u8_slice`.
 // The returned `FfiU8SliceBox` must be freed by calling `FreeFfiU8SliceBox()`.

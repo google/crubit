@@ -20,9 +20,11 @@ path = "lib.rs"
 annotations_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/annotations_consumer_sys", package = "rs_bindings_from_cc_annotations_consumer_sys"}
 ast_util_sys = { path = "../../../cargo/rs_bindings_from_cc/ast_util_sys", package = "rs_bindings_from_cc_ast_util_sys"}
 cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys", package = "rs_bindings_from_cc_cc_ir_sys"}
+cmdline_sys = { path = "../../../cargo/rs_bindings_from_cc/cmdline_sys", package = "rs_bindings_from_cc_cmdline_sys"}
 recording_diagnostic_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/recording_diagnostic_consumer_sys", package = "rs_bindings_from_cc_recording_diagnostic_consumer_sys"}
 type_map_sys = { path = "../../../cargo/rs_bindings_from_cc/type_map_sys", package = "rs_bindings_from_cc_type_map_sys"}
 annotation_reader_sys = { path = "../../../cargo/common/annotation_reader_sys"}
+status_sys = { path = "../../../cargo/common/status_sys"}
 type_lifetimes_sys = { path = "../../../cargo/lifetime_annotations/type_lifetimes_sys"}
 pragma_sys = { path = "../../../cargo/nullability/pragma_sys"}
 class_template_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/class_template_sys", package = "rs_bindings_from_cc_class_template_sys"}
