@@ -44,6 +44,7 @@ impl Default for DstLocalMovable {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "18DstLocalNonMovable"]
 #[repr(C)]

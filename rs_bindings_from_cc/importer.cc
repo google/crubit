@@ -350,6 +350,15 @@ Importer::Importer(Invocation& invocation, clang::ASTContext& ctx,
       rs_core_fmt_debug_(LookupRsCoreFmtDebug(&ctx)),
       rs_impl_(LookupCanonicalImplInNamespace(&ctx, "rs")),
       rs_std_impl_(LookupCanonicalImplInNamespace(&ctx, "rs_std")) {
+  if (ctx.getLangOpts().PointerFieldProtectionTagged) {
+    unsigned diag_id = ctx.getDiagnostics().getCustomDiagID(
+        clang::DiagnosticsEngine::Error,
+        "Crubit does not support "
+        "-fexperimental-pointer-field-protection-tagged: pointer fields are "
+        "encoded with the object address, so no type could be safely "
+        "Rust-moved");
+    ctx.getDiagnostics().Report(diag_id);
+  }
   decl_importers_.push_back(std::make_unique<ExistingRustTypeImporter>(*this));
   decl_importers_.push_back(std::make_unique<ClassTemplateDeclImporter>(*this));
   decl_importers_.push_back(std::make_unique<CXXRecordDeclImporter>(*this));

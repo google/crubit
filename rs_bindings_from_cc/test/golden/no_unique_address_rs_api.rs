@@ -144,6 +144,8 @@ pub mod padding_between_fields {
 /// - dsize (size without padding): 5
 ///   (4 bytes for `inner_int_field`, 1 byte for `inner_char_field`)
 /// - size: 8 (dsize adjusted up to account for alignment)
+///
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "30FieldInTailPadding_InnerStruct"]
 #[repr(C)]
@@ -235,6 +237,8 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 /// done through compile-time assertions of field offsets in the generated Rust
 /// code.  The initial alignment-based fix idea for b/232418721 would incorrectly
 /// put `char_in_tail_padding_of_prev_field` at offset 8.
+///
+/// Not Rust-movable: member `inner_struct` is not bitwise-relocatable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "18FieldInTailPadding"]
 #[repr(C, align(4))]

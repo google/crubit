@@ -418,6 +418,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithInlineConstructors {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "29StructWithDeletedConstructors"]
 #[repr(C)]
@@ -446,6 +447,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstruct
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "29StructWithPrivateConstructors"]
 #[repr(C, align(4))]
@@ -511,6 +513,8 @@ impl Default for StructWithExplicitlyDefaultedConstructors {
 
 /// TODO(lukasza): Add StructWithImplicitlyDefaultedConstructor test (or is
 ///                that just testing the compiler and therefore not useful?).
+///
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "32NonTrivialStructWithConstructors"]
 #[repr(C)]

@@ -572,6 +572,7 @@ pub fn generated_items_to_tokens<'db>(
                     free_functions,
                     lifetime_params,
                     is_thread_safe,
+                    needs_explicit_unpin_impl,
                     size,
                 } = record_item.as_ref();
 
@@ -726,6 +727,15 @@ pub fn generated_items_to_tokens<'db>(
                     None
                 };
 
+                let unpin_impl = if *needs_explicit_unpin_impl {
+                    Some(quote! {
+                        // C++ asserted bitwise relocatability over a field whose Rust binding is !Unpin
+                        impl #type_param_tokens Unpin for #ident #type_param_tokens {}
+                    })
+                } else {
+                    None
+                };
+
                 quote! {
                     #doc_comment_attr
                     #derive_attr
@@ -741,6 +751,7 @@ pub fn generated_items_to_tokens<'db>(
 
                     #send_impl
                     #sync_impl
+                    #unpin_impl
                     #cxx_impl
                     #display_impl
                     #debug_impl
@@ -1139,6 +1150,8 @@ pub struct Record {
     pub lifetime_params: Vec<syn::Lifetime>,
     /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
     pub is_thread_safe: bool,
+    /// Whether this type needs an explicit `impl Unpin` because it has a `!Unpin` field.
+    pub needs_explicit_unpin_impl: bool,
     /// The size of the type in bytes (needed for opaque UnsafeCell wrapping).
     pub size: usize,
 }

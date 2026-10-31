@@ -1346,6 +1346,15 @@ name = "rs_bindings_from_cc_bazel_label"
 version = "0.0.0"
 
 [[package]]
+name = "rs_bindings_from_cc_bitwise_relocatable_sys"
+version = "0.0.0"
+dependencies = [
+ "annotation_reader_sys",
+ "crubit_build",
+ "rs_bindings_from_cc_ast_util_sys",
+]
+
+[[package]]
 name = "rs_bindings_from_cc_cc_api"
 version = "0.0.0"
 dependencies = [
@@ -1439,6 +1448,7 @@ dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_ast_convert_sys",
  "rs_bindings_from_cc_ast_util_sys",
+ "rs_bindings_from_cc_bitwise_relocatable_sys",
  "rs_bindings_from_cc_cc_ir_sys",
  "type_lifetimes_sys",
 ]

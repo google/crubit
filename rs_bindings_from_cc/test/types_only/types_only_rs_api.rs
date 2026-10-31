@@ -45,6 +45,7 @@ impl Default for Copyable {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "9Cloneable"]
 #[repr(C, align(4))]
@@ -166,6 +167,7 @@ impl ::ctor::PinnedDrop for Cloneable {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "7Movable"]
 #[repr(C, align(4))]

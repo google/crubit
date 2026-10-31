@@ -2336,24 +2336,32 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   void set_destructor(::crubit::ffi::SpecialMemberFunc value) { destructor_ = value; }
   bool is_rust_movable() const { return is_rust_movable_; }
   void set_is_rust_movable(bool value) { is_rust_movable_ = value; }
+  bool has_not_rust_movable_reason() const { return (has_bits_ & 0x80ULL) != 0; }
+  void clear_not_rust_movable_reason() { has_bits_ &= ~0x80ULL; not_rust_movable_reason_ = {}; }
+  absl::string_view not_rust_movable_reason() const { return not_rust_movable_reason_.AsView(); }
+  void set_not_rust_movable_reason(absl::string_view value) { has_bits_ |= 0x80ULL; not_rust_movable_reason_ = FfiString(value); }
+  const FfiVec<FfiString>& libcxx_only_fields() const { return libcxx_only_fields_; }
+  FfiVec<FfiString>* mutable_libcxx_only_fields() { return &libcxx_only_fields_; }
+  void clear_libcxx_only_fields() { libcxx_only_fields_.Clear(); }
+  void add_libcxx_only_fields(absl::string_view value) { libcxx_only_fields_.Add(FfiString(value)); }
   bool is_inheritable() const { return is_inheritable_; }
   void set_is_inheritable(bool value) { is_inheritable_ = value; }
   bool is_abstract() const { return is_abstract_; }
   void set_is_abstract(bool value) { is_abstract_ = value; }
-  bool has_nodiscard() const { return (has_bits_ & 0x80ULL) != 0; }
-  void clear_nodiscard() { has_bits_ &= ~0x80ULL; nodiscard_ = {}; }
+  bool has_nodiscard() const { return (has_bits_ & 0x100ULL) != 0; }
+  void clear_nodiscard() { has_bits_ &= ~0x100ULL; nodiscard_ = {}; }
   absl::string_view nodiscard() const { return nodiscard_.AsView(); }
-  void set_nodiscard(absl::string_view value) { has_bits_ |= 0x80ULL; nodiscard_ = FfiString(value); }
+  void set_nodiscard(absl::string_view value) { has_bits_ |= 0x100ULL; nodiscard_ = FfiString(value); }
   ::crubit::ffi::RecordType record_type() const { return record_type_; }
   void set_record_type(::crubit::ffi::RecordType value) { record_type_ = value; }
   bool is_aggregate() const { return is_aggregate_; }
   void set_is_aggregate(bool value) { is_aggregate_ = value; }
   bool is_canonical_alias() const { return is_canonical_alias_; }
   void set_is_canonical_alias(bool value) { is_canonical_alias_ = value; }
-  bool has_enclosing_item_id() const { return (has_bits_ & 0x100ULL) != 0; }
-  void clear_enclosing_item_id() { has_bits_ &= ~0x100ULL; enclosing_item_id_ = {}; }
+  bool has_enclosing_item_id() const { return (has_bits_ & 0x200ULL) != 0; }
+  void clear_enclosing_item_id() { has_bits_ &= ~0x200ULL; enclosing_item_id_ = {}; }
   uint64_t enclosing_item_id() const { return enclosing_item_id_; }
-  void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x100ULL; enclosing_item_id_ = value; }
+  void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x200ULL; enclosing_item_id_ = value; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
   bool overloads_operator_delete() const { return overloads_operator_delete_; }
@@ -2372,10 +2380,10 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   void set_has_template_argument_lifetime(bool value) { has_template_argument_lifetime_ = value; }
   bool detected_formatter() const { return detected_formatter_; }
   void set_detected_formatter(bool value) { detected_formatter_ = value; }
-  bool has_deprecated() const { return (has_bits_ & 0x200ULL) != 0; }
-  void clear_deprecated() { has_bits_ &= ~0x200ULL; deprecated_ = {}; }
+  bool has_deprecated() const { return (has_bits_ & 0x400ULL) != 0; }
+  void clear_deprecated() { has_bits_ &= ~0x400ULL; deprecated_ = {}; }
   absl::string_view deprecated() const { return deprecated_.AsView(); }
-  void set_deprecated(absl::string_view value) { has_bits_ |= 0x200ULL; deprecated_ = FfiString(value); }
+  void set_deprecated(absl::string_view value) { has_bits_ |= 0x400ULL; deprecated_ = FfiString(value); }
   bool is_thread_safe() const { return is_thread_safe_; }
   void set_is_thread_safe(bool value) { is_thread_safe_ = value; }
   bool is_explicit_class_template_instantiation_definition() const { return is_explicit_class_template_instantiation_definition_; }
@@ -2412,6 +2420,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   ::crubit::ffi::SpecialMemberFunc move_constructor_{};
   ::crubit::ffi::SpecialMemberFunc destructor_{};
   bool is_rust_movable_{};
+  FfiString not_rust_movable_reason_{};
+  FfiVec<FfiString> libcxx_only_fields_{};
   bool is_inheritable_{};
   bool is_abstract_{};
   FfiString nodiscard_{};
@@ -3541,7 +3551,7 @@ inline Record& Record::operator=(Record&&) noexcept = default;
 inline Record::~Record() = default;
 inline ::crubit::ffi::Item* Record::add_children() { return children_.Add(); }
 static_assert(std::is_standard_layout_v<Record>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Record) == 1096 && alignof(Record) == 8));
+static_assert(sizeof(size_t) != 8 || (sizeof(Record) == 1144 && alignof(Record) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(Record, rs_name_) == 8);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, cc_name_) == 24);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, unique_name_) == 40);
@@ -3568,25 +3578,27 @@ static_assert(sizeof(size_t) != 8 || offsetof(Record, copy_constructor_) == 956)
 static_assert(sizeof(size_t) != 8 || offsetof(Record, move_constructor_) == 960);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, destructor_) == 964);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, is_rust_movable_) == 968);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_inheritable_) == 969);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_abstract_) == 970);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, nodiscard_) == 976);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, record_type_) == 992);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_aggregate_) == 996);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_canonical_alias_) == 997);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, enclosing_item_id_) == 1000);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, must_bind_) == 1008);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, overloads_operator_delete_) == 1009);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, has_private_or_deleted_operator_delete_) == 1010);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, lifetime_inputs_) == 1016);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, impl_debug_) == 1040);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, has_private_pointer_or_reference_fields_) == 1041);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, has_template_argument_lifetime_) == 1042);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, detected_formatter_) == 1043);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, deprecated_) == 1048);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_thread_safe_) == 1064);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_explicit_class_template_instantiation_definition_) == 1065);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, children_) == 1072);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, not_rust_movable_reason_) == 976);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, libcxx_only_fields_) == 992);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, is_inheritable_) == 1016);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, is_abstract_) == 1017);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, nodiscard_) == 1024);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, record_type_) == 1040);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, is_aggregate_) == 1044);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, is_canonical_alias_) == 1045);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, enclosing_item_id_) == 1048);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, must_bind_) == 1056);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, overloads_operator_delete_) == 1057);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, has_private_or_deleted_operator_delete_) == 1058);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, lifetime_inputs_) == 1064);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, impl_debug_) == 1088);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, has_private_pointer_or_reference_fields_) == 1089);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, has_template_argument_lifetime_) == 1090);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, detected_formatter_) == 1091);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, deprecated_) == 1096);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, is_thread_safe_) == 1112);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, is_explicit_class_template_instantiation_definition_) == 1113);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, children_) == 1120);
 static_assert(std::is_standard_layout_v<IncompleteRecord>);
 static_assert(sizeof(size_t) != 8 || (sizeof(IncompleteRecord) == 120 && alignof(IncompleteRecord) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, cc_name_) == 8);

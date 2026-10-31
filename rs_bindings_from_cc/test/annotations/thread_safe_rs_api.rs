@@ -17,6 +17,8 @@
 pub mod crubit {
     pub mod test {
         /// A simple thread-safe struct.
+        ///
+        /// Not Rust-movable: destructor or move constructor is user-provided
         #[::ctor::recursively_pinned]
         #[cfi_encoding = "N6crubit4test16ThreadSafeStructE"]
         #[repr(C, align(4))]
@@ -271,6 +273,8 @@ pub mod crubit {
         }
 
         /// Pinned thread-safe type with custom assignment
+        ///
+        /// Not Rust-movable: destructor or move constructor is user-provided
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[cfi_encoding = "N6crubit4test16ThreadSafePinnedE"]
         #[repr(C)]

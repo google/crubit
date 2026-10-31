@@ -17,6 +17,7 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
+bitwise_relocatable_sys = { path = "../../../../cargo/rs_bindings_from_cc/importers/bitwise_relocatable_sys", package = "rs_bindings_from_cc_bitwise_relocatable_sys"}
 annotation_reader_sys = { path = "../../../../cargo/common/annotation_reader_sys"}
 type_lifetimes_sys = { path = "../../../../cargo/lifetime_annotations/type_lifetimes_sys"}
 ast_convert_sys = { path = "../../../../cargo/rs_bindings_from_cc/ast_convert_sys", package = "rs_bindings_from_cc_ast_convert_sys"}

@@ -89,6 +89,7 @@ ASPECT_HINTS = {
     "template_inst": [
         "//features:template_instantiation",
     ],
+    "boxes": ["//features:experimental"],
     "inherited_friend_operators": [
         "//features:inherited_friend_operators",
     ],

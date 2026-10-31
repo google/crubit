@@ -20,10 +20,30 @@ cc_library(
 )
 
 cc_library(
+    name = "bitwise_relocatable",
+    srcs = ["bitwise_relocatable.cc"],
+    hdrs = ["bitwise_relocatable.h"],
+    deps = [
+        "//common:annotation_reader",
+        "//rs_bindings_from_cc:ast_util",
+        "//rs_bindings_from_cc:decl_importer",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/strings",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:lex",
+        "@llvm-project//clang:sema",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
     name = "cxx_record",
     srcs = ["cxx_record.cc"],
     hdrs = ["cxx_record.h"],
     deps = [
+        ":bitwise_relocatable",
         "//common:annotation_reader",
         "//common:status_macros",
         "//common:string_view_conversion",

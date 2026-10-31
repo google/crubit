@@ -65,9 +65,31 @@ fn test_str_box() {
 
 #[gtest]
 fn test_holder() {
-    unsafe {
-        let h = test::MakeHolder();
-        expect_eq!(**test::HolderBox(h as *const _), 42);
-        test::DestroyHolder(h);
-    }
+    static_assertions::assert_impl_all!(test::Holder: Unpin);
+    static_assertions::assert_impl_all!(test::Outer: Unpin);
+    static_assertions::assert_impl_all!(test::ArrayHolder: Unpin);
+
+    let mut h = test::MakeHolder(5);
+    expect_eq!(**h.b, 5);
+    **h.b = 6;
+    expect_eq!(test::HolderValue(&h), 6);
+    test::SetHolderValue(&mut h, 7);
+    let moved = h; // plain Rust move: Unpin
+    expect_eq!(test::HolderValue(&moved), 7);
+    let boxed: Box<test::Holder> = Box::new(moved);
+    expect_eq!(test::HolderValue(&boxed), 7);
+
+    let outer = test::MakeOuter(8);
+    expect_eq!(outer.tag, 9);
+    expect_eq!(test::HolderValue(&outer.h), 8);
+}
+
+#[gtest]
+fn test_pin_holder_drop() {
+    static_assertions::assert_impl_all!(test::PinHolder: Unpin);
+    let a = test::MakePinBoxNonTrivial(42);
+    let h = test::PinHolder { p: ::core::mem::ManuallyDrop::new(test::SharePinBoxNonTrivial(&a)) };
+    expect_eq!(test::NonTrivialUseCount(&a), 2);
+    drop(h);
+    expect_eq!(test::NonTrivialUseCount(&a), 1);
 }

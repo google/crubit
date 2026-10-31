@@ -366,6 +366,7 @@ pub mod pointers {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "10NonTrivial"]
 #[repr(C, align(8))]
@@ -864,6 +865,8 @@ impl Default for TrivialDefault {
 }
 
 /// Like `TrivialDefault`, but `!Unpin`.
+///
+/// Not Rust-movable: destructor or move constructor is user-provided
 ///
 /// # Safety
 ///

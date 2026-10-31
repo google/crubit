@@ -83,6 +83,7 @@ pub mod s {
     }
 }
 
+/// Not Rust-movable: destructor or move constructor is user-provided
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "44TriviallyCopyableButNontriviallyDestructible"]
 #[repr(C)]
