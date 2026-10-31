@@ -19,12 +19,13 @@
 #include "clang/Sema/Template.h"
 #include "absl/algorithm/container.h"
 #include "absl/container/btree_set.h"
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "common/annotation_reader.h"
+#include "common/check.h"
+#include "common/status_absl_compat.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/lifetime_error.h"
@@ -73,7 +74,7 @@ struct Errors {
   absl::btree_set<FormattedError> error_set;
   void Add(FormattedError error) {
     auto result = error_set.insert(std::move(error));
-    CHECK(result.second) << "Duplicated error message";
+    CRUBIT_CHECK(result.second) << "Duplicated error message";
   }
   void AddStatus(absl::Status status) {
     Add(FormattedError::FromStatus(status));
@@ -138,10 +139,9 @@ void CollectExplicitInitFieldNames(const clang::CXXRecordDecl& record_decl,
 
 SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
                                            Errors& errors) {
-  absl::StatusOr<std::optional<AnnotateArgs>> maybe_args =
-      GetAnnotateAttrArgs(decl, "crubit_override_unsafe");
-  if (!maybe_args.ok()) {
-    errors.AddStatus(std::move(maybe_args).status());
+  auto maybe_args = GetAnnotateAttrArgs(decl, "crubit_override_unsafe");
+  if (!maybe_args) {
+    errors.AddStatus(crubit::ToAbslStatus(maybe_args.takeError()));
     return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   }
   if (!maybe_args->has_value()) {
@@ -153,10 +153,9 @@ SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
         "`crubit_override_unsafe` annotation must have exactly one argument"));
     return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   }
-  absl::StatusOr<bool> is_unsafe =
-      GetExprAsBool(*args[0], decl.getASTContext());
-  if (!is_unsafe.ok()) {
-    errors.AddStatus(std::move(is_unsafe).status());
+  auto is_unsafe = GetExprAsBool(*args[0], decl.getASTContext());
+  if (!is_unsafe) {
+    errors.AddStatus(crubit::ToAbslStatus(is_unsafe.takeError()));
     return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   } else if (*is_unsafe) {
     return SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;
@@ -203,7 +202,7 @@ void ApplyRefQualifierToThisPointer(CcType& this_param_type,
                                     clang::RefQualifierKind ref_qualifier_kind,
                                     bool assumed_lifetimes_enabled) {
   // The CcType of `this` should always be a pointer.
-  CHECK(this_param_type.variant().has_pointer());
+  CRUBIT_CHECK(this_param_type.variant().has_pointer());
   auto* pointer = this_param_type.mutable_variant()->mutable_pointer();
 
   // Now we go back and fix the `this` parameter type to be a reference
@@ -212,7 +211,7 @@ void ApplyRefQualifierToThisPointer(CcType& this_param_type,
       ref_qualifier_kind == clang::RefQualifierKind::RQ_RValue) {
     // It was just a non null pointer, but because of the rvalue ref
     // qualification, it should be an rvalue reference.
-    CHECK(pointer->kind() == PointerTypeKind::NON_NULL);
+    CRUBIT_CHECK(pointer->kind() == PointerTypeKind::NON_NULL);
     pointer->set_kind(PointerTypeKind::R_VALUE_REF);
   }
 }
@@ -1076,7 +1075,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   }
 
   if (lifetimes) {
-    CHECK(lifetimes->IsValidForDecl(function_decl));
+    CRUBIT_CHECK(lifetimes->IsValidForDecl(function_decl));
   }
 
   for (unsigned i = 0; i < function_decl->getNumParams(); ++i) {
@@ -1090,7 +1089,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
                               /*nullable=*/true, assumed_lifetimes_enabled);
 
     std::optional<Identifier> param_name = GetTranslatedParamName(param);
-    CHECK(param_name.has_value());  // No known failure cases.
+    CRUBIT_CHECK(param_name.has_value());  // No known failure cases.
 
     absl::StatusOr<std::optional<std::string>> unknown_attr =
         CollectUnknownAttrs(
@@ -1178,7 +1177,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   for (clang::tidy::lifetimes::Lifetime lifetime : all_free_lifetimes) {
     std::optional<llvm::StringRef> name =
         lifetime_symbol_table.LookupLifetime(lifetime);
-    CHECK(name.has_value());
+    CRUBIT_CHECK(name.has_value());
     ir_proto::LifetimeName l_name;
     l_name.set_name(name->str());
     l_name.set_id(lifetime.Id());
@@ -1317,7 +1316,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
 
   // Silence ClangTidy, checked above: calling `errors.Add` if
   // `!return_type.ok()` and returning early if `!errors.empty()`.
-  CHECK_OK(return_type);
+  CRUBIT_CHECK(return_type.ok()) << return_type.status();
 
   // We should unify FunctionDecl* generated from friend declarations with the
   // correct enclosing record.
