@@ -22,8 +22,6 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/functional/any_invocable.h"
-#include "absl/log/check.h"
-#include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -31,6 +29,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
 #include "common/annotation_reader.h"
+#include "common/check.h"
 #include "common/status_macros.h"
 #include "common/string_view_conversion.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -330,11 +329,12 @@ std::optional<std::array<std::string, N>> GetKeyValues(
   for (size_t i = 0; i < N; ++i) {
     absl::StatusOr<std::optional<std::string>> value =
         GetAnnotationWithStringArg(record_decl, keys[i]);
-    CHECK_OK(value);
+    CRUBIT_CHECK(value.ok()) << value.status();
     if (!value->has_value()) {
-      CHECK_EQ(i, 0) << "Missing value for key: '" << keys[i]
-                     << "'; use the provided annotation to ensure that all "
-                        "keys are present";
+      CRUBIT_CHECK(i == 0)
+          << "Missing value for key: '" << keys[i]
+          << "'; use the provided annotation to ensure that all "
+             "keys are present";
       return std::nullopt;
     }
     values[i] = **std::move(value);
@@ -415,7 +415,7 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
     b->set_abi_cpp(std::move(abi_cpp));
     absl::StatusOr<std::optional<std::string>> hint_val =
         GetAnnotationWithStringArg(record_decl, "crubit_bridge_label_hint");
-    CHECK_OK(hint_val);
+    CRUBIT_CHECK(hint_val.ok()) << hint_val.status();
     if (hint_val->has_value()) {
       b->set_label_hint(**std::move(hint_val));
     }
@@ -1069,8 +1069,9 @@ absl::StatusOr<SafetyAnnotation> CXXRecordDeclImporter::GetSafetyAnnotation(
 std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
     const clang::FieldDecl* field_decl) {
   if (field_decl->getName().empty()) {
-    CHECK(!field_decl->hasAttr<clang::NoUniqueAddressAttr>() &&
-          "Unnamed fields can't be annotated with [[no_unique_address]]");
+    CRUBIT_CHECK(
+        !field_decl->hasAttr<clang::NoUniqueAddressAttr>() &&
+        "Unnamed fields can't be annotated with [[no_unique_address]]");
     // We don't just conjure an artificial name for an unnamed field, because
     // in the future such fields may be elided entirely - see unnamed members
     // in:
@@ -1372,7 +1373,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
         return nullptr;
       }
     }
-    CHECK(!named_decl->getName().empty());
+    CRUBIT_CHECK(!named_decl->getName().empty());
 
     absl::StatusOr<TranslatedIdentifier> record_name =
         ictx_.GetTranslatedIdentifier(*named_decl);
@@ -1704,7 +1705,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
       // canonical size in IR and in the binding code.
 
       // Make sure that `alignment` is a power of 2.
-      CHECK(!(alignment & (alignment - 1)));
+      CRUBIT_CHECK(!(alignment & (alignment - 1)));
 
       // Given that `alignment` is a power of 2, we can round it up by
       // a bit arithmetic: `alignment - 1` clears the single bit of it
@@ -1894,7 +1895,7 @@ CXXRecordDeclImporter::GetUnambiguousPublicBases(
       }
 
       clang::CXXRecordDecl* base_record_decl =
-          ABSL_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
+          CRUBIT_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
       if (!ictx_.HasBeenAlreadySuccessfullyImported(*base_record_decl)) {
         continue;
       }
@@ -1907,12 +1908,12 @@ CXXRecordDeclImporter::GetUnambiguousPublicBases(
         }
         *offset +=
             ictx_.ctx_.getASTRecordLayout(base_path_element.Class)
-                .getBaseClassOffset(ABSL_DIE_IF_NULL(
+                .getBaseClassOffset(CRUBIT_DIE_IF_NULL(
                     base_path_element.Base->getType()->getAsCXXRecordDecl()))
                 .getQuantity();
       }
-      CHECK((!offset.has_value() || *offset >= 0) &&
-            "Concrete base classes should have non-negative offsets.");
+      CRUBIT_CHECK((!offset.has_value() || *offset >= 0) &&
+                   "Concrete base classes should have non-negative offsets.");
       ir_proto::BaseClass base_class;
       base_class.set_base_record_id(
           ictx_.GenerateItemId(*base_record_decl).value());

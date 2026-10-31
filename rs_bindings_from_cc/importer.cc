@@ -24,8 +24,6 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/log/check.h"
-#include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -35,6 +33,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
 #include "common/annotation_reader.h"
+#include "common/check.h"
 #include "common/status_macros.h"
 #include "common/string_view_conversion.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -343,8 +342,8 @@ const clang::ClassTemplateDecl* absl_nullable LookupCanonicalImplInNamespace(
 Importer::Importer(Invocation& invocation, clang::ASTContext& ctx,
                    clang::Sema& sema)
     : ImportContext(invocation, ctx, sema),
-      mangler_(ABSL_DIE_IF_NULL(ctx_.createMangleContext())),
-      itanium_tag_name_mangler_(ABSL_DIE_IF_NULL(
+      mangler_(CRUBIT_DIE_IF_NULL(ctx_.createMangleContext())),
+      itanium_tag_name_mangler_(CRUBIT_DIE_IF_NULL(
           clang::ItaniumMangleContext::create(ctx_, ctx_.getDiagnostics()))),
       module_comments_(ctx.getSourceManager()),
       rs_core_fmt_debug_(LookupRsCoreFmtDebug(&ctx)),
@@ -1015,7 +1014,7 @@ const clang::Decl* absl_nonnull Importer::CanonicalizeUnmergedDuplicates(
   // declarations that are, so leave it alone.
   if (found_self) {
     // `best` isn't null, since lookup found `decl` itself.
-    representative = ABSL_DIE_IF_NULL(best);
+    representative = CRUBIT_DIE_IF_NULL(best);
   }
   unmerged_duplicates_cache_[decl] = representative;
   return representative;
@@ -1059,7 +1058,7 @@ const clang::Decl* absl_nullable Importer::CanonicalizeDeclInRedeclChain(
     for (auto iter = decl->redecls_begin(); iter != decl->redecls_end();
          ++iter) {
       auto* redecl = llvm::dyn_cast<clang::TagDecl>(*iter);
-      CHECK(redecl);
+      CRUBIT_CHECK(redecl);
       if (is_injected_class_name(redecl)) {
         continue;
       }
@@ -1085,7 +1084,7 @@ const clang::Decl* absl_nullable Importer::CanonicalizeDeclInRedeclChain(
         canonical = redecl;
       }
     }
-    CHECK(canonical != nullptr);
+    CRUBIT_CHECK(canonical != nullptr);
     return canonical;
   }
   if (const auto* function_decl = llvm::dyn_cast<clang::FunctionDecl>(decl)) {
@@ -1913,13 +1912,13 @@ void Importer::CheckLazyImportInvariants() const {
          dc != nullptr && !dc->isTranslationUnit() && !dc->isFunctionOrMethod();
          dc = dc->getParent()) {
       if (const auto* ns_decl = llvm::dyn_cast<clang::NamespaceDecl>(dc)) {
-        CHECK(import_cache_.contains(ns_decl))
+        CRUBIT_CHECK(import_cache_.contains(ns_decl))
             << "Enclosing namespace of an imported decl was not imported";
       }
     }
     if (entry.proto_item->has_namespace_decl()) {
       const auto* ns_decl = llvm::cast<clang::NamespaceDecl>(decl);
-      CHECK(import_cache_.contains(ns_decl->getCanonicalDecl()))
+      CRUBIT_CHECK(import_cache_.contains(ns_decl->getCanonicalDecl()))
           << "Canonical namespace of an imported namespace was not imported";
     }
   }
@@ -2247,7 +2246,7 @@ const ir_proto::Item* absl_nullable Importer::GetDeclItem(
   //    earlier import to instead use the real entry.
   //
   // TODO(jeanpierreda): find and eliminate all re-entrant imports, and replace with
-  // a CHECK(inserted).
+  // a CRUBIT_CHECK(inserted).
 
   // Note: insert_or_assign, not insert, in case a record, so as to overwrite
   // any null entries introduced by cycles.
@@ -3658,9 +3657,9 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
             pointee_type->getAs<clang::FunctionProtoType>()) {
       // Assert that the function pointers/references always either 1) have no
       // lifetime or 2) have `'static` lifetime (no other lifetime is allowed).
-      CHECK(!lifetime.has_value() ||
-            (lifetime->value() ==
-             clang::tidy::lifetimes::Lifetime::Static().Id()));
+      CRUBIT_CHECK(!lifetime.has_value() ||
+                   (lifetime->value() ==
+                    clang::tidy::lifetimes::Lifetime::Static().Id()));
 
       CRUBIT_ASSIGN_OR_RETURN(
           CallingConv cc_call_conv,
@@ -3692,7 +3691,7 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
                           /*nullable=*/true, assume_lifetimes);
       *fp->add_param_and_return_types() = std::move(cpp_return_type);
 
-      CHECK(type.isPointerType() || type.isLValueReferenceType());
+      CRUBIT_CHECK(type.isPointerType() || type.isLValueReferenceType());
       return func_ptr_type;
     }
     CcType cpp_pointee_type = ConvertQualType(
@@ -3709,7 +3708,7 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     } else if (type.isLValueReferenceType()) {
       return LValueReferenceTo(std::move(cpp_pointee_type), lifetime);
     } else {
-      CHECK(type.isRValueReferenceType());
+      CRUBIT_CHECK(type.isRValueReferenceType());
       return RValueReferenceTo(std::move(cpp_pointee_type), lifetime);
     }
   } else if (const auto* builtin_type =
@@ -3816,7 +3815,7 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
   } else if (const auto* deduced_type = type.getAs<clang::DeducedType>()) {
     // Deduction should have taken place earlier (e.g. via DeduceReturnType
     // called from FunctionDeclImporter::Import).
-    CHECK(deduced_type->isDeduced());
+    CRUBIT_CHECK(deduced_type->isDeduced());
     return ConvertQualType(deduced_type->getDeducedType(), lifetimes,
                            /*nullable=*/true, assume_lifetimes);
   } else if (const auto* decltype_type = type.getAs<clang::DecltypeType>()) {
@@ -3936,7 +3935,7 @@ std::string Importer::GetMangledName(const clang::NamedDecl& named_decl) const {
     // returns the name of the RTTI typeinfo symbol, and remove the _ZTS
     // prefix.
     constexpr llvm::StringRef kZtsPrefix = "_ZTS";
-    CHECK(buffer.str().take_front(4) == kZtsPrefix);
+    CRUBIT_CHECK(buffer.str().take_front(4) == kZtsPrefix);
     llvm::StringRef mangled_tag_name =
         buffer.str().drop_front(kZtsPrefix.size());
 
@@ -4144,7 +4143,7 @@ absl::StatusOr<TranslatedIdentifier> Importer::GetTranslatedIdentifier(
     const clang::NamedDecl& named_decl) const {
   CRUBIT_ASSIGN_OR_RETURN(TranslatedUnqualifiedIdentifier unqualified,
                           GetTranslatedName(named_decl));
-  CHECK(unqualified.cc_identifier.has_ident())
+  CRUBIT_CHECK(unqualified.cc_identifier.has_ident())
       << "Incorrectly called with a special name";
   Identifier cc_identifier(unqualified.cc_identifier.ident().identifier());
 
@@ -4157,7 +4156,7 @@ absl::StatusOr<TranslatedIdentifier> Importer::GetTranslatedIdentifier(
     return translated_identifiers;
   }
 
-  CHECK(unqualified.crubit_rust_name->has_ident())
+  CRUBIT_CHECK(unqualified.crubit_rust_name->has_ident())
       << "Crubit rust name cannot be a special name";
 
   translated_identifiers.crubit_rust_name =
