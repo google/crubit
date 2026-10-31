@@ -55,8 +55,6 @@ crubit_cc_test(
         "android",
         "ios",
     ],
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
     deps = [
         ":enums_cc_api",
         "@googletest//:gtest_main",
@@ -97,8 +95,6 @@ crubit_cc_test(
         "android",
         "ios",
     ],
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
     deps = [
         ":cpp_enums_cc_api",
         "@googletest//:gtest_main",
@@ -187,8 +183,6 @@ crubit_cc_test(
         "android",
         "ios",
     ],
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
     deps = [
         ":result_cc_api",
         "//support:movable",
