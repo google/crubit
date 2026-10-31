@@ -43,8 +43,6 @@ golden_test(
 crubit_cc_test(
     name = "type_identity_test",
     srcs = ["type_identity_test.cc"],
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
     deps = [
         ":rust_api_cc_api",
     ],
