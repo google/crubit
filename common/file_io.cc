@@ -8,39 +8,37 @@
 #include <string>
 #include <system_error>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "common/string_view_conversion.h"
+#include "common/status.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
 
-absl::StatusOr<std::string> GetFileContents(absl::string_view path) {
+llvm::Expected<std::string> GetFileContents(llvm::StringRef path) {
   llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> err_or_buffer =
-      llvm::MemoryBuffer::getFileOrSTDIN(path.data(), /* IsText= */ true);
+      llvm::MemoryBuffer::getFileOrSTDIN(path, /* IsText= */ true);
   if (std::error_code err = err_or_buffer.getError()) {
-    return absl::Status(absl::StatusCode::kInternal, err.message());
+    return crubit::InternalError(err.message());
   }
 
   return std::string((*err_or_buffer)->getBuffer());
 }
 
-absl::Status SetFileContents(absl::string_view path,
-                             absl::string_view contents) {
+llvm::Error SetFileContents(llvm::StringRef path, llvm::StringRef contents) {
   std::error_code error_code;
-  llvm::raw_fd_ostream stream(StringRefFromStringView(path), error_code);
+  llvm::raw_fd_ostream stream(path, error_code);
   if (error_code) {
-    return absl::Status(absl::StatusCode::kInternal, error_code.message());
+    return crubit::InternalError(error_code.message());
   }
   stream << contents;
   stream.close();
   if (stream.has_error()) {
-    return absl::Status(absl::StatusCode::kInternal, stream.error().message());
+    return crubit::InternalError(stream.error().message());
   }
-  return absl::OkStatus();
+  return llvm::Error::success();
 }
 
 }  // namespace crubit
