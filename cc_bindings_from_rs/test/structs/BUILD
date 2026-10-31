@@ -54,8 +54,6 @@ crubit_cc_test(
         "android",
         "ios",
     ],
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
     deps = [
         ":structs_cc_api",
         "@abseil-cpp//absl/strings",

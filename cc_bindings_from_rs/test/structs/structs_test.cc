@@ -115,6 +115,15 @@ float struct_by_float_passing_with_no_thunk__thunkless_inspect(
 #pragma clang diagnostic pop
 
 TEST(StructsTest, DirectFfiThunklessStructFloat) {
+#if defined(_WIN32) && defined(_M_IX86)
+  // TODO(b/522829368): Crubit emits `alignas(8)` on `StructFloat`, so on
+  // i686-pc-windows-msvc clang passes it by pointer while rustc passes it by
+  // value, and the direct `extern "C"` call reads garbage. Remove this skip
+  // once the generator stops emitting an `alignas` that equals the natural
+  // alignment.
+  GTEST_SKIP() << "By-value FFI of over-aligned structs is broken on 32-bit "
+                  "Windows";
+#endif
   namespace test = structs::struct_by_float_passing_with_no_thunk;
   test::StructFloat x =
       struct_by_float_passing_with_no_thunk__thunkless_create(111.0);
