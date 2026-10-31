@@ -5,7 +5,7 @@
 #include "rs_bindings_from_cc/profiling.h"
 
 namespace crubit {
-void StartHeapProfiling(absl::string_view prefix) {}
-void DumpHeapProfiling(absl::string_view prefix) {}
+void StartHeapProfiling(llvm::StringRef prefix) {}
+void DumpHeapProfiling(llvm::StringRef prefix) {}
 void StopHeapProfiling() {}
 }  // namespace crubit

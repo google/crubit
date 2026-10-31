@@ -9,7 +9,7 @@
 #include <ostream>
 #include <string>
 
-#include "absl/strings/str_cat.h"
+#include "llvm/ADT/Twine.h"
 
 namespace clang {
 namespace tidy {
@@ -60,9 +60,9 @@ std::string Lifetime::DebugString() const {
       return "'static";
     default:
       if (id_ <= FIRST_LOCAL_LIFETIME_ID) {
-        return absl::StrCat("'local", -id_);
+        return (llvm::Twine("'local") + llvm::Twine(-id_)).str();
       } else {
-        return absl::StrCat("'", id_);
+        return (llvm::Twine("'") + llvm::Twine(id_)).str();
       }
   }
 }

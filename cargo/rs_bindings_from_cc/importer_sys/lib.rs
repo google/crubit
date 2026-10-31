@@ -19,6 +19,7 @@ extern crate function_template_sys;
 extern crate namespace_sys;
 extern crate pragma_sys;
 extern crate recording_diagnostic_consumer_sys;
+extern crate status_sys;
 extern crate type_alias_sys;
 extern crate type_lifetimes_sys;
 extern crate type_map_sys;

@@ -8,7 +8,6 @@
 #include <string>
 #include <utility>
 
-#include "absl/container/flat_hash_set.h"
 #include "common/string_view_conversion.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "nullability/pragma.h"
@@ -18,6 +17,7 @@
 #include "clang/Frontend/DependencyOutputOptions.h"
 #include "clang/Frontend/FrontendAction.h"
 #include "clang/Frontend/Utils.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/StringRef.h"
 
 namespace crubit {
@@ -31,7 +31,7 @@ class DependencyFileGeneratorWithExclusions final
  public:
   DependencyFileGeneratorWithExclusions(
       const clang::DependencyOutputOptions& opts,
-      absl::flat_hash_set<std::string> excluded_files)
+      llvm::StringSet<> excluded_files)
       : clang::DependencyFileGenerator(opts),
         excluded_files_(std::move(excluded_files)) {}
 
@@ -39,7 +39,7 @@ class DependencyFileGeneratorWithExclusions final
                           bool is_system, bool is_module_file,
                           bool is_direct_module_import,
                           bool is_missing) override {
-    if (excluded_files_.contains(StringViewFromStringRef(filename))) {
+    if (excluded_files_.contains(filename)) {
       return;
     }
     clang::DependencyFileGenerator::maybeAddDependency(
@@ -48,7 +48,7 @@ class DependencyFileGeneratorWithExclusions final
   }
 
  private:
-  absl::flat_hash_set<std::string> excluded_files_;
+  llvm::StringSet<> excluded_files_;
 };
 
 }  // namespace
