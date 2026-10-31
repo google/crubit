@@ -89,6 +89,19 @@ pub fn as_ref_or_pinned_ref<'tcx>(
     }
 }
 
+/// Returns true if `ty` is `Box<T>` or `Pin<Box<T>>`.
+pub fn is_owned_box_or_pinned_box<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bool {
+    let ty::TyKind::Adt(adt, substs) = ty.kind() else { return false };
+    if tcx.is_lang_item(adt.did(), LangItem::OwnedBox) {
+        return true;
+    }
+    if !adt.is_pin() {
+        return false;
+    }
+    let ty::TyKind::Adt(inner_adt, _) = substs.type_at(0).kind() else { return false };
+    tcx.is_lang_item(inner_adt.did(), LangItem::OwnedBox)
+}
+
 /// Whether functions using `extern "C"` ABI can safely handle values of type
 /// `ty` (e.g. when passing by value arguments or return values of such type).
 pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
