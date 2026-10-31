@@ -113,16 +113,6 @@ def resolve_external_repo(repo_name, query_target, prereq_hint):
 
 def get_llvm_dev_date(llvm_src_dir: Path | None = None) -> str:
   """Retrieves the LLVM dev date from the environment, extracted repo, or commit."""
-  if dev_date := get_llvm_commit_date.get_commit_date_from_env():
-    log(f"Using LLVM dev date from CRUBIT_LLVM_DEV_DATE: {dev_date}")
-    return dev_date
-
-  if dev_date := get_llvm_commit_date.get_commit_date_from_source_dir(
-      llvm_src_dir
-  ):
-    log(f"Computed LLVM dev date from local source: {dev_date}")
-    return dev_date
-
   commit = get_llvm_commit_date.get_llvm_commit()
   dev_date = get_llvm_commit_date.get_commit_date(commit, llvm_src_dir)
   log(f"Computed LLVM dev date: {dev_date}")
