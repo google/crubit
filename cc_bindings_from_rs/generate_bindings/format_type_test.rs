@@ -1171,6 +1171,24 @@ fn test_format_ty_for_cc_smart_pointers_under_nonnull_smart_pointers() {
 }
 
 #[test]
+fn test_format_ty_for_cc_option_box() {
+    // `Box<T>` is not C++-movable, so `Option<Box<T>>` is not bridged to `std::optional` even in
+    // a bridgeable location; it is spelled with the layout-compatible `::rs::Option` instead.
+    let location = TypeLocation::FnReturn { is_constructor: false };
+    test_ty(
+        location,
+        &[("Option<Box<i32>>", ":: rs :: Option < :: rs :: Box < :: std :: int32_t > >")],
+        quote! {},
+        |desc, tcx, ty, expected| {
+            let db = bindings_db_for_tests(tcx);
+            let cc_snippet = db.format_ty_for_cc(ty, location).unwrap();
+            let parsed_expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(cc_snippet.tokens.to_string(), parsed_expected, "{desc}");
+        },
+    );
+}
+
+#[test]
 fn test_format_ty_for_cc_ignored_symbols_fails() {
     let preamble = quote! {
         pub struct IgnoredStruct {

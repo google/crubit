@@ -92,6 +92,16 @@ and move constructors and assignment operators. They can still be:
 
 See [Movable types](../rust/movable_types.md) for the general rules.
 
+## Inside `Option`
+
+An `Option<Box<T>>` (as well as options of pinned or slice boxes) is represented
+as `rs::Option<rs::Box<T>>`. Because these boxes use a non-null pointer
+representation, the `Option` takes advantage of Rust's niche layout
+optimization: the `rs::Option` is pointer-sized and layout-compatible with
+`Option<Box<T>>`, with the `None` state represented as a null pointer. The same
+applies for other non-movable payloads that fall back to `rs::Option` instead of
+`std::optional`.
+
 ## `Box<T>` requires `T` to be Rust-movable {#pinbox}
 
 In Rust, the contents of a `Box<T>` can be moved out by value (for example with

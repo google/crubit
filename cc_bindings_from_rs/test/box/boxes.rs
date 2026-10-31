@@ -129,3 +129,58 @@ pub fn clone_handle(t: &Tracked) -> Tracked {
 }
 
 pub fn consume_tracked(_b: Box<Tracked>) {}
+
+pub fn make_opt_box(some: bool) -> Option<Box<i32>> {
+    if some {
+        Some(Box::new(42))
+    } else {
+        None
+    }
+}
+
+pub fn opt_box_value(o: Option<&Box<i32>>) -> i32 {
+    if let Some(b) = o {
+        **b
+    } else {
+        -1
+    }
+}
+
+pub fn consume_opt_box(o: Option<Box<i32>>) -> i32 {
+    if let Some(b) = o {
+        *b
+    } else {
+        -1
+    }
+}
+
+pub struct OptHolder {
+    pub o: Option<Box<i32>>,
+}
+
+pub fn make_opt_pin_box(some: bool) -> Option<Pin<Box<NotUnpin>>> {
+    if some {
+        let b = Box::new(NotUnpin { val: 123, _pin: PhantomPinned });
+        Some(Box::into_pin(b))
+    } else {
+        None
+    }
+}
+
+pub fn make_opt_box_slice(some: bool) -> Option<Box<[i32]>> {
+    if some {
+        let b = vec![1, 2, 3].into_boxed_slice();
+        Some(b)
+    } else {
+        None
+    }
+}
+
+pub fn make_opt_box_str(some: bool) -> Option<Box<str>> {
+    if some {
+        let s = "hello".to_string().into_boxed_str();
+        Some(s)
+    } else {
+        None
+    }
+}

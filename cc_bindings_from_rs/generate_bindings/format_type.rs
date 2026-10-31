@@ -1135,11 +1135,16 @@ fn format_ty_for_cc_impl<'tcx>(
                 );
             }
 
+            // `Option<T>` is bridged by value to `std::optional<T>` unless the payload is not
+            // C++-movable (e.g. `Box<T>`, see crubit.rs/types/box): such payloads can only be
+            // relocated, which `rs::Option<T>` supports via `crubit::UnsafeRelocateTag`, so
+            // they fall through to the layout-compatible template specialization below.
             let is_bridged_option = location.is_bridgeable()
                 && matches!(BridgedBuiltin::new(db, adt), Some(BridgedBuiltin::Option))
                 && !db
                     .crate_features(db.source_crate_num())
-                    .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
+                    .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust)
+                && db.is_cpp_move_constructible(substs[0].expect_ty());
             if is_bridged_option {
                 let inner_ty = substs[0].expect_ty();
                 let mut prereqs = db

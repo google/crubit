@@ -92,8 +92,9 @@ fn test_format_bridged_type_in_generic_types() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-"Error handling parameter #0 of type `std::option::Option<std::boxed::Box<std::result::Result<RustType, ()>>>`: \
-            Type `std::boxed::Box<std::result::Result<RustType, ()>>` is not C++-movable. Box is layout-compatible but not C++-movable, see crubit.rs/types/box."
+            "Error handling parameter #0 of type \
+            `std::option::Option<std::boxed::Box<std::result::Result<RustType, ()>>>`: \
+            Template arguments do not support bridgeable types"
         );
     });
 }

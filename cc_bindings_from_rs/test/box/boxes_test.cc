@@ -139,4 +139,53 @@ TEST(BoxTest, DropTracking) {
   }
 }
 
+TEST(BoxTest, OptionBox) {
+  static_assert(sizeof(rs::Option<rs::Box<int32_t>>) == sizeof(void*));
+
+  rs::Option<rs::Box<int32_t>> opt_none = boxes::make_opt_box(false);
+  EXPECT_FALSE(opt_none.has_value());
+  EXPECT_EQ(boxes::consume_opt_box(std::move(opt_none)), -1);
+
+  rs::Option<rs::Box<int32_t>> opt_some = boxes::make_opt_box(true);
+  EXPECT_TRUE(opt_some.has_value());
+  EXPECT_EQ(boxes::consume_opt_box(std::move(opt_some)), 42);
+  // The C++ move constructor takes the payload, leaving `None` behind, so the
+  // box is not destroyed twice.
+  EXPECT_FALSE(opt_some.has_value());  // NOLINT(bugprone-use-after-move)
+
+  rs::Option<rs::Box<int32_t>> cpp_none = std::nullopt;
+  EXPECT_EQ(boxes::consume_opt_box(std::move(cpp_none)), -1);
+
+  rs::Option<rs::Box<int32_t>> cpp_some = rs::make_box(1337);
+  EXPECT_EQ(boxes::opt_box_value(&cpp_some.value()), 1337);
+  EXPECT_EQ(boxes::consume_opt_box(std::move(cpp_some)), 1337);
+}
+
+TEST(BoxTest, OptionPinBox) {
+  auto opt_none = boxes::make_opt_pin_box(false);
+  EXPECT_FALSE(opt_none.has_value());
+
+  auto opt_some = boxes::make_opt_pin_box(true);
+  EXPECT_TRUE(opt_some.has_value());
+  EXPECT_EQ(opt_some.value()->val, 123);
+}
+
+TEST(BoxTest, OptionBoxSlice) {
+  auto opt_none = boxes::make_opt_box_slice(false);
+  EXPECT_FALSE(opt_none.has_value());
+
+  auto opt_some = boxes::make_opt_box_slice(true);
+  EXPECT_TRUE(opt_some.has_value());
+  EXPECT_EQ(opt_some.value().size(), 3);
+}
+
+TEST(BoxTest, OptionBoxStr) {
+  auto opt_none = boxes::make_opt_box_str(false);
+  EXPECT_FALSE(opt_none.has_value());
+
+  auto opt_some = boxes::make_opt_box_str(true);
+  EXPECT_TRUE(opt_some.has_value());
+  EXPECT_EQ(opt_some.value().size(), 5);
+}
+
 }  // namespace

@@ -31,6 +31,9 @@ const _: () = assert!(::core::mem::offset_of!(::boxes_golden::Holder, b) == 0);
 const _: () = assert!(::core::mem::size_of::<::boxes_golden::NotUnpin>() == 4);
 const _: () = assert!(::core::mem::align_of::<::boxes_golden::NotUnpin>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::boxes_golden::NotUnpin, val) == 0);
+const _: () = assert!(::core::mem::size_of::<::boxes_golden::OptHolder>() == 8);
+const _: () = assert!(::core::mem::align_of::<::boxes_golden::OptHolder>() == 8);
+const _: () = assert!(::core::mem::offset_of!(::boxes_golden::OptHolder, o) == 0);
 const _: () = assert!(::core::mem::size_of::<::boxes_golden::Point>() == 8);
 const _: () = assert!(::core::mem::align_of::<::boxes_golden::Point>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::boxes_golden::Point, x) == 0);
@@ -84,6 +87,15 @@ unsafe extern "C" fn __crubit_thunk_consume_ubox(
     unsafe {
         let b = b.read();
         ::boxes_golden::consume_box(b)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_consume_uopt_ubox(
+    o: *mut ::core::option::Option<::alloc::boxed::Box<i32, ::alloc::alloc::Global>>,
+) -> i32 {
+    unsafe {
+        let o = o.read();
+        ::boxes_golden::consume_opt_box(o)
     }
 }
 #[unsafe(no_mangle)]
@@ -149,6 +161,44 @@ unsafe extern "C" fn __crubit_thunk_make_uholder(__ret_ptr: *mut ::boxes_golden:
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_make_uopt_ubox(
+    some: bool,
+    __ret_ptr: *mut ::core::option::Option<::alloc::boxed::Box<i32, ::alloc::alloc::Global>>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(::boxes_golden::make_opt_box(some));
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_make_uopt_ubox_uslice(
+    some: bool,
+    __ret_ptr: *mut ::core::option::Option<::alloc::boxed::Box<[i32], ::alloc::alloc::Global>>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(::boxes_golden::make_opt_box_slice(some));
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_make_uopt_ubox_ustr(
+    some: bool,
+    __ret_ptr: *mut ::core::option::Option<::alloc::boxed::Box<str, ::alloc::alloc::Global>>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(::boxes_golden::make_opt_box_str(some));
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_make_uopt_upin_ubox(
+    some: bool,
+    __ret_ptr: *mut ::core::option::Option<
+        ::core::pin::Pin<::alloc::boxed::Box<::boxes_golden::NotUnpin, ::alloc::alloc::Global>>,
+    >,
+) -> () {
+    unsafe {
+        __ret_ptr.write(::boxes_golden::make_opt_pin_box(some));
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_make_upin_ubox(
     __ret_ptr: *mut ::core::pin::Pin<::alloc::boxed::Box<i32, ::alloc::alloc::Global>>,
 ) -> () {
@@ -206,6 +256,15 @@ unsafe extern "C" fn __crubit_thunk_mutate_ubox(
     unsafe { ::boxes_golden::mutate_box(b) }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_opt_ubox_uvalue(
+    o: *mut ::core::option::Option<&'static ::alloc::boxed::Box<i32, ::alloc::alloc::Global>>,
+) -> i32 {
+    unsafe {
+        let o = o.read();
+        ::boxes_golden::opt_box_value(o)
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_point_ux(
     b: *mut ::alloc::boxed::Box<::boxes_golden::Point, ::alloc::alloc::Global>,
 ) -> i32 {
@@ -253,4 +312,58 @@ unsafe extern "C" fn __crubit_thunk_tracked_ustrong_ucount(
     t: &'static ::boxes_golden::Tracked,
 ) -> usize {
     unsafe { ::boxes_golden::tracked_strong_count(t) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x0000005bi32_x0000005d_x0000003e_x0000003e(
+    __self: &'static ::core::option::Option<::alloc::boxed::Box<[i32], ::alloc::alloc::Global>>,
+    __ret_ptr: *mut ::core::option::Option<::alloc::boxed::Box<[i32], ::alloc::alloc::Global>>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(<core::option::Option<::alloc::boxed::Box<[i32],::alloc::alloc::Global>>as::core::clone::Clone>::clone(__self));
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x0000005bi32_x0000005d_x0000003e_x0000003e(
+    __self: &'static mut ::core::option::Option<::alloc::boxed::Box<[i32], ::alloc::alloc::Global>>,
+    source: &'static ::core::option::Option<::alloc::boxed::Box<[i32], ::alloc::alloc::Global>>,
+) -> () {
+    unsafe {
+        <core::option::Option<::alloc::boxed::Box<[i32],::alloc::alloc::Global>>as::core::clone::Clone>::clone_from(__self,source)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003ci32_x0000003e_x0000003e(
+    __self: &'static ::core::option::Option<::alloc::boxed::Box<i32, ::alloc::alloc::Global>>,
+    __ret_ptr: *mut ::core::option::Option<::alloc::boxed::Box<i32, ::alloc::alloc::Global>>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(<core::option::Option<::alloc::boxed::Box<i32,::alloc::alloc::Global>>as::core::clone::Clone>::clone(__self));
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003ci32_x0000003e_x0000003e(
+    __self: &'static mut ::core::option::Option<::alloc::boxed::Box<i32, ::alloc::alloc::Global>>,
+    source: &'static ::core::option::Option<::alloc::boxed::Box<i32, ::alloc::alloc::Global>>,
+) -> () {
+    unsafe {
+        <core::option::Option<::alloc::boxed::Box<i32,::alloc::alloc::Global>>as::core::clone::Clone>::clone_from(__self,source)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003cstr_x0000003e_x0000003e(
+    __self: &'static ::core::option::Option<::alloc::boxed::Box<str, ::alloc::alloc::Global>>,
+    __ret_ptr: *mut ::core::option::Option<::alloc::boxed::Box<str, ::alloc::alloc::Global>>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(<core::option::Option<::alloc::boxed::Box<str,::alloc::alloc::Global>>as::core::clone::Clone>::clone(__self));
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003cstr_x0000003e_x0000003e(
+    __self: &'static mut ::core::option::Option<::alloc::boxed::Box<str, ::alloc::alloc::Global>>,
+    source: &'static ::core::option::Option<::alloc::boxed::Box<str, ::alloc::alloc::Global>>,
+) -> () {
+    unsafe {
+        <core::option::Option<::alloc::boxed::Box<str,::alloc::alloc::Global>>as::core::clone::Clone>::clone_from(__self,source)
+    }
 }
