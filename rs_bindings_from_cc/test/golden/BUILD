@@ -56,6 +56,12 @@ DEPS = {
         "unsupported",
     ],
     "types": ["//support/rs_std:char"],
+    "boxes": [
+        "//support/rs:box",
+        "//support/rs:pin_box",
+        "//support/rs:slice_box",
+        "//support/rs:str_box",
+    ],
     "composable_bridging": [
         "//support/rs_std:slice_ref",
         "@abseil-cpp//absl/strings:string_view",

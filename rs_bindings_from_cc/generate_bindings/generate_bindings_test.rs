@@ -2613,3 +2613,66 @@ fn test_c_array_template_args() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_box_rejects_non_unpin_and_incomplete_pointees() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+            namespace crubit::rust_type {
+            template <typename...>
+            struct Args {};
+            }
+
+            namespace rs {
+            template <typename T>
+            struct [[clang::annotate("crubit_internal_rust_type", "::alloc::boxed::Box<{}>",
+                                     crubit::rust_type::Args<T>())]] Box {
+              T* ptr_;
+            };
+            template <typename T>
+            struct [[clang::annotate(
+                "crubit_internal_rust_type",
+                "::core::pin::Pin<::alloc::boxed::Box<{}>>",
+                crubit::rust_type::Args<T>())]] PinBox {
+              T* ptr_;
+            };
+            template <typename T>
+            struct [[clang::annotate("crubit_internal_rust_type", "::alloc::boxed::Box<[{}]>",
+                                     crubit::rust_type::Args<T>())]] SliceBox {
+              T* ptr_;
+              unsigned long len_;
+            };
+            }  // namespace rs
+
+            struct NonTrivial {
+              NonTrivial(NonTrivial&&) {}
+              ~NonTrivial() {}
+            };
+            struct ForwardDeclared;
+
+            rs::PinBox<NonTrivial> AcceptedPinBox();
+            rs::Box<NonTrivial> RejectedBox();
+            rs::SliceBox<NonTrivial> RejectedSliceBox();
+            rs::Box<ForwardDeclared> RejectedIncompleteBox();
+        "#,
+    )?
+    .rs_api;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn AcceptedPinBox() -> ::core::pin::Pin<::alloc::boxed::Box<crate::NonTrivial>>
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { pub fn RejectedBox });
+    assert_rs_not_matches!(rs_api, quote! { pub fn RejectedSliceBox });
+    assert_rs_not_matches!(rs_api, quote! { pub fn RejectedIncompleteBox });
+    let rendered = rs_api.to_string();
+    expect_that!(rendered, contains_substring("`rs::Box<T>` cannot be used with `T` = `crate::NonTrivial` because `T` is not Rust-movable (`!Unpin`)"));
+    expect_that!(rendered, contains_substring("`rs::SliceBox<T>` cannot be used with `T` = `crate::NonTrivial` because `T` is not Rust-movable (`!Unpin`)"));
+    expect_that!(
+        rendered,
+        contains_substring("uses forward-declared type `crate::ForwardDeclared`")
+    );
+    Ok(())
+}

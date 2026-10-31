@@ -650,8 +650,12 @@ pub fn generate_bindings_tokens(
                 "//support/rs_std:rs_alloc",
             ))
             .is_empty();
+        // `rs::Box`, `PinBox`, `SliceBox` and `StrBox` are spelled with `::alloc::boxed::Box`.
+        let has_box = ir.items().any(|item| {
+            matches!(item, ir::Item::ExistingRustType(e) if e.rs_name().contains("::alloc::"))
+        });
 
-        (has_callables || has_rs_alloc)
+        (has_callables || has_rs_alloc || has_box)
             .then(|| quote! { extern crate alloc; __NEWLINE__ __NEWLINE__  })
     };
 
@@ -815,6 +819,9 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
         RsTypeKind::Enum { .. } | RsTypeKind::Primitive(..) => None,
         RsTypeKind::ExistingRustType { type_args, .. } => {
             template_params_safety(db, type_args.iter().cloned())
+        }
+        RsTypeKind::Box { pointee, .. } => {
+            pointee.as_ref().and_then(|p| db.rs_type_kind_safety(p.as_ref().clone()))
         }
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             // TODO(b/390621592): Should bridge types just delegate to the underlying type?
@@ -1382,6 +1389,15 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
         }
         RsTypeKind::CArray { .. } => {
             bail!("C-style array types cannot be bridged by value (b/575922365)")
+        }
+        RsTypeKind::Box { ref existing_rust_type, .. } => {
+            let cpp_type = make_cpp_type_from_item(
+                existing_rust_type.as_ref(),
+                existing_rust_type.cc_name(),
+                db,
+            )?;
+
+            Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
         }
         RsTypeKind::Primitive(primitive) => Ok(match primitive {
             Primitive::Bool => CrubitAbiType::transmute("bool", "bool"),

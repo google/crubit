@@ -23,6 +23,12 @@ use token_stream_printer::write_unformatted_tokens;
 use std::ops::Deref;
 
 const SLICE_REF_NAME_RS: &str = "&[]";
+// The `CRUBIT_INTERNAL_RUST_TYPE` spellings of the `rs` box templates (see
+// `support/rs/{box,pin_box,slice_box,str_box}.h` and crubit.rs/types/box).
+const BOX_NAME_RS: &str = "::alloc::boxed::Box<{}>";
+const PIN_BOX_NAME_RS: &str = "::core::pin::Pin<::alloc::boxed::Box<{}>>";
+const SLICE_BOX_NAME_RS: &str = "::alloc::boxed::Box<[{}]>";
+const STR_BOX_NAME_RS: &str = "::alloc::boxed::Box<str>";
 
 /// A struct with information associated with the formatted Rust code snippet.
 #[derive(Clone, Debug)]
@@ -697,6 +703,19 @@ pub enum RustPtrKind {
     Slice,
 }
 
+/// Which Rust owning box type an `rs` box template maps to.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub enum BoxKind {
+    /// `rs::Box<T>` → `Box<T>`.
+    Box,
+    /// `rs::PinBox<T>` → `Pin<Box<T>>`.
+    PinBox,
+    /// `rs::SliceBox<T>` → `Box<[T]>`.
+    SliceBox,
+    /// `rs::StrBox` → `Box<str>`.
+    StrBox,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum RsTypeKind {
     /// An error occurred while generating the type.
@@ -763,6 +782,18 @@ pub enum RsTypeKind {
     BridgeType {
         bridge_type: BridgeRsTypeKind,
         original_type: FfiRc<Record>,
+    },
+    /// One of the `rs` box templates (`Box`, `PinBox`, `SliceBox`, `StrBox`), mapped to the
+    /// corresponding Rust owning box type. See crubit.rs/types/box.
+    ///
+    /// Boxes are always `Unpin` (the payload lives out of line) and layout-compatible with their
+    /// Rust counterparts, but not C-ABI-compatible by value, so they cross the FFI boundary with
+    /// the `LayoutCompatible` passing convention.
+    Box {
+        kind: BoxKind,
+        /// The pointee type. `None` only for `BoxKind::StrBox`.
+        pointee: Option<Rc<RsTypeKind>>,
+        existing_rust_type: FfiRc<ExistingRustType>,
     },
     /// Types that can be reinterpreted in place, e.g., signed char <-> i8
     /// This variant comes from the `CRUBIT_INTERNAL_RUST_TYPE` attribute macro in C++,
@@ -1517,32 +1548,101 @@ impl RsTypeKind {
         Ok(RsTypeKind::Enum { enum_, crate_path })
     }
 
+    /// Resolves the single type template argument of a pointer-like `ExistingRustType` such as
+    /// `rs::SliceRef<T>` or `rs::Box<T>` into a layout-compatible pointee `RsTypeKind`, returning
+    /// it alongside the C++ argument type.
+    fn layout_compatible_pointee_template_arg<'a>(
+        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+        existing_rust_type: &ExistingRustType,
+        options: &LifetimeOptions,
+    ) -> Result<(Self, CcType)> {
+        let cc_name = existing_rust_type.cc_name();
+        let [template_arg] = existing_rust_type.template_args() else {
+            bail!(
+                "`{cc_name}` has {} template arguments, expected 1",
+                existing_rust_type.template_args().len()
+            );
+        };
+        let TemplateArg::Type(inner_cc_type) = template_arg else {
+            bail!("`{cc_name}` should have a type as its singular template argument");
+        };
+
+        let mut inner_rs_type_kind = db.rs_type_kind_with_lifetime_elision(
+            inner_cc_type.clone(),
+            LifetimeOptions { is_return_type: false, requires_layout_compatible: true, ..*options },
+        )?;
+        inner_rs_type_kind.force_layout_compatible();
+        Ok((inner_rs_type_kind, inner_cc_type.clone()))
+    }
+
+    /// Creates an `RsTypeKind::Box` for `rs::Box<T>`, `rs::PinBox<T>`, `rs::SliceBox<T>`, or
+    /// `rs::StrBox`, validating that the pointee `T` (if any) can be owned by the corresponding
+    /// Rust box type.
+    fn new_box<'a>(
+        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+        kind: BoxKind,
+        existing_rust_type: FfiRc<ExistingRustType>,
+        options: &LifetimeOptions,
+    ) -> Result<Self> {
+        let pointee = match kind {
+            BoxKind::StrBox => None,
+            BoxKind::Box | BoxKind::PinBox | BoxKind::SliceBox => {
+                let (inner_rs_type_kind, _) =
+                    Self::layout_compatible_pointee_template_arg(db, &existing_rust_type, options)?;
+                if kind == BoxKind::SliceBox {
+                    ensure!(
+                        inner_rs_type_kind.allowed_behind_multi_element_ptr(),
+                        "SliceBox pointee type is not allowed behind a multi element pointer: {}",
+                        inner_rs_type_kind.display(&db),
+                    );
+                } else {
+                    ensure!(
+                        inner_rs_type_kind.allowed_behind_single_element_ptr(),
+                        "Box pointee type is not allowed behind a single element pointer: {}",
+                        inner_rs_type_kind.display(&db),
+                    );
+                }
+                ensure!(
+                    !inner_rs_type_kind.pass_by_value_bridges(),
+                    "Box pointee type parameter `{}` is a bridged type and is not layout-compatible between Rust and C++.",
+                    inner_rs_type_kind.display(&db),
+                );
+                inner_rs_type_kind.ensure_complete_type_arg(&db, existing_rust_type.cc_name())?;
+                if (kind == BoxKind::Box || kind == BoxKind::SliceBox)
+                    && !inner_rs_type_kind.is_unpin()
+                {
+                    let cc_name = inner_rs_type_kind.display(&db);
+                    if kind == BoxKind::Box {
+                        bail!("`rs::Box<T>` cannot be used with `T` = `{cc_name}` because `T` is not Rust-movable (`!Unpin`): Rust could move the pointee out of the box, which would relocate a C++ object whose move constructor is non-trivial or deleted. Use `rs::PinBox<T>` (`Pin<Box<T>>`) instead. See crubit.rs/types/box#pinbox.");
+                    } else {
+                        bail!("`rs::SliceBox<T>` cannot be used with `T` = `{cc_name}` because `T` is not Rust-movable (`!Unpin`): Rust could move the pointee out of the box, which would relocate a C++ object whose move constructor is non-trivial or deleted. See crubit.rs/types/box#pinbox.");
+                    }
+                }
+                Some(Rc::new(inner_rs_type_kind))
+            }
+        };
+        Ok(RsTypeKind::Box { kind, pointee, existing_rust_type })
+    }
+
     fn new_existing_rust_type<'a>(
         db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
         existing_rust_type: FfiRc<ExistingRustType>,
         options: &LifetimeOptions,
         template_args: &Option<Rc<[CcType]>>,
     ) -> Result<Self> {
+        let box_kind = match existing_rust_type.rs_name() {
+            BOX_NAME_RS => Some(BoxKind::Box),
+            PIN_BOX_NAME_RS => Some(BoxKind::PinBox),
+            SLICE_BOX_NAME_RS => Some(BoxKind::SliceBox),
+            STR_BOX_NAME_RS => Some(BoxKind::StrBox),
+            _ => None,
+        };
+        if let Some(kind) = box_kind {
+            return Self::new_box(db, kind, existing_rust_type, options);
+        }
         if existing_rust_type.rs_name() == SLICE_REF_NAME_RS {
-            let [template_arg] = existing_rust_type.template_args() else {
-                bail!(
-                    "SliceRef has {} template parameters, expected 1",
-                    existing_rust_type.template_args().len()
-                );
-            };
-            let TemplateArg::Type(inner_cc_type) = template_arg else {
-                bail!("SliceRef should have a type as its singular template argument");
-            };
-
-            let mut inner_rs_type_kind = db.rs_type_kind_with_lifetime_elision(
-                inner_cc_type.clone(),
-                LifetimeOptions {
-                    is_return_type: false,
-                    requires_layout_compatible: true,
-                    ..*options
-                },
-            )?;
-            inner_rs_type_kind.force_layout_compatible();
+            let (inner_rs_type_kind, inner_cc_type) =
+                Self::layout_compatible_pointee_template_arg(db, &existing_rust_type, options)?;
             if let Some(c_array) = inner_rs_type_kind.contains_c_array() {
                 bail!(
                     "SliceRef pointee type cannot contain a C-style array: {} (b/575922365)",
@@ -1718,6 +1818,7 @@ impl RsTypeKind {
         match self.unalias() {
             RsTypeKind::CArray { element_type, .. } => std::slice::from_ref(element_type),
             RsTypeKind::ExistingRustType { type_args, .. } => type_args,
+            RsTypeKind::Box { .. } => &[],
             _ => &[],
         }
     }
@@ -1937,6 +2038,7 @@ impl RsTypeKind {
                 RsTypeKind::FuncPtr { .. } => f.write_str("function pointer")?,
                 RsTypeKind::Error { symbol, .. } => f.write_str(symbol)?,
                 RsTypeKind::TypeAlias { .. } | RsTypeKind::CArray { .. } => unreachable!(),
+                RsTypeKind::Box { .. } => unreachable!(),
             }
             let mut cur = self;
             while let RsTypeKind::CArray { element_type, num_elements } = cur.unalias() {
@@ -2088,6 +2190,7 @@ impl RsTypeKind {
                 RsTypeKind::Pointer { .. }
                 | RsTypeKind::BridgeType { .. }
                 | RsTypeKind::ExistingRustType { .. }
+                | RsTypeKind::Box { .. }
                 | RsTypeKind::Enum { .. }
                 | RsTypeKind::TypeAlias { .. }
                 | RsTypeKind::Primitive { .. }
@@ -2154,6 +2257,7 @@ impl RsTypeKind {
             RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
                 existing_rust_type.is_same_abi()
             }
+            RsTypeKind::Box { .. } => false,
         }
     }
 
@@ -2218,6 +2322,7 @@ impl RsTypeKind {
             RsTypeKind::CArray { .. } => true,
             RsTypeKind::BridgeType { .. } => false,
             RsTypeKind::ExistingRustType { .. } => true,
+            RsTypeKind::Box { .. } => true,
         }
     }
 
@@ -2346,6 +2451,7 @@ impl RsTypeKind {
             RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
                 existing_rust_type.is_trivially_copyable()
             }
+            RsTypeKind::Box { .. } => false,
         }
     }
 
@@ -2433,6 +2539,7 @@ impl RsTypeKind {
         match self.unalias() {
             RsTypeKind::IncompleteRecord { .. } => false,
             RsTypeKind::ExistingRustType { is_complete, .. } => *is_complete,
+            RsTypeKind::Box { .. } => true,
             RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
                 BridgeRsTypeKind::StdOptional(t) => t.is_complete(),
                 BridgeRsTypeKind::StdPair(t1, t2) => t1.is_complete() && t2.is_complete(),
@@ -2911,6 +3018,11 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
             original_type: original_type.clone(),
         }),
         RsTypeKind::ExistingRustType { .. } => Rc::new(t.clone()),
+        RsTypeKind::Box { kind, pointee, existing_rust_type } => Rc::new(RsTypeKind::Box {
+            kind: *kind,
+            pointee: pointee.as_ref().map(|p| all_static_lifetimes_internal(p, strip_aliases)),
+            existing_rust_type: existing_rust_type.clone(),
+        }),
     }
 }
 
@@ -3294,6 +3406,34 @@ impl RsTypeKind {
                 }
             }
             RsTypeKind::ExistingRustType { rust_type, .. } => rust_type.parse().expect("ExistingRustType.rust_type should parse as a TokenStream because it was constructed from one."),
+            RsTypeKind::Box { kind, pointee, existing_rust_type: _ } => {
+                match kind {
+                    BoxKind::Box => {
+                        let p = pointee
+                            .as_ref()
+                            .expect("non-StrBox box type must have a pointee")
+                            .to_token_stream(db);
+                        quote! { ::alloc::boxed::Box<#p> }
+                    }
+                    BoxKind::PinBox => {
+                        let p = pointee
+                            .as_ref()
+                            .expect("non-StrBox box type must have a pointee")
+                            .to_token_stream(db);
+                        quote! { ::core::pin::Pin<::alloc::boxed::Box<#p>> }
+                    }
+                    BoxKind::SliceBox => {
+                        let p = pointee
+                            .as_ref()
+                            .expect("non-StrBox box type must have a pointee")
+                            .to_token_stream(db);
+                        quote! { ::alloc::boxed::Box<[#p]> }
+                    }
+                    BoxKind::StrBox => {
+                        quote! { ::alloc::boxed::Box<str> }
+                    }
+                }
+            }
         }
     }
 
@@ -3509,6 +3649,11 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                         }
                     },
                     RsTypeKind::ExistingRustType { .. } => {}
+                    RsTypeKind::Box { pointee, .. } => {
+                        if let Some(p) = pointee {
+                            self.todo.push(p);
+                        }
+                    }
                 };
                 Some(curr)
             }
