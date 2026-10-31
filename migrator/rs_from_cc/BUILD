@@ -12,10 +12,11 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":rs_from_cc_lib",
+        "//common:check",
         "//common:file_io",
         "@abseil-cpp//absl/flags:flag",
         "@abseil-cpp//absl/flags:parse",
-        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
     ],
@@ -40,7 +41,7 @@ cc_library(
     hdrs = ["ast_consumer.h"],
     deps = [
         ":converter",
-        "@abseil-cpp//absl/log:check",
+        "//common:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:frontend",
     ],

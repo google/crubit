@@ -16,10 +16,10 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "common/check.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "nullability/pragma.h"
@@ -70,8 +70,8 @@ class Invocation {
         lazy_import_alien_decls_(lazy_import_alien_decls),
         check_importer_invariants_(check_importer_invariants) {
     // Caller should verify that the inputs are non-empty.
-    CHECK(!public_headers_.empty());
-    CHECK(!header_targets_.empty());
+    CRUBIT_CHECK(!public_headers_.empty());
+    CRUBIT_CHECK(!header_targets_.empty());
 
     for (const auto& header : public_headers_) {
       *ir_.add_public_headers() = header.AsFfi();

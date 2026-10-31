@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 
-#include "absl/log/check.h"
+#include "common/check.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Attr.h"
