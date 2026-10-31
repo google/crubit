@@ -10,12 +10,12 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
-#include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
+#include "common/check.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -47,7 +47,7 @@ std::string ProtoMessageToRustModName(llvm::StringRef message_name) {
     }
     // StrAppend doesn't accept `char`. :'(
     c = absl::ascii_tolower(static_cast<unsigned char>(c));
-    absl::StrAppend(&mod_name, absl::string_view(&c, 1));
+    mod_name += c;
   }
   return mod_name;
 }
@@ -69,7 +69,7 @@ std::string ProtoEnumToRustName(clang::NamedDecl& decl) {
 }
 }  // namespace
 
-std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
+std::unique_ptr<crubit::ffi::Item> crubit::TypeAliasImporter::Import(
     clang::NamedDecl* decl) {
   // Special-case proto enums. We handle them under the alias, rather than
   // the enum declaration, because the enum declaration gives no useful
@@ -79,7 +79,7 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
     if (ictx_.IsFromProtoTarget(*alias_decl) &&
         alias_decl->getUnderlyingType()->isEnumeralType()) {
       ictx_.MarkAsSuccessfullyImported(*decl);
-      auto item = std::make_unique<ir_proto::Item>();
+      auto item = std::make_unique<crubit::ffi::Item>();
       auto* existing = item->mutable_existing_rust_type();
       existing->set_rs_name(ProtoEnumToRustName(*decl));
       existing->set_cc_name(decl->getQualifiedNameAsString());
@@ -189,24 +189,22 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
   ictx_.MarkAsSuccessfullyImported(*decl);
 
   std::optional<std::string> deprecated;
-  absl::StatusOr<std::optional<std::string>> unknown_attr =
-      CollectUnknownAttrs(*decl, [&](const clang::Attr& attr) {
-        if (auto* deprecated_attr =
-                clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
-          deprecated.emplace(deprecated_attr->getMessage());
-          return true;
-        } else if (clang::isa<clang::VisibilityAttr>(attr)) {
-          // Visibility attributes on typedef/using declarations, from
-          // export macros for example, do not affect Rust type aliases,
-          // but Clang still creates the AST attribute node.
-          return true;
-        }
-        return false;
-      });
-  if (!unknown_attr.ok()) {
+  auto unknown_attr = CollectUnknownAttrs(*decl, [&](const clang::Attr& attr) {
+    if (auto* deprecated_attr = clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
+      deprecated.emplace(deprecated_attr->getMessage());
+      return true;
+    } else if (clang::isa<clang::VisibilityAttr>(attr)) {
+      // Visibility attributes on typedef/using declarations, from
+      // export macros for example, do not affect Rust type aliases,
+      // but Clang still creates the AST attribute node.
+      return true;
+    }
+    return false;
+  });
+  if (!unknown_attr) {
     return ictx_.ImportUnsupportedItem(
         *decl, (*identifier).cc_identifier, *enclosing_item_id,
-        {FormattedError::FromStatus(std::move(unknown_attr.status()))});
+        {FormattedError::FromStatus(unknown_attr.takeError())});
   }
 
   std::string rs_name = std::string(identifier->rs_identifier().Ident());
@@ -219,7 +217,7 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
                            absl::Hex(llvm::MD5Hash(rs_name)));
   }
 
-  auto item = std::make_unique<ir_proto::Item>();
+  auto item = std::make_unique<crubit::ffi::Item>();
   auto* type_alias = item->mutable_type_alias();
   type_alias->mutable_cc_name()->set_identifier(
       identifier->cc_identifier.Ident());

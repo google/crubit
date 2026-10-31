@@ -13,8 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_join.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_error.h"
 #include "lifetime_annotations/lifetime_substitutions.h"
@@ -25,6 +23,8 @@
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/Error.h"
 
 namespace clang {
@@ -133,8 +133,9 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
   if (this_type.isNull() && !lifetime_names.empty()) {
     return llvm::make_error<LifetimeError>(
         LifetimeError::Type::Other,
-        absl::StrCat("Encountered a `this` lifetime on a function with no "
-                     "`this` parameter"));
+        (llvm::Twine("Encountered a `this` lifetime on a function with no "
+                     "`this` parameter"))
+            .str());
   }
 
   if (!this_type.isNull()) {
@@ -144,8 +145,9 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
       if (lifetime_names.size() != 1) {
         return llvm::make_error<LifetimeError>(
             LifetimeError::Type::Other,
-            absl::StrCat("Expected a single lifetime but ",
-                         lifetime_names.size(), " were given"));
+            (llvm::Twine("Expected a single lifetime but ") +
+             llvm::Twine(lifetime_names.size()) + llvm::Twine(" were given"))
+                .str());
       }
       lifetime_name = lifetime_names.front();
     }
@@ -253,7 +255,7 @@ std::string FunctionLifetimes::DebugString(LifetimeFormatter formatter) const {
     if (s.find_first_of(",()") != std::string::npos || s.empty()) {
       // However, don't add redundant parentheses.
       if (!(s.size() >= 2 && s.front() == '(' && s.back() == ')')) {
-        return absl::StrCat("(", s, ")");
+        return ((llvm::Twine("(") + llvm::Twine(s) + llvm::Twine(")"))).str();
       }
     }
     return s;
@@ -266,21 +268,24 @@ std::string FunctionLifetimes::DebugString(LifetimeFormatter formatter) const {
 
   std::string result;
   if (this_lifetimes_.has_value()) {
-    result = absl::StrCat(
-        maybe_add_parentheses(this_lifetimes_->DebugString(formatter)), ":");
+    result = (llvm::Twine(maybe_add_parentheses(
+                  this_lifetimes_->DebugString(formatter))) +
+              llvm::Twine(":"))
+                 .str();
   }
   if (!result.empty() && !formatted_param_lifetimes.empty()) {
-    absl::StrAppend(&result, " ");
+    result += (llvm::Twine(" ")).str();
   }
-  absl::StrAppend(&result, absl::StrJoin(formatted_param_lifetimes, ", "));
+  result += (llvm::Twine(llvm::join(formatted_param_lifetimes, ", "))).str();
 
   if (return_lifetimes_.HasLifetimes()) {
     if (!result.empty()) {
-      absl::StrAppend(&result, " ");
+      result += (llvm::Twine(" ")).str();
     }
-    absl::StrAppend(
-        &result, "-> ",
-        maybe_add_parentheses(return_lifetimes_.DebugString(formatter)));
+    result +=
+        (llvm::Twine("-> ") + llvm::Twine(maybe_add_parentheses(
+                                  return_lifetimes_.DebugString(formatter))))
+            .str();
   }
 
   return result;

@@ -22,8 +22,6 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/functional/any_invocable.h"
-#include "absl/log/check.h"
-#include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -31,6 +29,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
 #include "common/annotation_reader.h"
+#include "common/check.h"
 #include "common/status_macros.h"
 #include "common/string_view_conversion.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -53,6 +52,7 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MD5.h"
 namespace crubit {
@@ -280,33 +280,33 @@ absl::StatusOr<std::string> CcName(
       absl::StrCat(std::string_view(specialization_decl->getKindName()), " ")));
 }
 
-ir_proto::AccessSpecifier TranslateAccessSpecifier(
+crubit::ffi::AccessSpecifier TranslateAccessSpecifier(
     clang::AccessSpecifier access) {
   switch (access) {
     case clang::AS_public:
-      return ir_proto::PUBLIC;
+      return crubit::ffi::PUBLIC;
     case clang::AS_protected:
-      return ir_proto::PROTECTED;
+      return crubit::ffi::PROTECTED;
     case clang::AS_private:
-      return ir_proto::PRIVATE;
+      return crubit::ffi::PRIVATE;
     case clang::AS_none:
       LOG(FATAL)
           << "We should never be encoding a 'none' access specifier in IR.";
       // We have to return something. Conservatively return private so we don't
       // inadvertently make a private member variable accessible in Rust.
-      return ir_proto::PRIVATE;
+      return crubit::ffi::PRIVATE;
   }
 }
 
-absl::StatusOr<ir_proto::RecordType> TranslateRecordType(
+absl::StatusOr<crubit::ffi::RecordType> TranslateRecordType(
     const clang::RecordDecl& record_decl) {
   switch (record_decl.getTagKind()) {
     case clang::TagTypeKind::Struct:
-      return ir_proto::STRUCT;
+      return crubit::ffi::STRUCT;
     case clang::TagTypeKind::Union:
-      return ir_proto::UNION;
+      return crubit::ffi::UNION;
     case clang::TagTypeKind::Class:
-      return ir_proto::CLASS;
+      return crubit::ffi::CLASS;
     case clang::TagTypeKind::Enum:
       llvm::report_fatal_error(
           "clang::RecordDecl::getTagKind shouldn't return TagTypeKind::Enum");
@@ -328,13 +328,13 @@ std::optional<std::array<std::string, N>> GetKeyValues(
     std::array<absl::string_view, N> keys) {
   std::array<std::string, N> values;
   for (size_t i = 0; i < N; ++i) {
-    absl::StatusOr<std::optional<std::string>> value =
-        GetAnnotationWithStringArg(record_decl, keys[i]);
-    CHECK_OK(value);
+    auto value = GetAnnotationWithStringArg(record_decl, keys[i]);
+    CRUBIT_CHECK(value) << llvm::toString(value.takeError());
     if (!value->has_value()) {
-      CHECK_EQ(i, 0) << "Missing value for key: '" << keys[i]
-                     << "'; use the provided annotation to ensure that all "
-                        "keys are present";
+      CRUBIT_CHECK(i == 0)
+          << "Missing value for key: '" << keys[i]
+          << "'; use the provided annotation to ensure that all "
+             "keys are present";
       return std::nullopt;
     }
     values[i] = **std::move(value);
@@ -342,7 +342,7 @@ std::optional<std::array<std::string, N>> GetKeyValues(
   return values;
 }
 
-std::string ToSnakeCase(absl::string_view input) {
+std::string ToSnakeCase(llvm::StringRef input) {
   std::string result;
   for (size_t i = 0; i < input.size(); ++i) {
     if (std::isupper(input[i])) {
@@ -413,9 +413,9 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
     b->set_rust_name(std::move(rust_name));
     b->set_abi_rust(std::move(abi_rust));
     b->set_abi_cpp(std::move(abi_cpp));
-    absl::StatusOr<std::optional<std::string>> hint_val =
+    auto hint_val =
         GetAnnotationWithStringArg(record_decl, "crubit_bridge_label_hint");
-    CHECK_OK(hint_val);
+    CRUBIT_CHECK(hint_val) << llvm::toString(hint_val.takeError());
     if (hint_val->has_value()) {
       b->set_label_hint(**std::move(hint_val));
     }
@@ -1045,9 +1045,9 @@ absl::StatusOr<SafetyAnnotation> CXXRecordDeclImporter::GetSafetyAnnotation(
           "`crubit_override_unsafe` annotation must have exactly one argument");
     }
 
-    absl::StatusOr<bool> is_unsafe =
-        GetExprAsBool(*args->front(), decl.getASTContext());
-    if (!is_unsafe.ok()) {
+    auto is_unsafe = GetExprAsBool(*args->front(), decl.getASTContext());
+    if (!is_unsafe) {
+      llvm::consumeError(is_unsafe.takeError());
       return absl::InvalidArgumentError(
           "`crubit_override_unsafe` annotation must have a bool argument");
     }
@@ -1069,8 +1069,9 @@ absl::StatusOr<SafetyAnnotation> CXXRecordDeclImporter::GetSafetyAnnotation(
 std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
     const clang::FieldDecl* field_decl) {
   if (field_decl->getName().empty()) {
-    CHECK(!field_decl->hasAttr<clang::NoUniqueAddressAttr>() &&
-          "Unnamed fields can't be annotated with [[no_unique_address]]");
+    CRUBIT_CHECK(
+        !field_decl->hasAttr<clang::NoUniqueAddressAttr>() &&
+        "Unnamed fields can't be annotated with [[no_unique_address]]");
     // We don't just conjure an artificial name for an unnamed field, because
     // in the future such fields may be elided entirely - see unnamed members
     // in:
@@ -1105,18 +1106,18 @@ bool IsKnownAttr(const clang::Attr& attr) {
          clang::isa<clang::MaxFieldAlignmentAttr>(attr);
 }
 
-static ir_proto::StatusOrOptionalString ToFlatProto(
-    const absl::StatusOr<std::optional<std::string>>& unknown_attr) {
-  ir_proto::StatusOrOptionalString proto;
-  if (!unknown_attr.ok()) {
-    proto.set_err(unknown_attr.status().message());
+static crubit::ffi::StatusOrOptionalString ToFlatProto(
+    llvm::Expected<std::optional<std::string>>& unknown_attr) {
+  crubit::ffi::StatusOrOptionalString proto;
+  if (!unknown_attr) {
+    proto.set_err(llvm::toString(unknown_attr.takeError()));
   } else if (unknown_attr->has_value()) {
     proto.set_ok_value(**unknown_attr);
   }
   return proto;
 }
 
-std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
+std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
     clang::CXXRecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
   if (decl_context->isFunctionOrMethod()) {
@@ -1146,10 +1147,10 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
     return nullptr;
   }
 
-  std::unique_ptr<ir_proto::Item> attr_error_item;
+  std::unique_ptr<crubit::ffi::Item> attr_error_item;
   std::optional<std::string> nodiscard;
   std::optional<std::string> deprecated;
-  absl::StatusOr<std::optional<std::string>> unknown_attr =
+  auto unknown_attr =
       CollectUnknownAttrs(*record_decl, [&](const clang::Attr& attr) {
         if (IsKnownAttr(attr)) {
           return true;
@@ -1180,10 +1181,10 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
         }
         return false;
       });
-  if (!unknown_attr.ok()) {
+  if (!unknown_attr) {
     return ictx_.ImportUnsupportedItem(
         *record_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(unknown_attr).status())});
+        {FormattedError::FromStatus(unknown_attr.takeError())});
   }
   if (attr_error_item != nullptr) {
     return attr_error_item;
@@ -1197,12 +1198,11 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   std::optional<BridgeType> bridge_type =
       GetBridgeTypeAnnotation(ictx_, *record_decl);
 
-  absl::StatusOr<std::optional<std::vector<std::string>>> args =
-      GetAnnotationWithStringArgs(*record_decl, "crubit_owned_pointee");
-  if (!args.ok()) {
+  auto args = GetAnnotationWithStringArgs(*record_decl, "crubit_owned_pointee");
+  if (!args) {
     return ictx_.ImportUnsupportedItem(
         *record_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(args).status())});
+        {FormattedError::FromStatus(args.takeError())});
   }
 
   std::optional<OwnedPtrConfig> owned_ptr_config;
@@ -1243,7 +1243,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
                                        enclosing_item_id, {std::move(error)});
   };
 
-  absl::StatusOr<ir_proto::RecordType> record_type =
+  absl::StatusOr<crubit::ffi::RecordType> record_type =
       TranslateRecordType(*record_decl);
   if (!record_type.ok()) {
     return unsupported(
@@ -1372,7 +1372,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
         return nullptr;
       }
     }
-    CHECK(!named_decl->getName().empty());
+    CRUBIT_CHECK(!named_decl->getName().empty());
 
     absl::StatusOr<TranslatedIdentifier> record_name =
         ictx_.GetTranslatedIdentifier(*named_decl);
@@ -1455,7 +1455,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   // definition is reachable.
   if (!record_decl->isCompleteDefinition() ||
       !ictx_.sema_.hasReachableDefinition(record_decl)) {
-    auto item = std::make_unique<ir_proto::Item>();
+    auto item = std::make_unique<crubit::ffi::Item>();
     auto* incomplete = item->mutable_incomplete_record();
     incomplete->mutable_cc_name()->set_identifier(cc_name);
     incomplete->mutable_rs_name()->set_identifier(rs_name);
@@ -1497,11 +1497,10 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   const clang::TypedefNameDecl* anon_typedef =
       record_decl->getTypedefNameForAnonDecl();
 
-  absl::StatusOr<bool> is_thread_safe =
+  auto is_thread_safe =
       HasAnnotationWithoutArgs(*record_decl, "crubit_thread_safe");
-  if (!is_thread_safe.ok()) {
-    return unsupported(
-        FormattedError::FromStatus(std::move(is_thread_safe).status()));
+  if (!is_thread_safe) {
+    return unsupported(FormattedError::FromStatus(is_thread_safe.takeError()));
   }
 
   // Automatically treat std::atomic<T> as CRUBIT_THREAD_SAFE so that its
@@ -1541,9 +1540,9 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
           ictx_.GetOwningTarget(*record_decl))) {
     auto lifetime_inputs_or_err =
         CollectLifetimeInputs(ictx_.sema_.getASTContext(), record_decl);
-    if (!lifetime_inputs_or_err.ok()) {
-      return unsupported(FormattedError::FromStatus(
-          std::move(lifetime_inputs_or_err).status()));
+    if (!lifetime_inputs_or_err) {
+      return unsupported(
+          FormattedError::FromStatus(lifetime_inputs_or_err.takeError()));
     } else {
       lifetime_inputs.reserve(lifetime_inputs_or_err->size());
       absl::c_transform(*lifetime_inputs_or_err,
@@ -1604,7 +1603,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
 
   auto fields = ImportFields(record_decl);
 
-  auto item = std::make_unique<ir_proto::Item>();
+  auto item = std::make_unique<crubit::ffi::Item>();
   auto* record = item->mutable_record();
   record->mutable_rs_name()->set_identifier(rs_name);
   record->mutable_cc_name()->set_identifier(cc_name);
@@ -1704,7 +1703,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
       // canonical size in IR and in the binding code.
 
       // Make sure that `alignment` is a power of 2.
-      CHECK(!(alignment & (alignment - 1)));
+      CRUBIT_CHECK(!(alignment & (alignment - 1)));
 
       // Given that `alignment` is a power of 2, we can round it up by
       // a bit arithmetic: `alignment - 1` clears the single bit of it
@@ -1718,11 +1717,11 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   return item;
 }
 
-std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
+std::vector<crubit::ffi::Field> CXXRecordDeclImporter::ImportFields(
     clang::CXXRecordDecl* record_decl) {
   clang::AccessSpecifier default_access =
       record_decl->isClass() ? clang::AS_private : clang::AS_public;
-  std::vector<ir_proto::Field> fields;
+  std::vector<crubit::ffi::Field> fields;
   const clang::ASTRecordLayout& layout =
       ictx_.ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
@@ -1778,40 +1777,39 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
     }
 
     std::optional<std::string> deprecated;
-    absl::StatusOr<std::optional<std::string>> unknown_attr;
-    // Rust does not support per-field `#[repr(align(N))]` or alignment on
-    // `type` aliases, so fields with explicit alignment must be replaced with
-    // opaque byte blobs (with padding up to their Clang AST offset) to preserve
-    // struct layout. We return an `absl::Status` error here rather than relying
-    // on `CollectUnknownAttrs` because:
-    // 1. Targets with `:experimental` enabled ignore `Ok(Some(attr))` from
-    //    `CollectUnknownAttrs`, whereas an `Err` status unconditionally forces
-    //    opaque-blob fallback in `field_rs_type_kind_for_layout`.
-    // 2. Alignment inherited from a `typedef` or `using` alias is recorded on
-    //    the field's `TypeInfo` (`RequiredByTypedef`), not in `field_decl`'s
-    //    attribute list.
-    if (field_decl->hasAttr<clang::AlignedAttr>() ||
-        ictx_.ctx_.getTypeInfo(field_decl->getType()).AlignRequirement ==
-            clang::AlignRequirementKind::RequiredByTypedef) {
-      unknown_attr = absl::UnimplementedError(
-          "Fields with explicit alignment attributes are not supported");
-    } else {
-      unknown_attr =
-          CollectUnknownAttrs(*field_decl, [&](const clang::Attr& attr) {
-            if (auto* deprecated_attr =
-                    clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
-              deprecated.emplace(deprecated_attr->getMessage());
-              return true;
-            } else if (clang::isa<clang::UnusedAttr>(attr)) {
-              return true;
-            } else if (clang::isa<clang::ExplicitInitAttr>(attr)) {
-              return true;
-            }
-            return false;
-          });
-    }
-
-    ir_proto::Field proto_field;
+    auto unknown_attr = [&]() -> llvm::Expected<std::optional<std::string>> {
+      // Rust does not support per-field `#[repr(align(N))]` or alignment on
+      // `type` aliases, so fields with explicit alignment must be replaced with
+      // opaque byte blobs (with padding up to their Clang AST offset) to
+      // preserve struct layout. We return an `absl::Status` error here rather
+      // than relying on `CollectUnknownAttrs` because:
+      // 1. Targets with `:experimental` enabled ignore `Ok(Some(attr))` from
+      //    `CollectUnknownAttrs`, whereas an `Err` status unconditionally
+      //    forces opaque-blob fallback in `field_rs_type_kind_for_layout`.
+      // 2. Alignment inherited from a `typedef` or `using` alias is recorded on
+      //    the field's `TypeInfo` (`RequiredByTypedef`), not in `field_decl`'s
+      //    attribute list.
+      if (field_decl->hasAttr<clang::AlignedAttr>() ||
+          ictx_.ctx_.getTypeInfo(field_decl->getType()).AlignRequirement ==
+              clang::AlignRequirementKind::RequiredByTypedef) {
+        return crubit::UnimplementedError(llvm::Twine(
+            "Fields with explicit alignment attributes are not supported"));
+      } else {
+        return CollectUnknownAttrs(*field_decl, [&](const clang::Attr& attr) {
+          if (auto* deprecated_attr =
+                  clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
+            deprecated.emplace(deprecated_attr->getMessage());
+            return true;
+          } else if (clang::isa<clang::UnusedAttr>(attr)) {
+            return true;
+          } else if (clang::isa<clang::ExplicitInitAttr>(attr)) {
+            return true;
+          }
+          return false;
+        });
+      }
+    }();
+    crubit::ffi::Field proto_field;
     if (auto rust_id = GetTranslatedFieldName(field_decl);
         rust_id.has_value()) {
       proto_field.mutable_rust_identifier()->set_identifier(rust_id->Ident());
@@ -1827,7 +1825,7 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
     proto_field.set_access(TranslateAccessSpecifier(access));
     proto_field.set_offset(layout.getFieldOffset(field_decl->getFieldIndex()));
     proto_field.set_size(size);
-    if (!unknown_attr.ok() || unknown_attr->has_value()) {
+    if (!unknown_attr || unknown_attr->has_value()) {
       *proto_field.mutable_unknown_attr() = ToFlatProto(unknown_attr);
     }
     proto_field.set_is_no_unique_address(
@@ -1843,7 +1841,7 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
   return fields;
 }
 
-std::vector<ir_proto::BaseClass>
+std::vector<crubit::ffi::BaseClass>
 CXXRecordDeclImporter::GetUnambiguousPublicBases(
     const clang::CXXRecordDecl& record_decl) const {
   // This function is unfortunate: the only way to correctly get information
@@ -1854,7 +1852,7 @@ CXXRecordDeclImporter::GetUnambiguousPublicBases(
   // So we need to call lookupInBases once per class, making this O(N^4).
 
   llvm::SmallPtrSet<const clang::CXXRecordDecl*, 4> seen;
-  std::vector<ir_proto::BaseClass> bases;
+  std::vector<crubit::ffi::BaseClass> bases;
   clang::CXXBasePaths paths;
   // the const cast is a common pattern, apparently, see e.g.
   // https://clang.llvm.org/doxygen/CXXInheritance_8cpp_source.html#l00074
@@ -1894,7 +1892,7 @@ CXXRecordDeclImporter::GetUnambiguousPublicBases(
       }
 
       clang::CXXRecordDecl* base_record_decl =
-          ABSL_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
+          CRUBIT_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
       if (!ictx_.HasBeenAlreadySuccessfullyImported(*base_record_decl)) {
         continue;
       }
@@ -1907,13 +1905,13 @@ CXXRecordDeclImporter::GetUnambiguousPublicBases(
         }
         *offset +=
             ictx_.ctx_.getASTRecordLayout(base_path_element.Class)
-                .getBaseClassOffset(ABSL_DIE_IF_NULL(
+                .getBaseClassOffset(CRUBIT_DIE_IF_NULL(
                     base_path_element.Base->getType()->getAsCXXRecordDecl()))
                 .getQuantity();
       }
-      CHECK((!offset.has_value() || *offset >= 0) &&
-            "Concrete base classes should have non-negative offsets.");
-      ir_proto::BaseClass base_class;
+      CRUBIT_CHECK((!offset.has_value() || *offset >= 0) &&
+                   "Concrete base classes should have non-negative offsets.");
+      crubit::ffi::BaseClass base_class;
       base_class.set_base_record_id(
           ictx_.GenerateItemId(*base_record_decl).value());
       if (offset.has_value()) {
@@ -2036,10 +2034,10 @@ namespace internal {
 // This function resolves the nesting by looking up the parent messages in the
 // C++ AST, and formats the resulting path as `outer::Inner` in Rust.
 std::string GetProto2MessageRustNameImpl(
-    absl::string_view message_name,
-    absl::AnyInvocable<bool(absl::string_view)> is_parent_proto) {
-  absl::string_view current = message_name;
-  std::vector<absl::string_view> path;
+    llvm::StringRef message_name,
+    absl::AnyInvocable<bool(llvm::StringRef)> is_parent_proto) {
+  llvm::StringRef current = message_name;
+  std::vector<llvm::StringRef> path;
 
   // Traverse nested protobuf messages by searching for '_' in the name and
   // checking if the prefix corresponds to an enclosing protobuf message.
@@ -2047,10 +2045,10 @@ std::string GetProto2MessageRustNameImpl(
     bool found = false;
     // Search for '_' from right to left to handle multiple levels of nesting.
     for (size_t last_underscore = current.rfind('_');
-         !found && last_underscore != absl::string_view::npos &&
+         !found && last_underscore != llvm::StringRef::npos &&
          last_underscore > 0;
          last_underscore = current.rfind('_', last_underscore - 1)) {
-      absl::string_view prefix = current.substr(0, last_underscore);
+      llvm::StringRef prefix = current.substr(0, last_underscore);
       if (is_parent_proto(prefix)) {
         // Found the parent proto message. The suffix is the inner message
         // name. Add it to our path and continue with the parent.
@@ -2071,9 +2069,11 @@ std::string GetProto2MessageRustNameImpl(
   if (path.size() > 1) {
     rust_name = ToSnakeCase(rust_name);
     for (size_t i = path.size() - 2; i > 0; --i) {
-      absl::StrAppend(&rust_name, "::", ToSnakeCase(path[i]));
+      rust_name += "::";
+      rust_name += ToSnakeCase(path[i]);
     }
-    absl::StrAppend(&rust_name, "::", path.front());
+    rust_name += "::";
+    rust_name += std::string(path.front());
   }
   return rust_name;
 }

@@ -11,13 +11,13 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_replace.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
+#include "common/check.h"
 #include "common/external_binaries.h"
 #include "common/ffi_types.h"
 #include "common/file_io.h"
@@ -56,7 +56,7 @@ Cmdline MakeCmdline(std::string header) {
   args.headers_to_targets[args.public_headers[0]] = args.current_target;
   args.target_to_features[args.current_target] = {"supported"};
   absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
-  CHECK_OK(cmdline);
+  CRUBIT_CHECK(cmdline.ok()) << cmdline.status();
   return *cmdline;
 }
 
@@ -91,14 +91,14 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
 }
 
 absl::StatusOr<absl::flat_hash_map<Identifier, Identifier>>
-GetInstantiationsFor(absl::string_view header_content,
-                     absl::string_view rust_source) {
+GetInstantiationsFor(llvm::StringRef header_content,
+                     llvm::StringRef rust_source) {
   std::string a_rs_path = WriteFileForCurrentTest("a.rs", rust_source);
   CmdlineArgs args = MakeCmdline("a.h").args();
   args.srcs_to_scan_for_instantiations = {a_rs_path};
   args.instantiations_out = "instantiations_out";
   absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
-  CHECK_OK(cmdline);
+  CRUBIT_CHECK(cmdline.ok()) << cmdline.status();
 
   CRUBIT_ASSIGN_OR_RETURN(
       BindingsAndMetadata result,
@@ -246,7 +246,7 @@ TEST(GenerateBindingsAndMetadataTest,
 }
 
 TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
-  constexpr absl::string_view kHeaderContent = R"(
+  constexpr llvm::StringRef kHeaderContent = R"(
     namespace top_level_1 {
       namespace middle {
         namespace inner_1 {}
@@ -262,7 +262,7 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
 
     namespace top_level_1 {}
   )";
-  constexpr absl::string_view kExpected = R"({
+  constexpr llvm::StringRef kExpected = R"({
   "label": "//:target",
   "namespaces": [
     {
@@ -312,7 +312,7 @@ TEST(GenerateBindingsAndMetadataTest,
   CmdlineArgs args = MakeCmdline("a.h").args();
   args.extra_cpp_srcs = {extra_cc_path};
   absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
-  CHECK_OK(cmdline);
+  CRUBIT_CHECK(cmdline.ok()) << cmdline.status();
 
   std::vector<std::string> clang_args = DefaultClangArgs();
   clang_args.push_back("-include");
@@ -356,7 +356,7 @@ TEST(GenerateBindingsAndMetadataTest, DepfileOmitsInMemoryFiles) {
 }
 
 absl::StatusOr<BindingsAndMetadata> GenerateBindingsWithExtraClangArg(
-    absl::string_view extra_clang_arg) {
+    llvm::StringRef extra_clang_arg) {
   Cmdline cmdline = MakeCmdline("a.h");
   std::vector<std::string> clang_args = DefaultClangArgs();
   clang_args.push_back(std::string(extra_clang_arg));

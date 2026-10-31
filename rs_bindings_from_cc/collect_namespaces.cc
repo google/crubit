@@ -4,15 +4,15 @@
 
 #include "rs_bindings_from_cc/collect_namespaces.h"
 
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "absl/container/btree_map.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/JSON.h"
 
 namespace crubit {
@@ -42,23 +42,23 @@ namespace {
 class NamespaceTrie {
  private:
   struct Node {
-    absl::string_view name;
+    llvm::StringRef name;
     // A map of child namespace name to the index of the namespace node in the
     // trie_nodes_ vector. We use a btree_map so that at conversion time we get
     // deterministic JSON output.
-    absl::btree_map<absl::string_view, int> child_name_to_idx;
+    std::map<llvm::StringRef, int> child_name_to_idx;
   };
 
   std::vector<Node> trie_nodes_;
   // A map of top level namespace name to the index of the namespace node in the
   // trie_nodes_ vector. We use a btree_map so that at conversion time we get
   // deterministic JSON output.
-  absl::btree_map<absl::string_view, int> top_level_name_to_idx_;
+  std::map<llvm::StringRef, int> top_level_name_to_idx_;
   // The current target's label.
   BazelLabel label_;
   // A map of item id to the IR Namespace item. It allows us to look up the
   // children namespace items.
-  absl::flat_hash_map<ItemId, const ir_proto::Namespace*>& id_to_namespace_;
+  llvm::DenseMap<ItemId, const ir_proto::Namespace*>& id_to_namespace_;
 
   // Creates a node from a Namespace and inserts it into the trie.
   void InsertNode(int parent_idx, const ir_proto::Namespace& ns) {
@@ -100,7 +100,7 @@ class NamespaceTrie {
  public:
   NamespaceTrie(
       BazelLabel label,
-      absl::flat_hash_map<ItemId, const ir_proto::Namespace*>& id_to_namespace)
+      llvm::DenseMap<ItemId, const ir_proto::Namespace*>& id_to_namespace)
       : label_(label), id_to_namespace_(id_to_namespace) {}
 
   NamespaceTrie(NamespaceTrie&) = delete;
@@ -146,7 +146,7 @@ class NamespaceTrie {
 // Returns the current target's namespace hierarchy in JSON serializable format.
 NamespacesHierarchy CollectNamespaces(const IR& ir) {
   auto all_namespaces = get_items_if<ir_proto::Namespace>(ir);
-  absl::flat_hash_map<ItemId, const ir_proto::Namespace*> id_to_namespace;
+  llvm::DenseMap<ItemId, const ir_proto::Namespace*> id_to_namespace;
   for (auto ns : all_namespaces) {
     // We are not interested in namespaces from different targets.
     if (ns->owning_target() != ir.current_target()) {

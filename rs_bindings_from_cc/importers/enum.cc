@@ -24,7 +24,7 @@
 
 namespace crubit {
 
-std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
+std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
     clang::EnumDecl* enum_decl) {
   if (enum_decl->getName().empty()) {
     // Anonymous enums are handled by `EnumConstantDeclImporter`.
@@ -78,7 +78,7 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
     return unsupported(FormattedError::FromStatus(std::move(type.status())));
   }
 
-  std::vector<ir_proto::Enumerator> enumerators;
+  std::vector<crubit::ffi::Enumerator> enumerators;
   enumerators.reserve(absl::c_distance(enum_decl->enumerators()));
   for (clang::EnumConstantDecl* enumerator : enum_decl->enumerators()) {
     absl::StatusOr<TranslatedIdentifier> enumerator_name =
@@ -91,7 +91,7 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
     }
 
     std::optional<std::string> deprecated;
-    absl::StatusOr<std::optional<std::string>> unknown_attr =
+    auto unknown_attr =
         CollectUnknownAttrs(*enumerator, [&](const clang::Attr& attr) {
           if (auto* deprecated_attr =
                   clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
@@ -100,17 +100,16 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
           }
           return false;
         });
-    if (!unknown_attr.ok()) {
-      return unsupported(
-          FormattedError::FromStatus(std::move(unknown_attr.status())));
+    if (!unknown_attr) {
+      return unsupported(FormattedError::FromStatus(unknown_attr.takeError()));
     }
 
-    absl::StatusOr<IntegerConstant> value =
+    llvm::Expected<crubit::ffi::IntegerConstant> value =
         IntegerConstantFromAPValue(enumerator->getInitVal());
-    if (!value.ok()) {
-      return unsupported(FormattedError::FromStatus(std::move(value.status())));
+    if (!value) {
+      return unsupported(FormattedError::FromStatus(value.takeError()));
     }
-    ir_proto::Enumerator proto_enum_val;
+    crubit::ffi::Enumerator proto_enum_val;
     proto_enum_val.mutable_identifier()->set_identifier(
         (*enumerator_name).rs_identifier().Ident());
     *proto_enum_val.mutable_value() = *std::move(value);
@@ -128,7 +127,7 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
 
   std::optional<std::string> nodiscard;
   std::optional<std::string> deprecated;
-  absl::StatusOr<std::optional<std::string>> unknown_attr =
+  auto unknown_attr =
       CollectUnknownAttrs(*enum_decl, [&](const clang::Attr& attr) {
         if (auto* unused_attr =
                 clang::dyn_cast<clang::WarnUnusedResultAttr>(&attr)) {
@@ -144,9 +143,8 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
         }
         return false;
       });
-  if (!unknown_attr.ok()) {
-    return unsupported(
-        FormattedError::FromStatus(std::move(unknown_attr.status())));
+  if (!unknown_attr) {
+    return unsupported(FormattedError::FromStatus(unknown_attr.takeError()));
   }
 
   if (ictx_.IsFromProtoTarget(*enum_decl) &&
@@ -174,7 +172,7 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
           "except via Message::Enum syntax."));
     }
     ictx_.MarkAsSuccessfullyImported(*enum_decl);
-    auto item = std::make_unique<ir_proto::Item>();
+    auto item = std::make_unique<crubit::ffi::Item>();
     auto* existing = item->mutable_existing_rust_type();
     existing->set_rs_name(std::string(enum_decl->getName()));
     existing->set_cc_name(enum_decl->getQualifiedNameAsString());
@@ -198,7 +196,7 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
   clang::DeclarationNameInfo name_info(enum_decl->getDeclName(),
                                        enum_decl->getLocation());
 
-  auto item = std::make_unique<ir_proto::Item>();
+  auto item = std::make_unique<crubit::ffi::Item>();
   auto* proto_enum = item->mutable_enum_decl();
   proto_enum->mutable_cc_name()->set_identifier(
       (*enum_name).cc_identifier.Ident());

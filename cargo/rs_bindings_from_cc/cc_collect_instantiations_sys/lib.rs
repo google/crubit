@@ -6,3 +6,4 @@
 
 extern crate cc_ffi_types_sys;
 extern crate collect_instantiations;
+extern crate status_sys;

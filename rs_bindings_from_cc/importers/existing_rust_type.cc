@@ -31,6 +31,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 namespace {
@@ -80,15 +81,15 @@ std::string_view ArgKindToString(clang::TemplateArgument::ArgKind kind) {
 
 // Returns the ClassTemplateSpecializationDecl of `crubit::{name}` if `type` is
 // an instantiation of it, or nullptr otherwise.
-const clang::ClassTemplateSpecializationDecl* absl_nullable
-GetCrubitClassTemplateSpecializationDecl(clang::QualType type,
-                                         absl::string_view name) {
+const clang::
+    ClassTemplateSpecializationDecl* _Nullable GetCrubitClassTemplateSpecializationDecl(
+        clang::QualType type, llvm::StringRef name) {
   const auto* record_type = type->getAs<clang::RecordType>();
   if (record_type == nullptr) {
     return nullptr;
   }
   const clang::RecordDecl* record_decl = record_type->getDecl();
-  if (absl::string_view(record_decl->getName()) != name) {
+  if (llvm::StringRef(record_decl->getName()) != name) {
     return nullptr;
   }
   if (!record_decl->getDeclContext()->isNamespace()) {
@@ -131,7 +132,7 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
         "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\")]]`");
   }
   CRUBIT_ASSIGN_OR_RETURN(
-      absl::string_view format_string,
+      llvm::StringRef format_string,
       GetExprAsStringLiteral(*args.front(), decl.getASTContext()));
 
   if (args.size() < 2) {
@@ -252,7 +253,7 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
 }
 }  // namespace
 
-std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
+std::unique_ptr<crubit::ffi::Item> ExistingRustTypeImporter::Import(
     clang::TypeDecl* type_decl) {
   absl::StatusOr<std::optional<CrubitInternalRustType>> opt_attr =
       GetCrubitInternalRustTypeAttr(ictx_, *type_decl);
@@ -280,15 +281,14 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
   }
 
   std::optional<std::string> label_hint;
-  absl::StatusOr<std::optional<std::string>> hint_val =
-      GetAnnotationWithStringArg(*type_decl,
-                                 "crubit_internal_rust_type_label_hint");
-  if (!hint_val.ok()) {
+  auto hint_val = GetAnnotationWithStringArg(
+      *type_decl, "crubit_internal_rust_type_label_hint");
+  if (!hint_val) {
     return ictx_.HardError(
         *type_decl,
         FormattedError::PrefixedStrCat(
             "Invalid crubit_internal_rust_type_label_hint attribute",
-            hint_val.status().message()));
+            llvm::toString(hint_val.takeError())));
   }
   if (hint_val->has_value()) {
     label_hint = **std::move(hint_val);
@@ -307,7 +307,7 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
 
   ictx_.MarkAsSuccessfullyImported(*type_decl);
 
-  auto item = std::make_unique<ir_proto::Item>();
+  auto item = std::make_unique<crubit::ffi::Item>();
   auto* existing = item->mutable_existing_rust_type();
   existing->set_rs_name(std::move(format_string));
   existing->set_cc_name(std::move(cc_name));

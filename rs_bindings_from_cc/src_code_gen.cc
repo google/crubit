@@ -20,12 +20,12 @@ using ffi::GenerateBindingsRequest;
 using ffi::GenerateBindingsResponse;
 
 absl::StatusOr<Bindings> GenerateBindings(
-    IR ir, absl::string_view crubit_support_path_format,
-    absl::string_view crubit_support_versioned_path_format,
-    absl::string_view clang_format_exe_path, absl::string_view rustfmt_exe_path,
-    absl::string_view rustfmt_config_path, bool generate_error_report,
+    IR ir, llvm::StringRef crubit_support_path_format,
+    llvm::StringRef crubit_support_versioned_path_format,
+    llvm::StringRef clang_format_exe_path, llvm::StringRef rustfmt_exe_path,
+    llvm::StringRef rustfmt_config_path, bool generate_error_report,
     bool is_golden_test, bool kythe_annotations,
-    absl::string_view kythe_default_corpus) {
+    llvm::StringRef kythe_default_corpus) {
   GenerateBindingsRequest request;
 
   *request.mutable_ir() = std::move(ir);

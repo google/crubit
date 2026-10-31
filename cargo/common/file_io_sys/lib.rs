@@ -3,3 +3,5 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated lib.rs for the cc_library file_io.
+
+extern crate status_sys;

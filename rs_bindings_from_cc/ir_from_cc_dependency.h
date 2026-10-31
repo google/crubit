@@ -14,9 +14,9 @@
 namespace crubit {
 
 // LINT.IfChange
-inline constexpr absl::string_view kDependencyTarget = "//test:dependency";
+inline constexpr llvm::StringRef kDependencyTarget = "//test:dependency";
 
-inline constexpr absl::string_view kDependencyHeaderName =
+inline constexpr llvm::StringRef kDependencyHeaderName =
     "test/dependency_header.h";
 // LINT.ThenChange(//depot/rs_bindings_from_cc/ir_testing.rs)
 
