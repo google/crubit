@@ -1233,17 +1233,6 @@ impl ::core::ops::SubAssign<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPiEE
     }
 }
 
-// error: item `rs::Box<test::NonTrivial>` could not be bound
-//   `rs::Box<T>` cannot be used with `T` = `crate::test::NonTrivial` because `T` is not Rust-movable (`!Unpin`): Rust could move the pointee out of the box, which would relocate a C++ object whose move constructor is non-trivial or deleted. Use `rs::PinBox<T>` (`Pin<Box<T>>`) instead. See crubit.rs/types/box#pinbox.
-
-// Type bindings for rs::Box<test::Point> suppressed due to being mapped to an existing Rust type (::alloc::boxed::Box<crate::test::Point>)
-
-// Type bindings for rs::Box<int> suppressed due to being mapped to an existing Rust type (::alloc::boxed::Box<::ffi_11::c_int>)
-
-// Type bindings for rs::PinBox<test::NonTrivial> suppressed due to being mapped to an existing Rust type (::core::pin::Pin<::alloc::boxed::Box<crate::test::NonTrivial>>)
-
-// Type bindings for rs::PinBox<int> suppressed due to being mapped to an existing Rust type (::core::pin::Pin<::alloc::boxed::Box<::ffi_11::c_int>>)
-
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE"]
 #[repr(C, align(8))]
@@ -2475,6 +2464,17 @@ pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
     }
 }
 
+// error: item `rs::Box<test::NonTrivial>` could not be bound
+//   `rs::Box<T>` cannot be used with `T` = `crate::test::NonTrivial` because `T` is not Rust-movable (`!Unpin`): Rust could move the pointee out of the box, which would relocate a C++ object whose move constructor is non-trivial or deleted. Use `rs::PinBox<T>` (`Pin<Box<T>>`) instead. See crubit.rs/types/box#pinbox.
+
+// Type bindings for rs::Box<test::Point> suppressed due to being mapped to an existing Rust type (::alloc::boxed::Box<crate::test::Point>)
+
+// Type bindings for rs::Box<int> suppressed due to being mapped to an existing Rust type (::alloc::boxed::Box<::ffi_11::c_int>)
+
+// Type bindings for rs::PinBox<test::NonTrivial> suppressed due to being mapped to an existing Rust type (::core::pin::Pin<::alloc::boxed::Box<crate::test::NonTrivial>>)
+
+// Type bindings for rs::PinBox<int> suppressed due to being mapped to an existing Rust type (::core::pin::Pin<::alloc::boxed::Box<::ffi_11::c_int>>)
+
 // Type bindings for rs::SliceRef<const test::NonTrivial> suppressed due to being mapped to an existing Rust type (*const[crate::test::NonTrivial])
 
 // Type bindings for rs::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
@@ -3222,20 +3222,6 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE: Drop);
     assert!(::core::mem::offset_of!(crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE, __i_) == 0);
-    assert!(::core::mem::size_of::<::alloc::boxed::Box<crate::test::Point>>() == 8);
-    assert!(::core::mem::align_of::<::alloc::boxed::Box<crate::test::Point>>() == 8);
-    assert!(::core::mem::size_of::<::alloc::boxed::Box<::ffi_11::c_int>>() == 8);
-    assert!(::core::mem::align_of::<::alloc::boxed::Box<::ffi_11::c_int>>() == 8);
-    assert!(
-        ::core::mem::size_of::<::core::pin::Pin<::alloc::boxed::Box<crate::test::NonTrivial>>>()
-            == 8
-    );
-    assert!(
-        ::core::mem::align_of::<::core::pin::Pin<::alloc::boxed::Box<crate::test::NonTrivial>>>()
-            == 8
-    );
-    assert!(::core::mem::size_of::<::core::pin::Pin<::alloc::boxed::Box<::ffi_11::c_int>>>() == 8);
-    assert!(::core::mem::align_of::<::core::pin::Pin<::alloc::boxed::Box<::ffi_11::c_int>>>() == 8);
     assert!(
         ::core::mem::size_of::<
             crate::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE,
@@ -3328,6 +3314,20 @@ const _: () = {
             __size_
         ) == 8
     );
+    assert!(::core::mem::size_of::<::alloc::boxed::Box<crate::test::Point>>() == 8);
+    assert!(::core::mem::align_of::<::alloc::boxed::Box<crate::test::Point>>() == 8);
+    assert!(::core::mem::size_of::<::alloc::boxed::Box<::ffi_11::c_int>>() == 8);
+    assert!(::core::mem::align_of::<::alloc::boxed::Box<::ffi_11::c_int>>() == 8);
+    assert!(
+        ::core::mem::size_of::<::core::pin::Pin<::alloc::boxed::Box<crate::test::NonTrivial>>>()
+            == 8
+    );
+    assert!(
+        ::core::mem::align_of::<::core::pin::Pin<::alloc::boxed::Box<crate::test::NonTrivial>>>()
+            == 8
+    );
+    assert!(::core::mem::size_of::<::core::pin::Pin<::alloc::boxed::Box<::ffi_11::c_int>>>() == 8);
+    assert!(::core::mem::align_of::<::core::pin::Pin<::alloc::boxed::Box<::ffi_11::c_int>>>() == 8);
     assert!(::core::mem::size_of::<*const [crate::test::NonTrivial]>() == 16);
     assert!(::core::mem::align_of::<*const [crate::test::NonTrivial]>() == 8);
     assert!(::core::mem::size_of::<*const [::ffi_11::c_int]>() == 16);
