@@ -19,7 +19,7 @@ _PROFILING_RUSTC_FLAGS = select({
 proto_library(
     name = "generate_bindings_proto",
     srcs = ["generate_bindings.proto"],
-    visibility = ["//:__subpackages__"],
+    visibility = ["//visibility:private"],
     deps = ["//rs_bindings_from_cc:ir_proto"],
 )
 
