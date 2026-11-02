@@ -243,8 +243,8 @@ namespace functions::generic_fn_tests::ctor_trait_tests {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: functions_golden :: generic_fn_tests :: ctor_trait_tests :: "
-    "CppMovable") alignas(4) [[clang::trivial_abi]] CppMovable final {
+    ":: functions_golden :: generic_fn_tests :: ctor_trait_tests :: CppMovable")
+    [[clang::trivial_abi]] CppMovable final {
  public:
   static ::functions::generic_fn_tests::ctor_trait_tests::CppMovable new_(
       ::std::int32_t value);
@@ -335,7 +335,7 @@ namespace functions::generic_fn_tests::into_trait_tests {
 namespace functions::non_null_tests {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: functions_golden :: non_null_tests :: SomeStruct") alignas(4)
+    ":: functions_golden :: non_null_tests :: SomeStruct")
     [[clang::trivial_abi]] SomeStruct final {
  public:
   ::std::int32_t value{};
@@ -374,7 +374,7 @@ namespace functions::thread_safety_tests {
 
 // CRUBIT_ANNOTATE: cpp_thread_safe=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: functions_golden :: thread_safety_tests :: ThreadSafeStruct") alignas(4)
+    ":: functions_golden :: thread_safety_tests :: ThreadSafeStruct")
     [[clang::trivial_abi]] ThreadSafeStruct final {
  public:
   ::std::int32_t value{};

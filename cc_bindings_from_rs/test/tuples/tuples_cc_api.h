@@ -70,8 +70,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault") alignas(
-    1) [[clang::trivial_abi]] CloneNoDefault final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault")
+    [[clang::trivial_abi]] CloneNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::CloneNoDefault new_(::std::uint8_t val);
@@ -83,7 +83,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault") alignas(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault") alignas(1)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault")
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -96,7 +96,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault") alignas(1)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault")
     [[clang::trivial_abi]] HasDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -112,7 +112,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault") alignas(8)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault")
     [[clang::trivial_abi]] HasNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -1000,7 +1000,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: GetsTuple") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: GetsTuple")
     [[clang::trivial_abi]] GetsTuple final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -1270,8 +1270,7 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: NestedTupleIntermediate1") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NestedTupleIntermediate1")
     [[clang::trivial_abi]] NestedTupleIntermediate1 final {
  public:
   ::rs::Tuple<::rs::Tuple<::std::uint32_t, ::std::uint32_t>, ::std::uint32_t>
@@ -1379,8 +1378,7 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: NestedTupleIntermediate2") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NestedTupleIntermediate2")
     [[clang::trivial_abi]] NestedTupleIntermediate2 final {
  public:
   ::rs::Tuple<::rs::Tuple<::rs::Tuple<::std::uint32_t, ::std::uint32_t>,
@@ -1397,9 +1395,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: NestedTupleStruct") alignas(4) [[clang::trivial_abi]]
-NestedTupleStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NestedTupleStruct")
+    [[clang::trivial_abi]] NestedTupleStruct final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::NestedTupleStruct new_(::std::uint32_t val);
@@ -1498,7 +1495,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace tuples {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TuplesWithU64") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TuplesWithU64")
     [[clang::trivial_abi]] TuplesWithU64 final {
  public:
   ::rs::Tuple<::std::uint64_t, ::std::uint64_t> u64_in_tuple1{};
@@ -2162,9 +2159,8 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace tuples {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: TupleWithSizeTypes") alignas(8) [[clang::trivial_abi]]
-TupleWithSizeTypes final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleWithSizeTypes")
+    [[clang::trivial_abi]] TupleWithSizeTypes final {
  public:
   ::rs::Tuple<::std::uint64_t, ::std::uint8_t> uval_in_tuple1{};
   ::rs::Tuple<::std::uint8_t, ::std::uint64_t> uval_in_tuple2{};

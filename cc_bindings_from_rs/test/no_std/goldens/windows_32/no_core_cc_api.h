@@ -27,7 +27,7 @@
 
 namespace no_core {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test")
     [[clang::trivial_abi]] Test final {
  public:
   static ::no_core::Test new_();

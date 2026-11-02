@@ -26,7 +26,7 @@
 namespace cpp_name {
 
 // CRUBIT_ANNOTATE: cpp_name=Replaced
-struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original")
     [[clang::trivial_abi]] Replaced final {
  public:
   // CRUBIT_ANNOTATE: cpp_name=create

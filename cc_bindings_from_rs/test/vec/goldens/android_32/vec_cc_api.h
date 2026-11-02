@@ -116,7 +116,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace vec {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: StructWithVec") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: StructWithVec")
     [[clang::trivial_abi]] StructWithVec final {
  public:
   static ::vec::StructWithVec new_(::std::int32_t val);

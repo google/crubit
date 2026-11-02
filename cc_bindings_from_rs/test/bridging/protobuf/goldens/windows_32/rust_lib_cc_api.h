@@ -327,7 +327,7 @@ inline absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>
 create_proto_status_or(::std::int32_t num) {
   static_assert(
       sizeof(absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>) ==
-              8 &&
+              12 &&
           alignof(
               absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>) ==
               4,

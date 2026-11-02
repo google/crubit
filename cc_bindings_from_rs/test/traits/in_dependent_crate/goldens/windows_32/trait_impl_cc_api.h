@@ -29,7 +29,7 @@
 
 namespace trait_impl {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct")
     [[clang::trivial_abi]] MyStruct final {
  public:
   static ::trait_impl::MyStruct new_(::std::int32_t x);
@@ -40,9 +40,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: trait_impl_golden :: NotImplemented") alignas(4) [[clang::trivial_abi]]
-NotImplemented final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: NotImplemented")
+    [[clang::trivial_abi]] NotImplemented final {
  public:
   ::rs::alloc::string::String foo{};
 

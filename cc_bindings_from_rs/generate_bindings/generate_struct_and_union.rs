@@ -2291,12 +2291,23 @@ pub fn generate_adt<'tcx>(
     let size = Literal::u64_unsuffixed(core.common.size_in_bytes);
     let main_api = {
         let rs_type = core.rs_fully_qualified_name.to_string();
-        let mut attributes = vec![
-            quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)},
-            quote! {alignas(#alignment)},
-            quote! {[[clang::trivial_abi]]},
-        ];
-        if core.def_id.is_some_and(|id| tcx.adt_def(id).repr().packed()) {
+        let repr = core.def_id.map(|id| tcx.adt_def(id).repr());
+        let is_packed = repr.is_some_and(|r| r.packed());
+
+        // Only emit `alignas` when the C++ compiler cannot derive the alignment from the
+        // fields itself: `#[repr(align)]`, `#[repr(packed)]`, or opaque byte-array fields.
+        // For a plain aggregate it is redundant (`cc_details` asserts `alignof` anyway) and
+        // harmful on 32-bit Windows: an explicit `alignas(8)` makes clang pass the struct by
+        // pointer, while rustc passes it by value, so direct by-value calls mismatch.
+        let needs_explicit_alignas =
+            !is_aggregate || is_packed || repr.is_some_and(|r| r.align.is_some());
+
+        let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
+        if needs_explicit_alignas {
+            attributes.push(quote! {alignas(#alignment)});
+        }
+        attributes.push(quote! {[[clang::trivial_abi]]});
+        if is_packed {
             attributes.push(quote! { __attribute__((packed)) })
         }
 
