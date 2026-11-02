@@ -1,6 +1,3 @@
-load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
-load("@protobuf//bazel:proto_library.bzl", "proto_library")
-load("@protobuf//rust:defs.bzl", "rust_proto_library")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
@@ -15,25 +12,6 @@ _PROFILING_RUSTC_FLAGS = select({
     "//rs_bindings_from_cc:enable_heap_profiling": ["--cfg=enable_heap_profiling"],
     "//conditions:default": [],
 })
-
-proto_library(
-    name = "generate_bindings_proto",
-    srcs = ["generate_bindings.proto"],
-    visibility = ["//:__subpackages__"],
-    deps = ["//rs_bindings_from_cc:ir_proto"],
-)
-
-cc_proto_library(
-    name = "generate_bindings_cc_proto",
-    visibility = ["//:__subpackages__"],
-    deps = [":generate_bindings_proto"],
-)
-
-rust_proto_library(
-    name = "generate_bindings_rust_proto",
-    visibility = ["//:__subpackages__"],
-    deps = [":generate_bindings_proto"],
-)
 
 rust_library(
     name = "cc_api_ffi",

@@ -1,8 +1,5 @@
 """Generates Rust bindings from C++ headers."""
 
-load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
-load("@protobuf//bazel:proto_library.bzl", "proto_library")
-load("@protobuf//rust:defs.bzl", "rust_proto_library")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "@rules_rust//rust:defs.bzl",
@@ -443,24 +440,6 @@ cc_library(
         "@llvm-project//clang:unified_symbol_resolution",
         "@llvm-project//llvm:Support",
     ],
-)
-
-proto_library(
-    name = "ir_proto",
-    srcs = ["ir.proto"],
-    visibility = ["//:__subpackages__"],
-)
-
-cc_proto_library(
-    name = "ir_cc_proto",
-    visibility = ["//:__subpackages__"],
-    deps = [":ir_proto"],
-)
-
-rust_proto_library(
-    name = "ir_rust_proto",
-    visibility = ["//:__subpackages__"],
-    deps = [":ir_proto"],
 )
 
 crubit_rust_binary(
