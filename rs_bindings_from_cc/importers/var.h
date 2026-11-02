@@ -27,9 +27,14 @@ class VarDeclImporter : public DeclImporterBase<clang::VarDecl> {
   //
   // Supported are boolean and integer scalars, as well as C-style arrays of
   // booleans and integers.
+  //
+  // `init_decl` is the declaration that provides the value initializer for
+  // `var_decl`, if one is available. This can be different from `var_decl`, for
+  // example if the variable is a const with an out-of-line `constexpr`
+  // definition.
   std::unique_ptr<ir_proto::Item> ImportConstant(
-      clang::VarDecl* var_decl, TranslatedIdentifier& var_name,
-      std::optional<ItemId> enclosing_item_id,
+      clang::VarDecl* var_decl, const clang::VarDecl& init_decl,
+      TranslatedIdentifier& var_name, std::optional<ItemId> enclosing_item_id,
       std::optional<std::string> unknown_attr,
       std::optional<std::string> deprecated);
 };
