@@ -1012,7 +1012,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 .layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
                 .expect("`layout_of` is expected to succeed for the builtin `char` type")
                 .layout;
-            assert_eq!(4, layout.align().abi.bytes());
+            assert_eq!(4, layout.align().bytes());
             assert_eq!(4, layout.size().bytes());
             assert!(matches!(
                 layout.backend_repr(),
@@ -2679,9 +2679,9 @@ pub fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
 
     let data_layout = tcx.data_layout();
     let ptr_size = data_layout.pointer_size().bytes();
-    let ptr_align = data_layout.pointer_align().abi.bytes();
+    let ptr_align = data_layout.pointer_align().bytes();
 
-    assert_eq!(ptr_align, layout.align().abi.bytes());
+    assert_eq!(ptr_align, layout.align().bytes());
     assert_eq!(2 * ptr_size, layout.size().bytes());
     assert!(has_slice_layout_representation(layout.backend_repr()));
 }

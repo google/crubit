@@ -2580,7 +2580,7 @@ pub fn generate_adt_core_for_ty<'tcx>(
     }
 
     let layout = get_validated_layout(tcx, self_ty)?;
-    let alignment_in_bytes = layout.align().abi.bytes();
+    let alignment_in_bytes = layout.align().bytes();
     let size_in_bytes = layout.size().bytes();
 
     let cc_short_name = quote! { #cpp_name };

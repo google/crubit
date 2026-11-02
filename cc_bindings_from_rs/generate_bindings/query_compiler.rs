@@ -61,7 +61,7 @@ pub fn is_std_ptr_non_null(tcx: TyCtxt<'_>, did: DefId) -> bool {
 /// and has a initialized (non-union), scalar ABI.
 pub fn has_pointer_abi(from: Layout, data_layout: &TargetDataLayout) -> bool {
     from.size() == data_layout.pointer_size()
-        && from.align().abi == data_layout.pointer_align().abi
+        && from.align() == data_layout.pointer_align()
         && matches!(from.backend_repr(), BackendRepr::Scalar(Scalar::Initialized { .. }))
 }
 

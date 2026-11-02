@@ -902,7 +902,7 @@ fn specialize_tuple<'tcx>(
             cc_short_name: quote! { Tuple },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
-            alignment_in_bytes: layout.align().abi.bytes(),
+            alignment_in_bytes: layout.align().bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
         def_id: None,
@@ -940,7 +940,7 @@ fn specialize_tuple<'tcx>(
     .collect();
 
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
-    let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
+    let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
 
     let main_api_tokens = quote! {
@@ -1128,7 +1128,7 @@ fn specialize_vec<'tcx>(
             cc_short_name: quote! { Vec },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
-            alignment_in_bytes: layout.align().abi.bytes(),
+            alignment_in_bytes: layout.align().bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
         def_id: Some(adt_def.did()),
@@ -1212,7 +1212,7 @@ fn specialize_vec<'tcx>(
 
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
-    let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
+    let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
 
     let main_api_tokens = quote! {
@@ -1434,7 +1434,7 @@ fn specialize_result<'tcx>(
             cc_short_name: quote! { Result },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
-            alignment_in_bytes: layout.align().abi.bytes(),
+            alignment_in_bytes: layout.align().bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
         def_id: Some(adt.did()),
@@ -1460,7 +1460,7 @@ fn specialize_result<'tcx>(
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
 
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
-    let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
+    let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
     let main_api_tokens = quote! {
         template<> __NEWLINE__
@@ -1638,7 +1638,7 @@ fn specialize_option<'tcx>(
             cc_short_name: quote! { Option },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
-            alignment_in_bytes: layout.align().abi.bytes(),
+            alignment_in_bytes: layout.align().bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
         def_id: Some(adt.did()),
@@ -1666,7 +1666,7 @@ fn specialize_option<'tcx>(
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
 
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
-    let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
+    let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
     // TODO(cramertj): Consider standardizing the `storage_` field with other representations in
     // `generate_adt`.
