@@ -9,10 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "absl/container/flat_hash_set.h"
-#include "absl/functional/function_ref.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "common/status.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "clang/AST/Attr.h"
@@ -22,7 +19,10 @@
 #include "clang/AST/Type.h"
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 
@@ -56,7 +56,7 @@ std::optional<llvm::StringRef> AsTopLevelNamespace(
 // ParameterizedByTAndStdTraitT(std::basic_string_view<T, something_else>,
 //                              "char_traits") -> error
 // ```
-absl::StatusOr<clang::QualType> ParameterizedByTAndStdTraitT(
+llvm::Expected<clang::QualType> ParameterizedByTAndStdTraitT(
     const clang::ASTContext& ast_context,
     const clang::ClassTemplateSpecializationDecl* spec_decl,
     llvm::StringRef std_trait_name);
@@ -73,7 +73,7 @@ absl::StatusOr<clang::QualType> ParameterizedByTAndStdTraitT(
 bool IsDefaultVisibilityAttr(const clang::Attr& attr);
 
 // Returns the set of ignored attribute names.
-absl::flat_hash_set<absl::string_view> GetIgnoredAttrs(const clang::Decl* decl);
+llvm::DenseSet<llvm::StringRef> GetIgnoredAttrs(const clang::Decl* decl);
 
 // Wrappers that respect CRUBIT_UNSAFE_IGNORE_ATTR
 template <typename T>
@@ -83,7 +83,7 @@ bool HasAttr(const clang::Decl* decl) {
   // Fast path: if there are no annotations at all, nothing can be ignored.
   if (!decl->hasAttr<clang::AnnotateAttr>()) return true;
 
-  absl::flat_hash_set<absl::string_view> ignored = GetIgnoredAttrs(decl);
+  llvm::DenseSet<llvm::StringRef> ignored = GetIgnoredAttrs(decl);
   for (const auto* attr : decl->specific_attrs<T>()) {
     if (attr->getAttrName()) {
       if (!ignored.contains(attr->getNormalizedFullName())) {
@@ -103,9 +103,9 @@ bool HasAttr(const clang::Decl* decl) {
 // attribute is understood.
 //
 // Annotate attributes are ignored and CRUBIT_UNSAFE_IGNORE_ATTR is considered.
-absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
+llvm::Expected<std::optional<std::string>> CollectUnknownAttrs(
     const clang::Decl& decl,
-    absl::FunctionRef<bool(const clang::Attr&)> is_known =
+    llvm::function_ref<bool(const clang::Attr&)> is_known =
         [](const clang::Attr& attr) { return false; });
 
 // Returns a human-readable string containing the list of unknown attrs.
@@ -113,7 +113,7 @@ absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
 // is_known is called exactly once on every attribute, and returns true if the
 // attribute is understood.
 std::optional<std::string> CollectUnknownTypeAttrs(
-    const clang::Type& t, absl::FunctionRef<bool(clang::attr::Kind)> is_known =
+    const clang::Type& t, llvm::function_ref<bool(clang::attr::Kind)> is_known =
                               [](clang::attr::Kind attr) { return false; });
 
 struct ClangLifetimeAnnotations {
@@ -123,19 +123,19 @@ struct ClangLifetimeAnnotations {
 
 // Collects explicitly-defined lifetime input parameters from `decl` under
 // `ast_context`.
-absl::StatusOr<std::vector<absl::string_view>> CollectLifetimeInputs(
+llvm::Expected<std::vector<llvm::StringRef>> CollectLifetimeInputs(
     const clang::ASTContext& ast_context, const clang::Decl* decl);
 
 // Collects the Clang lifetimebound and lifetime_capture_by attributes from
 // `t`, assuming that `t` is the type of a member function.
-absl::StatusOr<ClangLifetimeAnnotations>
+llvm::Expected<ClangLifetimeAnnotations>
 CollectClangLifetimeAnnotationsForMemberFunctionType(
     const clang::ASTContext& ast_context, const clang::Type& t);
 
 // Collects all lifetime names annotated on `t` under `ast_context`, returning
 // an error if any were invalid. Any returned string_views belong to
 // `ast_context`.
-absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
+llvm::Expected<std::vector<llvm::StringRef>> CollectExplicitLifetimes(
     const clang::ASTContext& ast_context, const clang::Type& t);
 
 // Returns true if an explicit lifetime annotation appears anywhere in `type`
@@ -156,7 +156,7 @@ clang::QualType StripPointersReferencesAndArrays(
 
 // Reduces a clang::CallingConv into a crubit::CallingConv, which is a subset.
 // If the variant isn't in the subset, returns an error.
-absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
+llvm::Expected<CallingConv> ConvertCcCallConvToSupportedCallingConv(
     clang::CallingConv cc_call_conv);
 
 // Returns true if `decl` is non-null and refers to a (code-generated) proto2
@@ -186,7 +186,7 @@ bool ForceDefineImplicitFunction(ImportContext& ictx,
 // leaves the instantiation complete (or defined) and not `isInvalidDecl()`, so
 // this is the only chance to observe that it is ill-formed.
 RecordingDiagnosticConsumer RecordDiagnosticsAndMarkFailedInstantiations(
-    ImportContext& ictx, absl::FunctionRef<void()> callback);
+    ImportContext& ictx, llvm::function_ref<void()> callback);
 
 // Checks to see if `function_decl` can reach an invalid template instantiation
 // or an invalid default/implicit member (including if `function_decl` itself

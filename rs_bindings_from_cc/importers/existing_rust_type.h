@@ -18,7 +18,7 @@ class ExistingRustTypeImporter final
  public:
   explicit ExistingRustTypeImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::unique_ptr<ir_proto::Item> Import(clang::TypeDecl*) override;
+  std::unique_ptr<crubit::ffi::Item> Import(clang::TypeDecl*) override;
 };
 
 }  // namespace crubit

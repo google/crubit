@@ -11,7 +11,7 @@
 
 namespace crubit {
 
-std::unique_ptr<ir_proto::Item> ClassTemplateDeclImporter::Import(
+std::unique_ptr<crubit::ffi::Item> ClassTemplateDeclImporter::Import(
     clang::ClassTemplateDecl* class_template_decl) {
   return ictx_.ImportUnsupportedItem(
       *class_template_decl,

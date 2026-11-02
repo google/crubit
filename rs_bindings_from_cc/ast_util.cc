@@ -11,16 +11,9 @@
 #include <string_view>
 #include <vector>
 
-#include "absl/container/flat_hash_set.h"
-#include "absl/functional/function_ref.h"
-#include "absl/log/log.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
+#include "common/status.h"
 #include "common/status_macros.h"
-#include "common/string_view_conversion.h"
 #include "rs_bindings_from_cc/clang_compat_macros.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -42,8 +35,11 @@
 #include "clang/Basic/Specifiers.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 
@@ -86,15 +82,16 @@ std::optional<llvm::StringRef> AsTopLevelNamespace(
   return identifier_info->getName();
 }
 
-absl::StatusOr<clang::QualType> ParameterizedByTAndStdTraitT(
+llvm::Expected<clang::QualType> ParameterizedByTAndStdTraitT(
     const clang::ASTContext& ast_context,
     const clang::ClassTemplateSpecializationDecl* spec_decl,
     llvm::StringRef std_trait_name) {
   const clang::TemplateArgumentList& args = spec_decl->getTemplateArgs();
   if (args.size() != 2) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Template specialization '", spec_decl->getNameAsString(),
-                     "' should have two template arguments"));
+    return InvalidArgumentError((llvm::Twine("Template specialization \'") +
+                                 spec_decl->getNameAsString() +
+                                 "\' should have two template arguments")
+                                    .str());
   }
 
   clang::QualType t = args[0].getAsType();
@@ -105,9 +102,10 @@ absl::StatusOr<clang::QualType> ParameterizedByTAndStdTraitT(
           std_trait_t->getAsCXXRecordDecl());
   if (std_trait_spec_decl == nullptr ||
       std_trait_spec_decl->getTemplateArgs().size() != 1) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Template specialization '", std_trait_t.getAsString(),
-                     "' should have one template argument"));
+    return InvalidArgumentError((llvm::Twine("Template specialization \'") +
+                                 std_trait_t.getAsString() +
+                                 "\' should have one template argument")
+                                    .str());
   }
 
   const clang::CXXRecordDecl* std_trait_templated_decl =
@@ -115,22 +113,23 @@ absl::StatusOr<clang::QualType> ParameterizedByTAndStdTraitT(
   if (std_trait_templated_decl == nullptr ||
       std_trait_templated_decl->getName() != std_trait_name ||
       !std_trait_templated_decl->getDeclContext()->isStdNamespace()) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Template specialization '", std_trait_t.getAsString(),
-                     "' is not a specialization of std::",
-                     std::string_view(std_trait_name)));
+    return InvalidArgumentError(
+        (llvm::Twine("Template specialization \'") + std_trait_t.getAsString() +
+         "\' is not a specialization of std::" + std_trait_name)
+            .str());
   }
 
   const clang::TemplateArgument& arg =
       std_trait_spec_decl->getTemplateArgs()[0];
-  LOG_IF(FATAL, arg.getKind() != clang::TemplateArgument::Type)
+  CRUBIT_CHECK(arg.getKind() == clang::TemplateArgument::Type)
       << "Expected type template argument on type trait '"
-      << std::string_view(std_trait_name) << "'";
+      << llvm::StringRef(std_trait_name).str() << "'";
   if (!ast_context.hasSameType(arg.getAsType(), t)) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Template argument '", t.getAsString(),
-                     "' does not match template argument '",
-                     arg.getAsType().getAsString(), "'"));
+    return InvalidArgumentError((llvm::Twine("Template argument \'") +
+                                 t.getAsString() +
+                                 "\' does not match template argument \'" +
+                                 arg.getAsType().getAsString() + "\'")
+                                    .str());
   }
 
   return t;
@@ -178,9 +177,9 @@ bool IsDefaultVisibilityAttr(const clang::Attr& attr) {
   return false;
 }
 
-absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
+llvm::Expected<std::optional<std::string>> CollectUnknownAttrs(
     const clang::Decl& decl,
-    absl::FunctionRef<bool(const clang::Attr&)> is_known) {
+    llvm::function_ref<bool(const clang::Attr&)> is_known) {
   std::optional<std::string> unknown_attr;
   if (!decl.hasAttrs()) {
     // Surprisingly, getAttrs() does not return an empty vec if there are no
@@ -188,7 +187,7 @@ absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     return unknown_attr;
   }
 
-  absl::flat_hash_set<absl::string_view> ignored_attr_names;
+  llvm::DenseSet<llvm::StringRef> ignored_attr_names;
   {
     CRUBIT_ASSIGN_OR_RETURN(
         std::optional<AnnotateArgs> args,
@@ -196,7 +195,7 @@ absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     if (args.has_value()) {
       clang::ASTContext& ast_context = decl.getASTContext();
       for (const clang::Expr* arg : *args) {
-        CRUBIT_ASSIGN_OR_RETURN(absl::string_view name,
+        CRUBIT_ASSIGN_OR_RETURN(llvm::StringRef name,
                                 GetExprAsStringLiteral(*arg, ast_context));
         ignored_attr_names.insert(name);
       }
@@ -222,28 +221,28 @@ absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     }
     // Ignore attributes we have been instructed to ignore.
     std::string name_buf;
-    absl::string_view name;
+    llvm::StringRef name;
     if (attr->getAttrName()) {
       name_buf = attr->getNormalizedFullName();
       name = name_buf;
     } else {
-      name = StringViewFromStringRef(attr->getSpelling());
+      name = attr->getSpelling();
     }
     if (ignored_attr_names.contains(name)) {
       continue;
     }
 
     if (unknown_attr.has_value()) {
-      absl::StrAppend(&*unknown_attr, ", ");
+      *unknown_attr += ", ";
     } else {
       unknown_attr.emplace("");
     }
-    absl::StrAppend(&*unknown_attr, name);
+    *unknown_attr += name;
   }
   return unknown_attr;
 }
 
-absl::string_view DebugAttrName(clang::attr::Kind attr_kind) {
+llvm::StringRef DebugAttrName(clang::attr::Kind attr_kind) {
   // TODO(jeanpierreda): Give some more human-readable name, e.g. using
   // ParsedAttrInfo::getAllBuiltin.  Unfortunately, we don't have a TypeLoc,
   // so we only have access to a Kind, which doesn't specify how it is spelled.
@@ -261,25 +260,26 @@ absl::string_view DebugAttrName(clang::attr::Kind attr_kind) {
 }
 
 std::optional<std::string> CollectUnknownTypeAttrs(
-    const clang::Type& t, absl::FunctionRef<bool(clang::attr::Kind)> is_known) {
+    const clang::Type& t,
+    llvm::function_ref<bool(clang::attr::Kind)> is_known) {
   std::optional<std::string> unknown_attr;
   const clang::Type* type = &t;
   while (const auto* attributed_type = type->getAs<clang::AttributedType>()) {
     clang::attr::Kind attr_kind = attributed_type->getAttrKind();
     if (!is_known(attr_kind)) {
       if (unknown_attr.has_value()) {
-        absl::StrAppend(&*unknown_attr, ", ");
+        *unknown_attr += ", ";
       } else {
         unknown_attr.emplace("");
       }
-      absl::StrAppend(&*unknown_attr, DebugAttrName(attr_kind));
+      *unknown_attr += DebugAttrName(attr_kind);
     }
     type = attributed_type->getEquivalentType().getTypePtr();
   }
   return unknown_attr;
 }
 
-absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
+llvm::Expected<CallingConv> ConvertCcCallConvToSupportedCallingConv(
     clang::CallingConv cc_call_conv) {
   switch (cc_call_conv) {
     case clang::CC_C:  // __attribute__((cdecl))
@@ -319,37 +319,37 @@ absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
     default:
       break;
   }
-  return absl::UnimplementedError(
-      absl::StrCat("Unsupported calling convention: ",
-                   StringViewFromStringRef(
-                       clang::FunctionType::getNameForCallConv(cc_call_conv))));
+  return UnimplementedError(
+      (llvm::Twine("Unsupported calling convention: ") +
+       clang::FunctionType::getNameForCallConv(cc_call_conv))
+          .str());
 }
 
 // Attempts to evaluate and return the value of `expr` as a string literal under
 // `ast_context`. The returned `string_view` is owned by the `ast_context`.
-absl::StatusOr<absl::string_view> EvaluateAsStringLiteral(
+llvm::Expected<llvm::StringRef> EvaluateAsStringLiteral(
     const clang::ASTContext& ast_context, const clang::Expr* expr) {
   clang::Expr::EvalResult eval_result;
   if (!expr->EvaluateAsConstantExpr(eval_result, ast_context) ||
       !eval_result.Val.isLValue()) {
-    return absl::InvalidArgumentError("expression is not a string literal");
+    return InvalidArgumentError("expression is not a string literal");
   }
 
   const auto* eval_result_expr =
       eval_result.Val.getLValueBase().dyn_cast<const clang::Expr*>();
   if (!eval_result_expr) {
-    return absl::InvalidArgumentError("expression is not a string literal");
+    return InvalidArgumentError("expression is not a string literal");
   }
 
   const auto* strlit = clang::dyn_cast<clang::StringLiteral>(eval_result_expr);
   if (!strlit) {
-    return absl::InvalidArgumentError("expression is not a string literal");
+    return InvalidArgumentError("expression is not a string literal");
   }
 
-  return StringViewFromStringRef(strlit->getString());
+  return strlit->getString();
 }
 
-absl::StatusOr<ClangLifetimeAnnotations>
+llvm::Expected<ClangLifetimeAnnotations>
 CollectClangLifetimeAnnotationsForMemberFunctionType(
     const clang::ASTContext& ast_context, const clang::Type& t) {
   ClangLifetimeAnnotations annotations;
@@ -374,11 +374,11 @@ CollectClangLifetimeAnnotationsForMemberFunctionType(
   return annotations;
 }
 
-absl::StatusOr<std::vector<absl::string_view>> CollectLifetimeInputs(
+llvm::Expected<std::vector<llvm::StringRef>> CollectLifetimeInputs(
     const clang::ASTContext& ast_context, const clang::Decl* decl) {
   // TODO(b/454627672): How do we reconcile multiple param binding lists
   // (possible with forward declarations)?
-  std::vector<absl::string_view> lifetimes;
+  std::vector<llvm::StringRef> lifetimes;
   // In contrast with type annotations, here the syntax tree looks like
   // (decl [($a, $b), ($c, $d)])
   for (const auto* attr : decl->specific_attrs<clang::AnnotateAttr>()) {
@@ -386,7 +386,7 @@ absl::StatusOr<std::vector<absl::string_view>> CollectLifetimeInputs(
       continue;
     }
     for (const auto* arg : attr->args()) {
-      CRUBIT_ASSIGN_OR_RETURN(absl::string_view lifetime,
+      CRUBIT_ASSIGN_OR_RETURN(llvm::StringRef lifetime,
                               EvaluateAsStringLiteral(ast_context, arg));
       lifetimes.push_back(lifetime);
     }
@@ -394,9 +394,9 @@ absl::StatusOr<std::vector<absl::string_view>> CollectLifetimeInputs(
   return lifetimes;
 }
 
-absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
+llvm::Expected<std::vector<llvm::StringRef>> CollectExplicitLifetimes(
     const clang::ASTContext& ast_context, const clang::Type& t) {
-  std::vector<absl::string_view> lifetimes;
+  std::vector<llvm::StringRef> lifetimes;
   const clang::Type* type = &t;
   // We're looking at ((t ($a, $b)) ($c, $d)) and want to get a flattened list
   // of [a; b; c; d].
@@ -418,7 +418,7 @@ absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
       lifetimes.resize(lifetimes.size() + n_args);
       size_t arg_index = 0;
       for (const clang::Expr* arg : annotate_type_attr->args()) {
-        CRUBIT_ASSIGN_OR_RETURN(absl::string_view lifetime,
+        CRUBIT_ASSIGN_OR_RETURN(llvm::StringRef lifetime,
                                 EvaluateAsStringLiteral(ast_context, arg));
         lifetimes[lifetimes.size() - arg_index - 1] = lifetime;
         ++arg_index;
@@ -468,13 +468,13 @@ bool IsProto2Message(const clang::Decl& decl) {
     return false;
   }
   auto has_qualified_name = [](const clang::CXXRecordDecl* record,
-                               absl::string_view expected_name) {
+                               llvm::StringRef expected_name) {
     std::string name_owned = record->getQualifiedNameAsString();
-    absl::string_view name = name_owned;
+    llvm::StringRef name = name_owned;
     // It's not clear that the default formatting rules will give us an absolute
     // qualified name, but popping off the first :: is benign.
     if (name.starts_with("::")) {
-      name.remove_prefix(2);
+      name = name.drop_front(2);
     }
     return name == expected_name;
   };
@@ -541,10 +541,9 @@ const clang::TagDecl* StripCStyleNameIntroducingTypedef(
 }
 
 RecordingDiagnosticConsumer RecordDiagnosticsAndMarkFailedInstantiations(
-    ImportContext& ictx, absl::FunctionRef<void()> callback) {
-  absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
-      failed_classes;
-  absl::flat_hash_set<clang::FunctionDecl*> failed_functions;
+    ImportContext& ictx, llvm::function_ref<void()> callback) {
+  llvm::DenseSet<const clang::ClassTemplateSpecializationDecl*> failed_classes;
+  llvm::DenseSet<clang::FunctionDecl*> failed_functions;
   RecordingDiagnosticConsumer diagnostic_recorder =
       RecordDiagnostics(ictx.sema_.getDiagnostics(), callback, [&] {
         for (const clang::Sema::CodeSynthesisContext& context :
@@ -670,14 +669,14 @@ std::string GetInvalidCallTarget(ImportContext& ictx,
   // TODO(zarko): Should we ForceDefineImplicitFunction each function we
   // encounter?
   std::string invalid_decl_name;
-  absl::flat_hash_set<clang::FunctionDecl*> visited_decls;
+  llvm::DenseSet<clang::FunctionDecl*> visited_decls;
   struct BodyVisitor : public clang::RecursiveASTVisitor<BodyVisitor> {
     std::string& invalid_decl_name;
-    absl::flat_hash_set<clang::FunctionDecl*>& visited_decls;
+    llvm::DenseSet<clang::FunctionDecl*>& visited_decls;
     ImportContext& ictx;
     clang::NamedDecl* blame_decl;
     BodyVisitor(std::string& invalid_decl_name,
-                absl::flat_hash_set<clang::FunctionDecl*>& visited_decls,
+                llvm::DenseSet<clang::FunctionDecl*>& visited_decls,
                 ImportContext& ictx, clang::NamedDecl* blame_decl)
         : invalid_decl_name(invalid_decl_name),
           visited_decls(visited_decls),
@@ -771,17 +770,20 @@ std::string GetInvalidCallTarget(ImportContext& ictx,
   return invalid_decl_name;
 }
 
-absl::flat_hash_set<absl::string_view> GetIgnoredAttrs(
-    const clang::Decl* decl) {
-  absl::flat_hash_set<absl::string_view> ignored_attr_names;
+llvm::DenseSet<llvm::StringRef> GetIgnoredAttrs(const clang::Decl* decl) {
+  llvm::DenseSet<llvm::StringRef> ignored_attr_names;
   if (!decl) return ignored_attr_names;
 
-  if (auto args = GetAnnotateAttrArgs(*decl, "crubit_unsafe_ignore_attr");
-      args.ok() && args->has_value()) {
+  auto args = GetAnnotateAttrArgs(*decl, "crubit_unsafe_ignore_attr");
+  if (!args) {
+    llvm::consumeError(args.takeError());
+  } else if (args->has_value()) {
     clang::ASTContext& ast_context = decl->getASTContext();
     for (const clang::Expr* arg : **args) {
-      if (auto name = GetExprAsStringLiteral(*arg, ast_context); name.ok()) {
-        ignored_attr_names.insert(*name);
+      if (auto name = GetExprAsStringLiteral(*arg, ast_context)) {
+        ignored_attr_names.insert(llvm::StringRef(name->data(), name->size()));
+      } else {
+        llvm::consumeError(name.takeError());
       }
     }
   }
@@ -791,7 +793,7 @@ absl::flat_hash_set<absl::string_view> GetIgnoredAttrs(
 std::vector<clang::CXXConstructorDecl*> GetAllConstructors(
     const clang::CXXRecordDecl& record) {
   std::vector<clang::CXXConstructorDecl*> result;
-  absl::flat_hash_set<const clang::Decl*> seen;
+  llvm::DenseSet<const clang::Decl*> seen;
   for (clang::CXXConstructorDecl* ctor : record.ctors()) {
     if (seen.insert(ctor->getCanonicalDecl()).second) result.push_back(ctor);
   }

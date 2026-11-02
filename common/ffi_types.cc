@@ -4,19 +4,19 @@
 
 #include "common/ffi_types.h"
 
-#include "absl/strings/string_view.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace crubit {
 
-FfiU8Slice MakeFfiU8Slice(absl::string_view s) {
+FfiU8Slice MakeFfiU8Slice(llvm::StringRef s) {
   FfiU8Slice result;
   result.ptr = s.data();
   result.size = s.size();
   return result;
 }
 
-absl::string_view StringViewFromFfiU8Slice(FfiU8Slice ffi_u8_slice) {
-  return absl::string_view(ffi_u8_slice.ptr, ffi_u8_slice.size);
+llvm::StringRef StringViewFromFfiU8Slice(FfiU8Slice ffi_u8_slice) {
+  return llvm::StringRef(ffi_u8_slice.ptr, ffi_u8_slice.size);
 }
 
 }  // namespace crubit

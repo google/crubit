@@ -8,7 +8,7 @@
 #include <optional>
 #include <variant>
 
-#include "absl/log/check.h"
+#include "common/check.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -17,7 +17,7 @@
 
 namespace crubit {
 
-std::unique_ptr<ir_proto::Item> FriendDeclImporter::Import(
+std::unique_ptr<crubit::ffi::Item> FriendDeclImporter::Import(
     clang::FriendDecl* friend_decl) {
   if (!ictx_.IsFromCurrentTarget(*friend_decl)) return nullptr;
 
@@ -55,9 +55,10 @@ std::unique_ptr<ir_proto::Item> FriendDeclImporter::Import(
   }
   if (redeclared_outside) return nullptr;
 
-  std::unique_ptr<ir_proto::Item> item = ictx_.ImportDecl(named_decl);
+  std::unique_ptr<crubit::ffi::Item> item = ictx_.ImportDecl(named_decl);
   if (!item || item->has_unsupported_item()) return nullptr;
-  CHECK(item->has_func());  // Guaranteed by `isa<clang::FunctionDecl>` above.
+  CRUBIT_CHECK(
+      item->has_func());  // Guaranteed by `isa<clang::FunctionDecl>` above.
   // Return the recursively generated function item almost as-is. It needs a
   // fresh item ID because it came from this friend_decl.
   //

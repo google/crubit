@@ -68,7 +68,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/hash/hash.h"
+#include "llvm/ADT/DenseMapInfo.h"
 
 namespace crubit {
 
@@ -103,11 +103,6 @@ class StrongInt {
   }
   static constexpr StrongInt Min() {
     return StrongInt(std::numeric_limits<ValueType>::min());
-  }
-
-  template <typename H>
-  friend H AbslHashValue(H h, const StrongInt &i) {
-    return H::combine(std::move(h), i.value_);
   }
 
  private:
@@ -161,5 +156,27 @@ CRUBIT_STRONG_INT_COMPARISON_OP(>=);  // NOLINT(whitespace/operators)
 #define CRUBIT_DEFINE_STRONG_INT_TYPE(type_name, value_type)                 \
   typedef ::crubit::StrongInt<class type_name##_strong_int_tag_, value_type> \
       type_name;
+
+namespace llvm {
+template <typename TagType, typename NativeType>
+struct DenseMapInfo<crubit::StrongInt<TagType, NativeType>> {
+  static inline crubit::StrongInt<TagType, NativeType> getEmptyKey() {
+    return crubit::StrongInt<TagType, NativeType>(
+        DenseMapInfo<NativeType>::getEmptyKey());
+  }
+  static inline crubit::StrongInt<TagType, NativeType> getTombstoneKey() {
+    return crubit::StrongInt<TagType, NativeType>(
+        DenseMapInfo<NativeType>::getTombstoneKey());
+  }
+  static unsigned getHashValue(
+      const crubit::StrongInt<TagType, NativeType>& Val) {
+    return DenseMapInfo<NativeType>::getHashValue(Val.value());
+  }
+  static bool isEqual(const crubit::StrongInt<TagType, NativeType>& LHS,
+                      const crubit::StrongInt<TagType, NativeType>& RHS) {
+    return LHS == RHS;
+  }
+};
+}  // namespace llvm
 
 #endif  // CRUBIT_COMMON_STRONG_INT_H_

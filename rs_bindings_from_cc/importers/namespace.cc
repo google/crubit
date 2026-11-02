@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 
-#include "absl/log/check.h"
+#include "common/check.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Attr.h"
@@ -18,7 +18,7 @@
 
 namespace crubit {
 
-std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
+std::unique_ptr<crubit::ffi::Item> NamespaceDeclImporter::Import(
     clang::NamespaceDecl* namespace_decl) {
   if (namespace_decl->isAnonymousNamespace()) {
     return ictx_.ImportUnsupportedItem(
@@ -26,22 +26,23 @@ std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
         {FormattedError::Static("Anonymous namespaces are not yet supported")});
   }
 
-  absl::StatusOr<TranslatedIdentifier> identifier =
+  llvm::Expected<TranslatedIdentifier> identifier =
       ictx_.GetTranslatedIdentifier(*namespace_decl);
-  if (!identifier.ok()) {
+  if (!identifier) {
     return ictx_.ImportUnsupportedItem(
         *namespace_decl, std::nullopt,
-        {FormattedError::PrefixedStrCat("Namespace name is not supported",
-                                        identifier.status().message())});
+        {FormattedError::PrefixedStrCat(
+            "Namespace name is not supported",
+            llvm::toString(identifier.takeError()))});
   }
 
   ictx_.ImportDeclsFromDeclContext(*namespace_decl);
   auto item_ids = ictx_.GetItemIdsInSourceOrder(namespace_decl);
   auto enclosing_item_id = ictx_.GetEnclosingItemId(namespace_decl);
-  if (!enclosing_item_id.ok()) {
+  if (!enclosing_item_id) {
     return ictx_.ImportUnsupportedItem(
         *namespace_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
+        {FormattedError::FromStatus(enclosing_item_id.takeError())});
   }
   // Renames are not currently supported for namespaces.
   // TODO - b/399487279: Support namespace renames using CRUBIT_RUST_NAME.
@@ -52,7 +53,7 @@ std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
   // }
 
   std::optional<std::string> deprecated;
-  absl::StatusOr<std::optional<std::string>> unknown_attr =
+  auto unknown_attr =
       CollectUnknownAttrs(*namespace_decl, [&](const clang::Attr& attr) {
         if (auto* deprecated_attr =
                 clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
@@ -63,10 +64,10 @@ std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
         }
         return false;
       });
-  if (!unknown_attr.ok()) {
+  if (!unknown_attr) {
     return ictx_.ImportUnsupportedItem(
         *namespace_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(unknown_attr.status()))});
+        {FormattedError::FromStatus(unknown_attr.takeError())});
   }
 
   ItemId id = ictx_.GenerateItemId(*namespace_decl);
@@ -79,7 +80,7 @@ std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
     ictx_.EnsureSuccessfullyImported(namespace_decl->getCanonicalDecl());
   }
 
-  auto item = std::make_unique<ir_proto::Item>();
+  auto item = std::make_unique<crubit::ffi::Item>();
   auto* ns = item->mutable_namespace_decl();
   ns->mutable_cc_name()->set_identifier(identifier->cc_identifier.Ident());
   ns->mutable_rs_name()->set_identifier(identifier->cc_identifier.Ident());

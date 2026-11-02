@@ -19,7 +19,7 @@ class TypeAliasImporter : public DeclImporterBase<clang::NamedDecl> {
  public:
   explicit TypeAliasImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::unique_ptr<ir_proto::Item> Import(clang::NamedDecl* decl) override;
+  std::unique_ptr<crubit::ffi::Item> Import(clang::NamedDecl* decl) override;
 };
 
 }  // namespace crubit

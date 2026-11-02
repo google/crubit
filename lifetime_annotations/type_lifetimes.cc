@@ -14,8 +14,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_join.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_error.h"
@@ -37,7 +35,9 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
 
@@ -234,11 +234,15 @@ llvm::Error ForEachTemplateArgument(
     }
   }
   if (template_arg_locs.size() != template_args.size()) {
-    llvm::report_fatal_error(llvm::StringRef(
-        absl::StrCat("In ForEachTemplateArgument(", type.getAsString(),
-                     "), template_args_locs has ", template_arg_locs.size(),
-                     " entries and template_args has ", template_args.size(),
-                     " entries, but they should be equal")));
+    llvm::report_fatal_error(
+        llvm::StringRef((llvm::Twine("In ForEachTemplateArgument(") +
+                         llvm::Twine(type.getAsString()) +
+                         llvm::Twine(", template_args_locs has ") +
+                         llvm::Twine(template_arg_locs.size()) +
+                         llvm::Twine(" entries and template_args has ") +
+                         llvm::Twine(template_args.size()) +
+                         llvm::Twine(" entries, but they should be equal"))
+                            .str()));
   }
   for (int depth = 0; depth < template_args.size(); depth++) {
     const auto& args_at_depth = template_args[depth];
@@ -348,9 +352,11 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
       lifetime_names.size() != lifetime_params.size()) {
     return llvm::make_error<LifetimeError>(
         LifetimeError::Type::Other,
-        absl::StrCat("Type has ", lifetime_params.size(),
-                     " lifetime parameters but ", lifetime_names.size(),
-                     " lifetime arguments were given"));
+        (llvm::Twine("Type has ") + llvm::Twine(lifetime_params.size()) +
+         llvm::Twine(" lifetime parameters but ") +
+         llvm::Twine(lifetime_names.size()) +
+         llvm::Twine(" lifetime arguments were given"))
+            .str());
   }
   for (size_t i = 0; i < lifetime_params.size(); ++i) {
     Lifetime l;
@@ -396,7 +402,7 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
     if (lifetime_params.empty() && !lifetime_names.empty())
       return llvm::make_error<LifetimeError>(
           LifetimeError::Type::Other,
-          absl::StrCat("Type may not be annotated with lifetimes"));
+          (llvm::Twine("Type may not be annotated with lifetimes")).str());
   }
   if (pointee.isNull()) {
     return ret;
@@ -429,8 +435,9 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
       if (lifetime_names.size() != 1) {
         return llvm::make_error<LifetimeError>(
             LifetimeError::Type::Other,
-            absl::StrCat("Expected a single lifetime but ",
-                         lifetime_names.size(), " were given"));
+            (llvm::Twine("Expected a single lifetime but ") +
+             llvm::Twine(lifetime_names.size()) + llvm::Twine(" were given"))
+                .str());
       }
       lifetime_name = lifetime_names.front();
     }
@@ -495,7 +502,8 @@ std::string ValueLifetimes::DebugString(
     assert(function_lifetimes_);
     std::string fn_lifetimes = function_lifetimes_->DebugString(formatter);
     if (fn_lifetimes.empty()) return "";
-    return absl::StrCat("(", fn_lifetimes, ")");
+    return (llvm::Twine("(") + llvm::Twine(fn_lifetimes) + llvm::Twine(")"))
+        .str();
   }
 
   std::vector<std::vector<std::string>> tmpl_lifetimes;
@@ -529,7 +537,10 @@ std::string ValueLifetimes::DebugString(
     if (lifetime_parameters.size() == 1) {
       return lifetime_parameters[0];
     }
-    return absl::StrCat("[", absl::StrJoin(lifetime_parameters, ", "), "]");
+    return (llvm::Twine("[") +
+            llvm::Twine(llvm::join(lifetime_parameters, ", ")) +
+            llvm::Twine("]"))
+        .str();
   } else if (lifetime_parameters.empty() && tmpl_lifetimes.size() == 1 &&
              tmpl_lifetimes[0].size() == 1) {
     return tmpl_lifetimes[0][0];
@@ -539,16 +550,21 @@ std::string ValueLifetimes::DebugString(
   tmpl_lifetimes_per_depth.reserve(tmpl_lifetimes.size());
   for (const auto& tmpl_depth : tmpl_lifetimes) {
     tmpl_lifetimes_per_depth.push_back(
-        absl::StrCat("<", absl::StrJoin(tmpl_depth, ", "), ">"));
+        (llvm::Twine("<") + llvm::Twine(llvm::join(tmpl_depth, ", ")) +
+         llvm::Twine(">"))
+            .str());
   }
   std::string lifetime_parameter_string;
   if (!lifetime_parameters.empty()) {
     lifetime_parameter_string =
-        absl::StrCat(" [", absl::StrJoin(lifetime_parameters, ", "), "]");
+        (llvm::Twine(" [") +
+         llvm::Twine(llvm::join(lifetime_parameters, ", ")) + llvm::Twine("]"))
+            .str();
   }
 
-  return absl::StrCat(absl::StrJoin(tmpl_lifetimes_per_depth, "::"),
-                      lifetime_parameter_string);
+  return (llvm::Twine(llvm::join(tmpl_lifetimes_per_depth, "::")) +
+          llvm::Twine(lifetime_parameter_string))
+      .str();
 }
 
 const ObjectLifetimes& ValueLifetimes::GetPointeeLifetimes() const {
@@ -893,7 +909,9 @@ std::string ObjectLifetimes::DebugString(
   if (inner_lifetimes.empty()) {
     return lifetime;
   }
-  return absl::StrCat(std::move(inner_lifetimes), ", ", std::move(lifetime));
+  return (llvm::Twine(std::move(inner_lifetimes)) + ", " +
+          llvm::Twine(std::move(lifetime)))
+      .str();
 }
 
 ObjectLifetimes ObjectLifetimes::GetFieldOrBaseLifetimes(

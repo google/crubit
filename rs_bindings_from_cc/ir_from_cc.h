@@ -9,16 +9,15 @@
 #include <string>
 #include <type_traits>
 
-#include "absl/base/nullability.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/cmdline_flags.h"
+#include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/profiling.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/Regex.h"
 
 namespace crubit {
@@ -29,27 +28,25 @@ struct NonCopyable final {
 };
 
 struct IrFromCcOptions final {
-  absl::string_view extra_source_code_for_testing = "";
+  llvm::StringRef extra_source_code_for_testing = "";
   BazelLabel current_target = BazelLabel{"//test:testing_target"};
-  absl::Span<const HeaderName> public_headers = {};
-  absl::flat_hash_map<HeaderName, std::string>
-      virtual_headers_contents_for_testing = {};
-  absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets = {};
-  absl::Span<const std::string> extra_rs_srcs = {};
-  absl::Span<const std::string> extra_cpp_srcs = {};
-  absl::Span<const std::string> reexported_namespaces = {};
-  absl::Span<const std::string> unstable_rust_features = {};
-  absl::Span<const absl::string_view> clang_args = {};
-  absl::Span<const std::string> extra_instantiations = {};
-  absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
-      crubit_features = {};
-  absl::flat_hash_map<BazelLabel, std::string> crate_names = {};
-  absl::string_view driver_path = "rs_bindings_from_cc_driver";
+  llvm::ArrayRef<HeaderName> public_headers = {};
+  llvm::DenseMap<HeaderName, std::string> virtual_headers_contents_for_testing =
+      {};
+  llvm::DenseMap<HeaderName, BazelLabel> headers_to_targets = {};
+  llvm::ArrayRef<std::string> extra_rs_srcs = {};
+  llvm::ArrayRef<std::string> extra_cpp_srcs = {};
+  llvm::ArrayRef<std::string> reexported_namespaces = {};
+  llvm::ArrayRef<std::string> unstable_rust_features = {};
+  llvm::ArrayRef<llvm::StringRef> clang_args = {};
+  llvm::ArrayRef<std::string> extra_instantiations = {};
+  llvm::DenseMap<BazelLabel, llvm::StringSet<>> crubit_features = {};
+  llvm::DenseMap<BazelLabel, std::string> crate_names = {};
+  llvm::StringRef driver_path = "rs_bindings_from_cc_driver";
 
   // Note: an empty allowlist disables the allowlist, allowing usage of
   // CRUBIT_DO_NOT_BIND with arbitrary symbols.
-  std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist =
-      std::nullopt;
+  std::optional<llvm::StringSet<>> do_not_bind_allowlist = std::nullopt;
 
   // Not an argument, just here to prevent the options struct from being
   // copied/moved with nontrivial lifetime implications.
@@ -58,8 +55,8 @@ struct IrFromCcOptions final {
   // Record additional source information for Kythe annotations.
   bool kythe_annotations = false;
 
-  absl_nullable std::shared_ptr<const llvm::Regex>
-      template_blocklist_path_regex = nullptr;
+  _Nullable std::shared_ptr<const llvm::Regex> template_blocklist_path_regex =
+      nullptr;
 
   CarcinizeMode carcinize_mode = CarcinizeMode::kOff;
 
@@ -99,7 +96,7 @@ static_assert(std::is_aggregate_v<IrFromCcOptions>);
 //   to instantiate and generate bindings from.
 // * `crubit_features`: The set of Crubit features to enable for each target.
 //
-CRUBIT_PROFILE_NOINLINE absl::StatusOr<IR> IrFromCc(IrFromCcOptions options);
+CRUBIT_PROFILE_NOINLINE llvm::Expected<IR> IrFromCc(IrFromCcOptions options);
 
 }  // namespace crubit
 

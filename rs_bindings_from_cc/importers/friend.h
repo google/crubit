@@ -18,7 +18,7 @@ class FriendDeclImporter : public DeclImporterBase<clang::FriendDecl> {
  public:
   explicit FriendDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::unique_ptr<ir_proto::Item> Import(clang::FriendDecl*) override;
+  std::unique_ptr<crubit::ffi::Item> Import(clang::FriendDecl*) override;
 };
 
 }  // namespace crubit

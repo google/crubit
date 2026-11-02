@@ -8,39 +8,46 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/status.h"
-#include "absl/strings/string_view.h"
-#include "common/status_test_matchers.h"
 #include "clang/AST/ASTContext.h"
 
 namespace crubit_rs_from_cc {
 namespace {
 
-using crubit::StatusIs;
 using ::testing::Eq;
 using ::testing::IsEmpty;
 
 TEST(RsFromCcTest, Noop) {
   // Nothing interesting there, but also not empty, so that the header gets
   // generated.
-  ASSERT_OK_AND_ASSIGN(std::string rs_code, RsFromCc(" "));
+  auto rs_code_or = RsFromCc(" ");
+  ASSERT_TRUE(static_cast<bool>(rs_code_or))
+      << llvm::toString(rs_code_or.takeError());
+  std::string rs_code = std::move(rs_code_or.get());
 
   EXPECT_THAT(rs_code, IsEmpty());
 }
 
 TEST(RsFromCcTest, Comment) {
-  ASSERT_OK_AND_ASSIGN(std::string rs_code, RsFromCc("// This is a comment"));
+  auto rs_code_or = RsFromCc("// This is a comment");
+  ASSERT_TRUE(static_cast<bool>(rs_code_or))
+      << llvm::toString(rs_code_or.takeError());
+  std::string rs_code = std::move(rs_code_or.get());
 
   EXPECT_THAT(rs_code, IsEmpty());
 }
 
 TEST(RsFromCcTest, ErrorOnInvalidInput) {
-  ASSERT_THAT(RsFromCc("int foo(); But this is not C++"),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+  auto err = RsFromCc("int foo(); But this is not C++");
+  ASSERT_FALSE(static_cast<bool>(err));
+  EXPECT_THAT(llvm::toString(err.takeError()),
+              ::testing::HasSubstr("Could not compile source file contents"));
 }
 
 TEST(RsFromCcTest, FunctionDeclaration) {
-  ASSERT_OK_AND_ASSIGN(std::string rs_code, RsFromCc("void f() {}"));
+  auto rs_code_or = RsFromCc("void f() {}");
+  ASSERT_TRUE(static_cast<bool>(rs_code_or))
+      << llvm::toString(rs_code_or.takeError());
+  std::string rs_code = std::move(rs_code_or.get());
 
   EXPECT_THAT(rs_code, Eq(R"end_of_string(
 // Unsupported decl:

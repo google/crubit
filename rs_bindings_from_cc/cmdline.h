@@ -11,16 +11,22 @@
 #include <utility>
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
+
+enum class CarcinizeMode {
+  kOff,     // Standard Crubit build (Carcinize is 100% OFF)
+  kStrict,  // Carcinize Mode: fails if 100% native Crubit coverage is missing
+  kIncomplete,  // Carcinize Mode: emits global_cpp! fallbacks for unsupported
+                // items
+};
 
 // The command line arguments to Crubit.
 struct CmdlineArgs {
@@ -44,7 +50,7 @@ struct CmdlineArgs {
   bool check_importer_invariants = false;
 
   std::vector<HeaderName> public_headers;
-  absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets;
+  llvm::DenseMap<HeaderName, BazelLabel> headers_to_targets;
 
   std::vector<std::string> extra_rs_srcs;
   std::vector<std::string> extra_cpp_srcs;
@@ -54,15 +60,16 @@ struct CmdlineArgs {
   std::vector<std::string> srcs_to_scan_for_instantiations;
   std::string instantiations_out;
 
-  absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
-      target_to_features;
+  llvm::DenseMap<BazelLabel, llvm::StringSet<>> target_to_features;
 
-  absl::flat_hash_map<BazelLabel, std::string> target_to_crate_name;
+  llvm::DenseMap<BazelLabel, std::string> target_to_crate_name;
 
   std::optional<std::vector<std::string>> do_not_bind_allowlist;
 
   std::string template_blocklist_path_regex;
   CarcinizeMode carcinize_mode = CarcinizeMode::kOff;
+
+  std::vector<std::string> clang_args;
 };
 
 // A valid command line invocation.
@@ -71,11 +78,12 @@ class Cmdline {
   // Creates a validated Cmdline based on the given `args`.
   //
   // Returns an error if `args` is invalid.
-  static absl::StatusOr<Cmdline> Create(CmdlineArgs args);
+  static llvm::Expected<Cmdline> Create(CmdlineArgs args);
   // Creates `Cmdline` based on the actual flags.
   //
   // Returns an error if the flags are invalid.
-  static absl::StatusOr<Cmdline> FromFlags();
+  static llvm::Expected<Cmdline> FromArgv(int argc, const char* const* argv);
+
   const CmdlineArgs& args() const& { return args_; }
   CmdlineArgs args() && { return std::move(args_); }
 
@@ -87,32 +95,9 @@ class Cmdline {
 
 namespace internal {
 // Parses --target_args into CmdlineArgs. Only exposed so it can be unit tested.
-absl::Status ParseTargetArgs(absl::string_view target_args_str,
-                             CmdlineArgs& args);
+llvm::Error ParseTargetArgs(llvm::StringRef target_args_str, CmdlineArgs& args);
 
 }  // namespace internal
-
-// Expands paramfiles (@path/to/file) in-place in argv.
-//
-// This must be called before flag parsing.
-//
-// A paramfile is a newline-delimited list of arguments, with some characters
-// escaped by a backslash. See:
-// https://github.com/bazelbuild/bazel/blob/818c5c8693c43fe490c9f6b2c05149eb8f45cf52/src/main/java/com/google/devtools/build/lib/util/GccParamFileEscaper.java#L24-L30
-//
-// Everywhere a `@param/file` is encountered in argv, it is replaced by the
-// list of arguments within that file.
-//
-// Paramfiles cannot include other paramfiles. (Can they?)
-void ExpandParamfiles(int& argc, char**& argv);
-
-// Moves `--target_to_arg` arguments into `--target_args`.
-//
-// This must be called before flag parsing.
-//
-// Abseil does not allow for repeated flags, so we need to concatenate the
-// --target_to_args values before moving them to the --target_args flag.
-void PreprocessTargetArgs(int& argc, char** argv);
 
 }  // namespace crubit
 

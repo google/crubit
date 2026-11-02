@@ -115,7 +115,6 @@ EOT
       --public_headers=\"${hdr}\" \
       --target_args=\"$(echo "${json}" | quote_escape)\" \
       --stderrthreshold=1 \
-      --undefok=stderrthreshold \
       2>\"${stderr_out}\""
 
   # Known, benign stderr lines:

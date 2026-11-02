@@ -18,7 +18,7 @@ class NamespaceDeclImporter : public DeclImporterBase<clang::NamespaceDecl> {
  public:
   explicit NamespaceDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::unique_ptr<ir_proto::Item> Import(clang::NamespaceDecl*) override;
+  std::unique_ptr<crubit::ffi::Item> Import(clang::NamespaceDecl*) override;
 };
 
 }  // namespace crubit

@@ -13,7 +13,7 @@
 
 namespace crubit {
 
-std::unique_ptr<ir_proto::Item> FunctionTemplateDeclImporter::Import(
+std::unique_ptr<crubit::ffi::Item> FunctionTemplateDeclImporter::Import(
     clang::FunctionTemplateDecl* function_template_decl) {
   if (!ictx_.IsFromCurrentTarget(*function_template_decl) ||
       clang::isa<clang::CXXDeductionGuideDecl>(

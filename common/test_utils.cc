@@ -8,31 +8,32 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
+#include "common/check.h"
 #include "common/file_io.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
 
 namespace crubit {
 
 static std::string MakeTmpdirForCurrentTest() {
-  absl::string_view current_test_name =
+  llvm::StringRef current_test_name =
       testing::UnitTest::GetInstance()->current_test_info()->name();
   std::string current_test_tmpdir_path =
-      absl::StrCat(testing::TempDir(), "/", current_test_name, "/");
+      (llvm::Twine(testing::TempDir()) + "/" + current_test_name + "/").str();
   llvm::StringRef parent_dir =
       llvm::sys::path::parent_path(current_test_tmpdir_path);
-  CHECK(!llvm::sys::fs::create_directories(parent_dir));
+  CRUBIT_CHECK(!llvm::sys::fs::create_directories(parent_dir));
   return current_test_tmpdir_path;
 }
 
-std::string WriteFileForCurrentTest(absl::string_view filename,
-                                    absl::string_view content) {
-  std::string path = absl::StrCat(MakeTmpdirForCurrentTest(), "/", filename);
-  CHECK_OK(SetFileContents(path, content));
+std::string WriteFileForCurrentTest(llvm::StringRef filename,
+                                    llvm::StringRef content) {
+  std::string path =
+      (llvm::Twine(MakeTmpdirForCurrentTest()) + "/" + filename).str();
+  llvm::Error status = SetFileContents(path, content);
+  CRUBIT_CHECK(!status) << llvm::toString(std::move(status));
   return path;
 }
 

@@ -20,14 +20,15 @@ class VarDeclImporter : public DeclImporterBase<clang::VarDecl> {
  public:
   explicit VarDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::unique_ptr<ir_proto::Item> Import(clang::VarDecl*) override;
+  std::unique_ptr<crubit::ffi::Item> Import(clang::VarDecl*) override;
 
  private:
-  // Imports a variable with a constant initializer as an `ir_proto::Constant`.
+  // Imports a variable with a constant initializer as an
+  // `crubit::ffi::Constant`.
   //
   // Supported are boolean and integer scalars, as well as C-style arrays of
   // booleans and integers.
-  std::unique_ptr<ir_proto::Item> ImportConstant(
+  std::unique_ptr<crubit::ffi::Item> ImportConstant(
       clang::VarDecl* var_decl, TranslatedIdentifier& var_name,
       std::optional<ItemId> enclosing_item_id,
       std::optional<std::string> unknown_attr,

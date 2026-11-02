@@ -273,23 +273,13 @@ def main():
       llvm_bin_dir / "llvm",
   ]
 
-  # 3. Abseil paths
-  absl_src_dir, absl_bin_dir = resolve_external_repo(
-      "abseil-cpp",
-      "@abseil-cpp//absl/base:base",
-      "rs_bindings_from_cc:rs_bindings_from_cc_main",
-  )
-  absl_include_paths = [absl_src_dir]
-  absl_lib_base = absl_bin_dir / "absl"
-
-  # 4. Hermetic Toolchain
+  # 3. Hermetic Toolchain
   toolchain = find_hermetic_toolchain()
   if not toolchain:
     fail("Hermetic toolchain or llvm-ar not found in toolchains_llvm.")
 
-  # 5. Merge static libraries into monolithic archives
+  # 4. Merge static libraries into monolithic archives
   archives_to_merge = [
-      ("libabsl_monolithic.a", [absl_lib_base]),
       ("libclang_monolithic.a", clang_lib_paths),
   ]
   for name, input_dirs in archives_to_merge:
@@ -299,12 +289,10 @@ def main():
         input_dirs,
     )
 
-  # 6. Environment variables
+  # 5. Environment variables
   env_vars = {
       "CLANG_INCLUDE_PATH": ",".join(str(p) for p in clang_include_paths),
       "CLANG_LIB_STATIC_PATH": str(bazel_outputs_dir),
-      "ABSL_INCLUDE_PATH": ",".join(str(p) for p in absl_include_paths),
-      "ABSL_LIB_STATIC_PATH": str(bazel_outputs_dir),
   }
 
   log(f"Found hermetic Clang: {toolchain['clang']}")

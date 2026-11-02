@@ -10,11 +10,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
+#include "common/status.h"
 #include "common/status_test_matchers.h"
 #include "lifetime_annotations/lifetime_error.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
@@ -70,7 +66,7 @@ std::string QualifiedName(const clang::FunctionDecl* func) {
 }
 
 // Prepends definitions for lifetime annotation macros to the code.
-std::string WithLifetimeMacros(absl::string_view code) {
+std::string WithLifetimeMacros(llvm::StringRef code) {
   std::string result = R"(
     // TODO(mboehme): We would prefer `$(...)` to be a variadic macro that
     // stringizes each of its macro arguments individually. This is possible but
@@ -80,10 +76,14 @@ std::string WithLifetimeMacros(absl::string_view code) {
     #define $3(l1, l2, l3) [[clang::annotate_type("lifetime", #l1, #l2, #l3)]]
   )";
   for (char l = 'a'; l <= 'z'; ++l) {
-    absl::StrAppendFormat(&result, "#define $%c $(%c)\n", l, l);
+    result += "#define $";
+    result += l;
+    result += " $(";
+    result += l;
+    result += ")\n";
   }
-  absl::StrAppend(&result, "#define $static $(static)\n");
-  absl::StrAppend(&result, code);
+  result += "#define $static $(static)\n";
+  result += code;
   return result;
 }
 
@@ -102,22 +102,22 @@ std::string FormatErrorString(llvm::Error err) {
             result = "ERROR(Other): ";
             break;
         }
-        absl::StrAppend(&result, lifetime_err.message());
+        result += lifetime_err.message();
       });
   if (err) {
-    result = absl::StrCat("ERROR: ", llvm::toString(std::move(err)));
+    result = "ERROR: " + llvm::toString(std::move(err));
   }
   return result;
 }
 
 class LifetimeAnnotationsTest : public testing::Test {
  protected:
-  absl::StatusOr<NamedFuncLifetimes> GetNamedLifetimeAnnotations(
-      absl::string_view code,
+  llvm::Expected<NamedFuncLifetimes> GetNamedLifetimeAnnotations(
+      llvm::StringRef code,
       const clang::tooling::FileContentMappings& file_contents =
           clang::tooling::FileContentMappings(),
       bool skip_templates = true) {
-    absl::StatusOr<NamedFuncLifetimes> result;
+    std::optional<llvm::Expected<NamedFuncLifetimes>> result;
     bool success = runOnCodeWithLifetimeHandlers(
         llvm::StringRef(code.data(), code.size()),
         [&result, skip_templates](
@@ -163,7 +163,7 @@ class LifetimeAnnotationsTest : public testing::Test {
                   named_func_lifetimes.Get(func_name);
               if (old_entry.has_value()) {
                 if (new_entry != old_entry.value()) {
-                  result = absl::UnknownError(
+                  result = crubit::UnknownError(
                       llvm::formatv(
                           "Unexpectedly different lifetimes for function '{0}'."
                           "Old: '{1}'. New: '{2}'.",
@@ -183,11 +183,14 @@ class LifetimeAnnotationsTest : public testing::Test {
         {}, file_contents);
 
     if (!success) {
-      return absl::UnknownError(
+      return crubit::UnknownError(
           "Error extracting lifetimes. (Compilation error?)");
     }
 
-    return result;
+    if (!result) {
+      return crubit::UnknownError("result uninitialized");
+    }
+    return std::move(*result);
   }
 };
 
@@ -203,7 +206,7 @@ TEST_F(LifetimeAnnotationsTest, Failure_CompileError) {
       GetNamedLifetimeAnnotations(R"(
         undefined f(undefined);
   )"),
-      StatusIs(absl::StatusCode::kUnknown,
+      StatusIs(crubit::StatusCode::kUnknown,
                StartsWith("Error extracting lifetimes. (Compilation error?)")));
 }
 

@@ -16,12 +16,18 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/base/attributes.h"
-#include "absl/log/check.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#if __has_cpp_attribute(clang::trivial_abi)
+#define CRUBIT_FFI_TRIVIAL_ABI [[clang::trivial_abi]]
+#else
+#define CRUBIT_FFI_TRIVIAL_ABI
+#endif
+#include "common/check.h"
 #include "common/ffi_types.h"
 #include "support/rs_std/internal/is_utf8.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMapInfo.h"
+#include "llvm/ADT/Hashing.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace crubit::ffi {
 
@@ -29,12 +35,12 @@ namespace crubit::ffi {
 // between C++ and Rust (`FfiString`). Memory is allocated and freed via
 // `AllocFfiBytes` / `FreeFfiBytes` so ownership can be transferred across FFI
 // in either direction without copying.
-class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiString {
+class CRUBIT_FFI_TRIVIAL_ABI FfiString {
  public:
   constexpr FfiString() : dangling_ptr_(1), len_(0) {}
 
-  explicit FfiString(absl::string_view sv) : dangling_ptr_(1), len_(0) {
-    CHECK(rs::internal::IsUtf8(sv));
+  explicit FfiString(llvm::StringRef sv) : dangling_ptr_(1), len_(0) {
+    CRUBIT_CHECK(rs::internal::IsUtf8(sv));
     if (!sv.empty()) {
       uint8_t* buf = static_cast<uint8_t*>(AllocFfiBytes(sv.size(), 1));
       std::memcpy(buf, sv.data(), sv.size());
@@ -43,7 +49,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiString {
     }
   }
 
-  static FfiString FromUtf8(absl::string_view sv) { return FfiString(sv); }
+  static FfiString FromUtf8(llvm::StringRef sv) { return FfiString(sv); }
 
   FfiString(const FfiString& other) : dangling_ptr_(1), len_(0) {
     if (other.len_ > 0) {
@@ -86,10 +92,10 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiString {
 
   ~FfiString() { Reset(); }
 
-  absl::string_view AsView() const { return absl::string_view(data(), len_); }
+  llvm::StringRef AsView() const { return llvm::StringRef(data(), len_); }
 
   // NOLINTNEXTLINE(google-explicit-constructor)
-  operator absl::string_view() const { return AsView(); }
+  operator llvm::StringRef() const { return AsView(); }
 
   std::string ToString() const { return std::string(AsView()); }
   explicit operator std::string() const { return ToString(); }
@@ -107,36 +113,59 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiString {
   friend bool operator!=(const FfiString& lhs, const FfiString& rhs) {
     return !(lhs == rhs);
   }
-  friend bool operator==(const FfiString& lhs, absl::string_view rhs) {
+  friend bool operator==(const FfiString& lhs, llvm::StringRef rhs) {
     return lhs.AsView() == rhs;
   }
-  friend bool operator!=(const FfiString& lhs, absl::string_view rhs) {
+  friend bool operator!=(const FfiString& lhs, llvm::StringRef rhs) {
     return lhs.AsView() != rhs;
   }
-  friend bool operator==(absl::string_view lhs, const FfiString& rhs) {
+  friend bool operator==(llvm::StringRef lhs, const FfiString& rhs) {
     return lhs == rhs.AsView();
   }
-  friend bool operator!=(absl::string_view lhs, const FfiString& rhs) {
+  friend bool operator!=(llvm::StringRef lhs, const FfiString& rhs) {
     return lhs != rhs.AsView();
   }
   friend bool operator<(const FfiString& lhs, const FfiString& rhs) {
     return lhs.AsView() < rhs.AsView();
   }
-  friend bool operator<(const FfiString& lhs, absl::string_view rhs) {
+  friend bool operator<(const FfiString& lhs, llvm::StringRef rhs) {
     return lhs.AsView() < rhs;
   }
-  friend bool operator<(absl::string_view lhs, const FfiString& rhs) {
+  friend bool operator<(llvm::StringRef lhs, const FfiString& rhs) {
     return lhs < rhs.AsView();
+  }
+
+  friend bool operator==(const FfiString& lhs, std::string_view rhs) {
+    return llvm::StringRef(lhs.AsView()) == llvm::StringRef(rhs);
+  }
+  friend bool operator!=(const FfiString& lhs, std::string_view rhs) {
+    return llvm::StringRef(lhs.AsView()) != llvm::StringRef(rhs);
+  }
+  friend bool operator==(std::string_view lhs, const FfiString& rhs) {
+    return llvm::StringRef(lhs) == llvm::StringRef(rhs.AsView());
+  }
+  friend bool operator!=(std::string_view lhs, const FfiString& rhs) {
+    return llvm::StringRef(lhs) != llvm::StringRef(rhs.AsView());
+  }
+  friend bool operator<(const FfiString& lhs, std::string_view rhs) {
+    return llvm::StringRef(lhs.AsView()) < llvm::StringRef(rhs);
+  }
+  friend bool operator<(std::string_view lhs, const FfiString& rhs) {
+    return llvm::StringRef(lhs) < llvm::StringRef(rhs.AsView());
   }
 
   template <typename H>
   friend H AbslHashValue(H h, const FfiString& s) {
-    return H::combine(std::move(h), s.AsView());
+    return H::combine(std::move(h), std::string_view(s.data(), s.size()));
   }
 
   friend std::ostream& operator<<(std::ostream& os, const FfiString& s) {
-    return os << s.AsView();
+    return os << std::string_view(s.AsView().data(), s.AsView().size());
   }
+
+  friend struct llvm::DenseMapInfo<FfiString>;
+  constexpr FfiString(uintptr_t sentinel_tag, std::nullptr_t)
+      : dangling_ptr_(sentinel_tag), len_(0) {}
 
  private:
   void Reset() {
@@ -169,7 +198,7 @@ static_assert(std::is_standard_layout_v<FfiString>);
 // An owned contiguous vector with a `#[repr(C)]` layout shared between C++ and
 // Rust.
 template <typename T>
-class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiVec {
+class CRUBIT_FFI_TRIVIAL_ABI FfiVec {
  public:
   using value_type = T;
   using reference = T&;
@@ -232,7 +261,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiVec {
   void reserve(size_t new_cap) {
     if (new_cap <= cap_) return;
     if constexpr (sizeof(T) > 0) {
-      CHECK(new_cap <= static_cast<size_t>(-1) / sizeof(T));
+      CRUBIT_CHECK(new_cap <= static_cast<size_t>(-1) / sizeof(T));
     }
     T* new_ptr =
         static_cast<T*>(AllocFfiBytes(new_cap * sizeof(T), alignof(T)));
@@ -251,7 +280,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiVec {
 
   void push_back(T value) {
     if (len_ == cap_) {
-      CHECK(cap_ <= static_cast<size_t>(-1) / 2);
+      CRUBIT_CHECK(cap_ <= static_cast<size_t>(-1) / 2);
       reserve(cap_ == 0 ? 4 : cap_ * 2);
     }
     new (ptr_ + len_) T(std::move(value));
@@ -259,9 +288,9 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiVec {
   }
 
   T* insert(size_t idx, T value) {
-    CHECK(idx <= len_);
+    CRUBIT_CHECK(idx <= len_);
     if (len_ == cap_) {
-      CHECK(cap_ <= static_cast<size_t>(-1) / 2);
+      CRUBIT_CHECK(cap_ <= static_cast<size_t>(-1) / 2);
       reserve(cap_ == 0 ? 4 : cap_ * 2);
     }
     if (idx < len_) {
@@ -279,7 +308,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiVec {
 
   T* Add() {
     if (len_ == cap_) {
-      CHECK(cap_ <= static_cast<size_t>(-1) / 2);
+      CRUBIT_CHECK(cap_ <= static_cast<size_t>(-1) / 2);
       reserve(cap_ == 0 ? 4 : cap_ * 2);
     }
     T* elem = new (ptr_ + len_) T();
@@ -315,15 +344,15 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiVec {
   T* end() { return ptr_ + len_; }
 
   const T& operator[](size_t idx) const {
-    CHECK(idx < len_);
+    CRUBIT_CHECK(idx < len_);
     return ptr_[idx];
   }
   T& operator[](size_t idx) {
-    CHECK(idx < len_);
+    CRUBIT_CHECK(idx < len_);
     return ptr_[idx];
   }
 
-  absl::Span<const T> AsSpan() const { return absl::Span<const T>(ptr_, len_); }
+  llvm::ArrayRef<T> AsSpan() const { return llvm::ArrayRef<T>(ptr_, len_); }
 
   friend bool operator==(const FfiVec& lhs, const FfiVec& rhs) {
     return lhs.AsSpan() == rhs.AsSpan();
@@ -376,7 +405,7 @@ struct FfiRcInner {
 // so reference-counted IR nodes can cross FFI on the same thread without moving
 // or reallocating. Must not be shared across threads.
 template <typename T>
-class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiRc {
+class CRUBIT_FFI_TRIVIAL_ABI FfiRc {
  public:
   constexpr FfiRc() : ptr_(nullptr) {}
 
@@ -387,7 +416,7 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiRc {
 
   FfiRc(const FfiRc& other) noexcept : ptr_(other.ptr_) {
     if (ptr_ != nullptr) {
-      CHECK(ptr_->strong_count < static_cast<size_t>(-1) / 2);
+      CRUBIT_CHECK(ptr_->strong_count < static_cast<size_t>(-1) / 2);
       ++ptr_->strong_count;
     }
   }
@@ -420,20 +449,20 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiRc {
     return &ptr_->value;
   }
   const T& operator*() const {
-    CHECK(ptr_ != nullptr);
+    CRUBIT_CHECK(ptr_ != nullptr);
     return ptr_->value;
   }
   T& operator*() {
-    CHECK(ptr_ != nullptr);
+    CRUBIT_CHECK(ptr_ != nullptr);
     EnsureUnique();
     return ptr_->value;
   }
   const T* operator->() const {
-    CHECK(ptr_ != nullptr);
+    CRUBIT_CHECK(ptr_ != nullptr);
     return &ptr_->value;
   }
   T* operator->() {
-    CHECK(ptr_ != nullptr);
+    CRUBIT_CHECK(ptr_ != nullptr);
     EnsureUnique();
     return &ptr_->value;
   }
@@ -491,7 +520,7 @@ static_assert(std::is_standard_layout_v<FfiRc<uint8_t>>);
 
 // Key-value pair entry for `FfiMap<K, V>`.
 template <typename K, typename V>
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI FfiMapEntry {
+struct CRUBIT_FFI_TRIVIAL_ABI FfiMapEntry {
   K first;
   V second;
 
@@ -507,7 +536,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI FfiMapEntry {
 // layout shared between C++ and Rust. Entries are kept sorted by key so
 // iteration order, equality, and hashing are deterministic.
 template <typename K, typename V>
-class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiMap {
+class CRUBIT_FFI_TRIVIAL_ABI FfiMap {
  public:
   using key_type = K;
   using mapped_type = V;
@@ -531,49 +560,49 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiMap {
   const_iterator begin() const { return entries_.begin(); }
   const_iterator end() const { return entries_.end(); }
 
-  iterator find(absl::string_view key) {
-    auto it = std::lower_bound(
-        begin(), end(), key, [](const value_type& entry, absl::string_view k) {
-          return entry.first < k;
-        });
+  iterator find(llvm::StringRef key) {
+    auto it = std::lower_bound(begin(), end(), key,
+                               [](const value_type& entry, llvm::StringRef k) {
+                                 return entry.first < k;
+                               });
     if (it != end() && it->first == key) return it;
     return end();
   }
 
-  const_iterator find(absl::string_view key) const {
-    auto it = std::lower_bound(
-        begin(), end(), key, [](const value_type& entry, absl::string_view k) {
-          return entry.first < k;
-        });
+  const_iterator find(llvm::StringRef key) const {
+    auto it = std::lower_bound(begin(), end(), key,
+                               [](const value_type& entry, llvm::StringRef k) {
+                                 return entry.first < k;
+                               });
     if (it != end() && it->first == key) return it;
     return end();
   }
 
-  bool contains(absl::string_view key) const { return find(key) != end(); }
+  bool contains(llvm::StringRef key) const { return find(key) != end(); }
 
-  V& at(absl::string_view key) {
+  V& at(llvm::StringRef key) {
     auto it = find(key);
-    CHECK(it != end());
+    CRUBIT_CHECK(it != end());
     return it->second;
   }
 
-  const V& at(absl::string_view key) const {
+  const V& at(llvm::StringRef key) const {
     auto it = find(key);
-    CHECK(it != end());
+    CRUBIT_CHECK(it != end());
     return it->second;
   }
 
-  V& operator[](absl::string_view key) {
-    auto it = std::lower_bound(
-        begin(), end(), key, [](const value_type& entry, absl::string_view k) {
-          return entry.first < k;
-        });
+  V& operator[](llvm::StringRef key) {
+    auto it = std::lower_bound(begin(), end(), key,
+                               [](const value_type& entry, llvm::StringRef k) {
+                                 return entry.first < k;
+                               });
     if (it != end() && it->first == key) return it->second;
     size_t idx = static_cast<size_t>(it - begin());
     return entries_.insert(idx, value_type{K(key), V()})->second;
   }
 
-  absl::Span<const value_type> entries() const { return entries_.AsSpan(); }
+  llvm::ArrayRef<value_type> entries() const { return entries_.AsSpan(); }
 
   friend bool operator==(const FfiMap& lhs, const FfiMap& rhs) {
     return lhs.entries_ == rhs.entries_;
@@ -587,5 +616,28 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FfiMap {
 };
 
 }  // namespace crubit::ffi
+
+namespace llvm {
+template <>
+struct DenseMapInfo<crubit::ffi::FfiString> {
+  static inline crubit::ffi::FfiString getEmptyKey() {
+    return crubit::ffi::FfiString(2, nullptr);
+  }
+  static inline crubit::ffi::FfiString getTombstoneKey() {
+    return crubit::ffi::FfiString(3, nullptr);
+  }
+  static unsigned getHashValue(const crubit::ffi::FfiString& Val) {
+    return llvm::hash_value(Val.AsView());
+  }
+  static bool isEqual(const crubit::ffi::FfiString& LHS,
+                      const crubit::ffi::FfiString& RHS) {
+    if ((LHS.len_ == 0 && LHS.dangling_ptr_ != 1) ||
+        (RHS.len_ == 0 && RHS.dangling_ptr_ != 1)) {
+      return LHS.dangling_ptr_ == RHS.dangling_ptr_ && LHS.len_ == RHS.len_;
+    }
+    return LHS == RHS;
+  }
+};
+}  // namespace llvm
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_FFI_SUPPORT_H_

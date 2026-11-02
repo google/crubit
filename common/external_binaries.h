@@ -1,4 +1,3 @@
-
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -14,20 +13,20 @@
 #ifndef THIRD_PARTY_CRUBIT_COMMON_EXTERNAL_BINARIES_H_
 #define THIRD_PARTY_CRUBIT_COMMON_EXTERNAL_BINARIES_H_
 
-#include "absl/strings/string_view.h"
+#include "llvm/ADT/StringRef.h"
 
 extern "C" const char* crubit_rustfmt_exe_path();
 extern "C" const char* crubit_clang_format_exe_path();
 
 namespace crubit {
 
-inline absl::string_view RustfmtExePath() {
-  static absl::string_view kRustfmtExePath = crubit_rustfmt_exe_path();
+inline llvm::StringRef RustfmtExePath() {
+  static llvm::StringRef kRustfmtExePath = crubit_rustfmt_exe_path();
   return kRustfmtExePath;
 }
 
-inline absl::string_view ClangFormatExePath() {
-  static absl::string_view kClangFormatExePath = crubit_clang_format_exe_path();
+inline llvm::StringRef ClangFormatExePath() {
+  static llvm::StringRef kClangFormatExePath = crubit_clang_format_exe_path();
   return kClangFormatExePath;
 }
 

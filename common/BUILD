@@ -22,6 +22,21 @@ exports_files([
     "golden_test.sh",
 ])
 
+cc_library(
+    name = "check",
+    hdrs = ["check.h"],
+    visibility = ["//:__subpackages__"],
+)
+
+crubit_cc_test(
+    name = "check_test",
+    srcs = ["check_test.cc"],
+    deps = [
+        ":check",
+        "@googletest//:gtest_main",
+    ],
+)
+
 rust_library(
     name = "arc_anyhow",
     srcs = ["arc_anyhow.rs"],
@@ -36,15 +51,8 @@ cc_library(
     srcs = ["annotation_reader.cc"],
     hdrs = ["annotation_reader.h"],
     deps = [
+        ":status",
         ":status_macros",
-        ":string_view_conversion",
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/base:nullability",
-        "@abseil-cpp//absl/functional:function_ref",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
@@ -58,15 +66,13 @@ crubit_cc_test(
     tags = ["no_windows"],
     deps = [
         ":annotation_reader",
+        ":check",
+        ":status",
         ":status_test_matchers",
-        ":string_view_conversion",
-        "@abseil-cpp//absl/log:check",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/strings:string_view",
-        "@abseil-cpp//absl/types:span",
         "@googletest//:gtest_main",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:testing",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -153,10 +159,7 @@ cc_library(
     srcs = ["file_io.cc"],
     hdrs = ["file_io.h"],
     deps = [
-        ":string_view_conversion",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings:string_view",
+        ":status",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -168,14 +171,14 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":ffi_types",  # buildcleaner: keep
-        "@abseil-cpp//absl/strings:string_view",
+        "@llvm-project//llvm:Support",
     ],
 )
 
 cc_library(
     name = "external_binaries_cc",
     hdrs = ["external_binaries.h"],
-    deps = ["@abseil-cpp//absl/strings:string_view"],
+    deps = ["@llvm-project//llvm:Support"],
 )
 
 rust_library(
@@ -265,15 +268,16 @@ crubit_rust_test(
 cc_library(
     name = "strong_int",
     hdrs = ["strong_int.h"],
-    deps = ["@abseil-cpp//absl/hash"],
+    deps = [
+        "@llvm-project//llvm:Support",
+    ],
 )
 
 cc_library(
     name = "string_type",
     hdrs = ["string_type.h"],
     deps = [
-        "@abseil-cpp//absl/flags:marshalling",
-        "@abseil-cpp//absl/strings:string_view",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -281,9 +285,7 @@ cc_library(
     name = "status_macros",
     hdrs = ["status_macros.h"],
     deps = [
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -395,10 +397,8 @@ cc_library(
     srcs = ["test_utils.cc"],
     hdrs = ["test_utils.h"],
     deps = [
+        ":check",
         ":file_io",
-        "@abseil-cpp//absl/log:check",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest",
         "@llvm-project//llvm:Support",
     ],
@@ -409,24 +409,16 @@ cc_library(
     testonly = True,
     hdrs = ["status_test_matchers.h"],
     deps = [
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
+        ":status",
+        ":status_macros",
         "@googletest//:gtest",
+        "@llvm-project//llvm:Support",
     ],
 )
 
 cc_library(
     name = "rust_allocator_shims",
     srcs = ["rust_allocator_shims.c"],
-)
-
-cc_library(
-    name = "string_view_conversion",
-    hdrs = ["string_view_conversion.h"],
-    deps = [
-        "@abseil-cpp//absl/strings:string_view",
-        "@llvm-project//llvm:Support",
-    ],
 )
 
 rust_library(
@@ -503,4 +495,64 @@ rust_static_library(
     name = "include_allocator_symbols",
     srcs = ["empty.rs"],
     edition = "2024",
+)
+
+cc_library(
+    name = "status",
+    srcs = ["status.cc"],
+    hdrs = ["status.h"],
+    deps = [
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "status_test",
+    srcs = ["status_test.cc"],
+    deps = [
+        ":status",
+        "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "status_macros_test",
+    srcs = ["status_macros_test.cc"],
+    deps = [
+        ":status",
+        ":status_macros",
+        "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "status_test_matchers_test",
+    srcs = ["status_test_matchers_test.cc"],
+    deps = [
+        ":status",
+        ":status_test_matchers",
+        "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "logging",
+    srcs = ["logging.cc"],
+    hdrs = ["logging.h"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "logging_test",
+    srcs = ["logging_test.cc"],
+    deps = [
+        ":logging",
+        "@googletest//:gtest_main",
+    ],
 )

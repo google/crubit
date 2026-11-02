@@ -6,20 +6,14 @@
 // * a Rust source file with bindings for the C++ API
 // * a C++ source file with the implementation of the bindings
 
-#include <cstddef>
 #include <cstdlib>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "absl/flags/parse.h"
-#include "absl/log/initialize.h"
-#include "absl/cleanup/cleanup.h"
-#include "absl/status/status.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "common/check.h"
 #include "common/file_io.h"
+#include "common/status.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/collect_namespaces.h"
@@ -27,8 +21,11 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/profiling.h"
 #include "rs_bindings_from_cc/src_code_gen_ffi.h"
-#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/ScopeExit.h"
+#include "llvm/ADT/Twine.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -44,8 +41,8 @@ std::string InstantiationsAsJson(
   return std::string(llvm::formatv("{0:2}", llvm::json::Value(std::move(obj))));
 }
 
-absl::Status Main(absl::Span<char* const> positional_args) {
-  CRUBIT_ASSIGN_OR_RETURN(Cmdline cmdline, Cmdline::FromFlags());
+llvm::Error Main(int argc, const char* const* argv) {
+  CRUBIT_ASSIGN_OR_RETURN(Cmdline cmdline, Cmdline::FromArgv(argc, argv));
   const CmdlineArgs& args = cmdline.args();
 
   if (args.do_nothing) {
@@ -61,16 +58,12 @@ absl::Status Main(absl::Span<char* const> positional_args) {
     if (!args.namespaces_out.empty()) {
       CRUBIT_RETURN_IF_ERROR(SetFileContents(args.namespaces_out, "[]"));
     }
-    return absl::OkStatus();
+    return llvm::Error::success();
   }
-
-  std::vector<std::string> clang_args;
-  clang_args.insert(clang_args.end(), positional_args.begin(),
-                    positional_args.end());
 
   CRUBIT_ASSIGN_OR_RETURN(
       BindingsAndMetadata bindings_and_metadata,
-      GenerateBindingsAndMetadata(cmdline, std::move(clang_args)));
+      GenerateBindingsAndMetadata(cmdline, args.clang_args));
 
   if (!args.ir_out.empty()) {
     CRUBIT_RETURN_IF_ERROR(
@@ -81,11 +74,14 @@ absl::Status Main(absl::Span<char* const> positional_args) {
   for (const std::string& cc_src : args.extra_cpp_srcs) {
     CRUBIT_ASSIGN_OR_RETURN(std::string cc_src_content,
                             GetFileContents(cc_src));
-    absl::StrAppend(&extra_cpp_srcs_content, "\n#line 1 \"", cc_src, "\"\n",
-                    cc_src_content, "\n");
+    extra_cpp_srcs_content += "\n#line 1 \"";
+    extra_cpp_srcs_content += cc_src;
+    extra_cpp_srcs_content += "\"\n";
+    extra_cpp_srcs_content += cc_src_content;
+    extra_cpp_srcs_content += "\n";
   }
   bindings_and_metadata.rs_api_impl =
-      absl::StrCat(extra_cpp_srcs_content, bindings_and_metadata.rs_api_impl);
+      extra_cpp_srcs_content + bindings_and_metadata.rs_api_impl;
 
   CRUBIT_RETURN_IF_ERROR(
       SetFileContents(args.rs_out, bindings_and_metadata.rs_api));
@@ -108,24 +104,20 @@ absl::Status Main(absl::Span<char* const> positional_args) {
                                            bindings_and_metadata.error_report));
   }
 
-  return absl::OkStatus();
+  return llvm::Error::success();
 }
 
 }  // namespace crubit
 
 extern "C" int crubit_rs_bindings_from_cc_main(int argc, char* argv[]) {
-  // TODO(jeanpierreda): move these functions into rs_bindings_from_cc.rs.
-  crubit::ExpandParamfiles(argc, argv);
-  crubit::PreprocessTargetArgs(argc, argv);
-  auto args = absl::ParseCommandLine(argc, argv);
-  absl::InitializeLog();
+  llvm::InitLLVM init(argc, argv);
   if (const char* prefix = getenv("RS_BINDINGS_ALLOC_RECORDER_PREFIX")) {
     crubit::StartHeapProfiling(prefix);
   }
-  auto cleanup = absl::MakeCleanup([] { crubit::StopHeapProfiling(); });
-  absl::Status status = crubit::Main(args);
-  if (!status.ok()) {
-    llvm::errs() << status.message() << "\n";
+  auto cleanup = llvm::scope_exit([] { crubit::StopHeapProfiling(); });
+  llvm::Error status = crubit::Main(argc, argv);
+  if (status) {
+    llvm::errs() << llvm::toString(std::move(status)) << "\n";
     return -1;
   }
   return 0;

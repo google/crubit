@@ -5,5 +5,7 @@
 // Automatically @generated lib.rs for the cc_library ir_from_cc.
 
 extern crate cc_ir_sys;
+extern crate cmdline_sys;
 extern crate frontend_action_sys;
 extern crate profiling_sys;
+extern crate status_sys;

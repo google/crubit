@@ -10,14 +10,14 @@
 #include <string>
 #include <vector>
 
-#include "absl/strings/string_view.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace crubit {
 
 // Writes a file for a current gunit test in a temporary directory specific to
 // the current test. Returns the path of the newly written file.
-std::string WriteFileForCurrentTest(absl::string_view filename,
-                                    absl::string_view content);
+std::string WriteFileForCurrentTest(llvm::StringRef filename,
+                                    llvm::StringRef content);
 
 // Gets Clang flags for gunit tests (for example -I flag that tells Clang to
 // search for headers in the temporary directory where `WriteFileForCurrentTest`

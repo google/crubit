@@ -17,8 +17,8 @@ use std::path::Path;
 /// `path_to_src_root` gives the root of the repo, where paths are specified
 /// relative to.
 ///
-/// All C++ libraries can make use of ABSL, LLVM, Protobuf, and Clang, as they are
-/// included in the include path, and are added to the link step.
+/// All C++ libraries can make use of LLVM and Clang (plus Abseil and Protobuf when
+/// `proto_sources` is non-empty), as they are included in the include path and link step.
 pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
     path_to_src_root: P1,
     sources: &[P2],
@@ -39,8 +39,14 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
 
     // ===== Abseil ======
 
-    let absl_include_dirs = absl::collect_absl_includes();
-    let (absl_lib_dirs, absl_libs) = absl::collect_absl_libs();
+    // (Only Protobuf generated sources still depend on Abseil)
+    let (absl_include_dirs, absl_lib_dirs, absl_libs) = if proto_sources.is_empty() {
+        (Vec::new(), Vec::new(), Vec::new())
+    } else {
+        let includes = absl::collect_absl_includes();
+        let (lib_dirs, libs) = absl::collect_absl_libs();
+        (includes, lib_dirs, libs)
+    };
 
     // ===== LLVM libtooling =====
 

@@ -10,23 +10,18 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_replace.h"
-#include "absl/strings/str_split.h"
-#include "absl/strings/string_view.h"
+#include "common/check.h"
 #include "common/external_binaries.h"
 #include "common/ffi_types.h"
 #include "common/file_io.h"
+#include "common/status.h"
 #include "common/status_macros.h"
 #include "common/status_test_matchers.h"
 #include "common/test_utils.h"
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/collect_namespaces.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "llvm/ADT/DenseMap.h"
 
 namespace crubit {
 namespace {
@@ -55,8 +50,8 @@ Cmdline MakeCmdline(std::string header) {
   };
   args.headers_to_targets[args.public_headers[0]] = args.current_target;
   args.target_to_features[args.current_target] = {"supported"};
-  absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
-  CHECK_OK(cmdline);
+  llvm::Expected<Cmdline> cmdline = Cmdline::Create(args);
+  CRUBIT_CHECK(cmdline) << llvm::toString(cmdline.takeError());
   return *cmdline;
 }
 
@@ -90,15 +85,14 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
   ASSERT_THAT(result.instantiations, IsEmpty());
 }
 
-absl::StatusOr<absl::flat_hash_map<Identifier, Identifier>>
-GetInstantiationsFor(absl::string_view header_content,
-                     absl::string_view rust_source) {
+llvm::Expected<llvm::DenseMap<Identifier, Identifier>> GetInstantiationsFor(
+    llvm::StringRef header_content, llvm::StringRef rust_source) {
   std::string a_rs_path = WriteFileForCurrentTest("a.rs", rust_source);
   CmdlineArgs args = MakeCmdline("a.h").args();
   args.srcs_to_scan_for_instantiations = {a_rs_path};
   args.instantiations_out = "instantiations_out";
-  absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
-  CHECK_OK(cmdline);
+  llvm::Expected<Cmdline> cmdline = Cmdline::Create(args);
+  CRUBIT_CHECK(cmdline) << llvm::toString(cmdline.takeError());
 
   CRUBIT_ASSIGN_OR_RETURN(
       BindingsAndMetadata result,
@@ -246,7 +240,7 @@ TEST(GenerateBindingsAndMetadataTest,
 }
 
 TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
-  constexpr absl::string_view kHeaderContent = R"(
+  constexpr llvm::StringRef kHeaderContent = R"(
     namespace top_level_1 {
       namespace middle {
         namespace inner_1 {}
@@ -262,7 +256,7 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
 
     namespace top_level_1 {}
   )";
-  constexpr absl::string_view kExpected = R"({
+  constexpr llvm::StringRef kExpected = R"({
   "label": "//:target",
   "namespaces": [
     {
@@ -311,8 +305,8 @@ TEST(GenerateBindingsAndMetadataTest,
       WriteFileForCurrentTest("extra.cc", "struct UnguardedStruct {};");
   CmdlineArgs args = MakeCmdline("a.h").args();
   args.extra_cpp_srcs = {extra_cc_path};
-  absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
-  CHECK_OK(cmdline);
+  llvm::Expected<Cmdline> cmdline = Cmdline::Create(args);
+  CRUBIT_CHECK(cmdline) << llvm::toString(cmdline.takeError());
 
   std::vector<std::string> clang_args = DefaultClangArgs();
   clang_args.push_back("-include");
@@ -330,7 +324,7 @@ TEST(GenerateBindingsAndMetadataTest, DepfileOmitsInMemoryFiles) {
   WriteFileForCurrentTest("included.h", "struct Included {};");
   std::string public_h =
       WriteFileForCurrentTest("public.h", "#include \"included.h\"\n");
-  std::string depfile_path = absl::StrCat(testing::TempDir(), "/rs_api.d");
+  std::string depfile_path = (testing::TempDir() + "/rs_api.d");
   std::vector<std::string> clang_args = DefaultClangArgs();
   clang_args.insert(clang_args.end(),
                     {"-MD", "-MF", depfile_path, "-MT", "path/to/rs_api.rs"});
@@ -338,25 +332,35 @@ TEST(GenerateBindingsAndMetadataTest, DepfileOmitsInMemoryFiles) {
   // Both `in_memory.h` and the main file synthesized by `IrFromCc` exist only
   // in Clang's in-memory file system.
   Cmdline cmdline = MakeCmdline("in_memory.h");
-  ASSERT_OK(GenerateBindingsAndMetadata(
-                cmdline, std::move(clang_args),
-                /*virtual_headers_contents_for_testing=*/
-                {{HeaderName("in_memory.h"),
-                  absl::StrCat("#include \"", public_h, "\"\n")}})
-                .status());
+  {
+    auto b_or = GenerateBindingsAndMetadata(
+        cmdline, std::move(clang_args),
+        /*virtual_headers_contents_for_testing=*/
+        {{HeaderName("in_memory.h"),
+          (llvm::Twine("#include \"") + public_h + "\"\n").str()}});
+    ASSERT_OK(b_or);
+  }
 
   ASSERT_OK_AND_ASSIGN(std::string depfile, GetFileContents(depfile_path));
   // Clang wraps long depfile lines using `\` + newline continuations.
-  std::vector<std::string> depfile_tokens =
-      absl::StrSplit(absl::StrReplaceAll(depfile, {{"\\\n", " "}}),
-                     absl::ByAnyChar(" \n"), absl::SkipEmpty());
+  std::string depfile_cleaned = depfile;
+  size_t pos = 0;
+  while ((pos = depfile_cleaned.find("\\\n", pos)) != std::string::npos) {
+    depfile_cleaned.replace(pos, 2, " ");
+  }
+  llvm::SmallVector<llvm::StringRef, 8> deps_refs;
+  llvm::StringRef(depfile_cleaned).split(deps_refs, " ", -1, false);
+  std::vector<std::string> depfile_tokens;
+  for (auto d : deps_refs) {
+    if (!d.trim().empty()) depfile_tokens.push_back(d.trim().str());
+  }
   EXPECT_THAT(depfile_tokens,
               ElementsAre("path/to/rs_api.rs:", EndsWith("/public.h"),
                           EndsWith("/included.h")));
 }
 
-absl::StatusOr<BindingsAndMetadata> GenerateBindingsWithExtraClangArg(
-    absl::string_view extra_clang_arg) {
+llvm::Expected<BindingsAndMetadata> GenerateBindingsWithExtraClangArg(
+    llvm::StringRef extra_clang_arg) {
   Cmdline cmdline = MakeCmdline("a.h");
   std::vector<std::string> clang_args = DefaultClangArgs();
   clang_args.push_back(std::string(extra_clang_arg));
@@ -367,12 +371,12 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsWithExtraClangArg(
 
 TEST(GenerateBindingsAndMetadataTest, FailsOnUnknownClangDriverArgument) {
   EXPECT_THAT(GenerateBindingsWithExtraClangArg("-fthis-flag-does-not-exist"),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(crubit::StatusCode::kInvalidArgument));
 }
 
 TEST(GenerateBindingsAndMetadataTest, FailsOnMissingInputFileInClangArgs) {
   EXPECT_THAT(GenerateBindingsWithExtraClangArg("/nonexistent_file.h"),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+              StatusIs(crubit::StatusCode::kInvalidArgument));
 }
 
 TEST(GenerateBindingsAndMetadataTest, SucceedsOnClangDriverWarning) {

@@ -7,16 +7,14 @@
 
 #include <string>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 
-absl::StatusOr<std::string> GetFileContents(absl::string_view path);
+llvm::Expected<std::string> GetFileContents(llvm::StringRef path);
 
-absl::Status SetFileContents(absl::string_view path,
-                             absl::string_view contents);
+llvm::Error SetFileContents(llvm::StringRef path, llvm::StringRef contents);
 
 }  // namespace crubit
 
