@@ -10,6 +10,7 @@ bzl_library(
     srcs = ["target_args_test.bzl"],
     visibility = ["//visibility:private"],
     deps = [
+        "//bazel:rust_api_from_cpp_bzl",
         "//rs_bindings_from_cc/bazel_support:providers_bzl",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils_bzl",

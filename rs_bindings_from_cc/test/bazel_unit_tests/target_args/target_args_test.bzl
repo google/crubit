@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_make_analysis_test",
@@ -259,6 +260,72 @@ def _test_toolchain_headers_in_header_analysis_action():
         target_under_test = ":somelib_with_aspect",
     )
 
+def _extra_cpp_srcs_in_header_analysis_action_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+    analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "CppHeaderAnalysis"][0]
+    inputs = analysis_action.inputs.to_list()
+    argv = analysis_action.argv
+
+    extra_cpp_src_paths = [
+        i.path
+        for i in inputs
+        if i.path.endswith("rs_bindings_from_cc/test/bazel_unit_tests/target_args/extra_cpp_src.cc")
+    ]
+    asserts.equals(env, 1, len(extra_cpp_src_paths), "extra_cpp_src_paths: %s" % extra_cpp_src_paths)
+    if not extra_cpp_src_paths:
+        return analysistest.end(env)
+    extra_cpp_src_path = extra_cpp_src_paths[0]
+
+    asserts.true(
+        env,
+        "--extra_cpp_srcs=" + extra_cpp_src_path in argv,
+        "Expected '--extra_cpp_srcs=%s' in argv: %s" % (extra_cpp_src_path, argv),
+    )
+    asserts.true(
+        env,
+        any([
+            argv[i] == "-include" and argv[i + 1] == extra_cpp_src_path
+            for i in range(len(argv) - 1)
+        ]),
+        "Expected '-include %s' in argv: %s" % (extra_cpp_src_path, argv),
+    )
+
+    return analysistest.end(env)
+
+extra_cpp_srcs_in_header_analysis_action_test = crubit_make_analysis_test(
+    _extra_cpp_srcs_in_header_analysis_action_test_impl,
+)
+
+def _test_extra_cpp_srcs_in_header_analysis_action():
+    native.genrule(
+        name = "generate_extra_cpp_src",
+        outs = ["extra_cpp_src.cc"],
+        cmd = "touch $@",
+    )
+    cc_library(
+        name = "somelib_with_extra_cpp_srcs",
+        hdrs = ["someheader.h"],
+        deps = [":mylib"],
+        aspect_hints = [":somelib_with_extra_cpp_srcs_rust.hint"],
+        tags = ["manual"],
+    )
+    rust_api_from_cpp(
+        name = "somelib_with_extra_cpp_srcs_rust",
+        cpp_target = ":somelib_with_extra_cpp_srcs",
+        cpp_srcs = ["extra_cpp_src.cc"],
+        tags = ["manual"],
+    )
+    attach_aspect(
+        name = "somelib_with_extra_cpp_srcs_with_aspect",
+        dep = ":somelib_with_extra_cpp_srcs",
+    )
+
+    extra_cpp_srcs_in_header_analysis_action_test(
+        name = "extra_cpp_srcs_in_header_analysis_action_test",
+        target_under_test = ":somelib_with_extra_cpp_srcs_with_aspect",
+    )
+
 def _generated_headers_specified_with_full_path_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
@@ -436,6 +503,7 @@ def target_args_test(name):
     _test_textual_hdrs_not_in_targets_and_hdrs()
     _test_lib_has_toolchain_targets_and_headers()
     _test_toolchain_headers_in_header_analysis_action()
+    _test_extra_cpp_srcs_in_header_analysis_action()
     _test_generated_headers_specified_with_full_path()
     _test_target_features_empty()
     _test_target_features_nonempty()
@@ -449,6 +517,7 @@ def target_args_test(name):
             ":textual_hdrs_not_in_targets_and_hdrs_test",
             ":lib_has_toolchain_targets_and_headers_test",
             ":toolchain_headers_in_header_analysis_action_test",
+            ":extra_cpp_srcs_in_header_analysis_action_test",
             ":generated_headers_specified_with_full_path_test",
             ":target_features_empty_test",
             ":target_features_nonempty_test",
