@@ -16,17 +16,19 @@ extern crate rustc_middle;
 extern crate rustc_span;
 use arc_anyhow::Error;
 use database::code_snippet::CcSnippet;
-use database::BindingsGenerator;
+#[doc(hidden)]
+pub use database::empty_generic_args;
+use database::{BindingsGenerator, GenericArgs};
 use generate_comment::generate_source_location;
 use quote::quote;
 use rustc_middle::ty;
 use rustc_span::def_id::DefId;
 
-pub fn non_lifetime_args<'tcx>(args: &'tcx [ty::GenericArg<'tcx>]) -> &'tcx [ty::GenericArg<'tcx>] {
+pub fn non_lifetime_args<'tcx>(args: GenericArgs<'tcx>) -> GenericArgs<'tcx> {
     if args.iter().any(|arg| !matches!(arg.kind(), ty::GenericArgKind::Lifetime(_))) {
         args
     } else {
-        &[]
+        empty_generic_args()
     }
 }
 
@@ -34,7 +36,7 @@ pub fn non_lifetime_args<'tcx>(args: &'tcx [ty::GenericArg<'tcx>]) -> &'tcx [ty:
 pub fn item_name_for_error_report<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
-    args: &'tcx [ty::GenericArg<'tcx>],
+    args: GenericArgs<'tcx>,
 ) -> error_report::ItemName {
     let tcx = db.tcx();
     let args = non_lifetime_args(args);
@@ -55,7 +57,7 @@ pub fn item_name_for_error_report<'tcx>(
 
         tcx.with_stable_hashing_context(|mut hcx| {
             let mut hasher = stable_hash::StableHasher::new();
-            let key = (def_id, args);
+            let key = (def_id, args.as_slice());
 
             #[cfg_accessible(stable_hash::HashStable)]
             stable_hash::HashStable::hash_stable(&key, &mut hcx, &mut hasher);
@@ -80,7 +82,7 @@ pub fn item_name_for_error_report<'tcx>(
 pub fn report_must_bind_error<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
-    args: &'tcx [ty::GenericArg<'tcx>],
+    args: GenericArgs<'tcx>,
     err: &Error,
 ) {
     let tcx = db.tcx();
@@ -100,7 +102,7 @@ pub fn report_must_bind_error<'tcx>(
 #[macro_export]
 macro_rules! error_scope {
     ($db:expr, $def_id:expr) => {
-        $crate::error_scope!($db, $def_id, &[]);
+        $crate::error_scope!($db, $def_id, $crate::empty_generic_args());
     };
     ($db:expr, $def_id:expr, $args:expr) => {
         let db = $db;
@@ -122,7 +124,7 @@ pub enum ErrorStyle {
 pub fn unsupported_def_error_message<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
-    args: &'tcx [ty::GenericArg<'tcx>],
+    args: GenericArgs<'tcx>,
     err: &Error,
     style: ErrorStyle,
 ) -> String {
@@ -156,14 +158,14 @@ pub fn generate_unsupported_def<'tcx>(
     def_id: DefId,
     err: Error,
 ) -> CcSnippet<'tcx> {
-    generate_unsupported_def_with_args(db, def_id, &[], err)
+    generate_unsupported_def_with_args(db, def_id, empty_generic_args(), err)
 }
 
 #[doc(hidden)]
 pub fn generate_unsupported_def_with_args<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
-    args: &'tcx [ty::GenericArg<'tcx>],
+    args: GenericArgs<'tcx>,
     err: Error,
 ) -> CcSnippet<'tcx> {
     db.errors().assert_in_item(item_name_for_error_report(db, def_id, args));

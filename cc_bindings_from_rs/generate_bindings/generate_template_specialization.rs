@@ -23,7 +23,8 @@ use database::code_snippet::{
     TemplateSpecialization, TraitImplTemplateSpecialization,
 };
 use database::{
-    AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, StaticMethodMode, TypeLocation,
+    AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, GenericArgs, StaticMethodMode,
+    TypeLocation,
 };
 use error_report::{anyhow, ensure};
 use format_type::{format_with_cc_body, replace_all_regions_with_static};
@@ -78,8 +79,8 @@ pub fn parse_adt_template_specialization<'tcx>(
     );
 
     match self_ty.kind() {
-        ty::TyKind::Adt(adt, substs) => {
-            parse_adt_def_template_specialization(db, self_ty, *adt, substs)
+        &ty::TyKind::Adt(adt, substs) => {
+            parse_adt_def_template_specialization(db, self_ty, adt, substs)
         }
         ty::TyKind::Tuple(types) if !types.is_empty() => {
             Some(parse_tuple_template_specialization(db, self_ty, types))
@@ -109,7 +110,7 @@ fn parse_adt_def_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     adt: ty::AdtDef<'tcx>,
-    substs: ty::GenericArgsRef<'tcx>,
+    substs: GenericArgs<'tcx>,
 ) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
     use database::code_snippet::EnumSpecializationKind;
     use format_type::BridgedBuiltin;
@@ -247,7 +248,7 @@ fn parse_user_defined_adt_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     adt: ty::AdtDef<'tcx>,
-    substs: ty::GenericArgsRef<'tcx>,
+    substs: GenericArgs<'tcx>,
 ) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
     let tcx = db.tcx();
     if !query_compiler::has_non_lifetime_generics(tcx, adt.did()) {
@@ -268,7 +269,7 @@ fn build_user_defined_adt_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     adt: ty::AdtDef<'tcx>,
-    substs: ty::GenericArgsRef<'tcx>,
+    substs: GenericArgs<'tcx>,
 ) -> Result<AdtTemplateSpecialization<'tcx>> {
     let tcx = db.tcx();
     let GenericAdtHeader { fully_qualified_cc_name: adt_cc_name, .. } =
@@ -902,7 +903,7 @@ fn specialize_tuple<'tcx>(
             cc_short_name: quote! { Tuple },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
-            alignment_in_bytes: layout.align().abi.bytes(),
+            alignment_in_bytes: layout.align().bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
         def_id: None,
@@ -940,7 +941,7 @@ fn specialize_tuple<'tcx>(
     .collect();
 
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
-    let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
+    let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
 
     let main_api_tokens = quote! {
@@ -988,7 +989,7 @@ fn find_pointer_field_offset_impl<'tcx>(
         return find_pointer_field_offset_impl(tcx, *underlying_ty, current_offset);
     }
 
-    if let ty::TyKind::Adt(adt_def, args) = kind {
+    if let ty::TyKind::Adt(adt_def, args) = *kind {
         if adt_def.is_enum() {
             return None;
         }
@@ -1051,7 +1052,7 @@ fn find_capacity_field_offset_impl<'tcx>(
         return Some(current_offset);
     }
 
-    let ty::TyKind::Adt(adt_def, args) = kind else { return None };
+    let ty::TyKind::Adt(adt_def, args) = *kind else { return None };
     if adt_def.is_enum() {
         return None;
     }
@@ -1071,7 +1072,7 @@ fn compute_vec_layout_offsets<'tcx>(
     self_ty: Ty<'tcx>,
     layout: Layout<'tcx>,
 ) -> VecLayoutOffsets {
-    let (adt_def, adt_generic_args) = match self_ty.kind() {
+    let (adt_def, adt_generic_args) = match *self_ty.kind() {
         ty::TyKind::Adt(adt_def, args) => (adt_def, args),
         _ => panic!("Expected Adt type"),
     };
@@ -1128,7 +1129,7 @@ fn specialize_vec<'tcx>(
             cc_short_name: quote! { Vec },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
-            alignment_in_bytes: layout.align().abi.bytes(),
+            alignment_in_bytes: layout.align().bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
         def_id: Some(adt_def.did()),
@@ -1212,7 +1213,7 @@ fn specialize_vec<'tcx>(
 
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
-    let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
+    let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
 
     let main_api_tokens = quote! {
@@ -1434,7 +1435,7 @@ fn specialize_result<'tcx>(
             cc_short_name: quote! { Result },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
-            alignment_in_bytes: layout.align().abi.bytes(),
+            alignment_in_bytes: layout.align().bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
         def_id: Some(adt.did()),
@@ -1460,7 +1461,7 @@ fn specialize_result<'tcx>(
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
 
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
-    let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
+    let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
     let main_api_tokens = quote! {
         template<> __NEWLINE__
@@ -1638,7 +1639,7 @@ fn specialize_option<'tcx>(
             cc_short_name: quote! { Option },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
-            alignment_in_bytes: layout.align().abi.bytes(),
+            alignment_in_bytes: layout.align().bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
         def_id: Some(adt.did()),
@@ -1666,7 +1667,7 @@ fn specialize_option<'tcx>(
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
 
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
-    let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
+    let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
     // TODO(cramertj): Consider standardizing the `storage_` field with other representations in
     // `generate_adt`.
@@ -1742,7 +1743,7 @@ fn specialize_user_defined_adt<'tcx>(
     spec: &AdtTemplateSpecialization<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let self_ty = spec.self_ty_rs;
-    let ty::TyKind::Adt(adt_def, substs) = self_ty.kind() else {
+    let ty::TyKind::Adt(adt_def, substs) = *self_ty.kind() else {
         panic!("Self type is not an ADT");
     };
     generate_unsupported::error_scope!(db, adt_def.did(), substs);
@@ -2171,7 +2172,7 @@ pub fn generate_template_specialization<'tcx>(
         }
         TemplateSpecialization::StdHash(std_hash) => generate_std_hash_specialization(db, std_hash)
             .unwrap_or_else(|err| {
-                if let ty::TyKind::Adt(adt, substs) = std_hash.self_ty.kind() {
+                if let ty::TyKind::Adt(adt, substs) = *std_hash.self_ty.kind() {
                     generate_unsupported::error_scope!(db, adt.did(), substs);
                     generate_unsupported_def_with_args(db, adt.did(), substs, err).into_main_api()
                 } else {

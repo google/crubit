@@ -26,3 +26,17 @@ mod static_method_mode;
 pub use static_method_mode::StaticMethodMode;
 mod type_location;
 pub use type_location::TypeLocation;
+
+#[rustversion::before(2026-10-31)]
+pub type GenericArgs<'tcx> = rustc_middle::ty::GenericArgsRef<'tcx>;
+#[rustversion::since(2026-10-31)]
+pub type GenericArgs<'tcx> = rustc_middle::ty::GenericArgs<'tcx>;
+
+#[rustversion::before(2026-10-31)]
+pub fn empty_generic_args<'tcx>() -> GenericArgs<'tcx> {
+    rustc_middle::ty::List::empty()
+}
+#[rustversion::since(2026-10-31)]
+pub fn empty_generic_args<'tcx>() -> GenericArgs<'tcx> {
+    rustc_middle::ty::GenericArgs::empty()
+}

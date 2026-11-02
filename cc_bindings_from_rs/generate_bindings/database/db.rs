@@ -12,13 +12,13 @@ use crate::code_snippet::{
 use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths, UnqualifiedName};
 use crate::include_guard::IncludeGuard;
 use crate::type_location::TypeLocation;
-use crate::StaticMethodMode;
+use crate::{GenericArgs, StaticMethodMode};
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
 use dyn_format::Format;
 use error_report::{ErrorReporting, ReportFatalError};
 use proc_macro2::{Ident, TokenStream};
-use rustc_middle::ty::{self, Ty, TyCtxt};
+use rustc_middle::ty::{Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::Symbol;
 use std::collections::{HashMap, HashSet};
@@ -300,7 +300,7 @@ memoized::query_group! {
       /// - doesn't identify a function
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_function.rs?q=function:generate_function
-      fn generate_function(&self, def_id: DefId, generic_args: Option<ty::GenericArgsRef<'tcx>>, method_name_override: Option<&'static str>, static_method_mode: StaticMethodMode) -> Result<ApiSnippets<'tcx>>;
+      fn generate_function(&self, def_id: DefId, generic_args: Option<GenericArgs<'tcx>>, method_name_override: Option<&'static str>, static_method_mode: StaticMethodMode) -> Result<ApiSnippets<'tcx>>;
 
       /// Determines if an ADT needs bindings generated in the current crate. This is a distinct method from `generate_adt_core` because we may want core binding information for a type that does not support bindings. For example, when generating bindings that use a type that isn't defined in the current crate.
       ///
@@ -351,7 +351,7 @@ memoized::query_group! {
       /// Given a function identified by `fn_def_id` (generic or non-generic) tries to return
       /// the generic arguments that should be used in the generated Crubit bindings.
       /// Fails if any of the generic parameters cannot be replaced with a concrete type.
-      fn get_generic_args(&self, fn_def_id: DefId) -> Result<ty::GenericArgsRef<'tcx>>;
+      fn get_generic_args(&self, fn_def_id: DefId) -> Result<GenericArgs<'tcx>>;
 
       /// Parses `self_ty` into a supported template specialization, if one is available
       /// (e.g. `Option<T>`, `Result<T, E>`). This just checks the type conforms to the right shape
@@ -368,10 +368,10 @@ memoized::query_group! {
       fn does_type_implement_trait(&self, self_ty: Ty<'tcx>, trait_id: DefId) -> bool;
 
       /// Returns the generic args if `impl_id` applies to `target_ty`.
-      fn does_impl_apply(&self, impl_id: DefId, target_ty: Ty<'tcx>) -> Option<ty::GenericArgsRef<'tcx>>;
+      fn does_impl_apply(&self, impl_id: DefId, target_ty: Ty<'tcx>) -> Option<GenericArgs<'tcx>>;
 
       /// Returns the generic args if `impl_id` applies to `target_ty` matching the first trait argument.
-      fn does_trait_impl_apply_by_first_arg(&self, impl_id: DefId, target_ty: Ty<'tcx>) -> Option<ty::GenericArgsRef<'tcx>>;
+      fn does_trait_impl_apply_by_first_arg(&self, impl_id: DefId, target_ty: Ty<'tcx>) -> Option<GenericArgs<'tcx>>;
 
   }
 }

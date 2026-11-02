@@ -13,7 +13,7 @@ extern crate rustc_span;
 extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 use arc_anyhow::{anyhow, bail, ensure, Result};
-use database::BindingsGenerator;
+use database::{BindingsGenerator, GenericArgs};
 use query_compiler::{liberate_and_deanonymize_late_bound_regions, matches_qualified_name};
 use rustc_infer::infer::InferCtxt;
 use rustc_infer::traits::{Obligation, ObligationCause};
@@ -63,7 +63,7 @@ impl<'tcx> GenericClausesExt<'tcx> for ty::GenericClauses<'tcx> {
 pub fn get_generic_args<'tcx>(
     db: &BindingsGenerator<'tcx>,
     fn_def_id: DefId,
-) -> Result<ty::GenericArgsRef<'tcx>> {
+) -> Result<GenericArgs<'tcx>> {
     let tcx = db.tcx();
 
     let generics = tcx.generics_of(fn_def_id);

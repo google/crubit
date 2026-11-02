@@ -41,7 +41,8 @@ use database::code_snippet::{
     TemplateSpecialization, TraitImplTemplateSpecialization,
 };
 use database::{
-    AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, StaticMethodMode, TypeLocation,
+    AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, GenericArgs, StaticMethodMode,
+    TypeLocation,
 };
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
@@ -94,7 +95,7 @@ pub fn non_blanket_impls_for_ty<'tcx, 'a>(
     db: &'a BindingsGenerator<'tcx>,
     trait_def_id: DefId,
     self_ty: Ty<'tcx>,
-) -> impl Iterator<Item = (DefId, ty::GenericArgsRef<'tcx>)> + 'a {
+) -> impl Iterator<Item = (DefId, GenericArgs<'tcx>)> + 'a {
     let tcx = db.tcx();
     tcx.non_blanket_impls_for_ty(trait_def_id, self_ty).filter_map(move |impl_id| {
         let impl_args = db.does_impl_apply(impl_id, self_ty)?;
@@ -286,7 +287,7 @@ pub fn generate_associated_item<'tcx>(
     db: &BindingsGenerator<'tcx>,
     assoc_item: &ty::AssocItem,
     member_function_names: &mut HashSet<String>,
-    generic_args: Option<ty::GenericArgsRef<'tcx>>,
+    generic_args: Option<GenericArgs<'tcx>>,
     method_name_override: Option<&'static str>,
     static_method_mode: StaticMethodMode,
 ) -> Option<ApiSnippets<'tcx>> {
@@ -300,7 +301,7 @@ pub fn generate_associated_item<'tcx>(
     if should_receive_bindings(db, def_id).is_err() {
         return None;
     }
-    let args = generic_args.map_or(&[][..], |args| args.as_slice());
+    let args = generic_args.unwrap_or_else(database::empty_generic_args);
     generate_unsupported::error_scope!(db, def_id, args);
     let result = match assoc_item.kind {
         ty::AssocKind::Fn { .. } => {
@@ -378,7 +379,7 @@ fn erase_regions<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
 fn get_instantiated_trait_ref<'tcx>(
     tcx: TyCtxt<'tcx>,
     impl_id: DefId,
-    impl_args: ty::GenericArgsRef<'tcx>,
+    impl_args: GenericArgs<'tcx>,
 ) -> ty::TraitRef<'tcx> {
     let middle_trait_header = tcx.impl_trait_header(impl_id);
     normalize_ty(
@@ -396,7 +397,7 @@ pub fn does_impl_apply<'tcx>(
     db: &BindingsGenerator<'tcx>,
     impl_id: DefId,
     target_ty: Ty<'tcx>,
-) -> Option<ty::GenericArgsRef<'tcx>> {
+) -> Option<GenericArgs<'tcx>> {
     does_impl_apply_inner(db.tcx(), impl_id, target_ty, /* match_first_trait_arg= */ false)
 }
 
@@ -404,7 +405,7 @@ pub fn does_trait_impl_apply_by_first_arg<'tcx>(
     db: &BindingsGenerator<'tcx>,
     impl_id: DefId,
     target_ty: Ty<'tcx>,
-) -> Option<ty::GenericArgsRef<'tcx>> {
+) -> Option<GenericArgs<'tcx>> {
     does_impl_apply_inner(db.tcx(), impl_id, target_ty, /* match_first_trait_arg= */ true)
 }
 
@@ -413,7 +414,7 @@ fn does_impl_apply_inner<'tcx>(
     impl_id: DefId,
     target_ty: Ty<'tcx>,
     match_first_trait_arg: bool,
-) -> Option<ty::GenericArgsRef<'tcx>> {
+) -> Option<GenericArgs<'tcx>> {
     use rustc_infer::infer::TyCtxtInferExt;
     use rustc_infer::traits::{Obligation, ObligationCause};
     use rustc_trait_selection::infer::canonical::ir::TypingMode;
@@ -757,7 +758,7 @@ fn generate_into_impls<'tcx>(
 }
 
 fn is_newtype_relationship<'tcx>(tcx: TyCtxt<'tcx>, tgt_ty: Ty<'tcx>, src_ty: Ty<'tcx>) -> bool {
-    if let TyKind::Adt(adt_def, substs) = tgt_ty.kind()
+    if let TyKind::Adt(adt_def, substs) = *tgt_ty.kind()
         && adt_def.is_struct()
         && let variants = adt_def.variants()
         && variants.len() == 1
@@ -1039,7 +1040,7 @@ fn operator_impls_for_ty<'tcx>(
     db: &BindingsGenerator<'tcx>,
     trait_def_id: DefId,
     self_ty: Ty<'tcx>,
-) -> Vec<(DefId, ty::GenericArgsRef<'tcx>)> {
+) -> Vec<(DefId, GenericArgs<'tcx>)> {
     let tcx = db.tcx();
     let mut impls: Vec<_> = non_blanket_impls_for_ty(db, trait_def_id, self_ty).collect();
 
@@ -1048,24 +1049,24 @@ fn operator_impls_for_ty<'tcx>(
     // Since `forward_ref_binop!`/`forward_ref_unop!` usually create both, we dedup them.
     let overloads_covered_by_adt_impls: HashSet<Option<Ty<'tcx>>> = impls
         .iter()
-        .map(|(impl_id, impl_args)| {
-            operator_rhs_ty(get_instantiated_trait_ref(tcx, *impl_id, impl_args))
+        .map(|&(impl_id, impl_args)| {
+            operator_rhs_ty(get_instantiated_trait_ref(tcx, impl_id, impl_args))
                 .map(|ty| erase_regions(tcx, ty))
         })
         .collect();
 
     let ref_to_self_ty = Ty::new_ref(tcx, tcx.lifetimes.re_erased, self_ty, Mutability::Not);
     impls.extend(non_blanket_impls_for_ty(db, trait_def_id, ref_to_self_ty).filter(
-        |(impl_id, impl_args)| {
+        |&(impl_id, impl_args)| {
             // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it also
             // holds blanket impls like `impl<A, B> PartialEq<&B> for &A`. Exclude impls whose
             // uninstantiated referent is a bare type parameter.
-            let uninstantiated_self_ty = tcx.type_of(*impl_id).skip_binder();
+            let uninstantiated_self_ty = tcx.type_of(impl_id).skip_binder();
             let is_blanket_ref_impl = matches!(
                 uninstantiated_self_ty.kind(),
                 ty::TyKind::Ref(_, referent_ty, _) if matches!(referent_ty.kind(), ty::TyKind::Param(_))
             );
-            let trait_ref = get_instantiated_trait_ref(tcx, *impl_id, impl_args);
+            let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
             !is_blanket_ref_impl
                 && !overloads_covered_by_adt_impls
                     .contains(&operator_rhs_ty(trait_ref).map(|ty| erase_regions(tcx, ty)))
@@ -1768,7 +1769,7 @@ pub fn is_struct_aggregate<'tcx>(
         return Err(NotAggregateReason::NotAStruct);
     };
     let tcx = db.tcx();
-    let TyKind::Adt(adt_def, adt_generic_args) = self_ty.kind() else {
+    let TyKind::Adt(adt_def, adt_generic_args) = *self_ty.kind() else {
         return Err(NotAggregateReason::NotAStruct);
     };
     if !adt_def.is_struct() {
@@ -2580,7 +2581,7 @@ pub fn generate_adt_core_for_ty<'tcx>(
     }
 
     let layout = get_validated_layout(tcx, self_ty)?;
-    let alignment_in_bytes = layout.align().abi.bytes();
+    let alignment_in_bytes = layout.align().bytes();
     let size_in_bytes = layout.size().bytes();
 
     let cc_short_name = quote! { #cpp_name };
@@ -2673,7 +2674,7 @@ fn generate_variant_ctor<'tcx>(
         bail!("`#[non_exhaustive]` structs don't get public constructors");
     }
 
-    let TyKind::Adt(adt_def, adt_generic_args) = core.common.self_ty.kind() else {
+    let TyKind::Adt(adt_def, adt_generic_args) = *core.common.self_ty.kind() else {
         panic!("Attempted to generate constructor for a non-ADT type: {:?}", core.common.self_ty)
     };
 
@@ -2775,7 +2776,7 @@ fn generate_variant_ctor<'tcx>(
                 }
                 return result;
             }
-            let enum_kind = get_enum_kind(*adt_def).expect("AtdKindEnum implied EnumKind");
+            let enum_kind = get_enum_kind(adt_def).expect("AtdKindEnum implied EnumKind");
             let body = match enum_kind {
                 EnumKind::ReprC => {
                     let discr = core
@@ -2924,7 +2925,7 @@ struct CppFieldGenerator<'a, 'tcx> {
     layout: rustc_abi::Layout<'tcx>,
     self_ty: Ty<'tcx>,
     adt_def: Option<ty::AdtDef<'tcx>>,
-    adt_generic_args: Option<ty::GenericArgsRef<'tcx>>,
+    adt_generic_args: Option<GenericArgs<'tcx>>,
     cc_short_name: &'a TokenStream,
     cc_fully_qualified_name: &'a TokenStream,
     rs_fully_qualified_name: &'a TokenStream,
@@ -4260,7 +4261,7 @@ fn format_const_value<'tcx>(
 pub fn generate_const<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
-    generic_args: Option<ty::GenericArgsRef<'tcx>>,
+    generic_args: Option<GenericArgs<'tcx>>,
 ) -> Result<ApiSnippets<'tcx>> {
     use get_generic_args::GenericClausesExt;
     let tcx = db.tcx();

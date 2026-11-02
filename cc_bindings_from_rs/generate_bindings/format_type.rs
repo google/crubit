@@ -25,8 +25,8 @@ use crubit_feature::CrubitFeature;
 use database::code_snippet::{
     CcPrerequisites, CcSnippet, CcSnippets, CrubitAbiTypeWithCcPrereqs, TemplateSpecialization,
 };
-use database::BindingsGenerator;
 use database::{rename_c_stdlib_functions, rename_clang_builtin_macros, TypeLocation};
+use database::{BindingsGenerator, GenericArgs};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
@@ -408,7 +408,7 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
     db: &BindingsGenerator<'tcx>,
     cpp_type_str: &str,
     adt: ty::AdtDef<'tcx>,
-    substs: &'tcx ty::List<ty::GenericArg<'tcx>>,
+    substs: GenericArgs<'tcx>,
     prereqs: &mut CcPrerequisites<'tcx>,
     location: TypeLocation,
 ) -> Result<TokenStream> {
@@ -1012,7 +1012,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 .layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
                 .expect("`layout_of` is expected to succeed for the builtin `char` type")
                 .layout;
-            assert_eq!(4, layout.align().abi.bytes());
+            assert_eq!(4, layout.align().bytes());
             assert_eq!(4, layout.size().bytes());
             assert!(matches!(
                 layout.backend_repr(),
@@ -1738,7 +1738,7 @@ fn format_transparent_pointee<'tcx>(
     Some(quote! { std::mem::MaybeUninit<#generic_ty> })
 }
 
-fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
+fn has_non_lifetime_substs(substs: GenericArgs<'_>) -> bool {
     substs.iter().any(|subst| subst.as_region().is_none())
 }
 type BinderWithFnSigTys<'tcx> = ty::Binder<'tcx, ty::FnSigTys<TyCtxt<'tcx>>>;
@@ -2122,7 +2122,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
             ty::FloatTy::F64 => CrubitAbiType::transmute("f64", "double"),
             _ => bail!("Unsupported bridge type: {float_ty:?}"),
         },
-        ty::TyKind::Adt(adt, substs) => {
+        &ty::TyKind::Adt(adt, substs) => {
             // Check if it has it's own bridge attrs
             let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
                 .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
@@ -2161,8 +2161,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 }
 
                 // if it doesn't, try seeing if it's a builtin.
-                if let Some(bridged_builtin @ BridgedBuiltin::Option) =
-                    BridgedBuiltin::new(db, *adt)
+                if let Some(bridged_builtin @ BridgedBuiltin::Option) = BridgedBuiltin::new(db, adt)
                 {
                     return bridged_builtin.crubit_abi_type(db, substs);
                 }
@@ -2282,7 +2281,7 @@ impl BridgedBuiltin {
     pub fn crubit_abi_type<'tcx>(
         self,
         db: &BindingsGenerator<'tcx>,
-        substs: &[GenericArg<'tcx>],
+        substs: GenericArgs<'tcx>,
     ) -> Result<CrubitAbiTypeWithCcPrereqs<'tcx>> {
         match self {
             BridgedBuiltin::Result | BridgedBuiltin::Vec => {
@@ -2679,9 +2678,9 @@ pub fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
 
     let data_layout = tcx.data_layout();
     let ptr_size = data_layout.pointer_size().bytes();
-    let ptr_align = data_layout.pointer_align().abi.bytes();
+    let ptr_align = data_layout.pointer_align().bytes();
 
-    assert_eq!(ptr_align, layout.align().abi.bytes());
+    assert_eq!(ptr_align, layout.align().bytes());
     assert_eq!(2 * ptr_size, layout.size().bytes());
     assert!(has_slice_layout_representation(layout.backend_repr()));
 }

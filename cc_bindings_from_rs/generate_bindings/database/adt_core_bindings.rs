@@ -76,10 +76,10 @@ pub struct AdtCoreBindings<'tcx> {
 }
 
 impl<'tcx> AdtCoreBindings<'tcx> {
-    pub fn substs(&self) -> &'tcx [rustc_middle::ty::GenericArg<'tcx>] {
-        match self.common.self_ty.kind() {
+    pub fn substs(&self) -> crate::GenericArgs<'tcx> {
+        match *self.common.self_ty.kind() {
             rustc_middle::ty::TyKind::Adt(_, substs) => substs,
-            _ => &[],
+            _ => crate::empty_generic_args(),
         }
     }
 }

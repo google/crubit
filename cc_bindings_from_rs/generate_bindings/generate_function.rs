@@ -16,7 +16,7 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, RsSnippet};
-use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
+use database::{BindingsGenerator, GenericArgs, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail};
 use format_type::CcType;
 use format_type::{
@@ -97,7 +97,7 @@ fn thunk_name<'tcx>(
     def_id: DefId,
     export_name: Option<Symbol>,
     needs_thunk: bool,
-    generic_args: ty::GenericArgsRef<'tcx>,
+    generic_args: GenericArgs<'tcx>,
 ) -> String {
     if needs_thunk {
         make_thunk_name(db, ThunkKind::Function { def_id, export_name, substs: generic_args })
@@ -549,7 +549,7 @@ fn function_kind<'tcx>(
     tcx: TyCtxt<'tcx>,
     def_id: DefId,
     sig: &ty::FnSig<'tcx>,
-    generic_args: ty::GenericArgsRef<'tcx>,
+    generic_args: GenericArgs<'tcx>,
 ) -> Result<FunctionKind<'tcx>> {
     match tcx.def_kind(def_id) {
         DefKind::Fn => Ok(FunctionKind::Free),
@@ -583,7 +583,7 @@ fn function_kind<'tcx>(
 fn self_ty_of_method<'tcx>(
     tcx: TyCtxt<'tcx>,
     def_id: DefId,
-    generic_args: ty::GenericArgsRef<'tcx>,
+    generic_args: GenericArgs<'tcx>,
 ) -> Ty<'tcx> {
     let impl_id = tcx.impl_of_assoc(def_id);
 
@@ -591,7 +591,7 @@ fn self_ty_of_method<'tcx>(
 
     let impl_generics = tcx.generics_of(impl_id);
     let num_impl_params = impl_generics.count();
-    let impl_args = tcx.mk_args(&generic_args[..num_impl_params]);
+    let impl_args = tcx.mk_args(&generic_args.as_slice()[..num_impl_params]);
 
     normalize_ty(tcx, tcx.param_env(impl_id), tcx.type_of(impl_id).instantiate(tcx, impl_args))
 }
@@ -871,7 +871,8 @@ fn format_trait_ref_for_cc<'tcx>(
     let trait_name = db
         .symbol_canonical_name(trait_ref.def_id)
         .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db))?;
-    let mut trait_args = trait_ref.args[1..].iter().filter_map(|arg| arg.as_type()).peekable();
+    let mut trait_args =
+        trait_ref.args.as_slice()[1..].iter().filter_map(|arg| arg.as_type()).peekable();
     let mut prereqs = CcPrerequisites::default();
     let tokens = if trait_args.peek().is_none() {
         quote! { #trait_name }
@@ -893,7 +894,8 @@ fn format_trait_ref_for_rs<'tcx>(
     let trait_name = db
         .symbol_canonical_name(trait_ref.def_id)
         .map(|fully_qualified_name| fully_qualified_name.format_for_rs())?;
-    let mut trait_args = trait_ref.args[1..].iter().filter_map(|arg| arg.as_type()).peekable();
+    let mut trait_args =
+        trait_ref.args.as_slice()[1..].iter().filter_map(|arg| arg.as_type()).peekable();
     if trait_args.peek().is_none() {
         Ok(quote! { #trait_name })
     } else {
@@ -921,7 +923,7 @@ pub fn bool_constraint_template_prefix() -> TokenStream {
 pub fn generate_function<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
-    self_generic_args: Option<ty::GenericArgsRef<'tcx>>,
+    self_generic_args: Option<GenericArgs<'tcx>>,
     method_name_override: Option<&'static str>,
     static_method_mode: StaticMethodMode,
 ) -> Result<ApiSnippets<'tcx>> {

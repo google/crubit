@@ -1298,7 +1298,7 @@ fn generate_item<'tcx>(
     if attributes.must_bind
         && let Err(e) = &generated
     {
-        report_must_bind_error(db, def_id, &[], e);
+        report_must_bind_error(db, def_id, database::empty_generic_args(), e);
     }
     generated
 }

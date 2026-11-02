@@ -61,7 +61,7 @@ pub fn is_std_ptr_non_null(tcx: TyCtxt<'_>, did: DefId) -> bool {
 /// and has a initialized (non-union), scalar ABI.
 pub fn has_pointer_abi(from: Layout, data_layout: &TargetDataLayout) -> bool {
     from.size() == data_layout.pointer_size()
-        && from.align().abi == data_layout.pointer_align().abi
+        && from.align() == data_layout.pointer_align()
         && matches!(from.backend_repr(), BackendRepr::Scalar(Scalar::Initialized { .. }))
 }
 
@@ -137,7 +137,7 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
         // - `#[repr(C)]` structs and unions,
         // - Discriminant-only enums (b/259984090).
         ty::TyKind::Tuple { .. } => false, // An empty tuple (`()` - the unit type) is handled above.
-        ty::TyKind::Adt(adt, substs) => {
+        &ty::TyKind::Adt(adt, substs) => {
             if is_std_ptr_non_null(tcx, adt.did()) {
                 let pointee = substs[0].expect_ty();
                 return is_abi_compatible_pointee(db, pointee);
@@ -319,7 +319,7 @@ fn has_unrevealed_opaque_type<'tcx>(
             if matches!(inner_ty.kind(), ty::TyKind::Alias(..)) {
                 return true;
             }
-            if let ty::TyKind::Adt(adt_def, substs) = inner_ty.kind() {
+            if let ty::TyKind::Adt(adt_def, substs) = *inner_ty.kind() {
                 if !seen.insert(adt_def.did()) || adt_def.is_phantom_data() {
                     continue;
                 }

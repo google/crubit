@@ -21,7 +21,7 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
-use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
+use database::{AdtCoreBindings, BindingsGenerator, GenericArgs, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use format_type::{can_be_made_layout_compatible, format_cc_ident};
 use generate_comment::{generate_deprecated_tag, generate_doc_comment};
@@ -331,7 +331,7 @@ pub fn analyze_enum<'tcx>(
 
 fn analyze_field<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    generic_args: ty::GenericArgsRef<'tcx>,
+    generic_args: GenericArgs<'tcx>,
     field_def: &ty::FieldDef,
     field_index: FieldIdx,
     field_shape: &FieldsShape<FieldIdx>,

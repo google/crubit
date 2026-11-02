@@ -13,7 +13,7 @@ use code_gen_utils::escape_non_identifier_chars;
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiTypeToRustExprTokens;
 use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
-use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
+use database::{AdtCoreBindings, BindingsGenerator, GenericArgs, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use format_type::CcType;
 use format_type::{
@@ -1022,8 +1022,8 @@ pub fn generate_trait_thunks<'tcx>(
 }
 
 pub enum ThunkKind<'tcx> {
-    Function { def_id: DefId, export_name: Option<Symbol>, substs: ty::GenericArgsRef<'tcx> },
-    TraitMethod { method: &'tcx ty::AssocItem, substs: ty::GenericArgsRef<'tcx> },
+    Function { def_id: DefId, export_name: Option<Symbol>, substs: GenericArgs<'tcx> },
+    TraitMethod { method: &'tcx ty::AssocItem, substs: GenericArgs<'tcx> },
 }
 
 pub fn make_thunk_name<'tcx>(db: &BindingsGenerator<'tcx>, kind: ThunkKind<'tcx>) -> String {
@@ -1093,7 +1093,7 @@ pub fn function_symbol_name<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     export_name: Option<Symbol>,
-    generic_args: ty::GenericArgsRef<'tcx>,
+    generic_args: GenericArgs<'tcx>,
 ) -> String {
     let tcx = db.tcx();
     if db.is_golden_test() {
