@@ -476,6 +476,23 @@ pub fn generated_items_to_token_stream<'db>(
     tokens
 }
 
+/// Returns `integer_constant` as an unsuffixed integer literal (e.g. `4` or `-1`), or as `true` or
+/// `false` if `is_bool`.
+pub fn integer_literal_tokens(integer_constant: IntegerConstant, is_bool: bool) -> TokenStream {
+    let wrapped_value = integer_constant.wrapped_value();
+    if is_bool {
+        if wrapped_value == 0 {
+            quote! {false}
+        } else {
+            quote! {true}
+        }
+    } else if integer_constant.is_negative() {
+        Literal::i64_unsuffixed(wrapped_value as i64).into_token_stream()
+    } else {
+        Literal::u64_unsuffixed(wrapped_value).into_token_stream()
+    }
+}
+
 pub fn integer_constant_to_token_stream(
     db: &crate::BindingsGenerator<'_>,
     integer_constant: IntegerConstant,
@@ -487,20 +504,10 @@ pub fn integer_constant_to_token_stream(
             underlying_type.display(db),
         )
     };
-    let is_negative = integer_constant.is_negative();
-    let wrapped_value = integer_constant.wrapped_value();
+    let mut value = integer_literal_tokens(integer_constant, underlying_type.is_bool());
     Ok(if underlying_type.is_bool() {
-        if wrapped_value == 0 {
-            quote! {false}
-        } else {
-            quote! {true}
-        }
+        value
     } else {
-        let mut value = if is_negative {
-            Literal::i64_unsuffixed(wrapped_value as i64).into_token_stream()
-        } else {
-            Literal::u64_unsuffixed(wrapped_value).into_token_stream()
-        };
         if underlying_type.is_char() {
             value = quote! {
                 #value as u8
