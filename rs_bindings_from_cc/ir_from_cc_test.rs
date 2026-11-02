@@ -7261,6 +7261,67 @@ fn test_top_level_constexpr_string_view_from_mutable_array_is_unsupported() {
 }
 
 #[gtest]
+fn test_only_constexpr_out_of_line_member_definitions_are_constants() {
+    // A static data member that is defined `constexpr` outside its class is a constant, like one
+    // that is initialized in the class. Other variables that are defined after they are declared
+    // keep referring to the C++ object, as they did before out-of-line definitions were looked
+    // at: their authors chose an object with an address over an `inline constexpr`.
+    let proto = ir_proto_from_cc(
+        r#"
+        struct S {
+          static const int kConstexprOutOfLine;
+          static const int kConstOutOfLine;
+        };
+        inline constexpr int S::kConstexprOutOfLine = 5;
+        inline const int S::kConstOutOfLine = 6;
+
+        extern const int kExternThenConstexpr;
+        constexpr int kExternThenConstexpr = 7;
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(ir, quote! { Constant { ... rs_name: "kConstexprOutOfLine", ... } });
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kConstexprOutOfLine", ... } });
+    // The value comes from the definition.
+    let constant = ir.constants().find(|c| c.cc_name() == "kConstexprOutOfLine").unwrap();
+    expect_that!(constant.value(), integer_constant_value(5));
+
+    assert_ir_matches!(ir, quote! { GlobalVar { ... rs_name: "kConstOutOfLine", ... } });
+    assert_ir_not_matches!(ir, quote! { Constant { ... rs_name: "kConstOutOfLine", ... } });
+    assert_ir_matches!(ir, quote! { GlobalVar { ... rs_name: "kExternThenConstexpr", ... } });
+    assert_ir_not_matches!(ir, quote! { Constant { ... rs_name: "kExternThenConstexpr", ... } });
+}
+
+#[gtest]
+fn test_unsupported_constexpr_out_of_line_member_definitions_are_unsupported() {
+    // A member with an out-of-line `constexpr` definition is treated like one that is initialized
+    // in the class, including when its type isn't supported for constants: here a floating-point
+    // member, and a member of the class's own type (which can only be defined out of line).
+    let proto = ir_proto_from_cc(
+        r#"
+        struct S {
+          static const double kDouble;
+          static const S kDefault;
+          int i;
+        };
+        inline constexpr double S::kDouble = 1.5;
+        inline constexpr S S::kDefault = {1};
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "S::kDouble", ... } });
+    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "S::kDefault", ... } });
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kDouble", ... } });
+    assert_ir_not_matches!(ir, quote! { Constant { ... rs_name: "kDouble", ... } });
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kDefault", ... } });
+    assert_ir_not_matches!(ir, quote! { Constant { ... rs_name: "kDefault", ... } });
+}
+
+#[gtest]
 fn test_anonymous_enum() {
     let proto = ir_proto_from_cc("enum { kFoo = 1, kBar = 2 };").unwrap();
 
