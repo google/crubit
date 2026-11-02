@@ -13,6 +13,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -90,6 +91,7 @@
 #include "clang/Lex/Lexer.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
+#include "clang/Tooling/Inclusions/StandardLibrary.h"
 #include "clang/UnifiedSymbolResolution/USRGeneration.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
@@ -1888,6 +1890,108 @@ void SetMustBindItem(ir_proto::Item& item) {
   }
 }
 
+void Importer::SetStdHeaders(const clang::Decl& decl, ir_proto::Item& item) {
+  auto add_std_headers = [&](auto* type_item) {
+    std::set<std::string> std_headers;
+    CollectStdHeaders(decl, std_headers);
+    for (const std::string& header : std_headers) {
+      type_item->add_std_headers(header);
+    }
+  };
+  switch (item.kind()) {
+    case ir_proto::Item::kRecord:
+      add_std_headers(item.mutable_record());
+      break;
+    case ir_proto::Item::kIncompleteRecord:
+      add_std_headers(item.mutable_incomplete_record());
+      break;
+    case ir_proto::Item::kEnum:
+      add_std_headers(item.mutable_enum_decl());
+      break;
+    case ir_proto::Item::kTypeAlias:
+      add_std_headers(item.mutable_type_alias());
+      break;
+    case ir_proto::Item::kExistingRustType:
+      add_std_headers(item.mutable_existing_rust_type());
+      break;
+    default:
+      break;
+  }
+}
+
+void Importer::CollectStdHeaders(const clang::Decl& decl,
+                                 std::set<std::string>& out) {
+  // The generated code names a specialization with a canonical
+  // `preferred_name` alias (e.g. `std::string_view`) by the alias, so its
+  // template arguments (e.g. `std::char_traits<char>`) are not named.
+  if (const clang::TypedefNameDecl* alias_decl =
+          GetTemplateSpecializationAlias(const_cast<clang::Decl*>(&decl))) {
+    CollectStdHeaders(*alias_decl, out);
+    return;
+  }
+
+  // `std::` excludes global declarations that merely share a C library name
+  // (e.g. `struct time`), and the system header check excludes user code that
+  // declares something in `namespace std`.
+  if (IsInSystemHeader(decl.getLocation())) {
+    if (std::optional<clang::tooling::stdlib::Symbol> symbol =
+            std_symbol_recognizer_(&decl);
+        symbol.has_value() && symbol->scope().starts_with("std::")) {
+      if (std::optional<clang::tooling::stdlib::Header> header =
+              symbol->header()) {
+        out.insert(header->name().trim("<>").str());
+      }
+    }
+  }
+
+  // Also cover enclosing records (e.g. `Outer<std::mutex>::Inner`).
+  if (const auto* enclosing_record =
+          clang::dyn_cast_or_null<clang::RecordDecl>(decl.getDeclContext())) {
+    CollectStdHeaders(*enclosing_record, out);
+  }
+
+  // The IR doesn't represent the template arguments of a `Record`, so cover
+  // them here.
+  const auto* specialization_decl =
+      clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(&decl);
+  if (specialization_decl == nullptr) return;
+
+  struct TemplateArgumentVisitor
+      : public clang::RecursiveASTVisitor<TemplateArgumentVisitor> {
+    TemplateArgumentVisitor(Importer& importer, std::set<std::string>& out)
+        : importer(importer), out(out) {}
+    Importer& importer;
+    std::set<std::string>& out;
+    bool VisitTagType(clang::TagType* type) {
+      // `RecursiveASTVisitor` doesn't traverse the decl (e.g. the template
+      // arguments of a specialization) behind a `TagType`.
+      if (const clang::TagDecl* tag_decl = type->getAsTagDecl()) {
+        importer.CollectStdHeaders(*tag_decl, out);
+      }
+      return true;
+    }
+    bool TraverseTemplateArgument(const clang::TemplateArgument& arg) {
+      // E.g. the `std::vector` in `MyTemplate<std::vector>`.
+      if (arg.getKind() == clang::TemplateArgument::Template ||
+          arg.getKind() == clang::TemplateArgument::TemplateExpansion) {
+        if (const clang::TemplateDecl* template_decl =
+                arg.getAsTemplateOrTemplatePattern().getAsTemplateDecl()) {
+          importer.CollectStdHeaders(*template_decl, out);
+        }
+      }
+      // E.g. the `std::byte` in `MyTemplate<std::byte{1}>`.
+      if (clang::QualType type = arg.getNonTypeTemplateArgumentType();
+          !type.isNull()) {
+        TraverseType(type);
+      }
+      return RecursiveASTVisitor::TraverseTemplateArgument(arg);
+    }
+  };
+  TemplateArgumentVisitor(*this, out)
+      .TraverseTemplateArguments(
+          specialization_decl->getTemplateArgs().asArray());
+}
+
 // Returns the DeclContext that determines `decl`'s enclosing item in the IR, or
 // nullptr if `decl` is always placed at the top level.
 //
@@ -2441,6 +2545,7 @@ absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
       if (*must_bind) {
         SetMustBindItem(*result);
       }
+      SetStdHeaders(*decl, *result);
       if (*pub_crate) {
         if (result->has_func()) {
           result->mutable_func()->set_is_pub_crate(true);

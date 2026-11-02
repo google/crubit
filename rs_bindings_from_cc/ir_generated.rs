@@ -198,6 +198,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, size_align, $($arg:tt)*) => { $msg.set_size_align($($arg)*) };
     ($msg:ident, spelling, $($arg:tt)*) => { $msg.set_spelling($($arg)*) };
     ($msg:ident, std_atomic, $($arg:tt)*) => { $msg.set_std_atomic($($arg)*) };
+    ($msg:ident, std_headers, $($arg:tt)*) => { $msg.set_std_headers($($arg)*) };
     ($msg:ident, std_optional, $($arg:tt)*) => { $msg.set_std_optional($($arg)*) };
     ($msg:ident, std_pair, $($arg:tt)*) => { $msg.set_std_pair($($arg)*) };
     ($msg:ident, std_shared_ptr, $($arg:tt)*) => { $msg.set_std_shared_ptr($($arg)*) };
@@ -2726,6 +2727,7 @@ mod __defs {
         pub deprecated: FfiString,
         pub is_thread_safe: bool,
         pub is_explicit_class_template_instantiation_definition: bool,
+        pub std_headers: FfiVec<FfiString>,
         pub children: FfiVec<Item>,
     }
 
@@ -2776,6 +2778,7 @@ mod __defs {
                 .field("deprecated", &self.deprecated())
                 .field("is_thread_safe", &self.is_thread_safe)
                 .field("is_explicit_class_template_instantiation_definition", &self.is_explicit_class_template_instantiation_definition)
+                .field("std_headers", &self.std_headers)
                 .field("children", &self.children)
                 .finish()
         }
@@ -2837,6 +2840,7 @@ mod __defs {
             deprecated: FfiString::EMPTY,
             is_thread_safe: false,
             is_explicit_class_template_instantiation_definition: false,
+            std_headers: FfiVec::EMPTY,
             children: FfiVec::EMPTY,
         };
         pub fn rs_name(&self) -> &Identifier {
@@ -3041,6 +3045,9 @@ mod __defs {
         pub fn is_explicit_class_template_instantiation_definition(&self) -> bool {
             self.is_explicit_class_template_instantiation_definition
         }
+        pub fn std_headers(&self) -> &[FfiString] {
+            self.std_headers.as_slice()
+        }
         pub fn children(&self) -> &[Item] {
             self.children.as_slice()
         }
@@ -3221,13 +3228,16 @@ mod __defs {
             self.is_explicit_class_template_instantiation_definition = val;
             &mut self.is_explicit_class_template_instantiation_definition
         }
+        pub fn set_std_headers(&mut self, val: FfiVec<FfiString>) {
+            self.std_headers = val;
+        }
         pub fn set_children(&mut self, val: FfiVec<Item>) {
             self.children = val;
         }
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<Record>() == 1096);
+        assert!(core::mem::size_of::<Record>() == 1120);
         assert!(core::mem::align_of::<Record>() == 8);
         assert!(core::mem::offset_of!(Record, rs_name) == 8);
         assert!(core::mem::offset_of!(Record, cc_name) == 24);
@@ -3273,7 +3283,8 @@ mod __defs {
         assert!(core::mem::offset_of!(Record, deprecated) == 1048);
         assert!(core::mem::offset_of!(Record, is_thread_safe) == 1064);
         assert!(core::mem::offset_of!(Record, is_explicit_class_template_instantiation_definition) == 1065);
-        assert!(core::mem::offset_of!(Record, children) == 1072);
+        assert!(core::mem::offset_of!(Record, std_headers) == 1072);
+        assert!(core::mem::offset_of!(Record, children) == 1096);
     };
 
     #[repr(C)]
@@ -3289,6 +3300,7 @@ mod __defs {
         pub record_type: RecordType,
         pub enclosing_item_id: ItemId,
         pub must_bind: bool,
+        pub std_headers: FfiVec<FfiString>,
     }
 
     impl core::fmt::Debug for IncompleteRecord {
@@ -3303,6 +3315,7 @@ mod __defs {
                 .field("record_type", &self.record_type)
                 .field("enclosing_item_id", &self.enclosing_item_id())
                 .field("must_bind", &self.must_bind)
+                .field("std_headers", &self.std_headers)
                 .finish()
         }
     }
@@ -3328,6 +3341,7 @@ mod __defs {
             record_type: RecordType::EMPTY,
             enclosing_item_id: ItemId::EMPTY,
             must_bind: false,
+            std_headers: FfiVec::EMPTY,
         };
         pub fn cc_name(&self) -> &Identifier {
             &self.cc_name
@@ -3370,6 +3384,9 @@ mod __defs {
         pub fn must_bind(&self) -> bool {
             self.must_bind
         }
+        pub fn std_headers(&self) -> &[FfiString] {
+            self.std_headers.as_slice()
+        }
         pub fn set_cc_name(&mut self, val: Identifier) -> &mut Identifier {
             self.cc_name = val;
             &mut self.cc_name
@@ -3407,10 +3424,13 @@ mod __defs {
             self.must_bind = val;
             &mut self.must_bind
         }
+        pub fn set_std_headers(&mut self, val: FfiVec<FfiString>) {
+            self.std_headers = val;
+        }
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<IncompleteRecord>() == 120);
+        assert!(core::mem::size_of::<IncompleteRecord>() == 144);
         assert!(core::mem::align_of::<IncompleteRecord>() == 8);
         assert!(core::mem::offset_of!(IncompleteRecord, cc_name) == 8);
         assert!(core::mem::offset_of!(IncompleteRecord, rs_name) == 24);
@@ -3421,6 +3441,7 @@ mod __defs {
         assert!(core::mem::offset_of!(IncompleteRecord, record_type) == 96);
         assert!(core::mem::offset_of!(IncompleteRecord, enclosing_item_id) == 104);
         assert!(core::mem::offset_of!(IncompleteRecord, must_bind) == 112);
+        assert!(core::mem::offset_of!(IncompleteRecord, std_headers) == 120);
     };
 
     #[repr(C)]
@@ -3555,6 +3576,7 @@ mod __defs {
         pub nodiscard: FfiString,
         pub deprecated: FfiString,
         pub doc_comment: FfiString,
+        pub std_headers: FfiVec<FfiString>,
     }
 
     impl core::fmt::Debug for Enum {
@@ -3576,6 +3598,7 @@ mod __defs {
                 .field("nodiscard", &self.nodiscard())
                 .field("deprecated", &self.deprecated())
                 .field("doc_comment", &self.doc_comment())
+                .field("std_headers", &self.std_headers)
                 .finish()
         }
     }
@@ -3608,6 +3631,7 @@ mod __defs {
             nodiscard: FfiString::EMPTY,
             deprecated: FfiString::EMPTY,
             doc_comment: FfiString::EMPTY,
+            std_headers: FfiVec::EMPTY,
         };
         pub fn cc_name(&self) -> &Identifier {
             &self.cc_name
@@ -3706,6 +3730,9 @@ mod __defs {
         pub fn doc_comment(&self) -> Option<&str> {
             self.has_doc_comment().then(|| self.doc_comment.as_str())
         }
+        pub fn std_headers(&self) -> &[FfiString] {
+            self.std_headers.as_slice()
+        }
         pub fn set_cc_name(&mut self, val: Identifier) -> &mut Identifier {
             self.cc_name = val;
             &mut self.cc_name
@@ -3776,10 +3803,13 @@ mod __defs {
             self.doc_comment = val;
             &mut self.doc_comment
         }
+        pub fn set_std_headers(&mut self, val: FfiVec<FfiString>) {
+            self.std_headers = val;
+        }
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<Enum>() == 400);
+        assert!(core::mem::size_of::<Enum>() == 424);
         assert!(core::mem::align_of::<Enum>() == 8);
         assert!(core::mem::offset_of!(Enum, cc_name) == 8);
         assert!(core::mem::offset_of!(Enum, rs_name) == 24);
@@ -3797,6 +3827,7 @@ mod __defs {
         assert!(core::mem::offset_of!(Enum, nodiscard) == 352);
         assert!(core::mem::offset_of!(Enum, deprecated) == 368);
         assert!(core::mem::offset_of!(Enum, doc_comment) == 384);
+        assert!(core::mem::offset_of!(Enum, std_headers) == 400);
     };
 
     #[repr(C)]
@@ -4040,6 +4071,7 @@ mod __defs {
         pub must_bind: bool,
         pub deprecated: FfiString,
         pub lifetime_inputs: FfiVec<FfiString>,
+        pub std_headers: FfiVec<FfiString>,
     }
 
     impl core::fmt::Debug for TypeAlias {
@@ -4058,6 +4090,7 @@ mod __defs {
                 .field("must_bind", &self.must_bind)
                 .field("deprecated", &self.deprecated())
                 .field("lifetime_inputs", &self.lifetime_inputs)
+                .field("std_headers", &self.std_headers)
                 .finish()
         }
     }
@@ -4087,6 +4120,7 @@ mod __defs {
             must_bind: false,
             deprecated: FfiString::EMPTY,
             lifetime_inputs: FfiVec::EMPTY,
+            std_headers: FfiVec::EMPTY,
         };
         pub fn cc_name(&self) -> &Identifier {
             &self.cc_name
@@ -4162,6 +4196,9 @@ mod __defs {
         pub fn lifetime_inputs(&self) -> &[FfiString] {
             self.lifetime_inputs.as_slice()
         }
+        pub fn std_headers(&self) -> &[FfiString] {
+            self.std_headers.as_slice()
+        }
         pub fn set_cc_name(&mut self, val: Identifier) -> &mut Identifier {
             self.cc_name = val;
             &mut self.cc_name
@@ -4218,10 +4255,13 @@ mod __defs {
         pub fn set_lifetime_inputs(&mut self, val: FfiVec<FfiString>) {
             self.lifetime_inputs = val;
         }
+        pub fn set_std_headers(&mut self, val: FfiVec<FfiString>) {
+            self.std_headers = val;
+        }
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<TypeAlias>() == 368);
+        assert!(core::mem::size_of::<TypeAlias>() == 392);
         assert!(core::mem::align_of::<TypeAlias>() == 8);
         assert!(core::mem::offset_of!(TypeAlias, cc_name) == 8);
         assert!(core::mem::offset_of!(TypeAlias, rs_name) == 24);
@@ -4236,6 +4276,7 @@ mod __defs {
         assert!(core::mem::offset_of!(TypeAlias, must_bind) == 320);
         assert!(core::mem::offset_of!(TypeAlias, deprecated) == 328);
         assert!(core::mem::offset_of!(TypeAlias, lifetime_inputs) == 344);
+        assert!(core::mem::offset_of!(TypeAlias, std_headers) == 368);
     };
 
     #[repr(C)]
@@ -4760,6 +4801,7 @@ mod __defs {
         pub impl_debug: bool,
         pub label_hint: FfiString,
         pub is_trivially_copyable: bool,
+        pub std_headers: FfiVec<FfiString>,
     }
 
     impl core::fmt::Debug for ExistingRustType {
@@ -4777,6 +4819,7 @@ mod __defs {
                 .field("impl_debug", &self.impl_debug)
                 .field("label_hint", &self.label_hint())
                 .field("is_trivially_copyable", &self.is_trivially_copyable)
+                .field("std_headers", &self.std_headers)
                 .finish()
         }
     }
@@ -4805,6 +4848,7 @@ mod __defs {
             impl_debug: false,
             label_hint: FfiString::EMPTY,
             is_trivially_copyable: true,
+            std_headers: FfiVec::EMPTY,
         };
         pub fn rs_name(&self) -> &str {
             self.rs_name.as_str()
@@ -4856,6 +4900,9 @@ mod __defs {
         pub fn is_trivially_copyable(&self) -> bool {
             self.is_trivially_copyable
         }
+        pub fn std_headers(&self) -> &[FfiString] {
+            self.std_headers.as_slice()
+        }
         pub fn set_rs_name(&mut self, val: FfiString) -> &mut FfiString {
             self.rs_name = val;
             &mut self.rs_name
@@ -4905,10 +4952,13 @@ mod __defs {
             self.is_trivially_copyable = val;
             &mut self.is_trivially_copyable
         }
+        pub fn set_std_headers(&mut self, val: FfiVec<FfiString>) {
+            self.std_headers = val;
+        }
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<ExistingRustType>() == 160);
+        assert!(core::mem::size_of::<ExistingRustType>() == 184);
         assert!(core::mem::align_of::<ExistingRustType>() == 8);
         assert!(core::mem::offset_of!(ExistingRustType, rs_name) == 8);
         assert!(core::mem::offset_of!(ExistingRustType, cc_name) == 24);
@@ -4922,6 +4972,7 @@ mod __defs {
         assert!(core::mem::offset_of!(ExistingRustType, impl_debug) == 129);
         assert!(core::mem::offset_of!(ExistingRustType, label_hint) == 136);
         assert!(core::mem::offset_of!(ExistingRustType, is_trivially_copyable) == 152);
+        assert!(core::mem::offset_of!(ExistingRustType, std_headers) == 160);
     };
 
     #[repr(C, u32)]

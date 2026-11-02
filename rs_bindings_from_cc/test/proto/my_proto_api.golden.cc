@@ -14,6 +14,7 @@
 #include "support/rs_std/lossy_formatter_for_bindings.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 
 // Public headers of the C++ library being wrapped.

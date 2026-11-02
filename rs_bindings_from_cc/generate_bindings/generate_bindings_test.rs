@@ -5,7 +5,7 @@
 use arc_anyhow::{anyhow, Result};
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{interpolate_spelled_rust_type, Mutability, RsTypeKind};
-use googletest::matchers::{contains_substring, not};
+use googletest::matchers::{contains_substring, is_empty, not};
 use googletest::{expect_eq, expect_that, gtest};
 use ir::IR;
 use ir_matchers::assert_ir_matches;
@@ -24,7 +24,9 @@ use test_generators::{
 use token_stream_matchers::{
     assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
 };
-use token_stream_printer::rs_tokens_to_formatted_string_for_tests;
+use token_stream_printer::{
+    cc_tokens_to_formatted_string_for_tests, rs_tokens_to_formatted_string_for_tests,
+};
 
 const PROTOBUF_NAMESPACE: &str = "google::protobuf";
 
@@ -2673,6 +2675,137 @@ fn test_box_rejects_non_unpin_and_incomplete_pointees() -> Result<()> {
     expect_that!(
         rendered,
         contains_substring("uses forward-declared type `crate::ForwardDeclared`")
+    );
+    Ok(())
+}
+
+/// Mock standard library declarations, in a system header (like the real ones).
+const MOCK_STD_SYSTEM_HEADER: &str = r#"
+    #pragma clang system_header
+    namespace std {
+    inline namespace __u {
+    class exception {};
+    class mutex {};
+    class bad_alloc {};
+    enum class errc { invalid_argument };
+    typedef unsigned int uint32_t;
+    namespace pmr {
+    class memory_resource {};
+    }  // namespace pmr
+    template <typename Iter>
+    class reverse_iterator {
+     public:
+      Iter current;
+    };
+    template <typename T>
+    class __wrap_iter {
+     public:
+      void set_resource(pmr::memory_resource* r) { r_ = r; }
+     private:
+      pmr::memory_resource* r_;
+    };
+    }  // namespace __u
+    }  // namespace std
+"#;
+
+/// The thunk file `#include`s the standard library headers of the std types that the thunks name.
+#[gtest]
+fn test_rs_api_impl_includes_std_headers_of_types_named_in_thunks() -> Result<()> {
+    /// Returns the system headers that the thunk file for `header` `#include`s.
+    fn std_includes(header: &str, dependency_header: &str) -> Result<Vec<String>> {
+        let rs_api_impl =
+            generate_bindings_tokens_from_cc_dependency(header, dependency_header)?.rs_api_impl;
+        Ok(cc_tokens_to_formatted_string_for_tests(rs_api_impl)?
+            .lines()
+            .filter_map(|line| line.strip_prefix("#include <")?.strip_suffix('>'))
+            .filter(|header| !header.contains('/')) // Crubit support headers.
+            .map(str::to_owned)
+            .collect())
+    }
+    /// Like `std_includes`, but uses `MOCK_STD_SYSTEM_HEADER`, and omits the headers that are
+    /// always included: `<memory>`, and `<cstddef>` (included when there are any records).
+    fn extra_std_includes(header: &str) -> Result<Vec<String>> {
+        Ok(std_includes(header, MOCK_STD_SYSTEM_HEADER)?
+            .into_iter()
+            .filter(|header| header != "cstddef" && header != "memory")
+            .collect())
+    }
+
+    expect_that!(extra_std_includes("")?, is_empty());
+
+    // A non-template type in a function signature.
+    expect_eq!(extra_std_includes("inline void TakeMutex(std::mutex& m) {}")?, ["mutex"]);
+    expect_eq!(
+        extra_std_includes("inline void TakeCallback(void (*f)(std::mutex*)) {}")?,
+        ["mutex"]
+    );
+
+    // A template instantiation (owned by the current target).
+    expect_eq!(
+        extra_std_includes("using ReverseIterator = std::reverse_iterator<int*>;")?,
+        ["iterator"]
+    );
+
+    // A template instantiation that has a method that names another standard library type.
+    expect_eq!(
+        extra_std_includes("using WrapIter = std::__wrap_iter<char>;")?,
+        ["memory_resource"]
+    );
+
+    // A template instantiation of a non-standard template, with a standard library type as a
+    // template argument.
+    expect_eq!(
+        extra_std_includes(
+            "template <typename T> struct Wrapper { T value; };
+             using WrapperOfErrc = Wrapper<std::errc>;"
+        )?,
+        ["system_error"]
+    );
+
+    // A standard library base class (named by the upcast thunk).
+    expect_eq!(extra_std_includes("struct Derived : public std::exception {};")?, ["exception"]);
+
+    // An alias without bindings is ignored, but if a function uses it, then the thunk names the
+    // underlying type.
+    expect_that!(extra_std_includes("using __BadAllocAlias = std::bad_alloc;")?, is_empty());
+    expect_eq!(
+        extra_std_includes(
+            "using __BadAllocAlias = std::bad_alloc;
+             inline void TakeBadAlloc(__BadAllocAlias& b) {}"
+        )?,
+        ["new"]
+    );
+
+    // A standard library type in the template arguments of an existing Rust type.
+    expect_eq!(
+        extra_std_includes(
+            r#"namespace crubit::rust_type { template <typename...> struct Args {}; }
+               struct [[clang::annotate("crubit_internal_rust_type", "MutexBox<{}>",
+                                        crubit::rust_type::Args<std::mutex*>())]] MutexBox {
+                 void* p;
+               };"#
+        )?,
+        ["mutex"]
+    );
+
+    // A primitive type spelled as a standard library typedef. (`<cstddef>` is tested without
+    // records, which would include `<cstddef>` anyway.)
+    expect_eq!(extra_std_includes("inline void TakeUint32(std::uint32_t i) {}")?, ["cstdint"]);
+    expect_eq!(
+        std_includes(
+            "inline void TakeSize(size_t s) {}",
+            "#pragma clang system_header\nusing size_t = decltype(sizeof(0));"
+        )?,
+        ["cstddef", "memory"]
+    );
+
+    // Not from a system header, so not treated as a standard library symbol.
+    expect_that!(
+        extra_std_includes(
+            "namespace std { class any {}; }
+             inline void TakeAny(std::any& a) {}"
+        )?,
+        is_empty()
     );
     Ok(())
 }

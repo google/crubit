@@ -1321,6 +1321,12 @@ fn generate_rs_api_impl_includes(
             intern!(db.interner(), "{crubit_header}"),
         ));
     }
+
+    // The thunks may name std types from implementation headers (e.g. libc++'s
+    // `__iterator/reverse_iterator.h`) that Clang modules don't re-export to the thunk file.
+    for header in std_headers_of_types_named_in_thunks(db) {
+        internal_includes.insert(CcInclude::SystemHeader(intern!(db.interner(), "{header}")));
+    }
     let internal_includes = format_cc_includes(&internal_includes);
 
     // In order to generate C++ thunk in all the cases Clang needs to be able to
@@ -1334,6 +1340,98 @@ fn generate_rs_api_impl_includes(
         .collect_vec();
 
     CppIncludes { internal_includes, ir_includes }
+}
+
+/// Returns the standard library headers that provide the types that the C++ thunks and
+/// assertions of the current target may name.
+fn std_headers_of_types_named_in_thunks<'db>(db: &BindingsGenerator<'db>) -> BTreeSet<&'db str> {
+    let ir = db.ir();
+    let mut std_headers = BTreeSet::new();
+    for item in ir.items() {
+        if !item.owning_target().is_some_and(|target| ir.is_current_target(&target))
+            || db.has_bindings(item.clone()).is_err()
+        {
+            continue;
+        }
+        match item {
+            Item::Func(func) => {
+                add_std_headers_of_cc_type(ir, func.return_type(), &mut std_headers);
+                for param in func.params() {
+                    add_std_headers_of_cc_type(ir, param.type_(), &mut std_headers);
+                }
+            }
+            Item::Record(record) => {
+                add_std_headers_of_type_item(ir, item, &mut std_headers);
+                // Upcast thunks also name the base classes.
+                for base in record.unambiguous_public_bases() {
+                    if let Some(base_item) = ir.get_decl(base.base_record_id()) {
+                        add_std_headers_of_type_item(ir, base_item, &mut std_headers);
+                    }
+                }
+            }
+            Item::IncompleteRecord(_)
+            | Item::Enum(_)
+            | Item::TypeAlias(_)
+            | Item::ExistingRustType(_) => {
+                add_std_headers_of_type_item(ir, item, &mut std_headers);
+            }
+            _ => {}
+        }
+    }
+    std_headers
+}
+
+/// Adds to `out` the standard library headers needed to name the type `item`.
+fn add_std_headers_of_type_item<'ir>(ir: &'ir IR, item: &'ir Item, out: &mut BTreeSet<&'ir str>) {
+    out.extend(item.std_headers().iter().map(|header| header.as_str()));
+    match item {
+        // The thunks may name the underlying type instead of the alias (e.g. when the alias has
+        // no bindings).
+        Item::TypeAlias(type_alias) => {
+            add_std_headers_of_cc_type(ir, type_alias.underlying_type(), out);
+        }
+        // E.g. the `std::mutex` in `crubit::rust_type::Args<std::mutex>()` (the importer only
+        // covers the template arguments of class template specializations).
+        Item::ExistingRustType(existing_rust_type) => {
+            for template_arg in existing_rust_type.template_args() {
+                if let TemplateArg::Type(cc_type) = template_arg {
+                    add_std_headers_of_cc_type(ir, cc_type, out);
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Adds to `out` the standard library headers needed to name `cc_type`.
+fn add_std_headers_of_cc_type<'ir>(
+    ir: &'ir IR,
+    cc_type: &'ir CcType,
+    out: &mut BTreeSet<&'ir str>,
+) {
+    match cc_type.variant() {
+        CcTypeVariant::Pointer(pointer) => {
+            add_std_headers_of_cc_type(ir, pointer.pointee_type(), out)
+        }
+        CcTypeVariant::FuncPointer(func_pointer) => {
+            for cc_type in func_pointer.param_and_return_types() {
+                add_std_headers_of_cc_type(ir, cc_type, out);
+            }
+        }
+        CcTypeVariant::ConstantArray(array) => {
+            add_std_headers_of_cc_type(ir, array.element_type(), out)
+        }
+        CcTypeVariant::Decl(id) => {
+            if let Some(item) = ir.get_decl(*id) {
+                add_std_headers_of_type_item(ir, item, out);
+            }
+        }
+        CcTypeVariant::Primitive(primitive) => out.extend(primitive.std_header()),
+        CcTypeVariant::Error(_) => {}
+    }
+    for template_arg in cc_type.template_args() {
+        add_std_headers_of_cc_type(ir, template_arg, out);
+    }
 }
 
 /// Implementation of `BindingsGenerator::crubit_abi_type`.

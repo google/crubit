@@ -8,6 +8,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -31,6 +32,7 @@
 #include "clang/Basic/FileEntry.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Sema/Sema.h"
+#include "clang/Tooling/Inclusions/StandardLibrary.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/Support/Allocator.h"
 
@@ -337,6 +339,13 @@ class Importer final : public ImportContext {
   absl::StatusOr<std::optional<bool>> DetectFormatterForType(
       clang::CanQualType lookup, clang::CanQualType target) const;
 
+  // If `item` is a type, sets its `std_headers`: the standard library headers
+  // (e.g. `iterator`) that provide `decl` (e.g. `std::reverse_iterator<int*>`)
+  // and the standard library types in the class template arguments of `decl`
+  // and of its enclosing records. See `generate_rs_api_impl_includes`.
+  void SetStdHeaders(const clang::Decl& decl, ir_proto::Item& item);
+  void CollectStdHeaders(const clang::Decl& decl, std::set<std::string>& out);
+
   // The different decl importers. Note that order matters: the first importer
   // to successfully match a decl "wins", and no other importers are tried.
   std::vector<std::unique_ptr<DeclImporter>> decl_importers_;
@@ -418,6 +427,8 @@ class Importer final : public ImportContext {
   // spelled directly in the decl currently being imported (i.e. not via a
   // typedef). Set by `ImportDecl`.
   clang::FileID governing_file_;
+
+  clang::tooling::stdlib::Recognizer std_symbol_recognizer_;
 
   // The inherited friend operator that is currently being imported by
   // `ImportInheritedFriendOperators`, if any. `GetOwningTarget` attributes it

@@ -437,6 +437,7 @@ cc_library(
         "@llvm-project//clang:basic",
         "@llvm-project//clang:lex",
         "@llvm-project//clang:sema",
+        "@llvm-project//clang:tooling_inclusions",
         "@llvm-project//clang:unified_symbol_resolution",
         "@llvm-project//llvm:Support",
     ],
