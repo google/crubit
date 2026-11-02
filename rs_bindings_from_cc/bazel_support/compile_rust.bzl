@@ -15,7 +15,6 @@ load(
     "@rules_rust//rust/private:rustc.bzl",
     "rustc_compile_action",
 )
-
 load("@bazel_skylib//lib:structs.bzl", "structs")
 
 _extra_rustc_flags = [
@@ -72,7 +71,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
       src: The source file to be compiled.
       extra_srcs: Additional source files to include in the crate.
       deps: depset[DepVariantInfo]: A depset of dependencies needed.
-      crate_name: (string) crate name for naming the output files (.rlib, .rmeta...))
+      crate_name: (string) crate name for naming the output file (.rlib)
       include_coverage: (bool) Whether or not coverage information should be generated.
       allow_lto: (bool, optional) Whether to allow LTO
       aliases: (dict, optional) A dict of aliases to be passed to the rustc_compile_action.
@@ -95,16 +94,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
         extension = ".rlib",
     )
 
-    rmeta_name = "{prefix}{name}-{lib_hash}{extension}".format(
-        prefix = "lib",
-        name = crate_name,
-        lib_hash = output_hash,
-        extension = ".rmeta",
-    )
-
     lib = ctx.actions.declare_file(lib_name)
-
-    rmeta = ctx.actions.declare_file(rmeta_name)
 
     # TODO(b/336367148): We should inherit almost nothing from `attr`, but for now, at least, we
     # should omit the rustc_flags.
@@ -140,7 +130,11 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             proc_macro_deps = [],
             aliases = aliases,
             output = lib,
-            metadata = rmeta,
+            # Generated binding crates consist almost entirely of `#[inline(always)]` FFI
+            # wrappers whose compilation is dominated by the rustc frontend rather than LLVM
+            # codegen, and `.rlib` archives already embed crate metadata. Skip the separate
+            # `RustcMetadata` pipelining action so the frontend only runs once per crate.
+            metadata = None,
             edition = "2024",
             is_test = False,
             rustc_env = rustc_env,

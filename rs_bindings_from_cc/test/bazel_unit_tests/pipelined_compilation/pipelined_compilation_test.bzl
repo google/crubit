@@ -27,31 +27,23 @@ def _action_inputs_with_pipelining_analysis_test_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
 
-    metadata_action = [
+    metadata_actions = [
         a
         for a in target_under_test[ActionsInfo].actions
         if a.mnemonic == "RustcMetadata"
-    ][0]
+    ]
 
-    # Check that we generate metadata for our binding
-    asserts.true(env, metadata_action != None)
-
-    metadata_action_inputs = metadata_action.inputs.to_list()
-
-    # Check that our metadata action accepts metadata inputs from the dependencies
-    asserts.true(env, _contains_input_of_type("middle", "rmeta", metadata_action_inputs))
-    asserts.true(env, _contains_input_of_type("top", "rmeta", metadata_action_inputs))
-    asserts.false(env, _contains_input_of_type("middle", "rlib", metadata_action_inputs))
-    asserts.false(env, _contains_input_of_type("top", "rlib", metadata_action_inputs))
+    # Check that generated binding crates skip separate RustcMetadata pipelining actions.
+    asserts.equals(env, 0, len(metadata_actions))
 
     rlib_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "Rustc"][0]
     rlib_action_inputs = rlib_action.inputs.to_list()
 
-    # Check that the rlib action accepts metadata inputs from the dependencies
-    asserts.true(env, _contains_input_of_type("middle", "rmeta", rlib_action_inputs))
-    asserts.true(env, _contains_input_of_type("top", "rmeta", rlib_action_inputs))
-    asserts.false(env, _contains_input_of_type("middle", "rlib", rlib_action_inputs))
-    asserts.false(env, _contains_input_of_type("top", "rlib", rlib_action_inputs))
+    # Check that the rlib action consumes .rlib inputs directly from dependencies.
+    asserts.false(env, _contains_input_of_type("middle", "rmeta", rlib_action_inputs))
+    asserts.false(env, _contains_input_of_type("top", "rmeta", rlib_action_inputs))
+    asserts.true(env, _contains_input_of_type("middle", "rlib", rlib_action_inputs))
+    asserts.true(env, _contains_input_of_type("top", "rlib", rlib_action_inputs))
 
     return analysistest.end(env)
 
