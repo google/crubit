@@ -11,7 +11,10 @@
 #include "support/internal/slot.h"
 
 #include <cstddef>
+#include <initializer_list>
+#include <iterator>
 #include <memory>
+#include <span>
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/boxes.h"

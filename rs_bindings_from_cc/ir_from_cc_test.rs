@@ -2154,6 +2154,7 @@ fn test_typedef() -> Result<()> {
             must_bind: false,
             deprecated: None,
             lifetime_inputs: [],
+            std_headers: [],
           }
         }
     );
@@ -2174,6 +2175,7 @@ fn test_typedef() -> Result<()> {
             must_bind: false,
             deprecated: None,
             lifetime_inputs: [],
+            std_headers: [],
           }
         }
     );
@@ -7910,4 +7912,123 @@ fn test_non_primitive_non_enum_arrays_rejected() {
             )
         );
     }
+}
+
+#[gtest]
+fn test_std_headers() -> Result<()> {
+    /// Mock standard library declarations, in a system header (like the real ones).
+    const MOCK_STD_SYSTEM_HEADER: &str = r#"
+        #pragma clang system_header
+        // Not in the `std` namespace, so not treated as a standard library
+        // symbol (even though `time` is a C library function).
+        struct time {};
+        namespace std {
+        inline namespace __u {
+        class exception {};
+        class mutex {};
+        class error_category;
+        enum class errc { invalid_argument };
+        template <typename Iter>
+        class reverse_iterator {
+         public:
+          Iter current;
+        };
+        template <typename T>
+        class __wrap_iter {
+         public:
+          T* p;
+        };
+        template <typename C>
+        struct char_traits {};
+        template <typename C, typename Traits = char_traits<C>>
+        class basic_string_view;
+        typedef basic_string_view<char> string_view;
+        template <typename C, typename Traits>
+        class [[clang::preferred_name(string_view)]] basic_string_view {
+         public:
+          const C* data;
+        };
+        }  // namespace __u
+        }  // namespace std
+    "#;
+    fn std_headers(item: &Item) -> Vec<String> {
+        item.std_headers().iter().map(|header| header.as_str().to_owned()).collect()
+    }
+    /// Returns the `std_headers` of the type that `Target` refers to in `header`.
+    fn std_headers_of_target(header: &str) -> Result<Vec<String>> {
+        let ir = make_test_ir(&ir_proto_from_cc_dependency(header, MOCK_STD_SYSTEM_HEADER)?)?;
+        let target = ir.type_aliases().find(|alias| alias.cc_name().as_str() == "Target").unwrap();
+        Ok(std_headers(ir.get_decl(target.underlying_type().decl_id().unwrap()).unwrap()))
+    }
+
+    // Declarations in the (mock) standard library, of the different kinds of type items.
+    let ir = make_test_ir(&ir_proto_from_cc_dependency("", MOCK_STD_SYSTEM_HEADER)?)?;
+    let std_headers_of_decl = |name: &str| {
+        std_headers(ir.items().find(|item| item.cc_name_as_str() == Some(name)).unwrap())
+    };
+    expect_eq!(std_headers_of_decl("mutex"), ["mutex"]); // Record
+    expect_eq!(std_headers_of_decl("error_category"), ["system_error"]); // IncompleteRecord
+    expect_eq!(std_headers_of_decl("errc"), ["system_error"]); // Enum
+    expect_eq!(std_headers_of_decl("string_view"), ["string_view"]); // TypeAlias
+    expect_that!(std_headers_of_decl("time"), is_empty());
+
+    // Not from a system header, so not treated as a standard library symbol.
+    expect_that!(
+        std_headers_of_target("namespace std { class any {}; }  using Target = std::any;")?,
+        is_empty()
+    );
+
+    // A template instantiation.
+    expect_eq!(std_headers_of_target("using Target = std::reverse_iterator<int*>;")?, ["iterator"]);
+
+    // A standard library type as a template argument.
+    expect_eq!(
+        std_headers_of_target(
+            "using Target = std::reverse_iterator<std::reverse_iterator<std::exception*>>;"
+        )?,
+        ["exception", "iterator"]
+    );
+    expect_eq!(
+        std_headers_of_target(
+            "template <typename T> struct Wrapper { T value; };
+             using Target = Wrapper<std::mutex*>;"
+        )?,
+        ["mutex"]
+    );
+
+    // A libc++ implementation detail has no standard library header.
+    expect_that!(std_headers_of_target("using Target = std::__wrap_iter<char>;")?, is_empty());
+
+    // A non-type template argument of a standard library type.
+    expect_eq!(
+        std_headers_of_target(
+            "template <std::errc E> struct WithErrc { int i; };
+             using Target = WithErrc<std::errc::invalid_argument>;"
+        )?,
+        ["system_error"]
+    );
+
+    // A standard library template as a template template argument.
+    expect_eq!(
+        std_headers_of_target(
+            "template <template <typename> class T> struct WithTemplate { int i; };
+             using Target = WithTemplate<std::reverse_iterator>;"
+        )?,
+        ["iterator"]
+    );
+
+    // A record nested in a class template specialization, as a template argument.
+    expect_eq!(
+        std_headers_of_target(
+            "template <typename T> struct Outer { struct Inner { int i; }; };
+             template <typename T> struct Wrapper { T value; };
+             using Target = Wrapper<Outer<std::mutex*>::Inner>;"
+        )?,
+        ["mutex"]
+    );
+
+    // The generated code names `std::string_view` (`preferred_name`), so
+    // `std::char_traits` (`<string>`) is not needed.
+    expect_eq!(std_headers_of_target("using Target = std::string_view;")?, ["string_view"]);
+    Ok(())
 }

@@ -10,6 +10,7 @@
 #include "support/internal/sizeof.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 
 // Public headers of the C++ library being wrapped.

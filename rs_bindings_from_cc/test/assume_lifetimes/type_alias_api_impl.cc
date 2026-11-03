@@ -11,7 +11,9 @@
 #include "support/internal/slot.h"
 
 #include <cstddef>
+#include <iterator>
 #include <memory>
+#include <string_view>
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/assume_lifetimes/type_alias.h"

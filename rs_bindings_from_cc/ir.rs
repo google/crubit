@@ -679,6 +679,23 @@ impl_typed_tokens_for_enum! {
     }
 }
 
+impl Primitive {
+    /// Returns the standard library header (e.g. `cstdint`) that declares the C++ spelling of this
+    /// type, if any. (In practice, `<cstdint>` and `<cstddef>` also declare the global names.)
+    pub fn std_header(self) -> Option<&'static str> {
+        use Primitive::*;
+        match self {
+            PtrdiffT | SizeT | StdPtrdiffT | StdSizeT => Some("cstddef"),
+            IntptrT | UintptrT | StdIntptrT | StdUintptrT | Int8T | Int16T | Int32T | Int64T
+            | StdInt8T | StdInt16T | StdInt32T | StdInt64T | Uint8T | Uint16T | Uint32T
+            | Uint64T | StdUint8T | StdUint16T | StdUint32T | StdUint64T => Some("cstdint"),
+            Bool | Void | Float | Double | Char | SignedChar | UnsignedChar | Short | Int
+            | Long | LongLong | Int128 | UnsignedShort | UnsignedInt | UnsignedLong
+            | UnsignedLongLong | UnsignedInt128 | Char16T | Char32T => None,
+        }
+    }
+}
+
 impl_typed_tokens_for_enum! {
     CcCallingConv {
         C = {cdecl},
@@ -1613,6 +1630,24 @@ impl GenericItem for Item {
 }
 
 impl Item {
+    /// The `std_headers` of this type item; empty for other items.
+    pub fn std_headers(&self) -> &[FfiString] {
+        match self {
+            Item::Record(record) => record.std_headers(),
+            Item::IncompleteRecord(record) => record.std_headers(),
+            Item::Enum(enum_) => enum_.std_headers(),
+            Item::TypeAlias(type_alias) => type_alias.std_headers(),
+            Item::ExistingRustType(existing_rust_type) => existing_rust_type.std_headers(),
+            Item::Func(_)
+            | Item::Constant(_)
+            | Item::GlobalVar(_)
+            | Item::UnsupportedItem(_)
+            | Item::Comment(_)
+            | Item::Namespace(_)
+            | Item::UseMod(_) => &[],
+        }
+    }
+
     /// Returns true if this is an aggregate type (struct, union, class, or
     /// enum).
     pub fn is_aggregate_type(&self) -> bool {

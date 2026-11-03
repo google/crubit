@@ -525,6 +525,11 @@ pub(crate) fn schema() -> Schema {
             deprecated: Str,
             is_thread_safe: Bool,
             is_explicit_class_template_instantiation_definition: Bool,
+            // Standard library headers (e.g. `iterator`, without angle
+            // brackets) that the generated C++ code `#include`s when it names
+            // this type. See `Importer::SetStdHeaders`. Also present in the
+            // other type items below.
+            std_headers: Vec(Str),
             children: Vec(Item),
         }
         struct IncompleteRecord {
@@ -539,6 +544,7 @@ pub(crate) fn schema() -> Schema {
             #[optional]
             enclosing_item_id: ItemId,
             must_bind: Bool,
+            std_headers: Vec(Str),
         }
         struct Enumerator {
             identifier: Identifier,
@@ -574,6 +580,7 @@ pub(crate) fn schema() -> Schema {
             deprecated: Str,
             #[optional]
             doc_comment: Str,
+            std_headers: Vec(Str),
         }
         struct GlobalVar {
             cc_name: Identifier,
@@ -615,6 +622,7 @@ pub(crate) fn schema() -> Schema {
             #[optional]
             deprecated: Str,
             lifetime_inputs: Vec(Str),
+            std_headers: Vec(Str),
         }
         #[scope("UnsupportedItem")]
         struct Path {
@@ -685,6 +693,7 @@ pub(crate) fn schema() -> Schema {
             label_hint: Str,
             #[default_true]
             is_trivially_copyable: Bool,
+            std_headers: Vec(Str),
         }
         enum Item {
             Func(Box(Func)),

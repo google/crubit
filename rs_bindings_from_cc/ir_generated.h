@@ -2380,6 +2380,10 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   void set_is_thread_safe(bool value) { is_thread_safe_ = value; }
   bool is_explicit_class_template_instantiation_definition() const { return is_explicit_class_template_instantiation_definition_; }
   void set_is_explicit_class_template_instantiation_definition(bool value) { is_explicit_class_template_instantiation_definition_ = value; }
+  const FfiVec<FfiString>& std_headers() const { return std_headers_; }
+  FfiVec<FfiString>* mutable_std_headers() { return &std_headers_; }
+  void clear_std_headers() { std_headers_.Clear(); }
+  void add_std_headers(absl::string_view value) { std_headers_.Add(FfiString(value)); }
   const FfiVec<::crubit::ffi::Item>& children() const { return children_; }
   FfiVec<::crubit::ffi::Item>* mutable_children() { return &children_; }
   void clear_children() { children_.Clear(); }
@@ -2430,6 +2434,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   FfiString deprecated_{};
   bool is_thread_safe_{};
   bool is_explicit_class_template_instantiation_definition_{};
+  FfiVec<FfiString> std_headers_{};
   FfiVec<::crubit::ffi::Item> children_{};
 };
 
@@ -2456,6 +2461,10 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI IncompleteRecord {
   void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x2ULL; enclosing_item_id_ = value; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
+  const FfiVec<FfiString>& std_headers() const { return std_headers_; }
+  FfiVec<FfiString>* mutable_std_headers() { return &std_headers_; }
+  void clear_std_headers() { std_headers_.Clear(); }
+  void add_std_headers(absl::string_view value) { std_headers_.Add(FfiString(value)); }
   friend bool operator==(const IncompleteRecord&, const IncompleteRecord&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::Identifier cc_name_{};
@@ -2467,6 +2476,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI IncompleteRecord {
   ::crubit::ffi::RecordType record_type_{};
   uint64_t enclosing_item_id_{};
   bool must_bind_{};
+  FfiVec<FfiString> std_headers_{};
 };
 
 struct ABSL_ATTRIBUTE_TRIVIAL_ABI Enumerator {
@@ -2543,6 +2553,10 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Enum {
   void clear_doc_comment() { has_bits_ &= ~0x40ULL; doc_comment_ = {}; }
   absl::string_view doc_comment() const { return doc_comment_.AsView(); }
   void set_doc_comment(absl::string_view value) { has_bits_ |= 0x40ULL; doc_comment_ = FfiString(value); }
+  const FfiVec<FfiString>& std_headers() const { return std_headers_; }
+  FfiVec<FfiString>* mutable_std_headers() { return &std_headers_; }
+  void clear_std_headers() { std_headers_.Clear(); }
+  void add_std_headers(absl::string_view value) { std_headers_.Add(FfiString(value)); }
   friend bool operator==(const Enum&, const Enum&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::Identifier cc_name_{};
@@ -2561,6 +2575,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Enum {
   FfiString nodiscard_{};
   FfiString deprecated_{};
   FfiString doc_comment_{};
+  FfiVec<FfiString> std_headers_{};
 };
 
 struct ABSL_ATTRIBUTE_TRIVIAL_ABI GlobalVar {
@@ -2658,6 +2673,10 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TypeAlias {
   FfiVec<FfiString>* mutable_lifetime_inputs() { return &lifetime_inputs_; }
   void clear_lifetime_inputs() { lifetime_inputs_.Clear(); }
   void add_lifetime_inputs(absl::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
+  const FfiVec<FfiString>& std_headers() const { return std_headers_; }
+  FfiVec<FfiString>* mutable_std_headers() { return &std_headers_; }
+  void clear_std_headers() { std_headers_.Clear(); }
+  void add_std_headers(absl::string_view value) { std_headers_.Add(FfiString(value)); }
   friend bool operator==(const TypeAlias&, const TypeAlias&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::Identifier cc_name_{};
@@ -2673,6 +2692,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TypeAlias {
   bool must_bind_{};
   FfiString deprecated_{};
   FfiVec<FfiString> lifetime_inputs_{};
+  FfiVec<FfiString> std_headers_{};
 };
 
 namespace unsupported_item {
@@ -2869,6 +2889,10 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI ExistingRustType {
   void set_label_hint(absl::string_view value) { has_bits_ |= 0x2ULL; label_hint_ = FfiString(value); }
   bool is_trivially_copyable() const { return is_trivially_copyable_; }
   void set_is_trivially_copyable(bool value) { is_trivially_copyable_ = value; }
+  const FfiVec<FfiString>& std_headers() const { return std_headers_; }
+  FfiVec<FfiString>* mutable_std_headers() { return &std_headers_; }
+  void clear_std_headers() { std_headers_.Clear(); }
+  void add_std_headers(absl::string_view value) { std_headers_.Add(FfiString(value)); }
   friend bool operator==(const ExistingRustType&, const ExistingRustType&) = default;
   uint64_t has_bits_ = 0;
   FfiString rs_name_{};
@@ -2883,6 +2907,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI ExistingRustType {
   bool impl_debug_{};
   FfiString label_hint_{};
   bool is_trivially_copyable_ = true;
+  FfiVec<FfiString> std_headers_{};
 };
 
 struct ABSL_ATTRIBUTE_TRIVIAL_ABI Item {
@@ -3541,7 +3566,7 @@ inline Record& Record::operator=(Record&&) noexcept = default;
 inline Record::~Record() = default;
 inline ::crubit::ffi::Item* Record::add_children() { return children_.Add(); }
 static_assert(std::is_standard_layout_v<Record>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Record) == 1096 && alignof(Record) == 8));
+static_assert(sizeof(size_t) != 8 || (sizeof(Record) == 1120 && alignof(Record) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(Record, rs_name_) == 8);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, cc_name_) == 24);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, unique_name_) == 40);
@@ -3586,9 +3611,10 @@ static_assert(sizeof(size_t) != 8 || offsetof(Record, detected_formatter_) == 10
 static_assert(sizeof(size_t) != 8 || offsetof(Record, deprecated_) == 1048);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, is_thread_safe_) == 1064);
 static_assert(sizeof(size_t) != 8 || offsetof(Record, is_explicit_class_template_instantiation_definition_) == 1065);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, children_) == 1072);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, std_headers_) == 1072);
+static_assert(sizeof(size_t) != 8 || offsetof(Record, children_) == 1096);
 static_assert(std::is_standard_layout_v<IncompleteRecord>);
-static_assert(sizeof(size_t) != 8 || (sizeof(IncompleteRecord) == 120 && alignof(IncompleteRecord) == 8));
+static_assert(sizeof(size_t) != 8 || (sizeof(IncompleteRecord) == 144 && alignof(IncompleteRecord) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, cc_name_) == 8);
 static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, rs_name_) == 24);
 static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, unique_name_) == 40);
@@ -3598,6 +3624,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, unknown_attr_) =
 static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, record_type_) == 96);
 static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, enclosing_item_id_) == 104);
 static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, must_bind_) == 112);
+static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, std_headers_) == 120);
 static_assert(std::is_standard_layout_v<Enumerator>);
 static_assert(sizeof(size_t) != 8 || (sizeof(Enumerator) == 88 && alignof(Enumerator) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(Enumerator, identifier_) == 8);
@@ -3606,7 +3633,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(Enumerator, unknown_attr_) == 40);
 static_assert(sizeof(size_t) != 8 || offsetof(Enumerator, deprecated_) == 56);
 static_assert(sizeof(size_t) != 8 || offsetof(Enumerator, doc_comment_) == 72);
 static_assert(std::is_standard_layout_v<Enum>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Enum) == 400 && alignof(Enum) == 8));
+static_assert(sizeof(size_t) != 8 || (sizeof(Enum) == 424 && alignof(Enum) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(Enum, cc_name_) == 8);
 static_assert(sizeof(size_t) != 8 || offsetof(Enum, rs_name_) == 24);
 static_assert(sizeof(size_t) != 8 || offsetof(Enum, unique_name_) == 40);
@@ -3623,6 +3650,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(Enum, detected_formatter_) == 345)
 static_assert(sizeof(size_t) != 8 || offsetof(Enum, nodiscard_) == 352);
 static_assert(sizeof(size_t) != 8 || offsetof(Enum, deprecated_) == 368);
 static_assert(sizeof(size_t) != 8 || offsetof(Enum, doc_comment_) == 384);
+static_assert(sizeof(size_t) != 8 || offsetof(Enum, std_headers_) == 400);
 static_assert(std::is_standard_layout_v<GlobalVar>);
 static_assert(sizeof(size_t) != 8 || (sizeof(GlobalVar) == 360 && alignof(GlobalVar) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, cc_name_) == 8);
@@ -3639,7 +3667,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, must_bind_) == 320);
 static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, deprecated_) == 328);
 static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, doc_comment_) == 344);
 static_assert(std::is_standard_layout_v<TypeAlias>);
-static_assert(sizeof(size_t) != 8 || (sizeof(TypeAlias) == 368 && alignof(TypeAlias) == 8));
+static_assert(sizeof(size_t) != 8 || (sizeof(TypeAlias) == 392 && alignof(TypeAlias) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, cc_name_) == 8);
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, rs_name_) == 24);
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, unique_name_) == 40);
@@ -3653,6 +3681,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, enclosing_item_id_) == 
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, must_bind_) == 320);
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, deprecated_) == 328);
 static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, lifetime_inputs_) == 344);
+static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, std_headers_) == 368);
 static_assert(std::is_standard_layout_v<unsupported_item::Path>);
 static_assert(sizeof(size_t) != 8 || (sizeof(unsupported_item::Path) == 40 && alignof(unsupported_item::Path) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(unsupported_item::Path, ident_) == 8);
@@ -3703,7 +3732,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(UseMod, mod_name_) == 16);
 static_assert(sizeof(size_t) != 8 || offsetof(UseMod, id_) == 32);
 static_assert(sizeof(size_t) != 8 || offsetof(UseMod, must_bind_) == 40);
 static_assert(std::is_standard_layout_v<ExistingRustType>);
-static_assert(sizeof(size_t) != 8 || (sizeof(ExistingRustType) == 160 && alignof(ExistingRustType) == 8));
+static_assert(sizeof(size_t) != 8 || (sizeof(ExistingRustType) == 184 && alignof(ExistingRustType) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, rs_name_) == 8);
 static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, cc_name_) == 24);
 static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, unique_name_) == 40);
@@ -3716,6 +3745,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, must_bind_) == 1
 static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, impl_debug_) == 129);
 static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, label_hint_) == 136);
 static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, is_trivially_copyable_) == 152);
+static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, std_headers_) == 160);
 static_assert(std::is_standard_layout_v<Item>);
 static_assert(sizeof(size_t) != 8 || (sizeof(Item) == 16 && alignof(Item) == 8));
 static_assert(std::is_standard_layout_v<IRProto>);
