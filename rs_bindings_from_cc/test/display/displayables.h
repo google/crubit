@@ -6,14 +6,14 @@
 
 #include <cstddef>
 #include <ostream>
+#include <string_view>
 
 #include "absl/strings/has_ostream_operator.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
 #include "support/annotations.h"
 
 struct CRUBIT_MUST_BIND CanAbslStringify {
-  absl::string_view value;
+  std::string_view value;
 
   template <typename Sink>
   friend void AbslStringify(Sink& sink, const CanAbslStringify& value) {
@@ -32,7 +32,7 @@ struct CRUBIT_MUST_BIND CanAbslStringifyByFill {
 };
 
 struct CRUBIT_MUST_BIND CanAbslStringifyByFormat {
-  absl::string_view value;
+  std::string_view value;
 
   template <typename Sink>
   friend void AbslStringify(Sink& sink, const CanAbslStringifyByFormat& value) {
@@ -41,7 +41,7 @@ struct CRUBIT_MUST_BIND CanAbslStringifyByFormat {
 };
 
 struct CRUBIT_MUST_BIND CanOstream {
-  absl::string_view value;
+  std::string_view value;
 
   friend std::ostream& operator<<(std::ostream& out, const CanOstream& value) {
     return out << value.value;
@@ -49,8 +49,8 @@ struct CRUBIT_MUST_BIND CanOstream {
 };
 
 struct CRUBIT_MUST_BIND CanAbslStringifyAndOstream {
-  absl::string_view stringify;
-  absl::string_view ostream;
+  std::string_view stringify;
+  std::string_view ostream;
 
   template <typename Sink>
   friend void AbslStringify(Sink& sink,
@@ -89,16 +89,16 @@ void AbslStringify(Sink& sink, const Templated<T>& value) {
 }
 
 struct NotDisplayable {};
-struct CRUBIT_MUST_BIND TemplatedStringView : Templated<absl::string_view> {
-  explicit TemplatedStringView(absl::string_view v) : Templated{v} {}
+struct CRUBIT_MUST_BIND TemplatedStringView : Templated<std::string_view> {
+  explicit TemplatedStringView(std::string_view v) : Templated{v} {}
 };
 struct CRUBIT_MUST_BIND TemplatedNotDisplayable : Templated<NotDisplayable> {
   TemplatedNotDisplayable() = default;
 };
 
 struct CRUBIT_MUST_BIND CRUBIT_OVERRIDE_DISPLAY(false) DisplayInRust {
-  absl::string_view cc_value;
-  absl::string_view rust_value;
+  std::string_view cc_value;
+  std::string_view rust_value;
   template <typename Sink>
   friend void AbslStringify(Sink& sink, const DisplayInRust& value) {
     sink.Append(value.cc_value);

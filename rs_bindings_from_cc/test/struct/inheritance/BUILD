@@ -74,11 +74,16 @@ crubit_test_cc_library(
     hdrs = ["virtual_base_ctor_dtor.h"],
 )
 
+rust_api_from_cpp(
+    name = "virtual_base_ctor_dtor_rust",
+    cpp_target = ":virtual_base_ctor_dtor",
+)
+
 crubit_rust_test(
     name = "virtual_base_ctor_dtor_test",
     srcs = ["virtual_base_ctor_dtor_test.rs"],
-    cc_deps = [":virtual_base_ctor_dtor"],
     deps = [
+        ":virtual_base_ctor_dtor_rust",
         "//support:ctor",
         "@crate_index//:googletest",
     ],

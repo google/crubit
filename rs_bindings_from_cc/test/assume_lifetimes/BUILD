@@ -145,38 +145,6 @@ crubit_rust_test(
 )
 
 crubit_test_cc_library(
-    name = "assumed_span",
-    srcs = ["assumed_span.cc"],
-    hdrs = ["assumed_span.h"],
-    aspect_hints = [
-        "//features:supported",
-    ],
-    deps = ["@abseil-cpp//absl/types:span"],
-)
-
-rust_api_from_cpp(
-    name = "assumed_span_rust",
-    cpp_target = ":assumed_span",
-)
-
-rust_api_from_cpp(
-    name = "span_rust",
-    cpp_target = "@abseil-cpp//absl/types:span",
-)
-
-crubit_rust_test(
-    name = "assumed_span_test",
-    srcs = ["assumed_span_test.rs"],
-    deps = [
-        ":assumed_span_rust",
-        ":span_rust",
-        "//support:cref",
-        "//support/cc_std",
-        "@crate_index//:googletest",
-    ],
-)
-
-crubit_test_cc_library(
     name = "string_view",
     srcs = ["string_view.cc"],
     hdrs = ["string_view.h"],

@@ -8,10 +8,11 @@
 #include <memory>
 
 #include "absl/base/nullability.h"
+#include "support/annotations.h"
 
-ABSL_POINTERS_DEFAULT_NONNULL
+CRUBIT_POINTERS_DEFAULT_NONNULL
 
-// Unannotated, but non-null because of `ABSL_POINTERS_DEFAULT_NONNULL`.
+// Unannotated, but non-null because of `CRUBIT_POINTERS_DEFAULT_NONNULL`.
 inline std::unique_ptr<int> MakeDefaultNonnullUniquePtr(int value) {
   return std::make_unique<int>(value);
 }

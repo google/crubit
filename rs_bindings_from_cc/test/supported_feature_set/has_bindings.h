@@ -20,7 +20,7 @@ struct Struct {
 
 using StructAlias = Struct;
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI NontrivialStruct {
+struct [[clang::trivial_abi]] NontrivialStruct {
   int* x;
   ~NontrivialStruct() {
     // this can do anything, but we'll do something silly for the sake of

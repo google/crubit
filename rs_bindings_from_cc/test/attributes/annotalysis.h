@@ -22,7 +22,7 @@ class ExampleClass {
   static MyMutex& mu() ABSL_LOCK_RETURNED(mu_) { return mu_; }
 
  private:
-  static MyMutex mu_;
+  static inline MyMutex mu_;
 };
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ATTRIBUTES_ANNOTALYSIS_H_
