@@ -5,6 +5,9 @@ nontrivial type which is `[[clang::trivial_abi]]`). Any such type can be used by
 value or plain reference/pointer in interop, all non-`Unpin` types must instead
 be used behind pinned pointers and references.
 
+See also: [Bitwise relocatability and
+Rust-movability](./bitwise_relocatable.md).
+
 ```dot
 digraph {
     rankdir=LR;
