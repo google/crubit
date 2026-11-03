@@ -71,8 +71,6 @@ crubit_cc_test(
     name = "cpp_api_deps_test",
     srcs = ["cpp_api_deps_test.cc"],
     platforms = ["android"],
-    # TODO(b/522829368): remove `no_windows` to enable.
-    tags = ["no_windows"],
     deps = [
         ":cc_consumer",
         "@googletest//:gtest_main",
