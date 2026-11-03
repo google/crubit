@@ -9,10 +9,10 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "common/check.h"
 #include "common/status_test_matchers.h"
 #include "common/string_view_conversion.h"
 #include "clang/AST/Attr.h"
@@ -41,7 +41,7 @@ T& LookupDecl(clang::ASTContext& context, absl::string_view name) {
   clang::DeclContextLookupResult result =
       context.getTranslationUnitDecl()->lookup(
           &context.Idents.get(StringRefFromStringView(name)));
-  CHECK(result.isSingleResult());
+  CRUBIT_CHECK(result.isSingleResult());
   return *cast<T>(result.front());
 }
 

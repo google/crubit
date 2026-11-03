@@ -848,7 +848,7 @@ fn generate_cc_union(schema: &Schema, u: &UnionDef) -> c::Tokens {
                             case k$vp: return lhs.payload_.$(vf)_ == rhs.payload_.$(vf)_;
                         })
                     })
-                    default: CHECK(false);
+                    default: CRUBIT_CHECK(false);
                 }
                 return false;
             }
@@ -864,7 +864,7 @@ fn generate_cc_union(schema: &Schema, u: &UnionDef) -> c::Tokens {
                             case k$vp: std::destroy_at(&payload_.$(vf)_); break;
                         })
                     })
-                    default: CHECK(false);
+                    default: CRUBIT_CHECK(false);
                 }
             }
             void CopyFrom(const $uname& other) {
@@ -881,7 +881,7 @@ fn generate_cc_union(schema: &Schema, u: &UnionDef) -> c::Tokens {
                             case k$vp: new (&payload_.$(vf)_) $cty(other.payload_.$(vf)_); break;
                         })
                     })
-                    default: CHECK(false);
+                    default: CRUBIT_CHECK(false);
                 }
             }
             void MoveFrom($uname&& other) noexcept {
@@ -898,7 +898,7 @@ fn generate_cc_union(schema: &Schema, u: &UnionDef) -> c::Tokens {
                             case k$vp: new (&payload_.$(vf)_) $cty(std::move(other.payload_.$(vf)_)); break;
                         })
                     })
-                    default: CHECK(false);
+                    default: CRUBIT_CHECK(false);
                 }
                 other.Clear();
             }
@@ -1160,7 +1160,7 @@ fn generate_cc(schema: &Schema) -> String {
         #include <utility>
 
         #include "third_party/absl/base/attributes.h"
-        #include "third_party/absl/log/check.h"
+        #include "common/check.h"
         #include "third_party/absl/strings/string_view.h"
         #include "rs_bindings_from_cc/ir_ffi_support.h"
 

@@ -17,7 +17,7 @@
 #include <utility>
 
 #include "absl/base/attributes.h"
-#include "absl/log/check.h"
+#include "common/check.h"
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/ir_ffi_support.h"
 
@@ -459,7 +459,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Variant {
       case kDecl: return lhs.payload_.decl_ == rhs.payload_.decl_;
       case kError: return lhs.payload_.error_ == rhs.payload_.error_;
       case kConstantArray: return lhs.payload_.constant_array_ == rhs.payload_.constant_array_;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     return false;
   }
@@ -472,7 +472,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Variant {
       case kDecl: std::destroy_at(&payload_.decl_); break;
       case kError: std::destroy_at(&payload_.error_); break;
       case kConstantArray: std::destroy_at(&payload_.constant_array_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void CopyFrom(const Variant& other) {
@@ -485,7 +485,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Variant {
       case kDecl: new (&payload_.decl_) uint64_t(other.payload_.decl_); break;
       case kError: new (&payload_.error_) ::crubit::ffi::FormattedError(other.payload_.error_); break;
       case kConstantArray: new (&payload_.constant_array_) ::crubit::ffi::cc_type::ConstantArrayType(other.payload_.constant_array_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void MoveFrom(Variant&& other) noexcept {
@@ -498,7 +498,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Variant {
       case kDecl: new (&payload_.decl_) uint64_t(std::move(other.payload_.decl_)); break;
       case kError: new (&payload_.error_) ::crubit::ffi::FormattedError(std::move(other.payload_.error_)); break;
       case kConstantArray: new (&payload_.constant_array_) ::crubit::ffi::cc_type::ConstantArrayType(std::move(other.payload_.constant_array_)); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     other.Clear();
   }
@@ -652,7 +652,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnqualifiedIdentifier {
       case kConstructor: return true;
       case kDestructor: return true;
       case kConversionOperator: return true;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     return false;
   }
@@ -664,7 +664,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnqualifiedIdentifier {
       case kConstructor: break;
       case kDestructor: break;
       case kConversionOperator: break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void CopyFrom(const UnqualifiedIdentifier& other) {
@@ -676,7 +676,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnqualifiedIdentifier {
       case kConstructor: break;
       case kDestructor: break;
       case kConversionOperator: break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void MoveFrom(UnqualifiedIdentifier&& other) noexcept {
@@ -688,7 +688,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnqualifiedIdentifier {
       case kConstructor: break;
       case kDestructor: break;
       case kConversionOperator: break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     other.Clear();
   }
@@ -829,7 +829,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
       case kSetter: return lhs.payload_.setter_ == rhs.payload_.setter_;
       case kGetter: return lhs.payload_.getter_ == rhs.payload_.getter_;
       case kConstructor: return true;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     return false;
   }
@@ -839,7 +839,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
       case kSetter: std::destroy_at(&payload_.setter_); break;
       case kGetter: std::destroy_at(&payload_.getter_); break;
       case kConstructor: break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void CopyFrom(const MemberFuncSemantic& other) {
@@ -849,7 +849,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
       case kSetter: new (&payload_.setter_) ::crubit::ffi::member_func_semantic::Setter(other.payload_.setter_); break;
       case kGetter: new (&payload_.getter_) ::crubit::ffi::member_func_semantic::Getter(other.payload_.getter_); break;
       case kConstructor: break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void MoveFrom(MemberFuncSemantic&& other) noexcept {
@@ -859,7 +859,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
       case kSetter: new (&payload_.setter_) ::crubit::ffi::member_func_semantic::Setter(std::move(other.payload_.setter_)); break;
       case kGetter: new (&payload_.getter_) ::crubit::ffi::member_func_semantic::Getter(std::move(other.payload_.getter_)); break;
       case kConstructor: break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     other.Clear();
   }
@@ -1050,7 +1050,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StatusOrOptionalString {
       case kNone: return true;
       case kOkValue: return lhs.payload_.ok_value_ == rhs.payload_.ok_value_;
       case kErr: return lhs.payload_.err_ == rhs.payload_.err_;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     return false;
   }
@@ -1060,7 +1060,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StatusOrOptionalString {
       case kNone: break;
       case kOkValue: std::destroy_at(&payload_.ok_value_); break;
       case kErr: std::destroy_at(&payload_.err_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void CopyFrom(const StatusOrOptionalString& other) {
@@ -1070,7 +1070,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StatusOrOptionalString {
       case kNone: break;
       case kOkValue: new (&payload_.ok_value_) FfiString(other.payload_.ok_value_); break;
       case kErr: new (&payload_.err_) FfiString(other.payload_.err_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void MoveFrom(StatusOrOptionalString&& other) noexcept {
@@ -1080,7 +1080,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StatusOrOptionalString {
       case kNone: break;
       case kOkValue: new (&payload_.ok_value_) FfiString(std::move(other.payload_.ok_value_)); break;
       case kErr: new (&payload_.err_) FfiString(std::move(other.payload_.err_)); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     other.Clear();
   }
@@ -1220,7 +1220,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateArg {
       case kType: return lhs.payload_.type_ == rhs.payload_.type_;
       case kBool: return lhs.payload_.bool_value_ == rhs.payload_.bool_value_;
       case kInt: return lhs.payload_.int_value_ == rhs.payload_.int_value_;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     return false;
   }
@@ -1230,7 +1230,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateArg {
       case kType: std::destroy_at(&payload_.type_); break;
       case kBool: std::destroy_at(&payload_.bool_value_); break;
       case kInt: std::destroy_at(&payload_.int_value_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void CopyFrom(const TemplateArg& other) {
@@ -1240,7 +1240,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateArg {
       case kType: new (&payload_.type_) ::crubit::ffi::CcType(other.payload_.type_); break;
       case kBool: new (&payload_.bool_value_) bool(other.payload_.bool_value_); break;
       case kInt: new (&payload_.int_value_) int64_t(other.payload_.int_value_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void MoveFrom(TemplateArg&& other) noexcept {
@@ -1250,7 +1250,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateArg {
       case kType: new (&payload_.type_) ::crubit::ffi::CcType(std::move(other.payload_.type_)); break;
       case kBool: new (&payload_.bool_value_) bool(std::move(other.payload_.bool_value_)); break;
       case kInt: new (&payload_.int_value_) int64_t(std::move(other.payload_.int_value_)); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     other.Clear();
   }
@@ -1459,7 +1459,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI BridgeType {
       case kStdString: return true;
       case kProtoMessageBridge: return lhs.payload_.proto_message_bridge_ == rhs.payload_.proto_message_bridge_;
       case kCallable: return lhs.payload_.callable_ == rhs.payload_.callable_;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     return false;
   }
@@ -1472,7 +1472,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI BridgeType {
       case kStdString: break;
       case kProtoMessageBridge: std::destroy_at(&payload_.proto_message_bridge_); break;
       case kCallable: std::destroy_at(&payload_.callable_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void CopyFrom(const BridgeType& other) {
@@ -1485,7 +1485,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI BridgeType {
       case kStdString: break;
       case kProtoMessageBridge: new (&payload_.proto_message_bridge_) ::crubit::ffi::bridge_type::ProtoMessageBridge(other.payload_.proto_message_bridge_); break;
       case kCallable: new (&payload_.callable_) ::crubit::ffi::bridge_type::Callable(other.payload_.callable_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void MoveFrom(BridgeType&& other) noexcept {
@@ -1498,7 +1498,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI BridgeType {
       case kStdString: break;
       case kProtoMessageBridge: new (&payload_.proto_message_bridge_) ::crubit::ffi::bridge_type::ProtoMessageBridge(std::move(other.payload_.proto_message_bridge_)); break;
       case kCallable: new (&payload_.callable_) ::crubit::ffi::bridge_type::Callable(std::move(other.payload_.callable_)); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     other.Clear();
   }
@@ -1621,7 +1621,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kIntegers: return lhs.payload_.integer_elements_ == rhs.payload_.integer_elements_;
       case kArrays: return lhs.payload_.array_elements_ == rhs.payload_.array_elements_;
       case kStringLiteral: return lhs.payload_.string_literal_ == rhs.payload_.string_literal_;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     return false;
   }
@@ -1631,7 +1631,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kIntegers: std::destroy_at(&payload_.integer_elements_); break;
       case kArrays: std::destroy_at(&payload_.array_elements_); break;
       case kStringLiteral: std::destroy_at(&payload_.string_literal_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void CopyFrom(const Kind& other) {
@@ -1641,7 +1641,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kIntegers: new (&payload_.integer_elements_) ::crubit::ffi::array_value::IntegerElements(other.payload_.integer_elements_); break;
       case kArrays: new (&payload_.array_elements_) ::crubit::ffi::array_value::ArrayElements(other.payload_.array_elements_); break;
       case kStringLiteral: new (&payload_.string_literal_) FfiVec<uint8_t>(other.payload_.string_literal_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void MoveFrom(Kind&& other) noexcept {
@@ -1651,7 +1651,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kIntegers: new (&payload_.integer_elements_) ::crubit::ffi::array_value::IntegerElements(std::move(other.payload_.integer_elements_)); break;
       case kArrays: new (&payload_.array_elements_) ::crubit::ffi::array_value::ArrayElements(std::move(other.payload_.array_elements_)); break;
       case kStringLiteral: new (&payload_.string_literal_) FfiVec<uint8_t>(std::move(other.payload_.string_literal_)); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     other.Clear();
   }
@@ -1748,7 +1748,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kInteger: return lhs.payload_.value_ == rhs.payload_.value_;
       case kArray: return lhs.payload_.array_value_ == rhs.payload_.array_value_;
       case kStringView: return lhs.payload_.string_view_value_ == rhs.payload_.string_view_value_;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     return false;
   }
@@ -1758,7 +1758,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kInteger: std::destroy_at(&payload_.value_); break;
       case kArray: std::destroy_at(&payload_.array_value_); break;
       case kStringView: std::destroy_at(&payload_.string_view_value_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void CopyFrom(const Kind& other) {
@@ -1768,7 +1768,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kInteger: new (&payload_.value_) ::crubit::ffi::IntegerConstant(other.payload_.value_); break;
       case kArray: new (&payload_.array_value_) ::crubit::ffi::ArrayValue(other.payload_.array_value_); break;
       case kStringView: new (&payload_.string_view_value_) FfiVec<uint8_t>(other.payload_.string_view_value_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void MoveFrom(Kind&& other) noexcept {
@@ -1778,7 +1778,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kInteger: new (&payload_.value_) ::crubit::ffi::IntegerConstant(std::move(other.payload_.value_)); break;
       case kArray: new (&payload_.array_value_) ::crubit::ffi::ArrayValue(std::move(other.payload_.array_value_)); break;
       case kStringView: new (&payload_.string_view_value_) FfiVec<uint8_t>(std::move(other.payload_.string_view_value_)); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     other.Clear();
   }
@@ -2121,7 +2121,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kC9Co: return lhs.payload_.c9_co_ == rhs.payload_.c9_co_;
       case kStdAtomic: return lhs.payload_.std_atomic_ == rhs.payload_.std_atomic_;
       case kNonSpecial: return true;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     return false;
   }
@@ -2140,7 +2140,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kC9Co: std::destroy_at(&payload_.c9_co_); break;
       case kStdAtomic: std::destroy_at(&payload_.std_atomic_); break;
       case kNonSpecial: break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void CopyFrom(const Kind& other) {
@@ -2159,7 +2159,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kC9Co: new (&payload_.c9_co_) ::crubit::ffi::template_specialization::C9Co(other.payload_.c9_co_); break;
       case kStdAtomic: new (&payload_.std_atomic_) ::crubit::ffi::template_specialization::StdAtomic(other.payload_.std_atomic_); break;
       case kNonSpecial: break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void MoveFrom(Kind&& other) noexcept {
@@ -2178,7 +2178,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
       case kC9Co: new (&payload_.c9_co_) ::crubit::ffi::template_specialization::C9Co(std::move(other.payload_.c9_co_)); break;
       case kStdAtomic: new (&payload_.std_atomic_) ::crubit::ffi::template_specialization::StdAtomic(std::move(other.payload_.std_atomic_)); break;
       case kNonSpecial: break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     other.Clear();
   }
@@ -3077,7 +3077,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Item {
       case kNamespace: return lhs.payload_.namespace_decl_ == rhs.payload_.namespace_decl_;
       case kUseMod: return lhs.payload_.use_mod_ == rhs.payload_.use_mod_;
       case kExistingRustType: return lhs.payload_.existing_rust_type_ == rhs.payload_.existing_rust_type_;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     return false;
   }
@@ -3096,7 +3096,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Item {
       case kNamespace: std::destroy_at(&payload_.namespace_decl_); break;
       case kUseMod: std::destroy_at(&payload_.use_mod_); break;
       case kExistingRustType: std::destroy_at(&payload_.existing_rust_type_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void CopyFrom(const Item& other) {
@@ -3115,7 +3115,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Item {
       case kNamespace: new (&payload_.namespace_decl_) FfiRc<::crubit::ffi::Namespace>(other.payload_.namespace_decl_); break;
       case kUseMod: new (&payload_.use_mod_) FfiRc<::crubit::ffi::UseMod>(other.payload_.use_mod_); break;
       case kExistingRustType: new (&payload_.existing_rust_type_) FfiRc<::crubit::ffi::ExistingRustType>(other.payload_.existing_rust_type_); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
   }
   void MoveFrom(Item&& other) noexcept {
@@ -3134,7 +3134,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Item {
       case kNamespace: new (&payload_.namespace_decl_) FfiRc<::crubit::ffi::Namespace>(std::move(other.payload_.namespace_decl_)); break;
       case kUseMod: new (&payload_.use_mod_) FfiRc<::crubit::ffi::UseMod>(std::move(other.payload_.use_mod_)); break;
       case kExistingRustType: new (&payload_.existing_rust_type_) FfiRc<::crubit::ffi::ExistingRustType>(std::move(other.payload_.existing_rust_type_)); break;
-      default: CHECK(false);
+      default: CRUBIT_CHECK(false);
     }
     other.Clear();
   }

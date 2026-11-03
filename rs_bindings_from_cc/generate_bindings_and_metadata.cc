@@ -14,10 +14,10 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "common/check.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/collect_instantiations.h"
@@ -46,7 +46,7 @@ std::vector<const ir_proto::Record* absl_nonnull> FindInstantiationsInNamespace(
   absl::flat_hash_set<ItemId> record_ids;
   for (const auto* type_alias : get_items_if<ir_proto::TypeAlias>(ir)) {
     if (ItemId(type_alias->enclosing_item_id()) == namespace_id) {
-      CHECK(type_alias->underlying_type().variant().has_decl());
+      CRUBIT_CHECK(type_alias->underlying_type().variant().has_decl());
       record_ids.insert(ItemId(type_alias->underlying_type().variant().decl()));
     }
   }

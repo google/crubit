@@ -14,7 +14,6 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
@@ -23,6 +22,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
 #include "absl/types/span.h"
+#include "common/check.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/decl_importer.h"
@@ -229,9 +229,9 @@ bool RunToolWithInMemoryFiles(
 
 absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
   // Caller should verify that the inputs are not empty.
-  CHECK(!options.extra_source_code_for_testing.empty() ||
-        !options.public_headers.empty() ||
-        !options.extra_instantiations.empty());
+  CRUBIT_CHECK(!options.extra_source_code_for_testing.empty() ||
+               !options.public_headers.empty() ||
+               !options.extra_instantiations.empty());
 
   clang::tooling::FileContentMappings file_contents;
 

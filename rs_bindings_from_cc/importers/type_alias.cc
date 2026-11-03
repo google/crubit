@@ -10,13 +10,13 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
-#include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
+#include "common/check.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -309,7 +309,8 @@ std::unique_ptr<ir_proto::Item> TypeAliasImporter::ImportFunctionAlias(
     return item;
   }
 
-  CHECK(item->has_func()) << "Importing a FunctionDecl should produce a Func";
+  CRUBIT_CHECK(item->has_func())
+      << "Importing a FunctionDecl should produce a Func";
   ir_proto::Func* func = item->mutable_func();
   func->set_unique_name(unique_name);
   func->set_id(id.value());
