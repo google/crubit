@@ -82,3 +82,19 @@ a Rust `Option<T>` with `From`/`Into`, e.g. `Option::from(opt)` or
 `Some(x).into()`.
 
 API: support/cc_std_impl/optional.rs
+
+## Unsupported `std` templates
+
+Concrete instantiations of unsupported `std` templates still receive opaque
+bindings you can pass around (by `Ctor!` or `Pin`) but not inspect. For example,
+a C++ function returning `std::map<int, Reading>` is not rejected; Crubit binds
+the concrete instantiation as an opaque, non-Rust-movable type:
+
+```rust
+pub fn LatestReadings() -> ::ctor::Ctor![crate::__CcTemplateInstNSt3__u3mapIi…];
+```
+
+Member types like `value_compare` are reported as
+`// error: … could not be bound`. Supported `std` types (`string_view`,
+`unique_ptr`, `vector`, `optional`, etc.) get ergonomic `cpp_std` mappings. Use
+`--config=crubit-genfiles` to see which you got.
