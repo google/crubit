@@ -21,11 +21,15 @@ const fn drain(mut o: optional<i32>) -> (bool, Option<i32>, bool) {
 
 const DRAINED_NEW: (bool, Option<i32>, bool) = drain(optional::new(5));
 const DRAINED_NONE: (bool, Option<i32>, bool) = drain(optional::<i32>::nullopt());
+const INTO_OPTION_NEW: Option<i32> = optional::new(5).into_option();
+const INTO_OPTION_NONE: Option<i32> = optional::<i32>::nullopt().into_option();
 
 #[gtest]
 fn test_const_api() {
     expect_eq!(DRAINED_NEW, (true, Some(5), true));
     expect_eq!(DRAINED_NONE, (false, None, true));
+    expect_eq!(INTO_OPTION_NEW, Some(5));
+    expect_eq!(INTO_OPTION_NONE, None);
 }
 
 /// Exercises the `const` API of `trivial_optional<T>`, which has no destructor and so may simply
@@ -39,11 +43,15 @@ const fn peek(mut o: trivial_optional<i32>) -> (bool, Option<i32>, bool) {
 
 const PEEKED_NEW: (bool, Option<i32>, bool) = peek(trivial_optional::new(5));
 const PEEKED_NONE: (bool, Option<i32>, bool) = peek(trivial_optional::<i32>::nullopt());
+const TRIVIAL_INTO_OPTION_NEW: Option<i32> = trivial_optional::new(5).into_option();
+const TRIVIAL_INTO_OPTION_NONE: Option<i32> = trivial_optional::<i32>::nullopt().into_option();
 
 #[gtest]
 fn test_trivial_const_api() {
     expect_eq!(PEEKED_NEW, (true, Some(5), true));
     expect_eq!(PEEKED_NONE, (false, None, true));
+    expect_eq!(TRIVIAL_INTO_OPTION_NEW, Some(5));
+    expect_eq!(TRIVIAL_INTO_OPTION_NONE, None);
 }
 
 /// `std::optional<T>` is layout-compatible even when passed by value. `int` is `Copy`, so the
@@ -161,6 +169,18 @@ fn test_conversions_between_optional_types() {
 
     let none: trivial_optional<i32> = optional::<i32>::nullopt().into();
     expect_true!(none.is_none());
+}
+
+#[gtest]
+fn test_into_option_on_cpp_return_values() {
+    let o = MakeOptional(11);
+    expect_eq!(o.into_option(), Some(11));
+    expect_eq!(trivial_optional::<i32>::nullopt().into_option(), None);
+
+    let v = MakeOptionalVector(12).into_option().expect("should be engaged");
+    expect_eq!(v.len(), 1);
+    expect_eq!(v[0], 12);
+    expect_true!(optional::<vector<i32>>::nullopt().into_option().is_none());
 }
 
 /// A payload which is not Rust-movable makes the `optional` itself `!Unpin`, because the payload

@@ -2,15 +2,15 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-//! Tests for constructing and destroying `cc_std::std::optional` payloads which cannot be moved
-//! or produced by value, such as `cc_std::std::string`.
+//! Tests for `cc_std::std::optional` and `cc_std::std::trivial_optional`.
 
 use core::cell::Cell;
 use core::marker::{PhantomPinned, Unpin};
-use cpp_std::{optional, string};
+use cpp_std::{optional, string, trivial_optional};
 use ctor::{emplace, Ctor, CtorNew, FnCtor, Infallible};
 use googletest::{expect_eq, expect_true, gtest};
 use static_assertions::assert_not_impl_any;
+use std::sync::Arc;
 
 // An `optional` holding a `!Unpin` payload must itself be `!Unpin`, otherwise safe code could
 // move it and invalidate the payload's self-references.
@@ -166,4 +166,44 @@ fn test_drop_of_empty_optional_destroys_nothing() {
         expect_eq!(counter.get(), 1);
     }
     expect_eq!(counter.get(), 1);
+}
+
+#[gtest]
+fn test_trivial_optional_into_option() {
+    const SOME: Option<i32> = trivial_optional::new(42).into_option();
+    const NONE: Option<i32> = trivial_optional::<i32>::nullopt().into_option();
+    expect_eq!(SOME, Some(42));
+    expect_eq!(NONE, None);
+
+    let opt = trivial_optional::new(7);
+    let matched = match opt.into_option() {
+        Some(v) => v,
+        None => -1,
+    };
+    expect_eq!(matched, 7);
+    // `trivial_optional<i32>` is `Copy`, so `opt` remains usable after `into_option()`.
+    expect_eq!(opt.as_ref(), Some(&7));
+}
+
+#[gtest]
+fn test_optional_into_option_moves_payload_once() {
+    const SOME: Option<i32> = optional::new(42).into_option();
+    const NONE: Option<i32> = optional::<i32>::nullopt().into_option();
+    expect_eq!(SOME, Some(42));
+    expect_eq!(NONE, None);
+
+    let owner = Arc::new(99);
+    expect_eq!(Arc::strong_count(&owner), 1);
+
+    {
+        let opt = optional::new(Arc::clone(&owner));
+        expect_eq!(Arc::strong_count(&owner), 2);
+
+        let converted = opt.into_option();
+        expect_eq!(Arc::strong_count(&owner), 2);
+        expect_eq!(converted.as_deref(), Some(&99));
+    }
+    expect_eq!(Arc::strong_count(&owner), 1);
+
+    expect_eq!(optional::<Arc<i32>>::nullopt().into_option(), None);
 }

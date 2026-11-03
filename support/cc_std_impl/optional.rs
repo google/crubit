@@ -115,6 +115,12 @@ impl<T> trivial_optional<T> {
             None
         }
     }
+
+    /// Converts the `trivial_optional` into an [`Option`].
+    #[inline]
+    pub const fn into_option(mut self) -> Option<T> {
+        self.take()
+    }
 }
 
 impl<T: Copy> Default for trivial_optional<T> {
@@ -145,8 +151,8 @@ impl<T: Copy> From<Option<T>> for trivial_optional<T> {
 
 impl<T> From<trivial_optional<T>> for Option<T> {
     #[inline]
-    fn from(mut value: trivial_optional<T>) -> Self {
-        value.take()
+    fn from(value: trivial_optional<T>) -> Self {
+        value.into_option()
     }
 }
 
@@ -236,6 +242,18 @@ impl<T> optional<T> {
     #[inline]
     pub const fn take(&mut self) -> Option<T> {
         self.inner.take()
+    }
+
+    /// Converts the `optional` into an [`Option`].
+    ///
+    /// This moves the value out, and so is unavailable when `self` is pinned.
+    #[inline]
+    pub const fn into_option(mut self) -> Option<T> {
+        let value = self.take();
+        // `self` is now empty (`engaged` is false), so `Drop` would be a no-op; forgetting it
+        // allows `into_option` to be `const`.
+        core::mem::forget(self);
+        value
     }
 
     /// Destroys the contained value, if any, leaving the `optional` empty.
@@ -331,8 +349,8 @@ impl<T> From<Option<T>> for optional<T> {
 
 impl<T> From<optional<T>> for Option<T> {
     #[inline]
-    fn from(mut value: optional<T>) -> Self {
-        value.take()
+    fn from(value: optional<T>) -> Self {
+        value.into_option()
     }
 }
 
