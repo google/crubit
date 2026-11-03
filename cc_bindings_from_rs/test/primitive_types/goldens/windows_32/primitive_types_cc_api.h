@@ -237,7 +237,7 @@ namespace primitive_types::test_c_void_ptr {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: primitive_types_golden :: test_c_void_ptr :: "
-    "StructWithCVoidPointerMember") alignas(4) [[clang::trivial_abi]]
+    "StructWithCVoidPointerMember") [[clang::trivial_abi]]
 StructWithCVoidPointerMember final {
  public:
   const void* ptr_const{};

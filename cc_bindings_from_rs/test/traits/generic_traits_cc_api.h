@@ -26,8 +26,7 @@
 
 namespace generic_traits {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generic_traits_golden :: AnotherStruct") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: generic_traits_golden :: AnotherStruct")
     [[clang::trivial_abi]] AnotherStruct final {
  public:
   ::std::int32_t y{};
@@ -36,8 +35,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generic_traits_golden :: StructGeneric") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: generic_traits_golden :: StructGeneric")
     [[clang::trivial_abi]] StructGeneric final {
  public:
   static ::generic_traits::StructGeneric new_(::std::int32_t x);

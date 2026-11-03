@@ -73,6 +73,15 @@ pub fn read_proto_ref(p: &FooRequestStats) -> i32 {
 pub struct NewStatusOr<T> {
     status: usize,
     data: std::mem::MaybeUninit<T>,
+    // `absl::StatusOr<T>` derives from `StatusOrData<T>` (the two fields above)
+    // and then from four empty `*CtorBase` / `*AssignBase` classes. The
+    // Itanium ABI gives those empty bases no storage, but the Microsoft ABI gives
+    // the first one a byte after the non-empty base, so under MSVC
+    // `sizeof(absl::StatusOr<T>)` is one byte more, rounded up to the
+    // alignment (e.g. 24 instead of 16 on x86_64, 12 instead of 8 on x86 for
+    // a pointer-sized `T`).
+    #[cfg(target_env = "msvc")]
+    _msvc_empty_bases: u8,
 }
 
 impl<T> NewStatusOr<T> {
@@ -80,6 +89,8 @@ impl<T> NewStatusOr<T> {
         Self {
             status: 1, // Inlined absl::Status::Ok() representation
             data: std::mem::MaybeUninit::new(value),
+            #[cfg(target_env = "msvc")]
+            _msvc_empty_bases: 0,
         }
     }
 }

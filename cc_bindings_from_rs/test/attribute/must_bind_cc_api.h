@@ -26,7 +26,7 @@
 namespace must_bind {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original")
     [[clang::trivial_abi]] Original final {
  public:
   // CRUBIT_ANNOTATE: must_bind=

@@ -33,7 +33,7 @@
 
 namespace compare {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyOrd") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyOrd")
     [[clang::trivial_abi]] MyOrd final {
  public:
   bool operator==(::compare::MyOrd const& other) const;
@@ -46,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyOrd") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyUnordered") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyUnordered")
     [[clang::trivial_abi]] MyUnordered final {
  public:
   bool operator==(::compare::MyUnordered const& other) const;
@@ -133,7 +133,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace compare {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyPartialOrd") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyPartialOrd")
     [[clang::trivial_abi]] MyPartialOrd final {
  public:
   bool operator==(::compare::MyPartialOrd const& other) const;

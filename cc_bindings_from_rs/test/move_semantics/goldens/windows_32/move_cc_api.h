@@ -31,7 +31,7 @@
 
 namespace move {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable")
     [[clang::trivial_abi]] Copyable final {
  public:
   static ::move::Copyable from_byte(::std::uint8_t byte);
