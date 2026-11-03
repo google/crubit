@@ -156,10 +156,12 @@ fn test_mangled_name_of_destructor() {
     let proto = ir_proto_from_cc("struct Class { ~Class(); };").unwrap();
 
     let ir = make_test_ir(&proto).unwrap();
-    let mangled_name = if test_platform().uses_msvc_cxx_abi() {
-        "??1Class@@QEAA@XZ" // Base destructor.
+    let platform = test_platform();
+    let mangled_name = if platform.uses_msvc_cxx_abi() {
+        // Base destructor.
+        format!("??1Class@@{}@XZ", platform.msvc_method_qualifiers())
     } else {
-        "_ZN5ClassD1Ev" // Complete destructor.
+        "_ZN5ClassD1Ev".to_string() // Complete destructor.
     };
     assert_ir_matches!(
         ir,
@@ -187,10 +189,12 @@ fn test_mangled_name_of_destructor_with_virtual_base() {
     .unwrap();
 
     let ir = make_test_ir(&proto).unwrap();
-    let mangled_name = if test_platform().uses_msvc_cxx_abi() {
-        "??_DDerived@@QEAAXXZ" // Complete destructor.
+    // All of these are complete destructors.
+    let platform = test_platform();
+    let mangled_name = if platform.uses_msvc_cxx_abi() {
+        format!("??_DDerived@@{}XXZ", platform.msvc_method_qualifiers())
     } else {
-        "_ZN7DerivedD1Ev" // Complete destructor.
+        "_ZN7DerivedD1Ev".to_string()
     };
     assert_ir_matches!(
         ir,
@@ -7073,6 +7077,9 @@ fn test_top_level_constexpr_array_with_too_large_dimension() {
 
 #[gtest]
 fn test_top_level_constexpr_array_with_unrepresentable_element() {
+    if !test_platform().supports_int128() {
+        return;
+    }
     let proto = ir_proto_from_cc("constexpr __int128 x[] = {1, (__int128)1 << 64};").unwrap();
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();

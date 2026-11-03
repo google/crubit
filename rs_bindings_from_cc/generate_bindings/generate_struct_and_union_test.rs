@@ -10,7 +10,7 @@ use googletest::{expect_that, gtest, matchers::contains_substring};
 use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_record, with_lifetime_macros};
 use multiplatform_ir_testing::{ir_proto_from_cc, ir_proto_from_record_impl_debug_cc};
 use multiplatform_testing::test_platform;
-use proc_macro2::TokenStream;
+use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 use test_generators::{
     generate_bindings_tokens_for_test, generate_bindings_tokens_from_assumed_lifetimes_cc,
@@ -1916,12 +1916,13 @@ fn test_supported_suppressed_field_types() -> Result<()> {
     let mut ir = make_test_ir(&proto)?;
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    let pointer_size = Literal::usize_unsuffixed(test_platform().pointer_size());
     assert_rs_matches!(
         rs_api,
         quote! {
         struct Trivial {
             ...
-            pub(crate) hidden_field: [::core::mem::MaybeUninit<u8>; 8],
+            pub(crate) hidden_field: [::core::mem::MaybeUninit<u8>; #pointer_size],
             ...
         }}
     );

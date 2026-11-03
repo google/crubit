@@ -13,6 +13,7 @@ use ir::{Func, Item, UnqualifiedIdentifier};
 use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_func, with_lifetime_macros};
 use multiplatform_ir_testing::ir_proto_from_cc;
 use multiplatform_testing::test_platform;
+use proc_macro2::TokenStream;
 use quote::quote;
 use test_generators::{
     generate_bindings_tokens_for_test, generate_bindings_tokens_from_assumed_lifetimes_cc,
@@ -2462,26 +2463,33 @@ fn test_thunk_ident_special_names() -> Result<()> {
 
     // `thunk_ident` escapes the target's mangled name, so the expected values
     // depend on the mangling scheme of the target's C++ ABI.
-    let uses_msvc_cxx_abi = test_platform().uses_msvc_cxx_abi();
-
+    let platform = test_platform();
     let destructor = ir.get_functions_by_name(&UnqualifiedIdentifier::Destructor).next().unwrap();
-    let expected = if uses_msvc_cxx_abi {
-        "__rust_thunk___u63__u63_1Class_u64__u64_QEAA_u64_XZ" // `??1Class@@QEAA@XZ`
+    let expected = if platform.uses_msvc_cxx_abi() {
+        // `??1Class@@QEAA@XZ` on x86_64.
+        format!(
+            "__rust_thunk___u63__u63_1Class_u64__u64_{}_u64_XZ",
+            platform.msvc_method_qualifiers()
+        )
     } else {
-        "__rust_thunk___ZN5ClassD1Ev"
+        "__rust_thunk___ZN5ClassD1Ev".to_string()
     };
-    assert_eq!(thunk_ident(&db, destructor), make_rs_ident(expected));
+    assert_eq!(thunk_ident(&db, destructor), make_rs_ident(&expected));
 
     let default_constructor = ir
         .get_functions_by_name(&UnqualifiedIdentifier::Constructor)
         .find(|f| f.params().len() == 1)
         .unwrap();
-    let expected = if uses_msvc_cxx_abi {
-        "__rust_thunk___u63__u63_0Class_u64__u64_QEAA_u64_XZ" // `??0Class@@QEAA@XZ`
+    let expected = if platform.uses_msvc_cxx_abi() {
+        // `??0Class@@QEAA@XZ` on x86_64.
+        format!(
+            "__rust_thunk___u63__u63_0Class_u64__u64_{}_u64_XZ",
+            platform.msvc_method_qualifiers()
+        )
     } else {
-        "__rust_thunk___ZN5ClassC1Ev"
+        "__rust_thunk___ZN5ClassC1Ev".to_string()
     };
-    assert_eq!(thunk_ident(&db, default_constructor), make_rs_ident(expected));
+    assert_eq!(thunk_ident(&db, default_constructor), make_rs_ident(&expected));
     Ok(())
 }
 
@@ -2583,8 +2591,15 @@ fn test_overloaded_functions() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {pub fn f(i: ::ffi_11::c_int)});
     assert_rs_not_matches!(rs_api, quote! {pub fn f(... S1 ...)});
 
-    // And thunks aren't generated for either.
-    assert_cc_not_matches!(rs_api_impl, quote! {f ( ... )});
+    // And thunks aren't generated for either (or for the overloaded methods of
+    // `S1`).  The patterns below don't match the thunk of the non-overloaded
+    // `S2::f`, which is generated on some platforms (e.g. on 32-bit x86
+    // Windows, because of `__thiscall`).
+    assert_cc_not_matches!(rs_api_impl, quote! { { f ( ... ) ; } });
+    assert_cc_not_matches!(
+        rs_api_impl,
+        quote! { (struct S1 * __this ...) { __this -> f ( ... ) ; } }
+    );
 
     // But we can import member functions that have the same name as a free
     // function.
@@ -3041,6 +3056,21 @@ fn test_unpin_by_value_return() -> Result<()> {
     Ok(())
 }
 
+/// Asserts that `rs_api` contains `decl` (the declaration of the
+/// `extern "C"` function that Rust calls for a non-inline instance method).
+/// `decl` has a `#[link_name = ...]` attribute if and only if Rust calls the
+/// C++ method directly (rather than through a C++ thunk, e.g. because the
+/// method uses `__thiscall`).
+fn assert_rs_matches_method_decl(rs_api: &TokenStream, decl: TokenStream) {
+    let decl_with_link_name = quote! { #[link_name = ...] #decl };
+    if test_platform().instance_methods_use_c_calling_convention() {
+        assert_rs_matches!(rs_api, decl_with_link_name);
+    } else {
+        assert_rs_matches!(rs_api, decl);
+        assert_rs_not_matches!(rs_api, decl_with_link_name);
+    }
+}
+
 #[gtest]
 fn test_unpin_rvalue_ref_qualified_method() -> Result<()> {
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
@@ -3059,13 +3089,12 @@ fn test_unpin_rvalue_ref_qualified_method() -> Result<()> {
             }
         }
     );
-    assert_rs_matches!(
-        rs_api,
+    assert_rs_matches_method_decl(
+        &rs_api,
         quote! {
-            #[link_name = ...]
             pub(crate) unsafe fn ... < 'a > (__this :
                 :: ctor :: RvalueReference < 'a , crate :: TrivialWithRvalueRefQualifiedMethod >) ;
-        }
+        },
     );
     Ok(())
 }
@@ -3088,13 +3117,12 @@ fn test_unpin_rvalue_ref_const_qualified_method() -> Result<()> {
             }
         }
     );
-    assert_rs_matches!(
-        rs_api,
+    assert_rs_matches_method_decl(
+        &rs_api,
         quote! {
-            #[link_name = ...]
             pub(crate) unsafe fn ... < 'a > (__this :
                 :: ctor :: ConstRvalueReference < 'a , crate :: TrivialWithRvalueRefConstQualifiedMethod >) ;
-        }
+        },
     );
     Ok(())
 }

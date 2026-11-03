@@ -16,9 +16,6 @@ pub enum Platform {
     X86MacOS,
     ArmMacOS,
     X86Windows,
-    // TODO(b/561578105): Also run `multiplatform_rust_test` tests for
-    // `I686Windows` (today tests have to ask for it explicitly, e.g. through
-    // `ir_testing::ir_proto_from_cc`).  This requires fixing failing tests first.
     I686Windows,
 }
 
@@ -37,7 +34,8 @@ impl Platform {
     /// Returns whether the platform uses the Microsoft C++ ABI rather than the
     /// Itanium one.  The two disagree about name mangling, record layout, and
     /// the underlying type of an unfixed `enum`, so some test expectations
-    /// have to differ.
+    /// have to differ.  (Mangled names of instance methods also differ between
+    /// Microsoft C++ ABI platforms - see `msvc_method_qualifiers`.)
     pub fn uses_msvc_cxx_abi(self) -> bool {
         matches!(self, Platform::X86Windows | Platform::I686Windows)
     }
@@ -64,6 +62,49 @@ impl Platform {
         } else {
             (quote! { c_uint }, quote! { new_c_uint })
         }
+    }
+
+    /// Returns the part of a Microsoft C++ ABI mangled name that encodes the
+    /// access, the `this` qualifiers, and the calling convention of a public,
+    /// non-virtual, non-const instance method that uses the default calling
+    /// convention.  For example, `QEAA` in `??1C@@QEAA@XZ` (`C::~C()`).
+    ///
+    /// Panics if the platform doesn't use the Microsoft C++ ABI.
+    pub fn msvc_method_qualifiers(self) -> &'static str {
+        match self {
+            // Public, `__ptr64` `this`, no cv-qualifiers, `__cdecl`.
+            Platform::X86Windows => "QEAA",
+            // Public, no cv-qualifiers, `__thiscall`.
+            Platform::I686Windows => "QAE",
+            Platform::X86Linux | Platform::ArmLinux | Platform::X86MacOS | Platform::ArmMacOS => {
+                panic!("{self:?} doesn't use the Microsoft C++ ABI")
+            }
+        }
+    }
+
+    /// Returns the size of a pointer in bytes.
+    pub fn pointer_size(self) -> usize {
+        match self {
+            Platform::I686Windows => 4,
+            Platform::X86Linux
+            | Platform::ArmLinux
+            | Platform::X86MacOS
+            | Platform::ArmMacOS
+            | Platform::X86Windows => 8,
+        }
+    }
+
+    /// Returns whether Clang supports `__int128` on the platform (it doesn't
+    /// on 32-bit targets).
+    pub fn supports_int128(self) -> bool {
+        self.pointer_size() == 8
+    }
+
+    /// Returns whether non-variadic C++ instance methods use the C calling
+    /// convention by default.  On 32-bit x86 Windows they use `__thiscall`,
+    /// and therefore Rust calls them through a C++ thunk.
+    pub fn instance_methods_use_c_calling_convention(self) -> bool {
+        !matches!(self, Platform::I686Windows)
     }
 
     /// Returns whether Clang supports the `vectorcall` calling convention on
@@ -106,6 +147,7 @@ static TEST_PLATFORM: LazyLock<Result<Platform, String>> = LazyLock::new(|| {
         "darwin_x86_64" => Platform::X86MacOS,
         "darwin_arm64" => Platform::ArmMacOS,
         "windows_x86_64" => Platform::X86Windows,
+        "windows_x86" => Platform::I686Windows,
         _ => return Err(format!("Unknown platform: {env}")),
     };
     Ok(platform)

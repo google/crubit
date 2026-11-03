@@ -14,6 +14,7 @@ _PLATFORMS = [
     "darwin_x86_64",
     "darwin_arm64",
     "windows_x86_64",
+    "windows_x86",
 ]
 
 # The platform whose `rust_test` target owns the compiled test binary. The targets for the other
