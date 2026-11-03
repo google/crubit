@@ -82,6 +82,12 @@ DEPS = {
 
 TAGS = {}
 
+COPTS = {
+    # Verify that the generated `deprecated_rs_api_impl.cc` compiles without
+    # deprecation warnings (even if the default flags disable them).
+    "deprecated": ["-Werror=deprecated-declarations"],
+}
+
 ASPECT_HINTS = {
     "composable_bridging_template_type": [
         "//features:template_instantiation",
@@ -145,6 +151,7 @@ rust_bindings_from_cc_cli_flag(
     aspect_hints = [
         "//features:supported",
     ] + (ASPECT_HINTS[name] if name in ASPECT_HINTS else []) + ([":enable_kythe_annotations"] if name.endswith("_annotations") else []),
+    copts = COPTS[name] if name in COPTS else [],
     deps = [
         ((d + "_cc") if d in TESTS else d)
         for d in (DEPS[name] if name in DEPS else [])

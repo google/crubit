@@ -18,6 +18,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 static_assert(sizeof(struct crubit::test::ArgumentToBoundOverload) == 1);
 static_assert(alignof(struct crubit::test::ArgumentToBoundOverload) == 1);

@@ -19,6 +19,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 extern "C" void __rust_thunk___Z20bridge_alias_to_instv(
     unsigned char* __return_abi_buffer) {

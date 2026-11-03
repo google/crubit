@@ -17,6 +17,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 static_assert(sizeof(union EmptyUnion) == 1);
 static_assert(alignof(union EmptyUnion) == 1);

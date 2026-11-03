@@ -17,6 +17,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 static_assert(sizeof(struct DifferentScope) == 1);
 static_assert(alignof(struct DifferentScope) == 1);

@@ -21,6 +21,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 extern "C" void __rust_thunk___ZN4test11MakeRequestEl(
     unsigned char* __return_abi_buffer, int64_t num) {

@@ -43,6 +43,7 @@ int MyStructAdder(MyStruct x) { return x.a + x.b; }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 static_assert(CRUBIT_SIZEOF(struct MyStruct) == 8);
 static_assert(alignof(struct MyStruct) == 4);

@@ -17,6 +17,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 static_assert(CRUBIT_SIZEOF(struct HasPointerToIncompleteTypedefs) == 16);
 static_assert(alignof(struct HasPointerToIncompleteTypedefs) == 8);

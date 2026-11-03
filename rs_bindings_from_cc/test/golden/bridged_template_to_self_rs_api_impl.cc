@@ -19,6 +19,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 static_assert(sizeof(struct ns::Member) == 1);
 static_assert(alignof(struct ns::Member) == 1);

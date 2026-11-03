@@ -17,6 +17,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 extern "C" void __rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
     struct NontrivialCustomType* non_trivial_custom_type) {

@@ -18,6 +18,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 static_assert(CRUBIT_SIZEOF(struct PublicPointer) == 8);
 static_assert(alignof(struct PublicPointer) == 8);

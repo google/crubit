@@ -17,6 +17,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 extern "C" float __rust_thunk___Z19function_vectorcallff(float a, float b) {
   return ::function_vectorcall(a, b);

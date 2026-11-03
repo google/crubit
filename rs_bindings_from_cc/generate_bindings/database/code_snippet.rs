@@ -1930,7 +1930,10 @@ impl ToTokens for CppDetails {
             __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
             // Disable Clang thread-safety-analysis warnings that would otherwise
             // complain about thunks that call mutex locking functions in an unpaired way.
-            __HASH_TOKEN__ pragma clang diagnostic ignored "-Wthread-safety-analysis" __NEWLINE__ __NEWLINE__
+            __HASH_TOKEN__ pragma clang diagnostic ignored "-Wthread-safety-analysis" __NEWLINE__
+            // Deprecated C++ APIs get a `#[deprecated]` attribute in the Rust bindings,
+            // so C++ deprecation warnings about their use in the generated code are redundant.
+            __HASH_TOKEN__ pragma clang diagnostic ignored "-Wdeprecated-declarations" __NEWLINE__ __NEWLINE__
 
             #dyn_callable_cpp_decls
             #( #thunks __NEWLINE__ __NEWLINE__ )*

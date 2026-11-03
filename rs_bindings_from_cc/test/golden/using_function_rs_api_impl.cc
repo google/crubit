@@ -15,6 +15,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 extern "C" void __rust_thunk__d6cf3509__ZN1A3FooEv() { A::Foo(); }
 
