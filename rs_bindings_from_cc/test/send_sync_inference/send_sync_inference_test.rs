@@ -11,6 +11,8 @@ fn test_plain_data_is_send_sync() {
     assert_impl_all!(Plain: Send, Sync);
     assert_impl_all!(Empty: Send, Sync);
     assert_impl_all!(ContainsPlain: Send, Sync);
+    assert_impl_all!(NonAggregatePlain: Send, Sync);
+    assert_impl_all!(WithZeroWidthBitfield: Send, Sync);
 }
 
 #[gtest]
@@ -35,9 +37,23 @@ fn test_explicit_opt_outs() {
     assert_not_impl_any!(NotSync: Sync);
 
     assert_not_impl_any!(NotSendNotSync: Send, Sync);
+    assert_not_impl_any!(MemberThreadAffineTag: Send, Sync);
+    assert_not_impl_any!(ThreadAffineTemplateInt: Send, Sync);
 }
 
 #[gtest]
 fn test_explicit_unsafe_impl() {
     assert_impl_all!(ExplicitSendSync: Send, Sync);
+}
+
+#[gtest]
+fn test_empty_bases_are_not_send_sync() {
+    assert_not_impl_any!(DerivedFromThreadAffineTag: Send, Sync);
+    assert_not_impl_any!(DerivedFromPrivateEmpty: Send, Sync);
+}
+
+#[gtest]
+fn test_zero_sized_fields_are_not_send_sync() {
+    assert_not_impl_any!(NoUniqueAddressThreadAffineTag: Send, Sync);
+    assert_not_impl_any!(WithZeroLengthPointerArray: Send, Sync);
 }

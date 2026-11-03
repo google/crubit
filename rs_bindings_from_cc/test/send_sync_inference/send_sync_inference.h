@@ -26,6 +26,22 @@ struct ContainsPlain final {
   Plain plain;
 };
 
+// Send + Sync: non-aggregate with no bases (0-byte `__non_field_data` only
+// prevents direct initialization and holds no C++ data).
+class NonAggregatePlain final {
+ public:
+  NonAggregatePlain() = default;
+  int x_ = 0;
+};
+
+// Send + Sync: bitfields and unnamed zero-width bitfields hold only integers /
+// alignment directives.
+struct WithZeroWidthBitfield final {
+  int a : 4;
+  int : 0;
+  int b : 4;
+};
+
 // Neither: raw pointers are neither Send nor Sync.
 struct WithPointer final {
   int* p;
@@ -78,6 +94,57 @@ struct CRUBIT_TRAIT_DERIVE("!Send", "!Sync") NotSendNotSync final {
 struct CRUBIT_UNSAFE_IMPL("Send", "Sync") ExplicitSendSync final {
   int* p;
 };
+
+// An empty tag type which is explicitly neither Send nor Sync.
+struct CRUBIT_TRAIT_DERIVE("!Send", "!Sync") ThreadAffineTag {};
+
+// Neither: empty base class subobjects are not emitted as Rust fields.
+struct DerivedFromThreadAffineTag final : ThreadAffineTag {
+  int x;
+};
+
+// Neither: private empty base class subobjects are not emitted as Rust fields.
+struct EmptyBase {};
+class DerivedFromPrivateEmpty final : private EmptyBase {
+ public:
+  int x_;
+};
+
+// Neither: zero-sized `[[no_unique_address]]` members are not emitted as Rust
+// fields.
+#ifdef _MSC_VER
+#define CRUBIT_TEST_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#else
+#define CRUBIT_TEST_NO_UNIQUE_ADDRESS [[no_unique_address]]
+#endif
+struct NoUniqueAddressThreadAffineTag final {
+  CRUBIT_TEST_NO_UNIQUE_ADDRESS ThreadAffineTag tag;
+  int x;
+};
+#undef CRUBIT_TEST_NO_UNIQUE_ADDRESS
+
+// Neither: zero-length array members are zero-sized and not emitted as Rust
+// fields.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-length-array"
+struct WithZeroLengthPointerArray final {
+  double x;
+  int* items[0];
+};
+#pragma clang diagnostic pop
+
+// Neither: contains a member which is neither.
+struct MemberThreadAffineTag final {
+  ThreadAffineTag tag;
+  int x;
+};
+
+// Neither: annotation on a class template applies to its instantiations.
+template <typename T>
+struct CRUBIT_TRAIT_DERIVE("!Send", "!Sync") ThreadAffineTemplate final {
+  T x;
+};
+using ThreadAffineTemplateInt = ThreadAffineTemplate<int>;
 
 }  // namespace crubit::test
 

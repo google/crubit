@@ -106,6 +106,73 @@ pub mod crubit {
             }
         }
 
+        /// Send + Sync: non-aggregate with no bases (0-byte `__non_field_data` only
+        /// prevents direct initialization and holds no C++ data).
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test17NonAggregatePlainE"]
+        #[repr(C)]
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NonAggregatePlain
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        pub struct NonAggregatePlain {
+            __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+            pub x_: ::ffi_11::c_int,
+        }
+        unsafe impl ::cxx::ExternType for NonAggregatePlain {
+            type Id = ::cxx::type_id!("crubit :: test :: NonAggregatePlain");
+            type Kind = ::cxx::kind::Trivial;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: NonAggregatePlain"),
+            crate::crubit::test::NonAggregatePlain
+        );
+
+        impl Default for NonAggregatePlain {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test17NonAggregatePlainC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
+
+        /// Send + Sync: bitfields and unnamed zero-width bitfields hold only integers /
+        /// alignment directives.
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test21WithZeroWidthBitfieldE"]
+        #[repr(C, align(4))]
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithZeroWidthBitfield
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        pub struct WithZeroWidthBitfield {
+            /// * `a` : 4 bits.
+            /// * `b` : 4 bits.
+            __bitfields0: [::core::mem::MaybeUninit<u8>; 5],
+        }
+        unsafe impl ::cxx::ExternType for WithZeroWidthBitfield {
+            type Id = ::cxx::type_id!("crubit :: test :: WithZeroWidthBitfield");
+            type Kind = ::cxx::kind::Trivial;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: WithZeroWidthBitfield"),
+            crate::crubit::test::WithZeroWidthBitfield
+        );
+
+        impl Default for WithZeroWidthBitfield {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test21WithZeroWidthBitfieldC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
+
         /// Neither: raw pointers are neither Send nor Sync.
         ///
         /// # Safety
@@ -192,8 +259,13 @@ pub mod crubit {
             /// Reason for representing this field as a blob of bytes:
             /// Types of non-public C++ fields can be elided away
             pub(crate) private_field_: [::core::mem::MaybeUninit<u8>; 4],
-            __do_not_auto_impl_send_sync1: ::core::marker::PhantomData<*mut ()>,
         }
+        /// Cannot infer `Send` because:
+        /// * field `private_field_` is represented as opaque bytes
+        impl !Send for WithPrivateField {}
+        /// Cannot infer `Sync` because:
+        /// * field `private_field_` is represented as opaque bytes
+        impl !Sync for WithPrivateField {}
         unsafe impl ::cxx::ExternType for WithPrivateField {
             type Id = ::cxx::type_id!("crubit :: test :: WithPrivateField");
             type Kind = ::cxx::kind::Trivial;
@@ -232,8 +304,13 @@ pub mod crubit {
             /// Reason for representing this field as a blob of bytes:
             /// Unsupported `volatile` qualifier: volatile int
             pub(crate) unsupported: [::core::mem::MaybeUninit<u8>; 4],
-            __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
         }
+        /// Cannot infer `Send` because:
+        /// * field `unsupported` is represented as opaque bytes
+        impl !Send for WithUnsupportedField {}
+        /// Cannot infer `Sync` because:
+        /// * field `unsupported` is represented as opaque bytes
+        impl !Sync for WithUnsupportedField {}
         unsafe impl ::cxx::ExternType for WithUnsupportedField {
             type Id = ::cxx::type_id!("crubit :: test :: WithUnsupportedField");
             type Kind = ::cxx::kind::Trivial;
@@ -292,9 +369,14 @@ pub mod crubit {
         ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct Derived {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
-            __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
             pub derived_field: ::ffi_11::c_int,
         }
+        /// Cannot infer `Send` because:
+        /// * base class subobjects are not represented as Rust fields
+        impl !Send for Derived {}
+        /// Cannot infer `Sync` because:
+        /// * base class subobjects are not represented as Rust fields
+        impl !Sync for Derived {}
         unsafe impl ::cxx::ExternType for Derived {
             type Id = ::cxx::type_id!("crubit :: test :: Derived");
             type Kind = ::cxx::kind::Trivial;
@@ -452,10 +534,296 @@ pub mod crubit {
                 }
             }
         }
+
+        /// An empty tag type which is explicitly neither Send nor Sync.
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test15ThreadAffineTagE"]
+        #[repr(C)]
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadAffineTag
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        pub struct ThreadAffineTag {
+            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        }
+        impl !Send for ThreadAffineTag {}
+        impl !Sync for ThreadAffineTag {}
+        unsafe impl ::cxx::ExternType for ThreadAffineTag {
+            type Id = ::cxx::type_id!("crubit :: test :: ThreadAffineTag");
+            type Kind = ::cxx::kind::Trivial;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ThreadAffineTag"),
+            crate::crubit::test::ThreadAffineTag
+        );
+
+        impl Default for ThreadAffineTag {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test15ThreadAffineTagC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
+
+        /// Neither: empty base class subobjects are not emitted as Rust fields.
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test26DerivedFromThreadAffineTagE"]
+        #[repr(C, align(4))]
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: DerivedFromThreadAffineTag
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        pub struct DerivedFromThreadAffineTag {
+            pub x: ::ffi_11::c_int,
+        }
+        /// Cannot infer `Send` because:
+        /// * base class subobjects are not represented as Rust fields
+        impl !Send for DerivedFromThreadAffineTag {}
+        /// Cannot infer `Sync` because:
+        /// * base class subobjects are not represented as Rust fields
+        impl !Sync for DerivedFromThreadAffineTag {}
+        unsafe impl ::cxx::ExternType for DerivedFromThreadAffineTag {
+            type Id = ::cxx::type_id!("crubit :: test :: DerivedFromThreadAffineTag");
+            type Kind = ::cxx::kind::Trivial;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: DerivedFromThreadAffineTag"),
+            crate::crubit::test::DerivedFromThreadAffineTag
+        );
+
+        impl Default for DerivedFromThreadAffineTag {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test26DerivedFromThreadAffineTagC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
+
+        /// Neither: private empty base class subobjects are not emitted as Rust fields.
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test9EmptyBaseE"]
+        #[repr(C)]
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: EmptyBase
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        pub struct EmptyBase {
+            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        }
+        unsafe impl ::cxx::ExternType for EmptyBase {
+            type Id = ::cxx::type_id!("crubit :: test :: EmptyBase");
+            type Kind = ::cxx::kind::Trivial;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: EmptyBase"),
+            crate::crubit::test::EmptyBase
+        );
+
+        impl Default for EmptyBase {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test9EmptyBaseC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
+
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test23DerivedFromPrivateEmptyE"]
+        #[repr(C, align(4))]
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: DerivedFromPrivateEmpty
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        pub struct DerivedFromPrivateEmpty {
+            __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+            pub x_: ::ffi_11::c_int,
+        }
+        /// Cannot infer `Send` because:
+        /// * base class subobjects are not represented as Rust fields
+        impl !Send for DerivedFromPrivateEmpty {}
+        /// Cannot infer `Sync` because:
+        /// * base class subobjects are not represented as Rust fields
+        impl !Sync for DerivedFromPrivateEmpty {}
+        unsafe impl ::cxx::ExternType for DerivedFromPrivateEmpty {
+            type Id = ::cxx::type_id!("crubit :: test :: DerivedFromPrivateEmpty");
+            type Kind = ::cxx::kind::Trivial;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: DerivedFromPrivateEmpty"),
+            crate::crubit::test::DerivedFromPrivateEmpty
+        );
+
+        impl Default for DerivedFromPrivateEmpty {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test23DerivedFromPrivateEmptyC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
+
+        // Neither: zero-sized `[[no_unique_address]]` members are not emitted as Rust
+        // fields.
+
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test30NoUniqueAddressThreadAffineTagE"]
+        #[repr(C, align(4))]
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NoUniqueAddressThreadAffineTag
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        pub struct NoUniqueAddressThreadAffineTag {
+            pub x: ::ffi_11::c_int,
+        }
+        /// Cannot infer `Send` because:
+        /// * zero-sized field `tag` is not represented as a Rust field
+        impl !Send for NoUniqueAddressThreadAffineTag {}
+        /// Cannot infer `Sync` because:
+        /// * zero-sized field `tag` is not represented as a Rust field
+        impl !Sync for NoUniqueAddressThreadAffineTag {}
+        unsafe impl ::cxx::ExternType for NoUniqueAddressThreadAffineTag {
+            type Id = ::cxx::type_id!("crubit :: test :: NoUniqueAddressThreadAffineTag");
+            type Kind = ::cxx::kind::Trivial;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: NoUniqueAddressThreadAffineTag"),
+            crate::crubit::test::NoUniqueAddressThreadAffineTag
+        );
+
+        impl Default for NoUniqueAddressThreadAffineTag {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test30NoUniqueAddressThreadAffineTagC1Ev(&raw mut tmp as*mut _);
+                    tmp.assume_init()
+                }
+            }
+        }
+
+        // Neither: zero-length array members are zero-sized and not emitted as Rust
+        // fields.
+
+        /// # Safety
+        ///
+        /// To call a function that accepts this type, you must uphold these requirements:
+        /// * Document why the following public unsafe fields of this type cannot be misused by callee:
+        ///   * `items`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'int *[0]': Zero-length C arrays are not supported
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test26WithZeroLengthPointerArrayE"]
+        #[repr(C, align(8))]
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithZeroLengthPointerArray
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        pub struct WithZeroLengthPointerArray {
+            pub x: f64,
+        }
+        /// Cannot infer `Send` because:
+        /// * zero-sized field `items` is not represented as a Rust field
+        impl !Send for WithZeroLengthPointerArray {}
+        /// Cannot infer `Sync` because:
+        /// * zero-sized field `items` is not represented as a Rust field
+        impl !Sync for WithZeroLengthPointerArray {}
+        unsafe impl ::cxx::ExternType for WithZeroLengthPointerArray {
+            type Id = ::cxx::type_id!("crubit :: test :: WithZeroLengthPointerArray");
+            type Kind = ::cxx::kind::Trivial;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: WithZeroLengthPointerArray"),
+            crate::crubit::test::WithZeroLengthPointerArray
+        );
+
+        impl Default for WithZeroLengthPointerArray {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test26WithZeroLengthPointerArrayC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
+
+        /// Neither: contains a member which is neither.
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test21MemberThreadAffineTagE"]
+        #[repr(C)]
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: MemberThreadAffineTag
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        pub struct MemberThreadAffineTag {
+            pub tag: crate::crubit::test::ThreadAffineTag,
+            pub x: ::ffi_11::c_int,
+        }
+        unsafe impl ::cxx::ExternType for MemberThreadAffineTag {
+            type Id = ::cxx::type_id!("crubit :: test :: MemberThreadAffineTag");
+            type Kind = ::cxx::kind::Trivial;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: MemberThreadAffineTag"),
+            crate::crubit::test::MemberThreadAffineTag
+        );
+
+        impl Default for MemberThreadAffineTag {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test21MemberThreadAffineTagC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
+
+        // error: class `crubit::test::ThreadAffineTemplate` could not be bound
+        //   Class templates are not yet supported
+
+        pub type ThreadAffineTemplateInt =
+            crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE;
     }
 }
 
 // namespace crubit::test
+
+/// Neither: annotation on a class template applies to its instantiations.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadAffineTemplate < int >
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct __CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE {
+    pub x: ::ffi_11::c_int,
+}
+impl !Send for __CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE {}
+impl !Sync for __CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("crubit :: test :: ThreadAffineTemplate < int >"),
+    crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE
+);
+
+impl Default for __CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__dcd8546c__ZN6crubit4test20ThreadAffineTemplateIiEC1Ev(
+                &raw mut tmp as *mut _,
+            );
+            tmp.assume_init()
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -468,6 +836,12 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test13ContainsPlainC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test17NonAggregatePlainC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test21WithZeroWidthBitfieldC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test11WithPointerC1Ev(
@@ -500,6 +874,30 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test16ExplicitSendSyncC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test15ThreadAffineTagC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test26DerivedFromThreadAffineTagC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test9EmptyBaseC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test23DerivedFromPrivateEmptyC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test30NoUniqueAddressThreadAffineTagC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test26WithZeroLengthPointerArrayC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test21MemberThreadAffineTagC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk__dcd8546c__ZN6crubit4test20ThreadAffineTemplateIiEC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
     }
 }
 
@@ -520,6 +918,16 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::crubit::test::ContainsPlain: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::crubit::test::ContainsPlain: Drop);
     assert!(::core::mem::offset_of!(crate::crubit::test::ContainsPlain, plain) == 0);
+    assert!(::core::mem::size_of::<crate::crubit::test::NonAggregatePlain>() == 4);
+    assert!(::core::mem::align_of::<crate::crubit::test::NonAggregatePlain>() == 4);
+    static_assertions::assert_impl_all!(crate::crubit::test::NonAggregatePlain: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::NonAggregatePlain: Drop);
+    assert!(::core::mem::offset_of!(crate::crubit::test::NonAggregatePlain, x_) == 0);
+    assert!(::core::mem::size_of::<crate::crubit::test::WithZeroWidthBitfield>() == 8);
+    assert!(::core::mem::align_of::<crate::crubit::test::WithZeroWidthBitfield>() == 4);
+    static_assertions::assert_impl_all!(crate::crubit::test::WithZeroWidthBitfield: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::WithZeroWidthBitfield: Drop);
+
     assert!(::core::mem::size_of::<crate::crubit::test::WithPointer>() == 8);
     assert!(::core::mem::align_of::<crate::crubit::test::WithPointer>() == 8);
     static_assertions::assert_impl_all!(crate::crubit::test::WithPointer: Copy,Clone);
@@ -571,4 +979,54 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::crubit::test::ExplicitSendSync: Copy,Clone,Send,Sync);
     static_assertions::assert_not_impl_any!(crate::crubit::test::ExplicitSendSync: Drop);
     assert!(::core::mem::offset_of!(crate::crubit::test::ExplicitSendSync, p) == 0);
+    assert!(::core::mem::size_of::<crate::crubit::test::ThreadAffineTag>() == 1);
+    assert!(::core::mem::align_of::<crate::crubit::test::ThreadAffineTag>() == 1);
+    static_assertions::assert_impl_all!(crate::crubit::test::ThreadAffineTag: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::ThreadAffineTag: Drop,Send,Sync);
+
+    assert!(::core::mem::size_of::<crate::crubit::test::DerivedFromThreadAffineTag>() == 4);
+    assert!(::core::mem::align_of::<crate::crubit::test::DerivedFromThreadAffineTag>() == 4);
+    static_assertions::assert_impl_all!(crate::crubit::test::DerivedFromThreadAffineTag: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::DerivedFromThreadAffineTag: Drop);
+    assert!(::core::mem::offset_of!(crate::crubit::test::DerivedFromThreadAffineTag, x) == 0);
+    assert!(::core::mem::size_of::<crate::crubit::test::EmptyBase>() == 1);
+    assert!(::core::mem::align_of::<crate::crubit::test::EmptyBase>() == 1);
+    static_assertions::assert_impl_all!(crate::crubit::test::EmptyBase: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::EmptyBase: Drop);
+
+    assert!(::core::mem::size_of::<crate::crubit::test::DerivedFromPrivateEmpty>() == 4);
+    assert!(::core::mem::align_of::<crate::crubit::test::DerivedFromPrivateEmpty>() == 4);
+    static_assertions::assert_impl_all!(crate::crubit::test::DerivedFromPrivateEmpty: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::DerivedFromPrivateEmpty: Drop);
+    assert!(::core::mem::offset_of!(crate::crubit::test::DerivedFromPrivateEmpty, x_) == 0);
+    assert!(::core::mem::size_of::<crate::crubit::test::NoUniqueAddressThreadAffineTag>() == 4);
+    assert!(::core::mem::align_of::<crate::crubit::test::NoUniqueAddressThreadAffineTag>() == 4);
+    static_assertions::assert_impl_all!(crate::crubit::test::NoUniqueAddressThreadAffineTag: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::NoUniqueAddressThreadAffineTag: Drop);
+    assert!(::core::mem::offset_of!(crate::crubit::test::NoUniqueAddressThreadAffineTag, x) == 0);
+    assert!(::core::mem::size_of::<crate::crubit::test::WithZeroLengthPointerArray>() == 8);
+    assert!(::core::mem::align_of::<crate::crubit::test::WithZeroLengthPointerArray>() == 8);
+    static_assertions::assert_impl_all!(crate::crubit::test::WithZeroLengthPointerArray: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::WithZeroLengthPointerArray: Drop);
+    assert!(::core::mem::offset_of!(crate::crubit::test::WithZeroLengthPointerArray, x) == 0);
+    assert!(::core::mem::size_of::<crate::crubit::test::MemberThreadAffineTag>() == 8);
+    assert!(::core::mem::align_of::<crate::crubit::test::MemberThreadAffineTag>() == 4);
+    static_assertions::assert_impl_all!(crate::crubit::test::MemberThreadAffineTag: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::MemberThreadAffineTag: Drop);
+    assert!(::core::mem::offset_of!(crate::crubit::test::MemberThreadAffineTag, tag) == 0);
+    assert!(::core::mem::offset_of!(crate::crubit::test::MemberThreadAffineTag, x) == 4);
+    assert!(
+        ::core::mem::size_of::<crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE>()
+            == 4
+    );
+    assert!(
+        ::core::mem::align_of::<crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE>()
+            == 4
+    );
+    static_assertions::assert_impl_all!(crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE: Drop,Send,Sync);
+    assert!(
+        ::core::mem::offset_of!(crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE, x)
+            == 0
+    );
 };

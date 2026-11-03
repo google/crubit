@@ -15,7 +15,7 @@ use flagset::FlagSet;
 use heck::ToSnakeCase;
 use ir::{
     BazelLabel, CcCallingConv, FfiRc, GenericItem, IntegerConstant, Item, ItemId, Namespace,
-    RecordType, TraitImplPolarity, UnqualifiedIdentifier,
+    RecordType, UnqualifiedIdentifier,
 };
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
@@ -559,7 +559,6 @@ pub fn generated_items_to_tokens<'db>(
                     ident,
                     id,
                     head_padding,
-                    head_padding_do_not_auto_impl_send_sync,
                     field_definitions,
                     send,
                     sync,
@@ -619,19 +618,11 @@ pub fn generated_items_to_tokens<'db>(
                     let head_padding = head_padding.map(|n| {
                         let n_literal = Literal::usize_unsuffixed(n);
                         // TODO(b/481405536): Do this unconditionally.
-                        let padding = if *internally_mutable_unknown_fields {
+                        if *internally_mutable_unknown_fields {
                             quote! { __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #n_literal], }
                         } else {
                             quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n_literal], }
-                        };
-                        let marker = if *head_padding_do_not_auto_impl_send_sync && n > 0 {
-                            Some(quote! {
-                                __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
-                            })
-                        } else {
-                            None
-                        };
-                        quote! { #padding #marker }
+                        }
                     });
                     let lifetime_markers: Vec<TokenStream> = lifetime_params
                         .iter()
@@ -648,22 +639,28 @@ pub fn generated_items_to_tokens<'db>(
                 };
 
                 let send_impl = match send {
-                    TraitImplPolarity::Positive => {
+                    SendSyncImpl::Positive => {
                         quote! { unsafe impl #type_param_tokens Send for #ident #type_param_tokens {} }
                     }
-                    TraitImplPolarity::Negative => {
-                        quote! { impl #type_param_tokens !Send for #ident #type_param_tokens {} }
+                    SendSyncImpl::Negative { doc_comment } => {
+                        quote! {
+                            #doc_comment
+                            impl #type_param_tokens !Send for #ident #type_param_tokens {}
+                        }
                     }
-                    TraitImplPolarity::None => quote! {},
+                    SendSyncImpl::None => quote! {},
                 };
                 let sync_impl = match sync {
-                    TraitImplPolarity::Positive => {
+                    SendSyncImpl::Positive => {
                         quote! { unsafe impl #type_param_tokens Sync for #ident #type_param_tokens {} }
                     }
-                    TraitImplPolarity::Negative => {
-                        quote! { impl #type_param_tokens !Sync for #ident #type_param_tokens {} }
+                    SendSyncImpl::Negative { doc_comment } => {
+                        quote! {
+                            #doc_comment
+                            impl #type_param_tokens !Sync for #ident #type_param_tokens {}
+                        }
                     }
-                    TraitImplPolarity::None => quote! {},
+                    SendSyncImpl::None => quote! {},
                 };
 
                 let cxx_impl = match cxx_impl {
@@ -1093,6 +1090,18 @@ pub struct OwnedPtrConfig {
     pub drop_impl: Ident,
 }
 
+/// The `Send` or `Sync` impl to emit for a record.
+#[derive(Clone, Debug)]
+pub enum SendSyncImpl {
+    /// `unsafe impl Send` / `unsafe impl Sync`.
+    Positive,
+    /// `impl !Send` / `impl !Sync`, optionally with a doc comment explaining why inference was
+    /// suppressed.
+    Negative { doc_comment: Option<DocCommentAttr> },
+    /// No impl, so that rustc infers the trait from the fields.
+    None,
+}
+
 #[derive(Clone, Debug)]
 pub struct Record {
     pub doc_comment_attr: Option<DocCommentAttr>,
@@ -1109,21 +1118,9 @@ pub struct Record {
     pub ident: Ident,
     pub id: ItemId,
     pub head_padding: Option<usize>,
-    /// Whether to prevent `Send` and `Sync` from being automatically implemented because of
-    /// `__non_field_data`.
-    ///
-    /// `__non_field_data` holds opaque bytes (e.g. base class subobjects) whose thread-safety
-    /// rustc can't see, so if this is set, a `PhantomData<*mut ()>` marker is emitted after it.
-    pub head_padding_do_not_auto_impl_send_sync: bool,
     pub field_definitions: Vec<FieldDefinition>,
-    /// The `Send` impl to emit:
-    ///
-    /// * `Positive`: `unsafe impl Send`.
-    /// * `Negative`: `impl !Send`.
-    /// * `None`: no impl, so that rustc infers `Send` from the fields.
-    pub send: TraitImplPolarity,
-    /// The `Sync` impl to emit. See `send`.
-    pub sync: TraitImplPolarity,
+    pub send: SendSyncImpl,
+    pub sync: SendSyncImpl,
     pub cxx_impl: Option<CxxExternTypeImpl>,
     pub incomplete_definition: Option<TokenStream>,
     pub upcast_impls: Vec<Result<UpcastImpl, String>>,
@@ -1408,12 +1405,6 @@ pub enum FieldDefinition {
         field_type: FieldType,
         /// Whether this field is printed by the record's field-wise `Debug` impl.
         is_debug_formattable: bool,
-        /// Whether to prevent `Send` and `Sync` from being automatically implemented because of
-        /// this field.
-        ///
-        /// Used for fields erased to opaque bytes, whose thread-safety rustc can't see. If set, a
-        /// `PhantomData<*mut ()>` marker is emitted after the field.
-        do_not_auto_impl_send_sync: bool,
     },
 }
 
@@ -1445,25 +1436,17 @@ impl ToTokens for FieldDefinition {
                 ident,
                 field_type,
                 is_debug_formattable: _,
-                do_not_auto_impl_send_sync,
             } => {
                 let padding_field = padding.map(|padding| {
                     let padding_name =
                         syn::parse_str::<Ident>(&format!("__padding{field_index}")).unwrap();
                     quote! { #padding_name: #padding, }
                 });
-                let marker_field = if *do_not_auto_impl_send_sync {
-                    let marker_name = format_ident!("__do_not_auto_impl_send_sync{field_index}");
-                    Some(quote! { #marker_name: ::core::marker::PhantomData<*mut ()>, })
-                } else {
-                    None
-                };
                 quote! {
                     #padding_field
                     #doc_comment
                     #deprecated_attr
                     #visibility #ident: #field_type,
-                    #marker_field
                 }
                 .to_tokens(tokens);
             }

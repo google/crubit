@@ -2249,10 +2249,10 @@ fn test_infer_send_sync_omits_negative_impls() -> Result<()> {
 }
 
 #[gtest]
-fn test_infer_send_sync_marks_erased_fields() -> Result<()> {
+fn test_infer_send_sync_documents_negative_impls_for_erased_fields() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
-        struct StructWithUnsupportedField {
+        struct StructWithUnsupportedField final {
           volatile int my_field;
         };
     "#,
@@ -2265,30 +2265,50 @@ fn test_infer_send_sync_marks_erased_fields() -> Result<()> {
             pub struct StructWithUnsupportedField {
                 #[doc = ...]
                 pub(crate) my_field: [::core::mem::MaybeUninit<u8>; 4],
-                __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
             }
+            #[doc = " Cannot infer `Send` because:\n * field `my_field` is represented as opaque bytes"]
+            impl !Send for StructWithUnsupportedField {}
+            #[doc = " Cannot infer `Sync` because:\n * field `my_field` is represented as opaque bytes"]
+            impl !Sync for StructWithUnsupportedField {}
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { PhantomData<*mut ()> });
+    Ok(())
+}
+
+#[gtest]
+fn test_without_infer_send_sync_negative_impls_have_no_doc_comment() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        struct StructWithUnsupportedField final {
+          volatile int my_field;
+        };
+    "#,
+    )?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct StructWithUnsupportedField {
+                #[doc = ...]
+                pub(crate) my_field: [::core::mem::MaybeUninit<u8>; 4],
+            }
+            impl !Send for StructWithUnsupportedField {}
+            impl !Sync for StructWithUnsupportedField {}
+        }
+    );
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            #[doc = ...]
+            impl !Send for StructWithUnsupportedField {}
         }
     );
     Ok(())
 }
 
 #[gtest]
-fn test_without_infer_send_sync_erased_fields_are_unmarked() -> Result<()> {
-    let rs_api = generate_bindings_tokens_from_cc(
-        r#"
-        struct StructWithUnsupportedField {
-          volatile int my_field;
-        };
-    "#,
-    )?
-    .rs_api;
-    assert_rs_not_matches!(rs_api, quote! { __do_not_auto_impl_send_sync0 });
-    assert_rs_matches!(rs_api, quote! { impl !Send for StructWithUnsupportedField {} });
-    Ok(())
-}
-
-#[gtest]
-fn test_infer_send_sync_marks_base_class_subobjects() -> Result<()> {
+fn test_infer_send_sync_documents_negative_impls_for_base_class_subobjects() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct Base {
@@ -2306,16 +2326,43 @@ fn test_infer_send_sync_marks_base_class_subobjects() -> Result<()> {
         quote! {
             pub struct Derived {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
-                __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
                 pub derived_field: ::ffi_11::c_int,
             }
+            #[doc = " Cannot infer `Send` because:\n * base class subobjects are not represented as Rust fields"]
+            impl !Send for Derived {}
+            #[doc = " Cannot infer `Sync` because:\n * base class subobjects are not represented as Rust fields"]
+            impl !Sync for Derived {}
         }
     );
     Ok(())
 }
 
 #[gtest]
-fn test_infer_send_sync_does_not_mark_empty_struct() -> Result<()> {
+fn test_infer_send_sync_documents_negative_impls_for_vtable_pointer() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct Polymorphic {
+            virtual ~Polymorphic();
+            int x;
+        };
+    "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[doc = " Cannot infer `Send` because:\n * non-field data (such as a vtable pointer) is represented as opaque bytes"]
+            impl !Send for Polymorphic {}
+            #[doc = " Cannot infer `Sync` because:\n * non-field data (such as a vtable pointer) is represented as opaque bytes"]
+            impl !Sync for Polymorphic {}
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_infer_send_sync_does_not_emit_negative_impls_for_empty_struct() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct Empty final {
@@ -2325,8 +2372,140 @@ fn test_infer_send_sync_does_not_mark_empty_struct() -> Result<()> {
     )?;
     let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
-    assert_rs_not_matches!(rs_api, quote! { __non_field_data_do_not_auto_impl_send_sync });
     assert_rs_not_matches!(rs_api, quote! { impl !Send for Empty {} });
+    assert_rs_not_matches!(rs_api, quote! { impl !Sync for Empty {} });
+    Ok(())
+}
+
+#[gtest]
+fn test_infer_send_sync_documents_negative_impls_for_empty_base_class_subobjects() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct EmptyBase {};
+        struct AggregateDerived final : EmptyBase {
+            int derived_field;
+        };
+        struct NonAggregateDerived final : EmptyBase {
+            NonAggregateDerived() : derived_field(0) {}
+            int derived_field;
+        };
+    "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct AggregateDerived {
+                pub derived_field: ::ffi_11::c_int,
+            }
+            #[doc = " Cannot infer `Send` because:\n * base class subobjects are not represented as Rust fields"]
+            impl !Send for AggregateDerived {}
+            #[doc = " Cannot infer `Sync` because:\n * base class subobjects are not represented as Rust fields"]
+            impl !Sync for AggregateDerived {}
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct NonAggregateDerived {
+                __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+                pub derived_field: ::ffi_11::c_int,
+            }
+            #[doc = " Cannot infer `Send` because:\n * base class subobjects are not represented as Rust fields"]
+            impl !Send for NonAggregateDerived {}
+            #[doc = " Cannot infer `Sync` because:\n * base class subobjects are not represented as Rust fields"]
+            impl !Sync for NonAggregateDerived {}
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_infer_send_sync_does_not_emit_negative_impls_for_non_aggregate_plain_struct() -> Result<()>
+{
+    let proto = ir_proto_from_cc(
+        r#"
+        struct NonAggregatePlain final {
+            NonAggregatePlain() : x(0) {}
+            int x;
+        };
+    "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct NonAggregatePlain {
+                __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+                pub x: ::ffi_11::c_int,
+            }
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { impl !Send for NonAggregatePlain {} });
+    assert_rs_not_matches!(rs_api, quote! { impl !Sync for NonAggregatePlain {} });
+    Ok(())
+}
+
+#[gtest]
+fn test_infer_send_sync_documents_zero_sized_fields_but_not_zero_width_bitfields() -> Result<()> {
+    let no_unique_address_attr = test_platform().no_unique_address_attr();
+    let proto = ir_proto_from_cc(&format!(
+        r#"
+        struct Empty {{}};
+        struct WithNoUniqueAddressEmpty final {{
+            {no_unique_address_attr} Empty tag;
+            int x;
+        }};
+        struct WithZeroWidthBitfield final {{
+            int a : 4;
+            int : 0;
+            int b : 4;
+        }};
+    "#,
+    ))?;
+    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct WithNoUniqueAddressEmpty {
+                pub x: ::ffi_11::c_int,
+            }
+            #[doc = " Cannot infer `Send` because:\n * zero-sized field `tag` is not represented as a Rust field"]
+            impl !Send for WithNoUniqueAddressEmpty {}
+            #[doc = " Cannot infer `Sync` because:\n * zero-sized field `tag` is not represented as a Rust field"]
+            impl !Sync for WithNoUniqueAddressEmpty {}
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { impl !Send for WithZeroWidthBitfield {} });
+    assert_rs_not_matches!(rs_api, quote! { impl !Sync for WithZeroWidthBitfield {} });
+    Ok(())
+}
+
+#[gtest]
+fn test_infer_send_sync_documents_multiple_reasons() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct Base {};
+        struct MultiReason final : Base {
+            volatile int first_bad;
+            volatile int second_bad;
+        };
+    "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[doc = " Cannot infer `Send` because:\n * base class subobjects are not represented as Rust fields\n * fields `first_bad`, `second_bad` are represented as opaque bytes"]
+            impl !Send for MultiReason {}
+            #[doc = " Cannot infer `Sync` because:\n * base class subobjects are not represented as Rust fields\n * fields `first_bad`, `second_bad` are represented as opaque bytes"]
+            impl !Sync for MultiReason {}
+        }
+    );
     Ok(())
 }
 
@@ -2340,18 +2519,40 @@ fn test_infer_send_sync_honors_explicit_annotations() -> Result<()> {
         struct [[clang::annotate("crubit_internal_unsafe_impl", "Send", "Sync")]] SendSync final {
             volatile int field;
         };
+        struct [[clang::annotate("crubit_internal_unsafe_impl", "Send")]] OnlySendWithOpaque final {
+            volatile int field;
+        };
     "#,
     )?;
     let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 
     assert_rs_matches!(rs_api, quote! { impl !Send for NotSend {} });
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            #[doc = ...]
+            impl !Send for NotSend {}
+        }
+    );
     assert_rs_not_matches!(rs_api, quote! { impl !Sync for NotSend {} });
 
     assert_rs_matches!(rs_api, quote! { unsafe impl Send for SendSync {} });
     assert_rs_matches!(rs_api, quote! { unsafe impl Sync for SendSync {} });
+    assert_rs_not_matches!(rs_api, quote! { impl !Send for SendSync {} });
+    assert_rs_not_matches!(rs_api, quote! { impl !Sync for SendSync {} });
 
-    // Explicitly annotated `Send`/`Sync` are asserted. The inferred `Sync` of `NotSend` is not.
+    assert_rs_matches!(rs_api, quote! { unsafe impl Send for OnlySendWithOpaque {} });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[doc = " Cannot infer `Sync` because:\n * field `field` is represented as opaque bytes"]
+            impl !Sync for OnlySendWithOpaque {}
+        }
+    );
+
+    // Explicitly annotated `Send`/`Sync` are asserted. The inferred `Sync` of `NotSend` and
+    // unannotated `!Sync` of `OnlySendWithOpaque` are not.
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -2362,6 +2563,12 @@ fn test_infer_send_sync_honors_explicit_annotations() -> Result<()> {
         rs_api,
         quote! {
             static_assertions::assert_impl_all!(crate::SendSync: Copy, Clone, Send, Sync);
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            static_assertions::assert_impl_all!(crate::OnlySendWithOpaque: Copy, Clone, Send);
         }
     );
     Ok(())

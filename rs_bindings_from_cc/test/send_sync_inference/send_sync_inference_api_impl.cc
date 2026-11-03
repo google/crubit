@@ -46,6 +46,23 @@ extern "C" void __rust_thunk___ZN6crubit4test13ContainsPlainC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(CRUBIT_SIZEOF(class crubit::test::NonAggregatePlain) == 4);
+static_assert(alignof(class crubit::test::NonAggregatePlain) == 4);
+static_assert(CRUBIT_OFFSET_OF(x_, class crubit::test::NonAggregatePlain) == 0);
+
+extern "C" void __rust_thunk___ZN6crubit4test17NonAggregatePlainC1Ev(
+    class crubit::test::NonAggregatePlain* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(struct crubit::test::WithZeroWidthBitfield) == 8);
+static_assert(alignof(struct crubit::test::WithZeroWidthBitfield) == 4);
+
+extern "C" void __rust_thunk___ZN6crubit4test21WithZeroWidthBitfieldC1Ev(
+    struct crubit::test::WithZeroWidthBitfield* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(CRUBIT_SIZEOF(struct crubit::test::WithPointer) == 8);
 static_assert(alignof(struct crubit::test::WithPointer) == 8);
 static_assert(CRUBIT_OFFSET_OF(p, struct crubit::test::WithPointer) == 0);
@@ -137,6 +154,98 @@ static_assert(CRUBIT_OFFSET_OF(p, struct crubit::test::ExplicitSendSync) == 0);
 
 extern "C" void __rust_thunk___ZN6crubit4test16ExplicitSendSyncC1Ev(
     struct crubit::test::ExplicitSendSync* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(sizeof(struct crubit::test::ThreadAffineTag) == 1);
+static_assert(alignof(struct crubit::test::ThreadAffineTag) == 1);
+
+extern "C" void __rust_thunk___ZN6crubit4test15ThreadAffineTagC1Ev(
+    struct crubit::test::ThreadAffineTag* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(struct crubit::test::DerivedFromThreadAffineTag) ==
+              4);
+static_assert(alignof(struct crubit::test::DerivedFromThreadAffineTag) == 4);
+static_assert(
+    CRUBIT_OFFSET_OF(x, struct crubit::test::DerivedFromThreadAffineTag) == 0);
+
+extern "C" void __rust_thunk___ZN6crubit4test26DerivedFromThreadAffineTagC1Ev(
+    struct crubit::test::DerivedFromThreadAffineTag* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(sizeof(struct crubit::test::EmptyBase) == 1);
+static_assert(alignof(struct crubit::test::EmptyBase) == 1);
+
+extern "C" void __rust_thunk___ZN6crubit4test9EmptyBaseC1Ev(
+    struct crubit::test::EmptyBase* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(class crubit::test::DerivedFromPrivateEmpty) == 4);
+static_assert(alignof(class crubit::test::DerivedFromPrivateEmpty) == 4);
+static_assert(CRUBIT_OFFSET_OF(x_,
+                               class crubit::test::DerivedFromPrivateEmpty) ==
+              0);
+
+extern "C" void __rust_thunk___ZN6crubit4test23DerivedFromPrivateEmptyC1Ev(
+    class crubit::test::DerivedFromPrivateEmpty* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(
+    CRUBIT_SIZEOF(struct crubit::test::NoUniqueAddressThreadAffineTag) == 4);
+static_assert(alignof(struct crubit::test::NoUniqueAddressThreadAffineTag) ==
+              4);
+static_assert(
+    CRUBIT_OFFSET_OF(tag,
+                     struct crubit::test::NoUniqueAddressThreadAffineTag) == 0);
+static_assert(CRUBIT_OFFSET_OF(
+                  x, struct crubit::test::NoUniqueAddressThreadAffineTag) == 0);
+
+extern "C" void
+__rust_thunk___ZN6crubit4test30NoUniqueAddressThreadAffineTagC1Ev(
+    struct crubit::test::NoUniqueAddressThreadAffineTag* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(struct crubit::test::WithZeroLengthPointerArray) ==
+              8);
+static_assert(alignof(struct crubit::test::WithZeroLengthPointerArray) == 8);
+static_assert(
+    CRUBIT_OFFSET_OF(x, struct crubit::test::WithZeroLengthPointerArray) == 0);
+static_assert(CRUBIT_OFFSET_OF(
+                  items, struct crubit::test::WithZeroLengthPointerArray) == 8);
+
+extern "C" void __rust_thunk___ZN6crubit4test26WithZeroLengthPointerArrayC1Ev(
+    struct crubit::test::WithZeroLengthPointerArray* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(struct crubit::test::MemberThreadAffineTag) == 8);
+static_assert(alignof(struct crubit::test::MemberThreadAffineTag) == 4);
+static_assert(CRUBIT_OFFSET_OF(tag,
+                               struct crubit::test::MemberThreadAffineTag) ==
+              0);
+static_assert(CRUBIT_OFFSET_OF(x, struct crubit::test::MemberThreadAffineTag) ==
+              4);
+
+extern "C" void __rust_thunk___ZN6crubit4test21MemberThreadAffineTagC1Ev(
+    struct crubit::test::MemberThreadAffineTag* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(struct crubit::test::ThreadAffineTemplate<int>) ==
+              4);
+static_assert(alignof(struct crubit::test::ThreadAffineTemplate<int>) == 4);
+static_assert(
+    CRUBIT_OFFSET_OF(x, struct crubit::test::ThreadAffineTemplate<int>) == 0);
+
+extern "C" void
+__rust_thunk__dcd8546c__ZN6crubit4test20ThreadAffineTemplateIiEC1Ev(
+    struct crubit::test::ThreadAffineTemplate<int>* __this) {
   crubit::construct_at(__this);
 }
 

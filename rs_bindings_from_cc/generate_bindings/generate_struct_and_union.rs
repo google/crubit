@@ -10,7 +10,8 @@ use database::code_snippet::{
     ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, CfiEncodingAttr,
     DeleteImpl, DeprecatedAttr, DeriveAttr, DisplayImpl, DocCommentAttr, Feature, FieldDefinition,
     FieldType, GeneratedItem, MustUseAttr, NoUniqueAddressAccessor, RecursivelyPinnedAttr,
-    SizeofImpl, StructOrUnion, Thunk, ThunkImpl, UpcastImpl, UpcastImplBody, Visibility,
+    SendSyncImpl, SizeofImpl, StructOrUnion, Thunk, ThunkImpl, UpcastImpl, UpcastImplBody,
+    Visibility,
 };
 use database::rs_snippet::{should_derive_clone, RsTypeKind};
 use database::{intern, BindingsGenerator};
@@ -346,7 +347,6 @@ fn field_definition(
     end: usize,
     desc: &[BitfieldComment],
     fields_that_must_be_copy: &mut Vec<TokenStream>,
-    infer_send_sync: bool,
 ) -> Result<FieldDefinition> {
     // TODO(b/481405536): we should do this unconditionally.
     let internally_mutable_unknown_fields = !record.should_derive_copy();
@@ -471,11 +471,6 @@ fn field_definition(
         }
     };
 
-    // Under `infer_send_sync`, rustc infers `Send`/`Sync` from the fields. A field erased to opaque
-    // bytes would otherwise be (incorrectly) inferred as `Send` (and, if not internally mutable,
-    // `Sync`), so prevent that.
-    let do_not_auto_impl_send_sync = infer_send_sync && matches!(field_type, FieldType::Erased(_));
-
     Ok(FieldDefinition::Field {
         field_index,
         padding,
@@ -485,8 +480,83 @@ fn field_definition(
         ident,
         field_type,
         is_debug_formattable: debug_printed_field_rs_type_kind(db, record, field).is_some(),
-        do_not_auto_impl_send_sync,
     })
+}
+
+/// Lists the C++ subobjects of `record` that are not represented as typed Rust fields, which
+/// prevent `rustc` from inferring `Send` or `Sync` when `infer_send_sync` is enabled.
+///
+/// Returns markdown bullets, each on a new line, to follow "Cannot infer `Send` because:". Returns
+/// `None` if every C++ subobject is represented as a typed Rust field (or is an integer/enum
+/// bitfield), so `rustc` can safely infer `Send` and `Sync` on its own.
+fn unrepresented_subobjects(
+    record: &Record,
+    head_padding_bytes: usize,
+    field_definitions: &[FieldDefinition],
+) -> Option<String> {
+    use std::fmt::Write as _;
+    fn quoted(fields: &[String]) -> impl std::fmt::Display + '_ {
+        fields.iter().format_with(", ", |field, f| f(&format_args!("`{field}`")))
+    }
+    let mut reasons = String::new();
+
+    // Base class subobjects (including empty bases with 0 bytes of head padding) are never emitted
+    // as typed Rust fields, and an empty base may still opt out of `Send`/`Sync`.
+    if record.is_derived_class() {
+        reasons.push_str("\n* base class subobjects are not represented as Rust fields");
+    } else if head_padding_bytes > 0
+        && (!record.fields().is_empty() || record.size_align().size() > 1)
+    {
+        // Non-empty `__non_field_data` on a non-derived class (such as a vptr) holds C++ state
+        // whose thread-safety `rustc` can't see. 0-byte `__non_field_data` on a non-derived
+        // non-aggregate (emitted only to block direct initialization) and the single byte of an
+        // empty non-derived class hold no C++ data.
+        reasons.push_str(
+            "\n* non-field data (such as a vtable pointer) is represented as opaque bytes",
+        );
+    }
+
+    let erased_fields: Vec<String> = field_definitions
+        .iter()
+        .filter_map(|field_def| match field_def {
+            FieldDefinition::Field { ident, field_type: FieldType::Erased(_), .. } => {
+                Some(ident.to_string().trim_start_matches("r#").to_string())
+            }
+            _ => None,
+        })
+        .collect();
+    match erased_fields.as_slice() {
+        [] => {}
+        [field] => write!(reasons, "\n* field `{field}` is represented as opaque bytes").unwrap(),
+        fields => write!(reasons, "\n* fields {} are represented as opaque bytes", quoted(fields))
+            .unwrap(),
+    }
+
+    // Zero-sized data members (e.g. `[[no_unique_address]]` empty members and zero-length arrays)
+    // are skipped when building `fields_with_bounds`, so `rustc` never sees their types. Unnamed
+    // zero-width bitfields (`int : 0;`) are alignment directives holding no subobject, so they are
+    // excluded.
+    let zero_sized_fields: Vec<String> = record
+        .fields()
+        .iter()
+        .filter(|field| field.size() == 0 && !field.is_bitfield())
+        .map(|field| field.cpp_identifier().map_or("<unnamed>", |id| id.as_str()).to_string())
+        .collect();
+    match zero_sized_fields.as_slice() {
+        [] => {}
+        [field] => {
+            write!(reasons, "\n* zero-sized field `{field}` is not represented as a Rust field")
+                .unwrap()
+        }
+        fields => write!(
+            reasons,
+            "\n* zero-sized fields {} are not represented as Rust fields",
+            quoted(fields)
+        )
+        .unwrap(),
+    }
+
+    (!reasons.is_empty()).then_some(reasons)
 }
 
 /// Returns the `Send` or `Sync` impl to emit for a record, given the polarity from its C++
@@ -494,17 +564,34 @@ fn field_definition(
 ///
 /// Explicit annotations are always honored. Without one, `raw_string_view` is positively
 /// implemented (it is a read-only byte slice view whose bytes can only be accessed via `unsafe`),
-/// and other records are negatively implemented unless `infer_send_sync` is enabled, in which case
-/// no impl is emitted and rustc infers the trait from the fields.
-fn send_sync_impl_polarity(
+/// and other records are negatively implemented unless `infer_send_sync` is enabled. When
+/// `infer_send_sync` is enabled, no impl is emitted if all C++ subobjects are represented as Rust
+/// fields; otherwise a documented negative impl is emitted explaining what prevented inference.
+fn send_sync_impl(
+    db: &BindingsGenerator,
     record: &Record,
+    trait_name: &str,
     annotated: TraitImplPolarity,
     infer_send_sync: bool,
-) -> TraitImplPolarity {
+    unrepresented: Option<&str>,
+) -> SendSyncImpl {
     match annotated {
-        TraitImplPolarity::None if record.is_raw_string_view() => TraitImplPolarity::Positive,
-        TraitImplPolarity::None if !infer_send_sync => TraitImplPolarity::Negative,
-        other => other,
+        TraitImplPolarity::Positive => SendSyncImpl::Positive,
+        TraitImplPolarity::Negative => SendSyncImpl::Negative { doc_comment: None },
+        TraitImplPolarity::None if record.is_raw_string_view() => SendSyncImpl::Positive,
+        TraitImplPolarity::None if !infer_send_sync => SendSyncImpl::Negative { doc_comment: None },
+        TraitImplPolarity::None => match unrepresented {
+            None => SendSyncImpl::None,
+            Some(unrepresented) => SendSyncImpl::Negative {
+                doc_comment: generate_doc_comment(
+                    Some(&format!("Cannot infer `{trait_name}` because:{unrepresented}")),
+                    None,
+                    None,
+                    db.is_golden_test(),
+                    db.kythe_annotations(),
+                ),
+            },
+        },
     }
 }
 
@@ -672,7 +759,6 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
                 end,
                 &cur.description,
                 &mut fields_that_must_be_copy,
-                infer_send_sync,
             )
         })
         .collect::<Result<Vec<_>>>()?;
@@ -708,7 +794,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
     };
 
     // Adjust the struct to also include base class subobjects, vtables, etc.
-    let head_padding = if let Some(first_field) = record.fields().first() {
+    let head_padding_bytes = if let Some(first_field) = record.fields().first() {
         first_field.offset() / 8
     } else {
         record.size_align().size()
@@ -730,16 +816,12 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
     // TODO(b/232969667): Protect unions from direct initialization, too.
     let allow_direct_init = record.is_aggregate() || record.is_union();
     let head_padding =
-        if head_padding > 0 || !allow_direct_init { Some(head_padding) } else { None };
-    // Under `infer_send_sync`, `__non_field_data` is opaque C++ data whose thread-safety rustc
-    // can't see: base class subobjects (Crubit doesn't emit the base class's fields, only its
-    // bytes) or a vptr. So it prevents `Send` and `Sync` from being automatically implemented.
-    // The exception is the single byte of an empty class, which holds no data. (Non-empty
-    // `__non_field_data` with no bases and at least one field can only be a vptr.)
-    let head_padding_do_not_auto_impl_send_sync = infer_send_sync
-        && (record.is_derived_class()
-            || !record.fields().is_empty()
-            || record.size_align().size() > 1);
+        if head_padding_bytes > 0 || !allow_direct_init { Some(head_padding_bytes) } else { None };
+    let unrepresented = if infer_send_sync {
+        unrepresented_subobjects(&record, head_padding_bytes, &field_definitions)
+    } else {
+        None
+    };
 
     api_snippets.cc_details.push(cc_struct_layout_assertion(db, &record)?);
 
@@ -1031,10 +1113,23 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         ident,
         id: record.id(),
         head_padding,
-        head_padding_do_not_auto_impl_send_sync,
         field_definitions,
-        send: send_sync_impl_polarity(&record, record.trait_derives().send, infer_send_sync),
-        sync: send_sync_impl_polarity(&record, record.trait_derives().sync, infer_send_sync),
+        send: send_sync_impl(
+            db,
+            &record,
+            "Send",
+            record.trait_derives().send,
+            infer_send_sync,
+            unrepresented.as_deref(),
+        ),
+        sync: send_sync_impl(
+            db,
+            &record,
+            "Sync",
+            record.trait_derives().sync,
+            infer_send_sync,
+            unrepresented.as_deref(),
+        ),
         cxx_impl,
         incomplete_definition,
         upcast_impls,
