@@ -52,7 +52,7 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli(
 def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
-    analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "CppHeaderAnalysis"][0]
+    analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic in ("CppHeaderAnalysis", "RustBindingsFromCc")][0]
     expected_flag = "--extra_rs_srcs=rs_bindings_from_cc/test/bazel_unit_tests/additional_rust_srcs_for_crubit_bindings_aspect_hint_test/stub.rs"
     asserts.true(
         env,

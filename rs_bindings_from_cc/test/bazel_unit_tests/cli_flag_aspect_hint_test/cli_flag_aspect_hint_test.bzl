@@ -55,7 +55,7 @@ def _test_rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
     expected_cli_flags = ["--is_golden_test=True", "--do_nothing"]
-    analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "CppHeaderAnalysis"][0]
+    analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic in ("CppHeaderAnalysis", "RustBindingsFromCc")][0]
     for expected_cli_flag in expected_cli_flags:
         asserts.true(
             env,

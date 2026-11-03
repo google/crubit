@@ -57,6 +57,9 @@ def _action_inputs_with_pipelining_analysis_test_impl(ctx):
 
 action_inputs_with_pipelining_analysis_test = crubit_make_analysis_test(
     _action_inputs_with_pipelining_analysis_test_impl,
+    config_settings = {
+        str(Label("@rules_rust//rust/settings:pipelined_compilation")): True,
+    },
 )
 
 def _targets_for_pipelined_compilation():

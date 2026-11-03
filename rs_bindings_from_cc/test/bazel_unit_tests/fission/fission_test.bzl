@@ -6,6 +6,7 @@ load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_make_analysis_test",
@@ -109,8 +110,9 @@ def _test_fission():
     cc_library(name = "disabled_crubit", tags = ["manual"], hdrs = ["disabled_crubit.h"])
 
     # Has public headers, and enables Crubit.
-    cc_library(name = "enabled_crubit_has_public_headers", tags = ["manual"], srcs = ["enabled_crubit_has_public_headers.cc"], hdrs = ["enabled_crubit_has_public_headers.h"], deps = [":has_no_public_headers", ":disabled_crubit"], aspect_hints = ["//features:supported"])
-    rust_library(name = "rust_library", tags = ["manual"], cc_deps = [":enabled_crubit_has_public_headers"], srcs = ["rust_library.rs"])
+    cc_library(name = "enabled_crubit_has_public_headers", tags = ["manual"], srcs = ["enabled_crubit_has_public_headers.cc"], hdrs = ["enabled_crubit_has_public_headers.h"], deps = [":has_no_public_headers", ":disabled_crubit"], aspect_hints = [":enabled_crubit_has_public_headers_rust.hint"])
+    rust_api_from_cpp(name = "enabled_crubit_has_public_headers_rust", tags = ["manual"], cpp_target = ":enabled_crubit_has_public_headers")
+    rust_library(name = "rust_library", tags = ["manual"], deps = [":enabled_crubit_has_public_headers_rust"], srcs = ["rust_library.rs"])
 
     fission_test(
         name = "fission_test",

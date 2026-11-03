@@ -34,7 +34,7 @@ def _error_report_enabled_test_impl(ctx):
 _error_report_enabled_test = crubit_make_analysis_test(
     _error_report_enabled_test_impl,
     config_settings = {
-        "//rs_bindings_from_cc/bazel_support:generate_error_report": True,
+        str(Label("//rs_bindings_from_cc/bazel_support:generate_error_report")): True,
     },
 )
 
@@ -49,7 +49,7 @@ def _error_report_disabled_test_impl(ctx):
 _error_report_disabled_test = crubit_make_analysis_test(
     _error_report_disabled_test_impl,
     config_settings = {
-        "//rs_bindings_from_cc/bazel_support:generate_error_report": False,
+        str(Label("//rs_bindings_from_cc/bazel_support:generate_error_report")): False,
     },
 )
 

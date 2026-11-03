@@ -28,7 +28,7 @@ def _deps_for_bindings_in_target_cfg_impl(ctx):
     # non exec path, aka target configuration.
 
     action = [a for a in tut[ActionsInfo].actions if a.mnemonic == "Rustc"][0]
-    implicit_dep_args = _filter_by_substring(action.argv, "third_party/rust/static_assertions")
+    implicit_dep_args = _filter_by_substring(action.argv, "static_assertions")
     exec_cfg_args = _filter_by_substring(implicit_dep_args, "-exec")
     target_cfg_args = _negative_filter_by_substring(implicit_dep_args, "-exec")
 
