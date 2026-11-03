@@ -11,6 +11,7 @@ load(
 load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "RustBindingsFromCcInfo",
+    "RustToolchainHeadersInfo",
 )
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
@@ -59,7 +60,6 @@ def _cc_std_test_impl(ctx):
     dep = ctx.attr.dep
 
     cc_toolchain = find_cpp_toolchain(ctx)
-    bindings_toolchain = ctx.toolchains["//rs_bindings_from_cc/bazel_support:toolchain_type"].rs_bindings_from_cc_toolchain_info
 
     ctx.actions.run(
         mnemonic = "CcStdTest",
@@ -67,12 +67,11 @@ def _cc_std_test_impl(ctx):
             direct = [
                 dep[RustBindingsFromCcInfo].dep_variant_info.crate_info.output,
                 dep[OutputsInfo].empty_header_file,
-            ] + bindings_toolchain.stl_headers,
+            ],
             transitive = [
                 # For the `clang` binary.
                 cc_toolchain.all_files,
-                ctx.attr._stl_headers.files,
-                ctx.attr._llvm_builtin_headers.files,
+                ctx.attr._std[RustToolchainHeadersInfo].headers,
             ],
         ),
         arguments = [out.path, dep[OutputsInfo].args],
@@ -98,18 +97,14 @@ cc_std_test = rule(
             executable = True,
             cfg = "exec",
         ),
-        "_stl_headers": attr.label(
-            default = "//third_party/stl:stl_headers",
-        ),
-        "_llvm_builtin_headers": attr.label(
-            default = "@llvm-project//clang:builtin_headers_files",
+        "_std": attr.label(
+            default = "//support/cc_std",
         ),
         # TODO: b/421934470 - Fix uses of exec groups and re-enable AEG
         "_use_auto_exec_groups": attr.bool(default = False),
     },
     toolchains = [
         "@bazel_tools//tools/cpp:toolchain_type",
-        "//rs_bindings_from_cc/bazel_support:toolchain_type",
     ],
     test = True,
 )
