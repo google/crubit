@@ -124,6 +124,9 @@ memoized::query_group! {
       #[input]
       fn ignore_symbols_from_files(&self) -> Rc<HashSet<PathBuf>>;
 
+      #[input]
+      fn crate_num_to_extern_name(&self) -> Rc<std::collections::BTreeMap<CrateNum, Rc<str>>>;
+
       /// Computes all specializations specified in the crate.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:specializations

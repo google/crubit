@@ -892,7 +892,7 @@ pub fn generate_trait_thunks<'tcx>(
         let display_name = def_id
             .and_then(|id| db.symbol_canonical_name(id).ok())
             .map(|canon| {
-                let parts = canon.rs_name_parts().map(|s| format!("{}", s)).collect::<Vec<_>>();
+                let parts = canon.rs_name_parts(db).map(|s| format!("{}", s)).collect::<Vec<_>>();
                 parts.join("::")
             })
             .unwrap_or_else(|| format!("{self_ty}"));
@@ -976,7 +976,7 @@ pub fn generate_trait_thunks<'tcx>(
                 }
             })
         } else {
-            let fully_qualified_trait_name = db.symbol_canonical_name(trait_id)?.format_for_rs();
+            let fully_qualified_trait_name = db.symbol_canonical_name(trait_id)?.format_for_rs(db);
             let method_name = make_rs_ident(method.name().as_str());
             let args = type_args
                 .iter()

@@ -185,7 +185,7 @@ def _filter_crubit_rustc_args(ctx, original_args, toolchain, dep_info):
     )
     return args
 
-def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, args, rustc_env, proto_crate_renames, self_rmeta, is_golden_test_override = None, target_denied_features = []):
+def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, args, rustc_env, proto_crate_renames, self_rmeta, is_golden_test_override = None, target_denied_features = [], proto_crate_infos = []):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
     Args:
@@ -274,6 +274,15 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
             crubit_args.add("--crate-namespace", _crate_name + "=" + crate_config.namespace)
     for mapping in proto_crate_renames:
         crubit_args.add("--crate-rename", mapping.crate_name + "=" + mapping.old_crate_name)
+
+    # Pass the `rust_proto_library` crates under the names the target crate uses for them, so that
+    # `cc_bindings_from_rs` can tell apart proto crates whose `proto_library` targets share a name
+    # (b/568453443).
+    proto_extern_inputs = []
+    for info in proto_crate_infos:
+        proto_extern_file = info.metadata if info.metadata != None else info.output
+        proto_extern_inputs.append(proto_extern_file)
+        crubit_args.add("--extern={}={}".format(info.name, proto_extern_file.path))
     self_crate_name = None
     for flag in cli_flags:
         # If --source-crate-name was specified manually, prefer that over passing the default.
@@ -307,7 +316,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
         ctx.actions.run(
             outputs = outputs,
             inputs = depset(
-                [f for f in [ctx.file._rustfmt_cfg, self_rmeta] if f != None],
+                [f for f in [ctx.file._rustfmt_cfg, self_rmeta] if f != None] + proto_extern_inputs,
                 transitive = [inputs],
             ),
             env = rustc_env | verbose_log_env | _rustc_lib_env(ctx),
@@ -425,6 +434,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         return []
 
     proto_crate_renames = []
+    proto_crate_infos = []
 
     toolchain = find_toolchain(ctx)
     crate_info = target[CrateInfo]
@@ -538,6 +548,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         proto_crate_renames = proto_crate_renames,
         self_rmeta = rmeta,
         target_denied_features = target_denied_features,
+        proto_crate_infos = proto_crate_infos,
     )
 
     dep_variant_info = _compile_rs_out_file(ctx, ctx.rule.attr, bindings_info.rust_file, target[CrateInfo].name, [target])

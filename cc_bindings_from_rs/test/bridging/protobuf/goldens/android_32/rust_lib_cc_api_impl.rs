@@ -11,7 +11,6 @@
 
 extern crate alloc;
 extern crate core;
-extern crate foo_rust_proto as foo_proto;
 const _: () = assert!(::core::mem::size_of::<::rust_lib_golden::FooService>() == 4);
 const _: () = assert!(::core::mem::align_of::<::rust_lib_golden::FooService>() == 4);
 #[unsafe(no_mangle)]
@@ -31,15 +30,15 @@ extern "C" fn __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aFo
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_handle_urequest(
     __self: &'static mut ::rust_lib_golden::FooService,
-    req: ::foo_proto::FooRequestView<'static>,
-    rsp: ::foo_proto::FooResponseMut<'static>,
+    req: ::foo_rust_proto::FooRequestView<'static>,
+    rsp: ::foo_rust_proto::FooResponseMut<'static>,
 ) -> bool {
     unsafe { ::rust_lib_golden::FooService::handle_request(__self, req, rsp) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_request_ustats(
     __self: &'static ::rust_lib_golden::FooService,
-) -> ::foo_proto::FooRequestStatsView<'static> {
+) -> ::foo_rust_proto::FooRequestStatsView<'static> {
     unsafe { ::rust_lib_golden::FooService::request_stats(__self) }
 }
 #[unsafe(no_mangle)]
@@ -63,7 +62,7 @@ unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
     unsafe {
         let updated_stats = {
             let mut __crubit_temp =
-                ::core::mem::MaybeUninit::<::foo_proto::FooRequestStats>::uninit();
+                ::core::mem::MaybeUninit::<::foo_rust_proto::FooRequestStats>::uninit();
             proto2_rust_thunk_Message_foo_service_FooRequestStats_crubit_cpp_to_rust_converter(
                 updated_stats,
                 __crubit_temp.as_mut_ptr() as *mut core::ffi::c_void,
@@ -74,7 +73,7 @@ unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: *mut ::foo_proto::FooEnum) -> () {
+unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: *mut ::foo_rust_proto::FooEnum) -> () {
     unsafe {
         let _e = _e.read();
         ::rust_lib_golden::FooService::enum_in_signature(_e)
@@ -101,7 +100,7 @@ const _: () = assert!(::core::mem::offset_of!(::rust_lib_golden::StructWithProto
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create_uproto_ustatus_uor(
     num: i32,
-    __ret_ptr: *mut ::rust_lib_golden::NewStatusOr<::foo_proto::FooRequestStats>,
+    __ret_ptr: *mut ::rust_lib_golden::NewStatusOr<::foo_rust_proto::FooRequestStats>,
 ) -> () {
     unsafe {
         __ret_ptr.write(::rust_lib_golden::create_proto_status_or(num));
@@ -110,7 +109,7 @@ unsafe extern "C" fn __crubit_thunk_create_uproto_ustatus_uor(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create_uproto_uvec(
     num: i32,
-    __ret_ptr: *mut ::alloc::vec::Vec<::foo_proto::FooRequestStats>,
+    __ret_ptr: *mut ::alloc::vec::Vec<::foo_rust_proto::FooRequestStats>,
 ) -> () {
     unsafe {
         __ret_ptr.write(::rust_lib_golden::create_proto_vec(num));
@@ -127,24 +126,24 @@ unsafe extern "C" fn __crubit_thunk_create_ustruct_uwith_uproto(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_read_uproto_upointer(
-    p: *const ::foo_proto::FooRequestStats,
+    p: *const ::foo_rust_proto::FooRequestStats,
 ) -> i32 {
     unsafe { ::rust_lib_golden::read_proto_pointer(p) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_read_uproto_uref(
-    p: &'static ::foo_proto::FooRequestStats,
+    p: &'static ::foo_rust_proto::FooRequestStats,
 ) -> i32 {
     unsafe { ::rust_lib_golden::read_proto_ref(p) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
-    __self: &'static ::alloc::vec::Vec<::foo_proto::FooRequestStats>,
-    __ret_ptr: *mut ::alloc::vec::Vec<::foo_proto::FooRequestStats>,
+    __self: &'static ::alloc::vec::Vec<::foo_rust_proto::FooRequestStats>,
+    __ret_ptr: *mut ::alloc::vec::Vec<::foo_rust_proto::FooRequestStats>,
 ) -> () {
     unsafe {
         __ret_ptr.write(
-            <::alloc::vec::Vec<::foo_proto::FooRequestStats> as ::core::clone::Clone>::clone(
+            <::alloc::vec::Vec<::foo_rust_proto::FooRequestStats> as ::core::clone::Clone>::clone(
                 __self,
             ),
         );
@@ -152,11 +151,11 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x00
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
-    __self: &'static mut ::alloc::vec::Vec<::foo_proto::FooRequestStats>,
-    source: &'static ::alloc::vec::Vec<::foo_proto::FooRequestStats>,
+    __self: &'static mut ::alloc::vec::Vec<::foo_rust_proto::FooRequestStats>,
+    source: &'static ::alloc::vec::Vec<::foo_rust_proto::FooRequestStats>,
 ) -> () {
     unsafe {
-        <::alloc::vec::Vec<::foo_proto::FooRequestStats> as ::core::clone::Clone>::clone_from(
+        <::alloc::vec::Vec<::foo_rust_proto::FooRequestStats> as ::core::clone::Clone>::clone_from(
             __self, source,
         )
     }

@@ -82,6 +82,28 @@ fn new_db<'tcx>(
     for file in &cmdline.ignore_symbols_from_files {
         ignore_symbols_from_files.insert(file.to_path_buf());
     }
+
+    let mut crate_num_to_extern_name = std::collections::BTreeMap::new();
+    for (name, path_str) in &cmdline.r#extern {
+        let path = std::path::Path::new(path_str);
+        if let Some(stem) = path.file_stem() {
+            for &cnum in tcx.crates(()) {
+                let source = tcx.used_crate_source(cnum);
+                let matches_stem = |p: &Option<std::path::PathBuf>| -> bool {
+                    p.as_ref().and_then(|p| p.file_stem()) == Some(stem)
+                };
+                if matches_stem(&source.dylib)
+                    || matches_stem(&source.rlib)
+                    || matches_stem(&source.rmeta)
+                {
+                    if name.as_str() != tcx.crate_name(cnum).as_str() {
+                        crate_num_to_extern_name.insert(cnum, name.as_str().into());
+                    }
+                }
+            }
+        }
+    }
+
     generate_bindings::new_database(
         tcx,
         cmdline.source_crate_name.as_ref().map(|s| s.clone().into()),
@@ -100,6 +122,7 @@ fn new_db<'tcx>(
         cmdline.is_golden_test,
         include_guard,
         ignore_symbols_from_files.into(),
+        crate_num_to_extern_name.into(),
     )
 }
 

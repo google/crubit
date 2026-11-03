@@ -150,14 +150,23 @@ impl FullyQualifiedName {
         )
     }
 
-    pub fn format_for_rs(&self) -> TokenStream {
-        let iter = self.rs_name_parts();
+    pub fn format_for_rs(&self, db: &BindingsGenerator<'_>) -> TokenStream {
+        let iter = self.rs_name_parts(db);
         quote! { #( ::#iter )* }
     }
 
     /// Returns an iterator of parts to spell out the Rust name.
-    pub fn rs_name_parts(&self) -> impl Iterator<Item = Ident> + use<'_> {
-        let krate = make_rs_ident(self.krate.as_str());
+    pub fn rs_name_parts(
+        &self,
+        db: &BindingsGenerator<'_>,
+    ) -> impl Iterator<Item = Ident> + use<'_> {
+        let crate_map = db.crate_num_to_extern_name();
+        let krate_name = if let Some(name) = crate_map.get(&self.krate_num) {
+            name.as_ref()
+        } else {
+            self.krate.as_str()
+        };
+        let krate = make_rs_ident(krate_name);
         let mod_path = self.rs_mod_path.parts_with_snake_case_record_names();
         let name = self.unqualified.rs_name;
         let name = make_rs_ident(name.as_str());
