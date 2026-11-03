@@ -106,9 +106,6 @@ namespace ir_proto = ::crubit::ffi;
 
 namespace {
 
-constexpr absl::string_view kTypeStatusPayloadUrl =
-    "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
-
 // Prefix of the synthetic label that `Importer::GetOwningTarget` returns when
 // no Bazel target visible to Crubit claims ownership of a header. The rest of
 // the label is the header path, which is useful for error messages.
