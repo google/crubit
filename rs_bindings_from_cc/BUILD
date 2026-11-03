@@ -449,7 +449,7 @@ crubit_rust_binary(
         "ir_schema.rs",
     ],
     deps = [
-        "@crate_index//:genco",  # v0_17
+        "@crate_index//:genco",  # v0_20
         "@crate_index//:heck",  # v0_5
     ],
 )

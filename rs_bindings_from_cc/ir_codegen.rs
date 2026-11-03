@@ -7,9 +7,10 @@
 //!
 //! Run `common/golden_update.sh` after modifying the schema in this file.
 
+use genco::fmt;
 use genco::lang::{c, rust};
+use genco::quote;
 use genco::tokens::quoted;
-use genco::{quote_in, Tokens};
 use heck::ToSnakeCase;
 use std::collections::BTreeMap;
 use std::env;
@@ -679,624 +680,559 @@ impl Schema {
     }
 }
 
-// TODO(b/578040953): Clean this up once genco 0.20 is available. Genco 0.17 doesn't have token
-// formatting by default so we've implemented a shim.
-fn format_tokens<L>(tokens: &Tokens<L>, is_cc: bool) -> String
-where
-    L: genco::lang::Lang,
-    L::Config: Default,
-{
-    let step = if is_cc { 2 } else { 4 };
-    let mut indent = 0usize;
-    let mut out = String::new();
-    for line in tokens.to_file_vec().expect("genco formatting to String cannot fail") {
-        let trimmed = line.trim();
-        if trimmed.is_empty() {
-            out.push('\n');
-            continue;
-        }
-        let is_ns_open = is_cc && trimmed.starts_with("namespace ") && trimmed.ends_with('{');
-        let is_ns_close = is_cc && trimmed.starts_with("}  // namespace ");
-        if !is_ns_close
-            && (trimmed.starts_with('}') || trimmed.starts_with(']') || trimmed.starts_with(')'))
-        {
-            indent = indent.saturating_sub(1);
-        }
-        if is_cc && trimmed == "private:" {
-            for _ in 0..(indent * step).saturating_sub(1) {
-                out.push(' ');
-            }
-        } else {
-            let line_indent = if !is_cc && trimmed.starts_with('.') { indent + 1 } else { indent };
-            for _ in 0..(line_indent * step) {
-                out.push(' ');
-            }
-        }
-        out.push_str(trimmed);
-        out.push('\n');
-        if !is_ns_open
-            && (trimmed.ends_with('{') || trimmed.ends_with('[') || trimmed.ends_with('('))
-        {
-            indent += 1;
-        }
+fn generate_cc_nested_aliases(schema: &Schema, parent_key: &str) -> c::Tokens {
+    quote! {
+        $(for child_rec in &schema.records join ($['\r']) {
+            $(if let Some(scope) = child_rec.scope() {
+                $(if scope.parent == parent_key {
+                    using $(child_rec.name()) = ::crubit::ffi::$(&scope.ns)::$(child_rec.name());
+                })
+            })
+        })
+        $(for child_en in &schema.enums join ($['\r']) {
+            $(if let Some(scope) = &child_en.item.scope {
+                $(if scope.parent == parent_key {
+                    $(let child_ns = &scope.ns)
+                    $(let ename = child_en.item.name)
+                    using $ename = ::crubit::ffi::$child_ns::$ename;
+                    $(for v in &child_en.variants join ($['\r']) =>
+                        static constexpr $ename $(&v.cc_name) = ::crubit::ffi::$child_ns::$(&v.cc_name);
+                    )
+                })
+            })
+        })
     }
-    out
 }
 
-fn generate_cc_nested_aliases(out: &mut c::Tokens, schema: &Schema, parent_key: &str) {
-    for child_rec in &schema.records {
-        if let Some(scope) = child_rec.scope()
-            && scope.parent == parent_key
-        {
-            let child_ns = &scope.ns;
-            let cname = child_rec.name();
-            quote_in! { *out =>
-                using $cname = ::crubit::ffi::$child_ns::$cname;$['\r']
+fn generate_cc_union(schema: &Schema, u: &UnionDef) -> c::Tokens {
+    let parent_key = u.item.cc_qual_name();
+    let uname = u.item.name;
+    let v0 = &u.variants[0];
+    let v0p = v0.pascal_name;
+    let v0f = &v0.field_name;
+    let v0_init = if matches!(v0.ty, FieldType::Unit) {
+        "empty_(0)".to_string()
+    } else {
+        format!("{v0f}_()")
+    };
+
+    quote! {
+        $(if let Some(ns) = u.item.ns() => namespace $ns $("{"))
+        struct ABSL_ATTRIBUTE_TRIVIAL_ABI $uname {
+            $(generate_cc_nested_aliases(schema, &parent_key))
+            enum Case : uint32_t {
+                $(for (idx, v) in u.variants.iter().enumerate() join ($['\r']) =>
+                    k$(v.pascal_name) = $idx,
+                )
+            };
+            $uname() : tag_(k$v0p), payload_() {}
+            $uname(const $uname& other) : tag_(k$v0p), payload_() { CopyFrom(other); }
+            $uname($uname&& other) noexcept : tag_(k$v0p), payload_() { MoveFrom(std::move(other)); }
+            $uname& operator=(const $uname& other) {
+                if (this != &other) { $uname tmp(other); MoveFrom(std::move(tmp)); }
+                return *this;
+            }
+            $uname& operator=($uname&& other) noexcept {
+                if (this != &other) { MoveFrom(std::move(other)); }
+                return *this;
+            }
+            ~$uname() { Destroy(); }
+            $(for v in &u.variants join ($['\r']) {
+                $(let vf = &v.field_name)
+                $(let vp = v.pascal_name)
+                $(match &v.ty {
+                    FieldType::Unit => {
+                        static $uname $vp() { $uname res; res.set_$vf(); return res; }
+                    }
+                    FieldType::Struct(cc_path) => {
+                        $(let cty = &format!("::crubit::ffi::{cc_path}"))
+                        $("// NOLINTNEXTLINE(google-explicit-constructor)")
+                        $uname($cty value) : tag_(k$vp), payload_(k$vp) { new (&payload_.$(vf)_) $cty(std::move(value)); }
+                    }
+                    FieldType::Box(inner) => {
+                        $(let inner_cty = &inner.cc_storage_type())
+                        $("// NOLINTNEXTLINE(google-explicit-constructor)")
+                        $uname($inner_cty value) : tag_(k$vp), payload_(k$vp) { new (&payload_.$(vf)_) FfiRc<$inner_cty>(std::move(value)); }
+                    }
+                    FieldType::Enum(_) => {
+                        $(let cty = v.ty.cc_storage_type())
+                        $("// NOLINTNEXTLINE(google-explicit-constructor)")
+                        $uname($cty value) : tag_(k$vp), payload_(k$vp) { payload_.$(vf)_ = value; }
+                    }
+                    _ => {}
+                })
+            })
+            void Clear() {
+                Destroy();
+                tag_ = k$v0p;
+                $(if !matches!(v0.ty, FieldType::Unit) {
+                    $(let v0_cty = v0.ty.cc_storage_type())
+                    new (&payload_.$(v0f)_) $v0_cty();
+                })
+            }
+            Case kind() const { return tag_; }
+            $(for v in &u.variants join ($['\r']) {
+                $(let vf = &v.field_name)
+                $(let vp = v.pascal_name)
+                bool has_$vf() const { return tag_ == k$vp; }
+                $(match v.ty.cc_type() {
+                    FieldType::Unit => {
+                        void set_$vf() { Destroy(); tag_ = k$vp; }
+                    }
+                    FieldType::Struct(cc_path) => {
+                        $(let cty = &format!("::crubit::ffi::{cc_path}"))
+                        const $cty& $vf() const { return has_$vf() ? payload_.$(vf)_ : DefaultValue<$cty>(); }
+                        $cty* mutable_$vf() {
+                            if (!has_$vf()) {
+                                Destroy();
+                                tag_ = k$vp;
+                                new (&payload_.$(vf)_) $cty();
+                            }
+                            return &payload_.$(vf)_;
+                        }
+                    }
+                    FieldType::Box(inner) => {
+                        $(let inner_cty = &inner.cc_storage_type())
+                        const $inner_cty& $vf() const { return has_$vf() ? payload_.$(vf)_.get_or_default() : DefaultValue<$inner_cty>(); }
+                        $inner_cty* mutable_$vf() {
+                            if (!has_$vf()) {
+                                Destroy();
+                                tag_ = k$vp;
+                                new (&payload_.$(vf)_) FfiRc<$inner_cty>();
+                            }
+                            return &payload_.$(vf)_.get_or_init();
+                        }
+                    }
+                    FieldType::Str => {
+                        absl::string_view $vf() const { return has_$vf() ? payload_.$(vf)_.AsView() : absl::string_view(); }
+                        void set_$vf(absl::string_view value) {
+                            FfiString tmp(value);
+                            Destroy();
+                            tag_ = k$vp;
+                            new (&payload_.$(vf)_) FfiString(std::move(tmp));
+                        }
+                    }
+                    FieldType::Bytes => {
+                        absl::string_view $vf() const { return has_$vf() ? absl::string_view(reinterpret_cast<const char*>(payload_.$(vf)_.data()), payload_.$(vf)_.size()) : absl::string_view(); }
+                        void set_$vf(absl::string_view value) {
+                            FfiVec<uint8_t> tmp(reinterpret_cast<const uint8_t*>(value.data()), reinterpret_cast<const uint8_t*>(value.data()) + value.size());
+                            Destroy();
+                            tag_ = k$vp;
+                            new (&payload_.$(vf)_) FfiVec<uint8_t>(std::move(tmp));
+                        }
+                    }
+                    FieldType::Bool
+                    | FieldType::I32
+                    | FieldType::U32
+                    | FieldType::I64
+                    | FieldType::U64
+                    | FieldType::Usize
+                    | FieldType::Enum(_) => {
+                        $(let cty = &v.ty.cc_storage_type())
+                        $(let default_val = if matches!(v.ty.cc_type(), FieldType::Bool) { "false".to_string() } else { format!("static_cast<{cty}>(0)") })
+                        $cty $vf() const { return has_$vf() ? payload_.$(vf)_ : $default_val; }
+                        void set_$vf($cty value) { Destroy(); tag_ = k$vp; payload_.$(vf)_ = value; }
+                    }
+                    _ => { $(ref _ => unreachable!("Unsupported union variant type")) }
+                })
+            })
+            friend bool operator==(const $uname& lhs, const $uname& rhs) {
+                if (lhs.tag_ != rhs.tag_) return false;
+                switch (lhs.tag_) {
+                    $(for v in &u.variants join ($['\r']) {
+                        $(let vp = v.pascal_name)
+                        $(let vf = &v.field_name)
+                        $(if matches!(v.ty, FieldType::Unit) {
+                            case k$vp: return true;
+                        } else {
+                            case k$vp: return lhs.payload_.$(vf)_ == rhs.payload_.$(vf)_;
+                        })
+                    })
+                    default: CHECK(false);
+                }
+                return false;
+            }
+        $[' ']private:
+            void Destroy() {
+                switch (tag_) {
+                    $(for v in &u.variants join ($['\r']) {
+                        $(let vp = v.pascal_name)
+                        $(let vf = &v.field_name)
+                        $(if matches!(v.ty, FieldType::Unit) {
+                            case k$vp: break;
+                        } else {
+                            case k$vp: std::destroy_at(&payload_.$(vf)_); break;
+                        })
+                    })
+                    default: CHECK(false);
+                }
+            }
+            void CopyFrom(const $uname& other) {
+                Destroy();
+                tag_ = other.tag_;
+                switch (tag_) {
+                    $(for v in &u.variants join ($['\r']) {
+                        $(let vp = v.pascal_name)
+                        $(let vf = &v.field_name)
+                        $(if matches!(v.ty, FieldType::Unit) {
+                            case k$vp: break;
+                        } else {
+                            $(let cty = v.ty.cc_storage_type())
+                            case k$vp: new (&payload_.$(vf)_) $cty(other.payload_.$(vf)_); break;
+                        })
+                    })
+                    default: CHECK(false);
+                }
+            }
+            void MoveFrom($uname&& other) noexcept {
+                Destroy();
+                tag_ = other.tag_;
+                switch (tag_) {
+                    $(for v in &u.variants join ($['\r']) {
+                        $(let vp = v.pascal_name)
+                        $(let vf = &v.field_name)
+                        $(if matches!(v.ty, FieldType::Unit) {
+                            case k$vp: break;
+                        } else {
+                            $(let cty = v.ty.cc_storage_type())
+                            case k$vp: new (&payload_.$(vf)_) $cty(std::move(other.payload_.$(vf)_)); break;
+                        })
+                    })
+                    default: CHECK(false);
+                }
+                other.Clear();
+            }
+            Case tag_;
+            union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+                Payload() : $v0_init {}
+                explicit Payload(Case) : empty_(0) {}
+                Payload(const Payload&) {}
+                Payload(Payload&&) noexcept {}
+                ~Payload() {}
+                char empty_;
+                $(for v in &u.variants join ($['\r']) {
+                    $(if !matches!(v.ty, FieldType::Unit) =>
+                        $(v.ty.cc_storage_type()) $(&v.field_name)_;
+                    )
+                })
+            } payload_;
+        };
+        $(if let Some(ns) = u.item.ns() => $("}  // namespace ")$ns)
+    }
+}
+
+fn generate_cc_struct(schema: &Schema, rec_idx: usize, st: &StructDef) -> c::Tokens {
+    let parent_key = st.item.cc_qual_name();
+    let sname = st.item.name;
+    let has_fwd_ref = schema.has_forward_ref(rec_idx);
+
+    let has_single_field_ctor = st.fields.len() == 1
+        && matches!(
+            st.fields[0].ty.cc_type(),
+            FieldType::Str
+                | FieldType::Bool
+                | FieldType::I32
+                | FieldType::U32
+                | FieldType::I64
+                | FieldType::U64
+                | FieldType::Usize
+                | FieldType::Enum(_)
+                | FieldType::Struct(_)
+        );
+    let has_leading_union_ctor = st.fields.len() > 1
+        && matches!(st.fields[0].cc_name, "variant" | "kind")
+        && schema.is_union_type(&st.fields[0].ty);
+
+    quote! {
+        $(if let Some(ns) = st.item.ns() => namespace $ns $("{"))
+        struct ABSL_ATTRIBUTE_TRIVIAL_ABI $sname {
+            $(generate_cc_nested_aliases(schema, &parent_key))
+            $(if has_fwd_ref {
+                $sname();
+                $sname(const $sname&);
+                $sname($sname&&) noexcept;
+                $sname& operator=(const $sname&);
+                $sname& operator=($sname&&) noexcept;
+                ~$sname();
+            } else {
+                $(if has_single_field_ctor || has_leading_union_ctor {
+                    $sname() = default;
+                })
+            })
+            $(if (has_single_field_ctor || has_leading_union_ctor)
+                && !schema.is_field_forward_ref(rec_idx, &st.fields[0].ty)
+            {
+                $(let f = &st.fields[0])
+                $(let fname = f.cc_name)
+                $(match f.ty.cc_type() {
+                    FieldType::Str => {
+                        explicit $sname(absl::string_view $fname) { set_$fname($fname); }
+                    }
+                    FieldType::Bool
+                    | FieldType::I32
+                    | FieldType::U32
+                    | FieldType::I64
+                    | FieldType::U64
+                    | FieldType::Usize
+                    | FieldType::Enum(_) => {
+                        $(let cty = f.ty.cc_storage_type())
+                        explicit $sname($cty $fname) { set_$fname($fname); }
+                    }
+                    FieldType::Struct(cc_path) => {
+                        $(let cty = format!("::crubit::ffi::{cc_path}"))
+                        explicit $sname($cty $fname) { *mutable_$fname() = std::move($fname); }
+                    }
+                    _ => { $(ref _ => unreachable!()) }
+                })
+            })
+            $(for f in &st.fields join ($['\r']) {
+                $(let fname = f.cc_name)
+                $(let is_fwd = schema.is_field_forward_ref(rec_idx, &f.ty))
+                $(let set_bit = f.cc_has_mask())
+                $(if let Some(hex_mask) = &set_bit {
+                    $(let clear_val = if f.default_true { "true" } else { "{}" })
+                    bool has_$fname() const { return (has_bits_ & $hex_mask) != 0; }
+                    $(if is_fwd {
+                        void clear_$fname();
+                    } else {
+                        void clear_$fname() { has_bits_ &= ~$hex_mask; $(fname)_ = $clear_val; }
+                    })
+                })
+                $(match f.ty.cc_type() {
+                    FieldType::Bool
+                    | FieldType::I32
+                    | FieldType::U32
+                    | FieldType::I64
+                    | FieldType::U64
+                    | FieldType::Usize
+                    | FieldType::Enum(_) => {
+                        $(let cty = &f.ty.cc_storage_type())
+                        $cty $fname() const { return $(fname)_; }
+                        void set_$fname($cty value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = value; }
+                    }
+                    FieldType::Str => {
+                        absl::string_view $fname() const { return $(fname)_.AsView(); }
+                        void set_$fname(absl::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = FfiString(value); }
+                    }
+                    FieldType::Bytes => {
+                        absl::string_view $fname() const { return absl::string_view(reinterpret_cast<const char*>($(fname)_.data()), $(fname)_.size()); }
+                        void set_$fname(absl::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = FfiVec<uint8_t>(reinterpret_cast<const uint8_t*>(value.data()), reinterpret_cast<const uint8_t*>(value.data()) + value.size()); }
+                    }
+                    FieldType::Struct(cc_path) => {
+                        $(let cty = &format!("::crubit::ffi::{cc_path}"))
+                        const $cty& $fname() const { return $(fname)_; }
+                        $cty* mutable_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_; }
+                    }
+                    FieldType::Box(inner) => {
+                        $(let cty = &inner.cc_storage_type())
+                        $(if is_fwd {
+                            const $cty& $fname() const;
+                            $cty* mutable_$fname();
+                        } else {
+                            const $cty& $fname() const { return $(fname)_.get_or_default(); }
+                            $cty* mutable_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_.get_or_init(); }
+                        })
+                    }
+                    FieldType::Vec(inner) => {
+                        $(let cty = &f.ty.cc_storage_type())
+                        const $cty& $fname() const { return $(fname)_; }
+                        $cty* mutable_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_; }
+                        $(if f.has_bit.is_none() =>
+                            void clear_$fname() { $(fname)_.Clear(); }
+                        )
+                        $(match inner.cc_type() {
+                            FieldType::Str => {
+                                void add_$fname(absl::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_.Add(FfiString(value)); }
+                            }
+                            FieldType::Bool
+                            | FieldType::I32
+                            | FieldType::U32
+                            | FieldType::I64
+                            | FieldType::U64
+                            | FieldType::Usize
+                            | FieldType::Enum(_) => {
+                                $(let elem_ty = &inner.cc_storage_type())
+                                void add_$fname($elem_ty value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_.Add(value); }
+                            }
+                            _ => {
+                                $(let elem_ty = &inner.cc_storage_type())
+                                $(if is_fwd {
+                                    $elem_ty* add_$fname();
+                                } else {
+                                    $elem_ty* add_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return $(fname)_.Add(); }
+                                })
+                            }
+                        })
+                    }
+                    FieldType::Map(_, _) => {
+                        $(let cty = &f.ty.cc_storage_type())
+                        const $cty& $fname() const { return $(fname)_; }
+                        $cty* mutable_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_; }
+                    }
+                    FieldType::Unit | FieldType::Newtype(_, _) => { $(ref _ => unreachable!()) }
+                })
+            })
+            friend bool operator==(const $sname&, const $sname&) = default;
+            $(if st.has_optional_fields() => uint64_t has_bits_ = 0;)
+            $(for f in &st.fields join ($['\r']) {
+                $(let fname = f.cc_name)
+                $(let cty = f.ty.cc_storage_type())
+                $(if f.default_true {
+                    $cty $(fname)_ = true;
+                } else {
+                    $cty $(fname)_{};
+                })
+            })
+        };
+        $(if let Some(ns) = st.item.ns() => $("}  // namespace ")$ns)
+    }
+}
+
+fn generate_cc_out_of_line(schema: &Schema, rec_idx: usize, rec: &RecordDef) -> c::Tokens {
+    let qname = &rec.cc_qual_name();
+    match rec {
+        RecordDef::Union(u) => {
+            let layout = schema.union_layout(u);
+            quote! {
+                static_assert(std::is_standard_layout_v<$qname>);
+                static_assert(sizeof(size_t) != 8 || (sizeof($qname) == $(layout.size) && alignof($qname) == $(layout.align)));
             }
         }
-    }
-    for child_en in &schema.enums {
-        if let Some(scope) = &child_en.item.scope {
-            if scope.parent == parent_key {
-                let child_ns = &scope.ns;
-                let ename = child_en.item.name;
-                quote_in! { *out =>
-                    using $ename = ::crubit::ffi::$child_ns::$ename;$['\r']
-                    $(for v in &child_en.variants =>
-                        static constexpr $ename $(&v.cc_name) = ::crubit::ffi::$child_ns::$(&v.cc_name);$['\r']
-                    )
-                }
+        RecordDef::Struct(st) => {
+            let sname = st.item.name;
+            let st_layout = schema.struct_layout(st);
+            quote! {
+                $(if schema.has_forward_ref(rec_idx) {
+                    inline $qname::$sname() = default;
+                    inline $qname::$sname(const $sname&) = default;
+                    inline $qname::$sname($sname&&) noexcept = default;
+                    inline $qname& $qname::operator=(const $sname&) = default;
+                    inline $qname& $qname::operator=($sname&&) noexcept = default;
+                    inline $qname::~$sname() = default;
+                    $(for f in &st.fields join ($['\r']) {
+                        $(if schema.is_field_forward_ref(rec_idx, &f.ty) {
+                            $(let set_bit = f.cc_has_mask())
+                            $(let fname = f.cc_name)
+                            $(if let Some(hex_mask) = &set_bit {
+                                $(let clear_val = if f.default_true { "true" } else { "{}" })
+                                inline void $qname::clear_$fname() { has_bits_ &= ~$hex_mask; $(fname)_ = $clear_val; }
+                            })
+                            $(match &f.ty {
+                                FieldType::Box(inner) => {
+                                    $(let inner_ty = &inner.cc_storage_type())
+                                    inline const $inner_ty& $qname::$fname() const { return $(fname)_.get_or_default(); }
+                                    inline $inner_ty* $qname::mutable_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_.get_or_init(); }
+                                }
+                                FieldType::Vec(inner) => {
+                                    $(let elem_ty = &inner.cc_storage_type())
+                                    inline $elem_ty* $qname::add_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return $(fname)_.Add(); }
+                                }
+                                FieldType::Map(_, _) => {}
+                                _ => { $(ref _ => unreachable!()) }
+                            })
+                        })
+                    })
+                })
+                static_assert(std::is_standard_layout_v<$qname>);
+                static_assert(sizeof(size_t) != 8 || (sizeof($qname) == $(st_layout.layout.size) && alignof($qname) == $(st_layout.layout.align)));
+                $(for foff in st_layout.field_offsets join ($['\r']) =>
+                    static_assert(sizeof(size_t) != 8 || offsetof($qname, $(foff.cc_name)_) == $(foff.offset));
+                )
             }
         }
     }
 }
 
 fn generate_cc(schema: &Schema) -> String {
-    let mut out = c::Tokens::new();
-    quote_in! { out =>
-        $("// Automatically @generated by ir_codegen.rs. Do not edit directly.")$['\r']
-        $("// To regenerate, run: common/golden_update.sh")$['\n']
-        $("// clang-format off")$['\r']
-        #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IR_GENERATED_H_$['\r']
-        #define CRUBIT_RS_BINDINGS_FROM_CC_IR_GENERATED_H_$['\n']
-        #include <cstddef>$['\r']
-        #include <cstdint>$['\r']
-        #include <memory>$['\r']
-        #include <new>$['\r']
-        #include <type_traits>$['\r']
-        #include <utility>$['\n']
-        #include "third_party/absl/base/attributes.h"$['\r']
-        #include "third_party/absl/log/check.h"$['\r']
-        #include "third_party/absl/strings/string_view.h"$['\r']
-        #include "rs_bindings_from_cc/ir_ffi_support.h"$['\n']
-        namespace crubit::ffi $("{")$['\r']
-        $("// NOLINTBEGIN(*-readability-class-member-naming,*-readability-constant-naming)")$['\n']
-        $(for rec in &schema.records {
+    let out: c::Tokens = quote! {
+        $("// Automatically @generated by ir_codegen.rs. Do not edit directly.")
+        $("// To regenerate, run: common/golden_update.sh")
+
+        $("// clang-format off")
+        #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IR_GENERATED_H_
+        #define CRUBIT_RS_BINDINGS_FROM_CC_IR_GENERATED_H_
+
+        #include <cstddef>
+        #include <cstdint>
+        #include <memory>
+        #include <new>
+        #include <type_traits>
+        #include <utility>
+
+        #include "third_party/absl/base/attributes.h"
+        #include "third_party/absl/log/check.h"
+        #include "third_party/absl/strings/string_view.h"
+        #include "rs_bindings_from_cc/ir_ffi_support.h"
+
+        namespace crubit::ffi $("{")
+        $("// NOLINTBEGIN(*-readability-class-member-naming,*-readability-constant-naming)")
+
+        $(for rec in &schema.records join ($['\r']) {
             $(if let Some(ns) = rec.ns() {
-                namespace $ns { struct ABSL_ATTRIBUTE_TRIVIAL_ABI $(rec.name()); }$['\r']
+                namespace $ns { struct ABSL_ATTRIBUTE_TRIVIAL_ABI $(rec.name()); }
             } else {
-                struct ABSL_ATTRIBUTE_TRIVIAL_ABI $(rec.name());$['\r']
+                struct ABSL_ATTRIBUTE_TRIVIAL_ABI $(rec.name());
             })
-        })$['\n']
-        $(for en in &schema.enums {
-            $(if let Some(ns) = en.item.ns() => namespace $ns $("{")$['\r'])
-            enum $(en.item.name) : int32_t {$['\r']
-                $(for v in &en.variants => $(&v.cc_name) = $(v.discriminant),$['\r'])
-            };$['\r']
-            $(if let Some(ns) = en.item.ns() => $("}  // namespace ")$ns$['\r'])
-            $['\n']
         })
-    }
 
-    // Pass 2: Union and Struct definitions.
-    for (rec_idx, rec) in schema.records.iter().enumerate() {
-        let parent_key = rec.cc_qual_name();
-        match rec {
-            RecordDef::Union(u) => {
-                let uname = u.item.name;
-                let v0 = &u.variants[0];
-                let v0p = v0.pascal_name;
-                let v0f = &v0.field_name;
-                let v0_init = if matches!(v0.ty, FieldType::Unit) {
-                    "empty_(0)".to_string()
-                } else {
-                    format!("{v0f}_()")
-                };
+        $(for en in &schema.enums join ($['\n']) {
+            $(if let Some(ns) = en.item.ns() => namespace $ns $("{"))
+            enum $(en.item.name) : int32_t {
+                $(for v in &en.variants join ($['\r']) => $(&v.cc_name) = $(v.discriminant),)
+            };
+            $(if let Some(ns) = en.item.ns() => $("}  // namespace ")$ns)
+        })
 
-                quote_in! { out =>
-                    $(if let Some(ns) = u.item.ns() => namespace $ns $("{")$['\r'])
-                    struct ABSL_ATTRIBUTE_TRIVIAL_ABI $uname {$['\r']
-                        $(ref out => generate_cc_nested_aliases(out, schema, &parent_key))
-                        enum Case : uint32_t {$['\r']
-                            $(for (idx, v) in u.variants.iter().enumerate() =>
-                                k$(v.pascal_name) = $idx,$['\r']
-                            )
-                        };$['\r']
-                        $uname() : tag_(k$v0p), payload_() {}$['\r']
-                        $uname(const $uname& other) : tag_(k$v0p), payload_() { CopyFrom(other); }$['\r']
-                        $uname($uname&& other) noexcept : tag_(k$v0p), payload_() { MoveFrom(std::move(other)); }$['\r']
-                        $uname& operator=(const $uname& other) {$['\r']
-                            if (this != &other) { $uname tmp(other); MoveFrom(std::move(tmp)); }$['\r']
-                            return *this;$['\r']
-                        }$['\r']
-                        $uname& operator=($uname&& other) noexcept {$['\r']
-                            if (this != &other) { MoveFrom(std::move(other)); }$['\r']
-                            return *this;$['\r']
-                        }$['\r']
-                        ~$uname() { Destroy(); }$['\r']
-                        $(for v in &u.variants {
-                            $(let vf = &v.field_name)
-                            $(let vp = v.pascal_name)
-                            $(match &v.ty {
-                                FieldType::Unit => {
-                                    static $uname $vp() { $uname res; res.set_$vf(); return res; }$['\r']
-                                }
-                                FieldType::Struct(cc_path) => {
-                                    $(let cty = &format!("::crubit::ffi::{cc_path}"))
-                                    $("// NOLINTNEXTLINE(google-explicit-constructor)")$['\r']
-                                    $uname($cty value) : tag_(k$vp), payload_(k$vp) { new (&payload_.$(vf)_) $cty(std::move(value)); }$['\r']
-                                }
-                                FieldType::Box(inner) => {
-                                    $(let inner_cty = &inner.cc_storage_type())
-                                    $("// NOLINTNEXTLINE(google-explicit-constructor)")$['\r']
-                                    $uname($inner_cty value) : tag_(k$vp), payload_(k$vp) { new (&payload_.$(vf)_) FfiRc<$inner_cty>(std::move(value)); }$['\r']
-                                }
-                                FieldType::Enum(_) => {
-                                    $(let cty = v.ty.cc_storage_type())
-                                    $("// NOLINTNEXTLINE(google-explicit-constructor)")$['\r']
-                                    $uname($cty value) : tag_(k$vp), payload_(k$vp) { payload_.$(vf)_ = value; }$['\r']
-                                }
-                                _ => {}
-                            })
-                        })
-                        void Clear() {$['\r']
-                            Destroy();$['\r']
-                            tag_ = k$v0p;$['\r']
-                            $(if !matches!(v0.ty, FieldType::Unit) {
-                                $(let v0_cty = v0.ty.cc_storage_type())
-                                new (&payload_.$(v0f)_) $v0_cty();$['\r']
-                            })
-                        }$['\r']
-                        Case kind() const { return tag_; }$['\r']
-                        $(for v in &u.variants {
-                            $(let vf = &v.field_name)
-                            $(let vp = v.pascal_name)
-                            bool has_$vf() const { return tag_ == k$vp; }$['\r']
-                            $(match v.ty.cc_type() {
-                                FieldType::Unit => {
-                                    void set_$vf() { Destroy(); tag_ = k$vp; }$['\r']
-                                }
-                                FieldType::Struct(cc_path) => {
-                                    $(let cty = &format!("::crubit::ffi::{cc_path}"))
-                                    const $cty& $vf() const { return has_$vf() ? payload_.$(vf)_ : DefaultValue<$cty>(); }$['\r']
-                                    $cty* mutable_$vf() {$['\r']
-                                        if (!has_$vf()) {$['\r']
-                                            Destroy();$['\r']
-                                            tag_ = k$vp;$['\r']
-                                            new (&payload_.$(vf)_) $cty();$['\r']
-                                        }$['\r']
-                                        return &payload_.$(vf)_;$['\r']
-                                    }$['\r']
-                                }
-                                FieldType::Box(inner) => {
-                                    $(let inner_cty = &inner.cc_storage_type())
-                                    const $inner_cty& $vf() const { return has_$vf() ? payload_.$(vf)_.get_or_default() : DefaultValue<$inner_cty>(); }$['\r']
-                                    $inner_cty* mutable_$vf() {$['\r']
-                                        if (!has_$vf()) {$['\r']
-                                            Destroy();$['\r']
-                                            tag_ = k$vp;$['\r']
-                                            new (&payload_.$(vf)_) FfiRc<$inner_cty>();$['\r']
-                                        }$['\r']
-                                        return &payload_.$(vf)_.get_or_init();$['\r']
-                                    }$['\r']
-                                }
-                                FieldType::Str => {
-                                    absl::string_view $vf() const { return has_$vf() ? payload_.$(vf)_.AsView() : absl::string_view(); }$['\r']
-                                    void set_$vf(absl::string_view value) {$['\r']
-                                        FfiString tmp(value);$['\r']
-                                        Destroy();$['\r']
-                                        tag_ = k$vp;$['\r']
-                                        new (&payload_.$(vf)_) FfiString(std::move(tmp));$['\r']
-                                    }$['\r']
-                                }
-                                FieldType::Bytes => {
-                                    absl::string_view $vf() const { return has_$vf() ? absl::string_view(reinterpret_cast<const char*>(payload_.$(vf)_.data()), payload_.$(vf)_.size()) : absl::string_view(); }$['\r']
-                                    void set_$vf(absl::string_view value) {$['\r']
-                                        FfiVec<uint8_t> tmp(reinterpret_cast<const uint8_t*>(value.data()), reinterpret_cast<const uint8_t*>(value.data()) + value.size());$['\r']
-                                        Destroy();$['\r']
-                                        tag_ = k$vp;$['\r']
-                                        new (&payload_.$(vf)_) FfiVec<uint8_t>(std::move(tmp));$['\r']
-                                    }$['\r']
-                                }
-                                FieldType::Bool
-                                | FieldType::I32
-                                | FieldType::U32
-                                | FieldType::I64
-                                | FieldType::U64
-                                | FieldType::Usize
-                                | FieldType::Enum(_) => {
-                                    $(let cty = &v.ty.cc_storage_type())
-                                    $(let default_val = if matches!(v.ty.cc_type(), FieldType::Bool) { "false".to_string() } else { format!("static_cast<{cty}>(0)") })
-                                    $cty $vf() const { return has_$vf() ? payload_.$(vf)_ : $default_val; }$['\r']
-                                    void set_$vf($cty value) { Destroy(); tag_ = k$vp; payload_.$(vf)_ = value; }$['\r']
-                                }
-                                _ => { $(ref _ => unreachable!("Unsupported union variant type")) }
-                            })
-                        })
-                        friend bool operator==(const $uname& lhs, const $uname& rhs) {$['\r']
-                            if (lhs.tag_ != rhs.tag_) return false;$['\r']
-                            switch (lhs.tag_) {$['\r']
-                                $(for v in &u.variants {
-                                    $(let vp = v.pascal_name)
-                                    $(let vf = &v.field_name)
-                                    $(if matches!(v.ty, FieldType::Unit) {
-                                        case k$vp: return true;$['\r']
-                                    } else {
-                                        case k$vp: return lhs.payload_.$(vf)_ == rhs.payload_.$(vf)_;$['\r']
-                                    })
-                                })
-                                default: CHECK(false);$['\r']
-                            }$['\r']
-                            return false;$['\r']
-                        }$['\r']
-                        private:$['\r']
-                        void Destroy() {$['\r']
-                            switch (tag_) {$['\r']
-                                $(for v in &u.variants {
-                                    $(let vp = v.pascal_name)
-                                    $(let vf = &v.field_name)
-                                    $(if matches!(v.ty, FieldType::Unit) {
-                                        case k$vp: break;$['\r']
-                                    } else {
-                                        case k$vp: std::destroy_at(&payload_.$(vf)_); break;$['\r']
-                                    })
-                                })
-                                default: CHECK(false);$['\r']
-                            }$['\r']
-                        }$['\r']
-                        void CopyFrom(const $uname& other) {$['\r']
-                            Destroy();$['\r']
-                            tag_ = other.tag_;$['\r']
-                            switch (tag_) {$['\r']
-                                $(for v in &u.variants {
-                                    $(let vp = v.pascal_name)
-                                    $(let vf = &v.field_name)
-                                    $(if matches!(v.ty, FieldType::Unit) {
-                                        case k$vp: break;$['\r']
-                                    } else {
-                                        $(let cty = v.ty.cc_storage_type())
-                                        case k$vp: new (&payload_.$(vf)_) $cty(other.payload_.$(vf)_); break;$['\r']
-                                    })
-                                })
-                                default: CHECK(false);$['\r']
-                            }$['\r']
-                        }$['\r']
-                        void MoveFrom($uname&& other) noexcept {$['\r']
-                            Destroy();$['\r']
-                            tag_ = other.tag_;$['\r']
-                            switch (tag_) {$['\r']
-                                $(for v in &u.variants {
-                                    $(let vp = v.pascal_name)
-                                    $(let vf = &v.field_name)
-                                    $(if matches!(v.ty, FieldType::Unit) {
-                                        case k$vp: break;$['\r']
-                                    } else {
-                                        $(let cty = v.ty.cc_storage_type())
-                                        case k$vp: new (&payload_.$(vf)_) $cty(std::move(other.payload_.$(vf)_)); break;$['\r']
-                                    })
-                                })
-                                default: CHECK(false);$['\r']
-                            }$['\r']
-                            other.Clear();$['\r']
-                        }$['\r']
-                        Case tag_;$['\r']
-                        union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {$['\r']
-                            Payload() : $v0_init {}$['\r']
-                            explicit Payload(Case) : empty_(0) {}$['\r']
-                            Payload(const Payload&) {}$['\r']
-                            Payload(Payload&&) noexcept {}$['\r']
-                            ~Payload() {}$['\r']
-                            char empty_;$['\r']
-                            $(for v in &u.variants {
-                                $(if !matches!(v.ty, FieldType::Unit) =>
-                                    $(v.ty.cc_storage_type()) $(&v.field_name)_;$['\r']
-                                )
-                            })
-                        } payload_;$['\r']
-                    };$['\r']
-                    $(if let Some(ns) = u.item.ns() => $("}  // namespace ")$ns$['\r'])
-                    $['\n']
-                }
-            }
-            RecordDef::Struct(st) => {
-                let sname = st.item.name;
-                let has_fwd_ref = schema.has_forward_ref(rec_idx);
+        $(for (rec_idx, rec) in schema.records.iter().enumerate() join ($['\n']) =>
+            $(match rec {
+                RecordDef::Union(u) => $(generate_cc_union(schema, u)),
+                RecordDef::Struct(st) => $(generate_cc_struct(schema, rec_idx, st)),
+            })
+        )
 
-                let has_single_field_ctor = st.fields.len() == 1
-                    && matches!(
-                        st.fields[0].ty.cc_type(),
-                        FieldType::Str
-                            | FieldType::Bool
-                            | FieldType::I32
-                            | FieldType::U32
-                            | FieldType::I64
-                            | FieldType::U64
-                            | FieldType::Usize
-                            | FieldType::Enum(_)
-                            | FieldType::Struct(_)
-                    );
-                let has_leading_union_ctor = st.fields.len() > 1
-                    && matches!(st.fields[0].cc_name, "variant" | "kind")
-                    && schema.is_union_type(&st.fields[0].ty);
+        $(for (rec_idx, rec) in schema.records.iter().enumerate() join ($['\r']) =>
+            $(generate_cc_out_of_line(schema, rec_idx, rec))
+        )
 
-                quote_in! { out =>
-                    $(if let Some(ns) = st.item.ns() => namespace $ns $("{")$['\r'])
-                    struct ABSL_ATTRIBUTE_TRIVIAL_ABI $sname {$['\r']
-                        $(ref out => generate_cc_nested_aliases(out, schema, &parent_key))
-                        $(if has_fwd_ref {
-                            $sname();$['\r']
-                            $sname(const $sname&);$['\r']
-                            $sname($sname&&) noexcept;$['\r']
-                            $sname& operator=(const $sname&);$['\r']
-                            $sname& operator=($sname&&) noexcept;$['\r']
-                            ~$sname();$['\r']
-                        } else {
-                            $(if has_single_field_ctor || has_leading_union_ctor {
-                                $sname() = default;$['\r']
-                            })
-                        })
-                        $(if (has_single_field_ctor || has_leading_union_ctor)
-                            && !schema.is_field_forward_ref(rec_idx, &st.fields[0].ty)
-                        {
-                            $(let f = &st.fields[0])
-                            $(let fname = f.cc_name)
-                            $(match f.ty.cc_type() {
-                                FieldType::Str => {
-                                    explicit $sname(absl::string_view $fname) { set_$fname($fname); }$['\r']
-                                }
-                                FieldType::Bool
-                                | FieldType::I32
-                                | FieldType::U32
-                                | FieldType::I64
-                                | FieldType::U64
-                                | FieldType::Usize
-                                | FieldType::Enum(_) => {
-                                    $(let cty = f.ty.cc_storage_type())
-                                    explicit $sname($cty $fname) { set_$fname($fname); }$['\r']
-                                }
-                                FieldType::Struct(cc_path) => {
-                                    $(let cty = format!("::crubit::ffi::{cc_path}"))
-                                    explicit $sname($cty $fname) { *mutable_$fname() = std::move($fname); }$['\r']
-                                }
-                                _ => { $(ref _ => unreachable!()) }
-                            })
-                        })
-                        $(ref out {
-                            // Regular field accessors
-                            for f in &st.fields {
-                                let fname = f.cc_name;
-                                let is_fwd = schema.is_field_forward_ref(rec_idx, &f.ty);
-                                let set_bit = f.cc_has_mask();
-                                if let Some(hex_mask) = &set_bit {
-                                    let clear_val = if f.default_true { "true" } else { "{}" };
-                                    quote_in! { *out =>
-                                        bool has_$fname() const { return (has_bits_ & $hex_mask) != 0; }$['\r']
-                                        $(if is_fwd {
-                                            void clear_$fname();$['\r']
-                                        } else {
-                                            void clear_$fname() { has_bits_ &= ~$hex_mask; $(fname)_ = $clear_val; }$['\r']
-                                        })
-                                    }
-                                }
-                                match f.ty.cc_type() {
-                                    FieldType::Bool
-                                    | FieldType::I32
-                                    | FieldType::U32
-                                    | FieldType::I64
-                                    | FieldType::U64
-                                    | FieldType::Usize
-                                    | FieldType::Enum(_) => {
-                                        let cty = &f.ty.cc_storage_type();
-                                        quote_in! { *out =>
-                                            $cty $fname() const { return $(fname)_; }$['\r']
-                                            void set_$fname($cty value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = value; }$['\r']
-                                        }
-                                    }
-                                    FieldType::Str => {
-                                        quote_in! { *out =>
-                                            absl::string_view $fname() const { return $(fname)_.AsView(); }$['\r']
-                                            void set_$fname(absl::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = FfiString(value); }$['\r']
-                                        }
-                                    }
-                                    FieldType::Bytes => {
-                                        quote_in! { *out =>
-                                            absl::string_view $fname() const { return absl::string_view(reinterpret_cast<const char*>($(fname)_.data()), $(fname)_.size()); }$['\r']
-                                            void set_$fname(absl::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = FfiVec<uint8_t>(reinterpret_cast<const uint8_t*>(value.data()), reinterpret_cast<const uint8_t*>(value.data()) + value.size()); }$['\r']
-                                        }
-                                    }
-                                    FieldType::Struct(cc_path) => {
-                                        let cty = &format!("::crubit::ffi::{cc_path}");
-                                        quote_in! { *out =>
-                                            const $cty& $fname() const { return $(fname)_; }$['\r']
-                                            $cty* mutable_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_; }$['\r']
-                                        }
-                                    }
-                                    FieldType::Box(inner) => {
-                                        let cty = &inner.cc_storage_type();
-                                        quote_in! { *out =>
-                                            $(if is_fwd {
-                                                const $cty& $fname() const;$['\r']
-                                                $cty* mutable_$fname();$['\r']
-                                            } else {
-                                                const $cty& $fname() const { return $(fname)_.get_or_default(); }$['\r']
-                                                $cty* mutable_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_.get_or_init(); }$['\r']
-                                            })
-                                        }
-                                    }
-                                    FieldType::Vec(inner) => {
-                                        let cty = &f.ty.cc_storage_type();
-                                        quote_in! { *out =>
-                                            const $cty& $fname() const { return $(fname)_; }$['\r']
-                                            $cty* mutable_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_; }$['\r']
-                                            $(if f.has_bit.is_none() =>
-                                                void clear_$fname() { $(fname)_.Clear(); }$['\r']
-                                            )
-                                            $(match inner.cc_type() {
-                                                FieldType::Str => {
-                                                    void add_$fname(absl::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_.Add(FfiString(value)); }$['\r']
-                                                }
-                                                FieldType::Bool
-                                                | FieldType::I32
-                                                | FieldType::U32
-                                                | FieldType::I64
-                                                | FieldType::U64
-                                                | FieldType::Usize
-                                                | FieldType::Enum(_) => {
-                                                    $(let elem_ty = &inner.cc_storage_type())
-                                                    void add_$fname($elem_ty value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_.Add(value); }$['\r']
-                                                }
-                                                _ => {
-                                                    $(let elem_ty = &inner.cc_storage_type())
-                                                    $(if is_fwd {
-                                                        $elem_ty* add_$fname();$['\r']
-                                                    } else {
-                                                        $elem_ty* add_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return $(fname)_.Add(); }$['\r']
-                                                    })
-                                                }
-                                            })
-                                        }
-                                    }
-                                    FieldType::Map(_, _) => {
-                                        let cty = &f.ty.cc_storage_type();
-                                        quote_in! { *out =>
-                                            const $cty& $fname() const { return $(fname)_; }$['\r']
-                                            $cty* mutable_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_; }$['\r']
-                                        }
-                                    }
-                                    FieldType::Unit | FieldType::Newtype(_, _) => unreachable!(),
-                                }
-                            }
-                        })
-                        friend bool operator==(const $sname&, const $sname&) = default;$['\r']
-                        $(if st.has_optional_fields() => uint64_t has_bits_ = 0;$['\r'])
-                        $(for f in &st.fields {
-                            $(let fname = f.cc_name)
-                            $(let cty = f.ty.cc_storage_type())
-                            $(if f.default_true {
-                                $cty $(fname)_ = true;$['\r']
-                            } else {
-                                $cty $(fname)_{};$['\r']
-                            })
-                        })
-                    };$['\r']
-                    $(if let Some(ns) = st.item.ns() => $("}  // namespace ")$ns$['\r'])
-                    $['\n']
-                }
-            }
-        }
-    }
+        $("// NOLINTEND(*-readability-class-member-naming,*-readability-constant-naming)")
+        $("}  // namespace crubit::ffi")
 
-    // Pass 3: Out-of-line inline definitions for forward-referenced structs and layout assertions.
-    for (rec_idx, rec) in schema.records.iter().enumerate() {
-        let qname = &rec.cc_qual_name();
-        match rec {
-            RecordDef::Union(u) => {
-                let layout = schema.union_layout(u);
-                quote_in! { out =>
-                    static_assert(std::is_standard_layout_v<$qname>);$['\r']
-                    static_assert(sizeof(size_t) != 8 || (sizeof($qname) == $(layout.size) && alignof($qname) == $(layout.align)));$['\r']
-                }
-            }
-            RecordDef::Struct(st) => {
-                let sname = st.item.name;
-                if schema.has_forward_ref(rec_idx) {
-                    quote_in! { out =>
-                        inline $qname::$sname() = default;$['\r']
-                        inline $qname::$sname(const $sname&) = default;$['\r']
-                        inline $qname::$sname($sname&&) noexcept = default;$['\r']
-                        inline $qname& $qname::operator=(const $sname&) = default;$['\r']
-                        inline $qname& $qname::operator=($sname&&) noexcept = default;$['\r']
-                        inline $qname::~$sname() = default;$['\r']
-                    }
+        $("#endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_GENERATED_H_")
+    };
 
-                    for f in &st.fields {
-                        if !schema.is_field_forward_ref(rec_idx, &f.ty) {
-                            continue;
-                        }
-                        let set_bit = f.cc_has_mask();
-                        let fname = f.cc_name;
-                        if let Some(hex_mask) = &set_bit {
-                            let clear_val = if f.default_true { "true" } else { "{}" };
-                            quote_in! { out =>
-                                inline void $qname::clear_$fname() { has_bits_ &= ~$hex_mask; $(fname)_ = $clear_val; }$['\r']
-                            }
-                        }
-                        match &f.ty {
-                            FieldType::Box(inner) => {
-                                let inner_ty = &inner.cc_storage_type();
-                                quote_in! { out =>
-                                    inline const $inner_ty& $qname::$fname() const { return $(fname)_.get_or_default(); }$['\r']
-                                    inline $inner_ty* $qname::mutable_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_.get_or_init(); }$['\r']
-                                }
-                            }
-                            FieldType::Vec(inner) => {
-                                let elem_ty = &inner.cc_storage_type();
-                                quote_in! { out =>
-                                    inline $elem_ty* $qname::add_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return $(fname)_.Add(); }$['\r']
-                                }
-                            }
-                            FieldType::Map(_, _) => {}
-                            _ => unreachable!(),
-                        }
-                    }
-                }
-
-                let st_layout = schema.struct_layout(st);
-                quote_in! { out =>
-                    static_assert(std::is_standard_layout_v<$qname>);$['\r']
-                    static_assert(sizeof(size_t) != 8 || (sizeof($qname) == $(st_layout.layout.size) && alignof($qname) == $(st_layout.layout.align)));$['\r']
-                    $(for foff in st_layout.field_offsets =>
-                        static_assert(sizeof(size_t) != 8 || offsetof($qname, $(foff.cc_name)_) == $(foff.offset));$['\r']
-                    )
-                }
-            }
-        }
-    }
-
-    quote_in! { out =>
-        $['\n']
-        $("// NOLINTEND(*-readability-class-member-naming,*-readability-constant-naming)")$['\r']
-        $("}  // namespace crubit::ffi")$['\n']
-        $("#endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_GENERATED_H_")$['\r']
-    }
-    format_tokens(&out, true)
+    let mut w = fmt::FmtWriter::new(String::new());
+    let fmt = fmt::Config::from_lang::<c::C>().with_indentation(fmt::Indentation::Space(2));
+    let config = c::Config::default();
+    out.format_file(&mut w.as_formatter(&fmt), &config)
+        .expect("genco formatting to String cannot fail");
+    w.into_inner()
 }
 
-fn generate_rs_enum(out: &mut rust::Tokens, en: &EnumDef) {
+fn generate_rs_enum(en: &EnumDef) -> rust::Tokens {
     let ename = en.item.name;
     let v0_rs = en.variants[0].rs_name;
-    quote_in! { *out =>
-        #[repr(i32)]$['\r']
-        #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]$['\r']
-        pub enum $ename {$['\r']
-            $(for (idx, v) in en.variants.iter().enumerate() {
-                $(if idx == 0 => #[default]$['\r'])
-                $(v.rs_name) = $(v.discriminant),$['\r']
+    quote! {
+        #[repr(i32)]
+        #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum $ename {
+            $(for (idx, v) in en.variants.iter().enumerate() join ($['\r']) {
+                $(if idx == 0 => #[default])
+                $(v.rs_name) = $(v.discriminant),
             })
-        }$['\r']
-        impl $ename {$['\r']
-            pub const EMPTY: Self = Self::$v0_rs;$['\r']
-            pub const fn from_i32(val: i32) -> Option<Self> {$['\r']
-                match val {$['\r']
-                    $(for v in &en.variants => $(v.discriminant) => Some(Self::$(v.rs_name)),$['\r'])
-                    _ => None,$['\r']
-                }$['\r']
-            }$['\r']
-        }$['\n']
+        }
+        impl $ename {
+            pub const EMPTY: Self = Self::$v0_rs;
+            pub const fn from_i32(val: i32) -> Option<Self> {
+                match val {
+                    $(for v in &en.variants join ($['\r']) => $(v.discriminant) => Some(Self::$(v.rs_name)),)
+                    _ => None,
+                }
+            }
+        }
     }
 }
 
-fn generate_rs_union(out: &mut rust::Tokens, schema: &Schema, u: &UnionDef, in_submodule: bool) {
+fn generate_rs_union(schema: &Schema, u: &UnionDef, in_submodule: bool) -> rust::Tokens {
     let uname = u.item.name;
     let prefix = if in_submodule { "super::" } else { "" };
 
@@ -1308,116 +1244,118 @@ fn generate_rs_union(out: &mut rust::Tokens, schema: &Schema, u: &UnionDef, in_s
     };
     let layout = schema.union_layout(u);
 
-    quote_in! { *out =>
-        #[repr(C, u32)]$['\r']
+    quote! {
+        #[repr(C, u32)]
         $(if matches!(uname, "UnqualifiedIdentifier" | "StatusOrOptionalString") {
-            #[derive(Clone, PartialEq, Eq, Hash)]$['\r']
+            #[derive(Clone, PartialEq, Eq, Hash)]
         } else {
-            #[derive(Debug, Clone, PartialEq, Eq, Hash)]$['\r']
+            #[derive(Debug, Clone, PartialEq, Eq, Hash)]
         })
-        pub enum $uname {$['\r']
-            $(for (idx, v) in u.variants.iter().enumerate() {
+        pub enum $uname {
+            $(for (idx, v) in u.variants.iter().enumerate() join ($['\r']) {
                 $(let vp = v.pascal_name)
                 $(match &v.ty {
                     FieldType::Unit => {
-                        $vp = $idx,$['\r']
+                        $vp = $idx,
                     }
                     _ => {
                         $(let sty = &v.ty.rs_storage_type(in_submodule))
-                        $vp($sty) = $idx,$['\r']
+                        $vp($sty) = $idx,
                     }
                 })
             })
-        }$['\n']
-        impl Default for $uname {$['\r']
-            fn default() -> Self {$['\r']
-                Self::EMPTY$['\r']
-            }$['\r']
-        }$['\r']
-        impl $(prefix)FfiDefault for $uname {$['\r']
-            const EMPTY_REF: &'static Self = &Self::EMPTY;$['\r']
-        }$['\n']
+        }
+
+        impl Default for $uname {
+            fn default() -> Self {
+                Self::EMPTY
+            }
+        }
+        impl $(prefix)FfiDefault for $uname {
+            const EMPTY_REF: &'static Self = &Self::EMPTY;
+        }
+
         $(match uname {
             "UnqualifiedIdentifier" => {
-                impl core::fmt::Debug for UnqualifiedIdentifier {$['\r']
-                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {$['\r']
-                        match self {$['\r']
-                            Self::Identifier(id) => core::fmt::Debug::fmt(id, f),$['\r']
-                            Self::Operator(op) => core::fmt::Debug::fmt(op, f),$['\r']
-                            Self::Constructor => f.write_str("Constructor"),$['\r']
-                            Self::Destructor => f.write_str("Destructor"),$['\r']
-                            Self::ConversionOperator => f.write_str("ConversionOperator"),$['\r']
-                        }$['\r']
-                    }$['\r']
+                impl core::fmt::Debug for UnqualifiedIdentifier {
+                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                        match self {
+                            Self::Identifier(id) => core::fmt::Debug::fmt(id, f),
+                            Self::Operator(op) => core::fmt::Debug::fmt(op, f),
+                            Self::Constructor => f.write_str("Constructor"),
+                            Self::Destructor => f.write_str("Destructor"),
+                            Self::ConversionOperator => f.write_str("ConversionOperator"),
+                        }
+                    }
                 }$['\n']
             }
             "StatusOrOptionalString" => {
-                impl StatusOrOptionalString {$['\r']
-                    pub fn as_result(&self) -> Result<Option<&str>, &str> {$['\r']
-                        match self {$['\r']
-                            Self::None => Ok(None),$['\r']
-                            Self::OkValue(s) => Ok(Some(s.as_str())),$['\r']
-                            Self::Err(e) => Err(e.as_str()),$['\r']
-                        }$['\r']
-                    }$['\r']
-                }$['\r']
-                impl core::fmt::Debug for StatusOrOptionalString {$['\r']
-                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {$['\r']
-                        core::fmt::Debug::fmt(&self.as_result(), f)$['\r']
-                    }$['\r']
+                impl StatusOrOptionalString {
+                    pub fn as_result(&self) -> Result<Option<&str>, &str> {
+                        match self {
+                            Self::None => Ok(None),
+                            Self::OkValue(s) => Ok(Some(s.as_str())),
+                            Self::Err(e) => Err(e.as_str()),
+                        }
+                    }
+                }
+                impl core::fmt::Debug for StatusOrOptionalString {
+                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                        core::fmt::Debug::fmt(&self.as_result(), f)
+                    }
                 }$['\n']
             }
             _ => {}
         })
-        impl $uname {$['\r']
-            pub const EMPTY: Self = $empty_expr;$['\r']
-            $(for v in &u.variants {
+        impl $uname {
+            pub const EMPTY: Self = $empty_expr;
+            $(for v in &u.variants join ($['\r']) {
                 $(let vf_clean = &v.field_name)
                 $(let vp = v.pascal_name)
                 $(match &v.ty {
                     FieldType::Unit => {
-                        pub fn set_$vf_clean(&mut self) {$['\r']
-                            *self = Self::$vp;$['\r']
-                        }$['\r']
+                        pub fn set_$vf_clean(&mut self) {
+                            *self = Self::$vp;
+                        }
                     }
                     FieldType::Enum(rs_path) => {
                         $(let ety = &format!("{prefix}{rs_path}"))
-                        pub fn set_$vf_clean(&mut self, val: $ety) {$['\r']
-                            *self = Self::$vp(val);$['\r']
-                        }$['\r']
+                        pub fn set_$vf_clean(&mut self, val: $ety) {
+                            *self = Self::$vp(val);
+                        }
                     }
                     FieldType::Box(inner) => {
                         $(let sub_ty = &inner.rs_storage_type(in_submodule))
-                        pub fn set_$vf_clean(&mut self, val: $sub_ty) -> &mut $sub_ty {$['\r']
-                            *self = Self::$vp(FfiRc::new(val));$['\r']
-                            let Self::$vp(ref mut inner) = *self else {$['\r']
-                                unreachable!()$['\r']
-                            };$['\r']
-                            inner.make_mut()$['\r']
-                        }$['\r']
+                        pub fn set_$vf_clean(&mut self, val: $sub_ty) -> &mut $sub_ty {
+                            *self = Self::$vp(FfiRc::new(val));
+                            let Self::$vp(ref mut inner) = *self else {
+                                unreachable!()
+                            };
+                            inner.make_mut()
+                        }
                     }
                     _ => {
                         $(let sty = &v.ty.rs_storage_type(in_submodule))
-                        pub fn set_$vf_clean(&mut self, val: $sty) -> &mut $sty {$['\r']
-                            *self = Self::$vp(val);$['\r']
-                            let Self::$vp(ref mut inner) = *self else {$['\r']
-                                unreachable!()$['\r']
-                            };$['\r']
-                            inner$['\r']
-                        }$['\r']
+                        pub fn set_$vf_clean(&mut self, val: $sty) -> &mut $sty {
+                            *self = Self::$vp(val);
+                            let Self::$vp(ref mut inner) = *self else {
+                                unreachable!()
+                            };
+                            inner
+                        }
                     }
                 })
             })
-        }$['\r']
-        #[cfg(target_pointer_width = "64")]$['\r']
-        const _: () = {$['\r']
-            assert!(core::mem::size_of::<$uname>() == $(layout.size));$['\r']
-            assert!(core::mem::align_of::<$uname>() == $(layout.align));$['\r']
-        };$['\n']
+        }
+        #[cfg(target_pointer_width = "64")]
+        const _: () = {
+            assert!(core::mem::size_of::<$uname>() == $(layout.size));
+            assert!(core::mem::align_of::<$uname>() == $(layout.align));
+        };
     }
 }
 
-fn generate_rs_struct(out: &mut rust::Tokens, schema: &Schema, st: &StructDef, in_submodule: bool) {
+fn generate_rs_struct(schema: &Schema, st: &StructDef, in_submodule: bool) -> rust::Tokens {
     let sname = st.item.name;
     let prefix = if in_submodule { "super::" } else { "" };
     let has_opt = st.has_optional_fields();
@@ -1426,213 +1364,199 @@ fn generate_rs_struct(out: &mut rust::Tokens, schema: &Schema, st: &StructDef, i
     let debug_name = if sname == "Path" { "UnsupportedItemPath" } else { sname };
     let st_layout = schema.struct_layout(st);
 
-    quote_in! { *out =>
-        #[repr(C)]$['\r']
+    quote! {
+        #[repr(C)]
         $(if is_copy {
-            #[derive($(if derive_debug => Debug, )Clone, Copy, PartialEq, Eq, Hash)]$['\r']
+            #[derive($(if derive_debug => Debug, )Clone, Copy, PartialEq, Eq, Hash)]
         } else {
-            #[derive($(if derive_debug => Debug, )Clone, PartialEq, Eq, Hash)]$['\r']
+            #[derive($(if derive_debug => Debug, )Clone, PartialEq, Eq, Hash)]
         })
-        pub struct $sname {$['\r']
-            $(if has_opt => pub has_bits: u64,$['\r'])
-            $(for f in &st.fields =>
-                pub $(f.rs_name): $(f.ty.rs_storage_type(in_submodule)),$['\r']
+        pub struct $sname {
+            $(if has_opt => pub has_bits: u64,)
+            $(for f in &st.fields join ($['\r']) =>
+                pub $(f.rs_name): $(f.ty.rs_storage_type(in_submodule)),
             )
-        }$['\n']
+        }
+
         $(match sname {
             "Identifier" => {
-                impl core::fmt::Debug for Identifier {$['\r']
-                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {$['\r']
-                        write!(f, "\"{}\"", self.identifier.as_str())$['\r']
-                    }$['\r']
+                impl core::fmt::Debug for Identifier {
+                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                        write!(f, "\"{}\"", self.identifier.as_str())
+                    }
                 }$['\n']
             }
             "Operator" => {
-                impl core::fmt::Debug for Operator {$['\r']
-                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {$['\r']
-                        let sep = match self.name.as_str().chars().next() {$['\r']
-                            Some(c) if c.is_alphabetic() => " ",$['\r']
-                            _ => "",$['\r']
-                        };$['\r']
-                        write!(f, "\"operator{sep}{}\"", self.name.as_str())$['\r']
-                    }$['\r']
+                impl core::fmt::Debug for Operator {
+                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                        let sep = match self.name.as_str().chars().next() {
+                            Some(c) if c.is_alphabetic() => " ",
+                            _ => "",
+                        };
+                        write!(f, "\"operator{sep}{}\"", self.name.as_str())
+                    }
                 }$['\n']
             }
             "CcType" => {
-                impl core::fmt::Debug for CcType {$['\r']
-                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {$['\r']
-                        struct DebugVariant<'a>(&'a CcType);$['\r']
-                        impl core::fmt::Debug for DebugVariant<'_> {$['\r']
-                            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {$['\r']
-                                match &self.0.variant {$['\r']
-                                    cc_type::Variant::Decl(id) => {$['\r']
-                                        let args = (!self.0.template_args.is_empty())$['\r']
-                                            .then_some(self.0.template_args.as_slice());$['\r']
-                                        f.debug_struct("Decl")$['\r']
-                                            .field("id", id)$['\r']
-                                            .field("template_args", &args)$['\r']
-                                            .finish()$['\r']
-                                    }$['\r']
-                                    cc_type::Variant::FuncPointer(fp) => core::fmt::Debug::fmt(fp, f),$['\r']
-                                    other => core::fmt::Debug::fmt(other, f),$['\r']
-                                }$['\r']
-                            }$['\r']
-                        }$['\r']
-                        f.debug_struct("CcType")$['\r']
-                            .field("variant", &DebugVariant(self))$['\r']
-                            .field("is_const", &self.is_const)$['\r']
-                            .field("is_nonnull", &self.is_nonnull)$['\r']
-                            .field("unknown_attr", &self.unknown_attr)$['\r']
-                            .field("explicit_lifetimes", &self.explicit_lifetimes)$['\r']
-                            .finish()$['\r']
-                    }$['\r']
+                impl core::fmt::Debug for CcType {
+                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                        struct DebugVariant<'a>(&'a CcType);
+                        impl core::fmt::Debug for DebugVariant<'_> {
+                            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                                match &self.0.variant {
+                                    cc_type::Variant::Decl(id) => {
+                                        let args = (!self.0.template_args.is_empty())
+                                            .then_some(self.0.template_args.as_slice());
+                                        f.debug_struct("Decl")
+                                            .field("id", id)
+                                            .field("template_args", &args)
+                                            .finish()
+                                    }
+                                    cc_type::Variant::FuncPointer(fp) => core::fmt::Debug::fmt(fp, f),
+                                    other => core::fmt::Debug::fmt(other, f),
+                                }
+                            }
+                        }
+                        f.debug_struct("CcType")
+                            .field("variant", &DebugVariant(self))
+                            .field("is_const", &self.is_const)
+                            .field("is_nonnull", &self.is_nonnull)
+                            .field("unknown_attr", &self.unknown_attr)
+                            .field("explicit_lifetimes", &self.explicit_lifetimes)
+                            .finish()
+                    }
                 }$['\n']
             }
             _ if !derive_debug => {
-                impl core::fmt::Debug for $sname {$['\r']
-                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {$['\r']
-                        f.debug_struct($(quoted(debug_name)))$['\r']
-                            $(for f in &st.fields {
+                impl core::fmt::Debug for $sname {
+                    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                        f.debug_struct($(quoted(debug_name)))
+                            $(for f in &st.fields join ($['\r']) {
                                 $(let fname = f.rs_name)
                                 $(if f.has_bit.is_some() {
-                                    .field($(quoted(fname)), &self.$fname())$['\r']
+                                    .field($(quoted(fname)), &self.$fname())
                                 } else {
-                                    .field($(quoted(fname)), &self.$fname)$['\r']
+                                    .field($(quoted(fname)), &self.$fname)
                                 })
                             })
-                            .finish()$['\r']
-                    }$['\r']
+                            .finish()
+                    }
                 }$['\n']
             }
             _ => {}
         })
-        impl $(prefix)FfiDefault for $sname {$['\r']
-            const EMPTY_REF: &'static Self = &Self::EMPTY;$['\r']
-        }$['\r']
-        impl Default for $sname {$['\r']
-            fn default() -> Self {$['\r']
-                Self::EMPTY$['\r']
-            }$['\r']
-        }$['\n']
-        impl $sname {$['\r']
-            pub const EMPTY: Self = Self {$['\r']
-                $(if has_opt => has_bits: 0,$['\r'])
-                $(for f in &st.fields =>
-                    $(f.rs_name): $(f.ty.rs_empty_expr(f.default_true, in_submodule)),$['\r']
+        impl $(prefix)FfiDefault for $sname {
+            const EMPTY_REF: &'static Self = &Self::EMPTY;
+        }
+        impl Default for $sname {
+            fn default() -> Self {
+                Self::EMPTY
+            }
+        }
+
+        impl $sname {
+            pub const EMPTY: Self = Self {
+                $(if has_opt => has_bits: 0,)
+                $(for f in &st.fields join ($['\r']) =>
+                    $(f.rs_name): $(f.ty.rs_empty_expr(f.default_true, in_submodule)),
                 )
-            };$['\r']
-            $(ref out {
-                for f in &st.fields {
-                    let fname = f.rs_name;
-                    let clean_name = f.cc_name;
-                    let rty = f.ty.rs_getter_return_type(schema, in_submodule);
-                    let val_expr = match &f.ty {
-                        FieldType::Bool
-                        | FieldType::I32
-                        | FieldType::U32
-                        | FieldType::I64
-                        | FieldType::U64
-                        | FieldType::Usize
-                        | FieldType::Enum(_) => format!("self.{fname}"),
-                        FieldType::Newtype(_, inner) => {
-                            if schema.is_copy_type(inner) {
-                                format!("self.{fname}")
-                            } else {
-                                format!("&self.{fname}")
-                            }
-                        }
-                        FieldType::Str => format!("self.{fname}.as_str()"),
-                        FieldType::Bytes | FieldType::Vec(_) => format!("self.{fname}.as_slice()"),
-                        FieldType::Struct("StatusOrOptionalString") => format!("self.{fname}.as_result()"),
-                        FieldType::Struct("decl_location::ByteRange") => {
-                            format!("(self.{fname}.begin, self.{fname}.end)")
-                        }
-                        FieldType::Struct(path) => {
-                            if schema.is_copy_struct(path) {
-                                format!("self.{fname}")
-                            } else {
-                                format!("&self.{fname}")
-                            }
-                        }
-                        FieldType::Box(_) => format!("&*self.{fname}"),
-                        FieldType::Map(_, _) => format!("&self.{fname}"),
-                        FieldType::Unit => unreachable!(),
-                    };
-
-                    if let Some(hex_mask) = &f.rs_has_mask() {
-                        let empty_expr = &f.ty.rs_empty_expr(f.default_true, in_submodule);
-                        quote_in! { *out =>
-                            pub fn has_$clean_name(&self) -> bool {$['\r']
-                                $("")(self.has_bits & $hex_mask) != 0$['\r']
-                            }$['\r']
-                            pub fn clear_$clean_name(&mut self) {$['\r']
-                                self.has_bits &= !$hex_mask;$['\r']
-                                self.$fname = $empty_expr;$['\r']
-                            }$['\r']
-                            pub fn $fname(&self) -> Option<$rty> {$['\r']
-                                self.has_$clean_name().then(|| $val_expr)$['\r']
-                            }$['\r']
-                        }
-                    } else {
-                        quote_in! { *out =>
-                            pub fn $fname(&self) -> $rty {$['\r']
-                                $val_expr$['\r']
-                            }$['\r']
+            };
+            $(for f in &st.fields join ($['\r']) {
+                $(let fname = f.rs_name)
+                $(let clean_name = f.cc_name)
+                $(let rty = f.ty.rs_getter_return_type(schema, in_submodule))
+                $(let val_expr = match &f.ty {
+                    FieldType::Bool
+                    | FieldType::I32
+                    | FieldType::U32
+                    | FieldType::I64
+                    | FieldType::U64
+                    | FieldType::Usize
+                    | FieldType::Enum(_) => format!("self.{fname}"),
+                    FieldType::Newtype(_, inner) => {
+                        if schema.is_copy_type(inner) {
+                            format!("self.{fname}")
+                        } else {
+                            format!("&self.{fname}")
                         }
                     }
-                }
-
-                for f in &st.fields {
-                    let fname = f.rs_name;
-                    let clean_name = f.cc_name;
-                    let sty = &f.ty.rs_storage_type(in_submodule);
-                    let set_bit = f.rs_has_mask();
-                    match &f.ty {
-                        FieldType::Box(inner) => {
-                            let sub_ty = &inner.rs_storage_type(in_submodule);
-                            quote_in! { *out =>
-                                pub fn set_$clean_name(&mut self, val: $sub_ty) -> &mut $sub_ty {$['\r']
-                                    $(if let Some(m) = &set_bit => self.has_bits |= $m;$['\r'])
-                                    self.$fname = FfiRc::new(val);$['\r']
-                                    self.$fname.make_mut()$['\r']
-                                }$['\r']
-                            }
-                        }
-                        FieldType::Enum(_) | FieldType::Vec(_) | FieldType::Map(_, _) => {
-                            quote_in! { *out =>
-                                pub fn set_$clean_name(&mut self, val: $sty) {$['\r']
-                                    $(if let Some(m) = &set_bit => self.has_bits |= $m;$['\r'])
-                                    self.$fname = val;$['\r']
-                                }$['\r']
-                            }
-                        }
-                        _ => {
-                            quote_in! { *out =>
-                                pub fn set_$clean_name(&mut self, val: $sty) -> &mut $sty {$['\r']
-                                    $(if let Some(m) = &set_bit => self.has_bits |= $m;$['\r'])
-                                    self.$fname = val;$['\r']
-                                    &mut self.$fname$['\r']
-                                }$['\r']
-                            }
+                    FieldType::Str => format!("self.{fname}.as_str()"),
+                    FieldType::Bytes | FieldType::Vec(_) => format!("self.{fname}.as_slice()"),
+                    FieldType::Struct("StatusOrOptionalString") => format!("self.{fname}.as_result()"),
+                    FieldType::Struct("decl_location::ByteRange") => {
+                        format!("(self.{fname}.begin, self.{fname}.end)")
+                    }
+                    FieldType::Struct(path) => {
+                        if schema.is_copy_struct(path) {
+                            format!("self.{fname}")
+                        } else {
+                            format!("&self.{fname}")
                         }
                     }
-                }
+                    FieldType::Box(_) => format!("&*self.{fname}"),
+                    FieldType::Map(_, _) => format!("&self.{fname}"),
+                    FieldType::Unit => unreachable!(),
+                })
+                $(if let Some(hex_mask) = &f.rs_has_mask() {
+                    $(let empty_expr = &f.ty.rs_empty_expr(f.default_true, in_submodule))
+                    pub fn has_$clean_name(&self) -> bool {
+                        (self.has_bits & $hex_mask) != 0
+                    }
+                    pub fn clear_$clean_name(&mut self) {
+                        self.has_bits &= !$hex_mask;
+                        self.$fname = $empty_expr;
+                    }
+                    pub fn $fname(&self) -> Option<$rty> {
+                        self.has_$clean_name().then(|| $val_expr)
+                    }
+                } else {
+                    pub fn $fname(&self) -> $rty {
+                        $val_expr
+                    }
+                })
             })
-        }$['\r']
-        #[cfg(target_pointer_width = "64")]$['\r']
-        const _: () = {$['\r']
-            assert!(core::mem::size_of::<$sname>() == $(st_layout.layout.size));$['\r']
-            assert!(core::mem::align_of::<$sname>() == $(st_layout.layout.align));$['\r']
-            $(for foff in st_layout.field_offsets =>
-                assert!(core::mem::offset_of!($sname, $(foff.rs_name)) == $(foff.offset));$['\r']
+            $(for f in &st.fields join ($['\r']) {
+                $(let fname = f.rs_name)
+                $(let clean_name = f.cc_name)
+                $(let sty = &f.ty.rs_storage_type(in_submodule))
+                $(let set_bit = f.rs_has_mask())
+                $(match &f.ty {
+                    FieldType::Box(inner) => {
+                        $(let sub_ty = &inner.rs_storage_type(in_submodule))
+                        pub fn set_$clean_name(&mut self, val: $sub_ty) -> &mut $sub_ty {
+                            $(if let Some(m) = &set_bit => self.has_bits |= $m;)
+                            self.$fname = FfiRc::new(val);
+                            self.$fname.make_mut()
+                        }
+                    }
+                    FieldType::Enum(_) | FieldType::Vec(_) | FieldType::Map(_, _) => {
+                        pub fn set_$clean_name(&mut self, val: $sty) {
+                            $(if let Some(m) = &set_bit => self.has_bits |= $m;)
+                            self.$fname = val;
+                        }
+                    }
+                    _ => {
+                        pub fn set_$clean_name(&mut self, val: $sty) -> &mut $sty {
+                            $(if let Some(m) = &set_bit => self.has_bits |= $m;)
+                            self.$fname = val;
+                            &mut self.$fname
+                        }
+                    }
+                })
+            })
+        }
+        #[cfg(target_pointer_width = "64")]
+        const _: () = {
+            assert!(core::mem::size_of::<$sname>() == $(st_layout.layout.size));
+            assert!(core::mem::align_of::<$sname>() == $(st_layout.layout.align));
+            $(for foff in st_layout.field_offsets join ($['\r']) =>
+                assert!(core::mem::offset_of!($sname, $(foff.rs_name)) == $(foff.offset));
             )
-        };$['\n']
+        };
     }
 }
 
 fn generate_rs(schema: &Schema) -> String {
-    let mut out = rust::Tokens::new();
-
     let mut setter_names: BTreeMap<&str, &str> = BTreeMap::new();
     for rec in &schema.records {
         match rec {
@@ -1659,190 +1583,157 @@ fn generate_rs(schema: &Schema) -> String {
         }
     }
 
-    quote_in! { out =>
-        $("// Automatically @generated by ir_codegen.rs. Do not edit directly.")$['\r']
-        $("// To regenerate, run: common/golden_update.sh")$['\n']
-        #![allow($['\r']
-            dead_code,$['\r']
-            non_camel_case_types,$['\r']
-            unused_imports,$['\r']
-            clippy::large_enum_variant,$['\r']
-            clippy::should_implement_trait,$['\r']
-            clippy::clone_on_copy,$['\r']
-            clippy::unnecessary_lazy_evaluations,$['\r']
-            clippy::explicit_auto_deref$['\r']
-        )]$['\n']
-        #[rustfmt::skip]$['\r']
-        #[macro_export]$['\r']
-        macro_rules! __proto_call_setter {$['\r']
-            $(for (rs_ident, clean_name) in setter_names =>
-                ($$msg:ident, $rs_ident, $$($$arg:tt)*) => { $$msg.set_$clean_name($$($$arg)*) };$['\r']
-            )
-        }$['\n']
-        #[rustfmt::skip]$['\r']
-        #[macro_export]$['\r']
-        macro_rules! __proto_fields {$['\r']
-            $("")($$msg:ident $$(,)?) => {};$['\r']
-            $("")($$msg:ident, $$field:ident : __ { $$($$inner:tt)* } $$(, $$($$rest:tt)*)?) => {$['\r']
-                {$['\r']
-                    let __sub = $$crate::ir_generated::__proto_call_setter!($$msg, $$field, Default::default());$['\r']
-                    $$crate::ir_generated::__proto_fields!(__sub, $$($$inner)*);$['\r']
-                }$['\r']
-                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);$['\r']
-            };$['\r']
-            $("")($$msg:ident, $$field:ident : [ $$( __ { $$($$inner:tt)* } ),* $$(,)? ] $$(, $$($$rest:tt)*)?) => {$['\r']
-                $$crate::ir_generated::__proto_call_setter!($$msg, $$field, Default::default());$['\r']
-                $$($['\r']
-                    {$['\r']
-                        let __elem = $$msg.$$field.push(Default::default());$['\r']
-                        $$crate::ir_generated::__proto_fields!(__elem, $$($$inner)*);$['\r']
-                    }$['\r']
-                )*$['\r']
-                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);$['\r']
-            };$['\r']
-            $("")($$msg:ident, $$field:ident : [ $$( ( $$k:expr, [ $$( __ { $$($$inner:tt)* } ),* $$(,)? ] ) ),* $$(,)? ] $$(, $$($$rest:tt)*)?) => {$['\r']
-                $$crate::ir_generated::__proto_call_setter!($$msg, $$field, Default::default());$['\r']
-                $$($['\r']
-                    {$['\r']
-                        let __vec = $$msg.$$field.insert(($$k).into(), Default::default());$['\r']
-                        $$($['\r']
-                            {$['\r']
-                                let __elem = __vec.push(Default::default());$['\r']
-                                $$crate::ir_generated::__proto_fields!(__elem, $$($$inner)*);$['\r']
-                            }$['\r']
-                        )*$['\r']
-                    }$['\r']
-                )*$['\r']
-                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);$['\r']
-            };$['\r']
-            $("")($$msg:ident, $$field:ident : [ $$( ( $$k:expr, __ { $$($$inner:tt)* } ) ),* $$(,)? ] $$(, $$($$rest:tt)*)?) => {$['\r']
-                $$crate::ir_generated::__proto_call_setter!($$msg, $$field, Default::default());$['\r']
-                $$($['\r']
-                    {$['\r']
-                        let __val = $$msg.$$field.insert(($$k).into(), Default::default());$['\r']
-                        $$crate::ir_generated::__proto_fields!(__val, $$($$inner)*);$['\r']
-                    }$['\r']
-                )*$['\r']
-                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);$['\r']
-            };$['\r']
-            $("")($$msg:ident, $$field:ident : $$($$subty:ident)::+ { $$($$inner:tt)* } $$(, $$($$rest:tt)*)?) => {$['\r']
-                $$crate::ir_generated::__proto_call_setter!($$msg, $$field, $$crate::ir_generated::proto!($$($$subty)::+ { $$($$inner)* }));$['\r']
-                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);$['\r']
-            };$['\r']
-            $("")($$msg:ident, $$field:ident : $$val:expr $$(, $$($$rest:tt)*)?) => {$['\r']
-                $$crate::ir_generated::__proto_call_setter!($$msg, $$field, ($$val).into());$['\r']
-                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);$['\r']
-            };$['\r']
-        }$['\n']
-        #[rustfmt::skip]$['\r']
-        #[macro_export]$['\r']
-        macro_rules! proto {$['\r']
-            $("")($$($$ty:ident)::+ { $$($$tt:tt)* }) => {{$['\r']
-                let mut __msg = <$$($$ty)::+>::EMPTY;$['\r']
-                $$crate::ir_generated::__proto_fields!(__msg, $$($$tt)*);$['\r']
-                __msg$['\r']
-            }};$['\r']
-        }$['\r']
-        pub use {__proto_call_setter, __proto_fields, proto};$['\n']
-        #[rustfmt::skip]$['\r']
-        mod __defs {$['\r']
-            use crate::ir_ffi_support::{BazelLabel, FfiDefault, FfiMap, FfiRc, FfiString, FfiVec, ItemId, LifetimeId};$['\n']
-            $(ref out {
-                // Top-level enums
-                for en in &schema.enums {
-                    if en.item.scope.is_none() {
-                        generate_rs_enum(out, en);
-                    }
-                }
-
-                // Top-level unions and structs
-                for rec in &schema.records {
-                    if rec.scope().is_none() {
-                        match rec {
-                            RecordDef::Union(u) => generate_rs_union(out, schema, u, false),
-                            RecordDef::Struct(st) => generate_rs_struct(out, schema, st, false),
-                        }
-                    }
-                }
-
-                // Group submodule items by top-level module name
-                let mut mod_names: BTreeMap<&str, ()> = BTreeMap::new();
-                for en in &schema.enums {
-                    if let Some(ns) = en.item.ns() {
-                        let top_mod = ns.split("::").next().unwrap();
-                        mod_names.insert(top_mod, ());
-                    }
-                }
-                for rec in &schema.records {
-                    if let Some(ns) = rec.ns() {
-                        let top_mod = ns.split("::").next().unwrap();
-                        mod_names.insert(top_mod, ());
-                    }
-                }
-
-                for (mod_idx, &top_mod) in mod_names.keys().enumerate() {
-                    if mod_idx > 0 {
-                        out.line();
-                    }
-                    let mut sub_mods: BTreeMap<&str, &str> = BTreeMap::new();
-                    for en in &schema.enums {
-                        if let Some(ns) = en.item.ns() {
-                            if let Some(rest) = ns.strip_prefix(&format!("{top_mod}::")) {
-                                sub_mods.insert(rest, ns);
-                            }
-                        }
-                    }
-
-                    quote_in! { *out =>
-                        pub mod $top_mod {$['\r']
-                            use super::*;$['\n']
-                            $(ref out {
-                                // Enums directly in top_mod
-                                for en in &schema.enums {
-                                    if en.item.ns() == Some(top_mod) {
-                                        generate_rs_enum(out, en);
-                                    }
-                                }
-
-                                // Nested sub-submodules (e.g. `bridge_type::callable`)
-                                for (&sub_mod, &full_ns) in &sub_mods {
-                                    quote_in! { *out =>
-                                        pub mod $sub_mod {$['\r']
-                                            $(ref out {
-                                                for en in &schema.enums {
-                                                    if en.item.ns() == Some(full_ns) {
-                                                        generate_rs_enum(out, en);
-                                                    }
-                                                }
-                                            })
-                                        }$['\n']
-                                    }
-                                }
-
-                                // Unions and structs directly in top_mod
-                                for rec in &schema.records {
-                                    if rec.ns() == Some(top_mod) {
-                                        match rec {
-                                            RecordDef::Union(u) => {
-                                                generate_rs_union(out, schema, u, true);
-                                            }
-                                            RecordDef::Struct(st) => {
-                                                generate_rs_struct(out, schema, st, true);
-                                            }
-                                        }
-                                    }
-                                }
-                            })
-                        }$['\r']
-                    }
-                }
-            })
-        }$['\r']
-        #[rustfmt::skip]$['\r']
-        pub use __defs::*;$['\r']
+    // Group submodule items by top-level module name and optional nested submodule.
+    let mut top_mods: BTreeMap<&str, BTreeMap<&str, &str>> = BTreeMap::new();
+    for en in &schema.enums {
+        if let Some(ns) = en.item.ns() {
+            let top_mod = ns.split("::").next().unwrap();
+            let sub_mods = top_mods.entry(top_mod).or_default();
+            if let Some(rest) = ns.strip_prefix(&format!("{top_mod}::")) {
+                sub_mods.insert(rest, ns);
+            }
+        }
+    }
+    for rec in &schema.records {
+        if let Some(ns) = rec.ns() {
+            let top_mod = ns.split("::").next().unwrap();
+            top_mods.entry(top_mod).or_default();
+        }
     }
 
-    format_tokens(&out, false)
+    let out: rust::Tokens = quote! {
+        $("// Automatically @generated by ir_codegen.rs. Do not edit directly.")
+        $("// To regenerate, run: common/golden_update.sh")
+
+        #![allow(
+            dead_code,
+            non_camel_case_types,
+            unused_imports,
+            clippy::large_enum_variant,
+            clippy::should_implement_trait,
+            clippy::clone_on_copy,
+            clippy::unnecessary_lazy_evaluations,
+            clippy::explicit_auto_deref
+        )]
+
+        #[rustfmt::skip]
+        #[macro_export]
+        macro_rules! __proto_call_setter {
+            $(for (rs_ident, clean_name) in setter_names join ($['\r']) =>
+                ($$msg:ident, $rs_ident, $$($$arg:tt)*) => { $$msg.set_$clean_name($$($$arg)*) };
+            )
+        }
+
+        #[rustfmt::skip]
+        #[macro_export]
+        macro_rules! __proto_fields {
+            ($$msg:ident $$(,)?) => {};
+            ($$msg:ident, $$field:ident : __ { $$($$inner:tt)* } $$(, $$($$rest:tt)*)?) => {
+                {
+                    let __sub = $$crate::ir_generated::__proto_call_setter!($$msg, $$field, Default::default());
+                    $$crate::ir_generated::__proto_fields!(__sub, $$($$inner)*);
+                }
+                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);
+            };
+            ($$msg:ident, $$field:ident : [ $$( __ { $$($$inner:tt)* } ),* $$(,)? ] $$(, $$($$rest:tt)*)?) => {
+                $$crate::ir_generated::__proto_call_setter!($$msg, $$field, Default::default());
+                $$(
+                    {
+                        let __elem = $$msg.$$field.push(Default::default());
+                        $$crate::ir_generated::__proto_fields!(__elem, $$($$inner)*);
+                    }
+                )*
+                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);
+            };
+            ($$msg:ident, $$field:ident : [ $$( ( $$k:expr, [ $$( __ { $$($$inner:tt)* } ),* $$(,)? ] ) ),* $$(,)? ] $$(, $$($$rest:tt)*)?) => {
+                $$crate::ir_generated::__proto_call_setter!($$msg, $$field, Default::default());
+                $$(
+                    {
+                        let __vec = $$msg.$$field.insert(($$k).into(), Default::default());
+                        $$(
+                            {
+                                let __elem = __vec.push(Default::default());
+                                $$crate::ir_generated::__proto_fields!(__elem, $$($$inner)*);
+                            }
+                        )*
+                    }
+                )*
+                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);
+            };
+            ($$msg:ident, $$field:ident : [ $$( ( $$k:expr, __ { $$($$inner:tt)* } ) ),* $$(,)? ] $$(, $$($$rest:tt)*)?) => {
+                $$crate::ir_generated::__proto_call_setter!($$msg, $$field, Default::default());
+                $$(
+                    {
+                        let __val = $$msg.$$field.insert(($$k).into(), Default::default());
+                        $$crate::ir_generated::__proto_fields!(__val, $$($$inner)*);
+                    }
+                )*
+                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);
+            };
+            ($$msg:ident, $$field:ident : $$($$subty:ident)::+ { $$($$inner:tt)* } $$(, $$($$rest:tt)*)?) => {
+                $$crate::ir_generated::__proto_call_setter!($$msg, $$field, $$crate::ir_generated::proto!($$($$subty)::+ { $$($$inner)* }));
+                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);
+            };
+            ($$msg:ident, $$field:ident : $$val:expr $$(, $$($$rest:tt)*)?) => {
+                $$crate::ir_generated::__proto_call_setter!($$msg, $$field, ($$val).into());
+                $$crate::ir_generated::__proto_fields!($$msg, $$($$($$rest)*)?);
+            };
+        }
+
+        #[rustfmt::skip]
+        #[macro_export]
+        macro_rules! proto {
+            ($$($$ty:ident)::+ { $$($$tt:tt)* }) => {{
+                let mut __msg = <$$($$ty)::+>::EMPTY;
+                $$crate::ir_generated::__proto_fields!(__msg, $$($$tt)*);
+                __msg
+            }};
+        }
+        pub use {__proto_call_setter, __proto_fields, proto};
+
+        #[rustfmt::skip]
+        mod __defs {
+            use crate::ir_ffi_support::{BazelLabel, FfiDefault, FfiMap, FfiRc, FfiString, FfiVec, ItemId, LifetimeId};
+
+            $(for en in schema.enums.iter().filter(|en| en.item.scope.is_none()) join ($['\n']) =>
+                $(generate_rs_enum(en))
+            )
+
+            $(for rec in schema.records.iter().filter(|rec| rec.scope().is_none()) join ($['\n']) =>
+                $(match rec {
+                    RecordDef::Union(u) => $(generate_rs_union(schema, u, false)),
+                    RecordDef::Struct(st) => $(generate_rs_struct(schema, st, false)),
+                })
+            )
+
+            $(for (&top_mod, sub_mods) in &top_mods join ($['\n']) {
+                pub mod $top_mod {
+                    use super::*;
+
+                    $(for en in schema.enums.iter().filter(|en| en.item.ns() == Some(top_mod)) {
+                        $(generate_rs_enum(en))$['\n']
+                    })
+                    $(for (&sub_mod, &full_ns) in sub_mods {
+                        pub mod $sub_mod {
+                            $(for en in schema.enums.iter().filter(|en| en.item.ns() == Some(full_ns)) join ($['\n']) =>
+                                $(generate_rs_enum(en))
+                            )
+                        }$['\n']
+                    })
+                    $(for rec in schema.records.iter().filter(|rec| rec.ns() == Some(top_mod)) join ($['\n']) =>
+                        $(match rec {
+                            RecordDef::Union(u) => $(generate_rs_union(schema, u, true)),
+                            RecordDef::Struct(st) => $(generate_rs_struct(schema, st, true)),
+                        })
+                    )
+                }
+            })
+        }
+        #[rustfmt::skip]
+        pub use __defs::*;
+    };
+
+    out.to_file_string().expect("genco formatting to String cannot fail")
 }
 
 fn main() {

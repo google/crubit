@@ -5527,7 +5527,6 @@ mod __defs {
             assert!(core::mem::size_of::<Kind>() == 56);
             assert!(core::mem::align_of::<Kind>() == 8);
         };
-
     }
 
     pub mod bridge_type {
@@ -5571,7 +5570,6 @@ mod __defs {
                     }
                 }
             }
-
         }
 
         #[repr(C)]
@@ -5841,7 +5839,6 @@ mod __defs {
             assert!(core::mem::offset_of!(Callable, return_type) == 8);
             assert!(core::mem::offset_of!(Callable, param_types) == 144);
         };
-
     }
 
     pub mod cc_type {
@@ -6091,7 +6088,6 @@ mod __defs {
             assert!(core::mem::size_of::<Variant>() == 64);
             assert!(core::mem::align_of::<Variant>() == 8);
         };
-
     }
 
     pub mod constant {
@@ -6143,7 +6139,6 @@ mod __defs {
             assert!(core::mem::size_of::<Kind>() == 72);
             assert!(core::mem::align_of::<Kind>() == 8);
         };
-
     }
 
     pub mod decl_location {
@@ -6192,7 +6187,6 @@ mod __defs {
             assert!(core::mem::offset_of!(ByteRange, begin) == 0);
             assert!(core::mem::offset_of!(ByteRange, end) == 4);
         };
-
     }
 
     pub mod instance_method_metadata {
@@ -6217,7 +6211,6 @@ mod __defs {
                 }
             }
         }
-
     }
 
     pub mod member_func_semantic {
@@ -6310,7 +6303,6 @@ mod __defs {
             assert!(core::mem::offset_of!(Getter, type_) == 0);
             assert!(core::mem::offset_of!(Getter, offset) == 136);
         };
-
     }
 
     pub mod template_specialization {
@@ -6738,7 +6730,6 @@ mod __defs {
             assert!(core::mem::size_of::<Kind>() == 280);
             assert!(core::mem::align_of::<Kind>() == 8);
         };
-
     }
 
     pub mod unsupported_item {
@@ -6840,7 +6831,6 @@ mod __defs {
             assert!(core::mem::offset_of!(Path, ident) == 8);
             assert!(core::mem::offset_of!(Path, enclosing_item_id) == 32);
         };
-
     }
 }
 #[rustfmt::skip]
