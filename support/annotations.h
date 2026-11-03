@@ -7,7 +7,7 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_
 
-#include "support/annotations_internal.h"
+#include "support/annotations_internal.h"  // IWYU pragma: export
 
 // SWIG does not follow `#include` directives, so it cannot see the definitions
 // below and reports "Syntax error in input" when it parses a header that uses
@@ -459,5 +459,89 @@
 // `rust_api_from_cpp` target that will not receive C++ bindings.
 #define CRUBIT_ALLOW_UNBINDABLE_TYPE \
   CRUBIT_INTERNAL_ANNOTATE("crubit_allow_unbindable_type")
+
+// Marks a C++ struct, class, enum, or type alias as having an equivalent
+// layout to an existing Rust type `t`, disabling automated Rust bindings
+// generation for the C++ declaration and mapping all uses of it to `t`.
+//
+// This is the C++ counterpart to `#[crubit_annotate::cpp_layout_equivalent]`
+// in Rust.
+//
+// Example (concrete type):
+//
+// ```c++
+// struct CRUBIT_RUST_LAYOUT_EQUIVALENT("::my_rust_crate::MyPoint") MyPoint {
+//   int32_t x;
+//   int32_t y;
+// };
+// ```
+//
+// Generic C++ templates can interpolate type and const-generic parameters into
+// `t` using `{}` placeholders and `crubit::rust_type::Const<N>`:
+//
+// ```c++
+// template <typename T, int64_t Tag>
+// struct CRUBIT_RUST_LAYOUT_EQUIVALENT(
+//     "crate::TaggedValue<{}, {}>", T, crubit::rust_type::Const<Tag>)
+//     TaggedValue {
+//   T value;
+// };
+// ```
+//
+// How to spell `t`:
+//
+// A path in `t` is spelled from the point of view of the Rust crate that
+// corresponds to the Bazel target defining the annotated C++ declaration (when
+// that target is the one bindings are being generated for, this is the crate
+// being generated):
+//
+// * `::some_crate::path::To::Type` names an external crate explicitly: the
+//   first path segment is a crate name, and the path is used as spelled (or
+//   rewritten when crate name mangling is active; see
+//   `CRUBIT_RUST_LAYOUT_EQUIVALENT_LABEL_HINT`).
+// * `crate::path::To::Type` refers to the crate of the defining target itself
+//   (for example, a Rust type defined via `srcs` on `rust_api_from_cpp`).
+//   Prefer `crate::...` over naming that target's crate explicitly so the path
+//   remains valid under crate name mangling.
+// * `path::To::Type` is relative to the root of that same crate (equivalent to
+//   `crate::path::To::Type`), where the first segment names a module rather
+//   than a crate, or a built-in Rust primitive such as `"i8"` or `"char"`.
+//
+// SAFETY:
+//   This annotation is unsafe. The C++ type and the Rust type `t` must have
+//   identical size, alignment, and valid bit representations across all uses;
+//   otherwise behavior is undefined.
+#define CRUBIT_RUST_LAYOUT_EQUIVALENT(t, ...)              \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_internal_rust_type", t, \
+                           crubit::rust_type::Args<__VA_ARGS__>())
+
+// Specifies the Bazel target label that owns the Rust crate referenced by
+// `CRUBIT_RUST_LAYOUT_EQUIVALENT`.
+//
+// Format: `"//package:target"` or short-form `"//package"`.
+//
+// This annotation is only needed when `t` in `CRUBIT_RUST_LAYOUT_EQUIVALENT` is
+// spelled with an explicit `::some_crate::path::To::Type` prefix AND the Bazel
+// target defining the C++ header differs from the Bazel target providing
+// `some_crate` (for example, `absl::StatusOr` in
+// `@abseil-cpp//absl/status:statusor` mapping to a Rust type in
+// `@abseil-cpp//absl/status:status`). When crate name mangling is enabled
+// (`use_label_encoded_names_for_deps`), Crubit uses this hint to rewrite
+// `some_crate` to the mangled crate name of the target.
+//
+// Paths spelled with `crate::...` or relative module paths do not need a label
+// hint.
+//
+// Example:
+//
+// ```c++
+// struct CRUBIT_RUST_LAYOUT_EQUIVALENT("::my_rust_lib::MyType")
+//     CRUBIT_RUST_LAYOUT_EQUIVALENT_LABEL_HINT("//path/to:my_rust_lib")
+//     MyType {
+//   int32_t value;
+// };
+// ```
+#define CRUBIT_RUST_LAYOUT_EQUIVALENT_LABEL_HINT(label_hint) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_internal_rust_type_label_hint", label_hint)
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_

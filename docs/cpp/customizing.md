@@ -14,6 +14,11 @@ For instance:
 *   A function or method can be given `pub(crate)` visibility in Rust, limiting
     its visibility to the generated crate (including custom `srcs` on
     `rust_api_from_cpp`), using `CRUBIT_PUB_CRATE`.
+*   A C++ type can be mapped directly to a layout-equivalent existing Rust type
+    (suppressing automated Rust bindings for the C++ declaration) using
+    `CRUBIT_RUST_LAYOUT_EQUIVALENT("crate::MyRustType")` (and, when needed for
+    external crates in separate Bazel targets,
+    `CRUBIT_RUST_LAYOUT_EQUIVALENT_LABEL_HINT("//pkg:target")`).
 
 <!-- TODO(jeanpierreda): should we fully enumerate everything, on this page? -->
 

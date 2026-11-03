@@ -9,11 +9,11 @@
 #include "rs_bindings_from_cc/test/bazel/deps_with_same_names/internal_rust_type/deps/B_cc_library/a.h"
 #include "support/annotations.h"
 
-// Map InternalTypeA to ::a::TypeA defined in A_cc_library's Rust crate.
-// The hint prefix 'a' will be replaced by the mangled crate name of
-// A_cc_library:a.
-struct CRUBIT_INTERNAL_RUST_TYPE("::a::TypeA")
-    CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT(
+// Map InternalTypeA to ::a::TypeA defined in A_cc_library's Rust crate using
+// the public macro spellings. The hint prefix 'a' will be replaced by the
+// mangled crate name of A_cc_library:a.
+struct CRUBIT_RUST_LAYOUT_EQUIVALENT("::a::TypeA")
+    CRUBIT_RUST_LAYOUT_EQUIVALENT_LABEL_HINT(
         "//rs_bindings_from_cc/test/bazel/"
         "deps_with_same_names/internal_rust_type/deps/A_cc_library:a")
         InternalTypeA {
