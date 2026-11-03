@@ -642,6 +642,10 @@ forward_declare::unsafe_define!(
     crate::StructWithUnsafeConstructor
 );
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `p`: raw pointer
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
     #[inline(always)]
     unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {

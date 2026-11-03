@@ -33,6 +33,10 @@ forward_declare::unsafe_define!(
     crate::TypeWithPtrConstructor
 );
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `ptr`: raw pointer
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
     #[inline(always)]
     unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {
@@ -75,6 +79,10 @@ forward_declare::unsafe_define!(
     crate::TypeWithNonNullPtrConstructor
 );
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `ptr`: raw pointer
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstructor {
     #[inline(always)]
     unsafe fn unsafe_from(args: *mut ::ffi_11::c_int) -> Self {

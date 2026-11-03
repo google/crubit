@@ -37,6 +37,10 @@ pub mod ns {
     }
     forward_declare::unsafe_define!(forward_declare::symbol!("ns :: Member"), crate::ns::Member);
 
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `instruction`: unsafe bridge type
     impl ::ctor::UnsafeFrom<crate::MyBox<crate::ns::Instruction>> for Member {
         #[inline(always)]
         unsafe fn unsafe_from(args: crate::MyBox<crate::ns::Instruction>) -> Self {
