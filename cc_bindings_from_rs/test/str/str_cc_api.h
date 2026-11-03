@@ -32,7 +32,7 @@ static constexpr ::rs::StrRef CONST_STR_FOO = ::rs::StrRef("foo");
 // Unsupported rustc_hir::hir::DefKind: Static { safety: Safe, mutability: Not,
 // nested: false }
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr")
     [[clang::trivial_abi]] TypeWithStr final {
  public:
   static ::str::TypeWithStr create(::rs::StrRef s);

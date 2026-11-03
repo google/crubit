@@ -45,8 +45,8 @@ struct HasOptions;
 // existing C++ type (decltype(char(0)))
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
-    1) [[clang::trivial_abi]] CloneNoDefault final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault")
+    [[clang::trivial_abi]] CloneNoDefault final {
  public:
   ::std::uint8_t val{};
 
@@ -55,7 +55,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault")
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
   ::std::uint8_t val{};
@@ -67,7 +67,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
 using FreeFunc CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: FreeFunc") =
     crubit::type_identity_t<void(void*, void*)>*;
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault")
     [[clang::trivial_abi]] HasDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -84,7 +84,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault")
     [[clang::trivial_abi]] HasNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -308,8 +308,8 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: UnitOptionField") alignas(
-    1) [[clang::trivial_abi]] UnitOptionField final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: UnitOptionField")
+    [[clang::trivial_abi]] UnitOptionField final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::UnitOptionField new_with_some();
@@ -619,9 +619,8 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_golden :: OptCloneNoDefault") alignas(1) [[clang::trivial_abi]]
-OptCloneNoDefault final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptCloneNoDefault")
+    [[clang::trivial_abi]] OptCloneNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptCloneNoDefault new_(::std::uint8_t x);
@@ -698,9 +697,8 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_golden :: OptCopyNoDefault") alignas(1) [[clang::trivial_abi]]
-OptCopyNoDefault final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptCopyNoDefault")
+    [[clang::trivial_abi]] OptCopyNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptCopyNoDefault new_(::std::uint8_t x);
@@ -773,9 +771,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_golden :: OptDefaultWithDrop") alignas(4) [[clang::trivial_abi]]
-OptDefaultWithDrop final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptDefaultWithDrop")
+    [[clang::trivial_abi]] OptDefaultWithDrop final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::rs::Movable<::option::OptDefaultWithDrop> new_(::rs::StrRef s);
@@ -848,8 +845,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_golden :: OptNoDefaultWithDrop") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptNoDefaultWithDrop")
     [[clang::trivial_abi]] OptNoDefaultWithDrop final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -928,7 +924,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions")
     [[clang::trivial_abi]] HasHasOptions final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -1460,7 +1456,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions")
     [[clang::trivial_abi]] HasOptions final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -1557,7 +1553,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace option {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: ZStream") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: ZStream")
     [[clang::trivial_abi]] ZStream final {
  public:
   ::rs::Option<crubit::type_identity_t<void(void*, void*)>*> zfree{};
@@ -1628,9 +1624,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_golden :: OptionWithSizeTypes") alignas(4) [[clang::trivial_abi]]
-OptionWithSizeTypes final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptionWithSizeTypes")
+    [[clang::trivial_abi]] OptionWithSizeTypes final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptionWithSizeTypes new_(::rs::Option<::std::uint32_t> uval,

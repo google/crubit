@@ -87,8 +87,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace rs_hash::derived_struct {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: rs_hash_golden :: derived_struct :: Point") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_hash_golden :: derived_struct :: Point")
     [[clang::trivial_abi]] Point final {
  public:
   bool operator==(::rs_hash::derived_struct::Point const& other) const;
@@ -112,7 +111,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace rs_hash::derived_tuple_struct {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: rs_hash_golden :: derived_tuple_struct :: TupleStruct") alignas(4)
+    ":: rs_hash_golden :: derived_tuple_struct :: TupleStruct")
     [[clang::trivial_abi]] TupleStruct final {
  public:
   bool operator==(
@@ -138,7 +137,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace rs_hash::explicit_struct {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: rs_hash_golden :: explicit_struct :: CustomHashStruct") alignas(4)
+    ":: rs_hash_golden :: explicit_struct :: CustomHashStruct")
     [[clang::trivial_abi]] CustomHashStruct final {
  public:
   bool operator==(

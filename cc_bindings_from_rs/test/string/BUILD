@@ -30,9 +30,6 @@ crubit_cc_test(
         "android",
         "ios",
     ],
-    # TODO(b/522829368): The generated rs_std.h declares `stdin()`, `stdout()` and
-    # `stderr()`, which the Windows UCRT defines as macros.
-    tags = ["no_windows"],
     deps = [
         ":string_cc_api",
         "//support/rs_std",
