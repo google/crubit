@@ -199,7 +199,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace rs_default::transparent_struct {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: rs_default_golden :: transparent_struct :: SomeStruct") alignas(4)
+    ":: rs_default_golden :: transparent_struct :: SomeStruct")
     [[clang::trivial_abi]] SomeStruct final {
  public:
   ::std::int32_t extract_int() const;

@@ -36,8 +36,8 @@
 
 namespace result {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
-    1) [[clang::trivial_abi]] CloneNoDefault final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault")
+    [[clang::trivial_abi]] CloneNoDefault final {
  public:
   ::std::uint8_t val{};
 
@@ -45,7 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault")
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
   ::std::uint8_t val{};
@@ -89,7 +89,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: DropNoDefault") alignas(1)
 
 using FreeFunc CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: FreeFunc") =
     crubit::type_identity_t<void(void*, void*)>*;
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault")
     [[clang::trivial_abi]] HasDefault final {
  public:
   static ::result::HasDefault new_(::rs::StrRef val);
@@ -102,7 +102,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault")
     [[clang::trivial_abi]] HasNoDefault final {
  public:
   ::rs::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;

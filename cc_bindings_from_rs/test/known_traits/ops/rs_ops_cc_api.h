@@ -31,7 +31,7 @@ namespace rs_ops {
 //  Exercises operator impls whose `Self` type is a *reference* to the ADT.
 //
 //  `MyBorrowedInt` does intentially no derive `Copy`.
-struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyBorrowedInt") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyBorrowedInt")
     [[clang::trivial_abi]] MyBorrowedInt final {
  public:
   static ::rs_ops::MyBorrowedInt new_(::std::int32_t value);
@@ -50,7 +50,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyBorrowedInt") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyInt") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyInt")
     [[clang::trivial_abi]] MyInt final {
  public:
   static ::rs_ops::MyInt new_(::std::int32_t value);
