@@ -298,6 +298,71 @@ pub mod struct_by_float_passing_with_no_thunk {
     }
 }
 
+/// Test that structs with a requested alignment are passed by value over a
+/// direct (thunk-less) `extern "C"` call the same way by both compilers.
+///
+/// The C++ side of a struct only carries `alignas` when Rust asked for an
+/// alignment (`#[repr(align)]`, `#[repr(packed)]`) or when C++ cannot derive
+/// it from the fields. On 32-bit Windows, where a struct with a
+/// requested alignment greater than 4 is passed by pointer rather than on the
+/// stack, `#[repr(align(16))]` must be passed by pointer on both sides, while
+/// `#[repr(packed)]` (alignment 1) and plain `#[repr(C)]` structs (see
+/// `struct_by_float_passing_with_no_thunk`) must be passed by value on both.
+pub mod requested_alignment_passing_with_no_thunk {
+    #[repr(C, align(16))]
+    #[crubit_annotate::must_bind]
+    pub struct Aligned16(pub f64, pub f64);
+
+    #[unsafe(export_name = "requested_alignment_passing_with_no_thunk__aligned16_create")]
+    #[crubit_annotate::must_bind]
+    pub extern "C" fn aligned16_create(f: f64) -> Aligned16 {
+        Aligned16(12.34, f)
+    }
+
+    #[unsafe(export_name = "requested_alignment_passing_with_no_thunk__aligned16_multiply")]
+    #[crubit_annotate::must_bind]
+    pub extern "C" fn aligned16_multiply(x: Aligned16, y: Aligned16) -> Aligned16 {
+        assert_eq!(12.34, x.0);
+        assert_eq!(12.34, y.0);
+        aligned16_create(x.1 * y.1)
+    }
+
+    #[unsafe(export_name = "requested_alignment_passing_with_no_thunk__aligned16_inspect")]
+    #[crubit_annotate::must_bind]
+    pub extern "C" fn aligned16_inspect(s: Aligned16) -> f64 {
+        assert_eq!(12.34, s.0);
+        s.1
+    }
+
+    #[repr(C, packed)]
+    #[crubit_annotate::must_bind]
+    pub struct Packed(pub u64, pub u8);
+
+    #[unsafe(export_name = "requested_alignment_passing_with_no_thunk__packed_create")]
+    #[crubit_annotate::must_bind]
+    pub extern "C" fn packed_create(v: u8) -> Packed {
+        Packed(0x1234_5678_9abc_def0, v)
+    }
+
+    #[unsafe(export_name = "requested_alignment_passing_with_no_thunk__packed_add")]
+    #[crubit_annotate::must_bind]
+    pub extern "C" fn packed_add(x: Packed, y: Packed) -> Packed {
+        // Copy the fields out first: taking a reference to a packed field is an error.
+        let (x0, x1, y0, y1) = (x.0, x.1, y.0, y.1);
+        assert_eq!(0x1234_5678_9abc_def0, x0);
+        assert_eq!(0x1234_5678_9abc_def0, y0);
+        packed_create(x1 + y1)
+    }
+
+    #[unsafe(export_name = "requested_alignment_passing_with_no_thunk__packed_inspect")]
+    #[crubit_annotate::must_bind]
+    pub extern "C" fn packed_inspect(s: Packed) -> u8 {
+        let (s0, s1) = (s.0, s.1);
+        assert_eq!(0x1234_5678_9abc_def0, s0);
+        s1
+    }
+}
+
 /// Dynamically sized types 1) don't get bindings today, and 2) shouldn't
 /// generate assertions about the size of the type (the latter is a regression
 /// test for b/279587535).

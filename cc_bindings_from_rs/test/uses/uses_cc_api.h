@@ -28,7 +28,7 @@
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original")
     [[clang::trivial_abi]] Original final {
  public:
   ::std::int32_t field{};
@@ -55,7 +55,7 @@ namespace uses::doc_hidden_test::visible {
 
 namespace uses {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName")
     [[clang::trivial_abi]] OtherPublicName final {
  public:
   ::std::int32_t __field0{};
@@ -71,9 +71,8 @@ void other_public_name();
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: uses_golden :: AliasOfExportedStruct") alignas(4) [[clang::trivial_abi]]
-AliasOfExportedStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: AliasOfExportedStruct")
+    [[clang::trivial_abi]] AliasOfExportedStruct final {
  public:
   static ::uses::AliasOfExportedStruct create(::std::int32_t field);
 
