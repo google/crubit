@@ -125,12 +125,14 @@ unsafe impl ::operator::Delete for crate::RustDerived {
 }
 
 pub mod rust_derived {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Method1<'__this>(__this: &'__this crate::RustDerived) -> ::ffi_11::c_int {
+    pub fn Method1<'__this>(__this: &'__this crate::RustDerived) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK11RustDerived7Method1Ev(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Upcast<'__this>(
+    pub fn Upcast<'__this>(
         __this: ::core::pin::Pin<&'__this mut crate::RustDerived>,
     ) -> *mut ::base::ExampleBase {
         unsafe { crate::detail::__rust_thunk___ZN11RustDerived6UpcastEv(__this) }

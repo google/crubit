@@ -282,38 +282,41 @@ impl<'__this, 'rhs> ::core::ops::Add<&'rhs crate::Nontrivial> for &'__this crate
 //   Compound assignment operators are not supported for non-Unpin types, found ::core::pin::Pin<&'__this mut crate::Nontrivial>
 
 pub mod nontrivial {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Unqualified<'__this>(__this: ::core::pin::Pin<&'__this mut crate::Nontrivial>) {
+    pub fn Unqualified<'__this>(__this: ::core::pin::Pin<&'__this mut crate::Nontrivial>) {
         unsafe { crate::detail::__rust_thunk___ZN10Nontrivial11UnqualifiedEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn ConstQualified<'__this>(__this: &'__this crate::Nontrivial) {
+    pub fn ConstQualified<'__this>(__this: &'__this crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNK10Nontrivial14ConstQualifiedEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn LvalueRefQualified<'__this>(
-        __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
-    ) {
+    pub fn LvalueRefQualified<'__this>(__this: ::core::pin::Pin<&'__this mut crate::Nontrivial>) {
         unsafe { crate::detail::__rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn ConstLvalueRefQualified<'__this>(__this: &'__this crate::Nontrivial) {
+    pub fn ConstLvalueRefQualified<'__this>(__this: &'__this crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn RvalueRefQualified<'__this>(
-        __this: ::core::pin::Pin<&'__this mut crate::Nontrivial>,
-    ) {
+    pub fn RvalueRefQualified<'__this>(__this: ::core::pin::Pin<&'__this mut crate::Nontrivial>) {
         unsafe { crate::detail::__rust_thunk___ZNO10Nontrivial18RvalueRefQualifiedEv(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn ConstRvalueRefQualified<'__this>(__this: &'__this crate::Nontrivial) {
+    pub fn ConstRvalueRefQualified<'__this>(__this: &'__this crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv(__this) }
     }
     /// Takes a non-Unpin type by value (as a `Ctor`) and returns a non-Unpin type,
     /// while also capturing the lifetime of `this`.
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn TakesByValueMember<'__this>(
+    pub fn TakesByValueMember<'__this>(
         __this: &'__this crate::Nontrivial,
         nontrivial: ::ctor::Ctor![crate::Nontrivial],
     ) -> ::ctor::Ctor![crate::Nontrivial] {
@@ -511,10 +514,9 @@ impl ::ctor::PinnedDrop for NontrivialInline {
 }
 
 pub mod nontrivial_inline {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn MemberFunction<'__this>(
-        __this: ::core::pin::Pin<&'__this mut crate::NontrivialInline>,
-    ) {
+    pub fn MemberFunction<'__this>(__this: ::core::pin::Pin<&'__this mut crate::NontrivialInline>) {
         unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(__this) }
     }
 }
@@ -813,8 +815,9 @@ impl Drop for NontrivialUnpin {
 }
 
 pub mod nontrivial_unpin {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn MemberFunction<'__this>(__this: &'__this mut crate::NontrivialUnpin) {
+    pub fn MemberFunction<'__this>(__this: &'__this mut crate::NontrivialUnpin) {
         unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv(__this) }
     }
 }
@@ -1047,10 +1050,9 @@ impl ::ctor::PinnedDrop for Nonmovable {
 }
 
 pub mod nonmovable {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn MemberFunction<'__this>(
-        __this: ::core::pin::Pin<&'__this mut crate::Nonmovable>,
-    ) {
+    pub fn MemberFunction<'__this>(__this: ::core::pin::Pin<&'__this mut crate::Nonmovable>) {
         unsafe { crate::detail::__rust_thunk___ZN10Nonmovable14MemberFunctionEv(__this) }
     }
 }

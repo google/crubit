@@ -81,58 +81,63 @@ impl Default for UnpinStructWithRefQualifiedMethods {
 }
 
 pub mod unpin_struct_with_ref_qualified_methods {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn increment_i<'__this>(
-        __this: &'__this mut crate::UnpinStructWithRefQualifiedMethods,
-    ) {
+    pub fn increment_i<'__this>(__this: &'__this mut crate::UnpinStructWithRefQualifiedMethods) {
         unsafe {
             crate::detail::__rust_thunk___ZN34UnpinStructWithRefQualifiedMethods11increment_iEv(
                 __this,
             )
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn unqualified_get_i<'__this>(
+    pub fn unqualified_get_i<'__this>(
         __this: &'__this mut crate::UnpinStructWithRefQualifiedMethods,
     ) -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZN34UnpinStructWithRefQualifiedMethods17unqualified_get_iEv(__this)
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn const_qualified_get_i<'__this>(
+    pub fn const_qualified_get_i<'__this>(
         __this: &'__this crate::UnpinStructWithRefQualifiedMethods,
     ) -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZNK34UnpinStructWithRefQualifiedMethods21const_qualified_get_iEv(__this)
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn lvalue_ref_qualified_get_i<'__this>(
+    pub fn lvalue_ref_qualified_get_i<'__this>(
         __this: &'__this mut crate::UnpinStructWithRefQualifiedMethods,
     ) -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZNR34UnpinStructWithRefQualifiedMethods26lvalue_ref_qualified_get_iEv(__this)
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn const_lvalue_ref_qualified_get_i<'__this>(
+    pub fn const_lvalue_ref_qualified_get_i<'__this>(
         __this: &'__this crate::UnpinStructWithRefQualifiedMethods,
     ) -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZNKR34UnpinStructWithRefQualifiedMethods32const_lvalue_ref_qualified_get_iEv(__this)
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn rvalue_ref_qualified_get_i<'__this>(
+    pub fn rvalue_ref_qualified_get_i<'__this>(
         __this: &'__this mut crate::UnpinStructWithRefQualifiedMethods,
     ) -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZNO34UnpinStructWithRefQualifiedMethods26rvalue_ref_qualified_get_iEv(__this)
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn const_rvalue_ref_qualified_get_i<'__this>(
+    pub fn const_rvalue_ref_qualified_get_i<'__this>(
         __this: &'__this crate::UnpinStructWithRefQualifiedMethods,
     ) -> ::ffi_11::c_int {
         unsafe {

@@ -61,8 +61,9 @@ impl Default for __CcTemplateInst10MyTemplateIiE {
 }
 
 pub mod cc_template_inst10_my_template_ii_e {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Create(value: ::ffi_11::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
+    pub fn Create(value: ::ffi_11::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
         unsafe {
             let mut __crubit_return =
                 ::core::mem::MaybeUninit::<crate::__CcTemplateInst10MyTemplateIiE>::uninit();
@@ -73,8 +74,9 @@ pub mod cc_template_inst10_my_template_ii_e {
             __crubit_return.assume_init()
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn value<'__this>(
+    pub fn value<'__this>(
         __this: &'__this crate::__CcTemplateInst10MyTemplateIiE,
     ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
         unsafe { crate::detail::__rust_thunk__758630aa__ZNK10MyTemplateIiE5valueEv(__this) }

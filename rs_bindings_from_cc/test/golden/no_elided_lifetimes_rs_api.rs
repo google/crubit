@@ -65,16 +65,18 @@ impl Default for S {
 }
 
 pub mod s {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn const_method<'__this, 'p1, 'p2>(
+    pub fn const_method<'__this, 'p1, 'p2>(
         __this: &'__this crate::S,
         p1: &'p1 mut ::ffi_11::c_int,
         p2: &'p2 mut ::ffi_11::c_int,
     ) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
         unsafe { crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn method<'__this, 'p1, 'p2>(
+    pub fn method<'__this, 'p1, 'p2>(
         __this: &'__this mut crate::S,
         p1: &'p1 mut ::ffi_11::c_int,
         p2: &'p2 mut ::ffi_11::c_int,

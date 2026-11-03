@@ -97,8 +97,9 @@ impl Default for Foo {
 }
 
 pub mod foo {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn BarBridgedInt<'__this>(
+    pub fn BarBridgedInt<'__this>(
         __this: &'__this mut crate::Foo,
         __param_0: crate::__CcTemplateInst6SizeofIiE,
     ) {
@@ -107,8 +108,9 @@ pub mod foo {
             crate::detail::__rust_thunk___ZN3Foo3BarE6SizeofIiE(__this, __param_0.as_mut_ptr())
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn BarBridgedFloat<'__this>(
+    pub fn BarBridgedFloat<'__this>(
         __this: &'__this mut crate::Foo,
         __param_0: crate::__CcTemplateInst6SizeofIfE,
     ) {
@@ -117,8 +119,9 @@ pub mod foo {
             crate::detail::__rust_thunk___ZN3Foo3BarE6SizeofIfE(__this, __param_0.as_mut_ptr())
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Bar<'__this>(__this: &'__this mut crate::Foo, __param_0: ::ffi_11::c_int) {
+    pub fn Bar<'__this>(__this: &'__this mut crate::Foo, __param_0: ::ffi_11::c_int) {
         unsafe { crate::detail::__rust_thunk___ZN3Foo3BarEi(__this, __param_0) }
     }
 }

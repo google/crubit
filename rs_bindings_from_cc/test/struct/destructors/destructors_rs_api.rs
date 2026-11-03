@@ -112,22 +112,25 @@ impl Drop for DestructionOrderRecorder {
 }
 
 pub mod destruction_order_recorder {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn RecordDestruction(int_field: ::ffi_11::c_int) {
+    pub fn RecordDestruction(int_field: ::ffi_11::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorder17RecordDestructionEi(
                 int_field,
             )
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn GetDestructionRecord() -> ::ffi_11::c_int {
+    pub fn GetDestructionRecord() -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorder20GetDestructionRecordEv()
         }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn ClearDestructionRecord() {
+    pub fn ClearDestructionRecord() {
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorder22ClearDestructionRecordEv()
         }
@@ -262,8 +265,9 @@ impl
 }
 
 pub mod field_destruction_order_tester {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn DestructFromCpp(
+    pub fn DestructFromCpp(
         field1: ::ffi_11::c_int,
         field2: ::ffi_11::c_int,
         field3: ::ffi_11::c_int,

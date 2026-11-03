@@ -191,8 +191,9 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase2 {
 }
 
 pub mod polymorphic_base2 {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Foo<'__this>(__this: ::core::pin::Pin<&'__this mut crate::PolymorphicBase2>) {
+    pub fn Foo<'__this>(__this: ::core::pin::Pin<&'__this mut crate::PolymorphicBase2>) {
         unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase23FooEv(__this) }
     }
 }

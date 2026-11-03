@@ -1221,10 +1221,9 @@ impl<'rhs> ::core::ops::ShrAssign<&'rhs Self> for ManyOperators {
 }
 
 pub mod many_operators {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn unary_plus<'__this>(
-        __this: &'__this crate::ManyOperators,
-    ) -> crate::ManyOperators {
+    pub fn unary_plus<'__this>(__this: &'__this crate::ManyOperators) -> crate::ManyOperators {
         unsafe {
             let mut __crubit_return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
             crate::detail::__rust_thunk___ZNK13ManyOperatorspsEv(

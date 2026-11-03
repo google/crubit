@@ -536,27 +536,31 @@ impl Default for MethodBase1 {
 }
 
 pub mod method_base1 {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Public<'__this>(__this: &'__this mut crate::MethodBase1) {
+    pub fn Public<'__this>(__this: &'__this mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(__this) }
     }
     /// # Safety
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__param_0`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn Equals<'__this>(
+    pub unsafe fn Equals<'__this>(
         __this: &'__this mut crate::MethodBase1,
         __param_0: *const crate::MethodBase1,
     ) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(__this, __param_0) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Colliding1<'__this>(__this: &'__this mut crate::MethodBase1) {
+    pub fn Colliding1<'__this>(__this: &'__this mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Colliding2<'__this>(__this: &'__this mut crate::MethodBase1) {
+    pub fn Colliding2<'__this>(__this: &'__this mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(__this) }
     }
 }
@@ -599,12 +603,14 @@ impl Default for MethodBase2 {
 }
 
 pub mod method_base2 {
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Colliding1<'__this>(__this: &'__this mut crate::MethodBase2) {
+    pub fn Colliding1<'__this>(__this: &'__this mut crate::MethodBase2) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(__this) }
     }
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) fn Colliding2<'__this>(__this: &'__this mut crate::MethodBase2) {
+    pub fn Colliding2<'__this>(__this: &'__this mut crate::MethodBase2) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(__this) }
     }
 }

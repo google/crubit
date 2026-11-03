@@ -89,8 +89,9 @@ pub mod cc_template_inst2_ts_iif_e {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
+    ///CRUBIT_ANNOTATE: do_not_bind=
     #[inline(always)]
-    pub(crate) unsafe fn Member(__this: *mut crate::__CcTemplateInst2TsIifE) {
+    pub unsafe fn Member(__this: *mut crate::__CcTemplateInst2TsIifE) {
         unsafe { crate::detail::__rust_thunk__f7010ef7__ZN2TsIifE6MemberEv(__this) }
     }
 }
