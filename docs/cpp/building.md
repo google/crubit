@@ -168,8 +168,9 @@ export PROTOBUF_INCLUDE_PATH=/path/to/protobuf/include/dir,/path/to/generated_he
 ## libupb.a) are ignored; the first two would collide with the ones above.
 export PROTOBUF_LIB_STATIC_PATH=/path/to/protobuf/libs
 
-# Tell Crubit which LLVM it is compiled against, as the commit date (YYYYMMDD) of
-# your llvm-project checkout.
+# Tell Crubit which LLVM it is compiled against, as the dev date (YYYYMMDD) of
+# your llvm-project commit: its own date on main, else its release branch's fork
+# from main.
 LLVM_DATE=$(python3 cargo/build/get_llvm_commit_date.py <llvm_commit_sha>)
 export CXXFLAGS="$CXXFLAGS -DCRUBIT_LLVM_DEV_DATE=${LLVM_DATE}"
 
