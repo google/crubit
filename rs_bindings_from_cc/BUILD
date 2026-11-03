@@ -224,8 +224,6 @@ cc_library(
     srcs = [],
     hdrs = ["bazel_types.h"],
     deps = [
-        "//common:check",
-        "//common:status",
         "//common:string_type",
         "@llvm-project//llvm:Support",
     ],

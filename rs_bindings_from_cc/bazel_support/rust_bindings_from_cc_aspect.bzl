@@ -53,8 +53,8 @@ def _filter_hdrs(input_list):
 # Targets which do not receive rust bindings at all. Most significantly, the header is not
 # attributed to belonging to this target. So, the main use for this list is to resolve
 # ambiguously-owned headers by disabling one of the targets.
-targets_to_remove = [
-]
+targets_to_remove = [Label(t) for t in [
+]]
 
 # Specific headers, in specific targets, which do not receive Rust bindings.
 #
@@ -64,11 +64,11 @@ targets_to_remove = [
 #    (For example, this is expected on targets with `features=["-parse_headers"]`.)
 # 3. The header is owned by another target as well, and we want to mark the _other_ one as
 #    canonically owning it. In that case, the comment should point to the other target.
-public_headers_to_remove = {
+public_headers_to_remove = {Label(k): v for k, v in {
     "//rs_bindings_from_cc/test/disable/disable_header:test_lib": [
         "rs_bindings_from_cc/test/disable/disable_header/disabled_header.h",
     ],
-}
+}.items()}
 
 def _get_additional_rust_srcs_from_provider(provider):
     """Returns `extra_rs_srcs` associated with the `provider`.
@@ -236,11 +236,10 @@ def _get_support_cc_infos(binding_infos):
 
 def _collect_hdrs(ctx, crubit_features):
     public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
-    label = str(ctx.label)
     public_hdrs = [
         h
         for h in public_hdrs
-        if h.short_path not in public_headers_to_remove.get(label, [])
+        if h.short_path not in public_headers_to_remove.get(ctx.label, [])
     ]
 
     # If Crubit is not enabled for this target, then disable header parsing by removing all headers
@@ -341,9 +340,11 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
     use_label_encoded_names_for_deps = ctx.attr._use_label_encoded_names_for_deps[BuildSettingInfo].value
     if use_label_encoded_names_for_deps:
-        legacy_mangling_allowlist = ctx.attr._legacy_mangling_allowlist[BuildSettingInfo].value
-        target_label_str = str(target.label)
-        if target_label_str in legacy_mangling_allowlist:
+        legacy_mangling_allowlist = [
+            Label(t)
+            for t in ctx.attr._legacy_mangling_allowlist[BuildSettingInfo].value
+        ]
+        if target.label in legacy_mangling_allowlist:
             use_label_encoded_names_for_deps = False
 
     # If this is a header target for a cc_public_library, we can't assign ownership of the headers
@@ -372,7 +373,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         # proto_library.
         return [ctx.rule.attr.deps[0][RustBindingsFromCcInfo]]
 
-    if str(ctx.label) in targets_to_remove:
+    if ctx.label in targets_to_remove:
         return []
 
     extra_cc_compilation_action_inputs = []
@@ -595,7 +596,7 @@ def _attr_predicate(ctx):
         # dependency via `public_headers_to_remove`.
         if (
             not ctx.rule.attr.aspect_hints.value and
-            str(ctx.rule.label) not in public_headers_to_remove and
+            ctx.rule.label not in public_headers_to_remove and
             any([
                 not src.name.endswith((".h", ".hh", ".hpp", ".hxx", ".inc"))
                 for src in ctx.rule.attr.srcs.value

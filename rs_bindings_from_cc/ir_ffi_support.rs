@@ -925,7 +925,12 @@ impl BazelLabel {
     pub const EMPTY: Self = Self(FfiString::EMPTY);
 
     pub fn as_str(&self) -> &str {
-        self.0.as_str()
+        let s = self.0.as_str();
+        if s.starts_with("@@//") {
+            &s[2..]
+        } else {
+            s
+        }
     }
 
     pub fn as_unknown_target_header(&self) -> Option<&str> {

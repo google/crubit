@@ -122,6 +122,8 @@ def encode_raw_string_as_crate_name(str):
     Returns:
         An encoded version of the input string.
     """
+    if str.startswith("@@//"):
+        str = str[2:]
     return _replace_all(str, _substitutions)
 
 def decode_crate_name_as_raw_string_for_testing(crate_name):

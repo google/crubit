@@ -16,11 +16,20 @@ load(
     "rustc_compile_action",
 )
 
+# buildifier: disable=bzl-visibility
+load(
+    "@rules_rust//rust/private:utils.bzl",
+    "can_use_metadata_for_pipelining",
+)
 load("@bazel_skylib//lib:structs.bzl", "structs")
 
 _extra_rustc_flags = [
     # b/540237308: Hide thunk symbols to avoid unnecessary GOT/PLT overhead.
     "-Zdefault-visibility=hidden",
+    "-A",
+    "unknown_lints",
+    "-A",
+    "mismatched_lifetime_syntaxes",
 ]
 
 def _version_parts(version):
@@ -106,6 +115,8 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
 
     rmeta = ctx.actions.declare_file(rmeta_name)
 
+    metadata_supports_pipelining = can_use_metadata_for_pipelining(toolchain, "rlib")
+
     # TODO(b/336367148): We should inherit almost nothing from `attr`, but for now, at least, we
     # should omit the rustc_flags.
     attr_args = structs.to_dict(attr)
@@ -142,6 +153,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             aliases = aliases,
             output = lib,
             metadata = rmeta,
+            metadata_supports_pipelining = metadata_supports_pipelining,
             edition = "2024",
             is_test = False,
             rustc_env = rustc_env,
@@ -149,6 +161,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             compile_data_targets = depset([]),
             owner = ctx.label,
         ),
+        extra_named_deps = extra_named_deps,
         rust_flags = remapped_flags + _extra_rustc_flags,
         output_hash = output_hash,
         include_coverage = include_coverage,

@@ -114,7 +114,10 @@ bzl_library(
 bzl_library(
     name = "compile_cc_bzl",
     srcs = ["compile_cc.bzl"],
-    deps = ["@rules_cc//cc/common"],
+    deps = [
+        ":generate_bindings_bzl",
+        "@rules_cc//cc/common",
+    ],
 )
 
 bzl_library(
@@ -235,7 +238,15 @@ toolchain_type(
 # they must be fully qualified (e.g. "//package:package").
 string_list_flag(
     name = "legacy_mangling_allowlist",
-    build_setting_default = [],
+    # TODO(b/541216309): clear this up.
+    build_setting_default = [
+        "//examples/cpp/virtual:base",
+        "//rs_bindings_from_cc/test/annotations:owned_ptr",
+        "//rs_bindings_from_cc/test/golden:nested_types_cc",
+        "//rs_bindings_from_cc/test/golden:trivial_type_cc",
+        "//rs_bindings_from_cc/test/golden:unsupported_cc",
+        "//rs_bindings_from_cc/test/proto:my_proto",
+    ],
     visibility = ["//visibility:public"],
 )
 

@@ -9,7 +9,7 @@ load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 
 # buildifier: disable=bzl-visibility
-load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
+load("@rules_rust//rust/private:providers.bzl", "CrateInfo", "DepVariantInfo")
 
 # buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:rustc.bzl", "AliasableDepInfo")
@@ -390,7 +390,15 @@ def generate_and_compile_bindings(
                 direct = [file for (file, _) in extra_rs_srcs],
                 transitive = [additional_rust_srcs],
             ),
-            extra_named_deps = depset(),
+            extra_named_deps = depset(
+                direct = [
+                    make_aliasable_dep_info(
+                        name = name,
+                        dep = dep_variant_info.crate_info,
+                    ),
+                ],
+                transitive = [extra_named_deps],
+            ),
         ),
         GeneratedBindingsInfo(
             cc_file = cc_output,
@@ -496,10 +504,12 @@ bindings_attrs = {
 }
 
 def make_aliasable_dep_info(name, dep):
-    """Constructs an AliasableDepInfo provider.
+    """Constructs an AliasableDepInfo provider with an immutable CrateInfo.
 
-    This is a helper to avoid loading AliasableDepInfo directly in other files,
-    which violates bzl-visibility rules.
+    This is a helper to avoid loading AliasableDepInfo directly in other files
+    (which violates bzl-visibility rules) and to omit mutable list/dict fields
+    from CrateInfo so the AliasableDepInfo is immediately immutable when added
+    to a depset under --incompatible_always_check_depset_elements.
 
     Args:
         name: The alias name.
@@ -508,4 +518,14 @@ def make_aliasable_dep_info(name, dep):
     Returns:
         An AliasableDepInfo provider.
     """
-    return AliasableDepInfo(name = name, dep = dep)
+    return AliasableDepInfo(
+        name = name,
+        dep = CrateInfo(
+            name = dep.name,
+            type = dep.type,
+            output = dep.output,
+            metadata = dep.metadata,
+            metadata_supports_pipelining = dep.metadata_supports_pipelining,
+            owner = dep.owner,
+        ),
+    )
