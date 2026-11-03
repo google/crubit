@@ -16,6 +16,6 @@ pub fn format_greeting(name: &str) -> String {
           return absl::StrCat("Hello, ", name);
         }
     };
-    let cpp_str = greet(name);
+    let cpp_str = ctor::emplace!(greet(name));
     cpp_str.to_string().expect("Valid UTF-8")
 }
