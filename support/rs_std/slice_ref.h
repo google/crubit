@@ -19,6 +19,11 @@
 #include "support/internal/cpp_config.h"
 #include "support/annotations.h"
 
+namespace crubit::internal {
+// See the `SliceRef(SliceRefDanglingTag, uintptr_t)` constructor.
+struct SliceRefDanglingTag {};
+}  // namespace crubit::internal
+
 namespace rs {
 
 namespace internal {
@@ -37,9 +42,21 @@ template <typename T>
 class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
     SliceRef final {
  public:
+  using element_type = T;
+
   // Creates a default `SliceRef` - one that represents an empty slice.
   // To mirror slices in Rust, the data pointer is not null.
   constexpr SliceRef() noexcept : dangling_ptr_(alignof(T)), size_(0) {}
+
+  // Only for generated bindings. Like `SliceRef()`, but takes `alignof(T)` as
+  // `align` instead of computing it, so `T` may be incomplete. Generated
+  // bindings use it to default-initialize struct fields whose element type is
+  // defined later in the header, e.g. because it refers back to the struct.
+  // They take `align` from rustc's layout, and check it against `alignof(T)`
+  // once `T` is complete.
+  constexpr SliceRef(::crubit::internal::SliceRefDanglingTag,
+                     uintptr_t align) noexcept
+      : dangling_ptr_(align), size_(0) {}
 
   // Primary constructor that initializes dangling_ptr_ for empty slices to
   // satisfy Rust's non-null slice invariant, or a ptr_ otherwise.
@@ -51,25 +68,43 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   }
 
   // Style waiver for implicit conversions granted in cl/662479273.
+  //
+  // This is a template, rather than taking `::std::span<T>`, so that copying
+  // or moving a `SliceRef` doesn't consider converting it to `::std::span<T>`.
+  // That would check whether `SliceRef<T>` is a range, which instantiates `T`
+  // (see the converting constructor templates below).
+  template <typename Span>
+    requires(::std::same_as<Span, ::std::span<T>>)
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr SliceRef(::std::span<T> span) noexcept
-      : SliceRef(span.data(), span.size()) {}
+  constexpr SliceRef(Span span) noexcept : SliceRef(span.data(), span.size()) {}
 
   // Implicit conversion from mutable SliceRef to const SliceRef.
+  //
+  // Like the `::std::span<T>` constructor above, this is a template so that
+  // copying or moving a `SliceRef<const T>` doesn't consider converting it to
+  // `SliceRef<T>`, which would check `SliceRef<T>`'s converting constructors.
+  template <typename U>
+    requires(::std::is_const_v<T> &&
+             ::std::same_as<U, ::std::remove_const_t<T>>)
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr SliceRef(const SliceRef<::std::remove_const_t<T>>& other) noexcept
-    requires(::std::is_const_v<T>)
+  constexpr SliceRef(const SliceRef<U>& other) noexcept
       : SliceRef(other.data(), other.size()) {}
 
   // Implicitly converts string-like types (literals, views) to SliceRef<const
   // T> in one conversion step.
   //
+  // Each converting constructor template below rejects `SliceRef` itself
+  // first. Constraints are checked in order, so copying or moving a `SliceRef`
+  // never checks the other constraints, which need `T` to be complete (e.g. via
+  // `sizeof(T)`, or ADL on `SliceRef<T>` in `std::ranges::begin`). Generated
+  // bindings copy `SliceRef<T>` struct fields before `T` is defined.
+  //
   // Style waiver for implicit conversions granted in cl/662479273.
   template <typename S>
-    requires(internal::ByteSliceTarget<T> &&
+    requires(!::std::same_as<::std::remove_cvref_t<S>, SliceRef> &&
+             internal::ByteSliceTarget<T> &&
              ::std::convertible_to<S, ::std::string_view> &&
-             ::std::is_trivially_copyable_v<::std::remove_cvref_t<S>> &&
-             !::std::same_as<::std::remove_cvref_t<S>, SliceRef>)
+             ::std::is_trivially_copyable_v<::std::remove_cvref_t<S>>)
   // Non-owning views (pointers, string views, and literals) are trivially
   // copyable. These do not need lifetime annotation.
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -78,10 +113,10 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
                  ::std::string_view(str).size()) {}
 
   template <typename S>
-    requires(internal::ByteSliceTarget<T> &&
+    requires(!::std::same_as<::std::remove_cvref_t<S>, SliceRef> &&
+             internal::ByteSliceTarget<T> &&
              ::std::convertible_to<const S&, ::std::string_view> &&
-             !::std::is_trivially_copyable_v<::std::remove_cvref_t<S>> &&
-             !::std::same_as<::std::remove_cvref_t<S>, SliceRef>)
+             !::std::is_trivially_copyable_v<::std::remove_cvref_t<S>>)
   // Owning containers (like ::std::string) are not trivially copyable. These
   // are marked with CRUBIT_LIFETIME_BOUND to prevent temporaries from outliving
   // the SliceRef. NOLINTNEXTLINE(google-explicit-constructor)
@@ -92,7 +127,8 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // Implicit conversion from views.
   template <typename View>
   // NOLINTNEXTLINE(build/c++20)
-    requires(!::std::is_same_v<::std::decay_t<View>, ::std::span<T>> &&
+    requires(!::std::same_as<::std::remove_cvref_t<View>, SliceRef> &&
+             !::std::is_same_v<::std::decay_t<View>, ::std::span<T>> &&
              ::std::convertible_to<View &&, ::std::span<T>> &&
              ::std::ranges::view<::std::decay_t<View>>)
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -103,7 +139,8 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // ::std::span).
   template <typename View>
   // NOLINTNEXTLINE(build/c++20)
-    requires(!::std::is_same_v<::std::decay_t<View>, ::std::span<T>> &&
+    requires(!::std::same_as<::std::remove_cvref_t<View>, SliceRef> &&
+             !::std::is_same_v<::std::decay_t<View>, ::std::span<T>> &&
              !::std::convertible_to<View &&, ::std::span<T>> &&
              ::std::constructible_from<::std::span<T>, View &&> &&
              ::std::ranges::view<::std::decay_t<View>>)
@@ -113,7 +150,8 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // Implicit conversion from non-view containers (only allowed if T is const).
   template <typename Container>
   // NOLINTNEXTLINE(build/c++20)
-    requires(::std::is_const_v<T> &&
+    requires(!::std::same_as<::std::remove_cvref_t<Container>, SliceRef> &&
+             ::std::is_const_v<T> &&
              ::std::convertible_to<Container &&, ::std::span<T>> &&
              !::std::ranges::view<::std::decay_t<Container>>)
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -128,7 +166,8 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // convertible to ::std::span.
   template <typename Container>
   // NOLINTNEXTLINE(build/c++20)
-    requires(((!::std::is_const_v<T> &&
+    requires(!::std::same_as<::std::remove_cvref_t<Container>, SliceRef> &&
+             ((!::std::is_const_v<T> &&
                ::std::constructible_from<::std::span<T>, Container &&>) ||
               (::std::is_const_v<T> &&
                ::std::constructible_from<::std::span<T>, Container &&> &&

@@ -279,6 +279,45 @@ TEST(ImplicitConversionTest, CallWithLiteral) {
   TakingSliceRefChar("hello");
 }
 
+// `SliceRef<T>` can be a member of a class before `T` is complete, as in
+// generated bindings for
+// `struct Dict { values: &'static [(&'static str, Value)] }` when `Value`
+// refers back to `Dict`.
+struct Incomplete;
+struct HoldsSliceOfIncomplete {
+  rs_std::SliceRef<const Incomplete> values{
+      crubit::internal::SliceRefDanglingTag{}, 8};
+};
+// Copying and moving `SliceRef<T>` (via the implicit special members of the
+// class) doesn't need `T` to be complete.
+static_assert(std::is_trivially_copyable_v<HoldsSliceOfIncomplete>);
+HoldsSliceOfIncomplete CopyThenMove(const HoldsSliceOfIncomplete& holder) {
+  HoldsSliceOfIncomplete copy = holder;
+  return copy;
+}
+struct alignas(8) Incomplete {
+  int64_t value;
+};
+
+TEST(SliceRefTest, MemberWithIncompleteElementType) {
+  HoldsSliceOfIncomplete holder;
+  EXPECT_EQ(CopyThenMove(holder).values.size(), 0);
+  EXPECT_THAT(CopyThenMove(holder).values.data(), IsNull());
+}
+
+TEST(SliceRefTest, DanglingTagConstructorMatchesDefault) {
+  using Slice = rs_std::SliceRef<const int64_t>;
+  constexpr Slice from_alignment(crubit::internal::SliceRefDanglingTag{},
+                                 alignof(int64_t));
+  EXPECT_EQ(from_alignment.size(), 0);
+  EXPECT_THAT(from_alignment.data(), IsNull());
+  // Rust sees the dangling data pointer too, so compare the whole
+  // representation, not just `data()` and `size()`.
+  using Bytes = std::array<std::byte, sizeof(Slice)>;
+  EXPECT_EQ(std::bit_cast<Bytes>(from_alignment),
+            std::bit_cast<Bytes>(Slice()));
+}
+
 void Fuzzer(std::vector<uint8_t> data) {
   const rs_std::SliceRef<const uint8_t> s = data;
   EXPECT_EQ(absl::Span<const uint8_t>(data), s.to_span());

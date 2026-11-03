@@ -6,6 +6,7 @@
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_BOX_H_
 
 #include <array>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -69,13 +70,19 @@ class CRUBIT_INTERNAL_RUST_TYPE("::alloc::boxed::Box<{}>", T) Box final {
     new (ptr_) T(::std::move(value).operator T());
   }
 
-  explicit Box(T&& value)
-    requires(::std::is_move_constructible_v<T>)
-      : Box(::std::in_place, ::std::move(value)) {}
+  // These are templates, rather than taking `T&&` and `const T&`, so that
+  // overload resolution with a `Box` argument (e.g. when declaring the copy
+  // constructor of a class with a `Box` member) fails at deduction, before it
+  // checks the `is_*_constructible_v<T>` constraints, which require `T` to be
+  // complete. Generated bindings declare `Box<T>` members before `T` is
+  // defined when `T` refers back to the class.
+  template <typename U>
+    requires(::std::same_as<U, T> && ::std::is_move_constructible_v<T>)
+  explicit Box(U&& value) : Box(::std::in_place, ::std::forward<U>(value)) {}
 
-  explicit Box(const T& value)
-    requires(::std::is_copy_constructible_v<T>)
-      : Box(::std::in_place, value) {}
+  template <typename U>
+    requires(::std::same_as<U, T> && ::std::is_copy_constructible_v<T>)
+  explicit Box(const U& value) : Box(::std::in_place, value) {}
 
   // Takes ownership of a pointer allocated by `crubit_alloc(sizeof(T),
   // alignof(T))`. SAFETY: The pointer must be non-null and valid for the

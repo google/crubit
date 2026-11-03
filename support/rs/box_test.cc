@@ -400,6 +400,31 @@ TEST(BoxTest, SlotIntegration) {
   EXPECT_EQ(tracker.use_count(), 1);
 }
 
+// A class can have a `Box<T>` member before `T` is complete, as in generated
+// bindings for `struct Neg { operand: Box<Expr> }` when `Expr` refers back to
+// `Neg`. Generated bindings store such fields in anonymous unions.
+struct Node;
+struct HoldsBoxOfIncomplete {
+  union {
+    Box<Node> child;
+  };
+  ~HoldsBoxOfIncomplete() {}
+};
+// Declaring the union's copy constructor checks `Box`'s constructors, which
+// must not need `Node` to be complete.
+static_assert(!::std::is_copy_constructible_v<HoldsBoxOfIncomplete>);
+struct Node {
+  int value;
+};
+
+TEST(BoxTest, ConstructFromValue) {
+  Box<Node> from_rvalue(Node{3});
+  EXPECT_EQ(from_rvalue->value, 3);
+  Node node{4};
+  Box<Node> from_lvalue(node);
+  EXPECT_EQ(from_lvalue->value, 4);
+}
+
 }  // namespace
 }  // namespace rs
 
