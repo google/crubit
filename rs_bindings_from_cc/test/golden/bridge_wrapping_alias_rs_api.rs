@@ -19,7 +19,31 @@ extern crate self as inline_cpp_generated_bindings;
 // error: class `TemplateType` could not be bound
 //   Class templates are not yet supported
 
-pub type AliasToInst = crate::__CcTemplateInst12TemplateTypeIiE;
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst12TemplateTypeIiE"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=TemplateType < int >
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct AliasToInst {
+    pub value: ::ffi_11::c_int,
+}
+impl !Send for AliasToInst {}
+impl !Sync for AliasToInst {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TemplateType < int >"),
+    crate::AliasToInst
+);
+
+impl Default for AliasToInst {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__2f8f40d6__ZN12TemplateTypeIiEC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // error: class `Bridge` could not be bound
 //   Class templates are not yet supported
@@ -32,35 +56,9 @@ pub type AliasToInst = crate::__CcTemplateInst12TemplateTypeIiE;
 /// the instantiation is bound and the bridge type wrapping it can be bridged
 /// too, as `Bridge<__CcTemplateInst12TemplateTypeIiE>`.
 #[inline(always)]
-pub fn bridge_alias_to_inst() -> crate::Bridge<crate::__CcTemplateInst12TemplateTypeIiE> {
+pub fn bridge_alias_to_inst() -> crate::Bridge<crate::AliasToInst> {
     unsafe {
-        ::crubit_support::bridge::unstable_return!(@crate::BridgeAbi(::crubit_support::bridge::transmute_abi::<crate::__CcTemplateInst12TemplateTypeIiE>()),crate::BridgeAbi<::crubit_support::bridge::TransmuteAbi<crate::__CcTemplateInst12TemplateTypeIiE>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z20bridge_alias_to_instv(__crubit_return_abi_buffer,); })
-    }
-}
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst12TemplateTypeIiE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TemplateType < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst12TemplateTypeIiE {
-    pub value: ::ffi_11::c_int,
-}
-impl !Send for __CcTemplateInst12TemplateTypeIiE {}
-impl !Sync for __CcTemplateInst12TemplateTypeIiE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("TemplateType < int >"),
-    crate::__CcTemplateInst12TemplateTypeIiE
-);
-
-impl Default for __CcTemplateInst12TemplateTypeIiE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__2f8f40d6__ZN12TemplateTypeIiEC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
+        ::crubit_support::bridge::unstable_return!(@crate::BridgeAbi(::crubit_support::bridge::transmute_abi::<crate::AliasToInst>()),crate::BridgeAbi<::crubit_support::bridge::TransmuteAbi<crate::AliasToInst>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z20bridge_alias_to_instv(__crubit_return_abi_buffer,); })
     }
 }
 
@@ -69,23 +67,26 @@ mod __crubit_mod_0;
 #[allow(unused_imports)]
 pub use __crubit_mod_0::*;
 
+#[doc(hidden)]
+pub type __CcTemplateInst12TemplateTypeIiE = crate::AliasToInst;
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___Z20bridge_alias_to_instv(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
-        );
         pub(crate) unsafe fn __rust_thunk__2f8f40d6__ZN12TemplateTypeIiEC1Ev(
             __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z20bridge_alias_to_instv(
+            __return_abi_buffer: *mut ::core::ffi::c_uchar,
         );
     }
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst12TemplateTypeIiE>() == 4);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst12TemplateTypeIiE>() == 4);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst12TemplateTypeIiE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst12TemplateTypeIiE: Drop);
-    assert!(::core::mem::offset_of!(crate::__CcTemplateInst12TemplateTypeIiE, value) == 0);
+    assert!(::core::mem::size_of::<crate::AliasToInst>() == 4);
+    assert!(::core::mem::align_of::<crate::AliasToInst>() == 4);
+    static_assertions::assert_impl_all!(crate::AliasToInst: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::AliasToInst: Drop);
+    assert!(::core::mem::offset_of!(crate::AliasToInst, value) == 0);
 };

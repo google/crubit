@@ -156,6 +156,7 @@ pub mod crubit {
 
 /// An empty implementation of absl::flat_hash_map to test code generation
 /// without the absl dependency.
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE"]
 #[repr(C)]

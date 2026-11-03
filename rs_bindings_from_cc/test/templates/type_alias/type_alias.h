@@ -27,4 +27,18 @@ class CRUBIT_ALWAYS_INSTANTIATE MyTemplate final {
 using MyTypeAlias = MyTemplate<int>;
 using OtherTypeAliasInSameTarget = MyTemplate<int>;
 
+namespace nested {
+// The struct for `MyTemplate<float>` is generated as `nested::NestedAlias`,
+// with this comment as its documentation.
+using NestedAlias = MyTemplate<float>;
+}  // namespace nested
+
+inline int GetValue(MyTemplate<int> s) { return s.value(); }
+inline int GetValueByRef(const MyTypeAlias& s) { return s.value(); }
+
+// `MyTemplate<double>` isn't named by any alias, so it keeps its mangled name.
+inline MyTemplate<double> MakeUnaliased(double value) {
+  return MyTemplate<double>::Create(value);
+}
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_TYPE_ALIAS_TYPE_ALIAS_H_

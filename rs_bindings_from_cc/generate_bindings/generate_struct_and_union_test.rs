@@ -41,7 +41,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
         quote! {
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >"]
-            pub struct __CcTemplateInst10MyTemplateIiE {
+            pub struct MyAliasOfTemplate {
                 pub field: ::ffi_11::c_int,
             }
         }
@@ -49,11 +49,11 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            impl __CcTemplateInst10MyTemplateIiE {
+            impl MyAliasOfTemplate {
                 #[doc = " Generated from: test/dependency_header.h;l=5"]
                 #[inline(always)]
                 pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> ::ffi_11::c_int {
-                    unsafe { self::cc_template_inst10_my_template_ii_e::GetValue(self) }
+                    unsafe { self::my_alias_of_template::GetValue(self) }
                 }
             }
         }
@@ -61,7 +61,8 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub type MyAliasOfTemplate = crate::__CcTemplateInst10MyTemplateIiE;
+            #[doc(hidden)]
+            pub type __CcTemplateInst10MyTemplateIiE = crate::MyAliasOfTemplate;
         }
     );
     assert_rs_matches!(
@@ -71,7 +72,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
                 ...
                 pub(crate) unsafe fn
                 ...<'a>(
-                    __this: ... Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>
+                    __this: ... Pin<&'a mut crate::MyAliasOfTemplate>
                 ) -> ::ffi_11::c_int;
                 ...
             } }
@@ -1692,11 +1693,13 @@ fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result
                 T getT();
             };
 
-            using Alias1 = MyStruct<int>;
-            using Alias2 = MyStruct<double>;
+            // We use functions to instantiate the templates without providing an eligible alias,
+            // so they retain their mangled names and we can test their ordering.
+            void use1(MyStruct<int>);
+            void use2(MyStruct<double>);
 
             namespace test_namespace_bindings {
-                using Alias3 = MyStruct<bool>;
+                void use3(MyStruct<bool>);
             }
             "#,
     )?;
@@ -1762,13 +1765,14 @@ fn test_implicit_template_specialization_namespace_qualifier() -> Result<()> {
             ...
             pub mod test_namespace_bindings {
                 ...
-                pub type MyTypeAlias = crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
+                pub struct MyTypeAlias {
+                    pub value_: ::ffi_11::c_int,
+                }
                 ...
             }
             ...
-            pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-                pub value_: ::ffi_11::c_int,
-            }
+            #[doc(hidden)]
+            pub type __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE = crate::test_namespace_bindings::MyTypeAlias;
             ...
         }
     );

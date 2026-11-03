@@ -398,6 +398,7 @@ pub mod test {
 
 // namespace test
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstSt16initializer_listIiE"]
 #[repr(C, align(8))]
@@ -498,6 +499,7 @@ pub mod cc_template_inst_st16initializer_list_ii_e {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE"]
 #[repr(C, align(8))]
@@ -594,6 +596,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ipkn4test10_
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE"]
 #[repr(C, align(8))]
@@ -674,6 +677,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ip_ki_eeee {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE"]
 #[repr(C, align(8))]
@@ -764,6 +768,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ipn4test10_n
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE"]
 #[repr(C, align(8))]
@@ -844,6 +849,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_i_pi_eeee {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE"]
 #[repr(C, align(8))]
@@ -952,6 +958,7 @@ impl ::core::ops::Index<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPKN4test
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPKiEE"]
 #[repr(C, align(8))]
@@ -1056,6 +1063,7 @@ impl ::core::ops::Index<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE"]
 #[repr(C, align(8))]
@@ -1149,6 +1157,7 @@ impl ::core::ops::SubAssign<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPN4t
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPiEE"]
 #[repr(C, align(8))]
@@ -1238,6 +1247,7 @@ impl ::core::ops::SubAssign<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPiEE
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE"]
 #[repr(C, align(8))]
@@ -1568,6 +1578,7 @@ pub mod cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm184467440737095
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE"]
 #[repr(C, align(8))]
@@ -1898,6 +1909,7 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE"]
 #[repr(C, align(8))]
@@ -2205,6 +2217,7 @@ pub mod cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm1844674407370955
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE"]
 #[repr(C, align(8))]

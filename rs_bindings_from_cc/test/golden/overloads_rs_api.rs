@@ -126,6 +126,7 @@ pub mod foo {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst6SizeofIfE"]
 #[repr(C)]
@@ -155,6 +156,7 @@ impl Default for __CcTemplateInst6SizeofIfE {
 // error: global variable `Sizeof<float>::size` could not be bound
 //   static data members of class template specializations are not supported
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst6SizeofIiE"]
 #[repr(C)]

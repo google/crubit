@@ -789,41 +789,40 @@ pub mod crubit {
         // error: class `crubit::test::ThreadAffineTemplate` could not be bound
         //   Class templates are not yet supported
 
-        pub type ThreadAffineTemplateInt =
-            crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE;
+        /// Neither: annotation on a class template applies to its instantiations.
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE"]
+        #[repr(C)]
+        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadAffineTemplate < int >
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        pub struct ThreadAffineTemplateInt {
+            pub x: ::ffi_11::c_int,
+        }
+        impl !Send for ThreadAffineTemplateInt {}
+        impl !Sync for ThreadAffineTemplateInt {}
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ThreadAffineTemplate < int >"),
+            crate::crubit::test::ThreadAffineTemplateInt
+        );
+
+        impl Default for ThreadAffineTemplateInt {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk__dcd8546c__ZN6crubit4test20ThreadAffineTemplateIiEC1Ev(&raw mut tmp as*mut _);
+                    tmp.assume_init()
+                }
+            }
+        }
     }
 }
 
 // namespace crubit::test
 
-/// Neither: annotation on a class template applies to its instantiations.
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadAffineTemplate < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE {
-    pub x: ::ffi_11::c_int,
-}
-impl !Send for __CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE {}
-impl !Sync for __CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("crubit :: test :: ThreadAffineTemplate < int >"),
-    crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE
-);
-
-impl Default for __CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__dcd8546c__ZN6crubit4test20ThreadAffineTemplateIiEC1Ev(
-                &raw mut tmp as *mut _,
-            );
-            tmp.assume_init()
-        }
-    }
-}
+#[doc(hidden)]
+pub type __CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE =
+    crate::crubit::test::ThreadAffineTemplateInt;
 
 mod detail {
     #[allow(unused_imports)]
@@ -1015,18 +1014,9 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::crubit::test::MemberThreadAffineTag: Drop);
     assert!(::core::mem::offset_of!(crate::crubit::test::MemberThreadAffineTag, tag) == 0);
     assert!(::core::mem::offset_of!(crate::crubit::test::MemberThreadAffineTag, x) == 4);
-    assert!(
-        ::core::mem::size_of::<crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE>()
-            == 4
-    );
-    assert!(
-        ::core::mem::align_of::<crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE>()
-            == 4
-    );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE: Drop,Send,Sync);
-    assert!(
-        ::core::mem::offset_of!(crate::__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE, x)
-            == 0
-    );
+    assert!(::core::mem::size_of::<crate::crubit::test::ThreadAffineTemplateInt>() == 4);
+    assert!(::core::mem::align_of::<crate::crubit::test::ThreadAffineTemplateInt>() == 4);
+    static_assertions::assert_impl_all!(crate::crubit::test::ThreadAffineTemplateInt: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::ThreadAffineTemplateInt: Drop,Send,Sync);
+    assert!(::core::mem::offset_of!(crate::crubit::test::ThreadAffineTemplateInt, x) == 0);
 };

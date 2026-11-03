@@ -546,6 +546,7 @@ pub fn generated_items_to_tokens<'db>(
             GeneratedItem::Record(record_item) => {
                 let Record {
                     doc_comment_attr,
+                    doc_hidden,
                     derive_attr,
                     recursively_pinned_attr,
                     must_use_attr,
@@ -730,8 +731,11 @@ pub fn generated_items_to_tokens<'db>(
                     None
                 };
 
+                let doc_hidden_attr = doc_hidden.then(|| quote! { #[doc(hidden)] });
+
                 quote! {
                     #doc_comment_attr
+                    #doc_hidden_attr
                     #derive_attr
                     #recursively_pinned_attr
                     #must_use_attr
@@ -1105,6 +1109,8 @@ pub enum SendSyncImpl {
 #[derive(Clone, Debug)]
 pub struct Record {
     pub doc_comment_attr: Option<DocCommentAttr>,
+    /// Whether to hide the struct from the documentation, because its name is mangled.
+    pub doc_hidden: bool,
     pub derive_attr: DeriveAttr,
     pub recursively_pinned_attr: Option<RecursivelyPinnedAttr>,
     pub must_use_attr: Option<MustUseAttr>,

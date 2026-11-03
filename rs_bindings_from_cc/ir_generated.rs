@@ -146,12 +146,14 @@ macro_rules! __proto_call_setter {
     ($msg:ident, line, $($arg:tt)*) => { $msg.set_line($($arg)*) };
     ($msg:ident, mangled_cc_name, $($arg:tt)*) => { $msg.set_mangled_cc_name($($arg)*) };
     ($msg:ident, mangled_name, $($arg:tt)*) => { $msg.set_mangled_name($($arg)*) };
+    ($msg:ident, mangled_rs_name, $($arg:tt)*) => { $msg.set_mangled_rs_name($($arg)*) };
     ($msg:ident, message, $($arg:tt)*) => { $msg.set_message($($arg)*) };
     ($msg:ident, mod_name, $($arg:tt)*) => { $msg.set_mod_name($($arg)*) };
     ($msg:ident, move_constructor, $($arg:tt)*) => { $msg.set_move_constructor($($arg)*) };
     ($msg:ident, must_bind, $($arg:tt)*) => { $msg.set_must_bind($($arg)*) };
     ($msg:ident, name, $($arg:tt)*) => { $msg.set_name($($arg)*) };
     ($msg:ident, name_range, $($arg:tt)*) => { $msg.set_name_range($($arg)*) };
+    ($msg:ident, names_template_instantiation, $($arg:tt)*) => { $msg.set_names_template_instantiation($($arg)*) };
     ($msg:ident, namespace_decl, $($arg:tt)*) => { $msg.set_namespace_decl($($arg)*) };
     ($msg:ident, nodiscard, $($arg:tt)*) => { $msg.set_nodiscard($($arg)*) };
     ($msg:ident, non_null, $($arg:tt)*) => { $msg.set_non_null($($arg)*) };
@@ -2714,6 +2716,7 @@ mod __defs {
         pub record_type: RecordType,
         pub is_aggregate: bool,
         pub is_canonical_alias: bool,
+        pub mangled_rs_name: FfiString,
         pub enclosing_item_id: ItemId,
         pub must_bind: bool,
         pub overloads_operator_delete: bool,
@@ -2764,6 +2767,7 @@ mod __defs {
                 .field("record_type", &self.record_type)
                 .field("is_aggregate", &self.is_aggregate)
                 .field("is_canonical_alias", &self.is_canonical_alias)
+                .field("mangled_rs_name", &self.mangled_rs_name())
                 .field("enclosing_item_id", &self.enclosing_item_id())
                 .field("must_bind", &self.must_bind)
                 .field("overloads_operator_delete", &self.overloads_operator_delete)
@@ -2825,6 +2829,7 @@ mod __defs {
             record_type: RecordType::EMPTY,
             is_aggregate: false,
             is_canonical_alias: false,
+            mangled_rs_name: FfiString::EMPTY,
             enclosing_item_id: ItemId::EMPTY,
             must_bind: false,
             overloads_operator_delete: false,
@@ -2991,11 +2996,21 @@ mod __defs {
         pub fn is_canonical_alias(&self) -> bool {
             self.is_canonical_alias
         }
-        pub fn has_enclosing_item_id(&self) -> bool {
+        pub fn has_mangled_rs_name(&self) -> bool {
             (self.has_bits & 0x100) != 0
         }
-        pub fn clear_enclosing_item_id(&mut self) {
+        pub fn clear_mangled_rs_name(&mut self) {
             self.has_bits &= !0x100;
+            self.mangled_rs_name = FfiString::EMPTY;
+        }
+        pub fn mangled_rs_name(&self) -> Option<&str> {
+            self.has_mangled_rs_name().then(|| self.mangled_rs_name.as_str())
+        }
+        pub fn has_enclosing_item_id(&self) -> bool {
+            (self.has_bits & 0x200) != 0
+        }
+        pub fn clear_enclosing_item_id(&mut self) {
+            self.has_bits &= !0x200;
             self.enclosing_item_id = ItemId::EMPTY;
         }
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
@@ -3026,10 +3041,10 @@ mod __defs {
             self.detected_formatter
         }
         pub fn has_deprecated(&self) -> bool {
-            (self.has_bits & 0x200) != 0
+            (self.has_bits & 0x400) != 0
         }
         pub fn clear_deprecated(&mut self) {
-            self.has_bits &= !0x200;
+            self.has_bits &= !0x400;
             self.deprecated = FfiString::EMPTY;
         }
         pub fn deprecated(&self) -> Option<&str> {
@@ -3172,8 +3187,13 @@ mod __defs {
             self.is_canonical_alias = val;
             &mut self.is_canonical_alias
         }
-        pub fn set_enclosing_item_id(&mut self, val: ItemId) -> &mut ItemId {
+        pub fn set_mangled_rs_name(&mut self, val: FfiString) -> &mut FfiString {
             self.has_bits |= 0x100;
+            self.mangled_rs_name = val;
+            &mut self.mangled_rs_name
+        }
+        pub fn set_enclosing_item_id(&mut self, val: ItemId) -> &mut ItemId {
+            self.has_bits |= 0x200;
             self.enclosing_item_id = val;
             &mut self.enclosing_item_id
         }
@@ -3209,7 +3229,7 @@ mod __defs {
             &mut self.detected_formatter
         }
         pub fn set_deprecated(&mut self, val: FfiString) -> &mut FfiString {
-            self.has_bits |= 0x200;
+            self.has_bits |= 0x400;
             self.deprecated = val;
             &mut self.deprecated
         }
@@ -3227,7 +3247,7 @@ mod __defs {
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<Record>() == 1096);
+        assert!(core::mem::size_of::<Record>() == 1112);
         assert!(core::mem::align_of::<Record>() == 8);
         assert!(core::mem::offset_of!(Record, rs_name) == 8);
         assert!(core::mem::offset_of!(Record, cc_name) == 24);
@@ -3261,19 +3281,20 @@ mod __defs {
         assert!(core::mem::offset_of!(Record, record_type) == 992);
         assert!(core::mem::offset_of!(Record, is_aggregate) == 996);
         assert!(core::mem::offset_of!(Record, is_canonical_alias) == 997);
-        assert!(core::mem::offset_of!(Record, enclosing_item_id) == 1000);
-        assert!(core::mem::offset_of!(Record, must_bind) == 1008);
-        assert!(core::mem::offset_of!(Record, overloads_operator_delete) == 1009);
-        assert!(core::mem::offset_of!(Record, has_private_or_deleted_operator_delete) == 1010);
-        assert!(core::mem::offset_of!(Record, lifetime_inputs) == 1016);
-        assert!(core::mem::offset_of!(Record, impl_debug) == 1040);
-        assert!(core::mem::offset_of!(Record, has_private_pointer_or_reference_fields) == 1041);
-        assert!(core::mem::offset_of!(Record, has_template_argument_lifetime) == 1042);
-        assert!(core::mem::offset_of!(Record, detected_formatter) == 1043);
-        assert!(core::mem::offset_of!(Record, deprecated) == 1048);
-        assert!(core::mem::offset_of!(Record, is_thread_safe) == 1064);
-        assert!(core::mem::offset_of!(Record, is_explicit_class_template_instantiation_definition) == 1065);
-        assert!(core::mem::offset_of!(Record, children) == 1072);
+        assert!(core::mem::offset_of!(Record, mangled_rs_name) == 1000);
+        assert!(core::mem::offset_of!(Record, enclosing_item_id) == 1016);
+        assert!(core::mem::offset_of!(Record, must_bind) == 1024);
+        assert!(core::mem::offset_of!(Record, overloads_operator_delete) == 1025);
+        assert!(core::mem::offset_of!(Record, has_private_or_deleted_operator_delete) == 1026);
+        assert!(core::mem::offset_of!(Record, lifetime_inputs) == 1032);
+        assert!(core::mem::offset_of!(Record, impl_debug) == 1056);
+        assert!(core::mem::offset_of!(Record, has_private_pointer_or_reference_fields) == 1057);
+        assert!(core::mem::offset_of!(Record, has_template_argument_lifetime) == 1058);
+        assert!(core::mem::offset_of!(Record, detected_formatter) == 1059);
+        assert!(core::mem::offset_of!(Record, deprecated) == 1064);
+        assert!(core::mem::offset_of!(Record, is_thread_safe) == 1080);
+        assert!(core::mem::offset_of!(Record, is_explicit_class_template_instantiation_definition) == 1081);
+        assert!(core::mem::offset_of!(Record, children) == 1088);
     };
 
     #[repr(C)]
@@ -4037,6 +4058,7 @@ mod __defs {
         pub underlying_type: CcType,
         pub decl_loc: DeclLocation,
         pub enclosing_item_id: ItemId,
+        pub names_template_instantiation: bool,
         pub must_bind: bool,
         pub deprecated: FfiString,
         pub lifetime_inputs: FfiVec<FfiString>,
@@ -4055,6 +4077,7 @@ mod __defs {
                 .field("underlying_type", &self.underlying_type)
                 .field("decl_loc", &self.decl_loc())
                 .field("enclosing_item_id", &self.enclosing_item_id())
+                .field("names_template_instantiation", &self.names_template_instantiation)
                 .field("must_bind", &self.must_bind)
                 .field("deprecated", &self.deprecated())
                 .field("lifetime_inputs", &self.lifetime_inputs)
@@ -4084,6 +4107,7 @@ mod __defs {
             underlying_type: CcType::EMPTY,
             decl_loc: DeclLocation::EMPTY,
             enclosing_item_id: ItemId::EMPTY,
+            names_template_instantiation: false,
             must_bind: false,
             deprecated: FfiString::EMPTY,
             lifetime_inputs: FfiVec::EMPTY,
@@ -4146,6 +4170,9 @@ mod __defs {
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
             self.has_enclosing_item_id().then(|| self.enclosing_item_id)
         }
+        pub fn names_template_instantiation(&self) -> bool {
+            self.names_template_instantiation
+        }
         pub fn must_bind(&self) -> bool {
             self.must_bind
         }
@@ -4206,6 +4233,10 @@ mod __defs {
             self.enclosing_item_id = val;
             &mut self.enclosing_item_id
         }
+        pub fn set_names_template_instantiation(&mut self, val: bool) -> &mut bool {
+            self.names_template_instantiation = val;
+            &mut self.names_template_instantiation
+        }
         pub fn set_must_bind(&mut self, val: bool) -> &mut bool {
             self.must_bind = val;
             &mut self.must_bind
@@ -4233,7 +4264,8 @@ mod __defs {
         assert!(core::mem::offset_of!(TypeAlias, underlying_type) == 112);
         assert!(core::mem::offset_of!(TypeAlias, decl_loc) == 248);
         assert!(core::mem::offset_of!(TypeAlias, enclosing_item_id) == 312);
-        assert!(core::mem::offset_of!(TypeAlias, must_bind) == 320);
+        assert!(core::mem::offset_of!(TypeAlias, names_template_instantiation) == 320);
+        assert!(core::mem::offset_of!(TypeAlias, must_bind) == 321);
         assert!(core::mem::offset_of!(TypeAlias, deprecated) == 328);
         assert!(core::mem::offset_of!(TypeAlias, lifetime_inputs) == 344);
     };
