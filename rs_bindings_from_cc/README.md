@@ -83,7 +83,7 @@ If possible follow these recommendations:
     code against the checked-in files) in
     [`test/golden`](rs_bindings_from_cc/test/golden/).
     *   Run
-        [`rs_bindings_from_cc/test/golden/update.sh`](rs_bindings_from_cc/test/golden/update.sh)
+        [`common/golden_update.sh`](common/golden_update.sh)
         to regenerate checked-in files.
 *   Write full executable end-to-end tests (verifying that interop tools and
     Bazel rules generate outputs that can be built and executed) as small
