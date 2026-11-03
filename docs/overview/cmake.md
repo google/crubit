@@ -13,7 +13,9 @@ Crubit's Corrosion support is in
 reviewed. <!-- TODO(b/574505417): Point at upstream Corrosion once merged. -->
 
 Rust bindings for C++ libraries (`rust_api_from_cpp`) aren't available in CMake
-yet. <!-- TODO(b/539627008) -->
+yet. <!-- TODO(b/539627008) --> You can build the `rs_bindings_from_cc` tool
+itself with CMake, though; see
+[Building with CMake](cargo_build.md#building-with-cmake).
 
 There are two example projects, and CI builds both on every change to Crubit:
 
