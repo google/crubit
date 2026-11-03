@@ -173,3 +173,75 @@ fn test_packed_struct_with_non_trivially_copyable_field_debug() {
     let s = PackedWithNonTriviallyCopyableField::default();
     expect_eq!(format!("{s:?}"), "PackedWithNonTriviallyCopyableField { .. }");
 }
+
+#[gtest]
+fn test_packed_struct_with_unpacked_non_pod_field() {
+    expect_true!(item_exists::type_exists!(packed::NonTriviallyCopyableAlign4));
+    expect_true!(item_exists::type_exists!(packed::Cxx11PodButNotPodForLayout));
+    #[cfg(not(any(target_os = "macos", target_os = "ios", target_env = "msvc")))]
+    {
+        expect_false!(item_exists::type_exists!(packed::PackedWithNonTriviallyCopyableAlign4Field));
+        expect_false!(item_exists::type_exists!(packed::PackedWithCxx11PodButNotPodForLayoutField));
+    }
+    #[cfg(any(target_os = "macos", target_os = "ios", target_env = "msvc"))]
+    {
+        expect_true!(item_exists::type_exists!(packed::PackedWithNonTriviallyCopyableAlign4Field));
+        expect_true!(item_exists::type_exists!(packed::PackedWithCxx11PodButNotPodForLayoutField));
+    }
+}
+
+#[gtest]
+fn test_packed_struct_with_pod_for_layout_defaulted_ctor_field() {
+    expect_eq!(
+        size_of::<PackedWithPodForLayoutDefaultedCtorField>(),
+        kPackedPodForLayoutDefaultedCtorSize
+    );
+    expect_eq!(
+        align_of::<PackedWithPodForLayoutDefaultedCtorField>(),
+        kPackedPodForLayoutDefaultedCtorAlignment
+    );
+    expect_eq!(
+        offset_of!(PackedWithPodForLayoutDefaultedCtorField, a),
+        kPackedPodForLayoutDefaultedCtorOffsetA
+    );
+    expect_eq!(
+        offset_of!(PackedWithPodForLayoutDefaultedCtorField, b),
+        kPackedPodForLayoutDefaultedCtorOffsetB
+    );
+}
+
+#[gtest]
+fn test_pragma_pack_2_with_non_pod_field() {
+    expect_eq!(
+        size_of::<PragmaPacked2WithNonTriviallyCopyableAlign4Field>(),
+        kPragmaPacked2NonPodSize
+    );
+    expect_eq!(
+        align_of::<PragmaPacked2WithNonTriviallyCopyableAlign4Field>(),
+        kPragmaPacked2NonPodAlignment
+    );
+    expect_eq!(
+        offset_of!(PragmaPacked2WithNonTriviallyCopyableAlign4Field, a),
+        kPragmaPacked2NonPodOffsetA
+    );
+    expect_eq!(
+        offset_of!(PragmaPacked2WithNonTriviallyCopyableAlign4Field, b),
+        kPragmaPacked2NonPodOffsetB
+    );
+}
+
+#[gtest]
+fn test_outer_packed_with_inner_packed_non_pod_field() {
+    expect_eq!(
+        size_of::<OuterPackedWithInnerPackedNonPod>(),
+        kOuterPackedWithInnerPackedNonPodSize
+    );
+    expect_eq!(
+        align_of::<OuterPackedWithInnerPackedNonPod>(),
+        kOuterPackedWithInnerPackedNonPodAlignment
+    );
+    expect_eq!(
+        offset_of!(OuterPackedWithInnerPackedNonPod, inner),
+        kOuterPackedWithInnerPackedNonPodOffsetInner
+    );
+}

@@ -1419,8 +1419,33 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
         FormattedError::Static("Dependent records are not supported"));
   }
 
-  if (record_decl->isCompleteDefinition() &&
-      std::any_of(record_decl->field_begin(), record_decl->field_end(),
+  // With precompiled header modules, the definition may come from a module
+  // that was loaded (because the include scanner found an `#include` of its
+  // header), but that isn't imported by the headers of the current target.
+  // Such a definition is not reachable, and the generated C++ code can't use
+  // it, so the record is treated as incomplete. Without modules, every
+  // definition is reachable.
+  if (!record_decl->isCompleteDefinition() ||
+      !ictx_.sema_.hasReachableDefinition(record_decl)) {
+    ictx_.MarkAsSuccessfullyImported(*record_decl);
+    auto item = std::make_unique<ir_proto::Item>();
+    auto* incomplete = item->mutable_incomplete_record();
+    incomplete->mutable_cc_name()->set_identifier(cc_name);
+    incomplete->mutable_rs_name()->set_identifier(rs_name);
+    incomplete->set_unique_name(ictx_.GetUniqueName(*record_decl));
+    incomplete->set_id(ictx_.GenerateItemId(*record_decl).value());
+    incomplete->set_owning_target(owning_target.value());
+    if (unknown_attr->has_value()) {
+      incomplete->set_unknown_attr(std::move(**unknown_attr));
+    }
+    incomplete->set_record_type(*record_type);
+    if (enclosing_item_id.has_value()) {
+      incomplete->set_enclosing_item_id(enclosing_item_id->value());
+    }
+    return item;
+  }
+
+  if (std::any_of(record_decl->field_begin(), record_decl->field_end(),
                   [](const clang::FieldDecl* field_decl) {
                     return crubit::HasAttr<clang::PackedAttr>(field_decl);
                   })) {
@@ -1445,33 +1470,37 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
             "packed alignment are not supported"));
       }
     }
+
+    if (ictx_.ctx_.getASTRecordLayout(record_decl)
+            .getAlignment()
+            .getQuantity() > *pack) {
+      // Under the Itanium C++ ABI, `__attribute__((packed))` does not pack
+      // fields that are non-POD for the purpose of layout (`-Wpacked-non-pod`),
+      // raising the record's alignment above `*pack`. Rust's
+      // `#[repr(C, packed(N))]` caps alignment at `N` and cannot also carry
+      // `#[repr(align)]`, so such a layout cannot be represented in Rust.
+      if (crubit::HasAttr<clang::PackedAttr>(record_decl) &&
+          absl::c_any_of(record_decl->fields(), [&](const clang::FieldDecl* f) {
+            if (f->isBitField()) return false;
+            const clang::CXXRecordDecl* field_class =
+                f->getType()->getAsCXXRecordDecl();
+            return field_class != nullptr && field_class->hasDefinition() &&
+                   !field_class->isPOD() &&
+                   !field_class->hasAttr<clang::PackedAttr>() &&
+                   ictx_.ctx_.getTypeAlignInChars(f->getType()).getQuantity() >
+                       *pack;
+          })) {
+        return unsupported(FormattedError::Static(
+            "Records with packed layout and non-POD fields with alignment "
+            "greater than the packing alignment are not supported"));
+      }
+      return unsupported(FormattedError::Static(
+          "Records with packed layout and alignment greater than packed "
+          "alignment are not supported"));
+    }
   }
 
   ictx_.MarkAsSuccessfullyImported(*record_decl);
-  // With precompiled header modules, the definition may come from a module
-  // that was loaded (because the include scanner found an `#include` of its
-  // header), but that isn't imported by the headers of the current target.
-  // Such a definition is not reachable, and the generated C++ code can't use
-  // it, so the record is treated as incomplete. Without modules, every
-  // definition is reachable.
-  if (!record_decl->isCompleteDefinition() ||
-      !ictx_.sema_.hasReachableDefinition(record_decl)) {
-    auto item = std::make_unique<ir_proto::Item>();
-    auto* incomplete = item->mutable_incomplete_record();
-    incomplete->mutable_cc_name()->set_identifier(cc_name);
-    incomplete->mutable_rs_name()->set_identifier(rs_name);
-    incomplete->set_unique_name(ictx_.GetUniqueName(*record_decl));
-    incomplete->set_id(ictx_.GenerateItemId(*record_decl).value());
-    incomplete->set_owning_target(owning_target.value());
-    if (unknown_attr->has_value()) {
-      incomplete->set_unknown_attr(std::move(**unknown_attr));
-    }
-    incomplete->set_record_type(*record_type);
-    if (enclosing_item_id.has_value()) {
-      incomplete->set_enclosing_item_id(enclosing_item_id->value());
-    }
-    return item;
-  }
 
   ictx_.sema_.ForceDeclarationOfImplicitMembers(record_decl);
 

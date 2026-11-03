@@ -238,6 +238,10 @@ Some packed structs don't get bindings:
 *   Structs with `__attribute__((packed))` on individual fields.
 *   Packed structs with an explicit alignment (such as `alignas` or
     `__attribute__((aligned(N)))`) greater than the packing alignment.
+*   `__attribute__((packed))` structs with a field that isn't POD for the
+    purpose of layout and has an alignment greater than 1, on targets where
+    Clang refuses to pack such fields (`-Wpacked-non-pod`). (`#pragma pack(N)`
+    still packs non-POD fields.)
 
 A field of a packed struct whose Rust type has `#[repr(align(N))]`, directly or
 in one of its own fields, becomes a private [opaque blob](#opaque_fields),
@@ -245,11 +249,6 @@ because Rust doesn't allow such types in packed structs. A struct type gets
 `#[repr(align(N))]` if, for example, it has an explicit alignment, or it has an
 alignment greater than 1 and has bitfields or fields whose type doesn't have
 bindings.
-
-Note: Clang doesn't pack fields whose type isn't POD for the purpose of layout
-(for example, a type with a user-defined copy constructor) and warns about this
-with `-Wpacked-non-pod`. If such a field has an alignment greater than 1, the
-Rust bindings won't compile, because the Rust struct packs every field.
 
 ### Using fields of packed structs {#packed_fields}
 

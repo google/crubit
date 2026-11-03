@@ -21,6 +21,9 @@ rust_api_from_cpp(
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
+    proc_macro_deps = [
+        "//common:item_exists",
+    ],
     deps = [
         ":packed_rust",
         "@crate_index//:googletest",

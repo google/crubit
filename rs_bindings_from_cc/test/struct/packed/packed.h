@@ -193,13 +193,13 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI NonTriviallyCopyable {
 
 // Packed struct holding a field that is not trivially copyable.
 //
-// Note: Clang does not pack fields that are non-POD for the purposes of layout.
-// `NonTriviallyCopyable` has an alignment of 1, so this doesn't affect the
-// layout. If `NonTriviallyCopyable` held an `int` instead of a `uint8_t`,
-// this would fail to compile because of `-Werror -Wpacked-non-pod`. Even with
-// `-Wpacked-non-pod` ignored, the Rust bindings would fail to compile because
-// of a size mismatch as clang would put `b` at a 4-byte alignment (3 bytes of
-// padding after `a`), which the Rust bindings would not account for.
+// Note: Under the Itanium C++ ABI (except on Darwin), Clang ignores
+// `__attribute__((packed))` on fields that are non-POD for the purpose of
+// layout (`-Wpacked-non-pod`). `NonTriviallyCopyable` has an alignment of 1, so
+// this doesn't affect the layout and the struct still receives bindings. When
+// such a field has alignment > 1 (see
+// `PackedWithNonTriviallyCopyableAlign4Field` below), Crubit omits bindings for
+// the struct rather than emitting a mismatched `#[repr(C, packed)]` layout.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpacked-non-pod"
 struct ABSL_ATTRIBUTE_PACKED ABSL_ATTRIBUTE_TRIVIAL_ABI
@@ -208,6 +208,129 @@ struct ABSL_ATTRIBUTE_PACKED ABSL_ATTRIBUTE_TRIVIAL_ABI
   NonTriviallyCopyable b;
 };
 #pragma clang diagnostic pop
+
+// A struct that is not POD for the purpose of layout (has a user-defined copy
+// constructor) and has alignment 4.
+struct ABSL_ATTRIBUTE_TRIVIAL_ABI NonTriviallyCopyableAlign4 {
+  NonTriviallyCopyableAlign4() = default;
+  // NOLINTNEXTLINE(modernize-use-equals-default)
+  NonTriviallyCopyableAlign4(const NonTriviallyCopyableAlign4& other)
+      : x(other.x) {}
+  // NOLINTNEXTLINE(modernize-use-equals-default)
+  NonTriviallyCopyableAlign4& operator=(
+      const NonTriviallyCopyableAlign4& other) {
+    x = other.x;
+    return *this;
+  }
+  int32_t x;
+};
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpacked-non-pod"
+struct ABSL_ATTRIBUTE_PACKED ABSL_ATTRIBUTE_TRIVIAL_ABI
+    PackedWithNonTriviallyCopyableAlign4Field {
+  uint8_t a;
+  NonTriviallyCopyableAlign4 b;
+};
+#pragma clang diagnostic pop
+
+// C++11 POD (trivial and standard-layout), but NOT POD for the purpose of
+// layout under the Itanium C++ ABI because it has a private non-static data
+// member (`CXXRecordDecl::isPOD()` is false).
+class Cxx11PodButNotPodForLayout {
+ public:
+  int32_t get() const { return x_; }
+
+ private:
+  int32_t x_;
+};
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpacked-non-pod"
+struct ABSL_ATTRIBUTE_PACKED PackedWithCxx11PodButNotPodForLayoutField {
+  uint8_t a;
+  Cxx11PodButNotPodForLayout b;
+};
+#pragma clang diagnostic pop
+
+// Has a user-declared defaulted constructor (so not a C++98 POD or C++20
+// aggregate), but IS POD for the purpose of layout under Clang's Itanium ABI
+// (`CXXRecordDecl::isPOD()` is true), so `__attribute__((packed))` packs it and
+// Crubit generates bindings.
+struct PodForLayoutWithDefaultedCtor {
+  PodForLayoutWithDefaultedCtor() = default;
+  int32_t x;
+};
+
+struct ABSL_ATTRIBUTE_PACKED PackedWithPodForLayoutDefaultedCtorField {
+  uint8_t a;
+  PodForLayoutWithDefaultedCtor b;
+};
+
+inline constexpr size_t kPackedPodForLayoutDefaultedCtorSize = 5;
+inline constexpr size_t kPackedPodForLayoutDefaultedCtorAlignment = 1;
+inline constexpr size_t kPackedPodForLayoutDefaultedCtorOffsetA = 0;
+inline constexpr size_t kPackedPodForLayoutDefaultedCtorOffsetB = 1;
+
+static_assert(sizeof(PackedWithPodForLayoutDefaultedCtorField) ==
+              kPackedPodForLayoutDefaultedCtorSize);
+static_assert(alignof(PackedWithPodForLayoutDefaultedCtorField) ==
+              kPackedPodForLayoutDefaultedCtorAlignment);
+static_assert(offsetof(PackedWithPodForLayoutDefaultedCtorField, a) ==
+              kPackedPodForLayoutDefaultedCtorOffsetA);
+static_assert(offsetof(PackedWithPodForLayoutDefaultedCtorField, b) ==
+              kPackedPodForLayoutDefaultedCtorOffsetB);
+
+// Unlike `__attribute__((packed))`, `#pragma pack(N)` packs fields even when
+// they are not POD for the purpose of layout.
+#pragma pack(push, 2)
+struct ABSL_ATTRIBUTE_TRIVIAL_ABI
+    PragmaPacked2WithNonTriviallyCopyableAlign4Field {
+  uint8_t a;
+  NonTriviallyCopyableAlign4 b;
+};
+#pragma pack(pop)
+
+inline constexpr size_t kPragmaPacked2NonPodSize = 6;
+inline constexpr size_t kPragmaPacked2NonPodAlignment = 2;
+inline constexpr size_t kPragmaPacked2NonPodOffsetA = 0;
+inline constexpr size_t kPragmaPacked2NonPodOffsetB = 2;
+
+static_assert(sizeof(PragmaPacked2WithNonTriviallyCopyableAlign4Field) ==
+              kPragmaPacked2NonPodSize);
+static_assert(alignof(PragmaPacked2WithNonTriviallyCopyableAlign4Field) ==
+              kPragmaPacked2NonPodAlignment);
+static_assert(offsetof(PragmaPacked2WithNonTriviallyCopyableAlign4Field, a) ==
+              kPragmaPacked2NonPodOffsetA);
+static_assert(offsetof(PragmaPacked2WithNonTriviallyCopyableAlign4Field, b) ==
+              kPragmaPacked2NonPodOffsetB);
+
+// A non-POD struct that is itself `__attribute__((packed))` has alignment 1 and
+// IS packed when nested inside another `__attribute__((packed))` struct.
+struct ABSL_ATTRIBUTE_PACKED ABSL_ATTRIBUTE_TRIVIAL_ABI InnerPackedNonPod {
+  InnerPackedNonPod() = default;
+  // NOLINTNEXTLINE(modernize-use-equals-default)
+  InnerPackedNonPod(const InnerPackedNonPod& other) : a(other.a), b(other.b) {}
+  uint8_t a;
+  int32_t b;
+};
+
+struct ABSL_ATTRIBUTE_PACKED ABSL_ATTRIBUTE_TRIVIAL_ABI
+    OuterPackedWithInnerPackedNonPod {
+  uint8_t x;
+  InnerPackedNonPod inner;
+};
+
+inline constexpr size_t kOuterPackedWithInnerPackedNonPodSize = 6;
+inline constexpr size_t kOuterPackedWithInnerPackedNonPodAlignment = 1;
+inline constexpr size_t kOuterPackedWithInnerPackedNonPodOffsetInner = 1;
+
+static_assert(sizeof(OuterPackedWithInnerPackedNonPod) ==
+              kOuterPackedWithInnerPackedNonPodSize);
+static_assert(alignof(OuterPackedWithInnerPackedNonPod) ==
+              kOuterPackedWithInnerPackedNonPodAlignment);
+static_assert(offsetof(OuterPackedWithInnerPackedNonPod, inner) ==
+              kOuterPackedWithInnerPackedNonPodOffsetInner);
 
 // Functions accepting and returning packed structs
 inline PackedStruct MakePackedStruct(uint8_t a, uint32_t b, uint16_t c) {
