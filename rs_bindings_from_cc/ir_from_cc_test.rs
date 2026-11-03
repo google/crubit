@@ -864,6 +864,132 @@ fn test_struct_with_noop_pragma_pack() {
 }
 
 #[gtest]
+fn test_packed_struct_with_non_pod_field_with_greater_alignment() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct NonPod {
+          NonPod(const NonPod&);
+          int x;
+        };
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wpacked-non-pod"
+        struct __attribute__((packed)) PackedNonPod {
+          char a;
+          NonPod b;
+        };
+        #pragma clang diagnostic pop"#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    match test_platform() {
+        multiplatform_testing::Platform::X86Linux | multiplatform_testing::Platform::ArmLinux => {
+            assert_ir_matches!(
+                ir,
+                quote! { UnsupportedItem {
+                    name: "PackedNonPod", ...
+                    errors: [FormattedError {
+                        ... message: "Records with packed layout and non-POD fields with alignment greater than the packing alignment are not supported", ...
+                    }], ...
+                }}
+            );
+        }
+        multiplatform_testing::Platform::X86MacOS
+        | multiplatform_testing::Platform::ArmMacOS
+        | multiplatform_testing::Platform::X86Windows
+        | multiplatform_testing::Platform::I686Windows => {
+            assert_ir_matches!(
+                ir,
+                quote! { Record {
+                    rs_name: "PackedNonPod", ...
+                    size_align: SizeAlign { size: 5, alignment: 1, }, ...
+                    pack: Some(1), ...
+                }}
+            );
+        }
+        other => panic!("Unexpected platform: {other:?}"),
+    }
+}
+
+#[gtest]
+fn test_packed_struct_with_cxx11_pod_but_not_pod_for_layout_field() {
+    let proto = ir_proto_from_cc(
+        r#"
+        class Cxx11PodWithPrivateField {
+          int x;
+        };
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wpacked-non-pod"
+        struct __attribute__((packed)) PackedPrivate {
+          char a;
+          Cxx11PodWithPrivateField b;
+        };
+        #pragma clang diagnostic pop"#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    match test_platform() {
+        multiplatform_testing::Platform::X86Linux | multiplatform_testing::Platform::ArmLinux => {
+            assert_ir_matches!(
+                ir,
+                quote! { UnsupportedItem {
+                    name: "PackedPrivate", ...
+                    errors: [FormattedError {
+                        ... message: "Records with packed layout and non-POD fields with alignment greater than the packing alignment are not supported", ...
+                    }], ...
+                }}
+            );
+        }
+        multiplatform_testing::Platform::X86MacOS
+        | multiplatform_testing::Platform::ArmMacOS
+        | multiplatform_testing::Platform::X86Windows
+        | multiplatform_testing::Platform::I686Windows => {
+            assert_ir_matches!(
+                ir,
+                quote! { Record {
+                    rs_name: "PackedPrivate", ...
+                    size_align: SizeAlign { size: 5, alignment: 1, }, ...
+                    pack: Some(1), ...
+                }}
+            );
+        }
+        other => panic!("Unexpected platform: {other:?}"),
+    }
+}
+
+#[gtest]
+fn test_pragma_pack_struct_with_non_pod_field_supported() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct NonPod {
+          NonPod(const NonPod&);
+          int x;
+        };
+        #pragma pack(push, 2)
+        struct PragmaPackedNonPod {
+          char a;
+          NonPod b;
+        };
+        #pragma pack(pop)"#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! { Record {
+            rs_name: "PragmaPackedNonPod", ...
+            size_align: SizeAlign { size: 6, alignment: 2, }, ...
+            pack: Some(2), ...
+        }}
+    );
+}
+
+#[gtest]
 fn test_struct_with_unnamed_bitfield_member() {
     // This test input causes `field_decl->getName()` to return an empty string.
     // This example is based on `struct timex` from bits/timex.h
