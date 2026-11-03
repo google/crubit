@@ -152,3 +152,37 @@ fn test_trivial_default_constructor_not_unpin() {
     assert_eq!(t.a, 0);
     assert_eq!(t.p, core::ptr::null());
 }
+
+#[gtest]
+fn test_field_init_constructor() {
+    let x: i32 = 42;
+    // SAFETY: `FieldInitCtor` doesn't dereference the pointer.
+    let c = unsafe {
+        <semantic_import::FieldInitCtor as ctor::UnsafeFrom<_>>::unsafe_from((7, &raw const x))
+    };
+    assert_eq!(c.a(), 7);
+    assert_eq!(c.unset(), 0.0);
+    assert_eq!(c.p(), &raw const x);
+}
+
+#[gtest]
+fn test_field_init_constructor_not_unpin() {
+    let x: i32 = 42;
+    // SAFETY: `FieldInitCtorNotUnpin` doesn't dereference the pointer.
+    let c = emplace!(unsafe {
+        <semantic_import::FieldInitCtorNotUnpin as ctor::UnsafeCtorNew<_>>::ctor_new((
+            7,
+            &raw const x,
+        ))
+    });
+    assert_eq!(c.a(), 7);
+    assert_eq!(c.unset(), 0.0);
+    assert_eq!(c.p(), &raw const x);
+}
+
+#[gtest]
+fn test_empty_constructor() {
+    let e = semantic_import::EmptyCtor::default();
+    assert_eq!(e.a, 0);
+    assert_eq!(e.p, core::ptr::null());
+}

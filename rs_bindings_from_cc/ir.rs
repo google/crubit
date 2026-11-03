@@ -29,7 +29,7 @@ pub use ir_generated::cc_type::{
 };
 pub use ir_generated::constant::Kind as ConstantValue;
 pub use ir_generated::instance_method_metadata::ReferenceQualification;
-pub use ir_generated::member_func_semantic::{Getter, Setter};
+pub use ir_generated::member_func_semantic::{Constructor, FieldInit, Getter, Setter};
 pub use ir_generated::template_specialization::Kind as TemplateSpecializationKind;
 pub use ir_generated::unsupported_item::{
     Kind as UnsupportedItemKind, Path as UnsupportedItemPath,
