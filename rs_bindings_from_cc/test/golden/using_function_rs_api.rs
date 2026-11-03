@@ -17,14 +17,40 @@
 pub mod A {
     #[inline(always)]
     pub fn Foo() {
-        unsafe { crate::detail::__rust_thunk___ZN1A3FooEv() }
+        unsafe { crate::detail::__rust_thunk__d6cf3509__ZN1A3FooEv() }
     }
+
+    #[inline(always)]
+    pub fn Add(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int {
+        unsafe { crate::detail::__rust_thunk__e4bd4550__ZN1A3AddEii(a, b) }
+    }
+
+    // error: function `A::Overloaded` could not be bound
+    //   Cannot generate bindings for overloaded function
+
+    // error: function `A::Overloaded` could not be bound
+    //   Cannot generate bindings for overloaded function
 }
 
 // namespace A
 
-pub mod B { // error: function `B::Foo` could not be bound
-            //   Function aliases are not yet supported.
+pub mod B {
+    #[inline(always)]
+    pub fn Foo() {
+        unsafe { crate::detail::__rust_thunk__2e00d1b3__ZN1A3FooEv() }
+    }
+
+    /// A doc comment on the using-declaration.
+    #[inline(always)]
+    pub fn Add(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int {
+        unsafe { crate::detail::__rust_thunk__beecbe97__ZN1A3AddEii(a, b) }
+    }
+
+    // error: function `B::Overloaded` could not be bound
+    //   Cannot generate bindings for overloaded function
+
+    // error: function `B::Overloaded` could not be bound
+    //   Cannot generate bindings for overloaded function
 }
 
 // namespace B
@@ -33,7 +59,15 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        #[link_name = "_ZN1A3FooEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN1A3FooEv();
+        pub(crate) unsafe fn __rust_thunk__d6cf3509__ZN1A3FooEv();
+        pub(crate) unsafe fn __rust_thunk__e4bd4550__ZN1A3AddEii(
+            a: ::ffi_11::c_int,
+            b: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk__2e00d1b3__ZN1A3FooEv();
+        pub(crate) unsafe fn __rust_thunk__beecbe97__ZN1A3AddEii(
+            a: ::ffi_11::c_int,
+            b: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
     }
 }
