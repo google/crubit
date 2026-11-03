@@ -147,7 +147,8 @@ def golden_test(
         golden_h = None,
         golden_rs = None,
         platforms = None,
-        kythe_annotations = False):
+        kythe_annotations = False,
+        custom_namespace = False):
     """Generates a golden test for `rust_library`.
 
     Args:
@@ -159,6 +160,10 @@ def golden_test(
         golden_rs: The generated Rust source code for the bindings.
         platforms: List of additional target platforms to generate tests for (e.g. ["android", "ios"]). Windows and macOS are always included unless the target is tagged `no_windows` / `no_macos`. Defaults to None.
         kythe_annotations: Whether to generate Kythe annotations.
+        custom_namespace: If true, the test does not inject its own namespace
+            configuration; use this when `rust_library` already carries a
+            configuration hint (e.g. the `<name>.hint` of a `cpp_api_from_rust`
+            with `namespace`), since a crate may only have one.
     """
     if not basename:
         basename = name
@@ -181,14 +186,17 @@ def golden_test(
         )
         kythe_annotations_flag = [":" + kythe_annotations_flag_name]
 
-    # Since we have patched the rust_library name, we need to keep the original crate
-    # name as the namespace name otherwise users get confused.
-    top_level_namespace = "top_level_namespace" + rust_library
-    cc_bindings_from_rust_library_config(
-        name = top_level_namespace,
-        namespace = rust_library,
-    )
     args = {}
+    namespace_hints = []
+    if not custom_namespace:
+        # Since we have patched the rust_library name, we need to keep the original crate
+        # name as the namespace name otherwise users get confused.
+        top_level_namespace = "top_level_namespace" + rust_library
+        cc_bindings_from_rust_library_config(
+            name = top_level_namespace,
+            namespace = rust_library,
+        )
+        namespace_hints = [":" + top_level_namespace]
     for key, value in native.existing_rule(rust_library).items():
         if key != "kind" and key != "name" and value:
             args[key] = value
@@ -198,7 +206,7 @@ def golden_test(
         args["aspect_hints"] = list(args["aspect_hints"])
     else:
         args["aspect_hints"] = []
-    args["aspect_hints"].append(":" + top_level_namespace)
+    args["aspect_hints"] += namespace_hints
     args["aspect_hints"] += kythe_annotations_flag
     rust_library_rule(
         **args

@@ -17,7 +17,7 @@
 #pragma clang diagnostic ignored "-Wshadow"
 #include <cstdint>
 
-namespace example_crate {
+namespace my::library {
 
 ::std::int32_t add_two_integers(::std::int32_t x, ::std::int32_t y);
 
@@ -29,7 +29,7 @@ inline ::std::int32_t add_two_integers(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_utwo_uintegers(x, y);
 }
 
-}  // namespace example_crate
+}  // namespace my::library
 
 #pragma clang diagnostic pop
 #endif  // EXAMPLES_RUST_LIBRARY_CONFIG_EXAMPLE_CRATE_GOLDEN
