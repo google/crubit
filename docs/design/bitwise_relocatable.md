@@ -48,8 +48,8 @@ x.~T();
 ```
 
 on every platform and build configuration Crubit supports (or, where an explicit
-opt-in such as `_LIBCXX_ONLY` narrows the promise, every configuration the
-annotating codebase builds). `Unpin` ⇔ BR.
+opt-in such as `_STD_STRING_ONLY_ON_LIBCXX` narrows the promise, every
+configuration the annotating codebase builds). `Unpin` ⇔ BR.
 
 Three notions are kept distinct and *none* is read from `trivial_abi`:
 
@@ -191,13 +191,12 @@ types the author cannot annotate. Cannot launder compiler-known unsound members
 member whose type is already BR is allowed but should produce a (non-fatal) note
 so stale overrides get cleaned up.
 
-#### 3.6.1 `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD_LIBCXX_ONLY` (policy opt-in)
+#### 3.6.1 `CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX` (policy opt-in)
 
 ```c++
 class CRUBIT_UNSAFE_BITWISE_RELOCATABLE GURL {
-  // SAFETY: libc++'s basic_string SSO holds no self-pointer. This type is
-  // never built against libstdc++/MSVC STL.
-  CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD_LIBCXX_ONLY std::string spec_;
+  // This program is only ever built against libc++.
+  CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX std::string spec_;
   ...
 };
 ```
@@ -208,11 +207,20 @@ platform-independent answer is therefore "no", but a codebase that *knows* it
 only ever builds against libc++ (Chromium) should be able to say so, loudly and
 locally. This variant:
 
--   is the only way to treat a `std::basic_string` member as BR;
--   is **enforced**, not just trusted: `rs_bindings_from_cc` errors if the TU it
-    is analysing is not compiled against libc++ (`_LIBCPP_VERSION` not defined
-    in the preprocessor state). So a libstdc++ build fails at bindings
-    generation instead of producing UB at runtime;
+-   is the only way to treat a `std::basic_string` member as BR, and applies to
+    nothing else: `rs_bindings_from_cc` errors if the annotated field's type
+    (through arrays) is not a `std::basic_string` specialization. The name
+    deliberately spells out all three facts: relocatability, `std::string`, only
+    on libc++;
+-   is **verified**, not trusted, which is why it carries no `UNSAFE_` prefix:
+    the only thing the author asserts is the build policy ("this program is only
+    built against libc++"); the facts about libc++ itself (SSO layout, ASan
+    behaviour) are Crubit's to validate and are covered by Crubit's tests. A
+    call site therefore needs no `SAFETY:` justification;
+-   is **enforced**: `rs_bindings_from_cc` errors if the TU it is analysing is
+    not compiled against libc++ (`_LIBCPP_VERSION` not defined in the
+    preprocessor state). So a libstdc++ build fails at bindings generation
+    instead of producing UB at runtime;
 -   still cannot launder polymorphic/ptrauth members, and is moot under tagged
     PFP (the whole generation fails, §3.8.1) — libc++'s `std::string` is *not*
     BR there either, since its pointer fields are address-tagged;
@@ -220,9 +228,9 @@ locally. This variant:
     short-string ASan annotations off (`if (__is_long())`); the §6.5 sanitizer
     matrix includes a `std::string` fixture so a libc++ roll that re-enables
     them fails Crubit's tests rather than users' binaries;
--   is named so the libc++-only policy is visible at every use site and
-    greppable; the docs explain exactly why (`std::string` SSO layout differs by
-    standard library).
+-   does not cover `std::string` nested inside another template
+    (`std::optional<std::string>`); that is what the codebase-level opt-in below
+    is for.
 
 This is the resolution of the "yes, I acknowledge this won't work with
 libstdc++/GCC" policy choice: the acknowledgment is spelled in the attribute
@@ -231,30 +239,31 @@ name *and* checked by the generator.
 **Why an opt-in at all, if `std::string`'s own bindings already differ per
 stdlib?** (asked in the thread.) Under this design they don't, for the property
 that matters here: `std::string` is in the never-set, so it is pinned on libc++
-*and* libstdc++, and so is every type that contains one. The `_LIBCXX_ONLY`
-override is the single construct that makes a type's Rust-movability depend on
-build configuration, so it is the single place that asks for an acknowledgment.
-What is being acknowledged is not "the shape is unpredictable" — it stays
-predictable: either the libc++ shape, or a generation failure — but the
-soundness promise: "this field is bitwise- relocatable on libc++ (and, per §3.8,
-not under tagged PFP, and only while libc++ keeps short-string ASan annotations
-off)". Reading a bare `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD` on a
-`std::string` member would *look* like the generic offset-ptr-style promise and
-hide that it is really a promise about somebody else's library.
+*and* libstdc++, and so is every type that contains one. The
+`_STD_STRING_ONLY_ON_LIBCXX` override is the single construct that makes a
+type's Rust-movability depend on build configuration, so it is the single place
+that asks for an acknowledgment. What is being acknowledged is not "the shape is
+unpredictable" — it stays predictable: either the libc++ shape, or a generation
+failure — but the soundness promise: "this field is bitwise- relocatable on
+libc++ (and, per §3.8, not under tagged PFP, and only while libc++ keeps
+short-string ASan annotations off)". Reading a bare
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD` on a `std::string` member would *look*
+like the generic offset-ptr-style promise and hide that it is really a promise
+about somebody else's library.
 
 **Virality.** The promise is enforced at the program level by the generator (it
-fails on non-libc++ TUs whenever a `_LIBCXX_ONLY` override actually participates
-in the BR result of an imported type — not merely when the macro appears in some
-included header). So an outer `Foo { Bar bar_; }` where `Bar` uses the override
-needs no marker of its own: `Bar` is BR, hence `Foo` is BR by the implicit rule
-or a plain `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`. For discoverability, the
-generated binding of *every* type whose BR result depended on a `_LIBCXX_ONLY`
-override gets a doc comment (`/// Rust-movable only when built against libc++
-(via field Bar::spec_)`), so the dependence is visible on `Foo` without being
-viral in source. A viral type-level marker
-(`CRUBIT_UNSAFE_BITWISE_RELOCATABLE_LIBCXX_ONLY` required on `Foo` too) was
-considered: it buys no soundness over the generator check and would spread
-across every transitive user of `GURL`.
+fails on non-libc++ TUs whenever a `_STD_STRING_ONLY_ON_LIBCXX` override
+actually participates in the BR result of an imported type — not merely when the
+macro appears in some included header). So an outer `Foo { Bar bar_; }` where
+`Bar` uses the override needs no marker of its own: `Bar` is BR, hence `Foo` is
+BR by the implicit rule or a plain `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`. For
+discoverability, the generated binding of *every* type whose BR result depended
+on a `_STD_STRING_ONLY_ON_LIBCXX` override gets a doc comment (`/// Rust-movable
+only when built against libc++ (via field Bar::spec_)`), so the dependence is
+visible on `Foo` without being viral in source. A viral type-level marker (a
+libc++-only marker required on `Foo` too) was considered: it buys no soundness
+over the generator check and would spread across every transitive user of
+`GURL`.
 
 #### 3.6.2 Why not an unchecked `CRUBIT_UNSAFE_RUST_MOVABLE` on the type?
 
@@ -270,8 +279,9 @@ gives the same power as §3.2 + §3.6 but loses what makes those safer:
     (unchecked member types) with no compiler check at all;
 -   it hides the libc++-only policy inside a generic name.
 
-`CRUBIT_UNSAFE_BITWISE_RELOCATABLE` + `..._FIELD_LIBCXX_ONLY` on `spec_` covers
-the `GURL` motivation with two lines and makes the platform assumption explicit.
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE` +
+`CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX` on `spec_` covers the
+`GURL` motivation with two lines and makes the platform assumption explicit.
 
 ### 3.7 `[[clang::trivial_abi]]` transition
 
@@ -434,38 +444,39 @@ exactly as today.
 
 ## 5\. Worked examples
 
-| C++                                                                                                                            | Today                  | Proposed                                                           |
-| :----------------------------------------------------------------------------------------------------------------------------- | :--------------------- | :----------------------------------------------------------------- |
-| `struct A { std::string s; };`                                                                                                 | pinned                 | pinned (`No`: member `s` is never-BR)                              |
-| `struct ABSL_ATTRIBUTE_TRIVIAL_ABI B { std::string s; };`                                                                      | **Unpin (bug)**        | pinned                                                             |
-| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE C { std::string s; };`                                                               | n/a                    | **error**: "`s`: `std::basic_string` is never bitwise-relocatable" |
-| `struct D { std::optional<int> o; };`                                                                                          | Unpin                  | Unpin                                                              |
-| `struct E { std::optional<std::unique_ptr<int>> o; };`                                                                         | pinned                 | Unpin                                                              |
-| `struct F { std::optional<std::string> o; };`                                                                                  | pinned                 | pinned                                                             |
-| `struct G { std::vector<std::string> v; };`                                                                                    | pinned                 | Unpin                                                              |
-| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE H : Base { virtual ~H(); };`                                                         | pinned                 | **error**: polymorphic                                             |
-| `class CRUBIT_UNSAFE_BITWISE_RELOCATABLE GURL { std::string spec_; ... };`                                                     | pinned                 | **error**: `spec_` is `std::basic_string`                          |
-| `class CRUBIT_UNSAFE_BITWISE_RELOCATABLE GURL { CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD_LIBCXX_ONLY std::string spec_; ... };` | pinned                 | Unpin on libc++; **error** if the TU uses libstdc++                |
-| `struct I { I(I&&); ~I(); int x; };` (no annotation)                                                                           | pinned                 | pinned (user-provided special members)                             |
-| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE I2 { I2(I2&&); ~I2(); int x; };`                                                     | pinned                 | Unpin                                                              |
-| `struct J { J(const J&) = default; J(J&&) = delete; ~J() = default; int x; };`                                                 | pinned                 | pinned (xvalue selects deleted move)                               |
-| `struct K { K(const K&) = delete; K(K&&) = delete; ~K(); int fd_; };`                                                          | pinned                 | pinned (no non-deleted copy/move; user-provided dtor)              |
-| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE K2 { K2(const K2&) = delete; K2(K2&&) = delete; ~K2(); int fd_; };`                  | pinned, **no way out** | Unpin                                                              |
+| C++                                                                                                                             | Today                  | Proposed                                                           |
+| :------------------------------------------------------------------------------------------------------------------------------ | :--------------------- | :----------------------------------------------------------------- |
+| `struct A { std::string s; };`                                                                                                  | pinned                 | pinned (`No`: member `s` is never-BR)                              |
+| `struct ABSL_ATTRIBUTE_TRIVIAL_ABI B { std::string s; };`                                                                       | **Unpin (bug)**        | pinned                                                             |
+| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE C { std::string s; };`                                                                | n/a                    | **error**: "`s`: `std::basic_string` is never bitwise-relocatable" |
+| `struct D { std::optional<int> o; };`                                                                                           | Unpin                  | Unpin                                                              |
+| `struct E { std::optional<std::unique_ptr<int>> o; };`                                                                          | pinned                 | Unpin                                                              |
+| `struct F { std::optional<std::string> o; };`                                                                                   | pinned                 | pinned                                                             |
+| `struct G { std::vector<std::string> v; };`                                                                                     | pinned                 | Unpin                                                              |
+| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE H : Base { virtual ~H(); };`                                                          | pinned                 | **error**: polymorphic                                             |
+| `class CRUBIT_UNSAFE_BITWISE_RELOCATABLE GURL { std::string spec_; ... };`                                                      | pinned                 | **error**: `spec_` is `std::basic_string`                          |
+| `class CRUBIT_UNSAFE_BITWISE_RELOCATABLE GURL { CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX std::string spec_; ... };` | pinned                 | Unpin on libc++; **error** if the TU uses libstdc++                |
+| `struct I { I(I&&); ~I(); int x; };` (no annotation)                                                                            | pinned                 | pinned (user-provided special members)                             |
+| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE I2 { I2(I2&&); ~I2(); int x; };`                                                      | pinned                 | Unpin                                                              |
+| `struct J { J(const J&) = default; J(J&&) = delete; ~J() = default; int x; };`                                                  | pinned                 | pinned (xvalue selects deleted move)                               |
+| `struct K { K(const K&) = delete; K(K&&) = delete; ~K(); int fd_; };`                                                           | pinned                 | pinned (no non-deleted copy/move; user-provided dtor)              |
+| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE K2 { K2(const K2&) = delete; K2(K2&&) = delete; ~K2(); int fd_; };`                   | pinned, **no way out** | Unpin                                                              |
 
 ## 6\. Implementation
 
 1.  **Annotations**: add to `support/annotations.h` (+ `annotations.swig`,
     `wald/.../cpp.tm` per the LINT.ThenChange):
-    `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` → `crubit_bitwise_relocatable`,
+    `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` → `crubit_unsafe_bitwise_relocatable`,
     `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_IF_ELIGIBLE` →
-    `crubit_bitwise_relocatable_if_eligible`,
+    `crubit_unsafe_bitwise_relocatable_if_eligible`,
     `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD` →
     `crubit_unsafe_bitwise_relocatable_field`,
-    `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD_LIBCXX_ONLY` →
-    `crubit_unsafe_bitwise_relocatable_field_libcxx_only` (generator checks
-    `_LIBCPP_VERSION` is defined in the TU's preprocessor state). Read with the
-    existing `GetAnnotateAttrArgs` (`common/annotation_reader.h`) on
-    `CXXRecordDecl` / `FieldDecl`.
+    `CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX` →
+    `crubit_bitwise_relocatable_std_string_only_on_libcxx` (generator checks
+    that the field is a `std::basic_string` and that `_LIBCPP_VERSION` is
+    defined in the TU's preprocessor state). Read with the existing
+    `GetAnnotateAttrArgs` (`common/annotation_reader.h`) on `CXXRecordDecl` /
+    `FieldDecl`.
 2.  **Predicate**: new
     `rs_bindings_from_cc/importers/bitwise_relocatable.{h,cc}` with
     `RelocatabilityAnalysis` (memo map `const CXXRecordDecl* → Result`),
@@ -494,9 +505,9 @@ exactly as today.
     mutates/reads/destroys it in C++; run under `--config=asan`,
     `--config=msan`, `--config=tsan` so in-object poisoning or shadow mismatches
     show up as test failures. 5a. **Mode checks in the generator**: fail fast on
-    `LangOpts.PointerFieldProtectionTagged`; the `_LIBCXX_ONLY` override checks
-    `_LIBCPP_VERSION`. Both are cheap preprocessor/LangOpts lookups in
-    `ImportContext` setup.
+    `LangOpts.PointerFieldProtectionTagged`; the `_STD_STRING_ONLY_ON_LIBCXX`
+    override checks `_LIBCPP_VERSION`. Both are cheap preprocessor/LangOpts
+    lookups in `ImportContext` setup.
 6.  **Docs**: rewrite `docs/cpp/classes_and_structs.md#rust_movable`,
     `docs/design/unpin.md` (which currently defines Rust-movable *as* trivial
     for calls),
@@ -511,7 +522,7 @@ exactly as today.
     in side tables, no address-keyed caches); (b) nothing poisons bytes of
     `*this` under ASan; (c) no address-dependent pointer encoding (`__ptrauth`,
     tagged PFP); (d) holds on every standard library the type is built against
-    (or use `_LIBCXX_ONLY`).
+    (or use `_STD_STRING_ONLY_ON_LIBCXX`).
 7.  **Rollout**: this changes generated code → Mondo (`rust_api_from_cpp` and
     `cpp_api_from_rust`). Expected breakages are exactly the unsound cases
     (types that were `Unpin` only because of `trivial_abi` + non-BR member); fix
@@ -546,8 +557,8 @@ exactly as today.
 ## 8\. Decisions
 
 1.  **`std::string` laundering** → allowed only via the explicitly named,
-    generator-enforced `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD_LIBCXX_ONLY`
-    (§3.6.1).
+    generator-verified `CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX`
+    (§3.6.1), which only applies to `std::basic_string` fields.
 2.  **`trivial_abi`** → kept forever as `_IF_ELIGIBLE`; docs warn that it may
     not yield a Rust-movable type (§3.7).
 3.  **Who sees the error for a wrong `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`?** → A
