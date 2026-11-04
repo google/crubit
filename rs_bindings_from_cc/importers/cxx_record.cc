@@ -30,6 +30,7 @@
 #include "absl/strings/strip.h"
 #include "common/annotation_reader.h"
 #include "common/check.h"
+#include "common/status_absl_compat.h"
 #include "common/status_macros.h"
 #include "common/string_view_conversion.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -52,6 +53,7 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MD5.h"
 namespace crubit {
@@ -327,9 +329,8 @@ std::optional<std::array<std::string, N>> GetKeyValues(
     std::array<absl::string_view, N> keys) {
   std::array<std::string, N> values;
   for (size_t i = 0; i < N; ++i) {
-    absl::StatusOr<std::optional<std::string>> value =
-        GetAnnotationWithStringArg(record_decl, keys[i]);
-    CRUBIT_CHECK(value.ok()) << value.status();
+    auto value = GetAnnotationWithStringArg(record_decl, keys[i]);
+    CRUBIT_CHECK(value) << llvm::toString(value.takeError());
     if (!value->has_value()) {
       CRUBIT_CHECK(i == 0)
           << "Missing value for key: '" << keys[i]
@@ -413,9 +414,9 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
     b->set_rust_name(std::move(rust_name));
     b->set_abi_rust(std::move(abi_rust));
     b->set_abi_cpp(std::move(abi_cpp));
-    absl::StatusOr<std::optional<std::string>> hint_val =
+    auto hint_val =
         GetAnnotationWithStringArg(record_decl, "crubit_bridge_label_hint");
-    CRUBIT_CHECK(hint_val.ok()) << hint_val.status();
+    CRUBIT_CHECK(hint_val) << llvm::toString(hint_val.takeError());
     if (hint_val->has_value()) {
       b->set_label_hint(**std::move(hint_val));
     }
@@ -950,9 +951,9 @@ absl::StatusOr<SafetyAnnotation> CXXRecordDeclImporter::GetSafetyAnnotation(
           "`crubit_override_unsafe` annotation must have exactly one argument");
     }
 
-    absl::StatusOr<bool> is_unsafe =
-        GetExprAsBool(*args->front(), decl.getASTContext());
-    if (!is_unsafe.ok()) {
+    auto is_unsafe = GetExprAsBool(*args->front(), decl.getASTContext());
+    if (!is_unsafe) {
+      llvm::consumeError(is_unsafe.takeError());
       return absl::InvalidArgumentError(
           "`crubit_override_unsafe` annotation must have a bool argument");
     }
@@ -1103,12 +1104,11 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   std::optional<BridgeType> bridge_type =
       GetBridgeTypeAnnotation(ictx_, *record_decl);
 
-  absl::StatusOr<std::optional<std::vector<std::string>>> args =
-      GetAnnotationWithStringArgs(*record_decl, "crubit_owned_pointee");
-  if (!args.ok()) {
+  auto args = GetAnnotationWithStringArgs(*record_decl, "crubit_owned_pointee");
+  if (!args) {
     return ictx_.ImportUnsupportedItem(
         *record_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(args).status())});
+        {FormattedError::FromStatus(crubit::ToAbslStatus(args.takeError()))});
   }
 
   std::optional<OwnedPtrConfig> owned_ptr_config;
@@ -1403,11 +1403,11 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   const clang::TypedefNameDecl* anon_typedef =
       record_decl->getTypedefNameForAnonDecl();
 
-  absl::StatusOr<bool> is_thread_safe =
+  auto is_thread_safe =
       HasAnnotationWithoutArgs(*record_decl, "crubit_thread_safe");
-  if (!is_thread_safe.ok()) {
-    return unsupported(
-        FormattedError::FromStatus(std::move(is_thread_safe).status()));
+  if (!is_thread_safe) {
+    return unsupported(FormattedError::FromStatus(
+        crubit::ToAbslStatus(is_thread_safe.takeError())));
   }
 
   // Automatically treat std::atomic<T> as CRUBIT_THREAD_SAFE so that its

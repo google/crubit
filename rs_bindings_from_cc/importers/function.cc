@@ -25,6 +25,7 @@
 #include "absl/strings/str_join.h"
 #include "common/annotation_reader.h"
 #include "common/check.h"
+#include "common/status_absl_compat.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/lifetime_error.h"
@@ -138,10 +139,9 @@ void CollectExplicitInitFieldNames(const clang::CXXRecordDecl& record_decl,
 
 SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
                                            Errors& errors) {
-  absl::StatusOr<std::optional<AnnotateArgs>> maybe_args =
-      GetAnnotateAttrArgs(decl, "crubit_override_unsafe");
-  if (!maybe_args.ok()) {
-    errors.AddStatus(std::move(maybe_args).status());
+  auto maybe_args = GetAnnotateAttrArgs(decl, "crubit_override_unsafe");
+  if (!maybe_args) {
+    errors.AddStatus(crubit::ToAbslStatus(maybe_args.takeError()));
     return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   }
   if (!maybe_args->has_value()) {
@@ -153,10 +153,9 @@ SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
         "`crubit_override_unsafe` annotation must have exactly one argument"));
     return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   }
-  absl::StatusOr<bool> is_unsafe =
-      GetExprAsBool(*args[0], decl.getASTContext());
-  if (!is_unsafe.ok()) {
-    errors.AddStatus(std::move(is_unsafe).status());
+  auto is_unsafe = GetExprAsBool(*args[0], decl.getASTContext());
+  if (!is_unsafe) {
+    errors.AddStatus(crubit::ToAbslStatus(is_unsafe.takeError()));
     return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   } else if (*is_unsafe) {
     return SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;

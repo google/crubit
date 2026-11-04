@@ -33,6 +33,7 @@ cc_library(
     deps = [
         "//common:annotation_reader",
         "//common:check",
+        "//common:status_absl_compat",
         "//common:status_macros",
         "//common:string_view_conversion",
         "//lifetime_annotations:type_lifetimes",
@@ -136,6 +137,7 @@ cc_library(
     deps = [
         "//common:annotation_reader",
         "//common:check",
+        "//common:status_absl_compat",
         "//lifetime_annotations",
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations:lifetime_error",
@@ -212,6 +214,7 @@ cc_library(
     hdrs = ["existing_rust_type.h"],
     deps = [
         "//common:annotation_reader",
+        "//common:status_absl_compat",
         "//common:status_macros",
         "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",

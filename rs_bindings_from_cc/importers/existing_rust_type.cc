@@ -16,6 +16,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
+#include "common/status_absl_compat.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -31,6 +32,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 namespace {
@@ -131,7 +133,7 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
         "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\")]]`");
   }
   CRUBIT_ASSIGN_OR_RETURN(
-      absl::string_view format_string,
+      llvm::StringRef format_string,
       GetExprAsStringLiteral(*args.front(), decl.getASTContext()));
 
   if (args.size() < 2) {
@@ -280,15 +282,14 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
   }
 
   std::optional<std::string> label_hint;
-  absl::StatusOr<std::optional<std::string>> hint_val =
-      GetAnnotationWithStringArg(*type_decl,
-                                 "crubit_internal_rust_type_label_hint");
-  if (!hint_val.ok()) {
+  auto hint_val = GetAnnotationWithStringArg(
+      *type_decl, "crubit_internal_rust_type_label_hint");
+  if (!hint_val) {
     return ictx_.HardError(
         *type_decl,
         FormattedError::PrefixedStrCat(
             "Invalid crubit_internal_rust_type_label_hint attribute",
-            hint_val.status().message()));
+            crubit::ToAbslStatus(hint_val.takeError()).message()));
   }
   if (hint_val->has_value()) {
     label_hint = **std::move(hint_val);

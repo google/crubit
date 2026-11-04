@@ -51,15 +51,8 @@ cc_library(
     srcs = ["annotation_reader.cc"],
     hdrs = ["annotation_reader.h"],
     deps = [
+        ":status",
         ":status_macros",
-        ":string_view_conversion",
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/base:nullability",
-        "@abseil-cpp//absl/functional:function_ref",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
@@ -74,14 +67,13 @@ crubit_cc_test(
     deps = [
         ":annotation_reader",
         ":check",
+        ":status",
         ":status_test_matchers",
         ":string_view_conversion",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/strings:string_view",
-        "@abseil-cpp//absl/types:span",
         "@googletest//:gtest_main",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:testing",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -168,10 +160,7 @@ cc_library(
     srcs = ["file_io.cc"],
     hdrs = ["file_io.h"],
     deps = [
-        ":string_view_conversion",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings:string_view",
+        ":status",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -181,16 +170,13 @@ cc_library(
     srcs = ["ffi_types.cc"],
     hdrs = ["ffi_types.h"],
     visibility = ["//:__subpackages__"],
-    deps = [
-        ":ffi_types",  # buildcleaner: keep
-        "@abseil-cpp//absl/strings:string_view",
-    ],
+    deps = [":ffi_types"],  # buildcleaner: keep
 )
 
 cc_library(
     name = "external_binaries_cc",
     hdrs = ["external_binaries.h"],
-    deps = ["@abseil-cpp//absl/strings:string_view"],
+    deps = [],
 )
 
 rust_library(
@@ -280,7 +266,10 @@ crubit_rust_test(
 cc_library(
     name = "strong_int",
     hdrs = ["strong_int.h"],
-    deps = ["@abseil-cpp//absl/hash"],
+    deps = [
+        "@abseil-cpp//absl/hash",
+        "@llvm-project//llvm:Support",
+    ],
 )
 
 cc_library(
@@ -289,6 +278,7 @@ cc_library(
     deps = [
         "@abseil-cpp//absl/flags:marshalling",
         "@abseil-cpp//absl/strings:string_view",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -414,9 +404,6 @@ cc_library(
     deps = [
         ":check",
         ":file_io",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest",
         "@llvm-project//llvm:Support",
     ],

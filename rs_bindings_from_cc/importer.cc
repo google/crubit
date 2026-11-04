@@ -34,6 +34,7 @@
 #include "absl/strings/strip.h"
 #include "common/annotation_reader.h"
 #include "common/check.h"
+#include "common/status_absl_compat.h"
 #include "common/status_macros.h"
 #include "common/string_view_conversion.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -93,6 +94,7 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/Regex.h"
@@ -1717,9 +1719,11 @@ void Importer::FindAlwaysInstantiateSpecs(
   for (const clang::Decl* decl : decl_context.decls()) {
     if (const auto* alias_decl =
             clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
-      if (auto status_or_bool = HasAnnotationWithoutArgs(
-              *alias_decl, "crubit_always_instantiate");
-          status_or_bool.ok() && *status_or_bool) {
+      auto status_or_bool =
+          HasAnnotationWithoutArgs(*alias_decl, "crubit_always_instantiate");
+      if (!status_or_bool) {
+        llvm::consumeError(status_or_bool.takeError());
+      } else if (*status_or_bool) {
         if (const auto* record_decl =
                 alias_decl->getUnderlyingType()->getAsCXXRecordDecl()) {
           if (const auto* spec =
@@ -1765,9 +1769,11 @@ bool Importer::IsAlwaysInstantiate(
       if (IsInSpecialCasedNamespace(*templated_decl)) {
         return true;
       }
-      if (auto status_or_bool = HasAnnotationWithoutArgs(
-              *templated_decl, "crubit_always_instantiate");
-          status_or_bool.ok() && *status_or_bool) {
+      auto status_or_bool = HasAnnotationWithoutArgs(
+          *templated_decl, "crubit_always_instantiate");
+      if (!status_or_bool) {
+        llvm::consumeError(status_or_bool.takeError());
+      } else if (*status_or_bool) {
         return true;
       }
     }
@@ -2352,10 +2358,10 @@ bool IsTransitivelyInPrivate(clang::Decl* decl_to_check) {
 
 absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
     clang::Decl* absl_nonnull decl) {
-  const absl::StatusOr<bool> must_bind =
-      HasAnnotationWithoutArgs(*decl, "crubit_must_bind");
-  if (!must_bind.ok()) {
-    return HardError(*decl, FormattedError::FromStatus(must_bind.status()));
+  auto must_bind = HasAnnotationWithoutArgs(*decl, "crubit_must_bind");
+  if (!must_bind) {
+    return HardError(*decl, FormattedError::FromStatus(
+                                crubit::ToAbslStatus(must_bind.takeError())));
   }
 
   if (IsTransitivelyInPrivate(decl)) {
@@ -2367,16 +2373,16 @@ absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
     return nullptr;
   }
 
-  const absl::StatusOr<bool> pub_crate =
-      HasAnnotationWithoutArgs(*decl, "crubit_pub_crate");
-  if (!pub_crate.ok()) {
-    return HardError(*decl, FormattedError::FromStatus(pub_crate.status()));
+  auto pub_crate = HasAnnotationWithoutArgs(*decl, "crubit_pub_crate");
+  if (!pub_crate) {
+    return HardError(*decl, FormattedError::FromStatus(
+                                crubit::ToAbslStatus(pub_crate.takeError())));
   }
 
-  const absl::StatusOr<bool> do_not_bind =
-      HasAnnotationWithoutArgs(*decl, "crubit_do_not_bind");
-  if (!do_not_bind.ok()) {
-    return HardError(*decl, FormattedError::FromStatus(do_not_bind.status()));
+  auto do_not_bind = HasAnnotationWithoutArgs(*decl, "crubit_do_not_bind");
+  if (!do_not_bind) {
+    return HardError(*decl, FormattedError::FromStatus(
+                                crubit::ToAbslStatus(do_not_bind.takeError())));
   }
   if (*do_not_bind) {
     if (*must_bind) {

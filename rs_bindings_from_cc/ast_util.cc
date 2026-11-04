@@ -44,6 +44,7 @@
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 
@@ -196,7 +197,7 @@ absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     if (args.has_value()) {
       clang::ASTContext& ast_context = decl.getASTContext();
       for (const clang::Expr* arg : *args) {
-        CRUBIT_ASSIGN_OR_RETURN(absl::string_view name,
+        CRUBIT_ASSIGN_OR_RETURN(llvm::StringRef name,
                                 GetExprAsStringLiteral(*arg, ast_context));
         ignored_attr_names.insert(name);
       }
@@ -776,12 +777,17 @@ absl::flat_hash_set<absl::string_view> GetIgnoredAttrs(
   absl::flat_hash_set<absl::string_view> ignored_attr_names;
   if (!decl) return ignored_attr_names;
 
-  if (auto args = GetAnnotateAttrArgs(*decl, "crubit_unsafe_ignore_attr");
-      args.ok() && args->has_value()) {
+  auto args = GetAnnotateAttrArgs(*decl, "crubit_unsafe_ignore_attr");
+  if (!args) {
+    llvm::consumeError(args.takeError());
+  } else if (args->has_value()) {
     clang::ASTContext& ast_context = decl->getASTContext();
     for (const clang::Expr* arg : **args) {
-      if (auto name = GetExprAsStringLiteral(*arg, ast_context); name.ok()) {
-        ignored_attr_names.insert(*name);
+      if (auto name = GetExprAsStringLiteral(*arg, ast_context)) {
+        ignored_attr_names.insert(
+            absl::string_view(name->data(), name->size()));
+      } else {
+        llvm::consumeError(name.takeError());
       }
     }
   }

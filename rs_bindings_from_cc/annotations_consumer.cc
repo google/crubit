@@ -15,6 +15,7 @@
 #include "common/check.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/DeclBase.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 
@@ -37,9 +38,9 @@ const absl::flat_hash_set<absl::string_view>& RustOperatorSymbols() {
 }
 
 std::optional<UnqualifiedIdentifier> CrubitRustName(const clang::Decl& decl) {
-  absl::StatusOr<std::optional<std::string>> crubit_rust_name =
-      GetAnnotationWithStringArg(decl, kCrubitRustNameTag);
-  CRUBIT_CHECK(crubit_rust_name.ok()) << crubit_rust_name.status();
+  auto crubit_rust_name = GetAnnotationWithStringArg(decl, kCrubitRustNameTag);
+  CRUBIT_CHECK(crubit_rust_name)
+      << llvm::toString(crubit_rust_name.takeError());
   if (!crubit_rust_name->has_value()) {
     return std::nullopt;
   }

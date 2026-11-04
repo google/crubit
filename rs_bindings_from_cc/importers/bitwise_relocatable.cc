@@ -33,7 +33,9 @@
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 namespace {
@@ -107,9 +109,13 @@ clang::CXXMethodDecl* LookupSpecialMemberFromXValue(
   }
 }
 
-bool HasAnnotation(const clang::Decl* decl, absl::string_view name) {
+bool HasAnnotation(const clang::Decl* decl, llvm::StringRef name) {
   auto args = GetAnnotateAttrArgs(*decl, name);
-  return args.ok() && args.value().has_value();
+  if (!args) {
+    llvm::consumeError(args.takeError());
+    return false;
+  }
+  return args->has_value();
 }
 
 enum class AnnotationState { kNone, kIfEligible, kAsserted };

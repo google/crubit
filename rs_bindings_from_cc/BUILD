@@ -282,6 +282,7 @@ cc_library(
         "@abseil-cpp//absl/log",
         "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -419,6 +420,7 @@ cc_library(
         ":type_map",
         "//common:annotation_reader",
         "//common:check",
+        "//common:status_absl_compat",
         "//common:status_macros",
         "//common:string_view_conversion",
         "//lifetime_annotations:type_lifetimes",
