@@ -52,8 +52,8 @@ const clang::ClassTemplateSpecializationDecl* GetTypeOfX(
 
 // Parses `kStdTemplates` followed by `code`.
 std::unique_ptr<clang::ASTUnit> Parse(const std::string& code) {
-  return clang::tooling::buildASTFromCodeWithArgs(
-      absl::StrCat(kStdTemplates, code), {"-std=c++17"});
+  return clang::tooling::buildASTFromCodeWithArgs(kStdTemplates + code,
+                                                  {"-std=c++17"});
 }
 
 TEST(ParameterizedByTAndStdTraitTTest, StdStringView) {

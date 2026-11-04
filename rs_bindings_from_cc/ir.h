@@ -141,8 +141,9 @@ inline std::string DebugStringFromDecl(const clang::Decl& decl) {
   auto ostream = llvm::raw_string_ostream(decl_name);
   decl.print(ostream);
   ostream.flush();
-  return absl::StrFormat("Canonical DeclID: %d; DeclID: %d; decl: %s",
-                         canonical_decl_id, decl_id, decl_name);
+  return (llvm::Twine("Canonical DeclID: ") + llvm::Twine(canonical_decl_id) +
+          "; DeclID: " + llvm::Twine(decl_id) + "; decl: " + decl_name)
+      .str();
 }
 
 // A numerical ID that uniquely identifies a lifetime.
@@ -172,14 +173,17 @@ class FormattedError final {
     return FormattedError(array, array);
   }
 
-  // Returns a FormattedError built with `absl::StrCat()`. The first argument is
-  // taken as the format string. All arguments are concatenated to form the
-  // formatted message, with an extra `": "` inserted after the first argument.
+  // Returns a FormattedError built with `internal::AppendToString()`. The first
+  // argument is taken as the format string. All arguments are concatenated to
+  // form the formatted message, with an extra `": "` inserted after the first
+  // argument.
   template <size_t N, typename... Ts>
   static FormattedError PrefixedStrCat(const char (&prefix)[N],
                                        Ts&&... moreArgs) {
-    return FormattedError(
-        prefix, absl::StrCat(prefix, ": ", std::forward<Ts>(moreArgs)...));
+    std::string result(prefix);
+    result.append(": ");
+    (internal::AppendToString(result, std::forward<Ts>(moreArgs)), ...);
+    return FormattedError(prefix, std::move(result));
   }
 
   // Returns a FormattedError built with `internal::Substitute()`.

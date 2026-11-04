@@ -4,10 +4,12 @@
 
 #include "rs_bindings_from_cc/importers/type_alias.h"
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "common/check.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -61,7 +63,7 @@ std::string ProtoEnumToRustName(clang::NamedDecl& decl) {
 
     mod_chain.push_back(ProtoMessageToRustModName(record_decl->getName()));
   }
-  absl::c_reverse(mod_chain);
+  std::reverse(mod_chain.begin(), mod_chain.end());
   mod_chain.push_back(std::string(decl.getName()));
   return llvm::join(mod_chain, "::");
 }

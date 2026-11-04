@@ -795,7 +795,7 @@ llvm::DenseSet<llvm::StringRef> GetIgnoredAttrs(const clang::Decl* decl) {
 std::vector<clang::CXXConstructorDecl*> GetAllConstructors(
     const clang::CXXRecordDecl& record) {
   std::vector<clang::CXXConstructorDecl*> result;
-  absl::flat_hash_set<const clang::Decl*> seen;
+  llvm::DenseSet<const clang::Decl*> seen;
   for (clang::CXXConstructorDecl* ctor : record.ctors()) {
     if (seen.insert(ctor->getCanonicalDecl()).second) result.push_back(ctor);
   }

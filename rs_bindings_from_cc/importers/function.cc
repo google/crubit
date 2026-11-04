@@ -964,11 +964,11 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
           FormattedError::FromStatus(lifetime_inputs_or_err.takeError()));
     } else {
       lifetime_inputs.reserve(lifetime_inputs_or_err->size());
-      absl::c_transform(*lifetime_inputs_or_err,
-                        std::back_inserter(lifetime_inputs),
-                        [](llvm::StringRef lifetime_view) {
-                          return std::string(lifetime_view);
-                        });
+      llvm::transform(*lifetime_inputs_or_err,
+                      std::back_inserter(lifetime_inputs),
+                      [](llvm::StringRef lifetime_view) {
+                        return std::string(lifetime_view);
+                      });
     }
   } else {
     llvm::Expected<clang::tidy::lifetimes::FunctionLifetimes> lifetimes_or_err =
