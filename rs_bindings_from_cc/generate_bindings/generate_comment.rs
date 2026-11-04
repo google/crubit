@@ -127,6 +127,10 @@ pub fn generate_unsupported(db: &BindingsGenerator, item: FfiRc<UnsupportedItem>
     for error in db.unsupported_item_errors(FfiRc::clone(&item)).iter() {
         db.errors().report(error);
     }
+    // Deliberately not bound: reported, but a comment per declaration would be noise.
+    if !item.do_not_bind().is_empty() {
+        return ApiSnippets::default();
+    }
 
     let source_loc = item.decl_loc().map(|decl_loc| decl_loc.to_string());
     let source_loc = match source_loc.as_deref() {

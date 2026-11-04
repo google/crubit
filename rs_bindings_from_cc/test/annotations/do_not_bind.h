@@ -17,6 +17,10 @@ inline void DoNotBindFn(ArgumentToBoundOverload) {}
 
 CRUBIT_DO_NOT_BIND inline void NonAllowListedDoNotBindFn() {}
 
+[[clang::annotate("crubit_do_not_bind", "not useful from Rust",
+                  "a second reason")]] inline void
+DoNotBindFnWithReason() {}
+
 struct CRUBIT_DO_NOT_BIND DoNotBindStruct {
   struct StructNestedInsideDoNotBindStruct {};
   DoNotBindStruct() = default;

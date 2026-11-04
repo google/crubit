@@ -1397,6 +1397,7 @@ impl UnsupportedItem {
             id,
             must_bind,
             defining_target: BazelLabel::default(),
+            do_not_bind: FfiVec::EMPTY,
         };
         if let Some(unique_name) = unique_name {
             item.set_unique_name(unique_name.into());

@@ -67,6 +67,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, deprecated, $($arg:tt)*) => { $msg.set_deprecated($($arg)*) };
     ($msg:ident, destructor, $($arg:tt)*) => { $msg.set_destructor($($arg)*) };
     ($msg:ident, detected_formatter, $($arg:tt)*) => { $msg.set_detected_formatter($($arg)*) };
+    ($msg:ident, do_not_bind, $($arg:tt)*) => { $msg.set_do_not_bind($($arg)*) };
     ($msg:ident, doc_comment, $($arg:tt)*) => { $msg.set_doc_comment($($arg)*) };
     ($msg:ident, drop_impl, $($arg:tt)*) => { $msg.set_drop_impl($($arg)*) };
     ($msg:ident, element_type, $($arg:tt)*) => { $msg.set_element_type($($arg)*) };
@@ -4283,6 +4284,7 @@ mod __defs {
         pub id: ItemId,
         pub must_bind: bool,
         pub defining_target: BazelLabel,
+        pub do_not_bind: FfiVec<FfiString>,
     }
 
     impl core::fmt::Debug for UnsupportedItem {
@@ -4298,6 +4300,7 @@ mod __defs {
                 .field("id", &self.id)
                 .field("must_bind", &self.must_bind)
                 .field("defining_target", &self.defining_target())
+                .field("do_not_bind", &self.do_not_bind)
                 .finish()
         }
     }
@@ -4324,6 +4327,7 @@ mod __defs {
             id: ItemId::EMPTY,
             must_bind: false,
             defining_target: BazelLabel::EMPTY,
+            do_not_bind: FfiVec::EMPTY,
         };
         pub fn name(&self) -> &str {
             self.name.as_str()
@@ -4390,6 +4394,9 @@ mod __defs {
         pub fn defining_target(&self) -> Option<&BazelLabel> {
             self.has_defining_target().then(|| &self.defining_target)
         }
+        pub fn do_not_bind(&self) -> &[FfiString] {
+            self.do_not_bind.as_slice()
+        }
         pub fn set_name(&mut self, val: FfiString) -> &mut FfiString {
             self.name = val;
             &mut self.name
@@ -4433,10 +4440,13 @@ mod __defs {
             self.defining_target = val;
             &mut self.defining_target
         }
+        pub fn set_do_not_bind(&mut self, val: FfiVec<FfiString>) {
+            self.do_not_bind = val;
+        }
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<UnsupportedItem>() == 224);
+        assert!(core::mem::size_of::<UnsupportedItem>() == 248);
         assert!(core::mem::align_of::<UnsupportedItem>() == 8);
         assert!(core::mem::offset_of!(UnsupportedItem, name) == 8);
         assert!(core::mem::offset_of!(UnsupportedItem, unique_name) == 24);
@@ -4448,6 +4458,7 @@ mod __defs {
         assert!(core::mem::offset_of!(UnsupportedItem, id) == 192);
         assert!(core::mem::offset_of!(UnsupportedItem, must_bind) == 200);
         assert!(core::mem::offset_of!(UnsupportedItem, defining_target) == 208);
+        assert!(core::mem::offset_of!(UnsupportedItem, do_not_bind) == 224);
     };
 
     #[repr(C)]

@@ -108,6 +108,9 @@ constexpr llvm::StringRef kTypeStatusPayloadUrl =
 // the label is the header path, which is useful for error messages.
 constexpr llvm::StringRef kUnknownTargetPrefix = "//_unknown_target:";
 
+// The reason recorded for a `CRUBIT_DO_NOT_BIND` declaration that gives none.
+constexpr llvm::StringRef kDoNotBindDefaultReason = "no reason given";
+
 // Returns the header path if `label` is a synthetic unknown-target label (see
 // `kUnknownTargetPrefix`), or `std::nullopt` if it is a real Bazel label.
 std::optional<llvm::StringRef> HeaderOfUnknownTarget(const BazelLabel& label) {
@@ -2367,12 +2370,20 @@ _Nullable std::unique_ptr<crubit::ffi::Item> Importer::ImportDecl(
                                 crubit::ToAbslStatus(pub_crate.takeError())));
   }
 
-  auto do_not_bind = HasAnnotationWithoutArgs(*decl, "crubit_do_not_bind");
-  if (!do_not_bind) {
-    return HardError(*decl, FormattedError::FromStatus(
-                                crubit::ToAbslStatus(do_not_bind.takeError())));
+  // `[[clang::annotate("crubit_do_not_bind", "reason", ...)]]` gives any number
+  // of reasons (`kDoNotBindDefaultReason` if none).
+  auto do_not_bind_args =
+      GetAnnotationWithStringArgs(*decl, "crubit_do_not_bind");
+  if (!do_not_bind_args) {
+    return HardError(*decl, FormattedError::FromStatus(crubit::ToAbslStatus(
+                                do_not_bind_args.takeError())));
   }
-  if (*do_not_bind) {
+  if (do_not_bind_args->has_value()) {
+    std::vector<std::string> do_not_bind_reasons =
+        std::move(**do_not_bind_args);
+    if (do_not_bind_reasons.empty()) {
+      do_not_bind_reasons.push_back(std::string(kDoNotBindDefaultReason));
+    }
     if (*must_bind) {
       return HardError(
           *decl, FormattedError::Static("Conflicting CRUBIT_MUST_BIND and "
@@ -2400,7 +2411,27 @@ _Nullable std::unique_ptr<crubit::ffi::Item> Importer::ImportDecl(
                        "`do_not_bind_allowlist`"));
       }
     }
-    return nullptr;
+    // Record the decision, so that the error report and the users of `decl`
+    // say why it has no bindings. It is deliberate, so it is never a hard
+    // error (even in strict carcinize mode), never migrated to inline C++, and
+    // no comment is generated for it in the bindings. The format string is the
+    // same for any reasons, so the error report groups them together.
+    std::string reason_bullets;
+    for (const std::string& reason : do_not_bind_reasons) {
+      reason_bullets += "\n* ";
+      reason_bullets += reason;
+    }
+    std::unique_ptr<crubit::ffi::Item> item = ImportUnsupportedItem(
+        *decl, std::nullopt,
+        {FormattedError::Substitute(
+            "Not bound because of CRUBIT_DO_NOT_BIND:$0", reason_bullets)},
+        /*is_hard_error=*/false);
+    item->mutable_unsupported_item()->set_must_bind(false);
+    for (const std::string& reason : do_not_bind_reasons) {
+      item->mutable_unsupported_item()->add_do_not_bind(reason);
+    }
+    item->mutable_unsupported_item()->clear_inline_cpp_source_text();
+    return item;
   }
 
   if (*pub_crate) {

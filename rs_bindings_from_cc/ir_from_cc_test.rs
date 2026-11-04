@@ -2092,6 +2092,112 @@ fn test_pub_crate_annotation_on_class_template_produces_error() -> googletest::R
     Ok(())
 }
 
+/// Returns the `do_not_bind` reasons and the (format string, message) of the errors of `item`.
+fn do_not_bind_reasons_and_errors(item: &UnsupportedItem) -> (Vec<&str>, Vec<(&str, &str)>) {
+    (
+        item.do_not_bind().iter().map(|reason| reason.as_str()).collect(),
+        item.errors().iter().map(|e| (e.fmt.as_str(), e.message.as_str())).collect(),
+    )
+}
+
+#[gtest]
+fn test_do_not_bind_is_reported_as_unsupported_item() -> googletest::Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"[[clang::annotate("crubit_do_not_bind")]] void f(int);
+           void f(double);"#,
+    )
+    .or_fail()?;
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
+    let item = ir.unsupported_items().find(|item| item.name() == "f").or_fail()?;
+    expect_eq!(item.must_bind(), false);
+    // Without a reason, the default reason is used.
+    expect_eq!(
+        do_not_bind_reasons_and_errors(item),
+        (
+            vec!["no reason given"],
+            vec![(
+                "Not bound because of CRUBIT_DO_NOT_BIND:$0",
+                "Not bound because of CRUBIT_DO_NOT_BIND:\n* no reason given"
+            )]
+        )
+    );
+    // The other overload is still imported.
+    expect_eq!(ir.functions().filter(|func| *func.cc_name() == "f").count(), 1);
+    Ok(())
+}
+
+#[gtest]
+fn test_do_not_bind_with_reason_is_reported_as_unsupported_item() -> googletest::Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"[[clang::annotate("crubit_do_not_bind", "some reason")]] void f(int);
+           void f(double);"#,
+    )
+    .or_fail()?;
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
+    let item = ir.unsupported_items().find(|item| item.name() == "f").or_fail()?;
+    expect_eq!(item.must_bind(), false);
+    // The format string is the same for any reasons, so that the error report groups them.
+    expect_eq!(
+        do_not_bind_reasons_and_errors(item),
+        (
+            vec!["some reason"],
+            vec![(
+                "Not bound because of CRUBIT_DO_NOT_BIND:$0",
+                "Not bound because of CRUBIT_DO_NOT_BIND:\n* some reason"
+            )]
+        )
+    );
+    // The other overload is still imported.
+    expect_eq!(ir.functions().filter(|func| *func.cc_name() == "f").count(), 1);
+    Ok(())
+}
+
+#[gtest]
+fn test_do_not_bind_with_two_reasons_is_reported_as_unsupported_item() -> googletest::Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"[[clang::annotate("crubit_do_not_bind", "reason one", "reason two")]] void f() {}"#,
+    )
+    .or_fail()?;
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
+    let item = ir.unsupported_items().find(|item| item.name() == "f").or_fail()?;
+    expect_eq!(item.must_bind(), false);
+    expect_eq!(
+        do_not_bind_reasons_and_errors(item),
+        (
+            vec!["reason one", "reason two"],
+            vec![(
+                "Not bound because of CRUBIT_DO_NOT_BIND:$0",
+                "Not bound because of CRUBIT_DO_NOT_BIND:\n* reason one\n* reason two"
+            )]
+        )
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_do_not_bind_with_non_string_argument_produces_error() -> googletest::Result<()> {
+    let proto = ir_proto_from_cc(r#"[[clang::annotate("crubit_do_not_bind", 1)]] void f() {}"#)
+        .or_fail()?;
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
+    let item = ir.unsupported_items().find(|item| item.name() == "f").or_fail()?;
+    expect_eq!(item.must_bind(), true);
+    expect_that!(item.do_not_bind(), is_empty());
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "f",
+            ...
+            errors: [FormattedError {
+                ... message: "Annotation crubit_do_not_bind arguments must be string literals.", ...
+            }],
+            ...
+            must_bind: true,
+            ...
+        }}
+    );
+    Ok(())
+}
+
 #[gtest]
 fn test_pub_crate_and_do_not_bind_conflict_produces_error() -> googletest::Result<()> {
     let proto = ir_proto_from_cc(

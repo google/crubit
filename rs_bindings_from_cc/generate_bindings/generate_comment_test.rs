@@ -405,3 +405,65 @@ fn test_generate_unsupported_item_reports_cause() -> Result<()> {
     assert_eq!(errors, [("first {}", "first reason"), ("second reason", "")]);
     Ok(())
 }
+
+#[gtest]
+fn test_generate_unsupported_do_not_bind_item_reports_error_without_comment() -> Result<()> {
+    let factory = make_factory();
+    let db = factory.make_db();
+    let actual = {
+        let _scope = error_report::ItemScope::new(
+            db.errors(),
+            error_report::ItemName {
+                name: "test_item".into(),
+                id: TEST_ITEM_ID.as_u64(),
+                unique_name: None,
+                defining_target: None,
+                source_loc: Some(TEST_ITEM_REPORT_SOURCE_LOC.into()),
+            },
+        );
+        let mut unsupported_item = db.new_unsupported_item_with_static_message(
+            &TestItem { decl_loc: Some(test_decl_loc()), must_bind: false },
+            /* path= */ None,
+            "unsupported_message",
+        );
+        unsupported_item.set_do_not_bind(["some reason"].into_iter().collect());
+        generate_unsupported(&db, unsupported_item.into()).generated_items
+    };
+
+    // No comment is generated...
+    assert!(actual.is_empty());
+
+    // ...but the error is still reported.
+    let entries: Vec<error_report::ErrorReportEntry> =
+        serde_json::from_str(&factory.errors().to_json_string())?;
+    let errors: Vec<&str> = entries[0].errors.iter().map(|e| e.fmt()).collect();
+    assert_eq!(errors, ["unsupported_message"]);
+    Ok(())
+}
+
+#[gtest]
+fn test_generate_unsupported_item_without_do_not_bind_gets_comment() -> Result<()> {
+    let factory = make_factory();
+    let db = factory.make_db_with_golden_test(true);
+    let _scope = error_report::ItemScope::new(
+        db.errors(),
+        error_report::ItemName {
+            name: "test_item".into(),
+            id: TEST_ITEM_ID.as_u64(),
+            unique_name: None,
+            defining_target: None,
+            source_loc: Some(TEST_ITEM_REPORT_SOURCE_LOC.into()),
+        },
+    );
+    let unsupported_item = db.new_unsupported_item_with_static_message(
+        &TestItem { decl_loc: Some(test_decl_loc()), must_bind: false },
+        /* path= */ None,
+        "unsupported_message",
+    );
+    assert!(unsupported_item.do_not_bind().is_empty());
+    let actual = generate_unsupported(&db, unsupported_item.into()).generated_items;
+    let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
+    let expected = "error: item `test_item` could not be bound\n  unsupported_message";
+    assert_rs_matches!(quote! { #actual }, quote! { __COMMENT__ #expected});
+    Ok(())
+}

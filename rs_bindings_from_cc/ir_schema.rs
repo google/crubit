@@ -641,6 +641,10 @@ pub(crate) fn schema() -> Schema {
             must_bind: Bool,
             #[optional]
             defining_target: BazelLabel,
+            // If not bound because of `CRUBIT_DO_NOT_BIND`, the reasons given (never empty: a
+            // default reason is used if none is given). Empty for all other items. Reported as an
+            // error, but no comment is generated in the bindings.
+            do_not_bind: Vec(Str),
         }
         struct Comment {
             text: Str,

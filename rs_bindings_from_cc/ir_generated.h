@@ -2744,6 +2744,10 @@ struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem {
   void clear_defining_target() { has_bits_ &= ~0x10ULL; defining_target_ = {}; }
   std::string_view defining_target() const { return defining_target_.AsView(); }
   void set_defining_target(std::string_view value) { has_bits_ |= 0x10ULL; defining_target_ = FfiString(value); }
+  const FfiVec<FfiString>& do_not_bind() const { return do_not_bind_; }
+  FfiVec<FfiString>* mutable_do_not_bind() { return &do_not_bind_; }
+  void clear_do_not_bind() { do_not_bind_.Clear(); }
+  void add_do_not_bind(std::string_view value) { do_not_bind_.Add(FfiString(value)); }
   friend bool operator==(const UnsupportedItem&, const UnsupportedItem&) = default;
   uint64_t has_bits_ = 0;
   FfiString name_{};
@@ -2756,6 +2760,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem {
   uint64_t id_{};
   bool must_bind_{};
   FfiString defining_target_{};
+  FfiVec<FfiString> do_not_bind_{};
 };
 
 struct CRUBIT_FFI_TRIVIAL_ABI Comment {
@@ -3669,7 +3674,7 @@ static_assert(sizeof(size_t) != 8 || (sizeof(unsupported_item::Path) == 40 && al
 static_assert(sizeof(size_t) != 8 || offsetof(unsupported_item::Path, ident_) == 8);
 static_assert(sizeof(size_t) != 8 || offsetof(unsupported_item::Path, enclosing_item_id_) == 32);
 static_assert(std::is_standard_layout_v<UnsupportedItem>);
-static_assert(sizeof(size_t) != 8 || (sizeof(UnsupportedItem) == 224 && alignof(UnsupportedItem) == 8));
+static_assert(sizeof(size_t) != 8 || (sizeof(UnsupportedItem) == 248 && alignof(UnsupportedItem) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, name_) == 8);
 static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, unique_name_) == 24);
 static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, kind_) == 40);
@@ -3680,6 +3685,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, inline_cpp_source
 static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, id_) == 192);
 static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, must_bind_) == 200);
 static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, defining_target_) == 208);
+static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, do_not_bind_) == 224);
 static_assert(std::is_standard_layout_v<Comment>);
 static_assert(sizeof(size_t) != 8 || (sizeof(Comment) == 32 && alignof(Comment) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(Comment, text_) == 0);
