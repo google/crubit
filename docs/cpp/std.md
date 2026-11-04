@@ -30,6 +30,11 @@ specified or inferred, or the data may be mutably aliased, then one should use
 `cpp_std::raw_string_view`. This is analogous to a `*const [u8]` in Rust.
 Otherwise, `cpp_std::string_view<'a>`.
 
+To give a C++ `struct` or `class` with a `string_view` field a lifetime
+parameter in Rust, annotate the type with `$lifetime_param("a")` from
+`"support/lifetime_annotations.h"`; see
+[Lifetime parameters on structs and classes](references_and_lifetimes.md#struct_lifetimes).
+
 API: support/cc_std_impl/string_view.rs
 
 ## `std::unique_ptr<T>` {#unique_ptr}
