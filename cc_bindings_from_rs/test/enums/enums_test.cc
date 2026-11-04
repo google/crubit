@@ -123,16 +123,16 @@ TEST(EnumsTest, TestCloneActiveVariant) {
 TEST(EnumsTest, TestRustReprEnumNoPayloadCtor) {
   // `constexpr` below is load-bearing - it is used to verify that aspect of the
   // generated bindings.
-  constexpr auto e1 = RustReprEnum::MakeVariant1();
+  constexpr auto e1 = RustReprEnum::Variant1::Make();
   EXPECT_EQ(e1.get_variant_number(), 1);
 
-  EXPECT_EQ(RustReprEnum::MakeVariant2().get_variant_number(), 2);
-  EXPECT_EQ(RustReprEnum::MakeVariant3().get_variant_number(), 3);
+  EXPECT_EQ(RustReprEnum::Variant2::Make().get_variant_number(), 2);
+  EXPECT_EQ(RustReprEnum::Variant3::Make().get_variant_number(), 3);
 }
 
 TEST(EnumsTest, TestRustReprEnumTuplePayloadCtor) {
   // TODO(b/489085607): Make `e1` variable `constexpr` when possible.
-  RustReprEnum e1 = RustReprEnum::MakeTuplePayloadVariant(123, 456);
+  RustReprEnum e1 = RustReprEnum::TuplePayloadVariant::Make(123, 456);
   ASSERT_TRUE(e1.is_tuple_payload_variant());
   EXPECT_EQ(e1.get_first_item_from_tuple_payload(), 123);
 }
@@ -152,12 +152,12 @@ TEST(EnumsTest, TestRustReprWithNamingConflictBetweenCtorsAndMethods) {
 }
 
 TEST(EnumsTest, TestIntReprEnumNoPayloadCtor) {
-  EXPECT_TRUE(IntReprEnumWithNoPayload::MakeNoPayload1().is_no_payload1());
-  EXPECT_TRUE(IntReprEnumWithNoPayload::MakeNoPayload2().is_no_payload2());
+  EXPECT_TRUE(IntReprEnumWithNoPayload::NoPayload1::Make().is_no_payload1());
+  EXPECT_TRUE(IntReprEnumWithNoPayload::NoPayload2::Make().is_no_payload2());
 }
 
 TEST(EnumsTest, TestIntReprWithSingleNoPayloadVariant) {
-  auto e = IntReprWithSingleNoPayloadVariant::MakeSingleVariant();
+  auto e = IntReprWithSingleNoPayloadVariant::SingleVariant::Make();
   EXPECT_TRUE(e.is_single_variant());
 }
 
@@ -168,12 +168,12 @@ TEST(EnumsTest, TestReprCWithSingleNoPayloadVariant) {
 }
 
 TEST(EnumsTest, TestRustReprWithSingleTuplePayloadVariant) {
-  auto e = RustReprWithSingleTuplePayloadVariant::MakeSingleVariant(123);
+  auto e = RustReprWithSingleTuplePayloadVariant::SingleVariant::Make(123);
   EXPECT_EQ(e.get_single_item_from_tuple_payload(), 123);
 }
 
 TEST(EnumsTest, TestQrError) {
-  auto e = QrError::MakeDataTooLong();
+  auto e = QrError::DataTooLong::Make();
   EXPECT_TRUE(e.is_data_too_long());
 }
 
@@ -197,8 +197,8 @@ TEST(EnumsTest, TestReprCWithExtremeDiscriminants) {
 }
 
 TEST(EnumsTest, TestNegReprIntEnum) {
-  auto e_minus_one = NegReprIntEnum::MakeMinusOne();
-  auto e_minus_two = NegReprIntEnum::MakeMinusTwo();
+  auto e_minus_one = NegReprIntEnum::MinusOne::Make();
+  auto e_minus_two = NegReprIntEnum::MinusTwo::Make();
   EXPECT_TRUE(e_minus_one.is_minus_one());
   EXPECT_FALSE(e_minus_one.is_minus_two());
 
@@ -234,8 +234,8 @@ TEST(EnumsTest, TestParamNameCollisions) {
   using enums::param_name_collisions::KeywordEnum;
   using enums::param_name_collisions::OptionLike;
 
-  auto some = OptionLike::Makesome();
-  auto none = OptionLike::Makenone();
+  auto some = OptionLike::some::Make();
+  auto none = OptionLike::none::Make();
   EXPECT_TRUE(is_some(some));
   EXPECT_FALSE(is_some(none));
   EXPECT_TRUE(is_none(none));
@@ -245,15 +245,15 @@ TEST(EnumsTest, TestParamNameCollisions) {
   EXPECT_TRUE(some.matches_variant(some));
   EXPECT_FALSE(some.matches_variant(none));
 
-  auto foo = FooBar::MakeFoo();
-  auto bar = FooBar::MakeBar();
+  auto foo = FooBar::Foo::Make();
+  auto bar = FooBar::Bar::Make();
   EXPECT_TRUE(is_foo(foo));
   EXPECT_FALSE(is_foo(bar));
   EXPECT_TRUE(is_bar(bar));
   EXPECT_FALSE(is_bar(foo));
 
-  auto match = KeywordEnum::Makematch();
-  auto other = KeywordEnum::Makeother();
+  auto match = KeywordEnum::match::Make();
+  auto other = KeywordEnum::other::Make();
   EXPECT_TRUE(is_match(match));
   EXPECT_FALSE(is_match(other));
 }

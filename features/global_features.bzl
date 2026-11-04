@@ -17,6 +17,7 @@ SUPPORTED_FEATURES = [
     "nonnull_smart_pointers",
     "reserve_standard_macros",
     "constant_arrays",
+    "enum_api_v2",
 ]
 
 # Per-feature denylists live in features/denylists/supported_feature_denylists.bzl, not here, so

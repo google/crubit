@@ -118,16 +118,6 @@ unsafe extern "C" fn __crubit_thunk_is_usome(
 const _: () = assert!(::core::mem::size_of::<::enums_golden::qr_error::QrError>() == 12);
 const _: () = assert!(::core::mem::align_of::<::enums_golden::qr_error::QrError>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Structured(
-    __param_0: *mut ::enums_golden::qr_error::StructuredQrError,
-    __ret_ptr: *mut ::enums_golden::qr_error::QrError,
-) -> () {
-    unsafe {
-        let __param_0 = __param_0.read();
-        __ret_ptr.write(::enums_golden::qr_error::QrError::Structured(__param_0));
-    }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_is_udata_utoo_ulong(
     __self: &'static ::enums_golden::qr_error::QrError,
 ) -> bool {
@@ -146,57 +136,6 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000
 }
 const _: () = assert!(::core::mem::size_of::<::enums_golden::qr_error::StructuredQrError>() == 12);
 const _: () = assert!(::core::mem::align_of::<::enums_golden::qr_error::StructuredQrError>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_TotalMismatch(
-    __param_0: usize,
-    __ret_ptr: *mut ::enums_golden::qr_error::StructuredQrError,
-) -> () {
-    unsafe {
-        __ret_ptr.write(::enums_golden::qr_error::StructuredQrError::TotalMismatch(__param_0));
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_SeqGreaterThanTotal(
-    __param_0: u8,
-    __param_1: u8,
-    __ret_ptr: *mut ::enums_golden::qr_error::StructuredQrError,
-) -> () {
-    unsafe {
-        __ret_ptr.write(::enums_golden::qr_error::StructuredQrError::SeqGreaterThanTotal(
-            __param_0, __param_1,
-        ));
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_LengthMismatch(
-    __param_0: usize,
-    __param_1: usize,
-    __ret_ptr: *mut ::enums_golden::qr_error::StructuredQrError,
-) -> () {
-    unsafe {
-        __ret_ptr.write(::enums_golden::qr_error::StructuredQrError::LengthMismatch(
-            __param_0, __param_1,
-        ));
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_UnsupportedVersion(
-    __param_0: i16,
-    __ret_ptr: *mut ::enums_golden::qr_error::StructuredQrError,
-) -> () {
-    unsafe {
-        __ret_ptr.write(::enums_golden::qr_error::StructuredQrError::UnsupportedVersion(__param_0));
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_SplitMax16(
-    __param_0: usize,
-    __ret_ptr: *mut ::enums_golden::qr_error::StructuredQrError,
-) -> () {
-    unsafe {
-        __ret_ptr.write(::enums_golden::qr_error::StructuredQrError::SplitMax16(__param_0));
-    }
-}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError(
     __self: &'static ::enums_golden::qr_error::StructuredQrError,
@@ -647,18 +586,6 @@ unsafe extern "C" fn __crubit_thunk_is_uminus_utwo(
 const _: () = assert!(::core::mem::size_of::<::enums_golden::repr_rust::RustReprEnum>() == 12);
 const _: () = assert!(::core::mem::align_of::<::enums_golden::repr_rust::RustReprEnum>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_TuplePayloadVariant(
-    __param_0: i32,
-    __param_1: i32,
-    __ret_ptr: *mut ::enums_golden::repr_rust::RustReprEnum,
-) -> () {
-    unsafe {
-        __ret_ptr.write(::enums_golden::repr_rust::RustReprEnum::TuplePayloadVariant(
-            __param_0, __param_1,
-        ));
-    }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_uvariant_unumber(
     __self: &'static ::enums_golden::repr_rust::RustReprEnum,
 ) -> i32 {
@@ -737,19 +664,6 @@ const _: () = assert!(
     ::core::mem::align_of::<::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant>()
         == 4
 );
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_SingleVariant(
-    __param_0: i32,
-    __ret_ptr: *mut ::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant,
-) -> () {
-    unsafe {
-        __ret_ptr.write(
-            ::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant::SingleVariant(
-                __param_0,
-            ),
-        );
-    }
-}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_usingle_uitem_ufrom_utuple_upayload(
     __self: &'static ::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant,
