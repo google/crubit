@@ -116,7 +116,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(8)
     return ::rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline ::rs::IteratorEnd end() & { return ::rs::IteratorEnd(); }
-  ::rs::SliceRef<const ::std::int32_t> slice{};
+  ::rs::SliceRef<const ::std::int32_t> slice{
+      ::crubit::internal::SliceRefDanglingTag{}, 4};
   ::std::uintptr_t index{};
 
  private:
@@ -516,6 +517,8 @@ inline void ::stdlib::RefIterator::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::stdlib::RefIterator;
   static_assert(0 == offsetof(__crubit_assert_type, slice));
   static_assert(16 == offsetof(__crubit_assert_type, index));
+  static_assert(4 ==
+                alignof(decltype(__crubit_assert_type::slice)::element_type));
 }
 }  // namespace stdlib
 

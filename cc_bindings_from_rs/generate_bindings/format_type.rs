@@ -357,6 +357,11 @@ fn format_slice_ref_for_cc<'tcx>(
             }
         });
     snippet.prereqs.includes.insert(db.support_header("rs_std/slice_ref.h"));
+    // Like a pointer, `rs::SliceRef<T>` only stores a `T*`, so `T` only needs to be
+    // forward-declared. Requiring its definition can create a cycle when `T` refers back to the
+    // type containing the slice, e.g. `enum Value { Dict(Dict) }` and
+    // `struct Dict { values: &'static [(&'static str, Value)] }`.
+    snippet.prereqs.forward_declare_type(element_ty);
     Ok(snippet)
 }
 
@@ -813,11 +818,12 @@ fn format_box_for_cc<'tcx>(
                 }
             }
             let inner_snippet = db.format_ty_for_cc(pointee, TypeLocation::TemplateArg)?;
+            let element_tokens = inner_snippet.into_tokens(&mut prereqs);
             // A forward declaration of `T` suffices to declare `rs::Box<T>` as a function
             // parameter or struct field. The definition of `T` must be available where the box is
-            // destroyed, so that its destructor can be instantiated.
+            // destroyed, so that its destructor can be instantiated. This must come after
+            // `into_tokens` above, which is what adds `T`'s definition to `prereqs`.
             prereqs.forward_declare_type(pointee);
-            let element_tokens = inner_snippet.into_tokens(&mut prereqs);
             CcSnippet { tokens: quote! { #template_name<#element_tokens> }, prereqs }
         }
     };

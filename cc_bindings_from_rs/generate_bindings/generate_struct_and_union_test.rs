@@ -1837,7 +1837,7 @@ fn test_format_item_struct_with_slice_reference_is_default_constructible() {
                 struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithSlice") alignas(8)
                 [[clang::trivial_abi]] StructWithSlice final {
                   ...
-                  ::rs::SliceRef<const ::std::int32_t> s{};
+                  ::rs::SliceRef<const ::std::int32_t> s{ ::crubit::internal::SliceRefDanglingTag{}, 4 };
                   ...
                 };
             }
@@ -1860,7 +1860,7 @@ fn test_format_item_struct_with_mut_slice_reference_is_default_constructible() {
                 struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithMutSlice") alignas(8)
                 [[clang::trivial_abi]] StructWithMutSlice final {
                   ...
-                  ::rs::SliceRef<::std::int32_t> s{};
+                  ::rs::SliceRef<::std::int32_t> s{ ::crubit::internal::SliceRefDanglingTag{}, 4 };
                   ...
                 };
             }

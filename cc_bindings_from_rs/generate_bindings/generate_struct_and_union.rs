@@ -2881,6 +2881,22 @@ struct Field<'tcx> {
     offset_of_next_field: u64,
     doc_comment: TokenStream,
     attributes: Vec<TokenStream>,
+    /// `align_of::<T>()` if the field is a reference or pointer to a slice `[T]` (formatted as
+    /// `rs::SliceRef<T>`). See `emit_struct_field`.
+    slice_element_align: Option<u64>,
+}
+
+/// If `ty` is formatted as `rs::SliceRef<T>` (a reference or raw pointer to a slice `[T]`),
+/// returns `align_of::<T>()`.
+fn slice_element_align<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Option<u64> {
+    let pointee = match ty.kind() {
+        ty::TyKind::Ref(_, pointee, _) | ty::TyKind::RawPtr(pointee, _) => *pointee,
+        _ => return None,
+    };
+    let ty::TyKind::Slice(element_ty) = pointee.kind() else {
+        return None;
+    };
+    get_layout(tcx, *element_ty).ok().map(|layout| layout.align().abi.bytes())
 }
 
 #[derive(Debug, Default)]
@@ -2960,6 +2976,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                         offset_of_next_field: self.layout.size.bytes(),
                         doc_comment: quote! {},
                         attributes: vec![],
+                        slice_element_align: None,
                     }],
                     size: self.layout.size.bytes(),
                 }];
@@ -3137,6 +3154,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             offset_of_next_field,
             doc_comment: quote! {},
             attributes: vec![],
+            slice_element_align: slice_element_align(self.db.tcx(), ty),
         }
     }
 
@@ -3207,6 +3225,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             offset_of_next_field,
             doc_comment: generate_doc_comment(self.db, field_def.did),
             attributes,
+            slice_element_align: slice_element_align(tcx, ty),
         }
     }
 
@@ -3224,6 +3243,18 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                     let offset = Literal::u64_unsuffixed(*offset);
                     quote! { static_assert(#offset == offsetof(__crubit_assert_type, #cc_name)); }
                 })
+                .chain(fields.iter().filter(|field| field.cpp_type.is_ok()).filter_map(
+                    |Field { cc_name, slice_element_align, .. }| {
+                        // Checks the alignment that `emit_struct_field` passed to
+                        // the `SliceRefDanglingTag` constructor, now that the element type is
+                        // complete.
+                        let align = Literal::u64_unsuffixed((*slice_element_align)?);
+                        Some(quote! {
+                            static_assert(#align == alignof(
+                                decltype(__crubit_assert_type::#cc_name)::element_type));
+                        })
+                    },
+                ))
                 .collect();
 
             CcSnippet::with_include(
@@ -3311,11 +3342,21 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
 
         if is_aggregate {
             cpp_type.map_snippets(|cpp_type| {
+                // `rs::SliceRef<T>{}` needs `alignof(T)`, so `T` would have to be defined before
+                // this struct. That's impossible if `T` refers back to this struct, so pass the
+                // alignment instead. `generate_common_assertions` checks it.
+                let initializer = match field.slice_element_align {
+                    Some(align) => {
+                        let align = Literal::u64_unsuffixed(align);
+                        quote! { ::crubit::internal::SliceRefDanglingTag{}, #align }
+                    }
+                    None => quote! {},
+                };
                 quote! {
                     #visibility __NEWLINE__
                     #doc_comment
                     #(#attributes)*
-                    #cpp_type #bracketed_cc_name {};
+                    #cpp_type #bracketed_cc_name { #initializer };
                 }
             })
         } else {

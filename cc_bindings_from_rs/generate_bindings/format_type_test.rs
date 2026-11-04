@@ -275,8 +275,8 @@ fn test_format_ty_for_cc_successes() {
             rs: "*mut [SomeStruct]",
             cc: "::rs::SliceRef< ::rust_out::SomeStruct>",
             includes: [ "<crubit/support/for/tests/rs_std/slice_ref.h>"],
-            prereq_def: "SomeStruct"
-
+            // Like a pointer, `SliceRef<T>` only needs `T` to be forward-declared.
+            prereq_fwd_decl: "SomeStruct"
         ),
         case!(
             rs: "&'static [i32]",

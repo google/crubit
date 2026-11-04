@@ -25,6 +25,7 @@ using ::enum_api_v2::ClonedEnum;
 using ::enum_api_v2::CollidesWithDiscriminant;
 using ::enum_api_v2::Command;
 using ::enum_api_v2::CustomDropEnum;
+using ::enum_api_v2::Expr;
 using ::enum_api_v2::Instruction;
 using ::enum_api_v2::MaybeRef;
 using ::enum_api_v2::MaybeTracked;
@@ -37,6 +38,7 @@ using ::enum_api_v2::Shape;
 using ::enum_api_v2::Sign;
 using ::enum_api_v2::TaggedEntry;
 using ::enum_api_v2::TrackedPayload;
+using ::enum_api_v2::Value;
 using ::enum_api_v2::Wrapper;
 using ::testing::AllOf;
 using ::testing::Field;
@@ -331,6 +333,22 @@ TEST(EnumApiV2Test, NonExhaustive) {
 TEST(EnumApiV2Test, EnumHelpersCoexistWithRsStdNamespace) {
   Shape circle = enum_api_v2::make_circle(6);
   EXPECT_EQ(rs::get_unchecked<Shape::Circle>(&circle)->__field0, 6);
+}
+
+TEST(EnumApiV2Test, RecursiveThroughSlice) {
+  EXPECT_EQ(enum_api_v2::dict_len(Value::Null::Make()), 0);
+  EXPECT_EQ(enum_api_v2::dict_len(Value::Int::Make(5)), 0);
+
+  Value dict = enum_api_v2::make_dict();
+  const Value::Dict* dict_variant = rs::get_if<Value::Dict>(&dict);
+  ASSERT_NE(dict_variant, nullptr);
+  EXPECT_EQ(dict_variant->__field0.values.size(), 2);
+  EXPECT_EQ(enum_api_v2::dict_len(dict), 2);
+}
+
+TEST(EnumApiV2Test, RecursiveThroughBox) {
+  EXPECT_EQ(enum_api_v2::eval(Expr::Lit::Make(4)), 4);
+  EXPECT_EQ(enum_api_v2::eval(enum_api_v2::negated_lit(3)), -3);
 }
 
 }  // namespace

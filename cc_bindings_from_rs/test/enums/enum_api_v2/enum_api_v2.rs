@@ -329,3 +329,56 @@ pub fn non_exhaustive_value(e: NonExhaustive) -> i32 {
         NonExhaustive::B(value) => value,
     }
 }
+
+/// An enum that refers back to itself through a struct and a slice, like a JSON value.
+#[derive(Clone, Copy)]
+pub enum Value {
+    Null,
+    Int(i64),
+    Dict(Dict),
+}
+
+#[derive(Clone, Copy)]
+pub struct Dict {
+    pub values: &'static [(&'static str, Value)],
+}
+
+static NESTED_VALUES: [(&str, Value); 2] = [("a", Value::Int(1)), ("b", Value::Null)];
+
+pub fn make_dict() -> Value {
+    Value::Dict(Dict { values: &NESTED_VALUES })
+}
+
+pub fn dict_len(value: Value) -> usize {
+    match value {
+        Value::Dict(dict) => dict.values.len(),
+        Value::Null | Value::Int(_) => 0,
+    }
+}
+
+/// An enum that refers back to itself through a struct and a `Box`, like an expression tree.
+/// `Default` makes both types C++-movable, which `EnumApiV2` needs for the `Neg` variant.
+#[derive(Default)]
+pub enum Expr {
+    #[default]
+    Zero,
+    Lit(i32),
+    Neg(Neg),
+}
+
+#[derive(Default)]
+pub struct Neg {
+    pub operand: Box<Expr>,
+}
+
+pub fn negated_lit(value: i32) -> Expr {
+    Expr::Neg(Neg { operand: Box::new(Expr::Lit(value)) })
+}
+
+pub fn eval(expr: &Expr) -> i32 {
+    match expr {
+        Expr::Zero => 0,
+        Expr::Lit(value) => *value,
+        Expr::Neg(neg) => -eval(&neg.operand),
+    }
+}
