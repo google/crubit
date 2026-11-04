@@ -9,9 +9,9 @@
 #include <string>
 #include <vector>
 
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_join.h"
 #include "lifetime_annotations/lifetime.h"
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang {
@@ -47,11 +47,12 @@ Lifetime LifetimeSubstitutions::Substitute(Lifetime l) const {
 void LifetimeSubstitutions::Dump() const {
   std::vector<std::string> parts;
   for (auto [from, to] : substitutions_) {
-    parts.push_back(
-        absl::StrCat(from.DebugString(), " -> ", Substitute(to).DebugString()));
+    parts.push_back((llvm::Twine(from.DebugString()) + llvm::Twine(" -> ") +
+                     llvm::Twine(Substitute(to).DebugString()))
+                        .str());
   }
   std::sort(parts.begin(), parts.end());
-  llvm::errs() << absl::StrJoin(parts, ", ") << "\n";
+  llvm::errs() << llvm::join(parts, ", ") << "\n";
 }
 
 }  // namespace lifetimes

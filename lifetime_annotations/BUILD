@@ -10,7 +10,6 @@ cc_library(
     srcs = ["lifetime.cc"],
     hdrs = ["lifetime.h"],
     deps = [
-        "@abseil-cpp//absl/strings",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -50,7 +49,6 @@ cc_library(
         ":lifetime_substitutions",
         ":lifetime_symbol_table",
         ":pointee_type",
-        "@abseil-cpp//absl/strings",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
@@ -67,8 +65,6 @@ cc_library(
         ":lifetime_symbol_table",
         ":pointee_type",
         ":type_lifetimes",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",
@@ -87,13 +83,10 @@ crubit_cc_test(
         ":lifetime_error",
         ":lifetime_symbol_table",
         ":type_lifetimes",
+        "//common:status",
         "//common:status_test_matchers",
         "//lifetime_annotations/test:named_func_lifetimes",
         "//lifetime_annotations/test:run_on_code",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:str_format",
         "@googletest//:gtest_main",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
@@ -108,7 +101,6 @@ cc_library(
     hdrs = ["lifetime_substitutions.h"],
     deps = [
         ":lifetime",
-        "@abseil-cpp//absl/strings",
         "@llvm-project//llvm:Support",
     ],
 )
