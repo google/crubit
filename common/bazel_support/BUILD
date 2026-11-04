@@ -37,7 +37,7 @@ bool_flag(
 
 bool_flag(
     name = "use_label_encoded_names_for_deps",
-    build_setting_default = False,
+    build_setting_default = True,
     visibility = ["//:__subpackages__"],
 )
 
