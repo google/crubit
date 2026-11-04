@@ -90,4 +90,27 @@ inline const AbstractOptIn& abstract_opt_in_instance() {
   return *kConcrete;
 }
 
+struct CRUBIT_MUST_BIND ArrayDebuggable {
+  char large[64] = {};
+  int matrix[2][3] = {{1, 2, 3}, {4, 5, 6}};
+};
+
+struct CRUBIT_MUST_BIND MixedOpaqueArrayDebuggable {
+  int header = 7;
+  int arr[2] = {8, 9};
+  int* absl_nullable ptrs[2] = {};
+};
+
+enum CRUBIT_MUST_BIND UnscopedDebugEnum {
+  kFirst = 10,
+  kSecond = 20,
+};
+
+struct CRUBIT_MUST_BIND EnumArrayDebuggable {
+  UnscopedDebugEnum unscoped[2] = {kFirst, kSecond};
+  Enum scoped[2] = {Enum::kOne, static_cast<Enum>(5)};
+  Enum matrix[2][2] = {{Enum::kOne, static_cast<Enum>(2)},
+                       {static_cast<Enum>(3), Enum::kOne}};
+};
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_DEBUG_DEBUGGABLES_H_

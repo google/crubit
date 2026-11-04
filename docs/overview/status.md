@@ -33,7 +33,7 @@ additionally [ABI-compatible](../types/index.md#abi-compatibility), and
 | **Containers**                             |                             |                           |
 | [C++ vector](../cpp/std.md#vector)         | `std::vector<T>`            | `cpp_std::vector<T>`      |
 | [Rust `Vec`](../rust/std.md#vec)           | `rs::Vec<T>`                | `Vec<T>`                  |
-| Fixed-size array                           | `std::array<T, N>`          | `[T; N]`                  |
+| Fixed-size array                           | `std::array<T, N>`, `T[N]`  | `[T; N]`                  |
 | **Strings**                                |                             |                           |
 | [String view](../cpp/std.md#string_view)   | `std::string_view`          | `cpp_std::string_view`    |
 | [C++ string](../cpp/std.md#string)         | `std::string`               | `cpp_std::string_wrapper` |

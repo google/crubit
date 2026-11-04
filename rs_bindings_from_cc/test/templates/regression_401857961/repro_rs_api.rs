@@ -24,9 +24,7 @@ pub mod repro {
     ///CRUBIT_ANNOTATE: cpp_type=repro :: Interval
     ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct Interval {
-        /// Reason for representing this field as a blob of bytes:
-        /// C-style array types are not yet supported: char[1] (b/575922365)
-        pub(crate) nanos: [::core::mem::MaybeUninit<u8>; 1],
+        pub nanos: [::ffi_11::c_char; 1],
     }
     impl !Send for Interval {}
     impl !Sync for Interval {}

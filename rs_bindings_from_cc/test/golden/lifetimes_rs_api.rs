@@ -47,8 +47,7 @@ pub unsafe fn ConsumeArray(pair: *mut ::ffi_11::c_int) {
     unsafe { crate::detail::__rust_thunk___Z12ConsumeArrayPi(pair) }
 }
 
-// error: type alias `Arr` could not be bound
-//   C-style array types are not yet supported: int[2] (b/575922365)
+pub type Arr = [::ffi_11::c_int; 2];
 
 /// # Safety
 ///

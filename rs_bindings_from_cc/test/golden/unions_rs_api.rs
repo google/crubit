@@ -216,6 +216,7 @@ pub union NonEmptyUnion {
     pub char_field: ::ffi_11::c_char,
     pub int_field: ::ffi_11::c_int,
     pub long_long_field: ::ffi_11::c_longlong,
+    pub int_array_field: [::ffi_11::c_int; 2],
 }
 impl !Send for NonEmptyUnion {}
 impl !Sync for NonEmptyUnion {}
@@ -313,6 +314,8 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for NonCopyUnion2 {
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
+/// * Document why the following public unsafe fields of this type cannot be misused by callee:
+///   * `volatile_array_field_not_yet_supported`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported `volatile` qualifier: volatile char[42]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "20UnionWithOpaqueField"]
 #[repr(C)]
@@ -320,8 +323,8 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for NonCopyUnion2 {
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub union UnionWithOpaqueField {
     /// Reason for representing this field as a blob of bytes:
-    /// C-style array types are not yet supported: char[42] (b/575922365)
-    pub(crate) constant_array_field_not_yet_supported: [::core::mem::MaybeUninit<u8>; 42],
+    /// Unsupported `volatile` qualifier: volatile char[42]
+    pub(crate) volatile_array_field_not_yet_supported: [::core::mem::MaybeUninit<u8>; 42],
 }
 impl !Send for UnionWithOpaqueField {}
 impl !Sync for UnionWithOpaqueField {}
@@ -564,10 +567,12 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::NonEmptyUnion, char_field) == 0);
     assert!(::core::mem::offset_of!(crate::NonEmptyUnion, int_field) == 0);
     assert!(::core::mem::offset_of!(crate::NonEmptyUnion, long_long_field) == 0);
+    assert!(::core::mem::offset_of!(crate::NonEmptyUnion, int_array_field) == 0);
     static_assertions::assert_impl_all!(bool: Copy);
     static_assertions::assert_impl_all!(::ffi_11::c_char: Copy);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     static_assertions::assert_impl_all!(::ffi_11::c_longlong: Copy);
+    static_assertions::assert_impl_all!([::ffi_11::c_int;2]: Copy);
     assert!(::core::mem::size_of::<crate::NonCopyUnion>() == 4);
     assert!(::core::mem::align_of::<crate::NonCopyUnion>() == 4);
     static_assertions::assert_not_impl_any!(crate::NonCopyUnion: Copy,Drop);
@@ -587,7 +592,7 @@ const _: () = {
     assert!(
         ::core::mem::offset_of!(
             crate::UnionWithOpaqueField,
-            constant_array_field_not_yet_supported
+            volatile_array_field_not_yet_supported
         ) == 0
     );
     assert!(::core::mem::size_of::<crate::TrivialButInheritable>() == 4);

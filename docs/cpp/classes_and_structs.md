@@ -39,6 +39,10 @@ The fields on the Rust struct type are the corresponding Rust types:
 *   If the field has a user-defined type, such as a [class
     type](classes_and_structs.md) or [enum](enums.md), then the Rust field uses
     the bindings for that type.
+*   If the field has a non-zero fixed-length C-style array type (`T[N]`) of a
+    [primitive type](../types/primitive.md) or [enum](enums.md) (including
+    multidimensional arrays such as `T[M][N]`), then the Rust field has type
+    `[T; N]`.
 
 ### Unsupported fields {#opaque_fields}
 
