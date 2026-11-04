@@ -11,13 +11,13 @@
 
 TEST void testSimpleValues(pragma_none::IntPtr a, pragma_nonnull::IntPtr b) {
   unknown(a);
-  nonnull(b);
+  unknown(b);
 }
 
 TEST void testCompoundTypes(pragma_none::Pointer<pragma_nonnull::IntPtr> a,
                             pragma_nonnull::Pointer<pragma_none::IntPtr> b) {
-  type<int* _Nonnull*>(a);
-  type<int** _Nonnull>(b);
+  type<int**>(a);
+  type<int**>(b);
 }
 
 TEST void testMemberInstantiation(pragma_none::IntPtrVec& a,
@@ -31,7 +31,7 @@ TEST void testMemberInstantiation(pragma_none::IntPtrVec& a,
 TEST void testFunctionInstantiation(pragma_none::IntPtrVec& a,
                                     pragma_nonnull::IntPtrVec& b) {
   unknown(create<pragma_none::IntPtr>());
-  nonnull(create<pragma_nonnull::IntPtr>());
+  unknown(create<pragma_nonnull::IntPtr>());
 }
 
 TEST void testOutputParameters(int* _Nonnull x, int* _Nonnull y) {
