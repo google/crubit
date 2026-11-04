@@ -152,7 +152,6 @@ cc_library(
     name = "optional_lib",
     hdrs = ["optional_lib.h"],
     aspect_hints = [
-        "//features:layout_compat_optional",
         "//features:layout_compat_tuple",
     ],
     deps = [
@@ -183,7 +182,7 @@ cc_library(
     hdrs = ["optional_nested_pair_lib.h"],
     aspect_hints = [
         ":optional_nested_pair_lib_rust.hint",
-        "//features:layout_compat_optional",
+        "//features:supported",
     ],
     deps = [
         "//support:annotations",

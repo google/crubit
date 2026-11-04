@@ -11,7 +11,6 @@ SUPPORTED_FEATURES = [
     "assume_lifetimes",
     "template_instantiation",
     "proto_references",
-    "layout_compat_optional",
     "always_specialize_generics_in_cpp_api_from_rust",
     "forward_declare",
     "iterator_item_references",
