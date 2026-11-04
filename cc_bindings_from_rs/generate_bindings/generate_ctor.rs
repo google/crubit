@@ -216,7 +216,7 @@ pub fn generate_copy_ctor_and_assignment_operator<'tcx>(
                     .and_then(|id| db.symbol_canonical_name(id).ok())
                     .map(|canon| {
                         let parts =
-                            canon.rs_name_parts().map(|s| format!("{}", s)).collect::<Vec<_>>();
+                            canon.rs_name_parts(db).map(|s| format!("{}", s)).collect::<Vec<_>>();
                         parts.join("::")
                     })
                     .unwrap_or_else(|| format!("{}", core.common.self_ty));

@@ -142,7 +142,7 @@ create_proto_status_or(::std::int32_t num);
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    ":: alloc :: vec :: Vec < :: foo_proto :: FooRequestStats >")::rs::
+    ":: alloc :: vec :: Vec < :: foo_rust_proto :: FooRequestStats >")::rs::
     Vec<::proto::Rust<::foo_service::FooRequestStats>>
     : public ::rs::VecBase<::proto::Rust<::foo_service::FooRequestStats>> {
  public:

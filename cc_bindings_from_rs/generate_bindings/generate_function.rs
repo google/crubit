@@ -893,7 +893,7 @@ fn format_trait_ref_for_rs<'tcx>(
 ) -> Result<TokenStream> {
     let trait_name = db
         .symbol_canonical_name(trait_ref.def_id)
-        .map(|fully_qualified_name| fully_qualified_name.format_for_rs())?;
+        .map(|fully_qualified_name| fully_qualified_name.format_for_rs(db))?;
     let mut trait_args =
         trait_ref.args.as_slice()[1..].iter().filter_map(|arg| arg.as_type()).peekable();
     if trait_args.peek().is_none() {
@@ -1332,7 +1332,7 @@ pub fn generate_function<'tcx>(
             } else {
                 struct_name
                     .clone()
-                    .map(|fully_qualified_name| fully_qualified_name.format_for_rs())?
+                    .map(|fully_qualified_name| fully_qualified_name.format_for_rs(db))?
             };
             // `struct_name` names the ADT, which is what the C++ class is generated for. But for
             // an `impl Trait for &T` block the trait is implemented on the reference type, so
@@ -1360,11 +1360,11 @@ pub fn generate_function<'tcx>(
             {
                 quote! { <#struct_name_tokens>::#fn_name }
             } else {
-                let struct_name = struct_name.format_for_rs();
+                let struct_name = struct_name.format_for_rs(db);
                 quote! { #struct_name :: #fn_name }
             }
         } else if let Ok(canonical) = db.symbol_canonical_name(def_id) {
-            canonical.format_for_rs()
+            canonical.format_for_rs(db)
         } else {
             panic!(
                 "`generate_function` called on unreachable top-level function {}",

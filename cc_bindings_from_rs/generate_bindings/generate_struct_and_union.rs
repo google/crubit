@@ -331,7 +331,7 @@ pub fn generate_associated_item<'tcx>(
                     let trait_rs_name = db
                         .symbol_canonical_name(trait_ref.def_id)
                         .expect("Trait impl should have a canonical name.")
-                        .format_for_rs();
+                        .format_for_rs(db);
                     // The first argument of a trait ref is the self type.
                     let self_ty = trait_ref.args.type_at(0);
                     let alias_type = normalize_ty(
@@ -791,7 +791,7 @@ fn generate_into_trait_thunk<'tcx>(
         Some(def_id) if !query_compiler::has_non_lifetime_generics(tcx, def_id) => (
             erase_regions(tcx, src_ty),
             db.symbol_canonical_name(def_id)
-                .map(|name| name.format_for_rs())
+                .map(|name| name.format_for_rs(db))
                 .or_else(|_| db.format_ty_for_rs(replace_all_regions_with_static(tcx, src_ty)))?,
         ),
         _ => (
@@ -2565,7 +2565,7 @@ pub fn generate_adt_core_for_ty<'tcx>(
         let static_self_ty = replace_all_regions_with_static(tcx, self_ty);
         db.format_ty_for_rs(static_self_ty)?
     } else {
-        fully_qualified_name.format_for_rs()
+        fully_qualified_name.format_for_rs(db)
     };
     let cpp_name = format_cc_ident(db, fully_qualified_name.unqualified.cpp_name.as_str())
         .context("Error formatting item name")?;

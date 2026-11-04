@@ -1932,7 +1932,7 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
             );
             let format_adt = || -> Result<TokenStream> {
                 let canonical_name = db.symbol_canonical_name(adt.did())?;
-                let type_name = canonical_name.format_for_rs();
+                let type_name = canonical_name.format_for_rs(db);
                 let generic_params = if substs.is_empty() {
                     quote! {}
                 } else {
@@ -1963,7 +1963,7 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
                         db.specializations().iter().find(|s| s.ty == erased_ty)
                         && let Ok(canonical_name) = db.symbol_canonical_name(specialization.def_id)
                     {
-                        canonical_name.format_for_rs()
+                        canonical_name.format_for_rs(db)
                     } else {
                         return Err(err);
                     }
@@ -2142,7 +2142,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 return Ok(CrubitAbiTypeWithCcPrereqs {
                     crubit_abi_type: CrubitAbiType::Transmute {
                         rust_type: {
-                            let parts = fully_qualified_name.rs_name_parts();
+                            let parts = fully_qualified_name.rs_name_parts(db);
                             quote! { #(::#parts)* }
                         },
                         cpp_type: cpp_type.as_str().parse().expect("Malformed cpp_type annotation"),
@@ -2204,7 +2204,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
 
                 CrubitAbiType::Transmute {
                     rust_type: {
-                        let parts = fully_qualified_name.rs_name_parts();
+                        let parts = fully_qualified_name.rs_name_parts(db);
                         quote! { #(::#parts)* }
                     },
                     cpp_type: fully_qualified_name.format_for_cc(db)?,

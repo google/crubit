@@ -302,6 +302,7 @@ pub fn new_database<'db>(
     is_golden_test: bool,
     h_out_include_guard: IncludeGuard,
     ignore_symbols_from_files: Rc<HashSet<PathBuf>>,
+    crate_num_to_extern_name: Rc<std::collections::BTreeMap<rustc_span::def_id::CrateNum, Rc<str>>>,
 ) -> BindingsGenerator<'db> {
     BindingsGenerator::new(
         tcx,
@@ -321,6 +322,7 @@ pub fn new_database<'db>(
         is_golden_test,
         h_out_include_guard,
         ignore_symbols_from_files,
+        crate_num_to_extern_name,
         specializations,
         source_crate_num,
         supported_traits,
@@ -423,12 +425,16 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
         if name.as_ref() == "alloc" {
             alloc_renamed = true;
         }
-        let name = make_rs_ident(name);
-        let renamed = make_rs_ident(renamed);
+        let name_str = name.as_ref();
+        let name = make_rs_ident(name_str);
+        let renamed = make_rs_ident(renamed.as_ref());
 
-        extern_crate_decls.push(quote! {
-            extern crate #name as #renamed;
-        });
+        let used_directly = db.crate_num_to_extern_name().values().any(|v| v.as_ref() == name_str);
+        if !used_directly {
+            extern_crate_decls.push(quote! {
+                extern crate #name as #renamed;
+            });
+        }
     }
 
     let tcx = db.tcx();
@@ -1178,7 +1184,7 @@ fn generate_trait<'tcx>(
 
     let doc_comment = generate_doc_comment(db, trait_id);
     let trait_name = format_cc_ident(db, canonical_name.unqualified.cpp_name.as_str())?;
-    let rs_type = canonical_name.format_for_rs().to_string();
+    let rs_type = canonical_name.format_for_rs(db).to_string();
     let attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
 
     let tcx = db.tcx();
@@ -1238,7 +1244,7 @@ fn create_type_alias<'tcx>(
     alias_type: Ty<'tcx>,
 ) -> Result<CcSnippet<'tcx>> {
     let fully_qualified_name = db.symbol_canonical_name(def_id)?;
-    let rs_type = format!("{}", fully_qualified_name.format_for_rs());
+    let rs_type = format!("{}", fully_qualified_name.format_for_rs(db));
     create_type_alias_with_rs_type(
         db,
         def_id,
