@@ -2896,7 +2896,7 @@ fn slice_element_align<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Option<u64> {
     let ty::TyKind::Slice(element_ty) = pointee.kind() else {
         return None;
     };
-    get_layout(tcx, *element_ty).ok().map(|layout| layout.align().abi.bytes())
+    get_layout(tcx, *element_ty).ok().map(|layout| layout.align().bytes())
 }
 
 #[derive(Debug, Default)]
@@ -3677,16 +3677,16 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                     #[rustversion::before(2026-05-18)]
                     let get_align =
                         |(_, layout): (VariantIdx, &LayoutData<FieldIdx, VariantIdx>)| {
-                            layout.align.abi.bytes().min(max_alignment)
+                            layout.align.bytes().min(max_alignment)
                         };
                     #[rustversion::since(2026-05-18)]
                     let get_align = |(i, _): (VariantIdx, &VariantLayout<FieldIdx>)| {
-                        LayoutData::for_variant(layout, i).align.abi.bytes().min(max_alignment)
+                        LayoutData::for_variant(layout, i).align.bytes().min(max_alignment)
                     };
                     layout_vars.iter_enumerated().map(get_align).collect_vec()
                 }
                 Variants::Single { .. } | Variants::Empty => {
-                    vec![self.layout.align.abi.bytes()]
+                    vec![self.layout.align.bytes()]
                 }
             };
 
