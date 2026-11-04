@@ -53,9 +53,13 @@ crubit_rust_test(
 # Checks the bindings of `:lib`. In particular, they must contain the ordinary `//` comments of
 # `shared.h`. When header modules are used, these comments aren't in the precompiled header
 # modules, so `rs_bindings_from_cc` reads them from the source of the headers instead.
+#
+# The golden file is specific to header modules (without them, `shared.h` is parsed once, in a
+# different place), so the test is skipped when they're off.
 golden_test(
     name = "lib_golden_test",
     basename = "lib",
     cc_library = ":lib",
     golden_rs = "lib_rs_api.rs",
+    requires_header_modules = True,
 )
