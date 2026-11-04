@@ -296,9 +296,11 @@ cc_library(
     name = "status_macros",
     hdrs = ["status_macros.h"],
     deps = [
+        ":status_absl_compat",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -425,9 +427,12 @@ cc_library(
     testonly = True,
     hdrs = ["status_test_matchers.h"],
     deps = [
+        ":status",
+        ":status_macros",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -517,4 +522,61 @@ rust_static_library(
     name = "include_allocator_symbols",
     srcs = ["empty.rs"],
     edition = "2024",
+)
+
+cc_library(
+    name = "status",
+    srcs = ["status.cc"],
+    hdrs = ["status.h"],
+    deps = [
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "status_test",
+    srcs = ["status_test.cc"],
+    deps = [
+        ":status",
+        "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "status_absl_compat",
+    hdrs = ["status_absl_compat.h"],
+    deps = [
+        ":status",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "status_macros_test",
+    srcs = ["status_macros_test.cc"],
+    deps = [
+        ":status",
+        ":status_macros",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "status_test_matchers_test",
+    srcs = ["status_test_matchers_test.cc"],
+    deps = [
+        ":status",
+        ":status_macros",
+        ":status_test_matchers",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
+    ],
 )
