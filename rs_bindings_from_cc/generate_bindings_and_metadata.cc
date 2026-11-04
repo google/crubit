@@ -11,14 +11,11 @@
 #include <variant>
 #include <vector>
 
-#include "absl/base/nullability.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/status/status.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
+#include "llvm/Support/Error.h"
 #include "common/check.h"
+#include "common/status.h"
 #include "common/status_macros.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/collect_instantiations.h"
 #include "rs_bindings_from_cc/collect_namespaces.h"
@@ -26,6 +23,10 @@
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "rs_bindings_from_cc/ir_generated.h"
 #include "rs_bindings_from_cc/src_code_gen.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Regex.h"
 
 namespace crubit {
@@ -45,7 +46,7 @@ const ir_proto::Namespace* _Nullable FindNamespace(const IR& ir,
 
 std::vector<const ir_proto::Record* _Nonnull> FindInstantiationsInNamespace(
     const IR& ir, ItemId namespace_id) {
-  absl::flat_hash_set<ItemId> record_ids;
+  llvm::DenseSet<ItemId> record_ids;
   for (const auto* type_alias : get_items_if<ir_proto::TypeAlias>(ir)) {
     if (ItemId(type_alias->enclosing_item_id()) == namespace_id) {
       CRUBIT_CHECK(type_alias->underlying_type().variant().has_decl());
@@ -62,9 +63,9 @@ std::vector<const ir_proto::Record* _Nonnull> FindInstantiationsInNamespace(
   return result;
 }
 
-absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
+llvm::Expected<BindingsAndMetadata> GenerateBindingsAndMetadata(
     Cmdline& cmdline, std::vector<std::string> clang_args,
-    absl::flat_hash_map<HeaderName, std::string>
+    llvm::DenseMap<HeaderName, std::string>
         virtual_headers_contents_for_testing) {
   std::vector<llvm::StringRef> clang_args_view;
   clang_args_view.insert(clang_args_view.end(), clang_args.begin(),
@@ -75,10 +76,9 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
       std::vector<std::string> requested_instantiations,
       CollectInstantiations(args.srcs_to_scan_for_instantiations));
 
-  std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist =
-      std::nullopt;
+  std::optional<llvm::StringSet<>> do_not_bind_allowlist = std::nullopt;
   if (args.do_not_bind_allowlist.has_value()) {
-    do_not_bind_allowlist = absl::flat_hash_set<std::string>();
+    do_not_bind_allowlist = llvm::StringSet<>();
     for (const std::string& decl : *args.do_not_bind_allowlist) {
       do_not_bind_allowlist->insert(decl);
     }
@@ -90,27 +90,42 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
     template_blocklist_path_regex = std::make_shared<llvm::Regex>(
         args.template_blocklist_path_regex, llvm::Regex::RegexFlags::NoFlags);
     if (!template_blocklist_path_regex->isValid()) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("Failed to parse template_blocklist_path_regex: ",
-                       args.template_blocklist_path_regex, " as llvm::Regex"));
+      return InvalidArgumentError(
+          (llvm::Twine("Failed to parse template_blocklist_path_regex: ") +
+           args.template_blocklist_path_regex + " as llvm::Regex")
+              .str());
     }
   }
 
+  llvm::DenseMap<HeaderName, BazelLabel> headers_to_targets;
+  for (const auto& [k, v] : args.headers_to_targets) {
+    headers_to_targets[k] = v;
+  }
+  llvm::DenseMap<BazelLabel, llvm::StringSet<>> target_to_features;
+  for (const auto& [k, v] : args.target_to_features) {
+    for (const auto& f : v) {
+      target_to_features[k].insert(f);
+    }
+  }
+  llvm::DenseMap<BazelLabel, std::string> target_to_crate_name;
+  for (const auto& [k, v] : args.target_to_crate_name) {
+    target_to_crate_name[k] = v;
+  }
   CRUBIT_ASSIGN_OR_RETURN(
       IR ir, IrFromCc(IrFromCcOptions{
                  .current_target = args.current_target,
                  .public_headers = args.public_headers,
                  .virtual_headers_contents_for_testing =
                      std::move(virtual_headers_contents_for_testing),
-                 .headers_to_targets = args.headers_to_targets,
+                 .headers_to_targets = headers_to_targets,
                  .extra_rs_srcs = args.extra_rs_srcs,
                  .extra_cpp_srcs = args.extra_cpp_srcs,
                  .reexported_namespaces = args.reexported_namespaces,
                  .unstable_rust_features = args.unstable_rust_features,
                  .clang_args = clang_args_view,
                  .extra_instantiations = requested_instantiations,
-                 .crubit_features = args.target_to_features,
-                 .crate_names = args.target_to_crate_name,
+                 .crubit_features = target_to_features,
+                 .crate_names = target_to_crate_name,
                  .driver_path = args.driver_path,
                  .do_not_bind_allowlist = std::move(do_not_bind_allowlist),
                  .kythe_annotations = args.kythe_annotations,
@@ -125,7 +140,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
 
   bool generate_error_report = !args.error_report_out.empty();
 
-  absl::flat_hash_map<Identifier, Identifier> instantiations;
+  llvm::DenseMap<Identifier, Identifier> instantiations;
   if (const auto* _Nullable ns =
           FindNamespace(ir, kInstantiationsNamespaceName)) {
     std::vector<const ir_proto::Record* _Nonnull> records =

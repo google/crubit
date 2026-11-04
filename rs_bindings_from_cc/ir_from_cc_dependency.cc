@@ -7,13 +7,12 @@
 #include <string>
 #include <utility>
 
-#include "llvm/Support/Error.h"
-#include "absl/container/flat_hash_set.h"
 #include "common/ffi_types.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
+#include "llvm/ADT/StringSet.h"
 
 namespace crubit {
 
@@ -22,7 +21,7 @@ llvm::Expected<IR> IrFromCcDependency(
     FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
     bool kythe_annotations, CarcinizeMode carcinize_mode,
     bool lazy_import_alien_decls, bool check_importer_invariants) {
-  absl::flat_hash_set<std::string> features = {"supported"};
+  llvm::StringSet<> features = {"supported"};
   if (extra_feature.size != 0) {
     features.insert(std::string(StringViewFromFfiU8Slice(extra_feature)));
   }
@@ -51,9 +50,8 @@ llvm::Expected<IR> IrFromCcDependency(
       .lazy_import_alien_decls = lazy_import_alien_decls,
       .check_importer_invariants = check_importer_invariants,
   });
-  if (!ir_or.ok()) {
-    return llvm::createStringError(llvm::inconvertibleErrorCode(),
-                                   ir_or.status().ToString());
+  if (!ir_or) {
+    return ir_or.takeError();
   }
   return std::move(*ir_or);
 }

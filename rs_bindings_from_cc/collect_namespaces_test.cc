@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/collect_namespaces.h"
 
 #include "gmock/gmock.h"
+#include "common/status.h"
 #include "common/status_macros.h"
 #include "common/status_test_matchers.h"
 #include "rs_bindings_from_cc/ir.h"

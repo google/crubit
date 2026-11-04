@@ -7,10 +7,10 @@
 
 #include <string>
 
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/profiling.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 
@@ -25,7 +25,7 @@ struct Bindings {
 };
 
 // Generates bindings from the given `IR`.
-CRUBIT_PROFILE_NOINLINE absl::StatusOr<Bindings> GenerateBindings(
+CRUBIT_PROFILE_NOINLINE llvm::Expected<Bindings> GenerateBindings(
     IR ir, llvm::StringRef crubit_support_path_format,
     llvm::StringRef crubit_support_versioned_path_format,
     llvm::StringRef clang_format_exe_path, llvm::StringRef rustfmt_exe_path,

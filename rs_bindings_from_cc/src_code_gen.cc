@@ -7,9 +7,8 @@
 #include <string>
 #include <utility>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "llvm/Support/Error.h"
+#include "common/status.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_generated.h"
 #include "rs_bindings_from_cc/src_code_gen_ffi.h"
@@ -20,7 +19,7 @@ namespace crubit {
 using ffi::GenerateBindingsRequest;
 using ffi::GenerateBindingsResponse;
 
-absl::StatusOr<Bindings> GenerateBindings(
+llvm::Expected<Bindings> GenerateBindings(
     IR ir, llvm::StringRef crubit_support_path_format,
     llvm::StringRef crubit_support_versioned_path_format,
     llvm::StringRef clang_format_exe_path, llvm::StringRef rustfmt_exe_path,
@@ -44,7 +43,7 @@ absl::StatusOr<Bindings> GenerateBindings(
   GenerateBindingsResponse response = GenerateBindingsCall(std::move(request));
 
   if (!response.fatal_errors().empty()) {
-    return absl::InvalidArgumentError(response.fatal_errors());
+    return InvalidArgumentError(response.fatal_errors());
   }
 
   Bindings bindings;
