@@ -1878,6 +1878,17 @@ impl RsTypeKind {
         all_static_lifetimes_internal(self, strip_aliases)
     }
 
+    /// Returns `true` if `self` and `other` are the same type, ignoring all [`Lifetime`]s
+    /// (see also `all_static_lifetimes`).
+    ///
+    /// This can be used to find a C++ function by its parameter types, because C++ functions
+    /// can't be overloaded on lifetimes.
+    ///
+    /// If `strip_aliases` is `true`, [`RsTypeKind::TypeAlias`] variants are also ignored.
+    pub fn eq_ignoring_lifetimes(&self, other: &RsTypeKind, strip_aliases: bool) -> bool {
+        self.all_static_lifetimes(strip_aliases) == other.all_static_lifetimes(strip_aliases)
+    }
+
     pub fn is_bridge_type(&self) -> bool {
         self.as_bridge_type().is_some()
     }
@@ -3982,6 +3993,53 @@ mod tests {
         let void_ptr = RsTypeKind::Primitive(Primitive::Void);
         expect_that!(void_ptr.allowed_behind_single_element_ptr(), eq(true));
         expect_that!(void_ptr.allowed_behind_multi_element_ptr(), eq(false));
+    }
+
+    fn make_ref(referent: RsTypeKind, mutability: Mutability, lifetime: &str) -> RsTypeKind {
+        RsTypeKind::Reference {
+            referent: Rc::new(referent),
+            mutability,
+            lifetime: Lifetime::new(lifetime),
+            is_cref: false,
+        }
+    }
+
+    #[gtest]
+    fn test_eq_ignoring_lifetimes() {
+        let int = RsTypeKind::Primitive(Primitive::Int32T);
+        let int_alias = RsTypeKind::TypeAlias {
+            type_alias: FfiRc::new(proto! {
+                ir_rust_proto::TypeAlias {
+                    cc_name: ir_rust_proto::Identifier { identifier: "MyAlias" },
+                    rs_name: ir_rust_proto::Identifier { identifier: "MyAlias" },
+                    unique_name: "MyAlias",
+                    id: 1u64,
+                    owning_target: "//foo/bar",
+                    underlying_type: ir_rust_proto::CcType {
+                        variant: __ { primitive: ir_rust_proto::Primitive::Int },
+                    },
+                }
+            }),
+            underlying_type: Rc::new(int.clone()),
+            crate_path: make_crate_path(),
+            lifetimes: vec![],
+        };
+        let ref_a = make_ref(int.clone(), Mutability::Const, "a");
+        let ref_b = make_ref(int.clone(), Mutability::Const, "b");
+        let mut_ref_a = make_ref(int.clone(), Mutability::Mut, "a");
+        let alias_ref_b = make_ref(int_alias, Mutability::Const, "b");
+
+        // Different lifetime names are ignored.
+        expect_that!(ref_a == ref_b, eq(false));
+        expect_that!(ref_a.eq_ignoring_lifetimes(&ref_b, false), eq(true));
+
+        // Other differences are not ignored.
+        expect_that!(ref_a.eq_ignoring_lifetimes(&mut_ref_a, false), eq(false));
+        expect_that!(ref_a.eq_ignoring_lifetimes(&int, false), eq(false));
+
+        // Type aliases are ignored only if `strip_aliases` is true.
+        expect_that!(ref_a.eq_ignoring_lifetimes(&alias_ref_b, false), eq(false));
+        expect_that!(ref_a.eq_ignoring_lifetimes(&alias_ref_b, true), eq(true));
     }
 
     #[gtest]

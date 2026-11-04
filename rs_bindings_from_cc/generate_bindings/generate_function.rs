@@ -1299,6 +1299,14 @@ pub fn get_binding(
     expected_function_name: UnqualifiedIdentifier,
     expected_param_types: Vec<RsTypeKind>,
 ) -> Option<(Ident, ImplKind)> {
+    // Lifetime names depend on the names of the C++ parameters (e.g. `&'__this T` in a member
+    // function VS `&'lhs T` in a non-member function), so with this feature, lifetimes are ignored
+    // when finding the corresponding function. Lifetimes are not ignored when generating the
+    // bindings of the found function (see `api_func_shape_if_some` below).
+    let ignore_lifetimes = db
+        .ir()
+        .target_crubit_features(db.ir().current_target())
+        .contains(crubit_feature::CrubitFeature::ParamNameInsensitiveOperatorLookup);
     db.ir()
         .get_functions_by_name(&expected_function_name)
         .filter(|function| {
@@ -1309,7 +1317,17 @@ pub fn get_binding(
             else {
                 return None;
             };
-            if !function_param_types.iter().eq(expected_param_types.iter()) {
+            if function_param_types.len() != expected_param_types.len()
+                || !function_param_types.iter().zip(&expected_param_types).all(
+                    |(actual, expected)| {
+                        if ignore_lifetimes {
+                            actual.eq_ignoring_lifetimes(expected, false)
+                        } else {
+                            actual == expected
+                        }
+                    },
+                )
+            {
                 return None;
             }
             api_func_shape_if_some(db, function, &mut function_param_types, &return_type)
@@ -3838,8 +3856,7 @@ fn has_matching_cc_index(db: &BindingsGenerator, record: &Record, index_type: &R
                 },
             )) = result
             {
-                return const_index_type.all_static_lifetimes(true)
-                    == index_type.all_static_lifetimes(true);
+                return const_index_type.eq_ignoring_lifetimes(index_type, true);
             }
         }
         false

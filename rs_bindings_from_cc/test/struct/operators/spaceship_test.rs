@@ -6,8 +6,8 @@ use core::cmp::Ordering;
 use googletest::prelude::*;
 use spaceship::{
     CompareWithOtherRecord, CustomWeakOrdering, DefaultedPartialOrdering, DefaultedStrongOrdering,
-    FriendStrongOrdering, OtherRecord, SpaceshipAndLessThan, SpaceshipReturningNotAnOrdering,
-    SpaceshipWithoutEq,
+    FriendStrongOrdering, MemberEqAndFriendSpaceship, OtherRecord, SpaceshipAndLessThan,
+    SpaceshipReturningNotAnOrdering, SpaceshipWithoutEq,
 };
 
 #[gtest]
@@ -63,6 +63,16 @@ fn test_friend_strong_ordering() {
     expect_eq!(s1.partial_cmp(&s2), Some(Ordering::Less));
     expect_eq!(s2.partial_cmp(&s1), Some(Ordering::Greater));
     expect_eq!(s1.partial_cmp(&s1), Some(Ordering::Equal));
+}
+
+#[gtest]
+fn test_member_eq_and_friend_spaceship() {
+    let s1 = MemberEqAndFriendSpaceship { i: 1 };
+    let s2 = MemberEqAndFriendSpaceship { i: 2 };
+
+    expect_eq!(s1.partial_cmp(&s2), Some(Ordering::Less));
+    expect_eq!(s2.cmp(&s1), Ordering::Greater);
+    expect_true!(s1 == s1);
 }
 
 #[gtest]

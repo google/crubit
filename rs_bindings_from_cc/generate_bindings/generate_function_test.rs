@@ -4,6 +4,7 @@
 
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
+use crubit_feature::CrubitFeature;
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{format_generic_params, Lifetime};
 use generate_function_thunk::thunk_ident;
@@ -11,7 +12,7 @@ use googletest::prelude::{assert_that, contains_substring, expect_that, gtest, n
 
 use ir::{Func, Item, UnqualifiedIdentifier};
 use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_func, with_lifetime_macros};
-use multiplatform_ir_testing::ir_proto_from_cc;
+use multiplatform_ir_testing::{ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc};
 use multiplatform_testing::test_platform;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -1164,6 +1165,51 @@ fn test_impl_eq_ne_for_free_function() -> Result<()> {
     Ok(())
 }
 
+/// Whether the `param_name_insensitive_operator_lookup` Crubit feature is enabled.
+enum LookupFeatureStatus {
+    Enabled,
+    Disabled,
+}
+
+/// Generates bindings with `assume_lifetimes`, which names lifetimes after the C++ parameters.
+fn generate_bindings_tokens_for_operator_lookup(
+    header: &str,
+    lookup_feature_status: LookupFeatureStatus,
+) -> Result<BindingsTokens> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(header)?;
+    let mut ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    match lookup_feature_status {
+        LookupFeatureStatus::Enabled => {
+            let target = ir.current_target().clone();
+            *ir.target_crubit_features_mut(&target) |=
+                CrubitFeature::ParamNameInsensitiveOperatorLookup;
+        }
+        LookupFeatureStatus::Disabled => {}
+    }
+    generate_bindings_tokens_for_test(ir)
+}
+
+/// `operator!=` should see `operator==`, even when the names of their parameters (and therefore
+/// the names of their lifetimes) differ. Otherwise both would implement `PartialEq::eq`, and
+/// neither would be bound.
+#[gtest]
+fn test_impl_eq_ne_with_differently_named_params() -> Result<()> {
+    let rs_api = generate_bindings_tokens_for_operator_lookup(
+        r#"
+        struct SomeStruct final {
+            bool operator==(const SomeStruct& other) const;
+            int i;
+        };
+        bool operator!=(const SomeStruct& lhs, const SomeStruct& rhs);
+        "#,
+        LookupFeatureStatus::Enabled,
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialEq for SomeStruct });
+    assert_rs_not_matches!(rs_api, quote! { !crate::detail::... });
+    Ok(())
+}
+
 #[gtest]
 fn test_impl_ne_for_member_function() -> Result<()> {
     let BindingsTokens { rs_api, rs_api_impl } =
@@ -2107,6 +2153,75 @@ fn test_impl_spaceship_operator_preferred_over_lt() -> Result<()> {
 
     let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
+    assert_rs_not_matches!(rs_api, quote! { fn lt });
+    expect_that!(
+        rs_api.to_string(),
+        contains_substring(
+            "Bindings for operator< were omitted because PartialOrd is already implemented via operator<=>"
+        )
+    );
+    Ok(())
+}
+
+/// A member `operator==` and a hidden friend `operator<=>`. With `assume_lifetimes`, their
+/// lifetimes have different names: `'__this` and `'other` VS `'lhs` and `'rhs`.
+const MEMBER_EQ_AND_FRIEND_SPACESHIP: &str = r#"
+    struct SomeStruct final {
+        bool operator==(const SomeStruct& other) const;
+        friend std::strong_ordering operator<=>(const SomeStruct& lhs, const SomeStruct& rhs);
+        int i;
+    };"#;
+
+/// With `param_name_insensitive_operator_lookup`, `operator<=>` finds `operator==`, even when the
+/// names of their parameters (and therefore the names of their lifetimes) differ.
+#[gtest]
+fn test_impl_spaceship_operator_with_differently_named_params() -> Result<()> {
+    let rs_api = generate_bindings_tokens_for_operator_lookup(
+        &format!("{FAKE_COMPARE_HEADER}{MEMBER_EQ_AND_FRIEND_SPACESHIP}"),
+        LookupFeatureStatus::Enabled,
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialEq for SomeStruct });
+    assert_rs_matches!(rs_api, quote! { impl PartialOrd for crate::SomeStruct });
+    Ok(())
+}
+
+/// Without `param_name_insensitive_operator_lookup`, `operator<=>` doesn't find `operator==` when
+/// the names of their parameters differ.
+#[gtest]
+fn test_impl_spaceship_operator_with_differently_named_params_without_feature() -> Result<()> {
+    let rs_api = generate_bindings_tokens_for_operator_lookup(
+        &format!("{FAKE_COMPARE_HEADER}{MEMBER_EQ_AND_FRIEND_SPACESHIP}"),
+        LookupFeatureStatus::Disabled,
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialEq for SomeStruct });
+    assert_rs_not_matches!(rs_api, quote! { impl PartialOrd });
+    expect_that!(
+        rs_api.to_string(),
+        contains_substring("operator<=> where operator== is missing.")
+    );
+    Ok(())
+}
+
+/// `operator<` should see the `PartialOrd` impl from `operator<=>`, even when the names of their
+/// parameters (and therefore the names of their lifetimes) differ.
+#[gtest]
+fn test_impl_spaceship_operator_preferred_over_lt_with_differently_named_params() -> Result<()> {
+    let rs_api = generate_bindings_tokens_for_operator_lookup(
+        &format!(
+            r#"{FAKE_COMPARE_HEADER}
+            struct SomeStruct final {{
+                bool operator==(const SomeStruct& other) const;
+                std::strong_ordering operator<=>(const SomeStruct& other) const;
+                friend bool operator<(const SomeStruct& lhs, const SomeStruct& rhs);
+                int i;
+            }};"#
+        ),
+        LookupFeatureStatus::Enabled,
+    )?
+    .rs_api;
     assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
     assert_rs_not_matches!(rs_api, quote! { fn lt });
     expect_that!(

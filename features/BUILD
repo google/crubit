@@ -381,6 +381,19 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set under which an operator binding finds a related operator (e.g. `operator<=>` and
+# `operator!=` find `operator==`) even if the names of their C++ parameters differ. This can
+# generate new `PartialEq` and `PartialOrd` impls, which can conflict with manual impls. This flag
+# only impacts rust_api_from_cpp users.
+#
+# See b/570103121
+crubit_feature_hint(
+    name = "param_name_insensitive_operator_lookup",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["param_name_insensitive_operator_lookup"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

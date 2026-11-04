@@ -51,6 +51,22 @@ struct FriendStrongOrdering final {
   }
 };
 
+// Member `operator==` and hidden friend `operator<=>`. Their parameters have
+// different names (`this` and `other` VS `lhs` and `rhs`). Bound together only
+// with the `param_name_insensitive_operator_lookup` Crubit feature.
+struct MemberEqAndFriendSpaceship final {
+  int i;
+
+  bool operator==(const MemberEqAndFriendSpaceship& other) const {
+    return i == other.i;
+  }
+  friend std::strong_ordering operator<=>(
+      const MemberEqAndFriendSpaceship& lhs,
+      const MemberEqAndFriendSpaceship& rhs) {
+    return lhs.i <=> rhs.i;
+  }
+};
+
 // Both `operator<=>` and `operator<`. `operator<=>` should back the
 // `PartialOrd` impl.
 struct SpaceshipAndLessThan final {

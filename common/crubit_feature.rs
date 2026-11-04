@@ -139,6 +139,11 @@ flagset::flags! {
         /// Generate Rust constants for object-like C++ macros which expand to simple constant
         /// expressions, e.g. `#define FOO 4` or `#define BAR (FOO + 3)`.
         MacroConstants,
+
+        /// When an operator binding depends on a related operator (e.g. `operator<=>` and
+        /// `operator!=` depend on `operator==`), find the related operator even if the names of
+        /// their C++ parameters differ. Only affects rust_api_from_cpp.
+        ParamNameInsensitiveOperatorLookup,
     }
 }
 
@@ -186,6 +191,7 @@ impl CrubitFeature {
             Self::StrongOrderingTraits => "strong_ordering_traits",
             Self::ConstantArrays => "constant_arrays",
             Self::MacroConstants => "macro_constants",
+            Self::ParamNameInsensitiveOperatorLookup => "param_name_insensitive_operator_lookup",
         }
     }
 
@@ -240,6 +246,9 @@ impl CrubitFeature {
             Self::StrongOrderingTraits => "//features:strong_ordering_traits",
             Self::ConstantArrays => "//features:constant_arrays",
             Self::MacroConstants => "//features:macro_constants",
+            Self::ParamNameInsensitiveOperatorLookup => {
+                "//features:param_name_insensitive_operator_lookup"
+            }
         }
     }
 }
@@ -312,6 +321,9 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"strong_ordering_traits" => CrubitFeature::StrongOrderingTraits.into(),
         b"constant_arrays" => CrubitFeature::ConstantArrays.into(),
         b"macro_constants" => CrubitFeature::MacroConstants.into(),
+        b"param_name_insensitive_operator_lookup" => {
+            CrubitFeature::ParamNameInsensitiveOperatorLookup.into()
+        }
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -516,6 +528,13 @@ mod tests {
     }
 
     #[gtest]
+    fn test_serialized_crubit_feature_param_name_insensitive_operator_lookup() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"param_name_insensitive_operator_lookup\"").unwrap();
+        assert_eq!(features, CrubitFeature::ParamNameInsensitiveOperatorLookup);
+    }
+
+    #[gtest]
     fn test_serialized_crubit_feature_all() {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"all\"").unwrap();
         assert_eq!(
@@ -538,6 +557,7 @@ mod tests {
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
                 | CrubitFeature::MacroConstants
+                | CrubitFeature::ParamNameInsensitiveOperatorLookup
         );
     }
 
@@ -583,6 +603,7 @@ mod tests {
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
                 | CrubitFeature::MacroConstants
+                | CrubitFeature::ParamNameInsensitiveOperatorLookup
         );
     }
 
@@ -610,6 +631,7 @@ mod tests {
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
                 | CrubitFeature::MacroConstants
+                | CrubitFeature::ParamNameInsensitiveOperatorLookup
         );
     }
 
@@ -638,6 +660,7 @@ mod tests {
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
                 | CrubitFeature::MacroConstants
+                | CrubitFeature::ParamNameInsensitiveOperatorLookup
         );
     }
 
@@ -666,6 +689,7 @@ mod tests {
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
                 | CrubitFeature::MacroConstants
+                | CrubitFeature::ParamNameInsensitiveOperatorLookup
         );
     }
 
@@ -694,6 +718,7 @@ mod tests {
                 | CrubitFeature::StrongOrderingTraits
                 | CrubitFeature::ConstantArrays
                 | CrubitFeature::MacroConstants
+                | CrubitFeature::ParamNameInsensitiveOperatorLookup
         );
     }
 }
