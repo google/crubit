@@ -36,10 +36,7 @@ jobs:
           
           VERSIONS=$(jq -c -n --argjson n "$NIGHTLIES" --argjson s "$STABLES" '{include: ($n + $s)}')
           
-          # Write to file for repo persistence
-          echo "$VERSIONS" > matrix.json
-          
-          # Set output for the next job
+          # Set output for downstream jobs
           echo "matrix=$VERSIONS" >> $GITHUB_OUTPUT
       - name: Resolve llvm-project head
         id: llvm
@@ -65,11 +62,11 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add crubit matrix.json llvm_commit.txt
+          git add crubit llvm_commit.txt
           if git diff --staged --quiet; then
             echo "No changes detected."
           else
-            git commit -m "chore: update crubit and matrix.json"
+            git commit -m "chore: update crubit and llvm_commit.txt"
             git push origin test-matrix
           fi
 
@@ -123,8 +120,8 @@ jobs:
           path: ${{ matrix.id }}.json
 
   upload-badges:
-    needs: build
-    if: always()
+    needs: [update-and-generate, build]
+    if: always() && needs.update-and-generate.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main branch
@@ -140,17 +137,28 @@ jobs:
           merge-multiple: true
 
       - name: Push JSONs to target branch
+        env:
+          MATRIX: ${{ needs.update-and-generate.outputs.matrix }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
+
+          jq -c -n \
+            --argjson matrix "$MATRIX" \
+            --slurpfile badges <(cat badges_temp/*.json) '
+            ($badges | INDEX(.label)) as $by_version |
+            $matrix | .include |= map(. + {
+              passing: ($by_version[.version].message == "passing")
+            })
+          ' > matrix.json
+
           mv badges_temp/*.json .
           git add *.json
-          
+
           if git diff --staged --quiet; then
             echo "No changes in badges."
           else
-            git commit -m "chore: update status badges"
+            git commit -m "chore: update status badges and matrix.json"
             git push origin test-matrix
           fi
 
