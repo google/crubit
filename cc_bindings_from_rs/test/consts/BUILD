@@ -54,6 +54,7 @@ crubit_cc_test(
     platforms = [
         "android",
         "ios",
+        "macos",
     ],
     deps = [
         ":consts_cc_api",
