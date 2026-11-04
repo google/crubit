@@ -22,7 +22,7 @@ rust_library(
     edition = "2024",
     visibility = ["//visibility:public"],
     deps = [
-        "@crate_index//:ra_ap_rustc_lexer",  # v0_165
+        "@crate_index//:ra_ap_rustc_lexer",  # v0_166
     ],
 )
 
@@ -45,7 +45,7 @@ rust_binary(
         ":inline_cpp_utils",
         ":parse_inline_cpp_macros",
         "@crate_index//:clap",  # v4
-        "@crate_index//:ra_ap_rustc_lexer",  # v0_165
+        "@crate_index//:ra_ap_rustc_lexer",  # v0_166
     ],
 )
 
@@ -84,7 +84,7 @@ rust_binary(
         "//common:external_binaries",
         "@crate_index//:anyhow",  # v1
         "@crate_index//:clap",  # v4
-        "@crate_index//:ra_ap_rustc_lexer",  # v0_165
+        "@crate_index//:ra_ap_rustc_lexer",  # v0_166
     ],
 )
 
