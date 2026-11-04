@@ -1,0 +1,3 @@
+# The oldest llvm-project commit against which rs_bindings_from_cc builds.
+# Tested by the nightly test matrix.
+6cd72b33224f0c3002b41e0e356eb2ab94ab3545
