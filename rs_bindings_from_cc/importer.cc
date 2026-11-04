@@ -20,18 +20,11 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
-#include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/log.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_join.h"
-#include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
-#include "absl/strings/strip.h"
 #include "common/annotation_reader.h"
 #include "common/check.h"
 #include "common/status_macros.h"
@@ -127,9 +120,9 @@ std::optional<llvm::StringRef> HeaderOfUnknownTarget(const BazelLabel& label) {
 
 // Checks if the return value from `GetDeclItem` indicates that the import was
 // successful.
-absl::Status CheckImportStatus(const crubit::ffi::Item* item) {
+llvm::Error CheckImportStatus(const crubit::ffi::Item* item) {
   if (item == nullptr) {
-    return absl::InvalidArgumentError("The import has been skipped");
+    return crubit::InvalidArgumentError("The import has been skipped");
   }
   if (item->has_unsupported_item()) {
     const auto& unsupported = item->unsupported_item();
@@ -138,15 +131,15 @@ absl::Status CheckImportStatus(const crubit::ffi::Item* item) {
     for (const auto& error : unsupported.errors()) {
       messages.push_back(error.message());
     }
-    return absl::InvalidArgumentError(absl::StrJoin(messages, "\n\n"));
+    return crubit::InvalidArgumentError(llvm::join(messages, "\n\n"));
   }
-  return absl::OkStatus();
+  return llvm::Error::success();
 }
 
 // Returns true if the comment is boilerplate that should be filtered out.
 bool IsFilteredComment(const clang::SourceManager& sm,
                        const clang::RawComment& comment) {
-  static absl::NoDestructor<llvm::Regex> kHeaderGuard("^// [A-Z_]*_H_ *$");
+  static llvm::Regex* kHeaderGuard = new llvm::Regex("^// [A-Z_]*_H_ *$");
   if (kHeaderGuard->match(comment.getRawText(sm))) {
     return true;
   }
@@ -1135,7 +1128,7 @@ ItemId Importer::GenerateItemId(const clang::RawComment& comment) const {
   return ItemId(reinterpret_cast<uintptr_t>(&comment));
 }
 
-absl::StatusOr<std::optional<ItemId>> Importer::GetEnclosingItemId(
+llvm::Expected<std::optional<ItemId>> Importer::GetEnclosingItemId(
     clang::Decl* _Nonnull decl) {
   for (clang::DeclContext* decl_context = decl->getDeclContext();;
        decl_context = decl_context->getParent()) {
@@ -1152,7 +1145,7 @@ absl::StatusOr<std::optional<ItemId>> Importer::GetEnclosingItemId(
     }
     if (auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl_context)) {
       if (!EnsureSuccessfullyImported(record_decl)) {
-        return absl::InvalidArgumentError("Couldn't import the parent");
+        return crubit::InvalidArgumentError("Couldn't import the parent");
       }
       return GenerateItemId(*record_decl);
     }
@@ -2700,7 +2693,7 @@ bool Importer::IsRecordImplDebugEnabledForTarget(
          IsFeatureEnabledForTarget(label, "all");
 }
 
-absl::StatusOr<bool> Importer::DetectFormatter(
+llvm::Expected<bool> Importer::DetectFormatter(
     const clang::TypeDecl& decl) const {
   CRUBIT_ASSIGN_OR_RETURN(std::optional<bool> override_display,
                           GetCrubitOverrideDisplayAnnotation(decl));
@@ -2768,7 +2761,7 @@ bool Importer::ImplementsCoreFmtDebug(const clang::TypeDecl& type) const {
   return false;
 }
 
-absl::StatusOr<std::optional<bool>> Importer::GetCrubitOverrideDebugAnnotation(
+llvm::Expected<std::optional<bool>> Importer::GetCrubitOverrideDebugAnnotation(
     const clang::TypeDecl& type) const {
   CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> args,
                           GetAnnotateAttrArgs(type, "crubit_override_debug"));
@@ -2776,14 +2769,14 @@ absl::StatusOr<std::optional<bool>> Importer::GetCrubitOverrideDebugAnnotation(
     return std::nullopt;
   }
   if (args->size() != 1) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "crubit_override_debug annotation must have exactly one argument");
   }
   CRUBIT_ASSIGN_OR_RETURN(bool result, GetExprAsBool(*args->front(), ctx_));
   return result;
 }
 
-absl::StatusOr<std::optional<bool>>
+llvm::Expected<std::optional<bool>>
 Importer::GetCrubitOverrideDisplayAnnotation(
     const clang::TypeDecl& decl) const {
   CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> args,
@@ -2792,14 +2785,14 @@ Importer::GetCrubitOverrideDisplayAnnotation(
     return std::nullopt;
   }
   if (args->size() != 1) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "crubit_override_display annotation must have exactly one argument");
   }
   CRUBIT_ASSIGN_OR_RETURN(bool result, GetExprAsBool(*args->front(), ctx_));
   return result;
 }
 
-absl::StatusOr<std::optional<bool>> Importer::DetectFormatterForType(
+llvm::Expected<std::optional<bool>> Importer::DetectFormatterForType(
     clang::CanQualType lookup, clang::CanQualType target) const {
   const clang::Type* lookup_type = lookup.getTypePtrOrNull();
   const clang::Type* target_type = target.getTypePtrOrNull();
@@ -2812,14 +2805,14 @@ absl::StatusOr<std::optional<bool>> Importer::DetectFormatterForType(
     } else {
       target_type->dump(os, ctx_);
     }
-    return absl::InternalError(error_message);
+    return crubit::InternalError(error_message);
   }
   if (target_type == nullptr) {
     std::string error_message;
     llvm::raw_string_ostream os(error_message);
     os << "unexpectedly null target type, while finding its formatter in ";
     lookup_type->dump(os, ctx_);
-    return absl::InternalError(error_message);
+    return crubit::InternalError(error_message);
   }
 
   if (const clang::CXXRecordDecl* record = lookup->getAsCXXRecordDecl();
@@ -2851,7 +2844,7 @@ absl::StatusOr<std::optional<bool>> Importer::DetectFormatterForType(
         record->dump(os);
         os << " unexpectedly not a TagDecl, while finding formatter for ";
         target_type->dump(os, ctx_);
-        return absl::InternalError(error_message);
+        return crubit::InternalError(error_message);
       }
       CRUBIT_ASSIGN_OR_RETURN(bool detected_for_base,
                               DetectFormatter(*base_decl));
@@ -2997,8 +2990,15 @@ std::optional<std::string> Importer::GetComment(const clang::Decl& decl) const {
 
   std::string raw_comment_text =
       raw_comment->getFormattedText(sm, sm.getDiagnostics());
-  std::string cleaned_comment_text = absl::StrJoin(
-      absl::StrSplit(raw_comment_text, '\n', ShouldKeepCommentLine), "\n");
+
+  std::string cleaned_comment_text;
+  for (llvm::StringRef line : llvm::split(raw_comment_text, '\n')) {
+    if (ShouldKeepCommentLine(line)) {
+      if (!cleaned_comment_text.empty()) cleaned_comment_text += '\n';
+      cleaned_comment_text += line;
+    }
+  }
+
   if (cleaned_comment_text.empty()) return {};
   return cleaned_comment_text;
 }
@@ -3093,8 +3093,9 @@ std::optional<std::string> Importer::CheckTemplateArgInstantiable(
   // marked invalid by Clang. Attempting them again reports nothing new, so
   // this has to be checked explicitly.
   if (arg_record_decl->isInvalidDecl()) {
-    return absl::StrCat("Template argument '", type.getAsString(),
-                        "' is an invalid declaration.");
+    return (llvm::Twine("Template argument '") + type.getAsString() +
+            "' is an invalid declaration.")
+        .str();
   }
   auto* arg_specialization_decl =
       clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(arg_record_decl);
@@ -3280,12 +3281,12 @@ CcType Importer::ConvertTemplateSpecializationType(
     (void)EnsureSuccessfullyImported(arg_record);
   }
 
-  absl::Status import_status =
+  llvm::Error import_status =
       CheckImportStatus(GetDeclItem(specialization_decl));
-  if (!import_status.ok()) {
+  if (import_status) {
     return CcType(FormattedError::Substitute(
         "Failed to create bindings for template specialization type $0: $1",
-        type_string, import_status.message()));
+        type_string, llvm::toString(std::move(import_status))));
   }
 
   return WithAsWrittenTemplateArgs(ConvertTypeDecl(specialization_decl), type,
@@ -3311,7 +3312,7 @@ CcType Importer::WithAsWrittenTemplateArgs(
 
   // An alias template specialization carries the arguments of the alias, not
   // of the class template it names: e.g. `c9::CoStatusOr<T>` is written with
-  // `T`, but names `Co<absl::StatusOr<T>>`. Look through aliases to find the
+  // `T`, but names `Co<llvm::Expected<T>>`. Look through aliases to find the
   // arguments of the class template specialization itself.
   const clang::TemplateSpecializationType* specialization_type = &type;
   while (specialization_type->isTypeAlias()) {
@@ -3456,13 +3457,13 @@ bool Importer::ContainsKnownNullability(clang::QualType type) const {
   return finder.found;
 }
 
-absl::StatusOr<CcType> Importer::ConvertType(
+llvm::Expected<CcType> Importer::ConvertType(
     const clang::Type& type,
     const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
     bool nullable, bool assume_lifetimes) {
-  absl::StatusOr<CcType> cpp_type =
+  llvm::Expected<CcType> cpp_type =
       ConvertUnattributedType(type, lifetimes, nullable, assume_lifetimes);
-  if (cpp_type.ok()) {
+  if (cpp_type) {
     // Nullability is sugar: it lives on an `AttributedType` wrapping the type,
     // and `ConvertUnattributedType` looks straight through that. `type` is
     // still sugared here, so this is the last point at which we can see it.
@@ -3545,9 +3546,9 @@ static const clang::Type& StripAttributes(const clang::Type& type) {
   }
 }
 
-absl::Status Importer::AddTemplateArgumentLifetime(const clang::Type& type,
-                                                   bool has_written_lifetimes,
-                                                   CcType& cpp_type) {
+llvm::Error Importer::AddTemplateArgumentLifetime(const clang::Type& type,
+                                                  bool has_written_lifetimes,
+                                                  CcType& cpp_type) {
   const clang::Type& spelled_type = StripAttributes(type);
 
   // A use of a specialization that takes a lifetime parameter for its template
@@ -3562,27 +3563,31 @@ absl::Status Importer::AddTemplateArgumentLifetime(const clang::Type& type,
     if (specialization_decl == nullptr || !cpp_type.variant().has_decl() ||
         cpp_type.template_args().size() != 1 ||
         !GetTemplateArgumentLifetimeParam(*specialization_decl).has_value()) {
-      return absl::OkStatus();
+      return llvm::Error::success();
     }
     const auto& arg_lifetimes =
         cpp_type.template_args()[0].explicit_lifetimes();
-    if (arg_lifetimes.empty()) return absl::OkStatus();
+    if (arg_lifetimes.empty()) return llvm::Error::success();
     std::string type_string = clang::QualType(&type, 0).getAsString();
     if (has_written_lifetimes) {
       // E.g. `View<int& $a> $b`. Both stand for the same lifetime parameter.
-      return absl::InvalidArgumentError(absl::StrCat(
-          "lifetimes are written both on the template argument of '",
-          type_string,
-          "' and on the type itself; write them only on the "
-          "template argument"));
+      return crubit::InvalidArgumentError(
+          (llvm::Twine(
+               "lifetimes are written both on the template argument of '") +
+           type_string +
+           "' and on the type itself; write them only on the "
+           "template argument")
+              .str());
     }
     if (arg_lifetimes.size() != 1) {
-      return absl::InvalidArgumentError(absl::StrCat(
-          "the template argument of '", type_string,
-          "' must have exactly one lifetime, but has ", arg_lifetimes.size()));
+      return crubit::InvalidArgumentError(
+          (llvm::Twine("the template argument of '") + type_string +
+           "' must have exactly one lifetime, but has " +
+           llvm::Twine(arg_lifetimes.size()))
+              .str());
     }
     *cpp_type.mutable_explicit_lifetimes() = arg_lifetimes;
-    return absl::OkStatus();
+    return llvm::Error::success();
   }
 
   // Inside such a specialization, a type spelled as its template parameter,
@@ -3601,7 +3606,7 @@ absl::Status Importer::AddTemplateArgumentLifetime(const clang::Type& type,
   // argument is itself a reference, e.g. `const T&` in `View<int&>`: the
   // references collapse into the argument's reference, so the type refers to
   // the same object as the argument.
-  if (!cpp_type.explicit_lifetimes().empty()) return absl::OkStatus();
+  if (!cpp_type.explicit_lifetimes().empty()) return llvm::Error::success();
   const clang::Type* parameter_type = &spelled_type;
   if (const auto* reference_type =
           clang::dyn_cast<clang::ReferenceType>(&spelled_type);
@@ -3612,21 +3617,21 @@ absl::Status Importer::AddTemplateArgumentLifetime(const clang::Type& type,
   const auto* subst_type =
       clang::dyn_cast<clang::SubstTemplateTypeParmType>(parameter_type);
   if (subst_type == nullptr || subst_type->getIndex() != 0) {
-    return absl::OkStatus();
+    return llvm::Error::success();
   }
   const auto* specialization_decl =
       clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
           subst_type->getAssociatedDecl());
-  if (specialization_decl == nullptr) return absl::OkStatus();
+  if (specialization_decl == nullptr) return llvm::Error::success();
   if (std::optional<std::string> lifetime =
           GetTemplateArgumentLifetimeParam(*specialization_decl)) {
     cpp_type.clear_explicit_lifetimes();
     cpp_type.add_explicit_lifetimes(*lifetime);
   }
-  return absl::OkStatus();
+  return llvm::Error::success();
 }
 
-absl::StatusOr<CcType> Importer::ConvertUnattributedType(
+llvm::Expected<CcType> Importer::ConvertUnattributedType(
     const clang::Type& type,
     const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
     bool nullable, bool assume_lifetimes) {
@@ -3640,7 +3645,7 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
   bool is_owned_ptr = crubit_owned_ptr_attr != nullptr;
 
   if (is_owned_ptr && !type.isPointerType()) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "CRUBIT_OWNED_POINTER can only be applied to pointer types.");
   }
 
@@ -3774,7 +3779,7 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
       case clang::BuiltinType::Char32:
         return CcType(Primitive::CHAR32_T);
       default:
-        return absl::UnimplementedError("Unsupported builtin type");
+        return crubit::UnimplementedError("Unsupported builtin type");
     }
   } else if (const auto* tag_type = type.getAsAdjusted<clang::TagType>()) {
     // With precompiled header modules, the definition may come from a module
@@ -3833,15 +3838,16 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     if (!num_elements.has_value()) {
       // C-style arrays could technically be size_t, but practically shouldn't
       // be that big.
-      return absl::UnimplementedError("Array size exceeds int64_t");
+      return crubit::UnimplementedError("Array size exceeds int64_t");
     }
     if (*num_elements == 0) {
       // Don't support the GNU extension for zero-length arrays (which may
       // actually be flexible arrays / not a constant size).
-      return absl::UnimplementedError("Zero-length C arrays are not supported");
+      return crubit::UnimplementedError(
+          "Zero-length C arrays are not supported");
     }
     if (!IsSupportedArrayElementType(ctx_, array_type->getElementType())) {
-      return absl::UnimplementedError(
+      return crubit::UnimplementedError(
           "C-style arrays of non-primitive, non-enum types are not yet "
           "supported (b/575922365)");
     }
@@ -3855,8 +3861,10 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     return result;
   }
 
-  return absl::UnimplementedError(absl::StrCat(
-      "Unsupported clang::Type class '", type.getTypeClassName(), "'"));
+  return crubit::UnimplementedError(
+      (llvm::Twine("Unsupported clang::Type class '") +
+       type.getTypeClassName() + "'")
+          .str());
 }
 
 CcType Importer::ConvertQualType(
@@ -3867,7 +3875,7 @@ CcType Importer::ConvertQualType(
   printing_policy.FullyQualifiedName = true;
   std::string type_string = qual_type.getAsString(printing_policy);
 
-  absl::StatusOr<CcType> type = ConvertType(*qual_type.getTypePtr(), lifetimes,
+  llvm::Expected<CcType> type = ConvertType(*qual_type.getTypePtr(), lifetimes,
                                             nullable, assume_lifetimes);
 
   // TODO(b/468093766): make _all_ the functions return a CcType.
@@ -3875,9 +3883,10 @@ CcType Importer::ConvertQualType(
   // as a bad status, or it was bad and returned as a CcType with a
   // FormattedError variant". That's a bit ridiculous! But the remaining uses
   // of Status are a bit tricky and don't fit in a first draft.
-  if (!type.ok()) {
-    return CcType(FormattedError::Substitute(
-        "Unsupported type '$0': $1", type_string, type.status().message()));
+  if (!type) {
+    return CcType(FormattedError::Substitute("Unsupported type '$0': $1",
+                                             type_string,
+                                             llvm::toString(type.takeError())));
   }
   if (type->variant().has_error()) {
     // TODO(jeanpierreda): The most-specific type should go at the start, and
@@ -4014,7 +4023,7 @@ std::optional<crubit::ffi::UnsupportedItem::Path>
 Importer::GetUnsupportedItemPathForTemplateDecl(
     clang::RedeclarableTemplateDecl* _Nonnull template_decl) {
   auto enclosing_item_id = GetEnclosingItemId(template_decl);
-  if (!enclosing_item_id.ok()) {
+  if (!enclosing_item_id) {
     return std::nullopt;
   }
 
@@ -4027,7 +4036,7 @@ Importer::GetUnsupportedItemPathForTemplateDecl(
   // with a fully-instantiated template declaration, so there is no mangled
   // name to refer to.
   auto names = GetTranslatedName(*template_decl);
-  if (!names.ok()) {
+  if (!names) {
     return std::nullopt;
   }
   crubit::ffi::UnsupportedItem::Path path;
@@ -4067,7 +4076,7 @@ std::string Importer::GetNameForSourceOrder(const clang::Decl& decl) const {
   }
 }
 
-absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
+llvm::Expected<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
     const clang::NamedDecl& named_decl) const {
   std::optional<UnqualifiedIdentifier> crubit_rust_name =
       CrubitRustName(named_decl);
@@ -4075,7 +4084,7 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
     case clang::DeclarationName::Identifier: {
       auto name = std::string(named_decl.getName());
       if (name.empty()) {
-        return absl::InvalidArgumentError("Missing identifier");
+        return crubit::InvalidArgumentError("Missing identifier");
       }
 
       // `r#foo` syntax in Rust can't be used to escape `crate`, `self`,
@@ -4084,8 +4093,8 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
       if ((name == "crate" || name == "self" || name == "super" ||
            name == "Self") &&
           !crubit_rust_name.has_value()) {
-        return absl::InvalidArgumentError(
-            absl::StrCat("Unescapable identifier: ", name));
+        return crubit::InvalidArgumentError(
+            (llvm::Twine("Unescapable identifier: ") + name).str());
       }
       // The string_view -> raw_string_view renaming happens centrally, so that
       // it applies to both records (if we use preferred_name renaming) and
@@ -4140,12 +4149,13 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
       // There are also e.g. literal operators, deduction guides, etc., but
       // we might not need to implement them at all. Full list at:
       // https://clang.llvm.org/doxygen/classclang_1_1DeclarationName.html#a9ab322d434446b43379d39e41af5cbe3
-      return absl::UnimplementedError(
-          absl::StrCat("Unsupported name: ", named_decl.getNameAsString()));
+      return crubit::UnimplementedError(
+          (llvm::Twine("Unsupported name: ") + named_decl.getNameAsString())
+              .str());
   }
 }
 
-absl::StatusOr<TranslatedIdentifier> Importer::GetTranslatedIdentifier(
+llvm::Expected<TranslatedIdentifier> Importer::GetTranslatedIdentifier(
     const clang::NamedDecl& named_decl) const {
   CRUBIT_ASSIGN_OR_RETURN(TranslatedUnqualifiedIdentifier unqualified,
                           GetTranslatedName(named_decl));

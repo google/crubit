@@ -12,6 +12,22 @@
 namespace crubit {
 namespace internal {
 
+class FatalStream {
+ public:
+  FatalStream(const char* file, int line) {
+    std::cerr << file << ":" << line << ": ";
+  }
+  [[noreturn]] ~FatalStream() {
+    std::cerr << "\n";
+    std::abort();
+  }
+  template <typename T>
+  FatalStream& operator<<(const T& value) {
+    std::cerr << value;
+    return *this;
+  }
+};
+
 class CheckFail {
  public:
   CheckFail(const char* file, int line, const char* condition) {
@@ -38,6 +54,8 @@ T DieIfNull(const char* file, int line, const char* exprtext, T&& t) {
 
 }  // namespace internal
 }  // namespace crubit
+
+#define CRUBIT_FATAL() ::crubit::internal::FatalStream(__FILE__, __LINE__)
 
 #define CRUBIT_CHECK(cond) \
   switch (0)               \

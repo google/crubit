@@ -11,9 +11,6 @@
 #include <vector>
 
 #include "absl/base/nullability.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
@@ -31,6 +28,7 @@
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Error.h"
 
@@ -42,12 +40,12 @@ namespace {
 // false. If the attribute is malformed, returns a bad status.
 //
 // `decl` must not be null.
-absl::StatusOr<bool> GetIsSameAbiAttribute(const clang::Decl* decl) {
+llvm::Expected<bool> GetIsSameAbiAttribute(const clang::Decl* decl) {
   CRUBIT_ASSIGN_OR_RETURN(
       std::optional<AnnotateArgs> args,
       GetAnnotateAttrArgs(*decl, "crubit_internal_same_abi"));
   if (args.has_value() && !args->empty()) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "The `crubit_internal_same_abi` attribute takes no arguments.");
   }
   return args.has_value();
@@ -118,7 +116,7 @@ struct CrubitInternalRustType {
 };
 
 // Gets the crubit_internal_rust_type attribute for `decl`.
-absl::StatusOr<std::optional<CrubitInternalRustType>>
+llvm::Expected<std::optional<CrubitInternalRustType>>
 GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
   CRUBIT_ASSIGN_OR_RETURN(
       std::optional<AnnotateArgs> opt_args,
@@ -126,7 +124,7 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
   if (!opt_args.has_value()) return std::nullopt;
   const AnnotateArgs& args = *opt_args;
   if (args.empty()) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "crubit.rs-bug: Crubit expects the annotation to expand to the form "
         "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\", "
         "crubit::rust_type::Args<T1, T2, ...>())]]`, but instead only found "
@@ -140,7 +138,7 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
     return CrubitInternalRustType{.format_string = std::string(format_string)};
   }
   if (args.size() > 2) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "crubit.rs-bug: Crubit expects the annotation to expand to the form "
         "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\", "
         "crubit::rust_type::Args<T1, T2, ...>())]]`, but instead found "
@@ -151,7 +149,7 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
   const clang::ClassTemplateSpecializationDecl* spec =
       GetCrubitClassTemplateSpecializationDecl(args[1]->getType(), "Args");
   if (spec == nullptr) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "crubit.rs-bug: Crubit expects the annotation to expand to the form "
         "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\", "
         "crubit::rust_type::Args<T1, T2, ...>())]]`, but instead found "
@@ -164,29 +162,37 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
   // template argument: a Pack. To get A, B, and C, we need to call
   // `getPackAsArray()` on that template argument.
   if (spec->getTemplateArgs().size() != 1) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "crubit.rs-bug: Crubit expects the annotation to expand to the form "
-        "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\", "
-        "crubit::rust_type::Args<T1, T2, ...>())]]`, but instead found "
-        "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\", "
-        "crubit::crubit_internal_rust_type_args<...>())]]`, where the inner "
-        "`<...>` has ",
-        spec->getTemplateArgs().size(),
-        " template arguments instead of a single pack argument."));
+    return crubit::InvalidArgumentError(
+        (llvm::Twine(
+             "crubit.rs-bug: Crubit expects the annotation to expand to the "
+             "form "
+             "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\", "
+             "crubit::rust_type::Args<T1, T2, ...>())]]`, but instead found "
+             "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\", "
+             "crubit::crubit_internal_rust_type_args<...>())]]`, where the "
+             "inner "
+             "`<...>` has ") +
+         llvm::Twine(spec->getTemplateArgs().size()) +
+         " template arguments instead of a single pack argument.")
+            .str());
   }
 
   const clang::TemplateArgument& spec_template_arg =
       spec->getTemplateArgs().get(0);
   if (spec_template_arg.getKind() != clang::TemplateArgument::Pack) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "crubit.rs-bug: Crubit expects the annotation to expand to the form "
-        "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\", "
-        "crubit::rust_type::Args<T1, T2, ...>())]]`, but instead found "
-        "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\", "
-        "crubit::rust_type::Args<...>())]]`, where the inner `<...>` has a "
-        "single argument of kind ",
-        ArgKindToString(spec_template_arg.getKind()),
-        " instead of a Pack argument."));
+    return crubit::InvalidArgumentError(
+        (llvm::Twine(
+             "crubit.rs-bug: Crubit expects the annotation to expand to the "
+             "form "
+             "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\", "
+             "crubit::rust_type::Args<T1, T2, ...>())]]`, but instead found "
+             "`[[clang::annotate\"crubit_internal_rust_type\", \"RustType\", "
+             "crubit::rust_type::Args<...>())]]`, where the inner `<...>` has "
+             "a "
+             "single argument of kind ") +
+         ArgKindToString(spec_template_arg.getKind()) +
+         " instead of a Pack argument.")
+            .str());
   }
 
   llvm::ArrayRef<clang::TemplateArgument> pack =
@@ -196,11 +202,13 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
   format_args.reserve(pack.size());
   for (const auto& arg : pack) {
     if (arg.getKind() != clang::TemplateArgument::Type) {
-      return absl::InvalidArgumentError(absl::StrCat(
-          "The template arguments of `CRUBIT_INTERNAL_RUST_TYPE` must be "
-          "types, found ",
-          ArgKindToString(arg.getKind()),
-          ". For const generics, use `crubit::rust_type::Const<N>`."));
+      return crubit::InvalidArgumentError(
+          (llvm::Twine(
+               "The template arguments of `CRUBIT_INTERNAL_RUST_TYPE` must be "
+               "types, found ") +
+           ArgKindToString(arg.getKind()) +
+           ". For const generics, use `crubit::rust_type::Const<N>`.")
+              .str());
     }
     clang::QualType type = arg.getAsType();
 
@@ -212,7 +220,7 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
       // Ensure that there is exactly one template argument (anything else
       // should be impossible).
       if (const_generic->getTemplateArgs().size() != 1) {
-        return absl::InvalidArgumentError(
+        return crubit::InvalidArgumentError(
             "crubit.rs-bug: `crubit::rust_type::Const` must have exactly one "
             "template argument.");
       }
@@ -221,10 +229,12 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
           const_generic->getTemplateArgs().get(0);
 
       if (const_generic_arg.getKind() != clang::TemplateArgument::Integral) {
-        return absl::InvalidArgumentError(absl::StrCat(
-            "`crubit::rust_type::Const` template argument must be an integral "
-            "constant, found: ",
-            ArgKindToString(const_generic_arg.getKind())));
+        return crubit::InvalidArgumentError(
+            (llvm::Twine("`crubit::rust_type::Const` template argument must be "
+                         "an integral "
+                         "constant, found: ") +
+             ArgKindToString(const_generic_arg.getKind()))
+                .str());
       }
       TemplateArg template_arg;
       if (const_generic_arg.getIntegralType()->isBooleanType()) {
@@ -256,9 +266,9 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
 
 std::unique_ptr<crubit::ffi::Item> ExistingRustTypeImporter::Import(
     clang::TypeDecl* type_decl) {
-  absl::StatusOr<std::optional<CrubitInternalRustType>> opt_attr =
+  llvm::Expected<std::optional<CrubitInternalRustType>> opt_attr =
       GetCrubitInternalRustTypeAttr(ictx_, *type_decl);
-  if (!opt_attr.ok()) {
+  if (!opt_attr) {
     return ictx_.HardError(
         *type_decl,
         // Failure here indicates that there was an incorrect attempt to use the
@@ -267,18 +277,18 @@ std::unique_ptr<crubit::ffi::Item> ExistingRustTypeImporter::Import(
         // kind.
         FormattedError::PrefixedStrCat(
             "Invalid CRUBIT_INTERNAL_RUST_TYPE attribute",
-            std::move(opt_attr).status().message()));
+            llvm::toString(opt_attr.takeError())));
   }
   if (!opt_attr->has_value()) {
     return nullptr;
   }
   auto [format_string, format_args] = **std::move(opt_attr);
-  absl::StatusOr<bool> is_same_abi = GetIsSameAbiAttribute(type_decl);
-  if (!is_same_abi.ok()) {
+  llvm::Expected<bool> is_same_abi = GetIsSameAbiAttribute(type_decl);
+  if (!is_same_abi) {
     return ictx_.HardError(*type_decl,
                            FormattedError::PrefixedStrCat(
                                "Invalid crubit_internal_is_same_abi attribute",
-                               is_same_abi.status().message()));
+                               llvm::toString(is_same_abi.takeError())));
   }
 
   std::optional<std::string> label_hint;

@@ -27,9 +27,9 @@ extern "C" ffi::IRProto proto_from_cc_dependency(
       carcinize ? CarcinizeMode::kStrict : CarcinizeMode::kOff,
       lazy_import_alien_decls, check_importer_invariants);
 
-  if (!ir.ok()) {
+  if (!ir) {
     llvm::report_fatal_error(llvm::formatv("IrFromCc reported an error: {0}",
-                                           ir.status().message()));
+                                           llvm::toString(ir.takeError())));
   }
   return *std::move(ir);
 }

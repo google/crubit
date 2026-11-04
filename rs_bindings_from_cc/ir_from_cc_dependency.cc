@@ -7,8 +7,8 @@
 #include <string>
 #include <utility>
 
+#include "llvm/Support/Error.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/status/statusor.h"
 #include "common/ffi_types.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline_flags.h"
@@ -17,7 +17,7 @@
 
 namespace crubit {
 
-absl::StatusOr<IR> IrFromCcDependency(
+llvm::Expected<IR> IrFromCcDependency(
     FfiU8Slice target_triple, FfiU8Slice header_source,
     FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
     bool kythe_annotations, CarcinizeMode carcinize_mode,
@@ -26,7 +26,7 @@ absl::StatusOr<IR> IrFromCcDependency(
   if (extra_feature.size != 0) {
     features.insert(std::string(StringViewFromFfiU8Slice(extra_feature)));
   }
-  return IrFromCc({
+  auto ir_or = IrFromCc({
       .extra_source_code_for_testing = StringViewFromFfiU8Slice(header_source),
       .current_target = BazelLabel{"//test:testing_target"},
       .virtual_headers_contents_for_testing =
@@ -51,6 +51,11 @@ absl::StatusOr<IR> IrFromCcDependency(
       .lazy_import_alien_decls = lazy_import_alien_decls,
       .check_importer_invariants = check_importer_invariants,
   });
+  if (!ir_or.ok()) {
+    return llvm::createStringError(llvm::inconvertibleErrorCode(),
+                                   ir_or.status().ToString());
+  }
+  return std::move(*ir_or);
 }
 
 }  // namespace crubit

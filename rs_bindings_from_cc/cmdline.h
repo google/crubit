@@ -13,12 +13,11 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 
@@ -71,11 +70,11 @@ class Cmdline {
   // Creates a validated Cmdline based on the given `args`.
   //
   // Returns an error if `args` is invalid.
-  static absl::StatusOr<Cmdline> Create(CmdlineArgs args);
+  static llvm::Expected<Cmdline> Create(CmdlineArgs args);
   // Creates `Cmdline` based on the actual flags.
   //
   // Returns an error if the flags are invalid.
-  static absl::StatusOr<Cmdline> FromFlags();
+  static llvm::Expected<Cmdline> FromFlags();
   const CmdlineArgs& args() const& { return args_; }
   CmdlineArgs args() && { return std::move(args_); }
 

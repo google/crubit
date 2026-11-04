@@ -16,7 +16,6 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "common/check.h"
@@ -277,7 +276,7 @@ class ImportContext {
   //
   // Imports the parent decl if it is not already imported, and returns a bad
   // status if the parent cannot be imported.
-  virtual absl::StatusOr<std::optional<ItemId>> GetEnclosingItemId(
+  virtual llvm::Expected<std::optional<ItemId>> GetEnclosingItemId(
       clang::Decl* _Nonnull decl) = 0;
 
   // Returns a map of top level item ids in source order for each target.
@@ -393,7 +392,7 @@ class ImportContext {
   // * declared inconsistently.
   // * declared with no or more than one argument.
   // * declared with a non-bool value.
-  virtual absl::StatusOr<bool> DetectFormatter(
+  virtual llvm::Expected<bool> DetectFormatter(
       const clang::TypeDecl& decl) const = 0;
 
   // Returns true if the given C++ type decl implements `rs::core::fmt::Debug`.
@@ -408,7 +407,7 @@ class ImportContext {
   // * declared inconsistently.
   // * declared with no or more than one argument.
   // * declared with a non-bool value.
-  virtual absl::StatusOr<std::optional<bool>> GetCrubitOverrideDebugAnnotation(
+  virtual llvm::Expected<std::optional<bool>> GetCrubitOverrideDebugAnnotation(
       const clang::TypeDecl& type) const = 0;
 
   // Gets an IR UnqualifiedIdentifier for the named decl.
@@ -419,12 +418,12 @@ class ImportContext {
   // a SpecialName.
   //
   // If the name can't be translated (or is empty), this returns an error.
-  virtual absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
+  virtual llvm::Expected<TranslatedUnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl& named_decl) const = 0;
 
   // GetTranslatedName, but only for identifier names. This is the common case.
   // If the name can't be translated (or is empty), this returns an error.
-  virtual absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
+  virtual llvm::Expected<TranslatedIdentifier> GetTranslatedIdentifier(
       const clang::NamedDecl& named_decl) const = 0;
 
   // Gets the doc comment of the declaration.

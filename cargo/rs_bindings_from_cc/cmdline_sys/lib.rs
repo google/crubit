@@ -5,3 +5,4 @@
 // Automatically @generated lib.rs for the cc_library cmdline.
 
 extern crate cc_ir_sys;
+extern crate status_sys;

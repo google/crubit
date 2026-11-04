@@ -9,7 +9,6 @@
 #include <string>
 #include <utility>
 
-#include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_generated.h"
@@ -22,20 +21,21 @@ namespace crubit {
 
 std::unique_ptr<crubit::ffi::Item> EnumConstantDeclImporter::Import(
     clang::EnumConstantDecl* enum_constant_decl) {
-  absl::StatusOr<TranslatedIdentifier> enumerator_name =
+  llvm::Expected<TranslatedIdentifier> enumerator_name =
       ictx_.GetTranslatedIdentifier(*enum_constant_decl);
-  if (!enumerator_name.ok()) {
+  if (!enumerator_name) {
     return ictx_.ImportUnsupportedItem(
         *enum_constant_decl, std::nullopt,
-        {FormattedError::PrefixedStrCat("Enumerator name is not supported",
-                                        enumerator_name.status().message())});
+        {FormattedError::PrefixedStrCat(
+            "Enumerator name is not supported",
+            llvm::toString(enumerator_name.takeError()))});
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(enum_constant_decl);
-  if (!enclosing_item_id.ok()) {
+  if (!enclosing_item_id) {
     return ictx_.ImportUnsupportedItem(
         *enum_constant_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
+        {FormattedError::FromStatus(enclosing_item_id.takeError())});
   }
 
   const clang::EnumDecl* enum_decl =
@@ -49,14 +49,14 @@ std::unique_ptr<crubit::ffi::Item> EnumConstantDeclImporter::Import(
         {FormattedError::Static("Enumerator's enum has no underlying type")});
   }
 
-  absl::StatusOr<CcType> type =
+  llvm::Expected<CcType> type =
       ictx_.ConvertQualType(cpp_type, nullptr, /*nullable=*/true,
                             ictx_.AreAssumedLifetimesEnabledForTarget(
                                 ictx_.GetOwningTarget(*enum_constant_decl)));
-  if (!type.ok()) {
+  if (!type) {
     return ictx_.ImportUnsupportedItem(
         *enum_constant_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(type.status()))});
+        {FormattedError::FromStatus(type.takeError())});
   }
 
   std::optional<std::string> deprecated;

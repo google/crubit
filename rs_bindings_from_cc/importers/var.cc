@@ -13,9 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/types/span.h"
 #include "common/check.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/ast_util.h"
@@ -38,6 +35,8 @@
 #include "clang/Sema/DeclSpec.h"
 #include "clang/Sema/Ownership.h"
 #include "clang/Sema/Sema.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/Support/Error.h"
 #if LLVM_DEV_DATE_GE(20261022)
 #include "clang/Sema/SemaProxy.h"
 #endif
@@ -121,16 +120,16 @@ const clang::StringLiteral* GetStringLiteralInit(const clang::Expr* init,
 }
 
 // Converts `value`, an integer or boolean array element, to `out`.
-absl::Status ConvertIntegerElement(const clang::APValue& value,
-                                   crubit::ffi::IntegerConstant& out) {
+llvm::Error ConvertIntegerElement(const clang::APValue& value,
+                                  crubit::ffi::IntegerConstant& out) {
   if (!value.isInt()) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "array element did not evaluate to an integer");
   }
   CRUBIT_ASSIGN_OR_RETURN(crubit::ffi::IntegerConstant integer_constant,
                           IntegerConstantFromAPValue(value.getInt()));
   out = std::move(integer_constant);
-  return absl::OkStatus();
+  return llvm::Error::success();
 }
 
 // Converts `value`, a (possibly nested) array with the given `dimensions`
@@ -143,10 +142,10 @@ absl::Status ConvertIntegerElement(const clang::APValue& value,
 // Only the explicitly initialized elements are recorded individually. The
 // remaining elements are value-initialized, and their value is recorded as the
 // filler.
-absl::Status ConvertArrayValue(const clang::APValue& value,
-                               absl::Span<const uint64_t> dimensions,
-                               const clang::Expr* char_array_init,
-                               crubit::ffi::ArrayValue& out) {
+llvm::Error ConvertArrayValue(const clang::APValue& value,
+                              llvm::ArrayRef<const uint64_t> dimensions,
+                              const clang::Expr* char_array_init,
+                              crubit::ffi::ArrayValue& out) {
   CRUBIT_CHECK(!dimensions.empty())
       << "must be called with at least one dimension";
   const uint64_t size = dimensions[0];
@@ -176,22 +175,22 @@ absl::Status ConvertArrayValue(const clang::APValue& value,
               ? char_array_init_list->getInit(i)
               : nullptr;
       CRUBIT_RETURN_IF_ERROR(ConvertArrayValue(
-          value.getArrayInitializedElt(i), dimensions.subspan(1),
+          value.getArrayInitializedElt(i), dimensions.drop_front(1),
           element_char_array_init, *elements->add_elements()));
     }
     if (filler != nullptr) {
       // The filler has no initializer expression of its own.
-      CRUBIT_RETURN_IF_ERROR(ConvertArrayValue(*filler, dimensions.subspan(1),
-                                               /*char_array_init=*/nullptr,
-                                               *elements->mutable_filler()));
+      CRUBIT_RETURN_IF_ERROR(ConvertArrayValue(
+          *filler, dimensions.drop_front(1),
+          /*char_array_init=*/nullptr, *elements->mutable_filler()));
     }
-    return absl::OkStatus();
+    return llvm::Error::success();
   }
 
   if (const clang::StringLiteral* string_literal =
           GetStringLiteralInit(char_array_init, size)) {
     out.mutable_kind()->set_string_literal(string_literal->getBytes().str());
-    return absl::OkStatus();
+    return llvm::Error::success();
   }
 
   auto* elements = out.mutable_kind()->mutable_integer_elements();
@@ -203,7 +202,7 @@ absl::Status ConvertArrayValue(const clang::APValue& value,
     CRUBIT_RETURN_IF_ERROR(
         ConvertIntegerElement(*filler, *elements->mutable_filler()));
   }
-  return absl::OkStatus();
+  return llvm::Error::success();
 }
 
 // Returns true if `type` is `std::string_view`
@@ -243,7 +242,7 @@ bool IsStringViewType(const clang::ASTContext& ast_context,
 // this independent of the standard library's private layout, and the constant
 // evaluator accepts any constant characters (string literals, `constexpr`
 // arrays, substrings, ...) and rejects anything else.
-absl::StatusOr<std::string> EvaluateStringViewContents(
+llvm::Expected<std::string> EvaluateStringViewContents(
     ImportContext& ictx, clang::VarDecl& var_decl) {
   clang::Sema& sema = ictx.sema_;
   clang::ASTContext& ast_context = ictx.ctx_;
@@ -277,7 +276,7 @@ absl::StatusOr<std::string> EvaluateStringViewContents(
       !data_call->getType()->isPointerType() ||
       !IsPlainChar(data_call->getType()->getPointeeType()) ||
       !size_call->getType()->isIntegerType()) {
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "string_view constant has no usable `data()` and `size()`");
   }
 
@@ -292,7 +291,7 @@ absl::StatusOr<std::string> EvaluateStringViewContents(
   if (!string_view_ref->EvaluateCharRangeAsString(
           contents, size_call, data_call, ast_context, eval_result)) {
 #endif
-    return absl::InvalidArgumentError(
+    return crubit::InvalidArgumentError(
         "string_view constant does not refer to constant characters");
   }
   return contents;
@@ -362,20 +361,20 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::Import(
         {FormattedError::Static("templated variables are not supported")});
   }
 
-  absl::StatusOr<TranslatedIdentifier> var_name =
+  llvm::Expected<TranslatedIdentifier> var_name =
       ictx_.GetTranslatedIdentifier(*var_decl);
-  if (!var_name.ok()) {
+  if (!var_name) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
         {FormattedError::PrefixedStrCat("variable name is not supported",
-                                        var_name.status().message())});
+                                        llvm::toString(var_name.takeError()))});
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(var_decl);
-  if (!enclosing_item_id.ok()) {
+  if (!enclosing_item_id) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
+        {FormattedError::FromStatus(enclosing_item_id.takeError())});
   }
 
   std::optional<std::string> deprecated;
@@ -517,12 +516,12 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
   auto item = std::make_unique<crubit::ffi::Item>();
   auto* constant = item->mutable_constant();
   if (is_string_view) {
-    absl::StatusOr<std::string> string_view_value =
+    llvm::Expected<std::string> string_view_value =
         EvaluateStringViewContents(ictx_, *var_decl);
-    if (!string_view_value.ok()) {
+    if (!string_view_value) {
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
-          {FormattedError::FromStatus(std::move(string_view_value.status()))});
+          {FormattedError::FromStatus(string_view_value.takeError())});
     }
     constant->mutable_kind()->set_string_view_value(
         *std::move(string_view_value));
@@ -546,10 +545,10 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
     // Crubit maps to `ffi_11::c_char`.
     const clang::Expr* char_array_init =
         IsPlainChar(value_type) ? var_decl->getInit() : nullptr;
-    if (absl::Status status =
+    if (llvm::Error status =
             ConvertArrayValue(*value, dimensions, char_array_init,
                               *constant->mutable_kind()->mutable_array_value());
-        !status.ok()) {
+        status) {
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
           {FormattedError::FromStatus(std::move(status))});

@@ -9,6 +9,7 @@
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -17,12 +18,6 @@
 
 #include "clang/Sema/Initialization.h"
 #include "clang/Sema/Template.h"
-#include "absl/algorithm/container.h"
-#include "absl/container/btree_set.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_join.h"
 #include "common/annotation_reader.h"
 #include "common/check.h"
 #include "lifetime_annotations/lifetime.h"
@@ -60,7 +55,9 @@
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
@@ -71,13 +68,13 @@ namespace {
 // A collection of `FormattedError` values that enforces uniqueness.
 struct Errors {
   // `btree_set` is used to ensure stable ordering.
-  absl::btree_set<FormattedError> error_set;
+  std::set<FormattedError> error_set;
   void Add(FormattedError error) {
     auto result = error_set.insert(std::move(error));
     CRUBIT_CHECK(result.second) << "Duplicated error message";
   }
-  void AddStatus(absl::Status status) {
-    Add(FormattedError::FromStatus(status));
+  void AddStatus(llvm::Error status) {
+    Add(FormattedError::FromStatus(std::move(status)));
   }
 };
 
@@ -151,7 +148,7 @@ SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
   }
   const AnnotateArgs& args = **maybe_args;
   if (args.size() != 1) {
-    errors.AddStatus(absl::InvalidArgumentError(
+    errors.AddStatus(crubit::InvalidArgumentError(
         "`crubit_override_unsafe` annotation must have exactly one argument"));
     return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   }
@@ -248,10 +245,11 @@ static bool IsInStdNamespace(const clang::FunctionDecl* decl) {
 Identifier FunctionDeclImporter::GetTranslatedParamName(
     const clang::ParmVarDecl* param_decl) {
   int param_pos = param_decl->getFunctionScopeIndex();
-  absl::StatusOr<TranslatedIdentifier> name =
+  llvm::Expected<TranslatedIdentifier> name =
       ictx_.GetTranslatedIdentifier(*param_decl);
-  if (!name.ok()) {
-    return {Identifier(absl::StrCat("__param_", param_pos))};
+  if (!name) {
+    return {
+        Identifier((llvm::Twine("__param_") + llvm::Twine(param_pos)).str())};
   }
   // Look through pointers, references and arrays: `const TArgs&... args` or
   // `TArgs*... args` expand to one parameter per pack element just like
@@ -339,7 +337,7 @@ bool FunctionBodyIsDefinedInHeader(const ImportContext& ictx,
   static constexpr llvm::StringRef kHeaderExtensions[] = {
       ".h", ".H", ".hh", ".hpp", ".hxx", ".h++", ".inc", ".inl", ".def", ".tcc",
   };
-  return absl::c_contains(kHeaderExtensions, ext);
+  return llvm::is_contained(kHeaderExtensions, ext);
 }
 
 struct PropertyFieldInfo {
@@ -770,21 +768,22 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
     }
   }
 
-  absl::StatusOr<TranslatedUnqualifiedIdentifier> translated_name =
+  llvm::Expected<TranslatedUnqualifiedIdentifier> translated_name =
       ictx_.GetTranslatedName(*function_decl);
-  if (!translated_name.ok()) {
+  if (!translated_name) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
-        {FormattedError::PrefixedStrCat("Function name is not supported",
-                                        translated_name.status().message())},
+        {FormattedError::PrefixedStrCat(
+            "Function name is not supported",
+            llvm::toString(translated_name.takeError()))},
         must_bind_);
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(function_decl);
-  if (!enclosing_item_id.ok()) {
+  if (!enclosing_item_id) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(enclosing_item_id).status())},
+        {FormattedError::FromStatus(enclosing_item_id.takeError())},
         must_bind_);
   }
 
@@ -822,10 +821,14 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
     return unsupported(FormattedError::Substitute(
         "Cannot be default-constructed: fields $0 require explicit "
         "initialization.",
-        absl::StrJoin(field_names, ", ",
-                      [](std::string* out, const std::string& name) {
-                        *out += (llvm::Twine("`") + name + "`").str();
-                      })));
+        [&]() {
+          std::string out;
+          for (size_t i = 0; i < field_names.size(); ++i) {
+            if (i > 0) out += ", ";
+            out += "`" + field_names[i] + "`";
+          }
+          return out;
+        }()));
   }
 
   // We should only import methods of class template specializations
@@ -1040,7 +1043,7 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
                      !this_param_type.explicit_lifetimes().empty()) {
             errors.Add(FormattedError::PrefixedStrCat(
                 "Extra explicit lifetimes on `this`",
-                absl::StrJoin(*this_lifetime_views, ", ")));
+                llvm::join(*this_lifetime_views, ", ")));
           } else {
             for (llvm::StringRef lifetime_view : *this_lifetime_views) {
               this_param_type.add_explicit_lifetimes(lifetime_view);
@@ -1146,7 +1149,8 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
               "Diagnostics emitted:\n")));
     }
   }
-  absl::StatusOr<CcType> return_type;
+  llvm::Expected<CcType> return_type =
+      crubit::InvalidArgumentError("uninitialized");
   if (!undeduced_return_type) {
     const clang::tidy::lifetimes::ValueLifetimes* return_lifetimes = nullptr;
     if (lifetimes) {
@@ -1155,9 +1159,10 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
     return_type =
         ictx_.ConvertQualType(function_decl->getReturnType(), return_lifetimes,
                               /*nullable=*/true, assumed_lifetimes_enabled);
-    if (!return_type.ok()) {
+    if (!return_type) {
       errors.Add(FormattedError::PrefixedStrCat(
-          "Return type is not supported", return_type.status().message()));
+          "Return type is not supported",
+          llvm::toString(return_type.takeError())));
     }
     // The generated bindings convert the result of `operator<=>` into an
     // integer, which requires a comparison category type.
@@ -1315,8 +1320,8 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
   }
 
   // Silence ClangTidy, checked above: calling `errors.Add` if
-  // `!return_type.ok()` and returning early if `!errors.empty()`.
-  CRUBIT_CHECK(return_type.ok()) << return_type.status();
+  // `!return_type` and returning early if `!errors.empty()`.
+  CRUBIT_CHECK(return_type) << llvm::toString(return_type.takeError());
 
   // We should unify FunctionDecl* generated from friend declarations with the
   // correct enclosing record.

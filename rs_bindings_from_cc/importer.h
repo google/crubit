@@ -15,7 +15,6 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "common/check.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -81,7 +80,7 @@ class Importer final : public ImportContext {
   ItemId GenerateItemId(const clang::Decl& decl) const override;
   ItemId GenerateItemId(const clang::RawComment& comment) const override;
   bool IsUnsupportedAndAlien(ItemId item_id) const override;
-  absl::StatusOr<std::optional<ItemId>> GetEnclosingItemId(
+  llvm::Expected<std::optional<ItemId>> GetEnclosingItemId(
       clang::Decl* _Nonnull decl) override;
 
   // The canonical children and comments that are within a decl.
@@ -124,14 +123,14 @@ class Importer final : public ImportContext {
   bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const override;
   bool IsRecordImplDebugEnabledForTarget(
       const BazelLabel& label) const override;
-  absl::StatusOr<bool> DetectFormatter(
+  llvm::Expected<bool> DetectFormatter(
       const clang::TypeDecl& decl) const override;
   bool ImplementsCoreFmtDebug(const clang::TypeDecl& type) const override;
-  absl::StatusOr<std::optional<bool>> GetCrubitOverrideDebugAnnotation(
+  llvm::Expected<std::optional<bool>> GetCrubitOverrideDebugAnnotation(
       const clang::TypeDecl& type) const override;
-  absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
+  llvm::Expected<TranslatedUnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl& named_decl) const override;
-  absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
+  llvm::Expected<TranslatedIdentifier> GetTranslatedIdentifier(
       const clang::NamedDecl& named_decl) const override;
   std::optional<std::string> GetComment(const clang::Decl& decl) const override;
   crubit::ffi::DeclLocation ConvertDeclLocation(
@@ -271,13 +270,13 @@ class Importer final : public ImportContext {
       const clang::DeclContext& decl_context) const;
   // Converts a type to a CcType.
   // TODO(b/251045039): Return a `CcType`.
-  absl::StatusOr<CcType> ConvertType(
+  llvm::Expected<CcType> ConvertType(
       const clang::Type& type,
       const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
       bool nullable, bool assume_lifetimes);
   // Converts a type, without processing attributes.
   // TODO(b/251045039): Return a `CcType`.
-  absl::StatusOr<CcType> ConvertUnattributedType(
+  llvm::Expected<CcType> ConvertUnattributedType(
       const clang::Type& type,
       const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
       bool nullable, bool assume_lifetimes);
@@ -287,9 +286,9 @@ class Importer final : public ImportContext {
   // argument, if `type` is a use of the specialization, or unbound, if `type`
   // is the template parameter inside it. `has_written_lifetimes` is whether
   // `type` itself was written with lifetimes.
-  absl::Status AddTemplateArgumentLifetime(const clang::Type& type,
-                                           bool has_written_lifetimes,
-                                           CcType& cpp_type);
+  llvm::Error AddTemplateArgumentLifetime(const clang::Type& type,
+                                          bool has_written_lifetimes,
+                                          CcType& cpp_type);
   CcType ConvertTypeDecl(clang::NamedDecl* _Nonnull decl);
 
   // Converts `type` into a CcType, after first importing the Record behind
@@ -329,10 +328,10 @@ class Importer final : public ImportContext {
   bool IsFeatureEnabledForTarget(const BazelLabel& label,
                                  llvm::StringRef feature) const override;
 
-  absl::StatusOr<std::optional<bool>> GetCrubitOverrideDisplayAnnotation(
+  llvm::Expected<std::optional<bool>> GetCrubitOverrideDisplayAnnotation(
       const clang::TypeDecl& decl) const;
 
-  absl::StatusOr<std::optional<bool>> DetectFormatterForType(
+  llvm::Expected<std::optional<bool>> DetectFormatterForType(
       clang::CanQualType lookup, clang::CanQualType target) const;
 
   // The different decl importers. Note that order matters: the first importer

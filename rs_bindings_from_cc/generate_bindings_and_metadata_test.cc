@@ -55,8 +55,8 @@ Cmdline MakeCmdline(std::string header) {
   };
   args.headers_to_targets[args.public_headers[0]] = args.current_target;
   args.target_to_features[args.current_target] = {"supported"};
-  absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
-  CRUBIT_CHECK(cmdline.ok()) << cmdline.status();
+  llvm::Expected<Cmdline> cmdline = Cmdline::Create(args);
+  CRUBIT_CHECK(bool(cmdline)) << llvm::toString(cmdline.takeError());
   return *cmdline;
 }
 
@@ -97,8 +97,8 @@ GetInstantiationsFor(llvm::StringRef header_content,
   CmdlineArgs args = MakeCmdline("a.h").args();
   args.srcs_to_scan_for_instantiations = {a_rs_path};
   args.instantiations_out = "instantiations_out";
-  absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
-  CRUBIT_CHECK(cmdline.ok()) << cmdline.status();
+  llvm::Expected<Cmdline> cmdline = Cmdline::Create(args);
+  CRUBIT_CHECK(bool(cmdline)) << llvm::toString(cmdline.takeError());
 
   CRUBIT_ASSIGN_OR_RETURN(
       BindingsAndMetadata result,
@@ -311,8 +311,8 @@ TEST(GenerateBindingsAndMetadataTest,
       WriteFileForCurrentTest("extra.cc", "struct UnguardedStruct {};");
   CmdlineArgs args = MakeCmdline("a.h").args();
   args.extra_cpp_srcs = {extra_cc_path};
-  absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
-  CRUBIT_CHECK(cmdline.ok()) << cmdline.status();
+  llvm::Expected<Cmdline> cmdline = Cmdline::Create(args);
+  CRUBIT_CHECK(bool(cmdline)) << llvm::toString(cmdline.takeError());
 
   std::vector<std::string> clang_args = DefaultClangArgs();
   clang_args.push_back("-include");

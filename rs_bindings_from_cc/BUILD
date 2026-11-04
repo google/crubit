@@ -297,6 +297,7 @@ cc_library(
         ":cc_ir",
         ":cmdline_flags",
         "//common:check",
+        "//common:status",
         "//common:string_view_conversion",
         "@abseil-cpp//absl/algorithm:container",
         "@abseil-cpp//absl/container:flat_hash_map",
@@ -341,6 +342,7 @@ crubit_cc_test(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -378,6 +380,7 @@ cc_library(
     deps = [
         ":ast_consumer",
         ":decl_importer",
+        "//common:status",
         "//common:string_view_conversion",
         "//lifetime_annotations",
         "//nullability:pragma",
@@ -412,6 +415,7 @@ cc_library(
         ":clang_compat_macros",
         ":cmdline_flags",
         ":decl_importer",
+        ":logging",
         ":recording_diagnostic_consumer",
         ":type_map",
         "//common:annotation_reader",
@@ -657,6 +661,7 @@ cc_library(
         "@abseil-cpp//absl/log",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -895,5 +900,25 @@ crubit_cc_test(
         "//common:status_test_matchers",
         "@googletest//:gtest_main",
         "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "logging",
+    srcs = ["logging.cc"],
+    hdrs = ["logging.h"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//common:check",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "logging_test",
+    srcs = ["logging_test.cc"],
+    deps = [
+        ":logging",
+        "@googletest//:gtest_main",
     ],
 )

@@ -1403,6 +1403,7 @@ version = "0.0.0"
 dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1448,6 +1449,7 @@ dependencies = [
  "rs_bindings_from_cc_ast_convert_sys",
  "rs_bindings_from_cc_ast_util_sys",
  "rs_bindings_from_cc_cc_ir_sys",
+ "status_sys",
  "type_lifetimes_sys",
 ]
 
@@ -1522,6 +1524,7 @@ dependencies = [
  "lifetime_annotations_sys",
  "pragma_sys",
  "rs_bindings_from_cc_ast_consumer_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1780,11 +1783,13 @@ dependencies = [
  "rs_bindings_from_cc_friend_sys",
  "rs_bindings_from_cc_function_sys",
  "rs_bindings_from_cc_function_template_sys",
+ "rs_bindings_from_cc_logging_sys",
  "rs_bindings_from_cc_namespace_sys",
  "rs_bindings_from_cc_recording_diagnostic_consumer_sys",
  "rs_bindings_from_cc_type_alias_sys",
  "rs_bindings_from_cc_type_map_sys",
  "rs_bindings_from_cc_var_sys",
+ "status_sys",
  "type_lifetimes_sys",
 ]
 
@@ -1886,6 +1891,13 @@ dependencies = [
  "rs_bindings_from_cc_test_generators",
  "syn 2.0.119",
  "unicode-ident",
+]
+
+[[package]]
+name = "rs_bindings_from_cc_logging_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
 ]
 
 [[package]]

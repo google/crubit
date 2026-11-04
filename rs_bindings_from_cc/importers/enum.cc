@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
-#include "absl/status/statusor.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -31,20 +30,21 @@ std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
     // Anonymous enums are handled by `EnumConstantDeclImporter`.
     return nullptr;
   }
-  absl::StatusOr<TranslatedIdentifier> enum_name =
+  llvm::Expected<TranslatedIdentifier> enum_name =
       ictx_.GetTranslatedIdentifier(*enum_decl);
-  if (!enum_name.ok()) {
+  if (!enum_name) {
     return ictx_.ImportUnsupportedItem(
         *enum_decl, std::nullopt,
-        {FormattedError::PrefixedStrCat("Enum name is not supported",
-                                        enum_name.status().message())});
+        {FormattedError::PrefixedStrCat(
+            "Enum name is not supported",
+            llvm::toString(enum_name.takeError()))});
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(enum_decl);
-  if (!enclosing_item_id.ok()) {
+  if (!enclosing_item_id) {
     return ictx_.ImportUnsupportedItem(
         *enum_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
+        {FormattedError::FromStatus(enclosing_item_id.takeError())});
   }
 
   // Reports an unsupported enum with the given error.
@@ -71,24 +71,24 @@ std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
                                "specifiers are not supported"));
   }
   const clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
-  absl::StatusOr<CcType> type =
+  llvm::Expected<CcType> type =
       ictx_.ConvertQualType(cpp_type, no_lifetimes, /*nullable=*/true,
                             ictx_.AreAssumedLifetimesEnabledForTarget(
                                 ictx_.GetOwningTarget(*enum_decl)));
-  if (!type.ok()) {
-    return unsupported(FormattedError::FromStatus(std::move(type.status())));
+  if (!type) {
+    return unsupported(FormattedError::FromStatus(type.takeError()));
   }
 
   std::vector<crubit::ffi::Enumerator> enumerators;
   enumerators.reserve(absl::c_distance(enum_decl->enumerators()));
   for (clang::EnumConstantDecl* enumerator : enum_decl->enumerators()) {
-    absl::StatusOr<TranslatedIdentifier> enumerator_name =
+    llvm::Expected<TranslatedIdentifier> enumerator_name =
         ictx_.GetTranslatedIdentifier(*enumerator);
-    if (!enumerator_name.ok()) {
+    if (!enumerator_name) {
       // It's not clear that this case is possible
-      return unsupported(
-          FormattedError::PrefixedStrCat("Enumerator name is not supported",
-                                         enumerator_name.status().message()));
+      return unsupported(FormattedError::PrefixedStrCat(
+          "Enumerator name is not supported",
+          llvm::toString(enumerator_name.takeError())));
     }
 
     std::optional<std::string> deprecated;
@@ -185,10 +185,10 @@ std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
   }
 
   BazelLabel owning_target = ictx_.GetOwningTarget(*enum_decl);
-  absl::StatusOr<bool> detected_formatter = ictx_.DetectFormatter(*enum_decl);
-  if (!detected_formatter.ok()) {
+  llvm::Expected<bool> detected_formatter = ictx_.DetectFormatter(*enum_decl);
+  if (!detected_formatter) {
     return unsupported(
-        FormattedError::FromStatus(std::move(detected_formatter).status()));
+        FormattedError::FromStatus(detected_formatter.takeError()));
   }
 
   std::optional<std::string> doc_comment = ictx_.GetComment(*enum_decl);

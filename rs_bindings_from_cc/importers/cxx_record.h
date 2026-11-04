@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "absl/functional/any_invocable.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/importers/bitwise_relocatable.h"
@@ -47,10 +46,10 @@ class CXXRecordDeclImporter : public DeclImporterBase<clang::CXXRecordDecl> {
 
   // Returns the bridge type of the given `decl` if it is a builtin bridge type
   // (e.g., `std::optional`). Otherwise, returns `std::nullopt`.
-  absl::StatusOr<std::optional<BridgeType>> GetBuiltinBridgeType(
+  llvm::Expected<std::optional<BridgeType>> GetBuiltinBridgeType(
       const clang::ClassTemplateSpecializationDecl* decl);
 
-  absl::StatusOr<SafetyAnnotation> GetSafetyAnnotation(const clang::Decl& decl);
+  llvm::Expected<SafetyAnnotation> GetSafetyAnnotation(const clang::Decl& decl);
 
   RelocatabilityAnalysis relocatability_analysis_;
 };

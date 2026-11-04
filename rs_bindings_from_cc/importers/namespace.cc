@@ -26,22 +26,23 @@ std::unique_ptr<crubit::ffi::Item> NamespaceDeclImporter::Import(
         {FormattedError::Static("Anonymous namespaces are not yet supported")});
   }
 
-  absl::StatusOr<TranslatedIdentifier> identifier =
+  llvm::Expected<TranslatedIdentifier> identifier =
       ictx_.GetTranslatedIdentifier(*namespace_decl);
-  if (!identifier.ok()) {
+  if (!identifier) {
     return ictx_.ImportUnsupportedItem(
         *namespace_decl, std::nullopt,
-        {FormattedError::PrefixedStrCat("Namespace name is not supported",
-                                        identifier.status().message())});
+        {FormattedError::PrefixedStrCat(
+            "Namespace name is not supported",
+            llvm::toString(identifier.takeError()))});
   }
 
   ictx_.ImportDeclsFromDeclContext(*namespace_decl);
   auto item_ids = ictx_.GetItemIdsInSourceOrder(namespace_decl);
   auto enclosing_item_id = ictx_.GetEnclosingItemId(namespace_decl);
-  if (!enclosing_item_id.ok()) {
+  if (!enclosing_item_id) {
     return ictx_.ImportUnsupportedItem(
         *namespace_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
+        {FormattedError::FromStatus(enclosing_item_id.takeError())});
   }
   // Renames are not currently supported for namespaces.
   // TODO - b/399487279: Support namespace renames using CRUBIT_RUST_NAME.

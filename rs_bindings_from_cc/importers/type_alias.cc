@@ -9,13 +9,6 @@
 #include <string>
 #include <utility>
 
-#include "absl/algorithm/container.h"
-#include "absl/log/log.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/ascii.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_join.h"
-#include "absl/strings/string_view.h"
 #include "common/check.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
@@ -28,7 +21,9 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/LLVM.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/MD5.h"
 
 namespace crubit {
@@ -42,14 +37,14 @@ std::string ProtoMessageToRustModName(llvm::StringRef message_name) {
     // If someone actually used an underscore in a proto message name, this
     // heuristic will fail. Whoops.
     if (c == '_' && !mod_name.empty()) {
-      absl::StrAppend(&mod_name, "::");
+      mod_name += "::";
       continue;
-    } else if (absl::ascii_isupper(c) && !mod_name.empty() &&
+    } else if (llvm::isUpper(c) && !mod_name.empty() &&
                mod_name.back() != ':') {
-      absl::StrAppend(&mod_name, "_");
+      mod_name += "_";
     }
     // StrAppend doesn't accept `char`. :'(
-    c = absl::ascii_tolower(static_cast<unsigned char>(c));
+    c = llvm::toLower(static_cast<unsigned char>(c));
     mod_name += c;
   }
   return mod_name;
@@ -68,7 +63,7 @@ std::string ProtoEnumToRustName(clang::NamedDecl& decl) {
   }
   absl::c_reverse(mod_chain);
   mod_chain.push_back(std::string(decl.getName()));
-  return absl::StrJoin(mod_chain, "::");
+  return llvm::join(mod_chain, "::");
 }
 }  // namespace
 
@@ -129,33 +124,34 @@ std::unique_ptr<crubit::ffi::Item> crubit::TypeAliasImporter::Import(
     return nullptr;
   }
 
-  absl::StatusOr<TranslatedIdentifier> identifier =
+  llvm::Expected<TranslatedIdentifier> identifier =
       ictx_.GetTranslatedIdentifier(*decl);
-  if (!identifier.ok()) {
+  if (!identifier) {
     return ictx_.ImportUnsupportedItem(
         *decl, std::nullopt,
-        {FormattedError::PrefixedStrCat("Type alias name is not supported",
-                                        identifier.status().message())});
+        {FormattedError::PrefixedStrCat(
+            "Type alias name is not supported",
+            llvm::toString(identifier.takeError()))});
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(decl);
-  if (!enclosing_item_id.ok()) {
+  if (!enclosing_item_id) {
     return ictx_.ImportUnsupportedItem(
         *decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
+        {FormattedError::FromStatus(enclosing_item_id.takeError())});
   }
 
   clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
   // TODO(mboehme): Once lifetime_annotations supports retrieving lifetimes in
   // type aliases, pass these to ConvertQualType().
-  absl::StatusOr<CcType> underlying_type = ictx_.ConvertQualType(
+  llvm::Expected<CcType> underlying_type = ictx_.ConvertQualType(
       underlying_qualtype, no_lifetimes, /*nullable=*/true,
       ictx_.AreAssumedLifetimesEnabledForTarget(ictx_.GetOwningTarget(*decl)));
 
-  if (!underlying_type.ok()) {
+  if (!underlying_type) {
     return ictx_.ImportUnsupportedItem(
         *decl, (*identifier).cc_identifier, *enclosing_item_id,
-        {FormattedError::FromStatus(std::move(underlying_type.status()))});
+        {FormattedError::FromStatus(underlying_type.takeError())});
   }
   bool is_cc_template_instantiation = false;
   if (const auto* ns_decl =
@@ -214,8 +210,9 @@ std::unique_ptr<crubit::ffi::Item> crubit::TypeAliasImporter::Import(
     // Preserve the prefix of the name for debugging. The hash must be stable
     // across runs. (llvm::MD5Hash returns the lower 64 bits of the MD5 hash,
     // and we need some extra headroom for the full file name.)
-    rs_name = absl::StrCat(rs_name.substr(0, 160 - 17), "_",
-                           absl::Hex(llvm::MD5Hash(rs_name)));
+    rs_name = (llvm::Twine(rs_name.substr(0, 160 - 17)) + "_" +
+               llvm::Twine::utohexstr(llvm::MD5Hash(rs_name)))
+                  .str();
   }
 
   auto item = std::make_unique<crubit::ffi::Item>();
@@ -266,12 +263,12 @@ std::unique_ptr<crubit::ffi::Item> TypeAliasImporter::ImportFunctionAlias(
                                 "targets are not yet supported.")});
   }
 
-  absl::StatusOr<std::optional<ItemId>> enclosing_item_id =
+  llvm::Expected<std::optional<ItemId>> enclosing_item_id =
       ictx_.GetEnclosingItemId(&using_decl);
-  if (!enclosing_item_id.ok()) {
+  if (!enclosing_item_id) {
     return ictx_.ImportUnsupportedItem(
         using_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(enclosing_item_id).status())});
+        {FormattedError::FromStatus(enclosing_item_id.takeError())});
   }
 
   // Import the function itself, and then re-home the resulting item onto the
