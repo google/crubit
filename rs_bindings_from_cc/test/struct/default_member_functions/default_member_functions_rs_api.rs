@@ -14,6 +14,7 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+/// Not Rust-movable: type is neither copyable nor movable
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "10Uncopyable"]
 #[repr(C)]
@@ -45,7 +46,6 @@ impl ::ctor::CtorNew<()> for Uncopyable {
     }
 }
 
-#[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "21UncopyableDespiteDecl"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=UncopyableDespiteDecl
@@ -59,16 +59,16 @@ impl !Send for UncopyableDespiteDecl {}
 impl !Sync for UncopyableDespiteDecl {}
 unsafe impl ::cxx::ExternType for UncopyableDespiteDecl {
     type Id = ::cxx::type_id!("UncopyableDespiteDecl");
-    type Kind = ::cxx::kind::Opaque;
+    type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("UncopyableDespiteDecl"),
     crate::UncopyableDespiteDecl
 );
 
-impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
+impl Drop for UncopyableDespiteDecl {
     #[inline(always)]
-    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
+    fn drop<'__this>(&'__this mut self) {
         unsafe { crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclD1Ev(self) }
     }
 }
@@ -76,18 +76,13 @@ impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
 // error: function `UncopyableDespiteDecl::operator=` could not be bound
 //   Defaulted function relies on an invalid decl: UncopyableDespiteDecl::operator=
 
-impl ::ctor::CtorNew<()> for UncopyableDespiteDecl {
-    type CtorType = ::ctor::Ctor![Self];
-    type Error = ::ctor::Infallible;
+impl Default for UncopyableDespiteDecl {
     #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
-                let () = args;
-                crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclC1Ev(
-                    __crubit_dest as *mut ::core::ffi::c_void,
-                );
-            })
+            crate::detail::__rust_thunk___ZN21UncopyableDespiteDeclC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
         }
     }
 }
@@ -101,7 +96,7 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN10UncopyableC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN21UncopyableDespiteDeclD1Ev<'__this>(
-            __this: ::core::pin::Pin<&'__this mut crate::UncopyableDespiteDecl>,
+            __this: &'__this mut crate::UncopyableDespiteDecl,
         );
         pub(crate) unsafe fn __rust_thunk___ZN21UncopyableDespiteDeclC1Ev(
             __this: *mut ::core::ffi::c_void,

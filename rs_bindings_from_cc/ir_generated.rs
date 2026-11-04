@@ -140,6 +140,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, kythe_default_corpus, $($arg:tt)*) => { $msg.set_kythe_default_corpus($($arg)*) };
     ($msg:ident, label_hint, $($arg:tt)*) => { $msg.set_label_hint($($arg)*) };
     ($msg:ident, length, $($arg:tt)*) => { $msg.set_length($($arg)*) };
+    ($msg:ident, libcxx_only_fields, $($arg:tt)*) => { $msg.set_libcxx_only_fields($($arg)*) };
     ($msg:ident, lifetime, $($arg:tt)*) => { $msg.set_lifetime($($arg)*) };
     ($msg:ident, lifetime_inputs, $($arg:tt)*) => { $msg.set_lifetime_inputs($($arg)*) };
     ($msg:ident, lifetime_params, $($arg:tt)*) => { $msg.set_lifetime_params($($arg)*) };
@@ -157,6 +158,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, non_null, $($arg:tt)*) => { $msg.set_non_null($($arg)*) };
     ($msg:ident, non_special, $($arg:tt)*) => { $msg.set_non_special($($arg)*) };
     ($msg:ident, none, $($arg:tt)*) => { $msg.set_none($($arg)*) };
+    ($msg:ident, not_rust_movable_reason, $($arg:tt)*) => { $msg.set_not_rust_movable_reason($($arg)*) };
     ($msg:ident, num_elements, $($arg:tt)*) => { $msg.set_num_elements($($arg)*) };
     ($msg:ident, offset, $($arg:tt)*) => { $msg.set_offset($($arg)*) };
     ($msg:ident, ok_value, $($arg:tt)*) => { $msg.set_ok_value($($arg)*) };
@@ -2708,6 +2710,8 @@ mod __defs {
         pub move_constructor: SpecialMemberFunc,
         pub destructor: SpecialMemberFunc,
         pub is_rust_movable: bool,
+        pub not_rust_movable_reason: FfiString,
+        pub libcxx_only_fields: FfiVec<FfiString>,
         pub is_inheritable: bool,
         pub is_abstract: bool,
         pub nodiscard: FfiString,
@@ -2758,6 +2762,8 @@ mod __defs {
                 .field("move_constructor", &self.move_constructor)
                 .field("destructor", &self.destructor)
                 .field("is_rust_movable", &self.is_rust_movable)
+                .field("not_rust_movable_reason", &self.not_rust_movable_reason())
+                .field("libcxx_only_fields", &self.libcxx_only_fields)
                 .field("is_inheritable", &self.is_inheritable)
                 .field("is_abstract", &self.is_abstract)
                 .field("nodiscard", &self.nodiscard())
@@ -2819,6 +2825,8 @@ mod __defs {
             move_constructor: SpecialMemberFunc::EMPTY,
             destructor: SpecialMemberFunc::EMPTY,
             is_rust_movable: false,
+            not_rust_movable_reason: FfiString::EMPTY,
+            libcxx_only_fields: FfiVec::EMPTY,
             is_inheritable: false,
             is_abstract: false,
             nodiscard: FfiString::EMPTY,
@@ -2966,6 +2974,19 @@ mod __defs {
         pub fn is_rust_movable(&self) -> bool {
             self.is_rust_movable
         }
+        pub fn has_not_rust_movable_reason(&self) -> bool {
+            (self.has_bits & 0x80) != 0
+        }
+        pub fn clear_not_rust_movable_reason(&mut self) {
+            self.has_bits &= !0x80;
+            self.not_rust_movable_reason = FfiString::EMPTY;
+        }
+        pub fn not_rust_movable_reason(&self) -> Option<&str> {
+            self.has_not_rust_movable_reason().then(|| self.not_rust_movable_reason.as_str())
+        }
+        pub fn libcxx_only_fields(&self) -> &[FfiString] {
+            self.libcxx_only_fields.as_slice()
+        }
         pub fn is_inheritable(&self) -> bool {
             self.is_inheritable
         }
@@ -2973,10 +2994,10 @@ mod __defs {
             self.is_abstract
         }
         pub fn has_nodiscard(&self) -> bool {
-            (self.has_bits & 0x80) != 0
+            (self.has_bits & 0x100) != 0
         }
         pub fn clear_nodiscard(&mut self) {
-            self.has_bits &= !0x80;
+            self.has_bits &= !0x100;
             self.nodiscard = FfiString::EMPTY;
         }
         pub fn nodiscard(&self) -> Option<&str> {
@@ -2992,10 +3013,10 @@ mod __defs {
             self.is_canonical_alias
         }
         pub fn has_enclosing_item_id(&self) -> bool {
-            (self.has_bits & 0x100) != 0
+            (self.has_bits & 0x200) != 0
         }
         pub fn clear_enclosing_item_id(&mut self) {
-            self.has_bits &= !0x100;
+            self.has_bits &= !0x200;
             self.enclosing_item_id = ItemId::EMPTY;
         }
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
@@ -3026,10 +3047,10 @@ mod __defs {
             self.detected_formatter
         }
         pub fn has_deprecated(&self) -> bool {
-            (self.has_bits & 0x200) != 0
+            (self.has_bits & 0x400) != 0
         }
         pub fn clear_deprecated(&mut self) {
-            self.has_bits &= !0x200;
+            self.has_bits &= !0x400;
             self.deprecated = FfiString::EMPTY;
         }
         pub fn deprecated(&self) -> Option<&str> {
@@ -3148,6 +3169,14 @@ mod __defs {
             self.is_rust_movable = val;
             &mut self.is_rust_movable
         }
+        pub fn set_not_rust_movable_reason(&mut self, val: FfiString) -> &mut FfiString {
+            self.has_bits |= 0x80;
+            self.not_rust_movable_reason = val;
+            &mut self.not_rust_movable_reason
+        }
+        pub fn set_libcxx_only_fields(&mut self, val: FfiVec<FfiString>) {
+            self.libcxx_only_fields = val;
+        }
         pub fn set_is_inheritable(&mut self, val: bool) -> &mut bool {
             self.is_inheritable = val;
             &mut self.is_inheritable
@@ -3157,7 +3186,7 @@ mod __defs {
             &mut self.is_abstract
         }
         pub fn set_nodiscard(&mut self, val: FfiString) -> &mut FfiString {
-            self.has_bits |= 0x80;
+            self.has_bits |= 0x100;
             self.nodiscard = val;
             &mut self.nodiscard
         }
@@ -3173,7 +3202,7 @@ mod __defs {
             &mut self.is_canonical_alias
         }
         pub fn set_enclosing_item_id(&mut self, val: ItemId) -> &mut ItemId {
-            self.has_bits |= 0x100;
+            self.has_bits |= 0x200;
             self.enclosing_item_id = val;
             &mut self.enclosing_item_id
         }
@@ -3209,7 +3238,7 @@ mod __defs {
             &mut self.detected_formatter
         }
         pub fn set_deprecated(&mut self, val: FfiString) -> &mut FfiString {
-            self.has_bits |= 0x200;
+            self.has_bits |= 0x400;
             self.deprecated = val;
             &mut self.deprecated
         }
@@ -3227,7 +3256,7 @@ mod __defs {
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<Record>() == 1096);
+        assert!(core::mem::size_of::<Record>() == 1144);
         assert!(core::mem::align_of::<Record>() == 8);
         assert!(core::mem::offset_of!(Record, rs_name) == 8);
         assert!(core::mem::offset_of!(Record, cc_name) == 24);
@@ -3255,25 +3284,27 @@ mod __defs {
         assert!(core::mem::offset_of!(Record, move_constructor) == 960);
         assert!(core::mem::offset_of!(Record, destructor) == 964);
         assert!(core::mem::offset_of!(Record, is_rust_movable) == 968);
-        assert!(core::mem::offset_of!(Record, is_inheritable) == 969);
-        assert!(core::mem::offset_of!(Record, is_abstract) == 970);
-        assert!(core::mem::offset_of!(Record, nodiscard) == 976);
-        assert!(core::mem::offset_of!(Record, record_type) == 992);
-        assert!(core::mem::offset_of!(Record, is_aggregate) == 996);
-        assert!(core::mem::offset_of!(Record, is_canonical_alias) == 997);
-        assert!(core::mem::offset_of!(Record, enclosing_item_id) == 1000);
-        assert!(core::mem::offset_of!(Record, must_bind) == 1008);
-        assert!(core::mem::offset_of!(Record, overloads_operator_delete) == 1009);
-        assert!(core::mem::offset_of!(Record, has_private_or_deleted_operator_delete) == 1010);
-        assert!(core::mem::offset_of!(Record, lifetime_inputs) == 1016);
-        assert!(core::mem::offset_of!(Record, impl_debug) == 1040);
-        assert!(core::mem::offset_of!(Record, has_private_pointer_or_reference_fields) == 1041);
-        assert!(core::mem::offset_of!(Record, has_template_argument_lifetime) == 1042);
-        assert!(core::mem::offset_of!(Record, detected_formatter) == 1043);
-        assert!(core::mem::offset_of!(Record, deprecated) == 1048);
-        assert!(core::mem::offset_of!(Record, is_thread_safe) == 1064);
-        assert!(core::mem::offset_of!(Record, is_explicit_class_template_instantiation_definition) == 1065);
-        assert!(core::mem::offset_of!(Record, children) == 1072);
+        assert!(core::mem::offset_of!(Record, not_rust_movable_reason) == 976);
+        assert!(core::mem::offset_of!(Record, libcxx_only_fields) == 992);
+        assert!(core::mem::offset_of!(Record, is_inheritable) == 1016);
+        assert!(core::mem::offset_of!(Record, is_abstract) == 1017);
+        assert!(core::mem::offset_of!(Record, nodiscard) == 1024);
+        assert!(core::mem::offset_of!(Record, record_type) == 1040);
+        assert!(core::mem::offset_of!(Record, is_aggregate) == 1044);
+        assert!(core::mem::offset_of!(Record, is_canonical_alias) == 1045);
+        assert!(core::mem::offset_of!(Record, enclosing_item_id) == 1048);
+        assert!(core::mem::offset_of!(Record, must_bind) == 1056);
+        assert!(core::mem::offset_of!(Record, overloads_operator_delete) == 1057);
+        assert!(core::mem::offset_of!(Record, has_private_or_deleted_operator_delete) == 1058);
+        assert!(core::mem::offset_of!(Record, lifetime_inputs) == 1064);
+        assert!(core::mem::offset_of!(Record, impl_debug) == 1088);
+        assert!(core::mem::offset_of!(Record, has_private_pointer_or_reference_fields) == 1089);
+        assert!(core::mem::offset_of!(Record, has_template_argument_lifetime) == 1090);
+        assert!(core::mem::offset_of!(Record, detected_formatter) == 1091);
+        assert!(core::mem::offset_of!(Record, deprecated) == 1096);
+        assert!(core::mem::offset_of!(Record, is_thread_safe) == 1112);
+        assert!(core::mem::offset_of!(Record, is_explicit_class_template_instantiation_definition) == 1113);
+        assert!(core::mem::offset_of!(Record, children) == 1120);
     };
 
     #[repr(C)]

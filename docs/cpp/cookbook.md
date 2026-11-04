@@ -13,8 +13,8 @@ the recommended practices to evolve over time, as Crubit's capabilities expand!
 >
 > If possible, solve the same problem while staying within more typical C++
 > style. For example: you may be able to [add
-> `ABSL_ATTRIBUTE_TRIVIAL_ABI`](#trivial_abi) to a type you control, instead of
-> [boxing the type in a pointer](#boxing).
+> `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`](#bitwise_relocatable) to a type you
+> control, instead of [boxing the type in a pointer](#boxing).
 
 ## Making types Rust-movable {#rust_movable}
 
@@ -24,11 +24,11 @@ more pleasant API when they are Rust-movable.
 This can happen for a couple of easily fixable reasons, described in
 subsections:
 
-*   The type defines a destructor or copy/move constructor / assignment
-    operator. If it is in-principle still Rust-movable, and these functions do
-    not care about the address of the object in memory, then the type can be
-    [annotated with `ABSL_ATTRIBUTE_TRIVIAL_ABI`](#trivial_abi)
-*   The type has a field which is not rust-movable. In that case, the field can
+*   The type defines a destructor or move constructor. If it is in-principle
+    still Rust-movable, and these functions do not care about the address of the
+    object in memory, then the type can be [annotated with
+    `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`](#bitwise_relocatable).
+*   The type has a field which is not Rust-movable. In that case, the field can
     be [boxed in a pointer](#boxing).
 
 There are *other* reasons a type can become non-Rust-movable, which do not have
@@ -36,14 +36,19 @@ these easy fixes described below. For example, virtual methods, or
 non-Rust-movable base classes. For those, your only option is the hard option of
 more radically restructuring your code to avoid those patterns.
 
-### `ABSL_ATTRIBUTE_TRIVIAL_ABI` {#trivial_abi}
+### `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` {#bitwise_relocatable}
 
-crubit.rs/cpp/cookbook#trivial_abi
+crubit.rs/cpp/cookbook#bitwise_relocatable
 
-One of the ways a type can become non-Rust-movable is if it has a copy/move
-constructor / assignment operator, or a destructor. In that case, Clang will
-assume that it cannot be trivially relocated, **unless** it is annotated with
-[`ABSL_ATTRIBUTE_TRIVIAL_ABI`](https://github.com/abseil/abseil-cpp/blob/master/absl/base/attributes.h#:~:text=ABSL_ATTRIBUTE_TRIVIAL_ABI).
+One of the ways a type can become non-Rust-movable is if it has a user-provided
+move constructor or destructor. In that case, Crubit will assume that it cannot
+be trivially relocated, **unless** it is annotated with
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE` (from `support/annotations.h`). Previously,
+[`ABSL_ATTRIBUTE_TRIVIAL_ABI`](https://github.com/abseil/abseil-cpp/blob/master/absl/base/attributes.h#:~:text=ABSL_ATTRIBUTE_TRIVIAL_ABI)
+was recommended for this, but `trivial_abi` alters the C++ calling-convention
+ABI and may not make a type Rust-movable when any of its members is not
+bitwise-relocatable. New code should use `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`
+instead.
 
 ```c++ {.bad}
 struct LogWhenDestroyed {
@@ -54,16 +59,17 @@ struct LogWhenDestroyed {
 ```
 
 ```c++ {.good}
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI LogWhenDestroyed {
+struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE LogWhenDestroyed {
   ~LogWhenDestroyed() {
     std::cerr << "I was destroyed!\n";
   }
 };
 ```
 
-> WARNING: Only use `ABSL_ATTRIBUTE_TRIVIAL_ABI` if changing the location of an
-> object in memory is safe. In particular, if the object is self-referential,
-> using `ABSL_ATTRIBUTE_TRIVIAL_ABI` will result in Undefined Behavior (UB).
+> WARNING: Only use `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` if changing the location
+> of an object in memory via `memcpy` (without running the destructor on the old
+> location) is safe. In particular, if the object is self-referential, using
+> `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` will result in Undefined Behavior (UB).
 >
 > ```c++ {.bad}
 > class SelfReferential {
@@ -76,7 +82,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI LogWhenDestroyed {
 > ```
 >
 > Types like this, if Rust-moved, will contain invalid pointers. Carefully
-> review any code adding `ABSL_ATTRIBUTE_TRIVIAL_ABI`.
+> review any code adding `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`.
 
 ### Boxing in a pointer {#boxing}
 
@@ -206,11 +212,11 @@ WARNING: Thread-safety in interop is subtle. Ensure you understand the
 implications before exposing mutating methods to Rust.
 
 SUMMARY: The preferred way to make a thread-safe C++ type available to Rust is
-to annotate it with `CRUBIT_THREAD_SAFE`. This automatically implements `Send +
-Sync` in Rust, wraps the type in `UnsafeCell`, and allows non-const methods to
-be called via shared references (`&self`). However, this requires all mutated
-fields to be marked `mutable`, or else for the object to never be stored in a
-C++ `const`.
+to annotate it with `CRUBIT_THREAD_SAFE`. This automatically implements
+`Send + Sync` in Rust, wraps the type in `UnsafeCell`, and allows non-const
+methods to be called via shared references (`&self`). However, this requires all
+mutated fields to be marked `mutable`, or else for the object to never be stored
+in a C++ `const`.
 
 ### `CRUBIT_THREAD_SAFE` {#crubit_thread_safe}
 

@@ -47,6 +47,7 @@ impl Default for TrivialCustomType {
 // error: function `TrivialCustomType::operator||` could not be bound
 //   Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
+/// Not Rust-movable: the move constructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "20NontrivialCustomType"]
 #[repr(C)]

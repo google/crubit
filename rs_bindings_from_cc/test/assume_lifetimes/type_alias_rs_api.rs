@@ -14,6 +14,7 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "13TypeAliasCtor"]
 #[repr(C)]

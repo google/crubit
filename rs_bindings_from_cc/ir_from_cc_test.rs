@@ -4221,17 +4221,16 @@ fn test_is_rust_movable_across_target_platforms() -> Result<()> {
             expected_rust_movable_on_linux: false,
             expected_rust_movable_on_windows: false,
         },
-        // A *deleted* special member does not disqualify a class - only a
-        // *non-trivial* one does.  Here the union's destructor is deleted
-        // (because the member's destructor is non-trivial), so the union is
-        // still movable by `memcpy`.
+        // Union members are checked like struct fields: this union is not
+        // Rust-movable because `nontrivial_dtor_member` has a user-provided
+        // destructor.
         TestCase {
             record_name: "UnionWithDeletedDtor",
             input_cpp: "struct SmallWithNontrivialDtor { char c; ~SmallWithNontrivialDtor(); }; \
                         union UnionWithDeletedDtor { \
                           int trivial_member; SmallWithNontrivialDtor nontrivial_dtor_member; };",
-            expected_rust_movable_on_linux: true,
-            expected_rust_movable_on_windows: true,
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
         },
         // Same idea for a deleted copy constructor: `MoveOnlyWrapper` is
         // movable by `memcpy` even though the copy constructor it would
@@ -4255,18 +4254,18 @@ fn test_is_rust_movable_across_target_platforms() -> Result<()> {
                           NontrivialCopyButTrivialMove(const NontrivialCopyButTrivialMove&); \
                           NontrivialCopyButTrivialMove(NontrivialCopyButTrivialMove&&) = default; \
                         };",
-            expected_rust_movable_on_linux: false,
-            expected_rust_movable_on_windows: false,
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
         },
-        // *Every* non-deleted copy constructor must be trivial - it is not
-        // enough that one of the overloads is.
+        // Only the constructor selected for an xvalue matters - here the
+        // defaulted `const&` copy constructor - so it is Rust-movable.
         TestCase {
             record_name: "OverloadedCopyCtor",
             input_cpp: "struct OverloadedCopyCtor { \
                           OverloadedCopyCtor(const OverloadedCopyCtor&) = default; \
                           OverloadedCopyCtor(OverloadedCopyCtor&); };",
-            expected_rust_movable_on_linux: false,
-            expected_rust_movable_on_windows: false,
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
         },
         // TODO(b/564616479): Clang drops `[[clang::trivial_abi]]` when a field
         // cannot be passed in registers on the target ABI, so the attribute

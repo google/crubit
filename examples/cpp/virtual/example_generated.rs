@@ -14,6 +14,7 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+/// Not Rust-movable: type is polymorphic
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "11RustDerived"]
 #[repr(C, align(8))]

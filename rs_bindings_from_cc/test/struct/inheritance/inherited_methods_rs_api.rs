@@ -14,6 +14,7 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+/// Not Rust-movable: type is neither copyable nor movable
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "10Nonmovable"]
 #[repr(C)]

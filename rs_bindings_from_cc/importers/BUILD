@@ -22,8 +22,14 @@ cc_library(
 
 cc_library(
     name = "cxx_record",
-    srcs = ["cxx_record.cc"],
-    hdrs = ["cxx_record.h"],
+    srcs = [
+        "bitwise_relocatable.cc",
+        "cxx_record.cc",
+    ],
+    hdrs = [
+        "bitwise_relocatable.h",
+        "cxx_record.h",
+    ],
     deps = [
         "//common:annotation_reader",
         "//common:check",
@@ -37,6 +43,7 @@ cc_library(
         "//rs_bindings_from_cc:decl_importer",
         "@abseil-cpp//absl/algorithm:container",
         "@abseil-cpp//absl/base:nullability",
+        "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/functional:any_invocable",
         "@abseil-cpp//absl/log",
@@ -46,6 +53,8 @@ cc_library(
         "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
+        "@llvm-project//clang:lex",
+        "@llvm-project//clang:sema",
         "@llvm-project//llvm:Support",
     ],
 )

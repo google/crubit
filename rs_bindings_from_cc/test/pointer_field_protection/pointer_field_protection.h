@@ -6,20 +6,20 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_POINTER_FIELD_PROTECTION_POINTER_FIELD_PROTECTION_H_
 
 // `TrivialAbiPointer` is trivial for calls (because of
-// `[[clang::trivial_abi]]`), so Crubit treats it as `Unpin` and lets Rust move
-// it with `memcpy`.
+// `[[clang::trivial_abi]]`) and has no unannotated non-relocatable members,
+// so Crubit treats it as `Unpin` and lets Rust move it with `memcpy`.
 //
 // `-fexperimental-pointer-field-protection-abi` enables pointer field
 // protection (PFP) for all types that are not standard-layout.
 // `TrivialAbiPointer` is not standard-layout, because its fields have
-// different access control.  There is no attribute in the source code, so
-// Crubit cannot see that PFP applies to this type.
-//
-// `TrivialAbiPointer` also has a user-provided destructor, so it is not
-// trivially copyable.  With `-fexperimental-pointer-field-protection-tagged`
-// on AArch64, Clang encodes `ptr_` with the address of the `TrivialAbiPointer`
-// object.  C++ copy and move operations re-encode `ptr_` for the new address,
-// but a `memcpy` does not.  See also `clang/test/CodeGenCXX/pfp-coerce.cpp` and
+// different access control, and it is not trivially copyable because of its
+// user-provided destructor.  Without
+// `-fexperimental-pointer-field-protection-tagged`, Clang encodes `ptr_`
+// without depending on the containing object's address, so Rust's `memcpy`
+// move preserves the encoding.  Crubit rejects
+// `-fexperimental-pointer-field-protection-tagged` during bindings
+// generation because tagged PFP encodes `ptr_` with the object's address.
+// See also `clang/test/CodeGenCXX/pfp-coerce.cpp` and
 // `clang/docs/StructureProtection.md` in LLVM.
 class [[clang::trivial_abi]] TrivialAbiPointer final {
  public:

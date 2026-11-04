@@ -146,6 +146,7 @@ pub mod struct_with_lifetimebound_ref_member_function {
     }
 }
 
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "40DropClassWithLifetimeboundMemberFunction"]
 #[repr(C)]
@@ -249,6 +250,7 @@ pub mod drop_class_with_lifetimebound_member_function {
     }
 }
 
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "43DropClassWithLifetimeboundRefMemberFunction"]
 #[repr(C)]
@@ -433,6 +435,7 @@ impl<'s> ::ctor::CtorNew<&'s crate::PlainStruct> for StructWithLifetimeboundRefC
     }
 }
 
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "31DropStructWithLifetimeboundCtor"]
 #[repr(C)]
@@ -522,6 +525,7 @@ impl ::ctor::PinnedDrop for DropStructWithLifetimeboundCtor {
     }
 }
 
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "34DropStructWithLifetimeboundRefCtor"]
 #[repr(C)]
@@ -607,6 +611,7 @@ impl ::ctor::PinnedDrop for DropStructWithLifetimeboundRefCtor {
     }
 }
 
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "41DropStructWithRefCtorAndRefMemberFunction"]
 #[repr(C)]
@@ -714,6 +719,7 @@ pub mod drop_struct_with_ref_ctor_and_ref_member_function {
     }
 }
 
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "35DropStructWithCtorAndMemberFunction"]
 #[repr(C)]
@@ -823,6 +829,7 @@ pub mod drop_struct_with_ctor_and_member_function {
     }
 }
 
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "38DropStructWithCtorAndRefMemberFunction"]
 #[repr(C)]
@@ -929,6 +936,7 @@ pub mod drop_struct_with_ctor_and_ref_member_function {
     }
 }
 
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "38DropStructWithRefCtorAndMemberFunction"]
 #[repr(C)]
@@ -1042,6 +1050,8 @@ pub mod drop_struct_with_ref_ctor_and_member_function {
 }
 
 /// We can't figure out the lifetime arity of this struct.
+///
+/// Not Rust-movable: type is neither copyable nor movable
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "10Impossible"]
 #[repr(C)]

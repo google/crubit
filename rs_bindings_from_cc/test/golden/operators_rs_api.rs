@@ -465,6 +465,7 @@ impl<'__this, 'rhs> ::core::ops::Add<&'rhs crate::AddableReturnsVoid>
     }
 }
 
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "26AddableConstMemberNonunpin"]
 #[repr(C, align(4))]

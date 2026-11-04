@@ -42,6 +42,7 @@ pub mod crubit {
         // error: type alias `crubit::test::MapWithIncompleteValue` could not be bound
         //   Type `absl::flat_hash_map<int, class crubit::test::Incomplete, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
 
+        /// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
         #[::ctor::recursively_pinned]
         #[cfi_encoding = "N6crubit4test12NoDestructorE"]
         #[repr(C)]

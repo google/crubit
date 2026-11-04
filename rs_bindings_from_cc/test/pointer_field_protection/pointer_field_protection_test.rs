@@ -10,8 +10,6 @@ fn test_get_after_cpp_copy() {
     expect_eq!(TrivialAbiPointer::GetAfterCppCopy(), 42);
 }
 
-// TODO(b/565847600): This test fails on AArch64 with PFP tagged mode.  See the
-// bug for repro steps.
 #[gtest]
 fn test_get_after_rust_move() {
     let p = TrivialAbiPointer::Create();

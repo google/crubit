@@ -143,6 +143,7 @@ pub fn AcceptSpecialized(
     }
 }
 
+/// Not Rust-movable: the move constructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "14NonRustMovable"]
 #[repr(C)]

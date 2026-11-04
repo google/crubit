@@ -17,6 +17,8 @@
 pub mod crubit {
     pub mod test {
         /// A simple thread-safe struct.
+        ///
+        /// Not Rust-movable: type is neither copyable nor movable
         #[::ctor::recursively_pinned]
         #[cfi_encoding = "N6crubit4test16ThreadSafeStructE"]
         #[repr(C, align(4))]
@@ -271,6 +273,8 @@ pub mod crubit {
         }
 
         /// Pinned thread-safe type with custom assignment
+        ///
+        /// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[cfi_encoding = "N6crubit4test16ThreadSafePinnedE"]
         #[repr(C)]

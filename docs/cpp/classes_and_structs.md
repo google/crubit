@@ -58,8 +58,7 @@ blobs:
 *   Fields that have nontrivial destructors
 *   Fields whose type does not have bindings
 *   Fields that have any unrecognized attribute, including `no_unique_address`
-*   Fields of a [packed struct](#packed) whose Rust type has
-    `#[repr(align(N))]`
+*   Fields of a [packed struct](#packed) whose Rust type has `#[repr(align(N))]`
 
 A Rust struct with opaque blobs is ABI-incompatible with the C++ struct or class
 that it corresponds to. As a consequence, if the struct is used for FFI outside
@@ -85,21 +84,36 @@ type. For example, `T Identity(T)` becomes `pub fn Identity(_: T) -> T`.
 
 If it is non-Rust-movable, then Crubit will instead use in-place initialization
 types, `Ctor`, and requires a bit of syntactic overhead when moving objects
-around. The same function might instead become `pub fn Foo(_: Ctor![T]) ->
-Ctor![T]`.
+around. The same function might instead become
+`pub fn Foo(_: Ctor![T]) -> Ctor![T]`.
 
 (For an introduction to `Ctor![T]`, see
 crubit.rs/types/non_rust_movable/intro_short.)
 
-Types are considered Rust-movable by default, meaning they can be relocated
-using `memcpy`. If the type defines a destructor or copy/move constructor, then
-it requires a special annotation to be considered Rust-movable:
-[`ABSL_ATTRIBUTE_TRIVIAL_ABI`](https://github.com/abseil/abseil-cpp/blob/master/absl/base/attributes.h#:~:text=ABSL_ATTRIBUTE_TRIVIAL_ABI).
-If it has a non-Rust-movable field or base class, then it is not Rust-movable.
+Types are considered Rust-movable (bitwise relocatable) by default. If the type
+defines a user-provided move constructor or destructor, then it requires a
+special annotation to be considered Rust-movable:
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE` (defined in `support/annotations.h`, along
+with `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_IF_ELIGIBLE` for templates,
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD`, and
+`CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX`).
+
+If a type has a non-Rust-movable field or base class, it is not Rust-movable. A
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE` annotation on a type with
+non-bitwise-relocatable fields or bases fails bindings generation with a hard
+error.
+
+**Note on `trivial_abi`**: While `[[clang::trivial_abi]]` /
+[`ABSL_ATTRIBUTE_TRIVIAL_ABI`](https://github.com/abseil/abseil-cpp/blob/master/absl/base/attributes.h#:~:text=ABSL_ATTRIBUTE_TRIVIAL_ABI)
+previously made types Rust-movable, it *may not* make a type Rust-movable
+anymore. Crubit checks the members of a `trivial_abi` type, and if any member is
+not bitwise-relocatable, Crubit leaves the type pinned and records the reason in
+the generated doc comment. New code should use
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE`.
 
 It can be worth putting some effort into designing the type to be Rust-movable.
-crubit.rs/cpp/cookbook#rust_movable describes, in more detail, how to go about
-this.
+The [C++ Bindings Cookbook](./cookbook.md#rust_movable) describes, in more
+detail, how to go about this.
 
 Some examples of Rust-movable types:
 
@@ -108,13 +122,17 @@ Some examples of Rust-movable types:
 *   `string_view`
 *   [`struct tm`](https://en.cppreference.com/w/cpp/chrono/c/tm), or any other
     type in the C standard library
-*   `unique_ptr` and `shared_ptr`, in the Clang unstable ABI.
+*   `std::unique_ptr` (with the default deleter), `std::shared_ptr`,
+    `std::weak_ptr`, and `std::vector` (with the default allocator)
+*   `std::optional<T>`, `std::variant<Ts...>`, and `std::expected<T, E>` when
+    their element types are Rust-movable
 *   `absl::Status`
 
 Some examples of types that are **not** Rust-movable:
 
-*   (For now) `std::string`, `std::vector`, and other nontrivial standard
-    library types.
+*   `std::string` (unless opted in on libc++-only builds via
+    `CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX`), `std::function`,
+    `std::any`, and node-based containers such as `std::map` and `std::list`.
 *   (For now) `absl::flat_hash_map`, `absl::AnyInvocable`, and other nontrivial
     types used throughout the C++ ecosystem, even outside the standard library.
 *   `absl::Mutex`, `absl::Notification`, and other non-movable types.

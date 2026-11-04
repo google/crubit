@@ -504,6 +504,9 @@ pub(crate) fn schema() -> Schema {
             move_constructor: SpecialMemberFunc,
             destructor: SpecialMemberFunc,
             is_rust_movable: Bool,
+            #[optional]
+            not_rust_movable_reason: Str,
+            libcxx_only_fields: Vec(Str),
             is_inheritable: Bool,
             is_abstract: Bool,
             #[optional]

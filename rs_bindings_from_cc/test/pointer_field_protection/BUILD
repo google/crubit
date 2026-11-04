@@ -1,5 +1,6 @@
 """End-to-end tests of Rust moves of, and accessors for, C++ types that use pointer field protection (PFP)."""
 
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
@@ -15,8 +16,9 @@ crubit_test_cc_library(
     #
     # `-abi` is what the `pointer_field_protection` crosstool feature passes.
     #
-    # `-tagged` makes the pointer encoding depend on the address of the object
-    # that contains the pointer field.
+    # Crubit rejects `-fexperimental-pointer-field-protection-tagged` because
+    # pointer fields are encoded with the object's address, so no type could be
+    # safely Rust-moved.
     #
     # It's okay that only this library (and its generated bindings and thunks,
     # which reuse these copts) uses these flags.  This is enough for this test,
@@ -24,7 +26,6 @@ crubit_test_cc_library(
     copts = select({
         "@platforms//cpu:aarch64": [
             "-fexperimental-pointer-field-protection-abi",
-            "-fexperimental-pointer-field-protection-tagged",
         ],
         "//conditions:default": [],
     }),
@@ -43,20 +44,29 @@ crubit_rust_test(
     name = "pointer_field_protection_test",
     srcs = ["pointer_field_protection_test.rs"],
 
-    # TODO(b/565847600): Remove `tags = ["manual"]` after fixing the bug / UB.
-    #
-    # `test_get_after_rust_move` fails on AArch64 with SIGILL in
-    # `__emupac_autda_impl`, because Crubit lets Rust `memcpy` a type whose
-    # pointer field is encoded with the object address.  See the bug for repro
-    # steps.
-    #
-    # `-c opt` is necessary: without optimizations, Clang turns the PFP
-    # instructions into NOPs (see "deactivation symbols" in
-    # `clang/docs/StructureProtection.md`), and the test passes.
+    # PFP only has an effect on AArch64, and only with `-c opt` (see above), so
+    # this test only checks anything with `--cpu=arm -c opt`.
     tags = ["manual"],
     deps = [
         ":pointer_field_protection_rust",
         "@crate_index//:googletest",
+    ],
+)
+
+sh_test(
+    name = "tagged_failure_test",
+    srcs = ["tagged_failure_test.sh"],
+    args = [
+        "$(rootpath //rs_bindings_from_cc)",
+        "$(rootpath pointer_field_protection.h)",
+    ],
+    data = [
+        "pointer_field_protection.h",
+        "//rs_bindings_from_cc",
+    ],
+    tags = [
+        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+        "not_run:mac",
     ],
 )
 

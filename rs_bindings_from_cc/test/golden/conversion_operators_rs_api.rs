@@ -44,6 +44,7 @@ impl Default for DstLocalMovable {
     }
 }
 
+/// Not Rust-movable: type is neither copyable nor movable
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "18DstLocalNonMovable"]
 #[repr(C)]

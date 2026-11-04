@@ -119,6 +119,7 @@ pub mod test {
         }
     }
 
+    /// Not Rust-movable: member `b` is not bitwise-relocatable: type is neither copyable nor movable
     #[::ctor::recursively_pinned(PinnedDrop)]
     #[cfi_encoding = "N4test6HolderE"]
     #[repr(C, align(8))]
@@ -173,6 +174,8 @@ pub mod test {
 
     /// A type that is not Rust-movable (`!Unpin` in Rust) because it has a
     /// user-defined move constructor and destructor.
+    ///
+    /// Not Rust-movable: the move constructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
     #[::ctor::recursively_pinned(PinnedDrop)]
     #[cfi_encoding = "N4test10NonTrivialE"]
     #[repr(C)]

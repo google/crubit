@@ -18,6 +18,8 @@
 /// overridden in Rust instead -- this is proof that you can write bindings
 /// that are forward-compatible, as described in
 /// additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl
+///
+/// Not Rust-movable: the copy constructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "14CompatibleType"]
 #[repr(C)]

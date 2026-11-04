@@ -412,6 +412,7 @@ pub mod pointers {
     }
 }
 
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "10NonTrivial"]
 #[repr(C, align(8))]
@@ -969,6 +970,8 @@ impl Default for TrivialDefault {
 }
 
 /// Like `TrivialDefault`, but `!Unpin`.
+///
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 ///
 /// # Safety
 ///

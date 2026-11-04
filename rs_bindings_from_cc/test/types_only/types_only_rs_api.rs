@@ -45,6 +45,7 @@ impl Default for Copyable {
     }
 }
 
+/// Not Rust-movable: destructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "9Cloneable"]
 #[repr(C, align(4))]
@@ -166,6 +167,7 @@ impl ::ctor::PinnedDrop for Cloneable {
     }
 }
 
+/// Not Rust-movable: the move constructor is user-provided; annotate the type with CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "7Movable"]
 #[repr(C, align(4))]
