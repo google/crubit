@@ -18,6 +18,7 @@
 #include "support/internal/slot.h"
 #include "support/movable.h"
 #include "support/unsafe_relocate_tag.h"
+#include "support/annotations.h"
 #include "support/annotations_internal.h"
 
 extern "C" {
@@ -42,7 +43,8 @@ inline constexpr bool is_rs_movable_v<::rs::Movable<T>> = true;
 // allocator. This is the C++ spelling of `Pin<Box<T>>` and is used when `T`
 // is not Rust-movable.
 template <typename T>
-class CRUBIT_INTERNAL_RUST_TYPE("::core::pin::Pin<::alloc::boxed::Box<{}>>", T)
+class CRUBIT_INTERNAL_RUST_TYPE("::core::pin::Pin<::alloc::boxed::Box<{}>>",
+                                T) CRUBIT_UNSAFE_BITWISE_RELOCATABLE
     PinBox final {
   static_assert(!::std::is_reference_v<T>, "PinBox<T> cannot hold a reference");
   static_assert(!::std::is_array_v<T>, "PinBox<T> cannot hold an array");

@@ -130,3 +130,10 @@ not C++-movable, so C++ cannot move the pointee either.
 For the background on how Crubit decides whether a type is Rust-movable, see
 [Unpin](../design/unpin.md) and
 [trivially relocatable types](../cpp/classes_and_structs.md#trivially_relocatable).
+
+## Structs containing boxes {#fields}
+
+A C++ struct with `rs` box fields is Rust-movable (`Unpin` in Rust) even though
+it is not C++-movable; it can be returned by value and used behind `&`, `&mut`,
+or `Box`, but cannot be passed *to* C++ by value (because it has no C++ move
+constructor). Pass a reference instead.

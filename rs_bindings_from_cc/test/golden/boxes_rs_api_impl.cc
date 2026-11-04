@@ -78,12 +78,37 @@ extern "C" void __rust_thunk___ZN4test6HolderD1Ev(struct test::Holder* __this) {
   std::destroy_at(__this);
 }
 
-static_assert((struct test::Holder * (*)()) & ::test::MakeHolder);
+extern "C" void __rust_thunk___ZN4test10MakeHolderEi(
+    struct test::Holder* __return, int v) {
+  new (__return) auto(test::MakeHolder(v));
+}
 
-static_assert((void (*)(struct test::Holder*)) & ::test::DestroyHolder);
+static_assert((struct test::Holder (*)(int)) & ::test::MakeHolder);
 
-static_assert((rs::Box<int> const* (*)(struct test::Holder const*)) &
-              ::test::HolderBox);
+static_assert((int (*)(struct test::Holder const&)) & ::test::HolderValue);
+
+static_assert((void (*)(struct test::Holder&, int)) & ::test::SetHolderValue);
+
+static_assert(CRUBIT_SIZEOF(struct test::Outer) == 16);
+static_assert(alignof(struct test::Outer) == 8);
+static_assert(CRUBIT_OFFSET_OF(h, struct test::Outer) == 0);
+static_assert(CRUBIT_OFFSET_OF(tag, struct test::Outer) == 8);
+
+extern "C" void __rust_thunk___ZN4test9MakeOuterEi(struct test::Outer* __return,
+                                                   int v) {
+  new (__return) auto(test::MakeOuter(v));
+}
+
+static_assert((struct test::Outer (*)(int)) & ::test::MakeOuter);
+
+static_assert(CRUBIT_SIZEOF(struct test::ArrayHolder) == 16);
+static_assert(alignof(struct test::ArrayHolder) == 8);
+static_assert(CRUBIT_OFFSET_OF(boxes, struct test::ArrayHolder) == 0);
+
+extern "C" void __rust_thunk___ZN4test11ArrayHolderD1Ev(
+    struct test::ArrayHolder* __this) {
+  std::destroy_at(__this);
+}
 
 static_assert(CRUBIT_SIZEOF(struct test::NonTrivial) == 4);
 static_assert(alignof(struct test::NonTrivial) == 4);
@@ -110,6 +135,15 @@ static_assert((struct test::NonTrivial &
 
 extern "C" void __rust_thunk___ZN4test10NonTrivialD1Ev(
     struct test::NonTrivial* __this) {
+  std::destroy_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(struct test::PinHolder) == 8);
+static_assert(alignof(struct test::PinHolder) == 8);
+static_assert(CRUBIT_OFFSET_OF(p, struct test::PinHolder) == 0);
+
+extern "C" void __rust_thunk___ZN4test9PinHolderD1Ev(
+    struct test::PinHolder* __this) {
   std::destroy_at(__this);
 }
 

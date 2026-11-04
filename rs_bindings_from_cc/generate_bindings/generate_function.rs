@@ -3206,6 +3206,12 @@ fn function_signature(
             derived_record.is_none() || (i == 0 && func.is_instance_method());
         if let Err(err) = type_.check_by_value() {
             errors.add(err);
+        } else if let RsTypeKind::Record { record, .. } = type_.unalias()
+            && record.is_unpin()
+            && record.copy_constructor() == ir::SpecialMemberFunc::Unavailable
+            && record.move_constructor() == ir::SpecialMemberFunc::Unavailable
+        {
+            errors.add(arc_anyhow::anyhow!("`{}` cannot be passed by value: it is Rust-movable but has no C++ copy or move constructor (for example because it contains an `rs::Box`), so the C++ thunk cannot relocate it. Pass it by reference or pointer instead. See crubit.rs/types/box#fields", record.cc_name()));
         }
         let quoted_type_or_self =
             if let (Some(self_type), true) = (self_type.as_ref(), should_replace_by_self) {

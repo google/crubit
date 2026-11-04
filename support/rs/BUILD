@@ -12,6 +12,7 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
     deps = [
+        "//support:annotations",
         "//support:annotations_internal",
         "//support:crubit_support",  # build_cleaner: keep, defines extern "C" functions we declare.
         "//support:movable",
@@ -27,6 +28,7 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
     deps = [
+        "//support:annotations",
         "//support:annotations_internal",
         "//support:crubit_support",  # build_cleaner: keep, defines extern "C" functions we declare.
         "//support:movable",
@@ -42,6 +44,7 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
     deps = [
+        "//support:annotations",
         "//support:annotations_internal",
         "//support:crubit_support",  # build_cleaner: keep, defines extern "C" functions we declare.
         "//support:unsafe_relocate_tag",
@@ -57,6 +60,7 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
     deps = [
+        "//support:annotations",
         "//support:annotations_internal",
         "//support:crubit_support",  # build_cleaner: keep, defines extern "C" functions we declare.
         "//support:movable",

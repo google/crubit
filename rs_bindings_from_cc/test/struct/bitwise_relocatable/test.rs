@@ -3,13 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use bitwise_relocatable::{
-    AssertedBR, DerivesUserMove, FieldOverrideUserMove, FuncVoid, GetAssertedBR,
-    GetStdStringOnLibcxxLength, GetStructWithVecAndUniquePtrLen, IfEligibleDerivesUserMove,
-    IfEligibleTrivial, IfEligibleUserMove, MakeAssertedBR, MakeStdStringOnLibcxx,
-    MakeStructWithVecAndUniquePtr, MapIntInt, NestedIfEligible, OptAsserted, OptInt, OptUserMove,
-    Polymorphic, RowCursorShape, SharedPtrUserMove, StdStringOnLibcxx, Trivial, UnionWithStr,
-    UniquePtrInt, UniquePtrUserMove, UserCopy, UserProvidedMoveDtor, VariantIntStr, VecInt, VecStr,
-    A, B, J, K, K2, TA,
+    AssertedBR, DeletedMoveAssign, DerivesUserMove, FieldOverrideUserMove, FuncVoid, GetAssertedBR,
+    GetStdStringOnLibcxxLength, GetStructWithVecAndUniquePtrLen, HolderK2,
+    IfEligibleDerivesUserMove, IfEligibleTrivial, IfEligibleUserMove, MakeAssertedBR,
+    MakeStdStringOnLibcxx, MakeStructWithVecAndUniquePtr, MapIntInt, NestedIfEligible, OptAsserted,
+    OptInt, OptUserMove, Polymorphic, RowCursorShape, SharedPtrUserMove, StdStringOnLibcxx,
+    Trivial, UnionWithStr, UniquePtrInt, UniquePtrUserMove, UserCopy, UserProvidedMoveDtor,
+    VariantIntStr, VecInt, VecStr, A, B, J, K, K2, TA,
 };
 use googletest::expect_that;
 use googletest::gtest;
@@ -26,6 +26,8 @@ assert_impl_all!(NestedIfEligible: Unpin);
 assert_not_impl_any!(J: Unpin);
 assert_not_impl_any!(K: Unpin);
 assert_impl_all!(K2: Unpin);
+assert_impl_all!(HolderK2: Unpin);
+assert_not_impl_any!(DeletedMoveAssign: Unpin);
 
 assert_not_impl_any!(A: Unpin);
 assert_not_impl_any!(B: Unpin);

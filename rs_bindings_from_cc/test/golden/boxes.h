@@ -31,9 +31,17 @@ struct Holder {
   rs::Box<int> b;
 };
 
-Holder* MakeHolder();
-void DestroyHolder(Holder* h);
-const rs::Box<int>* HolderBox(const Holder* h);
+Holder MakeHolder(int v);
+int HolderValue(const Holder& h);
+void SetHolderValue(Holder& h, int v);
+struct Outer {
+  Holder h;
+  int tag;
+};
+Outer MakeOuter(int v);
+struct ArrayHolder {
+  rs::Box<int> boxes[2];
+};
 
 // A type that is not Rust-movable (`!Unpin` in Rust) because it has a
 // user-defined move constructor and destructor.
@@ -50,6 +58,11 @@ struct NonTrivial {
 
   int val;
 };
+
+struct PinHolder {
+  rs::PinBox<NonTrivial> p;
+};
+void TakesHolderByValue(Holder h);
 
 rs::PinBox<NonTrivial> MakePinBoxNonTrivial(int val);
 rs::PinBox<NonTrivial> SharePinBoxNonTrivial(const rs::PinBox<NonTrivial>& b);

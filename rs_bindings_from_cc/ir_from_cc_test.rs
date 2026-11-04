@@ -4174,6 +4174,78 @@ fn test_is_rust_movable_across_target_platforms() -> Result<()> {
             expected_rust_movable_on_linux: true,
             expected_rust_movable_on_windows: true,
         },
+        TestCase {
+            record_name: "AnnotatedLeaf",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "StructWithAnnotatedField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct StructWithAnnotatedField { AnnotatedLeaf f; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "NestedStruct",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct NestedStruct { struct Inner { AnnotatedLeaf f; } i; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "ArrayField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct ArrayField { AnnotatedLeaf f[3]; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "ExplicitDefaultedMoveWithAnnotatedField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct ExplicitDefaultedMoveWithAnnotatedField { ExplicitDefaultedMoveWithAnnotatedField(ExplicitDefaultedMoveWithAnnotatedField&&) = default; AnnotatedLeaf f; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "MoveOnlyWithAnnotatedField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct MoveOnlyWithAnnotatedField { MoveOnlyWithAnnotatedField(MoveOnlyWithAnnotatedField&&) = default; MoveOnlyWithAnnotatedField(const MoveOnlyWithAnnotatedField&) = delete; AnnotatedLeaf f; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "AnonUnionWithAnnotatedField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable_if_eligible\")]] AnonUnionWithAnnotatedField { union { char none_; AnnotatedLeaf f; }; ~AnonUnionWithAnnotatedField() {} };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        TestCase {
+            record_name: "UserProvidedMoveWithAnnotatedField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct UserProvidedMoveWithAnnotatedField { UserProvidedMoveWithAnnotatedField(UserProvidedMoveWithAnnotatedField&&) {} AnnotatedLeaf f; };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
+        },
+        TestCase {
+            record_name: "DeletedMoveInts",
+            input_cpp: "struct DeletedMoveInts { DeletedMoveInts(DeletedMoveInts&&) = delete; int i; };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
+        },
+        TestCase {
+            record_name: "DeletedMoveAssignInts",
+            input_cpp: "struct DeletedMoveAssignInts { DeletedMoveAssignInts& operator=(DeletedMoveAssignInts&&) = delete; int i; };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
+        },
+        TestCase {
+            record_name: "NonTrivialField",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct NonTrivial { NonTrivial(NonTrivial&&) {} }; struct NonTrivialField { AnnotatedLeaf a; NonTrivial f; };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
+        },
+        TestCase {
+            record_name: "HolderWithDeletedDtor",
+            input_cpp: "struct [[clang::annotate(\"crubit_unsafe_bitwise_relocatable\")]] AnnotatedLeaf { AnnotatedLeaf() = default; AnnotatedLeaf(const AnnotatedLeaf&) = delete; AnnotatedLeaf(AnnotatedLeaf&&) = delete; ~AnnotatedLeaf() {} int* p; }; struct HolderWithDeletedDtor { ~HolderWithDeletedDtor() = delete; AnnotatedLeaf f; };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
+        },
         // Crubit does not analyze destructor bodies, and a destructor may
         // observe `this`, so a non-trivial destructor forces the conservative
         // answer.

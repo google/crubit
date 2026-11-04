@@ -119,8 +119,6 @@ pub mod test {
         }
     }
 
-    /// Not Rust-movable: member `b` is not bitwise-relocatable: type is neither copyable nor movable
-    #[::ctor::recursively_pinned(PinnedDrop)]
     #[cfi_encoding = "N4test6HolderE"]
     #[repr(C, align(8))]
     ///CRUBIT_ANNOTATE: cpp_type=test :: Holder
@@ -133,43 +131,98 @@ pub mod test {
     impl !Sync for Holder {}
     unsafe impl ::cxx::ExternType for Holder {
         type Id = ::cxx::type_id!("test :: Holder");
-        type Kind = ::cxx::kind::Opaque;
+        type Kind = ::cxx::kind::Trivial;
     }
     forward_declare::unsafe_define!(
         forward_declare::symbol!("test :: Holder"),
         crate::test::Holder
     );
 
-    impl ::ctor::PinnedDrop for Holder {
+    impl Drop for Holder {
         #[inline(always)]
-        unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
+        fn drop<'__this>(&'__this mut self) {
             unsafe { crate::detail::__rust_thunk___ZN4test6HolderD1Ev(self) }
         }
     }
 
     #[inline(always)]
-    pub fn MakeHolder() -> *mut crate::test::Holder {
-        unsafe { crate::detail::__rust_thunk___ZN4test10MakeHolderEv() }
+    pub fn MakeHolder(v: ::ffi_11::c_int) -> crate::test::Holder {
+        unsafe {
+            let mut __crubit_return = ::core::mem::MaybeUninit::<crate::test::Holder>::uninit();
+            crate::detail::__rust_thunk___ZN4test10MakeHolderEi(
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                v,
+            );
+            __crubit_return.assume_init()
+        }
+    }
+
+    #[inline(always)]
+    pub fn HolderValue<'h>(h: &'h crate::test::Holder) -> ::ffi_11::c_int {
+        unsafe { crate::detail::__rust_thunk___ZN4test11HolderValueERKNS_6HolderE(h) }
+    }
+
+    #[inline(always)]
+    pub fn SetHolderValue<'h>(h: &'h mut crate::test::Holder, v: ::ffi_11::c_int) {
+        unsafe { crate::detail::__rust_thunk___ZN4test14SetHolderValueERNS_6HolderEi(h, v) }
+    }
+
+    #[cfi_encoding = "N4test5OuterE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=test :: Outer
+    pub struct Outer {
+        pub h: crate::test::Holder,
+        pub tag: ::ffi_11::c_int,
+    }
+    impl !Send for Outer {}
+    impl !Sync for Outer {}
+    unsafe impl ::cxx::ExternType for Outer {
+        type Id = ::cxx::type_id!("test :: Outer");
+        type Kind = ::cxx::kind::Trivial;
+    }
+    forward_declare::unsafe_define!(forward_declare::symbol!("test :: Outer"), crate::test::Outer);
+
+    #[inline(always)]
+    pub fn MakeOuter(v: ::ffi_11::c_int) -> crate::test::Outer {
+        unsafe {
+            let mut __crubit_return = ::core::mem::MaybeUninit::<crate::test::Outer>::uninit();
+            crate::detail::__rust_thunk___ZN4test9MakeOuterEi(
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                v,
+            );
+            __crubit_return.assume_init()
+        }
     }
 
     /// # Safety
     ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `h`: raw pointer
-    #[inline(always)]
-    pub unsafe fn DestroyHolder(h: *mut crate::test::Holder) {
-        unsafe { crate::detail::__rust_thunk___ZN4test13DestroyHolderEPNS_6HolderE(h) }
+    /// To call a function that accepts this type, you must uphold these requirements:
+    /// * Document why the following public unsafe fields of this type cannot be misused by callee:
+    ///   * `boxes`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'rs::Box<int>[2]': C-style arrays of non-primitive, non-enum types are not yet supported (b/575922365)
+    #[cfi_encoding = "N4test11ArrayHolderE"]
+    #[repr(C, align(8))]
+    ///CRUBIT_ANNOTATE: cpp_type=test :: ArrayHolder
+    pub struct ArrayHolder {
+        /// Reason for representing this field as a blob of bytes:
+        /// Unsupported type 'rs::Box<int>[2]': C-style arrays of non-primitive, non-enum types are not yet supported (b/575922365)
+        pub(crate) boxes: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
     }
+    impl !Send for ArrayHolder {}
+    impl !Sync for ArrayHolder {}
+    unsafe impl ::cxx::ExternType for ArrayHolder {
+        type Id = ::cxx::type_id!("test :: ArrayHolder");
+        type Kind = ::cxx::kind::Trivial;
+    }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("test :: ArrayHolder"),
+        crate::test::ArrayHolder
+    );
 
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `h`: raw pointer
-    #[inline(always)]
-    pub unsafe fn HolderBox(
-        h: *const crate::test::Holder,
-    ) -> *const ::alloc::boxed::Box<::ffi_11::c_int> {
-        unsafe { crate::detail::__rust_thunk___ZN4test9HolderBoxEPKNS_6HolderE(h) }
+    impl Drop for ArrayHolder {
+        #[inline(always)]
+        fn drop<'__this>(&'__this mut self) {
+            unsafe { crate::detail::__rust_thunk___ZN4test11ArrayHolderD1Ev(self) }
+        }
     }
 
     /// A type that is not Rust-movable (`!Unpin` in Rust) because it has a
@@ -265,6 +318,48 @@ pub mod test {
         unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
             unsafe { crate::detail::__rust_thunk___ZN4test10NonTrivialD1Ev(self) }
         }
+    }
+
+    #[cfi_encoding = "N4test9PinHolderE"]
+    #[repr(C, align(8))]
+    ///CRUBIT_ANNOTATE: cpp_type=test :: PinHolder
+    pub struct PinHolder {
+        /// Reason for representing this field as a blob of bytes:
+        /// nontrivial fields would be destroyed in the wrong order
+        pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    }
+    impl !Send for PinHolder {}
+    impl !Sync for PinHolder {}
+    unsafe impl ::cxx::ExternType for PinHolder {
+        type Id = ::cxx::type_id!("test :: PinHolder");
+        type Kind = ::cxx::kind::Trivial;
+    }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("test :: PinHolder"),
+        crate::test::PinHolder
+    );
+
+    impl Drop for PinHolder {
+        #[inline(always)]
+        fn drop<'__this>(&'__this mut self) {
+            unsafe { crate::detail::__rust_thunk___ZN4test9PinHolderD1Ev(self) }
+        }
+    }
+
+    #[diagnostic::on_unimplemented(
+        message = "binding generation for function failed\n`Holder` cannot be passed by value: it is Rust-movable but has no C++ copy or move constructor (for example because it contains an `rs::Box`), so the C++ thunk cannot relocate it. Pass it by reference or pointer instead. See crubit.rs/types/box#fields"
+    )]
+    pub trait BindingFailedFor_ZN4test18TakesHolderByValueENS_6HolderE {}
+    #[inline(always)]
+    pub fn TakesHolderByValue(h: crate::test::Holder)
+    where
+        for<'error> &'error (): BindingFailedFor_ZN4test18TakesHolderByValueENS_6HolderE,
+    {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a crubit.rs-bug."
+        )
     }
 
     #[inline(always)]
@@ -2583,18 +2678,28 @@ mod detail {
             b: *mut ::alloc::boxed::Box<crate::test::Point>,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN4test6HolderD1Ev<'__this>(
-            __this: ::core::pin::Pin<&'__this mut crate::test::Holder>,
+            __this: &'__this mut crate::test::Holder,
         );
-        #[link_name = "_ZN4test10MakeHolderEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN4test10MakeHolderEv() -> *mut crate::test::Holder;
-        #[link_name = "_ZN4test13DestroyHolderEPNS_6HolderE"]
-        pub(crate) unsafe fn __rust_thunk___ZN4test13DestroyHolderEPNS_6HolderE(
-            h: *mut crate::test::Holder,
+        pub(crate) unsafe fn __rust_thunk___ZN4test10MakeHolderEi(
+            __return: *mut ::core::ffi::c_void,
+            v: ::ffi_11::c_int,
         );
-        #[link_name = "_ZN4test9HolderBoxEPKNS_6HolderE"]
-        pub(crate) unsafe fn __rust_thunk___ZN4test9HolderBoxEPKNS_6HolderE(
-            h: *const crate::test::Holder,
-        ) -> *const ::alloc::boxed::Box<::ffi_11::c_int>;
+        #[link_name = "_ZN4test11HolderValueERKNS_6HolderE"]
+        pub(crate) unsafe fn __rust_thunk___ZN4test11HolderValueERKNS_6HolderE<'h>(
+            h: &'h crate::test::Holder,
+        ) -> ::ffi_11::c_int;
+        #[link_name = "_ZN4test14SetHolderValueERNS_6HolderEi"]
+        pub(crate) unsafe fn __rust_thunk___ZN4test14SetHolderValueERNS_6HolderEi<'h>(
+            h: &'h mut crate::test::Holder,
+            v: ::ffi_11::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN4test9MakeOuterEi(
+            __return: *mut ::core::ffi::c_void,
+            v: ::ffi_11::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN4test11ArrayHolderD1Ev<'__this>(
+            __this: &'__this mut crate::test::ArrayHolder,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN4test10NonTrivialC1Ei(
             __this: *mut ::core::ffi::c_void,
             v: ::ffi_11::c_int,
@@ -2609,6 +2714,9 @@ mod detail {
         ) -> ::core::pin::Pin<&'__this mut crate::test::NonTrivial>;
         pub(crate) unsafe fn __rust_thunk___ZN4test10NonTrivialD1Ev<'__this>(
             __this: ::core::pin::Pin<&'__this mut crate::test::NonTrivial>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN4test9PinHolderD1Ev<'__this>(
+            __this: &'__this mut crate::test::PinHolder,
         );
         pub(crate) unsafe fn __rust_thunk___ZN4test20MakePinBoxNonTrivialEi(
             __return: *mut ::core::ffi::c_void,
@@ -3182,12 +3290,27 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::test::Holder: Drop);
     static_assertions::assert_not_impl_any!(crate::test::Holder: Copy);
     assert!(::core::mem::offset_of!(crate::test::Holder, b) == 0);
+    assert!(::core::mem::size_of::<crate::test::Outer>() == 16);
+    assert!(::core::mem::align_of::<crate::test::Outer>() == 8);
+    static_assertions::assert_not_impl_any!(crate::test::Outer: Copy,Drop);
+    assert!(::core::mem::offset_of!(crate::test::Outer, h) == 0);
+    assert!(::core::mem::offset_of!(crate::test::Outer, tag) == 8);
+    assert!(::core::mem::size_of::<crate::test::ArrayHolder>() == 16);
+    assert!(::core::mem::align_of::<crate::test::ArrayHolder>() == 8);
+    static_assertions::assert_impl_all!(crate::test::ArrayHolder: Drop);
+    static_assertions::assert_not_impl_any!(crate::test::ArrayHolder: Copy);
+    assert!(::core::mem::offset_of!(crate::test::ArrayHolder, boxes) == 0);
     assert!(::core::mem::size_of::<crate::test::NonTrivial>() == 4);
     assert!(::core::mem::align_of::<crate::test::NonTrivial>() == 4);
     static_assertions::assert_impl_all!(crate::test::NonTrivial: Drop);
     static_assertions::assert_not_impl_any!(crate::test::NonTrivial: Copy);
     assert!(::core::mem::offset_of!(crate::test::NonTrivial, val) == 0);
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
+    assert!(::core::mem::size_of::<crate::test::PinHolder>() == 8);
+    assert!(::core::mem::align_of::<crate::test::PinHolder>() == 8);
+    static_assertions::assert_impl_all!(crate::test::PinHolder: Drop);
+    static_assertions::assert_not_impl_any!(crate::test::PinHolder: Copy);
+    assert!(::core::mem::offset_of!(crate::test::PinHolder, p) == 0);
     assert!(::core::mem::size_of::<crate::__CcTemplateInstSt16initializer_listIiE>() == 16);
     assert!(::core::mem::align_of::<crate::__CcTemplateInstSt16initializer_listIiE>() == 8);
     static_assertions::assert_impl_all!(crate::__CcTemplateInstSt16initializer_listIiE: Copy,Clone);

@@ -15,6 +15,7 @@
 #include "support/internal/check.h"
 #include "support/movable.h"
 #include "support/unsafe_relocate_tag.h"
+#include "support/annotations.h"
 #include "support/annotations_internal.h"
 #include "support/rs_std/internal/is_utf8.h"
 #include "support/rs_std/str_ref.h"
@@ -32,7 +33,8 @@ namespace rs {
 // It is non-C++-movable, but can be relocated via `crubit::UnsafeRelocateTag`
 // and passed by-value via `rs::Movable`. Memory is managed by the Rust global
 // allocator.
-class CRUBIT_INTERNAL_RUST_TYPE("::alloc::boxed::Box<str>") StrBox final {
+class CRUBIT_INTERNAL_RUST_TYPE("::alloc::boxed::Box<str>")
+    CRUBIT_UNSAFE_BITWISE_RELOCATABLE StrBox final {
  public:
   StrBox() noexcept : dangling_ptr_(alignof(char)), size_(0) {}
 

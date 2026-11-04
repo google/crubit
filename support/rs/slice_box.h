@@ -15,6 +15,7 @@
 
 #include "support/internal/check.h"
 #include "support/unsafe_relocate_tag.h"
+#include "support/annotations.h"
 #include "support/annotations_internal.h"
 #include "support/rs_std/slice_ref.h"
 
@@ -32,7 +33,9 @@ namespace rs {
 // and passed by-value via `rs::Movable`. Memory is managed by the Rust global
 // allocator.
 template <typename T>
-class CRUBIT_INTERNAL_RUST_TYPE("::alloc::boxed::Box<[{}]>", T) SliceBox final {
+class CRUBIT_INTERNAL_RUST_TYPE("::alloc::boxed::Box<[{}]>",
+                                T) CRUBIT_UNSAFE_BITWISE_RELOCATABLE
+    SliceBox final {
   static_assert(!::std::is_reference_v<T>,
                 "SliceBox<T> cannot hold a reference");
   static_assert(!::std::is_array_v<T>, "SliceBox<T> cannot hold an array");

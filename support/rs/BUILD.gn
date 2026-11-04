@@ -21,6 +21,7 @@ source_set("box") {
     "box.h",
   ]
   deps = [
+    "$crubit_src_dir/support:annotations",
     "$crubit_src_dir/support:annotations_internal",
     "$crubit_src_dir/support:crubit_support",
     "$crubit_src_dir/support:movable",
@@ -42,6 +43,7 @@ source_set("pin_box") {
     "pin_box.h",
   ]
   deps = [
+    "$crubit_src_dir/support:annotations",
     "$crubit_src_dir/support:annotations_internal",
     "$crubit_src_dir/support:crubit_support",
     "$crubit_src_dir/support:movable",
@@ -63,6 +65,7 @@ source_set("slice_box") {
     "slice_box.h",
   ]
   deps = [
+    "$crubit_src_dir/support:annotations",
     "$crubit_src_dir/support:annotations_internal",
     "$crubit_src_dir/support:crubit_support",
     "$crubit_src_dir/support:unsafe_relocate_tag",
@@ -84,6 +87,7 @@ source_set("str_box") {
     "str_box.h",
   ]
   deps = [
+    "$crubit_src_dir/support:annotations",
     "$crubit_src_dir/support:annotations_internal",
     "$crubit_src_dir/support:crubit_support",
     "$crubit_src_dir/support:movable",

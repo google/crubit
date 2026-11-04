@@ -14,6 +14,7 @@ target_include_directories(crubit_support_rs_box INTERFACE
 )
 
 target_link_libraries(crubit_support_rs_box INTERFACE
+crubit_support_annotations
 crubit_support_annotations_internal
 crubit_support_movable
 crubit_support_unsafe_relocate_tag
@@ -30,6 +31,7 @@ target_include_directories(crubit_support_rs_pin_box INTERFACE
 )
 
 target_link_libraries(crubit_support_rs_pin_box INTERFACE
+crubit_support_annotations
 crubit_support_annotations_internal
 crubit_support_movable
 crubit_support_unsafe_relocate_tag
@@ -46,6 +48,7 @@ target_include_directories(crubit_support_rs_slice_box INTERFACE
 )
 
 target_link_libraries(crubit_support_rs_slice_box INTERFACE
+crubit_support_annotations
 crubit_support_annotations_internal
 crubit_support_unsafe_relocate_tag
 crubit_support_internal_bindings_support
@@ -62,6 +65,7 @@ target_include_directories(crubit_support_rs_str_box INTERFACE
 )
 
 target_link_libraries(crubit_support_rs_str_box INTERFACE
+crubit_support_annotations
 crubit_support_annotations_internal
 crubit_support_movable
 crubit_support_unsafe_relocate_tag

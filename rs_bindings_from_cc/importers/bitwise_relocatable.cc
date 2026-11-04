@@ -12,7 +12,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
-#include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
@@ -168,49 +167,75 @@ std::string NeverBRReason(NeverBRKind kind) {
 // move (design §3.1 rule 3), or a reason why they do not.
 std::optional<std::string> CheckOwnSpecialMembers(
     clang::Sema& SemaRef, const clang::CXXRecordDecl* D) {
-  bool has_implicit_move = D->needsImplicitMoveConstructor() &&
-                           !D->defaultedMoveConstructorIsDeleted();
-  bool has_implicit_copy = D->needsImplicitCopyConstructor() &&
-                           !D->defaultedCopyConstructorIsDeleted();
-  if (!has_implicit_move && !has_implicit_copy) {
-    auto* ctor = LookupSpecialMemberFromXValue(SemaRef, D, false);
-    if (!ctor || ctor->isDeleted()) {
+  // Per P2786 [class.prop], a union with no user-declared special member
+  // functions is trivially relocatable whenever all of its variant members are
+  // (even if a variant member's non-trivial move constructor or destructor
+  // causes the union's implicit special members to be deleted, as in an
+  // anonymous `union { char none_; T value_; };` inside an optional wrapper).
+  if (D->isUnion() && !D->hasUserDeclaredCopyConstructor() &&
+      !D->hasUserDeclaredCopyAssignment() &&
+      !D->hasUserDeclaredMoveOperation() && !D->hasUserDeclaredDestructor()) {
+    return std::nullopt;
+  }
+
+  SemaRef.ForceDeclarationOfImplicitMembers(
+      const_cast<clang::CXXRecordDecl*>(D));
+
+  auto* ctor = llvm::dyn_cast_or_null<clang::CXXConstructorDecl>(
+      LookupSpecialMemberFromXValue(SemaRef, D, /*Assign=*/false));
+  if (ctor && ctor->isCopyOrMoveConstructor() && ctor->isUserProvided()) {
+    return absl::StrCat(
+        "the ", (ctor->isMoveConstructor() ? "move" : "copy"),
+        " constructor is user-provided; annotate the type with "
+        "CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound");
+  }
+
+  // Under C++11 DR1402 (`Sema::AddOverloadCandidate`), a defaulted move
+  // constructor that Clang implicitly deleted is ignored by overload
+  // resolution. When all subobjects of `D` are bitwise-relocatable, such a move
+  // constructor (`D(D&&) = default` or implicit `D(D&&)`) was only deleted
+  // because a subobject deletes its C++ move constructor (e.g. `rs::Box<T>`),
+  // and would otherwise be an exact match for an xvalue of `D`.
+  bool has_eligible_defaulted_move = false;
+  for (const clang::CXXConstructorDecl* move_ctor : D->ctors()) {
+    move_ctor = move_ctor->getCanonicalDecl();
+    if (!move_ctor->isMoveConstructor() ||
+        move_ctor->isIneligibleOrNotSelected() || move_ctor->isUserProvided() ||
+        move_ctor->isDeletedAsWritten()) {
+      continue;
+    }
+    if (move_ctor->getNumParams() == 1 && !move_ctor->getParamDecl(0)
+                                               ->getType()
+                                               ->getPointeeType()
+                                               .hasQualifiers()) {
+      has_eligible_defaulted_move = true;
+      break;
+    }
+  }
+
+  // Otherwise, check overload resolution from an xvalue of `D`. A defaulted
+  // copy constructor that Clang implicitly deleted (`!isDeletedAsWritten()`)
+  // also does not disqualify `D` unless it was deleted because `D` itself
+  // declared a move operation.
+  if (!has_eligible_defaulted_move) {
+    if (!ctor || !ctor->isCopyOrMoveConstructor() ||
+        ctor->isDeletedAsWritten()) {
       return "type is neither copyable nor movable";
     }
-    if (ctor->isUserProvided()) {
-      return absl::StrCat(
-          "the ",
-          (llvm::isa<clang::CXXConstructorDecl>(ctor) &&
-                   llvm::cast<clang::CXXConstructorDecl>(ctor)
-                       ->isMoveConstructor()
-               ? "move"
-               : "copy"),
-          " constructor is user-provided; annotate the type with "
-          "CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound");
+    if (ctor->isImplicit() && ctor->isCopyConstructor() &&
+        D->hasUserDeclaredMoveOperation()) {
+      return "type is neither copyable nor movable";
     }
   }
-  if (auto* dtor = D->getDestructor()) {
-    dtor = llvm::cast<clang::CXXDestructorDecl>(dtor->getCanonicalDecl());
-    if (dtor->isDeleted()) return "destructor is deleted";
-    if (dtor->isUserProvided() && !dtor->isDefaulted()) {
-      return "destructor is user-provided; annotate the type with "
-             "CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound";
-    }
-  } else if (D->needsImplicitDestructor() &&
-             D->defaultedDestructorIsDeleted()) {
-    return "destructor is deleted";
+
+  auto* dtor = D->getDestructor();
+  if (!dtor) return "destructor is deleted";
+  dtor = llvm::cast<clang::CXXDestructorDecl>(dtor->getCanonicalDecl());
+  if (dtor->isDeleted()) return "destructor is deleted";
+  if (dtor->isUserProvided() && !dtor->isDefaulted()) {
+    return "destructor is user-provided; annotate the type with "
+           "CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound";
   }
-  bool has_non_deleted = has_implicit_move || has_implicit_copy;
-  if (!has_non_deleted) {
-    for (const clang::CXXConstructorDecl* ctor : GetAllConstructors(*D)) {
-      if (ctor->isDeleted() || ctor->isIneligibleOrNotSelected()) continue;
-      if (ctor->isCopyOrMoveConstructor()) {
-        has_non_deleted = true;
-        break;
-      }
-    }
-  }
-  if (!has_non_deleted) return "type is neither copyable nor movable";
   return std::nullopt;
 }
 

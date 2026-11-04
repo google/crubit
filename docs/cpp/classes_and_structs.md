@@ -126,6 +126,11 @@ Some examples of Rust-movable types:
     `std::weak_ptr`, and `std::vector` (with the default allocator)
 *   `std::optional<T>`, `std::variant<Ts...>`, and `std::expected<T, E>` when
     their element types are Rust-movable
+*   any class whose bases and non-static data members are Rust-movable, and
+    which has no user-provided (or explicitly `= delete`d) special member
+    functions, even if its copy and move constructors are implicitly deleted
+    (such as structs containing `rs::Box` or other non-C++-movable types
+    annotated with `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`).
 *   `absl::Status`
 
 Some examples of types that are **not** Rust-movable:

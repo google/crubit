@@ -64,6 +64,13 @@ struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE K2 {
   ~K2();
   int fd;
 };
+struct HolderK2 {
+  K2 k;
+};
+struct DeletedMoveAssign {
+  DeletedMoveAssign& operator=(DeletedMoveAssign&&) = delete;
+  int x;
+};
 
 struct A {
   std::string s;
