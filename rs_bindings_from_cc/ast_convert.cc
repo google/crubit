@@ -4,8 +4,6 @@
 
 #include "rs_bindings_from_cc/ast_convert.h"
 
-#include "absl/base/nullability.h"
-#include "absl/functional/function_ref.h"
 #include "common/check.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/decl_importer.h"
@@ -54,7 +52,7 @@ static clang::CXXConstructorDecl* GetMoveCtor(clang::CXXRecordDecl* record) {
 //       returns null if the special member function is implicitly defined.
 bool HasNoUserProvidedSpecialMember(
     clang::CXXRecordDecl* record,
-    absl::FunctionRef<clang::CXXMethodDecl*(clang::CXXRecordDecl*)> getter) {
+    llvm::function_ref<clang::CXXMethodDecl*(clang::CXXRecordDecl*)> getter) {
   auto nonrecursive_has_only_defaulted =
       [&getter](const clang::CXXRecordDecl* record) {
         const clang::CXXMethodDecl* decl =
@@ -70,8 +68,8 @@ bool HasNoUserProvidedSpecialMember(
 }
 
 SpecialMemberFunc GetSpecialMemberFunc(
-    ImportContext* absl_nullable ictx, clang::RecordDecl& record_decl,
-    absl::FunctionRef<clang::CXXMethodDecl*(clang::CXXRecordDecl*)> getter) {
+    ImportContext* _Nullable ictx, clang::RecordDecl& record_decl,
+    llvm::function_ref<clang::CXXMethodDecl*(clang::CXXRecordDecl*)> getter) {
   auto* cxx_record_decl = clang::dyn_cast<clang::CXXRecordDecl>(&record_decl);
   if (cxx_record_decl == nullptr) {
     return SpecialMemberFunc::TRIVIAL;

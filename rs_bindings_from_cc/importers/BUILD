@@ -33,6 +33,7 @@ cc_library(
     deps = [
         "//common:annotation_reader",
         "//common:check",
+        "//common:status",
         "//common:status_absl_compat",
         "//common:status_macros",
         "//common:string_view_conversion",
@@ -238,5 +239,6 @@ cc_test(
         "@abseil-cpp//absl/log",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
     ],
 )

@@ -29,7 +29,7 @@ struct NonCopyable final {
 };
 
 struct IrFromCcOptions final {
-  absl::string_view extra_source_code_for_testing = "";
+  llvm::StringRef extra_source_code_for_testing = "";
   BazelLabel current_target = BazelLabel{"//test:testing_target"};
   absl::Span<const HeaderName> public_headers = {};
   absl::flat_hash_map<HeaderName, std::string>
@@ -39,12 +39,12 @@ struct IrFromCcOptions final {
   absl::Span<const std::string> extra_cpp_srcs = {};
   absl::Span<const std::string> reexported_namespaces = {};
   absl::Span<const std::string> unstable_rust_features = {};
-  absl::Span<const absl::string_view> clang_args = {};
+  absl::Span<const llvm::StringRef> clang_args = {};
   absl::Span<const std::string> extra_instantiations = {};
   absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
       crubit_features = {};
   absl::flat_hash_map<BazelLabel, std::string> crate_names = {};
-  absl::string_view driver_path = "rs_bindings_from_cc_driver";
+  llvm::StringRef driver_path = "rs_bindings_from_cc_driver";
 
   // Note: an empty allowlist disables the allowlist, allowing usage of
   // CRUBIT_DO_NOT_BIND with arbitrary symbols.
@@ -58,8 +58,8 @@ struct IrFromCcOptions final {
   // Record additional source information for Kythe annotations.
   bool kythe_annotations = false;
 
-  absl_nullable std::shared_ptr<const llvm::Regex>
-      template_blocklist_path_regex = nullptr;
+  _Nullable std::shared_ptr<const llvm::Regex> template_blocklist_path_regex =
+      nullptr;
 
   CarcinizeMode carcinize_mode = CarcinizeMode::kOff;
 

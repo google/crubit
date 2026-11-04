@@ -7,13 +7,14 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir_generated.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/Basic/LLVM.h"
 
 namespace crubit {
 
-std::unique_ptr<ir_proto::Item> FunctionTemplateDeclImporter::Import(
+std::unique_ptr<crubit::ffi::Item> FunctionTemplateDeclImporter::Import(
     clang::FunctionTemplateDecl* function_template_decl) {
   if (!ictx_.IsFromCurrentTarget(*function_template_decl) ||
       clang::isa<clang::CXXDeductionGuideDecl>(

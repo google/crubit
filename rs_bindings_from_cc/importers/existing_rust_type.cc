@@ -16,10 +16,10 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
-#include "common/status_absl_compat.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir_generated.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
@@ -82,15 +82,15 @@ std::string_view ArgKindToString(clang::TemplateArgument::ArgKind kind) {
 
 // Returns the ClassTemplateSpecializationDecl of `crubit::{name}` if `type` is
 // an instantiation of it, or nullptr otherwise.
-const clang::ClassTemplateSpecializationDecl* absl_nullable
-GetCrubitClassTemplateSpecializationDecl(clang::QualType type,
-                                         absl::string_view name) {
+const clang::
+    ClassTemplateSpecializationDecl* _Nullable GetCrubitClassTemplateSpecializationDecl(
+        clang::QualType type, llvm::StringRef name) {
   const auto* record_type = type->getAs<clang::RecordType>();
   if (record_type == nullptr) {
     return nullptr;
   }
   const clang::RecordDecl* record_decl = record_type->getDecl();
-  if (absl::string_view(record_decl->getName()) != name) {
+  if (llvm::StringRef(record_decl->getName()) != name) {
     return nullptr;
   }
   if (!record_decl->getDeclContext()->isNamespace()) {
@@ -254,7 +254,7 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
 }
 }  // namespace
 
-std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
+std::unique_ptr<crubit::ffi::Item> ExistingRustTypeImporter::Import(
     clang::TypeDecl* type_decl) {
   absl::StatusOr<std::optional<CrubitInternalRustType>> opt_attr =
       GetCrubitInternalRustTypeAttr(ictx_, *type_decl);
@@ -289,7 +289,7 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
         *type_decl,
         FormattedError::PrefixedStrCat(
             "Invalid crubit_internal_rust_type_label_hint attribute",
-            crubit::ToAbslStatus(hint_val.takeError()).message()));
+            llvm::toString(hint_val.takeError())));
   }
   if (hint_val->has_value()) {
     label_hint = **std::move(hint_val);
@@ -308,7 +308,7 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
 
   ictx_.MarkAsSuccessfullyImported(*type_decl);
 
-  auto item = std::make_unique<ir_proto::Item>();
+  auto item = std::make_unique<crubit::ffi::Item>();
   auto* existing = item->mutable_existing_rust_type();
   existing->set_rs_name(std::move(format_string));
   existing->set_cc_name(std::move(cc_name));

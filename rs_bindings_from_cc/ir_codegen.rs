@@ -718,7 +718,7 @@ fn generate_cc_union(schema: &Schema, u: &UnionDef) -> c::Tokens {
 
     quote! {
         $(if let Some(ns) = u.item.ns() => namespace $ns $("{"))
-        struct ABSL_ATTRIBUTE_TRIVIAL_ABI $uname {
+        struct CRUBIT_FFI_TRIVIAL_ABI $uname {
             $(generate_cc_nested_aliases(schema, &parent_key))
             enum Case : uint32_t {
                 $(for (idx, v) in u.variants.iter().enumerate() join ($['\r']) =>
@@ -804,8 +804,8 @@ fn generate_cc_union(schema: &Schema, u: &UnionDef) -> c::Tokens {
                         }
                     }
                     FieldType::Str => {
-                        absl::string_view $vf() const { return has_$vf() ? payload_.$(vf)_.AsView() : absl::string_view(); }
-                        void set_$vf(absl::string_view value) {
+                        std::string_view $vf() const { return has_$vf() ? std::string_view(payload_.$(vf)_.AsView()) : std::string_view(); }
+                        void set_$vf(std::string_view value) {
                             FfiString tmp(value);
                             Destroy();
                             tag_ = k$vp;
@@ -813,8 +813,8 @@ fn generate_cc_union(schema: &Schema, u: &UnionDef) -> c::Tokens {
                         }
                     }
                     FieldType::Bytes => {
-                        absl::string_view $vf() const { return has_$vf() ? absl::string_view(reinterpret_cast<const char*>(payload_.$(vf)_.data()), payload_.$(vf)_.size()) : absl::string_view(); }
-                        void set_$vf(absl::string_view value) {
+                        std::string_view $vf() const { return has_$vf() ? std::string_view(reinterpret_cast<const char*>(payload_.$(vf)_.data()), payload_.$(vf)_.size()) : std::string_view(); }
+                        void set_$vf(std::string_view value) {
                             FfiVec<uint8_t> tmp(reinterpret_cast<const uint8_t*>(value.data()), reinterpret_cast<const uint8_t*>(value.data()) + value.size());
                             Destroy();
                             tag_ = k$vp;
@@ -903,7 +903,7 @@ fn generate_cc_union(schema: &Schema, u: &UnionDef) -> c::Tokens {
                 other.Clear();
             }
             Case tag_;
-            union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+            union CRUBIT_FFI_TRIVIAL_ABI Payload {
                 Payload() : $v0_init {}
                 explicit Payload(Case) : empty_(0) {}
                 Payload(const Payload&) {}
@@ -945,7 +945,7 @@ fn generate_cc_struct(schema: &Schema, rec_idx: usize, st: &StructDef) -> c::Tok
 
     quote! {
         $(if let Some(ns) = st.item.ns() => namespace $ns $("{"))
-        struct ABSL_ATTRIBUTE_TRIVIAL_ABI $sname {
+        struct CRUBIT_FFI_TRIVIAL_ABI $sname {
             $(generate_cc_nested_aliases(schema, &parent_key))
             $(if has_fwd_ref {
                 $sname();
@@ -966,7 +966,7 @@ fn generate_cc_struct(schema: &Schema, rec_idx: usize, st: &StructDef) -> c::Tok
                 $(let fname = f.cc_name)
                 $(match f.ty.cc_type() {
                     FieldType::Str => {
-                        explicit $sname(absl::string_view $fname) { set_$fname($fname); }
+                        explicit $sname(std::string_view $fname) { set_$fname($fname); }
                     }
                     FieldType::Bool
                     | FieldType::I32
@@ -1011,12 +1011,12 @@ fn generate_cc_struct(schema: &Schema, rec_idx: usize, st: &StructDef) -> c::Tok
                         void set_$fname($cty value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = value; }
                     }
                     FieldType::Str => {
-                        absl::string_view $fname() const { return $(fname)_.AsView(); }
-                        void set_$fname(absl::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = FfiString(value); }
+                        std::string_view $fname() const { return $(fname)_.AsView(); }
+                        void set_$fname(std::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = FfiString(value); }
                     }
                     FieldType::Bytes => {
-                        absl::string_view $fname() const { return absl::string_view(reinterpret_cast<const char*>($(fname)_.data()), $(fname)_.size()); }
-                        void set_$fname(absl::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = FfiVec<uint8_t>(reinterpret_cast<const uint8_t*>(value.data()), reinterpret_cast<const uint8_t*>(value.data()) + value.size()); }
+                        std::string_view $fname() const { return std::string_view(reinterpret_cast<const char*>($(fname)_.data()), $(fname)_.size()); }
+                        void set_$fname(std::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = FfiVec<uint8_t>(reinterpret_cast<const uint8_t*>(value.data()), reinterpret_cast<const uint8_t*>(value.data()) + value.size()); }
                     }
                     FieldType::Struct(cc_path) => {
                         $(let cty = &format!("::crubit::ffi::{cc_path}"))
@@ -1042,7 +1042,7 @@ fn generate_cc_struct(schema: &Schema, rec_idx: usize, st: &StructDef) -> c::Tok
                         )
                         $(match inner.cc_type() {
                             FieldType::Str => {
-                                void add_$fname(absl::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_.Add(FfiString(value)); }
+                                void add_$fname(std::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_.Add(FfiString(value)); }
                             }
                             FieldType::Bool
                             | FieldType::I32
@@ -1159,9 +1159,9 @@ fn generate_cc(schema: &Schema) -> String {
         #include <type_traits>
         #include <utility>
 
-        #include "third_party/absl/base/attributes.h"
+
         #include "common/check.h"
-        #include "third_party/absl/strings/string_view.h"
+        #include <string_view>
         #include "rs_bindings_from_cc/ir_ffi_support.h"
 
         namespace crubit::ffi $("{")
@@ -1169,9 +1169,9 @@ fn generate_cc(schema: &Schema) -> String {
 
         $(for rec in &schema.records join ($['\r']) {
             $(if let Some(ns) = rec.ns() {
-                namespace $ns { struct ABSL_ATTRIBUTE_TRIVIAL_ABI $(rec.name()); }
+                namespace $ns { struct CRUBIT_FFI_TRIVIAL_ABI $(rec.name()); }
             } else {
-                struct ABSL_ATTRIBUTE_TRIVIAL_ABI $(rec.name());
+                struct CRUBIT_FFI_TRIVIAL_ABI $(rec.name());
             })
         })
 

@@ -34,7 +34,6 @@
 #include "absl/strings/strip.h"
 #include "common/annotation_reader.h"
 #include "common/check.h"
-#include "common/status_absl_compat.h"
 #include "common/status_macros.h"
 #include "common/string_view_conversion.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -57,6 +56,7 @@
 #include "rs_bindings_from_cc/importers/type_alias.h"
 #include "rs_bindings_from_cc/importers/var.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir_generated.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "rs_bindings_from_cc/type_map.h"
 #include "clang/AST/ASTContext.h"
@@ -107,20 +107,19 @@ namespace ir_proto = ::crubit::ffi;
 
 namespace {
 
-constexpr absl::string_view kTypeStatusPayloadUrl =
+constexpr llvm::StringRef kTypeStatusPayloadUrl =
     "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
 
 // Prefix of the synthetic label that `Importer::GetOwningTarget` returns when
 // no Bazel target visible to Crubit claims ownership of a header. The rest of
 // the label is the header path, which is useful for error messages.
-constexpr absl::string_view kUnknownTargetPrefix = "//_unknown_target:";
+constexpr llvm::StringRef kUnknownTargetPrefix = "//_unknown_target:";
 
 // Returns the header path if `label` is a synthetic unknown-target label (see
 // `kUnknownTargetPrefix`), or `std::nullopt` if it is a real Bazel label.
-std::optional<absl::string_view> HeaderOfUnknownTarget(
-    const BazelLabel& label) {
-  absl::string_view value = label.value();
-  if (!absl::ConsumePrefix(&value, kUnknownTargetPrefix)) {
+std::optional<llvm::StringRef> HeaderOfUnknownTarget(const BazelLabel& label) {
+  llvm::StringRef value = label.value();
+  if (!value.consume_front(kUnknownTargetPrefix)) {
     return std::nullopt;
   }
   return value;
@@ -128,13 +127,13 @@ std::optional<absl::string_view> HeaderOfUnknownTarget(
 
 // Checks if the return value from `GetDeclItem` indicates that the import was
 // successful.
-absl::Status CheckImportStatus(const ir_proto::Item* item) {
+absl::Status CheckImportStatus(const crubit::ffi::Item* item) {
   if (item == nullptr) {
     return absl::InvalidArgumentError("The import has been skipped");
   }
   if (item->has_unsupported_item()) {
     const auto& unsupported = item->unsupported_item();
-    std::vector<absl::string_view> messages;
+    std::vector<llvm::StringRef> messages;
     messages.reserve(unsupported.errors().size());
     for (const auto& error : unsupported.errors()) {
       messages.push_back(error.message());
@@ -262,26 +261,25 @@ bool DetectFormatterFunction(const clang::Decl& decl,
 
 namespace {
 template <typename T>
-const T* absl_nullable FindDecl(const clang::DeclContext* absl_nonnull context,
-                                absl::string_view name) {
-  if (const auto* absl_nullable ns =
-          llvm::dyn_cast<clang::NamespaceDecl>(context);
+const T* _Nullable FindDecl(const clang::DeclContext* _Nonnull context,
+                            llvm::StringRef name) {
+  if (const auto* _Nullable ns = llvm::dyn_cast<clang::NamespaceDecl>(context);
       ns != nullptr) {
-    for (const auto* absl_nonnull redecl : ns->redecls()) {
-      for (const clang::Decl* absl_nonnull decl : redecl->decls()) {
-        if (const auto* absl_nullable type = llvm::dyn_cast<T>(decl);
+    for (const auto* _Nonnull redecl : ns->redecls()) {
+      for (const clang::Decl* _Nonnull decl : redecl->decls()) {
+        if (const auto* _Nullable type = llvm::dyn_cast<T>(decl);
             type != nullptr) {
-          if (StringViewFromStringRef(type->getName()) == name) {
+          if (type->getName() == name) {
             return type;
           }
         }
       }
     }
   } else {
-    for (const clang::Decl* absl_nonnull decl : context->decls()) {
-      if (const auto* absl_nullable type = llvm::dyn_cast<T>(decl);
+    for (const clang::Decl* _Nonnull decl : context->decls()) {
+      if (const auto* _Nullable type = llvm::dyn_cast<T>(decl);
           type != nullptr) {
-        if (StringViewFromStringRef(type->getName()) == name) {
+        if (type->getName() == name) {
           return type;
         }
       }
@@ -295,7 +293,7 @@ const T* absl_nullable FindDecl(const clang::DeclContext* absl_nonnull context,
 // (only headers that include `support/rs_std/traits.h` do), so its absence is
 // not an error.
 clang::QualType LookupRsCoreFmtDebug(
-    const clang::ASTContext* absl_nonnull context) {
+    const clang::ASTContext* _Nonnull context) {
   const clang::TranslationUnitDecl* translation_unit =
       context->getTranslationUnitDecl();
   const clang::NamespaceDecl* rs =
@@ -322,8 +320,8 @@ clang::QualType LookupRsCoreFmtDebug(
 // declared in the translation unit.  Most translation units don't declare it
 // (only headers that include `support/rs_std/traits.h` do), so its absence is
 // not an error.
-const clang::ClassTemplateDecl* absl_nullable LookupCanonicalImplInNamespace(
-    const clang::ASTContext* absl_nonnull context, absl::string_view ns_name) {
+const clang::ClassTemplateDecl* _Nullable LookupCanonicalImplInNamespace(
+    const clang::ASTContext* _Nonnull context, llvm::StringRef ns_name) {
   const clang::TranslationUnitDecl* translation_unit =
       context->getTranslationUnitDecl();
   const clang::NamespaceDecl* ns =
@@ -551,8 +549,8 @@ using RepresentativeCopyCache = Importer::RepresentativeCopyCache;
 // once: a namespace can have thousands of redeclarations (one per copy of each
 // header that reopens it), and this is called for each of them, so computing
 // each result separately would take quadratic time.
-static const clang::Decl* absl_nonnull GetRepresentativeCopy(
-    const clang::Decl* absl_nonnull decl, const clang::SourceManager& sm,
+static const clang::Decl* _Nonnull GetRepresentativeCopy(
+    const clang::Decl* _Nonnull decl, const clang::SourceManager& sm,
     RepresentativeCopyCache& cache) {
   if (auto it = cache.find(decl); it != cache.end()) return it->second;
 
@@ -758,7 +756,7 @@ class Importer::SourceLocationComparator {
   }
 
   using OrderedItemId = std::pair<SourceOrderKey, ItemId>;
-  using OrderedItem = std::pair<SourceOrderKey, const ir_proto::Item*>;
+  using OrderedItem = std::pair<SourceOrderKey, const crubit::ffi::Item*>;
 
   template <typename OrderedItemOrId>
   bool operator()(const OrderedItemOrId& a, const OrderedItemOrId& b) const {
@@ -928,8 +926,8 @@ std::vector<clang::Decl*> Importer::GetCanonicalChildren(
 // canonical declaration of a member may thus be lexically inside a demoted
 // definition, which we never visit (we only visit the children of the kept
 // definition).
-static const clang::Decl* absl_nonnull PreferMemberOfKeptDefinition(
-    const clang::Decl* absl_nonnull decl) {
+static const clang::Decl* _Nonnull PreferMemberOfKeptDefinition(
+    const clang::Decl* _Nonnull decl) {
   const auto* lexical_record =
       clang::dyn_cast<clang::TagDecl>(decl->getLexicalDeclContext());
   if (lexical_record == nullptr ||
@@ -944,15 +942,15 @@ static const clang::Decl* absl_nonnull PreferMemberOfKeptDefinition(
   return decl;
 }
 
-const clang::Decl* absl_nullable Importer::CanonicalizeDecl(
+const clang::Decl* _Nullable Importer::CanonicalizeDecl(
     const clang::Decl& decl) const {
   const clang::Decl* canonical = CanonicalizeDeclInRedeclChain(decl);
   if (canonical == nullptr) return nullptr;
   return CanonicalizeUnmergedDuplicates(canonical);
 }
 
-const clang::Decl* absl_nonnull Importer::CanonicalizeUnmergedDuplicates(
-    const clang::Decl* absl_nonnull decl) const {
+const clang::Decl* _Nonnull Importer::CanonicalizeUnmergedDuplicates(
+    const clang::Decl* _Nonnull decl) const {
   // Unmerged duplicates can only come from precompiled header modules.
   if (ctx_.getExternalSource() == nullptr) return decl;
 
@@ -1031,7 +1029,7 @@ const clang::Decl* absl_nonnull Importer::CanonicalizeUnmergedDuplicates(
   return representative;
 }
 
-const clang::Decl* absl_nullable Importer::CanonicalizeDeclInRedeclChain(
+const clang::Decl* _Nullable Importer::CanonicalizeDeclInRedeclChain(
     const clang::Decl& decl_ref) const {
   const clang::Decl* decl = &decl_ref;
   if (auto* namespace_decl = llvm::dyn_cast<clang::NamespaceDecl>(decl)) {
@@ -1115,8 +1113,8 @@ const clang::Decl* absl_nullable Importer::CanonicalizeDeclInRedeclChain(
   return PreferMemberOfKeptDefinition(decl->getCanonicalDecl());
 }
 
-clang::Decl* absl_nullable Importer::CanonicalizeDecl(
-    clang::Decl* absl_nonnull decl) const {
+clang::Decl* _Nullable Importer::CanonicalizeDecl(
+    clang::Decl* _Nonnull decl) const {
   const clang::Decl* ret = CanonicalizeDecl(*decl);
   return const_cast<clang::Decl*>(ret);
 }
@@ -1138,7 +1136,7 @@ ItemId Importer::GenerateItemId(const clang::RawComment& comment) const {
 }
 
 absl::StatusOr<std::optional<ItemId>> Importer::GetEnclosingItemId(
-    clang::Decl* absl_nonnull decl) {
+    clang::Decl* _Nonnull decl) {
   for (clang::DeclContext* decl_context = decl->getDeclContext();;
        decl_context = decl_context->getParent()) {
     if (decl_context->isTranslationUnit()) {
@@ -1168,12 +1166,11 @@ absl::StatusOr<std::optional<ItemId>> Importer::GetEnclosingItemId(
 // Returns true if `decl_context` is the synthetic namespace that `IrFromCc`
 // wraps `cc_template!` instantiation aliases in.
 static bool IsCcTemplateInstantiationsNamespace(
-    const clang::DeclContext* absl_nullable decl_context) {
+    const clang::DeclContext* _Nullable decl_context) {
   const auto* ns_decl =
       clang::dyn_cast_or_null<clang::NamespaceDecl>(decl_context);
   return ns_decl != nullptr && ns_decl->getParent()->isTranslationUnit() &&
-         StringViewFromStringRef(ns_decl->getName()) ==
-             kInstantiationsNamespaceName;
+         ns_decl->getName() == kInstantiationsNamespaceName;
 }
 
 // Returns true if `decl` (a child of a record if `is_record`) should be
@@ -1251,7 +1248,7 @@ Importer::DeclItems Importer::GetDeclItems(const clang::Decl& decl) {
   const auto& decl_context = clang::cast<clang::DeclContext>(decl);
   const bool is_record = clang::isa<clang::RecordDecl>(&decl_context);
   for (auto decl : GetCanonicalChildren(decl_context)) {
-    const ir_proto::Item* item = nullptr;
+    const crubit::ffi::Item* item = nullptr;
     if (ShouldImportEagerly(*decl, is_record, *this)) {
       item = GetDeclItem(decl);
     } else if (auto it = import_cache_.find(decl); it != import_cache_.end()) {
@@ -1344,7 +1341,7 @@ Importer::GetTopLevelItemIdsInSourceOrder(
 }
 
 std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
-    clang::Decl* absl_nonnull parent_decl) {
+    clang::Decl* _Nonnull parent_decl) {
   Importer::DeclItems decl_items = GetDeclItems(*parent_decl);
 
   std::vector<SourceLocationComparator::OrderedItemId> items;
@@ -1437,7 +1434,7 @@ static void CollectInheritedFriendOperators(
 }
 
 std::vector<ItemId> Importer::ImportInheritedFriendOperators(
-    clang::CXXRecordDecl* absl_nonnull record_decl) {
+    clang::CXXRecordDecl* _Nonnull record_decl) {
   // Generating new trait impls can conflict with manual impls in user code, so
   // this is opt-in.
   //
@@ -1488,12 +1485,12 @@ std::vector<ItemId> Importer::ImportInheritedFriendOperators(
     }
     auto it = import_cache_.find(function_decl);
     if (it == import_cache_.end()) continue;
-    ir_proto::Item* item = it->second.proto_item.get();
+    crubit::ffi::Item* item = it->second.proto_item.get();
     // Like `FriendDeclImporter`, silently drop operators that can't be
     // imported.
     if (item == nullptr || !item->has_func()) continue;
 
-    ir_proto::Func* func = item->mutable_func();
+    crubit::ffi::Func* func = item->mutable_func();
     if (enclosing_namespace_id.has_value()) {
       func->set_enclosing_item_id(enclosing_namespace_id->value());
     } else {
@@ -1573,8 +1570,8 @@ clang::FileID Importer::GetFirstLoadedFileID(clang::FileEntryRef file) const {
   return sm.getFileID(first);
 }
 
-const std::map<unsigned, clang::RawComment*>* absl_nullable
-Importer::GetModuleCommentsInFile(clang::FileID file) const {
+const std::map<unsigned, clang::RawComment*>* _Nullable Importer::
+    GetModuleCommentsInFile(clang::FileID file) const {
   clang::SourceManager& sm = ctx_.getSourceManager();
   if (module_comment_files_.insert(file).second) {
     // This mirrors what the preprocessor and `Sema::ActOnComment` do when the
@@ -1606,7 +1603,7 @@ Importer::GetModuleCommentsInFile(clang::FileID file) const {
   return module_comments_.getCommentsInFile(file);
 }
 
-const clang::RawComment* absl_nullable Importer::GetRawComment(
+const clang::RawComment* _Nullable Importer::GetRawComment(
     const clang::Decl& decl) const {
   const clang::Decl& decl_for_locations =
       GetDeclForSourceLocations(decl, ctx_, representative_copy_cache_);
@@ -1803,9 +1800,8 @@ std::optional<size_t> Importer::CountLifetimes(clang::QualType type) const {
       GetTemplateArgumentLifetimeParam(*specialization_decl).has_value()) {
     return 1;
   }
-  absl::StatusOr<std::vector<absl::string_view>> lifetime_inputs =
-      CollectLifetimeInputs(ctx_, record_decl);
-  if (!lifetime_inputs.ok()) return std::nullopt;
+  auto lifetime_inputs = CollectLifetimeInputs(ctx_, record_decl);
+  if (!lifetime_inputs) return std::nullopt;
   return lifetime_inputs->size();
 }
 
@@ -1839,9 +1835,8 @@ std::optional<std::string> Importer::GetTemplateArgumentLifetimeParam(
   }
   // A template that declares its own lifetime parameters (`LIFETIME_PARAMS`)
   // names them itself.
-  absl::StatusOr<std::vector<absl::string_view>> lifetime_inputs =
-      CollectLifetimeInputs(ctx_, &specialization_decl);
-  if (!lifetime_inputs.ok() || !lifetime_inputs->empty()) return std::nullopt;
+  auto lifetime_inputs = CollectLifetimeInputs(ctx_, &specialization_decl);
+  if (!lifetime_inputs || !lifetime_inputs->empty()) return std::nullopt;
 
   // TODO(zarko): Support more than one template argument.
   const clang::TemplateArgumentList& args =
@@ -1861,42 +1856,42 @@ std::optional<std::string> Importer::GetTemplateArgumentLifetimeParam(
   return param->getName().str();
 }
 
-void SetMustBindItem(ir_proto::Item& item) {
+void SetMustBindItem(crubit::ffi::Item& item) {
   switch (item.kind()) {
-    case ir_proto::Item::kFunc:
+    case crubit::ffi::Item::kFunc:
       item.mutable_func()->set_must_bind(true);
       break;
-    case ir_proto::Item::kRecord:
+    case crubit::ffi::Item::kRecord:
       item.mutable_record()->set_must_bind(true);
       break;
-    case ir_proto::Item::kIncompleteRecord:
+    case crubit::ffi::Item::kIncompleteRecord:
       item.mutable_incomplete_record()->set_must_bind(true);
       break;
-    case ir_proto::Item::kEnum:
+    case crubit::ffi::Item::kEnum:
       item.mutable_enum_decl()->set_must_bind(true);
       break;
-    case ir_proto::Item::kConstant:
+    case crubit::ffi::Item::kConstant:
       item.mutable_constant()->set_must_bind(true);
       break;
-    case ir_proto::Item::kTypeAlias:
+    case crubit::ffi::Item::kTypeAlias:
       item.mutable_type_alias()->set_must_bind(true);
       break;
-    case ir_proto::Item::kGlobalVar:
+    case crubit::ffi::Item::kGlobalVar:
       item.mutable_global_var()->set_must_bind(true);
       break;
-    case ir_proto::Item::kUnsupportedItem:
+    case crubit::ffi::Item::kUnsupportedItem:
       item.mutable_unsupported_item()->set_must_bind(true);
       break;
-    case ir_proto::Item::kComment:
+    case crubit::ffi::Item::kComment:
       item.mutable_comment()->set_must_bind(true);
       break;
-    case ir_proto::Item::kNamespace:
+    case crubit::ffi::Item::kNamespace:
       item.mutable_namespace_decl()->set_must_bind(true);
       break;
-    case ir_proto::Item::kUseMod:
+    case crubit::ffi::Item::kUseMod:
       item.mutable_use_mod()->set_must_bind(true);
       break;
-    case ir_proto::Item::kExistingRustType:
+    case crubit::ffi::Item::kExistingRustType:
       item.mutable_existing_rust_type()->set_must_bind(true);
       break;
   }
@@ -1909,8 +1904,8 @@ void SetMustBindItem(ir_proto::Item& item) {
 // a `preferred_name` alias, in which case they are placed inside the alias's
 // enclosing context (see `CXXRecordDeclImporter::Import` and
 // `Importer::GetCanonicalChildren`).
-static clang::DeclContext* absl_nullable GetEnclosingDeclContext(
-    clang::Decl* absl_nonnull decl, const ImportContext& ictx) {
+static clang::DeclContext* _Nullable GetEnclosingDeclContext(
+    clang::Decl* _Nonnull decl, const ImportContext& ictx) {
   if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl)) {
     clang::TypedefNameDecl* alias_decl =
         ictx.GetTemplateSpecializationAlias(decl);
@@ -1940,7 +1935,7 @@ void Importer::CheckLazyImportInvariants() const {
 }
 
 void Importer::Import(
-    clang::TranslationUnitDecl* absl_nonnull translation_unit_decl) {
+    clang::TranslationUnitDecl* _Nonnull translation_unit_decl) {
   FindAlwaysInstantiateSpecs(*translation_unit_decl);
   ImportFreeComments();
   clang::SourceManager& sm = ctx_.getSourceManager();
@@ -1948,11 +1943,11 @@ void Importer::Import(
 
   // Store free comments in comment_items to preserve their lifetime during
   // Import.
-  std::vector<std::unique_ptr<ir_proto::Item>> comment_items;
+  std::vector<std::unique_ptr<crubit::ffi::Item>> comment_items;
   comment_items.reserve(comments_.size());
   ordered_items.reserve(comments_.size());
   for (auto& comment : comments_) {
-    auto item = std::make_unique<ir_proto::Item>();
+    auto item = std::make_unique<crubit::ffi::Item>();
     auto* c = item->mutable_comment();
     c->set_text(comment->getFormattedText(sm, sm.getDiagnostics()));
     c->set_id(GenerateItemId(*comment).value());
@@ -2069,8 +2064,8 @@ void Importer::Import(
   // TODO(b/530340081): This logic to build a representative tree IR
   // replaces BuildTree() in ir.cc. The latter should be deleted.
   //
-  // Map each ItemId to its corresponding ir_proto::Item pointer.
-  absl::flat_hash_map<ItemId, ir_proto::Item* absl_nonnull> id_to_item;
+  // Map each ItemId to its corresponding crubit::ffi::Item pointer.
+  absl::flat_hash_map<ItemId, crubit::ffi::Item* _Nonnull> id_to_item;
   for (const auto& comment_item : comment_items) {
     id_to_item[ItemId(comment_item->comment().id())] = comment_item.get();
   }
@@ -2186,8 +2181,8 @@ void Importer::ImportDeclsFromDeclContext(
   }
 }
 
-const ir_proto::Item* absl_nullable Importer::GetDeclItem(
-    clang::Decl* absl_nonnull decl) {
+const crubit::ffi::Item* _Nullable Importer::GetDeclItem(
+    clang::Decl* _Nonnull decl) {
   if (auto it = import_cache_.find(decl); it != import_cache_.end()) {
     if (it->second.status == ItemCacheEntry::Status::kInProgress) {
       // TODO(jeanpierreda): Fix and promote to CHECK.
@@ -2278,8 +2273,8 @@ const ir_proto::Item* absl_nullable Importer::GetDeclItem(
     import_cache_insertion_order_.push_back(decl);
   }
 
-  std::unique_ptr<ir_proto::Item> result = ImportDecl(decl);
-  const ir_proto::Item* item_ptr = result.get();
+  std::unique_ptr<crubit::ffi::Item> result = ImportDecl(decl);
+  const crubit::ffi::Item* item_ptr = result.get();
 
   auto& entry = import_cache_.find(decl)->second;
   entry.status = result != nullptr ? ItemCacheEntry::Status::kCompleted
@@ -2356,8 +2351,8 @@ bool IsTransitivelyInPrivate(clang::Decl* decl_to_check) {
   }
 }
 
-absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
-    clang::Decl* absl_nonnull decl) {
+_Nullable std::unique_ptr<crubit::ffi::Item> Importer::ImportDecl(
+    clang::Decl* _Nonnull decl) {
   auto must_bind = HasAnnotationWithoutArgs(*decl, "crubit_must_bind");
   if (!must_bind) {
     return HardError(*decl, FormattedError::FromStatus(
@@ -2449,7 +2444,7 @@ absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
                            .getDecomposedExpansionLoc(decl->getLocation())
                            .first);
   for (auto& importer : decl_importers_) {
-    std::unique_ptr<ir_proto::Item> result =
+    std::unique_ptr<crubit::ffi::Item> result =
         importer->ImportDecl(decl, *must_bind);
     if (result != nullptr) {
       if (*must_bind) {
@@ -2473,7 +2468,7 @@ absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
   return nullptr;
 }
 
-const ir_proto::Item* absl_nullable Importer::GetImportedItem(
+const crubit::ffi::Item* _Nullable Importer::GetImportedItem(
     const clang::Decl& decl) const {
   auto it = import_cache_.find(&decl);
   if (it != import_cache_.end()) {
@@ -2557,7 +2552,7 @@ BazelLabel Importer::GetOwningTargetOfLocation(
   // (For instance, to tell them to enable Crubit for that file!)
   if (!filename) filename = "<unknown>";
   return BazelLabel(
-      absl::StrCat(kUnknownTargetPrefix, absl::string_view(*filename)));
+      (llvm::Twine(kUnknownTargetPrefix) + llvm::StringRef(*filename)).str());
 }
 
 bool Importer::IsFromCurrentTarget(const clang::Decl& decl) const {
@@ -2670,7 +2665,7 @@ bool Importer::IsFromProtoTarget(const clang::Decl& decl) const {
 }
 
 bool Importer::IsFeatureEnabledForTarget(const BazelLabel& label,
-                                         absl::string_view feature) const {
+                                         llvm::StringRef feature) const {
   if (auto i = invocation_.ir_.crubit_features().find(label.value());
       i != invocation_.ir_.crubit_features().end()) {
     for (const auto& f : i->second) {
@@ -2728,7 +2723,7 @@ bool Importer::ImplementsCoreFmtDebug(const clang::TypeDecl& type) const {
     if (impl_decl == nullptr) {
       continue;
     }
-    for (const clang::ClassTemplateSpecializationDecl* absl_nonnull spec :
+    for (const clang::ClassTemplateSpecializationDecl* _Nonnull spec :
          impl_decl->specializations()) {
       const clang::TemplateArgumentList& template_args =
           spec->getTemplateArgs();
@@ -2744,17 +2739,17 @@ bool Importer::ImplementsCoreFmtDebug(const clang::TypeDecl& type) const {
         continue;
       }
 
-      const clang::CXXRecordDecl* absl_nullable def = spec->getDefinition();
+      const clang::CXXRecordDecl* _Nullable def = spec->getDefinition();
       if (def == nullptr) {
         return false;
       }
 
-      for (const clang::Decl* absl_nonnull decl : def->decls()) {
-        const auto* absl_nullable var = llvm::dyn_cast<clang::VarDecl>(decl);
+      for (const clang::Decl* _Nonnull decl : def->decls()) {
+        const auto* _Nullable var = llvm::dyn_cast<clang::VarDecl>(decl);
         if (var == nullptr || var->getName() != "kIsImplemented") {
           continue;
         }
-        const clang::Expr* absl_nullable initializer = var->getAnyInitializer();
+        const clang::Expr* _Nullable initializer = var->getAnyInitializer();
         if (initializer == nullptr) {
           break;
         }
@@ -2829,8 +2824,7 @@ absl::StatusOr<std::optional<bool>> Importer::DetectFormatterForType(
 
   if (const clang::CXXRecordDecl* record = lookup->getAsCXXRecordDecl();
       record != nullptr) {
-    for (const clang::FriendDecl* absl_nonnull friend_decl :
-         record->friends()) {
+    for (const clang::FriendDecl* _Nonnull friend_decl : record->friends()) {
       const clang::NamedDecl* inner_friend = friend_decl->getFriendDecl();
       if (inner_friend != nullptr &&
           DetectFormatterFunction(*inner_friend, target)) {
@@ -2870,9 +2864,9 @@ absl::StatusOr<std::optional<bool>> Importer::DetectFormatterForType(
   if (lookup_decl == nullptr) {
     return std::nullopt;
   }
-  const clang::DeclContext* absl_nonnull context =
+  const clang::DeclContext* _Nonnull context =
       lookup_decl->getDeclContext()->getEnclosingNamespaceContext();
-  for (const clang::Decl* absl_nonnull decl : context->decls()) {
+  for (const clang::Decl* _Nonnull decl : context->decls()) {
     if (DetectFormatterFunction(*decl, target)) {
       return true;
     }
@@ -2888,17 +2882,17 @@ bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
   return false;
 }
 
-std::unique_ptr<ir_proto::Item> Importer::HardError(const clang::Decl& decl,
-                                                    FormattedError error) {
+std::unique_ptr<crubit::ffi::Item> Importer::HardError(const clang::Decl& decl,
+                                                       FormattedError error) {
   return ImportUnsupportedItem(decl, std::nullopt, {std::move(error)},
                                /*is_hard_error=*/true);
 }
 
-std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
+std::unique_ptr<crubit::ffi::Item> Importer::ImportUnsupportedItem(
     const clang::Decl& original_decl,
-    std::optional<ir_proto::UnsupportedItem::Path> path,
+    std::optional<crubit::ffi::UnsupportedItem::Path> path,
     std::vector<FormattedError> errors, bool is_hard_error) {
-  ir_proto::UnsupportedItem::Kind kind = ir_proto::UnsupportedItem::OTHER;
+  crubit::ffi::UnsupportedItem::Kind kind = crubit::ffi::UnsupportedItem::OTHER;
   const clang::Decl* decl = &original_decl;
   while (auto* using_decl = clang::dyn_cast<clang::UsingShadowDecl>(decl)) {
     decl = using_decl->getTargetDecl();
@@ -2907,16 +2901,16 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
           clang::dyn_cast<clang::TagDecl>(decl)) {
     switch (named_decl->getTagKind()) {
       case clang::TagTypeKind::Struct:
-        kind = ir_proto::UnsupportedItem::STRUCT;
+        kind = crubit::ffi::UnsupportedItem::STRUCT;
         break;
       case clang::TagTypeKind::Class:
-        kind = ir_proto::UnsupportedItem::CLASS;
+        kind = crubit::ffi::UnsupportedItem::CLASS;
         break;
       case clang::TagTypeKind::Enum:
-        kind = ir_proto::UnsupportedItem::ENUM;
+        kind = crubit::ffi::UnsupportedItem::ENUM;
         break;
       case clang::TagTypeKind::Union:
-        kind = ir_proto::UnsupportedItem::UNION;
+        kind = crubit::ffi::UnsupportedItem::UNION;
         break;
       default:
         break;
@@ -2924,19 +2918,19 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
   } else if (const clang::FunctionDecl* func_decl =
                  clang::dyn_cast<clang::FunctionDecl>(decl)) {
     kind = func_decl->getKind() == clang::NamedDecl::Kind::CXXConstructor
-               ? ir_proto::UnsupportedItem::CONSTRUCTOR
-               : ir_proto::UnsupportedItem::FUNC;
+               ? crubit::ffi::UnsupportedItem::CONSTRUCTOR
+               : crubit::ffi::UnsupportedItem::FUNC;
   } else if (clang::isa<clang::NamespaceDecl>(decl)) {
-    kind = ir_proto::UnsupportedItem::NAMESPACE;
+    kind = crubit::ffi::UnsupportedItem::NAMESPACE;
   } else if (clang::isa<clang::VarDecl>(decl)) {
-    kind = ir_proto::UnsupportedItem::GLOBAL_VAR;
+    kind = crubit::ffi::UnsupportedItem::GLOBAL_VAR;
   } else if (clang::isa<clang::FunctionTemplateDecl>(decl)) {
-    kind = ir_proto::UnsupportedItem::FUNC;
+    kind = crubit::ffi::UnsupportedItem::FUNC;
   } else if (clang::isa<clang::ClassTemplateDecl>(decl)) {
-    kind = ir_proto::UnsupportedItem::CLASS;
+    kind = crubit::ffi::UnsupportedItem::CLASS;
   } else if (clang::isa<clang::TypeAliasDecl>(decl) ||
              clang::isa<clang::TypedefNameDecl>(decl)) {
-    kind = ir_proto::UnsupportedItem::TYPE_ALIAS;
+    kind = crubit::ffi::UnsupportedItem::TYPE_ALIAS;
   }
   std::string name = "unnamed";
   if (const auto* named_decl =
@@ -2956,7 +2950,7 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
     }
   }
 
-  auto item = std::make_unique<ir_proto::Item>();
+  auto item = std::make_unique<crubit::ffi::Item>();
   auto* unsupported = item->mutable_unsupported_item();
   unsupported->set_name(std::move(name));
   unsupported->set_unique_name(GetUniqueName(original_decl));
@@ -2979,7 +2973,7 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
   return item;
 }
 
-static bool ShouldKeepCommentLine(absl::string_view line) {
+static bool ShouldKeepCommentLine(llvm::StringRef line) {
   // Based on https://clang.llvm.org/extra/clang-tidy/:
   llvm::Regex patterns_to_ignore(
       "^[[:space:]/]*"  // Whitespace, or extra //
@@ -3009,32 +3003,31 @@ std::optional<std::string> Importer::GetComment(const clang::Decl& decl) const {
   return cleaned_comment_text;
 }
 
-ir_proto::DeclLocation Importer::ConvertDeclLocation(
+crubit::ffi::DeclLocation Importer::ConvertDeclLocation(
     clang::SourceLocation loc,
-    clang::DeclarationNameInfo* absl_nullable name_info) const {
+    clang::DeclarationNameInfo* _Nullable name_info) const {
   const clang::SourceManager& sm = ctx_.getSourceManager();
   // Returns the path of the file containing `file_loc`, or an empty string if
   // it's unknown.
   auto get_path = [&sm](clang::SourceLocation file_loc) {
-    absl::string_view path = StringViewFromStringRef(sm.getFilename(file_loc));
-    absl::ConsumePrefix(&path, "./");
+    llvm::StringRef path = sm.getFilename(file_loc);
+    path.consume_front("./");
     return path;
   };
 
-  ir_proto::DeclLocation result;
+  crubit::ffi::DeclLocation result;
   // For macros (https://clang.llvm.org/doxygen/SourceManager_8h.html), the
   // spelling location is where the macro is defined, and the expansion
   // location is where it is expanded.
   bool spelling_known = false;
-  if (absl::string_view path = get_path(sm.getSpellingLoc(loc));
-      !path.empty()) {
+  if (llvm::StringRef path = get_path(sm.getSpellingLoc(loc)); !path.empty()) {
     spelling_known = true;
-    ir_proto::SourceLocation& spelling = *result.mutable_spelling();
+    crubit::ffi::SourceLocation& spelling = *result.mutable_spelling();
     spelling.set_path(path);
     spelling.set_line(sm.getSpellingLineNumber(loc));
   }
   if (invocation_.kythe_annotations()) {
-    ir_proto::DeclLocation::ByteRange& name_range =
+    crubit::ffi::DeclLocation::ByteRange& name_range =
         *result.mutable_name_range();
     name_range.set_begin(0);
     name_range.set_end(0);
@@ -3050,9 +3043,9 @@ ir_proto::DeclLocation Importer::ConvertDeclLocation(
     }
   }
   if (loc.isMacroID()) {
-    if (absl::string_view path = get_path(sm.getExpansionLoc(loc));
+    if (llvm::StringRef path = get_path(sm.getExpansionLoc(loc));
         !path.empty()) {
-      ir_proto::SourceLocation& expansion = *result.mutable_expansion();
+      crubit::ffi::SourceLocation& expansion = *result.mutable_expansion();
       expansion.set_path(path);
       expansion.set_line(sm.getExpansionLineNumber(loc));
     }
@@ -3112,8 +3105,8 @@ std::optional<std::string> Importer::CheckTemplateArgInstantiable(
 }
 
 std::optional<std::string> Importer::CheckSpecializationInstantiable(
-    clang::ClassTemplateSpecializationDecl* absl_nonnull specialization_decl) {
-  const clang::CXXRecordDecl* absl_nonnull key =
+    clang::ClassTemplateSpecializationDecl* _Nonnull specialization_decl) {
+  const clang::CXXRecordDecl* _Nonnull key =
       specialization_decl->getCanonicalDecl();
   if (auto it = instantiation_attempts_.find(key);
       it != instantiation_attempts_.end()) {
@@ -3222,8 +3215,7 @@ CcType Importer::ConvertTemplateSpecializationType(
     }
     auto target = GetOwningTarget(*template_decl);
     if (!IsCrubitEnabledForTarget(target)) {
-      if (std::optional<absl::string_view> header =
-              HeaderOfUnknownTarget(target);
+      if (std::optional<llvm::StringRef> header = HeaderOfUnknownTarget(target);
           header.has_value()) {
         return CcType(FormattedError::Substitute(
             "crubit.rs/errors/unknown_target: Failed to complete template "
@@ -3305,7 +3297,7 @@ CcType Importer::WithAsWrittenTemplateArgs(
     bool assume_lifetimes) {
   // The specialization decl is shared by every use with the same canonical
   // arguments, so it cannot carry anything that differs between uses: e.g.
-  // the nullability in `std::vector<absl_nonnull std::unique_ptr<T>>`, or the
+  // the nullability in `std::vector<_Nonnull std::unique_ptr<T>>`, or the
   // lifetime in `absl::Span<View $a>`. Record the arguments as written here,
   // and let consumers prefer them over the decl's.
   //
@@ -3381,7 +3373,7 @@ CcType Importer::WithAsWrittenTemplateArgs(
   return converted;
 }
 
-CcType Importer::ConvertTypeDecl(clang::NamedDecl* absl_nonnull decl) {
+CcType Importer::ConvertTypeDecl(clang::NamedDecl* _Nonnull decl) {
   if (!EnsureSuccessfullyImported(decl)) {
     return CcType(FormattedError::Substitute(
         "No generated bindings found for '$0'", decl->getNameAsString()));
@@ -3466,7 +3458,7 @@ bool Importer::ContainsKnownNullability(clang::QualType type) const {
 
 absl::StatusOr<CcType> Importer::ConvertType(
     const clang::Type& type,
-    const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
+    const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
     bool nullable, bool assume_lifetimes) {
   absl::StatusOr<CcType> cpp_type =
       ConvertUnattributedType(type, lifetimes, nullable, assume_lifetimes);
@@ -3519,10 +3511,9 @@ absl::StatusOr<CcType> Importer::ConvertType(
       cpp_type->set_unknown_attr(*unknown_attr);
     }
     if (assume_lifetimes) {
-      CRUBIT_ASSIGN_OR_RETURN(
-          std::vector<absl::string_view> explicit_lifetime_views,
-          CollectExplicitLifetimes(ctx_, type));
-      for (absl::string_view lifetime_view : explicit_lifetime_views) {
+      CRUBIT_ASSIGN_OR_RETURN(auto explicit_lifetime_views,
+                              CollectExplicitLifetimes(ctx_, type));
+      for (llvm::StringRef lifetime_view : explicit_lifetime_views) {
         cpp_type->add_explicit_lifetimes(lifetime_view);
       }
       CRUBIT_RETURN_IF_ERROR(AddTemplateArgumentLifetime(
@@ -3637,7 +3628,7 @@ absl::Status Importer::AddTemplateArgumentLifetime(const clang::Type& type,
 
 absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     const clang::Type& type,
-    const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
+    const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
     bool nullable, bool assume_lifetimes) {
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(&type, 0).getAsString();
@@ -3870,7 +3861,7 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
 
 CcType Importer::ConvertQualType(
     clang::QualType qual_type,
-    const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
+    const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
     bool nullable, bool assume_lifetimes) {
   clang::PrintingPolicy printing_policy = ctx_.getPrintingPolicy();
   printing_policy.FullyQualifiedName = true;
@@ -4019,9 +4010,9 @@ std::string Importer::GetMangledName(const clang::NamedDecl& named_decl) const {
   return name;
 }
 
-std::optional<ir_proto::UnsupportedItem::Path>
+std::optional<crubit::ffi::UnsupportedItem::Path>
 Importer::GetUnsupportedItemPathForTemplateDecl(
-    clang::RedeclarableTemplateDecl* absl_nonnull template_decl) {
+    clang::RedeclarableTemplateDecl* _Nonnull template_decl) {
   auto enclosing_item_id = GetEnclosingItemId(template_decl);
   if (!enclosing_item_id.ok()) {
     return std::nullopt;
@@ -4039,7 +4030,7 @@ Importer::GetUnsupportedItemPathForTemplateDecl(
   if (!names.ok()) {
     return std::nullopt;
   }
-  ir_proto::UnsupportedItem::Path path;
+  crubit::ffi::UnsupportedItem::Path path;
   *path.mutable_ident() = std::move(names->cc_identifier);
   if (enclosing_item_id->has_value()) {
     path.set_enclosing_item_id((*enclosing_item_id)->value());
@@ -4206,8 +4197,8 @@ bool Importer::IsInvalidTemplateSpecialization(
   return it != instantiation_attempts_.end() && it->second.has_value();
 }
 
-clang::TypedefNameDecl* absl_nullable Importer::GetTemplateSpecializationAlias(
-    clang::Decl* absl_nonnull decl) const {
+clang::TypedefNameDecl* _Nullable Importer::GetTemplateSpecializationAlias(
+    clang::Decl* _Nonnull decl) const {
   clang::ClassTemplateSpecializationDecl* spec_decl =
       clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl);
   if (!spec_decl) {

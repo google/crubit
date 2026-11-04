@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_PROFILING_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_PROFILING_H_
 
-#include "absl/strings/string_view.h"
+#include "llvm/ADT/StringRef.h"
 
 #ifdef CRUBIT_HEAP_PROFILING
 #define CRUBIT_PROFILE_NOINLINE __attribute__((noinline))
@@ -15,8 +15,8 @@
 
 namespace crubit {
 
-void StartHeapProfiling(absl::string_view prefix);
-void DumpHeapProfiling(absl::string_view prefix);
+void StartHeapProfiling(llvm::StringRef prefix);
+void DumpHeapProfiling(llvm::StringRef prefix);
 void StopHeapProfiling();
 
 }  // namespace crubit

@@ -20,18 +20,10 @@ class TypeAliasImporter : public DeclImporterBase<clang::NamedDecl> {
  public:
   explicit TypeAliasImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::unique_ptr<ir_proto::Item> Import(clang::NamedDecl* decl) override;
+  std::unique_ptr<crubit::ffi::Item> Import(clang::NamedDecl* decl) override;
 
  private:
-  // Imports a using-declaration that names a function, e.g. `using A::Foo;`
-  // inside `namespace B`.
-  //
-  // The aliased function is imported as a `Func` item whose location,
-  // enclosing item and owning target are those of the using-declaration, so
-  // that the generated Rust function lives in the module of the
-  // using-declaration (`B::Foo`). The C++ thunk calls the function through the
-  // using-declaration's qualified name, which is valid C++.
-  std::unique_ptr<ir_proto::Item> ImportFunctionAlias(
+  std::unique_ptr<crubit::ffi::Item> ImportFunctionAlias(
       clang::UsingShadowDecl& using_decl, clang::FunctionDecl& function_decl);
 };
 

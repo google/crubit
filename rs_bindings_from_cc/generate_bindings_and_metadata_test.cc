@@ -91,8 +91,8 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
 }
 
 absl::StatusOr<absl::flat_hash_map<Identifier, Identifier>>
-GetInstantiationsFor(absl::string_view header_content,
-                     absl::string_view rust_source) {
+GetInstantiationsFor(llvm::StringRef header_content,
+                     llvm::StringRef rust_source) {
   std::string a_rs_path = WriteFileForCurrentTest("a.rs", rust_source);
   CmdlineArgs args = MakeCmdline("a.h").args();
   args.srcs_to_scan_for_instantiations = {a_rs_path};
@@ -246,7 +246,7 @@ TEST(GenerateBindingsAndMetadataTest,
 }
 
 TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
-  constexpr absl::string_view kHeaderContent = R"(
+  constexpr llvm::StringRef kHeaderContent = R"(
     namespace top_level_1 {
       namespace middle {
         namespace inner_1 {}
@@ -262,7 +262,7 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
 
     namespace top_level_1 {}
   )";
-  constexpr absl::string_view kExpected = R"({
+  constexpr llvm::StringRef kExpected = R"({
   "label": "//:target",
   "namespaces": [
     {
@@ -356,7 +356,7 @@ TEST(GenerateBindingsAndMetadataTest, DepfileOmitsInMemoryFiles) {
 }
 
 absl::StatusOr<BindingsAndMetadata> GenerateBindingsWithExtraClangArg(
-    absl::string_view extra_clang_arg) {
+    llvm::StringRef extra_clang_arg) {
   Cmdline cmdline = MakeCmdline("a.h");
   std::vector<std::string> clang_args = DefaultClangArgs();
   clang_args.push_back(std::string(extra_clang_arg));

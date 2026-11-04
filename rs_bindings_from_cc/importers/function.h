@@ -18,7 +18,7 @@ class FunctionDeclImporter : public DeclImporterBase<clang::FunctionDecl> {
  public:
   explicit FunctionDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::unique_ptr<ir_proto::Item> Import(clang::FunctionDecl*) override;
+  std::unique_ptr<crubit::ffi::Item> Import(clang::FunctionDecl*) override;
 
  private:
   Identifier GetTranslatedParamName(const clang::ParmVarDecl* param_decl);

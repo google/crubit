@@ -21,7 +21,7 @@ class EnumConstantDeclImporter
  public:
   explicit EnumConstantDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::unique_ptr<ir_proto::Item> Import(clang::EnumConstantDecl*) override;
+  std::unique_ptr<crubit::ffi::Item> Import(clang::EnumConstantDecl*) override;
 };
 
 }  // namespace crubit

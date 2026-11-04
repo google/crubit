@@ -8,22 +8,21 @@
 #include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "common/check.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/DeclBase.h"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
 
 namespace crubit {
 
-static constexpr absl::string_view kCrubitRustNameTag = "crubit_rust_name";
+static constexpr llvm::StringRef kCrubitRustNameTag = "crubit_rust_name";
 
-const absl::flat_hash_set<absl::string_view>& RustOperatorSymbols() {
-  static const absl::NoDestructor<absl::flat_hash_set<absl::string_view>>
-      kRustOperatorSymbols({
+const llvm::DenseSet<llvm::StringRef>& RustOperatorSymbols() {
+  static const auto* const kRustOperatorSymbols =
+      new llvm::DenseSet<llvm::StringRef>({
           // Some of the symbols are not supported by Crubit, but let's include
           // them here for completeness so that we don't have to keep them in
           // sync.

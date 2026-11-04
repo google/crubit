@@ -16,81 +16,80 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/base/attributes.h"
 #include "common/check.h"
-#include "absl/strings/string_view.h"
+#include <string_view>
 #include "rs_bindings_from_cc/ir_ffi_support.h"
 
 namespace crubit::ffi {
 // NOLINTBEGIN(*-readability-class-member-naming,*-readability-constant-naming)
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI HeaderName;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI LifetimeName;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI SourceLocation;
-namespace decl_location { struct ABSL_ATTRIBUTE_TRIVIAL_ABI ByteRange; }
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI DeclLocation;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI FormattedError;
-namespace cc_type { struct ABSL_ATTRIBUTE_TRIVIAL_ABI PointerType; }
-namespace cc_type { struct ABSL_ATTRIBUTE_TRIVIAL_ABI FuncPointer; }
-namespace cc_type { struct ABSL_ATTRIBUTE_TRIVIAL_ABI ConstantArrayType; }
-namespace cc_type { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Variant; }
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI CcType;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Identifier;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI IntegerConstant;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Operator;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnqualifiedIdentifier;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI FuncParam;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI InstanceMethodMetadata;
-namespace member_func_semantic { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Setter; }
-namespace member_func_semantic { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Getter; }
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Func;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI StatusOrOptionalString;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Field;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI BaseClass;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI SizeAlign;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateArg;
-namespace bridge_type { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Bridge; }
-namespace bridge_type { struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdOptional; }
-namespace bridge_type { struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdPair; }
-namespace bridge_type { struct ABSL_ATTRIBUTE_TRIVIAL_ABI ProtoMessageBridge; }
-namespace bridge_type { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Callable; }
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI BridgeType;
-namespace array_value { struct ABSL_ATTRIBUTE_TRIVIAL_ABI IntegerElements; }
-namespace array_value { struct ABSL_ATTRIBUTE_TRIVIAL_ABI ArrayElements; }
-namespace array_value { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind; }
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI ArrayValue;
-namespace constant { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind; }
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Constant;
-namespace template_specialization { struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdVector; }
-namespace template_specialization { struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdOptional; }
-namespace template_specialization { struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdSharedPtr; }
-namespace template_specialization { struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdUniquePtr; }
-namespace template_specialization { struct ABSL_ATTRIBUTE_TRIVIAL_ABI AbslSpan; }
-namespace template_specialization { struct ABSL_ATTRIBUTE_TRIVIAL_ABI C9Co; }
-namespace template_specialization { struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdAtomic; }
-namespace template_specialization { struct ABSL_ATTRIBUTE_TRIVIAL_ABI AbslFlatHashMap; }
-namespace template_specialization { struct ABSL_ATTRIBUTE_TRIVIAL_ABI AbslFlatHashSet; }
-namespace template_specialization { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind; }
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateSpecialization;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI TraitDerives;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI OwnedPtrConfig;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI IncompleteRecord;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Enumerator;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Enum;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI GlobalVar;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI TypeAlias;
-namespace unsupported_item { struct ABSL_ATTRIBUTE_TRIVIAL_ABI Path; }
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnsupportedItem;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Comment;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Namespace;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI UseMod;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI ExistingRustType;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Item;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI IRProto;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI GenerateBindingsRequest;
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI GenerateBindingsResponse;
+struct CRUBIT_FFI_TRIVIAL_ABI HeaderName;
+struct CRUBIT_FFI_TRIVIAL_ABI LifetimeName;
+struct CRUBIT_FFI_TRIVIAL_ABI SourceLocation;
+namespace decl_location { struct CRUBIT_FFI_TRIVIAL_ABI ByteRange; }
+struct CRUBIT_FFI_TRIVIAL_ABI DeclLocation;
+struct CRUBIT_FFI_TRIVIAL_ABI FormattedError;
+namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI PointerType; }
+namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI FuncPointer; }
+namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI ConstantArrayType; }
+namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI Variant; }
+struct CRUBIT_FFI_TRIVIAL_ABI CcType;
+struct CRUBIT_FFI_TRIVIAL_ABI Identifier;
+struct CRUBIT_FFI_TRIVIAL_ABI IntegerConstant;
+struct CRUBIT_FFI_TRIVIAL_ABI Operator;
+struct CRUBIT_FFI_TRIVIAL_ABI UnqualifiedIdentifier;
+struct CRUBIT_FFI_TRIVIAL_ABI FuncParam;
+struct CRUBIT_FFI_TRIVIAL_ABI InstanceMethodMetadata;
+namespace member_func_semantic { struct CRUBIT_FFI_TRIVIAL_ABI Setter; }
+namespace member_func_semantic { struct CRUBIT_FFI_TRIVIAL_ABI Getter; }
+struct CRUBIT_FFI_TRIVIAL_ABI MemberFuncSemantic;
+struct CRUBIT_FFI_TRIVIAL_ABI Func;
+struct CRUBIT_FFI_TRIVIAL_ABI StatusOrOptionalString;
+struct CRUBIT_FFI_TRIVIAL_ABI Field;
+struct CRUBIT_FFI_TRIVIAL_ABI BaseClass;
+struct CRUBIT_FFI_TRIVIAL_ABI SizeAlign;
+struct CRUBIT_FFI_TRIVIAL_ABI TemplateArg;
+namespace bridge_type { struct CRUBIT_FFI_TRIVIAL_ABI Bridge; }
+namespace bridge_type { struct CRUBIT_FFI_TRIVIAL_ABI StdOptional; }
+namespace bridge_type { struct CRUBIT_FFI_TRIVIAL_ABI StdPair; }
+namespace bridge_type { struct CRUBIT_FFI_TRIVIAL_ABI ProtoMessageBridge; }
+namespace bridge_type { struct CRUBIT_FFI_TRIVIAL_ABI Callable; }
+struct CRUBIT_FFI_TRIVIAL_ABI BridgeType;
+namespace array_value { struct CRUBIT_FFI_TRIVIAL_ABI IntegerElements; }
+namespace array_value { struct CRUBIT_FFI_TRIVIAL_ABI ArrayElements; }
+namespace array_value { struct CRUBIT_FFI_TRIVIAL_ABI Kind; }
+struct CRUBIT_FFI_TRIVIAL_ABI ArrayValue;
+namespace constant { struct CRUBIT_FFI_TRIVIAL_ABI Kind; }
+struct CRUBIT_FFI_TRIVIAL_ABI Constant;
+namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI StdVector; }
+namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI StdOptional; }
+namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI StdSharedPtr; }
+namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI StdUniquePtr; }
+namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI AbslSpan; }
+namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI C9Co; }
+namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI StdAtomic; }
+namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI AbslFlatHashMap; }
+namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI AbslFlatHashSet; }
+namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI Kind; }
+struct CRUBIT_FFI_TRIVIAL_ABI TemplateSpecialization;
+struct CRUBIT_FFI_TRIVIAL_ABI TraitDerives;
+struct CRUBIT_FFI_TRIVIAL_ABI OwnedPtrConfig;
+struct CRUBIT_FFI_TRIVIAL_ABI Record;
+struct CRUBIT_FFI_TRIVIAL_ABI IncompleteRecord;
+struct CRUBIT_FFI_TRIVIAL_ABI Enumerator;
+struct CRUBIT_FFI_TRIVIAL_ABI Enum;
+struct CRUBIT_FFI_TRIVIAL_ABI GlobalVar;
+struct CRUBIT_FFI_TRIVIAL_ABI TypeAlias;
+namespace unsupported_item { struct CRUBIT_FFI_TRIVIAL_ABI Path; }
+struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem;
+struct CRUBIT_FFI_TRIVIAL_ABI Comment;
+struct CRUBIT_FFI_TRIVIAL_ABI Namespace;
+struct CRUBIT_FFI_TRIVIAL_ABI UseMod;
+struct CRUBIT_FFI_TRIVIAL_ABI ExistingRustType;
+struct CRUBIT_FFI_TRIVIAL_ABI Item;
+struct CRUBIT_FFI_TRIVIAL_ABI IRProto;
+struct CRUBIT_FFI_TRIVIAL_ABI GenerateBindingsRequest;
+struct CRUBIT_FFI_TRIVIAL_ABI GenerateBindingsResponse;
 
 enum SafetyAnnotation : int32_t {
   SAFETY_ANNOTATION_UNANNOTATED = 0,
@@ -224,18 +223,18 @@ enum Kind : int32_t {
 };
 }  // namespace unsupported_item
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI HeaderName {
+struct CRUBIT_FFI_TRIVIAL_ABI HeaderName {
   HeaderName() = default;
-  explicit HeaderName(absl::string_view name) { set_name(name); }
-  absl::string_view name() const { return name_.AsView(); }
-  void set_name(absl::string_view value) { name_ = FfiString(value); }
+  explicit HeaderName(std::string_view name) { set_name(name); }
+  std::string_view name() const { return name_.AsView(); }
+  void set_name(std::string_view value) { name_ = FfiString(value); }
   friend bool operator==(const HeaderName&, const HeaderName&) = default;
   FfiString name_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI LifetimeName {
-  absl::string_view name() const { return name_.AsView(); }
-  void set_name(absl::string_view value) { name_ = FfiString(value); }
+struct CRUBIT_FFI_TRIVIAL_ABI LifetimeName {
+  std::string_view name() const { return name_.AsView(); }
+  void set_name(std::string_view value) { name_ = FfiString(value); }
   int32_t id() const { return id_; }
   void set_id(int32_t value) { id_ = value; }
   friend bool operator==(const LifetimeName&, const LifetimeName&) = default;
@@ -243,9 +242,9 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI LifetimeName {
   int32_t id_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI SourceLocation {
-  absl::string_view path() const { return path_.AsView(); }
-  void set_path(absl::string_view value) { path_ = FfiString(value); }
+struct CRUBIT_FFI_TRIVIAL_ABI SourceLocation {
+  std::string_view path() const { return path_.AsView(); }
+  void set_path(std::string_view value) { path_ = FfiString(value); }
   uint32_t line() const { return line_; }
   void set_line(uint32_t value) { line_ = value; }
   friend bool operator==(const SourceLocation&, const SourceLocation&) = default;
@@ -254,7 +253,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI SourceLocation {
 };
 
 namespace decl_location {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI ByteRange {
+struct CRUBIT_FFI_TRIVIAL_ABI ByteRange {
   uint32_t begin() const { return begin_; }
   void set_begin(uint32_t value) { begin_ = value; }
   uint32_t end() const { return end_; }
@@ -265,7 +264,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI ByteRange {
 };
 }  // namespace decl_location
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI DeclLocation {
+struct CRUBIT_FFI_TRIVIAL_ABI DeclLocation {
   using ByteRange = ::crubit::ffi::decl_location::ByteRange;
   bool has_spelling() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_spelling() { has_bits_ &= ~0x1ULL; spelling_ = {}; }
@@ -286,18 +285,18 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI DeclLocation {
   ::crubit::ffi::decl_location::ByteRange name_range_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI FormattedError {
-  absl::string_view fmt() const { return fmt_.AsView(); }
-  void set_fmt(absl::string_view value) { fmt_ = FfiString(value); }
-  absl::string_view message() const { return message_.AsView(); }
-  void set_message(absl::string_view value) { message_ = FfiString(value); }
+struct CRUBIT_FFI_TRIVIAL_ABI FormattedError {
+  std::string_view fmt() const { return fmt_.AsView(); }
+  void set_fmt(std::string_view value) { fmt_ = FfiString(value); }
+  std::string_view message() const { return message_.AsView(); }
+  void set_message(std::string_view value) { message_ = FfiString(value); }
   friend bool operator==(const FormattedError&, const FormattedError&) = default;
   FfiString fmt_{};
   FfiString message_{};
 };
 
 namespace cc_type {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI PointerType {
+struct CRUBIT_FFI_TRIVIAL_ABI PointerType {
   PointerType();
   PointerType(const PointerType&);
   PointerType(PointerType&&) noexcept;
@@ -321,7 +320,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI PointerType {
 }  // namespace cc_type
 
 namespace cc_type {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI FuncPointer {
+struct CRUBIT_FFI_TRIVIAL_ABI FuncPointer {
   FuncPointer();
   FuncPointer(const FuncPointer&);
   FuncPointer(FuncPointer&&) noexcept;
@@ -339,7 +338,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI FuncPointer {
   const FfiVec<FfiString>& lifetime_inputs() const { return lifetime_inputs_; }
   FfiVec<FfiString>* mutable_lifetime_inputs() { return &lifetime_inputs_; }
   void clear_lifetime_inputs() { lifetime_inputs_.Clear(); }
-  void add_lifetime_inputs(absl::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
+  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
   friend bool operator==(const FuncPointer&, const FuncPointer&) = default;
   bool non_null_{};
   ::crubit::ffi::CallingConv call_conv_{};
@@ -349,7 +348,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI FuncPointer {
 }  // namespace cc_type
 
 namespace cc_type {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI ConstantArrayType {
+struct CRUBIT_FFI_TRIVIAL_ABI ConstantArrayType {
   ConstantArrayType();
   ConstantArrayType(const ConstantArrayType&);
   ConstantArrayType(ConstantArrayType&&) noexcept;
@@ -367,7 +366,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI ConstantArrayType {
 }  // namespace cc_type
 
 namespace cc_type {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Variant {
+struct CRUBIT_FFI_TRIVIAL_ABI Variant {
   enum Case : uint32_t {
     kPrimitive = 0,
     kPointer = 1,
@@ -503,7 +502,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Variant {
     other.Clear();
   }
   Case tag_;
-  union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+  union CRUBIT_FFI_TRIVIAL_ABI Payload {
     Payload() : primitive_() {}
     explicit Payload(Case) : empty_(0) {}
     Payload(const Payload&) {}
@@ -520,7 +519,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Variant {
 };
 }  // namespace cc_type
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI CcType {
+struct CRUBIT_FFI_TRIVIAL_ABI CcType {
   using PointerType = ::crubit::ffi::cc_type::PointerType;
   using FuncPointer = ::crubit::ffi::cc_type::FuncPointer;
   using ConstantArrayType = ::crubit::ffi::cc_type::ConstantArrayType;
@@ -538,12 +537,12 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI CcType {
   void set_is_const(bool value) { is_const_ = value; }
   bool is_nonnull() const { return is_nonnull_; }
   void set_is_nonnull(bool value) { is_nonnull_ = value; }
-  absl::string_view unknown_attr() const { return unknown_attr_.AsView(); }
-  void set_unknown_attr(absl::string_view value) { unknown_attr_ = FfiString(value); }
+  std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
+  void set_unknown_attr(std::string_view value) { unknown_attr_ = FfiString(value); }
   const FfiVec<FfiString>& explicit_lifetimes() const { return explicit_lifetimes_; }
   FfiVec<FfiString>* mutable_explicit_lifetimes() { return &explicit_lifetimes_; }
   void clear_explicit_lifetimes() { explicit_lifetimes_.Clear(); }
-  void add_explicit_lifetimes(absl::string_view value) { explicit_lifetimes_.Add(FfiString(value)); }
+  void add_explicit_lifetimes(std::string_view value) { explicit_lifetimes_.Add(FfiString(value)); }
   const FfiVec<::crubit::ffi::CcType>& template_args() const { return template_args_; }
   FfiVec<::crubit::ffi::CcType>* mutable_template_args() { return &template_args_; }
   void clear_template_args() { template_args_.Clear(); }
@@ -557,16 +556,16 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI CcType {
   FfiVec<::crubit::ffi::CcType> template_args_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Identifier {
+struct CRUBIT_FFI_TRIVIAL_ABI Identifier {
   Identifier() = default;
-  explicit Identifier(absl::string_view identifier) { set_identifier(identifier); }
-  absl::string_view identifier() const { return identifier_.AsView(); }
-  void set_identifier(absl::string_view value) { identifier_ = FfiString(value); }
+  explicit Identifier(std::string_view identifier) { set_identifier(identifier); }
+  std::string_view identifier() const { return identifier_.AsView(); }
+  void set_identifier(std::string_view value) { identifier_ = FfiString(value); }
   friend bool operator==(const Identifier&, const Identifier&) = default;
   FfiString identifier_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI IntegerConstant {
+struct CRUBIT_FFI_TRIVIAL_ABI IntegerConstant {
   bool is_negative() const { return is_negative_; }
   void set_is_negative(bool value) { is_negative_ = value; }
   uint64_t wrapped_value() const { return wrapped_value_; }
@@ -576,16 +575,16 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI IntegerConstant {
   uint64_t wrapped_value_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Operator {
+struct CRUBIT_FFI_TRIVIAL_ABI Operator {
   Operator() = default;
-  explicit Operator(absl::string_view name) { set_name(name); }
-  absl::string_view name() const { return name_.AsView(); }
-  void set_name(absl::string_view value) { name_ = FfiString(value); }
+  explicit Operator(std::string_view name) { set_name(name); }
+  std::string_view name() const { return name_.AsView(); }
+  void set_name(std::string_view value) { name_ = FfiString(value); }
   friend bool operator==(const Operator&, const Operator&) = default;
   FfiString name_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnqualifiedIdentifier {
+struct CRUBIT_FFI_TRIVIAL_ABI UnqualifiedIdentifier {
   enum Case : uint32_t {
     kIdentifier = 0,
     kOperator = 1,
@@ -693,7 +692,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnqualifiedIdentifier {
     other.Clear();
   }
   Case tag_;
-  union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+  union CRUBIT_FFI_TRIVIAL_ABI Payload {
     Payload() : ident_() {}
     explicit Payload(Case) : empty_(0) {}
     Payload(const Payload&) {}
@@ -705,7 +704,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnqualifiedIdentifier {
   } payload_;
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI FuncParam {
+struct CRUBIT_FFI_TRIVIAL_ABI FuncParam {
   const ::crubit::ffi::CcType& type() const { return type_; }
   ::crubit::ffi::CcType* mutable_type() { return &type_; }
   const ::crubit::ffi::Identifier& identifier() const { return identifier_; }
@@ -718,8 +717,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI FuncParam {
   void set_clang_lifetimebound(bool value) { clang_lifetimebound_ = value; }
   bool has_unknown_attr() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x1ULL; unknown_attr_ = {}; }
-  absl::string_view unknown_attr() const { return unknown_attr_.AsView(); }
-  void set_unknown_attr(absl::string_view value) { has_bits_ |= 0x1ULL; unknown_attr_ = FfiString(value); }
+  std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
+  void set_unknown_attr(std::string_view value) { has_bits_ |= 0x1ULL; unknown_attr_ = FfiString(value); }
   friend bool operator==(const FuncParam&, const FuncParam&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::CcType type_{};
@@ -729,7 +728,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI FuncParam {
   FfiString unknown_attr_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI InstanceMethodMetadata {
+struct CRUBIT_FFI_TRIVIAL_ABI InstanceMethodMetadata {
   using ReferenceQualification = ::crubit::ffi::instance_method_metadata::ReferenceQualification;
   static constexpr ReferenceQualification UNQUALIFIED = ::crubit::ffi::instance_method_metadata::UNQUALIFIED;
   static constexpr ReferenceQualification L_VALUE = ::crubit::ffi::instance_method_metadata::L_VALUE;
@@ -747,7 +746,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI InstanceMethodMetadata {
 };
 
 namespace member_func_semantic {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Setter {
+struct CRUBIT_FFI_TRIVIAL_ABI Setter {
   const ::crubit::ffi::CcType& type() const { return type_; }
   ::crubit::ffi::CcType* mutable_type() { return &type_; }
   size_t offset() const { return offset_; }
@@ -759,7 +758,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Setter {
 }  // namespace member_func_semantic
 
 namespace member_func_semantic {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Getter {
+struct CRUBIT_FFI_TRIVIAL_ABI Getter {
   const ::crubit::ffi::CcType& type() const { return type_; }
   ::crubit::ffi::CcType* mutable_type() { return &type_; }
   size_t offset() const { return offset_; }
@@ -770,7 +769,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Getter {
 };
 }  // namespace member_func_semantic
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
+struct CRUBIT_FFI_TRIVIAL_ABI MemberFuncSemantic {
   using Setter = ::crubit::ffi::member_func_semantic::Setter;
   using Getter = ::crubit::ffi::member_func_semantic::Getter;
   enum Case : uint32_t {
@@ -864,7 +863,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
     other.Clear();
   }
   Case tag_;
-  union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+  union CRUBIT_FFI_TRIVIAL_ABI Payload {
     Payload() : setter_() {}
     explicit Payload(Case) : empty_(0) {}
     Payload(const Payload&) {}
@@ -876,21 +875,21 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI MemberFuncSemantic {
   } payload_;
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Func {
+struct CRUBIT_FFI_TRIVIAL_ABI Func {
   const ::crubit::ffi::UnqualifiedIdentifier& cc_name() const { return cc_name_; }
   ::crubit::ffi::UnqualifiedIdentifier* mutable_cc_name() { return &cc_name_; }
   const ::crubit::ffi::UnqualifiedIdentifier& rs_name() const { return rs_name_; }
   ::crubit::ffi::UnqualifiedIdentifier* mutable_rs_name() { return &rs_name_; }
-  absl::string_view unique_name() const { return unique_name_.AsView(); }
-  void set_unique_name(absl::string_view value) { unique_name_ = FfiString(value); }
-  absl::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(absl::string_view value) { owning_target_ = FfiString(value); }
-  absl::string_view mangled_name() const { return mangled_name_.AsView(); }
-  void set_mangled_name(absl::string_view value) { mangled_name_ = FfiString(value); }
+  std::string_view unique_name() const { return unique_name_.AsView(); }
+  void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
+  std::string_view owning_target() const { return owning_target_.AsView(); }
+  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
+  std::string_view mangled_name() const { return mangled_name_.AsView(); }
+  void set_mangled_name(std::string_view value) { mangled_name_ = FfiString(value); }
   bool has_doc_comment() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_doc_comment() { has_bits_ &= ~0x1ULL; doc_comment_ = {}; }
-  absl::string_view doc_comment() const { return doc_comment_.AsView(); }
-  void set_doc_comment(absl::string_view value) { has_bits_ |= 0x1ULL; doc_comment_ = FfiString(value); }
+  std::string_view doc_comment() const { return doc_comment_.AsView(); }
+  void set_doc_comment(std::string_view value) { has_bits_ |= 0x1ULL; doc_comment_ = FfiString(value); }
   const ::crubit::ffi::CcType& return_type() const { return return_type_; }
   ::crubit::ffi::CcType* mutable_return_type() { return &return_type_; }
   const FfiVec<::crubit::ffi::FuncParam>& params() const { return params_; }
@@ -919,16 +918,16 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Func {
   void set_is_consteval(bool value) { is_consteval_ = value; }
   bool has_nodiscard() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_nodiscard() { has_bits_ &= ~0x4ULL; nodiscard_ = {}; }
-  absl::string_view nodiscard() const { return nodiscard_.AsView(); }
-  void set_nodiscard(absl::string_view value) { has_bits_ |= 0x4ULL; nodiscard_ = FfiString(value); }
+  std::string_view nodiscard() const { return nodiscard_.AsView(); }
+  void set_nodiscard(std::string_view value) { has_bits_ |= 0x4ULL; nodiscard_ = FfiString(value); }
   bool has_deprecated() const { return (has_bits_ & 0x8ULL) != 0; }
   void clear_deprecated() { has_bits_ &= ~0x8ULL; deprecated_ = {}; }
-  absl::string_view deprecated() const { return deprecated_.AsView(); }
-  void set_deprecated(absl::string_view value) { has_bits_ |= 0x8ULL; deprecated_ = FfiString(value); }
+  std::string_view deprecated() const { return deprecated_.AsView(); }
+  void set_deprecated(std::string_view value) { has_bits_ |= 0x8ULL; deprecated_ = FfiString(value); }
   bool has_unknown_attr() const { return (has_bits_ & 0x10ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x10ULL; unknown_attr_ = {}; }
-  absl::string_view unknown_attr() const { return unknown_attr_.AsView(); }
-  void set_unknown_attr(absl::string_view value) { has_bits_ |= 0x10ULL; unknown_attr_ = FfiString(value); }
+  std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
+  void set_unknown_attr(std::string_view value) { has_bits_ |= 0x10ULL; unknown_attr_ = FfiString(value); }
   bool has_call_conv() const { return (has_bits_ & 0x20ULL) != 0; }
   void clear_call_conv() { has_bits_ &= ~0x20ULL; call_conv_ = {}; }
   ::crubit::ffi::CallingConv call_conv() const { return call_conv_; }
@@ -955,12 +954,12 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Func {
   void set_must_bind(bool value) { must_bind_ = value; }
   bool has_inline_cpp_source_text() const { return (has_bits_ & 0x200ULL) != 0; }
   void clear_inline_cpp_source_text() { has_bits_ &= ~0x200ULL; inline_cpp_source_text_ = {}; }
-  absl::string_view inline_cpp_source_text() const { return inline_cpp_source_text_.AsView(); }
-  void set_inline_cpp_source_text(absl::string_view value) { has_bits_ |= 0x200ULL; inline_cpp_source_text_ = FfiString(value); }
+  std::string_view inline_cpp_source_text() const { return inline_cpp_source_text_.AsView(); }
+  void set_inline_cpp_source_text(std::string_view value) { has_bits_ |= 0x200ULL; inline_cpp_source_text_ = FfiString(value); }
   const FfiVec<FfiString>& lifetime_inputs() const { return lifetime_inputs_; }
   FfiVec<FfiString>* mutable_lifetime_inputs() { return &lifetime_inputs_; }
   void clear_lifetime_inputs() { lifetime_inputs_.Clear(); }
-  void add_lifetime_inputs(absl::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
+  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
   bool has_semantic() const { return (has_bits_ & 0x400ULL) != 0; }
   void clear_semantic() { has_bits_ &= ~0x400ULL; semantic_ = {}; }
   const ::crubit::ffi::MemberFuncSemantic& semantic() const { return semantic_; }
@@ -1002,7 +1001,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Func {
   bool is_pub_crate_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI StatusOrOptionalString {
+struct CRUBIT_FFI_TRIVIAL_ABI StatusOrOptionalString {
   enum Case : uint32_t {
     kNone = 0,
     kOkValue = 1,
@@ -1029,16 +1028,16 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StatusOrOptionalString {
   bool has_none() const { return tag_ == kNone; }
   void set_none() { Destroy(); tag_ = kNone; }
   bool has_ok_value() const { return tag_ == kOkValue; }
-  absl::string_view ok_value() const { return has_ok_value() ? payload_.ok_value_.AsView() : absl::string_view(); }
-  void set_ok_value(absl::string_view value) {
+  std::string_view ok_value() const { return has_ok_value() ? std::string_view(payload_.ok_value_.AsView()) : std::string_view(); }
+  void set_ok_value(std::string_view value) {
     FfiString tmp(value);
     Destroy();
     tag_ = kOkValue;
     new (&payload_.ok_value_) FfiString(std::move(tmp));
   }
   bool has_err() const { return tag_ == kErr; }
-  absl::string_view err() const { return has_err() ? payload_.err_.AsView() : absl::string_view(); }
-  void set_err(absl::string_view value) {
+  std::string_view err() const { return has_err() ? std::string_view(payload_.err_.AsView()) : std::string_view(); }
+  void set_err(std::string_view value) {
     FfiString tmp(value);
     Destroy();
     tag_ = kErr;
@@ -1085,7 +1084,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StatusOrOptionalString {
     other.Clear();
   }
   Case tag_;
-  union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+  union CRUBIT_FFI_TRIVIAL_ABI Payload {
     Payload() : empty_(0) {}
     explicit Payload(Case) : empty_(0) {}
     Payload(const Payload&) {}
@@ -1097,7 +1096,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StatusOrOptionalString {
   } payload_;
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Field {
+struct CRUBIT_FFI_TRIVIAL_ABI Field {
   bool has_rust_identifier() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_rust_identifier() { has_bits_ &= ~0x1ULL; rust_identifier_ = {}; }
   const ::crubit::ffi::Identifier& rust_identifier() const { return rust_identifier_; }
@@ -1108,8 +1107,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Field {
   ::crubit::ffi::Identifier* mutable_cpp_identifier() { has_bits_ |= 0x2ULL; return &cpp_identifier_; }
   bool has_doc_comment() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_doc_comment() { has_bits_ &= ~0x4ULL; doc_comment_ = {}; }
-  absl::string_view doc_comment() const { return doc_comment_.AsView(); }
-  void set_doc_comment(absl::string_view value) { has_bits_ |= 0x4ULL; doc_comment_ = FfiString(value); }
+  std::string_view doc_comment() const { return doc_comment_.AsView(); }
+  void set_doc_comment(std::string_view value) { has_bits_ |= 0x4ULL; doc_comment_ = FfiString(value); }
   const ::crubit::ffi::CcType& type() const { return type_; }
   ::crubit::ffi::CcType* mutable_type() { return &type_; }
   ::crubit::ffi::AccessSpecifier access() const { return access_; }
@@ -1130,8 +1129,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Field {
   void set_is_mutable(bool value) { is_mutable_ = value; }
   bool has_deprecated() const { return (has_bits_ & 0x8ULL) != 0; }
   void clear_deprecated() { has_bits_ &= ~0x8ULL; deprecated_ = {}; }
-  absl::string_view deprecated() const { return deprecated_.AsView(); }
-  void set_deprecated(absl::string_view value) { has_bits_ |= 0x8ULL; deprecated_ = FfiString(value); }
+  std::string_view deprecated() const { return deprecated_.AsView(); }
+  void set_deprecated(std::string_view value) { has_bits_ |= 0x8ULL; deprecated_ = FfiString(value); }
   friend bool operator==(const Field&, const Field&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::Identifier rust_identifier_{};
@@ -1149,7 +1148,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Field {
   FfiString deprecated_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI BaseClass {
+struct CRUBIT_FFI_TRIVIAL_ABI BaseClass {
   uint64_t base_record_id() const { return base_record_id_; }
   void set_base_record_id(uint64_t value) { base_record_id_ = value; }
   bool has_offset() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -1162,7 +1161,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI BaseClass {
   int64_t offset_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI SizeAlign {
+struct CRUBIT_FFI_TRIVIAL_ABI SizeAlign {
   size_t size() const { return size_; }
   void set_size(size_t value) { size_ = value; }
   size_t alignment() const { return alignment_; }
@@ -1172,7 +1171,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI SizeAlign {
   size_t alignment_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateArg {
+struct CRUBIT_FFI_TRIVIAL_ABI TemplateArg {
   enum Case : uint32_t {
     kType = 0,
     kBool = 1,
@@ -1255,7 +1254,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateArg {
     other.Clear();
   }
   Case tag_;
-  union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+  union CRUBIT_FFI_TRIVIAL_ABI Payload {
     Payload() : type_() {}
     explicit Payload(Case) : empty_(0) {}
     Payload(const Payload&) {}
@@ -1269,21 +1268,21 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateArg {
 };
 
 namespace bridge_type {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Bridge {
-  absl::string_view rust_name() const { return rust_name_.AsView(); }
-  void set_rust_name(absl::string_view value) { rust_name_ = FfiString(value); }
-  absl::string_view abi_rust() const { return abi_rust_.AsView(); }
-  void set_abi_rust(absl::string_view value) { abi_rust_ = FfiString(value); }
-  absl::string_view abi_cpp() const { return abi_cpp_.AsView(); }
-  void set_abi_cpp(absl::string_view value) { abi_cpp_ = FfiString(value); }
+struct CRUBIT_FFI_TRIVIAL_ABI Bridge {
+  std::string_view rust_name() const { return rust_name_.AsView(); }
+  void set_rust_name(std::string_view value) { rust_name_ = FfiString(value); }
+  std::string_view abi_rust() const { return abi_rust_.AsView(); }
+  void set_abi_rust(std::string_view value) { abi_rust_ = FfiString(value); }
+  std::string_view abi_cpp() const { return abi_cpp_.AsView(); }
+  void set_abi_cpp(std::string_view value) { abi_cpp_ = FfiString(value); }
   const FfiVec<::crubit::ffi::CcType>& template_args() const { return template_args_; }
   FfiVec<::crubit::ffi::CcType>* mutable_template_args() { return &template_args_; }
   void clear_template_args() { template_args_.Clear(); }
   ::crubit::ffi::CcType* add_template_args() { return template_args_.Add(); }
   bool has_label_hint() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_label_hint() { has_bits_ &= ~0x1ULL; label_hint_ = {}; }
-  absl::string_view label_hint() const { return label_hint_.AsView(); }
-  void set_label_hint(absl::string_view value) { has_bits_ |= 0x1ULL; label_hint_ = FfiString(value); }
+  std::string_view label_hint() const { return label_hint_.AsView(); }
+  void set_label_hint(std::string_view value) { has_bits_ |= 0x1ULL; label_hint_ = FfiString(value); }
   friend bool operator==(const Bridge&, const Bridge&) = default;
   uint64_t has_bits_ = 0;
   FfiString rust_name_{};
@@ -1295,7 +1294,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Bridge {
 }  // namespace bridge_type
 
 namespace bridge_type {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdOptional {
+struct CRUBIT_FFI_TRIVIAL_ABI StdOptional {
   StdOptional() = default;
   explicit StdOptional(::crubit::ffi::CcType inner_type) { *mutable_inner_type() = std::move(inner_type); }
   const ::crubit::ffi::CcType& inner_type() const { return inner_type_; }
@@ -1306,7 +1305,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdOptional {
 }  // namespace bridge_type
 
 namespace bridge_type {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdPair {
+struct CRUBIT_FFI_TRIVIAL_ABI StdPair {
   const ::crubit::ffi::CcType& first_type() const { return first_type_; }
   ::crubit::ffi::CcType* mutable_first_type() { return &first_type_; }
   const ::crubit::ffi::CcType& second_type() const { return second_type_; }
@@ -1318,18 +1317,18 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdPair {
 }  // namespace bridge_type
 
 namespace bridge_type {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI ProtoMessageBridge {
+struct CRUBIT_FFI_TRIVIAL_ABI ProtoMessageBridge {
   ProtoMessageBridge() = default;
-  explicit ProtoMessageBridge(absl::string_view rust_name) { set_rust_name(rust_name); }
-  absl::string_view rust_name() const { return rust_name_.AsView(); }
-  void set_rust_name(absl::string_view value) { rust_name_ = FfiString(value); }
+  explicit ProtoMessageBridge(std::string_view rust_name) { set_rust_name(rust_name); }
+  std::string_view rust_name() const { return rust_name_.AsView(); }
+  void set_rust_name(std::string_view value) { rust_name_ = FfiString(value); }
   friend bool operator==(const ProtoMessageBridge&, const ProtoMessageBridge&) = default;
   FfiString rust_name_{};
 };
 }  // namespace bridge_type
 
 namespace bridge_type {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Callable {
+struct CRUBIT_FFI_TRIVIAL_ABI Callable {
   using BackingType = ::crubit::ffi::bridge_type::callable::BackingType;
   static constexpr BackingType DYN_CALLABLE = ::crubit::ffi::bridge_type::callable::DYN_CALLABLE;
   static constexpr BackingType ANY_INVOCABLE = ::crubit::ffi::bridge_type::callable::ANY_INVOCABLE;
@@ -1355,7 +1354,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Callable {
 };
 }  // namespace bridge_type
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI BridgeType {
+struct CRUBIT_FFI_TRIVIAL_ABI BridgeType {
   using Bridge = ::crubit::ffi::bridge_type::Bridge;
   using StdOptional = ::crubit::ffi::bridge_type::StdOptional;
   using StdPair = ::crubit::ffi::bridge_type::StdPair;
@@ -1503,7 +1502,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI BridgeType {
     other.Clear();
   }
   Case tag_;
-  union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+  union CRUBIT_FFI_TRIVIAL_ABI Payload {
     Payload() : bridge_() {}
     explicit Payload(Case) : empty_(0) {}
     Payload(const Payload&) {}
@@ -1519,7 +1518,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI BridgeType {
 };
 
 namespace array_value {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI IntegerElements {
+struct CRUBIT_FFI_TRIVIAL_ABI IntegerElements {
   const FfiVec<::crubit::ffi::IntegerConstant>& elements() const { return elements_; }
   FfiVec<::crubit::ffi::IntegerConstant>* mutable_elements() { return &elements_; }
   void clear_elements() { elements_.Clear(); }
@@ -1536,7 +1535,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI IntegerElements {
 }  // namespace array_value
 
 namespace array_value {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI ArrayElements {
+struct CRUBIT_FFI_TRIVIAL_ABI ArrayElements {
   ArrayElements();
   ArrayElements(const ArrayElements&);
   ArrayElements(ArrayElements&&) noexcept;
@@ -1559,7 +1558,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI ArrayElements {
 }  // namespace array_value
 
 namespace array_value {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
+struct CRUBIT_FFI_TRIVIAL_ABI Kind {
   enum Case : uint32_t {
     kIntegers = 0,
     kArrays = 1,
@@ -1608,8 +1607,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
     return &payload_.array_elements_;
   }
   bool has_string_literal() const { return tag_ == kStringLiteral; }
-  absl::string_view string_literal() const { return has_string_literal() ? absl::string_view(reinterpret_cast<const char*>(payload_.string_literal_.data()), payload_.string_literal_.size()) : absl::string_view(); }
-  void set_string_literal(absl::string_view value) {
+  std::string_view string_literal() const { return has_string_literal() ? std::string_view(reinterpret_cast<const char*>(payload_.string_literal_.data()), payload_.string_literal_.size()) : std::string_view(); }
+  void set_string_literal(std::string_view value) {
     FfiVec<uint8_t> tmp(reinterpret_cast<const uint8_t*>(value.data()), reinterpret_cast<const uint8_t*>(value.data()) + value.size());
     Destroy();
     tag_ = kStringLiteral;
@@ -1656,7 +1655,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
     other.Clear();
   }
   Case tag_;
-  union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+  union CRUBIT_FFI_TRIVIAL_ABI Payload {
     Payload() : integer_elements_() {}
     explicit Payload(Case) : empty_(0) {}
     Payload(const Payload&) {}
@@ -1670,7 +1669,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
 };
 }  // namespace array_value
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI ArrayValue {
+struct CRUBIT_FFI_TRIVIAL_ABI ArrayValue {
   using IntegerElements = ::crubit::ffi::array_value::IntegerElements;
   using ArrayElements = ::crubit::ffi::array_value::ArrayElements;
   using Kind = ::crubit::ffi::array_value::Kind;
@@ -1686,7 +1685,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI ArrayValue {
 };
 
 namespace constant {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
+struct CRUBIT_FFI_TRIVIAL_ABI Kind {
   enum Case : uint32_t {
     kInteger = 0,
     kArray = 1,
@@ -1735,8 +1734,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
     return &payload_.array_value_;
   }
   bool has_string_view_value() const { return tag_ == kStringView; }
-  absl::string_view string_view_value() const { return has_string_view_value() ? absl::string_view(reinterpret_cast<const char*>(payload_.string_view_value_.data()), payload_.string_view_value_.size()) : absl::string_view(); }
-  void set_string_view_value(absl::string_view value) {
+  std::string_view string_view_value() const { return has_string_view_value() ? std::string_view(reinterpret_cast<const char*>(payload_.string_view_value_.data()), payload_.string_view_value_.size()) : std::string_view(); }
+  void set_string_view_value(std::string_view value) {
     FfiVec<uint8_t> tmp(reinterpret_cast<const uint8_t*>(value.data()), reinterpret_cast<const uint8_t*>(value.data()) + value.size());
     Destroy();
     tag_ = kStringView;
@@ -1783,7 +1782,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
     other.Clear();
   }
   Case tag_;
-  union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+  union CRUBIT_FFI_TRIVIAL_ABI Payload {
     Payload() : value_() {}
     explicit Payload(Case) : empty_(0) {}
     Payload(const Payload&) {}
@@ -1797,7 +1796,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
 };
 }  // namespace constant
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Constant {
+struct CRUBIT_FFI_TRIVIAL_ABI Constant {
   using Kind = ::crubit::ffi::constant::Kind;
   Constant() = default;
   explicit Constant(::crubit::ffi::constant::Kind kind) { *mutable_kind() = std::move(kind); }
@@ -1807,20 +1806,20 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Constant {
   ::crubit::ffi::Identifier* mutable_cc_name() { return &cc_name_; }
   const ::crubit::ffi::Identifier& rs_name() const { return rs_name_; }
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
-  absl::string_view unique_name() const { return unique_name_.AsView(); }
-  void set_unique_name(absl::string_view value) { unique_name_ = FfiString(value); }
+  std::string_view unique_name() const { return unique_name_.AsView(); }
+  void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  absl::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(absl::string_view value) { owning_target_ = FfiString(value); }
+  std::string_view owning_target() const { return owning_target_.AsView(); }
+  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_decl_loc() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_decl_loc() { has_bits_ &= ~0x1ULL; decl_loc_ = {}; }
   const ::crubit::ffi::DeclLocation& decl_loc() const { return decl_loc_; }
   ::crubit::ffi::DeclLocation* mutable_decl_loc() { has_bits_ |= 0x1ULL; return &decl_loc_; }
   bool has_unknown_attr() const { return (has_bits_ & 0x2ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x2ULL; unknown_attr_ = {}; }
-  absl::string_view unknown_attr() const { return unknown_attr_.AsView(); }
-  void set_unknown_attr(absl::string_view value) { has_bits_ |= 0x2ULL; unknown_attr_ = FfiString(value); }
+  std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
+  void set_unknown_attr(std::string_view value) { has_bits_ |= 0x2ULL; unknown_attr_ = FfiString(value); }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x4ULL; enclosing_item_id_ = {}; }
   uint64_t enclosing_item_id() const { return enclosing_item_id_; }
@@ -1833,12 +1832,12 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Constant {
   void set_must_bind(bool value) { must_bind_ = value; }
   bool has_deprecated() const { return (has_bits_ & 0x10ULL) != 0; }
   void clear_deprecated() { has_bits_ &= ~0x10ULL; deprecated_ = {}; }
-  absl::string_view deprecated() const { return deprecated_.AsView(); }
-  void set_deprecated(absl::string_view value) { has_bits_ |= 0x10ULL; deprecated_ = FfiString(value); }
+  std::string_view deprecated() const { return deprecated_.AsView(); }
+  void set_deprecated(std::string_view value) { has_bits_ |= 0x10ULL; deprecated_ = FfiString(value); }
   bool has_doc_comment() const { return (has_bits_ & 0x20ULL) != 0; }
   void clear_doc_comment() { has_bits_ &= ~0x20ULL; doc_comment_ = {}; }
-  absl::string_view doc_comment() const { return doc_comment_.AsView(); }
-  void set_doc_comment(absl::string_view value) { has_bits_ |= 0x20ULL; doc_comment_ = FfiString(value); }
+  std::string_view doc_comment() const { return doc_comment_.AsView(); }
+  void set_doc_comment(std::string_view value) { has_bits_ |= 0x20ULL; doc_comment_ = FfiString(value); }
   friend bool operator==(const Constant&, const Constant&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::constant::Kind kind_{};
@@ -1857,7 +1856,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Constant {
 };
 
 namespace template_specialization {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdVector {
+struct CRUBIT_FFI_TRIVIAL_ABI StdVector {
   StdVector() = default;
   explicit StdVector(::crubit::ffi::CcType element_type) { *mutable_element_type() = std::move(element_type); }
   const ::crubit::ffi::CcType& element_type() const { return element_type_; }
@@ -1868,7 +1867,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdVector {
 }  // namespace template_specialization
 
 namespace template_specialization {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdOptional {
+struct CRUBIT_FFI_TRIVIAL_ABI StdOptional {
   StdOptional() = default;
   explicit StdOptional(::crubit::ffi::CcType element_type) { *mutable_element_type() = std::move(element_type); }
   const ::crubit::ffi::CcType& element_type() const { return element_type_; }
@@ -1879,7 +1878,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdOptional {
 }  // namespace template_specialization
 
 namespace template_specialization {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdSharedPtr {
+struct CRUBIT_FFI_TRIVIAL_ABI StdSharedPtr {
   StdSharedPtr() = default;
   explicit StdSharedPtr(::crubit::ffi::CcType element_type) { *mutable_element_type() = std::move(element_type); }
   const ::crubit::ffi::CcType& element_type() const { return element_type_; }
@@ -1890,7 +1889,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdSharedPtr {
 }  // namespace template_specialization
 
 namespace template_specialization {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdUniquePtr {
+struct CRUBIT_FFI_TRIVIAL_ABI StdUniquePtr {
   StdUniquePtr() = default;
   explicit StdUniquePtr(::crubit::ffi::CcType element_type) { *mutable_element_type() = std::move(element_type); }
   const ::crubit::ffi::CcType& element_type() const { return element_type_; }
@@ -1901,7 +1900,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdUniquePtr {
 }  // namespace template_specialization
 
 namespace template_specialization {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI AbslSpan {
+struct CRUBIT_FFI_TRIVIAL_ABI AbslSpan {
   AbslSpan() = default;
   explicit AbslSpan(::crubit::ffi::CcType element_type) { *mutable_element_type() = std::move(element_type); }
   const ::crubit::ffi::CcType& element_type() const { return element_type_; }
@@ -1912,7 +1911,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI AbslSpan {
 }  // namespace template_specialization
 
 namespace template_specialization {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI C9Co {
+struct CRUBIT_FFI_TRIVIAL_ABI C9Co {
   C9Co() = default;
   explicit C9Co(::crubit::ffi::CcType element_type) { *mutable_element_type() = std::move(element_type); }
   const ::crubit::ffi::CcType& element_type() const { return element_type_; }
@@ -1923,7 +1922,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI C9Co {
 }  // namespace template_specialization
 
 namespace template_specialization {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdAtomic {
+struct CRUBIT_FFI_TRIVIAL_ABI StdAtomic {
   StdAtomic() = default;
   explicit StdAtomic(::crubit::ffi::CcType element_type) { *mutable_element_type() = std::move(element_type); }
   const ::crubit::ffi::CcType& element_type() const { return element_type_; }
@@ -1934,7 +1933,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI StdAtomic {
 }  // namespace template_specialization
 
 namespace template_specialization {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI AbslFlatHashMap {
+struct CRUBIT_FFI_TRIVIAL_ABI AbslFlatHashMap {
   const ::crubit::ffi::CcType& key_type() const { return key_type_; }
   ::crubit::ffi::CcType* mutable_key_type() { return &key_type_; }
   const ::crubit::ffi::CcType& value_type() const { return value_type_; }
@@ -1946,7 +1945,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI AbslFlatHashMap {
 }  // namespace template_specialization
 
 namespace template_specialization {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI AbslFlatHashSet {
+struct CRUBIT_FFI_TRIVIAL_ABI AbslFlatHashSet {
   AbslFlatHashSet() = default;
   explicit AbslFlatHashSet(::crubit::ffi::CcType element_type) { *mutable_element_type() = std::move(element_type); }
   const ::crubit::ffi::CcType& element_type() const { return element_type_; }
@@ -1957,7 +1956,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI AbslFlatHashSet {
 }  // namespace template_specialization
 
 namespace template_specialization {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
+struct CRUBIT_FFI_TRIVIAL_ABI Kind {
   enum Case : uint32_t {
     kStdStringView = 0,
     kStdWStringView = 1,
@@ -2183,7 +2182,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
     other.Clear();
   }
   Case tag_;
-  union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+  union CRUBIT_FFI_TRIVIAL_ABI Payload {
     Payload() : empty_(0) {}
     explicit Payload(Case) : empty_(0) {}
     Payload(const Payload&) {}
@@ -2203,7 +2202,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Kind {
 };
 }  // namespace template_specialization
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateSpecialization {
+struct CRUBIT_FFI_TRIVIAL_ABI TemplateSpecialization {
   using StdVector = ::crubit::ffi::template_specialization::StdVector;
   using StdOptional = ::crubit::ffi::template_specialization::StdOptional;
   using StdSharedPtr = ::crubit::ffi::template_specialization::StdSharedPtr;
@@ -2214,8 +2213,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateSpecialization {
   using AbslFlatHashMap = ::crubit::ffi::template_specialization::AbslFlatHashMap;
   using AbslFlatHashSet = ::crubit::ffi::template_specialization::AbslFlatHashSet;
   using Kind = ::crubit::ffi::template_specialization::Kind;
-  absl::string_view defining_target() const { return defining_target_.AsView(); }
-  void set_defining_target(absl::string_view value) { defining_target_ = FfiString(value); }
+  std::string_view defining_target() const { return defining_target_.AsView(); }
+  void set_defining_target(std::string_view value) { defining_target_ = FfiString(value); }
   const ::crubit::ffi::template_specialization::Kind& kind() const { return kind_; }
   ::crubit::ffi::template_specialization::Kind* mutable_kind() { return &kind_; }
   friend bool operator==(const TemplateSpecialization&, const TemplateSpecialization&) = default;
@@ -2223,7 +2222,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TemplateSpecialization {
   ::crubit::ffi::template_specialization::Kind kind_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI TraitDerives {
+struct CRUBIT_FFI_TRIVIAL_ABI TraitDerives {
   ::crubit::ffi::TraitImplPolarity clone() const { return clone_; }
   void set_clone(::crubit::ffi::TraitImplPolarity value) { clone_ = value; }
   ::crubit::ffi::TraitImplPolarity copy() const { return copy_; }
@@ -2237,7 +2236,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TraitDerives {
   const FfiVec<FfiString>& custom() const { return custom_; }
   FfiVec<FfiString>* mutable_custom() { return &custom_; }
   void clear_custom() { custom_.Clear(); }
-  void add_custom(absl::string_view value) { custom_.Add(FfiString(value)); }
+  void add_custom(std::string_view value) { custom_.Add(FfiString(value)); }
   friend bool operator==(const TraitDerives&, const TraitDerives&) = default;
   ::crubit::ffi::TraitImplPolarity clone_{};
   ::crubit::ffi::TraitImplPolarity copy_{};
@@ -2247,17 +2246,17 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TraitDerives {
   FfiVec<FfiString> custom_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI OwnedPtrConfig {
-  absl::string_view owned_ptr_type() const { return owned_ptr_type_.AsView(); }
-  void set_owned_ptr_type(absl::string_view value) { owned_ptr_type_ = FfiString(value); }
-  absl::string_view drop_impl() const { return drop_impl_.AsView(); }
-  void set_drop_impl(absl::string_view value) { drop_impl_ = FfiString(value); }
+struct CRUBIT_FFI_TRIVIAL_ABI OwnedPtrConfig {
+  std::string_view owned_ptr_type() const { return owned_ptr_type_.AsView(); }
+  void set_owned_ptr_type(std::string_view value) { owned_ptr_type_ = FfiString(value); }
+  std::string_view drop_impl() const { return drop_impl_.AsView(); }
+  void set_drop_impl(std::string_view value) { drop_impl_ = FfiString(value); }
   friend bool operator==(const OwnedPtrConfig&, const OwnedPtrConfig&) = default;
   FfiString owned_ptr_type_{};
   FfiString drop_impl_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
+struct CRUBIT_FFI_TRIVIAL_ABI Record {
   Record();
   Record(const Record&);
   Record(Record&&) noexcept;
@@ -2268,26 +2267,26 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
   const ::crubit::ffi::Identifier& cc_name() const { return cc_name_; }
   ::crubit::ffi::Identifier* mutable_cc_name() { return &cc_name_; }
-  absl::string_view unique_name() const { return unique_name_.AsView(); }
-  void set_unique_name(absl::string_view value) { unique_name_ = FfiString(value); }
-  absl::string_view mangled_cc_name() const { return mangled_cc_name_.AsView(); }
-  void set_mangled_cc_name(absl::string_view value) { mangled_cc_name_ = FfiString(value); }
+  std::string_view unique_name() const { return unique_name_.AsView(); }
+  void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
+  std::string_view mangled_cc_name() const { return mangled_cc_name_.AsView(); }
+  void set_mangled_cc_name(std::string_view value) { mangled_cc_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  absl::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(absl::string_view value) { owning_target_ = FfiString(value); }
+  std::string_view owning_target() const { return owning_target_.AsView(); }
+  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_template_specialization() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_template_specialization() { has_bits_ &= ~0x1ULL; template_specialization_ = {}; }
   const ::crubit::ffi::TemplateSpecialization& template_specialization() const { return template_specialization_; }
   ::crubit::ffi::TemplateSpecialization* mutable_template_specialization() { has_bits_ |= 0x1ULL; return &template_specialization_; }
   bool has_unknown_attr() const { return (has_bits_ & 0x2ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x2ULL; unknown_attr_ = {}; }
-  absl::string_view unknown_attr() const { return unknown_attr_.AsView(); }
-  void set_unknown_attr(absl::string_view value) { has_bits_ |= 0x2ULL; unknown_attr_ = FfiString(value); }
+  std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
+  void set_unknown_attr(std::string_view value) { has_bits_ |= 0x2ULL; unknown_attr_ = FfiString(value); }
   bool has_doc_comment() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_doc_comment() { has_bits_ &= ~0x4ULL; doc_comment_ = {}; }
-  absl::string_view doc_comment() const { return doc_comment_.AsView(); }
-  void set_doc_comment(absl::string_view value) { has_bits_ |= 0x4ULL; doc_comment_ = FfiString(value); }
+  std::string_view doc_comment() const { return doc_comment_.AsView(); }
+  void set_doc_comment(std::string_view value) { has_bits_ |= 0x4ULL; doc_comment_ = FfiString(value); }
   bool has_bridge_type() const { return (has_bits_ & 0x8ULL) != 0; }
   void clear_bridge_type() { has_bits_ &= ~0x8ULL; bridge_type_ = {}; }
   const ::crubit::ffi::BridgeType& bridge_type() const { return bridge_type_; }
@@ -2338,20 +2337,20 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   void set_is_rust_movable(bool value) { is_rust_movable_ = value; }
   bool has_not_rust_movable_reason() const { return (has_bits_ & 0x80ULL) != 0; }
   void clear_not_rust_movable_reason() { has_bits_ &= ~0x80ULL; not_rust_movable_reason_ = {}; }
-  absl::string_view not_rust_movable_reason() const { return not_rust_movable_reason_.AsView(); }
-  void set_not_rust_movable_reason(absl::string_view value) { has_bits_ |= 0x80ULL; not_rust_movable_reason_ = FfiString(value); }
+  std::string_view not_rust_movable_reason() const { return not_rust_movable_reason_.AsView(); }
+  void set_not_rust_movable_reason(std::string_view value) { has_bits_ |= 0x80ULL; not_rust_movable_reason_ = FfiString(value); }
   const FfiVec<FfiString>& libcxx_only_fields() const { return libcxx_only_fields_; }
   FfiVec<FfiString>* mutable_libcxx_only_fields() { return &libcxx_only_fields_; }
   void clear_libcxx_only_fields() { libcxx_only_fields_.Clear(); }
-  void add_libcxx_only_fields(absl::string_view value) { libcxx_only_fields_.Add(FfiString(value)); }
+  void add_libcxx_only_fields(std::string_view value) { libcxx_only_fields_.Add(FfiString(value)); }
   bool is_inheritable() const { return is_inheritable_; }
   void set_is_inheritable(bool value) { is_inheritable_ = value; }
   bool is_abstract() const { return is_abstract_; }
   void set_is_abstract(bool value) { is_abstract_ = value; }
   bool has_nodiscard() const { return (has_bits_ & 0x100ULL) != 0; }
   void clear_nodiscard() { has_bits_ &= ~0x100ULL; nodiscard_ = {}; }
-  absl::string_view nodiscard() const { return nodiscard_.AsView(); }
-  void set_nodiscard(absl::string_view value) { has_bits_ |= 0x100ULL; nodiscard_ = FfiString(value); }
+  std::string_view nodiscard() const { return nodiscard_.AsView(); }
+  void set_nodiscard(std::string_view value) { has_bits_ |= 0x100ULL; nodiscard_ = FfiString(value); }
   ::crubit::ffi::RecordType record_type() const { return record_type_; }
   void set_record_type(::crubit::ffi::RecordType value) { record_type_ = value; }
   bool is_aggregate() const { return is_aggregate_; }
@@ -2371,7 +2370,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   const FfiVec<FfiString>& lifetime_inputs() const { return lifetime_inputs_; }
   FfiVec<FfiString>* mutable_lifetime_inputs() { return &lifetime_inputs_; }
   void clear_lifetime_inputs() { lifetime_inputs_.Clear(); }
-  void add_lifetime_inputs(absl::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
+  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
   bool impl_debug() const { return impl_debug_; }
   void set_impl_debug(bool value) { impl_debug_ = value; }
   bool has_private_pointer_or_reference_fields() const { return has_private_pointer_or_reference_fields_; }
@@ -2382,8 +2381,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   void set_detected_formatter(bool value) { detected_formatter_ = value; }
   bool has_deprecated() const { return (has_bits_ & 0x400ULL) != 0; }
   void clear_deprecated() { has_bits_ &= ~0x400ULL; deprecated_ = {}; }
-  absl::string_view deprecated() const { return deprecated_.AsView(); }
-  void set_deprecated(absl::string_view value) { has_bits_ |= 0x400ULL; deprecated_ = FfiString(value); }
+  std::string_view deprecated() const { return deprecated_.AsView(); }
+  void set_deprecated(std::string_view value) { has_bits_ |= 0x400ULL; deprecated_ = FfiString(value); }
   bool is_thread_safe() const { return is_thread_safe_; }
   void set_is_thread_safe(bool value) { is_thread_safe_ = value; }
   bool is_explicit_class_template_instantiation_definition() const { return is_explicit_class_template_instantiation_definition_; }
@@ -2443,21 +2442,21 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Record {
   FfiVec<::crubit::ffi::Item> children_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI IncompleteRecord {
+struct CRUBIT_FFI_TRIVIAL_ABI IncompleteRecord {
   const ::crubit::ffi::Identifier& cc_name() const { return cc_name_; }
   ::crubit::ffi::Identifier* mutable_cc_name() { return &cc_name_; }
   const ::crubit::ffi::Identifier& rs_name() const { return rs_name_; }
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
-  absl::string_view unique_name() const { return unique_name_.AsView(); }
-  void set_unique_name(absl::string_view value) { unique_name_ = FfiString(value); }
+  std::string_view unique_name() const { return unique_name_.AsView(); }
+  void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  absl::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(absl::string_view value) { owning_target_ = FfiString(value); }
+  std::string_view owning_target() const { return owning_target_.AsView(); }
+  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_unknown_attr() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x1ULL; unknown_attr_ = {}; }
-  absl::string_view unknown_attr() const { return unknown_attr_.AsView(); }
-  void set_unknown_attr(absl::string_view value) { has_bits_ |= 0x1ULL; unknown_attr_ = FfiString(value); }
+  std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
+  void set_unknown_attr(std::string_view value) { has_bits_ |= 0x1ULL; unknown_attr_ = FfiString(value); }
   ::crubit::ffi::RecordType record_type() const { return record_type_; }
   void set_record_type(::crubit::ffi::RecordType value) { record_type_ = value; }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x2ULL) != 0; }
@@ -2479,23 +2478,23 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI IncompleteRecord {
   bool must_bind_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Enumerator {
+struct CRUBIT_FFI_TRIVIAL_ABI Enumerator {
   const ::crubit::ffi::Identifier& identifier() const { return identifier_; }
   ::crubit::ffi::Identifier* mutable_identifier() { return &identifier_; }
   const ::crubit::ffi::IntegerConstant& value() const { return value_; }
   ::crubit::ffi::IntegerConstant* mutable_value() { return &value_; }
   bool has_unknown_attr() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x1ULL; unknown_attr_ = {}; }
-  absl::string_view unknown_attr() const { return unknown_attr_.AsView(); }
-  void set_unknown_attr(absl::string_view value) { has_bits_ |= 0x1ULL; unknown_attr_ = FfiString(value); }
+  std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
+  void set_unknown_attr(std::string_view value) { has_bits_ |= 0x1ULL; unknown_attr_ = FfiString(value); }
   bool has_deprecated() const { return (has_bits_ & 0x2ULL) != 0; }
   void clear_deprecated() { has_bits_ &= ~0x2ULL; deprecated_ = {}; }
-  absl::string_view deprecated() const { return deprecated_.AsView(); }
-  void set_deprecated(absl::string_view value) { has_bits_ |= 0x2ULL; deprecated_ = FfiString(value); }
+  std::string_view deprecated() const { return deprecated_.AsView(); }
+  void set_deprecated(std::string_view value) { has_bits_ |= 0x2ULL; deprecated_ = FfiString(value); }
   bool has_doc_comment() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_doc_comment() { has_bits_ &= ~0x4ULL; doc_comment_ = {}; }
-  absl::string_view doc_comment() const { return doc_comment_.AsView(); }
-  void set_doc_comment(absl::string_view value) { has_bits_ |= 0x4ULL; doc_comment_ = FfiString(value); }
+  std::string_view doc_comment() const { return doc_comment_.AsView(); }
+  void set_doc_comment(std::string_view value) { has_bits_ |= 0x4ULL; doc_comment_ = FfiString(value); }
   friend bool operator==(const Enumerator&, const Enumerator&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::Identifier identifier_{};
@@ -2505,19 +2504,19 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Enumerator {
   FfiString doc_comment_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Enum {
+struct CRUBIT_FFI_TRIVIAL_ABI Enum {
   const ::crubit::ffi::Identifier& cc_name() const { return cc_name_; }
   ::crubit::ffi::Identifier* mutable_cc_name() { return &cc_name_; }
   const ::crubit::ffi::Identifier& rs_name() const { return rs_name_; }
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
-  absl::string_view unique_name() const { return unique_name_.AsView(); }
-  void set_unique_name(absl::string_view value) { unique_name_ = FfiString(value); }
-  absl::string_view mangled_cc_name() const { return mangled_cc_name_.AsView(); }
-  void set_mangled_cc_name(absl::string_view value) { mangled_cc_name_ = FfiString(value); }
+  std::string_view unique_name() const { return unique_name_.AsView(); }
+  void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
+  std::string_view mangled_cc_name() const { return mangled_cc_name_.AsView(); }
+  void set_mangled_cc_name(std::string_view value) { mangled_cc_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  absl::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(absl::string_view value) { owning_target_ = FfiString(value); }
+  std::string_view owning_target() const { return owning_target_.AsView(); }
+  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_decl_loc() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_decl_loc() { has_bits_ &= ~0x1ULL; decl_loc_ = {}; }
   const ::crubit::ffi::DeclLocation& decl_loc() const { return decl_loc_; }
@@ -2531,8 +2530,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Enum {
   ::crubit::ffi::Enumerator* add_enumerators() { has_bits_ |= 0x2ULL; return enumerators_.Add(); }
   bool has_unknown_attr() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x4ULL; unknown_attr_ = {}; }
-  absl::string_view unknown_attr() const { return unknown_attr_.AsView(); }
-  void set_unknown_attr(absl::string_view value) { has_bits_ |= 0x4ULL; unknown_attr_ = FfiString(value); }
+  std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
+  void set_unknown_attr(std::string_view value) { has_bits_ |= 0x4ULL; unknown_attr_ = FfiString(value); }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x8ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x8ULL; enclosing_item_id_ = {}; }
   uint64_t enclosing_item_id() const { return enclosing_item_id_; }
@@ -2543,16 +2542,16 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Enum {
   void set_detected_formatter(bool value) { detected_formatter_ = value; }
   bool has_nodiscard() const { return (has_bits_ & 0x10ULL) != 0; }
   void clear_nodiscard() { has_bits_ &= ~0x10ULL; nodiscard_ = {}; }
-  absl::string_view nodiscard() const { return nodiscard_.AsView(); }
-  void set_nodiscard(absl::string_view value) { has_bits_ |= 0x10ULL; nodiscard_ = FfiString(value); }
+  std::string_view nodiscard() const { return nodiscard_.AsView(); }
+  void set_nodiscard(std::string_view value) { has_bits_ |= 0x10ULL; nodiscard_ = FfiString(value); }
   bool has_deprecated() const { return (has_bits_ & 0x20ULL) != 0; }
   void clear_deprecated() { has_bits_ &= ~0x20ULL; deprecated_ = {}; }
-  absl::string_view deprecated() const { return deprecated_.AsView(); }
-  void set_deprecated(absl::string_view value) { has_bits_ |= 0x20ULL; deprecated_ = FfiString(value); }
+  std::string_view deprecated() const { return deprecated_.AsView(); }
+  void set_deprecated(std::string_view value) { has_bits_ |= 0x20ULL; deprecated_ = FfiString(value); }
   bool has_doc_comment() const { return (has_bits_ & 0x40ULL) != 0; }
   void clear_doc_comment() { has_bits_ &= ~0x40ULL; doc_comment_ = {}; }
-  absl::string_view doc_comment() const { return doc_comment_.AsView(); }
-  void set_doc_comment(absl::string_view value) { has_bits_ |= 0x40ULL; doc_comment_ = FfiString(value); }
+  std::string_view doc_comment() const { return doc_comment_.AsView(); }
+  void set_doc_comment(std::string_view value) { has_bits_ |= 0x40ULL; doc_comment_ = FfiString(value); }
   friend bool operator==(const Enum&, const Enum&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::Identifier cc_name_{};
@@ -2573,45 +2572,45 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Enum {
   FfiString doc_comment_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI GlobalVar {
+struct CRUBIT_FFI_TRIVIAL_ABI GlobalVar {
   const ::crubit::ffi::Identifier& cc_name() const { return cc_name_; }
   ::crubit::ffi::Identifier* mutable_cc_name() { return &cc_name_; }
   const ::crubit::ffi::Identifier& rs_name() const { return rs_name_; }
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
-  absl::string_view unique_name() const { return unique_name_.AsView(); }
-  void set_unique_name(absl::string_view value) { unique_name_ = FfiString(value); }
+  std::string_view unique_name() const { return unique_name_.AsView(); }
+  void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  absl::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(absl::string_view value) { owning_target_ = FfiString(value); }
+  std::string_view owning_target() const { return owning_target_.AsView(); }
+  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_decl_loc() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_decl_loc() { has_bits_ &= ~0x1ULL; decl_loc_ = {}; }
   const ::crubit::ffi::DeclLocation& decl_loc() const { return decl_loc_; }
   ::crubit::ffi::DeclLocation* mutable_decl_loc() { has_bits_ |= 0x1ULL; return &decl_loc_; }
   bool has_unknown_attr() const { return (has_bits_ & 0x2ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x2ULL; unknown_attr_ = {}; }
-  absl::string_view unknown_attr() const { return unknown_attr_.AsView(); }
-  void set_unknown_attr(absl::string_view value) { has_bits_ |= 0x2ULL; unknown_attr_ = FfiString(value); }
+  std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
+  void set_unknown_attr(std::string_view value) { has_bits_ |= 0x2ULL; unknown_attr_ = FfiString(value); }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x4ULL; enclosing_item_id_ = {}; }
   uint64_t enclosing_item_id() const { return enclosing_item_id_; }
   void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x4ULL; enclosing_item_id_ = value; }
   bool has_mangled_name() const { return (has_bits_ & 0x8ULL) != 0; }
   void clear_mangled_name() { has_bits_ &= ~0x8ULL; mangled_name_ = {}; }
-  absl::string_view mangled_name() const { return mangled_name_.AsView(); }
-  void set_mangled_name(absl::string_view value) { has_bits_ |= 0x8ULL; mangled_name_ = FfiString(value); }
+  std::string_view mangled_name() const { return mangled_name_.AsView(); }
+  void set_mangled_name(std::string_view value) { has_bits_ |= 0x8ULL; mangled_name_ = FfiString(value); }
   const ::crubit::ffi::CcType& type() const { return type_; }
   ::crubit::ffi::CcType* mutable_type() { return &type_; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
   bool has_deprecated() const { return (has_bits_ & 0x10ULL) != 0; }
   void clear_deprecated() { has_bits_ &= ~0x10ULL; deprecated_ = {}; }
-  absl::string_view deprecated() const { return deprecated_.AsView(); }
-  void set_deprecated(absl::string_view value) { has_bits_ |= 0x10ULL; deprecated_ = FfiString(value); }
+  std::string_view deprecated() const { return deprecated_.AsView(); }
+  void set_deprecated(std::string_view value) { has_bits_ |= 0x10ULL; deprecated_ = FfiString(value); }
   bool has_doc_comment() const { return (has_bits_ & 0x20ULL) != 0; }
   void clear_doc_comment() { has_bits_ &= ~0x20ULL; doc_comment_ = {}; }
-  absl::string_view doc_comment() const { return doc_comment_.AsView(); }
-  void set_doc_comment(absl::string_view value) { has_bits_ |= 0x20ULL; doc_comment_ = FfiString(value); }
+  std::string_view doc_comment() const { return doc_comment_.AsView(); }
+  void set_doc_comment(std::string_view value) { has_bits_ |= 0x20ULL; doc_comment_ = FfiString(value); }
   friend bool operator==(const GlobalVar&, const GlobalVar&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::Identifier cc_name_{};
@@ -2629,25 +2628,25 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI GlobalVar {
   FfiString doc_comment_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI TypeAlias {
+struct CRUBIT_FFI_TRIVIAL_ABI TypeAlias {
   const ::crubit::ffi::Identifier& cc_name() const { return cc_name_; }
   ::crubit::ffi::Identifier* mutable_cc_name() { return &cc_name_; }
   const ::crubit::ffi::Identifier& rs_name() const { return rs_name_; }
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
-  absl::string_view unique_name() const { return unique_name_.AsView(); }
-  void set_unique_name(absl::string_view value) { unique_name_ = FfiString(value); }
+  std::string_view unique_name() const { return unique_name_.AsView(); }
+  void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  absl::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(absl::string_view value) { owning_target_ = FfiString(value); }
+  std::string_view owning_target() const { return owning_target_.AsView(); }
+  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_doc_comment() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_doc_comment() { has_bits_ &= ~0x1ULL; doc_comment_ = {}; }
-  absl::string_view doc_comment() const { return doc_comment_.AsView(); }
-  void set_doc_comment(absl::string_view value) { has_bits_ |= 0x1ULL; doc_comment_ = FfiString(value); }
+  std::string_view doc_comment() const { return doc_comment_.AsView(); }
+  void set_doc_comment(std::string_view value) { has_bits_ |= 0x1ULL; doc_comment_ = FfiString(value); }
   bool has_unknown_attr() const { return (has_bits_ & 0x2ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x2ULL; unknown_attr_ = {}; }
-  absl::string_view unknown_attr() const { return unknown_attr_.AsView(); }
-  void set_unknown_attr(absl::string_view value) { has_bits_ |= 0x2ULL; unknown_attr_ = FfiString(value); }
+  std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
+  void set_unknown_attr(std::string_view value) { has_bits_ |= 0x2ULL; unknown_attr_ = FfiString(value); }
   const ::crubit::ffi::CcType& underlying_type() const { return underlying_type_; }
   ::crubit::ffi::CcType* mutable_underlying_type() { return &underlying_type_; }
   bool has_decl_loc() const { return (has_bits_ & 0x4ULL) != 0; }
@@ -2662,12 +2661,12 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TypeAlias {
   void set_must_bind(bool value) { must_bind_ = value; }
   bool has_deprecated() const { return (has_bits_ & 0x10ULL) != 0; }
   void clear_deprecated() { has_bits_ &= ~0x10ULL; deprecated_ = {}; }
-  absl::string_view deprecated() const { return deprecated_.AsView(); }
-  void set_deprecated(absl::string_view value) { has_bits_ |= 0x10ULL; deprecated_ = FfiString(value); }
+  std::string_view deprecated() const { return deprecated_.AsView(); }
+  void set_deprecated(std::string_view value) { has_bits_ |= 0x10ULL; deprecated_ = FfiString(value); }
   const FfiVec<FfiString>& lifetime_inputs() const { return lifetime_inputs_; }
   FfiVec<FfiString>* mutable_lifetime_inputs() { return &lifetime_inputs_; }
   void clear_lifetime_inputs() { lifetime_inputs_.Clear(); }
-  void add_lifetime_inputs(absl::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
+  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
   friend bool operator==(const TypeAlias&, const TypeAlias&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::Identifier cc_name_{};
@@ -2686,7 +2685,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI TypeAlias {
 };
 
 namespace unsupported_item {
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Path {
+struct CRUBIT_FFI_TRIVIAL_ABI Path {
   const ::crubit::ffi::UnqualifiedIdentifier& ident() const { return ident_; }
   ::crubit::ffi::UnqualifiedIdentifier* mutable_ident() { return &ident_; }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -2700,7 +2699,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Path {
 };
 }  // namespace unsupported_item
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnsupportedItem {
+struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem {
   using Path = ::crubit::ffi::unsupported_item::Path;
   using Kind = ::crubit::ffi::unsupported_item::Kind;
   static constexpr Kind OTHER = ::crubit::ffi::unsupported_item::OTHER;
@@ -2713,12 +2712,12 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnsupportedItem {
   static constexpr Kind TYPE_ALIAS = ::crubit::ffi::unsupported_item::TYPE_ALIAS;
   static constexpr Kind NAMESPACE = ::crubit::ffi::unsupported_item::NAMESPACE;
   static constexpr Kind CONSTRUCTOR = ::crubit::ffi::unsupported_item::CONSTRUCTOR;
-  absl::string_view name() const { return name_.AsView(); }
-  void set_name(absl::string_view value) { name_ = FfiString(value); }
+  std::string_view name() const { return name_.AsView(); }
+  void set_name(std::string_view value) { name_ = FfiString(value); }
   bool has_unique_name() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_unique_name() { has_bits_ &= ~0x1ULL; unique_name_ = {}; }
-  absl::string_view unique_name() const { return unique_name_.AsView(); }
-  void set_unique_name(absl::string_view value) { has_bits_ |= 0x1ULL; unique_name_ = FfiString(value); }
+  std::string_view unique_name() const { return unique_name_.AsView(); }
+  void set_unique_name(std::string_view value) { has_bits_ |= 0x1ULL; unique_name_ = FfiString(value); }
   ::crubit::ffi::unsupported_item::Kind kind() const { return kind_; }
   void set_kind(::crubit::ffi::unsupported_item::Kind value) { kind_ = value; }
   bool has_path() const { return (has_bits_ & 0x2ULL) != 0; }
@@ -2735,16 +2734,16 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnsupportedItem {
   ::crubit::ffi::DeclLocation* mutable_decl_loc() { has_bits_ |= 0x4ULL; return &decl_loc_; }
   bool has_inline_cpp_source_text() const { return (has_bits_ & 0x8ULL) != 0; }
   void clear_inline_cpp_source_text() { has_bits_ &= ~0x8ULL; inline_cpp_source_text_ = {}; }
-  absl::string_view inline_cpp_source_text() const { return inline_cpp_source_text_.AsView(); }
-  void set_inline_cpp_source_text(absl::string_view value) { has_bits_ |= 0x8ULL; inline_cpp_source_text_ = FfiString(value); }
+  std::string_view inline_cpp_source_text() const { return inline_cpp_source_text_.AsView(); }
+  void set_inline_cpp_source_text(std::string_view value) { has_bits_ |= 0x8ULL; inline_cpp_source_text_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
   bool has_defining_target() const { return (has_bits_ & 0x10ULL) != 0; }
   void clear_defining_target() { has_bits_ &= ~0x10ULL; defining_target_ = {}; }
-  absl::string_view defining_target() const { return defining_target_.AsView(); }
-  void set_defining_target(absl::string_view value) { has_bits_ |= 0x10ULL; defining_target_ = FfiString(value); }
+  std::string_view defining_target() const { return defining_target_.AsView(); }
+  void set_defining_target(std::string_view value) { has_bits_ |= 0x10ULL; defining_target_ = FfiString(value); }
   friend bool operator==(const UnsupportedItem&, const UnsupportedItem&) = default;
   uint64_t has_bits_ = 0;
   FfiString name_{};
@@ -2759,9 +2758,9 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnsupportedItem {
   FfiString defining_target_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Comment {
-  absl::string_view text() const { return text_.AsView(); }
-  void set_text(absl::string_view value) { text_ = FfiString(value); }
+struct CRUBIT_FFI_TRIVIAL_ABI Comment {
+  std::string_view text() const { return text_.AsView(); }
+  void set_text(std::string_view value) { text_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
   bool must_bind() const { return must_bind_; }
@@ -2772,7 +2771,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Comment {
   bool must_bind_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Namespace {
+struct CRUBIT_FFI_TRIVIAL_ABI Namespace {
   Namespace();
   Namespace(const Namespace&);
   Namespace(Namespace&&) noexcept;
@@ -2783,18 +2782,18 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Namespace {
   ::crubit::ffi::Identifier* mutable_cc_name() { return &cc_name_; }
   const ::crubit::ffi::Identifier& rs_name() const { return rs_name_; }
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
-  absl::string_view unique_name() const { return unique_name_.AsView(); }
-  void set_unique_name(absl::string_view value) { unique_name_ = FfiString(value); }
+  std::string_view unique_name() const { return unique_name_.AsView(); }
+  void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
   uint64_t canonical_namespace_id() const { return canonical_namespace_id_; }
   void set_canonical_namespace_id(uint64_t value) { canonical_namespace_id_ = value; }
   bool has_unknown_attr() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x1ULL; unknown_attr_ = {}; }
-  absl::string_view unknown_attr() const { return unknown_attr_.AsView(); }
-  void set_unknown_attr(absl::string_view value) { has_bits_ |= 0x1ULL; unknown_attr_ = FfiString(value); }
-  absl::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(absl::string_view value) { owning_target_ = FfiString(value); }
+  std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
+  void set_unknown_attr(std::string_view value) { has_bits_ |= 0x1ULL; unknown_attr_ = FfiString(value); }
+  std::string_view owning_target() const { return owning_target_.AsView(); }
+  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x2ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x2ULL; enclosing_item_id_ = {}; }
   uint64_t enclosing_item_id() const { return enclosing_item_id_; }
@@ -2805,12 +2804,12 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Namespace {
   void set_must_bind(bool value) { must_bind_ = value; }
   bool has_deprecated() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_deprecated() { has_bits_ &= ~0x4ULL; deprecated_ = {}; }
-  absl::string_view deprecated() const { return deprecated_.AsView(); }
-  void set_deprecated(absl::string_view value) { has_bits_ |= 0x4ULL; deprecated_ = FfiString(value); }
+  std::string_view deprecated() const { return deprecated_.AsView(); }
+  void set_deprecated(std::string_view value) { has_bits_ |= 0x4ULL; deprecated_ = FfiString(value); }
   bool has_doc_comment() const { return (has_bits_ & 0x8ULL) != 0; }
   void clear_doc_comment() { has_bits_ &= ~0x8ULL; doc_comment_ = {}; }
-  absl::string_view doc_comment() const { return doc_comment_.AsView(); }
-  void set_doc_comment(absl::string_view value) { has_bits_ |= 0x8ULL; doc_comment_ = FfiString(value); }
+  std::string_view doc_comment() const { return doc_comment_.AsView(); }
+  void set_doc_comment(std::string_view value) { has_bits_ |= 0x8ULL; doc_comment_ = FfiString(value); }
   const FfiVec<::crubit::ffi::Item>& children() const { return children_; }
   FfiVec<::crubit::ffi::Item>* mutable_children() { return &children_; }
   void clear_children() { children_.Clear(); }
@@ -2832,9 +2831,9 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Namespace {
   FfiVec<::crubit::ffi::Item> children_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI UseMod {
-  absl::string_view path() const { return path_.AsView(); }
-  void set_path(absl::string_view value) { path_ = FfiString(value); }
+struct CRUBIT_FFI_TRIVIAL_ABI UseMod {
+  std::string_view path() const { return path_.AsView(); }
+  void set_path(std::string_view value) { path_ = FfiString(value); }
   const ::crubit::ffi::Identifier& mod_name() const { return mod_name_; }
   ::crubit::ffi::Identifier* mutable_mod_name() { return &mod_name_; }
   uint64_t id() const { return id_; }
@@ -2848,19 +2847,19 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI UseMod {
   bool must_bind_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI ExistingRustType {
-  absl::string_view rs_name() const { return rs_name_.AsView(); }
-  void set_rs_name(absl::string_view value) { rs_name_ = FfiString(value); }
-  absl::string_view cc_name() const { return cc_name_.AsView(); }
-  void set_cc_name(absl::string_view value) { cc_name_ = FfiString(value); }
-  absl::string_view unique_name() const { return unique_name_.AsView(); }
-  void set_unique_name(absl::string_view value) { unique_name_ = FfiString(value); }
+struct CRUBIT_FFI_TRIVIAL_ABI ExistingRustType {
+  std::string_view rs_name() const { return rs_name_.AsView(); }
+  void set_rs_name(std::string_view value) { rs_name_ = FfiString(value); }
+  std::string_view cc_name() const { return cc_name_.AsView(); }
+  void set_cc_name(std::string_view value) { cc_name_ = FfiString(value); }
+  std::string_view unique_name() const { return unique_name_.AsView(); }
+  void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   const FfiVec<::crubit::ffi::TemplateArg>& template_args() const { return template_args_; }
   FfiVec<::crubit::ffi::TemplateArg>* mutable_template_args() { return &template_args_; }
   void clear_template_args() { template_args_.Clear(); }
   ::crubit::ffi::TemplateArg* add_template_args() { return template_args_.Add(); }
-  absl::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(absl::string_view value) { owning_target_ = FfiString(value); }
+  std::string_view owning_target() const { return owning_target_.AsView(); }
+  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_size_align() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_size_align() { has_bits_ &= ~0x1ULL; size_align_ = {}; }
   const ::crubit::ffi::SizeAlign& size_align() const { return size_align_; }
@@ -2875,8 +2874,8 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI ExistingRustType {
   void set_impl_debug(bool value) { impl_debug_ = value; }
   bool has_label_hint() const { return (has_bits_ & 0x2ULL) != 0; }
   void clear_label_hint() { has_bits_ &= ~0x2ULL; label_hint_ = {}; }
-  absl::string_view label_hint() const { return label_hint_.AsView(); }
-  void set_label_hint(absl::string_view value) { has_bits_ |= 0x2ULL; label_hint_ = FfiString(value); }
+  std::string_view label_hint() const { return label_hint_.AsView(); }
+  void set_label_hint(std::string_view value) { has_bits_ |= 0x2ULL; label_hint_ = FfiString(value); }
   bool is_trivially_copyable() const { return is_trivially_copyable_; }
   void set_is_trivially_copyable(bool value) { is_trivially_copyable_ = value; }
   friend bool operator==(const ExistingRustType&, const ExistingRustType&) = default;
@@ -2895,7 +2894,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI ExistingRustType {
   bool is_trivially_copyable_ = true;
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Item {
+struct CRUBIT_FFI_TRIVIAL_ABI Item {
   enum Case : uint32_t {
     kFunc = 0,
     kRecord = 1,
@@ -3149,7 +3148,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Item {
     other.Clear();
   }
   Case tag_;
-  union ABSL_ATTRIBUTE_TRIVIAL_ABI Payload {
+  union CRUBIT_FFI_TRIVIAL_ABI Payload {
     Payload() : func_() {}
     explicit Payload(Case) : empty_(0) {}
     Payload(const Payload&) {}
@@ -3171,27 +3170,27 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Item {
   } payload_;
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI IRProto {
+struct CRUBIT_FFI_TRIVIAL_ABI IRProto {
   const FfiVec<::crubit::ffi::HeaderName>& public_headers() const { return public_headers_; }
   FfiVec<::crubit::ffi::HeaderName>* mutable_public_headers() { return &public_headers_; }
   void clear_public_headers() { public_headers_.Clear(); }
   ::crubit::ffi::HeaderName* add_public_headers() { return public_headers_.Add(); }
-  absl::string_view current_target() const { return current_target_.AsView(); }
-  void set_current_target(absl::string_view value) { current_target_ = FfiString(value); }
+  std::string_view current_target() const { return current_target_.AsView(); }
+  void set_current_target(std::string_view value) { current_target_ = FfiString(value); }
   bool has_crate_root_path() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_crate_root_path() { has_bits_ &= ~0x1ULL; crate_root_path_ = {}; }
-  absl::string_view crate_root_path() const { return crate_root_path_.AsView(); }
-  void set_crate_root_path(absl::string_view value) { has_bits_ |= 0x1ULL; crate_root_path_ = FfiString(value); }
+  std::string_view crate_root_path() const { return crate_root_path_.AsView(); }
+  void set_crate_root_path(std::string_view value) { has_bits_ |= 0x1ULL; crate_root_path_ = FfiString(value); }
   const FfiMap<FfiString, FfiVec<FfiString>>& crubit_features() const { return crubit_features_; }
   FfiMap<FfiString, FfiVec<FfiString>>* mutable_crubit_features() { return &crubit_features_; }
   const FfiVec<FfiString>& unstable_rust_features() const { return unstable_rust_features_; }
   FfiVec<FfiString>* mutable_unstable_rust_features() { return &unstable_rust_features_; }
   void clear_unstable_rust_features() { unstable_rust_features_.Clear(); }
-  void add_unstable_rust_features(absl::string_view value) { unstable_rust_features_.Add(FfiString(value)); }
+  void add_unstable_rust_features(std::string_view value) { unstable_rust_features_.Add(FfiString(value)); }
   const FfiVec<FfiString>& reexported_namespaces() const { return reexported_namespaces_; }
   FfiVec<FfiString>* mutable_reexported_namespaces() { return &reexported_namespaces_; }
   void clear_reexported_namespaces() { reexported_namespaces_.Clear(); }
-  void add_reexported_namespaces(absl::string_view value) { reexported_namespaces_.Add(FfiString(value)); }
+  void add_reexported_namespaces(std::string_view value) { reexported_namespaces_.Add(FfiString(value)); }
   const FfiMap<FfiString, FfiVec<::crubit::ffi::Item>>& top_level_items() const { return top_level_items_; }
   FfiMap<FfiString, FfiVec<::crubit::ffi::Item>>* mutable_top_level_items() { return &top_level_items_; }
   const FfiMap<FfiString, FfiString>& crate_names() const { return crate_names_; }
@@ -3208,27 +3207,27 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI IRProto {
   FfiMap<FfiString, FfiString> crate_names_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI GenerateBindingsRequest {
+struct CRUBIT_FFI_TRIVIAL_ABI GenerateBindingsRequest {
   const ::crubit::ffi::IRProto& ir() const { return ir_; }
   ::crubit::ffi::IRProto* mutable_ir() { return &ir_; }
-  absl::string_view crubit_support_path_format() const { return crubit_support_path_format_.AsView(); }
-  void set_crubit_support_path_format(absl::string_view value) { crubit_support_path_format_ = FfiString(value); }
-  absl::string_view crubit_support_versioned_path_format() const { return crubit_support_versioned_path_format_.AsView(); }
-  void set_crubit_support_versioned_path_format(absl::string_view value) { crubit_support_versioned_path_format_ = FfiString(value); }
-  absl::string_view clang_format_exe_path() const { return clang_format_exe_path_.AsView(); }
-  void set_clang_format_exe_path(absl::string_view value) { clang_format_exe_path_ = FfiString(value); }
-  absl::string_view rustfmt_exe_path() const { return rustfmt_exe_path_.AsView(); }
-  void set_rustfmt_exe_path(absl::string_view value) { rustfmt_exe_path_ = FfiString(value); }
-  absl::string_view rustfmt_config_path() const { return rustfmt_config_path_.AsView(); }
-  void set_rustfmt_config_path(absl::string_view value) { rustfmt_config_path_ = FfiString(value); }
+  std::string_view crubit_support_path_format() const { return crubit_support_path_format_.AsView(); }
+  void set_crubit_support_path_format(std::string_view value) { crubit_support_path_format_ = FfiString(value); }
+  std::string_view crubit_support_versioned_path_format() const { return crubit_support_versioned_path_format_.AsView(); }
+  void set_crubit_support_versioned_path_format(std::string_view value) { crubit_support_versioned_path_format_ = FfiString(value); }
+  std::string_view clang_format_exe_path() const { return clang_format_exe_path_.AsView(); }
+  void set_clang_format_exe_path(std::string_view value) { clang_format_exe_path_ = FfiString(value); }
+  std::string_view rustfmt_exe_path() const { return rustfmt_exe_path_.AsView(); }
+  void set_rustfmt_exe_path(std::string_view value) { rustfmt_exe_path_ = FfiString(value); }
+  std::string_view rustfmt_config_path() const { return rustfmt_config_path_.AsView(); }
+  void set_rustfmt_config_path(std::string_view value) { rustfmt_config_path_ = FfiString(value); }
   bool generate_error_report() const { return generate_error_report_; }
   void set_generate_error_report(bool value) { generate_error_report_ = value; }
   bool is_golden_test() const { return is_golden_test_; }
   void set_is_golden_test(bool value) { is_golden_test_ = value; }
   bool kythe_annotations() const { return kythe_annotations_; }
   void set_kythe_annotations(bool value) { kythe_annotations_ = value; }
-  absl::string_view kythe_default_corpus() const { return kythe_default_corpus_.AsView(); }
-  void set_kythe_default_corpus(absl::string_view value) { kythe_default_corpus_ = FfiString(value); }
+  std::string_view kythe_default_corpus() const { return kythe_default_corpus_.AsView(); }
+  void set_kythe_default_corpus(std::string_view value) { kythe_default_corpus_ = FfiString(value); }
   friend bool operator==(const GenerateBindingsRequest&, const GenerateBindingsRequest&) = default;
   ::crubit::ffi::IRProto ir_{};
   FfiString crubit_support_path_format_{};
@@ -3242,15 +3241,15 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI GenerateBindingsRequest {
   FfiString kythe_default_corpus_{};
 };
 
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI GenerateBindingsResponse {
-  absl::string_view rs_api() const { return rs_api_.AsView(); }
-  void set_rs_api(absl::string_view value) { rs_api_ = FfiString(value); }
-  absl::string_view rs_api_impl() const { return rs_api_impl_.AsView(); }
-  void set_rs_api_impl(absl::string_view value) { rs_api_impl_ = FfiString(value); }
-  absl::string_view error_report() const { return error_report_.AsView(); }
-  void set_error_report(absl::string_view value) { error_report_ = FfiString(value); }
-  absl::string_view fatal_errors() const { return fatal_errors_.AsView(); }
-  void set_fatal_errors(absl::string_view value) { fatal_errors_ = FfiString(value); }
+struct CRUBIT_FFI_TRIVIAL_ABI GenerateBindingsResponse {
+  std::string_view rs_api() const { return rs_api_.AsView(); }
+  void set_rs_api(std::string_view value) { rs_api_ = FfiString(value); }
+  std::string_view rs_api_impl() const { return rs_api_impl_.AsView(); }
+  void set_rs_api_impl(std::string_view value) { rs_api_impl_ = FfiString(value); }
+  std::string_view error_report() const { return error_report_.AsView(); }
+  void set_error_report(std::string_view value) { error_report_ = FfiString(value); }
+  std::string_view fatal_errors() const { return fatal_errors_.AsView(); }
+  void set_fatal_errors(std::string_view value) { fatal_errors_ = FfiString(value); }
   friend bool operator==(const GenerateBindingsResponse&, const GenerateBindingsResponse&) = default;
   FfiString rs_api_{};
   FfiString rs_api_impl_{};

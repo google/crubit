@@ -8,16 +8,17 @@
 #include <string>
 #include <vector>
 
-#include "absl/status/statusor.h"
-#include "absl/types/span.h"
+#include "common/status.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 
 // Parses Rust source files given their filenames and returns a vector with all
 // C++ class template instantiations requested by calls to the `cc_template!`
 // macro.
-absl::StatusOr<std::vector<std::string>> CollectInstantiations(
-    absl::Span<const std::string> rust_sources);
+llvm::Expected<std::vector<std::string>> CollectInstantiations(
+    llvm::ArrayRef<std::string> rust_sources);
 
 }  // namespace crubit
 

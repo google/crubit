@@ -9,12 +9,12 @@
 #include <string>
 #include <utility>
 
-#include "absl/container/flat_hash_set.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
 
 namespace crubit {
 
@@ -24,8 +24,7 @@ class FrontendAction : public clang::ASTFrontendAction {
  public:
   // `in_memory_files` are tracked to exclude them from the depfile requested
   // via `-MD`, `-MF`, etc.
-  FrontendAction(Invocation& invocation,
-                 absl::flat_hash_set<std::string> in_memory_files)
+  FrontendAction(Invocation& invocation, llvm::StringSet<> in_memory_files)
       : invocation_(invocation), in_memory_files_(std::move(in_memory_files)) {}
 
   bool BeginInvocation(clang::CompilerInstance& instance) override;
@@ -35,7 +34,7 @@ class FrontendAction : public clang::ASTFrontendAction {
 
  private:
   Invocation& invocation_;
-  absl::flat_hash_set<std::string> in_memory_files_;
+  llvm::StringSet<> in_memory_files_;
 };
 
 }  // namespace crubit

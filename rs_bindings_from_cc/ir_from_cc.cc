@@ -38,15 +38,17 @@
 #include "clang/Tooling/Tooling.h"
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/VirtualFileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
 
-static constexpr absl::string_view kVirtualHeaderPath =
+static constexpr llvm::StringRef kVirtualHeaderPath =
     "ir_from_cc_virtual_header.h";
-static constexpr absl::string_view kVirtualInputPath =
+static constexpr llvm::StringRef kVirtualInputPath =
     "ir_from_cc_virtual_input.cc";
 
 namespace {
@@ -89,11 +91,12 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
   }
 
   auto follow_mod_path_to_ns =
-      [&](absl::string_view mod_path) -> std::optional<ir_proto::Namespace*> {
+      [&](llvm::StringRef mod_path) -> std::optional<ir_proto::Namespace*> {
     if (mod_path.empty()) {
       return std::nullopt;
     }
-    std::vector<absl::string_view> parts = absl::StrSplit(mod_path, "::");
+    llvm::SmallVector<llvm::StringRef, 4> parts;
+    mod_path.split(parts, "::");
     // In case there are some inner namespaces with the same name, we need to
     // first find the top-level namespace and then follow its children to match
     // the full path.
@@ -112,7 +115,8 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
       auto* parent_ns = ns_it->second;
       for (const auto& child_item : parent_ns->children()) {
         if (child_item.has_namespace_decl() &&
-            child_item.namespace_decl().cc_name().identifier() == part) {
+            child_item.namespace_decl().cc_name().identifier() ==
+                std::string_view(part)) {
           ns_id = ItemId(child_item.namespace_decl().id());
           found = true;
           break;
@@ -133,10 +137,10 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
   std::vector<UseModFromSrc> use_mods;
   use_mods.reserve(extra_rs_srcs.size());
   for (const std::string& extra_source_info : extra_rs_srcs) {
-    std::pair<absl::string_view, absl::string_view> parts =
+    std::pair<llvm::StringRef, llvm::StringRef> parts =
         absl::StrSplit(extra_source_info, absl::MaxSplits('=', 1));
-    absl::string_view extra_source_file_path = parts.first;
-    absl::string_view mod_path = parts.second;
+    llvm::StringRef extra_source_file_path = parts.first;
+    llvm::StringRef mod_path = parts.second;
     if (absl::StrContains(mod_path, '=')) {
       return absl::InvalidArgumentError(
           absl::StrCat("Invalid extra_rs_srcs entry: ", extra_source_info));
@@ -157,10 +161,10 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
       if (auto ns = follow_mod_path_to_ns(mod_path); ns.has_value()) {
         enclosing_namespace = std::move(ns);
       } else {
-        return absl::InvalidArgumentError(absl::Substitute(
+        return absl::InvalidArgumentError(internal::Substitute(
             "Specified a namespace path '$0' that does not exist. If "
             "you want to create a new module, use pub mod.",
-            mod_path));
+            {std::string(mod_path)}));
       }
     }
     use_mods.push_back(UseModFromSrc{
@@ -256,10 +260,10 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
   }
 
   std::string virtual_input_file_content;
-  absl::flat_hash_set<absl::string_view> included_files;
-  auto add_header = [&](absl::string_view header_path) {
-    absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
-                              header_path);
+  absl::flat_hash_set<llvm::StringRef> included_files;
+  auto add_header = [&](llvm::StringRef header_path) {
+    virtual_input_file_content += internal::Substitute(
+        "#include \"$0\"\n", {internal::ToStringForSubstitute(header_path)});
     included_files.insert(header_path);
   };
   for (const HeaderName& header_name : augmented_public_headers) {
@@ -271,18 +275,20 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
         {HeaderName(cc_src), options.current_target});
   }
   if (!options.extra_instantiations.empty()) {
-    absl::SubstituteAndAppend(&virtual_input_file_content, "namespace $0 {\n",
-                              kInstantiationsNamespaceName);
+    virtual_input_file_content +=
+        (llvm::Twine("namespace ") + kInstantiationsNamespaceName + " {\n")
+            .str();
     int counter = 0;
     for (const std::string& extra_instantiation :
          options.extra_instantiations) {
-      absl::SubstituteAndAppend(&virtual_input_file_content,
-                                "using __cc_template_instantiation_$0 = $1;\n",
-                                counter++, extra_instantiation);
+      virtual_input_file_content += internal::Substitute(
+          "using __cc_template_instantiation_$0 = $1;\n",
+          {internal::ToStringForSubstitute(counter++),
+           internal::ToStringForSubstitute(extra_instantiation)});
     }
-    absl::SubstituteAndAppend(&virtual_input_file_content,
-                              "}  // namespace $0\n",
-                              kInstantiationsNamespaceName);
+    virtual_input_file_content +=
+        (llvm::Twine("}  // namespace ") + kInstantiationsNamespaceName + "\n")
+            .str();
   }
   file_contents.push_back(
       {std::string(kVirtualInputPath), std::move(virtual_input_file_content)});
@@ -314,7 +320,7 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
       options.kythe_annotations, options.template_blocklist_path_regex,
       options.carcinize_mode, options.lazy_import_alien_decls,
       options.check_importer_invariants);
-  absl::flat_hash_set<std::string> in_memory_files;
+  llvm::StringSet<> in_memory_files;
   for (const auto& [path, _] : file_contents) {
     in_memory_files.insert(path);
   }

@@ -350,7 +350,7 @@ absl::StatusOr<Cmdline> Cmdline::Create(CmdlineArgs args) {
           absl::Substitute(
               "Couldn't find header '$0' in the `headers_to_target` map "
               "derived from the --target_args cmdline argument\n",
-              header.IncludePath()));
+              header.IncludePath().str()));
     }
   }
   if (!error.empty()) {

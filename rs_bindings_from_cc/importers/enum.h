@@ -18,7 +18,7 @@ class EnumDeclImporter : public DeclImporterBase<clang::EnumDecl> {
  public:
   explicit EnumDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::unique_ptr<ir_proto::Item> Import(clang::EnumDecl*) override;
+  std::unique_ptr<crubit::ffi::Item> Import(clang::EnumDecl*) override;
 };
 
 }  // namespace crubit

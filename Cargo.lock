@@ -1312,8 +1312,10 @@ name = "rs_bindings_from_cc_annotations_consumer_sys"
 version = "0.0.0"
 dependencies = [
  "annotation_reader_sys",
+ "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1342,6 +1344,7 @@ dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
  "rs_bindings_from_cc_recording_diagnostic_consumer_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1374,6 +1377,7 @@ dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_collect_instantiations",
+ "status_sys",
 ]
 
 [[package]]
@@ -1382,6 +1386,7 @@ version = "0.0.0"
 dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
+ "status_sys",
 ]
 
 [[package]]
@@ -1907,6 +1912,7 @@ name = "rs_bindings_from_cc_profiling_sys"
 version = "0.0.0"
 dependencies = [
  "crubit_build",
+ "status_sys",
 ]
 
 [[package]]
@@ -1917,6 +1923,7 @@ dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
  "rs_bindings_from_cc_ir_from_cc_dependency_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1989,8 +1996,10 @@ dependencies = [
 name = "rs_bindings_from_cc_type_map_sys"
 version = "0.0.0"
 dependencies = [
+ "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "status_sys",
 ]
 
 [[package]]
