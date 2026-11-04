@@ -71,7 +71,6 @@ LIBCXX_HEADERS = [
 ]
 
 LIBC_HEADERS = [
-    "netinet/in.h",
     "netinet/tcp.h",
     "netinet/udp.h",
     "sys/socket.h",
@@ -80,4 +79,9 @@ LIBC_HEADERS = [
 # Libc headers that are not available on Apple platforms (iOS, macOS).
 NON_APPLE_LIBC_HEADERS = [
     "netinet/ether.h",
+    # TODO(b/433699129): Re-enable on Apple once Crubit or the Apple SDK
+    # handles the RFC 3678 socket filter functions (`setipv4sourcefilter`,
+    # `getipv4sourcefilter`, `setsourcefilter`, `getsourcefilter`) declared
+    # outside `__BEGIN_DECLS` / `__END_DECLS` (`extern "C"`) in `netinet/in.h`.
+    "netinet/in.h",
 ]
