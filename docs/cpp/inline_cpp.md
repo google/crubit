@@ -72,6 +72,7 @@ rust_api_from_cpp(
     cpp_target = ":widget",
     root_namespaces = ["widget"],
     srcs = ["widget_custom.rs"],
+    embedded_cpp = True,
 )
 ```
 
