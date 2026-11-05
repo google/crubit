@@ -1,0 +1,26 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "forward_declare"
+version = "0.1.0"
+description = "Forward declarations of C++ types in Rust."
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+path = "../../forward_declare.rs"
+
+[dependencies]
+cref = { path = "../cref" }
+forward_declare_proc_macros = { path = "../forward_declare_proc_macros" }
+
+[features]
+default = ["unstable"]
+unstable = []
+
+[dev-dependencies]
+googletest.workspace = true
