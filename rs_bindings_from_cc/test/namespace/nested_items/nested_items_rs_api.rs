@@ -118,6 +118,12 @@ pub mod same_items {
     impl NestedEnum {
         pub const kOne: NestedEnum = NestedEnum(::ffi_11::new_c_int(0));
         pub const kTwo: NestedEnum = NestedEnum(::ffi_11::new_c_int(1));
+        pub const fn from_raw(value: ::ffi_11::c_int) -> Self {
+            Self(value)
+        }
+        pub const fn into_raw(self) -> ::ffi_11::c_int {
+            self.0
+        }
     }
     impl From<::ffi_11::c_int> for NestedEnum {
         fn from(value: ::ffi_11::c_int) -> NestedEnum {

@@ -294,6 +294,12 @@ impl DocCommentEnum {
     pub const kDocCommentBlue: DocCommentEnum = DocCommentEnum(::ffi_11::new_c_uint(1));
     /// Green color variant.
     pub const kDocCommentGreen: DocCommentEnum = DocCommentEnum(::ffi_11::new_c_uint(2));
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
 }
 impl From<::ffi_11::c_uint> for DocCommentEnum {
     fn from(value: ::ffi_11::c_uint) -> DocCommentEnum {

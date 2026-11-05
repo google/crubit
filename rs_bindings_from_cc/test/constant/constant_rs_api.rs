@@ -21,6 +21,12 @@
 pub struct Foo(::ffi_11::c_uint);
 impl Foo {
     pub const BAR: Foo = Foo(::ffi_11::new_c_uint(0));
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
 }
 impl From<::ffi_11::c_uint> for Foo {
     fn from(value: ::ffi_11::c_uint) -> Foo {
