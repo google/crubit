@@ -44,10 +44,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "aliasing_references_test",
     srcs = ["aliasing_references_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":aliasing_references_cc_api",
         "@abseil-cpp//absl/types:span",

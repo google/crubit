@@ -51,10 +51,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "enums_test",
     srcs = ["enums_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":enums_cc_api",
         "@googletest//:gtest_main",
@@ -91,10 +87,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "cpp_enums_test",
     srcs = ["cpp_enums_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":cpp_enums_cc_api",
         "@googletest//:gtest_main",
@@ -133,10 +125,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "option_test",
     srcs = ["option_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":option_cc_api",
         "//support/rs_std",
@@ -173,10 +161,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "option_references_test",
     srcs = ["option_references_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":option_references_cc_api",
         "@googletest//:gtest_main",
@@ -211,10 +195,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "option_specialization_collision_test",
     srcs = ["option_specialization_collision_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":option_specialization_collision_cc_api",
         "@googletest//:gtest_main",
@@ -253,10 +233,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "result_test",
     srcs = ["result_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":result_cc_api",
         "//support:movable",

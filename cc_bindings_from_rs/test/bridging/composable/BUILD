@@ -51,6 +51,7 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "composable_bridging_test",
     srcs = ["composable_bridging_test.cc"],
+    tags = ["no_test_android_x86"],
     deps = [
         ":composable_bridging_cc_api",
         "//support/rs_std:slice_ref",

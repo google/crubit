@@ -46,10 +46,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "boxes_test",
     srcs = ["boxes_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":boxes_cc_api",
         "//support:movable",

@@ -67,6 +67,7 @@ golden_test(
 crubit_cc_test(
     name = "test",
     srcs = ["test.cc"],
+    tags = ["no_test_android_x86"],
     deps = [
         ":cc_struct",
         ":lib_cc_api",

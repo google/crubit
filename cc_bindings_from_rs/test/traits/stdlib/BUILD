@@ -42,10 +42,6 @@ golden_test(
 crubit_cc_test(
     name = "stdlib_test",
     srcs = ["stdlib_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":stdlib_cc_api",
         "//support/rs_std",

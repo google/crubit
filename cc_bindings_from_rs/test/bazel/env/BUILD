@@ -26,10 +26,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "env_test",
     srcs = ["env_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":env_cc_api",
         "@googletest//:gtest_main",

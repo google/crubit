@@ -50,7 +50,11 @@ crubit_cc_test(
     name = "shared_ptr_test",
     srcs = ["shared_ptr_test.cc"],
     # TODO(b/575815022): Re-enable once `cc_std` links on macOS.
-    tags = ["no_macos"],
+    tags = [
+        "no_ios",
+        "no_macos",
+        "no_test_android_x86",
+    ],
     deps = [
         ":shared_ptr_cc_api",
         "@googletest//:gtest_main",
