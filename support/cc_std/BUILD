@@ -7,7 +7,7 @@ load(
     "bindings_for_toolchain_headers",
 )
 load(
-    "//support/cc_std_impl:headers.bzl",
+    "@crubit_std_headers//:headers.bzl",
     "LIBCXX_HEADERS",
     "LIBC_HEADERS",
     "NON_APPLE_LIBC_HEADERS",

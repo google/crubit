@@ -1,0 +1,70 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#
+# C++ standard library headers to generate bindings for, as written in
+# `#include <...>`. One per line; lines starting with `#` are comments.
+
+algorithm
+any
+array
+atomic
+bitset
+cassert
+cctype
+cerrno
+cfenv
+cfloat
+charconv
+chrono
+cinttypes
+climits
+cmath
+# TODO(b/437061002): Re-enable once the bug is fixed.
+# "condition_variable",
+coroutine
+csetjmp
+csignal
+cstdarg
+cstddef
+cstdint
+cstdio
+cstdlib
+cstring
+ctime
+cuchar
+cwchar
+cwctype
+deque
+exception
+forward_list
+functional
+initializer_list
+ios
+limits
+list
+map
+memory
+mutex
+new
+numeric
+optional
+queue
+ratio
+set
+scoped_allocator
+stack
+stdexcept
+streambuf
+string
+string_view
+system_error
+tuple
+type_traits
+typeindex
+typeinfo
+unordered_map
+unordered_set
+utility
+variant
+vector

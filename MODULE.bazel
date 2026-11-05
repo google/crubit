@@ -45,6 +45,13 @@ llvm_configure(
 )
 
 ########################################################################
+# The C++ standard library headers that cc_std generates bindings for. They
+# are kept in text files, shared with the CMake build.
+std_headers = use_repo_rule("//support/cc_std_impl:std_headers_repo.bzl", "std_headers")
+
+std_headers(name = "crubit_std_headers")
+
+########################################################################
 # Rust Crate Dependencies
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 crate.from_cargo(
