@@ -25,7 +25,13 @@ template <typename T>
 struct TemplateWithStaticMembers {
   static constexpr int kValue = 14;
   static T value;
+
+  struct Nested {
+    static constexpr int kNestedValue = 42;
+    static T nested_value;
+  };
 };
 using TemplateWithStaticMembersInt = TemplateWithStaticMembers<int>;
+static_assert(sizeof(TemplateWithStaticMembersInt::Nested) > 0);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATE_INSTANTIATION_H_

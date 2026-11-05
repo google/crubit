@@ -124,6 +124,9 @@ impl Default for __CcTemplateInst25TemplateWithStaticMembersIiE {
 // error: global variable `TemplateWithStaticMembers<int>::value` could not be bound
 //   static data members of class template specializations are not supported
 
+// error: struct `TemplateWithStaticMembers<int>::Nested` could not be bound
+//   b/485949049: type definitions nested inside templated records are not yet supported
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;

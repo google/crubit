@@ -322,11 +322,20 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::Import(
       // Members of uninstantiated templates have no concrete type or value.
       return nullptr;
     }
-    if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl_context)) {
-      // Static data members of class template specializations are instantiated
-      // lazily: their initializers may not have been evaluated and their
-      // definitions may never be emitted by C++ unless ODR-used, which would
-      // lead to link errors from the Rust side.
+    // `getInstantiatedFromStaticDataMember()` returns the template pattern
+    // `VarDecl` from which `var_decl` was instantiated, or `nullptr` if it was
+    // not instantiated from a template. This covers static data members both of
+    // class template specializations and of non-template classes nested inside
+    // class template specializations (where `decl_context` is a plain
+    // `CXXRecordDecl`). Checking `decl_context` as well covers explicit class
+    // template specializations.
+    //
+    // Such static data members are instantiated lazily: their initializers may
+    // not have been evaluated (so `var_decl->getInit()` can be null even when
+    // `isConstexpr()` is true) and their definitions may never be emitted by
+    // C++ unless ODR-used, which would lead to link errors from the Rust side.
+    if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl_context) ||
+        var_decl->getInstantiatedFromStaticDataMember() != nullptr) {
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
           {FormattedError::Static(
