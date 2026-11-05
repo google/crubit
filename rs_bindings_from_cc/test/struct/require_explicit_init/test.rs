@@ -2,9 +2,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-//! Regression test for b/555410712: types with
-//! `ABSL_REQUIRE_EXPLICIT_INIT` fields must not get `Default`/`CtorNew`
-//! bindings, because the generated C++ thunk would not compile.
+//! Types with `ABSL_REQUIRE_EXPLICIT_INIT` fields must not get
+//! `Default`/`CtorNew` bindings, because the generated C++ thunk would not
+//! compile.
 
 use googletest::prelude::*;
 use require_explicit_init::*;

@@ -810,7 +810,7 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
   // would generate (`crubit::construct_at(__this)`) value-initializes the
   // record, which fails to compile with `-Wuninitialized-explicit-init`. Note
   // that Clang clears this bit for non-aggregates, where the attribute is
-  // ignored. See b/555410712.
+  // ignored.
   if (const auto* constructor_decl =
           clang::dyn_cast<clang::CXXConstructorDecl>(function_decl);
       constructor_decl != nullptr && constructor_decl->getNumParams() == 0 &&

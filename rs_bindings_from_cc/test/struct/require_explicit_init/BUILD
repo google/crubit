@@ -1,4 +1,4 @@
-"""Repro for b/555410712: ABSL_REQUIRE_EXPLICIT_INIT and Crubit bindings."""
+"""Tests for ABSL_REQUIRE_EXPLICIT_INIT and Crubit bindings."""
 
 load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
