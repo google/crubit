@@ -176,11 +176,11 @@ pub fn return_triply_nested_tuple() -> (((i32,),),) {
 }
 
 #[must_bind]
-pub fn param_ffi_alias_in_tuple(five: (std::ffi::c_char,)) {
+pub fn param_ffi_alias_in_tuple(five: (std::ffi::c_schar,)) {
     assert_eq!(five.0, 5);
 }
 #[must_bind]
-pub fn return_ffi_alias_in_tuple() -> (std::ffi::c_char,) {
+pub fn return_ffi_alias_in_tuple() -> (std::ffi::c_schar,) {
     (5,)
 }
 
