@@ -14,7 +14,7 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/Specifiers.h"
-#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {

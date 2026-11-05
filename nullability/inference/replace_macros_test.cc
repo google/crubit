@@ -17,8 +17,8 @@
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
-#include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"  // IWYU pragma: keep
-#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "gmock/gmock.h"  // IWYU pragma: keep
+#include "gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {

@@ -6,7 +6,7 @@
 
 #include "nullability/test/check_diagnostics.h"
 #include "llvm/ADT/StringRef.h"
-#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "gtest/gtest.h"
 
 // TODO: The tests in this file test two different things that should be tested
 // separately:

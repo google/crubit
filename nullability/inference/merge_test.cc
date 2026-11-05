@@ -11,8 +11,8 @@
 #include "nullability/inference/inference.pb.h"
 #include "nullability/inference/proto_matchers.h"
 #include "llvm/ADT/StringRef.h"
-#include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
-#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "google/protobuf/text_format.h"
 
 namespace clang::tidy::nullability {
