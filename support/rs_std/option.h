@@ -39,7 +39,7 @@ inline constexpr bool OptionFromStdOptional = ::std::conjunction_v<
     ::std::negation<::std::is_lvalue_reference<Opt>>>;
 
 template <typename Derived, typename T>
-class OptionBase {
+class [[clang::analyze_as_class("std::optional")]] OptionBase {
  private:
   // Sets `option` to `None` when destroyed. This lets a `return` statement
   // relocate the value out of `option` before `option` is marked empty.
