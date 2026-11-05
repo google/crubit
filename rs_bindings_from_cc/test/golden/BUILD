@@ -82,6 +82,24 @@ DEPS = {
 
 TAGS = {}
 
+# Tests whose golden files were generated with precompiled header modules, and
+# differ without them (e.g. in the order of the items). They are skipped when
+# `//rs_bindings_from_cc/bazel_support:use_header_modules`
+# is off.
+REQUIRES_HEADER_MODULES = [
+    "boxes",
+]
+
+# True when `rs_bindings_from_cc` doesn't use precompiled header modules. See
+# `requires_header_modules` in `golden_test.bzl`.
+config_setting(
+    name = "header_modules_off",
+    flag_values = {
+        "//rs_bindings_from_cc/bazel_support:use_header_modules": "False",
+    },
+    visibility = ["//:__subpackages__"],
+)
+
 COPTS = {
     # Verify that the generated `deprecated_rs_api_impl.cc` compiles without
     # deprecation warnings (even if the default flags disable them).
@@ -164,6 +182,7 @@ rust_bindings_from_cc_cli_flag(
     cc_library = name + "_cc",
     golden_cc = name + "_rs_api_impl.cc",
     golden_rs = name + "_rs_api.rs",
+    requires_header_modules = name in REQUIRES_HEADER_MODULES,
     tags = [tag for tag in (TAGS[name] if name in TAGS else [])],
 ) for name in TESTS]
 
