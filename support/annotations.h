@@ -481,6 +481,16 @@
 #define CRUBIT_UNSAFE_BITWISE_RELOCATABLE \
   CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_bitwise_relocatable")
 
+// Marks a C++ record type as never bitwise relocatable, making it stay
+// pinned (!Unpin) in the generated Rust bindings even if it is trivially
+// copyable or annotated with [[clang::trivial_abi]].
+//
+// This is useful for types whose address is registered elsewhere or which must
+// not be memcpy-moved despite having trivial special members. Applying this
+// along with CRUBIT_UNSAFE_BITWISE_RELOCATABLE is a hard error.
+#define CRUBIT_NEVER_BITWISE_RELOCATABLE \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_never_bitwise_relocatable")
+
 // Like `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`, but if a member is not bitwise
 // relocatable, the generator silently leaves the type pinned instead of
 // failing. Useful for class templates whose bitwise relocatability depends on

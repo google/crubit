@@ -152,6 +152,9 @@ A type is never BR if:
 -   it contains an address-tagged Pointer-Field-Protection field (§3.8) (this
     only arises under `-fexperimental-pointer-field-protection-tagged` which v1
     rejects outright; untagged `-abi` mode is unaffected).
+-   it is annotated with `CRUBIT_NEVER_BITWISE_RELOCATABLE`. Rationale: lets
+    authors pin types that look trivially relocatable to Crubit but must not be
+    `memcpy`-moved (e.g. their address is registered elsewhere).
 -   it is `std::basic_string<...>` (any specialization). Rationale: libc++'s is
     BR but libstdc++'s SSO pointer is self-referential; a platform-independent
     answer must be "no".
@@ -258,12 +261,12 @@ macro appears in some included header). So an outer `Foo { Bar bar_; }` where
 `Bar` uses the override needs no marker of its own: `Bar` is BR, hence `Foo` is
 BR by the implicit rule or a plain `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`. For
 discoverability, the generated binding of *every* type whose BR result depended
-on a `_STD_STRING_ONLY_ON_LIBCXX` override gets a doc comment (`/// Rust-movable
-only when built against libc++ (via field Bar::spec_)`), so the dependence is
-visible on `Foo` without being viral in source. A viral type-level marker (a
-libc++-only marker required on `Foo` too) was considered: it buys no soundness
-over the generator check and would spread across every transitive user of
-`GURL`.
+on a `_STD_STRING_ONLY_ON_LIBCXX` override gets a doc comment
+(`/// Rust-movable only when built against libc++ (via field Bar::spec_)`), so
+the dependence is visible on `Foo` without being viral in source. A viral
+type-level marker (a libc++-only marker required on `Foo` too) was considered:
+it buys no soundness over the generator check and would spread across every
+transitive user of `GURL`.
 
 #### 3.6.2 Why not an unchecked `CRUBIT_UNSAFE_RUST_MOVABLE` on the type?
 
@@ -444,23 +447,26 @@ exactly as today.
 
 ## 5\. Worked examples
 
-| C++                                                                                                                             | Today                  | Proposed                                                           |
-| :------------------------------------------------------------------------------------------------------------------------------ | :--------------------- | :----------------------------------------------------------------- |
-| `struct A { std::string s; };`                                                                                                  | pinned                 | pinned (`No`: member `s` is never-BR)                              |
-| `struct ABSL_ATTRIBUTE_TRIVIAL_ABI B { std::string s; };`                                                                       | **Unpin (bug)**        | pinned                                                             |
-| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE C { std::string s; };`                                                                | n/a                    | **error**: "`s`: `std::basic_string` is never bitwise-relocatable" |
-| `struct D { std::optional<int> o; };`                                                                                           | Unpin                  | Unpin                                                              |
-| `struct E { std::optional<std::unique_ptr<int>> o; };`                                                                          | pinned                 | Unpin                                                              |
-| `struct F { std::optional<std::string> o; };`                                                                                   | pinned                 | pinned                                                             |
-| `struct G { std::vector<std::string> v; };`                                                                                     | pinned                 | Unpin                                                              |
-| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE H : Base { virtual ~H(); };`                                                          | pinned                 | **error**: polymorphic                                             |
-| `class CRUBIT_UNSAFE_BITWISE_RELOCATABLE GURL { std::string spec_; ... };`                                                      | pinned                 | **error**: `spec_` is `std::basic_string`                          |
-| `class CRUBIT_UNSAFE_BITWISE_RELOCATABLE GURL { CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX std::string spec_; ... };` | pinned                 | Unpin on libc++; **error** if the TU uses libstdc++                |
-| `struct I { I(I&&); ~I(); int x; };` (no annotation)                                                                            | pinned                 | pinned (user-provided special members)                             |
-| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE I2 { I2(I2&&); ~I2(); int x; };`                                                      | pinned                 | Unpin                                                              |
-| `struct J { J(const J&) = default; J(J&&) = delete; ~J() = default; int x; };`                                                  | pinned                 | pinned (xvalue selects deleted move)                               |
-| `struct K { K(const K&) = delete; K(K&&) = delete; ~K(); int fd_; };`                                                           | pinned                 | pinned (no non-deleted copy/move; user-provided dtor)              |
-| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE K2 { K2(const K2&) = delete; K2(K2&&) = delete; ~K2(); int fd_; };`                   | pinned, **no way out** | Unpin                                                              |
+| C++                                                                                                                             | Today                  | Proposed                                                                 |
+| :------------------------------------------------------------------------------------------------------------------------------ | :--------------------- | :----------------------------------------------------------------------- |
+| `struct A { std::string s; };`                                                                                                  | pinned                 | pinned (`No`: member `s` is never-BR)                                    |
+| `struct ABSL_ATTRIBUTE_TRIVIAL_ABI B { std::string s; };`                                                                       | **Unpin (bug)**        | pinned                                                                   |
+| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE C { std::string s; };`                                                                | n/a                    | **error**: "`s`: `std::basic_string` is never bitwise-relocatable"       |
+| `struct D { std::optional<int> o; };`                                                                                           | Unpin                  | Unpin                                                                    |
+| `struct E { std::optional<std::unique_ptr<int>> o; };`                                                                          | pinned                 | Unpin                                                                    |
+| `struct F { std::optional<std::string> o; };`                                                                                   | pinned                 | pinned                                                                   |
+| `struct G { std::vector<std::string> v; };`                                                                                     | pinned                 | Unpin                                                                    |
+| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE H : Base { virtual ~H(); };`                                                          | pinned                 | **error**: polymorphic                                                   |
+| `class CRUBIT_UNSAFE_BITWISE_RELOCATABLE GURL { std::string spec_; ... };`                                                      | pinned                 | **error**: `spec_` is `std::basic_string`                                |
+| `class CRUBIT_UNSAFE_BITWISE_RELOCATABLE GURL { CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX std::string spec_; ... };` | pinned                 | Unpin on libc++; **error** if the TU uses libstdc++                      |
+| `struct I { I(I&&); ~I(); int x; };` (no annotation)                                                                            | pinned                 | pinned (user-provided special members)                                   |
+| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE I2 { I2(I2&&); ~I2(); int x; };`                                                      | pinned                 | Unpin                                                                    |
+| `struct J { J(const J&) = default; J(J&&) = delete; ~J() = default; int x; };`                                                  | pinned                 | pinned (xvalue selects deleted move)                                     |
+| `struct K { K(const K&) = delete; K(K&&) = delete; ~K(); int fd_; };`                                                           | pinned                 | pinned (no non-deleted copy/move; user-provided dtor)                    |
+| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE K2 { K2(const K2&) = delete; K2(K2&&) = delete; ~K2(); int fd_; };`                   | pinned, **no way out** | Unpin                                                                    |
+| `struct CRUBIT_NEVER_BITWISE_RELOCATABLE L { int x; };`                                                                         | Unpin                  | pinned (never-set)                                                       |
+| `struct ABSL_ATTRIBUTE_TRIVIAL_ABI CRUBIT_NEVER_BITWISE_RELOCATABLE L2 { int x; };`                                             | Unpin                  | pinned (never-set)                                                       |
+| `struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE CRUBIT_NEVER_BITWISE_RELOCATABLE L3 { int x; };`                                      | n/a                    | **error**: `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` applied to never-set type |
 
 ## 6\. Implementation
 

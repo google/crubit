@@ -99,8 +99,9 @@ defines a user-provided move constructor or destructor, then it requires a
 special annotation to be considered Rust-movable:
 `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` (defined in `support/annotations.h`, along
 with `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_IF_ELIGIBLE` for templates,
-`CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD`, and
-`CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX`).
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD`,
+`CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX`, and
+`CRUBIT_NEVER_BITWISE_RELOCATABLE`).
 
 If a type has a non-Rust-movable field or base class, it is not Rust-movable. A
 `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` annotation on a type with

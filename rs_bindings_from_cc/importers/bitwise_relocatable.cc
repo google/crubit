@@ -135,7 +135,8 @@ enum class NeverBRKind {
   kPolymorphic,
   kVirtualBases,
   kAddressDependent,
-  kStdBasicString
+  kStdBasicString,
+  kAnnotatedNever
 };
 
 NeverBRKind IsNeverBR(const clang::CXXRecordDecl* decl) {
@@ -151,6 +152,9 @@ NeverBRKind IsNeverBR(const clang::CXXRecordDecl* decl) {
         return NeverBRKind::kStdBasicString;
     }
   }
+  if (HasAnnotation(decl, "crubit_never_bitwise_relocatable")) {
+    return NeverBRKind::kAnnotatedNever;
+  }
   return NeverBRKind::kNotNever;
 }
 
@@ -164,6 +168,8 @@ std::string NeverBRReason(NeverBRKind kind) {
       return "type can never pass in registers (__weak or __ptrauth)";
     case NeverBRKind::kStdBasicString:
       return "std::basic_string is never bitwise-relocatable";
+    case NeverBRKind::kAnnotatedNever:
+      return "type is annotated with CRUBIT_NEVER_BITWISE_RELOCATABLE";
     default:
       return "";
   }

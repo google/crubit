@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use bitwise_relocatable::{
-    AssertedBR, DeletedMoveAssign, DerivesUserMove, FieldOverrideUserMove, FuncVoid, GetAssertedBR,
+    AnnotatedNeverBR, AnnotatedNeverBRTrivialAbi, AssertedBR, ContainerOfAnnotatedNeverBR,
+    DeletedMoveAssign, DerivesUserMove, FieldOverrideUserMove, FuncVoid, GetAssertedBR,
     GetStdStringOnLibcxxLength, GetStructWithVecAndUniquePtrLen, HolderK2,
     IfEligibleDerivesUserMove, IfEligibleTrivial, IfEligibleUserMove, MakeAssertedBR,
     MakeStdStringOnLibcxx, MakeStructWithVecAndUniquePtr, MapIntInt, NestedIfEligible, OptAsserted,
@@ -43,6 +44,10 @@ assert_not_impl_any!(DerivesUserMove: Unpin);
 assert_not_impl_any!(IfEligibleDerivesUserMove: Unpin);
 
 assert_not_impl_any!(Polymorphic: Unpin);
+
+assert_not_impl_any!(AnnotatedNeverBR: Unpin);
+assert_not_impl_any!(AnnotatedNeverBRTrivialAbi: Unpin);
+assert_not_impl_any!(ContainerOfAnnotatedNeverBR: Unpin);
 
 assert_impl_all!(StdStringOnLibcxx: Unpin);
 

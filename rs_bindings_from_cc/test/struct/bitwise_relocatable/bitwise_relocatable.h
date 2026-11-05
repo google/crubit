@@ -128,6 +128,21 @@ struct StdStringOnLibcxx {
   CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX std::string s;
 };
 
+struct CRUBIT_NEVER_BITWISE_RELOCATABLE AnnotatedNeverBR {
+  int x;
+};
+
+struct [[clang::trivial_abi]] CRUBIT_NEVER_BITWISE_RELOCATABLE
+    AnnotatedNeverBRTrivialAbi {
+  AnnotatedNeverBRTrivialAbi(AnnotatedNeverBRTrivialAbi&&);
+  ~AnnotatedNeverBRTrivialAbi();
+  int x;
+};
+
+struct ContainerOfAnnotatedNeverBR {
+  AnnotatedNeverBR n;
+};
+
 AssertedBR MakeAssertedBR(int x);
 int GetAssertedBR(const AssertedBR& a);
 
