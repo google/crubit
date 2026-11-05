@@ -371,3 +371,7 @@ impl<T> GenericStruct<T> {
         GenericStruct { value: ZeroSizedUnboundType }
     }
 }
+
+pub fn instantiate_transitive_reexport(val: i32) -> generics_reexport::TransitiveGeneric<i32> {
+    generics_reexport::TransitiveGeneric { value: val }
+}

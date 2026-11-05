@@ -2460,6 +2460,14 @@ pub fn get_generic_adt_header<'tcx>(
         );
     }
 
+    let is_stdlib_stable_reexport =
+        matches!(tcx.crate_name(def_id.krate).as_str(), "core" | "alloc")
+            && matches!(tcx.crate_name(canonical_name.krate_num).as_str(), "std" | "alloc");
+    ensure!(
+        canonical_name.krate_num == def_id.krate || is_stdlib_stable_reexport,
+        "Transitively re-exported generic types are not supported yet (b/259749095)"
+    );
+
     ensure!(
         are_generics_enabled(db, def_id.krate),
         "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"

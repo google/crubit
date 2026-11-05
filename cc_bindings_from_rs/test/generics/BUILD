@@ -15,6 +15,27 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 package(default_applicable_licenses = ["//:license"])
 
 rust_library(
+    name = "generics_def",
+    srcs = ["generics_def.rs"],
+    aspect_hints = [
+        "//features:generics",
+        "//features:supported",
+    ],
+    edition = "2024",
+)
+
+rust_library(
+    name = "generics_reexport",
+    srcs = ["generics_reexport.rs"],
+    aspect_hints = [
+        "//features:generics",
+        "//features:supported",
+    ],
+    edition = "2024",
+    deps = [":generics_def"],
+)
+
+rust_library(
     name = "generics",
     srcs = ["generics.rs"],
     aspect_hints = [
@@ -22,6 +43,7 @@ rust_library(
         "//features:supported",
     ],
     edition = "2024",
+    deps = [":generics_reexport"],
 )
 
 golden_test(

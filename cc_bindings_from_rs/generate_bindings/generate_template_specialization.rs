@@ -254,12 +254,14 @@ fn parse_user_defined_adt_template_specialization<'tcx>(
     if !query_compiler::has_non_lifetime_generics(tcx, adt.did()) {
         return None;
     }
-    if !are_generics_enabled(db, adt.did().krate) {
-        return None;
-    }
     // Types annotated with `cpp_type` should not be specialized. They will be handled by the
     // logic for cpp_type.
     if crubit_attr::get_attrs(tcx, adt.did()).ok()?.cpp_type.is_some() {
+        return None;
+    }
+    let canonical_krate =
+        db.symbol_canonical_name(adt.did()).map_or(adt.did().krate, |name| name.krate_num);
+    if !are_generics_enabled(db, canonical_krate) {
         return None;
     }
     Some(build_user_defined_adt_template_specialization(db, self_ty, adt, substs))

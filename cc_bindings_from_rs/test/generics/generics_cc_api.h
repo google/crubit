@@ -191,6 +191,11 @@ instantiate_multi_generic_at_bool_i32();
 
 ::generics::RenamedSubGeneric<::std::int32_t> instantiate_sub_generic();
 
+// Error generating bindings for function
+// `generics_golden::instantiate_transitive_reexport`: Error formatting function
+// return type `generics_def::TransitiveGeneric<i32>`: Transitively re-exported
+// generic types are not supported yet (b/259749095)
+
 ::generics::GenericStruct<::std::array<::std::int32_t, 4>>
 instantiate_with_array();
 
