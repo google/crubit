@@ -37,6 +37,7 @@
 
 namespace clang::tidy::nullability {
 namespace {
+using ::clang::ast_matchers::bindingDecl;
 using ::clang::ast_matchers::declRefExpr;
 using ::clang::ast_matchers::functionDecl;
 using ::clang::ast_matchers::hasDescendant;
@@ -766,6 +767,43 @@ TEST_F(GetTypeNullabilityTest,
                      hasDescendant(declRefExpr(to(parmVarDecl().bind("t"))))),
                  AST.context()));
   ASSERT_NE(D, nullptr);
+  EXPECT_THAT(
+      getTypeNullability(*D, TypeNullabilityDefaults(AST.context(), Pragmas)),
+      IsEmpty());
+}
+
+TEST_F(GetTypeNullabilityTest,
+       PackIndexingIntoStructuredBindingPackEvenInInstantiation) {
+  // This is a crash repro for b/575454697.
+  Inputs.Language = TestLanguage::Lang_CXX26;
+  Inputs.Code = R"cpp(
+    struct S {
+      int* a;
+      int* b;
+    };
+
+    template <typename T>
+    int* foo(const T& s) {
+      const auto& [... fields] = s;
+      return fields...[1];
+    }
+
+    void usage() { foo(S{}); }
+  )cpp";
+  NullabilityPragmas Pragmas;
+  Inputs.MakeAction = makeRegisterPragmasAction(Pragmas);
+  TestAST AST(Inputs);
+  // In the instantiation, the pack operand of the `PackIndexingExpr` still
+  // refers to the structured binding pack from the template pattern, whose type
+  // is `PackExpansionType(DependentTy)`.
+  auto* D = selectFirst<BindingDecl>(
+      "fields",
+      match(functionDecl(
+                isTemplateInstantiation(),
+                hasDescendant(declRefExpr(to(bindingDecl().bind("fields"))))),
+            AST.context()));
+  ASSERT_NE(D, nullptr);
+  ASSERT_TRUE(D->isParameterPack());
   EXPECT_THAT(
       getTypeNullability(*D, TypeNullabilityDefaults(AST.context(), Pragmas)),
       IsEmpty());

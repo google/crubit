@@ -1328,6 +1328,73 @@ TEST(PointerNullabilityTest, CallMethodTakingParameterPack) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, PackIndexingIntoStructuredBindingPack) {
+  // This is a crash repro for b/575454697.
+  // In an instantiation, the pack operand of each `PackIndexingExpr` is a
+  // `DeclRefExpr` to the structured binding pack from the template pattern,
+  // whose type is a dependent `PackExpansionType`.
+  // Note: checkDiagnostics runs in C++17 and C++20 mode, so structured binding
+  // packs and pack indexing (both C++26 features) are accepted only as clang
+  // extensions there.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      int* _Nullable N;
+      int* _Nonnull NN;
+    };
+    template <typename T>
+    void target(const T& s) {
+      const auto& [... fields] = s;
+      *fields...[0];  // [[unsafe]]
+      *fields...[1];
+    }
+    void usage(S s) { target(s); }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, PackIndexingIntoTupleLikeStructuredBindingPack) {
+  // This is a crash repro for b/575454697.
+  // Same as above, but tuple-like decomposition binds through holding
+  // variables.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct TL {
+      int* _Nullable N;
+      int* _Nonnull NN;
+    };
+    namespace std {
+    template <class T>
+    struct tuple_size;
+    template <unsigned long I, class T>
+    struct tuple_element;
+    template <>
+    struct tuple_size<TL> {
+      static constexpr unsigned long value = 2;
+    };
+    template <>
+    struct tuple_element<0, TL> {
+      using type = int* _Nullable;
+    };
+    template <>
+    struct tuple_element<1, TL> {
+      using type = int* _Nonnull;
+    };
+    }  // namespace std
+    template <unsigned long I>
+    typename std::tuple_element<I, TL>::type get(const TL& t) {
+      if constexpr (I == 0)
+        return t.N;
+      else
+        return t.NN;
+    }
+    template <typename T>
+    void target(T t) {
+      auto [... fields] = t;
+      *fields...[0];  // [[unsafe]]
+      *fields...[1];
+    }
+    void usage(TL t) { target(t); }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, CallFunctionReturningTemplateSpecializationType) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     template <class T>

@@ -1117,8 +1117,14 @@ TypeNullability getTypeNullability(
     // Pack indexing expressions can contain dependent types even in an
     // instantiation, so we detect and skip attempting to walk these types as
     // specifically as we can.
+    // The pack operand is either a function parameter pack, whose type is a
+    // `PackExpansionType` with a pattern containing an unexpanded parameter
+    // pack, or a structured binding pack, whose type is
+    // `PackExpansionType(DependentTy)` (see
+    // `Sema::ActOnDecompositionDeclarator`).
     if (!PET || PET->getPattern().isNull() ||
-        !PET->getPattern()->containsUnexpandedParameterPack()) {
+        !(PET->getPattern()->containsUnexpandedParameterPack() ||
+          PET->getPattern()->isSpecificBuiltinType(BuiltinType::Dependent))) {
       llvm::reportFatalInternalError(
           Twine("Most dependent types should never reach this point of "
                 "analysis. Unexpected dependent type: ") +
