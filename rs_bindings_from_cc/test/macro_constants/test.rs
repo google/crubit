@@ -10,7 +10,11 @@ use googletest::{expect_eq, expect_true, gtest};
 fn test_values_match_cc() {
     expect_eq!(macro_constants::INT_CONSTANT!(), macro_constants::IntConstant());
     expect_eq!(macro_constants::UNSIGNED_CONSTANT!(), macro_constants::UnsignedConstant());
+    expect_eq!(macro_constants::LONG_LONG_CONSTANT!(), macro_constants::LongLongConstant());
     expect_eq!(macro_constants::HEX_CONSTANT!(), macro_constants::HexConstant());
+    expect_eq!(macro_constants::SHIFTED_CONSTANT!(), macro_constants::ShiftedConstant());
+    expect_eq!(macro_constants::BITWISE_CONSTANT!(), macro_constants::BitwiseConstant());
+    expect_eq!(macro_constants::BOOL_CONSTANT!(), macro_constants::BoolConstant());
     // `ffi_11::c_char` isn't a primitive type, so an untyped literal can't have its type.
     expect_eq!(
         ffi_11::new_c_char(macro_constants::CHAR_CONSTANT!()),

@@ -81,6 +81,13 @@ macro_rules! FALSE_CONSTANT {
     };
 }
 
+#[macro_export]
+macro_rules! COMPARISON {
+    () => {
+        true
+    };
+}
+
 // Only the definition that is in effect at the end of the header is used.
 
 #[macro_export]
@@ -128,6 +135,181 @@ macro_rules! COMPLEMENT_CONSTANT {
 macro_rules! NOT_CONSTANT {
     () => {
         false
+    };
+}
+
+#[macro_export]
+macro_rules! SHIFTED_CONSTANT {
+    () => {
+        ::ffi_11::new_c_uint(2147483648)
+    };
+}
+
+#[macro_export]
+macro_rules! BITWISE_CONSTANT {
+    () => {
+        252
+    };
+}
+
+#[macro_export]
+macro_rules! LOGICAL_CONSTANT {
+    () => {
+        true
+    };
+}
+
+// Each binary operator. The operands are chosen so that each operator gives a
+// different value.
+
+#[macro_export]
+macro_rules! MUL_CONSTANT {
+    () => {
+        87
+    };
+}
+
+#[macro_export]
+macro_rules! DIV_CONSTANT {
+    () => {
+        9
+    };
+}
+
+#[macro_export]
+macro_rules! REM_CONSTANT {
+    () => {
+        2
+    };
+}
+
+#[macro_export]
+macro_rules! ADD_CONSTANT {
+    () => {
+        32
+    };
+}
+
+#[macro_export]
+macro_rules! SUB_CONSTANT {
+    () => {
+        26
+    };
+}
+
+#[macro_export]
+macro_rules! SHL_CONSTANT {
+    () => {
+        232
+    };
+}
+
+#[macro_export]
+macro_rules! SHR_CONSTANT {
+    () => {
+        3
+    };
+}
+
+#[macro_export]
+macro_rules! AND_CONSTANT {
+    () => {
+        1
+    };
+}
+
+#[macro_export]
+macro_rules! XOR_CONSTANT {
+    () => {
+        30
+    };
+}
+
+#[macro_export]
+macro_rules! OR_CONSTANT {
+    () => {
+        31
+    };
+}
+
+// The results of comparing 1, 2, and 3 with 2, as the bits of an integer.
+
+#[macro_export]
+macro_rules! LT_CONSTANT {
+    () => {
+        1
+    };
+}
+
+#[macro_export]
+macro_rules! GT_CONSTANT {
+    () => {
+        4
+    };
+}
+
+#[macro_export]
+macro_rules! LE_CONSTANT {
+    () => {
+        3
+    };
+}
+
+#[macro_export]
+macro_rules! GE_CONSTANT {
+    () => {
+        6
+    };
+}
+
+#[macro_export]
+macro_rules! EQ_CONSTANT {
+    () => {
+        2
+    };
+}
+
+#[macro_export]
+macro_rules! NE_CONSTANT {
+    () => {
+        5
+    };
+}
+
+#[macro_export]
+macro_rules! LOGICAL_AND_CONSTANT {
+    () => {
+        false
+    };
+}
+
+#[macro_export]
+macro_rules! LOGICAL_OR_CONSTANT {
+    () => {
+        true
+    };
+}
+
+// Precedence and associativity.
+
+#[macro_export]
+macro_rules! PRECEDENCE_CONSTANT {
+    () => {
+        7
+    };
+}
+
+#[macro_export]
+macro_rules! LEFT_ASSOCIATIVE_CONSTANT {
+    () => {
+        3
+    };
+}
+
+#[macro_export]
+macro_rules! SHIFT_VS_ADD_CONSTANT {
+    () => {
+        8
     };
 }
 

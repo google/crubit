@@ -15,6 +15,7 @@
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/IdentifierTable.h"
+#include "clang/Basic/OperatorPrecedence.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Basic/TokenKinds.h"
@@ -96,6 +97,50 @@ bool IsSupportedIntegralType(clang::QualType type) {
   }
 }
 
+std::optional<clang::BinaryOperatorKind> GetBinaryOperatorKind(
+    clang::tok::TokenKind kind) {
+  switch (kind) {
+    case clang::tok::star:
+      return clang::BO_Mul;
+    case clang::tok::slash:
+      return clang::BO_Div;
+    case clang::tok::percent:
+      return clang::BO_Rem;
+    case clang::tok::plus:
+      return clang::BO_Add;
+    case clang::tok::minus:
+      return clang::BO_Sub;
+    case clang::tok::lessless:
+      return clang::BO_Shl;
+    case clang::tok::greatergreater:
+      return clang::BO_Shr;
+    case clang::tok::less:
+      return clang::BO_LT;
+    case clang::tok::greater:
+      return clang::BO_GT;
+    case clang::tok::lessequal:
+      return clang::BO_LE;
+    case clang::tok::greaterequal:
+      return clang::BO_GE;
+    case clang::tok::equalequal:
+      return clang::BO_EQ;
+    case clang::tok::exclaimequal:
+      return clang::BO_NE;
+    case clang::tok::amp:
+      return clang::BO_And;
+    case clang::tok::caret:
+      return clang::BO_Xor;
+    case clang::tok::pipe:
+      return clang::BO_Or;
+    case clang::tok::ampamp:
+      return clang::BO_LAnd;
+    case clang::tok::pipepipe:
+      return clang::BO_LOr;
+    default:
+      return std::nullopt;
+  }
+}
+
 std::optional<clang::UnaryOperatorKind> GetUnaryOperatorKind(
     clang::tok::TokenKind kind) {
   switch (kind) {
@@ -114,8 +159,8 @@ std::optional<clang::UnaryOperatorKind> GetUnaryOperatorKind(
 
 // A recursive descent parser for the subset of C++ constant expressions that
 // is supported in macro constants: integer, character, and boolean literals,
-// parentheses, and unary operators. The expressions are built using `Sema`, so
-// that they have the same types and semantics as in C++.
+// parentheses, and unary and binary operators. The expressions are built using
+// `Sema`, so that they have the same types and semantics as in C++.
 class MacroExpressionParser {
  public:
   MacroExpressionParser(clang::Sema& sema, llvm::ArrayRef<clang::Token> tokens)
@@ -123,7 +168,7 @@ class MacroExpressionParser {
 
   // Parses all the tokens as a single expression. Returns null on failure.
   clang::Expr* absl_nullable Parse() {
-    clang::Expr* expr = ParseUnary();
+    clang::Expr* expr = ParseBinary(clang::prec::LogicalOr);
     if (expr == nullptr || position_ != tokens_.size()) return nullptr;
     return expr;
   }
@@ -163,6 +208,32 @@ class MacroExpressionParser {
     return token != nullptr && token->is(kind);
   }
 
+  // Parses a sequence of binary operators with a precedence of at least
+  // `min_precedence` (precedence climbing). All supported binary operators are
+  // left-associative.
+  clang::Expr* absl_nullable ParseBinary(clang::prec::Level min_precedence) {
+    clang::Expr* lhs = ParseUnary();
+    while (lhs != nullptr) {
+      const clang::Token* token = Peek();
+      if (token == nullptr) break;
+      std::optional<clang::BinaryOperatorKind> opcode =
+          GetBinaryOperatorKind(token->getKind());
+      if (!opcode.has_value()) break;
+      clang::prec::Level precedence =
+          clang::getBinOpPrecedence(token->getKind(),
+                                    /*GreaterThanIsOperator=*/true,
+                                    /*CPlusPlus11=*/true);
+      if (precedence < min_precedence) break;
+      clang::SourceLocation op_loc = token->getLocation();
+      ++position_;
+      clang::Expr* rhs =
+          ParseBinary(static_cast<clang::prec::Level>(precedence + 1));
+      if (rhs == nullptr) return nullptr;
+      lhs = Get(sema_.CreateBuiltinBinOp(op_loc, *opcode, lhs, rhs));
+    }
+    return lhs;
+  }
+
   // unary-expression:
   //     primary-expression
   //     (`+` | `-` | `~` | `!`) unary-expression
@@ -183,7 +254,7 @@ class MacroExpressionParser {
   //     integer-literal
   //     character-literal
   //     boolean-literal
-  //     `(` unary-expression `)`
+  //     `(` logical-or-expression `)`
   clang::Expr* absl_nullable ParsePrimary() {
     const clang::Token* token = Peek();
     if (token == nullptr) return nullptr;
@@ -211,7 +282,7 @@ class MacroExpressionParser {
             sema_.ActOnCXXBoolLiteral(token->getLocation(), token->getKind()));
       case clang::tok::l_paren: {
         clang::SourceLocation l_paren_loc = token->getLocation();
-        clang::Expr* inner = ParseUnary();
+        clang::Expr* inner = ParseBinary(clang::prec::LogicalOr);
         if (inner == nullptr || !PeekIs(clang::tok::r_paren)) return nullptr;
         clang::SourceLocation r_paren_loc = tokens_[position_++].getLocation();
         return Get(sema_.ActOnParenExpr(l_paren_loc, r_paren_loc, inner));
