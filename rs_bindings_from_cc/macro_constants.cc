@@ -159,8 +159,8 @@ std::optional<clang::UnaryOperatorKind> GetUnaryOperatorKind(
 
 // A recursive descent parser for the subset of C++ constant expressions that
 // is supported in macro constants: integer, character, and boolean literals,
-// parentheses, and unary and binary operators. The expressions are built using
-// `Sema`, so that they have the same types and semantics as in C++.
+// parentheses, unary and binary operators, and `?:`. The expressions are built
+// using `Sema`, so that they have the same types and semantics as in C++.
 class MacroExpressionParser {
  public:
   MacroExpressionParser(clang::Sema& sema, llvm::ArrayRef<clang::Token> tokens)
@@ -168,7 +168,7 @@ class MacroExpressionParser {
 
   // Parses all the tokens as a single expression. Returns null on failure.
   clang::Expr* absl_nullable Parse() {
-    clang::Expr* expr = ParseBinary(clang::prec::LogicalOr);
+    clang::Expr* expr = ParseConditional();
     if (expr == nullptr || position_ != tokens_.size()) return nullptr;
     return expr;
   }
@@ -206,6 +206,25 @@ class MacroExpressionParser {
   bool PeekIs(clang::tok::TokenKind kind) const {
     const clang::Token* token = Peek();
     return token != nullptr && token->is(kind);
+  }
+
+  // conditional-expression:
+  //     logical-or-expression
+  //     logical-or-expression `?` conditional-expression `:`
+  //         conditional-expression
+  clang::Expr* absl_nullable ParseConditional() {
+    clang::Expr* condition = ParseBinary(clang::prec::LogicalOr);
+    if (condition == nullptr || !PeekIs(clang::tok::question)) {
+      return condition;
+    }
+    clang::SourceLocation question_loc = tokens_[position_++].getLocation();
+    clang::Expr* true_expr = ParseConditional();
+    if (true_expr == nullptr || !PeekIs(clang::tok::colon)) return nullptr;
+    clang::SourceLocation colon_loc = tokens_[position_++].getLocation();
+    clang::Expr* false_expr = ParseConditional();
+    if (false_expr == nullptr) return nullptr;
+    return Get(sema_.ActOnConditionalOp(question_loc, colon_loc, condition,
+                                        true_expr, false_expr));
   }
 
   // Parses a sequence of binary operators with a precedence of at least
@@ -254,7 +273,7 @@ class MacroExpressionParser {
   //     integer-literal
   //     character-literal
   //     boolean-literal
-  //     `(` logical-or-expression `)`
+  //     `(` conditional-expression `)`
   clang::Expr* absl_nullable ParsePrimary() {
     const clang::Token* token = Peek();
     if (token == nullptr) return nullptr;
@@ -282,7 +301,7 @@ class MacroExpressionParser {
             sema_.ActOnCXXBoolLiteral(token->getLocation(), token->getKind()));
       case clang::tok::l_paren: {
         clang::SourceLocation l_paren_loc = token->getLocation();
-        clang::Expr* inner = ParseBinary(clang::prec::LogicalOr);
+        clang::Expr* inner = ParseConditional();
         if (inner == nullptr || !PeekIs(clang::tok::r_paren)) return nullptr;
         clang::SourceLocation r_paren_loc = tokens_[position_++].getLocation();
         return Get(sema_.ActOnParenExpr(l_paren_loc, r_paren_loc, inner));

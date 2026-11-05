@@ -41,6 +41,9 @@ constexpr int kAlreadyDeclared = 1;
 #define NOT_CONSTANT !true
 #define SHIFTED_CONSTANT (1u << 31)
 #define BITWISE_CONSTANT ((0xF0 | 0x0F) & ~0x3)
+#define CONDITIONAL_CONSTANT (4 > 3 ? 10 : 20)
+#define NESTED_CONDITIONAL_CONSTANT (1 ? 1 : 0 ? 2 : 3)
+#define CONDITIONAL_PRECEDENCE_CONSTANT (0 || 1 ? 2 : 3)
 #define LOGICAL_CONSTANT (true && !false)
 
 // Each binary operator. The operands are chosen so that each operator gives a
@@ -78,6 +81,12 @@ constexpr int kAlreadyDeclared = 1;
 #define NOT_A_NUMBER 1.2.3
 #define DIVISION_BY_ZERO (1 / 0)
 #define OVERFLOW_CONSTANT (2147483647 + 1)
+// Incomplete conditionals, which fail partway through parsing.
+#define CONDITIONAL_WITHOUT_BRANCHES 1 ?
+#define CONDITIONAL_WITHOUT_COLON 1 ? 2
+#define CONDITIONAL_WITHOUT_FALSE_BRANCH (1 ? 2 :)
+#define CONDITIONAL_WITHOUT_TRUE_BRANCH (1 ?: 2)
+#define CONDITIONAL_WITHOUT_CONDITION (? 1 : 2)
 #define WIDE_CHAR_CONSTANT L'x'
 #define UTF8_CHAR_CONSTANT u8'x'
 #define CAST_CONSTANT ((unsigned char)1)

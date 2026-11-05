@@ -13,6 +13,7 @@
 #define HEX_CONSTANT 0xFFFFFFFF
 #define SHIFTED_CONSTANT (1u << 31)
 #define BITWISE_CONSTANT ((0xF0 | 0x0F) & ~0x3)
+#define CONDITIONAL_CONSTANT (4 > 3 ? 10 : 20)
 #define BOOL_CONSTANT (4 == 4 && !false)
 #define CHAR_CONSTANT 'x'
 
@@ -28,6 +29,7 @@ inline long long LongLongConstant() {  // NOLINT
 inline unsigned int HexConstant() { return HEX_CONSTANT; }
 inline unsigned int ShiftedConstant() { return SHIFTED_CONSTANT; }
 inline int BitwiseConstant() { return BITWISE_CONSTANT; }
+inline int ConditionalConstant() { return CONDITIONAL_CONSTANT; }
 inline bool BoolConstant() { return BOOL_CONSTANT; }
 inline char CharConstant() { return CHAR_CONSTANT; }
 

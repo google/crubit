@@ -153,6 +153,27 @@ macro_rules! BITWISE_CONSTANT {
 }
 
 #[macro_export]
+macro_rules! CONDITIONAL_CONSTANT {
+    () => {
+        10
+    };
+}
+
+#[macro_export]
+macro_rules! NESTED_CONDITIONAL_CONSTANT {
+    () => {
+        1
+    };
+}
+
+#[macro_export]
+macro_rules! CONDITIONAL_PRECEDENCE_CONSTANT {
+    () => {
+        2
+    };
+}
+
+#[macro_export]
 macro_rules! LOGICAL_CONSTANT {
     () => {
         true
@@ -314,6 +335,8 @@ macro_rules! SHIFT_VS_ADD_CONSTANT {
 }
 
 // The following macros are not supported, and are silently ignored.
+
+// Incomplete conditionals, which fail partway through parsing.
 
 // The following macros have names that can't be bound, and are reported as
 // errors.

@@ -14,6 +14,7 @@ fn test_values_match_cc() {
     expect_eq!(macro_constants::HEX_CONSTANT!(), macro_constants::HexConstant());
     expect_eq!(macro_constants::SHIFTED_CONSTANT!(), macro_constants::ShiftedConstant());
     expect_eq!(macro_constants::BITWISE_CONSTANT!(), macro_constants::BitwiseConstant());
+    expect_eq!(macro_constants::CONDITIONAL_CONSTANT!(), macro_constants::ConditionalConstant());
     expect_eq!(macro_constants::BOOL_CONSTANT!(), macro_constants::BoolConstant());
     // `ffi_11::c_char` isn't a primitive type, so an untyped literal can't have its type.
     expect_eq!(
