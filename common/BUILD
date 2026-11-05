@@ -182,6 +182,10 @@ cc_library(
 rust_library(
     name = "external_binaries",
     srcs = ["external_binaries.rs"],
+    data = [
+        "@llvm_toolchain//:clang-format",
+        "@rules_rust//rust/toolchain:current_rust_toolchain",
+    ],
     edition = "2024",
     rustc_env = EXTERNAL_BINARIES,
 )
@@ -341,10 +345,6 @@ rust_library(
 rust_library(
     name = "token_stream_printer",
     srcs = ["token_stream_printer.rs"],
-    data = [
-        "@llvm_toolchain//:clang-format",
-        "@rules_rust//rust/toolchain:current_rust_toolchain",
-    ],
     edition = "2024",
     deps = [
         ":external_binaries",

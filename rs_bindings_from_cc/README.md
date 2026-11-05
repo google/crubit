@@ -78,7 +78,7 @@ If possible follow these recommendations:
     *   have snippets of C++ as input
     *   make assertions on the content of the IR
 *   Write tests for the command line interface of interop tools in
-    [`rs_bindings_from_cc_test.sh`](rs_bindings_from_cc/test/rs_bindings_from_cc_test.sh).
+    [`rs_bindings_from_cc_test.rs`](rs_bindings_from_cc/test/rs_bindings_from_cc_test.rs).
 *   Write golden file tests (comparing both the C++ and Rust generated source
     code against the checked-in files) in
     [`test/golden`](rs_bindings_from_cc/test/golden/).

@@ -1,23 +1,28 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("@rules_shell//shell:sh_test.bzl", "sh_test")
-load("//common/bazel_support:external_binaries.bzl", "EXTERNAL_BINARIES")
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_rust_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
-sh_test(
+crubit_rust_test(
     name = "rs_bindings_from_cc_test",
-    srcs = ["rs_bindings_from_cc_test.sh"],
+    srcs = ["rs_bindings_from_cc_test.rs"],
     data = [
         "//rs_bindings_from_cc",
     ],
-    env = EXTERNAL_BINARIES,
+    rustc_env = {
+        "RS_BINDINGS_FROM_CC": "$(rootpath //rs_bindings_from_cc)",
+    },
     tags = [
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
         "not_run:mac",
     ],
     deps = [
-        "//util/shell/gbash",
-        "//util/shell/gbash:unit",
+        "//common:external_binaries",
+        "@crate_index//:googletest",
+        "@crate_index//:tempfile",  # v3
     ],
 )
 
