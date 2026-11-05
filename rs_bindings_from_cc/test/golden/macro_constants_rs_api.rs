@@ -101,6 +101,36 @@ macro_rules! PARENTHESIZED_CONSTANT {
     };
 }
 
+// Operators.
+
+#[macro_export]
+macro_rules! NEGATIVE_CONSTANT {
+    () => {
+        -1
+    };
+}
+
+#[macro_export]
+macro_rules! UNARY_PLUS_CONSTANT {
+    () => {
+        1
+    };
+}
+
+#[macro_export]
+macro_rules! COMPLEMENT_CONSTANT {
+    () => {
+        -1
+    };
+}
+
+#[macro_export]
+macro_rules! NOT_CONSTANT {
+    () => {
+        false
+    };
+}
+
 // The following macros are not supported, and are silently ignored.
 
 // The following macros have names that can't be bound, and are reported as

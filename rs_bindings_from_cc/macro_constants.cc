@@ -11,6 +11,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/OperationKinds.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/IdentifierTable.h"
@@ -95,10 +96,26 @@ bool IsSupportedIntegralType(clang::QualType type) {
   }
 }
 
+std::optional<clang::UnaryOperatorKind> GetUnaryOperatorKind(
+    clang::tok::TokenKind kind) {
+  switch (kind) {
+    case clang::tok::plus:
+      return clang::UO_Plus;
+    case clang::tok::minus:
+      return clang::UO_Minus;
+    case clang::tok::tilde:
+      return clang::UO_Not;
+    case clang::tok::exclaim:
+      return clang::UO_LNot;
+    default:
+      return std::nullopt;
+  }
+}
+
 // A recursive descent parser for the subset of C++ constant expressions that
 // is supported in macro constants: integer, character, and boolean literals,
-// and parentheses. The expressions are built using `Sema`, so that they have
-// the same types and semantics as in C++.
+// parentheses, and unary operators. The expressions are built using `Sema`, so
+// that they have the same types and semantics as in C++.
 class MacroExpressionParser {
  public:
   MacroExpressionParser(clang::Sema& sema, llvm::ArrayRef<clang::Token> tokens)
@@ -106,7 +123,7 @@ class MacroExpressionParser {
 
   // Parses all the tokens as a single expression. Returns null on failure.
   clang::Expr* absl_nullable Parse() {
-    clang::Expr* expr = ParsePrimary();
+    clang::Expr* expr = ParseUnary();
     if (expr == nullptr || position_ != tokens_.size()) return nullptr;
     return expr;
   }
@@ -146,11 +163,27 @@ class MacroExpressionParser {
     return token != nullptr && token->is(kind);
   }
 
+  // unary-expression:
+  //     primary-expression
+  //     (`+` | `-` | `~` | `!`) unary-expression
+  clang::Expr* absl_nullable ParseUnary() {
+    const clang::Token* token = Peek();
+    if (token == nullptr) return nullptr;
+    std::optional<clang::UnaryOperatorKind> opcode =
+        GetUnaryOperatorKind(token->getKind());
+    if (!opcode.has_value()) return ParsePrimary();
+    clang::SourceLocation op_loc = token->getLocation();
+    ++position_;
+    clang::Expr* operand = ParseUnary();
+    if (operand == nullptr) return nullptr;
+    return Get(sema_.CreateBuiltinUnaryOp(op_loc, *opcode, operand));
+  }
+
   // primary-expression:
   //     integer-literal
   //     character-literal
   //     boolean-literal
-  //     `(` primary-expression `)`
+  //     `(` unary-expression `)`
   clang::Expr* absl_nullable ParsePrimary() {
     const clang::Token* token = Peek();
     if (token == nullptr) return nullptr;
@@ -178,7 +211,7 @@ class MacroExpressionParser {
             sema_.ActOnCXXBoolLiteral(token->getLocation(), token->getKind()));
       case clang::tok::l_paren: {
         clang::SourceLocation l_paren_loc = token->getLocation();
-        clang::Expr* inner = ParsePrimary();
+        clang::Expr* inner = ParseUnary();
         if (inner == nullptr || !PeekIs(clang::tok::r_paren)) return nullptr;
         clang::SourceLocation r_paren_loc = tokens_[position_++].getLocation();
         return Get(sema_.ActOnParenExpr(l_paren_loc, r_paren_loc, inner));

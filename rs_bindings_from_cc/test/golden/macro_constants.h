@@ -33,6 +33,12 @@ constexpr int kAlreadyDeclared = 1;
 // Parentheses.
 #define PARENTHESIZED_CONSTANT ((4))
 
+// Operators.
+#define NEGATIVE_CONSTANT -1
+#define UNARY_PLUS_CONSTANT +1
+#define COMPLEMENT_CONSTANT ~0
+#define NOT_CONSTANT !true
+
 // The following macros are not supported, and are silently ignored.
 #define EMPTY_MACRO
 #define FUNCTION_LIKE_MACRO(x) ((x) + 1)
