@@ -28,10 +28,6 @@ golden_test(
     basename = "aliasing_references",
     golden_h = "aliasing_references_cc_api.h",
     golden_rs = "aliasing_references_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "aliasing_references",
 )
 
@@ -44,10 +40,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "aliasing_references_test",
     srcs = ["aliasing_references_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":aliasing_references_cc_api",
         "@abseil-cpp//absl/types:span",

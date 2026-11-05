@@ -36,6 +36,12 @@ golden_test(
     basename = "rust_api",
     golden_h = "rust_api_cc_api.h",
     rust_library = "rust_api",
+    # TODO(b/483962985): Add 32-bit Android and iOS goldens and enable these golden tests.
+    tags = [
+        "no_ios",
+        "no_test_android_arm",
+        "no_test_android_x86",
+    ],
 )
 
 crubit_cc_test(

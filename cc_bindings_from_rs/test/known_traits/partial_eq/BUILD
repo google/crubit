@@ -38,20 +38,12 @@ golden_test(
     basename = "partial_eq",
     golden_h = "partial_eq_cc_api.h",
     golden_rs = "partial_eq_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "partial_eq",
 )
 
 crubit_cc_test(
     name = "partial_eq_test",
     srcs = ["partial_eq_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":partial_eq_cc_api",
         "//support/rs_std:str_ref",

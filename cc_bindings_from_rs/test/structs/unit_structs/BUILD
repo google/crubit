@@ -29,10 +29,6 @@ golden_test(
     basename = "unit_structs",
     golden_h = "unit_structs_cc_api.h",
     golden_rs = "unit_structs_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "unit_structs",
 )
 
@@ -45,10 +41,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "unit_structs_test",
     srcs = ["unit_structs_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":unit_structs_cc_api",
         "@googletest//:gtest_main",

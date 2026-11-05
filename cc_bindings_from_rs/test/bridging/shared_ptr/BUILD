@@ -37,7 +37,12 @@ golden_test(
     golden_rs = "shared_ptr_cc_api_impl.rs",
     rust_library = "shared_ptr",
     # TODO(b/580795136): header analysis of `cc_std` fails for windows_arm64.
-    tags = ["no_test_windows_arm64"],
+    # TODO(b/483962985): Add 32-bit Android goldens and enable these golden tests.
+    tags = [
+        "no_test_android_arm",
+        "no_test_android_x86",
+        "no_test_windows_arm64",
+    ],
 )
 
 cpp_api_from_rust(
@@ -50,7 +55,11 @@ crubit_cc_test(
     name = "shared_ptr_test",
     srcs = ["shared_ptr_test.cc"],
     # TODO(b/575815022): Re-enable once `cc_std` links on macOS.
-    tags = ["no_macos"],
+    tags = [
+        "no_ios",
+        "no_macos",
+        "no_test_android_x86",
+    ],
     deps = [
         ":shared_ptr_cc_api",
         "@googletest//:gtest_main",

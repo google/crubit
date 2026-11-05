@@ -35,10 +35,6 @@ golden_test(
     basename = "enums",
     golden_h = "enums_cc_api.h",
     golden_rs = "enums_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "enums",
 )
 
@@ -51,10 +47,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "enums_test",
     srcs = ["enums_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":enums_cc_api",
         "@googletest//:gtest_main",
@@ -75,10 +67,6 @@ golden_test(
     name = "cpp_enums_golden_test",
     basename = "cpp_enums",
     golden_h = "cpp_enums_cc_api.h",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "cpp_enums",
 )
 
@@ -91,10 +79,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "cpp_enums_test",
     srcs = ["cpp_enums_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":cpp_enums_cc_api",
         "@googletest//:gtest_main",
@@ -117,10 +101,6 @@ golden_test(
     basename = "option",
     golden_h = "option_cc_api.h",
     golden_rs = "option_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "option",
 )
 
@@ -133,10 +113,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "option_test",
     srcs = ["option_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":option_cc_api",
         "//support/rs_std",
@@ -157,10 +133,6 @@ golden_test(
     basename = "option_references",
     golden_h = "option_references_cc_api.h",
     golden_rs = "option_references_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "option_references",
 )
 
@@ -173,10 +145,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "option_references_test",
     srcs = ["option_references_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":option_references_cc_api",
         "@googletest//:gtest_main",
@@ -195,10 +163,6 @@ golden_test(
     basename = "option_specialization_collision",
     golden_h = "option_specialization_collision_cc_api.h",
     golden_rs = "option_specialization_collision_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "option_specialization_collision",
 )
 
@@ -211,10 +175,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "option_specialization_collision_test",
     srcs = ["option_specialization_collision_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":option_specialization_collision_cc_api",
         "@googletest//:gtest_main",
@@ -237,10 +197,6 @@ golden_test(
     basename = "result",
     golden_h = "result_cc_api.h",
     golden_rs = "result_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "result",
 )
 
@@ -253,10 +209,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "result_test",
     srcs = ["result_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":result_cc_api",
         "//support:movable",

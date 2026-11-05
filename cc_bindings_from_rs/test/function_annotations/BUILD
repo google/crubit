@@ -39,20 +39,12 @@ golden_test(
     golden_h = "function_annotations_cc_api.h",
     golden_rs = "function_annotations_cc_api_impl.rs",
     kythe_annotations = True,
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "function_annotations",
 )
 
 crubit_cc_test(
     name = "function_annotations_test",
     srcs = ["function_annotations_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":function_annotations_cc_api",
         "@googletest//:gtest_main",

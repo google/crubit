@@ -85,20 +85,12 @@ golden_test(
     basename = "layout_equivalent_generics",
     golden_h = "layout_equivalent_generics_cc_api.h",
     golden_rs = "layout_equivalent_generics_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "layout_equivalent_generics",
 )
 
 crubit_cc_test(
     name = "bridging_test",
     srcs = ["bridging_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":layout_equivalent_generics_cc_api",
         ":rust_pointer_types_cc_api",
@@ -121,10 +113,6 @@ golden_test(
     basename = "bridged_types",
     golden_h = "bridged_types_cc_api.h",
     golden_rs = "bridged_types_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "bridged_types",
 )
 
@@ -142,10 +130,6 @@ golden_test(
     basename = "layout_equivalent_pointers",
     golden_h = "layout_equivalent_pointers_cc_api.h",
     golden_rs = "layout_equivalent_pointers_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "layout_equivalent_pointers",
 )
 
@@ -174,10 +158,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "mapped_cpp_type_test",
     srcs = ["mapped_cpp_type_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":mapped_cpp_type_cc_api",
         "@googletest//:gtest_main",

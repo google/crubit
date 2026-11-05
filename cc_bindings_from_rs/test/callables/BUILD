@@ -36,10 +36,6 @@ golden_test(
     basename = "callables",
     golden_h = "callables_cc_api.h",
     golden_rs = "callables_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "callables",
 )
 
@@ -52,10 +48,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "callables_test",
     srcs = ["callables_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":callables_cc_api",
         "@googletest//:gtest_main",

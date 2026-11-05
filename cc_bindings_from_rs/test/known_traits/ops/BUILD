@@ -36,20 +36,12 @@ golden_test(
     basename = "rs_ops",
     golden_h = "rs_ops_cc_api.h",
     golden_rs = "rs_ops_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "rs_ops",
 )
 
 crubit_cc_test(
     name = "rs_ops_test",
     srcs = ["rs_ops_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":rs_ops_cc_api",
         "@googletest//:gtest_main",

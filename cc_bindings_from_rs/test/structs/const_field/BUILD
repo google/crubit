@@ -61,12 +61,18 @@ golden_test(
     golden_rs = "const_field_cc_api_impl.rs",
     rust_library = "const_field",
     # TODO(b/580795136): header analysis of `cc_std` fails for windows_arm64.
-    tags = ["no_test_windows_arm64"],
+    # TODO(b/483962985): Add 32-bit Android goldens and enable these golden tests.
+    tags = [
+        "no_test_android_arm",
+        "no_test_android_x86",
+        "no_test_windows_arm64",
+    ],
 )
 
 crubit_cc_test(
     name = "test",
     srcs = ["test.cc"],
+    tags = ["no_test_android_x86"],
     deps = [
         ":cc_struct",
         ":lib_cc_api",

@@ -41,10 +41,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "uses_test",
     srcs = ["uses_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":uses_cc_api",
         "@googletest//:gtest_main",
@@ -56,9 +52,5 @@ golden_test(
     basename = "uses",
     golden_h = "uses_cc_api.h",
     golden_rs = "uses_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "uses",
 )

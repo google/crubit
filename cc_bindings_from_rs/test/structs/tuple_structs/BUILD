@@ -36,10 +36,6 @@ golden_test(
     basename = "tuple_structs",
     golden_h = "tuple_structs_cc_api.h",
     golden_rs = "tuple_structs_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "tuple_structs",
 )
 
@@ -52,10 +48,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "tuple_structs_test",
     srcs = ["tuple_structs_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":tuple_structs_cc_api",
         "@googletest//:gtest_main",

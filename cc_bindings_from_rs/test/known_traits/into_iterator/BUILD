@@ -36,10 +36,6 @@ golden_test(
     basename = "into_iterator",
     golden_h = "into_iterator_cc_api.h",
     golden_rs = "into_iterator_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "into_iterator_rust",
 )
 
@@ -52,10 +48,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "into_iterator_cc_test",
     srcs = ["into_iterator_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":into_iterator_cc_api",
         "@googletest//:gtest_main",

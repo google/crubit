@@ -43,4 +43,9 @@ golden_test(
     name = "example_golden_test",
     golden_h = "example_generated.h",
     rust_library = "example_crate",
+    # TODO(b/483962985): Add 32-bit Android goldens and enable these golden tests.
+    tags = [
+        "no_test_android_arm",
+        "no_test_android_x86",
+    ],
 )

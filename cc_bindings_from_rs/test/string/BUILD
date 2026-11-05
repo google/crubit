@@ -26,10 +26,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "string_test",
     srcs = ["string_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":string_cc_api",
         "//support/rs_std",

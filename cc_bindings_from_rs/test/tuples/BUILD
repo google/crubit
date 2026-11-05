@@ -34,10 +34,6 @@ golden_test(
     basename = "tuples",
     golden_h = "tuples_cc_api.h",
     golden_rs = "tuples_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "tuples",
 )
 
@@ -50,10 +46,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "tuples_test",
     srcs = ["tuples_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":tuples_cc_api",
         "//support/rs_std:rs_alloc",
