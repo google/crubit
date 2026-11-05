@@ -6,6 +6,7 @@
 """
 
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+load("@rules_cc//cc/common:cc_helper.bzl", "cc_helper")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:generate_bindings.bzl", "escape_cpp_target_name")
 
@@ -50,6 +51,9 @@ def compile_cc(
     for d in getattr(attr, "local_defines", []):
         local_defines.append(ctx.expand_make_variables("local_defines", d, {}))
 
+    if "linux" in cc_toolchain.target_gnu_system_name:
+        user_copts.extend(["-ffunction-sections", "-fdata-sections"])
+
     (compilation_context, compilation_outputs) = cc_common.compile(
         name = src.basename,
         actions = ctx.actions,
@@ -68,6 +72,7 @@ def compile_cc(
     # TODO(b/468327990): Make this portable in OSS.
     backrefs_flag = []
     if "linux" in cc_toolchain.target_gnu_system_name:
+        backrefs_flag.append("-Wl,--gc-sections")
         target = escape_cpp_target_name(ctx.label.package, ctx.label.name)
         backrefs_flag.append("-Wl,--warn-backrefs-exclude=*/{package}/lib{target}-*".format(package = ctx.label.package, target = target))
 
@@ -85,10 +90,13 @@ def compile_cc(
         user_link_flags = backrefs_flag,
     )
 
+    debug_context = cc_helper.merge_cc_debug_contexts(compilation_outputs, [cc_info])
+
     # `compilation_context` already carries the headers and header modules of `cc_infos` as
     # non-exported deps. Don't re-export `cc_infos` here: the caller decides which module maps
     # dependents may use (see `RustBindingsFromCcInfo.cc_info`).
     return CcInfo(
         compilation_context = compilation_context,
         linking_context = linking_context,
+        debug_context = debug_context,
     )

@@ -88,11 +88,14 @@ def _matches_any_pattern(label, patterns):
             return True
     return False
 
+_FEATURES_PACKAGE = Label("//features:supported").package
+_INTERNAL_FEATURES_PACKAGE = _FEATURES_PACKAGE + "/internal"
+
 def _has_explicit_opt_in(aspect_hints, features):
     for hint in aspect_hints:
-        if hint.label.package == "features" and hint.label.name in features:
+        if hint.label.package == _FEATURES_PACKAGE and hint.label.name in features:
             return True
-        if hint.label.package == "features/internal" and hint.label.name in ["testonly_" + f for f in features]:
+        if hint.label.package == _INTERNAL_FEATURES_PACKAGE and hint.label.name in ["testonly_" + f for f in features]:
             return True
     return False
 
@@ -130,10 +133,15 @@ def find_crubit_features(target, aspect_ctx):
     Returns:
         A list of feature strings.
     """
-    features = list(aspect_ctx.attr._globally_enabled_features[BuildSettingInfo].value)
+    features = []
     _add_features(features, target)
     for hint in aspect_ctx.rule.attr.aspect_hints:
         _add_features(features, hint)
+    for feature in aspect_ctx.attr._globally_enabled_features[BuildSettingInfo].value:
+        # Negative (`no_*`) global features disable sub-features on targets that already enable
+        # Crubit, rather than enabling Crubit on targets without Crubit hints.
+        if (not feature.startswith("no_") or features) and feature not in features:
+            features.append(feature)
     denied = find_denied_crubit_features(target, aspect_ctx)
     features = [f for f in features if f not in denied]
     return sorted(features)
