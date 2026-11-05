@@ -889,6 +889,8 @@ cc_library(
 crubit_cc_test(
     name = "logging_test",
     srcs = ["logging_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":logging",
         "@googletest//:gtest_main",
