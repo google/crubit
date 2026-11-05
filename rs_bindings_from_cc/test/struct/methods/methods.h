@@ -5,7 +5,15 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_METHODS_METHODS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_METHODS_METHODS_H_
 
-class SomeClass final {
+#if defined(_WIN32)
+// Similar to Chromium's `COMPONENT_EXPORT`, but uses `dllexport` (not
+// `dllimport`) also for users, because the test links `methods.cc` statically.
+#define METHODS_EXPORT __declspec(dllexport)
+#else
+#define METHODS_EXPORT __attribute__((visibility("default")))
+#endif
+
+class METHODS_EXPORT SomeClass final {
  public:
   static SomeClass static_factory_method(int int_var_initial_value);
   static int static_method_that_multiplies_its_args(int x, int y);

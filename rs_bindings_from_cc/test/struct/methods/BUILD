@@ -15,6 +15,15 @@ crubit_test_cc_library(
     srcs = ["methods.cc"],
     hdrs = ["methods.h"],
     aspect_hints = ["//features:assume_this_lifetimes"],
+    # Like `/Zc:dllexportInlines-`: Clang then marks the inline methods of
+    # `METHODS_EXPORT` classes with `DLLExportStaticLocalAttr`.
+    copts = select({
+        "@platforms//os:windows": [
+            "-Xclang",
+            "-fno-dllexport-inlines",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 rust_api_from_cpp(

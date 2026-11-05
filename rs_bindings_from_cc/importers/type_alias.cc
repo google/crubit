@@ -192,10 +192,8 @@ std::unique_ptr<crubit::ffi::Item> crubit::TypeAliasImporter::Import(
     if (auto* deprecated_attr = clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
       deprecated.emplace(deprecated_attr->getMessage());
       return true;
-    } else if (clang::isa<clang::VisibilityAttr>(attr)) {
-      // Visibility attributes on typedef/using declarations, from
-      // export macros for example, do not affect Rust type aliases,
-      // but Clang still creates the AST attribute node.
+    } else if (IsIgnoredVisibilityAttr(attr,
+                                       /*allow_non_default_visibility=*/true)) {
       return true;
     }
     return false;
