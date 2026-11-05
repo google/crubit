@@ -523,6 +523,8 @@ cc_library(
 crubit_cc_test(
     name = "status_test",
     srcs = ["status_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM doesn't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":status",
         "@googletest//:gtest_main",
@@ -544,6 +546,8 @@ cc_library(
 crubit_cc_test(
     name = "status_macros_test",
     srcs = ["status_macros_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM doesn't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":status",
         ":status_macros",
@@ -557,6 +561,8 @@ crubit_cc_test(
 crubit_cc_test(
     name = "status_test_matchers_test",
     srcs = ["status_test_matchers_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM doesn't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":status",
         ":status_macros",
