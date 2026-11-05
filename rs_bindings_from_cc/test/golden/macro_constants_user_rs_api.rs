@@ -15,7 +15,8 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 // Only the macros defined in this target's headers receive bindings here, not
-// the ones from `macro_constants.h`.
+// the ones from `macro_constants.h`, even though they are visible and can be
+// used.
 
 #[macro_export]
 macro_rules! USER_CONSTANT {

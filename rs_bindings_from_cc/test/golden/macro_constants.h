@@ -8,6 +8,11 @@
 /// A simple integer constant.
 #define INT_CONSTANT 4
 
+// Constants which refer to other macro constants.
+#define REFERS_TO_OTHER_CONSTANT (INT_CONSTANT + 3)
+#define DEFINED_BEFORE_ITS_DEPENDENCY (DEFINED_AFTER_ITS_DEPENDENT * 2)
+#define DEFINED_AFTER_ITS_DEPENDENT 21
+
 // The types follow the C++ rules.
 #define UNSIGNED_CONSTANT 42u
 #define LONG_LONG_CONSTANT 1LL
@@ -17,7 +22,9 @@
 #define CHAR32_CONSTANT U'x'
 #define BOOL_CONSTANT true
 #define FALSE_CONSTANT false
-#define COMPARISON (4 > 3)
+// A suffix in a nested macro makes the macro typed, too.
+#define REFERS_TO_UNSIGNED_CONSTANT (UNSIGNED_CONSTANT + 1)
+#define COMPARISON (INT_CONSTANT > 3)
 
 // Only the definition that is in effect at the end of the header is used.
 #define REDEFINED_CONSTANT 1
@@ -41,6 +48,9 @@ constexpr int kAlreadyDeclared = 1;
 #define NOT_CONSTANT !true
 #define SHIFTED_CONSTANT (1u << 31)
 #define BITWISE_CONSTANT ((0xF0 | 0x0F) & ~0x3)
+#define CONDITIONAL_CONSTANT (INT_CONSTANT > 3 ? 10 : 20)
+#define NESTED_CONDITIONAL_CONSTANT (1 ? 1 : 0 ? 2 : 3)
+#define CONDITIONAL_PRECEDENCE_CONSTANT (0 || 1 ? 2 : 3)
 #define LOGICAL_CONSTANT (true && !false)
 
 // Each binary operator. The operands are chosen so that each operator gives a
@@ -78,8 +88,31 @@ constexpr int kAlreadyDeclared = 1;
 #define NOT_A_NUMBER 1.2.3
 #define DIVISION_BY_ZERO (1 / 0)
 #define OVERFLOW_CONSTANT (2147483647 + 1)
+#define SELF_REFERENTIAL (SELF_REFERENTIAL + 1)
+// Incomplete conditionals, which fail partway through parsing.
+#define CONDITIONAL_WITHOUT_BRANCHES 1 ?
+#define CONDITIONAL_WITHOUT_COLON 1 ? 2
+#define CONDITIONAL_WITHOUT_FALSE_BRANCH (1 ? 2 :)
+#define CONDITIONAL_WITHOUT_TRUE_BRANCH (1 ?: 2)
+#define CONDITIONAL_WITHOUT_CONDITION (? 1 : 2)
 #define WIDE_CHAR_CONSTANT L'x'
 #define UTF8_CHAR_CONSTANT u8'x'
+#define UNKNOWN_IDENTIFIER (not_a_macro + 1)
+#define TOKEN_PASTING 1##2
+#define EMPTY_DAG_0
+#define EMPTY_DAG_1 EMPTY_DAG_0 EMPTY_DAG_0
+#define EMPTY_DAG_2 EMPTY_DAG_1 EMPTY_DAG_1
+#define EMPTY_DAG_3 EMPTY_DAG_2 EMPTY_DAG_2
+#define EMPTY_DAG_4 EMPTY_DAG_3 EMPTY_DAG_3
+#define EMPTY_DAG_5 EMPTY_DAG_4 EMPTY_DAG_4
+#define EMPTY_DAG_6 EMPTY_DAG_5 EMPTY_DAG_5
+#define EMPTY_DAG_7 EMPTY_DAG_6 EMPTY_DAG_6
+#define EMPTY_DAG_8 EMPTY_DAG_7 EMPTY_DAG_7
+#define EMPTY_DAG_9 EMPTY_DAG_8 EMPTY_DAG_8
+#define EMPTY_DAG_10 EMPTY_DAG_9 EMPTY_DAG_9
+#define EMPTY_DAG_11 EMPTY_DAG_10 EMPTY_DAG_10
+#define EMPTY_DAG_12 EMPTY_DAG_11 EMPTY_DAG_11
+#define EXPANSION_STEP_LIMIT (EMPTY_DAG_12 1)
 #define CAST_CONSTANT ((unsigned char)1)
 
 // The following macros have names that can't be bound, and are reported as
