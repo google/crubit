@@ -13,13 +13,19 @@ support. Instead of linking to API docs, we link to Rust source files.
 
 ## `std::string` {#string}
 
-Bindings for the layout-compatible `std::string` type are available behind the
-`//features:layout_compat_string` feature flag, but are not
-yet enabled by default (b/408961701).
+When passed or returned directly by value, `std::string` is bridged to
+`cpp_std::string_wrapper` unless the
+`//features:layout_compat_string` feature flag is enabled
+(b/408961701). References (`const std::string&`, `std::string&`), struct fields,
+and layout-compatible generic containers (such as `std::optional<std::string>`
+and `absl::StatusOr<std::string>`) use the layout-compatible, `!Unpin`
+`cpp_std::string` type.
 
-`std::string` is only supported as a "bridge type", with runtime conversion.
-When a `std::string` is passed or returned by value, it is transformed into a
-`cpp_std::string_wrapper`.
+Both `cpp_std::string` and `cpp_std::string_wrapper` convert to
+`cpp_std::string_view` via `From<&string>` and `From<&string_wrapper>`. In the
+reverse direction, `string_wrapper` implements `From<string_view>`, and `string`
+implements `ctor::CtorNew<string_view>` (and can be cloned in place via
+`ctor::emplace!(ctor::copy(s))`).
 
 API: support/cc_std_impl/string.rs
 
@@ -34,35 +40,47 @@ API: support/cc_std_impl/string_view.rs
 
 ## `std::unique_ptr<T>` {#unique_ptr}
 
-C++'s `std::unique_ptr<T>` type has two analogues in Rust. If the type has a
-virtual destructor, or an overloaded `operator delete`, then it becomes a
+C++'s `std::unique_ptr<T>` type has two non-null analogues in Rust. If the type
+has a virtual destructor, or an overloaded `operator delete`, then it becomes a
 `cpp_std::virtual_unique_ptr<T>`. In particular, polymorphic types will be
 stored in a `cpp_std::virtual_unique_ptr<T>`.
 
 Otherwise, when the destructor is directly callable and not virtual, it becomes
 a `cpp_std::unique_ptr<T>`.
 
-For example, a C++ `std::unique_ptr<int>` is a Rust `cpp_std::unique_ptr<int>`,
-but a C++ `std::unique_ptr<ios_base>` would become a Rust
-`cpp_std::virtual_unique_ptr<ios_base>`.
+When a `std::unique_ptr<T>` is known to be non-null (for example, annotated with
+`absl_nonnull` or `_Nonnull`, or under `ABSL_POINTERS_DEFAULT_NONNULL`), Crubit
+maps it directly to `cpp_std::unique_ptr<T>` or
+`cpp_std::virtual_unique_ptr<T>`. When it may be null (unannotated or
+`absl_nullable`), Crubit wraps it in `cpp_std::Nullable<Ptr>`. Convert either to
+`Option<Ptr>` using `cpp_std::OptionLike` (`into_option`, `as_option`,
+`as_option_mut`), which is implemented on both `Nullable<Ptr>` and bare `Ptr` so
+callers keep compiling when nullability annotations are added.
 
-Both types implement `Deref<Target = T>` and `DerefMut<Target = T>` (when `T:
-Unpin`). While C++ `std::unique_ptr` is only shallow-const (i.e. `const
-std::unique_ptr<T>&` allows mutating the underlying `T`), it is conventionally
-treated as deep-const. In order for `&unique_ptr<T>` to be usable at all from
-Rust, we treat it as deep-const. C++ code which mutates a value of type `T`
-while Rust has obtained a `&T` via `&unique_ptr<T>` -\> `&T` deref will result
-in undefined behavior.
+Both `unique_ptr<T>` and `virtual_unique_ptr<T>` implement `Deref<Target = T>`
+and `DerefMut<Target = T>` (when `T: Unpin`). To heap-construct a
+non-Rust-movable (`!Unpin`) `T` in place from a `ctor::Ctor`, use
+`cpp_std::unique_ptr::emplace` (or `try_emplace`). While C++ `std::unique_ptr`
+is only shallow-const (i.e. `const std::unique_ptr<T>&` allows mutating the
+underlying `T`), it is conventionally treated as deep-const. In order for
+`&unique_ptr<T>` to be usable at all from Rust, we treat it as deep-const. C++
+code which mutates a value of type `T` while Rust has obtained a `&T` via
+`&unique_ptr<T>` -\> `&T` deref will result in undefined behavior.
 
-API: support/cc_std_impl/unique_ptr.rs
+API: support/cc_std_impl/unique_ptr.rs,
+support/cc_std_impl/nullable.rs
 
 See also: crubit.rs/errors/delete
 
 ## `std::shared_ptr<T>` {#shared_ptr}
 
-A C++ `std::shared_ptr<T>` becomes a Rust `cpp_std::shared_ptr<T>`. It
+A non-null C++ `std::shared_ptr<T>` (`absl_nonnull` or `_Nonnull`) becomes a
+Rust `cpp_std::shared_ptr<T>`, while an unannotated or `absl_nullable`
+`std::shared_ptr<T>` becomes `cpp_std::Nullable<cpp_std::shared_ptr<T>>`
+(convertible to `Option` via `cpp_std::OptionLike`). `cpp_std::shared_ptr<T>`
 implements `Deref<Target = T>`, allowing `&shared_ptr<T>` to be dereferenced to
-`&T`.
+`&T`, and provides `shared_ptr::emplace` (and `try_emplace`) to construct
+`!Unpin` pointees in place from a `ctor::Ctor`.
 
 API: support/cc_std_impl/shared_ptr.rs
 
@@ -75,11 +93,13 @@ API: support/cc_std_impl/vector.rs
 ## `std::optional<T>` {#optional}
 
 `std::optional<T>` in C++ is bound as `cpp_std::optional<T>` or
-`cpp_std::trivial_optional<T>` in Rust. `trivial_optional` is used when `T:
-Copy`, which allows `optional` of trivially copyable types to also be trivially
-copyable (see the `trivial_optional` docs in the API below). Convert to and from
-a Rust `Option<T>` with `From`/`Into`, e.g. `Option::from(opt)` or
-`Some(x).into()`.
+`cpp_std::trivial_optional<T>` in Rust. `trivial_optional` is used when
+`T: Copy`, which allows `optional` of trivially copyable types to also be
+trivially copyable (see the `trivial_optional` docs in the API below). Convert
+to and from a Rust `Option<T>` with `From`/`Into`, e.g. `Option::from(opt)` or
+`Some(x).into()`. When `T` is `!Unpin`, construct `cpp_std::optional<T>` in
+place via `ctor::CtorNew<Option<A>>` (`optional::<T>::ctor_new(opt)`) or
+`optional::ctor_from_option`.
 
 API: support/cc_std_impl/optional.rs
 

@@ -107,10 +107,13 @@ wrapper type.
 underlying value has been moved out, ensuring that the destructor is not run on
 moved-from instances:
 
-*   **Accessing members**: Like a smart pointer or `std::optional`, you can
-    access the underlying `T`'s fields and methods using `operator*` and
-    `operator->` (e.g. `val->method()`, `(*val).field`). Note that
-    `rs::Movable<T>` does not provide implicit conversions to `T` or `T&`.
+*   **Accessing members and unwrapping**: Like a smart pointer or
+    `std::optional`, you can access the underlying `T`'s fields and methods
+    using `operator*` and `operator->` (e.g. `val->method()`, `(*val).field`).
+    An rvalue `rs::Movable<T>` also implicitly converts to a `T` prvalue
+    (`operator T() &&`), initializing a `T` directly via C++17 guaranteed copy
+    elision and leaving the `Movable` valueless (lvalues require `std::move`,
+    and there is no implicit conversion to `T&`).
 *   **Move semantics**: You can move `rs::Movable<T>` instances with `std::move`
     to pass them by value into functions. Moving relocates the underlying Rust
     object into the target without calling intermediate destructors.
@@ -165,6 +168,14 @@ void forward_unmovable(rs::Movable<Unmovable> movable) {
   consume_unmovable(std::move(movable));
 }
 ```
+
+When the opt-in `//features:movable_return_values` feature is
+enabled, functions returning a non-C++-movable type by value (such as
+`make_unmovable`) return `::rs::Movable<Unmovable>` instead of `Unmovable`. This
+allows passing the return value directly to
+`consume_unmovable(make_unmovable(42))`, while
+`Unmovable val = make_unmovable(42);` continues to compile via the rvalue
+conversion on `rs::Movable<T>`.
 
 [^semiregular]: The combination of default-constructible and copyable is so
     important for making types useful in C++ that it even has a name:
