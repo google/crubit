@@ -316,20 +316,21 @@ static_assert(kB.get<ConstexprB>()->y == 2);
 
 // A pointer niche, as in `Option<&i32>`: `None` is the all-zero pointer and
 // `Some` is the untagged variant. Building `Some` at compile time needs the
-// pointer to be a real member -- it could not be `bit_cast` into bytes.
+// pointer to be a real member -- it could not be `bit_cast` into bytes. The tag
+// is pointer-sized, as rustc's is, so the layout also holds on 32-bit targets.
 constexpr int32_t kPointee = 5;
 struct NoneRef {
-  static constexpr uint64_t kDiscriminant = 0;
-  uint64_t null = 0;
+  static constexpr uintptr_t kDiscriminant = 0;
+  uintptr_t null = 0;
   constexpr explicit NoneRef(VariantKey) {}
 };
 struct SomeRef {
-  static constexpr uint64_t kDiscriminant = 1;
+  static constexpr uintptr_t kDiscriminant = 1;
   const int32_t* p;
   constexpr SomeRef(VariantKey, const int32_t* p) : p(p) {}
 };
 using OptionRefTU = VariadicUnionStorage<
-    Niche<uint64_t, /*NicheOffset=*/0, /*UntaggedVariant=*/1,
+    Niche<uintptr_t, /*NicheOffset=*/0, /*UntaggedVariant=*/1,
           /*NicheStartVariant=*/0, /*NicheEndVariant=*/0,
           /*NicheStartValue=*/0>,
     NoneRef, SomeRef>;
