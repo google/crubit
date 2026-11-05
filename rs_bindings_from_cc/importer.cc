@@ -50,6 +50,7 @@
 #include "rs_bindings_from_cc/importers/var.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_generated.h"
+#include "rs_bindings_from_cc/macro_constants.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "rs_bindings_from_cc/type_map.h"
 #include "clang/AST/ASTContext.h"
@@ -81,6 +82,7 @@
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/HeaderSearchOptions.h"
 #include "clang/Lex/Lexer.h"
+#include "clang/Lex/MacroInfo.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
 #include "clang/UnifiedSymbolResolution/USRGeneration.h"
@@ -1930,10 +1932,67 @@ void Importer::CheckLazyImportInvariants() const {
   }
 }
 
+void Importer::ImportMacroConstants() {
+  // TODO(b/530193579): After expanding features earlier, just check the
+  // specific feature without manually checking for "all".
+  if (!IsFeatureEnabledForTarget(invocation_.target_, "macro_constants") &&
+      !IsFeatureEnabledForTarget(invocation_.target_, "all")) {
+    return;
+  }
+
+  clang::SourceManager& sm = ctx_.getSourceManager();
+  clang::Preprocessor& preprocessor = sema_.getPreprocessor();
+  clang::TranslationUnitDecl* translation_unit = ctx_.getTranslationUnitDecl();
+  std::vector<std::pair<const clang::IdentifierInfo*, const clang::MacroInfo*>>
+      macros;
+  for (const auto& [identifier, unused_macro_state] :
+       preprocessor.macros(/*IncludeExternalMacros=*/false)) {
+    // The definition that is in effect at the end of the translation unit, if
+    // any.
+    clang::MacroDefinition macro_def =
+        preprocessor.getMacroDefinition(identifier);
+    if (!macro_def || macro_def.isAmbiguous()) continue;
+    const clang::MacroInfo* macro_info = macro_def.getMacroInfo();
+    // `SynthesizeMacroConstant` checks whether the macro itself is supported.
+    if (macro_info == nullptr ||
+        GetOwningTargetOfLocation(macro_info->getDefinitionLoc()) !=
+            invocation_.target_) {
+      continue;
+    }
+    // A declaration with the same name (that was declared before the macro was
+    // defined) would conflict with the synthesized constant.
+    if (!translation_unit->lookup(identifier).empty()) continue;
+    macros.push_back({identifier, macro_info});
+  }
+
+  // `Preprocessor::macros()` iterates over a hash map. Add the variables to the
+  // translation unit in source order instead, so that the order of its
+  // declarations (which is the order they are imported in, and breaks ties
+  // when items are sorted by source order) doesn't depend on the hash seed.
+  llvm::sort(macros, [&sm](const auto& a, const auto& b) {
+    clang::SourceLocation loc_a = a.second->getDefinitionLoc();
+    clang::SourceLocation loc_b = b.second->getDefinitionLoc();
+    if (IsBeforeInSourceOrder(sm, loc_a, loc_b)) return true;
+    if (IsBeforeInSourceOrder(sm, loc_b, loc_a)) return false;
+    return a.first->getName() < b.first->getName();
+  });
+  for (const auto& [identifier, macro_info] : macros) {
+    if (std::optional<MacroConstant> macro_constant =
+            SynthesizeMacroConstant(sema_, *identifier, *macro_info)) {
+      // The variable must not be found by name lookup: it is not a real C++
+      // declaration.
+      translation_unit->addHiddenDecl(macro_constant->var_decl);
+      macro_constant_is_typed_.insert(
+          {macro_constant->var_decl, macro_constant->is_typed});
+    }
+  }
+}
+
 void Importer::Import(
     clang::TranslationUnitDecl* _Nonnull translation_unit_decl) {
   FindAlwaysInstantiateSpecs(*translation_unit_decl);
   ImportFreeComments();
+  ImportMacroConstants();
   clang::SourceManager& sm = ctx_.getSourceManager();
   std::vector<SourceLocationComparator::OrderedItem> ordered_items;
 
@@ -3005,6 +3064,13 @@ static bool ShouldKeepCommentLine(llvm::StringRef line) {
       "(\\([^)[:space:]]*\\)?)?"  // Optional (...)
       "[[:space:]]*$");           // Whitespace
   return !patterns_to_ignore.match(StringRefFromStringView(line));
+}
+
+std::optional<bool> Importer::IsTypedMacroConstant(
+    const clang::VarDecl& var_decl) const {
+  auto it = macro_constant_is_typed_.find(&var_decl);
+  if (it == macro_constant_is_typed_.end()) return std::nullopt;
+  return it->second;
 }
 
 std::optional<std::string> Importer::GetComment(const clang::Decl& decl) const {

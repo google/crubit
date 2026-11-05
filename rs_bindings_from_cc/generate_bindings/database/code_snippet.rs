@@ -947,6 +947,13 @@ pub fn generated_items_to_tokens<'db>(
                 pub const #ident: #type_tokens = #value;
             }
             .to_tokens(tokens),
+            GeneratedItem::MacroConstant { ident, value } => quote! {
+                #[macro_export]
+                macro_rules! #ident {
+                    () => { #value };
+                }
+            }
+            .to_tokens(tokens),
             GeneratedItem::GlobalVar { link_name, is_mut, ident, type_tokens, deprecated_attr } => {
                 let link_name_attr =
                     link_name.as_deref().map(|link_name| quote! { #[link_name = #link_name] });
@@ -1015,6 +1022,11 @@ pub enum GeneratedItem {
         type_tokens: TokenStream,
         value: TokenStream,
         deprecated_attr: Option<DeprecatedAttr>,
+    },
+    /// A `macro_rules!` that expands to `value`, for a C++ object-like macro.
+    MacroConstant {
+        ident: Ident,
+        value: TokenStream,
     },
     Enum(TokenStream),
     Func(TokenStream),

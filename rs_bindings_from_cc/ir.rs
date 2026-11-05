@@ -27,7 +27,7 @@ pub use ir_generated::bridge_type::callable::{BackingType, FnTrait};
 pub use ir_generated::cc_type::{
     ConstantArrayType, FuncPointer, PointerType, Variant as CcTypeVariant,
 };
-pub use ir_generated::constant::Kind as ConstantValue;
+pub use ir_generated::constant::{Kind as ConstantValue, MacroKind};
 pub use ir_generated::instance_method_metadata::ReferenceQualification;
 pub use ir_generated::member_func_semantic::{Getter, Setter};
 pub use ir_generated::template_specialization::Kind as TemplateSpecializationKind;

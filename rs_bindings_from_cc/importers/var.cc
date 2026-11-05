@@ -583,6 +583,11 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
   if (auto comment = ictx_.GetComment(*var_decl); comment.has_value()) {
     constant->set_doc_comment(std::move(*comment));
   }
+  if (std::optional<bool> is_typed = ictx_.IsTypedMacroConstant(*var_decl);
+      is_typed.has_value()) {
+    constant->set_macro_kind(*is_typed ? crubit::ffi::constant::TYPED_MACRO
+                                       : crubit::ffi::constant::UNTYPED_MACRO);
+  }
   return item;
 }
 

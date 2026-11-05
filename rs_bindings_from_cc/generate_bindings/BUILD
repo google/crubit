@@ -457,6 +457,7 @@ rust_library(
     deps = [
         ":generate_function_thunk",
         "//common:arc_anyhow",
+        "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:error_report",
         "//rs_bindings_from_cc:ir",

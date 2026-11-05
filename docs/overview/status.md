@@ -72,6 +72,19 @@ Crubit generates Rust bindings for everyday C++ APIs:
     [explicit lifetime annotations](../cpp/references_and_lifetimes.md).
 *   Type aliases, forward-declared types, and concrete class template
     specializations such as `MyTemplate<int>`.
+*   Object-like macros which expand to simple integral constants, such as
+    `#define FOO 4`, with the `macro_constants` feature. They are bound as
+    `macro_rules!`, so `FOO` is used as `FOO!()`.
+    *   If the macro contains a literal with a suffix (e.g. `42u` or `1L`), or a
+        `u'x'` or `U'x'` character literal, `FOO!()` has the type of the C++
+        constant, e.g. `::ffi_11::c_uint`.
+    *   Otherwise, `FOO!()` is an untyped literal, which can be used as any
+        integer type, e.g. as an `i64` or `usize`, or as an array length. Values
+        that don't fit the type are silently truncated, because rustc doesn't
+        report overflowing literals from another crate's macros. To use it as an
+        `ffi_11` type which isn't a primitive type (e.g. `c_char`, or
+        `c_longlong` on Linux), convert it, e.g. with
+        `ffi_11::new_c_longlong(FOO!())`.
 
 Unreleased: non-virtual inheritance (upcasting, downcasting, inherited methods).
 
@@ -80,7 +93,8 @@ and overriding C++ methods from Rust (b/313733992), checking that C++ code
 actually honors the elided or annotated lifetimes, C++ templates with generic
 (non-concrete) type parameters (see [Generics and
 Templates](limits.md#generics)), non-type `using` aliases, constants of other
-types (e.g. floating-point or class types), and macros.
+types (e.g. floating-point or class types), and macros other than simple
+constants.
 
 ## C++ bindings for Rust libraries
 

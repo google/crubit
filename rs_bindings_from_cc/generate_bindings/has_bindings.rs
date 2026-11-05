@@ -3,13 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::Result;
+use code_gen_utils::try_make_rs_ident;
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{missing_feature_descriptions, NoBindingsReason, ResolvedName};
 use database::rs_snippet::{LifetimeOptions, RsTypeKind};
 use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail};
 use heck::ToSnakeCase;
-use ir::{CcType, CcTypeVariant, FfiRc, Func, GenericItem, Item, ItemId, Record};
+use ir::{CcType, CcTypeVariant, FfiRc, Func, GenericItem, Item, ItemId, MacroKind, Record};
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -179,6 +180,16 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindings
             blocker: None,
             source: error,
         });
+    }
+    // A C++ macro's name may not be a valid Rust macro name, e.g. `self` or `_`.
+    if let Item::Constant(constant) = &item
+        && constant.macro_kind() != MacroKind::NotMacro
+        && try_make_rs_ident(constant.rs_name().as_str()).is_err()
+    {
+        return Err(NoBindingsReason::Unsupported(anyhow!(
+            "`{}` is not a valid Rust macro name",
+            constant.rs_name().as_str()
+        )));
     }
 
     match item {

@@ -70,6 +70,7 @@ DEPS = {
         "forward_declaration",
     ],
     "inherited_friend_operators": ["operator_mixins"],
+    "macro_constants_user": ["macro_constants"],
     "uses_not_crubit_exposed": ["not_crubit_exposed"],
     "depends_on_nested_types": ["nested_types"],
     "template_inst": [
@@ -97,6 +98,12 @@ ASPECT_HINTS = {
     ],
     "inherited_friend_operators": [
         "//features:inherited_friend_operators",
+    ],
+    "macro_constants": [
+        "//features:macro_constants",
+    ],
+    "macro_constants_user": [
+        "//features:macro_constants",
     ],
     "blocklist_template_paths": [
         "//features:template_instantiation",

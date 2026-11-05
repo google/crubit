@@ -5,22 +5,24 @@
 
 use arc_anyhow::{anyhow, ensure, Context, Error, Result};
 use code_gen_utils::make_rs_lifetime_ident;
-use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
+use code_gen_utils::{
+    format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, try_make_rs_ident, CcInclude,
+};
 use cpp_type_name::format_cpp_type_with_references;
 use crubit_abi_type::{
     CrubitAbiType, CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens,
     CrubitAbiTypeToRustExprTokens, CrubitAbiTypeToRustTokens, FullyQualifiedPath,
 };
 use database::code_snippet::{
-    self, integer_constant_to_token_stream, ApiSnippets, Bindings, BindingsTokens, CppDetails,
-    CppIncludes, DeprecatedAttr, Feature, GeneratedItem, ThunkImpl,
+    self, integer_constant_to_token_stream, integer_literal_tokens, ApiSnippets, Bindings,
+    BindingsTokens, CppDetails, CppIncludes, DeprecatedAttr, Feature, GeneratedItem, ThunkImpl,
 };
 use database::db::{BindingsGenerator, CodegenFunctions, Interner};
 use database::intern;
 use database::rs_snippet::{
     resolve_bridge_rust_name, BackingType, BridgeRsTypeKind, Callable, CustomizeMethodsKind,
-    FnTrait, LifetimeOptions, Mutability, PassingConvention, RsTypeKind, RustPtrKind,
-    UniformReprTemplateType, UnsafeReason,
+    FnTrait, LifetimeOptions, Mutability, PassingConvention, PrimitiveName, RsTypeKind,
+    RustPtrKind, UniformReprTemplateType, UnsafeReason,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -206,6 +208,9 @@ fn generate_type_alias(
 
 fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Constant);
+    if constant.macro_kind() != MacroKind::NotMacro {
+        return generate_macro_constant(db, constant);
+    }
     let type_and_value = match constant.value() {
         ConstantValue::Integer(value) => {
             let type_ = db.rs_type_kind(constant.type_().unwrap().clone())?;
@@ -247,6 +252,47 @@ fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiS
                 value,
                 deprecated_attr: constant.deprecated().map(|s| DeprecatedAttr(Rc::from(s))),
             },
+        )]),
+        ..Default::default()
+    })
+}
+
+/// Generates a `macro_rules!` for a constant synthesized from a C++ object-like macro.
+///
+/// If the C++ macro is untyped (`MacroKind::UntypedMacro`), the Rust macro expands to an
+/// unsuffixed literal, which can be used as any Rust integer type. Otherwise, it expands to a value
+/// of the constant's type.
+fn generate_macro_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiSnippets> {
+    // `has_bindings` also checks this, so that the error is reported instead of being fatal.
+    let ident = try_make_rs_ident(constant.rs_name().as_str())
+        .map_err(|_| anyhow!("`{}` is not a valid Rust macro name", constant.rs_name().as_str()))?;
+    let ConstantValue::Integer(value) = constant.value() else {
+        bail!("macro constants must be integers");
+    };
+    let type_ = db.rs_type_kind(constant.type_().unwrap().clone())?;
+    let value_tokens = if constant.macro_kind() == MacroKind::UntypedMacro || type_.is_bool() {
+        integer_literal_tokens(*value, type_.is_bool())
+    } else {
+        match *type_.unalias() {
+            RsTypeKind::Primitive(primitive) => match PrimitiveName::from_primitive(primitive) {
+                // A suffix gives the literal its type, e.g. `120u16`.
+                PrimitiveName::NativeType(type_name) => {
+                    let literal = format!("{}{type_name}", integer_literal_tokens(*value, false));
+                    literal
+                        .parse::<TokenStream>()
+                        .map_err(|e| anyhow!("Invalid literal `{literal}`: {e}"))?
+                }
+                PrimitiveName::Ffi11Type(_) => {
+                    integer_constant_to_token_stream(db, *value, &type_)?
+                }
+            },
+            _ => integer_constant_to_token_stream(db, *value, &type_)?,
+        }
+    };
+    Ok(ApiSnippets {
+        generated_items: HashMap::from([(
+            constant.id(),
+            GeneratedItem::MacroConstant { ident, value: value_tokens },
         )]),
         ..Default::default()
     })

@@ -430,6 +430,12 @@ class ImportContext {
   virtual std::optional<std::string> GetComment(
       const clang::Decl& decl) const = 0;
 
+  // If `var_decl` was synthesized from an object-like macro (see
+  // `SynthesizeMacroConstant`), returns whether the macro is typed (see
+  // `MacroConstant::is_typed`). Otherwise, returns `std::nullopt`.
+  virtual std::optional<bool> IsTypedMacroConstant(
+      const clang::VarDecl& var_decl) const = 0;
+
   // Converts a Clang source location to a structured `DeclLocation`.
   // `name_info` may be null.
   virtual crubit::ffi::DeclLocation ConvertDeclLocation(

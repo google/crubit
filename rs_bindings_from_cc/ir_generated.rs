@@ -146,6 +146,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, lifetime_inputs, $($arg:tt)*) => { $msg.set_lifetime_inputs($($arg)*) };
     ($msg:ident, lifetime_params, $($arg:tt)*) => { $msg.set_lifetime_params($($arg)*) };
     ($msg:ident, line, $($arg:tt)*) => { $msg.set_line($($arg)*) };
+    ($msg:ident, macro_kind, $($arg:tt)*) => { $msg.set_macro_kind($($arg)*) };
     ($msg:ident, mangled_cc_name, $($arg:tt)*) => { $msg.set_mangled_cc_name($($arg)*) };
     ($msg:ident, mangled_name, $($arg:tt)*) => { $msg.set_mangled_name($($arg)*) };
     ($msg:ident, message, $($arg:tt)*) => { $msg.set_message($($arg)*) };
@@ -2308,6 +2309,7 @@ mod __defs {
         pub must_bind: bool,
         pub deprecated: FfiString,
         pub doc_comment: FfiString,
+        pub macro_kind: constant::MacroKind,
     }
 
     impl core::fmt::Debug for Constant {
@@ -2326,6 +2328,7 @@ mod __defs {
                 .field("must_bind", &self.must_bind)
                 .field("deprecated", &self.deprecated())
                 .field("doc_comment", &self.doc_comment())
+                .field("macro_kind", &self.macro_kind)
                 .finish()
         }
     }
@@ -2355,6 +2358,7 @@ mod __defs {
             must_bind: false,
             deprecated: FfiString::EMPTY,
             doc_comment: FfiString::EMPTY,
+            macro_kind: constant::MacroKind::EMPTY,
         };
         pub fn kind(&self) -> &constant::Kind {
             &self.kind
@@ -2437,6 +2441,9 @@ mod __defs {
         pub fn doc_comment(&self) -> Option<&str> {
             self.has_doc_comment().then(|| self.doc_comment.as_str())
         }
+        pub fn macro_kind(&self) -> constant::MacroKind {
+            self.macro_kind
+        }
         pub fn set_kind(&mut self, val: constant::Kind) -> &mut constant::Kind {
             self.kind = val;
             &mut self.kind
@@ -2495,10 +2502,13 @@ mod __defs {
             self.doc_comment = val;
             &mut self.doc_comment
         }
+        pub fn set_macro_kind(&mut self, val: constant::MacroKind) {
+            self.macro_kind = val;
+        }
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<Constant>() == 416);
+        assert!(core::mem::size_of::<Constant>() == 424);
         assert!(core::mem::align_of::<Constant>() == 8);
         assert!(core::mem::offset_of!(Constant, kind) == 8);
         assert!(core::mem::offset_of!(Constant, cc_name) == 80);
@@ -2513,6 +2523,7 @@ mod __defs {
         assert!(core::mem::offset_of!(Constant, must_bind) == 376);
         assert!(core::mem::offset_of!(Constant, deprecated) == 384);
         assert!(core::mem::offset_of!(Constant, doc_comment) == 400);
+        assert!(core::mem::offset_of!(Constant, macro_kind) == 416);
     };
 
     #[repr(C)]
@@ -6134,6 +6145,26 @@ mod __defs {
 
     pub mod constant {
         use super::*;
+
+        #[repr(i32)]
+        #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum MacroKind {
+            #[default]
+            NotMacro = 0,
+            UntypedMacro = 1,
+            TypedMacro = 2,
+        }
+        impl MacroKind {
+            pub const EMPTY: Self = Self::NotMacro;
+            pub const fn from_i32(val: i32) -> Option<Self> {
+                match val {
+                    0 => Some(Self::NotMacro),
+                    1 => Some(Self::UntypedMacro),
+                    2 => Some(Self::TypedMacro),
+                    _ => None,
+                }
+            }
+        }
 
         #[repr(C, u32)]
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]

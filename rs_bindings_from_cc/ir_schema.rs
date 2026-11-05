@@ -381,6 +381,12 @@ pub(crate) fn schema() -> Schema {
             Array(array_value: ArrayValue),
             StringView(string_view_value: Bytes),
         }
+        #[scope("Constant")]
+        enum MacroKind {
+            NotMacro,
+            UntypedMacro,
+            TypedMacro,
+        }
         struct Constant {
             kind: constant::Kind,
             cc_name: Identifier,
@@ -401,6 +407,9 @@ pub(crate) fn schema() -> Schema {
             deprecated: Str,
             #[optional]
             doc_comment: Str,
+            // Whether the constant was synthesized from an object-like macro, in which case it is
+            // bound as a `macro_rules!` instead of a `const`.
+            macro_kind: constant::MacroKind,
         }
         #[scope("TemplateSpecialization")]
         struct StdVector {

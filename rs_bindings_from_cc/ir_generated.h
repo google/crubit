@@ -223,6 +223,14 @@ enum Kind : int32_t {
 };
 }  // namespace unsupported_item
 
+namespace constant {
+enum MacroKind : int32_t {
+  NOT_MACRO = 0,
+  UNTYPED_MACRO = 1,
+  TYPED_MACRO = 2,
+};
+}  // namespace constant
+
 struct CRUBIT_FFI_TRIVIAL_ABI HeaderName {
   HeaderName() = default;
   explicit HeaderName(std::string_view name) { set_name(name); }
@@ -1798,6 +1806,10 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
 
 struct CRUBIT_FFI_TRIVIAL_ABI Constant {
   using Kind = ::crubit::ffi::constant::Kind;
+  using MacroKind = ::crubit::ffi::constant::MacroKind;
+  static constexpr MacroKind NOT_MACRO = ::crubit::ffi::constant::NOT_MACRO;
+  static constexpr MacroKind UNTYPED_MACRO = ::crubit::ffi::constant::UNTYPED_MACRO;
+  static constexpr MacroKind TYPED_MACRO = ::crubit::ffi::constant::TYPED_MACRO;
   Constant() = default;
   explicit Constant(::crubit::ffi::constant::Kind kind) { *mutable_kind() = std::move(kind); }
   const ::crubit::ffi::constant::Kind& kind() const { return kind_; }
@@ -1838,6 +1850,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Constant {
   void clear_doc_comment() { has_bits_ &= ~0x20ULL; doc_comment_ = {}; }
   std::string_view doc_comment() const { return doc_comment_.AsView(); }
   void set_doc_comment(std::string_view value) { has_bits_ |= 0x20ULL; doc_comment_ = FfiString(value); }
+  ::crubit::ffi::constant::MacroKind macro_kind() const { return macro_kind_; }
+  void set_macro_kind(::crubit::ffi::constant::MacroKind value) { macro_kind_ = value; }
   friend bool operator==(const Constant&, const Constant&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::constant::Kind kind_{};
@@ -1853,6 +1867,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Constant {
   bool must_bind_{};
   FfiString deprecated_{};
   FfiString doc_comment_{};
+  ::crubit::ffi::constant::MacroKind macro_kind_{};
 };
 
 namespace template_specialization {
@@ -3487,7 +3502,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(ArrayValue, length_) == 56);
 static_assert(std::is_standard_layout_v<constant::Kind>);
 static_assert(sizeof(size_t) != 8 || (sizeof(constant::Kind) == 72 && alignof(constant::Kind) == 8));
 static_assert(std::is_standard_layout_v<Constant>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Constant) == 416 && alignof(Constant) == 8));
+static_assert(sizeof(size_t) != 8 || (sizeof(Constant) == 424 && alignof(Constant) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(Constant, kind_) == 8);
 static_assert(sizeof(size_t) != 8 || offsetof(Constant, cc_name_) == 80);
 static_assert(sizeof(size_t) != 8 || offsetof(Constant, rs_name_) == 96);
@@ -3501,6 +3516,7 @@ static_assert(sizeof(size_t) != 8 || offsetof(Constant, type_) == 240);
 static_assert(sizeof(size_t) != 8 || offsetof(Constant, must_bind_) == 376);
 static_assert(sizeof(size_t) != 8 || offsetof(Constant, deprecated_) == 384);
 static_assert(sizeof(size_t) != 8 || offsetof(Constant, doc_comment_) == 400);
+static_assert(sizeof(size_t) != 8 || offsetof(Constant, macro_kind_) == 416);
 static_assert(std::is_standard_layout_v<template_specialization::StdVector>);
 static_assert(sizeof(size_t) != 8 || (sizeof(template_specialization::StdVector) == 136 && alignof(template_specialization::StdVector) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(template_specialization::StdVector, element_type_) == 0);

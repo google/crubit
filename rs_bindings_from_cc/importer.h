@@ -133,6 +133,8 @@ class Importer final : public ImportContext {
   llvm::Expected<TranslatedIdentifier> GetTranslatedIdentifier(
       const clang::NamedDecl& named_decl) const override;
   std::optional<std::string> GetComment(const clang::Decl& decl) const override;
+  std::optional<bool> IsTypedMacroConstant(
+      const clang::VarDecl& var_decl) const override;
   crubit::ffi::DeclLocation ConvertDeclLocation(
       clang::SourceLocation loc,
       clang::DeclarationNameInfo* _Nullable name_info) const override;
@@ -245,6 +247,12 @@ class Importer final : public ImportContext {
   // are not necessarily all in the same copy of the header as `comments_`.
   clang::SourceLocation TranslateToCommentFile(
       clang::SourceLocation location) const;
+
+  // If the `macro_constants` feature is enabled, synthesizes `constexpr`
+  // variables for the object-like macros of this target that expand to simple
+  // constants (see `SynthesizeMacroConstant`). The variables are then imported
+  // like any other constant.
+  void ImportMacroConstants();
 
   clang::Decl* _Nullable CanonicalizeDecl(clang::Decl* _Nonnull decl) const;
   const clang::Decl* _Nullable CanonicalizeDecl(const clang::Decl& decl) const;
@@ -364,6 +372,10 @@ class Importer final : public ImportContext {
       instantiation_attempts_;
 
   std::vector<const clang::RawComment*> comments_;
+
+  // The variables synthesized by `ImportMacroConstants`, mapped to whether
+  // they are typed (see `MacroConstant::is_typed`).
+  absl::flat_hash_map<const clang::VarDecl*, bool> macro_constant_is_typed_;
 
   // The comments in files loaded from precompiled header modules, which Crubit
   // collects itself by lexing the files (whose contents are embedded in the
