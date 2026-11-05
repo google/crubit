@@ -71,9 +71,6 @@ alias(
 crubit_cc_test(
     name = "char_test",
     srcs = ["char_test.cc"],
-    # TODO(b/522829368): `char_::encode_utf8` returns the wrong bytes on Windows
-    # (`EncodedIsUtf8BytesTest` fails on x86_64 and x86).
-    tags = ["no_windows"],
     deps = [
         ":char",
         ":str_ref",
@@ -437,9 +434,6 @@ crubit_cc_test(
 crubit_cc_test(
     name = "enum_storage_test",
     srcs = ["enum_storage_test.cc"],
-    # TODO(b/522829368): x86 doesn't build: a tag-encoding static_assert fails on
-    # 32-bit Windows (`SomeRef` is narrower than the 8-byte niche tag).
-    tags = ["no_test_windows_x86"],
     deps = [
         ":enum",
         "@fuzztest//:fuzztest_gtest_main",
