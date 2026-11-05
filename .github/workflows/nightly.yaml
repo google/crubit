@@ -12,6 +12,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       commit: ${{ steps.llvm.outputs.commit }}
+      crubit_commit: ${{ steps.update-crubit.outputs.commit }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -21,8 +22,12 @@ jobs:
           ref: test-matrix
 
       - name: Update Crubit Submodule
+        id: update-crubit
         run: |
           git submodule update --init --remote crubit
+          CRUBIT_COMMIT=$(git -C crubit rev-parse HEAD)
+          echo "Updated crubit submodule to $CRUBIT_COMMIT"
+          echo "commit=$CRUBIT_COMMIT" >> "$GITHUB_OUTPUT"
 
       - name: Fetch Versions and Generate Matrix
         id: set-matrix
@@ -161,6 +166,22 @@ jobs:
             git commit -m "chore: update status badges and matrix.json"
             git push origin test-matrix
           fi
+
+      - name: Update latest tag
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CRUBIT_COMMIT: ${{ needs.update-and-generate.outputs.crubit_commit }}
+        run: |
+          if [[ ! "$CRUBIT_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Invalid Crubit submodule commit SHA: '$CRUBIT_COMMIT'"
+            exit 1
+          fi
+          echo "Updating 'latest' tag to Crubit commit: $CRUBIT_COMMIT"
+          gh api -X PATCH "/repos/${{ github.repository }}/git/refs/tags/latest" \
+            --field sha="$CRUBIT_COMMIT" --field force=true \
+          || gh api -X POST "/repos/${{ github.repository }}/git/refs" \
+            --field ref="refs/tags/latest" --field sha="$CRUBIT_COMMIT"
 
   notify-failures:
     needs: build
