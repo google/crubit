@@ -6,6 +6,14 @@ package(
 )
 
 bzl_library(
+    name = "cc_embed_data_bzl",
+    srcs = ["cc_embed_data.bzl"],
+    deps = [
+        "@rules_cc//cc:core_rules",
+    ],
+)
+
+bzl_library(
     name = "cpp_api_from_rust_bzl",
     srcs = ["cpp_api_from_rust.bzl"],
     deps = [
