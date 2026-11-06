@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use core::pin::Pin;
 use ctor::{emplace, CtorNew as _};
 use googletest::gtest;
 use oops::Upcast as _;
@@ -56,4 +57,13 @@ fn test_upcast_thunk_name_uniqueness() {
         unsafe { (derived as *const another_namespace::VirtualBase2).virtual_upcast() };
     let base1_address = base1 as usize;
     assert_eq!(base1_address, derived.base1_address());
+}
+
+#[gtest]
+fn test_upcast_pin_mut() {
+    use upcast::nonunpin_upcast::{NonUnpinBase, NonUnpinDerived};
+    let mut derived = emplace!(NonUnpinDerived::ctor_new(()));
+    // Call the non-const method via upcast:
+    let base: Pin<&mut NonUnpinBase> = unsafe { derived.as_mut().upcast() };
+    base.non_const_method();
 }

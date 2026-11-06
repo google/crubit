@@ -98,4 +98,17 @@ class VirtualBase2 : public virtual Base1 {
 
 }  // namespace another_namespace
 
+namespace nonunpin_upcast {
+class NonUnpinBase {
+ public:
+  NonUnpinBase() = default;
+  NonUnpinBase(const NonUnpinBase&) = delete;
+  NonUnpinBase& operator=(const NonUnpinBase&) = delete;
+
+  void non_const_method() {}
+};
+
+class NonUnpinDerived : public NonUnpinBase {};
+}  // namespace nonunpin_upcast
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_INHERITANCE_UPCAST_H_
