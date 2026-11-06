@@ -28,9 +28,6 @@ use generate_function_thunk::{
 };
 use ir::*;
 use itertools::Itertools;
-use lifetime_defaults_transform::{
-    lifetime_defaults_transform_func, lifetime_defaults_transform_record,
-};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{HashMap, HashSet};
@@ -1268,10 +1265,10 @@ fn api_func_shape(
             api_func_shape_for_destructor(db, func, maybe_record, param_types)
         }
         UnqualifiedIdentifier::Constructor => {
-            api_func_shape_for_constructor(db, func, maybe_record, param_types, errors)
+            api_func_shape_for_constructor(db, &*func, maybe_record, param_types, errors)
         }
         UnqualifiedIdentifier::ConversionOperator => {
-            api_func_shape_for_conversion_operator(func, maybe_record, param_types, return_type)
+            api_func_shape_for_conversion_operator(&*func, maybe_record, param_types, return_type)
         }
     }
 }
@@ -1313,7 +1310,8 @@ pub fn get_binding(
             generate_function(db, (*function).clone(), None).ok().flatten().is_some()
         })
         .find_map(|function| {
-            let Ok((mut function_param_types, return_type)) = rs_type_kinds_for_func(db, function)
+            let Ok((mut function_param_types, return_type)) =
+                rs_type_kinds_for_func(db, function.clone())
             else {
                 return None;
             };
@@ -1349,7 +1347,7 @@ pub fn is_record_clonable(db: &BindingsGenerator<'_>, record: FfiRc<Record>) -> 
             })
             .any(|function| {
                 let Ok((mut function_param_types, return_type)) =
-                    rs_type_kinds_for_func(db, function)
+                    rs_type_kinds_for_func(db, function.clone())
                 else {
                     return false;
                 };
@@ -1505,7 +1503,7 @@ fn thunkless_impl(
 ) -> Option<ThunklessImpl> {
     if !db
         .ir()
-        .target_crubit_features(func.owning_target())
+        .target_crubit_features((&*func).owning_target())
         .contains(crubit_feature::CrubitFeature::ThunklessAccessors)
     {
         return None;
@@ -1885,14 +1883,14 @@ fn use_shared_ref_if_thread_safe(db: &BindingsGenerator<'_>, func: &Func) -> boo
 
 fn rs_type_kinds_for_func(
     db: &BindingsGenerator,
-    func: &Func,
+    func: ir::FfiRc<ir::Func>,
 ) -> Result<(Vec<RsTypeKind>, RsTypeKind)> {
 
     let errors = Errors::new();
-    let infer_lifetimes = func_should_infer_lifetimes_of_references(func);
+    let infer_lifetimes = func_should_infer_lifetimes_of_references(&*func);
     let assume_lifetimes = db
         .ir()
-        .target_crubit_features(func.owning_target())
+        .target_crubit_features((&*func).owning_target())
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
     // We can only reliably generate conversion operators when `AssumeThisLifetimes` is enabled,
     // which allows the implicit `this` pointer to be mapped as a reference rather than a raw
@@ -1901,9 +1899,8 @@ fn rs_type_kinds_for_func(
         assume_lifetimes || matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator);
     let is_operator = matches!(func.cc_name(), ir::UnqualifiedIdentifier::Operator(_));
 
-    // TODO(b/454627672): is it worth caching this?
     let func =
-        if run_lifetime_transform { &lifetime_defaults_transform_func(db, func)? } else { func };
+        if run_lifetime_transform { db.lifetime_defaults_transform_func(func)? } else { func };
     let param_types: Vec<RsTypeKind> = func
         .params()
         .iter()
@@ -1912,7 +1909,7 @@ fn rs_type_kinds_for_func(
             let mut param_type = param.type_().clone();
             let mut infer_param_lifetimes = infer_lifetimes;
             if i == 0 && func.is_instance_method() {
-                if use_shared_ref_if_thread_safe(db, func)
+                if use_shared_ref_if_thread_safe(db, &*func)
                     && let CcTypeVariant::Pointer(ptr) = param_type.variant_mut()
                 {
                     // Types annotated with CRUBIT_THREAD_SAFE are treated as thread-safe,
@@ -1940,7 +1937,7 @@ fn rs_type_kinds_for_func(
                 };
                 let lifetime = ptr.lifetime();
                 if db.ir()
-                    .target_crubit_features(func.owning_target())
+                    .target_crubit_features((&*func).owning_target())
                     .contains(crubit_feature::CrubitFeature::AssumeThisLifetimes) {
                     infer_param_lifetimes = true;
                 }
@@ -2003,7 +2000,7 @@ fn rs_type_kinds_for_func(
         })
         .collect();
 
-    let return_type = if is_spaceship_operator(func) {
+    let return_type = if is_spaceship_operator(&*func) {
         // The C++ comparison category type is not exposed to Rust. See
         // `spaceship_thunk_return_type`.
         Some(spaceship_thunk_return_type())
@@ -2115,11 +2112,11 @@ pub fn generate_function(
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
 
-    let (mut param_types, mut return_type) = rs_type_kinds_for_func(db, &func)?;
+    let (mut param_types, mut return_type) = rs_type_kinds_for_func(db, func.clone())?;
 
     let errors = Errors::new();
     let (func_name, impl_kind) =
-        if let Some(values) = api_func_shape(db, &func, &mut param_types, &return_type, &errors) {
+        if let Some(values) = api_func_shape(db, &*func, &mut param_types, &return_type, &errors) {
             values
         } else {
             errors.consolidate()?;
@@ -2128,7 +2125,7 @@ pub fn generate_function(
     if impl_kind.is_unsafe() {
         db.errors().add_category(error_report::Category::Unsafe);
     }
-    let namespace_qualifier = db.namespace_qualifier(&func).format_for_rs();
+    let namespace_qualifier = db.namespace_qualifier(&*func).format_for_rs();
 
     if let Err(err) = return_type.check_by_value() {
         // If the return type is not valid, we can't generate even a fake thunk, so we must return
@@ -2146,7 +2143,7 @@ pub fn generate_function(
     // Note that this must be computed before `param_types` and `return_type` are adjusted below
     // to match the shape of the generated API: the same value is passed to `generate_func_body`,
     // so that the body cannot end up calling a thunk which was never generated.
-    let thunkless_impl = thunkless_impl(db, &func, &param_types, &return_type);
+    let thunkless_impl = thunkless_impl(db, &*func, &param_types, &return_type);
     let skip_thunk_generation: bool = thunkless_impl.is_some() || {
         || {
             // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when
@@ -2170,7 +2167,7 @@ pub fn generate_function(
     } else {
         errors.consume_error(generate_function_thunk(
             db,
-            &func,
+            func.clone(),
             &param_idents,
             &param_types,
             &return_type,
@@ -2193,7 +2190,7 @@ pub fn generate_function(
         mut features,
     } = errors.consolidate_on_err(function_signature(
         db,
-        &func,
+        func.clone(),
         &impl_kind,
         &param_idents,
         &mut param_types,
@@ -2209,7 +2206,7 @@ pub fn generate_function(
             .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
         let mut self_type = db.rs_type_kind((&**record).into())?;
         if assume_lifetimes {
-            let record = lifetime_defaults_transform_record(db, record)?;
+            let record = db.lifetime_defaults_transform_record(record.clone())?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
                 *lifetimes = record.lifetime_inputs().iter().map(|id| Lifetime::new(id)).collect();
             }
@@ -2420,7 +2417,7 @@ pub fn generate_function(
                 features: free_features,
             } = free_errors.consolidate_on_err(function_signature(
                 db,
-                &func,
+                func.clone(),
                 &free_impl_kind,
                 &free_param_idents,
                 &mut free_param_types,
@@ -2647,12 +2644,12 @@ pub fn generate_function(
 
             let assume_lifetimes = db
                 .ir()
-                .target_crubit_features(trait_record.as_ref().owning_target())
+                .target_crubit_features((&**trait_record).owning_target())
                 .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
-            // TODO(b/454627672): is it worth caching this?
             let transformed_trait_record;
             let trait_record = if assume_lifetimes {
-                transformed_trait_record = lifetime_defaults_transform_record(db, trait_record)?;
+                transformed_trait_record =
+                    db.lifetime_defaults_transform_record(trait_record.clone())?;
                 &transformed_trait_record
             } else {
                 trait_record
@@ -2672,7 +2669,7 @@ pub fn generate_function(
                 // (e.g. for conversion operators) retrieve the fully qualified path without
                 // lifetime arguments, since `#trait_record_param_tokens` will be
                 // appended when generating the trait impl.
-                let t = db.rs_type_kind(trait_record.into())?;
+                let t = db.rs_type_kind((&**trait_record).into())?;
                 t.to_token_stream_without_lifetimes(db)
             };
 
@@ -2751,7 +2748,7 @@ pub fn generate_function(
             } else if let TraitName::PartialOrd { param, op } = &trait_name
                 && *op != PartialOrdOp::Spaceship
             {
-                let mut self_type = db.rs_type_kind(trait_record.into())?;
+                let mut self_type = db.rs_type_kind((&**trait_record).into())?;
                 if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
                     *lifetimes = trait_lifetime_params.clone().into();
                 }
@@ -2829,7 +2826,7 @@ pub fn generate_function(
             // NOTE: `trait_generic_params` may include lifetimes!
             let formatted_trait_generic_params =
                 format_generic_params(&trait_lifetime_params, &*trait_generic_params);
-            let mut self_type_for_extra = db.rs_type_kind(trait_record.into())?;
+            let mut self_type_for_extra = db.rs_type_kind((&**trait_record).into())?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type_for_extra {
                 *lifetimes = trait_lifetime_params.clone().into();
             }
@@ -2980,7 +2977,7 @@ pub fn generate_function(
                 _ => None,
             };
 
-            let mut self_type = db.rs_type_kind(trait_record.into())?;
+            let mut self_type = db.rs_type_kind((&**trait_record).into())?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
                 *lifetimes = trait_lifetime_params.clone().into();
             }
@@ -3108,10 +3105,10 @@ fn collect_parent_lifetime_bindings(
             if let Item::Record(r) = decl {
                 let assume_lifetimes = db
                     .ir()
-                    .target_crubit_features(r.as_ref().owning_target())
+                    .target_crubit_features((&**r).owning_target())
                     .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
                 if assume_lifetimes {
-                    let r = lifetime_defaults_transform_record(db, r)?;
+                    let r = db.lifetime_defaults_transform_record(r.clone())?;
                     for lifetime in r.lifetime_inputs() {
                         unordered_lifetimes.insert(lifetime.to_string());
                     }
@@ -3137,7 +3134,7 @@ fn collect_parent_lifetime_bindings(
 #[allow(clippy::too_many_arguments)]
 fn function_signature(
     db: &BindingsGenerator,
-    func: &Func,
+    func: ir::FfiRc<ir::Func>,
     impl_kind: &ImplKind,
     param_idents: &[Ident],
     param_types: &mut Vec<RsTypeKind>,
@@ -3158,11 +3155,10 @@ fn function_signature(
 
     let assume_lifetimes = db
         .ir()
-        .target_crubit_features(func.owning_target())
+        .target_crubit_features((&*func).owning_target())
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
 
-    // TODO(b/454627672): is it worth caching this?
-    let func = if assume_lifetimes { &lifetime_defaults_transform_func(db, func)? } else { func };
+    let func = if assume_lifetimes { db.lifetime_defaults_transform_func(func)? } else { func };
 
     let transformed_func = if matches!(
         impl_kind,
@@ -3171,11 +3167,11 @@ fn function_signature(
             ..
         }
     ) {
-        adjust_signature_for_indexing_traits(db, func, return_type, param_types)?
+        adjust_signature_for_indexing_traits(db, func.clone(), return_type, param_types)?
     } else {
         None
     };
-    let func = transformed_func.as_ref().unwrap_or(func);
+    let func = transformed_func.unwrap_or(func);
 
     // For an `ImplFor::RefT` impl block (`impl Trait for &T`), a non-`Unpin` return type becomes an
     // associated type `type Output = ::ctor::Ctor![...]`. For that opaque associated type to
@@ -3205,7 +3201,7 @@ fn function_signature(
     let self_type = if let Some(record) = impl_kind_record {
         let mut t = db.rs_type_kind((&**record).into())?;
         if assume_lifetimes {
-            let record = lifetime_defaults_transform_record(db, record)?;
+            let record = db.lifetime_defaults_transform_record(record.clone())?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = t {
                 *lifetimes = record.lifetime_inputs().iter().map(|id| Lifetime::new(id)).collect();
             }
@@ -3308,7 +3304,7 @@ fn function_signature(
 
     // We guarantee that all transformed lifetimes are unique, so all we need to do here is to
     // make sure that we don't rebind an existing lifetime.
-    let parent_lifetimes = collect_parent_lifetime_bindings(db, func, impl_kind)?;
+    let parent_lifetimes = collect_parent_lifetime_bindings(db, &func, impl_kind)?;
 
     let mut all_types = param_types.clone();
     all_types.push(return_type.clone());
@@ -3344,7 +3340,7 @@ fn function_signature(
     if let ImplKind::Struct { is_renamed_unpin_constructor: true, .. } = impl_kind {
         move_self_from_out_param_to_return_value(
             db,
-            func,
+            &func,
             return_type,
             &mut api_params,
             &mut thunk_args,
@@ -3385,7 +3381,7 @@ fn function_signature(
             if func.cc_name().is_constructor() {
                 move_self_from_out_param_to_return_value(
                     db,
-                    func,
+                    &func,
                     return_type,
                     &mut api_params,
                     &mut thunk_args,
@@ -3603,7 +3599,7 @@ fn function_signature(
     // Unknown attributes could affect ABI and should suppress bindings by default. Note that these
     // can be annotated around with `CRUBIT_UNSAFE_IGNORE_ATTR()`
     if let Some(unknown_attr) = func.unknown_attr() {
-        let target = func.owning_target();
+        let target = (&*func).owning_target();
         let enabled_features = db.ir().target_crubit_features(target);
         ensure!(
             enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
@@ -3842,7 +3838,7 @@ fn has_matching_cc_index(db: &BindingsGenerator, record: &Record, index_type: &R
             && let UnqualifiedIdentifier::Operator(op) = f.cc_name()
             && op.name() == "[]"
         {
-            let Ok((mut param_types, return_type)) = rs_type_kinds_for_func(db, f) else {
+            let Ok((mut param_types, return_type)) = rs_type_kinds_for_func(db, f.clone()) else {
                 return false;
             };
             let result = api_func_shape(db, f, &mut param_types, &return_type, &Errors::new());
@@ -3974,11 +3970,12 @@ pub fn generate_standard_indexing_impl(
 /// Returns the transformed `Func` if any transformations were applied.
 pub fn adjust_signature_for_indexing_traits(
     db: &BindingsGenerator,
-    func: &Func,
+    func: ir::FfiRc<ir::Func>,
     return_type: &mut RsTypeKind,
     param_types: &mut [RsTypeKind],
-) -> Result<Option<Func>> {
-    let is_rvalue = match func.instance_method_metadata() {
+) -> Result<Option<ir::FfiRc<ir::Func>>> {
+    let f: &ir::Func = &func;
+    let is_rvalue = match f.instance_method_metadata() {
         Some(metadata) => metadata.reference() == ReferenceQualification::RValue,
         None => false,
     };
@@ -3986,9 +3983,9 @@ pub fn adjust_signature_for_indexing_traits(
         bail!("R-value qualified operator[] is not supported");
     }
 
-    let transformed_func = lifetime_defaults_transform_func(db, func)?;
+    let transformed_func = func.clone();
 
-    let rs_return_type = db.rs_type_kind(transformed_func.return_type().clone()).ok();
+    let rs_return_type = db.rs_type_kind((&*transformed_func).return_type().clone()).ok();
 
     if let Some(rs_return_type) = rs_return_type {
         let rs_return_type = match rs_return_type {

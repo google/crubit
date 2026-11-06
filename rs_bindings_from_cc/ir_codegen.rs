@@ -266,6 +266,12 @@ impl StructDef {
     fn has_optional_fields(&self) -> bool {
         self.fields.iter().any(|f| f.has_bit.is_some())
     }
+
+    fn has_item_id(&self) -> bool {
+        self.fields
+            .iter()
+            .any(|f| f.rs_name == "id" && matches!(f.ty, FieldType::Newtype("ItemId", _)))
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -1359,6 +1365,7 @@ fn generate_rs_struct(schema: &Schema, st: &StructDef, in_submodule: bool) -> ru
     let sname = st.item.name;
     let prefix = if in_submodule { "super::" } else { "" };
     let has_opt = st.has_optional_fields();
+    let has_item_id = st.has_item_id();
     let is_copy = st.fields.iter().all(|f| schema.is_copy_type(&f.ty));
     let derive_debug = !has_opt && !matches!(sname, "Identifier" | "Operator" | "CcType" | "Path");
     let debug_name = if sname == "Path" { "UnsupportedItemPath" } else { sname };
@@ -1366,10 +1373,14 @@ fn generate_rs_struct(schema: &Schema, st: &StructDef, in_submodule: bool) -> ru
 
     quote! {
         #[repr(C)]
-        $(if is_copy {
-            #[derive($(if derive_debug => Debug, )Clone, Copy, PartialEq, Eq, Hash)]
+        $(if has_item_id {
+            #[derive($(if derive_debug => Debug, )Clone, Eq)]
         } else {
-            #[derive($(if derive_debug => Debug, )Clone, PartialEq, Eq, Hash)]
+            $(if is_copy {
+                #[derive($(if derive_debug => Debug, )Clone, Copy, PartialEq, Eq, Hash)]
+            } else {
+                #[derive($(if derive_debug => Debug, )Clone, PartialEq, Eq, Hash)]
+            })
         })
         pub struct $sname {
             $(if has_opt => pub has_bits: u64,)
@@ -1377,6 +1388,24 @@ fn generate_rs_struct(schema: &Schema, st: &StructDef, in_submodule: bool) -> ru
                 pub $(f.rs_name): $(f.ty.rs_storage_type(in_submodule)),
             )
         }
+
+        $(if has_item_id {
+            impl PartialEq for $sname {
+                fn eq(&self, other: &Self) -> bool {
+                    core::ptr::eq(self, other)
+                        || (self.id == other.id
+                            $(if has_opt => && self.has_bits == other.has_bits)
+                            $(for f in st.fields.iter().filter(|f| f.rs_name != "id") join ($['\r']) =>
+                                && self.$(f.rs_name) == other.$(f.rs_name)
+                            ))
+                }
+            }
+            impl core::hash::Hash for $sname {
+                fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+                    self.id.hash(state);
+                }
+            }$['\n']
+        })
 
         $(match sname {
             "Identifier" => {
