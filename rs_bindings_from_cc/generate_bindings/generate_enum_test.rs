@@ -27,7 +27,7 @@ fn test_generate_enum_basic() -> Result<()> {
             impl Color {
                 pub const kRed: Color = Color(::ffi_11::#new_int(5));
                 pub const kBlue: Color = Color(::ffi_11::#new_int(6));
-            }
+            ... }
             impl From<::ffi_11::#int_ty> for Color {
                 fn from(value: ::ffi_11::#int_ty) -> Color {
                     Color(value)
@@ -61,7 +61,7 @@ fn test_generate_enum_basic_with_annotations() -> Result<()> {
             impl Color {
                 pub const kRed: Color = Color(::ffi_11::#new_int(5));
                 pub const kBlue: Color = Color(::ffi_11::#new_int(6));
-            }
+            ... }
             impl From<::ffi_11::#int_ty> for Color {
                 fn from(value: ::ffi_11::#int_ty) -> Color {
                     Color(value)
@@ -99,7 +99,7 @@ fn test_generate_scoped_enum_basic() -> Result<()> {
             impl Color {
                 pub const kRed: Color = Color(::ffi_11::new_c_int(-5));
                 pub const kBlue: Color = Color(::ffi_11::new_c_int(-4));
-            }
+            ... }
             impl From<::ffi_11::c_int> for Color {
                 fn from(value: ::ffi_11::c_int) -> Color {
                     Color(value)
@@ -142,7 +142,7 @@ fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
                 pub const kBlue: Color = Color(::ffi_11::new_c_longlong(-4));
                 pub const kGreen: Color = Color(::ffi_11::new_c_longlong(3));
                 pub const kMagenta: Color = Color(::ffi_11::new_c_longlong(9223372036854775807));
-            }
+            ... }
             impl From<::ffi_11::c_longlong> for Color {
                 fn from(value: ::ffi_11::c_longlong) -> Color {
                     Color(value)
@@ -181,7 +181,7 @@ fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
                 pub const kRed: Color = Color(::ffi_11::new_c_ulonglong(0));
                 pub const kBlue: Color = Color(::ffi_11::new_c_ulonglong(1));
                 pub const kLimeGreen: Color = Color(::ffi_11::new_c_ulonglong(18446744073709551615));
-            }
+            ... }
             impl From<::ffi_11::c_ulonglong> for Color {
                 fn from(value: ::ffi_11::c_ulonglong) -> Color {
                     Color(value)
@@ -217,7 +217,7 @@ fn test_generate_enum_with_32_bit_signed_vals() -> Result<()> {
                 pub const kBlue: Color = Color(::ffi_11::new_c_int(-4));
                 pub const kGreen: Color = Color(::ffi_11::new_c_int(3));
                 pub const kMagenta: Color = Color(::ffi_11::new_c_int(2147483647));
-            }
+            ... }
             impl From<::ffi_11::c_int> for Color {
                 fn from(value: ::ffi_11::c_int) -> Color {
                     Color(value)
@@ -252,7 +252,7 @@ fn test_generate_enum_with_32_bit_unsigned_vals() -> Result<()> {
                 pub const kRed: Color = Color(::ffi_11::new_c_uint(0));
                 pub const kBlue: Color = Color(::ffi_11::new_c_uint(1));
                 pub const kLimeGreen: Color = Color(::ffi_11::new_c_uint(4294967295));
-            }
+            ... }
             impl From<::ffi_11::c_uint> for Color {
                 fn from(value: ::ffi_11::c_uint) -> Color {
                     Color(value)
@@ -283,7 +283,7 @@ fn test_generate_enum_bool() -> Result<()> {
             impl Bool {
                 pub const kFalse: Bool = Bool(false);
                 pub const kTrue: Bool = Bool(true);
-            }
+            ... }
             impl From<bool> for Bool {
                 fn from(value: bool) -> Bool {
                     Bool(value)
@@ -317,7 +317,7 @@ fn test_generate_enum_bool_alias() -> Result<()> {
             impl Bool {
                 pub const kFalse: Bool = Bool(false);
                 pub const kTrue: Bool = Bool(true);
-            }
+            ... }
             impl From<crate::MyBool> for Bool {
                 fn from(value: crate::MyBool) -> Bool {
                     Bool(value)
@@ -394,7 +394,7 @@ fn test_enumerator_doc_comment() -> Result<()> {
             impl Color {
                 #[doc = " Red color variant."]
                 pub const kRed: Color = Color(...);
-            }
+            ... }
         }
     );
     Ok(())

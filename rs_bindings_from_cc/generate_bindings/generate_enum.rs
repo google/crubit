@@ -30,6 +30,18 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: FfiRc<Enum>) -> Result<ApiSn
     let name = make_rs_ident(enum_.rs_name().as_str());
     let underlying_type = db.rs_type_kind(enum_.underlying_type().clone())?;
 
+    let mut has_from_raw = false;
+    let mut has_into_raw = false;
+    for enumerator in enum_.enumerators().into_iter().flatten() {
+        let ident_str = enumerator.identifier().as_str();
+        if ident_str == "from_raw" || ident_str == "r#from_raw" {
+            has_from_raw = true;
+        }
+        if ident_str == "into_raw" || ident_str == "r#into_raw" {
+            has_into_raw = true;
+        }
+    }
+
     let enumerators: TokenStream = enum_
         .enumerators()
         .into_iter()
@@ -117,6 +129,17 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: FfiRc<Enum>) -> Result<ApiSn
     let deprecated_attr = enum_.deprecated().map(|s| DeprecatedAttr(Rc::from(s)));
     let must_use_attr = enum_.nodiscard().map(|s| MustUseAttr(Rc::from(s)));
     let cfi_encoding_attr = CfiEncodingAttr(Rc::from(enum_.mangled_cc_name()));
+    let from_raw = if has_from_raw {
+        quote! {}
+    } else {
+        quote! { pub const fn from_raw(value: #underlying_type_tokens) -> Self { Self(value) } }
+    };
+    let into_raw = if has_into_raw {
+        quote! {}
+    } else {
+        quote! { pub const fn into_raw(self) -> #underlying_type_tokens { self.0 } }
+    };
+
     let item = quote! {
         #capture_tags #doc_comment
         #[repr(transparent)]
@@ -128,6 +151,8 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: FfiRc<Enum>) -> Result<ApiSn
         pub struct #bracketed_enum_name(#underlying_type_tokens);
         impl #name {
             #enumerators
+            #from_raw
+            #into_raw
         }
         impl From<#underlying_type_tokens> for #name {
             fn from(value: #underlying_type_tokens) -> #name {
