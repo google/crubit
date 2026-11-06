@@ -26,9 +26,9 @@ pub struct GeneratedFunction {
 /// Uniquely identifies a generated Rust function.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct FunctionId {
-    // If the function is on a trait impl, contains the name of the Self type for
-    // which the trait is being implemented.
-    pub self_type: Option<syn::Path>,
+    // If the function is on a trait impl, contains the canonical Rust Self type
+    // for which the trait is being implemented.
+    pub self_type: Option<syn::Type>,
     // Fully qualified path of the function. For functions in impl blocks, this
     // includes the name of the type or trait on which the function is being
     // implemented, e.g. `Default::default`.
@@ -190,6 +190,44 @@ impl TraitName {
     /// Returns the lifetimes used in this trait name.
     pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + use<'_> {
         self.params().iter().flat_map(|p| p.lifetimes())
+    }
+
+    /// Returns a copy of `self` with all type parameters canonicalized for [`FunctionId`]
+    /// comparison (lifetimes normalized to `'static`, type aliases stripped, and `ffi_11`
+    /// primitive type aliases canonicalized to their underlying Rust primitive types).
+    pub fn canonical_for_function_id(&self) -> Self {
+        let canonicalize_slice = |params: &[RsTypeKind]| -> Rc<[RsTypeKind]> {
+            params.iter().map(|p| p.canonical_for_function_id().as_ref().clone()).collect()
+        };
+        match self {
+            Self::Clone => Self::Clone,
+            Self::Default => Self::Default,
+            Self::Delete => Self::Delete,
+            Self::CtorNew(params) => Self::CtorNew(canonicalize_slice(params)),
+            Self::From(params) => Self::From(canonicalize_slice(params)),
+            Self::UnsafeCtorNew(params) => Self::UnsafeCtorNew(canonicalize_slice(params)),
+            Self::UnsafeFrom(params) => Self::UnsafeFrom(canonicalize_slice(params)),
+            Self::PartialEq { param, negate_thunk_result } => Self::PartialEq {
+                param: param.canonical_for_function_id(),
+                negate_thunk_result: *negate_thunk_result,
+            },
+            Self::PartialOrd { param, op } => {
+                Self::PartialOrd { param: param.canonical_for_function_id(), op: *op }
+            }
+            Self::CcIndex { index_type, output_type } => Self::CcIndex {
+                index_type: index_type.canonical_for_function_id(),
+                output_type: output_type.canonical_for_function_id(),
+            },
+            Self::CcIndexMut { index_type, output_type } => Self::CcIndexMut {
+                index_type: index_type.canonical_for_function_id(),
+                output_type: output_type.canonical_for_function_id(),
+            },
+            Self::Other { name, params, is_unsafe_fn } => Self::Other {
+                name: name.clone(),
+                params: canonicalize_slice(params),
+                is_unsafe_fn: *is_unsafe_fn,
+            },
+        }
     }
 }
 

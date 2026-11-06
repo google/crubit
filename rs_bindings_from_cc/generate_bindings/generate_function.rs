@@ -13,8 +13,8 @@ use database::function_types::{
 };
 use database::rs_snippet::{
     format_generic_params, format_generic_params_replacing_by_self, should_derive_clone,
-    unique_lifetimes, Lifetime, LifetimeOptions, Mutability, PassingConvention, RsTypeKind,
-    RustPtrKind,
+    unique_lifetimes, CratePath, Lifetime, LifetimeOptions, Mutability, PassingConvention,
+    RsTypeKind, RustPtrKind,
 };
 use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail, ErrorList};
@@ -1164,6 +1164,12 @@ fn api_func_shape_for_conversion_operator(
 
     let (trait_name, func_name, src_param_type) = if is_rvalue {
         if referent_type_kind.is_unpin() && is_dst_unpin {
+            if return_type.canonical_for_function_id()
+                == referent_type_kind.canonical_for_function_id()
+            {
+                // `core` provides a blanket `impl<T> From<T> for T`.
+                return None;
+            }
             (
                 TraitName::From(Rc::new([referent_type_kind.clone()])),
                 make_rs_ident("from"),
@@ -1894,9 +1900,10 @@ fn rs_type_kinds_for_func(
         .ir()
         .target_crubit_features(func.owning_target())
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
-    // We can only reliably generate conversion operators when `AssumeThisLifetimes` is enabled,
-    // which allows the implicit `this` pointer to be mapped as a reference rather than a raw
-    // pointer. We run the lifetime transform here to populate the lifetimes of `this`.
+    // We can only reliably generate conversion operators when `AssumeLifetimes` or
+    // `AssumeThisLifetimes` is enabled, which allows the implicit `this` pointer to be mapped as a
+    // reference rather than a raw pointer. We run the lifetime transform here to populate the
+    // lifetimes of `this`.
     let run_lifetime_transform =
         assume_lifetimes || matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator);
     let is_operator = matches!(func.cc_name(), ir::UnqualifiedIdentifier::Operator(_));
@@ -2101,13 +2108,14 @@ pub fn generate_function(
     func: FfiRc<Func>,
     derived_record: Option<FfiRc<Record>>,
 ) -> Result<Option<GeneratedFunction>> {
+    let enabled_features = db.ir().target_crubit_features(func.as_ref().owning_target());
     if matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator)
-        && !db
-            .ir()
-            .target_crubit_features(func.as_ref().owning_target())
-            .contains(crubit_feature::CrubitFeature::AssumeThisLifetimes)
+        && !enabled_features.contains(crubit_feature::CrubitFeature::AssumeLifetimes)
+        && !enabled_features.contains(crubit_feature::CrubitFeature::AssumeThisLifetimes)
     {
-        bail!("Conversion operators are only supported when AssumeThisLifetimes is enabled");
+        bail!(
+            "Conversion operators are only supported when AssumeLifetimes or AssumeThisLifetimes is enabled"
+        );
     }
 
     let _scope = db.error_scope(func.id());
@@ -3002,20 +3010,40 @@ pub fn generate_function(
                 }
                 #extra_items
             };
-            let self_type = match &impl_for {
+            let canonical_self_type_tokens = match &impl_for {
                 ImplFor::Type(target_type) => {
-                    let target_tokens = target_type.to_token_stream_without_lifetimes(db);
-                    syn::parse2(target_tokens).ok()
+                    target_type.canonical_for_function_id().to_token_stream(db)
                 }
-                _ => {
-                    let record_qualifier = db.namespace_qualifier(trait_record).format_for_rs();
-                    syn::parse2(quote! { #record_qualifier #record_name }).ok()
+                ImplFor::RefT => param_types[0].canonical_for_function_id().to_token_stream(db),
+                ImplFor::T => {
+                    if Some(trait_record.id()) == func.enclosing_item_id() {
+                        let crate_path = CratePath::new(
+                            db.ir(),
+                            db.namespace_qualifier(trait_record),
+                            rs_imported_crate_name(trait_record.owning_target(), db.ir()),
+                        );
+                        let static_lifetimes = if trait_lifetime_params.is_empty()
+                            || trait_record.is_raw_string_view()
+                        {
+                            quote! {}
+                        } else {
+                            let statics = std::iter::repeat_n(
+                                quote! { 'static },
+                                trait_lifetime_params.len(),
+                            );
+                            quote! { < #( #statics ),* > }
+                        };
+                        quote! { #crate_path #record_name #static_lifetimes }
+                    } else {
+                        self_type.canonical_for_function_id().to_token_stream(db)
+                    }
                 }
             };
+            let canonical_trait_name = trait_name.canonical_for_function_id();
             function_id = FunctionId {
-                self_type,
+                self_type: syn::parse2(canonical_self_type_tokens).ok(),
                 function_path: {
-                    let trait_name_tokens = trait_name_to_token_stream(db, trait_name);
+                    let trait_name_tokens = trait_name_to_token_stream(db, &canonical_trait_name);
                     syn::parse2(quote! { #trait_name_tokens :: #func_name }).unwrap()
                 },
             };
