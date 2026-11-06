@@ -313,6 +313,18 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling `rs::Option<T const&>` / `rs::Option<T&>` (like C++26 `std::optional<T&>`)
+# instead of `rs::Option<T const*>` / `rs::Option<T*>` for `Option<&T>` / `Option<&mut T>`. This
+# flag only impacts cpp_api_from_rust users.
+#
+# See b/575916406
+crubit_feature_hint(
+    name = "option_references",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["option_references"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set enabling bindings for operators that are hidden friends of base classes (e.g.
 # defined by CRTP mixins), as if they were hidden friends of the derived class.
 #

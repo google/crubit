@@ -3579,6 +3579,384 @@ fn test_iterator_item_references() {
     });
 }
 
+/// With `option_references`, `Option<&T>` and `Option<&mut T>` are `rs::Option<T const&>` and
+/// `rs::Option<T&>`, which keeps them distinct from `Option<*const T>` (`rs::Option<T const*>`).
+/// See b/575916406.
+#[gtest]
+fn test_option_references() {
+    let test_src = r#"
+        pub struct Value {
+            pub x: i32,
+        }
+
+        pub fn by_ref(v: &Value) -> Option<&Value> {
+            Some(v)
+        }
+
+        pub fn by_mut_ref(v: &mut Value) -> Option<&mut Value> {
+            Some(v)
+        }
+
+        pub fn by_ptr(v: &Value) -> Option<*const Value> {
+            Some(v as *const Value)
+        }
+
+        pub fn get_x(v: Option<&Value>) -> i32 {
+            v.map_or(0, |v| v.x)
+        }
+
+        pub struct RefIter<'a> {
+            pub slice: &'a [i32],
+        }
+
+        impl<'a> Iterator for RefIter<'a> {
+            type Item = &'a i32;
+            fn next(&mut self) -> Option<Self::Item> {
+                self.slice.split_off_first()
+            }
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
+                | crubit_feature::CrubitFeature::IteratorItemReferences
+                | crubit_feature::CrubitFeature::OptionReferences,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                ::rs::Option<::rust_out::Value const& $static> by_ref(...);
+                ...
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                ::rs::Option<::rust_out::Value& $static> by_mut_ref(...);
+                ...
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                ::rs::Option<::rust_out::Value const*> by_ptr(...);
+                ...
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                ::std::int32_t get_x(::rs::Option<::rust_out::Value const& $static> v);
+                ...
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                template<>
+                struct ::rs::impl<::rust_out::RefIter, ::rs::core::iter::Iterator> {
+                    static constexpr bool kIsImplemented = true;
+                    using Item CRUBIT_INTERNAL_RUST_TYPE(...) = ::std::int32_t const& $a;
+                    static ::rs::Option<::std::int32_t const& $static> next(::rust_out::RefIter& self);
+                };
+                ...
+            }
+        );
+        // `Option<&Value>` and `Option<*const Value>` get separate specializations.
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                template<>
+                struct alignas(...) CRUBIT_INTERNAL_RUST_TYPE(...)
+                ::rs::Option<::rust_out::Value const& $static>
+                    : public ::rs::OptionBase<
+                        ::rs::Option<::rust_out::Value const& $static>,
+                        ::rust_out::Value const& $static> {
+                    ...
+                };
+                ...
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                template<>
+                struct alignas(...) CRUBIT_INTERNAL_RUST_TYPE(...)
+                ::rs::Option<::rust_out::Value const*>
+                    : public ::rs::OptionBase<
+                        ::rs::Option<::rust_out::Value const*>,
+                        ::rust_out::Value const*> {
+                    ...
+                };
+                ...
+            }
+        );
+    });
+}
+
+/// `option_references` applies to `Iterator::next` even if `iterator_item_references` is disabled
+/// (and `Iterator::Item` is a pointer). `rs::IteratorAdapter` supports both.
+#[gtest]
+fn test_option_references_without_iterator_item_references() {
+    let test_src = r#"
+        pub struct RefIter<'a> {
+            pub slice: &'a [i32],
+        }
+
+        impl<'a> Iterator for RefIter<'a> {
+            type Item = &'a i32;
+            fn next(&mut self) -> Option<Self::Item> {
+                self.slice.split_off_first()
+            }
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
+                | crubit_feature::CrubitFeature::OptionReferences,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                template<>
+                struct ::rs::impl<::rust_out::RefIter, ::rs::core::iter::Iterator> {
+                    static constexpr bool kIsImplemented = true;
+                    using Item CRUBIT_INTERNAL_RUST_TYPE(...) = ::std::int32_t const* $a crubit_nonnull;
+                    static ::rs::Option<::std::int32_t const& $static> next(::rust_out::RefIter& self);
+                };
+                ...
+            }
+        );
+    });
+}
+
+/// Tests the API of an `rs::Option<T&>` specialization: unlike other specializations of
+/// `rs::Option`, its state is a pointer stored in `rs::OptionBase<Derived, T&>`.
+#[gtest]
+fn test_option_references_specialization() {
+    let test_src = r#"
+        pub fn by_ref(v: &i32) -> Option<&i32> {
+            Some(v)
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
+                | crubit_feature::CrubitFeature::OptionReferences,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                template<>
+                struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE("core :: option :: Option < & 'static i32 >")
+                ::rs::Option<::std::int32_t const& $static>
+                    : public ::rs::OptionBase<
+                        ::rs::Option<::std::int32_t const& $static>,
+                        ::std::int32_t const& $static> {
+                    public:
+                    ...
+                    Option(const Option&) = default;
+                    Option& operator=(const Option&) = default;
+                    ...
+                    using base_type = ::rs::OptionBase<
+                        ::rs::Option<::std::int32_t const& $static>,
+                        ::std::int32_t const& $static>;
+                    constexpr Option() = default;
+                    constexpr Option(::std::nullopt_t) noexcept;
+                    constexpr Option& operator=(::std::nullopt_t) noexcept;
+                    template <typename U>
+                      requires ::rs::OptionRefBindable<::std::int32_t const& $static, U>
+                    constexpr Option(U&& value) noexcept;
+                    template <typename U>
+                      requires ::rs::OptionRefBindable<::std::int32_t const& $static, U>
+                    constexpr Option& operator=(U&& value) noexcept;
+                    ~Option() noexcept = default;
+                };
+                ...
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                static_assert(sizeof(::rs::Option<::std::int32_t const& $static>) == 8);
+                static_assert(alignof(::rs::Option<::std::int32_t const& $static>) == 8);
+                ...
+            }
+        );
+        // The state of the option is owned by `rs::OptionBase<Derived, T&>`.
+        assert_cc_not_matches!(bindings.cc_api, quote! { storage_ });
+        assert_cc_not_matches!(bindings.cc_api, quote! { some_ptr });
+    });
+}
+
+/// Without `option_references`, `Option<&i32>` and `Option<*const i32>` would both be
+/// `rs::Option<std::int32_t const*>`, so only the former is bound (b/575916406).
+#[gtest]
+fn test_colliding_specializations_are_not_bound() {
+    let test_src = r#"
+        pub fn by_ref(v: &i32) -> Option<&i32> {
+            Some(v)
+        }
+
+        pub fn by_ptr(v: &i32) -> Option<*const i32> {
+            Some(v)
+        }
+
+        pub fn nested_by_ptr(v: &i32) -> Option<Option<*const i32>> {
+            Some(Some(v))
+        }
+
+        #[derive(Clone, Copy, Default)]
+        pub struct SomeStruct {
+            pub x: i32,
+        }
+
+        impl SomeStruct {
+            pub fn method_by_ptr(&self) -> Option<*const i32> {
+                Some(&self.x)
+            }
+
+            pub fn method_by_value(&self) -> i32 {
+                self.x
+            }
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        let cc_api = bindings.cc_api.to_string();
+        assert!(cc_api.contains("\"core :: option :: Option < & 'static i32 >\""), "{cc_api}");
+        assert!(!cc_api.contains("Option < * const i32 >"), "{cc_api}");
+        assert_cc_matches!(bindings.cc_api, quote! { ... by_ref(...); ... });
+        assert_cc_not_matches!(bindings.cc_api, quote! { by_ptr(...); });
+        assert_cc_not_matches!(bindings.cc_api, quote! { nested_by_ptr(...); });
+        assert_cc_not_matches!(bindings.cc_api, quote! { method_by_ptr(...) const; });
+        // Only the method that uses the rejected specialization is unsupported, not the struct.
+        assert_cc_matches!(bindings.cc_api, quote! { ... method_by_value() const; ... });
+        let error = "`std::option::Option<*const i32>` can't be bound because it would have the \
+                     same C++ type as `std::option::Option<&i32>`, which is also used by this \
+                     crate (b/575916406). Enabling the `option_references` Crubit feature makes \
+                     `Option<&T>` a distinct C++ type, `rs::Option<T const&>`";
+        assert_eq!(cc_api.matches(error).count(), 3, "{cc_api}");
+    });
+}
+
+/// The bindings are generated again after rejecting the colliding specializations, but errors are
+/// only reported once.
+#[gtest]
+fn test_colliding_specializations_error_report() {
+    let test_src = r#"
+        pub fn by_ref(v: &i32) -> Option<&i32> {
+            Some(v)
+        }
+
+        pub fn by_ptr(v: &i32) -> Option<*const i32> {
+            Some(v)
+        }
+
+        pub struct SomeStruct(i32);
+
+        impl SomeStruct {
+            pub fn get_arc(self: std::sync::Arc<Self>) -> i32 {
+                self.0
+            }
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, error_report, _fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported
+                    | crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust,
+            );
+        generate_bindings::generate_bindings(&db).unwrap();
+        let report = error_report.to_json_string();
+        assert_eq!(report.matches("`std::option::Option<*const i32>` can't be bound").count(), 1);
+        assert_eq!(
+            report.matches("Unsupported `self` type `std::sync::Arc<SomeStruct>`").count(),
+            1
+        );
+    });
+}
+
+/// With `option_references`, `Option<&i32>` is `rs::Option<std::int32_t const&>`, so it doesn't
+/// collide with `Option<*const i32>`. But `Option<NonNull<i32>>` still collides with
+/// `Option<*mut i32>`.
+#[gtest]
+fn test_colliding_specializations_with_option_references() {
+    let test_src = r#"
+        use std::ptr::NonNull;
+
+        pub fn by_ref(v: &i32) -> Option<&i32> {
+            Some(v)
+        }
+
+        pub fn by_ptr(v: &i32) -> Option<*const i32> {
+            Some(v)
+        }
+
+        pub fn by_mut_ptr(v: &mut i32) -> Option<*mut i32> {
+            Some(v)
+        }
+
+        pub fn by_non_null(v: &mut i32) -> Option<NonNull<i32>> {
+            Some(NonNull::from(v))
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
+                | crubit_feature::CrubitFeature::OptionReferences,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        let cc_api = bindings.cc_api.to_string();
+        assert_cc_matches!(bindings.cc_api, quote! { ... by_ref(...); ... });
+        assert_cc_matches!(bindings.cc_api, quote! { ... by_ptr(...); ... });
+        assert_cc_matches!(bindings.cc_api, quote! { ... by_mut_ptr(...); ... });
+        assert_cc_not_matches!(bindings.cc_api, quote! { by_non_null(...); });
+        let error = "`std::option::Option<std::ptr::NonNull<i32>>` can't be bound because it \
+                     would have the same C++ type as `std::option::Option<*mut i32>`, which is \
+                     also used by this crate (b/575916406)";
+        assert_eq!(cc_api.matches(error).count(), 1, "{cc_api}");
+        assert!(!cc_api.contains("option_references"), "{cc_api}");
+    });
+}
+
 #[test]
 fn test_user_defined_generic_adt_specialization() {
     let test_src = r#"

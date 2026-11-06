@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <iterator>
+#include <memory>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -30,6 +31,36 @@ struct IteratorEnd {
   IteratorEnd(const IteratorEnd&) = default;
   IteratorEnd& operator=(const IteratorEnd&) = default;
 };
+
+namespace internal {
+
+// Whether `Opt` is an optional reference, such as `rs::Option<T&>`.
+template <typename Opt>
+inline constexpr bool kIsOptionalReference = false;
+template <template <typename> class OptionalTemplate, typename T>
+inline constexpr bool kIsOptionalReference<OptionalTemplate<T&>> = true;
+
+// Converts the result of `rs::impl<I, rs::core::iter::Iterator>::next()` to a
+// `std::optional<StoredItem>`.
+//
+// Reference items (`T&` / `const T&`) are stored as pointers (`T*` /
+// `const T*`), since `std::optional` cannot hold C++ references. `next()`
+// returns them either as an optional reference (`rs::Option<T&>` /
+// `rs::Option<const T&>`, with the `option_references` Crubit feature), or as
+// an optional pointer, which converts to `std::optional<StoredItem>` directly.
+template <typename StoredItem, typename NextResult>
+::std::optional<StoredItem> ToStoredItem(NextResult&& next_result) {
+  if constexpr (kIsOptionalReference<::std::remove_cvref_t<NextResult>>) {
+    if (!next_result.has_value()) {
+      return ::std::nullopt;
+    }
+    return ::std::addressof(*next_result);
+  } else {
+    return ::std::forward<NextResult>(next_result);
+  }
+}
+
+}  // namespace internal
 
 // Adapter that wraps a Rust-style iterator and presents it as a C++ iterator.
 //
@@ -138,13 +169,15 @@ class IteratorAdapter {
   bool operator==(IteratorEnd) const { return !current_item_.has_value(); }
 
  private:
-  void next() { current_item_ = impl::next(source_); }
+  void next() {
+    current_item_ =
+        ::rs::internal::ToStoredItem<stored_item_type>(impl::next(source_));
+  }
 
   TAdaptedIterator source_;
 
-  // Reference items (`T&` / `const T&`) are returned as pointers (`T*` /
-  // `const T*`) from `impl::next()`, since `rs_std::Option` and
-  // `std::optional` cannot hold C++ references directly.
+  // Reference items (`T&` / `const T&`) are stored as pointers (`T*` /
+  // `const T*`), since `std::optional` cannot hold C++ references directly.
   using stored_item_type =
       ::std::conditional_t< ::std::is_reference_v<element_type>,
                             ::std::remove_reference_t<element_type>*,
@@ -180,7 +213,8 @@ struct impl<T*, ::rs::core::iter::Iterator> {
       ::std::conditional_t< ::std::is_reference_v<Item>,
                             ::std::remove_reference_t<Item>*, Item>;
   static ::std::optional<StoredItem> next(T* self) {
-    return rs::impl<T, ::rs::core::iter::Iterator>::next(*self);
+    return ::rs::internal::ToStoredItem<StoredItem>(
+        rs::impl<T, ::rs::core::iter::Iterator>::next(*self));
   }
 };
 }  // namespace CRUBIT_RS_STD_PRIMARY_NS

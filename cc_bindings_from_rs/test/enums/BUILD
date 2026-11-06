@@ -145,6 +145,83 @@ crubit_cc_test(
 )
 
 rust_library(
+    name = "option_references",
+    testonly = 1,
+    srcs = ["option_references.rs"],
+    aspect_hints = ["//features:option_references"],
+    edition = "2024",
+)
+
+golden_test(
+    name = "option_references_golden_test",
+    basename = "option_references",
+    golden_h = "option_references_cc_api.h",
+    golden_rs = "option_references_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
+    rust_library = "option_references",
+)
+
+cpp_api_from_rust(
+    name = "option_references_cc_api",
+    testonly = 1,
+    crate = ":option_references",
+)
+
+crubit_cc_test(
+    name = "option_references_test",
+    srcs = ["option_references_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
+    deps = [
+        ":option_references_cc_api",
+        "@googletest//:gtest_main",
+    ],
+)
+
+rust_library(
+    name = "option_specialization_collision",
+    testonly = 1,
+    srcs = ["option_specialization_collision.rs"],
+    edition = "2024",
+)
+
+golden_test(
+    name = "option_specialization_collision_golden_test",
+    basename = "option_specialization_collision",
+    golden_h = "option_specialization_collision_cc_api.h",
+    golden_rs = "option_specialization_collision_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
+    rust_library = "option_specialization_collision",
+)
+
+cpp_api_from_rust(
+    name = "option_specialization_collision_cc_api",
+    testonly = 1,
+    crate = ":option_specialization_collision",
+)
+
+crubit_cc_test(
+    name = "option_specialization_collision_test",
+    srcs = ["option_specialization_collision_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
+    deps = [
+        ":option_specialization_collision_cc_api",
+        "@googletest//:gtest_main",
+    ],
+)
+
+rust_library(
     name = "result",
     testonly = 1,
     srcs = ["result.rs"],

@@ -49,6 +49,15 @@ pub enum TypeLocation {
     /// inside `rs::Result<T, E>` or `rs::Vec<T>`).
     TemplateArg,
 
+    /// The template argument `T` of an `rs::Option<T>` specialization.
+    ///
+    /// This is formatted the same way as `TemplateArg`, except that when `option_references` is
+    /// enabled, a reference to a sized type is formatted as a C++ reference (`rs::Option<T
+    /// const&>` / `rs::Option<T&>`, like C++26 `std::optional<T&>`) rather than as a pointer.
+    /// This keeps `Option<&T>` (a nullable pointer) and `Option<*const T>` (a pointer plus a
+    /// tag) from mapping to the same C++ type (b/575916406).
+    OptionArg,
+
     /// The `Item` associated type of `core::iter::Iterator` or `core::iter::IntoIterator`.
     ///
     /// Unlike other associated types and type aliases (where Rust references are formatted as C++
@@ -80,7 +89,7 @@ impl TypeLocation {
             TypeLocation::FnParam { .. } => Ok(()),
             TypeLocation::Const => Ok(()),
             TypeLocation::NestedBridgeable => Ok(()),
-            TypeLocation::TemplateArg => bail!("Template arguments do not support bridgeable types"),
+            TypeLocation::TemplateArg | TypeLocation::OptionArg => bail!("Template arguments do not support bridgeable types"),
             // TODO(jeanpierreda): Why?
             TypeLocation::FnReturn { is_constructor: true } => bail!("Constructor functions cannot return bridge types"),
             TypeLocation::ClosureReturn | TypeLocation::IteratorItem | TypeLocation::Other => bail!("crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"),
@@ -103,6 +112,7 @@ impl TypeLocation {
             TypeLocation::FnReturn { .. }
             | TypeLocation::Const
             | TypeLocation::TemplateArg
+            | TypeLocation::OptionArg
             | TypeLocation::IteratorItem
             | TypeLocation::ClosureReturn
             | TypeLocation::Other
@@ -128,6 +138,7 @@ mod tests {
         assert!(!TypeLocation::FnReturn { is_constructor: true }.admits_movable());
         assert!(!TypeLocation::Const.admits_movable());
         assert!(!TypeLocation::TemplateArg.admits_movable());
+        assert!(!TypeLocation::OptionArg.admits_movable());
         assert!(!TypeLocation::IteratorItem.admits_movable());
         assert!(!TypeLocation::ClosureReturn.admits_movable());
         assert!(!TypeLocation::Other.admits_movable());

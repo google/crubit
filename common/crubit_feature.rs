@@ -144,6 +144,12 @@ flagset::flags! {
         /// `operator!=` depend on `operator==`), find the related operator even if the names of
         /// their C++ parameters differ. Only affects rust_api_from_cpp.
         ParamNameInsensitiveOperatorLookup,
+
+        /// Emit `rs::Option<T const&>` / `rs::Option<T&>` (like C++26 `std::optional<T&>`) instead
+        /// of `rs::Option<T const*>` / `rs::Option<T*>` for `Option<&T>` / `Option<&mut T>`. This
+        /// also keeps `Option<&T>` and `Option<*const T>` from colliding as the same C++ type
+        /// (b/575916406). Only affects cpp_api_from_rust.
+        OptionReferences,
     }
 }
 
@@ -192,6 +198,7 @@ impl CrubitFeature {
             Self::ConstantArrays => "constant_arrays",
             Self::MacroConstants => "macro_constants",
             Self::ParamNameInsensitiveOperatorLookup => "param_name_insensitive_operator_lookup",
+            Self::OptionReferences => "option_references",
         }
     }
 
@@ -249,6 +256,7 @@ impl CrubitFeature {
             Self::ParamNameInsensitiveOperatorLookup => {
                 "//features:param_name_insensitive_operator_lookup"
             }
+            Self::OptionReferences => "//features:option_references",
         }
     }
 }
@@ -281,6 +289,9 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 // Out of `all` until callers which use a bare `T` return value as a temporary
                 // (e.g. `f().method()`) are migrated to `rs::Movable<T>`.
                 - CrubitFeature::MovableReturnValues
+                // Out of `all` until callers expecting `rs::Option<T const*>` for `Option<&T>`
+                // are migrated.
+                - CrubitFeature::OptionReferences
         }
         // `supported` automatically implies `types` and `impl_cxx_extern_type`.
         b"supported" => {
@@ -324,6 +335,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"param_name_insensitive_operator_lookup" => {
             CrubitFeature::ParamNameInsensitiveOperatorLookup.into()
         }
+        b"option_references" => CrubitFeature::OptionReferences.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -532,6 +544,13 @@ mod tests {
         let SerializedCrubitFeature(features) =
             serde_json::from_str("\"param_name_insensitive_operator_lookup\"").unwrap();
         assert_eq!(features, CrubitFeature::ParamNameInsensitiveOperatorLookup);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_option_references() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"option_references\"").unwrap();
+        assert_eq!(features, CrubitFeature::OptionReferences);
     }
 
     #[gtest]

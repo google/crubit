@@ -23,8 +23,8 @@ use code_gen_utils::{
     format_cc_includes, make_rs_ident, CcInclude, CommonTokens, NamespaceQualifier,
 };
 use database::code_snippet::{
-    ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, ExternCDecl, RsSnippet,
-    TemplateSpecialization,
+    AdtTemplateSpecialization, ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, ExternCDecl,
+    RsSnippet, TemplateSpecialization,
 };
 use database::{
     rename_clang_builtin_macros, CoreBindingsCommon, ExportedPath, FullyQualifiedName, PublicPaths,
@@ -33,7 +33,7 @@ use database::{
 pub use database::{
     BindingsGenerator, CopyCodegenStyle, CppTypeSpecialization, IncludeGuard, MoveCodegenStyle,
 };
-use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
+use error_report::{anyhow, bail, Category, ErrorReporting, ItemName, ReportFatalError};
 use format_type::{
     crubit_abi_type_from_ty, format_cc_ident, format_cc_ident_symbol,
     format_top_level_ns_for_crate, format_with_cc_body,
@@ -58,7 +58,7 @@ pub use generate_unsupported::{
     generate_unsupported_def_with_args, item_name_for_error_report, report_must_bind_error,
 };
 use itertools::Itertools;
-use proc_macro2::TokenStream;
+use proc_macro2::{TokenStream, TokenTree};
 use query_compiler::{
     is_in_ignore_symbols_from_files, stable_def_id_cmp, try_normalize_ty, SortedByDef,
 };
@@ -74,7 +74,7 @@ use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use std::borrow::Cow;
 use std::cmp::Ordering;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::PathBuf;
 use std::rc::Rc;
 
@@ -307,6 +307,80 @@ pub fn new_database<'db>(
     h_out_include_guard: IncludeGuard,
     ignore_symbols_from_files: HashSet<PathBuf>,
 ) -> BindingsGenerator<'db> {
+    new_database_impl(
+        tcx,
+        source_crate_name,
+        crubit_support_path_format,
+        crubit_debug_path_format,
+        default_features,
+        kythe_annotations,
+        portable_abi_compatible,
+        enable_rmeta_interface,
+        crate_name_to_include_paths,
+        crate_name_to_features,
+        crate_name_to_namespace,
+        crate_renames,
+        errors,
+        fatal_errors,
+        is_golden_test,
+        h_out_include_guard,
+        ignore_symbols_from_files,
+        /* rejected_template_specializations= */ HashMap::new(),
+    )
+}
+
+/// Returns a new database with the same inputs as `db`, except for the given ones.
+///
+/// The new database doesn't share any memoized query results with `db`.
+fn new_database_rejecting_template_specializations<'db>(
+    db: &BindingsGenerator<'db>,
+    rejected_template_specializations: HashMap<Ty<'db>, arc_anyhow::Error>,
+    errors: Rc<dyn ErrorReporting>,
+    fatal_errors: Rc<dyn ReportFatalError>,
+) -> BindingsGenerator<'db> {
+    new_database_impl(
+        db.tcx(),
+        db.source_crate_name().map(Rc::from),
+        db.crubit_support_path_format().clone(),
+        db.crubit_debug_path_format().cloned(),
+        db.default_features(),
+        db.kythe_annotations(),
+        db.portable_abi_compatible(),
+        db.enable_rmeta_interface(),
+        db.crate_name_to_include_paths().clone(),
+        db.crate_name_to_features().clone(),
+        db.crate_name_to_namespace().clone(),
+        db.crate_renames().clone(),
+        errors,
+        fatal_errors,
+        db.is_golden_test(),
+        db.h_out_include_guard().clone(),
+        db.ignore_symbols_from_files().clone(),
+        rejected_template_specializations,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn new_database_impl<'db>(
+    tcx: TyCtxt<'db>,
+    source_crate_name: Option<Rc<str>>,
+    crubit_support_path_format: dyn_format::Format<1>,
+    crubit_debug_path_format: Option<dyn_format::Format<2>>,
+    default_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+    kythe_annotations: bool,
+    portable_abi_compatible: bool,
+    enable_rmeta_interface: bool,
+    crate_name_to_include_paths: HashMap<Rc<str>, Vec<CcInclude>>,
+    crate_name_to_features: HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>,
+    crate_name_to_namespace: HashMap<Rc<str>, Rc<str>>,
+    crate_renames: HashMap<Rc<str>, Rc<str>>,
+    errors: Rc<dyn ErrorReporting>,
+    fatal_errors: Rc<dyn ReportFatalError>,
+    is_golden_test: bool,
+    h_out_include_guard: IncludeGuard,
+    ignore_symbols_from_files: HashSet<PathBuf>,
+    rejected_template_specializations: HashMap<Ty<'db>, arc_anyhow::Error>,
+) -> BindingsGenerator<'db> {
     BindingsGenerator::new(
         tcx,
         source_crate_name,
@@ -325,6 +399,7 @@ pub fn new_database<'db>(
         is_golden_test,
         h_out_include_guard,
         ignore_symbols_from_files,
+        rejected_template_specializations,
         CommonTokens::new(),
         specializations,
         generate_struct_and_union::ref_trait_impls_by_referent,
@@ -396,11 +471,12 @@ pub fn generate_bindings<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<BindingsT
         quote! { __COMMENT__ #txt __NEWLINE__ }
     };
 
-    let BindingsTokens { cc_api, cc_api_impl } = generate_crate(db).unwrap_or_else(|err| {
-        let txt = format!("Failed to generate bindings for the crate: {err}");
-        let src = quote! { __COMMENT__ #txt };
-        BindingsTokens { cc_api: src.clone(), cc_api_impl: src }
-    });
+    let BindingsTokens { cc_api, cc_api_impl } =
+        generate_crate_without_colliding_specializations(db).unwrap_or_else(|err| {
+            let txt = format!("Failed to generate bindings for the crate: {err}");
+            let src = quote! { __COMMENT__ #txt };
+            BindingsTokens { cc_api: src.clone(), cc_api_impl: src }
+        });
     let cc_api = quote! {
         __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
         __HASH_TOKEN__ pragma clang diagnostic ignored "-Wreturn-type-c-linkage" __NEWLINE__
@@ -1592,18 +1668,20 @@ impl<'tcx> NodeSortKey<'tcx> {
         NodeSortKey { tcx, path_str: tcx.def_path_str(def_id), def_id: Some(def_id) }
     }
 
+    fn from_adt(tcx: TyCtxt<'tcx>, spec: &AdtTemplateSpecialization<'tcx>) -> Self {
+        let ty = spec.self_ty_rs;
+        Self {
+            tcx,
+            // Ty's Display implementation uses FmtPrinter to pretty print the type, so this will be
+            // a reasonable representation of the underlying tree structure.
+            path_str: ty.to_string(),
+            def_id: ty.ty_adt_def().map(|adt| adt.did()),
+        }
+    }
+
     fn new(tcx: TyCtxt<'tcx>, spec: &TemplateSpecialization<'tcx>) -> Self {
         match spec {
-            TemplateSpecialization::Adt(adt) => {
-                let ty = adt.self_ty_rs;
-                Self {
-                    tcx,
-                    // Ty's Display implementation uses FmtPrinter to pretty print the type, so this
-                    // will be a reasonable representation of the underlying tree structure.
-                    path_str: ty.to_string(),
-                    def_id: ty.ty_adt_def().map(|adt| adt.did()),
-                }
-            }
+            TemplateSpecialization::Adt(e) => Self::from_adt(tcx, e),
             TemplateSpecialization::TraitImpl(t) => Self::from_def_id(tcx, t.trait_impl),
             TemplateSpecialization::NegativeAutoTraitImpl(u) => {
                 let trait_name = tcx.item_name(u.trait_id);
@@ -1643,8 +1721,224 @@ impl<'tcx> Ord for NodeSortKey<'tcx> {
     }
 }
 
+/// The result of `generate_crate`.
+enum GeneratedCrate<'tcx> {
+    Bindings(BindingsTokens),
+    /// The template specializations that need to be rejected, mapped to the reason why, because
+    /// they would define the same C++ type as another specialization (see
+    /// `find_colliding_specializations`).
+    SpecializationCollisions(HashMap<Ty<'tcx>, arc_anyhow::Error>),
+}
+
+/// Formats all public items from the Rust crate being compiled, refusing to bind template
+/// specializations that would define the same C++ type as another specialization used by the
+/// crate (see `find_colliding_specializations`).
+///
+/// The collisions are all found at once, among the specializations used by the whole crate. If
+/// there are any, the bindings are generated a second time, with a new database in which the
+/// rejected specializations fail to format. That way, only the APIs that use them (e.g. a single
+/// method, rather than the whole struct) are unsupported, and so are the specializations that
+/// depend on them.
+fn generate_crate_without_colliding_specializations(
+    db: &BindingsGenerator,
+) -> Result<BindingsTokens> {
+    let collisions = match generate_crate(db)? {
+        GeneratedCrate::Bindings(bindings) => return Ok(bindings),
+        GeneratedCrate::SpecializationCollisions(collisions) => collisions,
+    };
+    let new_errors = collisions.values().map(|err| err.to_string()).collect();
+    let db = new_database_rejecting_template_specializations(
+        db,
+        collisions,
+        Rc::new(ReportOnlyNewErrors { errors: db.errors(), new_errors }),
+        // Fatal errors don't depend on the rejected specializations, so they have all been
+        // reported already.
+        Rc::new(IgnoreFatalErrors),
+    );
+    match generate_crate(&db)? {
+        GeneratedCrate::Bindings(bindings) => Ok(bindings),
+        // Rejecting specializations only makes formatting fail, so the second generation only uses
+        // specializations that the first one used, minus the rejected ones, and none of those
+        // collide. So this can't happen, but if it did, fail rather than emit the collisions.
+        GeneratedCrate::SpecializationCollisions(collisions) => {
+            let mut messages: Vec<String> =
+                collisions.values().map(|err| err.to_string()).collect();
+            messages.sort();
+            bail!(
+                "Template specializations still collide after rejecting the colliding ones: {}",
+                messages.join("; ")
+            )
+        }
+    }
+}
+
+/// Reports only the errors caused by the rejected template specializations, when the bindings
+/// are generated a second time by `generate_crate_without_colliding_specializations`. (All other
+/// errors were already reported by the first generation.)
+struct ReportOnlyNewErrors {
+    errors: Rc<dyn ErrorReporting>,
+    /// The messages of the new errors.
+    new_errors: HashSet<String>,
+}
+
+impl ErrorReporting for ReportOnlyNewErrors {
+    fn report(&self, error: &arc_anyhow::Error) {
+        let root_cause = error.root_cause().to_string();
+        if self.new_errors.iter().any(|new_error| root_cause.contains(new_error.as_str())) {
+            self.errors.report(error);
+        }
+    }
+    fn enter_item(&self, item: ItemName) -> Option<ItemName> {
+        self.errors.enter_item(item)
+    }
+    fn assert_in_item(&self, item: ItemName) {
+        self.errors.assert_in_item(item)
+    }
+    fn exit_item(&self, item: ItemName, replace_with: Option<ItemName>) {
+        self.errors.exit_item(item, replace_with)
+    }
+    fn add_category(&self, category: Category) {
+        self.errors.add_category(category)
+    }
+}
+
+struct IgnoreFatalErrors;
+
+impl ReportFatalError for IgnoreFatalErrors {
+    fn report(&self, _msg: &str) {}
+}
+
+/// Finds the template specializations that would define the same C++ type as another
+/// specialization used by the crate, but with a different spelling or layout (b/575916406).
+///
+/// For example, without the `option_references` feature, both `Option<&i32>` and
+/// `Option<*const i32>` are `rs::Option<std::int32_t const*>` in C++ (the former is annotated as
+/// `_Nonnull`, but that doesn't make it a different type), even though they have different
+/// layouts. Their specializations have different include guards, so the generated header would
+/// define the same specialization twice, and fail to compile. (And if their include guards were
+/// the same, one of them would silently get the layout of the other.)
+///
+/// Of each group of colliding specializations, the first one (in `NodeSortKey` order) is kept,
+/// and the others are returned, mapped to the reason why they're rejected. The keys are
+/// `AdtTemplateSpecialization::self_ty_rs`.
+fn find_colliding_specializations<'a, 'tcx: 'a>(
+    db: &BindingsGenerator<'tcx>,
+    specializations: impl IntoIterator<Item = &'a TemplateSpecialization<'tcx>>,
+) -> HashMap<Ty<'tcx>, arc_anyhow::Error> {
+    let tcx = db.tcx();
+    let mut specializations_by_cc_type =
+        BTreeMap::<String, Vec<&AdtTemplateSpecialization<'tcx>>>::new();
+    for spec in specializations {
+        if let TemplateSpecialization::Adt(adt_spec) = spec {
+            let cc_type = cc_type_spelling(adt_spec.self_ty_cc.tokens.clone(), false);
+            specializations_by_cc_type.entry(cc_type).or_default().push(adt_spec);
+        }
+    }
+
+    let mut collisions = HashMap::new();
+    for mut specs in specializations_by_cc_type.into_values() {
+        if specs.len() < 2 {
+            continue;
+        }
+        // Keep the first specialization in `NodeSortKey` order, and reject the others that would
+        // define the same C++ type differently. Choosing by this order, rather than by the order
+        // in which the specializations were found, keeps the choice deterministic. It's the order
+        // of the Rust types' names, so e.g. `Option<&T>` is kept rather than `Option<*const T>`.
+        specs.sort_by_cached_key(|spec| NodeSortKey::from_adt(tcx, spec));
+        let (kept, others) = specs.split_first().expect("specs.len() >= 2");
+        let kept_spelling = cc_type_spelling(kept.self_ty_cc.tokens.clone(), true);
+        for spec in others {
+            let is_same_layout = spec.layout.size() == kept.layout.size()
+                && spec.layout.align().bytes() == kept.layout.align().bytes();
+            if is_same_layout
+                && cc_type_spelling(spec.self_ty_cc.tokens.clone(), true) == kept_spelling
+            {
+                // The specializations have the same include guard, so only one of them is defined,
+                // and that is fine, because they have the same layout. (E.g. `Option<usize>` and
+                // `Option<u64>`.)
+                continue;
+            }
+            collisions.insert(spec.self_ty_rs, specialization_collision_error(db, spec, kept));
+        }
+    }
+    collisions
+}
+
+fn specialization_collision_error<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    rejected: &AdtTemplateSpecialization<'tcx>,
+    kept: &AdtTemplateSpecialization<'tcx>,
+) -> arc_anyhow::Error {
+    let tcx = db.tcx();
+    let is_option_of_reference = |spec: &AdtTemplateSpecialization<'tcx>| {
+        spec.is_option()
+            && matches!(spec.self_ty_rs.kind(), ty::TyKind::Adt(_, args)
+                if args.types().next().is_some_and(|some_ty| some_ty.is_ref()))
+    };
+    let hint = if (is_option_of_reference(rejected) || is_option_of_reference(kept))
+        && !db
+            .crate_features(db.source_crate_num())
+            .contains(crubit_feature::CrubitFeature::OptionReferences)
+    {
+        ". Enabling the `option_references` Crubit feature makes `Option<&T>` a distinct C++ type, \
+         `rs::Option<T const&>`"
+    } else {
+        ""
+    };
+    anyhow!(
+        "`{}` can't be bound because it would have the same C++ type as `{}`, which is also used \
+         by this crate (b/575916406){hint}",
+        format_type::erase_all_regions(tcx, rejected.self_ty_rs),
+        format_type::erase_all_regions(tcx, kept.self_ty_rs),
+    )
+}
+
+/// Returns the spelling of the C++ type `tokens`, ignoring lifetime annotations, and also
+/// ignoring nullability annotations unless `keep_nullability` is true.
+///
+/// Nullability annotations don't make two C++ types distinct, but they are part of the include
+/// guards of template specializations.
+fn cc_type_spelling(tokens: TokenStream, keep_nullability: bool) -> String {
+    fn strip(tokens: TokenStream, keep_nullability: bool) -> TokenStream {
+        let mut result = TokenStream::new();
+        let mut tokens = tokens.into_iter().peekable();
+        while let Some(token) = tokens.next() {
+            match token {
+                // Lifetime annotations: `$a`, `$static`, or `$(name)`.
+                TokenTree::Punct(punct) if punct.as_char() == '$' => {
+                    if matches!(tokens.peek(), Some(TokenTree::Ident(_) | TokenTree::Group(_))) {
+                        tokens.next();
+                    }
+                }
+                TokenTree::Ident(ident)
+                    if !keep_nullability
+                        && [
+                            "crubit_nonnull",
+                            "crubit_nullable",
+                            "_Nonnull",
+                            "_Nullable",
+                            "_Null_unspecified",
+                        ]
+                        .iter()
+                        .any(|annotation| ident == annotation) => {}
+                TokenTree::Group(group) => {
+                    let mut new_group = proc_macro2::Group::new(
+                        group.delimiter(),
+                        strip(group.stream(), keep_nullability),
+                    );
+                    new_group.set_span(group.span());
+                    result.extend([TokenTree::Group(new_group)]);
+                }
+                token => result.extend([token]),
+            }
+        }
+        result
+    }
+    strip(tokens, keep_nullability).to_string()
+}
+
 /// Formats all public items from the Rust crate being compiled.
-fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<BindingsTokens> {
+fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'tcx>> {
     struct CcDetails<'db> {
         def_id: DefId,
         namespace: Cow<'db, NamespaceQualifier>,
@@ -1743,6 +2037,11 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<BindingsTokens> 
 
     let GeneratedSpecializations { mut specializations, impls_cc_details } =
         generate_specializations_fixpoint(db, worklist, &mut cc_details_prereqs, &mut rs_details);
+
+    let collisions = find_colliding_specializations(db, specializations.keys());
+    if !collisions.is_empty() {
+        return Ok(GeneratedCrate::SpecializationCollisions(collisions));
+    }
 
     // Find the order of `main_apis` that 1) meets the requirements of
     // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
@@ -1952,7 +2251,7 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<BindingsTokens> 
         };
     }
 
-    Ok(BindingsTokens { cc_api, cc_api_impl })
+    Ok(GeneratedCrate::Bindings(BindingsTokens { cc_api, cc_api_impl }))
 }
 
 pub use generate_unsupported::error_scope;

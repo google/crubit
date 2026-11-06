@@ -38,6 +38,16 @@ inline constexpr bool OptionFromStdOptional = ::std::conjunction_v<
     ::std::is_same<::std::decay_t<Opt>, ::std::optional<ArgType>>,
     ::std::negation<::std::is_lvalue_reference<Opt>>>;
 
+// Whether an `rs::Option<R>`, where `R` is a reference type, can bind to an
+// argument of type `U&&`. The argument must be an lvalue, so that the option
+// can't end up referring to a temporary, and `R` must be able to refer to it
+// without a conversion.
+template <typename R, typename U>
+inline constexpr bool OptionRefBindable =
+    ::std::conjunction_v<::std::is_reference<R>, ::std::is_lvalue_reference<U>,
+                         ::std::is_convertible<::std::remove_reference_t<U>*,
+                                               ::std::remove_reference_t<R>*>>;
+
 template <typename Derived, typename T>
 class OptionBase {
  private:
@@ -302,6 +312,67 @@ bool operator==(const OptionBase<Derived, T>& opt, const U& v) {
   return opt.has_value() && static_cast<bool>(*opt == v);
 }
 
+// `rs::Option<T&>` is how Rust's `Option<&mut T>` (as `rs::Option<T&>`) and
+// `Option<&T>` (as `rs::Option<T const&>`) are represented in C++ under the
+// `option_references` Crubit feature.
+//
+// Like C++26 `std::optional<T&>`, it holds an optional reference, which
+// assignment rebinds rather than assigning through, and `operator*` and
+// `operator->` are shallow-const. `None` is represented as a null pointer,
+// which matches the layout of Rust's `Option<&T>`.
+//
+// Unlike the primary template, it has no `value()` or `value_or()`, which are
+// only there temporarily, for code migrating from `std::optional<T>`
+// (b/523234159). Use `*` and `->` instead.
+template <typename Derived, typename T>
+class OptionBase<Derived, T&> {
+ public:
+  using value_type = T;
+
+  constexpr OptionBase() noexcept = default;
+  // Intentionally implicit to support `return std::nullopt;` and ternary
+  // expressions (`cond ? opt : std::nullopt`), mirroring `std::optional<T&>`.
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  constexpr OptionBase(::std::nullopt_t) noexcept {}
+  constexpr OptionBase& operator=(::std::nullopt_t) noexcept {
+    ptr_ = nullptr;
+    return *this;
+  }
+
+  // Intentionally implicit to support seamless conversion from an lvalue of
+  // type `T`, mirroring `std::optional<T&>`.
+  template <typename U>
+    requires(OptionRefBindable<T&, U>)
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  constexpr OptionBase(U&& value) noexcept : ptr_(::std::addressof(value)) {}
+
+  // Rebinds the reference to `value`, rather than assigning to the referent.
+  template <typename U>
+    requires(OptionRefBindable<T&, U>)
+  constexpr OptionBase& operator=(U&& value) noexcept {
+    ptr_ = ::std::addressof(value);
+    return *this;
+  }
+
+  constexpr bool has_value() const noexcept { return ptr_ != nullptr; }
+  constexpr explicit operator bool() const noexcept { return has_value(); }
+  void check_has_value() const {
+    CRUBIT_CHECK(has_value()) << "Bad value access on rs::Option";
+  }
+
+  T& operator*() const {
+    check_has_value();
+    return *ptr_;
+  }
+  T* operator->() const {
+    check_has_value();
+    return ptr_;
+  }
+
+ private:
+  T* ptr_ = nullptr;
+};
+
 template <typename T>
 struct Option final {
   static_assert(false,
@@ -320,6 +391,8 @@ inline constexpr bool OptionForwardConstructible =
 template <typename ArgType, typename Opt>
 inline constexpr bool OptionFromStdOptional =
     ::rs::OptionFromStdOptional<ArgType, Opt>;
+template <typename R, typename U>
+inline constexpr bool OptionRefBindable = ::rs::OptionRefBindable<R, U>;
 template <typename Derived, typename T>
 using OptionBase [[deprecated("Use rs::OptionBase instead")]] =
     ::rs::OptionBase<Derived, T>;
@@ -336,6 +409,8 @@ inline constexpr bool OptionForwardConstructible =
 template <typename ArgType, typename Opt>
 inline constexpr bool OptionFromStdOptional =
     ::rs_std::OptionFromStdOptional<ArgType, Opt>;
+template <typename R, typename U>
+inline constexpr bool OptionRefBindable = ::rs_std::OptionRefBindable<R, U>;
 template <typename Derived, typename T>
 using OptionBase = ::rs_std::OptionBase<Derived, T>;
 template <typename T>

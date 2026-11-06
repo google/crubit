@@ -524,7 +524,7 @@ fn format_int_ty_for_cc<'tcx>(
         ty::IntTy::I32 => Ok(cstdint(quote! { ::std::int32_t })),
         ty::IntTy::I64 => Ok(cstdint(quote! { ::std::int64_t })),
         ty::IntTy::Isize => {
-            if matches!(location, TypeLocation::TemplateArg) {
+            if matches!(location, TypeLocation::TemplateArg | TypeLocation::OptionArg) {
                 let fixed_ty =
                     tcx.data_layout.ptr_sized_integer().to_ty(tcx, /* signed= */ true);
                 let ty::TyKind::Int(fixed_int) = fixed_ty.kind() else { unreachable!() };
@@ -556,7 +556,7 @@ fn format_uint_ty_for_cc<'tcx>(
         ty::UintTy::U32 => Ok(cstdint(quote! { ::std::uint32_t })),
         ty::UintTy::U64 => Ok(cstdint(quote! { ::std::uint64_t })),
         ty::UintTy::Usize => {
-            if matches!(location, TypeLocation::TemplateArg) {
+            if matches!(location, TypeLocation::TemplateArg | TypeLocation::OptionArg) {
                 let fixed_ty =
                     tcx.data_layout.ptr_sized_integer().to_ty(tcx, /* signed= */ false);
                 let ty::TyKind::Uint(fixed_uint) = fixed_ty.kind() else { unreachable!() };
@@ -1378,7 +1378,8 @@ fn format_ty_for_cc_impl<'tcx>(
                 | TypeLocation::IteratorItem
                 | TypeLocation::ClosureReturn
                 | TypeLocation::Field
-                | TypeLocation::TemplateArg => {
+                | TypeLocation::TemplateArg
+                | TypeLocation::OptionArg => {
                     quote! { * }
                 }
             };
@@ -1567,6 +1568,14 @@ fn treat_ref_as_ptr<'tcx>(
             }
         }
 
+        TypeLocation::OptionArg => {
+            if is_option_arg_formatted_as_cc_ref(db, ty) {
+                RefConvert::ToRef
+            } else {
+                RefConvert::ToPtr { is_lifetime_bound: false }
+            }
+        }
+
         // References in other locations are always converted to pointers, as references are often
         // not allowed in these locations (e.g. the target of another reference, the element type
         // of an array, etc.).
@@ -1576,6 +1585,24 @@ fn treat_ref_as_ptr<'tcx>(
         | TypeLocation::Field
         | TypeLocation::TemplateArg => RefConvert::ToPtr { is_lifetime_bound: false },
     }
+}
+
+/// Returns whether `ty`, as the template argument of an `rs::Option<T>` specialization (see
+/// `TypeLocation::OptionArg`), is formatted as a C++ reference, giving `rs::Option<T const&>` or
+/// `rs::Option<T&>`.
+///
+/// This requires the `option_references` feature, and only applies to references to sized types
+/// (other than `c_void`): those are thin, non-null pointers, so `Option<&T>` has the same layout as
+/// a nullable `T*`. References to slices and `str` are formatted as `rs::SliceRef<T>` and
+/// `rs::StrRef` instead.
+pub fn is_option_arg_formatted_as_cc_ref<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+    let ty::TyKind::Ref(_, referent, _) = *ty.kind() else {
+        return false;
+    };
+    let tcx = db.tcx();
+    db.crate_features(db.source_crate_num()).contains(CrubitFeature::OptionReferences)
+        && referent.is_sized(tcx, ty::TypingEnv::fully_monomorphized())
+        && !referent.is_c_void(tcx)
 }
 
 /// Returns whether a value of type `ty` returned by value (at the top level) is wrapped in
@@ -2638,12 +2665,28 @@ pub fn replace_all_regions_with_static<'tcx, T>(tcx: TyCtxt<'tcx>, value: T) -> 
 where
     T: ty::TypeFoldable<TyCtxt<'tcx>>,
 {
-    struct Staticifier<'tcx> {
+    replace_all_regions(tcx, value, tcx.lifetimes.re_static)
+}
+
+/// Erases all non-bound regions in `value`, so that they are not printed (e.g. in error messages).
+pub fn erase_all_regions<'tcx, T>(tcx: TyCtxt<'tcx>, value: T) -> T
+where
+    T: ty::TypeFoldable<TyCtxt<'tcx>>,
+{
+    replace_all_regions(tcx, value, tcx.lifetimes.re_erased)
+}
+
+/// Replaces all non-bound regions in `value` with `region`.
+fn replace_all_regions<'tcx, T>(tcx: TyCtxt<'tcx>, value: T, region: ty::Region<'tcx>) -> T
+where
+    T: ty::TypeFoldable<TyCtxt<'tcx>>,
+{
+    struct RegionReplacer<'tcx> {
         tcx: TyCtxt<'tcx>,
-        static_region: ty::Region<'tcx>,
+        region: ty::Region<'tcx>,
     }
 
-    impl<'tcx> ty::TypeFolder<TyCtxt<'tcx>> for Staticifier<'tcx> {
+    impl<'tcx> ty::TypeFolder<TyCtxt<'tcx>> for RegionReplacer<'tcx> {
         fn cx(&self) -> TyCtxt<'tcx> {
             self.tcx
         }
@@ -2651,12 +2694,12 @@ where
             if matches!(r.kind(), ty::RegionKind::ReBound(..)) {
                 r
             } else {
-                self.static_region
+                self.region
             }
         }
     }
 
-    value.fold_with(&mut Staticifier { tcx, static_region: tcx.lifetimes.re_static })
+    value.fold_with(&mut RegionReplacer { tcx, region })
 }
 
 pub fn check_feature_enabled_on_self_and_all_deps(

@@ -77,6 +77,9 @@ pub fn parse_adt_template_specialization<'tcx>(
         tcx,
         tcx.normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_ty),
     );
+    if let Some(err) = db.rejected_template_specializations().get(&self_ty) {
+        return Some(Err(err.clone()));
+    }
 
     match self_ty.kind() {
         &ty::TyKind::Adt(adt, substs) => {
@@ -123,7 +126,7 @@ fn parse_adt_def_template_specialization<'tcx>(
                         .unwrap_or_else(|| {
                             FormattedTy::try_from_ty(
                                 substs.type_at(0),
-                                TypeLocation::TemplateArg,
+                                TypeLocation::OptionArg,
                                 db,
                             )
                         })?;
@@ -477,6 +480,66 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                         : base_type(ip, ::std::forward<Args>(args)...) {} __NEWLINE__
                 }
             });
+        cc_details.prereqs.includes.insert(CcInclude::utility());
+        ApiSnippets { main_api, cc_details, ..Default::default() }
+    }
+}
+
+/// Generates the API of an `rs::Option<T&>` specialization, which represents `Option<&T>` or
+/// `Option<&mut T>` under the `option_references` feature (see
+/// `format_type::is_option_arg_formatted_as_cc_ref`).
+///
+/// Unlike `OptionApiGenerator`, there is no storage or tag to access: the state of the option is
+/// a single (nullable) pointer owned by the `rs::OptionBase<Derived, T&>` partial specialization.
+struct OptionRefApiGenerator {
+    arg_ty: TokenStream,
+    size_in_bytes: Literal,
+    alignment_in_bytes: Literal,
+}
+
+impl OptionRefApiGenerator {
+    fn api_snippets<'tcx>(self) -> ApiSnippets<'tcx> {
+        let Self { arg_ty, size_in_bytes, alignment_in_bytes } = self;
+        let full_self_ty = quote! { ::rs::Option<#arg_ty> };
+        let main_api = CcSnippet::new(quote! {
+            using base_type = ::rs::OptionBase<#full_self_ty, #arg_ty>;
+            constexpr Option() = default;
+            constexpr Option(::std::nullopt_t) noexcept;
+            constexpr Option& operator=(::std::nullopt_t) noexcept;
+
+            template <typename U>
+              requires ::rs::OptionRefBindable<#arg_ty, U>
+            constexpr Option(U&& value) noexcept;
+
+            template <typename U>
+              requires ::rs::OptionRefBindable<#arg_ty, U>
+            constexpr Option& operator=(U&& value) noexcept;
+
+            ~Option() noexcept = default;
+        });
+        let mut cc_details = CcSnippet::new(quote! {
+            static_assert(sizeof(#full_self_ty) == #size_in_bytes);
+            static_assert(alignof(#full_self_ty) == #alignment_in_bytes);
+            static_assert(::std::is_trivially_destructible_v<#full_self_ty>); __NEWLINE__
+
+            inline constexpr #full_self_ty::Option(::std::nullopt_t) noexcept : base_type(::std::nullopt) {} __NEWLINE__
+            inline constexpr #full_self_ty& #full_self_ty::operator=(::std::nullopt_t) noexcept {
+                base_type::operator=(::std::nullopt);
+                return *this;
+            } __NEWLINE__
+
+            template <typename U>
+              requires ::rs::OptionRefBindable<#arg_ty, U>
+            inline constexpr #full_self_ty::Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {} __NEWLINE__
+
+            template <typename U>
+              requires ::rs::OptionRefBindable<#arg_ty, U>
+            inline constexpr #full_self_ty& #full_self_ty::operator=(U&& value) noexcept {
+                base_type::operator=(::std::forward<U>(value));
+                return *this;
+            } __NEWLINE__
+        });
+        cc_details.prereqs.includes.insert(CcInclude::type_traits());
         cc_details.prereqs.includes.insert(CcInclude::utility());
         ApiSnippets { main_api, cc_details, ..Default::default() }
     }
@@ -1506,6 +1569,11 @@ fn specialize_option<'tcx>(
     let mut prereqs = CcPrerequisites::default();
     let ty_tokens = arg_ty.for_cc.clone().into_tokens(&mut prereqs);
     let layout = adt_spec.layout;
+    // Under the `option_references` feature, `Option<&T>` is `rs::Option<T const&>`, whose only
+    // state is a pointer owned by `rs::OptionBase<Derived, T&>`. This matches the layout of
+    // `Option<&T>`: for a sized `T`, Rust guarantees that it has the layout of `&T`, with `None`
+    // represented as a null pointer.
+    let is_reference = format_type::is_option_arg_formatted_as_cc_ref(db, arg_ty.ty);
 
     let (tag_encoding, tag_field) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
@@ -1658,18 +1726,34 @@ fn specialize_option<'tcx>(
         &core.common.cc_fully_qualified_name,
     );
 
+    let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
+    let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
+    let (option_api, storage_field) = if is_reference {
+        let option_ref_api = OptionRefApiGenerator {
+            arg_ty: ty_tokens.clone(),
+            size_in_bytes: size_literal.clone(),
+            alignment_in_bytes: align_literal.clone(),
+        };
+        (option_ref_api.api_snippets(), quote! {})
+    } else {
+        let storage_field = quote! {
+            private:
+                unsigned char storage_[#size_literal];
+                __NEWLINE__
+        };
+        (option_api.api_snippets(), storage_field)
+    };
+
     let ApiSnippets { main_api, cc_details, rs_details } = [
         copy_ctor_and_assignment_snippets,
         move_ctor_and_assignment_snippets,
         relocating_ctor_snippets,
-        option_api.api_snippets(),
+        option_api,
     ]
     .into_iter()
     .collect();
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
 
-    let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
-    let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
     // TODO(cramertj): Consider standardizing the `storage_` field with other representations in
     // `generate_adt`.
@@ -1682,16 +1766,17 @@ fn specialize_option<'tcx>(
         public:
             #main_api_tokens __NEWLINE__
 
-        private:
-            unsigned char storage_[#size_literal];
-            __NEWLINE__
+            #storage_field
         };
     };
     let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
-    let (main_api_tokens, cc_details_tokens) = ifdef_guard_specialization(
+    // The guard must spell the C++ type exactly as `ty_tokens` does, so format `T` as the
+    // argument of an `rs::Option`.
+    let (main_api_tokens, cc_details_tokens) = ifdef_guard_specialization_with_location(
         db,
         quote! { ::rs::Option },
         [arg_ty.ty],
+        TypeLocation::OptionArg,
         main_api_tokens,
         cc_details_tokens,
     );
@@ -1914,6 +1999,27 @@ fn ifdef_guard_specialization<'tcx>(
     main_api: TokenStream,
     cc_details: TokenStream,
 ) -> (TokenStream, TokenStream) {
+    ifdef_guard_specialization_with_location(
+        db,
+        template_name,
+        tys,
+        TypeLocation::TemplateArg,
+        main_api,
+        cc_details,
+    )
+}
+
+/// Like `ifdef_guard_specialization`, but formats the template arguments `tys` in `location`,
+/// which must be the location that the specialization itself was formatted in (so that the guard
+/// matches the specialized C++ type).
+fn ifdef_guard_specialization_with_location<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    template_name: TokenStream,
+    tys: impl IntoIterator<Item = Ty<'tcx>>,
+    location: TypeLocation,
+    main_api: TokenStream,
+    cc_details: TokenStream,
+) -> (TokenStream, TokenStream) {
     let tcx = db.tcx();
     // For guards specifically, we want our types to be normalized to remove aliases and standardize
     // region naming so that we don't get duplicate bindings.
@@ -1927,7 +2033,7 @@ fn ifdef_guard_specialization<'tcx>(
             if ty_norm.is_unit() {
                 &db.tokens().rs_unit_t
             } else {
-                &db.format_ty_for_cc(ty_norm, TypeLocation::TemplateArg)
+                &db.format_ty_for_cc(ty_norm, location)
                     .expect("Type formatting should have been checked in parse_rs_std_template_specialization")
                     .tokens
             }

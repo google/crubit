@@ -143,6 +143,14 @@ memoized::query_group! {
 
       #[input]
       #[return_ref]
+      /// Template specializations that must not receive bindings, mapped to the reason why.
+      ///
+      /// The keys are `AdtTemplateSpecialization::self_ty_rs`. This is used to avoid emitting two
+      /// specializations that define the same C++ type (b/575916406).
+      fn rejected_template_specializations(&self) -> &HashMap<Ty<'tcx>, arc_anyhow::Error>;
+
+      #[input]
+      #[return_ref]
       /// Returns the set of common tokens.
       ///
       /// Implementation: common/code_gen_utils.rs?q=function:new+class:CommonTokens
