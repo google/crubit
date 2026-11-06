@@ -418,7 +418,6 @@ cc_library(
     hdrs = ["status_test_matchers.h"],
     deps = [
         ":status",
-        ":status_macros",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest",
@@ -568,7 +567,6 @@ crubit_cc_test(
     tags = ["no_windows"],
     deps = [
         ":status",
-        ":status_macros",
         ":status_test_matchers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

@@ -4,14 +4,14 @@
 
 #include "common/status_test_matchers.h"
 
-#include <string>
+#include <sstream>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "common/status.h"
-#include "common/status_macros.h"
 #include "llvm/Support/Error.h"
 
 namespace crubit {
@@ -20,88 +20,47 @@ namespace {
 using ::testing::HasSubstr;
 using ::testing::Not;
 
-TEST(StatusTestMatchersTest, IsOkAbslStatus) {
-  absl::Status s = absl::OkStatus();
-  EXPECT_OK(s);
-  EXPECT_THAT(s, IsOk());
+TEST(StatusTestMatchersTest, IsOk) {
+  EXPECT_OK(absl::OkStatus());
+  EXPECT_THAT(absl::InvalidArgumentError("err"), Not(IsOk()));
 
-  absl::Status s2 = absl::InvalidArgumentError("err");
-  EXPECT_THAT(s2, Not(IsOk()));
-}
+  EXPECT_OK(absl::StatusOr<int>(42));
+  EXPECT_THAT(absl::StatusOr<int>(absl::InvalidArgumentError("err")),
+              Not(IsOk()));
 
-TEST(StatusTestMatchersTest, IsOkAbslStatusOr) {
-  absl::StatusOr<int> s = 42;
-  EXPECT_OK(s);
-  EXPECT_THAT(s, IsOk());
+  EXPECT_OK(llvm::Error::success());
+  EXPECT_THAT(InvalidArgumentError("err"), Not(IsOk()));
 
-  absl::StatusOr<int> s2 = absl::InvalidArgumentError("err");
-  EXPECT_THAT(s2, Not(IsOk()));
-}
-
-TEST(StatusTestMatchersTest, IsOkLlvmError) {
-  llvm::Error e = llvm::Error::success();
-  EXPECT_OK(e);
-
-  llvm::Error e2 = InvalidArgumentError("err");
-  EXPECT_THAT(e2, Not(IsOk()));
-}
-
-TEST(StatusTestMatchersTest, IsOkLlvmExpected) {
-  llvm::Expected<int> e = 42;
-  EXPECT_OK(e);
-
-  llvm::Expected<int> e2 = InvalidArgumentError("err");
-  EXPECT_THAT(e2, Not(IsOk()));
+  EXPECT_OK(llvm::Expected<int>(42));
+  EXPECT_THAT(llvm::Expected<int>(InvalidArgumentError("err")), Not(IsOk()));
 }
 
 TEST(StatusTestMatchersTest, IsOkAndHolds) {
-  absl::StatusOr<int> s = 42;
-  EXPECT_THAT(s, IsOkAndHolds(42));
-
-  llvm::Expected<int> e = 42;
-  EXPECT_THAT(e, IsOkAndHolds(42));
+  EXPECT_THAT(absl::StatusOr<int>(42), IsOkAndHolds(42));
+  EXPECT_THAT(llvm::Expected<int>(42), IsOkAndHolds(42));
 }
 
 TEST(StatusTestMatchersTest, StatusIsAbsl) {
-  absl::Status s = absl::InvalidArgumentError("absl msg");
-  EXPECT_THAT(s, StatusIs(absl::StatusCode::kInvalidArgument));
-  EXPECT_THAT(s, StatusIs(absl::StatusCode::kInvalidArgument, "absl msg"));
-  EXPECT_THAT(s,
-              StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("msg")));
-  EXPECT_THAT(s, Not(StatusIs(absl::StatusCode::kNotFound)));
-
-  absl::StatusOr<int> s_or = absl::InvalidArgumentError("absl msg");
-  EXPECT_THAT(s_or, StatusIs(absl::StatusCode::kInvalidArgument));
-  EXPECT_THAT(s_or, StatusIs(absl::StatusCode::kInvalidArgument, "absl msg"));
-  EXPECT_THAT(s_or,
-              StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("msg")));
-  EXPECT_THAT(s_or, Not(StatusIs(absl::StatusCode::kNotFound)));
+  auto check = [](auto matcher) {
+    EXPECT_THAT(absl::InvalidArgumentError("absl msg"), matcher);
+    EXPECT_THAT(absl::StatusOr<int>(absl::InvalidArgumentError("absl msg")),
+                matcher);
+  };
+  check(StatusIs(absl::StatusCode::kInvalidArgument));
+  check(StatusIs(absl::StatusCode::kInvalidArgument, "absl msg"));
+  check(StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("msg")));
+  check(Not(StatusIs(absl::StatusCode::kNotFound)));
 }
 
 TEST(StatusTestMatchersTest, StatusIsLlvm) {
-  llvm::Error e = InvalidArgumentError("llvm msg");
-  EXPECT_THAT(e, StatusIs(StatusCode::kInvalidArgument));
-
-  llvm::Error e2 = InvalidArgumentError("llvm msg");
-  EXPECT_THAT(e2, StatusIs(StatusCode::kInvalidArgument, "llvm msg"));
-
-  llvm::Error e3 = InvalidArgumentError("llvm msg");
-  EXPECT_THAT(e3, StatusIs(StatusCode::kInvalidArgument, HasSubstr("msg")));
-
-  llvm::Error e4 = InvalidArgumentError("llvm msg");
-  EXPECT_THAT(e4, Not(StatusIs(StatusCode::kNotFound)));
-
-  llvm::Expected<int> e_exp = InvalidArgumentError("llvm msg");
-  EXPECT_THAT(e_exp, StatusIs(StatusCode::kInvalidArgument));
-
-  llvm::Expected<int> e_exp2 = InvalidArgumentError("llvm msg");
-  EXPECT_THAT(e_exp2, StatusIs(StatusCode::kInvalidArgument, "llvm msg"));
-
-  llvm::Expected<int> e_exp3 = InvalidArgumentError("llvm msg");
-  EXPECT_THAT(e_exp3, StatusIs(StatusCode::kInvalidArgument, HasSubstr("msg")));
-
-  llvm::Expected<int> e_exp4 = InvalidArgumentError("llvm msg");
-  EXPECT_THAT(e_exp4, Not(StatusIs(StatusCode::kNotFound)));
+  auto check = [](auto matcher) {
+    EXPECT_THAT(InvalidArgumentError("llvm msg"), matcher);
+    EXPECT_THAT(llvm::Expected<int>(InvalidArgumentError("llvm msg")), matcher);
+  };
+  check(StatusIs(StatusCode::kInvalidArgument));
+  check(StatusIs(StatusCode::kInvalidArgument, "llvm msg"));
+  check(StatusIs(StatusCode::kInvalidArgument, HasSubstr("msg")));
+  check(Not(StatusIs(StatusCode::kNotFound)));
 }
 
 TEST(StatusTestMatchersTest, AssertOkAndAssign) {
@@ -112,6 +71,38 @@ TEST(StatusTestMatchersTest, AssertOkAndAssign) {
   llvm::Expected<int> e = 100;
   ASSERT_OK_AND_ASSIGN(int y, std::move(e));
   EXPECT_EQ(y, 100);
+}
+
+TEST(StatusTestMatchersTest, StatusIsDescription) {
+  ::testing::Matcher<const absl::Status&> matcher =
+      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("bad"));
+
+  std::ostringstream desc;
+  matcher.DescribeTo(&desc);
+  EXPECT_EQ(desc.str(),
+            "has status code INVALID_ARGUMENT and a message that has substring "
+            "\"bad\"");
+
+  std::ostringstream neg_desc;
+  matcher.DescribeNegationTo(&neg_desc);
+  EXPECT_EQ(neg_desc.str(),
+            "does not have status code INVALID_ARGUMENT and a message that has "
+            "substring \"bad\"");
+
+  ::testing::StringMatchResultListener code_listener;
+  EXPECT_FALSE(
+      matcher.MatchAndExplain(absl::NotFoundError("bad"), &code_listener));
+  EXPECT_THAT(
+      code_listener.str(),
+      HasSubstr(
+          "whose canonical status code is not equal to INVALID_ARGUMENT (was "
+          "NOT_FOUND)"));
+
+  ::testing::StringMatchResultListener msg_listener;
+  EXPECT_FALSE(matcher.MatchAndExplain(absl::InvalidArgumentError("other"),
+                                       &msg_listener));
+  EXPECT_THAT(msg_listener.str(),
+              HasSubstr("whose error message is wrong (was: \"other\")"));
 }
 
 }  // namespace
