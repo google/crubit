@@ -7,9 +7,9 @@
 
 #include <utility>
 
-#include "absl/functional/any_invocable.h"
 #include "common/test/bidirectional_deps/leaf_rs_lib.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs/dyn_callable.h"
 
 #pragma clang lifetime_elision
 
@@ -116,7 +116,7 @@ inline unsigned char UnwrapStaticBound(leaf_rs_lib::LeafRsStaticBound x) {
 // lives for the call, so the Rust parameter type takes any lifetime
 // (`dyn Fn(LeafRsLifetime<'_>)`) rather than being wrapped in `Unsafe`.
 inline unsigned char CallWithLifetime(
-    absl::AnyInvocable<unsigned char(leaf_rs_lib::LeafRsLifetime) const> f) {
+    rs::DynCallable<unsigned char(leaf_rs_lib::LeafRsLifetime) const> f) {
   const unsigned char x = 7;
   return f(leaf_rs_lib::wrap_lifetime(&x));
 }
