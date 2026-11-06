@@ -46,7 +46,7 @@ inline void ::example_crate::Struct::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::example_crate::Struct;
   static_assert(0 == offsetof(__crubit_assert_type, a));
 }
-}  // namespace example_crate
+}
 
 #pragma clang diagnostic pop
 #endif  // EXAMPLES_RUST_STRUCT_EXAMPLE_CRATE_GOLDEN

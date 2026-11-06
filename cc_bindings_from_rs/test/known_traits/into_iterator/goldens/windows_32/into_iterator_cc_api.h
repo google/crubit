@@ -260,7 +260,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 ::into_iterator_rust::ContainerWithRefIntoIter make_ref_container(
     ::into_iterator_rust::MyIterator* $a crubit_nonnull iter);
 
-}  // namespace into_iterator_rust
+}
 
 template <>
 struct ::rs::impl<::into_iterator_rust::ContainerWithInherentBegin,
@@ -378,7 +378,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace into_iterator_rust
+}
 
 template <>
 struct ::rs::impl<::into_iterator_rust::MyIterator,
@@ -1010,7 +1010,7 @@ inline ::into_iterator_rust::ContainerWithRefIntoIter make_ref_container(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace into_iterator_rust
+}
 
 namespace into_iterator_rust {
 namespace __crubit_internal {
@@ -1019,7 +1019,7 @@ __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_
     ::into_iterator_rust::ContainerWithInherentBegin*,
     ::into_iterator_rust::SimpleIntoIter* __ret_ptr);
 }
-}  // namespace into_iterator_rust
+}
 inline ::into_iterator_rust::SimpleIntoIter(
     ::rs::impl<::into_iterator_rust::ContainerWithInherentBegin,
                ::rs::core::iter::IntoIterator>::into_iter)(
@@ -1039,7 +1039,7 @@ extern "C" ::into_iterator_rust::MyIterator& $a
 __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithRefIntoIter_x0000003c_x00000027a_x0000003e_u_x00000027a(
     ::into_iterator_rust::ContainerWithRefIntoIter*);
 }
-}  // namespace into_iterator_rust
+}
 inline ::into_iterator_rust::MyIterator& $a(
     ::rs::impl<::into_iterator_rust::ContainerWithRefIntoIter,
                ::rs::core::iter::IntoIterator>::into_iter)(
@@ -1056,7 +1056,7 @@ __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aM
     ::into_iterator_rust::MoveOnlyIterator&,
     ::rs::Option<::into_iterator_rust::MoveOnlyPayload>* __ret_ptr);
 }
-}  // namespace into_iterator_rust
+}
 inline ::rs::Option<::into_iterator_rust::MoveOnlyPayload>(
     ::rs::impl<::into_iterator_rust::MoveOnlyIterator,
                ::rs::core::iter::Iterator>::next)(
@@ -1077,7 +1077,7 @@ __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_
     ::into_iterator_rust::MyContainer*,
     ::into_iterator_rust::MyContainerIntoIter* __ret_ptr);
 }
-}  // namespace into_iterator_rust
+}
 inline ::into_iterator_rust::MyContainerIntoIter(
     ::rs::impl<::into_iterator_rust::MyContainer,
                ::rs::core::iter::IntoIterator>::into_iter)(
@@ -1098,7 +1098,7 @@ __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aM
     ::into_iterator_rust::MyContainerIntoIter&,
     ::rs::Option<::std::int32_t>* __ret_ptr);
 }
-}  // namespace into_iterator_rust
+}
 inline ::rs::Option<::std::int32_t>(
     ::rs::impl<::into_iterator_rust::MyContainerIntoIter,
                ::rs::core::iter::Iterator>::next)(
@@ -1118,7 +1118,7 @@ __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aM
     ::into_iterator_rust::MyContainerIter&,
     ::rs::Option<::std::int32_t const * $static crubit_nonnull>* __ret_ptr);
 }
-}  // namespace into_iterator_rust
+}
 inline ::rs::Option<::std::int32_t const * $static crubit_nonnull>(
     ::rs::impl<::into_iterator_rust::MyContainerIter,
                ::rs::core::iter::Iterator>::next)(
@@ -1139,7 +1139,7 @@ __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aM
     ::into_iterator_rust::MyContainerIterMut&,
     ::rs::Option<::std::int32_t* $static crubit_nonnull>* __ret_ptr);
 }
-}  // namespace into_iterator_rust
+}
 inline ::rs::Option<::std::int32_t* $static crubit_nonnull>(
     ::rs::impl<::into_iterator_rust::MyContainerIterMut,
                ::rs::core::iter::Iterator>::next)(
@@ -1159,7 +1159,7 @@ extern "C" void
 __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyIterator(
     ::into_iterator_rust::MyIterator&, ::rs::Option<::std::int32_t>* __ret_ptr);
 }
-}  // namespace into_iterator_rust
+}
 inline ::rs::Option<::std::int32_t>(
     ::rs::impl<::into_iterator_rust::MyIterator,
                ::rs::core::iter::Iterator>::next)(
@@ -1179,7 +1179,7 @@ __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aS
     ::into_iterator_rust::SimpleIntoIter&,
     ::rs::Option<::std::int32_t>* __ret_ptr);
 }
-}  // namespace into_iterator_rust
+}
 inline ::rs::Option<::std::int32_t>(
     ::rs::impl<::into_iterator_rust::SimpleIntoIter,
                ::rs::core::iter::Iterator>::next)(

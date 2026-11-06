@@ -192,7 +192,7 @@ inline void takes_val_unmovable(
       _val_slot.Get());
 }
 
-}  // namespace pass_by_value_unmovable
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_PASS_BY_VALUE_UNMOVABLE_PASS_BY_VALUE_UNMOVABLE_GOLDEN

@@ -133,7 +133,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 void function_with_trivial_unnamed_lifetime_param(
     ::std::int32_t const& __param_0);
 
-}  // namespace lifetimes
+}
 
 template <>
 struct ::rs::impl<::lifetimes::StructWithLifetime, ::rs::core::fmt::Debug> {
@@ -358,7 +358,7 @@ inline void function_with_trivial_unnamed_lifetime_param(
           __param_0);
 }
 
-}  // namespace lifetimes
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN

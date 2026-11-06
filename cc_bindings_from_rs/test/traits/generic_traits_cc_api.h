@@ -69,7 +69,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   using impl = ::rs::impl<T, TraitWithTwoGenerics<T0, T1>>;
 };
 
-}  // namespace generic_traits
+}
 
 // Error generating bindings for implementation
 // `<generic_traits_golden::AnotherStruct as
@@ -146,7 +146,7 @@ inline void ::generic_traits::StructGeneric::
 // `generic_traits_golden::TraitWithGeneric`: Aliases to generic trait
 // `generic_traits_golden::TraitWithGeneric` are not supported.
 
-}  // namespace generic_traits
+}
 
 namespace generic_traits {
 namespace __crubit_internal {
@@ -154,7 +154,7 @@ extern "C" ::std::int32_t
 __crubit_thunk_TraitWithGeneric_ufoo_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32(
     ::generic_traits::StructGeneric const&, ::std::int32_t);
 }
-}  // namespace generic_traits
+}
 inline ::std::int32_t(
     ::rs::impl<::generic_traits::StructGeneric,
                ::generic_traits::TraitWithGeneric<::std::int32_t>>::foo)(
@@ -170,7 +170,7 @@ extern "C" ::std::int32_t
 __crubit_thunk_TraitWithTwoGenerics_ubar_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32_ui32(
     ::generic_traits::StructGeneric const&, ::std::int32_t, ::std::int32_t);
 }
-}  // namespace generic_traits
+}
 inline ::std::int32_t(::rs::impl<::generic_traits::StructGeneric,
                                  ::generic_traits::TraitWithTwoGenerics<
                                      ::std::int32_t, ::std::int32_t>>::bar)(

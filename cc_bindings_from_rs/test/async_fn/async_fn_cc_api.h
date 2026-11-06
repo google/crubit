@@ -317,7 +317,7 @@ inline ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace async_fn
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ASYNC_FN_ASYNC_FN_GOLDEN

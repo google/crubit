@@ -169,7 +169,7 @@ inline void ::return_position_impl_trait::ArcWrapper::
   using __crubit_assert_type = ::return_position_impl_trait::ArcWrapper;
   static_assert(0 == offsetof(__crubit_assert_type, arc));
 }
-}  // namespace return_position_impl_trait
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_RETURN_POSITION_IMPL_TRAIT_RETURN_POSITION_IMPL_TRAIT_GOLDEN
