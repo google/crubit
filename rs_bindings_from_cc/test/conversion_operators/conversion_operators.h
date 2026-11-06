@@ -67,4 +67,27 @@ struct Src {
 };
 }  // namespace namespace_a
 
+struct ConvertsIntoConflictingPrimitives {
+  int value;
+  explicit operator char16_t() const;
+  // NOLINTNEXTLINE(runtime/int)
+  explicit operator unsigned short() const;
+  explicit operator char32_t() const;
+  explicit operator unsigned int() const;
+  explicit operator int() const;
+};
+
+struct SrcWithConflictingCtor;
+
+struct DstWithConvertingCtor {
+  int val;
+  explicit DstWithConvertingCtor(const SrcWithConflictingCtor& src);
+};
+
+struct SrcWithConflictingCtor {
+  int value;
+  explicit operator DstWithConvertingCtor() const;
+  explicit operator int() const;
+};
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CONVERSION_OPERATORS_CONVERSION_OPERATORS_H_

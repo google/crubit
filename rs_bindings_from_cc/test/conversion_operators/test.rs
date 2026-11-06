@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use conversion_operators::{
-    ConvertsIntoIntImplicitly, ConvertsIntoIntsRef, ConvertsIntoVariousTypes, ConvertsRvalueOnly,
-    DstLocalMovable, DstLocalNonMovable,
+    ConvertsIntoConflictingPrimitives, ConvertsIntoIntImplicitly, ConvertsIntoIntsRef,
+    ConvertsIntoVariousTypes, ConvertsRvalueOnly, DstLocalMovable, DstLocalNonMovable,
+    SrcWithConflictingCtor,
 };
 use cref::{CMut, CRef};
 use ctor::emplace;
@@ -115,4 +116,13 @@ fn test_foreign_immovable() {
     let src = ConvertsIntoVariousTypes { value: 42 };
     let dst = emplace!(ForeignImmovable::ctor_new(&src));
     assert_that!(dst.val, eq(42));
+}
+
+#[gtest]
+fn test_conflicting_primitives_and_converting_ctors_still_bind_unambiguous_conversions() {
+    let src = ConvertsIntoConflictingPrimitives { value: 42 };
+    assert_that!(i32::from(&src), eq(42));
+
+    let src2 = SrcWithConflictingCtor { value: 99 };
+    assert_that!(i32::from(&src2), eq(99));
 }
