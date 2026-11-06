@@ -48,7 +48,7 @@ impl Default for Equatable {
 impl PartialEq for crate::Equatable {
     #[inline(always)]
     fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
-        unsafe { crate::detail::__rust_thunk___ZN6mixinseqERK9EquatableS2_(self, rhs) }
+        unsafe { crate::detail::__rust_thunk__0717bbc8__ZN6mixinseqERK9EquatableS2_(self, rhs) }
     }
 }
 
@@ -116,7 +116,7 @@ impl Default for Comparable {
 impl PartialEq for crate::Comparable {
     #[inline(always)]
     fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
-        unsafe { crate::detail::__rust_thunk___ZN6mixinseqERK10ComparableS2_(self, rhs) }
+        unsafe { crate::detail::__rust_thunk__0717bbc8__ZN6mixinseqERK10ComparableS2_(self, rhs) }
     }
 }
 
@@ -136,7 +136,7 @@ impl PartialOrd for crate::Comparable {
     }
     #[inline(always)]
     fn lt<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
-        unsafe { crate::detail::__rust_thunk___ZN6mixinsltERK10ComparableS2_(self, rhs) }
+        unsafe { crate::detail::__rust_thunk__9cfb84ad__ZN6mixinsltERK10ComparableS2_(self, rhs) }
     }
 }
 
@@ -186,7 +186,9 @@ pub mod ns {
         #[inline(always)]
         fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
             unsafe {
-                crate::detail::__rust_thunk___ZN6mixinseqERKN2ns19NamespacedEquatableES3_(self, rhs)
+                crate::detail::__rust_thunk__0717bbc8__ZN6mixinseqERKN2ns19NamespacedEquatableES3_(
+                    self, rhs,
+                )
             }
         }
     }
@@ -256,7 +258,9 @@ pub mod outer {
         #[inline(always)]
         fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
             unsafe {
-                crate::detail::__rust_thunk___ZN6mixinseqERKN5Outer15NestedEquatableES3_(self, rhs)
+                crate::detail::__rust_thunk__0717bbc8__ZN6mixinseqERKN5Outer15NestedEquatableES3_(
+                    self, rhs,
+                )
             }
         }
     }
@@ -346,7 +350,9 @@ impl ::ctor::PinnedDrop for NonTrivialEquatable {
 impl PartialEq for crate::NonTrivialEquatable {
     #[inline(always)]
     fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
-        unsafe { crate::detail::__rust_thunk___ZN6mixinseqERK19NonTrivialEquatableS2_(self, rhs) }
+        unsafe {
+            crate::detail::__rust_thunk__0717bbc8__ZN6mixinseqERK19NonTrivialEquatableS2_(self, rhs)
+        }
     }
 }
 
@@ -443,7 +449,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN9EquatableC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN6mixinseqERK9EquatableS2_<'lhs, 'rhs>(
+        pub(crate) unsafe fn __rust_thunk__0717bbc8__ZN6mixinseqERK9EquatableS2_<'lhs, 'rhs>(
             lhs: &'lhs crate::Equatable,
             rhs: &'rhs crate::Equatable,
         ) -> bool;
@@ -451,18 +457,18 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN10ComparableC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN6mixinseqERK10ComparableS2_<'lhs, 'rhs>(
+        pub(crate) unsafe fn __rust_thunk__0717bbc8__ZN6mixinseqERK10ComparableS2_<'lhs, 'rhs>(
             lhs: &'lhs crate::Comparable,
             rhs: &'rhs crate::Comparable,
         ) -> bool;
-        pub(crate) unsafe fn __rust_thunk___ZN6mixinsltERK10ComparableS2_<'lhs, 'rhs>(
+        pub(crate) unsafe fn __rust_thunk__9cfb84ad__ZN6mixinsltERK10ComparableS2_<'lhs, 'rhs>(
             lhs: &'lhs crate::Comparable,
             rhs: &'rhs crate::Comparable,
         ) -> bool;
         pub(crate) unsafe fn __rust_thunk___ZN2ns19NamespacedEquatableC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN6mixinseqERKN2ns19NamespacedEquatableES3_<
+        pub(crate) unsafe fn __rust_thunk__0717bbc8__ZN6mixinseqERKN2ns19NamespacedEquatableES3_<
             'lhs,
             'rhs,
         >(
@@ -473,7 +479,10 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN5Outer15NestedEquatableC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN6mixinseqERKN5Outer15NestedEquatableES3_<'lhs, 'rhs>(
+        pub(crate) unsafe fn __rust_thunk__0717bbc8__ZN6mixinseqERKN5Outer15NestedEquatableES3_<
+            'lhs,
+            'rhs,
+        >(
             lhs: &'lhs crate::outer::NestedEquatable,
             rhs: &'rhs crate::outer::NestedEquatable,
         ) -> bool;
@@ -491,7 +500,10 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN19NonTrivialEquatableD1Ev<'__this>(
             __this: ::core::pin::Pin<&'__this mut crate::NonTrivialEquatable>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN6mixinseqERK19NonTrivialEquatableS2_<'lhs, 'rhs>(
+        pub(crate) unsafe fn __rust_thunk__0717bbc8__ZN6mixinseqERK19NonTrivialEquatableS2_<
+            'lhs,
+            'rhs,
+        >(
             lhs: &'lhs crate::NonTrivialEquatable,
             rhs: &'rhs crate::NonTrivialEquatable,
         ) -> bool;

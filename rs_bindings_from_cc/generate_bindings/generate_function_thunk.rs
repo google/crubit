@@ -389,8 +389,13 @@ fn compute_disambiguator_hash(func: &Func) -> String {
 
 pub fn thunk_ident(db: &BindingsGenerator, func: &Func) -> Ident {
     let disambiguator = {
+        // Functions imported from a `friend` declaration may also be declared in another
+        // target's header which this target doesn't see (e.g. a header that includes this one),
+        // so `has_conflicting_mangled_name` can't detect the conflict, and both targets would
+        // emit a thunk with the same name.
         let need_disambiguation = db.has_conflicting_mangled_name(func)
-            || func.is_member_or_descendant_of_class_template();
+            || func.is_member_or_descendant_of_class_template()
+            || func.adl_enclosing_record().is_some();
         if need_disambiguation {
             compute_disambiguator_hash(func)
         } else {

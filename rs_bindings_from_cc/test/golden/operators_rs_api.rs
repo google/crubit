@@ -154,7 +154,7 @@ impl<'lhs, 'rhs> ::core::ops::Add<&'rhs crate::AddableFriend> for &'lhs crate::A
     fn add(self, rhs: &'rhs crate::AddableFriend) -> Self::Output {
         unsafe {
             let mut __crubit_return = ::core::mem::MaybeUninit::<crate::AddableFriend>::uninit();
-            crate::detail::__rust_thunk___ZplRK13AddableFriendS1_(
+            crate::detail::__rust_thunk__d39cd4ab__ZplRK13AddableFriendS1_(
                 &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 self,
                 rhs,
@@ -754,7 +754,7 @@ impl<'rhs> ::core::ops::AddAssign<&'rhs Self> for crate::AddAssignFriendByConstR
     #[inline(always)]
     fn add_assign<'lhs>(&'lhs mut self, rhs: &'rhs Self) {
         unsafe {
-            crate::detail::__rust_thunk___ZpLR25AddAssignFriendByConstRefRKS_(self, rhs);
+            crate::detail::__rust_thunk__3e1a2e0c__ZpLR25AddAssignFriendByConstRefRKS_(self, rhs);
         }
     }
 }
@@ -794,7 +794,10 @@ impl ::core::ops::AddAssign<Self> for crate::AddAssignFriendByValue {
     fn add_assign<'lhs>(&'lhs mut self, rhs: Self) {
         let mut rhs = ::core::mem::MaybeUninit::new(rhs);
         unsafe {
-            crate::detail::__rust_thunk___ZpLR22AddAssignFriendByValueS_(self, rhs.as_mut_ptr());
+            crate::detail::__rust_thunk__c9a4e968__ZpLR22AddAssignFriendByValueS_(
+                self,
+                rhs.as_mut_ptr(),
+            );
         }
     }
 }
@@ -1257,7 +1260,7 @@ mod detail {
             rhs: &'rhs crate::AddableNonConstMember,
         );
         pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZplRK13AddableFriendS1_<'lhs, 'rhs>(
+        pub(crate) unsafe fn __rust_thunk__d39cd4ab__ZplRK13AddableFriendS1_<'lhs, 'rhs>(
             __return: *mut ::core::ffi::c_void,
             lhs: &'lhs crate::AddableFriend,
             rhs: &'rhs crate::AddableFriend,
@@ -1368,14 +1371,17 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         #[link_name = "_ZpLR25AddAssignFriendByConstRefRKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZpLR25AddAssignFriendByConstRefRKS_<'lhs, 'rhs>(
+        pub(crate) unsafe fn __rust_thunk__3e1a2e0c__ZpLR25AddAssignFriendByConstRefRKS_<
+            'lhs,
+            'rhs,
+        >(
             lhs: &'lhs mut crate::AddAssignFriendByConstRef,
             rhs: &'rhs crate::AddAssignFriendByConstRef,
         ) -> *mut crate::AddAssignFriendByConstRef;
         pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZpLR22AddAssignFriendByValueS_<'lhs>(
+        pub(crate) unsafe fn __rust_thunk__c9a4e968__ZpLR22AddAssignFriendByValueS_<'lhs>(
             lhs: &'lhs mut crate::AddAssignFriendByValue,
             rhs: *mut crate::AddAssignFriendByValue,
         ) -> &'lhs mut crate::AddAssignFriendByValue;
