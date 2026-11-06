@@ -9,7 +9,20 @@ use googletest::{expect_eq, expect_true, gtest};
 #[gtest]
 fn test_values_match_cc() {
     expect_eq!(macro_constants::INT_CONSTANT!(), macro_constants::IntConstant());
+    expect_eq!(
+        macro_constants::REFERS_TO_OTHER_CONSTANT!(),
+        macro_constants::RefersToOtherConstant()
+    );
+    expect_eq!(
+        macro_constants::REFERS_TO_DEPENDENCY_CONSTANT!(),
+        macro_constants::RefersToDependencyConstant()
+    );
+    expect_eq!(macro_constants::REFERS_TO_UNEXPANDED_DEPENDENCY_CONSTANT!(), 101);
     expect_eq!(macro_constants::UNSIGNED_CONSTANT!(), macro_constants::UnsignedConstant());
+    expect_eq!(
+        macro_constants::REFERS_TO_UNSIGNED_CONSTANT!(),
+        macro_constants::RefersToUnsignedConstant()
+    );
     expect_eq!(macro_constants::LONG_LONG_CONSTANT!(), macro_constants::LongLongConstant());
     expect_eq!(macro_constants::HEX_CONSTANT!(), macro_constants::HexConstant());
     expect_eq!(macro_constants::SHIFTED_CONSTANT!(), macro_constants::ShiftedConstant());
@@ -20,6 +33,20 @@ fn test_values_match_cc() {
     expect_eq!(
         ffi_11::new_c_char(macro_constants::CHAR_CONSTANT!()),
         macro_constants::CharConstant()
+    );
+    expect_eq!(macro_constants::CAST_CONSTANT!(), macro_constants::CastConstant());
+    expect_eq!(macro_constants::STATIC_CAST_CONSTANT!(), macro_constants::StaticCastConstant());
+    expect_eq!(
+        macro_constants::CAST_FROM_UNEXPANDED_DEP_MACRO!(),
+        ::ffi_11::new_c_longlong(0x10000)
+    );
+    expect_eq!(
+        macro_constants::STRING_CONSTANT!().len(),
+        macro_constants::StringConstantLength() as usize
+    );
+    expect_eq!(
+        macro_constants::LONG_STRING_CONSTANT!().len(),
+        macro_constants::LongStringConstantLength() as usize
     );
 }
 
@@ -99,6 +126,8 @@ fn test_literal_types() {
     // The types of the typed constants: those with a suffix, prefixed character literals, and
     // booleans.
     assert_type::<c_uint>(DECIMAL_U!());
+    // The suffix is in a nested macro.
+    assert_type::<c_uint>(REFERS_TO_UNSIGNED_CONSTANT!());
     assert_type::<c_uint>(HEX_U!());
     assert_type::<c_long>(DECIMAL_L!());
     assert_type::<c_ulong>(DECIMAL_UL!());
@@ -135,4 +164,11 @@ fn test_literal_types() {
         assert_type::<c_ulonglong>(HEX_L_ULLONG_MAX!());
         assert_type::<c_ulonglong>(DECIMAL_UL_UINT_MAX_PLUS_1!());
     }
+}
+
+#[gtest]
+fn test_strings() {
+    let string: &'static str = macro_constants::STRING_CONSTANT!();
+    expect_eq!(string, "hello, world");
+    expect_eq!(macro_constants::LONG_STRING_CONSTANT!(), "0123456789abcdef".repeat(80));
 }
