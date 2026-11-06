@@ -34,7 +34,7 @@ enum CRUBIT_INTERNAL_RUST_TYPE(
   BLUE = INT32_C(2),
 };
 
-}  // namespace cpp_enums::classless_enum
+}
 
 namespace cpp_enums::cpp_enum {
 
@@ -45,7 +45,7 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
   BLUE = INT32_C(2),
 };
 
-}  // namespace cpp_enums::cpp_enum
+}
 
 namespace cpp_enums::deprecated_enum {
 
@@ -57,7 +57,7 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
       BLUE = INT32_C(2),
     };
 
-}  // namespace cpp_enums::deprecated_enum
+}
 
 namespace cpp_enums::forward_declared_enum {
 
@@ -70,7 +70,7 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
   TWO = 2,
 };
 
-}  // namespace cpp_enums::forward_declared_enum
+}
 
 namespace cpp_enums::forward_declared_enum {
 
@@ -86,7 +86,7 @@ inline ::cpp_enums::forward_declared_enum::B AFunction() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace cpp_enums::forward_declared_enum
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN

@@ -204,7 +204,7 @@ inline void ::send_sync_types::SyncButNotSend::
   using __crubit_assert_type = ::send_sync_types::SyncButNotSend;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace send_sync_types
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_TRAITS_AUTO_TRAITS_SEND_SYNC_TYPES_GOLDEN

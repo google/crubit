@@ -29,7 +29,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_golden :: Trait") Trait {
   using impl = ::rs::impl<T, Trait>;
 };
 
-}  // namespace trait
+}
 
 template <>
 struct ::rs::impl<::CcType, ::trait::Trait> {
@@ -44,7 +44,7 @@ extern "C" ::std::int32_t
 __crubit_thunk_Trait_uget_uvalue_ucc_utype_x0000003a_x0000003aCcType(
     ::CcType const&);
 }
-}  // namespace trait
+}
 inline ::std::int32_t(::rs::impl<::CcType, ::trait::Trait>::get_value)(
     ::CcType const& self) {
   return trait::__crubit_internal::

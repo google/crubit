@@ -60,7 +60,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyUnordered")
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace compare
+}
 
 template <>
 struct ::rs::impl<::compare::MyOrd, ::rs::core::cmp::Eq> {
@@ -289,7 +289,7 @@ inline void ::compare::MyUnordered::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::compare::MyUnordered;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace compare
+}
 
 namespace compare {
 namespace __crubit_internal {
@@ -298,7 +298,7 @@ __crubit_thunk_Ord_ucmp_ucompare_ugolden_x0000003a_x0000003aMyOrd(
     ::compare::MyOrd const&, ::compare::MyOrd const&,
     ::rs::core::cmp::Ordering* __ret_ptr);
 }
-}  // namespace compare
+}
 inline ::rs::core::cmp::Ordering(
     ::rs::impl<::compare::MyOrd, ::rs::core::cmp::Ord>::cmp)(
     ::compare::MyOrd const& self, ::compare::MyOrd const& other) {

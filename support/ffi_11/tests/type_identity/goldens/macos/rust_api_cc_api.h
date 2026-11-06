@@ -203,7 +203,7 @@ inline ::std::uint16_t c_ushort() {
   return __crubit_internal::__crubit_thunk_c_uushort();
 }
 
-}  // namespace rust_api
+}
 
 #pragma clang diagnostic pop
 #endif  // SUPPORT_FFI_11_TESTS_TYPE_IDENTITY_RUST_API_GOLDEN

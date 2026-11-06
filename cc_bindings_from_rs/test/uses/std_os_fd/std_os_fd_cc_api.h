@@ -28,7 +28,7 @@ namespace std_os_fd {
 // reachable through a transitive re-export of the standard library
 // (b/262052635).
 
-}  // namespace std_os_fd
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_USES_STD_OS_FD_STD_OS_FD_GOLDEN

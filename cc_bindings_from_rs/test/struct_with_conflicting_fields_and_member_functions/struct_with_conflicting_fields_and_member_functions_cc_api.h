@@ -107,7 +107,7 @@ inline void ::struct_with_conflicting_fields_and_member_functions::X::
   static_assert(4 == offsetof(__crubit_assert_type, b_));
   static_assert(8 == offsetof(__crubit_assert_type, c));
 }
-}  // namespace struct_with_conflicting_fields_and_member_functions
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_GOLDEN

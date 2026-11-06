@@ -40,7 +40,7 @@ namespace transitive_reexports {
 ::direct::Transitive direct_to_transittive_type_alias(
     ::direct::Direct const& direct);
 
-}  // namespace transitive_reexports
+}
 
 namespace transitive_reexports {
 
@@ -121,7 +121,7 @@ inline ::direct::Transitive direct_to_transittive_type_alias(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace transitive_reexports
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_USES_TRASITIVE_REEXPORTS_TRANSITIVE_REEXPORTS_GOLDEN

@@ -62,7 +62,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace partial_eq::basic_test
+}
 
 namespace partial_eq::bool_and_str_rhs {
 
@@ -109,7 +109,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace partial_eq::bool_and_str_rhs
+}
 
 namespace partial_eq::str_and_ref_str_rhs {
 
@@ -150,7 +150,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace partial_eq::str_and_ref_str_rhs
+}
 
 namespace partial_eq::tuple_collision {
 
@@ -190,7 +190,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace partial_eq::tuple_collision
+}
 
 namespace partial_eq::usize_rhs {
 
@@ -225,7 +225,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace partial_eq::usize_rhs
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
@@ -357,7 +357,7 @@ inline void ::partial_eq::basic_test::MyStruct::
   using __crubit_assert_type = ::partial_eq::basic_test::MyStruct;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace partial_eq::basic_test
+}
 
 namespace partial_eq::bool_and_str_rhs {
 
@@ -437,7 +437,7 @@ inline void ::partial_eq::bool_and_str_rhs::MyStruct::
   static_assert(8 == offsetof(__crubit_assert_type, int_val));
   static_assert(16 == offsetof(__crubit_assert_type, bool_val));
 }
-}  // namespace partial_eq::bool_and_str_rhs
+}
 
 namespace partial_eq::str_and_ref_str_rhs {
 
@@ -487,7 +487,7 @@ inline void ::partial_eq::str_and_ref_str_rhs::MyStruct::
   using __crubit_assert_type = ::partial_eq::str_and_ref_str_rhs::MyStruct;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace partial_eq::str_and_ref_str_rhs
+}
 
 namespace partial_eq::tuple_collision {
 
@@ -539,7 +539,7 @@ inline void ::partial_eq::tuple_collision::MyStruct::
   using __crubit_assert_type = ::partial_eq::tuple_collision::MyStruct;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace partial_eq::tuple_collision
+}
 
 namespace partial_eq::usize_rhs {
 
@@ -587,7 +587,7 @@ inline void ::partial_eq::usize_rhs::MyStruct::
   using __crubit_assert_type = ::partial_eq::usize_rhs::MyStruct;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace partial_eq::usize_rhs
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e

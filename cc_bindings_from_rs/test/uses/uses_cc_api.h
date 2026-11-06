@@ -37,21 +37,21 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original")
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace uses
+}
 
 namespace uses::a::c {
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t private_middle_path();
 
-}  // namespace uses::a::c
+}
 
 namespace uses::doc_hidden_test::visible {
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t private_fn();
 
-}  // namespace uses::doc_hidden_test::visible
+}
 
 namespace uses {
 
@@ -66,7 +66,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName")
 
 void other_public_name();
 
-}  // namespace uses
+}
 
 namespace uses {
 
@@ -84,7 +84,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: AliasOfExportedStruct")
 
 ::std::int32_t private_fn();
 
-}  // namespace uses
+}
 
 namespace uses {
 
@@ -94,21 +94,21 @@ namespace uses {
 // CRUBIT_ANNOTATE: must_bind=
 ::extern_crate::Y return_y();
 
-}  // namespace uses
+}
 
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t f();
 
-}  // namespace uses
+}
 
 namespace uses {
 
 using X CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") = ::extern_crate::X;
 using XFromExternCrate CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") =
     ::extern_crate::X;
-}  // namespace uses
+}
 
 namespace uses {
 
@@ -131,7 +131,7 @@ inline void ::uses::Original::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::uses::Original;
   static_assert(0 == offsetof(__crubit_assert_type, field));
 }
-}  // namespace uses
+}
 
 namespace uses::a::c {
 
@@ -142,7 +142,7 @@ inline ::std::int32_t private_middle_path() {
   return __crubit_internal::__crubit_thunk_private_umiddle_upath();
 }
 
-}  // namespace uses::a::c
+}
 
 namespace uses::doc_hidden_test::hidden {
 using ::uses::doc_hidden_test::visible::private_fn;
@@ -157,7 +157,7 @@ inline ::std::int32_t private_fn() {
   return __crubit_internal::__crubit_thunk_private_ufn();
 }
 
-}  // namespace uses::doc_hidden_test::visible
+}
 
 namespace uses {
 
@@ -185,7 +185,7 @@ inline void other_public_name() {
   return __crubit_internal::__crubit_thunk_other_upublic_uname();
 }
 
-}  // namespace uses
+}
 
 namespace uses {
 
@@ -226,7 +226,7 @@ inline ::std::int32_t private_fn() {
   return __crubit_internal::__crubit_thunk_private_ufn();
 }
 
-}  // namespace uses
+}
 
 namespace uses {
 
@@ -250,7 +250,7 @@ inline ::extern_crate::Y return_y() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace uses
+}
 
 namespace uses::test_mod {
 using ::uses::f;
@@ -263,7 +263,7 @@ extern "C" ::std::int32_t __crubit_thunk_f();
 }
 inline ::std::int32_t f() { return __crubit_internal::__crubit_thunk_f(); }
 
-}  // namespace uses
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN

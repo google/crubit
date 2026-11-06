@@ -130,7 +130,7 @@ roundtrip_shared_ptr(::std::shared_ptr<::std::int32_t> crubit_nonnull val) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace shared_ptr
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_BRIDGING_SHARED_PTR_SHARED_PTR_GOLDEN

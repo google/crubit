@@ -167,7 +167,7 @@ inline void take_by_value(
   return __crubit_internal::__crubit_thunk_take_uby_uvalue(_x_slot.Get());
 }
 
-}  // namespace non_trivially_destructible
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_NON_TRIVIALLY_DESTRUCTIBLE_NON_TRIVIALLY_DESTRUCTIBLE_GOLDEN

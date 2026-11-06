@@ -49,7 +49,7 @@ using SpecializedAlias CRUBIT_INTERNAL_RUST_TYPE(
 
 ::rs::Result<::std::int32_t, ::std::int32_t> returns_specialized();
 
-}  // namespace type_aliases::test_generics_matching
+}
 
 namespace type_aliases::test_type_aliases {
 
@@ -62,7 +62,7 @@ using TypeAlias2 CRUBIT_INTERNAL_RUST_TYPE(
 
 ::std::int32_t func_using_alias();
 
-}  // namespace type_aliases::test_type_aliases
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
@@ -243,7 +243,7 @@ inline ::rs::Result<::std::int32_t, ::std::int32_t> returns_specialized() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace type_aliases::test_generics_matching
+}
 
 namespace type_aliases::test_type_aliases {
 
@@ -254,7 +254,7 @@ inline ::std::int32_t func_using_alias() {
   return __crubit_internal::__crubit_thunk_func_uusing_ualias();
 }
 
-}  // namespace type_aliases::test_type_aliases
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e

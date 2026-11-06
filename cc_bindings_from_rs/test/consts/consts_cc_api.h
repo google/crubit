@@ -211,7 +211,7 @@ static constexpr ::std::uint32_t UNSIGNED_INT = UINT32_C(4294967295);
 // `consts_golden::fn_with_unreturnable_const`: Function contains a const block
 // that cannot return
 
-}  // namespace consts
+}
 
 template <>
 struct ::rs::impl<::consts::NestedStruct, ::rs::core::cmp::Eq> {
@@ -507,7 +507,7 @@ inline void ::consts::TyWithAssocConsts::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::consts::TyWithAssocConsts;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace consts
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_CONSTS_CONSTS_GOLDEN

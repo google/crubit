@@ -438,7 +438,7 @@ inline void public_function() {
       __crubit_thunk_ANY_IDENTIFIER_CHARACTERS();
 }
 
-}  // namespace test_crate::public_module
+}
 
 #pragma clang diagnostic pop
 #endif  // CRUBIT_GENERATED_HEADER_FOR_test_crate_
@@ -489,7 +489,7 @@ inline void public_function() {
       __crubit_thunk_ANY_IDENTIFIER_CHARACTERS();
 }
 
-}  // namespace test_crate::public_module
+}
 
 #pragma clang diagnostic pop
 "#

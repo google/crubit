@@ -105,7 +105,7 @@ inline void ::example_crate::ReprRustUnion::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(__crubit_assert_type, a));
   static_assert(0 == offsetof(__crubit_assert_type, b));
 }
-}  // namespace example_crate
+}
 
 #pragma clang diagnostic pop
 #endif  // EXAMPLES_RUST_RUST_UNION_EXAMPLE_CRATE_GOLDEN

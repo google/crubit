@@ -122,7 +122,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator")
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace stdlib
+}
 
 template <>
 struct ::rs::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
@@ -518,7 +518,7 @@ inline void ::stdlib::RefIterator::__crubit_field_offset_assertions() {
   static_assert(4 ==
                 alignof(decltype(__crubit_assert_type::slice)::element_type));
 }
-}  // namespace stdlib
+}
 
 namespace stdlib {
 namespace __crubit_internal {
@@ -526,7 +526,7 @@ extern "C" void
 __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
     ::stdlib::MyStruct&, ::rs::Option<::std::int32_t>* __ret_ptr);
 }
-}  // namespace stdlib
+}
 inline ::rs::Option<::std::int32_t>(
     ::rs::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator>::next)(
     ::stdlib::MyStruct& self) {
@@ -544,7 +544,7 @@ extern "C" void
 __crubit_thunk_ToString_uto_ustring_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
     ::stdlib::MyStruct const&, ::rs::alloc::string::String* __ret_ptr);
 }
-}  // namespace stdlib
+}
 inline ::rs::alloc::string::String(
     ::rs::impl<::stdlib::MyStruct, ::rs::alloc::string::ToString>::to_string)(
     ::stdlib::MyStruct const& self) {
@@ -563,7 +563,7 @@ __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aNonCloneableIte
     ::stdlib::NonCloneableIterator&,
     ::rs::Option<::stdlib::NonCloneableValue>* __ret_ptr);
 }
-}  // namespace stdlib
+}
 inline ::rs::Option<::stdlib::NonCloneableValue>(
     ::rs::impl<::stdlib::NonCloneableIterator,
                ::rs::core::iter::Iterator>::next)(
@@ -584,7 +584,7 @@ __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x00
     ::stdlib::RefIterator&,
     ::rs::Option<::std::int32_t const * $static crubit_nonnull>* __ret_ptr);
 }
-}  // namespace stdlib
+}
 inline ::rs::Option<::std::int32_t const * $static crubit_nonnull>(
     ::rs::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator>::next)(
     ::stdlib::RefIterator& self) {
