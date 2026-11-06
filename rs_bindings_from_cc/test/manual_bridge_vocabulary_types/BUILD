@@ -4,6 +4,10 @@ load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
 )
+load(
+    "//rs_bindings_from_cc/test/golden:golden_test.bzl",
+    "golden_test",
+)
 
 licenses(["notice"])
 
