@@ -74,7 +74,8 @@ def golden_test(
         basename = None,
         golden_cc = None,
         golden_rs = None,
-        golden_namespaces = None):
+        golden_namespaces = None,
+        requires_header_modules = False):
     """Generates a golden test for `cc_library`.
 
     Args:
@@ -85,6 +86,9 @@ def golden_test(
         golden_cc: The generated C++ source code for the bindings.
         golden_rs: The generated Rust source code for the bindings.
         golden_namespaces: The generated namespaces JSON file for the bindings.
+        requires_header_modules: Whether the golden files were generated with precompiled header
+            modules (`//rs_bindings_from_cc/bazel_support:use_header_modules`), and differ without
+            them. Such tests are skipped (marked incompatible) when the modules are off.
 
     """
     if not basename:
@@ -92,6 +96,15 @@ def golden_test(
     if not tags:
         tags = []
     tags.append("crubit_golden_test")
+
+    target_compatible_with = None
+    if requires_header_modules:
+        target_compatible_with = select({
+            "//rs_bindings_from_cc/test/golden:header_modules_off": [
+                "//third_party/bazel_platforms:incompatible",
+            ],
+            "//conditions:default": [],
+        })
 
     bindings_name = basename + ".generated_bindings"
 
@@ -159,6 +172,7 @@ def golden_test(
         args = args,
         data = data,
         tags = tags,
+        target_compatible_with = target_compatible_with,
     )
     native.filegroup(
         name = basename + ".build_cleaner_optout",
