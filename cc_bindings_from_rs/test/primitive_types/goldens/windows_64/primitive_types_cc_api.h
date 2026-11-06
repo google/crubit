@@ -35,7 +35,7 @@ void c_char_mut_ptr_arg(decltype(char(0))* __param_0);
 
 void c_char_ptr_arg(decltype(char(0)) const* __param_0);
 
-}  // namespace primitive_types::argument_types
+}
 
 namespace primitive_types::field_types {
 
@@ -160,7 +160,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace primitive_types::field_types
+}
 
 namespace primitive_types::return_types {
 
@@ -231,7 +231,7 @@ crubit::type_identity_t<void(::std::int8_t)>& i8_func();
 
 ::std::uintptr_t usize();
 
-}  // namespace primitive_types::return_types
+}
 
 namespace primitive_types::test_c_void_ptr {
 
@@ -254,7 +254,7 @@ void* identity_mut_c_void_ptr(void* ptr);
 ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember
 new_struct_with_c_void_pointer_member(const void* ptr_const, void* ptr_mut);
 
-}  // namespace primitive_types::test_c_void_ptr
+}
 
 namespace primitive_types::test_maybe_uninit {
 
@@ -268,7 +268,7 @@ maybe_uninit_ref(::std::int32_t const* $static maybe_uninit);
 ::std::int32_t& $static
 maybe_uninit_ref_mut(::std::int32_t* $static maybe_uninit);
 
-}  // namespace primitive_types::test_maybe_uninit
+}
 
 namespace primitive_types::argument_types {
 
@@ -286,7 +286,7 @@ inline void c_char_ptr_arg(decltype(char(0)) const* __param_0) {
   return __crubit_internal::__crubit_thunk_c_uchar_uptr_uarg(__param_0);
 }
 
-}  // namespace primitive_types::argument_types
+}
 
 namespace primitive_types::field_types {
 
@@ -339,7 +339,7 @@ inline void ::primitive_types::field_types::Types::
   static_assert(139 == offsetof(__crubit_assert_type, i8));
   static_assert(140 == offsetof(__crubit_assert_type, u8));
 }
-}  // namespace primitive_types::field_types
+}
 
 namespace primitive_types::return_types {
 
@@ -546,7 +546,7 @@ inline ::std::uintptr_t usize() {
   return __crubit_internal::__crubit_thunk_usize();
 }
 
-}  // namespace primitive_types::return_types
+}
 
 namespace primitive_types::test_c_void_ptr {
 
@@ -605,7 +605,7 @@ new_struct_with_c_void_pointer_member(const void* ptr_const, void* ptr_mut) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace primitive_types::test_c_void_ptr
+}
 
 namespace primitive_types::test_maybe_uninit {
 
@@ -646,7 +646,7 @@ maybe_uninit_ref_mut(::std::int32_t* $static maybe_uninit) {
       maybe_uninit);
 }
 
-}  // namespace primitive_types::test_maybe_uninit
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_PRIMITIVE_TYPES_PRIMITIVE_TYPES_GOLDEN

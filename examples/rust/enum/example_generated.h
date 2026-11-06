@@ -140,7 +140,7 @@ inline ::example_crate::Color::Color(::crubit::UnsafeRelocateTag,
   ::std::memcpy(this, &value, sizeof(value));
 }
 
-}  // namespace example_crate
+}
 
 #pragma clang diagnostic pop
 #endif  // EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN

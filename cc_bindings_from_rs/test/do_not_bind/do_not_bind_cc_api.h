@@ -42,7 +42,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: do_not_bind_golden :: Trait") Trait {
 
 ::std::int32_t bound_free_fn();
 
-}  // namespace do_not_bind
+}
 
 template <>
 struct ::rs::impl<::do_not_bind::Struct, ::do_not_bind::Trait> {
@@ -81,7 +81,7 @@ inline ::std::int32_t bound_free_fn() {
   return __crubit_internal::__crubit_thunk_bound_ufree_ufn();
 }
 
-}  // namespace do_not_bind
+}
 
 namespace do_not_bind {
 namespace __crubit_internal {
@@ -89,7 +89,7 @@ extern "C" ::std::int32_t
 __crubit_thunk_Trait_ubound_utrait_umethod_udo_unot_ubind_ugolden_x0000003a_x0000003aStruct(
     ::do_not_bind::Struct const&);
 }
-}  // namespace do_not_bind
+}
 inline ::std::int32_t(::rs::impl<::do_not_bind::Struct,
                                  ::do_not_bind::Trait>::bound_trait_method)(
     ::do_not_bind::Struct const& self) {

@@ -65,7 +65,7 @@ namespace functions::fn_abi_tests {
 //    name (and just needs to be redeclared in C++).
 extern "C" double get_42_as_f64_via_no_mangle_extern_c();
 
-}  // namespace functions::fn_abi_tests
+}
 
 namespace functions::fn_attribute_tests {
 
@@ -81,7 +81,7 @@ namespace functions::fn_must_use_tests {
 
 [[nodiscard]] ::std::int32_t no_msg_add(::std::int32_t x, ::std::int32_t y);
 
-}  // namespace functions::fn_must_use_tests
+}
 
 namespace functions::fn_param_ty_tests {
 
@@ -166,7 +166,7 @@ void set_pinned_mut_ref_to_sum_of_ints(::std::int32_t& sum, ::std::int32_t x,
 
 ::std::uint32_t sum_bytes(::rs::SliceRef<const ::std::uint8_t> bytes);
 
-}  // namespace functions::fn_param_ty_tests
+}
 
 namespace functions::generic_fn_tests::as_mut_trait_tests {
 
@@ -237,7 +237,7 @@ void diverse_lifetimes(::rs::SliceRef<const ::std::int32_t> arg1,
 ::std::int32_t two_args(::rs::SliceRef<const ::std::int32_t> x,
                         ::rs::SliceRef<const ::std::int32_t> y);
 
-}  // namespace functions::generic_fn_tests::as_ref_trait_tests
+}
 
 namespace functions::generic_fn_tests::ctor_trait_tests {
 
@@ -306,7 +306,7 @@ return_rvalue_reference_array(
 return_rvalue_reference_tuple(
     ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&& c);
 
-}  // namespace functions::generic_fn_tests::ctor_trait_tests
+}
 
 namespace functions::generic_fn_tests::into_trait_tests {
 
@@ -330,7 +330,7 @@ namespace functions::generic_fn_tests::into_trait_tests {
 
 ::std::int32_t where_clause(::std::int32_t x);
 
-}  // namespace functions::generic_fn_tests::into_trait_tests
+}
 
 namespace functions::non_null_tests {
 
@@ -360,7 +360,7 @@ return_non_null_maybe_uninit(::std::int32_t* crubit_nonnull ptr);
 void set_non_null_value(::std::int32_t* crubit_nonnull ptr,
                         ::std::int32_t value);
 
-}  // namespace functions::non_null_tests
+}
 
 namespace functions::other_fn_param_tests {
 
@@ -391,7 +391,7 @@ void accepts_thread_safe_ref(
         ::functions::thread_safety_tests::ThreadSafeStruct* $(__anon1)
             crubit_nonnull x CRUBIT_LIFETIME_BOUND);
 
-}  // namespace functions::thread_safety_tests
+}
 
 namespace functions::unit_ret_ty_tests {
 
@@ -399,7 +399,7 @@ extern "C" ::std::int32_t get_global_i32_via_extern_c_with_export_name();
 
 void set_global_i32_via_extern_c_with_export_name(::std::int32_t x);
 
-}  // namespace functions::unit_ret_ty_tests
+}
 
 namespace functions::unsafe_fn_tests {
 
@@ -409,7 +409,7 @@ namespace functions::unsafe_fn_tests {
 //  to facilitate minimal testing of bindings generated for such functions.
 ::std::int32_t unsafe_add(::std::int32_t x, ::std::int32_t y);
 
-}  // namespace functions::unsafe_fn_tests
+}
 
 template <>
 struct ::rs::impl<
@@ -483,7 +483,7 @@ inline ::std::int32_t add_i32_via_rust_abi(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_ui32_uvia_urust_uabi(x, y);
 }
 
-}  // namespace functions::fn_abi_tests
+}
 
 namespace functions::fn_attribute_tests {
 
@@ -495,7 +495,7 @@ inline ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_ui32(x, y);
 }
 
-}  // namespace functions::fn_attribute_tests
+}
 
 namespace functions::fn_must_use_tests {
 
@@ -515,7 +515,7 @@ inline ::std::int32_t no_msg_add(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_no_umsg_uadd(x, y);
 }
 
-}  // namespace functions::fn_must_use_tests
+}
 
 namespace functions::fn_param_ty_tests {
 
@@ -696,7 +696,7 @@ inline ::std::uint32_t sum_bytes(::rs::SliceRef<const ::std::uint8_t> bytes) {
   return __crubit_internal::__crubit_thunk_sum_ubytes(&bytes);
 }
 
-}  // namespace functions::fn_param_ty_tests
+}
 
 namespace functions::generic_fn_tests::as_mut_trait_tests {
 
@@ -711,7 +711,7 @@ inline void prefix_sums(::rs::SliceRef<::std::int32_t> arg) {
           &arg);
 }
 
-}  // namespace functions::generic_fn_tests::as_mut_trait_tests
+}
 
 namespace functions::generic_fn_tests::as_ref_trait_tests {
 
@@ -820,7 +820,7 @@ inline ::std::int32_t two_args(::rs::SliceRef<const ::std::int32_t> x,
           &x, &y);
 }
 
-}  // namespace functions::generic_fn_tests::as_ref_trait_tests
+}
 
 namespace functions::generic_fn_tests::ctor_trait_tests {
 
@@ -992,7 +992,7 @@ return_rvalue_reference_tuple(
   return ::std::make_tuple(*__return_value_0_storage);
 }
 
-}  // namespace functions::generic_fn_tests::ctor_trait_tests
+}
 
 namespace functions::generic_fn_tests::into_trait_tests {
 
@@ -1045,7 +1045,7 @@ inline ::std::int32_t where_clause(::std::int32_t x) {
   return __crubit_internal::__crubit_thunk_where_uclause_ui32(x);
 }
 
-}  // namespace functions::generic_fn_tests::into_trait_tests
+}
 
 namespace functions::non_null_tests {
 
@@ -1121,7 +1121,7 @@ inline void set_non_null_value(::std::int32_t* crubit_nonnull ptr,
   return __crubit_internal::__crubit_thunk_set_unon_unull_uvalue(ptr, value);
 }
 
-}  // namespace functions::non_null_tests
+}
 
 namespace functions::other_fn_param_tests {
 
@@ -1138,7 +1138,7 @@ inline ::std::int32_t add_i32_via_rust_abi_with_duplicated_param_names(
           x, y, __param_2, __param_3);
 }
 
-}  // namespace functions::other_fn_param_tests
+}
 
 namespace functions::thread_safety_tests {
 
@@ -1182,7 +1182,7 @@ inline ::functions::thread_safety_tests::ThreadSafeStruct& $(__anon1)
   return __crubit_internal::__crubit_thunk_returns_uthread_usafe_uref(x);
 }
 
-}  // namespace functions::thread_safety_tests
+}
 
 namespace functions::unit_ret_ty_tests {
 
@@ -1193,7 +1193,7 @@ inline void set_global_i32_via_extern_c_with_export_name(::std::int32_t x) {
   return __crubit_internal::custom_export_name_for_get_global_i32(x);
 }
 
-}  // namespace functions::unit_ret_ty_tests
+}
 
 namespace functions::unsafe_fn_tests {
 
@@ -1205,7 +1205,7 @@ inline ::std::int32_t unsafe_add(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_unsafe_uadd(x, y);
 }
 
-}  // namespace functions::unsafe_fn_tests
+}
 
 namespace functions {
 namespace __crubit_internal {
@@ -1214,7 +1214,7 @@ extern "C" ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& $(
     __crubit_thunk_AsRef_uas_uref_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
         ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const&);
 }
-}  // namespace functions
+}
 inline ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& $(
     __anon1)(::rs::impl<
              ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct,

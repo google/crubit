@@ -27,7 +27,7 @@ namespace layout_equivalent_pointers::test_format_func_arg_pointer_like {
 
 void test_format_func_arg_pointer_like(const CppType* __param_0);
 
-}  // namespace layout_equivalent_pointers::test_format_func_arg_pointer_like
+}
 
 namespace layout_equivalent_pointers::test_format_return_type_pointer_like {
 
@@ -39,7 +39,7 @@ namespace layout_equivalent_pointers::test_format_return_type_pointer_like {
 
 CppType* test_format_return_type_pointer_like();
 
-}  // namespace layout_equivalent_pointers::test_format_return_type_pointer_like
+}
 
 namespace layout_equivalent_pointers::test_format_func_arg_pointer_like {
 
@@ -52,7 +52,7 @@ inline void test_format_func_arg_pointer_like(const CppType* __param_0) {
       __crubit_thunk_test_uformat_ufunc_uarg_upointer_ulike(__param_0);
 }
 
-}  // namespace layout_equivalent_pointers::test_format_func_arg_pointer_like
+}
 
 namespace layout_equivalent_pointers::test_format_return_type_pointer_like {
 
@@ -64,7 +64,7 @@ inline CppType* test_format_return_type_pointer_like() {
       __crubit_thunk_test_uformat_ureturn_utype_upointer_ulike();
 }
 
-}  // namespace layout_equivalent_pointers::test_format_return_type_pointer_like
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_BRIDGING_LAYOUT_EQUIVALENT_POINTERS_GOLDEN

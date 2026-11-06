@@ -107,7 +107,7 @@ inline void never_return() {
   __crubit_internal::__crubit_thunk_never_ureturn();
 }
 
-}  // namespace never
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_NEVER_NEVER_GOLDEN

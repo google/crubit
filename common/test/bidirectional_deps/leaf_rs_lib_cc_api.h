@@ -258,7 +258,7 @@ inline ::leaf_rs_lib::LeafRsEnum wrap_enum(::std::uint8_t x) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace leaf_rs_lib
+}
 
 #pragma clang diagnostic pop
 #endif  // COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN

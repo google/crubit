@@ -573,7 +573,13 @@ fn clang_format(input: String, clang_format_exe_path: &Path) -> Result<String> {
         input,
         "clang-format",
         clang_format_exe_path,
-        [OsStr::new("--style=google"), OsStr::new("--sort-includes=false")],
+        [
+            // clang-format's `NamespaceEndCommentsFixer` is very slow on large files with many
+            // namespaces (every comment it inserts rebuilds the whole file), and the comments
+            // noticeably increase the size of generated headers.
+            OsStr::new("--style={BasedOnStyle: Google, FixNamespaceComments: false}"),
+            OsStr::new("--sort-includes=false"),
+        ],
     )
 }
 
@@ -918,7 +924,7 @@ fn foo(
             r#"namespace ns {
 void foo() {}
 void bar() {}
-}  // namespace ns"#
+}"#
         );
     }
 
