@@ -132,7 +132,39 @@ jobs:
     - name: Build Bazel test project (example)
       run: |
         cd examples/build_systems/bazel
-        bazelisk build --remote_download_outputs=minimal //:main
+        bazelisk build --lockfile_mode=error --remote_download_outputs=minimal //:main
+
+  bazel_test:
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      with:
+        persist-credentials: false
+    - name: Setup CI
+      id: setup
+      uses: ./.github/actions/setup_ci
+      with:
+        gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+        bazel: 'true'
+        llvm: 'pinned'
+    - name: Test Bazel targets
+      if: steps.setup.outputs.authenticated == 'true'
+      run: >
+        bazelisk test
+        --lockfile_mode=error
+        --remote_download_outputs=minimal
+        --test_tag_filters=-crubit_golden_test
+        //...
+    - name: Analyze Bazel targets (unauthenticated fork fallback)
+      if: steps.setup.outputs.authenticated != 'true'
+      run: >
+        bazelisk build
+        --nobuild
+        --lockfile_mode=error
+        //...
 
   bazel_bridge:
 
@@ -177,7 +209,7 @@ jobs:
   ci-status:
 
     if: always()
-    needs: [cargo_test, cmake, bazel_example, bazel_bridge]
+    needs: [cargo_test, cmake, bazel_example, bazel_bridge, bazel_test]
     runs-on: ubuntu-latest
 
     steps:
