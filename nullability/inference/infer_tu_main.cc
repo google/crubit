@@ -36,6 +36,7 @@
 #include "clang/Tooling/Execution.h"
 #include "clang/Tooling/Tooling.h"
 #include "clang/UnifiedSymbolResolution/USRGeneration.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
@@ -307,11 +308,13 @@ int main(int argc, const char **absl_nonnull argv) {
   auto Exec = createExecutorFromCommandLineArgs(argc, argv, Opts);
   QCHECK(Exec) << toString(Exec.takeError());
 
-  CHECK_EQ(ctn_replacement_macros_size(), 1);
-  llvm::StringRef MacroReplacementText =
-      ctn_replacement_macros_create()[0].data;
-  (*Exec)->mapVirtualFile(ReplacementMacrosHeaderFileName,
-                          MacroReplacementText);
+  llvm::ArrayRef<std::pair<llvm::StringRef, llvm::StringRef>>
+      ReplacementHeaders =
+          clang::tidy::nullability::getReplacementMacrosHeaders();
+  CHECK_EQ(ReplacementHeaders.size(), 1);
+  CHECK_EQ(ReplacementHeaders[0].first, ReplacementMacrosHeaderFileName);
+  (*Exec)->mapVirtualFile(ReplacementHeaders[0].first,
+                          ReplacementHeaders[0].second);
 
   auto Err = (*Exec)->execute(
       newFrontendActionFactory<clang::tidy::nullability::Action>(),

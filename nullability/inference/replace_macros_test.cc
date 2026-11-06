@@ -37,9 +37,8 @@ using ::testing::NotNull;
 
 clang::TestInputs getInputs(llvm::StringRef Source) {
   clang::TestInputs Inputs = Source;
-  for (const auto& Entry : llvm::ArrayRef(ctn_replacement_macros_create(),
-                                          ctn_replacement_macros_size()))
-    Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
+  for (const auto& Entry : getReplacementMacrosHeaders())
+    Inputs.ExtraFiles.try_emplace(Entry.first, Entry.second);
   Inputs.ExtraArgs.push_back("-include");
   Inputs.ExtraArgs.push_back(std::string(ReplacementMacrosHeaderFileName));
 

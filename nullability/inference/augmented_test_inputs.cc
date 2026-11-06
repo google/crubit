@@ -26,9 +26,8 @@ TestInputs getAugmentedTestInputs(llvm::StringRef Source,
   auto Headers = clang::tidy::nullability::test::getMockHeaders();
   for (const auto& Entry : Headers)
     Inputs.ExtraFiles.try_emplace(Entry.first, Entry.second);
-  for (const auto& Entry : llvm::ArrayRef(ctn_replacement_macros_create(),
-                                          ctn_replacement_macros_size()))
-    Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
+  for (const auto& Entry : getReplacementMacrosHeaders())
+    Inputs.ExtraFiles.try_emplace(Entry.first, Entry.second);
 
   Inputs.ExtraArgs.push_back("-I.");
   Inputs.ExtraArgs.push_back("-include");
