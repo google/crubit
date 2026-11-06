@@ -365,6 +365,15 @@ impl<'db> BindingsGenerator<'db> {
             )
         }
 
+        if type_kind.has_elided_lifetime() {
+            bail!(
+                "Fields of type `{}` with an elided lifetime are not yet supported (b/576904034); \
+                 annotate the struct with `$lifetime_params(\"a\")` and the field type with `$a` \
+                 (or `$static`) from `//support:lifetime_annotations`",
+                self.cc_type_debug_name(field.type_())
+            );
+        }
+
         for target in
             self.defining_target(record.id()).as_ref().into_iter().chain([record.owning_target()])
         {

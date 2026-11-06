@@ -2596,6 +2596,71 @@ impl RsTypeKind {
         RsTypeKindIter::new(self, true).filter_map(Self::lifetime)
     }
 
+    /// Returns true if formatting `self` as a field type emits an unbound elided lifetime (`'_`).
+    pub fn has_elided_lifetime(&self) -> bool {
+        match self {
+            Self::Error { .. }
+            | Self::Primitive(_)
+            | Self::IncompleteRecord { .. }
+            | Self::Enum { .. }
+            // Function pointers introduce a higher-ranked `for<'a>` binder for elided lifetimes.
+            | Self::FuncPtr { .. } => false,
+            Self::Pointer { pointee, .. } | Self::CArray { element_type: pointee, .. } => {
+                pointee.has_elided_lifetime()
+            }
+            Self::Box { pointee, .. } => {
+                pointee.as_deref().is_some_and(Self::has_elided_lifetime)
+            }
+            Self::Reference { referent, lifetime, .. }
+            | Self::RvalueReference { referent, lifetime, .. } => {
+                lifetime.is_elided() || referent.has_elided_lifetime()
+            }
+            Self::Record { uniform_repr_template_type, lifetimes, .. } => {
+                lifetimes.iter().any(Lifetime::is_elided)
+                    || uniform_repr_template_type.as_deref().is_some_and(|template| {
+                        template.lifetime().is_some_and(|lt| lt.is_elided())
+                            || match template {
+                                UniformReprTemplateType::StdVector { element_type }
+                                | UniformReprTemplateType::StdOptional { element_type }
+                                | UniformReprTemplateType::StdUniquePtr { element_type, .. }
+                                | UniformReprTemplateType::StdAtomic { element_type, .. }
+                                | UniformReprTemplateType::StdSharedPtr { element_type, .. }
+                                | UniformReprTemplateType::AbslSpan { element_type, .. } => {
+                                    element_type.has_elided_lifetime()
+                                }
+                                UniformReprTemplateType::StdStringView { .. } => false,
+                            }
+                    })
+            }
+            Self::TypeAlias { lifetimes, .. } => lifetimes.iter().any(Lifetime::is_elided),
+            Self::BridgeType { bridge_type, .. } => match bridge_type {
+                BridgeRsTypeKind::Bridge { generic_types, .. } => {
+                    generic_types.iter().any(Self::has_elided_lifetime)
+                }
+                BridgeRsTypeKind::ProtoMessageBridge {
+                    kind: ProtoBridgeKind::View(lt) | ProtoBridgeKind::Mut(lt),
+                    ..
+                } => lt.is_elided(),
+                BridgeRsTypeKind::ProtoMessageBridge { kind: ProtoBridgeKind::Owned, .. }
+                | BridgeRsTypeKind::StdString { .. }
+                // `dyn Fn(...)` introduces a higher-ranked `for<'a>` binder for elided lifetimes.
+                | BridgeRsTypeKind::Callable(_) => false,
+                BridgeRsTypeKind::StdOptional(t) => t.has_elided_lifetime(),
+                BridgeRsTypeKind::StdPair(t1, t2) => {
+                    t1.has_elided_lifetime() || t2.has_elided_lifetime()
+                }
+                BridgeRsTypeKind::C9Co { has_reference_param, result_type, lifetime } => {
+                    lifetime.as_ref().is_some_and(Lifetime::is_elided)
+                        || (lifetime.is_none() && *has_reference_param)
+                        || result_type.has_elided_lifetime()
+                }
+            },
+            Self::ExistingRustType { type_args, .. } => {
+                type_args.iter().any(Self::has_elided_lifetime)
+            }
+        }
+    }
+
     /// Returns the pointer or reference target.
     pub fn referent(&self) -> Option<&RsTypeKind> {
         match self.unalias() {
