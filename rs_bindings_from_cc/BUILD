@@ -533,6 +533,7 @@ rust_library(
         "//common:crubit_feature",
         "//common:error_report",
         "//common:ffi_types",
+        "//common:memoized",
         "@crate_index//:flagset",  # v0_4
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",

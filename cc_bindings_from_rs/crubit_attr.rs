@@ -251,7 +251,7 @@ impl CrubitAttrs {
     /// `include_paths` and return `Ok(None)` here.
     pub fn get_cpp_layout_equivalent_attrs(
         &self,
-        crubit_support_path_format: Format<1>,
+        crubit_support_path_format: &Format<1>,
     ) -> Result<Option<CppLayoutEquivalentAttrs>> {
         self.validate_cpp_type_attrs()?;
         if let Self {
@@ -266,7 +266,7 @@ impl CrubitAttrs {
             Ok(Some(CppLayoutEquivalentAttrs {
                 include_paths: include_paths
                     .iter()
-                    .map(|s| include_from_path(crubit_support_path_format.clone(), s.as_str()))
+                    .map(|s| include_from_path(crubit_support_path_format, s.as_str()))
                     .collect(),
                 cpp_type: *cpp_type,
             }))
@@ -278,7 +278,7 @@ impl CrubitAttrs {
     /// Returns the `#[crubit_annotate::cpp_convertible]` attributes if present.
     pub fn get_cpp_convertible_attrs(
         &self,
-        crubit_support_path_format: Format<1>,
+        crubit_support_path_format: &Format<1>,
     ) -> Result<Option<CppConvertibleAttrs>> {
         self.validate_cpp_type_attrs()?;
         if let Self {
@@ -292,7 +292,7 @@ impl CrubitAttrs {
             Ok(Some(CppConvertibleAttrs {
                 include_paths: include_paths
                     .iter()
-                    .map(|s| include_from_path(crubit_support_path_format.clone(), s.as_str()))
+                    .map(|s| include_from_path(crubit_support_path_format, s.as_str()))
                     .collect(),
                 cpp_type: *cpp_type,
                 cpp_to_rust_converter: *cpp_to_rust_converter,

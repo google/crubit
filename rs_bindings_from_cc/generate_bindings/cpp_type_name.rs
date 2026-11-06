@@ -140,6 +140,7 @@ pub fn format_cpp_type_inner(
             // reversed `int[4][2]`).
             Ok(quote! { crubit::type_identity_t<#elem [#len]> })
         }
+        RsTypeKind::Primitive(ir::Primitive::Void) => Ok(db.tokens().void.clone()),
         RsTypeKind::Primitive(primitive) => Ok(quote! { #primitive }),
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             BridgeRsTypeKind::ProtoMessageBridge { kind, .. } => match kind {

@@ -14,8 +14,6 @@ use ir::{CcType, CcTypeVariant, FfiRc, Func, GenericItem, Item, ItemId, MacroKin
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use generate_function_thunk;
-
 /// Recursively checks whether all C++ declarations (`Decl`) directly or transitively
 /// referenced by `cc_type` have bindings.
 fn cc_type_has_bindings<'a>(
@@ -208,7 +206,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindings
                 // Only check those item kinds that decl_lifetime_arity explicitly supports.
                 if let Some(ot) = &item.owning_target()
                     && db.ir().target_crubit_features(ot).contains(CrubitFeature::AssumeLifetimes)
-                    && let Err(error) = (db.codegen_functions().decl_lifetime_arity)(db, item.id())
+                    && let Err(error) = db.decl_lifetime_arity(item.id())
                 {
                     return Err(NoBindingsReason::Unsupported(error));
                 }
@@ -392,7 +390,7 @@ fn determine_name_conflict_action<'a>(
 pub fn resolve_names(
     db: &BindingsGenerator,
     parent: FfiRc<Record>,
-) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>> {
+) -> Result<HashMap<Rc<str>, ResolvedName>> {
     let child_items = match parent.enclosing_item_id().map(|id| db.find_untyped_decl(id)) {
         Some(Item::Namespace(ns)) => ns.children().iter(),
         Some(Item::Record(record)) => record.children().iter(),
@@ -519,5 +517,5 @@ pub fn resolve_names(
         }
     }
 
-    Ok(Rc::new(names))
+    Ok(names)
 }

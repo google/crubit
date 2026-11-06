@@ -48,6 +48,7 @@ use rustc_middle::ty::layout::IntegerExt;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt, TypeVisitableExt};
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::symbol::{sym, Symbol};
+use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::rc::Rc;
 
@@ -231,7 +232,7 @@ fn format_non_owning_pointer_prefix<'tcx>(
 }
 
 /// Implementation of `BindingsGenerator::format_top_level_ns_for_crate`.
-pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum) -> Rc<[Symbol]> {
+pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum) -> Vec<Symbol> {
     let crate_name = db.tcx().crate_name(krate);
     let crate_needle_name =
         if krate == db.source_crate_num() { "self" } else { crate_name.as_str() };
@@ -248,7 +249,7 @@ pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum
     } else {
         let renamed = rename_clang_builtin_macros(Rc::from(crate_name.as_str()));
         let renamed = rename_c_stdlib_functions(renamed);
-        Rc::from([Symbol::intern(renamed.as_ref())])
+        vec![Symbol::intern(renamed.as_ref())]
     }
 }
 
@@ -325,35 +326,37 @@ fn format_slice_ref_for_cc<'tcx>(
         .with_context(|| {
             format!("Failed to format the element type of the slice type `{element_ty}`")
         })?
-        .map_snippets(|mut tokens| {
-            if let Mutability::Not = mutability {
-                // For immutable slices (`&[T]` or `*const [T]`), the elements of the slice
-                // must be const-qualified in C++.
-                tokens = match element_ty.kind() {
-                    ty::TyKind::RawPtr(..) | ty::TyKind::Ref(..) | ty::TyKind::FnPtr(..) => {
-                        // For pointer/reference types (e.g., `*const c_void` formatted as `const
-                        // void*`, or `*const i32` formatted as
-                        // `::std::int32_t const *`), prepending `const`
-                        // would result in invalid C++ with duplicate `const` declaration specifiers
-                        // (e.g., `const const void*`) or incorrectly qualify the pointee instead of
-                        // the pointer. Placing `const` after the pointer tokens (`#tokens const`)
-                        // produces valid C++ types like `SliceRef<const void* const>` or
-                        // `SliceRef<void* const>`.
-                        quote! { #tokens const }
+        .map_snippets(|tokens| {
+            match mutability {
+                Mutability::Mut => quote! { ::rs::SliceRef<#tokens> },
+                Mutability::Not => {
+                    // For immutable slices (`&[T]` or `*const [T]`), the elements of the slice
+                    // must be const-qualified in C++.
+                    match element_ty.kind() {
+                        ty::TyKind::RawPtr(..) | ty::TyKind::Ref(..) | ty::TyKind::FnPtr(..) => {
+                            // For pointer/reference types (e.g., `*const c_void` formatted as
+                            // `const void*`, or `*const i32` formatted
+                            // as `::std::int32_t const *`), prepending
+                            // `const` would result in invalid C++ with
+                            // duplicate `const` declaration specifiers
+                            // (e.g., `const const void*`) or incorrectly qualify the pointee
+                            // instead of the pointer. Placing `const`
+                            // after the pointer tokens (`#tokens const`)
+                            // produces valid C++ types like `SliceRef<const void* const>` or
+                            // `SliceRef<void* const>`.
+                            quote! { ::rs::SliceRef<#tokens const> }
+                        }
+                        _ => {
+                            // For non-pointer types, placing `const` before the type (`const
+                            // #tokens`) produces the standard canonical
+                            // formatting (e.g., `SliceRef<const
+                            // uint8_t>`). Although we could always do east
+                            // const, west const is considered better style so
+                            // we prefer it when possible.
+                            quote! { ::rs::SliceRef<const #tokens> }
+                        }
                     }
-                    _ => {
-                        // For non-pointer types, placing `const` before the type (`const #tokens`)
-                        // produces the standard canonical formatting (e.g., `SliceRef<const
-                        // uint8_t>`). Although we could always do east
-                        // const, west const is considered better style so
-                        // we prefer it when possible.
-                        quote! { const #tokens }
-                    }
-                };
-            }
-
-            quote! {
-                ::rs::SliceRef<#tokens>
+                }
             }
         });
     snippet.prereqs.includes.insert(db.support_header("rs_std/slice_ref.h"));
@@ -893,7 +896,7 @@ fn format_ty_for_cc_impl<'tcx>(
         let param_snippets = info
             .param_tys
             .iter()
-            .map(|&param_ty| -> Result<TokenStream> {
+            .map(|&param_ty| -> Result<&TokenStream> {
                 ensure!(
                     db.is_cpp_move_constructible(param_ty),
                     "Callable parameter type `{param_ty}` is not C++-movable. Types without C++ move constructors cannot be passed by value to a callable. See crubit.rs/rust/movable_types for what types are C++ movable."
@@ -931,7 +934,9 @@ fn format_ty_for_cc_impl<'tcx>(
 
     Ok(match *ty.kind() {
         ty::TyKind::Never => match location {
-            TypeLocation::FnReturn { .. } | TypeLocation::ClosureReturn => keyword(quote! { void }),
+            TypeLocation::FnReturn { .. } | TypeLocation::ClosureReturn => {
+                keyword(db.tokens().void.clone())
+            }
             _ => {
                 // TODO(b/254507801): Maybe translate into `crubit::Never`?
                 bail!("The never type `!` is only supported as a return type (b/254507801)");
@@ -941,7 +946,7 @@ fn format_ty_for_cc_impl<'tcx>(
             if types.is_empty()
                 && matches!(location, TypeLocation::FnReturn { .. } | TypeLocation::ClosureReturn)
             {
-                keyword(quote! { void })
+                keyword(db.tokens().void.clone())
             } else if !location.is_bridgeable()
                 || (db
                     .crate_features(db.source_crate_num())
@@ -951,7 +956,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 let Some(adt_spec) = db.parse_adt_template_specialization(ty) else {
                     bail!("Tuple type `{ty}` is not supported in this context");
                 };
-                let adt_spec = adt_spec?;
+                let adt_spec = adt_spec.as_ref().map_err(Clone::clone)?;
                 let mut snippet = adt_spec.self_ty_cc.clone();
                 snippet.prereqs.depend_on_spec(db, location, adt_spec);
                 return Ok(snippet);
@@ -996,7 +1001,7 @@ fn format_ty_for_cc_impl<'tcx>(
         // that "Rust's bool has the same layout as C17's _Bool".  The details (e.g. size, valid
         // bit patterns) are implementation-defined, but this is okay, because `bool` in the
         // `extern "C"` functions in the generated `..._cc_api.h` will also be the C17's _Bool.
-        ty::TyKind::Bool => keyword(quote! { bool }),
+        ty::TyKind::Bool => keyword(db.tokens().bool_.clone()),
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#fixed-width-floating-point-types
         // documents that "When the platforms' "math.h" header defines the __STDC_IEC_559__ macro,
@@ -1004,8 +1009,8 @@ fn format_ty_for_cc_impl<'tcx>(
         // types are expected (f32 for float, f64 for double)."
         //
         // TODO(b/255768062): Generated bindings should explicitly check `__STDC_IEC_559__`
-        ty::TyKind::Float(ty::FloatTy::F32) => keyword(quote! { float }),
-        ty::TyKind::Float(ty::FloatTy::F64) => keyword(quote! { double }),
+        ty::TyKind::Float(ty::FloatTy::F32) => keyword(db.tokens().float.clone()),
+        ty::TyKind::Float(ty::FloatTy::F64) => keyword(db.tokens().double.clone()),
 
         // ABI compatibility and other details are described in the doc comments in
         // `crubit/support/rs_std/char.h` and `crubit/support/rs_std/char_test.cc` (search for
@@ -1160,7 +1165,8 @@ fn format_ty_for_cc_impl<'tcx>(
                             inner_ty,
                         ),
                     )?
-                    .prereqs;
+                    .prereqs
+                    .clone();
                 prereqs.includes.insert(CcInclude::optional());
                 let inner_tokens = format_ty_for_cc(db, inner_ty, TypeLocation::NestedBridgeable)?
                     .into_tokens(&mut prereqs);
@@ -1168,7 +1174,12 @@ fn format_ty_for_cc_impl<'tcx>(
                     tokens: quote! { ::std::optional<#inner_tokens> },
                     prereqs,
                 });
-            } else if let Some(adt_spec) = db.parse_adt_template_specialization(ty).transpose()? {
+            } else if let Some(adt_spec) = db
+                .parse_adt_template_specialization(ty)
+                .as_ref()
+                .map(|r| r.as_ref().map_err(Clone::clone))
+                .transpose()?
+            {
                 let mut snippet = adt_spec.self_ty_cc.clone();
                 snippet.prereqs.depend_on_spec(db, location, adt_spec);
                 if !db.is_cpp_move_constructible(ty) && location.admits_movable() {
@@ -1589,19 +1600,21 @@ pub fn is_movable_wrapped_return_ty<'tcx>(
 }
 
 /// Returns the C++ return type.
-pub fn format_ret_ty_for_cc<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+pub fn format_ret_ty_for_cc<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
-) -> Result<CcSnippet<'tcx>> {
+) -> Result<Cow<'db, CcSnippet<'tcx>>> {
     let output_ty = sig_mid.output();
-    let mut snippet = db
+    let snippet = db
         .format_ty_for_cc(output_ty, TypeLocation::FnReturn { is_constructor: false })
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))?;
     if is_movable_wrapped_return_ty(db, output_ty)? {
+        let mut snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
         snippet.prereqs.includes.insert(db.support_header("movable.h"));
-        snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
+        Ok(Cow::Owned(snippet))
+    } else {
+        Ok(Cow::Borrowed(snippet))
     }
-    Ok(snippet)
 }
 
 pub fn has_elided_region<'tcx>(tcx: TyCtxt<'tcx>, search_ty: ty::Ty<'tcx>) -> bool {
@@ -1636,18 +1649,18 @@ pub fn region_is_elided<'tcx>(tcx: TyCtxt<'tcx>, region: ty::Region<'tcx>) -> bo
 }
 
 #[derive(Debug, Clone)]
-pub struct CcParamTy<'tcx> {
-    pub snippet: CcSnippet<'tcx>,
+pub struct CcParamTy<'db, 'tcx> {
+    pub snippet: Cow<'db, CcSnippet<'tcx>>,
     pub is_lifetime_bound: bool,
 }
 
 /// Returns the C++ parameter types, both for thunks and non-thunks
-fn format_param_types_for_cc_impl<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+fn format_param_types_for_cc_impl<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     has_self_param: bool,
     is_thunk: bool,
-) -> Result<Vec<CcParamTy<'tcx>>> {
+) -> Result<Vec<CcParamTy<'db, 'tcx>>> {
     let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
     let param_types = sig_mid.inputs();
     let mut snippets = Vec::with_capacity(param_types.len());
@@ -1671,7 +1684,7 @@ fn format_param_types_for_cc_impl<'tcx>(
             .format_ty_for_cc(param_type, location)
             .with_context(|| format!("Error handling parameter #{i} of type `{param_type}`"))?;
         snippets.push(CcParamTy {
-            snippet: cc_type,
+            snippet: Cow::Borrowed(cc_type),
             is_lifetime_bound: matches!(
                 treat_ref_as_ptr(db, param_type, location),
                 RefConvert::ToPtr { is_lifetime_bound: true }
@@ -1682,20 +1695,20 @@ fn format_param_types_for_cc_impl<'tcx>(
 }
 
 /// Returns the C++ parameter types for the C++ API.
-pub fn format_param_types_for_cc_api<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+pub fn format_param_types_for_cc_api<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     has_self_param: bool,
-) -> Result<Vec<CcParamTy<'tcx>>> {
+) -> Result<Vec<CcParamTy<'db, 'tcx>>> {
     format_param_types_for_cc_impl(db, sig_mid, has_self_param, /* is_thunk= */ false)
 }
 
 /// Returns the C++ parameter types for the thunks.
-pub fn format_param_types_for_cc_thunk<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+pub fn format_param_types_for_cc_thunk<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     has_self_param: bool,
-) -> Result<Vec<CcParamTy<'tcx>>> {
+) -> Result<Vec<CcParamTy<'db, 'tcx>>> {
     format_param_types_for_cc_impl(db, sig_mid, has_self_param, /* is_thunk= */ true)
 }
 
@@ -1725,7 +1738,7 @@ enum RsLifetimeMode {
 impl RsLifetimeMode {
     fn format_ty<'tcx>(self, db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
         match self {
-            Self::Default => db.format_ty_for_rs(ty),
+            Self::Default => db.format_ty_for_rs(ty).cloned(),
             Self::ClosureParam | Self::ClosureReturn => {
                 format_ty_for_rs_with_lifetime_mode(db, ty, self)
             }
@@ -1793,7 +1806,7 @@ fn format_fn_ptr_for_rs<'tcx>(
         .inputs()
         .iter()
         .map(|&ty| lifetime_mode.format_ty(db, ty))
-        .collect::<Result<Vec<TokenStream>>>()?;
+        .collect::<Result<Vec<_>>>()?;
     let maybe_output = if fn_sig_tys.output().is_unit() {
         TokenStream::new()
     } else {
@@ -1879,7 +1892,7 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
             let rs_types = types
                 .iter()
                 .map(|ty| lifetime_mode.format_ty(db, ty))
-                .collect::<Result<Vec<TokenStream>>>()?;
+                .collect::<Result<Vec<_>>>()?;
             quote! { (#(#rs_types,)*) }
         }
         ty::TyKind::Array(element_type, length) => {
@@ -1929,7 +1942,12 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
                 || !has_non_lifetime_substs(substs)
                 || is_rvalue_reference(db, adt.did())
                 || is_ctor_by_value(db, adt.did())
-                || db.parse_adt_template_specialization(ty).transpose()?.is_some()
+                || db
+                    .parse_adt_template_specialization(ty)
+                    .as_ref()
+                    .map(|r| r.as_ref().map_err(Clone::clone))
+                    .transpose()?
+                    .is_some()
                 || db.tcx().is_lang_item(adt.did(), LangItem::OwnedBox)
                 || adt.is_pin();
             ensure!(
@@ -1948,15 +1966,17 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
                             ty::GenericArgKind::Type(ty) => lifetime_mode.format_ty(db, ty),
                             ty::GenericArgKind::Lifetime(_) => match lifetime_mode {
                                 RsLifetimeMode::Default | RsLifetimeMode::ClosureReturn => {
-                                    Ok(quote! { 'static })
+                                    Ok(db.tokens().lifetime_static.clone())
                                 }
-                                RsLifetimeMode::ClosureParam => Ok(quote! { '_ }),
+                                RsLifetimeMode::ClosureParam => {
+                                    Ok(db.tokens().lifetime_wildcard.clone())
+                                }
                             },
                             ty::GenericArgKind::Const(_) => {
                                 bail!("crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)")
                             }
                         })
-                        .collect::<Result<Vec<TokenStream>>>()?;
+                        .collect::<Result<Vec<_>>>()?;
                     quote! { < #(#generic_params),* > }
                 };
                 Ok(quote! { #type_name #generic_params })
@@ -2068,7 +2088,7 @@ pub fn format_region_as_rs_lifetime<'tcx>(
 /// `CrubitAbi` encoding (`Option`) and can only be passed by value in bridgeable locations.
 /// For layout-compatible C++ type mappings (`#[crubit_annotate::cpp_layout_equivalent]`), see
 /// [`cpp_layout_equivalent_type`].
-pub enum BridgedType {
+pub enum BridgedType<'db> {
     ExternCFuncConverters {
         /// The spelling of the C++ type of the item.
         cpp_type: CcType,
@@ -2077,7 +2097,7 @@ pub enum BridgedType {
         cpp_to_rust_converter: Symbol,
         rust_to_cpp_converter: Symbol,
     },
-    Option(CrubitAbiType),
+    Option(&'db CrubitAbiType),
 }
 
 /// Returns an error if `ty` is not pointer-like.
@@ -2157,9 +2177,9 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 });
             } else {
                 if is_std_ptr_non_null(db.tcx(), adt.did()) {
-                    let rust_type = db.format_ty_for_rs(ty)?;
+                    let rust_type = db.format_ty_for_rs(ty)?.clone();
                     let CcSnippet { tokens: cpp_type, prereqs } =
-                        db.format_ty_for_cc(ty, TypeLocation::Other)?;
+                        db.format_ty_for_cc(ty, TypeLocation::Other)?.clone();
                     return Ok(CrubitAbiTypeWithCcPrereqs {
                         crubit_abi_type: CrubitAbiType::Transmute { rust_type, cpp_type },
                         prereqs,
@@ -2180,11 +2200,13 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                             "Failed to construct CrubitAbiType for {ty} because it is not movable."
                         );
                     }
-                    let spec = spec?;
+                    let spec = spec.as_ref().map_err(Clone::clone)?;
                     let mut prereqs = CcPrerequisites::default();
-                    let rust_type = db.format_ty_for_rs(spec.self_ty_rs)?;
-                    let cpp_type = spec.self_ty_cc.clone().into_tokens(&mut prereqs);
-                    prereqs.template_specializations.insert(TemplateSpecialization::Adt(spec));
+                    let rust_type = db.format_ty_for_rs(spec.self_ty_rs)?.clone();
+                    let cpp_type = (&spec.self_ty_cc).into_tokens(&mut prereqs).clone();
+                    prereqs
+                        .template_specializations
+                        .insert(TemplateSpecialization::Adt(spec.clone()));
                     let crubit_abi_type = CrubitAbiType::Transmute { rust_type, cpp_type };
                     return Ok(CrubitAbiTypeWithCcPrereqs { crubit_abi_type, prereqs });
                 }
@@ -2226,9 +2248,9 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 is_rust_slice = true;
             }
             // Do we need to confirm that pointee is layout compatible?
-            let rust_type = db.format_ty_for_rs(pointee)?;
+            let rust_type = db.format_ty_for_rs(pointee)?.clone();
             let CcSnippet { tokens: cpp_type, prereqs } =
-                db.format_ty_for_cc(pointee, TypeLocation::Other)?;
+                db.format_ty_for_cc(pointee, TypeLocation::Other)?.clone();
 
             return Ok(CrubitAbiTypeWithCcPrereqs {
                 crubit_abi_type: CrubitAbiType::Ptr {
@@ -2243,9 +2265,9 @@ pub fn crubit_abi_type_from_ty<'tcx>(
             });
         }
         ty::TyKind::Ref(_, _, _) => {
-            let rust_type = db.format_ty_for_rs(ty)?;
+            let rust_type = db.format_ty_for_rs(ty)?.clone();
             let CcSnippet { tokens: cpp_type, prereqs } =
-                db.format_ty_for_cc(ty, TypeLocation::Other)?;
+                db.format_ty_for_cc(ty, TypeLocation::Other)?.clone();
             return Ok(CrubitAbiTypeWithCcPrereqs {
                 crubit_abi_type: CrubitAbiType::Transmute { rust_type, cpp_type },
                 prereqs,
@@ -2294,7 +2316,7 @@ impl BridgedBuiltin {
                 bail!("Result/Vec as a bridge type is not yet supported")
             }
             BridgedBuiltin::Option => {
-                let inner = db.crubit_abi_type_from_ty(substs[0].expect_ty())?;
+                let inner = db.crubit_abi_type_from_ty(substs[0].expect_ty())?.clone();
                 Ok(CrubitAbiTypeWithCcPrereqs {
                     crubit_abi_type: CrubitAbiType::option(inner.crubit_abi_type),
                     prereqs: inner.prereqs,
@@ -2378,7 +2400,10 @@ pub fn cpp_layout_equivalent_type<'tcx>(
 /// Returns a `BridgedType` for an ADT manually annotated with
 /// `#[crubit_annotate::cpp_convertible]`. Returns `None` if the type is not annotated with
 /// `cpp_convertible`. Returns an error if getting the attributes fails.
-fn is_bridged_adt<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<Option<BridgedType>> {
+fn is_bridged_adt<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+) -> Result<Option<BridgedType<'static>>> {
     // We take a `Ty` instead of adt + substs directly so we can use `Ty` in error messages.
     let ty::TyKind::Adt(adt, _) = ty.kind() else {
         panic!("should only be called on an ADT type");
@@ -2466,10 +2491,10 @@ fn ensure_layout_compatible_pointee<'tcx>(
 ///
 /// Returns `Ok(None)` if `ty` is not a bridged type, or an error if `ty` is a pointer/reference or
 /// generic instantiation containing a non-layout-compatible type, or if its attributes are invalid.
-pub fn is_bridged_type<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+pub fn is_bridged_type<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
-) -> Result<Option<BridgedType>> {
+) -> Result<Option<BridgedType<'db>>> {
     // The ABI of bridged types is lifetime-independent, and the Crubit thunks replace all
     // lifetimes with static.
     let ty = replace_all_regions_with_static(db.tcx(), ty);
@@ -2519,11 +2544,8 @@ pub fn is_bridged_type<'tcx>(
                 }
                 if !always_specialize_generics {
                     // The ADT is an Option, which is a composable bridged type.
-                    let crubit_abi_type_with_cc_prereqs =
-                        bridged_builtin.crubit_abi_type(db, substs)?;
-
                     return Ok(Some(BridgedType::Option(
-                        crubit_abi_type_with_cc_prereqs.crubit_abi_type,
+                        &db.crubit_abi_type_from_ty(ty)?.crubit_abi_type,
                     )));
                 }
             }

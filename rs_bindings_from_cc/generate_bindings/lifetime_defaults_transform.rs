@@ -12,7 +12,6 @@ use ir::{
     PointerTypeKind, Record, TreeIR, TypeAlias, IR,
 };
 use itertools::Itertools;
-use memoized::memoized;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::rc::Rc;
 
@@ -37,7 +36,7 @@ fn lifetime_arity(db: &BindingsGenerator, ty: &CcType) -> Result<usize> {
         CcTypeVariant::FuncPointer(_) => {
             bail!("TODO(b/454627672): function pointer returns are unsupported")
         }
-        CcTypeVariant::Decl(id) => decl_lifetime_arity(db, *id),
+        CcTypeVariant::Decl(id) => db.decl_lifetime_arity(*id),
         CcTypeVariant::ConstantArray(arr) => lifetime_arity(db, arr.element_type()),
         CcTypeVariant::Error(msg) => bail!("encountered error type: {:?}", msg),
     }
@@ -53,7 +52,7 @@ fn has_members_with_lifetimes(db: &BindingsGenerator, rc: &Record) -> bool {
         }
     }
     for base in rc.unambiguous_public_bases() {
-        if decl_lifetime_arity(db, base.base_record_id()).unwrap_or(0) > 0 {
+        if db.decl_lifetime_arity(base.base_record_id()).unwrap_or(0) > 0 {
             return true;
         }
     }
@@ -103,6 +102,7 @@ fn tie_record_type_to_lifetimes(
     }
     let mut record_type = record_type.clone();
     *record_type.explicit_lifetimes_mut() = lifetimes.into();
+
     match ty.variant_mut() {
         // `ty` is a reference to the record.
         CcTypeVariant::Pointer(pty) => {
@@ -231,10 +231,7 @@ pub fn record_lifetime_arity(
     Ok(0)
 }
 
-fn decl_lifetime_arity_impl(
-    db: &BindingsGenerator,
-    item_id: ir::ItemId,
-) -> Result<usize, arc_anyhow::Error> {
+pub fn decl_lifetime_arity(db: &BindingsGenerator, item_id: ir::ItemId) -> Result<usize> {
     let item = db.find_untyped_decl(item_id);
     match item {
         Item::TypeAlias(ta) if ta.rs_name().as_str() == "raw_string_view" => Ok(1),
@@ -291,12 +288,6 @@ fn decl_lifetime_arity_impl(
         }
     }
 }
-
-fn return_err(e: &str) -> Result<usize, arc_anyhow::Error> {
-    bail!("Cycle detected: {}", e)
-}
-
-memoized!(return_err, pub fn decl_lifetime_arity(db: &BindingsGenerator, item_id: ir::ItemId) -> Result<usize, arc_anyhow::Error> = decl_lifetime_arity_impl);
 
 /// Manages bindings for lifetime names. We expect to start with a `new` `BindingContext` for each
 /// item I being imported. This `BindingContext` should contain bindings for all parent items of I.
@@ -451,7 +442,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     fn decl_binds_lifetimes(&mut self, id: &ItemId) -> Result<bool> {
         // TODO(zarko): We currently only expect 0 or 1 lifetimes per type. This function will
         // probably go away entirely and be replaced with decl_lifetime_arity or lifetime_arity.
-        Ok(decl_lifetime_arity(self.db, *id) == Ok(1))
+        Ok(self.db.decl_lifetime_arity(*id) == Ok(1))
     }
 
     /// Adds lifetimes to a type in input position. Returns the new type paired with a LifetimeState
@@ -502,6 +493,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     self.get_lifetime_for_state(&state)
                 };
                 *new_ty.explicit_lifetimes_mut() = explicit_lifetimes.into_iter().collect();
+
                 Ok(LifetimeResult { ty: new_ty, state, this_state: LifetimeState::Unseen })
             }
             CcTypeVariant::Pointer(pty) if is_this || pty.kind() == PointerTypeKind::LValueRef => {
@@ -532,6 +524,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 ));
                 *new_ty.explicit_lifetimes_mut() =
                     self.get_lifetime_for_state(&state).into_iter().collect();
+
                 if is_this {
                     Ok(LifetimeResult {
                         ty: new_ty,
@@ -645,6 +638,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                             })
                         })
                         .collect();
+
                     // TODO(zarko): Recurse on pty.pointee_type and replace new_ty.variant.
                     return Ok(new_ty);
                 }
@@ -666,6 +660,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     FfiRc::new(pointee_type),
                 ));
                 *new_ty.explicit_lifetimes_mut() = lifetime_hint.iter().cloned().collect();
+
                 Ok(new_ty)
             }
             _ => Ok(ty.clone()),
@@ -694,6 +689,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         let mut pointee_type = pty.pointee_type().clone();
         *pointee_type.explicit_lifetimes_mut() = lifetimes.into();
         pty.set_pointee_type(pointee_type);
+
         Ok(())
     }
 

@@ -760,7 +760,7 @@ pub enum RsTypeKind {
         /// If this record is an instantiation of a `UniformReprTemplateType`, this will be set.
         uniform_repr_template_type: Option<Rc<UniformReprTemplateType>>,
         owned_ptr_type: Option<Rc<str>>,
-        lifetimes: Vec<Lifetime>,
+        lifetimes: Rc<[Lifetime]>,
         customize_methods: Option<Rc<CustomizeMethodsKind>>,
     },
     Enum {
@@ -771,7 +771,7 @@ pub enum RsTypeKind {
         type_alias: FfiRc<TypeAlias>,
         underlying_type: Rc<RsTypeKind>,
         crate_path: Rc<CratePath>,
-        lifetimes: Vec<Lifetime>,
+        lifetimes: Rc<[Lifetime]>,
     },
     Primitive(Primitive),
     CArray {
@@ -1436,8 +1436,12 @@ impl RsTypeKind {
         let ir = db.ir();
         let mut underlying_cc_type = type_alias.underlying_type().clone();
         if underlying_cc_type.explicit_lifetimes().is_empty() {
-            *underlying_cc_type.explicit_lifetimes_mut() =
-                lifetimes.iter().map(|lt| lt.0.clone()).collect();
+            underlying_cc_type.set_explicit_lifetimes(
+                lifetimes
+                    .iter()
+                    .map(|lt| ir_ffi_support::FfiString::from(lt.0.as_ref()))
+                    .collect::<ir_ffi_support::FfiVec<_>>(),
+            );
         }
         let underlying_type =
             db.rs_type_kind_with_lifetime_elision(underlying_cc_type, *options)?;
@@ -1468,7 +1472,7 @@ impl RsTypeKind {
             type_alias,
             crate_path,
             underlying_type: Rc::new(underlying_type),
-            lifetimes: lifetimes.to_vec(),
+            lifetimes: lifetimes.into(),
         })
     }
 
@@ -1520,7 +1524,7 @@ impl RsTypeKind {
                 .map(|cfg| Rc::from(cfg.owned_ptr_type())),
             record,
             crate_path,
-            lifetimes: lifetimes.to_vec(),
+            lifetimes: lifetimes.into(),
             customize_methods,
         })
     }
@@ -2927,7 +2931,10 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
                 })
             }),
             owned_ptr_type: owned_ptr_type.clone(),
-            lifetimes: lifetimes.iter().map(|_| Lifetime::new("static")).collect(),
+            lifetimes: lifetimes
+                .iter()
+                .map(|_| Lifetime::new("static"))
+                .collect::<Rc<[Lifetime]>>(),
             customize_methods: customize_methods.as_ref().map(|customize_methods| {
                 Rc::new(match customize_methods.as_ref() {
                     CustomizeMethodsKind::AbslFlatHashMap { key_type, value_type } => {
@@ -2952,7 +2959,10 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
                     type_alias: type_alias.clone(),
                     underlying_type: all_static_lifetimes_internal(underlying_type, strip_aliases),
                     crate_path: crate_path.clone(),
-                    lifetimes: lifetimes.iter().map(|_| Lifetime::new("static")).collect(),
+                    lifetimes: lifetimes
+                        .iter()
+                        .map(|_| Lifetime::new("static"))
+                        .collect::<Rc<[Lifetime]>>(),
                 })
             }
         }
@@ -3253,7 +3263,7 @@ impl RsTypeKind {
                 if let Some(generic_monomorphization) = uniform_repr_template_type {
                     return generic_monomorphization.to_token_stream(&db);
                 }
-                let arity = (db.codegen_functions().decl_lifetime_arity)(&db, record.id()).expect("RsTypeKind::to_token_stream: can't determine lifetime arity");
+                let arity = db.decl_lifetime_arity(record.id()).expect("RsTypeKind::to_token_stream: can't determine lifetime arity");
                 if arity == 0 || lifetimes.len() == arity || record.is_raw_string_view() {
                     // Use the safe projection.
                     let lts = if lifetimes.is_empty() {
@@ -3296,7 +3306,7 @@ impl RsTypeKind {
                     new_crate_path.namespace_qualifier.namespaces.pop();
                     crate_path = Rc::new(new_crate_path);
                 };
-                let arity = (db.codegen_functions().decl_lifetime_arity)(&db, type_alias.id()).unwrap_or(0);
+                let arity = db.decl_lifetime_arity(type_alias.id()).unwrap_or(0);
                 let lts = if lifetimes.is_empty() && arity > 0 {
                     let statics = std::iter::repeat_n(make_rs_lifetime_ident("static"), arity);
                     quote! { <#( #statics ),* > }
@@ -3325,10 +3335,7 @@ impl RsTypeKind {
                             &resolved_name,
                         );
 
-                        let arity = (db.codegen_functions().decl_lifetime_arity)(
-                            &db,
-                            original_type.id(),
-                        )
+                        let arity = db.decl_lifetime_arity(original_type.id())
                         .unwrap_or(0);
                         if generic_types.is_empty() && arity == 0 {
                             return path;
@@ -3402,7 +3409,7 @@ impl RsTypeKind {
                             .map(|ident| quote! { ::#ident })
                             .unwrap_or_else(|| quote! { ::co });
                         let result_type_tokens = if result_type.is_void() {
-                            quote! { () }
+                            db.tokens().unit.clone()
                         } else {
                             result_type.to_token_stream(db)
                         };
@@ -3981,7 +3988,7 @@ mod tests {
             type_alias: FfiRc::new(alias_proto),
             underlying_type: Rc::new(incomplete_record_proto_to_rs_type_kind(&proto)),
             crate_path: make_crate_path(),
-            lifetimes: vec![],
+            lifetimes: Rc::new([]),
         };
 
         expect_that!(alias_incomplete_record.allowed_behind_single_element_ptr(), eq(true));
@@ -4022,7 +4029,7 @@ mod tests {
             }),
             underlying_type: Rc::new(int.clone()),
             crate_path: make_crate_path(),
-            lifetimes: vec![],
+            lifetimes: Rc::from([]),
         };
         let ref_a = make_ref(int.clone(), Mutability::Const, "a");
         let ref_b = make_ref(int.clone(), Mutability::Const, "b");
@@ -4284,3 +4291,6 @@ mod tests {
         );
     }
 }
+
+impl memoized::CheapClone for UnsafeReason {}
+impl memoized::CheapClone for RsTypeKind {}

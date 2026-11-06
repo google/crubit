@@ -193,7 +193,7 @@ fn get_field_rs_type_kind_for_layout(
 fn collect_unqualified_member_functions_from_all_bases(
     db: &BindingsGenerator,
     record: &Record,
-) -> Rc<[FfiRc<Func>]> {
+) -> Vec<FfiRc<Func>> {
     record
         .unambiguous_public_bases()
         .iter()
@@ -216,7 +216,7 @@ fn collect_unqualified_member_functions_from_all_bases(
 pub fn collect_unqualified_member_functions(
     _db: &BindingsGenerator,
     record: FfiRc<Record>,
-) -> Rc<[FfiRc<Func>]> {
+) -> Vec<FfiRc<Func>> {
     record
         .children()
         .iter()
@@ -239,8 +239,8 @@ pub fn collect_unqualified_member_functions(
 fn filter_out_ambiguous_member_functions(
     db: &BindingsGenerator,
     derived_record: FfiRc<Record>,
-    inherited_functions: Rc<[FfiRc<Func>]>,
-) -> Rc<[FfiRc<Func>]> {
+    inherited_functions: Vec<FfiRc<Func>>,
+) -> Vec<FfiRc<Func>> {
     let derived_member_functions = db
         .collect_unqualified_member_functions(derived_record.clone())
         .iter()
@@ -862,7 +862,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         let Item::Func(ir_func) = item else { panic!("Unexpected item type: {:?}", item) };
         let generated_func =
             db.generate_function(ir_func.clone(), Some(record.clone())).ok().flatten()?;
-        Some((*generated_func.snippets).clone())
+        Some(generated_func.snippets.clone())
     })
     .for_each(|mut func_snippets| {
         // After generating the functions pertaining to our record, we pull them out of the
@@ -1520,7 +1520,7 @@ fn cc_struct_operator_delete_impl(
 
     let cc_record_name = cpp_type_name_for_record(record.as_ref(), db)?;
     let thunk_impl = ThunkImpl::Function {
-        return_type_name: quote! { void },
+        return_type_name: db.tokens().void.clone(),
         thunk_ident: thunk_ident.clone(),
         param_types: vec![quote! { #cc_record_name* }],
         param_idents: vec![make_rs_ident("ptr")],

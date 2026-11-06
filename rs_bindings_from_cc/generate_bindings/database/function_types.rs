@@ -14,7 +14,7 @@ use syn::Ident;
 #[derive(Clone)]
 pub struct GeneratedFunction {
     /// The generated Rust function.
-    pub snippets: Rc<ApiSnippets>,
+    pub snippets: ApiSnippets,
     /// The function's ID.
     pub id: Rc<FunctionId>,
     /// The status of function generation.

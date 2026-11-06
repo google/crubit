@@ -14,8 +14,16 @@ use crate::include_guard::IncludeGuard;
 use crate::type_location::TypeLocation;
 use crate::{GenericArgs, StaticMethodMode};
 use arc_anyhow::Result;
-use code_gen_utils::CcInclude;
+use code_gen_utils::{CcInclude, CommonTokens};
 use dyn_format::Format;
+
+pub struct RefTraitImpls {
+    pub by_adt: HashMap<DefId, Vec<(usize, DefId)>>,
+    pub by_tuple_arity: HashMap<usize, Vec<(usize, DefId)>>,
+    pub alias_fallback: Vec<(usize, DefId)>,
+    pub other: Vec<(usize, DefId)>,
+}
+
 use error_report::{ErrorReporting, ReportFatalError};
 use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::{Ty, TyCtxt};
@@ -48,22 +56,25 @@ memoized::query_group! {
       fn tcx(&self) -> TyCtxt<'tcx>;
 
       #[input]
+      #[return_ref]
       /// Name of the `extern` crate that bindings should be generated for.
       /// If `None`, bindings will be generated for the crate currently being compiled.
-      fn source_crate_name(&self) -> Option<Rc<str>>;
+      fn source_crate_name(&self) -> Option<&str>;
 
       #[input]
+      #[return_ref]
       /// Format specifier for `#include` Crubit C++ support library headers,
       /// using `{header}` as the place holder.  Example:
       /// `<crubit/support/{header}>` results in `#include
       /// <crubit/support/hdr.h>`.
-      fn crubit_support_path_format(&self) -> Format<1>;
+      fn crubit_support_path_format(&self) -> &Format<1>;
 
       #[input]
+      #[return_ref]
       /// Format specifier for path cross-references in "Generated from" comments.
       ///
       /// Inputs are `{path}` and `{line}` respectively.
-      fn crubit_debug_path_format(&self) -> Option<Format<2>>;
+      fn crubit_debug_path_format(&self) -> Option<&Format<2>>;
 
       #[input]
       /// The default features enabled on all crates, if not present in `crate_name_to_features`.
@@ -82,27 +93,31 @@ memoized::query_group! {
       fn enable_rmeta_interface(&self) -> bool;
 
       #[input]
+      #[return_ref]
       /// A map from a crate name to the include paths of the corresponding C++
       /// headers This is used when formatting a type exported from another
       /// crate.
       // TODO(b/271857814): A crate name might not be globally unique - the key needs to also cover
       // a "hash" of the crate version and compilation flags.
-      fn crate_name_to_include_paths(&self) -> Rc<HashMap<Rc<str>, Vec<CcInclude>>>;
+      fn crate_name_to_include_paths(&self) -> &HashMap<Rc<str>, Vec<CcInclude>>;
 
       #[input]
+      #[return_ref]
       /// A map from a crate name to the features enabled on that crate. The special name `self`
       /// refers to the current crate.
       // TODO(b/271857814): A crate name might not be globally unique - the key needs to also cover
       // a "hash" of the crate version and compilation flags.
-      fn crate_name_to_features(&self) -> Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>;
+      fn crate_name_to_features(&self) -> &HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>;
 
       #[input]
+      #[return_ref]
       /// A map from a crate name to the top-level namespace of the C++ bindings. The special name
       /// `self` refers to the current crate.
-      fn crate_name_to_namespace(&self) -> Rc<HashMap<Rc<str>, Rc<str>>>;
+      fn crate_name_to_namespace(&self) -> &HashMap<Rc<str>, Rc<str>>;
 
       #[input]
-      fn crate_renames(&self) -> Rc<HashMap<Rc<str>, Rc<str>>>;
+      #[return_ref]
+      fn crate_renames(&self) -> &HashMap<Rc<str>, Rc<str>>;
 
       #[input]
       /// Error collector for generating reports of errors encountered during the generation of bindings.
@@ -119,30 +134,47 @@ memoized::query_group! {
       fn is_golden_test(&self) -> bool;
 
       #[input]
-      fn h_out_include_guard(&self) -> IncludeGuard;
+      #[return_ref]
+      fn h_out_include_guard(&self) -> &IncludeGuard;
 
       #[input]
-      fn ignore_symbols_from_files(&self) -> Rc<HashSet<PathBuf>>;
+      #[return_ref]
+      fn ignore_symbols_from_files(&self) -> &HashSet<PathBuf>;
 
+      #[input]
+      #[return_ref]
+      /// Returns the set of common tokens.
+      ///
+      /// Implementation: common/code_gen_utils.rs?q=function:new+class:CommonTokens
+      fn tokens(&self) -> &CommonTokens;
+
+      #[return_ref]
       /// Computes all specializations specified in the crate.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:specializations
-      fn specializations(&self) -> Rc<[CppTypeSpecialization<'tcx>]>;
+      fn specializations(&self) -> &[CppTypeSpecialization<'tcx>];
+
+      #[return_ref]
+      /// Pre-index `&T` operator trait impls by referent type to avoid iterating over all blanket impls.
+      fn ref_trait_impls_by_referent(&self, trait_def_id: DefId) -> &RefTraitImpls;
 
       /// The `CrateNum` of the crate that the bindings should be generated for.
       /// This will be `LOCAL_CRATE` if no `source_crate_name` was provided.
       fn source_crate_num(&self) -> CrateNum;
 
+#[return_ref]
       /// Returns the list of traits that should appear in the generated bindings.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:supported_traits
-      fn supported_traits(&self) -> Rc<[DefId]>;
+      fn supported_traits(&self) -> &[DefId];
 
+      #[return_ref]
       /// Computes the unqualified name of the symbol identified by `def_id`.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:symbol_unqualified_name
-      fn symbol_unqualified_name(&self, def_id: DefId) -> Option<UnqualifiedName>;
+      fn symbol_unqualified_name(&self, def_id: DefId) -> Option<&UnqualifiedName>;
 
+      #[return_ref]
       /// Computes the canonical name of the symbol identified by `def_id`. For most cases, this
       /// will be the fully qualified path to the definition `def_id` references. However, some
       /// definitions are private and may not be referenced by the path they are defined at. This
@@ -167,16 +199,18 @@ memoized::query_group! {
       /// `def_id` has no publicly visible paths, for example.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:symbol_canonical_name
-      fn symbol_canonical_name(&self, def_id: DefId) -> Result<FullyQualifiedName>;
+      fn symbol_canonical_name(&self, def_id: DefId) -> Result<&FullyQualifiedName>;
 
+      #[return_ref]
       /// Computes a mapping from a `DefId` to a list of public paths that reference it in a given
       /// crate. This accounts for `use` statements that reexport, and optionally alias, the same
       /// DefId. This will not account for paths available in the entire forest of crates, unlike
       /// visible_parent_map(), strictly those within the provided crate.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:public_paths_by_def_id
-      fn public_paths_by_def_id(&self, crate_num: CrateNum) -> HashMap<DefId, PublicPaths>;
+      fn public_paths_by_def_id(&self, crate_num: CrateNum) -> &HashMap<DefId, PublicPaths>;
 
+      #[return_ref]
       /// Computes a mapping from a `DefId` to a list of public paths that reference it in the
       /// crate graph. Paths are only considered if they are from the source crate or they have a
       /// `--crate-header` specifying their bindings. Usually, this will mean the current crate and
@@ -186,24 +220,27 @@ memoized::query_group! {
       /// re-export of a definition will only be used if the defining crate has no paths.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:all_public_paths_by_def_id
-      fn all_public_paths_by_def_id(&self) -> HashMap<DefId, PublicPaths>;
+      fn all_public_paths_by_def_id(&self) -> &HashMap<DefId, PublicPaths>;
 
       /// Finds the `DefId` of a public item by its name in the given crate.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:def_id_by_symbol
       fn def_id_by_symbol(&self, crate_num: CrateNum, name: Symbol) -> Option<DefId>;
 
+      #[return_ref]
       /// Formats a C++ identifier, if possible.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:format_cc_ident_symbol
-      fn format_cc_ident(&self, ident: Symbol) -> Result<Ident>;
+      fn format_cc_ident(&self, ident: Symbol) -> Result<&Ident>;
 
+      #[return_ref]
       /// Formats the top-level namespace for the given crate, e.g. as `self::foo`, or
       /// `somecrate::foo`.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:format_top_level_ns_for_crate
-      fn format_top_level_ns_for_crate(&self, krate: CrateNum) -> Rc<[Symbol]>;
+      fn format_top_level_ns_for_crate(&self, krate: CrateNum) -> &[Symbol];
 
+      #[return_ref]
       /// Formats `ty` into a `CcSnippet` that represents how the type should be
       /// spelled in a C++ declaration of a function parameter or field.
       ///
@@ -212,8 +249,9 @@ memoized::query_group! {
           &self,
           ty: Ty<'tcx>,
           location: TypeLocation,
-      ) -> Result<CcSnippet<'tcx>>;
+      ) -> Result<&CcSnippet<'tcx>>;
 
+      #[return_ref]
       /// Formats `ty` into a `CcSnippet` that represents how the type should be
       /// spelled in a C++ declaration of a function parameter or field.
       ///
@@ -221,7 +259,7 @@ memoized::query_group! {
       fn format_ty_for_rs(
           &self,
           ty: Ty<'tcx>
-      ) -> Result<TokenStream>;
+      ) -> Result<&TokenStream>;
 
       /// Returns the `DefId` of the `cc_std::std::SupportsNullable` trait, or `None` if the
       /// support crate is not loaded.
@@ -284,6 +322,7 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:is_cpp_constexpr_move_constructible
       fn is_cpp_constexpr_move_constructible(&self, ty: Ty<'tcx>) -> bool;
 
+      #[return_ref]
       /// Generates bindings for a HIR item idenfied by `def_id`.  Returns `None` if
       /// the item can be ignored. Returns an `Err` if the bindings could not be
       /// generated.
@@ -291,8 +330,9 @@ memoized::query_group! {
       /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:generate_item
-      fn generate_item(&self, def_id: DefId) -> Result<Option<ApiSnippets<'tcx>>>;
+      fn generate_item(&self, def_id: DefId) -> Result<Option<&ApiSnippets<'tcx>>>;
 
+      #[return_ref]
       /// Generates bindings for a function with the given `local_def_id`.
       ///
       /// Will panic if `local_def_id`
@@ -300,13 +340,15 @@ memoized::query_group! {
       /// - doesn't identify a function
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_function.rs?q=function:generate_function
-      fn generate_function(&self, def_id: DefId, generic_args: Option<GenericArgs<'tcx>>, method_name_override: Option<&'static str>, static_method_mode: StaticMethodMode) -> Result<ApiSnippets<'tcx>>;
+      fn generate_function(&self, def_id: DefId, generic_args: Option<GenericArgs<'tcx>>, method_name_override: Option<&'static str>, static_method_mode: StaticMethodMode) -> Result<&ApiSnippets<'tcx>>;
 
+      #[return_ref]
       /// Determines if an ADT needs bindings generated in the current crate. This is a distinct method from `generate_adt_core` because we may want core binding information for a type that does not support bindings. For example, when generating bindings that use a type that isn't defined in the current crate.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_struct_and_union.rs?q=function:adt_supports_bindings
-      fn adt_needs_bindings(&self, def_id: DefId) -> Result<Rc<AdtCoreBindings<'tcx>>>;
+      fn adt_needs_bindings(&self, def_id: DefId) -> Result<&AdtCoreBindings<'tcx>>;
 
+      #[return_ref]
       /// Generates the bindings for the core of an algebraic data type (an ADT - a
       /// struct, an enum, or a union) represented by `def_id`.
       ///
@@ -323,10 +365,12 @@ memoized::query_group! {
       /// `generate_adt_core` is used both to 1) generate bindings for the core of an
       /// ADT, and 2) check if formatting would have succeeded (e.g. when called from
       /// `format_ty`).  The 2nd case is needed for ADTs defined in any crate.
-      fn generate_adt_core(&self, def_id: DefId) -> Result<Rc<AdtCoreBindings<'tcx>>>;
+      fn generate_adt_core(&self, def_id: DefId) -> Result<&AdtCoreBindings<'tcx>>;
 
-      fn crubit_abi_type_from_ty(&self, ty: Ty<'tcx>) -> Result<CrubitAbiTypeWithCcPrereqs<'tcx>>;
+      #[return_ref]
+      fn crubit_abi_type_from_ty(&self, ty: Ty<'tcx>) -> Result<&CrubitAbiTypeWithCcPrereqs<'tcx>>;
 
+      #[return_ref]
       /// Gathers all  `From` trait impls for the current crate and provides a mapping from the
       /// argument type to the impl. This is useful for determining `From` impls of ADTs where the
       /// ADT appears as an argument rather than a self type (i.e. `impl From<Adt> for i32`).
@@ -338,21 +382,23 @@ memoized::query_group! {
       /// reason, this function is currently limited to `From` specifically.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_struct_and_union.rs?q=function:from_trait_impls_by_argument
-      fn from_trait_impls_by_argument(&self, crate_num: CrateNum) -> Rc<HashMap<DefId, Vec<DefId>>>;
+      fn from_trait_impls_by_argument(&self, crate_num: CrateNum) -> &HashMap<DefId, Vec<DefId>>;
 
 
+      #[return_ref]
       /// Gathers all `Into` trail impls for the current crate and provides a mapping from
       /// the destination type to the impl.
       /// This is useful for discovering impls that convert from a given type.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_struct_and_union.rs?q=function:into_trait_impls_by_destination
-      fn into_trait_impls_by_destination(&self, crate_num: CrateNum) -> Rc<HashMap<DefId, Vec<DefId>>>;
+      fn into_trait_impls_by_destination(&self, crate_num: CrateNum) -> &HashMap<DefId, Vec<DefId>>;
 
       /// Given a function identified by `fn_def_id` (generic or non-generic) tries to return
       /// the generic arguments that should be used in the generated Crubit bindings.
       /// Fails if any of the generic parameters cannot be replaced with a concrete type.
       fn get_generic_args(&self, fn_def_id: DefId) -> Result<GenericArgs<'tcx>>;
 
+      #[return_ref]
       /// Parses `self_ty` into a supported template specialization, if one is available
       /// (e.g. `Option<T>`, `Result<T, E>`). This just checks the type conforms to the right shape
       /// and contains valid types. It does not check if the template specialization should be used
@@ -362,7 +408,7 @@ memoized::query_group! {
       fn parse_adt_template_specialization(
           &self,
           self_ty: Ty<'tcx>,
-      ) -> Option<Result<AdtTemplateSpecialization<'tcx>>>;
+      ) -> Option<&Result<AdtTemplateSpecialization<'tcx>>>;
 
       /// Checks if `self_ty` implements `trait_id` with empty generic arguments.
       fn does_type_implement_trait(&self, self_ty: Ty<'tcx>, trait_id: DefId) -> bool;
@@ -379,7 +425,7 @@ memoized::query_group! {
 impl<'tcx> BindingsGenerator<'tcx> {
     /// Returns the include for the given Crubit runtime support header.
     pub fn support_header(&self, suffix: &str) -> CcInclude {
-        CcInclude::support_lib_header(self.crubit_support_path_format(), suffix.into())
+        CcInclude::support_lib_header(self.crubit_support_path_format().clone(), suffix.into())
     }
 
     pub fn crate_features(

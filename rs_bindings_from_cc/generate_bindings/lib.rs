@@ -7,6 +7,7 @@ use arc_anyhow::{anyhow, ensure, Context, Error, Result};
 use code_gen_utils::make_rs_lifetime_ident;
 use code_gen_utils::{
     format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, try_make_rs_ident, CcInclude,
+    CommonTokens,
 };
 use cpp_type_name::format_cpp_type_with_references;
 use crubit_abi_type::{
@@ -448,7 +449,7 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
                 if db.is_ambiguous_function(&generated_function.id, func.id()) {
                     bail!("Cannot generate bindings for overloaded function")
                 } else {
-                    (*generated_function.snippets).clone()
+                    generated_function.snippets.clone()
                 }
             }
         },
@@ -533,7 +534,7 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
     };
 
     // Suppress bindings at the last minute, to collect other errors first.
-    let _ = db.has_bindings(item.clone())?;
+    db.has_bindings(item.clone())?;
 
     Ok(generated_item)
 }
@@ -557,9 +558,10 @@ pub fn new_database<'db>(
             generate_enum: generate_enum::generate_enum,
             generate_item,
             generate_record: generate_struct_and_union::generate_record,
-            decl_lifetime_arity: lifetime_defaults_transform::decl_lifetime_arity,
         },
         interner,
+        CommonTokens::new(),
+        lifetime_defaults_transform::decl_lifetime_arity,
         rs_type_kind_safety,
         record_field_safety,
         record_safety,
@@ -925,7 +927,7 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
                     .target_crubit_features(record.as_ref().owning_target())
                     .contains(crubit_feature::CrubitFeature::AssumeLifetimes)
             {
-                match (db.codegen_functions().decl_lifetime_arity)(db, record.id()) {
+                match db.decl_lifetime_arity(record.id()) {
                     Ok(arity) => {
                         if arity != 0 && lifetimes.len() != arity {
                             return Some(UnsafeReason(intern!(
@@ -1136,7 +1138,12 @@ fn callable_safety(
 }
 
 /// Implementation of `BindingsGenerator::record_field_safety`.
-fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeReason> {
+fn record_field_safety(
+    db: &BindingsGenerator,
+    record: FfiRc<ir::Record>,
+    field_index: usize,
+) -> Option<UnsafeReason> {
+    let field = &record.fields()[field_index];
     if field.access() != AccessSpecifier::Public {
         return None;
     }
@@ -1154,10 +1161,7 @@ fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeRea
 }
 
 /// Implementation of `BindingsGenerator::unsupported_item_errors`.
-fn unsupported_item_errors(
-    db: &BindingsGenerator,
-    item: FfiRc<ir::UnsupportedItem>,
-) -> Rc<[Error]> {
+fn unsupported_item_errors(db: &BindingsGenerator, item: FfiRc<ir::UnsupportedItem>) -> Vec<Error> {
     item.errors()
         .iter()
         .map(|e| {
@@ -1197,8 +1201,9 @@ fn record_safety(db: &BindingsGenerator, record: FfiRc<Record>) -> Option<Unsafe
     let reasons: Vec<_> = record
         .fields()
         .iter()
-        .filter_map(|field| {
-            let reason = db.record_field_safety(field.clone())?;
+        .enumerate()
+        .filter_map(|(idx, field)| {
+            let reason = db.record_field_safety(record.clone(), idx)?;
 
             // TODO(nicholasbishop): handle unnamed better.
             let mut name = field
@@ -1395,7 +1400,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
         )),
         RsTypeKind::TypeAlias { underlying_type, .. } => {
             // We don't actually _have_ to expand the type alias here
-            db.crubit_abi_type(underlying_type.as_ref().clone())
+            db.crubit_abi_type(underlying_type.as_ref().clone()).cloned()
         }
         RsTypeKind::Pointer { pointee, kind, mutability } => {
             let rust_tokens = pointee.to_token_stream(db);
@@ -1544,18 +1549,18 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
 
                 let type_args = generic_types
                     .iter()
-                    .map(|t: &RsTypeKind| db.crubit_abi_type(t.clone()))
+                    .map(|t: &RsTypeKind| db.crubit_abi_type(t.clone()).cloned())
                     .collect::<Result<Rc<[CrubitAbiType]>>>()?;
 
                 Ok(CrubitAbiType::Type { rust_abi_path, cpp_abi_path, type_args })
             }
             BridgeRsTypeKind::StdOptional(inner) => {
-                let inner_abi = db.crubit_abi_type(inner.as_ref().clone())?;
+                let inner_abi = db.crubit_abi_type(inner.as_ref().clone())?.clone();
                 Ok(CrubitAbiType::option(inner_abi))
             }
             BridgeRsTypeKind::StdPair(first, second) => {
-                let first_abi = db.crubit_abi_type(first.as_ref().clone())?;
-                let second_abi = db.crubit_abi_type(second.as_ref().clone())?;
+                let first_abi = db.crubit_abi_type(first.as_ref().clone())?.clone();
+                let second_abi = db.crubit_abi_type(second.as_ref().clone())?.clone();
                 Ok(CrubitAbiType::Pair(Rc::from(first_abi), Rc::from(second_abi)))
             }
             BridgeRsTypeKind::StdString { in_cc_std, layout_compatible } => {
@@ -1587,7 +1592,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                     .unwrap_or_else(|| quote! { ::co });
 
                 let result_type_tokens = if result_type.is_void() {
-                    quote! { () }
+                    db.tokens().unit.clone()
                 } else {
                     result_type.all_static_lifetimes(false).to_token_stream(db)
                 };
@@ -1602,7 +1607,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 };
 
                 let rust_expr_tokens = {
-                    let consume_result_fn = match &result_type_crubit_abi_type {
+                    let consume_result_fn = match result_type_crubit_abi_type {
                         None => quote! { #co_crate::internal_crubit::consume_void_result },
                         Some(result_type_crubit_abi_type) => {
                             let result_type_crubit_abi_type_tokens =
@@ -1644,12 +1649,12 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 };
 
                 let cpp_type_tokens = {
-                    let result_type_crubit_abi_type_tokens = match &result_type_crubit_abi_type {
+                    let result_type_crubit_abi_type_tokens = match result_type_crubit_abi_type {
                         None => {
                             // For coroutines that return void, there is no CrubitAbi type. To avoid
                             // needing many C++ types, we'll use `void` as the placeholder since
                             // it's never used on as the CrubitAbi type in this context anyways.
-                            quote! { void }
+                            db.tokens().void.clone()
                         }
                         Some(result_type_crubit_abi_type) => {
                             let cpp_tokens = CrubitAbiTypeToCppTokens(result_type_crubit_abi_type);
@@ -1662,7 +1667,7 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 };
 
                 let cpp_expr_tokens = {
-                    let start_coroutine_fn_tokens = match &result_type_crubit_abi_type {
+                    let start_coroutine_fn_tokens = match result_type_crubit_abi_type {
                         None => {
                             quote! {
                                 &::c9::internal::rust::StartCoroutineFromRust
@@ -1764,11 +1769,11 @@ fn generate_dyn_callable_invoker_and_manager_decls(
             let return_type_tokens =
                 cpp_type_name::format_cpp_type_with_references(&callable.return_type, db).ok()?;
             out_param = Some(quote! { , #return_type_tokens* out });
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = db.tokens().void.clone();
         }
         PassingConvention::ComposablyBridged => {
             out_param = Some(quote! { , unsigned char* out });
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = db.tokens().void.clone();
         }
         PassingConvention::Ctor => {
             return None;
@@ -1778,7 +1783,7 @@ fn generate_dyn_callable_invoker_and_manager_decls(
         }
         PassingConvention::Void => {
             out_param = None;
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = db.tokens().void.clone();
         }
     }
 
@@ -1846,7 +1851,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
                 }
                 PassingConvention::ComposablyBridged => {
                     let crubit_abi_type = db.crubit_abi_type(ty.clone()).ok()?;
-                    let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+                    let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(crubit_abi_type);
                     ffi_to_rust_transforms.extend(quote! {
                         let #ident = unsafe { ::crubit_support::bridge::internal::decode(#crubit_abi_type_expr_tokens, #ident) };
                     });
@@ -1905,7 +1910,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
         }
         PassingConvention::ComposablyBridged => {
             let crubit_abi_type = db.crubit_abi_type(callable.return_type.as_ref().clone()).ok()?;
-            let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+            let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(crubit_abi_type);
             invoke_rust_and_return_to_ffi = quote! {
                 unsafe {
                     ::crubit_support::bridge::internal::encode(
@@ -2122,10 +2127,9 @@ fn generate_any_invocable_invoker_def(
                     Some(quote! { , #param_type_tokens* #param_ident })
                 }
                 PassingConvention::ComposablyBridged => {
-                    let crubit_abi_type =
-                        db.crubit_abi_type(RsTypeKind::clone(param_type)).ok()?;
-                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                    let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                    let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(param_type)).ok()?;
+                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(crubit_abi_type);
+                    let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(crubit_abi_type);
                     arg_exprs.push(quote! { ::crubit::internal::Decode<#crubit_abi_type_tokens>(#crubit_abi_type_expr_tokens, #param_ident) });
                     Some(quote! { , unsigned char* #param_ident })
                 }
@@ -2170,11 +2174,11 @@ fn generate_any_invocable_invoker_def(
             };
 
             out_param = Some(quote! { , #return_type_tokens* out });
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = db.tokens().void.clone();
         }
         PassingConvention::ComposablyBridged => {
             let crubit_abi_type = db.crubit_abi_type(callable.return_type.as_ref().clone()).ok()?;
-            let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+            let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(crubit_abi_type);
             invoke_rust_and_return_to_ffi = quote! {
                 ::crubit::internal::Encode(
                     #crubit_abi_type_expr_tokens,
@@ -2183,7 +2187,7 @@ fn generate_any_invocable_invoker_def(
                 );
             };
 
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = db.tokens().void.clone();
             out_param = Some(quote! { , unsigned char* out });
         }
         PassingConvention::Ctor => {
@@ -2198,7 +2202,7 @@ fn generate_any_invocable_invoker_def(
                 #invoke_rust_and_return_to_ffi;
             };
 
-            decl_return_type_tokens = quote! { void };
+            decl_return_type_tokens = db.tokens().void.clone();
             out_param = None;
         }
     }

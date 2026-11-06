@@ -5,8 +5,8 @@
 use crate::code_snippet::{ApiSnippets, NoBindingsReason, ResolvedName};
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::{LifetimeOptions, RsTypeKind, UnsafeReason};
-use arc_anyhow::{Error, Result};
-use code_gen_utils::make_rs_ident;
+use arc_anyhow::{anyhow, Error, Result};
+use code_gen_utils::{make_rs_ident, CommonTokens};
 use crubit_abi_type::CrubitAbiType;
 use error_report::{bail, ensure, ErrorReporting, ReportFatalError};
 use heck::ToSnakeCase;
@@ -36,12 +36,10 @@ impl InternerImpl {
             rc
         };
 
-        // If we just allocated something massive, free up the memory.
-        self.buf.truncate(1024);
-        self.buf.shrink_to_fit();
-
-        // And then clear for next use.
         self.buf.clear();
+        if self.buf.capacity() > 1024 {
+            self.buf.shrink_to(1024);
+        }
         rc
     }
 }
@@ -96,12 +94,11 @@ macro_rules! intern {
     };
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct CodegenFunctions {
     pub generate_enum: fn(&BindingsGenerator<'_>, FfiRc<Enum>) -> Result<ApiSnippets>,
     pub generate_item: fn(&BindingsGenerator<'_>, ir::Item) -> Result<ApiSnippets>,
     pub generate_record: fn(&BindingsGenerator<'_>, FfiRc<Record>) -> Result<ApiSnippets>,
-    pub decl_lifetime_arity: fn(&BindingsGenerator<'_>, ir::ItemId) -> Result<usize>,
 }
 
 memoized::query_group! {
@@ -132,6 +129,16 @@ memoized::query_group! {
         #[input]
         fn interner(&self) -> &'db Interner;
 
+        #[input]
+        #[return_ref]
+        /// Returns the set of common tokens.
+        ///
+        /// Implementation: common/code_gen_utils.rs?q=function:new+class:CommonTokens
+        fn tokens(&self) -> &CommonTokens;
+
+        #[break_cycles_with = Err(anyhow!("Cycle detected: decl_lifetime_arity"))]
+        fn decl_lifetime_arity(&self, item_id: ir::ItemId) -> Result<usize>;
+
         #[break_cycles_with = None]
         /// Returns whether the given Rust type is an unsafe type, such as a raw pointer.
         ///
@@ -144,7 +151,7 @@ memoized::query_group! {
         /// Returns whether the given field is unsafe to access.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:record_field_safety
-        fn record_field_safety(&self, field: Field) -> Option<UnsafeReason>;
+        fn record_field_safety(&self, record: FfiRc<ir::Record>, field_index: usize) -> Option<UnsafeReason>;
 
         #[break_cycles_with = None]
         /// Returns whether the given record is unsafe.
@@ -155,17 +162,17 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:record_safety
         fn record_safety(&self, record: FfiRc<Record>) -> Option<UnsafeReason>;
 
+        #[return_ref]
         /// Returns whether the given item has bindings, or an error if the item is not supported.
-        ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:has_bindings
-        fn has_bindings(&self, item: ir::Item) -> Result<(), NoBindingsReason>;
+        fn has_bindings(&self, item: ir::Item) -> Result<(), &NoBindingsReason>;
 
         /// Returns the Rust type kind of the given C++ type, optionally filling in missing
         /// reference lifetimes with the elided lifetime (`'_`).
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/rs_type_kind.rs?q=function:rs_type_kind_with_lifetime_elision
-        fn rs_type_kind_with_lifetime_elision(&self, cc_type: CcType, lifetime_options: LifetimeOptions) -> Result<RsTypeKind>;
+        fn rs_type_kind_with_lifetime_elision_memoized(&self, cc_type: Rc<CcType>, lifetime_options: LifetimeOptions) -> Result<RsTypeKind>;
 
+        #[return_ref]
         /// Returns the generated bindings for the given function.
         ///
         /// `derived_record` is a derived class type which re-exports `func` as a
@@ -186,8 +193,9 @@ memoized::query_group! {
         /// rely on the bindings of a function being generated correctly, except for `Drop`.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:generate_function
-        fn generate_function(&self, func: FfiRc<Func>, derived_record: Option<FfiRc<Record>>) -> Result<Option<GeneratedFunction>>;
+        fn generate_function(&self, func: FfiRc<Func>, derived_record: Option<FfiRc<Record>>) -> Result<Option<&GeneratedFunction>>;
 
+        #[return_ref]
         /// You should call is_function_ambiguous() instead.
         ///
         /// Identifies all functions having overloads that we can't import (yet).
@@ -195,7 +203,7 @@ memoized::query_group! {
         /// TODO(b/213280424): Implement support for overloaded functions.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:overload_sets
-        fn overload_sets(&self) -> Rc<HashMap<Rc<FunctionId>, Option<ir::ItemId>>>;
+        fn overload_sets(&self) -> &HashMap<Rc<FunctionId>, Option<ir::ItemId>>;
 
         /// Returns whether the given record either implements or derives the Clone
         /// trait.
@@ -203,36 +211,41 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:is_record_clonable
         fn is_record_clonable(&self, record: FfiRc<Record>) -> bool;
 
+        #[return_ref]
         /// Returns the generated bindings for a function with the given name and param
         /// types. If none exists, returns None.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:get_binding
-        fn get_binding(
+        fn get_binding_memoized(
             &self,
-            expected_function_name: UnqualifiedIdentifier,
-            expected_param_types: Vec<RsTypeKind>,
-        ) -> Option<(Ident, ImplKind)>;
+            expected_function_name: Rc<UnqualifiedIdentifier>,
+            expected_param_types: Rc<[RsTypeKind]>,
+        ) -> Option<&(Ident, ImplKind)>;
 
+        #[return_ref]
         /// Returns a collection of unqualified member functions of the given record.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:collect_unqualified_member_functions
         fn collect_unqualified_member_functions(
             &self,
             record: FfiRc<Record>,
-        ) -> Rc<[FfiRc<Func>]>;
+        ) -> &[FfiRc<Func>];
 
+        #[return_ref]
         /// Returns the `CrubitAbiType` for the given `RsTypeKind`.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:crubit_abi_type
-        fn crubit_abi_type(&self, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType>;
+        fn crubit_abi_type(&self, rs_type_kind: RsTypeKind) -> Result<&CrubitAbiType>;
 
+        #[return_ref]
         /// Resolves names to a map from name to ResolvedName.
         ///
         /// This checks both type and value namespaces.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:resolve_names
-        fn resolve_names(&self, parent: FfiRc<Record>) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>>;
+        fn resolve_names(&self, parent: FfiRc<Record>) -> Result<&HashMap<Rc<str>, ResolvedName>>;
 
+        #[return_ref]
         /// Counts how many functions have the given mangled name.
         /// Returns a map from a mangled name to the number of times it occurs in the IR.
         ///
@@ -241,16 +254,33 @@ memoized::query_group! {
         /// bindings are skipped).
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:mangled_name_counts
-        fn mangled_name_counts(&self) -> Rc<HashMap<Rc<str>, usize>>;
+        fn mangled_name_counts(&self) -> &HashMap<Rc<str>, usize>;
 
+        #[return_ref]
         /// Returns the formatted errors for the given unsupported item.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:unsupported_item_errors
-        fn unsupported_item_errors(&self, item: FfiRc<ir::UnsupportedItem>) -> Rc<[Error]>;
+        fn unsupported_item_errors(&self, item: FfiRc<ir::UnsupportedItem>) -> &[Error];
     }
 }
 
 impl<'db> BindingsGenerator<'db> {
+    pub fn get_binding(
+        &self,
+        expected_function_name: UnqualifiedIdentifier,
+        expected_param_types: Rc<[RsTypeKind]>,
+    ) -> Option<&(Ident, ImplKind)> {
+        self.get_binding_memoized(Rc::new(expected_function_name), expected_param_types)
+    }
+
+    pub fn rs_type_kind_with_lifetime_elision(
+        &self,
+        cc_type: CcType,
+        lifetime_options: LifetimeOptions,
+    ) -> Result<RsTypeKind> {
+        self.rs_type_kind_with_lifetime_elision_memoized(Rc::new(cc_type), lifetime_options)
+    }
+
     /// Returns the generated bindings for the given enum.
     ///
     /// Implementation: <http://rs_bindings_from_cc/generate_bindings/generate_enum.rs?q=function:generate_enum>

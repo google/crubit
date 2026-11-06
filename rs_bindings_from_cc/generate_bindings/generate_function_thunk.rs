@@ -675,9 +675,8 @@ pub fn generate_cc_thunk_parts(
                 PassingConvention::ComposablyBridged => {
                     let ffi_ident = format_ident!("__{ident}");
                     let crubit_abi_type = db.crubit_abi_type(arg_type.clone())?;
-                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                    let crubit_abi_type_expr_tokens =
-                        CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(crubit_abi_type);
+                    let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(crubit_abi_type);
                     let decoder = format_ident!("__{ident}_decoder");
                     conversion_stmts.extend(quote! {
                         ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ffi_ident);
@@ -757,7 +756,7 @@ pub fn generate_cc_thunk_parts(
             match passing_convention {
                 PassingConvention::ComposablyBridged => {
                     let crubit_abi_type = db.crubit_abi_type(arg_type.clone())?;
-                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(crubit_abi_type);
                     let decoder = format_ident!("__{ident}_decoder");
                     conversion_stmts.extend(quote! {
                         ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ident);
@@ -811,7 +810,7 @@ pub fn generate_cc_thunk_parts(
                         PassingConvention::ComposablyBridged => {
                             let crubit_abi_type = db.crubit_abi_type(rs_type_kind.clone())?;
                             let crubit_abi_type_expr_tokens =
-                                CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                                CrubitAbiTypeToCppExprTokens(crubit_abi_type);
                             let decoder = format_ident!("__{ident}_decoder");
                             Ok(quote! {
                                 #crubit_abi_type_expr_tokens.Decode(#decoder)
@@ -875,14 +874,14 @@ pub fn generate_cc_thunk_parts(
             // value across `extern "C"` ABI.
             param_idents.insert(0, format_cc_ident("__return_abi_buffer", features)?);
             param_types.insert(0, quote! {unsigned char *});
-            quote! { void }
+            db.tokens().void.clone()
         }
         PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
             // Here, we add a `__return` parameter if the return type can't be passed by
             // value across `extern "C"` ABI.
             param_idents.insert(0, format_cc_ident("__return", features)?);
             param_types.insert(0, quote! {#return_type_cpp_spelling *});
-            quote! {void}
+            db.tokens().void.clone()
         }
         PassingConvention::AbiCompatible
         | PassingConvention::OwnedPtr
@@ -894,8 +893,8 @@ pub fn generate_cc_thunk_parts(
             PassingConvention::ComposablyBridged => {
                 let out_param = &param_idents[0];
                 let crubit_abi_type = db.crubit_abi_type(return_type_kind)?;
-                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(crubit_abi_type);
+                let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(crubit_abi_type);
                 let return_expr = quote! { ([&]() #body_tokens)() };
                 quote! {
                     ::crubit::Encoder __return_encoder(#crubit_abi_type_tokens::kSize, #out_param);
@@ -959,9 +958,8 @@ pub fn generate_cc_thunk_parts(
                 PassingConvention::ComposablyBridged => {
                     let out_param = &param_idents[0];
                     let crubit_abi_type = db.crubit_abi_type(return_type_kind.clone())?;
-                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                    let crubit_abi_type_expr_tokens =
-                        CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(crubit_abi_type);
+                    let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(crubit_abi_type);
                     quote! {
                         ::crubit::Encoder __return_encoder(#crubit_abi_type_tokens::kSize, #out_param);
                         #crubit_abi_type_expr_tokens.Encode(

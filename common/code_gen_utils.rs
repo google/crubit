@@ -1114,13 +1114,13 @@ impl CcInclude {
 
 /// Creates a `CcInclude` from an `include_path` annotation string, mapping
 /// `<crubit/support/...>` and `support/...` paths to `CcInclude::SupportLibHeader`.
-pub fn include_from_path(crubit_support_path_format: Format<1>, path: &str) -> CcInclude {
+pub fn include_from_path(crubit_support_path_format: &Format<1>, path: &str) -> CcInclude {
     if let Some(support_path) = path
         .strip_prefix("<crubit/support/")
         .and_then(|s| s.strip_suffix('>'))
         .or_else(|| path.strip_prefix("support/"))
     {
-        CcInclude::support_lib_header(crubit_support_path_format, support_path.into())
+        CcInclude::support_lib_header(crubit_support_path_format.clone(), support_path.into())
     } else {
         CcInclude::from_path(path)
     }
@@ -1586,5 +1586,47 @@ pub mod tests {
             let actual_output = is_cpp_pointer_type(input.parse().unwrap());
             assert_eq!(actual_output, expected_output);
         }
+    }
+}
+
+/// Pre-interned constant [`TokenStream`]s stored in the bindings database so codegen functions can
+/// borrow `&'db TokenStream` directly instead of repeatedly allocating via `quote!`.
+#[derive(Clone)]
+pub struct CommonTokens {
+    pub void: TokenStream,
+    pub bool_: TokenStream,
+    pub float: TokenStream,
+    pub double: TokenStream,
+    pub unit: TokenStream,
+    pub rs_unit_t: TokenStream,
+    pub crubit_bool_t: TokenStream,
+    pub crubit_bool_t_const_ref: TokenStream,
+    pub lifetime_static: TokenStream,
+    pub lifetime_wildcard: TokenStream,
+}
+
+impl Default for CommonTokens {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl CommonTokens {
+    pub fn new() -> Self {
+        thread_local! {
+            static INTERNED: CommonTokens = CommonTokens {
+                bool_: quote! { bool },
+                float: quote! { float },
+                double: quote! { double },
+                void: quote! { void },
+                unit: quote! { () },
+                rs_unit_t: quote! { ::rs::unit_t },
+                crubit_bool_t: quote! { __CrubitBoolT },
+                crubit_bool_t_const_ref: quote! { __CrubitBoolT const& },
+                lifetime_static: quote! { 'static },
+                lifetime_wildcard: quote! { '_ },
+            };
+        }
+        INTERNED.with(Clone::clone)
     }
 }

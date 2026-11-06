@@ -1,7 +1,6 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-
 #![feature(cfg_accessible)]
 #![feature(rustc_private)]
 #![feature(stmt_expr_attributes)]
@@ -59,13 +58,13 @@ use rustc_abi::{Endian, FieldIdx, FieldsShape, LayoutData, VariantIdx, Variants}
 
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
-use rustc_middle::mir::Mutability;
 use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
@@ -123,10 +122,10 @@ pub fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
 }
 
 /// Returns the C++ underlying type of the `cpp_enum` struct specified by the given def id.
-pub fn cpp_enum_cpp_underlying_type<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+pub fn cpp_enum_cpp_underlying_type<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
     def_id: DefId,
-) -> Result<CcSnippet<'tcx>> {
+) -> Result<&'db CcSnippet<'tcx>> {
     let field_type = cpp_enum_rust_underlying_type(db.tcx(), def_id)?;
     db.format_ty_for_cc(field_type, TypeLocation::Field)
 }
@@ -159,7 +158,7 @@ pub fn cpp_enum_cpp_underlying_type<'tcx>(
 /// ```
 fn generate_cpp_enum<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    core: Rc<AdtCoreBindings<'tcx>>,
+    core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let enumeration_cc_name = &core.common.cc_short_name;
@@ -283,14 +282,14 @@ fn is_trait_method_of_impl_lookup_stable<'tcx>(tcx: TyCtxt<'tcx>, impl_assoc_id:
         .expect("Associated trait item should be defined on it's trait")
 }
 
-pub fn generate_associated_item<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+pub fn generate_associated_item<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
     assoc_item: &ty::AssocItem,
     member_function_names: &mut HashSet<String>,
     generic_args: Option<GenericArgs<'tcx>>,
     method_name_override: Option<&'static str>,
     static_method_mode: StaticMethodMode,
-) -> Option<ApiSnippets<'tcx>> {
+) -> Option<Cow<'db, ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
     let def_id = assoc_item.def_id;
     if !is_supported_associated_item(tcx, def_id) {
@@ -305,7 +304,7 @@ pub fn generate_associated_item<'tcx>(
     generate_unsupported::error_scope!(db, def_id, args);
     let result = match assoc_item.kind {
         ty::AssocKind::Fn { .. } => {
-            db.generate_function(def_id, generic_args, method_name_override, static_method_mode).inspect(|_binding| {
+            db.generate_function(def_id, generic_args, method_name_override, static_method_mode).map(Cow::Borrowed).inspect(|_binding| {
                 // If `generate_function` succeeds, record the method in `member_function_names`.
                 let Some(unqualified_name) = db.symbol_unqualified_name(def_id) else {
                     panic!("Associated item should have an unqualified name: {}", tcx.def_path_str(def_id));
@@ -318,7 +317,7 @@ pub fn generate_associated_item<'tcx>(
             );
             })
         }
-        ty::AssocKind::Const { .. } => generate_const(db, def_id, generic_args),
+        ty::AssocKind::Const { .. } => generate_const(db, def_id, generic_args).map(Cow::Owned),
         // TODO: b/405132277 - Rust does not support inherent associated types, but should support
         // associated types when adding traits.
         ty::AssocKind::Type { .. } => {
@@ -357,7 +356,7 @@ pub fn generate_associated_item<'tcx>(
                         alias_type,
                         type_location,
                     )
-                    .map(|snippet| snippet.into_main_api())
+                    .map(|snippet| Cow::Owned(snippet.into_main_api()))
                 })
         }
     };
@@ -366,7 +365,9 @@ pub fn generate_associated_item<'tcx>(
             if crubit_attr::get_attrs(tcx, def_id).unwrap().must_bind {
                 report_must_bind_error(db, def_id, args, &err);
             }
-            Some(generate_unsupported_def_with_args(db, def_id, args, err).into_main_api())
+            Some(Cow::Owned(
+                generate_unsupported_def_with_args(db, def_id, args, err).into_main_api(),
+            ))
         }
         Ok(result) => Some(result),
     }
@@ -541,12 +542,12 @@ fn snippets_introduce_recursive_specialization<'tcx>(
         .chain(snippets.cc_details.prereqs.template_specializations.iter())
         .chain(snippets.cc_details.prereqs.lazy_template_specializations.iter())
         .any(|spec| match spec {
-            TemplateSpecialization::Adt(adt_spec) => {
+            TemplateSpecialization::Adt(adt) => {
                 // Because we eagerly instantiate all template specializations, we need
                 // to guard against infinite recursion. This can arise from inherent
                 // methods or operator impls that use Self as a template argument of
                 // another specialization, among other things.
-                is_recursive_specialization(tcx, self_ty, adt_spec.self_ty_rs)
+                is_recursive_specialization(tcx, self_ty, adt.self_ty_rs)
             }
             _ => false,
         })
@@ -556,7 +557,7 @@ fn trait_impls_by_argument_adt<'tcx>(
     tcx: TyCtxt<'tcx>,
     crate_num: CrateNum,
     trait_id: DefId,
-) -> Rc<HashMap<DefId, Vec<DefId>>> {
+) -> HashMap<DefId, Vec<DefId>> {
     let impls_iter: Box<dyn Iterator<Item = DefId>> = if crate_num == LOCAL_CRATE {
         Box::new(tcx.local_trait_impls(trait_id).iter().map(|impl_id| impl_id.to_def_id()))
     } else {
@@ -572,13 +573,13 @@ fn trait_impls_by_argument_adt<'tcx>(
         };
         map.entry(adt_def.did()).or_default().push(impl_id);
     }
-    Rc::new(map)
+    map
 }
 
 pub fn from_trait_impls_by_argument<'tcx>(
     db: &BindingsGenerator<'tcx>,
     crate_num: CrateNum,
-) -> Rc<HashMap<DefId, Vec<DefId>>> {
+) -> HashMap<DefId, Vec<DefId>> {
     let tcx = db.tcx();
     let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
     trait_impls_by_argument_adt(tcx, crate_num, from_trait)
@@ -587,7 +588,7 @@ pub fn from_trait_impls_by_argument<'tcx>(
 pub fn into_trait_impls_by_destination<'tcx>(
     db: &BindingsGenerator<'tcx>,
     crate_num: CrateNum,
-) -> Rc<HashMap<DefId, Vec<DefId>>> {
+) -> HashMap<DefId, Vec<DefId>> {
     let tcx = db.tcx();
     let into_trait = tcx.get_diagnostic_item(sym::Into).expect("Could not find Into trait");
     trait_impls_by_argument_adt(tcx, crate_num, into_trait)
@@ -707,7 +708,7 @@ fn generate_into_impls<'tcx>(
                 .expect(
                     "ADT's self type should be C++-convertible after generate_adt_core succeeds",
                 );
-            let self_cpp_ty = self_cpp_ty.into_tokens(&mut prereqs);
+            prereqs += &self_cpp_ty.prereqs;
             let impl_body = generate_thunk_call(
                 db,
                 thunk_name.clone(),
@@ -718,7 +719,7 @@ fn generate_into_impls<'tcx>(
                 &[Param {
                     cc_name: format_ident!("self"),
                     cpp_type: CcParamTy {
-                        snippet: CcSnippet::new(self_cpp_ty),
+                        snippet: Cow::Borrowed(self_cpp_ty),
                         is_lifetime_bound: false,
                     },
                     ty: core.common.self_ty,
@@ -790,13 +791,13 @@ fn generate_into_trait_thunk<'tcx>(
     let (thunk_self_ty, src_rs_name) = match src_def_id {
         Some(def_id) if !query_compiler::has_non_lifetime_generics(tcx, def_id) => (
             erase_regions(tcx, src_ty),
-            db.symbol_canonical_name(def_id)
-                .map(|name| name.format_for_rs())
-                .or_else(|_| db.format_ty_for_rs(replace_all_regions_with_static(tcx, src_ty)))?,
+            db.symbol_canonical_name(def_id).map(|name| name.format_for_rs()).or_else(|_| {
+                db.format_ty_for_rs(replace_all_regions_with_static(tcx, src_ty)).cloned()
+            })?,
         ),
         _ => (
             erase_regions(tcx, src_ty),
-            db.format_ty_for_rs(replace_all_regions_with_static(tcx, src_ty))?,
+            db.format_ty_for_rs(replace_all_regions_with_static(tcx, src_ty))?.clone(),
         ),
     };
     let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls } =
@@ -806,7 +807,7 @@ fn generate_into_trait_thunk<'tcx>(
             &[dst_ty],
             thunk_self_ty,
             src_def_id,
-            src_rs_name,
+            &src_rs_name,
             is_constructor,
             /* within_template= */ false,
         )?;
@@ -940,7 +941,7 @@ fn generate_constructor_impls<'tcx>(
             .ok()?;
 
             if is_aggregate {
-                db.format_ty_for_rs(replace_all_regions_with_static(tcx, src_ty)).ok()?;
+                let _ = db.format_ty_for_rs(replace_all_regions_with_static(tcx, src_ty)).ok()?;
                 let impl_name = tcx.def_path_str(impl_id);
                 let msg = format!(
                     "Constructor from `{impl_name}` is suppressed because `{cc_struct_name}` is a C++ aggregate."
@@ -968,7 +969,7 @@ fn generate_constructor_impls<'tcx>(
                     &[src_ty],
                     core.common.self_ty,
                     core.def_id,
-                    core.rs_fully_qualified_name.clone(),
+                    &core.rs_fully_qualified_name,
                     /*is_constructor=*/ true,
                     /*within_template=*/ false,
                 )
@@ -999,7 +1000,7 @@ fn generate_constructor_impls<'tcx>(
             prereqs.move_defs_to_fwd_decls();
             let (template_prefix, cc_ty) = if src_ty.is_bool() {
                 prereqs.includes.insert(CcInclude::type_traits());
-                (bool_constraint_template_prefix(), quote! { __CrubitBoolT })
+                (bool_constraint_template_prefix(), &db.tokens().crubit_bool_t)
             } else {
                 (quote! {}, cc_ty)
             };
@@ -1055,23 +1056,45 @@ fn operator_impls_for_ty<'tcx>(
         })
         .collect();
 
-    let ref_to_self_ty = Ty::new_ref(tcx, tcx.lifetimes.re_erased, self_ty, Mutability::Not);
-    impls.extend(non_blanket_impls_for_ty(db, trait_def_id, ref_to_self_ty).filter(
-        |&(impl_id, impl_args)| {
-            // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it also
-            // holds blanket impls like `impl<A, B> PartialEq<&B> for &A`. Exclude impls whose
-            // uninstantiated referent is a bare type parameter.
-            let uninstantiated_self_ty = tcx.type_of(impl_id).skip_binder();
-            let is_blanket_ref_impl = matches!(
-                uninstantiated_self_ty.kind(),
-                ty::TyKind::Ref(_, referent_ty, _) if matches!(referent_ty.kind(), ty::TyKind::Param(_))
-            );
+    let ref_impls = db.ref_trait_impls_by_referent(trait_def_id);
+    let mut candidates = Vec::new();
+    match self_ty.kind() {
+        ty::TyKind::Adt(adt_def, _) => {
+            if let Some(list) = ref_impls.by_adt.get(&adt_def.did()) {
+                candidates.extend_from_slice(list);
+            }
+            candidates.extend_from_slice(&ref_impls.alias_fallback);
+        }
+        ty::TyKind::Tuple(tys) => {
+            if let Some(list) = ref_impls.by_tuple_arity.get(&tys.len()) {
+                candidates.extend_from_slice(list);
+            }
+            candidates.extend_from_slice(&ref_impls.alias_fallback);
+        }
+        _ => {
+            candidates.extend_from_slice(&ref_impls.alias_fallback);
+            candidates.extend_from_slice(&ref_impls.other);
+        }
+    }
+    if candidates.len() > 1
+        && (!ref_impls.alias_fallback.is_empty()
+            || (!ref_impls.other.is_empty()
+                && !matches!(self_ty.kind(), ty::TyKind::Adt(..) | ty::TyKind::Tuple(..))))
+    {
+        candidates.sort_by_key(|(ord, _)| *ord);
+    }
+
+    let ref_to_self_ty = Ty::new_ref(tcx, tcx.lifetimes.re_erased, self_ty, ty::Mutability::Not);
+    for (_, impl_id) in candidates {
+        if let Some(impl_args) = db.does_impl_apply(impl_id, ref_to_self_ty) {
             let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
-            !is_blanket_ref_impl
-                && !overloads_covered_by_adt_impls
-                    .contains(&operator_rhs_ty(trait_ref).map(|ty| erase_regions(tcx, ty)))
-        },
-    ));
+            if !overloads_covered_by_adt_impls
+                .contains(&operator_rhs_ty(trait_ref).map(|ty| erase_regions(tcx, ty)))
+            {
+                impls.push((impl_id, impl_args));
+            }
+        }
+    }
     impls
 }
 
@@ -1156,20 +1179,19 @@ fn generate_trait_operator_impls<'tcx>(
                 })
             })
             .filter_map(|res| match res {
-                Ok(snippets) => Some(snippets).filter(|snippets| {
-                    !self_is_generic
-                        || !snippets_introduce_recursive_specialization(
-                            tcx,
-                            core.common.self_ty,
-                            snippets,
-                        )
-                }),
+                Ok(snippets) => (!self_is_generic
+                    || !snippets_introduce_recursive_specialization(
+                        tcx,
+                        core.common.self_ty,
+                        snippets,
+                    ))
+                .then_some(Cow::Borrowed(snippets)),
                 Err((err, def_id, impl_args)) => {
                     generate_unsupported::error_scope!(db, def_id, impl_args);
-                    Some(
+                    Some(Cow::Owned(
                         generate_unsupported_def_with_args(db, def_id, impl_args, err)
                             .into_main_api(),
-                    )
+                    ))
                 }
             })
             .collect()
@@ -1469,9 +1491,9 @@ fn generate_partial_ord_impls<'tcx>(
         quote! {}
     };
 
-    let mut main_api = ref_rhs_cc_ty.clone().map_snippets(|rhs_cc_tokens_for_main| {
+    let mut main_api = ref_rhs_cc_ty.map_snippets(|rhs_cc_tokens_for_main| {
         let rhs_cc_tokens_for_main = if rhs_ty.is_bool() {
-            quote! { __CrubitBoolT const& }
+            &db.tokens().crubit_bool_t_const_ref
         } else {
             rhs_cc_tokens_for_main
         };
@@ -1490,9 +1512,9 @@ fn generate_partial_ord_impls<'tcx>(
     let mut cc_details = [ref_self_cc_ty, ref_rhs_cc_ty].map_snippets(
         |[ref_self_cc_tokens, ref_rhs_cc_tokens]| {
             let rhs_cc_tokens_for_impl = if rhs_ty.is_bool() {
-                quote! { __CrubitBoolT const& }
+                &db.tokens().crubit_bool_t_const_ref
             } else {
-                ref_rhs_cc_tokens.clone()
+                ref_rhs_cc_tokens
             };
             quote! {
                 namespace __crubit_internal {
@@ -1576,7 +1598,7 @@ fn generate_display_impl<'tcx>(
         &[],
         core.common.self_ty,
         core.def_id,
-        core.rs_fully_qualified_name.clone(),
+        &core.rs_fully_qualified_name,
         /* is_constructor= */ false,
         /* within_template= */ true,
     ) {
@@ -1998,7 +2020,7 @@ fn generate_hash_impl<'tcx>(
 /// bindings for the ADT.
 pub fn generate_adt<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    core: Rc<AdtCoreBindings<'tcx>>,
+    core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let adt_cc_name = &core.common.cc_short_name;
@@ -2017,7 +2039,7 @@ pub fn generate_adt<'tcx>(
     let is_aggregate = aggregate_result.is_ok();
 
     let default_ctor_snippets =
-        if is_aggregate { ApiSnippets::default() } else { generate_default_ctor(db, &core) };
+        if is_aggregate { ApiSnippets::default() } else { generate_default_ctor(db, core) };
 
     let copy_ctor_and_assignment_snippets = if is_aggregate {
         if is_copy(tcx, core.common.self_ty) {
@@ -2034,11 +2056,11 @@ pub fn generate_adt<'tcx>(
             ApiSnippets::default()
         }
     } else {
-        generate_copy_ctor_and_assignment_operator(db, &core)
+        generate_copy_ctor_and_assignment_operator(db, core)
     };
 
     let move_ctor_and_assignment_snippets = if is_aggregate {
-        if !adt_core_bindings_needs_drop(&core, tcx) {
+        if !adt_core_bindings_needs_drop(core, tcx) {
             let qualified_adt_name = &core.common.cc_fully_qualified_name;
             let cc_details = CcSnippet::with_include(
                 quote! {
@@ -2052,7 +2074,7 @@ pub fn generate_adt<'tcx>(
             ApiSnippets::default()
         }
     } else {
-        generate_move_ctor_and_assignment_operator(db, &core)
+        generate_move_ctor_and_assignment_operator(db, core)
     };
 
     let relocating_ctor_snippets = if is_aggregate {
@@ -2115,16 +2137,16 @@ pub fn generate_adt<'tcx>(
         .collect();
 
     // With `EnumApiV2`, variants are constructed with `V::Make` instead of `MakeV`.
-    let enum_layout = generate_enum::analyze_enum(db, &core, &member_function_names);
+    let enum_layout = generate_enum::analyze_enum(db, core, &member_function_names);
     let is_enum_api_v2 = matches!(enum_layout, Ok(Some(_)));
     let adt_based_ctors = if is_aggregate || is_enum_api_v2 {
         ApiSnippets::default()
     } else {
-        generate_adt_based_ctors(db, core.clone(), &mut member_function_names)
+        generate_adt_based_ctors(db, core, &mut member_function_names)
     };
 
     let destructor_snippets = if is_aggregate {
-        if !adt_core_bindings_needs_drop(&core, tcx) {
+        if !adt_core_bindings_needs_drop(core, tcx) {
             let cc_details = CcSnippet::with_include(
                 quote! { static_assert(::std::is_trivially_destructible_v<#cc_fully_qualified_name>); },
                 CcInclude::type_traits(),
@@ -2133,7 +2155,7 @@ pub fn generate_adt<'tcx>(
         } else {
             ApiSnippets::default()
         }
-    } else if adt_core_bindings_needs_drop(&core, tcx) {
+    } else if adt_core_bindings_needs_drop(core, tcx) {
         let drop_trait_id =
             tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
         let TraitThunks {
@@ -2146,7 +2168,7 @@ pub fn generate_adt<'tcx>(
             &[],
             core.common.self_ty,
             core.def_id,
-            core.rs_fully_qualified_name.clone(),
+            &core.rs_fully_qualified_name,
             /* is_constructor= */ false,
             /* within_template= */ false,
         )
@@ -2211,24 +2233,22 @@ pub fn generate_adt<'tcx>(
         );
         ApiSnippets { main_api, cc_details, ..Default::default() }
     };
-    let into_operator_snippets = generate_into_impls(db, core.as_ref());
-    let trait_operator_snippets = generate_trait_operator_impls(db, core.as_ref());
-    let constructor_operator_snippets = generate_constructor_impls(db, core.as_ref(), is_aggregate);
-    let compare_snippets = generate_ord_and_partialord_impls(db, core.as_ref());
-    let display_snippets = generate_display_impl(db, core.as_ref());
-    let hash_snippets = generate_hash_impl(db, core.as_ref());
-    let into_iterator_snippets =
-        generate_into_iterator_impls(db, core.as_ref(), &mut member_function_names).unwrap_or_else(
-            |err| {
-                generate_unsupported_def_with_args(
-                    db,
-                    core.def_id.expect("DefId should be present for an ADT"),
-                    core.substs(),
-                    err,
-                )
-                .into_main_api()
-            },
-        );
+    let into_operator_snippets = generate_into_impls(db, core);
+    let trait_operator_snippets = generate_trait_operator_impls(db, core);
+    let constructor_operator_snippets = generate_constructor_impls(db, core, is_aggregate);
+    let compare_snippets = generate_ord_and_partialord_impls(db, core);
+    let display_snippets = generate_display_impl(db, core);
+    let hash_snippets = generate_hash_impl(db, core);
+    let into_iterator_snippets = generate_into_iterator_impls(db, core, &mut member_function_names)
+        .unwrap_or_else(|err| {
+            generate_unsupported_def_with_args(
+                db,
+                core.def_id.expect("DefId should be present for an ADT"),
+                core.substs(),
+                err,
+            )
+            .into_main_api()
+        });
 
     let ApiSnippets {
         main_api: public_functions_main_api,
@@ -2258,7 +2278,7 @@ pub fn generate_adt<'tcx>(
         cc_details: fields_cc_details,
         rs_details: fields_rs_details,
     } = match enum_layout {
-        Ok(Some(enum_layout)) => generate_enum::generate_enum(db, &core, enum_layout),
+        Ok(Some(enum_layout)) => generate_enum::generate_enum(db, core, enum_layout),
         enum_layout => {
             let fields = generate_fields(
                 db,
@@ -2403,7 +2423,7 @@ pub fn generate_adt<'tcx>(
 pub fn adt_needs_bindings<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
-) -> Result<Rc<AdtCoreBindings<'tcx>>> {
+) -> Result<AdtCoreBindings<'tcx>> {
     let tcx = db.tcx();
 
     let fully_qualified_name = db.symbol_canonical_name(def_id)?;
@@ -2415,7 +2435,7 @@ pub fn adt_needs_bindings<'tcx>(
         );
     }
 
-    db.generate_adt_core(def_id)
+    db.generate_adt_core(def_id).cloned()
 }
 
 fn adt_cc_keyword(adt_def: ty::AdtDef<'_>, crubit_attrs: &crubit_attr::CrubitAttrs) -> TokenStream {
@@ -2488,7 +2508,7 @@ pub fn get_generic_adt_header<'tcx>(
     ensure!(!template_args.is_empty(), "Generic ADT must have at least one type parameter");
 
     Ok(GenericAdtHeader {
-        canonical_name,
+        canonical_name: canonical_name.clone(),
         keyword,
         cpp_name,
         fully_qualified_cc_name,
@@ -2540,7 +2560,7 @@ pub fn generate_generic_adt_declaration<'tcx>(
 pub fn generate_adt_core<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
-) -> Result<Rc<AdtCoreBindings<'tcx>>> {
+) -> Result<AdtCoreBindings<'tcx>> {
     let tcx = db.tcx();
     // Note: we erase regions in order to get bindings regardless of what lifetime parameters are
     // present. We want to generate bindings for functions regardless of their lifetime bounds, as
@@ -2562,7 +2582,7 @@ pub fn generate_adt_core_for_ty<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     self_ty_cc: &CcSnippet<'tcx>,
-) -> Result<Rc<AdtCoreBindings<'tcx>>> {
+) -> Result<AdtCoreBindings<'tcx>> {
     let tcx = db.tcx();
     let adt_def = self_ty.ty_adt_def().ok_or_else(|| anyhow!("`self_ty` must be an ADT"))?;
     let def_id = adt_def.did();
@@ -2571,7 +2591,7 @@ pub fn generate_adt_core_for_ty<'tcx>(
 
     let rs_fully_qualified_name = if query_compiler::has_non_lifetime_generics(tcx, def_id) {
         let static_self_ty = replace_all_regions_with_static(tcx, self_ty);
-        db.format_ty_for_rs(static_self_ty)?
+        db.format_ty_for_rs(static_self_ty)?.clone()
     } else {
         fully_qualified_name.format_for_rs()
     };
@@ -2595,7 +2615,7 @@ pub fn generate_adt_core_for_ty<'tcx>(
     let cc_short_name = quote! { #cpp_name };
     let cc_fully_qualified_name = self_ty_cc.tokens.clone();
 
-    Ok(Rc::new(AdtCoreBindings {
+    Ok(AdtCoreBindings {
         common: Rc::new(CoreBindingsCommon {
             keyword,
             cc_short_name,
@@ -2606,7 +2626,7 @@ pub fn generate_adt_core_for_ty<'tcx>(
         }),
         def_id: Some(def_id),
         rs_fully_qualified_name,
-    }))
+    })
 }
 
 /// Generates C++ bindings that are equivalent to using Rust constructors.
@@ -2617,7 +2637,7 @@ pub fn generate_adt_core_for_ty<'tcx>(
 ///   (b/487399481) and `MyEnum::TuplePayloadVariant(1, 2, 3)` (b/487356976)
 fn generate_adt_based_ctors<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    core: Rc<AdtCoreBindings<'tcx>>,
+    core: &AdtCoreBindings<'tcx>,
     member_function_names: &mut HashSet<String>,
 ) -> ApiSnippets<'tcx> {
     let TyKind::Adt(adt_def, _) = core.common.self_ty.kind() else {
@@ -2633,17 +2653,16 @@ fn generate_adt_based_ctors<'tcx>(
     adt_def
         .variants()
         .iter_enumerated()
-        .map(|(variant_index, variant)| {
+        .filter_map(|(variant_index, variant)| {
             generate_unsupported::error_scope!(db, variant.def_id, core.substs());
-            generate_variant_ctor(db, core.clone(), member_function_names, variant_index, variant)
-                .unwrap_or_else(|err| {
-                    if should_suppress_errors {
-                        Default::default()
-                    } else {
-                        generate_unsupported_def_with_args(db, variant.def_id, core.substs(), err)
-                            .into_main_api()
-                    }
-                })
+            match generate_variant_ctor(db, core, member_function_names, variant_index, variant) {
+                Ok(snippets) => Some(snippets),
+                Err(_) if should_suppress_errors => None,
+                Err(err) => Some(Cow::Owned(
+                    generate_unsupported_def_with_args(db, variant.def_id, core.substs(), err)
+                        .into_main_api(),
+                )),
+            }
         })
         .collect()
 }
@@ -2667,13 +2686,13 @@ fn get_enum_kind<'tcx>(adt_def: ty::AdtDef<'tcx>) -> Option<EnumKind> {
     }
 }
 
-fn generate_variant_ctor<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    core: Rc<AdtCoreBindings<'tcx>>,
+fn generate_variant_ctor<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
     member_function_names: &mut HashSet<String>,
     variant_index: VariantIdx,
     variant: &'tcx ty::VariantDef,
-) -> Result<ApiSnippets<'tcx>> {
+) -> Result<Cow<'db, ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
 
     if variant.is_field_list_non_exhaustive() {
@@ -2749,7 +2768,7 @@ fn generate_variant_ctor<'tcx>(
                 let cc_name = anonymous_field_ident(i);
                 quote! { #cc_name ( ::std::move ( #cc_name ) ) }
             });
-            Ok(ApiSnippets {
+            Ok(Cow::Owned(ApiSnippets {
                 main_api: CcSnippet {
                     prereqs,
                     tokens: quote! {
@@ -2761,7 +2780,7 @@ fn generate_variant_ctor<'tcx>(
                     },
                 },
                 ..Default::default()
-            })
+            }))
         }
         ty::AdtKind::Enum => {
             let method_name = format_variant_ctor_cc_name(variant.name.as_str());
@@ -2782,7 +2801,7 @@ fn generate_variant_ctor<'tcx>(
                 if result.is_ok() {
                     mark_method_name_as_used();
                 }
-                return result;
+                return result.map(Cow::Borrowed);
             }
             let enum_kind = get_enum_kind(adt_def).expect("AtdKindEnum implied EnumKind");
             let body = match enum_kind {
@@ -2846,7 +2865,7 @@ fn generate_variant_ctor<'tcx>(
                     }
                 }
             };
-            let constexpr = if adt_core_bindings_needs_drop(&core, tcx) {
+            let constexpr = if adt_core_bindings_needs_drop(core, tcx) {
                 // TODO(b/489085607): If we can make destructor `constexpr` (see bug for ideas)
                 // then `constexpr` *here* can be used unconditionally.
                 quote! {}
@@ -2856,7 +2875,7 @@ fn generate_variant_ctor<'tcx>(
             let doc_comment = generate_doc_comment(db, variant.def_id);
             let method_name = format_cc_ident(db, &method_name)?;
             mark_method_name_as_used();
-            Ok(ApiSnippets {
+            Ok(Cow::Owned(ApiSnippets {
                 main_api: CcSnippet {
                     prereqs,
                     tokens: quote! {
@@ -2872,14 +2891,14 @@ fn generate_variant_ctor<'tcx>(
                     __NEWLINE__
                 }),
                 ..Default::default()
-            })
+            }))
         }
         ty::AdtKind::Union => bail!("Crubit doesn't provide bindings for constructing unions"),
     }
 }
 
-struct Field<'tcx> {
-    cpp_type: Result<CcSnippet<'tcx>>,
+struct Field<'db, 'tcx> {
+    cpp_type: Result<&'db CcSnippet<'tcx>>,
     size: u64,
     cc_name: Ident,
     rs_name: TokenStream,
@@ -2933,15 +2952,24 @@ impl CcFieldVisState {
     }
 }
 
-struct CppVariantLayout<'tcx> {
-    fields: Vec<Field<'tcx>>,
+struct CppVariantLayout<'db, 'tcx> {
+    fields: Vec<Field<'db, 'tcx>>,
     size: u64,
 }
 
-enum CppLayout<'tcx> {
-    Struct { fields: Vec<Field<'tcx>>, always_omit_padding: bool },
-    Union { fields: Vec<Field<'tcx>> },
-    Enum { enum_kind: EnumKind, tag_size_with_padding: u64, variants: Vec<CppVariantLayout<'tcx>> },
+enum CppLayout<'db, 'tcx> {
+    Struct {
+        fields: Vec<Field<'db, 'tcx>>,
+        always_omit_padding: bool,
+    },
+    Union {
+        fields: Vec<Field<'db, 'tcx>>,
+    },
+    Enum {
+        enum_kind: EnumKind,
+        tag_size_with_padding: u64,
+        variants: Vec<CppVariantLayout<'db, 'tcx>>,
+    },
 }
 
 struct CppFieldGenerator<'a, 'tcx> {
@@ -2965,7 +2993,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         &self,
         enum_kind: Option<EnumKind>,
         tag_size_with_padding: u64,
-    ) -> Vec<CppVariantLayout<'tcx>> {
+    ) -> Vec<CppVariantLayout<'a, 'tcx>> {
         if let Some(adt_def) = self.adt_def {
             if let ty::AdtKind::Enum = adt_def.adt_kind()
                 && enum_kind != Some(EnumKind::ReprC)
@@ -3076,7 +3104,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             .map(|((offset, offset_of_next_field), index)| (index, offset, offset_of_next_field))
     }
 
-    fn analyze_layout(&self) -> Result<CppLayout<'tcx>> {
+    fn analyze_layout(&self) -> Result<CppLayout<'a, 'tcx>> {
         let layout = &self.layout;
 
         let enum_kind = self.adt_def.and_then(get_enum_kind);
@@ -3107,7 +3135,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
     }
 
     /// Ensures that a field of type `ty` has a valid C++ type and returns it, if so.
-    fn prepare_field_type(&self, ty: Ty<'tcx>) -> Result<CcSnippet<'tcx>> {
+    fn prepare_field_type(&self, ty: Ty<'tcx>) -> Result<&'a CcSnippet<'tcx>> {
         get_layout(self.db.tcx(), ty)?;
         if !can_be_made_layout_compatible(self.db, ty).unwrap_or(true) {
             bail!(
@@ -3139,7 +3167,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         ty: Ty<'tcx>,
         offset: u64,
         offset_of_next_field: u64,
-    ) -> Field<'tcx> {
+    ) -> Field<'a, 'tcx> {
         let cpp_type = self.prepare_field_type(ty);
         let size = self.field_size(ty, cpp_type.is_ok(), offset, offset_of_next_field);
         let cc_name = anonymous_field_ident(index);
@@ -3172,7 +3200,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         field_def: &ty::FieldDef,
         offset: u64,
         offset_of_next_field: u64,
-    ) -> Field<'tcx> {
+    ) -> Field<'a, 'tcx> {
         let tcx = self.db.tcx();
         let ty =
             field_def.ty(tcx, self.adt_generic_args.expect("generic args present for ADT field"));
@@ -3237,7 +3265,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         }
     }
 
-    fn generate_common_assertions(&self, fields: &[Field<'tcx>]) -> ApiSnippets<'tcx> {
+    fn generate_common_assertions(&self, fields: &[Field<'a, 'tcx>]) -> ApiSnippets<'tcx> {
         let adt_cc_fully_qualified_name = self.cc_fully_qualified_name;
         let adt_rs_name = self.rs_fully_qualified_name;
 
@@ -3299,7 +3327,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
 
     fn emit_field_err(
         &self,
-        field: &Field<'tcx>,
+        field: &Field<'a, 'tcx>,
         err: &arc_anyhow::Error,
         current_visibility: &mut CcFieldVisState,
     ) -> CcSnippet<'tcx> {
@@ -3323,7 +3351,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
 
     fn emit_struct_field(
         &self,
-        field: Field<'tcx>,
+        field: Field<'a, 'tcx>,
         current_visibility: &mut CcFieldVisState,
         always_omit_padding: bool,
         is_aggregate: bool,
@@ -3398,7 +3426,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
 
     fn emit_union_field(
         &self,
-        field: Field<'tcx>,
+        field: Field<'a, 'tcx>,
         current_visibility: &mut CcFieldVisState,
         is_repr_c: bool,
     ) -> CcSnippet<'tcx> {
@@ -3445,18 +3473,18 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
 
     fn emit_enum_field(
         &self,
-        field: &Field<'tcx>,
+        field: &Field<'a, 'tcx>,
         current_visibility: &mut CcFieldVisState,
     ) -> CcSnippet<'tcx> {
         let cc_name = &field.cc_name;
 
         let cpp_type = match &field.cpp_type {
             Err(err) => return self.emit_field_err(field, err, current_visibility),
-            Ok(cpp_type) => cpp_type,
+            Ok(cpp_type) => *cpp_type,
         };
 
         let visibility = current_visibility.set_is_public(field.is_public);
-        cpp_type.clone().map_snippets(|cpp_type| {
+        cpp_type.map_snippets(|cpp_type| {
             quote! {
                 #visibility __NEWLINE__ #cpp_type #cc_name;
             }
@@ -3465,7 +3493,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
 
     fn generate_struct(
         &self,
-        fields: Vec<Field<'tcx>>,
+        fields: Vec<Field<'a, 'tcx>>,
         always_omit_padding: bool,
         is_aggregate: bool,
     ) -> ApiSnippets<'tcx> {
@@ -3487,7 +3515,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         assertions.prepend_main_api(fields)
     }
 
-    fn generate_union(&self, fields: Vec<Field<'tcx>>) -> ApiSnippets<'tcx> {
+    fn generate_union(&self, fields: Vec<Field<'a, 'tcx>>) -> ApiSnippets<'tcx> {
         let assertions = self.generate_common_assertions(&fields);
 
         let is_repr_c = self.adt_def.is_some_and(|adt| adt.repr().c());
@@ -3504,7 +3532,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         &self,
         enum_kind: EnumKind,
         tag_size_with_padding: u64,
-        variants: Vec<CppVariantLayout<'tcx>>,
+        variants: Vec<CppVariantLayout<'a, 'tcx>>,
     ) -> ApiSnippets<'tcx> {
         let adt_def = self.adt_def.expect("Enum should have adt_def");
         let tcx = self.db.tcx();
@@ -4036,7 +4064,7 @@ fn generate_begin_and_end_for_type<'tcx>(
     let param = Param {
         cc_name: format_ident!("self_"),
         cpp_type: CcParamTy {
-            snippet: CcSnippet::new(param_cc_type_tokens.clone()),
+            snippet: Cow::Owned(CcSnippet::new(param_cc_type_tokens)),
             is_lifetime_bound: false,
         },
         ty: check_ty,
@@ -4081,7 +4109,7 @@ fn generate_begin_and_end_for_type<'tcx>(
     };
 
     let mut main_api =
-        into_iter_cc_ty.clone().map_snippets(|into_iter_cc_ty_tokens_main| match passing_mode {
+        into_iter_cc_ty.map_snippets(|into_iter_cc_ty_tokens_main| match passing_mode {
             PassingMode::Value => quote! {
                 template <typename TAdaptedSelf_ = #adt_cc_name>
                 inline #into_iter_cc_ty_tokens_main into_iter() &&;
@@ -4104,7 +4132,7 @@ fn generate_begin_and_end_for_type<'tcx>(
     main_api.prereqs.move_defs_to_fwd_decls();
     main_api.prereqs.template_specializations.insert(specialization);
 
-    let mut cc_details = [into_iter_cc_ty, cc_thunk_decls, impl_body].map_snippets(
+    let mut cc_details = [into_iter_cc_ty, &cc_thunk_decls, &impl_body].map_snippets(
         |[into_iter_cc_ty_tokens_details, cc_thunk_decls_tokens, impl_body_tokens]| {
             match passing_mode {
                 PassingMode::Value => {
@@ -4407,7 +4435,7 @@ pub fn generate_const<'tcx>(
 
     let cc_type_tokens = cc_type.tokens.clone();
     let cc_value_tokens = cc_value.tokens.clone();
-    let main_api = [cc_type, cc_value].map_snippets(|[cc_type, cc_value]| {
+    let main_api = [cc_type, &cc_value].map_snippets(|[cc_type, cc_value]| {
         if is_self_referential {
             quote! {
                 static const #cc_type #cc_name;
@@ -4468,4 +4496,51 @@ pub fn create_type_alias_with_rs_type<'tcx>(
 pub fn are_generics_enabled<'tcx>(db: &BindingsGenerator<'tcx>, krate: CrateNum) -> bool {
     db.crate_features(db.source_crate_num()).contains(crubit_feature::CrubitFeature::Generics)
         && db.crate_features(krate).contains(crubit_feature::CrubitFeature::Generics)
+}
+
+pub fn ref_trait_impls_by_referent<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    trait_def_id: DefId,
+) -> database::RefTraitImpls {
+    let tcx = db.tcx();
+    let mut by_adt: HashMap<DefId, Vec<(usize, DefId)>> = HashMap::new();
+    let mut by_tuple_arity: HashMap<usize, Vec<(usize, DefId)>> = HashMap::new();
+    let mut alias_fallback: Vec<(usize, DefId)> = Vec::new();
+    let mut other: Vec<(usize, DefId)> = Vec::new();
+
+    let placeholder_ref = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, tcx.types.unit);
+    for (ord_idx, impl_id) in
+        tcx.non_blanket_impls_for_ty(trait_def_id, placeholder_ref).enumerate()
+    {
+        // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it also
+        // holds blanket impls like `impl<A, B> PartialEq<&B> for &A`. Exclude impls whose
+        // uninstantiated referent is a bare type parameter.
+        let uninstantiated_self_ty = tcx.type_of(impl_id).skip_binder();
+        if let ty::TyKind::Ref(_, referent_ty, mutability) = uninstantiated_self_ty.kind() {
+            if *mutability == ty::Mutability::Not {
+                if matches!(referent_ty.kind(), ty::TyKind::Param(_)) {
+                    continue; // Skip blanket refs
+                }
+                match referent_ty.kind() {
+                    ty::TyKind::Adt(adt_def, _) => {
+                        by_adt.entry(adt_def.did()).or_default().push((ord_idx, impl_id));
+                    }
+                    ty::TyKind::Tuple(tys) => {
+                        by_tuple_arity.entry(tys.len()).or_default().push((ord_idx, impl_id));
+                    }
+                    ty::TyKind::Alias(..) => {
+                        alias_fallback.push((ord_idx, impl_id));
+                    }
+                    _ => {
+                        other.push((ord_idx, impl_id));
+                    }
+                }
+            } else {
+                other.push((ord_idx, impl_id));
+            }
+        } else {
+            other.push((ord_idx, impl_id));
+        }
+    }
+    database::RefTraitImpls { by_adt, by_tuple_arity, alias_fallback, other }
 }

@@ -94,10 +94,10 @@ fn parse_unit_in_specialization<'tcx>(
     ty: Ty<'tcx>,
 ) -> Option<Result<FormattedTy<'tcx>>> {
     ty.is_unit().then(|| {
-        let for_rs = db.format_ty_for_rs(ty)?;
+        let for_rs = db.format_ty_for_rs(ty)?.clone();
         Ok(FormattedTy {
             for_cc: CcSnippet::with_include(
-                quote! { ::rs::unit_t },
+                db.tokens().rs_unit_t.clone(),
                 db.support_header("rs_std/unit.h"),
             ),
             for_rs,
@@ -1764,7 +1764,7 @@ fn specialize_user_defined_adt<'tcx>(
         "Generic ADT header should have been checked in parse_user_defined_adt_template_specialization",
     );
 
-    let mut snippets = generate_adt(db, core);
+    let mut snippets = generate_adt(db, &core);
     snippets.main_api.prereqs += spec.self_ty_cc.prereqs.clone();
     let ns = canonical_name.cpp_ns_qualifier(db);
     let main_tokens = snippets.main_api.tokens;
@@ -1925,9 +1925,9 @@ fn ifdef_guard_specialization<'tcx>(
                 Unnormalized::new(ty),
             );
             if ty_norm.is_unit() {
-                quote! { ::rs::unit_t }
+                &db.tokens().rs_unit_t
             } else {
-                db.format_ty_for_cc(ty_norm, TypeLocation::TemplateArg)
+                &db.format_ty_for_cc(ty_norm, TypeLocation::TemplateArg)
                     .expect("Type formatting should have been checked in parse_rs_std_template_specialization")
                     .tokens
             }

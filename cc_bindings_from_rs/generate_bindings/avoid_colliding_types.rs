@@ -20,7 +20,7 @@ pub struct TypeCollisionRisk<'tcx, T> {
     pub preferred_type: Ty<'tcx>,
 }
 
-pub trait AvoidCollidingTypes<'tcx, T: 'tcx>: Iterator<Item = T> {
+pub trait AvoidCollidingTypes<'tcx, T>: Iterator<Item = T> {
     /// Categorizes the items from the iterator, using the type reported by `key_getter`
     /// into either `Ok(item)` or `Err(TypeCollisionRisk)` if they would collide
     /// in C++.  For example, we don't want both `Index<u64>` and `Index<usize>` in the
@@ -55,7 +55,7 @@ pub trait AvoidCollidingTypes<'tcx, T: 'tcx>: Iterator<Item = T> {
     }
 }
 
-impl<'tcx, T: 'tcx, I> AvoidCollidingTypes<'tcx, T> for I where I: Iterator<Item = T> {}
+impl<'tcx, T, I> AvoidCollidingTypes<'tcx, T> for I where I: Iterator<Item = T> {}
 
 /// Turns the still-`Ok` entries of `results` that risk colliding with a more preferred entry
 /// into `Err(TypeCollisionRisk)`.  Entries that are already `Err` are passed through.

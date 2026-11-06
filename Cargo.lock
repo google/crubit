@@ -1107,6 +1107,7 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 name = "memoized"
 version = "0.0.0"
 dependencies = [
+ "arc_anyhow",
  "googletest",
 ]
 
@@ -1805,6 +1806,7 @@ dependencies = [
  "flagset",
  "googletest",
  "itertools",
+ "memoized",
  "proc-macro2",
  "quote",
  "rs_bindings_from_cc_bazel_label",
@@ -1879,7 +1881,6 @@ dependencies = [
  "error_report",
  "googletest",
  "itertools",
- "memoized",
  "multiplatform_testing",
  "proc-macro2",
  "quote",

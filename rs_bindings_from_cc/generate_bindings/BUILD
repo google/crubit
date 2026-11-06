@@ -483,7 +483,6 @@ rust_library(
         "//common:crubit_abi_type",
         "//common:crubit_feature",
         "//common:error_report",
-        "//common:memoized",
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",
         "@crate_index//:itertools",  # v0_13

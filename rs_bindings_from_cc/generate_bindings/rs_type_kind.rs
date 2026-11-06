@@ -45,10 +45,10 @@ fn item_is_or_aliases_string_view(db: &BindingsGenerator<'_>, item: &ir::Item) -
 /// Implementation of `BindingsGenerator::rs_type_kind`.
 pub fn rs_type_kind_with_lifetime_elision(
     db: &BindingsGenerator,
-    ty: CcType,
+    ty: std::rc::Rc<CcType>,
     lifetime_options: LifetimeOptions,
 ) -> Result<RsTypeKind> {
-    rs_type_kind_with_lifetime_elision_impl(db, ty, lifetime_options)
+    rs_type_kind_with_lifetime_elision_impl(db, (*ty).clone(), lifetime_options)
 }
 
 fn rs_type_kind_with_lifetime_elision_impl(

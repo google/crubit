@@ -194,6 +194,9 @@ rust_library(
     name = "memoized",
     srcs = ["memoized.rs"],
     edition = "2024",
+    deps = [
+        ":arc_anyhow",
+    ],
 )
 
 rust_test(

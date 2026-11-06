@@ -519,12 +519,12 @@ impl CcType {
         &mut self.variant
     }
 
-    pub fn explicit_lifetimes_mut(&mut self) -> &mut FfiVec<FfiString> {
-        &mut self.explicit_lifetimes
-    }
-
     pub fn decl_template_args(&self) -> Option<&[CcType]> {
         (!self.template_args.is_empty()).then_some(self.template_args.as_slice())
+    }
+
+    pub fn explicit_lifetimes_mut(&mut self) -> &mut FfiVec<FfiString> {
+        &mut self.explicit_lifetimes
     }
 
     pub fn template_args_mut(&mut self) -> &mut FfiVec<CcType> {
@@ -2454,3 +2454,7 @@ mod tests {
         assert_eq!(arr.num_elements(), 4);
     }
 }
+
+impl memoized::CheapClone for Item {}
+
+impl<T> memoized::CheapClone for ir_ffi_support::FfiRc<T> {}
