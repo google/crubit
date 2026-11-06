@@ -361,3 +361,101 @@ impl From<EnumWithUnbindableEnumerator> for ::ffi_11::c_uint {
         value.0
     }
 }
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[cfi_encoding = "15TypedefAnonEnum"]
+///CRUBIT_ANNOTATE: cpp_type=TypedefAnonEnum
+pub struct TypedefAnonEnum(::ffi_11::c_uint);
+impl TypedefAnonEnum {
+    pub const kTypedefAnonRed: TypedefAnonEnum = TypedefAnonEnum(::ffi_11::new_c_uint(0));
+    pub const kTypedefAnonBlue: TypedefAnonEnum = TypedefAnonEnum(::ffi_11::new_c_uint(1));
+    pub const kTypedefAnonGreen: TypedefAnonEnum = TypedefAnonEnum(::ffi_11::new_c_uint(2));
+}
+impl From<::ffi_11::c_uint> for TypedefAnonEnum {
+    fn from(value: ::ffi_11::c_uint) -> TypedefAnonEnum {
+        TypedefAnonEnum(value)
+    }
+}
+impl From<TypedefAnonEnum> for ::ffi_11::c_uint {
+    fn from(value: TypedefAnonEnum) -> ::ffi_11::c_uint {
+        value.0
+    }
+}
+
+pub const kTypedefAnonRed: ::ffi_11::c_uint = ::ffi_11::new_c_uint(0);
+
+pub const kTypedefAnonBlue: ::ffi_11::c_uint = ::ffi_11::new_c_uint(1);
+
+pub const kTypedefAnonGreen: ::ffi_11::c_uint = ::ffi_11::new_c_uint(2);
+
+#[inline(always)]
+pub fn consume_typedef_anon_enum(e: crate::TypedefAnonEnum) {
+    unsafe { crate::detail::__rust_thunk___Z25consume_typedef_anon_enum15TypedefAnonEnum(e) }
+}
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[cfi_encoding = "13TypedefAnonE8"]
+///CRUBIT_ANNOTATE: cpp_type=TypedefAnonE8
+pub struct TypedefAnonE8(::ffi_11::c_uchar);
+impl TypedefAnonE8 {
+    pub const kTypedefAnonE8: TypedefAnonE8 = TypedefAnonE8(::ffi_11::new_c_uchar(0));
+}
+impl From<::ffi_11::c_uchar> for TypedefAnonE8 {
+    fn from(value: ::ffi_11::c_uchar) -> TypedefAnonE8 {
+        TypedefAnonE8(value)
+    }
+}
+impl From<TypedefAnonE8> for ::ffi_11::c_uchar {
+    fn from(value: TypedefAnonE8) -> ::ffi_11::c_uchar {
+        value.0
+    }
+}
+
+pub const kTypedefAnonE8: ::ffi_11::c_uchar = ::ffi_11::new_c_uchar(0);
+
+pub mod my_ns {
+    #[repr(transparent)]
+    #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+    #[cfi_encoding = "N5my_ns13TypedefAnonNsE"]
+    ///CRUBIT_ANNOTATE: cpp_type=my_ns :: TypedefAnonNs
+    pub struct TypedefAnonNs(::ffi_11::c_uint);
+    impl TypedefAnonNs {
+        pub const kTypedefAnonNs: TypedefAnonNs = TypedefAnonNs(::ffi_11::new_c_uint(0));
+    }
+    impl From<::ffi_11::c_uint> for TypedefAnonNs {
+        fn from(value: ::ffi_11::c_uint) -> TypedefAnonNs {
+            TypedefAnonNs(value)
+        }
+    }
+    impl From<TypedefAnonNs> for ::ffi_11::c_uint {
+        fn from(value: TypedefAnonNs) -> ::ffi_11::c_uint {
+            value.0
+        }
+    }
+
+    pub const kTypedefAnonNs: ::ffi_11::c_uint = ::ffi_11::new_c_uint(0);
+}
+
+pub type TypedefAnonEnumAlias = crate::TypedefAnonEnum;
+
+#[inline(always)]
+pub fn consume_typedef_anon_enum_alias(e: crate::TypedefAnonEnumAlias) {
+    unsafe { crate::detail::__rust_thunk___Z31consume_typedef_anon_enum_alias15TypedefAnonEnum(e) }
+}
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        #[link_name = "_Z25consume_typedef_anon_enum15TypedefAnonEnum"]
+        pub(crate) unsafe fn __rust_thunk___Z25consume_typedef_anon_enum15TypedefAnonEnum(
+            e: crate::TypedefAnonEnum,
+        );
+        #[link_name = "_Z31consume_typedef_anon_enum_alias15TypedefAnonEnum"]
+        pub(crate) unsafe fn __rust_thunk___Z31consume_typedef_anon_enum_alias15TypedefAnonEnum(
+            e: crate::TypedefAnonEnumAlias,
+        );
+    }
+}

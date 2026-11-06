@@ -55,4 +55,21 @@ enum EnumWithUnbindableEnumerator {
   kUnbindable [[maybe_unused]],
 };
 
+typedef enum {
+  kTypedefAnonRed,
+  kTypedefAnonBlue,
+  kTypedefAnonGreen,
+} TypedefAnonEnum;
+
+void consume_typedef_anon_enum(TypedefAnonEnum e);
+
+typedef enum : unsigned char { kTypedefAnonE8 } TypedefAnonE8;
+
+namespace my_ns {
+typedef enum { kTypedefAnonNs } TypedefAnonNs;
+}
+
+typedef TypedefAnonEnum TypedefAnonEnumAlias;
+void consume_typedef_anon_enum_alias(TypedefAnonEnumAlias e);
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ENUMS_H_

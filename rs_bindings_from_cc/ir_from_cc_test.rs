@@ -5,7 +5,7 @@
 
 use arc_anyhow::Result;
 use googletest::matcher::Matcher;
-use googletest::matchers::{contains, eq, is_empty, not, pat, some};
+use googletest::matchers::{contains, eq, is_empty, none, not, pat, some};
 use googletest::{expect_eq, expect_that, expect_true, fail, gtest, OrFail};
 use ir::FfiRc as Rc;
 use ir::*;
@@ -7453,6 +7453,55 @@ fn test_anonymous_enum() {
     expect_that!(kfoo.value(), integer_constant_value(1));
     let kbar = ir.constants().find(|c| c.cc_name() == "kBar").unwrap();
     expect_that!(kbar.value(), integer_constant_value(2));
+}
+
+#[gtest]
+fn test_typedef_anonymous_enum() {
+    let proto = ir_proto_from_cc("typedef enum { kFoo = 1, kBar = 2 } MyEnum;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let my_enum = ir.enums().find(|e| e.cc_name() == "MyEnum").unwrap();
+    expect_eq!(my_enum.enumerators().unwrap().len(), 2);
+    expect_eq!(my_enum.enumerators().unwrap()[0].identifier().identifier(), "kFoo");
+    expect_eq!(my_enum.enumerators().unwrap()[1].identifier().identifier(), "kBar");
+
+    // The typedef itself shouldn't also be emitted as a TypeAlias
+    let my_enum_alias = ir.type_aliases().find(|a| a.cc_name() == "MyEnum");
+    expect_that!(my_enum_alias, none());
+
+    // Top-level constants SHOULD be emitted for backward compatibility
+    let kfoo_constant = ir.constants().find(|c| c.cc_name() == "kFoo").unwrap();
+    expect_that!(kfoo_constant.value(), integer_constant_value(1));
+}
+
+#[gtest]
+fn test_typedef_anonymous_enum_explicit_type() {
+    let proto = ir_proto_from_cc("typedef enum : unsigned char { kFoo8 = 1 } MyEnum8;").unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let my_enum = ir.enums().find(|e| e.cc_name() == "MyEnum8").unwrap();
+    expect_eq!(my_enum.enumerators().unwrap().len(), 1);
+}
+
+#[gtest]
+fn test_typedef_anonymous_enum_in_namespace() {
+    let proto =
+        ir_proto_from_cc("namespace my_ns { typedef enum { kFooNs = 1 } MyEnumNs; }").unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let my_enum = ir.enums().find(|e| e.cc_name() == "MyEnumNs").unwrap();
+    expect_eq!(my_enum.enumerators().unwrap().len(), 1);
+}
+
+#[gtest]
+fn test_typedef_anonymous_enum_alias() {
+    let proto =
+        ir_proto_from_cc("typedef enum { kFooA = 1 } MyEnum; typedef MyEnum MyEnumAlias;").unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let my_enum = ir.enums().find(|e| e.cc_name() == "MyEnum").unwrap();
+    expect_eq!(my_enum.enumerators().unwrap().len(), 1);
+
+    // The second typedef MUST be emitted as a TypeAlias
+    let my_enum_alias = ir.type_aliases().find(|a| a.cc_name() == "MyEnumAlias").unwrap();
+    expect_eq!(my_enum_alias.cc_name(), "MyEnumAlias");
 }
 
 #[gtest]

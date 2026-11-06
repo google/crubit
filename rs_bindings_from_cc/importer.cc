@@ -867,7 +867,9 @@ std::vector<clang::Decl*> Importer::GetCanonicalChildren(
             result.push_back(enumerator);
           }
         }
-        continue;
+        if (enum_decl->getTypedefNameForAnonDecl() == nullptr) {
+          continue;
+        }
       }
     }
 

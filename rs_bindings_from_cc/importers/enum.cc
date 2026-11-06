@@ -26,12 +26,17 @@ namespace crubit {
 
 std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
     clang::EnumDecl* enum_decl) {
+  const clang::NamedDecl* named_decl = enum_decl;
   if (enum_decl->getName().empty()) {
-    // Anonymous enums are handled by `EnumConstantDeclImporter`.
-    return nullptr;
+    if (auto* typedef_decl = enum_decl->getTypedefNameForAnonDecl()) {
+      named_decl = typedef_decl;
+    } else {
+      // Anonymous enums are handled by `EnumConstantDeclImporter`.
+      return nullptr;
+    }
   }
   llvm::Expected<TranslatedIdentifier> enum_name =
-      ictx_.GetTranslatedIdentifier(*enum_decl);
+      ictx_.GetTranslatedIdentifier(*named_decl);
   if (!enum_name) {
     return ictx_.ImportUnsupportedItem(
         *enum_decl, std::nullopt,

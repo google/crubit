@@ -17,4 +17,9 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
+static_assert((void (*)(TypedefAnonEnum)) & ::consume_typedef_anon_enum);
+
+static_assert((void (*)(TypedefAnonEnumAlias)) &
+              ::consume_typedef_anon_enum_alias);
+
 #pragma clang diagnostic pop
