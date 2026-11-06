@@ -144,6 +144,7 @@ flagset::flags! {
         /// `operator!=` depend on `operator==`), find the related operator even if the names of
         /// their C++ parameters differ. Only affects rust_api_from_cpp.
         ParamNameInsensitiveOperatorLookup,
+        NoescapePointerParamsAsReferences,
     }
 }
 
@@ -192,6 +193,7 @@ impl CrubitFeature {
             Self::ConstantArrays => "constant_arrays",
             Self::MacroConstants => "macro_constants",
             Self::ParamNameInsensitiveOperatorLookup => "param_name_insensitive_operator_lookup",
+            Self::NoescapePointerParamsAsReferences => "noescape_pointer_params_as_references",
         }
     }
 
@@ -248,6 +250,9 @@ impl CrubitFeature {
             Self::MacroConstants => "//features:macro_constants",
             Self::ParamNameInsensitiveOperatorLookup => {
                 "//features:param_name_insensitive_operator_lookup"
+            }
+            Self::NoescapePointerParamsAsReferences => {
+                "//features:noescape_pointer_params_as_references"
             }
         }
     }
@@ -323,6 +328,9 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"macro_constants" => CrubitFeature::MacroConstants.into(),
         b"param_name_insensitive_operator_lookup" => {
             CrubitFeature::ParamNameInsensitiveOperatorLookup.into()
+        }
+        b"noescape_pointer_params_as_references" => {
+            CrubitFeature::NoescapePointerParamsAsReferences.into()
         }
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579

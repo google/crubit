@@ -126,6 +126,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, is_mutable, $($arg:tt)*) => { $msg.set_is_mutable($($arg)*) };
     ($msg:ident, is_negative, $($arg:tt)*) => { $msg.set_is_negative($($arg)*) };
     ($msg:ident, is_no_unique_address, $($arg:tt)*) => { $msg.set_is_no_unique_address($($arg)*) };
+    ($msg:ident, is_noescape, $($arg:tt)*) => { $msg.set_is_noescape($($arg)*) };
     ($msg:ident, is_nonnull, $($arg:tt)*) => { $msg.set_is_nonnull($($arg)*) };
     ($msg:ident, is_noreturn, $($arg:tt)*) => { $msg.set_is_noreturn($($arg)*) };
     ($msg:ident, is_pub_crate, $($arg:tt)*) => { $msg.set_is_pub_crate($($arg)*) };
@@ -818,6 +819,7 @@ mod __defs {
         pub variant: cc_type::Variant,
         pub is_const: bool,
         pub is_nonnull: bool,
+        pub is_noescape: bool,
         pub unknown_attr: FfiString,
         pub explicit_lifetimes: FfiVec<FfiString>,
         pub template_args: FfiVec<CcType>,
@@ -866,6 +868,7 @@ mod __defs {
             variant: cc_type::Variant::EMPTY,
             is_const: false,
             is_nonnull: false,
+            is_noescape: false,
             unknown_attr: FfiString::EMPTY,
             explicit_lifetimes: FfiVec::EMPTY,
             template_args: FfiVec::EMPTY,
@@ -878,6 +881,9 @@ mod __defs {
         }
         pub fn is_nonnull(&self) -> bool {
             self.is_nonnull
+        }
+        pub fn is_noescape(&self) -> bool {
+            self.is_noescape
         }
         pub fn unknown_attr(&self) -> &str {
             self.unknown_attr.as_str()
@@ -900,6 +906,10 @@ mod __defs {
             self.is_nonnull = val;
             &mut self.is_nonnull
         }
+        pub fn set_is_noescape(&mut self, val: bool) -> &mut bool {
+            self.is_noescape = val;
+            &mut self.is_noescape
+        }
         pub fn set_unknown_attr(&mut self, val: FfiString) -> &mut FfiString {
             self.unknown_attr = val;
             &mut self.unknown_attr
@@ -918,6 +928,7 @@ mod __defs {
         assert!(core::mem::offset_of!(CcType, variant) == 0);
         assert!(core::mem::offset_of!(CcType, is_const) == 64);
         assert!(core::mem::offset_of!(CcType, is_nonnull) == 65);
+        assert!(core::mem::offset_of!(CcType, is_noescape) == 66);
         assert!(core::mem::offset_of!(CcType, unknown_attr) == 72);
         assert!(core::mem::offset_of!(CcType, explicit_lifetimes) == 88);
         assert!(core::mem::offset_of!(CcType, template_args) == 112);

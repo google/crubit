@@ -84,12 +84,11 @@ DEPS = {
 TAGS = {}
 
 COPTS = {
-    # Verify that the generated `deprecated_rs_api_impl.cc` compiles without
-    # deprecation warnings (even if the default flags disable them).
     "deprecated": ["-Werror=deprecated-declarations"],
 }
 
 ASPECT_HINTS = {
+    "noescape_pointers": ["//features:noescape_pointer_params_as_references"],
     "composable_bridging_template_type": [
         "//features:template_instantiation",
     ],

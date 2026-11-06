@@ -545,6 +545,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI CcType {
   void set_is_const(bool value) { is_const_ = value; }
   bool is_nonnull() const { return is_nonnull_; }
   void set_is_nonnull(bool value) { is_nonnull_ = value; }
+  bool is_noescape() const { return is_noescape_; }
+  void set_is_noescape(bool value) { is_noescape_ = value; }
   std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
   void set_unknown_attr(std::string_view value) { unknown_attr_ = FfiString(value); }
   const FfiVec<FfiString>& explicit_lifetimes() const { return explicit_lifetimes_; }
@@ -559,6 +561,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI CcType {
   ::crubit::ffi::cc_type::Variant variant_{};
   bool is_const_{};
   bool is_nonnull_{};
+  bool is_noescape_{};
   FfiString unknown_attr_{};
   FfiVec<FfiString> explicit_lifetimes_{};
   FfiVec<::crubit::ffi::CcType> template_args_{};
@@ -3353,6 +3356,7 @@ static_assert(sizeof(size_t) != 8 || (sizeof(CcType) == 136 && alignof(CcType) =
 static_assert(sizeof(size_t) != 8 || offsetof(CcType, variant_) == 0);
 static_assert(sizeof(size_t) != 8 || offsetof(CcType, is_const_) == 64);
 static_assert(sizeof(size_t) != 8 || offsetof(CcType, is_nonnull_) == 65);
+static_assert(sizeof(size_t) != 8 || offsetof(CcType, is_noescape_) == 66);
 static_assert(sizeof(size_t) != 8 || offsetof(CcType, unknown_attr_) == 72);
 static_assert(sizeof(size_t) != 8 || offsetof(CcType, explicit_lifetimes_) == 88);
 static_assert(sizeof(size_t) != 8 || offsetof(CcType, template_args_) == 112);

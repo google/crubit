@@ -235,10 +235,18 @@ fn rs_type_kind_with_lifetime_elision_impl(
                 // with a user-provided annotation in order to convert some pointers into either
                 // references or optional references.
                 PointerTypeKind::NonNull | PointerTypeKind::Nullable | PointerTypeKind::Owned => {
-                    RsTypeKind::Pointer {
-                        pointee,
-                        kind: RustPtrKind::CcPtr(pointer.kind()),
-                        mutability,
+                    if pointer.kind() == PointerTypeKind::NonNull && ty.is_noescape() {
+                        let is_cref = lifetime_options.assume_lifetimes
+                            && (!pointee.is_complete()
+                                || (lifetime_options.is_return_type
+                                    && !lifetime_options.is_operator));
+                        RsTypeKind::Reference { referent: pointee, mutability, lifetime, is_cref }
+                    } else {
+                        RsTypeKind::Pointer {
+                            pointee,
+                            kind: RustPtrKind::CcPtr(pointer.kind()),
+                            mutability,
+                        }
                     }
                 }
             })
