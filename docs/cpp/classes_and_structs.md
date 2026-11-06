@@ -234,6 +234,40 @@ interface in Rust, is not supported. The workaround is a C++ subclass that
 forwards to a Rust type; see
 [`examples/cpp/virtual/`](https://github.com/google/crubit/tree/main/examples/cpp/virtual/).
 
+## Debug formatting {#debug}
+
+With the experimental `//features:record_impl_debug` feature,
+Crubit automatically generates an `impl Debug` for C++ structs and classes,
+unless:
+
+*   The type is abstract i.e., has pure virtual functions, in which case it
+    defaults to *not* implementing `Debug`.
+*   The type explicitly opts out using `CRUBIT_OVERRIDE_DEBUG(false)`.
+
+The generated `impl Debug` formats all [supported fields](#fields) that
+implement `Debug`. If all fields are supported and debug-formattable, and the
+type has no bases, it calls `.finish()` (exhaustive). Otherwise, it calls
+`.finish_non_exhaustive()` to indicate that some C++ details may be omitted
+e.g., unsupported fields, other bases.
+
+### Opting out or in {#override_debug}
+
+To manually control whether to generate the `impl Debug`, use the
+`CRUBIT_OVERRIDE_DEBUG` macro:
+
+```live-snippet
+cs/file:support/annotations.h symbol:CRUBIT_OVERRIDE_DEBUG
+```
+
+*   `CRUBIT_OVERRIDE_DEBUG(false)`: Use if the C++ type already has a
+    hand-written Rust `Debug` implementation to avoid a trait implementation
+    conflict.
+*   `CRUBIT_OVERRIDE_DEBUG(true)`: Use to force generation for an abstract type.
+
+IMPORTANT: Deriving `Debug` using `CRUBIT_TRAIT_DERIVE("Debug")` will be
+deprecated and cause a compilation error. Use the default behavior or
+`CRUBIT_OVERRIDE_DEBUG` instead.
+
 ## Packed structs {#packed}
 
 A packed C++ struct becomes a packed Rust struct with the same layout:
