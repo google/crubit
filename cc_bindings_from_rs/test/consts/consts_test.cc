@@ -32,6 +32,10 @@ TEST(ConstsTest, AllAreExpected) {
   // the furthest negative floating-point values, so no assertion is made here.
   static_assert(consts::RUST_F32_MAX == FLT_MAX);
   static_assert(consts::RUST_F64_MAX == DBL_MAX);
+  static_assert(consts::FLOAT_32_ZERO == 0.0f);
+  static_assert(consts::FLOAT_32_ONE == 1.0f);
+  static_assert(consts::FLOAT_64_ZERO == 0.0);
+  static_assert(consts::FLOAT_64_ONE == 1.0);
 
   static_assert(consts::TyWithAssocConsts::ASSOC_42 == 42);
   static_assert(consts::TyWithAssocConsts::ASSOC_POINT.x == 5);

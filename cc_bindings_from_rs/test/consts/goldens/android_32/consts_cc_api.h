@@ -34,7 +34,11 @@ static constexpr ::std::array<::std::int32_t, 3> ARRAY_CONST =
     ::std::array<::std::int32_t, 3>{INT32_C(10), INT32_C(20), INT32_C(30)};
 static constexpr decltype(char(0)) CHAR = 42;
 static constexpr float FLOAT_32 = 0.125f;
+static constexpr float FLOAT_32_ONE = 1.0f;
+static constexpr float FLOAT_32_ZERO = 0.0f;
 static constexpr double FLOAT_64 = 0.0078125L;
+static constexpr double FLOAT_64_ONE = 1.0L;
+static constexpr double FLOAT_64_ZERO = 0.0L;
 static constexpr ::std::int32_t INT_NEG = INT32_C(-17);
 static constexpr ::std::int32_t INT_POS = INT32_C(42);
 static constexpr ::std::intptr_t ISIZE = INT64_C(42);

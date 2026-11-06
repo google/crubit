@@ -40,6 +40,10 @@ use crubit_annotate::must_bind;
 #[must_bind] pub const INT_NEG: i32 = -17;
 #[must_bind] pub const FLOAT_32: f32 = 0.125; // 2^(-3)
 #[must_bind] pub const FLOAT_64: f64 = 0.0078125; // 2^(-7)
+#[must_bind] pub const FLOAT_32_ZERO: f32 = 0.0;
+#[must_bind] pub const FLOAT_32_ONE: f32 = 1.0;
+#[must_bind] pub const FLOAT_64_ZERO: f64 = 0.0;
+#[must_bind] pub const FLOAT_64_ONE: f64 = 1.0;
 #[must_bind] pub const LARGE_INT: i64 = 9223372036854775807;
 #[must_bind] pub const UNSIGNED_INT: u32 = 4294967295;
 #[must_bind] pub const SLICE_LENGTH: usize = "hello world".len();

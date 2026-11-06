@@ -699,6 +699,14 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
     use ty::TyKind;
     use ty::UintTy::*;
 
+    fn format_float(value: String, suffix: &str) -> String {
+        if value.contains('.') || value.contains('e') || value.contains('E') {
+            format!("{value}{suffix}")
+        } else {
+            format!("{value}.0{suffix}")
+        }
+    }
+
     Ok(match kind {
         TyKind::Bool => scalar.try_to_bool().unwrap().to_string(),
         TyKind::Int(I8) => scalar.to_i8().to_string(),
@@ -708,8 +716,14 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
         TyKind::Uint(U16) => format!("UINT16_C({})", scalar.to_u16()),
         TyKind::Uint(U32) => format!("UINT32_C({})", scalar.to_u32()),
         TyKind::Uint(U64) => format!("UINT64_C({})", scalar.to_u64()),
-        TyKind::Float(F32) => format!("{}f", scalar.to_f32()),
-        TyKind::Float(F64) => format!("{}L", scalar.to_f64()),
+        TyKind::Float(F32) => {
+            let s = scalar.to_f32().to_string();
+            format_float(s, "f")
+        }
+        TyKind::Float(F64) => {
+            let s = scalar.to_f64().to_string();
+            format_float(s, "L")
+        }
         TyKind::Uint(Usize) => format!("UINT64_C({})", scalar.to_target_usize(tcx)),
 
         // Signed integer minimums cannot be expressed with literals, as `-<int>` parses as a unary
