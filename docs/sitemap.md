@@ -20,6 +20,14 @@
         *   [Cheat Sheet](/docs/types/non_rust_movable/cheat_sheet.md)
 
 *   [Errors](/docs/errors/)
+    *   [Unsupported types](/docs/errors/unsupported_type.md)
+    *   [Unknown targets](/docs/errors/unknown_target.md)
+    *   [Nested types](/docs/errors/nested_type.md)
+    *   [Visibility](/docs/errors/visibility.md)
+    *   [Unknown attributes](/docs/errors/unknown_attribute.md)
+    *   [Bridge types as struct fields](/docs/errors/bridge_field.md)
+    *   [Compound types containing bridge types](/docs/errors/bridge_compound_type.md)
+    *   [The `Delete` trait](/docs/errors/delete.md)
 
 *   Rust Bindings for C++ Libraries
 
@@ -42,6 +50,7 @@
 *   C++ Bindings for Rust Libraries
 
     *   [Overview](/docs/rust/)
+    *   [Customizing](/docs/rust/customizing.md)
     *   [Functions](/docs/rust/functions.md)
     *   [Callbacks](/docs/rust/callbacks.md)
     *   [Structs](/docs/rust/structs.md)

@@ -44,11 +44,18 @@ jobs:
         id: pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - name: Build with mdBook
-        run: mdbook build
+        id: build
+        run: |
+          mdbook build
+          if [ -d ./book/html ]; then
+            echo "book_path=./book/html" >> "$GITHUB_OUTPUT"
+          else
+            echo "book_path=./book" >> "$GITHUB_OUTPUT"
+          fi
       - name: Upload artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
-          path: ./book
+          path: ${{ steps.build.outputs.book_path }}
 
   # Deployment job
   deploy:

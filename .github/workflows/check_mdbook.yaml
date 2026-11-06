@@ -1,0 +1,37 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+name: Check mdBook
+
+# Validates that the documentation builds and that all internal links resolve
+# (via mdbook-linkcheck2, configured in `book.toml`). Deployment to GitHub Pages
+# happens separately in `deploy_mdbook.yaml`.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      MDBOOK_VERSION: 0.5.2
+      MDBOOK_TABS_VERSION: 0.3.4
+      MDBOOK_LINKCHECK2_VERSION: 0.13.0
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Install mdBook
+        run: |
+          curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf -y | sh
+          rustup update
+          cargo install --version ${MDBOOK_VERSION} mdbook
+          cargo install --version ${MDBOOK_TABS_VERSION} mdbook-tabs
+          cargo install --version ${MDBOOK_LINKCHECK2_VERSION} mdbook-linkcheck2
+      - name: Build and check links with mdBook
+        run: mdbook build

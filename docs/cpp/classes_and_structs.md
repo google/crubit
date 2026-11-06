@@ -202,8 +202,8 @@ To get inherited methods, add `//features:oo_casting` to the
     `//support:oops`.
 
 The tests in
-[`rs_bindings_from_cc/test/struct/inheritance/`](/rs_bindings_from_cc/test/struct/inheritance/)
-show both.
+`rs_bindings_from_cc/test/struct/inheritance/` show
+both.
 
 Without `oo_casting`, add a method to the derived class in C++ that forwards to
 the base class method, or a function that returns the object as a pointer to its
@@ -232,7 +232,7 @@ it doesn't override are [inherited methods](#inherited_methods).
 Overriding a C++ virtual method in Rust, or otherwise implementing a C++
 interface in Rust, is not supported. The workaround is a C++ subclass that
 forwards to a Rust type; see
-[`examples/cpp/virtual/`](/examples/cpp/virtual/).
+[`examples/cpp/virtual/`](https://github.com/google/crubit/tree/main/examples/cpp/virtual/).
 
 ## Packed structs {#packed}
 
@@ -317,7 +317,7 @@ differences:
 
 For example, with the struct above, `format!("{s:?}")` is
 `PackedStruct { a: 10, b: 200, c: 3000 }`. The tests in
-[`rs_bindings_from_cc/test/struct/packed/`](/rs_bindings_from_cc/test/struct/packed/)
+[`rs_bindings_from_cc/test/struct/packed/`](/rs_bindings_from_cc/test/struct/packed/test.rs)
 show more examples.
 
 ## Attributes {#attributes}

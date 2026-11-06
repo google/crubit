@@ -3,13 +3,12 @@
 C++ code can call functions defined in Rust, provided that the parameter and
 return types are supported by Crubit:
 
-*   If a parameter or return type is a [fundamental
-    type](../cpp/fundamental_types.md), then the bindings for the function use
-    the corresponding C++ type.
+*   If a parameter or return type is a [primitive type](../types/primitive.md),
+    then the bindings for the function use the corresponding C++ type.
 *   Similarly, if a parameter or return type is a [pointer
-    type](../cpp/pointer_types.md), then the bindings for the function use the
+    type](../types/pointer.md), then the bindings for the function use the
     corresponding C++ pointer type.
-*   If the type is a user-defined type, such as a [struct](struct.md) or
+*   If the type is a user-defined type, such as a [struct](structs.md) or
     [enum](enums.md), then the bindings for the function use the bindings for
     that type.
 
@@ -80,8 +79,8 @@ caveats apply.
 
 ## Slice parameters
 
-Rust slice parameters (`&[T]`, `&mut [T]`, `&str`) map to `rs::SliceRef<const
-T>`, `rs::SliceRef<T>`, and `rs::StrRef` in C++.
+Rust slice parameters (`&[T]`, `&mut [T]`, `&str`) map to
+`rs::SliceRef<const T>`, `rs::SliceRef<T>`, and `rs::StrRef` in C++.
 
 C++ callers can pass `absl::Span<const T>`, `std::span<const T>`, or contiguous
 containers like `std::vector<T>` and `std::array<T, N>` directly to satisfy
@@ -106,8 +105,8 @@ fn process_mut_bytes(_: &mut [u8]) {}  // Cannot pass string literals or const s
     `std::span<T>`, `std::vector<T>`, and `std::array<T, N>`.
 *   **`&mut [T]`**: Maps to `rs::SliceRef<T>`
     (`crubit/support/rs_std/slice_ref.h`). Converts implicitly from mutable
-    `std::span<T>` and `absl::Span<T>`, or construct via `rs::SliceRef(ptr,
-    size)`.
+    `std::span<T>` and `absl::Span<T>`, or construct via
+    `rs::SliceRef(ptr, size)`.
 *   **`&str`**: Maps to `rs::StrRef` (`crubit/support/rs_std/str_ref.h`).
     Converts from string literals and `std::string_view`.
 *   **`&[u8]`**: Maps to `rs::SliceRef<const uint8_t>`. In addition to
@@ -131,9 +130,9 @@ canonical substitutions which are defined as follows:
 
 ## Callbacks (`Fn`, `FnMut`, `FnOnce`) {#callbacks}
 
-Rust functions can accept callbacks as borrowed trait objects (`&dyn Fn`, `&mut
-dyn FnMut`), owned boxes (`Box<dyn Fn>`, `Box<dyn FnMut>`, `Box<dyn FnOnce>`),
-or generic `impl Trait` parameters:
+Rust functions can accept callbacks as borrowed trait objects (`&dyn Fn`,
+`&mut dyn FnMut`), owned boxes (`Box<dyn Fn>`, `Box<dyn FnMut>`,
+`Box<dyn FnOnce>`), or generic `impl Trait` parameters:
 
 *   **`&dyn Fn(...)` / `impl Fn(...)`**: Maps to `rs::FnRef<... const>`
     (borrowed, no allocation).

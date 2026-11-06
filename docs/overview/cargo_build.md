@@ -10,7 +10,7 @@ the same `rustc` that compiles the crates it generates bindings for. See
 [Toolchain requirements](build_systems.md#toolchain-requirements) for supported
 toolchains and setup instructions.
 
-## cc_bindings_from_rs
+## cc_bindings_from_rs {#cc_bindings_from_rs}
 
 In a Crubit checkout, `rustup` automatically selects the nightly toolchain from
 `rust-toolchain.toml`, and you can build `cc_bindings_from_rs` with Cargo:
@@ -66,8 +66,8 @@ error[E0463]: can't find crate for `rustc_driver`
 ```
 
 If you build Crubit using `cargo` and `rustc` that are managed by `rustup`, then
-you can just run the suggested command to add the `rustc-dev` component: `rustup
-component add rustc-dev`.
+you can just run the suggested command to add the `rustc-dev` component:
+`rustup component add rustc-dev`.
 
 If you build Crubit using `cargo` and `rustc` that are built and installed using
 `x.py install`, then please ensure that `x.py`'s `config.toml` covers the
@@ -196,15 +196,15 @@ environment variables.
 
 The CMake project in `cmake/rs_bindings_from_cc` builds `rs_bindings_from_cc`.
 It finds or builds the C++ dependencies and then runs Cargo. For each
-dependency, it uses one that's already installed if it's suitable, and
-otherwise gets one itself:
+dependency, it uses one that's already installed if it's suitable, and otherwise
+gets one itself:
 
 *   **LLVM/Clang**: uses the install you pass with `-DCRUBIT_LLVM_ROOT=<path>`,
     or else an LLVM 23.1.3 that `find_package(LLVM)` finds (for example through
     `CMAKE_PREFIX_PATH` or `LLVM_DIR`). Either one must contain
-    `bin/llvm-config`, the headers and the static Clang and LLVM libraries,
-    and `llvm-ar` must be from the same LLVM version. Otherwise, it downloads
-    the official LLVM 23.1.3 release for your platform. On platforms that LLVM
+    `bin/llvm-config`, the headers and the static Clang and LLVM libraries, and
+    `llvm-ar` must be from the same LLVM version. Otherwise, it downloads the
+    official LLVM 23.1.3 release for your platform. On platforms that LLVM
     doesn't publish releases for (such as x86_64 macOS), you must provide LLVM
     explicitly.
 *   **Abseil and Protobuf**: uses the installed packages that
@@ -218,8 +218,8 @@ Every download is checked against a pinned SHA-256 hash. If you change
 `CRUBIT_LLVM_VERSION` or `CRUBIT_LLVM_URL`, set `CRUBIT_LLVM_URL_HASH` too;
 otherwise the build warns that the download isn't verified.
 
-You need CMake 3.22 or later, Ninja, a C++20 compiler, and `rustup`. On Linux and
-macOS, run from the root of the checkout:
+You need CMake 3.22 or later, Ninja, a C++20 compiler, and `rustup`. On Linux
+and macOS, run from the root of the checkout:
 
 ```sh
 $ cmake -S cmake/rs_bindings_from_cc -B cmake_build -G Ninja
@@ -227,9 +227,10 @@ $ cmake --build cmake_build
 $ ./cmake_build/bin/rs_bindings_from_cc --help
 ```
 
-The build also writes `cmake_build/crubit-cargo-env.sh`, which sets the environment
-variables described [below](#custom-build-systems-chromium-android-or-other-projects).
-After one CMake build, you can run Cargo yourself:
+The build also writes `cmake_build/crubit-cargo-env.sh`, which sets the
+environment variables described
+[below](#custom-build-systems-chromium-android-or-other-projects). After one
+CMake build, you can run Cargo yourself:
 
 ```sh
 $ source cmake_build/crubit-cargo-env.sh
@@ -242,37 +243,36 @@ Useful cache variables:
 *   `CRUBIT_LLVM_URL` and `CRUBIT_LLVM_URL_HASH`: a different LLVM archive to
     download, and its hash as `SHA256=<hex>`.
 *   `CRUBIT_LLVM_DEV_DATE`: the date (`YYYYMMDD`) of the LLVM commit. It is
-    detected for LLVM 23 releases (23.1.0 and later); set it for any other
-    LLVM, including builds of LLVM's main branch.
+    detected for LLVM 23 releases (23.1.0 and later); set it for any other LLVM,
+    including builds of LLVM's main branch.
 *   `CRUBIT_FIND_DEPENDENCIES`: whether to look for installed Abseil and
     Protobuf packages (default `ON`). Set it to `OFF` to always build them.
-*   `CRUBIT_CARGO_PROFILE`: the Cargo profile to build with (default
-    `release`).
+*   `CRUBIT_CARGO_PROFILE`: the Cargo profile to build with (default `release`).
 
 To use the tool from another CMake project, add this project with
-`add_subdirectory()`. Because it's outside that project's source tree, also
-give it a build directory:
+`add_subdirectory()`. Because it's outside that project's source tree, also give
+it a build directory:
 
 ```cmake
 add_subdirectory(<crubit>/cmake/rs_bindings_from_cc crubit_rs_bindings_from_cc)
 ```
 
-It defines the imported executable target `crubit::rs_bindings_from_cc`. Use `$<TARGET_FILE:crubit::rs_bindings_from_cc>`
-in custom commands and list the target in their `DEPENDS`, so that the tool is
-built first. `cmake --install` installs the binary to `bin/`.
+It defines the imported executable target `crubit::rs_bindings_from_cc`. Use
+`$<TARGET_FILE:crubit::rs_bindings_from_cc>` in custom commands and list the
+target in their `DEPENDS`, so that the tool is built first. `cmake --install`
+installs the binary to `bin/`.
 
 Cargo uses a copy of `Cargo.lock` in the build directory (through
 `CARGO_RESOLVER_LOCKFILE_PATH`), because the checked-in `Cargo.lock` also lists
 crates that only Bazel uses, which Cargo would remove. The copy keeps the pinned
 versions, and the checked-in file stays untouched.
 
-When the LLVM install includes `clang` and `lld`, the build uses them to
-compile C code and to link.
+When the LLVM install includes `clang` and `lld`, the build uses them to compile
+C code and to link.
 
 > [!NOTE]
-> LLVM releases ship their static libraries as LTO bitcode, which only a linker
-> of the same LLVM version can read.
-
+> LLVM releases ship their static libraries as LTO bitcode, which
+> only a linker of the same LLVM version can read.
 
 ### Custom Build Systems (Chromium, Android, or Other Projects)
 
@@ -333,8 +333,8 @@ C++ dependencies and pre-generate C++ Protobuf headers before invoking `cargo`:
             ```
 
         *   `RUSTFLAGS`: Rust compiler flags for linking (e.g. `-C linker=...`,
-            `-C link-arg=-stdlib=libc++`, `-C link-arg=-lc++`, `-C
-            link-arg=-lzstd`).
+            `-C link-arg=-stdlib=libc++`, `-C link-arg=-lc++`,
+            `-C link-arg=-lzstd`).
 
 3.  **Build `rs_bindings_from_cc` using Cargo**:
 

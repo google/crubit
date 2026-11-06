@@ -107,8 +107,9 @@ applies for other non-movable payloads that fall back to `rs::Option` instead of
 In Rust, the contents of a `Box<T>` can be moved out by value (for example with
 `*b`), which relocates the `T` by copying its bytes. That is only sound if `T`
 is Rust-movable, i.e. `Unpin`. A C++ type whose move constructor is non-trivial
-or deleted is [not Rust-movable](non_rust_movable/intro_short.md): Rust bindings
-for it are `!Unpin`, and relocating it by `memcpy` would be undefined behavior.
+or deleted is [not Rust-movable](../cpp/classes_and_structs.md#rust_movable):
+Rust bindings for it are `!Unpin`, and relocating it by `memcpy` would be
+undefined behavior.
 
 For that reason, `rust_api_from_cpp` **refuses to generate bindings** for a C++
 API that uses `rs::Box<T>` or `rs::SliceBox<T>` with a `T` that is not
