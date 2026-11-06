@@ -12,7 +12,6 @@ use database::rs_snippet::{
 use database::BindingsGenerator;
 use ir::GenericItem;
 use ir::{CcType, CcTypeVariant, PointerTypeKind};
-use lifetime_defaults_transform::lifetime_defaults_transform_item;
 use std::rc::Rc;
 
 fn pointee_is_string_view(db: &BindingsGenerator<'_>, ty: &CcType) -> bool {
@@ -361,7 +360,7 @@ fn rs_type_kind_with_lifetime_elision_impl(
                     (
                         decl_assumes_lifetimes,
                         if decl_assumes_lifetimes {
-                            lifetime_defaults_transform_item(db, item)?
+                            db.lifetime_defaults_transform_item(item.clone())?
                         } else {
                             item.clone()
                         },

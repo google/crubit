@@ -33,7 +33,7 @@ use generate_struct_and_union::generate_incomplete_record;
 use ir::*;
 use itertools::Itertools;
 use kythe_metadata::rs_embed_provenance_map;
-use lifetime_defaults_transform::lifetime_defaults_transform_type_alias;
+
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use rs_type_kind::rs_type_kind_with_lifetime_elision;
@@ -140,9 +140,9 @@ fn generate_type_alias(
         .target_crubit_features(raw_type_alias.as_ref().owning_target())
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
     let type_alias = if assume_lifetimes {
-        &lifetime_defaults_transform_type_alias(db, raw_type_alias.as_ref())?
+        db.lifetime_defaults_transform_type_alias(raw_type_alias.clone())?
     } else {
-        raw_type_alias.as_ref()
+        raw_type_alias.clone()
     };
     db.errors().add_category(error_report::Category::Alias);
     // Skip the type alias if it maps to a bridge type that cannot be aliased.
@@ -155,7 +155,7 @@ fn generate_type_alias(
     //
     // Since rs_type_kind() can succeed even if this alias is unsupported (it is "seen through"),
     // we only do so after rs_type_kind() fails.
-    let Ok(_rs_type_kind) = db.rs_type_kind(type_alias.into()) else {
+    let Ok(_rs_type_kind) = db.rs_type_kind((&*type_alias).into()) else {
         // Return the un-hidden raw error from has_bindings().
         let Err(e) = db.has_bindings(ir::Item::TypeAlias(raw_type_alias)) else {
             unreachable!(
@@ -170,7 +170,7 @@ fn generate_type_alias(
             type_alias.underlying_type().clone(),
             LifetimeOptions { assume_lifetimes, ..Default::default() },
         )
-        .with_context(|| format!("Failed to format underlying type for {type_alias}"))?;
+        .with_context(|| format!("Failed to format underlying type for {}", type_alias.as_ref()))?;
     let mut lifetime_params = vec![];
     if assume_lifetimes {
         lifetime_params =
@@ -563,6 +563,10 @@ pub fn new_database<'db>(
         CommonTokens::new(),
         lifetime_defaults_transform::decl_lifetime_arity,
         rs_type_kind_safety,
+        lifetime_defaults_transform::lifetime_defaults_transform_item,
+        lifetime_defaults_transform::lifetime_defaults_transform_record,
+        lifetime_defaults_transform::lifetime_defaults_transform_func,
+        lifetime_defaults_transform::lifetime_defaults_transform_type_alias,
         record_field_safety,
         record_safety,
         has_bindings::has_bindings,

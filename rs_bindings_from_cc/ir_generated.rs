@@ -1306,7 +1306,7 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, Eq)]
     pub struct Func {
         pub has_bits: u64,
         pub cc_name: UnqualifiedIdentifier,
@@ -1340,6 +1340,49 @@ mod __defs {
         pub lifetime_inputs: FfiVec<FfiString>,
         pub semantic: MemberFuncSemantic,
         pub is_pub_crate: bool,
+    }
+
+    impl PartialEq for Func {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.has_bits == other.has_bits
+                    && self.cc_name == other.cc_name
+                    && self.rs_name == other.rs_name
+                    && self.unique_name == other.unique_name
+                    && self.owning_target == other.owning_target
+                    && self.mangled_name == other.mangled_name
+                    && self.doc_comment == other.doc_comment
+                    && self.return_type == other.return_type
+                    && self.params == other.params
+                    && self.lifetime_params == other.lifetime_params
+                    && self.is_inline == other.is_inline
+                    && self.is_always_inline == other.is_always_inline
+                    && self.instance_method_metadata == other.instance_method_metadata
+                    && self.is_extern_c == other.is_extern_c
+                    && self.is_noreturn == other.is_noreturn
+                    && self.is_variadic == other.is_variadic
+                    && self.is_consteval == other.is_consteval
+                    && self.nodiscard == other.nodiscard
+                    && self.deprecated == other.deprecated
+                    && self.unknown_attr == other.unknown_attr
+                    && self.call_conv == other.call_conv
+                    && self.is_member_or_descendant_of_class_template == other.is_member_or_descendant_of_class_template
+                    && self.safety_annotation == other.safety_annotation
+                    && self.decl_loc == other.decl_loc
+                    && self.enclosing_item_id == other.enclosing_item_id
+                    && self.adl_enclosing_record == other.adl_enclosing_record
+                    && self.must_bind == other.must_bind
+                    && self.inline_cpp_source_text == other.inline_cpp_source_text
+                    && self.lifetime_inputs == other.lifetime_inputs
+                    && self.semantic == other.semantic
+                    && self.is_pub_crate == other.is_pub_crate)
+        }
+    }
+    impl core::hash::Hash for Func {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl core::fmt::Debug for Func {
@@ -2293,7 +2336,7 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, Eq)]
     pub struct Constant {
         pub has_bits: u64,
         pub kind: constant::Kind,
@@ -2310,6 +2353,32 @@ mod __defs {
         pub deprecated: FfiString,
         pub doc_comment: FfiString,
         pub macro_kind: constant::MacroKind,
+    }
+
+    impl PartialEq for Constant {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.has_bits == other.has_bits
+                    && self.kind == other.kind
+                    && self.cc_name == other.cc_name
+                    && self.rs_name == other.rs_name
+                    && self.unique_name == other.unique_name
+                    && self.owning_target == other.owning_target
+                    && self.decl_loc == other.decl_loc
+                    && self.unknown_attr == other.unknown_attr
+                    && self.enclosing_item_id == other.enclosing_item_id
+                    && self.type_ == other.type_
+                    && self.must_bind == other.must_bind
+                    && self.deprecated == other.deprecated
+                    && self.doc_comment == other.doc_comment
+                    && self.macro_kind == other.macro_kind)
+        }
+    }
+    impl core::hash::Hash for Constant {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl core::fmt::Debug for Constant {
@@ -2693,7 +2762,7 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, Eq)]
     pub struct Record {
         pub has_bits: u64,
         pub rs_name: Identifier,
@@ -2743,6 +2812,65 @@ mod __defs {
         pub is_thread_safe: bool,
         pub is_explicit_class_template_instantiation_definition: bool,
         pub children: FfiVec<Item>,
+    }
+
+    impl PartialEq for Record {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.has_bits == other.has_bits
+                    && self.rs_name == other.rs_name
+                    && self.cc_name == other.cc_name
+                    && self.unique_name == other.unique_name
+                    && self.mangled_cc_name == other.mangled_cc_name
+                    && self.owning_target == other.owning_target
+                    && self.template_specialization == other.template_specialization
+                    && self.unknown_attr == other.unknown_attr
+                    && self.doc_comment == other.doc_comment
+                    && self.bridge_type == other.bridge_type
+                    && self.owned_ptr_config == other.owned_ptr_config
+                    && self.decl_loc == other.decl_loc
+                    && self.unambiguous_public_bases == other.unambiguous_public_bases
+                    && self.fields == other.fields
+                    && self.lifetime_params == other.lifetime_params
+                    && self.size_align == other.size_align
+                    && self.trait_derives == other.trait_derives
+                    && self.is_derived_class == other.is_derived_class
+                    && self.has_virtual_bases == other.has_virtual_bases
+                    && self.override_alignment == other.override_alignment
+                    && self.pack == other.pack
+                    && self.safety_annotation == other.safety_annotation
+                    && self.copy_constructor == other.copy_constructor
+                    && self.move_constructor == other.move_constructor
+                    && self.destructor == other.destructor
+                    && self.is_rust_movable == other.is_rust_movable
+                    && self.not_rust_movable_reason == other.not_rust_movable_reason
+                    && self.libcxx_only_fields == other.libcxx_only_fields
+                    && self.is_inheritable == other.is_inheritable
+                    && self.is_abstract == other.is_abstract
+                    && self.nodiscard == other.nodiscard
+                    && self.record_type == other.record_type
+                    && self.is_aggregate == other.is_aggregate
+                    && self.is_canonical_alias == other.is_canonical_alias
+                    && self.enclosing_item_id == other.enclosing_item_id
+                    && self.must_bind == other.must_bind
+                    && self.overloads_operator_delete == other.overloads_operator_delete
+                    && self.has_private_or_deleted_operator_delete == other.has_private_or_deleted_operator_delete
+                    && self.lifetime_inputs == other.lifetime_inputs
+                    && self.impl_debug == other.impl_debug
+                    && self.has_private_pointer_or_reference_fields == other.has_private_pointer_or_reference_fields
+                    && self.has_template_argument_lifetime == other.has_template_argument_lifetime
+                    && self.detected_formatter == other.detected_formatter
+                    && self.deprecated == other.deprecated
+                    && self.is_thread_safe == other.is_thread_safe
+                    && self.is_explicit_class_template_instantiation_definition == other.is_explicit_class_template_instantiation_definition
+                    && self.children == other.children)
+        }
+    }
+    impl core::hash::Hash for Record {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl core::fmt::Debug for Record {
@@ -3320,7 +3448,7 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, Eq)]
     pub struct IncompleteRecord {
         pub has_bits: u64,
         pub cc_name: Identifier,
@@ -3332,6 +3460,27 @@ mod __defs {
         pub record_type: RecordType,
         pub enclosing_item_id: ItemId,
         pub must_bind: bool,
+    }
+
+    impl PartialEq for IncompleteRecord {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.has_bits == other.has_bits
+                    && self.cc_name == other.cc_name
+                    && self.rs_name == other.rs_name
+                    && self.unique_name == other.unique_name
+                    && self.owning_target == other.owning_target
+                    && self.unknown_attr == other.unknown_attr
+                    && self.record_type == other.record_type
+                    && self.enclosing_item_id == other.enclosing_item_id
+                    && self.must_bind == other.must_bind)
+        }
+    }
+    impl core::hash::Hash for IncompleteRecord {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl core::fmt::Debug for IncompleteRecord {
@@ -3579,7 +3728,7 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, Eq)]
     pub struct Enum {
         pub has_bits: u64,
         pub cc_name: Identifier,
@@ -3598,6 +3747,34 @@ mod __defs {
         pub nodiscard: FfiString,
         pub deprecated: FfiString,
         pub doc_comment: FfiString,
+    }
+
+    impl PartialEq for Enum {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.has_bits == other.has_bits
+                    && self.cc_name == other.cc_name
+                    && self.rs_name == other.rs_name
+                    && self.unique_name == other.unique_name
+                    && self.mangled_cc_name == other.mangled_cc_name
+                    && self.owning_target == other.owning_target
+                    && self.decl_loc == other.decl_loc
+                    && self.underlying_type == other.underlying_type
+                    && self.enumerators == other.enumerators
+                    && self.unknown_attr == other.unknown_attr
+                    && self.enclosing_item_id == other.enclosing_item_id
+                    && self.must_bind == other.must_bind
+                    && self.detected_formatter == other.detected_formatter
+                    && self.nodiscard == other.nodiscard
+                    && self.deprecated == other.deprecated
+                    && self.doc_comment == other.doc_comment)
+        }
+    }
+    impl core::hash::Hash for Enum {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl core::fmt::Debug for Enum {
@@ -3843,7 +4020,7 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, Eq)]
     pub struct GlobalVar {
         pub has_bits: u64,
         pub cc_name: Identifier,
@@ -3859,6 +4036,31 @@ mod __defs {
         pub must_bind: bool,
         pub deprecated: FfiString,
         pub doc_comment: FfiString,
+    }
+
+    impl PartialEq for GlobalVar {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.has_bits == other.has_bits
+                    && self.cc_name == other.cc_name
+                    && self.rs_name == other.rs_name
+                    && self.unique_name == other.unique_name
+                    && self.owning_target == other.owning_target
+                    && self.decl_loc == other.decl_loc
+                    && self.unknown_attr == other.unknown_attr
+                    && self.enclosing_item_id == other.enclosing_item_id
+                    && self.mangled_name == other.mangled_name
+                    && self.type_ == other.type_
+                    && self.must_bind == other.must_bind
+                    && self.deprecated == other.deprecated
+                    && self.doc_comment == other.doc_comment)
+        }
+    }
+    impl core::hash::Hash for GlobalVar {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl core::fmt::Debug for GlobalVar {
@@ -4067,7 +4269,7 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, Eq)]
     pub struct TypeAlias {
         pub has_bits: u64,
         pub cc_name: Identifier,
@@ -4083,6 +4285,31 @@ mod __defs {
         pub must_bind: bool,
         pub deprecated: FfiString,
         pub lifetime_inputs: FfiVec<FfiString>,
+    }
+
+    impl PartialEq for TypeAlias {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.has_bits == other.has_bits
+                    && self.cc_name == other.cc_name
+                    && self.rs_name == other.rs_name
+                    && self.unique_name == other.unique_name
+                    && self.owning_target == other.owning_target
+                    && self.doc_comment == other.doc_comment
+                    && self.unknown_attr == other.unknown_attr
+                    && self.underlying_type == other.underlying_type
+                    && self.decl_loc == other.decl_loc
+                    && self.enclosing_item_id == other.enclosing_item_id
+                    && self.must_bind == other.must_bind
+                    && self.deprecated == other.deprecated
+                    && self.lifetime_inputs == other.lifetime_inputs)
+        }
+    }
+    impl core::hash::Hash for TypeAlias {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl core::fmt::Debug for TypeAlias {
@@ -4282,7 +4509,7 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, Eq)]
     pub struct UnsupportedItem {
         pub has_bits: u64,
         pub name: FfiString,
@@ -4296,6 +4523,29 @@ mod __defs {
         pub must_bind: bool,
         pub defining_target: BazelLabel,
         pub do_not_bind: FfiVec<FfiString>,
+    }
+
+    impl PartialEq for UnsupportedItem {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.has_bits == other.has_bits
+                    && self.name == other.name
+                    && self.unique_name == other.unique_name
+                    && self.kind == other.kind
+                    && self.path == other.path
+                    && self.errors == other.errors
+                    && self.decl_loc == other.decl_loc
+                    && self.inline_cpp_source_text == other.inline_cpp_source_text
+                    && self.must_bind == other.must_bind
+                    && self.defining_target == other.defining_target
+                    && self.do_not_bind == other.do_not_bind)
+        }
+    }
+    impl core::hash::Hash for UnsupportedItem {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl core::fmt::Debug for UnsupportedItem {
@@ -4473,11 +4723,25 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Debug,Clone, PartialEq, Eq, Hash)]
+    #[derive(Debug,Clone, Eq)]
     pub struct Comment {
         pub text: FfiString,
         pub id: ItemId,
         pub must_bind: bool,
+    }
+
+    impl PartialEq for Comment {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.text == other.text
+                    && self.must_bind == other.must_bind)
+        }
+    }
+    impl core::hash::Hash for Comment {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl FfiDefault for Comment {
@@ -4527,7 +4791,7 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, Eq)]
     pub struct Namespace {
         pub has_bits: u64,
         pub cc_name: Identifier,
@@ -4543,6 +4807,31 @@ mod __defs {
         pub deprecated: FfiString,
         pub doc_comment: FfiString,
         pub children: FfiVec<Item>,
+    }
+
+    impl PartialEq for Namespace {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.has_bits == other.has_bits
+                    && self.cc_name == other.cc_name
+                    && self.rs_name == other.rs_name
+                    && self.unique_name == other.unique_name
+                    && self.canonical_namespace_id == other.canonical_namespace_id
+                    && self.unknown_attr == other.unknown_attr
+                    && self.owning_target == other.owning_target
+                    && self.enclosing_item_id == other.enclosing_item_id
+                    && self.is_inline == other.is_inline
+                    && self.must_bind == other.must_bind
+                    && self.deprecated == other.deprecated
+                    && self.doc_comment == other.doc_comment
+                    && self.children == other.children)
+        }
+    }
+    impl core::hash::Hash for Namespace {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl core::fmt::Debug for Namespace {
@@ -4734,12 +5023,27 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Debug,Clone, PartialEq, Eq, Hash)]
+    #[derive(Debug,Clone, Eq)]
     pub struct UseMod {
         pub path: FfiString,
         pub mod_name: Identifier,
         pub id: ItemId,
         pub must_bind: bool,
+    }
+
+    impl PartialEq for UseMod {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.path == other.path
+                    && self.mod_name == other.mod_name
+                    && self.must_bind == other.must_bind)
+        }
+    }
+    impl core::hash::Hash for UseMod {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl FfiDefault for UseMod {
@@ -4798,7 +5102,7 @@ mod __defs {
     };
 
     #[repr(C)]
-    #[derive(Clone, PartialEq, Eq, Hash)]
+    #[derive(Clone, Eq)]
     pub struct ExistingRustType {
         pub has_bits: u64,
         pub rs_name: FfiString,
@@ -4813,6 +5117,30 @@ mod __defs {
         pub impl_debug: bool,
         pub label_hint: FfiString,
         pub is_trivially_copyable: bool,
+    }
+
+    impl PartialEq for ExistingRustType {
+        fn eq(&self, other: &Self) -> bool {
+            core::ptr::eq(self, other)
+                || (self.id == other.id
+                    && self.has_bits == other.has_bits
+                    && self.rs_name == other.rs_name
+                    && self.cc_name == other.cc_name
+                    && self.unique_name == other.unique_name
+                    && self.template_args == other.template_args
+                    && self.owning_target == other.owning_target
+                    && self.size_align == other.size_align
+                    && self.is_same_abi == other.is_same_abi
+                    && self.must_bind == other.must_bind
+                    && self.impl_debug == other.impl_debug
+                    && self.label_hint == other.label_hint
+                    && self.is_trivially_copyable == other.is_trivially_copyable)
+        }
+    }
+    impl core::hash::Hash for ExistingRustType {
+        fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+            self.id.hash(state);
+        }
     }
 
     impl core::fmt::Debug for ExistingRustType {

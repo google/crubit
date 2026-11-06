@@ -1046,40 +1046,47 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     /// decls).
     fn add_lifetime_to_item(&mut self, item: &Item) -> Result<Item> {
         match item {
-            Item::Func(func) => Ok(Item::Func(self.add_lifetime_to_func(func)?.into())),
-            Item::Record(record) => Ok(Item::Record(self.add_lifetime_to_record(record)?.into())),
-            Item::TypeAlias(type_alias) => {
-                Ok(Item::TypeAlias(self.add_lifetime_to_type_alias(type_alias)?.into()))
+            Item::Func(func) => {
+                Ok(Item::Func(self.db.lifetime_defaults_transform_func(func.clone())?))
             }
+            Item::Record(record) => {
+                Ok(Item::Record(self.db.lifetime_defaults_transform_record(record.clone())?))
+            }
+            Item::TypeAlias(type_alias) => Ok(Item::TypeAlias(
+                self.db.lifetime_defaults_transform_type_alias(type_alias.clone())?,
+            )),
             _ => Ok(item.clone()),
         }
     }
 }
 
 /// Creates a copy of `func` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_func(db: &BindingsGenerator<'_>, func: &Func) -> Result<Func> {
-    LifetimeDefaults::new(db).add_lifetime_to_func(func)
+pub fn lifetime_defaults_transform_func(
+    db: &BindingsGenerator<'_>,
+    func: FfiRc<Func>,
+) -> Result<FfiRc<Func>> {
+    Ok(FfiRc::new(LifetimeDefaults::new(db).add_lifetime_to_func(&func)?))
 }
 
 /// Creates a copy of `record` with default lifetimes filled in.
 pub fn lifetime_defaults_transform_record(
     db: &BindingsGenerator<'_>,
-    record: &Record,
-) -> Result<Record> {
-    LifetimeDefaults::new(db).add_lifetime_to_record(record)
+    record: FfiRc<Record>,
+) -> Result<FfiRc<Record>> {
+    Ok(FfiRc::new(LifetimeDefaults::new(db).add_lifetime_to_record(&record)?))
 }
 
 /// Creates a copy of `type_alias` with default lifetimes filled in.
 pub fn lifetime_defaults_transform_type_alias(
     db: &BindingsGenerator<'_>,
-    type_alias: &TypeAlias,
-) -> Result<TypeAlias> {
-    LifetimeDefaults::new(db).add_lifetime_to_type_alias(type_alias)
+    type_alias: FfiRc<TypeAlias>,
+) -> Result<FfiRc<TypeAlias>> {
+    Ok(FfiRc::new(LifetimeDefaults::new(db).add_lifetime_to_type_alias(&type_alias)?))
 }
 
 /// Creates a copy of `item` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_item(db: &BindingsGenerator<'_>, item: &Item) -> Result<Item> {
-    LifetimeDefaults::new(db).add_lifetime_to_item(item)
+pub fn lifetime_defaults_transform_item(db: &BindingsGenerator<'_>, item: Item) -> Result<Item> {
+    LifetimeDefaults::new(db).add_lifetime_to_item(&item)
 }
 
 /// Helper to transform a slice of nested items.
@@ -1093,7 +1100,7 @@ fn transform_children(db: &BindingsGenerator<'_>, children: &[Item]) -> Result<V
 
 /// Recursively traverses and transforms an Item and its nested children.
 fn transform_item(db: &BindingsGenerator<'_>, item: &Item) -> Result<Item> {
-    let mut transformed = LifetimeDefaults::new(db).add_lifetime_to_item(item)?;
+    let mut transformed = db.lifetime_defaults_transform_item(item.clone())?;
 
     match &mut transformed {
         Item::Record(record) => {
