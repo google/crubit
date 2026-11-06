@@ -10,7 +10,8 @@ use database::rs_snippet::{LifetimeOptions, RsTypeKind};
 use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail};
 use heck::ToSnakeCase;
-use ir::{CcType, CcTypeVariant, FfiRc, Func, GenericItem, Item, ItemId, MacroKind, Record};
+use ir::ir_generated::constant::MacroKind;
+use ir::{CcType, CcTypeVariant, FfiRc, Func, GenericItem, Item, ItemId, Record};
 use std::collections::HashMap;
 use std::rc::Rc;
 

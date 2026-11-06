@@ -1093,14 +1093,28 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
     CcType param_type =
         ictx_.ConvertQualType(param->getType(), param_lifetimes,
                               /*nullable=*/true, assumed_lifetimes_enabled);
+    if (param->hasAttr<clang::NoEscapeAttr>() && param_type.is_nonnull()) {
+      clang::QualType pointee = param->getType()->getPointeeType();
+      if (!pointee.isNull() && !pointee->isVoidType() &&
+          !pointee->isFunctionType() && !pointee->isIncompleteType()) {
+        BazelLabel label = ictx_.GetOwningTarget(*function_decl);
+        if (ictx_.IsFeatureEnabledForTarget(
+                label, "noescape_pointer_params_as_references")) {
+          param_type.set_is_noescape(true);
+        }
+      }
+    }
 
     std::optional<Identifier> param_name = GetTranslatedParamName(param);
     CRUBIT_CHECK(param_name.has_value());  // No known failure cases.
 
-    auto unknown_attr = CollectUnknownAttrs(
-        *param, assumed_lifetimes_enabled
-                    ? IsClangLifetimeAnnotation
-                    : [](const clang::Attr& attr) { return false; });
+    auto unknown_attr =
+        CollectUnknownAttrs(*param, [&](const clang::Attr& attr) {
+          if (attr.getKind() == clang::attr::NoEscape) {
+            return true;
+          }
+          return assumed_lifetimes_enabled && IsClangLifetimeAnnotation(attr);
+        });
     if (!unknown_attr) {
       errors.Add(FormattedError::FromStatus(unknown_attr.takeError()));
       continue;

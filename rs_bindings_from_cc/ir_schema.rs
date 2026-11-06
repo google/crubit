@@ -185,6 +185,7 @@ pub(crate) fn schema() -> Schema {
             variant: cc_type::Variant,
             is_const: Bool,
             is_nonnull: Bool,
+            is_noescape: Bool,
             unknown_attr: Str,
             explicit_lifetimes: Vec(Str),
             template_args: Vec(CcType),

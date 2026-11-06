@@ -412,3 +412,12 @@ bzl_library(
         "//:__subpackages__",
     ],
 )
+
+# Opt-in: binds `T* _Nonnull` `[[clang::noescape]]` parameters as Rust references.
+# See docs/design/noescape_pointers.md.
+crubit_feature_hint(
+    name = "noescape_pointer_params_as_references",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["noescape_pointer_params_as_references"],
+    visibility = ["//visibility:public"],
+)
