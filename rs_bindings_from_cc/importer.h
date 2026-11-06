@@ -254,6 +254,9 @@ class Importer final : public ImportContext {
   // like any other constant.
   void ImportMacroConstants();
 
+  // Returns true if a macro constant of type `type` would receive bindings.
+  bool IsBindableMacroConstantType(clang::QualType type);
+
   clang::Decl* _Nullable CanonicalizeDecl(clang::Decl* _Nonnull decl) const;
   const clang::Decl* _Nullable CanonicalizeDecl(const clang::Decl& decl) const;
   // Like `CanonicalizeDecl`, but only considers the redeclaration chain of

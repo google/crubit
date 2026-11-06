@@ -5,22 +5,41 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_MACRO_CONSTANTS_MACRO_CONSTANTS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_MACRO_CONSTANTS_MACRO_CONSTANTS_H_
 
+#include <cstdint>
+
+#include "rs_bindings_from_cc/test/macro_constants/macro_constants_dependency.h"
 #include "rs_bindings_from_cc/test/macro_constants/macro_constants_textual.inc"
 
 #define INT_CONSTANT 4
+#define REFERS_TO_OTHER_CONSTANT (INT_CONSTANT + 3)
+#define REFERS_TO_DEPENDENCY_CONSTANT (DEPENDENCY_CONSTANT + 1)
+#define REFERS_TO_UNEXPANDED_DEPENDENCY_CONSTANT \
+  (UNEXPANDED_OUTER_DEPENDENCY_CONSTANT + 1)
 #define UNSIGNED_CONSTANT 42u
+// Typed, because the nested macro has a suffix.
+#define REFERS_TO_UNSIGNED_CONSTANT (UNSIGNED_CONSTANT + 1)
 #define LONG_LONG_CONSTANT (-(1LL << 40))
 #define HEX_CONSTANT 0xFFFFFFFF
 #define SHIFTED_CONSTANT (1u << 31)
 #define BITWISE_CONSTANT ((0xF0 | 0x0F) & ~0x3)
-#define CONDITIONAL_CONSTANT (4 > 3 ? 10 : 20)
-#define BOOL_CONSTANT (4 == 4 && !false)
+#define CONDITIONAL_CONSTANT (INT_CONSTANT > 3 ? 10 : 20)
+#define BOOL_CONSTANT (INT_CONSTANT == 4 && !false)
 #define CHAR_CONSTANT 'x'
+#define CAST_CONSTANT ((uint8_t)0x1FF)
+#define STATIC_CAST_CONSTANT (static_cast<std::int64_t>(INT_CONSTANT) << 40)
+#define CAST_FROM_UNEXPANDED_DEP_MACRO UNEXPANDED_CAST_HELPER
 
 // Functions returning the values of the macros, as computed by the C++
 // compiler.
 inline int IntConstant() { return INT_CONSTANT; }
+inline int RefersToOtherConstant() { return REFERS_TO_OTHER_CONSTANT; }
+inline int RefersToDependencyConstant() {
+  return REFERS_TO_DEPENDENCY_CONSTANT;
+}
 inline unsigned int UnsignedConstant() { return UNSIGNED_CONSTANT; }
+inline unsigned int RefersToUnsignedConstant() {
+  return REFERS_TO_UNSIGNED_CONSTANT;
+}
 // `long long` rather than `int64_t`, to match the type of `1LL`. `NOLINT`
 // silences both ClangTidy's google-runtime-int and cpplint's runtime/int.
 inline long long LongLongConstant() {  // NOLINT
@@ -32,6 +51,8 @@ inline int BitwiseConstant() { return BITWISE_CONSTANT; }
 inline int ConditionalConstant() { return CONDITIONAL_CONSTANT; }
 inline bool BoolConstant() { return BOOL_CONSTANT; }
 inline char CharConstant() { return CHAR_CONSTANT; }
+inline uint8_t CastConstant() { return CAST_CONSTANT; }
+inline int64_t StaticCastConstant() { return STATIC_CAST_CONSTANT; }
 
 // The type of an integer literal is the first type in a list that can represent
 // its value. The list depends on the base and suffix, see
