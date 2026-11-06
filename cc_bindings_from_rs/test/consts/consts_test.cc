@@ -4,11 +4,14 @@
 
 #include "cc_bindings_from_rs/test/consts/consts.h"
 
+#include <sys/stat.h>
+
 #include "gtest/gtest.h"
 
 namespace {
 
 TEST(ConstsTest, AllAreExpected) {
+  static_assert(consts::S_IFDIR_ == 0040000);
   static_assert(consts::RUST_TRUE);
   static_assert(!consts::RUST_FALSE);
   static_assert(consts::RUST_INT8_MIN == INT8_MIN);

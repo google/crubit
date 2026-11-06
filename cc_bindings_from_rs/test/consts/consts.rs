@@ -45,6 +45,7 @@ use crubit_annotate::must_bind;
 #[must_bind] pub const SLICE_LENGTH: usize = "hello world".len();
 #[must_bind] pub const ISIZE: isize = 42;
 #[must_bind] pub const CHAR: ffi_11::c_char = ffi_11::c_char::new(42u8);
+#[must_bind] pub const S_IFDIR: u32 = 0o040000;
 
 pub struct TyWithAssocConsts(#[allow(dead_code)] u8);
 

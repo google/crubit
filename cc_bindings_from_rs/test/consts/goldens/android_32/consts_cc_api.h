@@ -88,6 +88,7 @@ static constexpr ::std::uintptr_t SLICE_LENGTH = 11;
 // `consts_golden::StructWithRef<'static>` cannot be generated as it is not a
 // C++ aggregate: Field `r` is not default-constructible in C++
 
+static constexpr ::std::uint32_t S_IFDIR_ = 16384;
 struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithArray") alignas(
     4) [[clang::trivial_abi]] StructWithArray final {
  public:
