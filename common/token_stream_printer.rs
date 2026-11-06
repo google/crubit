@@ -7,8 +7,11 @@ use proc_macro2::{Delimiter, TokenStream, TokenTree};
 use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
 use std::io::Write as _;
+use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::Mutex;
 
 // TODO(b/231320237): The `RustfmtConfig` struct should be replaced with
 // `rustfmt_nightly::Config` once we switch to using rustfmt as a library
@@ -74,14 +77,16 @@ pub fn rs_tokens_to_formatted_string(
     tokens: TokenStream,
     config: Option<&RustfmtConfig>,
 ) -> Result<String> {
-    let mut tokens_string = tokens_to_string(tokens)?
-        // NOTE: This is a terrible hack. `rustfmt` became more strict about appearances of `...`
-        // (the `DotDotDot` token) at some point in the past. This is not a precise or general
-        // solution, but rewriting this token to a comment produces formattable code in some cases,
-        // making test failure messages better.
-        .replace("...", "/*...*/");
+    let mut tokens_string = tokens_to_string(tokens)?;
+    // NOTE: This is a terrible hack. `rustfmt` became more strict about appearances of `...`
+    // (the `DotDotDot` token) at some point in the past. This is not a precise or general
+    // solution, but rewriting this token to a comment produces formattable code in some cases,
+    // making test failure messages better.
+    if tokens_string.contains("...") {
+        tokens_string = tokens_string.replace("...", "/*...*/");
+    }
     if let Some(config) = config {
-        tokens_string = rustfmt(tokens_string.clone(), config).with_context(|| {
+        tokens_string = rustfmt(&tokens_string, config).with_context(|| {
             format!("Failed to rustfmt the following Rust tokens:\n\n{tokens_string}")
         })?;
     }
@@ -98,9 +103,11 @@ pub fn rs_tokens_to_formatted_string_with_provenance(
     // (the `DotDotDot` token) at some point in the past. This is not a precise or general
     // solution, but rewriting this token to a comment produces formattable code in some cases,
     // making test failure messages better.
-    tokens_string = tokens_string.replace("...", "/*...*/");
+    if tokens_string.contains("...") {
+        tokens_string = tokens_string.replace("...", "/*...*/");
+    }
     if let Some(config) = config {
-        tokens_string = rustfmt(tokens_string.clone(), config).with_context(|| {
+        tokens_string = rustfmt(&tokens_string, config).with_context(|| {
             format!("Failed to rustfmt the following Rust tokens:\n\n{tokens_string}")
         })?;
     }
@@ -527,7 +534,7 @@ fn is_ident_or_literal(tt: &TokenTree) -> bool {
 }
 
 fn pipe_string_through_process<'a>(
-    input: String,
+    input: &str,
     exe_name: &str,
     exe_path: &Path,
     args: impl IntoIterator<Item = &'a OsStr>,
@@ -541,25 +548,24 @@ fn pipe_string_through_process<'a>(
         .unwrap_or_else(|e| panic!("Failed to spawn {exe_name} at {exe_path:?}: {e}"));
 
     let mut stdin = child.stdin.take().unwrap_or_else(|| panic!("Failed to open {exe_name} stdin"));
-    let exe_name_string = exe_name.to_string();
-    let handle = std::thread::spawn(move || {
-        stdin
-            .write_all(input.as_bytes())
-            .unwrap_or_else(|_| panic!("Failed to write to {exe_name_string} stdin"));
+    let (output, write_res) = std::thread::scope(|s| {
+        let handle = s.spawn(move || stdin.write_all(input.as_bytes()));
+        let output =
+            child.wait_with_output().unwrap_or_else(|_| panic!("Failed to read {exe_name} stdout"));
+        let write_res = handle.join().unwrap();
+        (output, write_res)
     });
-    let output =
-        child.wait_with_output().unwrap_or_else(|_| panic!("Failed to read {exe_name} stdout"));
-
-    handle.join().unwrap();
 
     if !output.status.success() {
         bail!("{exe_name} reported an error: {}", String::from_utf8_lossy(&output.stderr));
     }
+    write_res.unwrap_or_else(|e| panic!("Failed to write to {exe_name} stdin: {e}"));
 
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    Ok(String::from_utf8(output.stdout)
+        .unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned()))
 }
 
-fn rustfmt(input: String, config: &RustfmtConfig) -> Result<String> {
+fn rustfmt(input: &str, config: &RustfmtConfig) -> Result<String> {
     pipe_string_through_process(
         input,
         "rustfmt",
@@ -568,13 +574,439 @@ fn rustfmt(input: String, config: &RustfmtConfig) -> Result<String> {
     )
 }
 
-fn clang_format(input: String, clang_format_exe_path: &Path) -> Result<String> {
+/// Target size in bytes for splitting large C++ inputs before invoking `clang-format`.
+///
+/// `clang-format` (`--style=google`) exhibits superlinear `O(N_namespaces * FileSize)` scaling in
+/// `calculateRangesAfterReplacements` when inserting `// namespace ...` comments across multi-MB
+/// generated headers. Splitting into ~128 KiB chunks at safe top-level declaration boundaries keeps
+/// each invocation's working set small and allows independent chunks to be formatted in parallel
+/// while producing byte-for-byte identical output.
+const CLANG_FORMAT_CHUNK_TARGET_BYTES: usize = 128 * 1024;
+const CLANG_FORMAT_MAX_WORKERS: usize = 8;
+
+fn clang_format_single(input: &str, clang_format_exe_path: &Path) -> Result<String> {
     pipe_string_through_process(
         input,
         "clang-format",
         clang_format_exe_path,
         [OsStr::new("--style=google"), OsStr::new("--sort-includes=false")],
     )
+}
+
+fn clang_format(input: String, clang_format_exe_path: &Path) -> Result<String> {
+    clang_format_with_chunk_size(&input, clang_format_exe_path, CLANG_FORMAT_CHUNK_TARGET_BYTES)
+}
+
+fn clang_format_with_chunk_size(
+    input: &str,
+    clang_format_exe_path: &Path,
+    target_chunk_bytes: usize,
+) -> Result<String> {
+    let chunks = split_cc_for_clang_format(input, target_chunk_bytes);
+    if chunks.len() <= 1 {
+        return clang_format_single(input, clang_format_exe_path);
+    }
+
+    let available = std::thread::available_parallelism().map(NonZeroUsize::get).unwrap_or(4);
+    let num_workers = chunks.len().min(available).min(CLANG_FORMAT_MAX_WORKERS).max(1);
+    if num_workers == 1 {
+        let mut formatted_chunks = Vec::with_capacity(chunks.len());
+        for chunk in &chunks {
+            formatted_chunks.push(clang_format_single(chunk, clang_format_exe_path)?);
+        }
+        return Ok(join_formatted_chunks(&formatted_chunks));
+    }
+
+    let next_idx = AtomicUsize::new(0);
+    let failed = AtomicBool::new(false);
+    let results: Mutex<Vec<(usize, Result<String>)>> = Mutex::new(Vec::with_capacity(chunks.len()));
+
+    std::thread::scope(|s| {
+        for _ in 0..num_workers {
+            s.spawn(|| loop {
+                if failed.load(Ordering::Relaxed) {
+                    break;
+                }
+                let idx = next_idx.fetch_add(1, Ordering::Relaxed);
+                let Some(chunk) = chunks.get(idx) else {
+                    break;
+                };
+                let res = clang_format_single(chunk, clang_format_exe_path);
+                if res.is_err() {
+                    failed.store(true, Ordering::Relaxed);
+                }
+                results.lock().unwrap().push((idx, res));
+            });
+        }
+    });
+
+    let mut indexed_results = results.into_inner().unwrap();
+    indexed_results.sort_unstable_by_key(|(idx, _)| *idx);
+    let mut formatted_chunks = Vec::with_capacity(chunks.len());
+    for (_, res) in indexed_results {
+        formatted_chunks.push(res?);
+    }
+    Ok(join_formatted_chunks(&formatted_chunks))
+}
+
+fn join_formatted_chunks(chunks: &[String]) -> String {
+    let sep_bytes = chunks.len().saturating_sub(1) * 2;
+    let total_len: usize = chunks.iter().map(String::len).sum::<usize>() + sep_bytes;
+    let mut out = String::with_capacity(total_len);
+    for (i, chunk) in chunks.iter().enumerate() {
+        if i > 0 {
+            out.push_str("\n\n");
+        }
+        out.push_str(chunk);
+    }
+    out
+}
+
+fn escaped_newline_len(bytes: &[u8], i: usize) -> Option<usize> {
+    if bytes.get(i) != Some(&b'\\') {
+        return None;
+    }
+    match bytes.get(i + 1) {
+        Some(&b'\n') => Some(2),
+        Some(&b'\r') if bytes.get(i + 2) == Some(&b'\n') => Some(3),
+        _ => None,
+    }
+}
+
+fn ident_prefix_before(bytes: &[u8], i: usize) -> &[u8] {
+    let mut start = i;
+    while start > 0 && (bytes[start - 1].is_ascii_alphanumeric() || bytes[start - 1] == b'_') {
+        start -= 1;
+    }
+    &bytes[start..i]
+}
+
+fn raw_string_delimiter(bytes: &[u8], quote_idx: usize) -> Option<&[u8]> {
+    let prefix = ident_prefix_before(bytes, quote_idx);
+    if !matches!(prefix, b"R" | b"LR" | b"uR" | b"UR" | b"u8R") {
+        return None;
+    }
+    let delim_start = quote_idx + 1;
+    let max_end = bytes.len().min(delim_start + 17);
+    for idx in delim_start..max_end {
+        let b = bytes[idx];
+        if b == b'(' {
+            return Some(&bytes[delim_start..idx]);
+        }
+        if b.is_ascii_whitespace() || b == b')' || b == b'\\' {
+            return None;
+        }
+    }
+    None
+}
+
+fn is_cpp_digit_separator(bytes: &[u8], quote_idx: usize) -> bool {
+    let prefix = ident_prefix_before(bytes, quote_idx);
+    !prefix.is_empty() && !matches!(prefix, b"L" | b"u" | b"U" | b"u8")
+}
+
+fn update_clang_format_toggle(comment_body: &[u8], clang_format_off: &mut bool) {
+    let trimmed = comment_body.trim_ascii();
+    if trimmed.starts_with(b"clang-format off") {
+        *clang_format_off = true;
+    } else if trimmed.starts_with(b"clang-format on") {
+        *clang_format_off = false;
+    }
+}
+
+/// Splits `input` into chunks of at least `target_chunk_bytes` at top-level blank lines (`\n\n`)
+/// following complete top-level declarations or namespace blocks (`;` or `}`), preserving leading
+/// and trailing whitespace on the first and last chunks so joining formatted chunks with `"\n\n"`
+/// produces byte-for-byte identical output to formatting `input` in a single `clang-format` pass.
+fn split_cc_for_clang_format(input: &str, target_chunk_bytes: usize) -> Vec<&str> {
+    enum LexState<'a> {
+        Normal,
+        LineComment { start: usize },
+        BlockComment { start: usize },
+        StringLiteral,
+        CharLiteral,
+        RawString(&'a [u8]),
+    }
+
+    if input.len() <= target_chunk_bytes {
+        return vec![input];
+    }
+
+    let bytes = input.as_bytes();
+    let mut chunks = Vec::new();
+    let mut chunk_start = 0usize;
+    let mut state = LexState::Normal;
+    let mut brace_depth = 0usize;
+    let mut paren_depth = 0usize;
+    let mut bracket_depth = 0usize;
+    let mut in_pp_directive = false;
+    let mut at_line_start = true;
+    let mut seen_top_level_code = false;
+    let mut pp_depth = 0usize;
+    let mut outer_guard_depth: Option<usize> = None;
+    let mut clang_format_off = false;
+    let mut last_top_level_code_byte = 0u8;
+
+    let mut i = 0usize;
+    while i < bytes.len() {
+        match state {
+            LexState::Normal => {
+                if let Some(skip) = escaped_newline_len(bytes, i) {
+                    i += skip;
+                    continue;
+                }
+                let b = bytes[i];
+                if b == b'\n' {
+                    let was_pp_directive = in_pp_directive;
+                    in_pp_directive = false;
+                    at_line_start = true;
+
+                    let mut newline_count = 1usize;
+                    let mut last_nl = i;
+                    let mut j = i + 1;
+                    while j < bytes.len() && matches!(bytes[j], b' ' | b'\t' | b'\r' | b'\n') {
+                        if bytes[j] == b'\n' {
+                            newline_count += 1;
+                            last_nl = j;
+                        }
+                        j += 1;
+                    }
+
+                    let sep_start = i;
+                    let sep_end = last_nl + 1;
+                    if newline_count >= 2
+                        && sep_start - chunk_start >= target_chunk_bytes
+                        && !was_pp_directive
+                        && !clang_format_off
+                        && brace_depth == 0
+                        && paren_depth == 0
+                        && bracket_depth == 0
+                        && pp_depth == outer_guard_depth.unwrap_or(0)
+                        && matches!(last_top_level_code_byte, b'}' | b';')
+                        && j < bytes.len()
+                        && !matches!(bytes[j], b';' | b',')
+                        && bytes[chunk_start..sep_start].iter().any(|c| !c.is_ascii_whitespace())
+                    {
+                        chunks.push(&input[chunk_start..sep_start]);
+                        chunk_start = sep_end;
+                        last_top_level_code_byte = 0;
+                    }
+                    i = sep_end;
+                    continue;
+                }
+                if matches!(b, b' ' | b'\t' | b'\r') {
+                    i += 1;
+                    continue;
+                }
+                if b == b'/' && bytes.get(i + 1) == Some(&b'/') {
+                    state = LexState::LineComment { start: i + 2 };
+                    at_line_start = false;
+                    i += 2;
+                    continue;
+                }
+                if b == b'/' && bytes.get(i + 1) == Some(&b'*') {
+                    state = LexState::BlockComment { start: i + 2 };
+                    i += 2;
+                    continue;
+                }
+                if b == b'#' && at_line_start {
+                    in_pp_directive = true;
+                    at_line_start = false;
+                    last_top_level_code_byte = 0;
+                    let mut k = i + 1;
+                    while k < bytes.len() && matches!(bytes[k], b' ' | b'\t') {
+                        k += 1;
+                    }
+                    let kw_start = k;
+                    while k < bytes.len() && bytes[k].is_ascii_alphabetic() {
+                        k += 1;
+                    }
+                    match &bytes[kw_start..k] {
+                        b"ifndef" => {
+                            if !seen_top_level_code && outer_guard_depth.is_none() && pp_depth == 0
+                            {
+                                outer_guard_depth = Some(1);
+                            }
+                            pp_depth += 1;
+                        }
+                        b"if" | b"ifdef" => {
+                            pp_depth += 1;
+                        }
+                        b"else" | b"elif" | b"elifdef" | b"elifndef" => {
+                            if pp_depth == 1 && outer_guard_depth == Some(1) {
+                                outer_guard_depth = Some(0);
+                            }
+                        }
+                        b"endif" => {
+                            pp_depth = pp_depth.saturating_sub(1);
+                            if pp_depth == 0 && outer_guard_depth == Some(1) {
+                                outer_guard_depth = Some(0);
+                            }
+                        }
+                        _ => {}
+                    }
+                    i = k;
+                    continue;
+                }
+
+                at_line_start = false;
+                if !in_pp_directive {
+                    seen_top_level_code = true;
+                }
+
+                match b {
+                    b'"' => {
+                        if !in_pp_directive
+                            && brace_depth == 0
+                            && paren_depth == 0
+                            && bracket_depth == 0
+                        {
+                            last_top_level_code_byte = b'"';
+                        }
+                        if let Some(delim) = raw_string_delimiter(bytes, i) {
+                            let after_open_paren = i + 2 + delim.len();
+                            state = LexState::RawString(delim);
+                            i = after_open_paren;
+                            continue;
+                        }
+                        state = LexState::StringLiteral;
+                    }
+                    b'\'' => {
+                        if !is_cpp_digit_separator(bytes, i) {
+                            if !in_pp_directive
+                                && brace_depth == 0
+                                && paren_depth == 0
+                                && bracket_depth == 0
+                            {
+                                last_top_level_code_byte = b'\'';
+                            }
+                            state = LexState::CharLiteral;
+                        }
+                    }
+                    b'{' if !in_pp_directive => {
+                        brace_depth += 1;
+                        last_top_level_code_byte = b'{';
+                    }
+                    b'}' if !in_pp_directive => {
+                        brace_depth = brace_depth.saturating_sub(1);
+                        if brace_depth == 0 && paren_depth == 0 && bracket_depth == 0 {
+                            last_top_level_code_byte = b'}';
+                        }
+                    }
+                    b'(' if !in_pp_directive => {
+                        paren_depth += 1;
+                    }
+                    b')' if !in_pp_directive => {
+                        paren_depth = paren_depth.saturating_sub(1);
+                        if brace_depth == 0 && paren_depth == 0 && bracket_depth == 0 {
+                            last_top_level_code_byte = b')';
+                        }
+                    }
+                    b'[' if !in_pp_directive => {
+                        bracket_depth += 1;
+                    }
+                    b']' if !in_pp_directive => {
+                        bracket_depth = bracket_depth.saturating_sub(1);
+                        if brace_depth == 0 && paren_depth == 0 && bracket_depth == 0 {
+                            last_top_level_code_byte = b']';
+                        }
+                    }
+                    _ => {
+                        if !in_pp_directive
+                            && brace_depth == 0
+                            && paren_depth == 0
+                            && bracket_depth == 0
+                        {
+                            last_top_level_code_byte = b;
+                        }
+                    }
+                }
+                i += 1;
+            }
+            LexState::LineComment { start } => {
+                if let Some(skip) = escaped_newline_len(bytes, i) {
+                    i += skip;
+                    continue;
+                }
+                if bytes[i] == b'\n' {
+                    update_clang_format_toggle(&bytes[start..i], &mut clang_format_off);
+                    state = LexState::Normal;
+                    continue;
+                }
+                i += 1;
+            }
+            LexState::BlockComment { start } => {
+                if bytes[i] == b'*' && bytes.get(i + 1) == Some(&b'/') {
+                    update_clang_format_toggle(&bytes[start..i], &mut clang_format_off);
+                    state = LexState::Normal;
+                    i += 2;
+                    continue;
+                }
+                if bytes[i] == b'\n' && !in_pp_directive {
+                    at_line_start = true;
+                }
+                i += 1;
+            }
+            LexState::StringLiteral => {
+                if bytes[i] == b'\\' {
+                    i = (i + 2).min(bytes.len());
+                    continue;
+                }
+                if bytes[i] == b'"' {
+                    state = LexState::Normal;
+                    i += 1;
+                    continue;
+                }
+                if bytes[i] == b'\n' {
+                    in_pp_directive = false;
+                    at_line_start = true;
+                    state = LexState::Normal;
+                    i += 1;
+                    continue;
+                }
+                i += 1;
+            }
+            LexState::CharLiteral => {
+                if bytes[i] == b'\\' {
+                    i = (i + 2).min(bytes.len());
+                    continue;
+                }
+                if bytes[i] == b'\'' {
+                    state = LexState::Normal;
+                    i += 1;
+                    continue;
+                }
+                if bytes[i] == b'\n' {
+                    in_pp_directive = false;
+                    at_line_start = true;
+                    state = LexState::Normal;
+                    i += 1;
+                    continue;
+                }
+                i += 1;
+            }
+            LexState::RawString(delim) => {
+                if bytes[i] == b')'
+                    && bytes.get(i + 1..i + 1 + delim.len()) == Some(delim)
+                    && bytes.get(i + 1 + delim.len()) == Some(&b'"')
+                {
+                    state = LexState::Normal;
+                    at_line_start = false;
+                    i += 2 + delim.len();
+                    continue;
+                }
+                i += 1;
+            }
+        }
+    }
+
+    if chunk_start < input.len() {
+        chunks.push(&input[chunk_start..]);
+    }
+    if chunks.is_empty() {
+        chunks.push(input);
+    }
+    chunks
 }
 
 #[cfg(test)]
@@ -929,6 +1361,171 @@ void bar() {}
             r#"a // test " - quote
 "#
         );
+        Ok(())
+    }
+
+    #[gtest]
+    fn test_chunked_clang_format_matches_single_pass_with_include_guard() -> Result<()> {
+        let exe = Path::new(external_binaries::CLANG_FORMAT_EXE_PATH);
+        let input = r#"// Automatically @generated C++ bindings.
+#ifndef THIRD_PARTY_CRUBIT_TEST_HEADER_H_
+#define THIRD_PARTY_CRUBIT_TEST_HEADER_H_
+
+#ifdef KYTHE_IS_RUNNING
+#pragma kythe_inline_metadata "This file contains Kythe metadata."
+#endif
+
+#include <cstddef>
+#include <cstdint>
+
+namespace crubit_test::alpha {
+struct Alpha final {
+  std::int32_t field_one;
+  std::int64_t field_two;
+};
+}
+
+namespace crubit_test::beta {
+extern "C" void __crubit_thunk_beta(std::int32_t x, std::int32_t* out);
+
+inline std::int32_t call_beta(std::int32_t x) {
+  std::int32_t out = 0;
+  __crubit_thunk_beta(x, &out);
+  return out;
+}
+}
+
+namespace crubit_test::gamma {
+static_assert(sizeof(crubit_test::alpha::Alpha) == 16);
+using BetaAlias = crubit_test::alpha::Alpha;
+}
+
+#endif  // THIRD_PARTY_CRUBIT_TEST_HEADER_H_
+"#;
+        let chunks = split_cc_for_clang_format(input, 64);
+        assert!(chunks.len() >= 4, "expected multiple chunks, got {}", chunks.len());
+        let single = clang_format_single(input, exe)?;
+        let chunked = clang_format_with_chunk_size(input, exe, 64)?;
+        assert_eq!(chunked, single);
+        Ok(())
+    }
+
+    #[gtest]
+    fn test_chunked_clang_format_respects_lexical_and_preprocessor_scopes() -> Result<()> {
+        let exe = Path::new(external_binaries::CLANG_FORMAT_EXE_PATH);
+        let input = r#"#pragma once
+
+namespace lex_scope {
+constexpr int kLarge = 1'000'000 + 0xdead'beef;
+constexpr char kQuote = '\'';
+constexpr char8_t kUtf8 = u8'a';
+constexpr const char* kRaw = R"delim(
+struct FakeInsideRawString { int x; };
+
+namespace not_a_real_split {
+}
+)delim";
+}
+
+/* Block comment with fake boundary:
+};
+
+namespace not_a_real_comment_split {}
+*/
+namespace after_comment {
+void f();
+}
+
+#ifdef OPTIONAL_FEATURE
+namespace inside_ifdef_one {
+void a();
+}
+
+namespace inside_ifdef_two {
+void b();
+}
+#else
+namespace inside_else {
+void c();
+}
+#endif
+
+#define MULTILINE_MACRO(x) \
+  do {                     \
+    (void)(x);             \
+  } while (0)
+
+template <typename T>
+
+struct TemplateAcrossBlankLine {
+  T value;
+};
+
+// clang-format off
+struct   UnformattedStruct {   int   a ;
+
+int   b ; };
+// clang-format on
+
+namespace final_ns {
+void done();
+}
+"#;
+        let chunks = split_cc_for_clang_format(input, 48);
+        assert!(chunks.len() >= 4, "expected multiple chunks, got {}", chunks.len());
+        for chunk in &chunks {
+            assert!(
+                !(chunk.contains("inside_ifdef_one") ^ chunk.contains("inside_ifdef_two")),
+                "must not split inside #ifdef block: {chunk:?}"
+            );
+        }
+        let single = clang_format_single(input, exe)?;
+        let chunked = clang_format_with_chunk_size(input, exe, 48)?;
+        assert_eq!(chunked, single);
+        Ok(())
+    }
+
+    #[gtest]
+    fn test_chunked_clang_format_preserves_edge_newlines_and_provenance() -> Result<()> {
+        let exe = Path::new(external_binaries::CLANG_FORMAT_EXE_PATH);
+        let tokens = quote! {
+            __NEWLINE__
+            __NEWLINE__
+            namespace first_ns {
+            __COMMENT__ "Generated from: first.rs;l=1"
+            __CAPTURE_TAG__ "first.rs" "10" "18"
+            struct __CAPTURE_BEGIN__ FirstType __CAPTURE_END__ { int x; };
+            }
+            __NEWLINE__
+            __NEWLINE__
+            __NEWLINE__
+            namespace second_ns {
+            __COMMENT__ "Generated from: second.rs;l=2"
+            __CAPTURE_TAG__ "second.rs" "20" "30"
+            struct __CAPTURE_BEGIN__ SecondType __CAPTURE_END__ { int y; };
+            }
+            __NEWLINE__
+            __NEWLINE__
+            namespace third_ns {
+            __COMMENT__ "Generated from: third.rs;l=3"
+            __CAPTURE_TAG__ "third.rs" "40" "49"
+            void __CAPTURE_BEGIN__ third_fn __CAPTURE_END__ ();
+            }
+        };
+        let (unformatted, provenance_map) = tokens_to_string_with_provenance(tokens)?;
+        let chunks = split_cc_for_clang_format(&unformatted, 48);
+        assert!(chunks.len() >= 3, "expected >= 3 chunks, got {}", chunks.len());
+
+        let single = clang_format_single(&unformatted, exe)?;
+        let chunked = clang_format_with_chunk_size(&unformatted, exe, 48)?;
+        assert_eq!(chunked, single);
+
+        let single_prov =
+            fix_provenance_map_postformatting(&single, "// Generated from:", &provenance_map);
+        let chunked_prov =
+            fix_provenance_map_postformatting(&chunked, "// Generated from:", &provenance_map);
+        assert_eq!(chunked_prov, single_prov);
+        assert_eq!(chunked_prov.len(), 3);
         Ok(())
     }
 }
