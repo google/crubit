@@ -712,7 +712,11 @@ pub fn generate_bindings_tokens(
     // TODO: `--carcinize` emits `inline_cpp!` into the generated bindings themselves, and
     // `extract_cpp` only scans `srcs`. A carcinize target that also has `srcs` gets
     // `CRUBIT_TARGET` set, so those calls fail to compile instead of expanding to `unreachable!()`.
-    let extern_crate_self = ir.items().any(|item| matches!(item, Item::UseMod(_))).then(
+    let extern_crate_self = snippets
+        .generated_items
+        .values()
+        .any(|item| matches!(item, GeneratedItem::UseMod { .. }))
+        .then(
         || quote! { extern crate self as inline_cpp_generated_bindings; __NEWLINE__ __NEWLINE__ },
     );
 

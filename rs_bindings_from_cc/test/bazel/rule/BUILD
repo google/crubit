@@ -61,6 +61,22 @@ crubit_rust_test(
     ],
 )
 
+rust_api_from_cpp(
+    name = "my_lib_embedded_rust",
+    srcs = ["embedded_cpp_srcs.rs"],
+    cpp_target = ":my_lib",
+    embedded_cpp = True,
+)
+
+crubit_rust_test(
+    name = "my_lib_embedded_rust_test",
+    srcs = ["embedded_cpp_srcs_test.rs"],
+    deps = [
+        ":my_lib_embedded_rust",
+        "@crate_index//:googletest",
+    ],
+)
+
 # A target without public headers. Crubit generates bindings for it only because of the extra
 # Rust `srcs`; its generated `_rust_api_impl.cc` includes a synthetic empty header that the impl
 # compile itself owns, and is compiled against precompiled header modules like any other.
