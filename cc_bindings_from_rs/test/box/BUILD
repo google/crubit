@@ -29,6 +29,11 @@ golden_test(
     basename = "boxes",
     golden_h = "boxes_cc_api.h",
     golden_rs = "boxes_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+        "macos",
+    ],
     rust_library = "boxes",
 )
 

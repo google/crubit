@@ -40,6 +40,10 @@ golden_test(
     basename = "rs_hash",
     golden_h = "rs_hash_cc_api.h",
     golden_rs = "rs_hash_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "rs_hash",
 )
 
