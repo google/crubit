@@ -67,6 +67,7 @@ crubit_cc_test(
     srcs = [
         "verify_iwyu_export_test.cc",
     ],
+    tags = ["no_test_android_x86"],
     deps = [
         ":library_with_embedded_cpp_cc_api",
         "@googletest//:gtest_main",

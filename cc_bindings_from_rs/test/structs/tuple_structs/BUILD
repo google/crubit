@@ -52,10 +52,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "tuple_structs_test",
     srcs = ["tuple_structs_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":tuple_structs_cc_api",
         "@googletest//:gtest_main",

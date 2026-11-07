@@ -50,10 +50,6 @@ golden_test(
 crubit_cc_test(
     name = "hash_test",
     srcs = ["hash_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":rs_hash_cc_api",
         "@abseil-cpp//absl/container:flat_hash_map",

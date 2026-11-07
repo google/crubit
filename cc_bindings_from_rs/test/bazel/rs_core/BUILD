@@ -9,10 +9,6 @@ package(default_applicable_licenses = ["//:license"])
 crubit_cc_test(
     name = "rs_core_test",
     srcs = ["rs_core_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         "//support/rs_std:rs_core",
         "@googletest//:gtest_main",

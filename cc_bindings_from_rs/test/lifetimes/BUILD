@@ -48,10 +48,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "lifetimes_test",
     srcs = ["lifetimes_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":lifetimes_cc_api",
         "@googletest//:gtest_main",

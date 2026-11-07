@@ -54,10 +54,6 @@ golden_test(
 crubit_cc_test(
     name = "functions_test",
     srcs = ["functions_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":functions_cc_api",
         "//support/rs_std:char",

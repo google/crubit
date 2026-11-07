@@ -50,10 +50,6 @@ golden_test(
 crubit_cc_test(
     name = "rs_index_test",
     srcs = ["rs_index_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":rs_index_cc_api",
         "@googletest//:gtest_main",

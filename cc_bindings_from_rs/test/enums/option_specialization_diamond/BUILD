@@ -50,10 +50,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "option_specialization_diamond",
     srcs = ["foobar_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":foobar_cc_api",
         "@googletest//:gtest_main",

@@ -47,10 +47,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "traits_test",
     srcs = ["traits_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":traits_cc_api",
         "@googletest//:gtest_main",
@@ -87,10 +83,6 @@ golden_test(
 crubit_cc_test(
     name = "generic_traits_test",
     srcs = ["generic_traits_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":generic_traits_cc_api",
         "@googletest//:gtest_main",
