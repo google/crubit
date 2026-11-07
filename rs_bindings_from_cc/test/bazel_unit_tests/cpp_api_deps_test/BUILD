@@ -70,6 +70,7 @@ cc_library(
 crubit_cc_test(
     name = "cpp_api_deps_test",
     srcs = ["cpp_api_deps_test.cc"],
+    platforms = ["android"],
     deps = [
         ":cc_consumer",
         "@googletest//:gtest_main",

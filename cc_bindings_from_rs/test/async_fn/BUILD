@@ -51,6 +51,10 @@ golden_test(
 crubit_cc_test(
     name = "async_fn_test",
     srcs = ["async_fn_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":async_fn_cc_api",
         "//support:movable",

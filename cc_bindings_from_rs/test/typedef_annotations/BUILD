@@ -45,6 +45,10 @@ golden_test(
 crubit_cc_test(
     name = "typedef_annotations_test",
     srcs = ["typedef_annotations_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":typedef_annotations_cc_api",
         "@googletest//:gtest_main",
