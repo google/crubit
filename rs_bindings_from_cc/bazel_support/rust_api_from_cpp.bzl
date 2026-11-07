@@ -153,6 +153,11 @@ def rust_api_from_cpp(
       srcs_mod: Controls which module inside the Rust crate the additional rust sources are added to.
       root_namespaces: List of C++ namespaces to re-export at the root of the generated Rust bindings.
       generated_cpp_support_deps: C++ dependencies of the generated C++ target (e.g. ABI support libraries required by the generated bindings).
+        When `embedded_cpp` is True, headers included by `inline_cpp!` or
+        `global_cpp!` blocks should come from these targets. If these
+        dependencies are Crubit-enabled, their bindings are made available to
+        the generated Rust crate only when `cpp_srcs` (including embedded C++)
+        is non-empty, so types defined in them can be used in `cpp_srcs`/`inline_cpp!` signatures.
       unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
       crubit_features: List of additional Crubit features to enable on top of
         `supported` for bindings generation (e.g. `["infer_send_sync"]` or
@@ -172,7 +177,8 @@ def rust_api_from_cpp(
         `#include` every header the embedded C++ uses, including the headers of `cpp_target`.
         Include only headers of `cpp_target` or `generated_cpp_support_deps`: other headers
         build today, but will break once `cpp_srcs` is compiled with `layering_check`
-        (b/573160050).
+        (b/573160050). Types defined in these headers can be used in `inline_cpp!` signatures
+        since their bindings are made available to the generated Rust crate when `embedded_cpp` is True.
       **kwargs: Additional arguments passed to the underlying rule.
     """
 
