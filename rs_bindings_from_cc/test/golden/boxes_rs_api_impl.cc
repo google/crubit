@@ -277,14 +277,14 @@ static_assert(
             class std::__wrap_iter<const struct test::NonTrivial*>>) == 8);
 
 extern "C" void
-__rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1Ev(
+__rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1Ev(
     class std::reverse_iterator<
         class std::__wrap_iter<const struct test::NonTrivial*>>* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
-__rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1ES6_(
+__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1ES6_(
     class std::reverse_iterator<
         class std::__wrap_iter<const struct test::NonTrivial*>>* __this,
     class std::__wrap_iter<const struct test::NonTrivial*>* __x) {
@@ -292,7 +292,7 @@ __rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10No
 }
 
 extern "C" void
-__rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEE4baseEv(
+__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEE4baseEv(
     class std::__wrap_iter<const struct test::NonTrivial*>* __return,
     class std::reverse_iterator<
         class std::__wrap_iter<const struct test::NonTrivial*>> const* __this) {
@@ -315,20 +315,20 @@ static_assert(
     8);
 
 extern "C" void
-__rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1Ev(
+__rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1Ev(
     class std::reverse_iterator<class std::__wrap_iter<const int*>>* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
-__rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1ES4_(
+__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1ES4_(
     class std::reverse_iterator<class std::__wrap_iter<const int*>>* __this,
     class std::__wrap_iter<const int*>* __x) {
   crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(__x));
 }
 
 extern "C" void
-__rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEE4baseEv(
+__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEE4baseEv(
     class std::__wrap_iter<const int*>* __return,
     class std::reverse_iterator<class std::__wrap_iter<const int*>> const*
         __this) {
@@ -348,14 +348,14 @@ static_assert(alignof(class std::reverse_iterator<
                       class std::__wrap_iter<struct test::NonTrivial*>>) == 8);
 
 extern "C" void
-__rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1Ev(
+__rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1Ev(
     class std::reverse_iterator<
         class std::__wrap_iter<struct test::NonTrivial*>>* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
-__rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1ES5_(
+__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1ES5_(
     class std::reverse_iterator<
         class std::__wrap_iter<struct test::NonTrivial*>>* __this,
     class std::__wrap_iter<struct test::NonTrivial*>* __x) {
@@ -363,7 +363,7 @@ __rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10Non
 }
 
 extern "C" void
-__rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEE4baseEv(
+__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEE4baseEv(
     class std::__wrap_iter<struct test::NonTrivial*>* __return,
     class std::reverse_iterator<
         class std::__wrap_iter<struct test::NonTrivial*>> const* __this) {
@@ -384,20 +384,20 @@ static_assert(
     alignof(class std::reverse_iterator<class std::__wrap_iter<int*>>) == 8);
 
 extern "C" void
-__rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1Ev(
+__rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1Ev(
     class std::reverse_iterator<class std::__wrap_iter<int*>>* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
-__rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1ES3_(
+__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1ES3_(
     class std::reverse_iterator<class std::__wrap_iter<int*>>* __this,
     class std::__wrap_iter<int*>* __x) {
   crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(__x));
 }
 
 extern "C" void
-__rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEE4baseEv(
+__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEE4baseEv(
     class std::__wrap_iter<int*>* __return,
     class std::reverse_iterator<class std::__wrap_iter<int*>> const* __this) {
   new (__return) auto(__this->base());
@@ -414,13 +414,13 @@ static_assert(alignof(class std::__wrap_iter<const struct test::NonTrivial*>) ==
               8);
 
 extern "C" void
-__rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEC1Ev(
+__rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEC1Ev(
     class std::__wrap_iter<const struct test::NonTrivial*>* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
-__rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEplEl(
+__rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEplEl(
     class std::__wrap_iter<const struct test::NonTrivial*>* __return,
     class std::__wrap_iter<const struct test::NonTrivial*> const* __this,
     ptrdiff_t __n) {
@@ -433,7 +433,7 @@ static_assert((class std::__wrap_iter<const struct test::NonTrivial*> (
               ::std::__wrap_iter<const struct test::NonTrivial*>::operator+);
 
 extern "C" class std::__wrap_iter<const struct test::NonTrivial*>*
-__rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEpLEl(
+__rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEpLEl(
     class std::__wrap_iter<const struct test::NonTrivial*>* __this,
     ptrdiff_t __n) {
   return std::addressof(__this->operator+=(__n));
@@ -445,7 +445,7 @@ static_assert(
     ::std::__wrap_iter<const struct test::NonTrivial*>::operator+=);
 
 extern "C" void
-__rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEmiEl(
+__rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEmiEl(
     class std::__wrap_iter<const struct test::NonTrivial*>* __return,
     class std::__wrap_iter<const struct test::NonTrivial*> const* __this,
     ptrdiff_t __n) {
@@ -458,7 +458,7 @@ static_assert((class std::__wrap_iter<const struct test::NonTrivial*> (
               ::std::__wrap_iter<const struct test::NonTrivial*>::operator-);
 
 extern "C" class std::__wrap_iter<const struct test::NonTrivial*>*
-__rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEmIEl(
+__rust_thunk__06934629__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEmIEl(
     class std::__wrap_iter<const struct test::NonTrivial*>* __this,
     ptrdiff_t __n) {
   return std::addressof(__this->operator-=(__n));
@@ -470,7 +470,7 @@ static_assert(
     ::std::__wrap_iter<const struct test::NonTrivial*>::operator-=);
 
 extern "C" struct test::NonTrivial const*
-__rust_thunk__3dcfade5__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEixEl(
+__rust_thunk__8a7bd168__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEixEl(
     class std::__wrap_iter<const struct test::NonTrivial*> const* __this,
     ptrdiff_t __n) {
   return std::addressof(__this->operator[](__n));
@@ -484,12 +484,12 @@ static_assert((struct test::NonTrivial const& (
 static_assert(CRUBIT_SIZEOF(class std::__wrap_iter<const int*>) == 8);
 static_assert(alignof(class std::__wrap_iter<const int*>) == 8);
 
-extern "C" void __rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPKiEC1Ev(
+extern "C" void __rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPKiEC1Ev(
     class std::__wrap_iter<const int*>* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPKiEplEl(
+extern "C" void __rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPKiEplEl(
     class std::__wrap_iter<const int*>* __return,
     class std::__wrap_iter<const int*> const* __this, ptrdiff_t __n) {
   new (__return) auto(__this->operator+(__n));
@@ -500,7 +500,7 @@ static_assert((class std::__wrap_iter<const int*> (
               ::std::__wrap_iter<const int*>::operator+);
 
 extern "C" class std::__wrap_iter<const int*>*
-__rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPKiEpLEl(
+__rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPKiEpLEl(
     class std::__wrap_iter<const int*>* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator+=(__n));
 }
@@ -509,7 +509,7 @@ static_assert((class std::__wrap_iter<const int*> &
                (::std::__wrap_iter<const int*>::*)(ptrdiff_t)) &
               ::std::__wrap_iter<const int*>::operator+=);
 
-extern "C" void __rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPKiEmiEl(
+extern "C" void __rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPKiEmiEl(
     class std::__wrap_iter<const int*>* __return,
     class std::__wrap_iter<const int*> const* __this, ptrdiff_t __n) {
   new (__return) auto(__this->operator-(__n));
@@ -520,7 +520,7 @@ static_assert((class std::__wrap_iter<const int*> (
               ::std::__wrap_iter<const int*>::operator-);
 
 extern "C" class std::__wrap_iter<const int*>*
-__rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPKiEmIEl(
+__rust_thunk__06934629__ZNSt3__u11__wrap_iterIPKiEmIEl(
     class std::__wrap_iter<const int*>* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator-=(__n));
 }
@@ -529,7 +529,7 @@ static_assert((class std::__wrap_iter<const int*> &
                (::std::__wrap_iter<const int*>::*)(ptrdiff_t)) &
               ::std::__wrap_iter<const int*>::operator-=);
 
-extern "C" int const* __rust_thunk__3dcfade5__ZNKSt3__u11__wrap_iterIPKiEixEl(
+extern "C" int const* __rust_thunk__8a7bd168__ZNKSt3__u11__wrap_iterIPKiEixEl(
     class std::__wrap_iter<const int*> const* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator[](__n));
 }
@@ -543,13 +543,13 @@ static_assert(CRUBIT_SIZEOF(class std::__wrap_iter<struct test::NonTrivial*>) ==
 static_assert(alignof(class std::__wrap_iter<struct test::NonTrivial*>) == 8);
 
 extern "C" void
-__rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEC1Ev(
+__rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEC1Ev(
     class std::__wrap_iter<struct test::NonTrivial*>* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
-__rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEplEl(
+__rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEplEl(
     class std::__wrap_iter<struct test::NonTrivial*>* __return,
     class std::__wrap_iter<struct test::NonTrivial*> const* __this,
     ptrdiff_t __n) {
@@ -562,7 +562,7 @@ static_assert((class std::__wrap_iter<struct test::NonTrivial*> (
               ::std::__wrap_iter<struct test::NonTrivial*>::operator+);
 
 extern "C" class std::__wrap_iter<struct test::NonTrivial*>*
-__rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEpLEl(
+__rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEpLEl(
     class std::__wrap_iter<struct test::NonTrivial*>* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator+=(__n));
 }
@@ -572,7 +572,7 @@ static_assert((class std::__wrap_iter<struct test::NonTrivial*> &
               ::std::__wrap_iter<struct test::NonTrivial*>::operator+=);
 
 extern "C" void
-__rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEmiEl(
+__rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEmiEl(
     class std::__wrap_iter<struct test::NonTrivial*>* __return,
     class std::__wrap_iter<struct test::NonTrivial*> const* __this,
     ptrdiff_t __n) {
@@ -585,7 +585,7 @@ static_assert((class std::__wrap_iter<struct test::NonTrivial*> (
               ::std::__wrap_iter<struct test::NonTrivial*>::operator-);
 
 extern "C" class std::__wrap_iter<struct test::NonTrivial*>*
-__rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEmIEl(
+__rust_thunk__06934629__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEmIEl(
     class std::__wrap_iter<struct test::NonTrivial*>* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator-=(__n));
 }
@@ -597,12 +597,12 @@ static_assert((class std::__wrap_iter<struct test::NonTrivial*> &
 static_assert(CRUBIT_SIZEOF(class std::__wrap_iter<int*>) == 8);
 static_assert(alignof(class std::__wrap_iter<int*>) == 8);
 
-extern "C" void __rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPiEC1Ev(
+extern "C" void __rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPiEC1Ev(
     class std::__wrap_iter<int*>* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPiEplEl(
+extern "C" void __rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPiEplEl(
     class std::__wrap_iter<int*>* __return,
     class std::__wrap_iter<int*> const* __this, ptrdiff_t __n) {
   new (__return) auto(__this->operator+(__n));
@@ -613,7 +613,7 @@ static_assert((class std::__wrap_iter<int*> (::std::__wrap_iter<int*>::*)(
               ::std::__wrap_iter<int*>::operator+);
 
 extern "C" class std::__wrap_iter<int*>*
-__rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPiEpLEl(
+__rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPiEpLEl(
     class std::__wrap_iter<int*>* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator+=(__n));
 }
@@ -622,7 +622,7 @@ static_assert((class std::__wrap_iter<int*> &
                (::std::__wrap_iter<int*>::*)(ptrdiff_t)) &
               ::std::__wrap_iter<int*>::operator+=);
 
-extern "C" void __rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPiEmiEl(
+extern "C" void __rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPiEmiEl(
     class std::__wrap_iter<int*>* __return,
     class std::__wrap_iter<int*> const* __this, ptrdiff_t __n) {
   new (__return) auto(__this->operator-(__n));
@@ -633,7 +633,7 @@ static_assert((class std::__wrap_iter<int*> (::std::__wrap_iter<int*>::*)(
               ::std::__wrap_iter<int*>::operator-);
 
 extern "C" class std::__wrap_iter<int*>*
-__rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPiEmIEl(
+__rust_thunk__06934629__ZNSt3__u11__wrap_iterIPiEmIEl(
     class std::__wrap_iter<int*>* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator-=(__n));
 }

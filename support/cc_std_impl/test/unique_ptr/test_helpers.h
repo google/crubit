@@ -12,8 +12,8 @@
 namespace unique_ptr_test {
 
 struct TwoWords {
-  void* ptr1;
-  void* ptr2;
+  void* absl_nullable ptr1;
+  void* absl_nullable ptr2;
 };
 
 CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<int> create_unique_ptr() {
@@ -29,9 +29,9 @@ CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<short>
 create_unique_ptr_short() {
   return std::make_unique<short>(static_cast<short>(1));
 }
-CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<void*>
+CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<void* absl_nullable>
 create_unique_ptr_void_ptr() {
-  return std::make_unique<void*>(nullptr);
+  return std::make_unique<void* absl_nullable>(nullptr);
 }
 CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<TwoWords>
 create_unique_ptr_two_words() {
@@ -58,7 +58,7 @@ CRUBIT_MUST_BIND inline int get_derived_destructor_count() {
 }
 
 struct CustomDelete {
-  static void operator delete(void* p) {
+  static void operator delete(void* absl_nonnull p) {
     custom_delete_count++;
     ::operator delete(p);
   }
