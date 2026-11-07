@@ -393,9 +393,9 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::Import(
                 clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
           deprecated.emplace(deprecated_attr->getMessage());
           return true;
-        } else if (clang::isa<clang::VisibilityAttr>(attr)) {
-          // Visibility attributes on global/static variables do not affect Rust
-          // FFI bindings.
+        } else if (IsIgnoredVisibilityAttr(
+                       attr, /*allow_non_default_visibility=*/true)) {
+          // dllimport variables are rejected below, unless they are constants.
           return true;
         }
         return false;
@@ -409,6 +409,15 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::Import(
   if (has_const_init) {
     return ImportConstant(var_decl, *var_name, *enclosing_item_id,
                           std::move(*unknown_attr), std::move(deprecated));
+  }
+
+  // Rust refers to the symbol of the variable directly (see `mangled_name`
+  // below), but the symbol of a dllimport variable is only available as
+  // `__imp_<mangled name>`.
+  if (HasAttr<clang::DLLImportAttr>(var_decl)) {
+    return ictx_.ImportUnsupportedItem(
+        *var_decl, std::nullopt,
+        {FormattedError::Static("dllimport variables are not supported")});
   }
 
   CcType type =

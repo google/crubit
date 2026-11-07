@@ -143,8 +143,8 @@ std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
                        clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
           deprecated.emplace(deprecated_attr->getMessage());
           return true;
-        } else if (clang::isa<clang::VisibilityAttr>(attr)) {
-          // Visibility attributes on enums do not affect Rust enum bindings.
+        } else if (IsIgnoredVisibilityAttr(
+                       attr, /*allow_non_default_visibility=*/true)) {
           return true;
         }
         return false;

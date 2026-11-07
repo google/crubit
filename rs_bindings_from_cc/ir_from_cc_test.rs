@@ -6136,6 +6136,93 @@ fn test_visibility_attribute_on_user_declarations() {
     );
 }
 
+/// `__declspec(dllimport)` and `__declspec(dllexport)` (e.g. from Chromium's
+/// `COMPONENT_EXPORT` macro on Windows) are accepted like the default
+/// visibility attribute.  Clang adds an inherited copy of a class-level
+/// attribute to each member, so members have to be accepted too.
+#[gtest]
+fn test_dllimport_and_dllexport_attributes() -> Result<()> {
+    if !test_platform().uses_msvc_cxx_abi() {
+        // Clang ignores `__declspec(dllimport)` for non-Windows targets.
+        return Ok(());
+    }
+    // Note: `assert_ir_matches!(ir, quote! { Func { ... unknown_attr: None, ... } })`
+    // would also match `unknown_attr` of a nested `FuncParam` or `CcType`.
+    fn unknown_attrs(ir: &IR) -> Vec<&str> {
+        ir.items().filter_map(|item| item.unknown_attr()).collect_vec()
+    }
+
+    for attr in ["dllimport", "dllexport"] {
+        let proto = ir_proto_from_cc(&format!(
+            r#"class __declspec({attr}) ClassWithDllAttr {{
+                 public:
+                  ClassWithDllAttr();
+                  ~ClassWithDllAttr();
+                  void method();
+                  static constexpr int kStaticConstant = 1;
+                  static int static_var;
+                  int field;
+                }};
+                __declspec({attr}) void free_function_with_dll_attr();"#
+        ))?;
+        let ir = ir_testing::make_test_ir(&proto)?;
+        expect_that!(unknown_attrs(&ir), is_empty(), "for {attr}");
+        retrieve_record(&ir, "ClassWithDllAttr");
+        retrieve_func(&ir, "method");
+        retrieve_func(&ir, "free_function_with_dll_attr");
+        expect_eq!(expect_constant(&ir).cc_name(), "kStaticConstant", "for {attr}");
+        if attr == "dllimport" {
+            // `static_var` inherits `dllimport` from the class.
+            assert_ir_matches!(
+                ir,
+                quote! {
+                    UnsupportedItem {
+                        name: "ClassWithDllAttr::static_var", ...
+                        errors: [FormattedError {
+                            ... message: "dllimport variables are not supported", ...
+                        }], ...
+                    }
+                }
+            );
+        } else {
+            assert_ir_matches!(ir, quote! { GlobalVar { ... rs_name: "static_var", ... } });
+        }
+    }
+
+    // Clang replaces `dllexport` on an explicit instantiation declaration with
+    // `DLLExportOnDeclAttr`.
+    let proto = ir_proto_from_cc(
+        r#"template <typename T> class Template { public: T value; };
+           extern template class __declspec(dllexport) Template<int>;
+           using TemplateInt = Template<int>;"#,
+    )?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    expect_that!(unknown_attrs(&ir), is_empty());
+    retrieve_record(&ir, "Template<int>");
+
+    let proto = ir_proto_from_cc("__declspec(dllexport) extern int dllexport_global_var;")?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(ir, quote! { GlobalVar { ... rs_name: "dllexport_global_var", ... } });
+    expect_that!(unknown_attrs(&ir), is_empty());
+
+    // Only `__imp_<mangled name>` is available for a dllimport variable, so
+    // Rust can't refer to it directly.
+    let proto = ir_proto_from_cc("__declspec(dllimport) extern int dllimport_global_var;")?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(
+        ir,
+        quote! {
+            UnsupportedItem {
+                name: "dllimport_global_var", ...
+                errors: [FormattedError {
+                    ... message: "dllimport variables are not supported", ...
+                }], ...
+            }
+        }
+    );
+    Ok(())
+}
+
 /// Returns how the location of each item that has one is displayed in doc comments.
 fn displayed_decl_locs(ir: &IR) -> Vec<String> {
     ir.items().filter_map(|item| item.decl_loc()).map(|decl_loc| decl_loc.to_string()).collect()
