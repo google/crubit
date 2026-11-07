@@ -40,20 +40,12 @@ golden_test(
     basename = "rs_hash",
     golden_h = "rs_hash_cc_api.h",
     golden_rs = "rs_hash_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "rs_hash",
 )
 
 crubit_cc_test(
     name = "hash_test",
     srcs = ["hash_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":rs_hash_cc_api",
         "@abseil-cpp//absl/container:flat_hash_map",

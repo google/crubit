@@ -39,20 +39,12 @@ golden_test(
     golden_h = "typedef_annotations_cc_api.h",
     golden_rs = "typedef_annotations_cc_api_impl.rs",
     kythe_annotations = True,
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "typedef_annotations",
 )
 
 crubit_cc_test(
     name = "typedef_annotations_test",
     srcs = ["typedef_annotations_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":typedef_annotations_cc_api",
         "@googletest//:gtest_main",

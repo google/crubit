@@ -30,10 +30,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "drop_test",
     srcs = ["drop_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":drop_cc_api",
         "@googletest//:gtest_main",

@@ -45,20 +45,12 @@ golden_test(
     basename = "async_fn",
     golden_h = "async_fn_cc_api.h",
     golden_rs = "async_fn_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "async_fn",
 )
 
 crubit_cc_test(
     name = "async_fn_test",
     srcs = ["async_fn_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":async_fn_cc_api",
         "//support:movable",

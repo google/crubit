@@ -38,20 +38,12 @@ golden_test(
     basename = "compare",
     golden_h = "compare_cc_api.h",
     golden_rs = "compare_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "compare",
 )
 
 crubit_cc_test(
     name = "compare_test",
     srcs = ["compare_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":compare_cc_api",
         "@googletest//:gtest_main",

@@ -29,10 +29,6 @@ golden_test(
     basename = "no_std",
     golden_h = "no_std_cc_api.h",
     golden_rs = "no_std_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "no_std",
 )
 
@@ -45,10 +41,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "no_std_test",
     srcs = ["no_std_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":no_std_cc_api",
         "@googletest//:gtest_main",
@@ -76,10 +68,6 @@ golden_test(
     basename = "no_core",
     golden_h = "no_core_cc_api.h",
     golden_rs = "no_core_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "no_core",
 )
 
@@ -92,10 +80,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "no_core_test",
     srcs = ["no_core_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":no_core_cc_api",
         "@googletest//:gtest_main",

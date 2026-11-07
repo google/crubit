@@ -35,10 +35,6 @@ golden_test(
     basename = "arrays",
     golden_h = "arrays_cc_api.h",
     golden_rs = "arrays_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "arrays",
 )
 
@@ -51,10 +47,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "arrays_test",
     srcs = ["arrays_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":arrays_cc_api",
         "@googletest//:gtest_main",

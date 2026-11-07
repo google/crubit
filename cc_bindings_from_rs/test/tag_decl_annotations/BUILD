@@ -39,20 +39,12 @@ golden_test(
     golden_h = "tag_decl_annotations_cc_api.h",
     golden_rs = "tag_decl_annotations_cc_api_impl.rs",
     kythe_annotations = True,
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "tag_decl_annotations",
 )
 
 crubit_cc_test(
     name = "tag_decl_annotations_test",
     srcs = ["tag_decl_annotations_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":tag_decl_annotations_cc_api",
         "@googletest//:gtest_main",

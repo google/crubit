@@ -35,20 +35,12 @@ golden_test(
     basename = "primitive_types",
     golden_h = "primitive_types_cc_api.h",
     golden_rs = "primitive_types_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "primitive_types",
 )
 
 crubit_cc_test(
     name = "primitive_types_test",
     srcs = ["primitive_types_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":primitive_types_cc_api",
         "@googletest//:gtest_main",

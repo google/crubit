@@ -34,10 +34,6 @@ golden_test(
     basename = "into",
     golden_h = "into_cc_api.h",
     golden_rs = "into_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "into",
 )
 
@@ -50,10 +46,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "into_test",
     srcs = ["into_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":into_cc_api",
         "@googletest//:gtest_main",

@@ -48,10 +48,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "transitive_reexports_test",
     srcs = ["transitive_reexports_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":transitive_reexports_cc_api",
         "@googletest//:gtest_main",
@@ -63,9 +59,5 @@ golden_test(
     basename = "transitive_reexports",
     golden_h = "transitive_reexports_cc_api.h",
     golden_rs = "transitive_reexports_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "transitive_reexports",
 )

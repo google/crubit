@@ -40,20 +40,12 @@ golden_test(
     basename = "type_aliases",
     golden_h = "type_aliases_cc_api.h",
     golden_rs = "type_aliases_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "type_aliases",
 )
 
 crubit_cc_test(
     name = "type_aliases_test",
     srcs = ["type_aliases_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":type_aliases_cc_api",
         "@googletest//:gtest_main",

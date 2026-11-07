@@ -25,10 +25,6 @@ golden_test(
     basename = "str",
     golden_h = "str_cc_api.h",
     golden_rs = "str_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "str",
 )
 
@@ -41,10 +37,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "str_test",
     srcs = ["str_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":str_cc_api",
         "@googletest//:gtest_main",

@@ -25,10 +25,6 @@ golden_test(
     basename = "never",
     golden_h = "never_cc_api.h",
     golden_rs = "never_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "never",
 )
 
@@ -41,10 +37,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "never_test",
     srcs = ["never_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":never_cc_api",
         "@googletest//:gtest_main",

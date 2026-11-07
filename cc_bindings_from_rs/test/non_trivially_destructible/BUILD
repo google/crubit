@@ -38,20 +38,12 @@ golden_test(
     basename = "non_trivially_destructible",
     golden_h = "non_trivially_destructible_cc_api.h",
     golden_rs = "non_trivially_destructible_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "non_trivially_destructible",
 )
 
 crubit_cc_test(
     name = "non_trivially_destructible_test",
     srcs = ["non_trivially_destructible_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":non_trivially_destructible_cc_api",
         "@googletest//:gtest_main",

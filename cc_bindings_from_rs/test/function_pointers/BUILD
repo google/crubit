@@ -26,10 +26,6 @@ golden_test(
     basename = "function_pointers",
     golden_h = "function_pointers_cc_api.h",
     golden_rs = "function_pointers_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "function_pointers",
 )
 
@@ -42,10 +38,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "function_pointers_test",
     srcs = ["function_pointers_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":function_pointers_cc_api",
         "@googletest//:gtest_main",

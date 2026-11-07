@@ -34,10 +34,6 @@ golden_test(
     basename = "dep_crate",
     golden_h = "dep_crate_cc_api.h",
     golden_rs = "dep_crate_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "dep_crate",
 )
 
@@ -63,9 +59,5 @@ golden_test(
     basename = "reexport_crate",
     golden_h = "reexport_crate_cc_api.h",
     golden_rs = "reexport_crate_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "reexport_crate",
 )

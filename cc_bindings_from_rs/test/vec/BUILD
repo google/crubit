@@ -28,10 +28,6 @@ golden_test(
     basename = "vec",
     golden_h = "vec_cc_api.h",
     golden_rs = "vec_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "vec",
 )
 
@@ -44,10 +40,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "vec_test",
     srcs = ["vec_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":vec_cc_api",
         "//support/rs_std:rs_alloc",

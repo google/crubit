@@ -34,10 +34,6 @@ golden_test(
     basename = "structs",
     golden_h = "structs_cc_api.h",
     golden_rs = "structs_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "structs",
 )
 
@@ -50,10 +46,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "structs_test",
     srcs = ["structs_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":structs_cc_api",
         "@abseil-cpp//absl/strings",

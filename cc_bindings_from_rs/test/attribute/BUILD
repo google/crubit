@@ -31,10 +31,6 @@ golden_test(
     basename = "cpp_name",
     golden_h = "cpp_name_cc_api.h",
     golden_rs = "cpp_name_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "cpp_name",
 )
 
@@ -46,10 +42,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "cpp_name_test",
     srcs = ["cpp_name_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":cpp_name_cc_api",
         "@googletest//:gtest_main",
@@ -70,10 +62,6 @@ golden_test(
     basename = "must_bind",
     golden_h = "must_bind_cc_api.h",
     golden_rs = "must_bind_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "must_bind",
 )
 
@@ -85,10 +73,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "must_bind_test",
     srcs = ["must_bind_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":must_bind_cc_api",
         "@googletest//:gtest_main",

@@ -46,10 +46,6 @@ golden_test(
     basename = "trait_definition",
     golden_h = "trait_definition_cc_api.h",
     golden_rs = "trait_definition_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "trait_definition",
 )
 
@@ -58,20 +54,12 @@ golden_test(
     basename = "trait_impl",
     golden_h = "trait_impl_cc_api.h",
     golden_rs = "trait_impl_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "trait_impl",
 )
 
 crubit_cc_test(
     name = "trait_impl_test",
     srcs = ["trait_impl_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":traits_impl_cc_api",
         "@googletest//:gtest_main",

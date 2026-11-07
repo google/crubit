@@ -51,10 +51,6 @@ golden_test(
     basename = "generics",
     golden_h = "generics_cc_api.h",
     golden_rs = "generics_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "generics",
 )
 
@@ -67,10 +63,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "generics_test",
     srcs = ["generics_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":generics_cc_api",
         "@googletest//:gtest_main",
