@@ -68,3 +68,5 @@ target_include_directories(crubit_support INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_options(crubit_support INTERFACE
   $<$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>:-Wno-nullability-completeness>
 )
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Crubit.cmake)
