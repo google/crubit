@@ -35,6 +35,10 @@ golden_test(
     basename = "default",
     golden_h = "default_cc_api.h",
     golden_rs = "default_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "rs_default",
 )
 

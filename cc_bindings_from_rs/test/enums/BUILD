@@ -35,6 +35,10 @@ golden_test(
     basename = "enums",
     golden_h = "enums_cc_api.h",
     golden_rs = "enums_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "enums",
 )
 
@@ -67,6 +71,10 @@ golden_test(
     name = "cpp_enums_golden_test",
     basename = "cpp_enums",
     golden_h = "cpp_enums_cc_api.h",
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "cpp_enums",
 )
 
@@ -101,6 +109,10 @@ golden_test(
     basename = "option",
     golden_h = "option_cc_api.h",
     golden_rs = "option_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "option",
 )
 
@@ -133,6 +145,10 @@ golden_test(
     basename = "option_references",
     golden_h = "option_references_cc_api.h",
     golden_rs = "option_references_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "option_references",
 )
 
@@ -163,6 +179,10 @@ golden_test(
     basename = "option_specialization_collision",
     golden_h = "option_specialization_collision_cc_api.h",
     golden_rs = "option_specialization_collision_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "option_specialization_collision",
 )
 
@@ -197,6 +217,10 @@ golden_test(
     basename = "result",
     golden_h = "result_cc_api.h",
     golden_rs = "result_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "result",
 )
 

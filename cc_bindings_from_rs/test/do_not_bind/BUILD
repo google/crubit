@@ -35,6 +35,10 @@ golden_test(
     basename = "do_not_bind",
     golden_h = "do_not_bind_cc_api.h",
     golden_rs = "do_not_bind_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "do_not_bind",
 )
 

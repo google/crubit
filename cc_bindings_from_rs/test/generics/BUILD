@@ -51,6 +51,10 @@ golden_test(
     basename = "generics",
     golden_h = "generics_cc_api.h",
     golden_rs = "generics_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "generics",
 )
 
