@@ -95,10 +95,6 @@ golden_test(
 crubit_cc_test(
     name = "bridging_test",
     srcs = ["bridging_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":layout_equivalent_generics_cc_api",
         ":rust_pointer_types_cc_api",
@@ -174,10 +170,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "mapped_cpp_type_test",
     srcs = ["mapped_cpp_type_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":mapped_cpp_type_cc_api",
         "@googletest//:gtest_main",

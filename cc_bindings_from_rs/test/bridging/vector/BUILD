@@ -55,7 +55,11 @@ crubit_cc_test(
     name = "vector_test",
     srcs = ["vector_test.cc"],
     # TODO(b/575815022): Re-enable once `cc_std` links on macOS.
-    tags = ["no_macos"],
+    tags = [
+        "no_ios",
+        "no_macos",
+        "no_test_android_x86",
+    ],
     deps = [
         ":test_helpers",
         ":vector_cc_api",

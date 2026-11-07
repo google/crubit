@@ -48,10 +48,6 @@ golden_test(
 crubit_cc_test(
     name = "uses_reexport_test",
     srcs = ["uses_reexport_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":uses_reexport_cc_api",
         "@googletest//:gtest_main",

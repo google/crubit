@@ -26,10 +26,6 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "unwinding_test",
     srcs = ["unwinding_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":panic_function_cc_api",
         "@googletest//:gtest_main",

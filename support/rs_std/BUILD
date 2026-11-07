@@ -52,6 +52,10 @@ cc_library(
 crubit_cc_test(
     name = "int_test",
     srcs = ["int_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":int",
         "@fuzztest//:fuzztest_gtest_main",
@@ -71,6 +75,10 @@ alias(
 crubit_cc_test(
     name = "char_test",
     srcs = ["char_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":char",
         ":str_ref",
@@ -165,6 +173,8 @@ crubit_cc_test(
     name = "slice_ref_test",
     srcs = ["slice_ref_test.cc"],
     tags = [
+        "no_android",
+        "no_ios",
         # Continuous fuzzing (autofuzz) is not supported for Crubit targets because crubit_cc_test uses
         # a custom transition to the LLVM unstable toolchain.
         "noautofuzz",
@@ -202,6 +212,10 @@ cc_library(
 crubit_cc_test(
     name = "str_ref_test",
     srcs = ["str_ref_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":str_ref",
         "@abseil-cpp//absl/strings",
@@ -242,6 +256,10 @@ cc_library(
 crubit_cc_test(
     name = "dyn_callable_test",
     srcs = ["dyn_callable_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":dyn_callable",
         "@abseil-cpp//absl/functional:any_invocable",
@@ -261,6 +279,10 @@ cc_library(
 crubit_cc_test(
     name = "fn_ref_test",
     srcs = ["fn_ref_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":fn_ref",
         "@fuzztest//:fuzztest_gtest_main",
@@ -279,6 +301,10 @@ cc_library(
 crubit_cc_test(
     name = "fn_test",
     srcs = ["fn_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":fn",
         "//support:movable",
@@ -317,6 +343,10 @@ cc_library(
 crubit_cc_test(
     name = "iterator_adapter_test",
     srcs = ["iterator_adapter_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":iterator_adapter",
         "@fuzztest//:fuzztest_gtest_main",
@@ -397,6 +427,10 @@ cc_library(
 crubit_cc_test(
     name = "unit_test",
     srcs = ["unit_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":unit",
         "@fuzztest//:fuzztest_gtest_main",
@@ -424,6 +458,10 @@ cc_library(
 crubit_cc_test(
     name = "enum_tag_encoding_test",
     srcs = ["enum_tag_encoding_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":enum",
         "@fuzztest//:fuzztest_gtest_main",
@@ -434,6 +472,10 @@ crubit_cc_test(
 crubit_cc_test(
     name = "enum_storage_test",
     srcs = ["enum_storage_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":enum",
         "@fuzztest//:fuzztest_gtest_main",
@@ -446,6 +488,10 @@ crubit_cc_test(
     srcs = [
         "enum_test.cc",
         "enum_test_option_i32.h",
+    ],
+    tags = [
+        "no_android",
+        "no_ios",
     ],
     deps = [
         ":enum",

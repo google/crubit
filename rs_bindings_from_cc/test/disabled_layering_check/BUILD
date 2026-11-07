@@ -56,6 +56,5 @@ rust_api_from_cpp(
 crubit_cc_test(
     name = "layering_check_validation_test",
     srcs = ["layering_check_validation_test.cc"],
-    platforms = ["android"],
     deps = [":top_lib"],
 )

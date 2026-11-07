@@ -50,10 +50,6 @@ golden_test(
 crubit_cc_test(
     name = "type_aliases_test",
     srcs = ["type_aliases_test.cc"],
-    platforms = [
-        "android",
-        "ios",
-    ],
     deps = [
         ":type_aliases_cc_api",
         "@googletest//:gtest_main",
