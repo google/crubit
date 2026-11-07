@@ -155,6 +155,10 @@ def rust_api_from_cpp(
       cpp_deps: C++ dependencies of the generated C++ implementation (`_rust_api_impl.cc`),
         which also compiles `cpp_srcs` and C++ embedded via `inline_cpp!`/`global_cpp!`: for
         example, ABI support libraries for bridged types and headers included by `cpp_srcs`.
+        When `cpp_srcs` is non-empty or `embedded_cpp` is True, Crubit-enabled `cpp_deps` are
+        treated as bindings dependencies of the generated crate (their types may appear in
+        `inline_cpp!`/`global_cpp!`/`cpp_srcs` signatures and their crates are available to the
+        generated Rust); otherwise, and for non-Crubit-enabled entries, they remain C++-only.
         Unlike `cpp_api_deps`, these are not propagated to `cpp_api_from_rust` dependents.
       unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
       crubit_features: List of additional Crubit features to enable on top of
@@ -174,7 +178,9 @@ def rust_api_from_cpp(
         `#include` every header the embedded C++ uses, including the headers of `cpp_target`.
         Include only headers of `cpp_target` or `cpp_deps`: other headers
         build today, but will break once `cpp_srcs` is compiled with `layering_check`
-        (b/573160050).
+        (b/573160050). Types from `cpp_target` and Crubit-enabled `cpp_deps` can be used in
+        `inline_cpp!` signatures since their bindings are made available to the generated Rust
+        crate.
       **kwargs: Additional arguments passed to the underlying rule.
     """
 

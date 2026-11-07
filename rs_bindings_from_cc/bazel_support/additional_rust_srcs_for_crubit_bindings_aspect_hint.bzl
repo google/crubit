@@ -93,6 +93,7 @@ def make_additional_rust_srcs_provider(
         deps,
         cc_deps,
         cpp_deps = [],
+        cpp_deps_for_bindings = [],
         unstable_rust_features = [],
         root_namespaces = [],
         aliases = {},
@@ -110,6 +111,19 @@ def make_additional_rust_srcs_provider(
             dep[CcInfo]
             for dep in cpp_deps
         ],
+        cpp_deps_bindings = [
+            dep[RustBindingsFromCcInfo].dep_variant_info
+            for dep in cpp_deps_for_bindings
+            if RustBindingsFromCcInfo in dep and
+               dep[RustBindingsFromCcInfo].dep_variant_info
+        ],
+        cpp_deps_target_args = depset(
+            transitive = [
+                dep[RustBindingsFromCcInfo].target_args
+                for dep in cpp_deps_for_bindings
+                if RustBindingsFromCcInfo in dep
+            ],
+        ) if cpp_deps_for_bindings else None,
         cpp_srcs = cpp_srcs,
         unstable_rust_features = unstable_rust_features,
         root_namespaces = root_namespaces,
@@ -158,6 +172,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.deps,
         ctx.attr.cc_deps,
         ctx.attr.cpp_deps,
+        ctx.attr.cpp_deps_for_bindings,
         ctx.attr.unstable_rust_features,
         ctx.attr.root_namespaces,
         aliases = aliases,
@@ -213,6 +228,11 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
         "cpp_deps": attr.label_list(
             mandatory = False,
             default = [],
+        ),
+        "cpp_deps_for_bindings": attr.label_list(
+            mandatory = False,
+            default = [],
+            aspects = [rust_bindings_from_cc_aspect],
         ),
         "unstable_rust_features": attr.string_list(
             mandatory = False,
@@ -304,10 +324,11 @@ def additional_rust_srcs_for_crubit_bindings(
         cc_deps: List of cc_library targets whose crubit-generated bindings will be made available
             to this library target.
         cpp_deps: C++ dependencies of the generated C++ implementation (`_rust_api_impl.cc`),
-            which also compiles `cpp_srcs`, such as headers included by `cpp_srcs`.
-            For example, C++ types that have composable bridging should define their supporting
-            Crubit ABI types here so they're available to generated code without being exposed to
-            Crubit.
+            which also compiles `cpp_srcs`: for example, ABI support libraries for bridged types
+            and headers included by `cpp_srcs`. When `cpp_srcs` is non-empty, Crubit-enabled
+            `cpp_deps` are treated as bindings dependencies of the generated crate (their types may
+            appear in `cpp_srcs` signatures and their crates are available to the generated Rust);
+            otherwise, and for non-Crubit-enabled entries, they remain C++-only.
         root_namespaces: List of C++ namespaces to re-export at the root of the generated Rust bindings.
         unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
         crubit_features: List of Crubit features to enable.
@@ -319,6 +340,8 @@ def additional_rust_srcs_for_crubit_bindings(
             The label that `extract_cpp` used, passed to rustc as `CRUBIT_TARGET`.
         **kwargs: Args passed through to the underlying rule (visibility, etc.).
     """
+    has_cpp_srcs = type(cpp_srcs) != type([]) or len(cpp_srcs) > 0
+    cpp_deps_for_bindings = cpp_deps if has_cpp_srcs else []
     _additional_rust_srcs_for_crubit_bindings_rule(
         name = name,
         srcs = srcs,
@@ -329,6 +352,7 @@ def additional_rust_srcs_for_crubit_bindings(
         link_deps = link_deps,
         cc_deps = cc_deps,
         cpp_deps = cpp_deps,
+        cpp_deps_for_bindings = cpp_deps_for_bindings,
         unstable_rust_features = unstable_rust_features,
         crubit_features = [
             f if (f.startswith("//") or f.startswith(":")) else "//features:" + f

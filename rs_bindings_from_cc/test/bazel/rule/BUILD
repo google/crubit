@@ -182,3 +182,72 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+cc_library(
+    name = "embedded_cpp_with_support_deps_lib",
+    hdrs = ["math_dependency.h"],
+    aspect_hints = [":embedded_cpp_with_support_deps.hint"],
+)
+
+rust_api_from_cpp(
+    name = "embedded_cpp_with_support_deps",
+    srcs = ["embedded_cpp_with_support_deps.rs"],
+    cpp_deps = ["//support/rs_std:str_ref"],
+    cpp_target = ":embedded_cpp_with_support_deps_lib",
+    embedded_cpp = True,
+)
+
+cc_library(
+    name = "non_crubit_str_ref_bridge",
+    srcs = ["non_crubit_str_ref_bridge.cc"],
+    hdrs = ["non_crubit_str_ref_bridge.h"],
+    deps = ["//support/rs_std:str_ref"],
+)
+
+cc_library(
+    name = "dependent_without_cpp_deps_lib",
+    hdrs = ["dependent_without_cpp_deps_lib.h"],
+    aspect_hints = [":dependent_without_cpp_deps.hint"],
+    deps = [
+        ":embedded_cpp_with_support_deps_lib",
+        ":non_crubit_str_ref_bridge",
+    ],
+)
+
+rust_api_from_cpp(
+    name = "dependent_without_cpp_deps",
+    cpp_target = ":dependent_without_cpp_deps_lib",
+)
+
+crubit_rust_test(
+    name = "embedded_cpp_with_support_deps_test",
+    srcs = ["embedded_cpp_with_support_deps_test.rs"],
+    proc_macro_deps = ["//common:item_exists"],
+    deps = [
+        ":dependent_without_cpp_deps",
+        ":embedded_cpp_with_support_deps",
+        "@crate_index//:googletest",
+    ],
+)
+
+cc_library(
+    name = "handwritten_cpp_with_support_deps_lib",
+    hdrs = ["handwritten_cpp_with_support_deps_lib.h"],
+    aspect_hints = [":handwritten_cpp_with_support_deps.hint"],
+)
+
+rust_api_from_cpp(
+    name = "handwritten_cpp_with_support_deps",
+    cpp_deps = ["//support/rs_std:str_ref"],
+    cpp_srcs = ["handwritten_cpp_with_support_deps.cc"],
+    cpp_target = ":handwritten_cpp_with_support_deps_lib",
+)
+
+crubit_rust_test(
+    name = "handwritten_cpp_with_support_deps_test",
+    srcs = ["handwritten_cpp_with_support_deps_test.rs"],
+    deps = [
+        ":handwritten_cpp_with_support_deps",
+        "@crate_index//:googletest",
+    ],
+)
