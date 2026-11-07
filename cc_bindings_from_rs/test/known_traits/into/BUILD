@@ -34,10 +34,6 @@ golden_test(
     basename = "into",
     golden_h = "into_cc_api.h",
     golden_rs = "into_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "into",
 )
 

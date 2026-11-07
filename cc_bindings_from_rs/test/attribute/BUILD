@@ -31,10 +31,6 @@ golden_test(
     basename = "cpp_name",
     golden_h = "cpp_name_cc_api.h",
     golden_rs = "cpp_name_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "cpp_name",
 )
 
@@ -66,10 +62,6 @@ golden_test(
     basename = "must_bind",
     golden_h = "must_bind_cc_api.h",
     golden_rs = "must_bind_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "must_bind",
 )
 

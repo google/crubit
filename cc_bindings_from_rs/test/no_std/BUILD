@@ -29,10 +29,6 @@ golden_test(
     basename = "no_std",
     golden_h = "no_std_cc_api.h",
     golden_rs = "no_std_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "no_std",
 )
 
@@ -72,10 +68,6 @@ golden_test(
     basename = "no_core",
     golden_h = "no_core_cc_api.h",
     golden_rs = "no_core_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "no_core",
 )
 

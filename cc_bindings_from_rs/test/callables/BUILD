@@ -36,10 +36,6 @@ golden_test(
     basename = "callables",
     golden_h = "callables_cc_api.h",
     golden_rs = "callables_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "callables",
 )
 

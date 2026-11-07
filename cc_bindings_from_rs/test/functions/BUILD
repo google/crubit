@@ -44,10 +44,6 @@ golden_test(
     basename = "functions",
     golden_h = "functions_cc_api.h",
     golden_rs = "functions_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "functions",
 )
 

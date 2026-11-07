@@ -45,10 +45,6 @@ golden_test(
     basename = "async_fn",
     golden_h = "async_fn_cc_api.h",
     golden_rs = "async_fn_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "async_fn",
 )
 

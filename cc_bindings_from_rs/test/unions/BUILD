@@ -29,10 +29,6 @@ golden_test(
     basename = "unions",
     golden_h = "unions_cc_api.h",
     golden_rs = "unions_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "unions",
 )
 

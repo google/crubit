@@ -28,10 +28,6 @@ golden_test(
     basename = "aliasing_references",
     golden_h = "aliasing_references_cc_api.h",
     golden_rs = "aliasing_references_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "aliasing_references",
 )
 

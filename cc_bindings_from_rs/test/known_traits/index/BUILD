@@ -40,10 +40,6 @@ golden_test(
     basename = "rs_index",
     golden_h = "rs_index_cc_api.h",
     golden_rs = "rs_index_cc_api_impl.rs",
-    platforms = [
-        "android",
-        "ios",
-    ],
     rust_library = "rs_index",
 )
 

@@ -146,9 +146,12 @@ def golden_test(
         basename = None,
         golden_h = None,
         golden_rs = None,
-        platforms = None,
         kythe_annotations = False):
     """Generates a golden test for `rust_library`.
+
+    Besides the host test, this also generates golden subtests for Android, iOS, macOS and
+    Windows. Use the `no_android`, `no_ios`, `no_macos` and `no_windows` tags to opt out of a
+    platform.
 
     Args:
         name: The name of the golden test.
@@ -157,7 +160,6 @@ def golden_test(
         basename: The name to use for generated files.
         golden_h: The generated C++ source code for the bindings.
         golden_rs: The generated Rust source code for the bindings.
-        platforms: List of additional target platforms to generate tests for (e.g. ["android", "ios"]). Windows and macOS are always included unless the target is tagged `no_windows` / `no_macos`. Defaults to None.
         kythe_annotations: Whether to generate Kythe annotations.
     """
     if not basename:
@@ -165,8 +167,6 @@ def golden_test(
 
     tags = list(tags) if tags else []
     tags.append("crubit_golden_test")
-
-    platforms = platforms or []
 
     # Turn on annotations if necessary.
     # TODO(jeanpierreda): Move this out to a separate
