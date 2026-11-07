@@ -87,7 +87,8 @@ class ManagedCallable {
 // The type for functions issuing the actual invocation of the object.
 // A pointer to such a function is contained in each DynCallable instance.
 template <class ReturnType, class... P>
-using InvokerType = ReturnType(TypeErasedState*, ForwardedParameterType<P>...);
+using InvokerType = ReturnType(TypeErasedState* absl_nonnull,
+                               ForwardedParameterType<P>...);
 
 // Partially specialized class that wraps ManagedCallable and handles
 // operator().
@@ -96,7 +97,7 @@ class Impl {};
 
 // Raises a fatal error when the DynCallable is invoked after a move.
 template <class ReturnType, class... P>
-inline ReturnType InvokedAfterMove(TypeErasedState*,
+inline ReturnType InvokedAfterMove(TypeErasedState* absl_nonnull,
                                    ForwardedParameterType<P>...) {
   ::std::terminate();
 }
@@ -109,7 +110,7 @@ inline ReturnType InvokedAfterMove(TypeErasedState*,
     using InvokerType = InvokerType<ReturnType, P...>;                      \
                                                                             \
     explicit Impl(TypeErasedState state, ManagerType* absl_nonnull manager, \
-                  InvokerType* invoker)                                     \
+                  InvokerType* absl_nullable invoker)                       \
         : ManagedCallable(state, manager), invoker_(invoker) {}             \
                                                                             \
    public:                                                                  \
@@ -146,7 +147,7 @@ inline ReturnType InvokedAfterMove(TypeErasedState*,
     bool HasValue() const { return invoker_ != nullptr; }                   \
                                                                             \
    protected:                                                               \
-    InvokerType* invoker_ = nullptr;                                        \
+    InvokerType* absl_nullable invoker_ = nullptr;                          \
   };
 
 CRUBIT_INTERNAL_RUST_ANY_CALLABLE_IMPL(const)
@@ -187,11 +188,11 @@ struct DynCallableAbi {
   }
 
   explicit DynCallableAbi(ManagerType* absl_nonnull manager,
-                          Value::Impl::InvokerType* invoker)
+                          Value::Impl::InvokerType* absl_nonnull invoker)
       : manager(manager), invoker(invoker) {}
 
   ManagerType* absl_nonnull manager;
-  Value::Impl::InvokerType* invoker;
+  Value::Impl::InvokerType* absl_nonnull invoker;
 };
 
 }  // namespace internal_dyn_callable
@@ -237,7 +238,7 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
   //   `Box<dyn Trait>`.
   explicit DynCallable(internal_dyn_callable::TypeErasedState state,
                        internal_dyn_callable::ManagerType* absl_nonnull manager,
-                       Impl::InvokerType* invoker)
+                       Impl::InvokerType* absl_nonnull invoker)
       : Impl(state, manager, invoker) {}
 
  public:

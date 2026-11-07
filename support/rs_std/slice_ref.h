@@ -206,7 +206,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // `dangling_ptr_` is never read from in C++, and `ptr_` must only ever be
   // read from when `size_ > 0`.
   union {
-    T* ptr_;
+    T* crubit_nonnull ptr_;
     uintptr_t dangling_ptr_;
   };
   size_t size_;
