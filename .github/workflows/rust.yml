@@ -58,7 +58,6 @@ jobs:
       with:
         gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
         sccache: 'true'
-        protoc: 'true'
     - name: Test Cargo project
       run: >
         cargo test --verbose --locked --workspace --no-fail-fast

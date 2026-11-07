@@ -10,7 +10,6 @@ exports_files(["get_llvm_commit_date.py"])
 filegroup(
     name = "cargo_build_scripts",
     srcs = [
-        "generate_proto_headers.py",
         "setup_bazel_env.py",
     ],
     tags = ["ignore_srcs"],

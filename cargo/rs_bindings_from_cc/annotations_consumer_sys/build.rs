@@ -7,7 +7,6 @@
 const PATH_TO_SRC_ROOT: &str = "../../..";
 
 fn main() {
-    crubit_build::compile_cc_lib(PATH_TO_SRC_ROOT, SOURCES, PROTO_SOURCES).unwrap();
+    crubit_build::compile_cc_lib(PATH_TO_SRC_ROOT, SOURCES).unwrap();
 }
 const SOURCES: &[&str] = &["rs_bindings_from_cc/annotations_consumer.cc"];
-const PROTO_SOURCES: &[&str] = &[];

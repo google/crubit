@@ -80,7 +80,6 @@
     -   [Bazel](./overview/bazel.md)
     -   [CMake](./overview/cmake.md)
 -   [Cargo build](./overview/cargo_build.md)
-    -   [Protobuf in the Cargo build](./overview/cargo_build_protobuf.md)
 -   [Required unstable features of Rust](./overview/unstable_features.md)
 -   [Memory Safety](./overview/safety.md)
 -   [Reference Safety](./overview/reference_safety.md)

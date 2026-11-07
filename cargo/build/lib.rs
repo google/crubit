@@ -6,7 +6,6 @@ mod absl;
 mod clang;
 mod flags;
 mod paths;
-mod protobuf;
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -17,12 +16,11 @@ use std::path::Path;
 /// `path_to_src_root` gives the root of the repo, where paths are specified
 /// relative to.
 ///
-/// All C++ libraries can make use of ABSL, LLVM, Protobuf, and Clang, as they are
+/// All C++ libraries can make use of ABSL, LLVM, and Clang, as they are
 /// included in the include path, and are added to the link step.
-pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
+pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>>(
     path_to_src_root: P1,
     sources: &[P2],
-    proto_sources: &[P3],
 ) -> Result<(), std::io::Error> {
     let name = std::env::var("CARGO_PKG_NAME").unwrap();
     let out_dir = std::env::var("OUT_DIR").unwrap();
@@ -48,29 +46,14 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
     let clang_include_dirs = clang::collect_clang_includes();
     let (clang_lib_dirs, clang_libs) = clang::collect_clang_libs();
 
-    // ===== Protobuf =====
-
-    let (proto_include_dirs, proto_lib_dirs, proto_libs, gen_proto_sources) =
-        if proto_sources.is_empty() {
-            (Vec::new(), Vec::new(), Vec::new(), Vec::new())
-        } else {
-            let include_dirs = protobuf::collect_protobuf_includes();
-            let (lib_dirs, libs) = protobuf::collect_protobuf_libs();
-            let gen_srcs = protobuf::collect_generated_proto_sources(proto_sources, &include_dirs);
-            (include_dirs, lib_dirs, libs, gen_srcs)
-        };
-
     // ===== Linking directives =====
 
     // Combine and deduplicate link search paths and libraries across dependencies.
     // `BTreeSet` deduplicates and sorts without an additional `itertools` dep.
-    let all_lib_dirs = [absl_lib_dirs, clang_lib_dirs, proto_lib_dirs]
-        .into_iter()
-        .flatten()
-        .collect::<BTreeSet<_>>();
+    let all_lib_dirs =
+        [absl_lib_dirs, clang_lib_dirs].into_iter().flatten().collect::<BTreeSet<_>>();
     paths::print_link_searches(all_lib_dirs)?;
-    let all_libs =
-        [absl_libs, clang_libs, proto_libs].into_iter().flatten().collect::<BTreeSet<_>>();
+    let all_libs = [absl_libs, clang_libs].into_iter().flatten().collect::<BTreeSet<_>>();
     paths::print_link_libs(all_libs)?;
 
     // ===== The cc lib ======
@@ -92,16 +75,12 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
             println!("cargo::warning=Skipping internal-only source file: {}", p.display());
         }
     }
-    for p in &gen_proto_sources {
-        paths::add_source_file(&mut cc_lib, p)?;
-        num_sources += 1;
-    }
     if num_sources == 0 {
         let placeholder = obj_dir.join("empty.cc");
         std::fs::write(&placeholder, "// Empty placeholder for header-only library\n")?;
         cc_lib.file(&placeholder);
     }
-    for p in absl_include_dirs.into_iter().chain(clang_include_dirs).chain(proto_include_dirs) {
+    for p in absl_include_dirs.into_iter().chain(clang_include_dirs) {
         paths::add_include_path(&mut cc_lib, p, false);
     }
     cc_lib.cpp(true);

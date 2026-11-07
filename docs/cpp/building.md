@@ -34,13 +34,12 @@ If you're integrating Crubit into another build system, you can build the
 rules](https://github.com/google/crubit/tree/main/rs_bindings_from_cc/bazel_support)
 do.
 
-`rs_bindings_from_cc` is a Rust program that links against Clang's C++
-libraries, plus Abseil and Protobuf. It is built against a specific
-`llvm-project` commit, pinned in `MODULE.bazel` and updated regularly by CI.
-Open-source CI covers Linux x86_64.
+`rs_bindings_from_cc` is a Rust program that links against Clang's C++ libraries
+and Abseil. It is built against a specific `llvm-project` commit, pinned in
+`MODULE.bazel` and updated regularly by CI. Open-source CI covers Linux x86_64.
 
 There are two ways to build it: with Bazel (which builds LLVM from source for
-you) or with Cargo against your own LLVM, Abseil, and Protobuf installation.
+you) or with Cargo against your own LLVM and Abseil installation.
 
 ### Bazel
 
@@ -62,7 +61,7 @@ bazelisk build //rs_bindings_from_cc:rs_bindings_from_cc_main
 To build against a different `llvm-project` commit, set the `CRUBIT_LLVM_COMMIT`
 environment variable to the full commit SHA.
 
-### Cargo, with your own LLVM, Abseil, and Protobuf
+### Cargo, with your own LLVM and Abseil
 
 This option is for packagers and for projects that already build LLVM, such as
 Chromium. CI doesn't test it.
@@ -74,8 +73,6 @@ Chromium. CI doesn't test it.
     *   They must be built with compression support (zlib), which is the default
         build config.
 *   Abseil libraries, built and installed.
-*   Protobuf libraries and the `protoc` compiler (v27.1 or later), installed.
-    Crubit's CI uses Protobuf 36.1.
 *   zlib (for example, `libz.so`) in the system include and lib paths.
 *   A recent Rust toolchain. In a Crubit checkout, `rustup` automatically
     selects the nightly toolchain from `rust-toolchain.toml`.
@@ -143,12 +140,6 @@ export CXXFLAGS="$CXXFLAGS /D_CRT_SECURE_NO_DEPRECATE"
 Run the build step via cargo:
 
 ```sh
-# Pre-generate the C++ headers for Crubit's own .proto files. This avoids
-# races during the parallel Cargo build.
-python3 cargo/build/generate_proto_headers.py \
-    --protoc=/path/to/protoc --out_dir=/path/to/generated_headers
-export PROTOC=/path/to/protoc
-
 # Paths for Crubit's cargo to use. Most accept a comma-separated list.
 ## This path contains clang/ and llvm/ dirs with their respective headers.
 export CLANG_INCLUDE_PATH=/path/to/llvm/and/clang/headers
@@ -160,13 +151,6 @@ export CLANG_LIB_STATIC_PATH=/path/to/llvm/and/clang/libs
 export ABSL_INCLUDE_PATH=/path/to/absl/include/dir
 ## This path contains libabsl_*
 export ABSL_LIB_STATIC_PATH=/path/to/absl/libs
-## These paths contain google/protobuf/ dir with all the includes, and the
-## headers generated above.
-export PROTOBUF_INCLUDE_PATH=/path/to/protobuf/include/dir,/path/to/generated_headers
-## This path contains libprotobuf.a and libutf8_validity.a.  Other archives that a
-## protobuf install tree holds (libutf8_range.a, libprotobuf-lite.a, libprotoc.a,
-## libupb.a) are ignored; the first two would collide with the ones above.
-export PROTOBUF_LIB_STATIC_PATH=/path/to/protobuf/libs
 
 # Tell Crubit which LLVM it is compiled against, as the dev date (YYYYMMDD) of
 # your llvm-project commit: its own date on main, else its release branch's fork

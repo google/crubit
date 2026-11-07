@@ -151,9 +151,9 @@ error[E0554]: `#![feature]` may not be used on the stable release channel
 
 ## rs_bindings_from_cc
 
-`rs_bindings_from_cc` is a Rust binary that depends on C++ libraries (Abseil,
-LLVM/Clang LibTooling, and Protobuf). To build it with Cargo in an open-source
-checkout, you first need to build and export these C++ dependencies.
+`rs_bindings_from_cc` is a Rust binary that depends on C++ libraries (Abseil and
+LLVM/Clang LibTooling). To build it with Cargo in an open-source checkout, you
+first need to build and export these C++ dependencies.
 
 ### Building with C++ dependencies from Bazel
 
@@ -162,16 +162,14 @@ Bazel, prefer the [full Bazel build](../cpp/building.md#bazel) instead.
 
 Crubit provides a helper script `cargo/build/setup_bazel_env.py` that discovers
 prebuilt C++ dependencies in Bazel's output tree, merges them into monolithic
-static archives, pre-generates Protobuf headers, and exports the necessary
-environment variables.
+static archives, and exports the necessary environment variables.
 
 1.  **Prebuild C++ dependencies using `bazelisk`**:
 
     ```sh
     $ bazelisk build \
         --remote_download_outputs=all \
-        rs_bindings_from_cc:rs_bindings_from_cc_main \
-        @protobuf//:protoc
+        rs_bindings_from_cc:rs_bindings_from_cc_main
     ```
 
 2.  **Discover and package Bazel outputs**:
@@ -278,24 +276,9 @@ C code and to link.
 
 When integrating `rs_bindings_from_cc` into custom build systems (such as
 Chromium, Android, or other standalone environments), you must prepare prebuilt
-C++ dependencies and pre-generate C++ Protobuf headers before invoking `cargo`:
+C++ dependencies before invoking `cargo`:
 
-1.  **Pre-generate C++ Protobuf Headers**: To avoid build ordering issues and
-    race conditions during parallel Cargo builds, C++ Protobuf headers
-    (`rs_bindings_from_cc/ir.pb.h` and
-    `rs_bindings_from_cc/generate_bindings/generate_bindings.pb.h`) must be
-    generated prior to invoking `cargo build` (see
-    [cargo_build_protobuf.md](cargo_build_protobuf.md) for architectural
-    details). Crubit provides a helper script that invokes `protoc` to
-    pre-generate these headers:
-
-    ```sh
-    $ python3 cargo/build/generate_proto_headers.py \
-        --protoc=<path/to/protoc> \
-        --out_dir=<path/to/generated_headers>
-    ```
-
-2.  **Configure Environment Variables**: Before invoking `cargo`, configure the
+1.  **Configure Environment Variables**: Before invoking `cargo`, configure the
     following environment variables:
 
     *   **Abseil**:
@@ -309,17 +292,6 @@ C++ dependencies and pre-generate C++ Protobuf headers before invoking `cargo`:
             tablegen-generated headers).
         *   `CLANG_LIB_STATIC_PATH`: Comma-separated list of directories
             containing Clang/LLVM static archives.
-    *   **Protobuf**:
-        *   `PROTOBUF_INCLUDE_PATH`: Comma-separated list of include directories
-            containing Google Protobuf headers (`google/protobuf/...`,
-            `utf8_range`), as well as Crubit's pre-generated Protobuf headers
-            directory from step 1.
-        *   `PROTOBUF_LIB_STATIC_PATH`: Directory containing the Protobuf static
-            archive (`libprotobuf.a` or `protobuf.lib`).
-        *   `PROTOC`: Absolute path to the `protoc` compiler executable. This is
-            required by `protobuf-codegen` during the Cargo build to generate
-            Rust Protobuf bindings for `ir_rust_proto` and
-            `generate_bindings_rust_proto`.
     *   **Toolchain & Linker**:
         *   `CC` / `CXX`: C and C++ compilers (e.g. Clang/Clang++).
 
@@ -336,7 +308,7 @@ C++ dependencies and pre-generate C++ Protobuf headers before invoking `cargo`:
             `-C link-arg=-stdlib=libc++`, `-C link-arg=-lc++`,
             `-C link-arg=-lzstd`).
 
-3.  **Build `rs_bindings_from_cc` using Cargo**:
+2.  **Build `rs_bindings_from_cc` using Cargo**:
 
     ```sh
     $ cargo build --locked -p rs_bindings_from_cc
