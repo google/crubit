@@ -44,6 +44,10 @@ golden_test(
 crubit_cc_test(
     name = "partial_eq_test",
     srcs = ["partial_eq_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":partial_eq_cc_api",
         "//support/rs_std:str_ref",

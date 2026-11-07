@@ -67,6 +67,10 @@ cc_library(
 crubit_cc_test(
     name = "multiple_crate_versions_test",
     srcs = ["multiple_crate_versions_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":consumer_v1",
         ":consumer_v2",

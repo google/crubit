@@ -103,7 +103,9 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "cc_test",
     srcs = ["cc_test.cc"],
-    tags = ["no_test_android_x86"],
+    platforms = [
+        "ios",
+    ],
     deps = [
         ":leaf_cc_lib",
         ":middle_rs_lib_cc_api",

@@ -41,6 +41,10 @@ golden_test(
 crubit_cc_test(
     name = "default_test",
     srcs = ["default_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":rs_default_cc_api",
         "@googletest//:gtest_main",

@@ -42,6 +42,10 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "cpp_name_test",
     srcs = ["cpp_name_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":cpp_name_cc_api",
         "@googletest//:gtest_main",
@@ -73,6 +77,10 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "must_bind_test",
     srcs = ["must_bind_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":must_bind_cc_api",
         "@googletest//:gtest_main",

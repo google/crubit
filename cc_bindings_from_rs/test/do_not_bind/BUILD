@@ -41,6 +41,10 @@ golden_test(
 crubit_cc_test(
     name = "do_not_bind_test",
     srcs = ["do_not_bind_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":do_not_bind_cc_api",
         "@googletest//:gtest_main",

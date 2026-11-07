@@ -45,6 +45,10 @@ golden_test(
 crubit_cc_test(
     name = "tag_decl_annotations_test",
     srcs = ["tag_decl_annotations_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":tag_decl_annotations_cc_api",
         "@googletest//:gtest_main",
