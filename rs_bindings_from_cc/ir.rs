@@ -2453,6 +2453,37 @@ mod tests {
         };
         assert_eq!(arr.num_elements(), 4);
     }
+
+    #[gtest]
+    fn test_item_hash_by_id_and_partial_eq() {
+        use googletest::{expect_eq, expect_ne};
+        use std::hash::BuildHasher;
+
+        let r1 = ir_rust_proto::proto!(crate::ir_rust_proto::Record {
+            id: 42u64,
+            rs_name: __ { identifier: "Foo" },
+            cc_name: __ { identifier: "Foo" },
+            children: [__ { comment: __ { text: "child comment", id: 43u64, must_bind: false } }],
+        });
+        let r2 = ir_rust_proto::proto!(crate::ir_rust_proto::Record {
+            id: 42u64,
+            rs_name: __ { identifier: "Bar" },
+            cc_name: __ { identifier: "Bar" },
+        });
+        let r3 = ir_rust_proto::proto!(crate::ir_rust_proto::Record {
+            id: 99u64,
+            rs_name: __ { identifier: "Foo" },
+            cc_name: __ { identifier: "Foo" },
+            children: [__ { comment: __ { text: "child comment", id: 43u64, must_bind: false } }],
+        });
+
+        let hasher = std::collections::hash_map::RandomState::new();
+        expect_eq!(hasher.hash_one(&r1), hasher.hash_one(&r2));
+        expect_ne!(hasher.hash_one(&r1), hasher.hash_one(&r3));
+        expect_eq!(r1, r1.clone());
+        expect_ne!(r1, r2);
+        expect_ne!(r1, r3);
+    }
 }
 
 impl memoized::CheapClone for Item {}
