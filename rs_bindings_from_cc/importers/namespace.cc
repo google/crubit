@@ -53,15 +53,13 @@ std::unique_ptr<crubit::ffi::Item> NamespaceDeclImporter::Import(
   // }
 
   std::optional<std::string> deprecated;
-  // TODO(lukasza): Allow non-default visibility (see cl/1016025999).
-  constexpr bool kAllowNonDefaultVisibility = false;
   auto unknown_attr =
       CollectUnknownAttrs(*namespace_decl, [&](const clang::Attr& attr) {
         if (auto* deprecated_attr =
                 clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
           deprecated.emplace(deprecated_attr->getMessage());
           return true;
-        } else if (IsIgnoredVisibilityAttr(attr, kAllowNonDefaultVisibility)) {
+        } else if (IsIgnoredVisibilityAttr(attr)) {
           return true;
         }
         return false;

@@ -1092,8 +1092,7 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
               {FormattedError::Static("Records from the standard library with "
                                       "hidden visibility are not supported")});
           return true;
-        } else if (IsIgnoredVisibilityAttr(
-                       attr, /*allow_non_default_visibility=*/true)) {
+        } else if (IsIgnoredVisibilityAttr(attr)) {
           return true;
         } else if (auto* unused_attr =
                        clang::dyn_cast<clang::WarnUnusedResultAttr>(&attr)) {

@@ -6070,45 +6070,26 @@ fn test_visibility_attribute_on_user_declarations() {
         };"#,
         quote! { Record { ... rs_name: "StructWithHiddenVisibility", ... } },
     );
-    assert_matches(
+    // Note: `assert_ir_matches!(ir, quote! { Func { ... unknown_attr: None, ... } })`
+    // would also match `unknown_attr` of a nested `FuncParam` or `CcType`.
+    for cc_snippet in [
         r#"__attribute__((visibility("default"))) void free_function_with_default_visibility();"#,
-        quote! { Func { ... rs_name: "free_function_with_default_visibility", ... unknown_attr: None, ... } },
-    );
-    assert_matches(
         r#"__attribute__((visibility("hidden"))) void free_function_with_hidden_visibility();"#,
-        quote! { Func { ... rs_name: "free_function_with_hidden_visibility", ... unknown_attr: Some("visibility"), ... } },
-    );
-    assert_matches(
         r#"struct StructWithMethods {
             __attribute__((visibility("default"))) void method_with_default_visibility();
             __attribute__((visibility("hidden"))) void method_with_hidden_visibility();
+            __attribute__((visibility("protected"))) void method_with_protected_visibility();
         };"#,
-        quote! {
-            Record {
-                ...
-                rs_name: "StructWithMethods",
-                ...
-                children: [
-                    ...
-                    Func(Func {
-                        ...
-                        rs_name: "method_with_default_visibility",
-                        ...
-                        unknown_attr: None,
-                        ...
-                    }),
-                    Func(Func {
-                        ...
-                        rs_name: "method_with_hidden_visibility",
-                        ...
-                        unknown_attr: Some("visibility"),
-                        ...
-                    }),
-                ],
-                ...
-            }
-        },
-    );
+    ] {
+        let proto = ir_proto_from_cc(cc_snippet).unwrap();
+        let ir = ir_testing::make_test_ir(&proto).unwrap();
+        let funcs = ir.functions().filter(|f| format!("{:?}", f.rs_name()).contains("visibility"));
+        let funcs = funcs.collect_vec();
+        expect_eq!(funcs.len(), cc_snippet.matches("__attribute__").count(), "for {cc_snippet}");
+        for func in funcs {
+            expect_eq!(func.unknown_attr(), None, "for {:?}", func.rs_name());
+        }
+    }
     assert_matches(
         r#"enum __attribute__((visibility("default"))) EnumWithDefaultVisibility {
             kValue = 1,

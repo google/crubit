@@ -1128,7 +1128,7 @@ fn test_supported_unknown_attr_namespace() -> Result<()> {
     {
         let proto = ir_proto_from_cc(&format!(
             r#"
-            namespace [[gnu::visibility("hidden")]] unknown_attr_namespace {{
+            inline namespace [[gnu::abi_tag("tag")]] unknown_attr_namespace {{
                 {nested_notpresent}
             }}
             extern "C" {{
@@ -1156,13 +1156,13 @@ fn test_supported_unknown_attr_namespace() -> Result<()> {
 fn test_supported_unknown_attr_namespace_merge() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
-        namespace unknown_attr_namespace {
+        inline namespace unknown_attr_namespace {
             enum Present {};
         }
-        namespace [[gnu::visibility("hidden")]] unknown_attr_namespace {
+        inline namespace [[gnu::abi_tag("tag")]] unknown_attr_namespace {
             enum NotPresent {};
         }
-        namespace unknown_attr_namespace {
+        inline namespace unknown_attr_namespace {
             enum AlsoPresent {};
         }
         "#,
@@ -1186,7 +1186,7 @@ fn test_supported_unknown_attr_namespace_merge() -> Result<()> {
 fn test_supported_unknown_attr_namespace_typedef() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
-        namespace [[gnu::visibility("hidden")]] unknown_attr_namespace {
+        inline namespace [[gnu::abi_tag("tag")]] unknown_attr_namespace {
             using NotPresent = int;
         }
         extern "C" {
@@ -1220,7 +1220,7 @@ fn test_visibility_attribute_on_functions() -> Result<()> {
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(rs_api, quote! { pub fn DefaultVisibilityFunc() });
-    assert_rs_not_matches!(rs_api, quote! { HiddenVisibilityFunc });
+    assert_rs_matches!(rs_api, quote! { pub fn HiddenVisibilityFunc() });
     Ok(())
 }
 
