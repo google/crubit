@@ -13,6 +13,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       commit: ${{ steps.llvm.outputs.commit }}
       crubit_commit: ${{ steps.update-crubit.outputs.commit }}
+      llvm_matrix: ${{ steps.llvm-matrix.outputs.matrix }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -61,6 +62,52 @@ jobs:
             "$COMMIT" \
             "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > llvm_commit.txt
           echo "commit=${COMMIT}" >> "$GITHUB_OUTPUT"
+      - name: Generate LLVM Matrix
+        id: llvm-matrix
+        env:
+          HEAD: ${{ steps.llvm.outputs.commit }}
+          # Lifts the GitHub fallback above the unauthenticated rate limit.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          VERSIONS=$(jq -c -n --arg head "$HEAD" \
+            '{include: [{version: $head, id: "llvm-head", label: ("llvm-" + $head[:8])}]}')
+
+          # If main records the oldest LLVM it supports include it in the matrix,
+          # otherwise just build against LLVM head.
+          if [[ -f crubit/bazel/llvm_floor.txt ]]; then
+            # Comments, whitespace, CRLF endings and blank lines aside, the file
+            # holds one full commit.
+            FLOOR=$(sed -e 's/#.*//' -e 's/[[:space:]]//g' -e '/^$/d' crubit/bazel/llvm_floor.txt |
+              tr 'A-F' 'a-f')
+            if [[ ! "$FLOOR" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::Could not read Crubit's LLVM floor (got '${FLOOR}')"
+              exit 1
+            fi
+            VERSIONS=$(jq -c --arg floor "$FLOOR" \
+              '.include += [{version: $floor, id: "llvm-floor", label: ("llvm-" + $floor[:8])}]' <<< "$VERSIONS")
+          fi
+
+          # Dated once here, so Bazel in each llvm-build job stays offline and
+          # we can display that date in the badge.
+          DATES='{}'
+          for COMMIT in $(jq -r '.include[].version' <<< "$VERSIONS"); do
+            # An empty date leaves the lookup to that entry's Bazel.
+            if ! DEV_DATE=$(python3 -I crubit/cargo/build/get_llvm_commit_date.py "$COMMIT"); then
+              echo "::warning::Could not date LLVM ${COMMIT}; its llvm-build job will look the date up itself."
+              DEV_DATE=""
+            fi
+            DATES=$(jq -c --arg c "$COMMIT" --arg d "$DEV_DATE" '.[$c] = $d' <<< "$DATES")
+          done
+          VERSIONS=$(jq -c --argjson d "$DATES" '.include |= map(.dev_date = $d[.version])' <<< "$VERSIONS")
+          # Label head and floor with the dev date and commit to keep a legible
+          # and unambiguous range.
+          VERSIONS=$(jq -c '.include |= map(
+            if (.id == "llvm-head" or .id == "llvm-floor") and .dev_date != ""
+            then .label = "llvm-\(.dev_date[:4])-\(.dev_date[4:6])-\(.dev_date[6:]) (\(.version[:8]))"
+            else . end)' <<< "$VERSIONS")
+
+          # Set output for downstream jobs
+          echo "matrix=$VERSIONS" >> $GITHUB_OUTPUT
 
       - name: Commit and Push Updates
         run: |
@@ -125,7 +172,7 @@ jobs:
           path: ${{ matrix.id }}.json
 
   upload-badges:
-    needs: [update-and-generate, build]
+    needs: [update-and-generate, build, llvm-build]
     if: always() && needs.update-and-generate.result == 'success'
     runs-on: ubuntu-latest
     steps:
@@ -144,6 +191,7 @@ jobs:
       - name: Push JSONs to target branch
         env:
           MATRIX: ${{ needs.update-and-generate.outputs.matrix }}
+          LLVM_MATRIX: ${{ needs.update-and-generate.outputs.llvm_matrix }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -156,6 +204,23 @@ jobs:
               passing: ($by_version[.version].message == "passing")
             })
           ' > matrix.json
+          # Read by the entry's id, since head and the floor can share a dev
+          # date and so a label. A missing badge counts as failing.
+          jq -c '.include[]' <<< "$LLVM_MATRIX" | while read -r ENTRY; do
+            BADGE="badges_temp/$(jq -r .id <<< "$ENTRY").json"
+            PASSING=false
+            if [[ -f "$BADGE" ]] && jq -e '.message == "passing"' "$BADGE" > /dev/null; then
+              PASSING=true
+            fi
+            jq -c --argjson passing "$PASSING" '. + {passing: $passing}' <<< "$ENTRY"
+          done | jq -c -s '{include: .}' > llvm_matrix.json
+
+          # A slot with no badge tonight shows grey rather than its last result.
+          # One that has never built keeps its "unknown" placeholder.
+          for f in llvm-*.json; do
+            [[ -e "badges_temp/$f" ]] || jq -e '.message == "unknown"' "$f" > /dev/null ||
+              jq -c '.message = "not built" | .color = "lightgrey"' "$f" > "badges_temp/$f"
+          done
 
           mv badges_temp/*.json .
           git add *.json
@@ -208,22 +273,24 @@ jobs:
             --body "$BODY" \
             --label "p2,bug,automated-report"
 
-  warm-llvm-cache:
+  llvm-build:
     needs: update-and-generate
     runs-on: ubuntu-latest
-    # The first build after LLVM moves is expensive by design; this is the one
-    # place per day that pays it.
+    # An uncached commit builds LLVM from source. Head pays that once per day,
+    # and the floor once each time it moves.
     timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.update-and-generate.outputs.llvm_matrix) }}
     env:
-      CRUBIT_LLVM_COMMIT: ${{ needs.update-and-generate.outputs.commit }}
+      CRUBIT_LLVM_COMMIT: ${{ matrix.version }}
+      CRUBIT_LLVM_DEV_DATE: ${{ matrix.dev_date }}
     steps:
       - name: Checkout test-matrix
         uses: actions/checkout@v6
         with:
           ref: test-matrix
           submodules: true
-      - name: Update crubit submodule to main
-        run: git submodule update --init --remote crubit
       # Reuses the same composite action main's CI uses, so the Bazel
       # configuration (and therefore the action cache keys) match.
       - name: Setup CI
@@ -231,15 +298,34 @@ jobs:
         with:
           gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
           bazel: 'true'
-          llvm: 'none'    # the commit comes from the job env, above
-      - name: Build against today's LLVM
+          llvm: 'none'    # the commit and its date come from the matrix
+      - name: Build against ${{ matrix.id }}
         run: |
           cd crubit
           bazelisk build --lockfile_mode=error \
             rs_bindings_from_cc:rs_bindings_from_cc_main
 
+      - name: Create Badge JSON
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          COLOR="brightgreen"
+          MESSAGE="passing"
+          if [ "$STATUS" != "success" ]; then
+            COLOR="red"
+            MESSAGE="failing"
+          fi
+          echo "{\"schemaVersion\": 1, \"label\": \"${{ matrix.label }}\", \"message\": \"$MESSAGE\", \"color\": \"$COLOR\"}" > ${{ matrix.id }}.json
+
+      - name: Upload JSON Artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: badge-${{ matrix.id }}
+          path: ${{ matrix.id }}.json
+
   notify-llvm-failure:
-    needs: warm-llvm-cache
+    needs: llvm-build
     if: failure()
     runs-on: ubuntu-latest
     steps:
@@ -250,9 +336,12 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TEAM_HANDLE: "@google/crubit-readers"
         run: |
-          TITLE="🚨 LLVM head build failure: $(date +'%Y-%m-%d')"
-          BODY="Attention $TEAM_HANDLE: building Crubit against today's pinned LLVM commit failed.
-          The commit has already been published to \`llvm_commit.txt\` on \`test-matrix\`, so PR CI is using it. If this is an upstream breakage, roll back by editing that file to the previous SHA and pushing.
+          TITLE="🚨 LLVM build failure: $(date +'%Y-%m-%d')"
+          BODY="Attention $TEAM_HANDLE: building Crubit against one or more LLVM commits failed.
+
+          - **Head:** already published to \`llvm_commit.txt\` on \`test-matrix\`, so PR CI is using it. If this is an upstream breakage, roll back by editing that file to the previous SHA and pushing.
+          - **The floor:** Crubit no longer builds against the oldest LLVM that \`bazel/llvm_floor.txt\` claims. Fix Crubit, or raise the floor there if dropping that LLVM is deliberate.
+
           **Run Details:** [View Workflow Run](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)"
           gh issue create \
             --title "$TITLE" \
