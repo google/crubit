@@ -15,6 +15,19 @@ using AliasedDebuggable CRUBIT_MUST_BIND = Debuggable;
 
 struct CRUBIT_MUST_BIND CRUBIT_OVERRIDE_DEBUG(false) OptOut {};
 
+struct CRUBIT_MUST_BIND NonCopy {
+  NonCopy() = default;
+  NonCopy(const NonCopy&) = delete;
+  NonCopy& operator=(const NonCopy&) = delete;
+  NonCopy(NonCopy&&) = default;
+  NonCopy& operator=(NonCopy&&) = default;
+};
+
+struct CRUBIT_MUST_BIND HasMutableFields {
+  mutable int i = 0;
+  mutable NonCopy non_copy;
+};
+
 enum class CRUBIT_MUST_BIND Enum { kOne = 1 };
 
 union CRUBIT_MUST_BIND Union {

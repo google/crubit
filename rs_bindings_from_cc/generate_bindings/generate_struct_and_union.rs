@@ -140,6 +140,11 @@ fn debug_printed_field_rs_type_kind(
         return None;
     }
     let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field).ok()?;
+    if field.is_mutable() && !field_rs_type_kind.implements_copy() {
+        // Crubit binds `mutable` fields to `Cell<T>`, which only implements `Debug` when
+        // `T: Copy + Debug`.
+        return None;
+    }
     if record.is_packed() && type_has_repr_align(db, &field_rs_type_kind) {
         // Represented as a blob of bytes.
         return None;
