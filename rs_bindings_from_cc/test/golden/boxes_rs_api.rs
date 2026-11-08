@@ -642,7 +642,7 @@ impl Default
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1Ev(&raw mut tmp as*mut _);
+            crate::detail::__rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1Ev(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -657,7 +657,7 @@ impl From<crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>
         let mut __x = ::core::mem::MaybeUninit::new(__x);
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1ES6_(&raw mut tmp as*mut _,__x.as_mut_ptr());
+            crate::detail::__rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1ES6_(&raw mut tmp as*mut _,__x.as_mut_ptr());
             tmp.assume_init()
         }
     }
@@ -688,7 +688,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ipkn4test10_
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE,
             >::uninit();
-            crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
+            crate::detail::__rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
             __crubit_return.assume_init()
         }
     }
@@ -727,7 +727,7 @@ impl Default for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiE
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1Ev(&raw mut tmp as*mut _);
+            crate::detail::__rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1Ev(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -742,7 +742,7 @@ impl From<crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE>
         let mut __x = ::core::mem::MaybeUninit::new(__x);
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1ES4_(&raw mut tmp as*mut _,__x.as_mut_ptr());
+            crate::detail::__rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1ES4_(&raw mut tmp as*mut _,__x.as_mut_ptr());
             tmp.assume_init()
         }
     }
@@ -769,7 +769,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ip_ki_eeee {
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
             >::uninit();
-            crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
+            crate::detail::__rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
             __crubit_return.assume_init()
         }
     }
@@ -814,7 +814,7 @@ impl Default
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1Ev(&raw mut tmp as*mut _);
+            crate::detail::__rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1Ev(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -829,7 +829,7 @@ impl From<crate::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>
         let mut __x = ::core::mem::MaybeUninit::new(__x);
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1ES5_(&raw mut tmp as*mut _,__x.as_mut_ptr());
+            crate::detail::__rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1ES5_(&raw mut tmp as*mut _,__x.as_mut_ptr());
             tmp.assume_init()
         }
     }
@@ -860,7 +860,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ipn4test10_n
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE,
             >::uninit();
-            crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
+            crate::detail::__rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
             __crubit_return.assume_init()
         }
     }
@@ -899,7 +899,7 @@ impl Default for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEE
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1Ev(&raw mut tmp as*mut _);
+            crate::detail::__rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1Ev(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -914,7 +914,7 @@ impl From<crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE>
         let mut __x = ::core::mem::MaybeUninit::new(__x);
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1ES3_(&raw mut tmp as*mut _,__x.as_mut_ptr());
+            crate::detail::__rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1ES3_(&raw mut tmp as*mut _,__x.as_mut_ptr());
             tmp.assume_init()
         }
     }
@@ -941,7 +941,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_i_pi_eeee {
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
             >::uninit();
-            crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
+            crate::detail::__rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
             __crubit_return.assume_init()
         }
     }
@@ -971,7 +971,7 @@ impl Default for __CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEC1Ev(
+            crate::detail::__rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEC1Ev(
                 &raw mut tmp as *mut _,
             );
             tmp.assume_init()
@@ -989,7 +989,7 @@ impl<'__this> ::core::ops::Add<isize>
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE,
             >::uninit();
-            crate::detail::__rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEplEl(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__n);
+            crate::detail::__rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEplEl(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__n);
             __crubit_return.assume_init()
         }
     }
@@ -1001,7 +1001,7 @@ impl ::core::ops::AddAssign<isize>
     #[inline(always)]
     fn add_assign<'__this>(&'__this mut self, __n: isize) {
         unsafe {
-            crate::detail::__rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEpLEl(
+            crate::detail::__rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEpLEl(
                 self, __n,
             );
         }
@@ -1018,7 +1018,7 @@ impl<'__this> ::core::ops::Sub<isize>
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE,
             >::uninit();
-            crate::detail::__rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEmiEl(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__n);
+            crate::detail::__rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEmiEl(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__n);
             __crubit_return.assume_init()
         }
     }
@@ -1030,7 +1030,7 @@ impl ::core::ops::SubAssign<isize>
     #[inline(always)]
     fn sub_assign<'__this>(&'__this mut self, __n: isize) {
         unsafe {
-            crate::detail::__rust_thunk__06934629__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEmIEl(
+            crate::detail::__rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEmIEl(
                 self, __n,
             );
         }
@@ -1042,7 +1042,7 @@ impl ::operator::CcIndex<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPKN4tes
     #[inline(always)]
     fn cc_index<'ctnr>(&'ctnr self, __n: isize) -> Self::Output<'ctnr> {
         unsafe {
-            crate::detail::__rust_thunk__8a7bd168__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEixEl(
+            crate::detail::__rust_thunk__3dcfade5__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEixEl(
                 self, __n,
             )
         }
@@ -1080,7 +1080,7 @@ impl Default for __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPKiEC1Ev(
+            crate::detail::__rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPKiEC1Ev(
                 &raw mut tmp as *mut _,
             );
             tmp.assume_init()
@@ -1098,7 +1098,7 @@ impl<'__this> ::core::ops::Add<isize>
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
             >::uninit();
-            crate::detail::__rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPKiEplEl(
+            crate::detail::__rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPKiEplEl(
                 &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 self,
                 __n,
@@ -1112,7 +1112,7 @@ impl ::core::ops::AddAssign<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPKiE
     #[inline(always)]
     fn add_assign<'__this>(&'__this mut self, __n: isize) {
         unsafe {
-            crate::detail::__rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPKiEpLEl(self, __n);
+            crate::detail::__rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPKiEpLEl(self, __n);
         }
     }
 }
@@ -1127,7 +1127,7 @@ impl<'__this> ::core::ops::Sub<isize>
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
             >::uninit();
-            crate::detail::__rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPKiEmiEl(
+            crate::detail::__rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPKiEmiEl(
                 &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 self,
                 __n,
@@ -1141,7 +1141,7 @@ impl ::core::ops::SubAssign<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPKiE
     #[inline(always)]
     fn sub_assign<'__this>(&'__this mut self, __n: isize) {
         unsafe {
-            crate::detail::__rust_thunk__06934629__ZNSt3__u11__wrap_iterIPKiEmIEl(self, __n);
+            crate::detail::__rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPKiEmIEl(self, __n);
         }
     }
 }
@@ -1150,7 +1150,7 @@ impl ::operator::CcIndex<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
     type Output<'ctnr> = &'ctnr ::ffi_11::c_int;
     #[inline(always)]
     fn cc_index<'ctnr>(&'ctnr self, __n: isize) -> Self::Output<'ctnr> {
-        unsafe { crate::detail::__rust_thunk__8a7bd168__ZNKSt3__u11__wrap_iterIPKiEixEl(self, __n) }
+        unsafe { crate::detail::__rust_thunk__3dcfade5__ZNKSt3__u11__wrap_iterIPKiEixEl(self, __n) }
     }
 }
 impl ::core::ops::Index<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
@@ -1185,7 +1185,7 @@ impl Default for __CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEC1Ev(
+            crate::detail::__rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEC1Ev(
                 &raw mut tmp as *mut _,
             );
             tmp.assume_init()
@@ -1203,7 +1203,7 @@ impl<'__this> ::core::ops::Add<isize>
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE,
             >::uninit();
-            crate::detail::__rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEplEl(
+            crate::detail::__rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEplEl(
                 &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 self,
                 __n,
@@ -1217,7 +1217,7 @@ impl ::core::ops::AddAssign<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPN4t
     #[inline(always)]
     fn add_assign<'__this>(&'__this mut self, __n: isize) {
         unsafe {
-            crate::detail::__rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEpLEl(
+            crate::detail::__rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEpLEl(
                 self, __n,
             );
         }
@@ -1234,7 +1234,7 @@ impl<'__this> ::core::ops::Sub<isize>
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE,
             >::uninit();
-            crate::detail::__rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEmiEl(
+            crate::detail::__rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEmiEl(
                 &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 self,
                 __n,
@@ -1248,7 +1248,7 @@ impl ::core::ops::SubAssign<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPN4t
     #[inline(always)]
     fn sub_assign<'__this>(&'__this mut self, __n: isize) {
         unsafe {
-            crate::detail::__rust_thunk__06934629__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEmIEl(
+            crate::detail::__rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEmIEl(
                 self, __n,
             );
         }
@@ -1279,7 +1279,7 @@ impl Default for __CcTemplateInstNSt3__u11__wrap_iterIPiEE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPiEC1Ev(
+            crate::detail::__rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPiEC1Ev(
                 &raw mut tmp as *mut _,
             );
             tmp.assume_init()
@@ -1297,7 +1297,7 @@ impl<'__this> ::core::ops::Add<isize>
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
             >::uninit();
-            crate::detail::__rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPiEplEl(
+            crate::detail::__rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPiEplEl(
                 &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 self,
                 __n,
@@ -1311,7 +1311,7 @@ impl ::core::ops::AddAssign<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPiEE
     #[inline(always)]
     fn add_assign<'__this>(&'__this mut self, __n: isize) {
         unsafe {
-            crate::detail::__rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPiEpLEl(self, __n);
+            crate::detail::__rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPiEpLEl(self, __n);
         }
     }
 }
@@ -1326,7 +1326,7 @@ impl<'__this> ::core::ops::Sub<isize>
             let mut __crubit_return = ::core::mem::MaybeUninit::<
                 crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
             >::uninit();
-            crate::detail::__rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPiEmiEl(
+            crate::detail::__rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPiEmiEl(
                 &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 self,
                 __n,
@@ -1340,7 +1340,7 @@ impl ::core::ops::SubAssign<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPiEE
     #[inline(always)]
     fn sub_assign<'__this>(&'__this mut self, __n: isize) {
         unsafe {
-            crate::detail::__rust_thunk__06934629__ZNSt3__u11__wrap_iterIPiEmIEl(self, __n);
+            crate::detail::__rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPiEmIEl(self, __n);
         }
     }
 }
@@ -2798,165 +2798,165 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk__2f3b1219__ZNKSt16initializer_listIiE3endEv<'__this>(
             __this: &'__this crate::__CcTemplateInstSt16initializer_listIiE,
         ) -> *const ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1ES6_(
+        pub(crate) unsafe fn __rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1ES6_(
             __this: *mut ::core::ffi::c_void,
             __x: *mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE,
         );
-        pub(crate) unsafe fn __rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEE4baseEv<
+        pub(crate) unsafe fn __rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEE4baseEv<
             '__this,
         >(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE,
         );
-        pub(crate) unsafe fn __rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1ES4_(
+        pub(crate) unsafe fn __rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1ES4_(
             __this: *mut ::core::ffi::c_void,
             __x: *mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
         );
-        pub(crate) unsafe fn __rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEE4baseEv<
+        pub(crate) unsafe fn __rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEE4baseEv<
             '__this,
         >(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE,
         );
-        pub(crate) unsafe fn __rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1ES5_(
+        pub(crate) unsafe fn __rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1ES5_(
             __this: *mut ::core::ffi::c_void,
             __x: *mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE,
         );
-        pub(crate) unsafe fn __rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEE4baseEv<
+        pub(crate) unsafe fn __rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEE4baseEv<
             '__this,
         >(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE,
         );
-        pub(crate) unsafe fn __rust_thunk__9fcfbc27__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__34c90dec__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1ES3_(
+        pub(crate) unsafe fn __rust_thunk__466217a1__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEC1ES3_(
             __this: *mut ::core::ffi::c_void,
             __x: *mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
         );
-        pub(crate) unsafe fn __rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEE4baseEv<
+        pub(crate) unsafe fn __rust_thunk__fc29d7fd__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEE4baseEv<
             '__this,
         >(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE,
         );
-        pub(crate) unsafe fn __rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEplEl<
+        pub(crate) unsafe fn __rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEplEl<
             '__this,
         >(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE,
             __n: isize,
         );
-        pub(crate) unsafe fn __rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEpLEl<
+        pub(crate) unsafe fn __rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEpLEl<
             '__this,
         >(
             __this: &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE,
             __n: isize,
         ) -> &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE;
-        pub(crate) unsafe fn __rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEmiEl<
+        pub(crate) unsafe fn __rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEmiEl<
             '__this,
         >(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE,
             __n: isize,
         );
-        pub(crate) unsafe fn __rust_thunk__06934629__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEmIEl<
+        pub(crate) unsafe fn __rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPKN4test10NonTrivialEEmIEl<
             '__this,
         >(
             __this: &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE,
             __n: isize,
         ) -> &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE;
-        pub(crate) unsafe fn __rust_thunk__8a7bd168__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEixEl<
+        pub(crate) unsafe fn __rust_thunk__3dcfade5__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEixEl<
             '__this,
         >(
             __this: &'__this crate::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE,
             __n: isize,
         ) -> &'__this crate::test::NonTrivial;
-        pub(crate) unsafe fn __rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPKiEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPKiEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPKiEplEl<'__this>(
+        pub(crate) unsafe fn __rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPKiEplEl<'__this>(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
             __n: isize,
         );
-        pub(crate) unsafe fn __rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPKiEpLEl<'__this>(
+        pub(crate) unsafe fn __rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPKiEpLEl<'__this>(
             __this: &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
             __n: isize,
         ) -> &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE;
-        pub(crate) unsafe fn __rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPKiEmiEl<'__this>(
+        pub(crate) unsafe fn __rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPKiEmiEl<'__this>(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
             __n: isize,
         );
-        pub(crate) unsafe fn __rust_thunk__06934629__ZNSt3__u11__wrap_iterIPKiEmIEl<'__this>(
+        pub(crate) unsafe fn __rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPKiEmIEl<'__this>(
             __this: &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
             __n: isize,
         ) -> &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE;
-        pub(crate) unsafe fn __rust_thunk__8a7bd168__ZNKSt3__u11__wrap_iterIPKiEixEl<'__this>(
+        pub(crate) unsafe fn __rust_thunk__3dcfade5__ZNKSt3__u11__wrap_iterIPKiEixEl<'__this>(
             __this: &'__this crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
             __n: isize,
         ) -> &'__this ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEplEl<
+        pub(crate) unsafe fn __rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEplEl<
             '__this,
         >(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE,
             __n: isize,
         );
-        pub(crate) unsafe fn __rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEpLEl<
+        pub(crate) unsafe fn __rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEpLEl<
             '__this,
         >(
             __this: &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE,
             __n: isize,
         ) -> &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE;
-        pub(crate) unsafe fn __rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEmiEl<
+        pub(crate) unsafe fn __rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEmiEl<
             '__this,
         >(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE,
             __n: isize,
         );
-        pub(crate) unsafe fn __rust_thunk__06934629__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEmIEl<
+        pub(crate) unsafe fn __rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPN4test10NonTrivialEEmIEl<
             '__this,
         >(
             __this: &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE,
             __n: isize,
         ) -> &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE;
-        pub(crate) unsafe fn __rust_thunk__a737e951__ZNSt3__u11__wrap_iterIPiEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__27ad6cd0__ZNSt3__u11__wrap_iterIPiEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPiEplEl<'__this>(
+        pub(crate) unsafe fn __rust_thunk__d9068c5b__ZNKSt3__u11__wrap_iterIPiEplEl<'__this>(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
             __n: isize,
         );
-        pub(crate) unsafe fn __rust_thunk__297a4c06__ZNSt3__u11__wrap_iterIPiEpLEl<'__this>(
+        pub(crate) unsafe fn __rust_thunk__ed7b06d0__ZNSt3__u11__wrap_iterIPiEpLEl<'__this>(
             __this: &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
             __n: isize,
         ) -> &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE;
-        pub(crate) unsafe fn __rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPiEmiEl<'__this>(
+        pub(crate) unsafe fn __rust_thunk__58f1a91b__ZNKSt3__u11__wrap_iterIPiEmiEl<'__this>(
             __return: *mut ::core::ffi::c_void,
             __this: &'__this crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
             __n: isize,
         );
-        pub(crate) unsafe fn __rust_thunk__06934629__ZNSt3__u11__wrap_iterIPiEmIEl<'__this>(
+        pub(crate) unsafe fn __rust_thunk__ebbbe4fe__ZNSt3__u11__wrap_iterIPiEmIEl<'__this>(
             __this: &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
             __n: isize,
         ) -> &'__this mut crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE;

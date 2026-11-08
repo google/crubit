@@ -102,7 +102,7 @@ impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__e38fd5b5__ZNSt3__u16reverse_iteratorIPKcEC1Ev(
+            crate::detail::__rust_thunk__046f2d88__ZNSt3__u16reverse_iteratorIPKcEC1Ev(
                 &raw mut tmp as *mut _,
             );
             tmp.assume_init()
@@ -122,7 +122,7 @@ impl ::ctor::UnsafeFrom<*const ::ffi_11::c_char>
         let mut __x = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__041ba35f__ZNSt3__u16reverse_iteratorIPKcEC1ES2_(
+            crate::detail::__rust_thunk__9d7a113a__ZNSt3__u16reverse_iteratorIPKcEC1ES2_(
                 &raw mut tmp as *mut _,
                 __x,
             );
@@ -149,7 +149,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ip_kc_ee {
         __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
     ) -> *const ::ffi_11::c_char {
         unsafe {
-            crate::detail::__rust_thunk__0c525269__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(__this)
+            crate::detail::__rust_thunk__74bf6f6f__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(__this)
         }
     }
 }
@@ -178,7 +178,7 @@ impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__e38fd5b5__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
+            crate::detail::__rust_thunk__046f2d88__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
                 &raw mut tmp as *mut _,
             );
             tmp.assume_init()
@@ -221,19 +221,19 @@ mod detail {
             x: *mut ::cc_std::std::string_view<'a>,
             y: *mut ::cc_std::std::string_view<'a>,
         );
-        pub(crate) unsafe fn __rust_thunk__e38fd5b5__ZNSt3__u16reverse_iteratorIPKcEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__046f2d88__ZNSt3__u16reverse_iteratorIPKcEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__041ba35f__ZNSt3__u16reverse_iteratorIPKcEC1ES2_(
+        pub(crate) unsafe fn __rust_thunk__9d7a113a__ZNSt3__u16reverse_iteratorIPKcEC1ES2_(
             __this: *mut ::core::ffi::c_void,
             __x: *const ::ffi_11::c_char,
         );
-        pub(crate) unsafe fn __rust_thunk__0c525269__ZNKSt3__u16reverse_iteratorIPKcE4baseEv<
+        pub(crate) unsafe fn __rust_thunk__74bf6f6f__ZNKSt3__u16reverse_iteratorIPKcE4baseEv<
             '__this,
         >(
             __this: &'__this crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
         ) -> *const ::ffi_11::c_char;
-        pub(crate) unsafe fn __rust_thunk__e38fd5b5__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__046f2d88__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
     }

@@ -54,18 +54,18 @@ struct Base {
   virtual bool is_derived() const { return false; }
 };
 struct Derived : public Base {
-  explicit Derived(int* absl_nullable count) : count(count) {}
+  explicit Derived(int* count) : count(count) {}
   ~Derived() override {
     if (count != nullptr) {
       (*count)++;
     }
   }
   bool is_derived() const override { return true; }
-  int* absl_nullable count = nullptr;
+  int* count = nullptr;
 };
 
 CRUBIT_MUST_BIND inline absl_nonnull std::shared_ptr<Base> create_virtual_base(
-    int* absl_nullable count) {
+    int* count) {
   return std::make_shared<Derived>(count);
 }
 
@@ -78,7 +78,7 @@ CRUBIT_MUST_BIND inline std::unique_ptr<int> create_null_unique_ptr() {
 }
 
 CRUBIT_MUST_BIND inline absl_nonnull std::unique_ptr<Base>
-create_virtual_unique_base(int* absl_nullable count) {
+create_virtual_unique_base(int* count) {
   return std::make_unique<Derived>(count);
 }
 

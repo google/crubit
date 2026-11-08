@@ -198,20 +198,20 @@ static_assert(
     8);
 
 extern "C" void
-__rust_thunk__687579d4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1Ev(
+__rust_thunk__12254c19__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1Ev(
     class std::reverse_iterator<class std::__wrap_iter<const int*>>* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
-__rust_thunk__3d46f6bb__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1ES4_(
+__rust_thunk__b1a7fc4d__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEC1ES4_(
     class std::reverse_iterator<class std::__wrap_iter<const int*>>* __this,
     class std::__wrap_iter<const int*>* __x) {
   crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(__x));
 }
 
 extern "C" void
-__rust_thunk__91e2ce8a__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEE4baseEv(
+__rust_thunk__44ef6cb1__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEE4baseEv(
     class std::__wrap_iter<const int*>* __return,
     class std::reverse_iterator<class std::__wrap_iter<const int*>> const*
         __this) {
@@ -232,7 +232,7 @@ static_assert(alignof(class std::reverse_iterator<
                           char, struct std::char_traits<char>>*>>) == 8);
 
 extern "C" void
-__rust_thunk__687579d4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEC1Ev(
+__rust_thunk__12254c19__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEC1Ev(
     class std::reverse_iterator<class std::__wrap_iter<
         class std::basic_string_view<char, struct std::char_traits<char>>*>>*
         __this) {
@@ -240,7 +240,7 @@ __rust_thunk__687579d4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_
 }
 
 extern "C" void
-__rust_thunk__3d46f6bb__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEC1ES7_(
+__rust_thunk__b1a7fc4d__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEC1ES7_(
     class std::reverse_iterator<class std::__wrap_iter<
         class std::basic_string_view<char, struct std::char_traits<char>>*>>*
         __this,
@@ -251,7 +251,7 @@ __rust_thunk__3d46f6bb__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_
 }
 
 extern "C" void
-__rust_thunk__91e2ce8a__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEE4baseEv(
+__rust_thunk__44ef6cb1__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEE4baseEv(
     class std::__wrap_iter<class std::basic_string_view<
         char, struct std::char_traits<char>>*>* __return,
     class std::reverse_iterator<
@@ -272,18 +272,18 @@ static_assert(
 static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<const char*>) == 8);
 static_assert(alignof(class std::reverse_iterator<const char*>) == 8);
 
-extern "C" void __rust_thunk__687579d4__ZNSt3__u16reverse_iteratorIPKcEC1Ev(
+extern "C" void __rust_thunk__12254c19__ZNSt3__u16reverse_iteratorIPKcEC1Ev(
     class std::reverse_iterator<const char*>* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk__3d46f6bb__ZNSt3__u16reverse_iteratorIPKcEC1ES2_(
+extern "C" void __rust_thunk__b1a7fc4d__ZNSt3__u16reverse_iteratorIPKcEC1ES2_(
     class std::reverse_iterator<const char*>* __this, char const* __x) {
   crubit::construct_at(__this, __x);
 }
 
 extern "C" char const*
-__rust_thunk__91e2ce8a__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(
+__rust_thunk__44ef6cb1__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(
     class std::reverse_iterator<const char*> const* __this) {
   return __this->base();
 }
@@ -294,7 +294,7 @@ static_assert((char const* (::std::reverse_iterator<const char*>::*)() const) &
 static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<const wchar_t*>) == 8);
 static_assert(alignof(class std::reverse_iterator<const wchar_t*>) == 8);
 
-extern "C" void __rust_thunk__687579d4__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
+extern "C" void __rust_thunk__12254c19__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
     class std::reverse_iterator<const wchar_t*>* __this) {
   crubit::construct_at(__this);
 }
@@ -302,12 +302,12 @@ extern "C" void __rust_thunk__687579d4__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
 static_assert(CRUBIT_SIZEOF(class std::__wrap_iter<const int*>) == 8);
 static_assert(alignof(class std::__wrap_iter<const int*>) == 8);
 
-extern "C" void __rust_thunk__eefb2482__ZNSt3__u11__wrap_iterIPKiEC1Ev(
+extern "C" void __rust_thunk__b4336fca__ZNSt3__u11__wrap_iterIPKiEC1Ev(
     class std::__wrap_iter<const int*>* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk__00de7d8e__ZNKSt3__u11__wrap_iterIPKiEplEl(
+extern "C" void __rust_thunk__2f32272b__ZNKSt3__u11__wrap_iterIPKiEplEl(
     class std::__wrap_iter<const int*>* __return,
     class std::__wrap_iter<const int*> const* __this, ptrdiff_t __n) {
   new (__return) auto(__this->operator+(__n));
@@ -318,7 +318,7 @@ static_assert((class std::__wrap_iter<const int*> (
               ::std::__wrap_iter<const int*>::operator+);
 
 extern "C" class std::__wrap_iter<const int*>*
-__rust_thunk__e75d0a75__ZNSt3__u11__wrap_iterIPKiEpLEl(
+__rust_thunk__ebd93561__ZNSt3__u11__wrap_iterIPKiEpLEl(
     class std::__wrap_iter<const int*>* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator+=(__n));
 }
@@ -327,7 +327,7 @@ static_assert((class std::__wrap_iter<const int*> &
                (::std::__wrap_iter<const int*>::*)(ptrdiff_t)) &
               ::std::__wrap_iter<const int*>::operator+=);
 
-extern "C" void __rust_thunk__28ba32d4__ZNKSt3__u11__wrap_iterIPKiEmiEl(
+extern "C" void __rust_thunk__6caa0065__ZNKSt3__u11__wrap_iterIPKiEmiEl(
     class std::__wrap_iter<const int*>* __return,
     class std::__wrap_iter<const int*> const* __this, ptrdiff_t __n) {
   new (__return) auto(__this->operator-(__n));
@@ -338,7 +338,7 @@ static_assert((class std::__wrap_iter<const int*> (
               ::std::__wrap_iter<const int*>::operator-);
 
 extern "C" class std::__wrap_iter<const int*>*
-__rust_thunk__5d595711__ZNSt3__u11__wrap_iterIPKiEmIEl(
+__rust_thunk__b6912148__ZNSt3__u11__wrap_iterIPKiEmIEl(
     class std::__wrap_iter<const int*>* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator-=(__n));
 }
@@ -347,7 +347,7 @@ static_assert((class std::__wrap_iter<const int*> &
                (::std::__wrap_iter<const int*>::*)(ptrdiff_t)) &
               ::std::__wrap_iter<const int*>::operator-=);
 
-extern "C" int const* __rust_thunk__ab13c73d__ZNKSt3__u11__wrap_iterIPKiEixEl(
+extern "C" int const* __rust_thunk__6dc0ff60__ZNKSt3__u11__wrap_iterIPKiEixEl(
     class std::__wrap_iter<const int*> const* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator[](__n));
 }
@@ -362,7 +362,7 @@ static_assert(alignof(class std::__wrap_iter<class std::basic_string_view<
                           char, struct std::char_traits<char>>*>) == 8);
 
 extern "C" void
-__rust_thunk__eefb2482__ZNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEC1Ev(
+__rust_thunk__b4336fca__ZNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEC1Ev(
     class std::__wrap_iter<
         class std::basic_string_view<char, struct std::char_traits<char>>*>*
         __this) {
@@ -370,7 +370,7 @@ __rust_thunk__eefb2482__ZNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char
 }
 
 extern "C" void
-__rust_thunk__00de7d8e__ZNKSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEplEl(
+__rust_thunk__2f32272b__ZNKSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEplEl(
     class std::__wrap_iter<class std::basic_string_view<
         char, struct std::char_traits<char>>*>* __return,
     class std::__wrap_iter<class std::basic_string_view<
@@ -389,7 +389,7 @@ static_assert(
 
 extern "C" class std::__wrap_iter<
     class std::basic_string_view<char, struct std::char_traits<char>>*>*
-__rust_thunk__e75d0a75__ZNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEpLEl(
+__rust_thunk__ebd93561__ZNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEpLEl(
     class std::__wrap_iter<class std::basic_string_view<
         char, struct std::char_traits<char>>*>* __this,
     ptrdiff_t __n) {
@@ -405,7 +405,7 @@ static_assert(
         char, struct std::char_traits<char>>*>::operator+=);
 
 extern "C" void
-__rust_thunk__28ba32d4__ZNKSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEmiEl(
+__rust_thunk__6caa0065__ZNKSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEmiEl(
     class std::__wrap_iter<class std::basic_string_view<
         char, struct std::char_traits<char>>*>* __return,
     class std::__wrap_iter<class std::basic_string_view<
@@ -424,7 +424,7 @@ static_assert(
 
 extern "C" class std::__wrap_iter<
     class std::basic_string_view<char, struct std::char_traits<char>>*>*
-__rust_thunk__5d595711__ZNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEmIEl(
+__rust_thunk__b6912148__ZNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEmIEl(
     class std::__wrap_iter<class std::basic_string_view<
         char, struct std::char_traits<char>>*>* __this,
     ptrdiff_t __n) {
