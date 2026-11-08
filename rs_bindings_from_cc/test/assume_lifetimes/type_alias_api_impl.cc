@@ -46,18 +46,18 @@ __rust_thunk___ZN13TypeAliasCtorC1ENSt3__u17basic_string_viewIcNS0_11char_traits
 static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<const char*>) == 8);
 static_assert(alignof(class std::reverse_iterator<const char*>) == 8);
 
-extern "C" void __rust_thunk__2e045c9c__ZNSt3__u16reverse_iteratorIPKcEC1Ev(
+extern "C" void __rust_thunk__63d556e1__ZNSt3__u16reverse_iteratorIPKcEC1Ev(
     class std::reverse_iterator<const char*>* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk__08100a92__ZNSt3__u16reverse_iteratorIPKcEC1ES2_(
+extern "C" void __rust_thunk__9cfa002e__ZNSt3__u16reverse_iteratorIPKcEC1ES2_(
     class std::reverse_iterator<const char*>* __this, char const* __x) {
   crubit::construct_at(__this, __x);
 }
 
 extern "C" char const*
-__rust_thunk__6ba6b233__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(
+__rust_thunk__1b6af95a__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(
     class std::reverse_iterator<const char*> const* __this) {
   return __this->base();
 }
@@ -68,7 +68,7 @@ static_assert((char const* (::std::reverse_iterator<const char*>::*)() const) &
 static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<const wchar_t*>) == 8);
 static_assert(alignof(class std::reverse_iterator<const wchar_t*>) == 8);
 
-extern "C" void __rust_thunk__2e045c9c__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
+extern "C" void __rust_thunk__63d556e1__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
     class std::reverse_iterator<const wchar_t*>* __this) {
   crubit::construct_at(__this);
 }
