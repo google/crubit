@@ -63,7 +63,8 @@ pub fn generate_incomplete_record(
     let features = db.ir().target_crubit_features(&incomplete_record.owning_target().unwrap());
     let cc_type = format_nonportable_cc_type_name(incomplete_record.cc_name().as_str())
         .expect("IncompleteRecord has invalid type name");
-    let namespace_qualifier = db.namespace_qualifier(&incomplete_record).format_for_cc(features)?;
+    let namespace_qualifier =
+        db.cc_namespace_qualifier(&incomplete_record).format_for_cc(features)?;
     Ok(ApiSnippets {
         generated_items: HashMap::from([(
             incomplete_record.id(),
@@ -1111,6 +1112,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
             db.is_golden_test(),
             db.kythe_annotations(),
         ),
+        doc_hidden: record.is_rs_name_mangled(),
         derive_attr: generate_derives(&record),
         recursively_pinned_attr,
         must_use_attr: record.nodiscard().map(|s| MustUseAttr(Rc::from(s))),
@@ -1303,7 +1305,7 @@ pub fn generate_derives(record: &Record) -> DeriveAttr {
 
 fn cc_struct_layout_assertion(db: &BindingsGenerator, record: &Record) -> Result<ThunkImpl> {
     let features = db.ir().target_crubit_features(record.owning_target());
-    let namespace_qualifier = db.namespace_qualifier(record).format_for_cc(features)?;
+    let namespace_qualifier = db.cc_namespace_qualifier(record).format_for_cc(features)?;
     let fields_and_expected_offsets: Vec<(TokenStream, usize)> = record
         .fields()
         .iter()

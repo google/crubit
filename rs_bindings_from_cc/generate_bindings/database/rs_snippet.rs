@@ -2023,12 +2023,20 @@ impl RsTypeKind {
                     crate_path.namespace_qualifier.format_for_cc_debug(),
                     enum_.cc_name()
                 )?,
-                RsTypeKind::Record { record, crate_path, .. } => write!(
-                    f,
-                    "{}{}",
-                    crate_path.namespace_qualifier.format_for_cc_debug(),
-                    record.cc_name()
-                )?,
+                RsTypeKind::Record { record, crate_path, .. } => {
+                    // The C++ name of an instantiation that is named after a type alias is already
+                    // fully qualified, and its Rust namespace is that of the alias.
+                    if record.mangled_rs_name().is_some() {
+                        write!(f, "{}", record.cc_name())?
+                    } else {
+                        write!(
+                            f,
+                            "{}{}",
+                            crate_path.namespace_qualifier.format_for_cc_debug(),
+                            record.cc_name()
+                        )?
+                    }
+                }
                 RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => write!(
                     f,
                     "{}{}",

@@ -35,6 +35,7 @@ pub fn NotBoundCaller(i: crate::__CcTemplateInst10NotBoundTsIifE) {
     unsafe { crate::detail::__rust_thunk___Z14NotBoundCaller10NotBoundTsIifE(i.as_mut_ptr()) }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst13AlwaysBoundTsIifE"]
 #[repr(C)]
@@ -96,6 +97,7 @@ pub mod cc_template_inst13_always_bound_ts_iif_e {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10NotBoundTsIifE"]
 #[repr(C)]

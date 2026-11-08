@@ -143,6 +143,7 @@ pub mod lib_ns {
 // namespace lib_ns
 
 /// Not Rust-movable: std::function may store its callable inline with a self-pointer
+#[doc(hidden)]
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE"]
 #[repr(C, align(8))]

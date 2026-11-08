@@ -1025,6 +1025,10 @@ impl TemplateSpecialization {
     }
 }
 
+/// The prefix of the Rust name of a class template instantiation which isn't
+/// named after a type alias. It is followed by the mangled C++ name.
+pub const CC_TEMPLATE_INST_PREFIX: &str = "__CcTemplateInst";
+
 impl Record {
     pub fn is_packed(&self) -> bool {
         self.pack().is_some()
@@ -1054,6 +1058,13 @@ impl Record {
     /// docs/design/unpin.md for more details.
     pub fn is_unpin(&self) -> bool {
         self.is_rust_movable()
+    }
+
+    /// Whether `rs_name` is a mangled `__CcTemplateInst...` name, which is not
+    /// meant to be read (or written) by humans.
+    pub fn is_rs_name_mangled(&self) -> bool {
+        self.template_specialization().is_some()
+            && self.rs_name().as_str().starts_with(CC_TEMPLATE_INST_PREFIX)
     }
 
     // TODO(b/498977848): The record with cc_name

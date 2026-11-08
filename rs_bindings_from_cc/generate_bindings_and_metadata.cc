@@ -146,9 +146,15 @@ llvm::Expected<BindingsAndMetadata> GenerateBindingsAndMetadata(
     std::vector<const ir_proto::Record* _Nonnull> records =
         FindInstantiationsInNamespace(ir, ItemId(ns->id()));
     for (const auto* record : records) {
+      // An instantiation named after a type alias has the name of the alias,
+      // in the alias's module, so `cc_template!` uses the mangled name, which
+      // is always available.
+      std::string_view rs_name = record->has_mangled_rs_name()
+                                     ? record->mangled_rs_name()
+                                     : record->rs_name().identifier();
       instantiations.insert(
           {Identifier(std::string(record->cc_name().identifier())),
-           Identifier(std::string(record->rs_name().identifier()))});
+           Identifier(std::string(rs_name))});
     }
   }
 

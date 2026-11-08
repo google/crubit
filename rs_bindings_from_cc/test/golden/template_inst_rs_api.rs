@@ -27,6 +27,7 @@ pub fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
 #[repr(C)]

@@ -96,6 +96,7 @@ impl ::ctor::PinnedDrop for TypeAliasCtor {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE"]
 #[repr(C, align(8))]
@@ -178,6 +179,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ip_kc_ee {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE"]
 #[repr(C, align(8))]

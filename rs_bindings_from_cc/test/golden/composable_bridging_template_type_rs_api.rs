@@ -28,6 +28,7 @@ pub fn ReturnsValue() -> crate::MyOption<crate::__CcTemplateInst5ValueIiE> {
 }
 
 /// A basic templated type that does nothing fancy.
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst5ValueIiE"]
 #[repr(C)]

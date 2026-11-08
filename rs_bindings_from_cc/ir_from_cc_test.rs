@@ -2257,6 +2257,7 @@ fn test_typedef() -> Result<()> {
             underlying_type: #int,
             ...
             enclosing_item_id: None,
+            names_template_instantiation: false,
             must_bind: false,
             deprecated: None,
             lifetime_inputs: [],
@@ -2277,6 +2278,7 @@ fn test_typedef() -> Result<()> {
             underlying_type: #int,
             ...
             enclosing_item_id: None,
+            names_template_instantiation: false,
             must_bind: false,
             deprecated: None,
             lifetime_inputs: [],
@@ -2364,11 +2366,11 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
         ir,
         quote! {
           Record {
-            rs_name: "__CcTemplateInstN23test_namespace_bindings8MyStructIiEE",
+            rs_name: "MyTypeAlias",
             cc_name: "test_namespace_bindings::MyStruct<int>",
             unique_name: "c:@N@test_namespace_bindings@S@MyStruct>#I", ...
             owning_target: BazelLabel("//test:testing_target"), ...
-            doc_comment: Some("Doc comment of MyStruct template."), ...
+            doc_comment: Some("Doc comment of MyTypeAlias."), ...
             fields: [Field {
                 rust_identifier: Some("value"), ...
                 doc_comment: Some("Doc comment of `value` field."), ...
@@ -2376,14 +2378,13 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
                 access: Public,
                 offset: 0, ...
             }], ...
-            enclosing_item_id: None, ...
           }
         }
     );
     let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id();
-    // Make sure the instantiation of the class template appears exactly once in the
-    // `top_level_items`.
-    assert_eq!(1, ir.top_level_items().iter().filter(|item| item.id() == record_id).count());
+    // The instantiation of the class template is named after `MyTypeAlias`, so it is placed in
+    // the namespace of the alias instead of in the `top_level_items`.
+    assert_eq!(0, ir.top_level_items().iter().filter(|item| item.id() == record_id).count());
     // Type alias for the class template specialization.
     assert_ir_matches!(
         ir,
@@ -2396,6 +2397,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
             underlying_type: CcType {
               variant: Decl{id: ItemId(#record_id) ... }, ...
             }, ...
+            names_template_instantiation: true, ...
           }
         }
     );
@@ -2465,14 +2467,14 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
         ir,
         quote! {
           Record {
-            rs_name: "__CcTemplateInstN23test_namespace_bindings8MyStructIiEE",
+            rs_name: "MyTypeAlias",
             cc_name: "test_namespace_bindings::MyStruct<int>",
             unique_name: "c:@N@test_namespace_bindings@S@MyStruct>#I", ...
             owning_target: BazelLabel("//test:testing_target"),
             template_specialization: Some(TemplateSpecialization { ...
                 defining_target: BazelLabel("//test:testing_target"), ...
             }), ...
-            doc_comment: Some("Doc comment for template specialization for T=int." ...), ...
+            doc_comment: Some("Doc comment of MyTypeAlias." ...), ...
             fields: [Field {
                 rust_identifier: Some("value"), ...
                 doc_comment: Some("Doc comment of the `value` field specialization for T=int." ...), ...
@@ -2480,7 +2482,6 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
                 access: Public,
                 offset: 0, ...
             }], ...
-            enclosing_item_id: None, ...
           }
         }
     );
@@ -2552,12 +2553,14 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
               void MyMethod();
             };
             struct Str {};
-            using Alias1 = MyStruct<int>;
-            using Alias2 = MyStruct<long long>;
-            using Alias3 = MyStruct<Str>;
+            // We use functions to instantiate the templates without providing an eligible alias,
+            // so they retain their mangled names and we can test their determinism.
+            void use1(MyStruct<int>);
+            void use2(MyStruct<long long>);
+            void use3(MyStruct<Str>);
             namespace test_namespace_bindings {
-              using Alias4 = MyStruct<MyStruct<int>>;
-              using Alias5 = MyStruct<bool>;
+              void use4(MyStruct<MyStruct<int>>);
+              void use5(MyStruct<bool>);
             }
             "#,
     )?;
@@ -2677,7 +2680,7 @@ fn test_aliased_class_template_instantiated_in_header() -> Result<()> {
         ir,
         quote! {
           Record {
-            rs_name: "__CcTemplateInst10MyTemplateIiE", ...
+            rs_name: "MyAlias", ...
             cc_name: "MyTemplate<int>", ...
             fields: [Field { rust_identifier: Some("field"), ... }], ...
           }
@@ -2712,7 +2715,7 @@ fn test_aliased_class_template_partially_instantiated_in_header() -> Result<()> 
         ir,
         quote! {
           Record {
-            rs_name: "__CcTemplateInst10MyTemplateIiE", ...
+            rs_name: "MyAlias", ...
             cc_name: "MyTemplate<int>", ...
             fields: [Field { rust_identifier: Some("field"), ... }], ...
           }
@@ -2738,7 +2741,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
         ir,
         quote! {
           Record(Record {
-            rs_name: "__CcTemplateInst8MyStructIJiiEE", ...
+            rs_name: "MyTypeAlias", ...
             cc_name: "MyStruct<int, int>", ...
           }),
         }

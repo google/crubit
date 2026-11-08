@@ -247,6 +247,7 @@ pub fn ReturnsEnumInNamespaceInComposableBridgeType(
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE"]
 #[repr(C, align(8))]
@@ -327,6 +328,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ip_ki_eeee {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE"]
 #[repr(C, align(8))]
@@ -365,6 +367,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ipns_17basic
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE"]
 #[repr(C, align(8))]
@@ -447,6 +450,7 @@ pub mod cc_template_inst_n_st3_u16reverse_iterator_ip_kc_ee {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE"]
 #[repr(C, align(8))]
@@ -478,6 +482,7 @@ impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPKiEE"]
 #[repr(C, align(8))]
@@ -582,6 +587,7 @@ impl ::core::ops::Index<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE"]
 #[repr(C, align(8))]
@@ -642,6 +648,7 @@ impl ::core::ops::SubAssign<isize>
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE"]
 #[repr(C, align(8))]
@@ -972,6 +979,7 @@ pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE"]
 #[repr(C, align(8))]

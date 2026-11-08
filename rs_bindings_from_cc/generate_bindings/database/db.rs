@@ -482,7 +482,7 @@ impl<'db> BindingsGenerator<'db> {
         let item = self.find_untyped_decl(item_id);
         let (id, name): (ir::ItemId, Rc<str>) = match item {
             ir::Item::Func(f) => {
-                let mut name = self.namespace_qualifier_from_id(f.id()).format_for_cc_debug();
+                let mut name = self.cc_namespace_qualifier_from_id(f.id()).format_for_cc_debug();
                 let record_name = || -> Option<Rc<str>> {
                     if let Some(parent_id) = f.enclosing_item_id() {
                         match self.find_untyped_decl(parent_id) {
@@ -548,7 +548,7 @@ impl<'db> BindingsGenerator<'db> {
             ir::Item::GlobalVar(g) => (g.id(), Rc::from(g.cc_name().as_str())),
             ir::Item::TypeAlias(t) => (t.id(), Rc::from(t.cc_name().as_str())),
         };
-        let qualifier = self.namespace_qualifier_from_id(id).format_for_cc_debug();
+        let qualifier = self.cc_namespace_qualifier_from_id(id).format_for_cc_debug();
         intern!(self.interner(), "{qualifier}{name}")
     }
 
@@ -746,6 +746,39 @@ impl<'db> BindingsGenerator<'db> {
         item: &impl ir::GenericItem,
     ) -> code_gen_utils::NamespaceQualifier {
         self.namespace_qualifier_from_id(item.id())
+    }
+
+    /// Like `namespace_qualifier`, but for formatting the C++ name of `item`.
+    ///
+    /// A class template instantiation that is named after a type alias is placed in the namespace
+    /// of that alias in Rust (see `Record::mangled_rs_name`), but its C++ name stays the
+    /// fully-qualified name of the instantiation. So the namespaces are omitted for it, and for
+    /// the items nested in it.
+    pub fn cc_namespace_qualifier(
+        &self,
+        item: &impl ir::GenericItem,
+    ) -> code_gen_utils::NamespaceQualifier {
+        self.cc_namespace_qualifier_from_id(item.id())
+    }
+
+    /// Like `cc_namespace_qualifier`, but takes the ID of the item.
+    pub fn cc_namespace_qualifier_from_id(
+        &self,
+        item_id: ir::ItemId,
+    ) -> code_gen_utils::NamespaceQualifier {
+        let mut namespace_qualifier = self.namespace_qualifier_from_id(item_id);
+        let mut id = Some(item_id);
+        while let Some(current_id) = id {
+            let current_item = self.find_untyped_decl(current_id);
+            if let ir::Item::Record(record) = current_item
+                && record.mangled_rs_name().is_some()
+            {
+                namespace_qualifier.namespaces.clear();
+                break;
+            }
+            id = current_item.enclosing_item_id();
+        }
+        namespace_qualifier
     }
 
     #[track_caller]
