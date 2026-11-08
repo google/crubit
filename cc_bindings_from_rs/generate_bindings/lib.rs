@@ -46,9 +46,9 @@ use generate_ctor::{
 };
 use generate_function::generate_function;
 use generate_struct_and_union::{
-    adt_needs_bindings, cpp_enum_cpp_underlying_type, create_type_alias_with_rs_type,
-    does_impl_apply, does_trait_impl_apply_by_first_arg, from_trait_impls_by_argument,
-    generate_adt, generate_adt_core, generate_const, generate_generic_adt_declaration,
+    cpp_enum_cpp_underlying_type, create_type_alias_with_rs_type, does_impl_apply,
+    does_trait_impl_apply_by_first_arg, from_trait_impls_by_argument, generate_adt,
+    generate_adt_core, generate_const, generate_generic_adt_declaration,
     generate_generic_adt_fwd_decl, get_generic_adt_header, into_trait_impls_by_destination,
     is_cpp_constexpr_move_constructible, GenericAdtHeader,
 };
@@ -425,7 +425,6 @@ fn new_database_impl<'db>(
         is_cpp_constexpr_move_constructible,
         generate_item,
         generate_function,
-        adt_needs_bindings,
         generate_adt_core,
         crubit_abi_type_from_ty,
         from_trait_impls_by_argument,
@@ -1394,18 +1393,21 @@ fn generate_item_impl<'tcx>(
     def_id: DefId,
 ) -> Result<Option<ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
-    if db.symbol_canonical_name(def_id).is_err() {
+    let Ok(canonical_name) = db.symbol_canonical_name(def_id) else {
         return Ok(None);
     };
     match tcx.def_kind(def_id) {
         DefKind::Struct | DefKind::Enum | DefKind::Union => {
-            if query_compiler::has_non_lifetime_generics(tcx, def_id) {
+            if canonical_name.unqualified.cpp_type.is_some() {
+                // The Rust type is mapped to an existing C++ type, so there is nothing to generate.
+                Ok(None)
+            } else if query_compiler::has_non_lifetime_generics(tcx, def_id) {
                 generate_generic_adt_declaration(db, def_id).map(|tokens| {
                     let snippet = CcSnippet::new(tokens);
                     Some(snippet.into_main_api())
                 })
             } else {
-                db.adt_needs_bindings(def_id).map(|core| Some(generate_adt(db, core)))
+                db.generate_adt_core(def_id).map(|core| Some(generate_adt(db, core)))
             }
         }
         DefKind::Fn => {

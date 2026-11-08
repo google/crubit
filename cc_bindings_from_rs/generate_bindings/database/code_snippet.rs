@@ -299,14 +299,28 @@ impl<'tcx> CcPrerequisites<'tcx> {
     }
 
     /// Include the definition as a prerequisite. For a local definition, this is adding it to the
-    ///`defs` set. For a foreign definition, an include path for the foreign crate must be
+    /// `defs` set, or, if it is mapped to an existing C++ type (`cpp_type`), adding its
+    /// `include_path`s. For a foreign definition, an include path for the foreign crate must be
     /// available or this will fail.
     pub fn depend_on_def(&mut self, db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<()> {
         let tcx = db.tcx();
         let canonical_name = db.symbol_canonical_name(def_id)?;
-        // Definition with a local canonical name can be immediately added to the `defs` set.
         if canonical_name.krate_num == db.source_crate_num() {
-            self.defs.insert(def_id);
+            if canonical_name.unqualified.cpp_type.is_some() {
+                // Local definitions mapped to an existing C++ type have no generated definition:
+                // depend on the C++ header that defines the type instead.
+                let attrs = crubit_attr::get_attrs(tcx, def_id)?;
+                self.includes.extend(attrs.include_paths.iter().map(|path| {
+                    code_gen_utils::include_from_path(
+                        db.crubit_support_path_format(),
+                        path.as_str(),
+                    )
+                }));
+            } else {
+                // Definition with a local canonical name can be immediately added to the `defs`
+                // set.
+                self.defs.insert(def_id);
+            }
             return Ok(());
         }
         let other_crate_name = canonical_name.krate;

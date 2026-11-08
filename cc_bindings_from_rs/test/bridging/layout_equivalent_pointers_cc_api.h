@@ -19,27 +19,15 @@
 
 namespace layout_equivalent_pointers::test_format_func_arg_pointer_like {
 
-// Error generating bindings for struct
-// `layout_equivalent_pointers_golden::test_format_func_arg_pointer_like::RustTypeView`:
-// Type bindings for
-// layout_equivalent_pointers_golden::test_format_func_arg_pointer_like::RustTypeView
-// suppressed due to being mapped to an existing C++ type (const CppType*)
-
 void test_format_func_arg_pointer_like(const CppType* __param_0);
 
-}  // namespace layout_equivalent_pointers::test_format_func_arg_pointer_like
+}
 
 namespace layout_equivalent_pointers::test_format_return_type_pointer_like {
 
-// Error generating bindings for struct
-// `layout_equivalent_pointers_golden::test_format_return_type_pointer_like::RustTypeOwned`:
-// Type bindings for
-// layout_equivalent_pointers_golden::test_format_return_type_pointer_like::RustTypeOwned
-// suppressed due to being mapped to an existing C++ type (CppType*)
-
 CppType* test_format_return_type_pointer_like();
 
-}  // namespace layout_equivalent_pointers::test_format_return_type_pointer_like
+}
 
 namespace layout_equivalent_pointers::test_format_func_arg_pointer_like {
 

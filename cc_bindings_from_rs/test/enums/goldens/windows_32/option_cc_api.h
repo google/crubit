@@ -40,11 +40,6 @@
 
 namespace option {
 struct HasOptions;
-
-// Error generating bindings for struct `option_golden::BridgedType`: Type
-// bindings for option_golden::BridgedType suppressed due to being mapped to an
-// existing C++ type (decltype(char(0)))
-
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
     1) [[clang::trivial_abi]] CloneNoDefault final {

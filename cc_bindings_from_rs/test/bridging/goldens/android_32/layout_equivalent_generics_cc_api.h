@@ -25,29 +25,9 @@
 
 namespace layout_equivalent_generics {
 
-// Error generating bindings for struct
-// `layout_equivalent_generics_golden::ByValueBridged`: Type bindings for
-// layout_equivalent_generics_golden::ByValueBridged suppressed due to being
-// mapped to an existing C++ type (crubit::test::SomeCppType)
-
-// Error generating bindings for struct
-// `layout_equivalent_generics_golden::MyOptional`: Type bindings for
-// layout_equivalent_generics_golden::MyOptional suppressed due to being mapped
-// to an existing C++ type (crubit::test::MyOptional<{T}>)
-
-// Error generating bindings for struct
-// `layout_equivalent_generics_golden::MyPair`: Type bindings for
-// layout_equivalent_generics_golden::MyPair suppressed due to being mapped to
-// an existing C++ type (crubit::test::MyPair<{T1}, {T2}>)
-
 using MyStatusAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: layout_equivalent_generics_golden :: MyStatusAlias") =
     crubit::test::MyStatus;
-
-// Error generating bindings for struct
-// `layout_equivalent_generics_golden::MyStatusOr`: Type bindings for
-// layout_equivalent_generics_golden::MyStatusOr suppressed due to being mapped
-// to an existing C++ type (crubit::test::MyStatusOr<{T}>)
 
 // Error generating bindings for type alias
 // `layout_equivalent_generics_golden::UnitAlias`: Tuple type `()` is not

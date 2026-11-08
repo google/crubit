@@ -787,12 +787,8 @@ fn test_format_cpp_name_for_struct() {
             }
         "#;
     test_format_item(test_src, "RustType", |result| {
-        let err = result.unwrap_err();
-        assert_eq!(
-            err,
-            "Type bindings for RustType suppressed \
-                due to being mapped to an existing C++ type (cpp_ns::CppType)"
-        );
+        // Types mapped to an existing C++ type silently generate nothing.
+        assert!(result.unwrap().is_none());
     });
 }
 
