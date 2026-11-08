@@ -189,7 +189,7 @@ def generate_and_compile_bindings(
       exported_cc_infos: list[CcInfo]: CcInfos whose module maps the `_rust_api_impl.cc` of a
         direct dependent may use (usually just the C++ target itself). They are exported one level
         through `RustBindingsFromCcInfo.cc_info`.
-      support_cc_infos: list[CcInfo]: This target's `generated_cpp_support_deps` and the
+      support_cc_infos: list[CcInfo]: This target's `cpp_deps` and the
         `support_cc_info` of its bindings deps. They are exported transitively through
         `RustBindingsFromCcInfo.support_cc_info` and `RustBindingsFromCcInfo.cc_info`.
     Returns:
@@ -307,7 +307,7 @@ def generate_and_compile_bindings(
     #   concatenated into `_rust_api_impl.cc`. That code was never checked by `layering_check`
     #   (which needs `"module_maps"`), and may include headers of transitive deps.
     #   TODO(b/573160050): Remove this case once `cpp_srcs` users declare their includes in
-    #   `generated_cpp_support_deps`.
+    #   `cpp_deps`.
     compile_textually = compile_textually or extra_cpp_srcs or _has_fno_modules(ctx, attr)
     feature_configuration_for_cc_compile = cc_common.configure_features(
         ctx = ctx,

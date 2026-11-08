@@ -218,13 +218,13 @@ def _get_additional_aliases(aspect_ctx):
                     aliases[struct(label = label)] = alias_name
     return aliases
 
-def _get_generated_cpp_support_deps(aspect_ctx):
-    generated_cpp_support_deps = []
+def _get_cpp_deps(aspect_ctx):
+    cpp_deps = []
     for hint in aspect_ctx.rule.attr.aspect_hints:
         if AdditionalRustSrcsProviderInfo in hint:
             info = hint[AdditionalRustSrcsProviderInfo]
-            generated_cpp_support_deps.extend(info.generated_cpp_support_deps)
-    return generated_cpp_support_deps
+            cpp_deps.extend(info.cpp_deps)
+    return cpp_deps
 
 def _get_support_cc_infos(binding_infos):
     """Returns the `support_cc_info`s of `binding_infos` that have one."""
@@ -383,7 +383,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     extra_deps = []
     aliases = _get_additional_aliases(ctx)
 
-    generated_cpp_support_deps = _get_generated_cpp_support_deps(ctx)
+    cpp_deps = _get_cpp_deps(ctx)
 
     # Headers for which we will produce bindings.
     public_hdrs = []
@@ -512,9 +512,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
                         aliases[struct(label = label)] = name
 
     compilation_context = target[CcInfo].compilation_context
-    if generated_cpp_support_deps or extra_cpp_srcs:
+    if cpp_deps or extra_cpp_srcs:
         compilation_context = cc_common.merge_cc_infos(
-            direct_cc_infos = [target[CcInfo]] + generated_cpp_support_deps + [
+            direct_cc_infos = [target[CcInfo]] + cpp_deps + [
                 CcInfo(
                     compilation_context = cc_common.create_compilation_context(
                         headers = depset(extra_cpp_srcs),
@@ -552,7 +552,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             d.cc_info
             for d in binding_infos
             if d.cc_info
-        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + generated_cpp_support_deps,
+        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + cpp_deps,
         deps_for_rs_file = depset(
             direct = [
                 d.dep_variant_info
@@ -584,7 +584,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         extra_named_deps = extra_named_deps,
         use_label_encoded_names_for_deps = use_label_encoded_names_for_deps,
         exported_cc_infos = [target[CcInfo]],
-        support_cc_infos = generated_cpp_support_deps + _get_support_cc_infos(binding_infos),
+        support_cc_infos = cpp_deps + _get_support_cc_infos(binding_infos),
     )
 
 def _attr_predicate(ctx):
