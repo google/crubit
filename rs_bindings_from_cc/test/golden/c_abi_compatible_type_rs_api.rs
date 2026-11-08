@@ -14,8 +14,6 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-// Type bindings for MyI8 suppressed due to being mapped to an existing Rust type (i8)
-
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "1X"]
 #[repr(C)]

@@ -113,8 +113,6 @@ pub fn MapMultiply(v: crate::MyOption<crate::Vec3>, factor: f32) -> crate::MyOpt
     }
 }
 
-// Type bindings for MyI8Struct suppressed due to being mapped to an existing Rust type (i8)
-
 #[inline(always)]
 pub fn MakeMyI8Struct() -> crate::MyOption<i8> {
     unsafe {
@@ -246,10 +244,6 @@ pub fn ReturnsEnumInNamespaceInComposableBridgeType(
         ::crubit_support::bridge::unstable_return!(@crate::MyOptionAbi(::crubit_support::bridge::transmute_abi::<crate::some_namespace::EnumInNamespace>()),crate::MyOptionAbi<::crubit_support::bridge::TransmuteAbi<crate::some_namespace::EnumInNamespace>>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z44ReturnsEnumInNamespaceInComposableBridgeTypev(__crubit_return_abi_buffer,); })
     }
 }
-
-// Type bindings for rs::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
-
-// Type bindings for rs::SliceRef<std::string_view> suppressed due to being mapped to an existing Rust type (*mut[::cc_std::std::__u::raw_string_view])
 
 /// Class template instantiations that aren't named by a C++ type alias.
 pub mod zz_template_instantiations {
