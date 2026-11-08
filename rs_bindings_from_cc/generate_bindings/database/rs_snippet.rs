@@ -2024,9 +2024,12 @@ impl RsTypeKind {
                     enum_.cc_name()
                 )?,
                 RsTypeKind::Record { record, crate_path, .. } => {
-                    // The C++ name of an instantiation that is named after a type alias is already
-                    // fully qualified, and its Rust namespace is that of the alias.
-                    if record.mangled_rs_name().is_some() {
+                    // The C++ name of a class template instantiation is already fully qualified,
+                    // and its Rust module is that of the alias that it is named after, or
+                    // `TEMPLATE_INSTANTIATIONS_MODULE`.
+                    if record.mangled_rs_name().is_some()
+                        || (record.enclosing_item_id().is_none() && record.is_rs_name_mangled())
+                    {
                         write!(f, "{}", record.cc_name())?
                     } else {
                         write!(

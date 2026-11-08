@@ -360,47 +360,50 @@ impl From<DocCommentEnum> for ::ffi_11::c_uint {
     }
 }
 
-/// Class template with nested struct inside.
-#[doc(hidden)]
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst13OuterTemplateIiE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=OuterTemplate < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst13OuterTemplateIiE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInst13OuterTemplateIiE {}
-impl !Sync for __CcTemplateInst13OuterTemplateIiE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("OuterTemplate < int >"),
-    crate::__CcTemplateInst13OuterTemplateIiE
-);
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    /// Class template with nested struct inside.
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInst13OuterTemplateIiE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=OuterTemplate < int >
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInst13OuterTemplateIiE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for __CcTemplateInst13OuterTemplateIiE {}
+    impl !Sync for __CcTemplateInst13OuterTemplateIiE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("OuterTemplate < int >"),
+        crate::zz_template_instantiations::__CcTemplateInst13OuterTemplateIiE
+    );
 
-impl Default for __CcTemplateInst13OuterTemplateIiE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__2cd151a5__ZN13OuterTemplateIiEC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
+    impl Default for __CcTemplateInst13OuterTemplateIiE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__2cd151a5__ZN13OuterTemplateIiEC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
         }
     }
+
+    // Doc comment for the nested struct.
+
+    // error: struct `OuterTemplate<int>::NestedStruct` could not be bound
+    //   b/485949049: type definitions nested inside templated records are not yet supported
+
+    // Data member in a nested struct.
+
+    #[doc(hidden)]
+    pub type __CcTemplateInst10MyTemplateIiE = crate::MyInstantiation;
+
+    #[doc(hidden)]
+    pub type __CcTemplateInst10MyTemplateIfE = crate::MySpecializedInstantiation;
 }
-
-// Doc comment for the nested struct.
-
-// error: struct `OuterTemplate<int>::NestedStruct` could not be bound
-//   b/485949049: type definitions nested inside templated records are not yet supported
-
-// Data member in a nested struct.
-
-#[doc(hidden)]
-pub type __CcTemplateInst10MyTemplateIiE = crate::MyInstantiation;
-
-#[doc(hidden)]
-pub type __CcTemplateInst10MyTemplateIfE = crate::MySpecializedInstantiation;
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -485,8 +488,15 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::MySpecializedInstantiation: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::MySpecializedInstantiation: Drop);
     assert!(::core::mem::offset_of!(crate::MySpecializedInstantiation, value) == 0);
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst13OuterTemplateIiE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst13OuterTemplateIiE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst13OuterTemplateIiE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst13OuterTemplateIiE: Drop);
+    assert!(
+        ::core::mem::size_of::<crate::zz_template_instantiations::__CcTemplateInst13OuterTemplateIiE>(
+        ) == 1
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::zz_template_instantiations::__CcTemplateInst13OuterTemplateIiE,
+        >() == 1
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInst13OuterTemplateIiE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInst13OuterTemplateIiE: Drop);
 };

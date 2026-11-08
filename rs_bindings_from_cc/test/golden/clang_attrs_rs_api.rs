@@ -179,10 +179,12 @@ pub mod template_with_preferred_name {
 
 // namespace template_with_preferred_name
 
-#[doc(hidden)]
-pub type __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE =
-    crate::template_with_preferred_name::SpecializedTypeAlias;
-
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[doc(hidden)]
+    pub type __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE =
+        crate::template_with_preferred_name::SpecializedTypeAlias;
+}
 mod detail {
     #[allow(unused_imports)]
     use super::*;

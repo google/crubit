@@ -18,10 +18,11 @@
 //   Class templates are not yet supported
 
 #[inline(always)]
-pub fn RTS() -> crate::__CcTemplateInst2TSIiE {
+pub fn RTS() -> crate::zz_template_instantiations::__CcTemplateInst2TSIiE {
     unsafe {
-        let mut __crubit_return =
-            ::core::mem::MaybeUninit::<crate::__CcTemplateInst2TSIiE>::uninit();
+        let mut __crubit_return = ::core::mem::MaybeUninit::<
+            crate::zz_template_instantiations::__CcTemplateInst2TSIiE,
+        >::uninit();
         crate::detail::__rust_thunk___Z3RTSv(&raw mut __crubit_return as *mut ::core::ffi::c_void);
         __crubit_return.assume_init()
     }
@@ -99,36 +100,37 @@ impl Default for TemplateWithStaticMembersInt {
 // error: struct `TemplateWithStaticMembers<int>::Nested` could not be bound
 //   b/485949049: type definitions nested inside templated records are not yet supported
 
-#[doc(hidden)]
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInst2TSIiE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TS < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInst2TSIiE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInst2TSIiE {}
-impl !Sync for __CcTemplateInst2TSIiE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("TS < int >"),
-    crate::__CcTemplateInst2TSIiE
-);
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInst2TSIiE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=TS < int >
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInst2TSIiE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    impl !Send for __CcTemplateInst2TSIiE {}
+    impl !Sync for __CcTemplateInst2TSIiE {}
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("TS < int >"),
+        crate::zz_template_instantiations::__CcTemplateInst2TSIiE
+    );
 
-impl Default for __CcTemplateInst2TSIiE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__20ba560a__ZN2TSIiEC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
+    impl Default for __CcTemplateInst2TSIiE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__20ba560a__ZN2TSIiEC1Ev(&raw mut tmp as *mut _);
+                tmp.assume_init()
+            }
         }
     }
+
+    #[doc(hidden)]
+    pub type __CcTemplateInst25TemplateWithStaticMembersIiE = crate::TemplateWithStaticMembersInt;
 }
-
-#[doc(hidden)]
-pub type __CcTemplateInst25TemplateWithStaticMembersIiE = crate::TemplateWithStaticMembersInt;
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -153,8 +155,12 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::TemplateWithStaticMembersInt: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TemplateWithStaticMembersInt: Drop);
 
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst2TSIiE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst2TSIiE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst2TSIiE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst2TSIiE: Drop);
+    assert!(
+        ::core::mem::size_of::<crate::zz_template_instantiations::__CcTemplateInst2TSIiE>() == 1
+    );
+    assert!(
+        ::core::mem::align_of::<crate::zz_template_instantiations::__CcTemplateInst2TSIiE>() == 1
+    );
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInst2TSIiE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInst2TSIiE: Drop);
 };

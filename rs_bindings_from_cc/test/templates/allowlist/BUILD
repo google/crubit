@@ -75,7 +75,6 @@ crubit_rust_test(
     srcs = ["allowlist_specific_template_test.rs"],
     deps = [
         ":allowlist_specific_template_rust",
-        "//support:cref",
         "@crate_index//:googletest",
     ],
 )

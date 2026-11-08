@@ -57,9 +57,11 @@ pub fn SomeApi<'i>(i: &'i crate::NiIF) {
     unsafe { crate::detail::__rust_thunk___Z7SomeApiRK2NiIifE(i) }
 }
 
-#[doc(hidden)]
-pub type __CcTemplateInst2NiIifE = crate::NiIF;
-
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[doc(hidden)]
+    pub type __CcTemplateInst2NiIifE = crate::NiIF;
+}
 mod detail {
     #[allow(unused_imports)]
     use super::*;

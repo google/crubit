@@ -337,35 +337,37 @@ pub mod test_namespace_bindings {
 
 // namespace test_namespace_bindings
 
-#[doc(hidden)]
-pub type __CcTemplateInst10MyTemplateIiE = crate::Alias1;
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[doc(hidden)]
+    pub type __CcTemplateInst10MyTemplateIiE = crate::Alias1;
 
-#[doc(hidden)]
-pub type __CcTemplateInst10MyTemplateIfE = crate::Alias2;
+    #[doc(hidden)]
+    pub type __CcTemplateInst10MyTemplateIfE = crate::Alias2;
 
-#[doc(hidden)]
-pub type __CcTemplateInst10MyTemplateI8TopLevelE = crate::Alias3;
+    #[doc(hidden)]
+    pub type __CcTemplateInst10MyTemplateI8TopLevelE = crate::Alias3;
 
-#[doc(hidden)]
-pub type __CcTemplateInst10MyTemplateIdE = crate::Alias4;
+    #[doc(hidden)]
+    pub type __CcTemplateInst10MyTemplateIdE = crate::Alias4;
 
-#[doc(hidden)]
-pub type __CcTemplateInst10MyTemplateIbE = crate::Alias5;
+    #[doc(hidden)]
+    pub type __CcTemplateInst10MyTemplateIbE = crate::Alias5;
 
-#[doc(hidden)]
-pub type __CcTemplateInst10MyTemplateIS_I8TopLevelEE = crate::Alias6;
+    #[doc(hidden)]
+    pub type __CcTemplateInst10MyTemplateIS_I8TopLevelEE = crate::Alias6;
 
-#[doc(hidden)]
-pub type __CcTemplateInst10MyTemplateIcE = crate::test_namespace_bindings::Alias7;
+    #[doc(hidden)]
+    pub type __CcTemplateInst10MyTemplateIcE = crate::test_namespace_bindings::Alias7;
 
-#[doc(hidden)]
-pub type __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE =
-    crate::test_namespace_bindings::Alias8;
+    #[doc(hidden)]
+    pub type __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE =
+        crate::test_namespace_bindings::Alias8;
 
-#[doc(hidden)]
-pub type __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE =
-    crate::test_namespace_bindings::Alias9;
-
+    #[doc(hidden)]
+    pub type __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE =
+        crate::test_namespace_bindings::Alias9;
+}
 mod detail {
     #[allow(unused_imports)]
     use super::*;

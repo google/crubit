@@ -67,9 +67,11 @@ mod __crubit_mod_0;
 #[allow(unused_imports)]
 pub use __crubit_mod_0::*;
 
-#[doc(hidden)]
-pub type __CcTemplateInst12TemplateTypeIiE = crate::AliasToInst;
-
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[doc(hidden)]
+    pub type __CcTemplateInst12TemplateTypeIiE = crate::AliasToInst;
+}
 mod detail {
     #[allow(unused_imports)]
     use super::*;

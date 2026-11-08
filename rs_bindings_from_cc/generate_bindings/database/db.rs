@@ -750,10 +750,10 @@ impl<'db> BindingsGenerator<'db> {
 
     /// Like `namespace_qualifier`, but for formatting the C++ name of `item`.
     ///
-    /// A class template instantiation that is named after a type alias is placed in the namespace
-    /// of that alias in Rust (see `Record::mangled_rs_name`), but its C++ name stays the
-    /// fully-qualified name of the instantiation. So the namespaces are omitted for it, and for
-    /// the items nested in it.
+    /// The Rust module of a class template instantiation is either the namespace of the type alias
+    /// that it is named after (see `Record::mangled_rs_name`), or `TEMPLATE_INSTANTIATIONS_MODULE`.
+    /// But its C++ name is the fully-qualified name of the instantiation either way. So the
+    /// namespaces are omitted for it, and for the items nested in it.
     pub fn cc_namespace_qualifier(
         &self,
         item: &impl ir::GenericItem,
@@ -770,9 +770,11 @@ impl<'db> BindingsGenerator<'db> {
         let mut id = Some(item_id);
         while let Some(current_id) = id {
             let current_item = self.find_untyped_decl(current_id);
-            if let ir::Item::Record(record) = current_item
-                && record.mangled_rs_name().is_some()
-            {
+            let is_renamed = matches!(
+                current_item,
+                ir::Item::Record(record) if record.mangled_rs_name().is_some()
+            );
+            if is_renamed || self::is_in_template_instantiations_module(current_item) {
                 namespace_qualifier.namespaces.clear();
                 break;
             }
@@ -788,9 +790,11 @@ impl<'db> BindingsGenerator<'db> {
     ) -> code_gen_utils::NamespaceQualifier {
         let mut namespaces = vec![];
         let mut nested_records = vec![];
-        let mut enclosing_item_id = self.find_untyped_decl(item_id).enclosing_item_id();
+        let mut outermost_item = self.find_untyped_decl(item_id);
+        let mut enclosing_item_id = outermost_item.enclosing_item_id();
         while let Some(parent_id) = enclosing_item_id {
-            match self.find_untyped_decl(parent_id) {
+            outermost_item = self.find_untyped_decl(parent_id);
+            match outermost_item {
                 ir::Item::Namespace(ns) => {
                     namespaces.push(Rc::from(ns.rs_name().as_str()));
                     enclosing_item_id = ns.enclosing_item_id();
@@ -822,6 +826,9 @@ impl<'db> BindingsGenerator<'db> {
                     panic!("Expected namespace or parent record, found enclosing item: {item:#?}");
                 }
             }
+        }
+        if self::is_in_template_instantiations_module(outermost_item) {
+            namespaces.push(Rc::from(self::TEMPLATE_INSTANTIATIONS_MODULE));
         }
         namespaces.reverse();
         nested_records.reverse();
@@ -871,5 +878,25 @@ impl<'db> BindingsGenerator<'db> {
             }
         }
         Ok(make_rs_ident(&name))
+    }
+}
+
+/// The module that contains the class template instantiations that have a mangled
+/// `__CcTemplateInst...` name, so that they don't clutter the rest of the API. It sorts last in
+/// rustdoc.
+pub const TEMPLATE_INSTANTIATIONS_MODULE: &str = "zz_template_instantiations";
+
+/// Whether `item` is a class template instantiation with a mangled name, which is placed in
+/// `TEMPLATE_INSTANTIATIONS_MODULE` rather than at the top level.
+pub fn is_in_template_instantiations_module(item: &ir::Item) -> bool {
+    match item {
+        ir::Item::Record(record) => {
+            record.enclosing_item_id().is_none() && record.is_rs_name_mangled()
+        }
+        ir::Item::IncompleteRecord(record) => {
+            record.enclosing_item_id().is_none()
+                && record.rs_name().as_str().starts_with(ir::CC_TEMPLATE_INST_PREFIX)
+        }
+        _ => false,
     }
 }

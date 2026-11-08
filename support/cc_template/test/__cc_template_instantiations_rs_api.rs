@@ -2,12 +2,14 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-pub(crate) struct __CcTemplateInst_my_namespace_my_template_my_arg {
-    pub value: usize,
-}
+pub mod zz_template_instantiations {
+    pub(crate) struct __CcTemplateInst_my_namespace_my_template_my_arg {
+        pub value: usize,
+    }
 
-impl __CcTemplateInst_my_namespace_my_template_my_arg {
-    pub fn new(value: usize) -> Self {
-        Self { value }
+    impl __CcTemplateInst_my_namespace_my_template_my_arg {
+        pub fn new(value: usize) -> Self {
+            Self { value }
+        }
     }
 }

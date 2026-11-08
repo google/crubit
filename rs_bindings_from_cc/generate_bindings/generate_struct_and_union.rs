@@ -1112,7 +1112,6 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
             db.is_golden_test(),
             db.kythe_annotations(),
         ),
-        doc_hidden: record.is_rs_name_mangled(),
         derive_attr: generate_derives(&record),
         recursively_pinned_attr,
         must_use_attr: record.nodiscard().map(|s| MustUseAttr(Rc::from(s))),

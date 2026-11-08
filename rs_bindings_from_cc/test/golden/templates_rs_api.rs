@@ -200,10 +200,7 @@ pub mod test_namespace_bindings {
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < struct test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >
     ///CRUBIT_ANNOTATE: cpp_move_constructible=
-    pub struct AliasToTemplateOfATemplate {
-        pub value1: crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-        pub value2: ::ffi_11::c_int,
-    }
+    pub struct AliasToTemplateOfATemplate{ pub value1: crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,pub value2: ::ffi_11::c_int, }
     impl !Send for AliasToTemplateOfATemplate {}
     impl !Sync for AliasToTemplateOfATemplate {}
     forward_declare::unsafe_define!(forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < struct test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"),crate::test_namespace_bindings::AliasToTemplateOfATemplate);
@@ -301,7 +298,7 @@ impl Default for TopLevelTemplateWithNonTopLevelParam {
 /// * `i`: raw pointer
 #[inline(always)]
 pub unsafe fn processForwardDeclaredSpecialization(
-    i: *mut crate::__CcTemplateInst18MyTopLevelTemplateIiE,
+    i: *mut crate::zz_template_instantiations::__CcTemplateInst18MyTopLevelTemplateIiE,
 ) {
     unsafe {
         crate::detail::__rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE(i)
@@ -350,8 +347,7 @@ pub mod forward_declared_template {
     // error: class `forward_declared_template::ForwardDeclaredTemplate` could not be bound
     //   Class templates are not yet supported
 
-    pub type TypeAliasToForwardDeclaredTemplate =
-        crate::__CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE;
+    pub type TypeAliasToForwardDeclaredTemplate=crate::zz_template_instantiations::__CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE;
 }
 
 // namespace forward_declared_template
@@ -379,70 +375,68 @@ pub mod private_classes {
 
 // namespace private_classes
 
-#[doc(hidden)]
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE"]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < int , int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
-    pub value1: ::ffi_11::c_int,
-    pub value2: ::ffi_11::c_int,
-}
-impl !Send for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < int , int >"),
-    crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
-);
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE"]
+    #[repr(C)]
+    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < int , int >
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
+        pub value1: ::ffi_11::c_int,
+        pub value2: ::ffi_11::c_int,
+    }
+    impl !Send for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {}
+    impl !Sync for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {}
+    forward_declare::unsafe_define!(forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < int , int >"),crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE);
 
-impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk__994b0149__ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1Ev(&raw mut tmp as*mut _);
-            tmp.assume_init()
+    impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__994b0149__ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1Ev(&raw mut tmp as*mut _);
+                tmp.assume_init()
+            }
         }
     }
+
+    forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = forward_declare::symbol!("MyTopLevelTemplate < int >"));
+
+    forward_declare::forward_declare!(pub __CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE = forward_declare::symbol!("forward_declared_template :: ForwardDeclaredTemplate < int >"));
+
+    #[doc(hidden)]
+    pub type __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE =
+        crate::test_namespace_bindings::MyTypeAlias;
+
+    #[doc(hidden)]
+    pub type __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE =
+        crate::test_namespace_bindings::TemplateWithStructTemplateParam;
+
+    #[doc(hidden)]
+    pub type __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE =
+        crate::test_namespace_bindings::ParamFromDifferentScope;
+
+    #[doc(hidden)]
+    pub type __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE =
+        crate::test_namespace_bindings::AliasToTemplateWithTwoParams;
+
+    #[doc(hidden)]
+    pub type __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE =
+        crate::test_namespace_bindings::AliasToTemplateOfATemplate;
+
+    #[doc(hidden)]
+    pub type __CcTemplateInstN23test_namespace_bindings8MyStructIcEE =
+        crate::test_namespace_bindings::MyCharStruct;
+
+    #[doc(hidden)]
+    pub type __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE =
+        crate::TopLevelTemplateWithNonTopLevelParam;
+
+    #[doc(hidden)]
+    pub type __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE =
+        crate::template_template_params::MyTypeAlias;
 }
-
-forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = forward_declare::symbol!("MyTopLevelTemplate < int >"));
-
-forward_declare::forward_declare!(pub __CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE = forward_declare::symbol!("forward_declared_template :: ForwardDeclaredTemplate < int >"));
-
-#[doc(hidden)]
-pub type __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE =
-    crate::test_namespace_bindings::MyTypeAlias;
-
-#[doc(hidden)]
-pub type __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE =
-    crate::test_namespace_bindings::TemplateWithStructTemplateParam;
-
-#[doc(hidden)]
-pub type __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE =
-    crate::test_namespace_bindings::ParamFromDifferentScope;
-
-#[doc(hidden)]
-pub type __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE =
-    crate::test_namespace_bindings::AliasToTemplateWithTwoParams;
-
-#[doc(hidden)]
-pub type __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE =
-    crate::test_namespace_bindings::AliasToTemplateOfATemplate;
-
-#[doc(hidden)]
-pub type __CcTemplateInstN23test_namespace_bindings8MyStructIcEE =
-    crate::test_namespace_bindings::MyCharStruct;
-
-#[doc(hidden)]
-pub type __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE =
-    crate::TopLevelTemplateWithNonTopLevelParam;
-
-#[doc(hidden)]
-pub type __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE =
-    crate::template_template_params::MyTypeAlias;
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -476,7 +470,7 @@ mod detail {
         );
         #[link_name = "_Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE"]
         pub(crate) unsafe fn __rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE(
-            i: *mut crate::__CcTemplateInst18MyTopLevelTemplateIiE,
+            i: *mut crate::zz_template_instantiations::__CcTemplateInst18MyTopLevelTemplateIiE,
         );
         pub(crate) unsafe fn __rust_thunk__57a95918__ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev(
             __this: *mut ::core::ffi::c_void,
@@ -586,28 +580,10 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::private_classes::HasPrivateType: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::private_classes::HasPrivateType: Drop);
 
-    assert!(
-        ::core::mem::size_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-        >() == 8
-    );
-    assert!(
-        ::core::mem::align_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-        >() == 4
-    );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE: Drop);
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-            value1
-        ) == 0
-    );
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-            value2
-        ) == 4
-    );
+    assert!(::core::mem::size_of::<crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE>()==8);
+    assert!(::core::mem::align_of::<crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE>()==4);
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE: Drop);
+    assert!(::core::mem::offset_of!(crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,value1)==0);
+    assert!(::core::mem::offset_of!(crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,value2)==4);
 };

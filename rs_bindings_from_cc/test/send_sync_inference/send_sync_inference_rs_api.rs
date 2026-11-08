@@ -820,10 +820,12 @@ pub mod crubit {
 
 // namespace crubit::test
 
-#[doc(hidden)]
-pub type __CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE =
-    crate::crubit::test::ThreadAffineTemplateInt;
-
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[doc(hidden)]
+    pub type __CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE =
+        crate::crubit::test::ThreadAffineTemplateInt;
+}
 mod detail {
     #[allow(unused_imports)]
     use super::*;

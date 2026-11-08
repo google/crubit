@@ -18,7 +18,8 @@ use repeatedly_failed_template_instantiation::*;
 /// specializations are unaffected.
 #[gtest]
 fn test_instantiable_specializations_still_get_bindings() {
-    let mut instantiable = __CcTemplateInst20InstantiableTemplateI10IncompleteE::default();
+    let mut instantiable =
+        zz_template_instantiations::__CcTemplateInst20InstantiableTemplateI10IncompleteE::default();
     // SAFETY: the C++ functions ignore the pointer they are handed.
     unsafe {
         TakesInstantiable1(&raw mut instantiable);

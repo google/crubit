@@ -17,7 +17,7 @@
 ///   bindings for the instantiation and it will expand to something like:
 ///   ```rust
 ///     fn make_bool_vector() ->
-/// __cc_template_instantiations_rs_api::__CcTemplateInstSt6VectorIbE {
+/// __cc_template_instantiations_rs_api::zz_template_instantiations::__CcTemplateInstSt6VectorIbE {
 ///       ...
 ///     }
 ///   ```

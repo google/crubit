@@ -4464,13 +4464,13 @@ fn test_template_argument_lifetime_is_bound() -> Result<()> {
             pub fn make<'a, 'b>(
                 x: &'a mut ::ffi_11::c_int,
                 y: &'b mut ::ffi_11::c_int
-            ) -> crate::__CcTemplateInst4ViewIRiE<'a> { ... }
+            ) -> crate::zz_template_instantiations::__CcTemplateInst4ViewIRiE<'a> { ... }
         }
     );
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub unsafe fn take<'a>(v: crate::__CcTemplateInst4ViewIRiE<'a>) { ... }
+            pub unsafe fn take<'a>(v: crate::zz_template_instantiations::__CcTemplateInst4ViewIRiE<'a>) { ... }
         }
     );
     // An unannotated use gets the default lifetime rules, as `int&` itself would.
@@ -4478,7 +4478,7 @@ fn test_template_argument_lifetime_is_bound() -> Result<()> {
         rs_api,
         quote! {
             pub fn make_elided<'x>(x: &'x mut ::ffi_11::c_int)
-                -> crate::__CcTemplateInst4ViewIRiE<'x> { ... }
+                -> crate::zz_template_instantiations::__CcTemplateInst4ViewIRiE<'x> { ... }
         }
     );
     Ok(())
@@ -4513,7 +4513,7 @@ fn test_template_argument_lifetime_reaches_record_field() -> Result<()> {
         quote! {
             pub struct __CcTemplateInst4ViewIS_IRiEE<'T> {
                 ...
-                pub value: crate::__CcTemplateInst4ViewIRiE<'T>,
+                pub value: crate::zz_template_instantiations::__CcTemplateInst4ViewIRiE<'T>,
                 ...
             }
         }
@@ -4522,7 +4522,7 @@ fn test_template_argument_lifetime_reaches_record_field() -> Result<()> {
         rs_api,
         quote! {
             pub unsafe fn make_obj<'a, 'b>(x: crate::Obj<'a>, y: crate::Obj<'b>)
-                -> crate::__CcTemplateInst4ViewI3ObjE<'a> { ... }
+                -> crate::zz_template_instantiations::__CcTemplateInst4ViewI3ObjE<'a> { ... }
         }
     );
     assert_rs_matches!(
@@ -4531,7 +4531,7 @@ fn test_template_argument_lifetime_reaches_record_field() -> Result<()> {
             pub fn make_nested<'a, 'b>(
                 x: &'a mut ::ffi_11::c_int,
                 y: &'b mut ::ffi_11::c_int
-            ) -> crate::__CcTemplateInst4ViewIS_IRiEE<'a> { ... }
+            ) -> crate::zz_template_instantiations::__CcTemplateInst4ViewIS_IRiEE<'a> { ... }
         }
     );
     Ok(())
@@ -4590,8 +4590,8 @@ fn test_template_argument_lifetime_is_constrained() -> Result<()> {
         rs_api,
         quote! {
             pub fn swap<'T, 'a, 'b>(
-                a: &'a mut crate::__CcTemplateInst3BoxIRiE<'T>,
-                b: &'b mut crate::__CcTemplateInst3BoxIRiE<'T>
+                a: &'a mut crate::zz_template_instantiations::__CcTemplateInst3BoxIRiE<'T>,
+                b: &'b mut crate::zz_template_instantiations::__CcTemplateInst3BoxIRiE<'T>
             ) { ... }
         }
     );

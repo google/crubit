@@ -38,7 +38,8 @@ fn test_alias_in_different_target_than_template() {
 fn test_instantiation_is_named_after_first_alias() {
     // `MyTemplate<int>` is generated as the struct `MyTypeAlias`, and the old mangled name is a
     // (hidden) alias of it.
-    let s: type_alias::__CcTemplateInst10MyTemplateIiE = type_alias::MyTypeAlias::Create(1);
+    let s: type_alias::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE =
+        type_alias::MyTypeAlias::Create(1);
     let s2: type_alias::MyTypeAlias = s;
     assert_eq!(1, type_alias::GetValue(s2));
 }
@@ -59,7 +60,8 @@ fn test_instantiation_named_after_alias_in_nested_namespace() {
 
 #[gtest]
 fn test_unaliased_instantiation_keeps_mangled_name() {
-    let s: type_alias::__CcTemplateInst10MyTemplateIdE = type_alias::MakeUnaliased(7.0);
+    let s: type_alias::zz_template_instantiations::__CcTemplateInst10MyTemplateIdE =
+        type_alias::MakeUnaliased(7.0);
     // SAFETY: s is alive while s.value() is alive; no other references to s exist.
     assert_eq!(7.0, *unsafe { CRef::unchanging(s.value()) });
 }

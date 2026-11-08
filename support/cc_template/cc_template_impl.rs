@@ -55,7 +55,9 @@ fn get_instantiation_struct_name(
     match instantiations.get(&instantiation_name) {
         Some(concrete_struct_name) => {
             let ident = syn::parse_str::<syn::Ident>(concrete_struct_name)?;
-            Ok(quote! { __cc_template_instantiations_rs_api :: #ident })
+            Ok(
+                quote! { __cc_template_instantiations_rs_api :: zz_template_instantiations :: #ident },
+            )
         }
         None => Err(make_syn_error(format!(
             "Couldn't find '{}' in the instantiations map {:?}",
@@ -154,7 +156,7 @@ mod tests {
         .unwrap();
         assert_eq!(
             expanded.to_string(),
-            quote! {__cc_template_instantiations_rs_api::__std_vector__bool__}.to_string()
+            quote! {__cc_template_instantiations_rs_api::zz_template_instantiations::__std_vector__bool__}.to_string()
         );
     }
 

@@ -740,13 +740,24 @@ pub fn generate_bindings_tokens(
         free_functions: _,
     } = snippets;
 
-    let top_level_ids: Vec<ItemId> =
-        ir.top_level_items_in_target(ir.current_target()).iter().map(|item| item.id()).collect();
+    let (template_instantiation_ids, top_level_ids): (Vec<ItemId>, Vec<ItemId>) =
+        ir.top_level_items_in_target(ir.current_target()).iter().partition_map(|item| {
+            if database::db::is_in_template_instantiations_module(item) {
+                itertools::Either::Left(item.id())
+            } else {
+                itertools::Either::Right(item.id())
+            }
+        });
     let main_api =
         code_snippet::generated_items_to_token_stream(&generated_items, &db, &top_level_ids);
+    let template_instantiations_api = code_snippet::generated_items_to_token_stream(
+        &generated_items,
+        &db,
+        &template_instantiation_ids,
+    );
 
     // Class template instantiations that are named after a type alias keep their mangled name as a
-    // hidden alias in the crate root, which is where they would have been otherwise.
+    // hidden alias in the template instantiations module.
     let crate_root_path = ir.crate_root_path_tokens();
     let mangled_name_aliases = ir
         .records()
@@ -765,6 +776,20 @@ pub fn generate_bindings_tokens(
             })
         })
         .collect::<TokenStream>();
+
+    let template_instantiations_module =
+        if template_instantiations_api.is_empty() && mangled_name_aliases.is_empty() {
+            None
+        } else {
+            let module = make_rs_ident(database::db::TEMPLATE_INSTANTIATIONS_MODULE);
+            Some(quote! {
+                /// Class template instantiations that aren't named by a C++ type alias.
+                pub mod #module {
+                    #template_instantiations_api
+                    #mangled_name_aliases
+                }
+            })
+        };
 
     let cc_details = CppDetails {
         includes: generate_rs_api_impl_includes(
@@ -865,7 +890,7 @@ pub fn generate_bindings_tokens(
 
             #main_api
 
-            #mangled_name_aliases
+            #template_instantiations_module
 
             #mod_detail __NEWLINE__ __NEWLINE__
 
