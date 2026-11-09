@@ -20,10 +20,15 @@
 #include "support/rs_std/result.h"
 
 #include <bit>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
 #include <utility>
+
+namespace type_aliases::test_same_name_type_alias_and_function {
+struct Wrapped;
+}
 
 namespace type_aliases::test_deprecated_type_alias {
 
@@ -50,6 +55,91 @@ using SpecializedAlias CRUBIT_INTERNAL_RUST_TYPE(
 ::rs::Result<::std::int32_t, ::std::int32_t> returns_specialized();
 
 }  // namespace type_aliases::test_generics_matching
+
+namespace type_aliases::test_same_name_type_alias_and_function {
+
+::std::int32_t Reexported(::std::int32_t x);
+
+using SAME_CONST_ CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "SAME_CONST") = ::std::int32_t;
+static constexpr ::std::int32_t SAME_CONST = INT32_C(99);
+
+::type_aliases::test_same_name_type_alias_and_function::Wrapped SameAdt(
+    ::std::int32_t value);
+
+using SameName_ CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "SameName") = ::std::int32_t;
+
+::std::int32_t SameName(::std::int32_t x);
+
+using Secondary_1 CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "Secondary") = ::std::int16_t;
+
+::std::int16_t Secondary();
+
+::std::int16_t Secondary_();
+
+::std::uint16_t Shared();
+
+using Sibling_1 CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "Sibling") = ::std::int32_t;
+
+::std::int32_t Sibling();
+
+using Sibling_ CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "Sibling_") = ::std::uint32_t;
+using Trailing_1 CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "Trailing_") = ::std::int64_t;
+
+::std::int64_t Trailing_(::std::int64_t x);
+
+using WithSubmod_1 CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "WithSubmod") = ::std::int32_t;
+
+::std::int32_t WithSubmod();
+
+}  // namespace type_aliases::test_same_name_type_alias_and_function
+
+namespace type_aliases::test_same_name_type_alias_and_function::WithSubmod_ {
+
+::std::int32_t inside();
+
+}
+
+namespace type_aliases::test_same_name_type_alias_and_function {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "Wrapped") alignas(4) [[clang::trivial_abi]] Wrapped final {
+ public:
+  ::std::int32_t value{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace type_aliases::test_same_name_type_alias_and_function
+
+namespace type_aliases::test_same_name_type_alias_and_function {
+
+using Reexported_ CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "Reexported") = ::std::int32_t;
+}
+
+namespace type_aliases::test_same_name_type_alias_and_function {
+
+using Shared_ CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "Shared") = ::std::uint16_t;
+}
 
 namespace type_aliases::test_type_aliases {
 
@@ -244,6 +334,131 @@ inline ::rs::Result<::std::int32_t, ::std::int32_t> returns_specialized() {
 }
 
 }  // namespace type_aliases::test_generics_matching
+
+namespace type_aliases::test_same_name_type_alias_and_function {
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_Reexported(::std::int32_t);
+}
+inline ::std::int32_t Reexported(::std::int32_t x) {
+  return __crubit_internal::__crubit_thunk_Reexported(x);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_SameAdt(
+    ::std::int32_t,
+    ::type_aliases::test_same_name_type_alias_and_function::Wrapped* __ret_ptr);
+}
+inline ::type_aliases::test_same_name_type_alias_and_function::Wrapped SameAdt(
+    ::std::int32_t value) {
+  crubit::Slot<::type_aliases::test_same_name_type_alias_and_function::Wrapped>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_SameAdt(value, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_SameName(::std::int32_t);
+}
+inline ::std::int32_t SameName(::std::int32_t x) {
+  return __crubit_internal::__crubit_thunk_SameName(x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int16_t __crubit_thunk_Secondary();
+}
+inline ::std::int16_t Secondary() {
+  return __crubit_internal::__crubit_thunk_Secondary();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int16_t __crubit_thunk_Secondary_u();
+}
+inline ::std::int16_t Secondary_() {
+  return __crubit_internal::__crubit_thunk_Secondary_u();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uint16_t __crubit_thunk_Shared();
+}
+inline ::std::uint16_t Shared() {
+  return __crubit_internal::__crubit_thunk_Shared();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_Sibling();
+}
+inline ::std::int32_t Sibling() {
+  return __crubit_internal::__crubit_thunk_Sibling();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int64_t __crubit_thunk_Trailing_u(::std::int64_t);
+}
+inline ::std::int64_t Trailing_(::std::int64_t x) {
+  return __crubit_internal::__crubit_thunk_Trailing_u(x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_WithSubmod();
+}
+inline ::std::int32_t WithSubmod() {
+  return __crubit_internal::__crubit_thunk_WithSubmod();
+}
+
+}  // namespace type_aliases::test_same_name_type_alias_and_function
+
+namespace type_aliases::test_same_name_type_alias_and_function::WithSubmod_ {
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_inside();
+}
+inline ::std::int32_t inside() {
+  return __crubit_internal::__crubit_thunk_inside();
+}
+
+}  // namespace
+   // type_aliases::test_same_name_type_alias_and_function::WithSubmod_
+
+namespace type_aliases::test_same_name_type_alias_and_function {
+
+using SameAdt_ CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "Wrapped") =
+    ::type_aliases::test_same_name_type_alias_and_function::Wrapped;
+static_assert(
+    sizeof(::type_aliases::test_same_name_type_alias_and_function::Wrapped) ==
+        4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::type_aliases::test_same_name_type_alias_and_function::Wrapped) ==
+        4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<
+              ::type_aliases::test_same_name_type_alias_and_function::Wrapped>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::type_aliases::test_same_name_type_alias_and_function::Wrapped>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::type_aliases::test_same_name_type_alias_and_function::Wrapped>);
+static_assert(::std::is_trivially_copy_constructible_v<
+              ::type_aliases::test_same_name_type_alias_and_function::Wrapped>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              ::type_aliases::test_same_name_type_alias_and_function::Wrapped>);
+inline void ::type_aliases::test_same_name_type_alias_and_function::Wrapped::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::type_aliases::test_same_name_type_alias_and_function::Wrapped;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
+}
+}  // namespace type_aliases::test_same_name_type_alias_and_function
+
+namespace type_aliases::test_same_name_type_alias_and_function::other {
+
+using Shared CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_golden :: test_same_name_type_alias_and_function :: "
+    "Shared") = ::std::uint16_t;
+}
 
 namespace type_aliases::test_type_aliases {
 

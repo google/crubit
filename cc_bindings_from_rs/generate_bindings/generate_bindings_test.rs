@@ -1828,6 +1828,118 @@ fn test_format_item_type_alias_should_give_underlying_type() {
 }
 
 #[gtest]
+fn test_generated_bindings_type_alias_explicit_cpp_name_avoids_collision() {
+    let test_src = r#"
+        #[doc="CRUBIT_ANNOTATE: cpp_name=CustomAlias"]
+        pub type SameName = i32;
+
+        #[allow(non_snake_case)]
+        pub fn SameName(x: SameName) -> SameName {
+            x
+        }
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                using CustomAlias CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: SameName") = ::std::int32_t;
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ::std::int32_t SameName(::std::int32_t x);
+            }
+        );
+    });
+}
+
+#[gtest]
+fn test_format_item_type_alias_explicit_cpp_name_collision_errors() {
+    let test_src = r#"
+        #[doc="CRUBIT_ANNOTATE: cpp_name=Taken"]
+        pub type Alias = i32;
+
+        #[allow(non_snake_case)]
+        pub fn Taken() {}
+    "#;
+    test_format_item(test_src, "Alias", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "Type alias `Alias` has explicit `cpp_name` `Taken` that collides with another item in the same scope"
+        );
+    });
+}
+
+#[gtest]
+fn test_generated_bindings_type_alias_does_not_rename_for_same_name_macro() {
+    let test_src = r#"
+        #[macro_export]
+        macro_rules! same_name {
+            () => {};
+        }
+
+        #[allow(non_camel_case_types)]
+        pub type same_name = i32;
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                using same_name CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: same_name") = ::std::int32_t;
+            }
+        );
+    });
+}
+
+#[gtest]
+fn test_generated_bindings_reexported_type_alias_renames_on_collision_only_in_colliding_mod() {
+    let test_src = r#"
+        pub mod source_mod {
+            pub type Shared = u16;
+        }
+        pub mod colliding_mod {
+            pub use crate::source_mod::Shared;
+
+            #[allow(non_snake_case)]
+            pub fn Shared() -> Shared {
+                7
+            }
+        }
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace rust_out::source_mod {
+                    using Shared CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: source_mod :: Shared") = ::std::uint16_t;
+                }
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace rust_out::colliding_mod {
+                    ::std::uint16_t Shared();
+                }
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace rust_out::colliding_mod {
+                    using Shared_ CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: source_mod :: Shared") = ::std::uint16_t;
+                }
+            }
+        );
+    });
+}
+
+#[gtest]
 fn test_format_item_private_type_alias_wont_generate_bindings() {
     let test_src = r#"
         #[allow(dead_code)]

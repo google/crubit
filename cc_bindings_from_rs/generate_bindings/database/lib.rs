@@ -14,7 +14,7 @@ pub use adt_core_bindings::{
 };
 mod db;
 pub use code_gen_utils::is_cpp_pointer_type;
-pub use db::{BindingsGenerator, CppTypeSpecialization, RefTraitImpls};
+pub use db::{BindingsGenerator, CppTypeSpecialization, DisambiguatedAliases, RefTraitImpls};
 mod fully_qualified_name;
 pub use fully_qualified_name::{
     rename_c_stdlib_functions, rename_clang_builtin_macros, ExportedPath, FullyQualifiedName,
