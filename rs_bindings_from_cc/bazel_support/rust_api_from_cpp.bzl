@@ -155,8 +155,7 @@ def rust_api_from_cpp(
       generated_cpp_support_deps: C++ dependencies of the generated C++ target (e.g. ABI support libraries required by the generated bindings).
       unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
       crubit_features: List of additional Crubit features to enable on top of
-        `supported` for bindings generation (e.g. `["infer_send_sync"]` or
-        `["experimental"]`). Valid features are defined in
+        `supported` for bindings generation (e.g. `["experimental"]`). Valid features are defined in
         `//features:BUILD`.
       types_only: If True, only generates bindings for types
         (`//features:types`), disabling `supported` features

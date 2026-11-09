@@ -2236,7 +2236,7 @@ fn test_non_thread_safe_struct_has_no_unsafe_send_sync() -> Result<()> {
 }
 
 #[gtest]
-fn test_infer_send_sync_omits_negative_impls() -> Result<()> {
+fn test_send_sync_omits_negative_impls() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct RegularStruct final {
@@ -2244,7 +2244,7 @@ fn test_infer_send_sync_omits_negative_impls() -> Result<()> {
         };
     "#,
     )?;
-    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 
     // No impls at all: rustc infers `Send` and `Sync` from the fields.
@@ -2257,7 +2257,7 @@ fn test_infer_send_sync_omits_negative_impls() -> Result<()> {
 }
 
 #[gtest]
-fn test_infer_send_sync_documents_negative_impls_for_erased_fields() -> Result<()> {
+fn test_send_sync_documents_negative_impls_for_erased_fields() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct StructWithUnsupportedField final {
@@ -2265,7 +2265,7 @@ fn test_infer_send_sync_documents_negative_impls_for_erased_fields() -> Result<(
         };
     "#,
     )?;
-    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -2285,7 +2285,7 @@ fn test_infer_send_sync_documents_negative_impls_for_erased_fields() -> Result<(
 }
 
 #[gtest]
-fn test_infer_send_sync_documents_negative_impls_for_base_class_subobjects() -> Result<()> {
+fn test_send_sync_documents_negative_impls_for_base_class_subobjects() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct Base {
@@ -2296,7 +2296,7 @@ fn test_infer_send_sync_documents_negative_impls_for_base_class_subobjects() -> 
         };
     "#,
     )?;
-    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -2315,7 +2315,7 @@ fn test_infer_send_sync_documents_negative_impls_for_base_class_subobjects() -> 
 }
 
 #[gtest]
-fn test_infer_send_sync_documents_negative_impls_for_vtable_pointer() -> Result<()> {
+fn test_send_sync_documents_negative_impls_for_vtable_pointer() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct Polymorphic {
@@ -2324,7 +2324,7 @@ fn test_infer_send_sync_documents_negative_impls_for_vtable_pointer() -> Result<
         };
     "#,
     )?;
-    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -2339,7 +2339,7 @@ fn test_infer_send_sync_documents_negative_impls_for_vtable_pointer() -> Result<
 }
 
 #[gtest]
-fn test_infer_send_sync_does_not_emit_negative_impls_for_empty_struct() -> Result<()> {
+fn test_send_sync_does_not_emit_negative_impls_for_empty_struct() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct Empty final {
@@ -2347,7 +2347,7 @@ fn test_infer_send_sync_does_not_emit_negative_impls_for_empty_struct() -> Resul
         };
     "#,
     )?;
-    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_not_matches!(rs_api, quote! { impl !Send for Empty {} });
     assert_rs_not_matches!(rs_api, quote! { impl !Sync for Empty {} });
@@ -2355,7 +2355,7 @@ fn test_infer_send_sync_does_not_emit_negative_impls_for_empty_struct() -> Resul
 }
 
 #[gtest]
-fn test_infer_send_sync_documents_negative_impls_for_empty_base_class_subobjects() -> Result<()> {
+fn test_send_sync_documents_negative_impls_for_empty_base_class_subobjects() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct EmptyBase {};
@@ -2368,7 +2368,7 @@ fn test_infer_send_sync_documents_negative_impls_for_empty_base_class_subobjects
         };
     "#,
     )?;
-    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -2399,8 +2399,7 @@ fn test_infer_send_sync_documents_negative_impls_for_empty_base_class_subobjects
 }
 
 #[gtest]
-fn test_infer_send_sync_does_not_emit_negative_impls_for_non_aggregate_plain_struct() -> Result<()>
-{
+fn test_send_sync_does_not_emit_negative_impls_for_non_aggregate_plain_struct() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct NonAggregatePlain final {
@@ -2409,7 +2408,7 @@ fn test_infer_send_sync_does_not_emit_negative_impls_for_non_aggregate_plain_str
         };
     "#,
     )?;
-    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -2426,7 +2425,7 @@ fn test_infer_send_sync_does_not_emit_negative_impls_for_non_aggregate_plain_str
 }
 
 #[gtest]
-fn test_infer_send_sync_documents_zero_sized_fields_but_not_zero_width_bitfields() -> Result<()> {
+fn test_send_sync_documents_zero_sized_fields_but_not_zero_width_bitfields() -> Result<()> {
     let no_unique_address_attr = test_platform().no_unique_address_attr();
     let proto = ir_proto_from_cc(&format!(
         r#"
@@ -2442,7 +2441,7 @@ fn test_infer_send_sync_documents_zero_sized_fields_but_not_zero_width_bitfields
         }};
     "#,
     ))?;
-    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -2462,7 +2461,7 @@ fn test_infer_send_sync_documents_zero_sized_fields_but_not_zero_width_bitfields
 }
 
 #[gtest]
-fn test_infer_send_sync_documents_multiple_reasons() -> Result<()> {
+fn test_send_sync_documents_multiple_reasons() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct Base {};
@@ -2472,7 +2471,7 @@ fn test_infer_send_sync_documents_multiple_reasons() -> Result<()> {
         };
     "#,
     )?;
-    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -2487,7 +2486,7 @@ fn test_infer_send_sync_documents_multiple_reasons() -> Result<()> {
 }
 
 #[gtest]
-fn test_infer_send_sync_honors_explicit_annotations() -> Result<()> {
+fn test_send_sync_honors_explicit_annotations() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
         struct [[clang::annotate("crubit_internal_trait_derive", "!Send")]] NotSend final {
@@ -2501,7 +2500,7 @@ fn test_infer_send_sync_honors_explicit_annotations() -> Result<()> {
         };
     "#,
     )?;
-    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 
     assert_rs_matches!(rs_api, quote! { impl !Send for NotSend {} });
