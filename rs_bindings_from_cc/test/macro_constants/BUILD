@@ -12,6 +12,14 @@ crubit_test_cc_library(
     hdrs = ["macro_constants.h"],
     aspect_hints = ["//features:macro_constants"],
     textual_hdrs = ["macro_constants_textual.inc"],
+    deps = [":macro_constants_dependency"],
+)
+
+# A dependency whose macros are used by `macro_constants`, but which doesn't enable the
+# `macro_constants` feature.
+crubit_test_cc_library(
+    name = "macro_constants_dependency",
+    hdrs = ["macro_constants_dependency.h"],
 )
 
 rust_api_from_cpp(

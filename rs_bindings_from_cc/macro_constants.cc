@@ -19,6 +19,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Basic/TokenKinds.h"
+#include "clang/Lex/ExternalPreprocessorSource.h"
 #include "clang/Lex/LiteralSupport.h"
 #include "clang/Lex/MacroInfo.h"
 #include "clang/Lex/Preprocessor.h"
@@ -26,15 +27,24 @@
 #include "clang/Sema/Ownership.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 
 namespace crubit {
 namespace {
 
-// The maximum number of tokens in a macro, so that pathological macros can't
-// make the bindings generator slow or overflow its stack.
-constexpr size_t kMaxTokens = 1024;
+// Bounds on the work done for a single macro, so that pathological macros
+// can't make the bindings generator slow or overflow its stack.
+//
+// The maximum number of tokens that a macro may expand to.
+constexpr size_t kMaxExpandedTokens = 1024;
+// The maximum depth of nested macro expansions.
+constexpr size_t kMaxExpansionDepth = 64;
+// The maximum total number of nested macro expansions performed for a single
+// macro, bounding exponential expansion of empty or small macro DAGs.
+constexpr size_t kMaxExpansionSteps = 4096;
 
 // Silences all diagnostics while it is alive (unsupported macros are skipped
 // silently), but records whether any errors occurred.
@@ -95,6 +105,74 @@ bool IsSupportedIntegralType(clang::QualType type) {
     default:
       return false;
   }
+}
+
+// Appends the tokens that the object-like macro `name` (defined by
+// `macro_info`) expands to to `out`, recursively expanding other object-like
+// macros.
+//
+// `expanding` holds the macros that are currently being expanded. As in the C
+// preprocessor, they are not expanded again (but they will make parsing fail,
+// because they are left as identifiers).
+//
+// Returns false if the macro can't be expanded, e.g. because it uses token
+// pasting or exceeds the expansion limits.
+bool ExpandObjectLikeMacro(
+    clang::Preprocessor& preprocessor, const clang::IdentifierInfo& name,
+    const clang::MacroInfo& macro_info,
+    llvm::SmallVectorImpl<const clang::IdentifierInfo*>& expanding,
+    size_t& expansion_steps, llvm::SmallVectorImpl<clang::Token>& out) {
+  if (macro_info.isFunctionLike() || macro_info.isBuiltinMacro()) {
+    return false;
+  }
+  if (expanding.size() >= kMaxExpansionDepth ||
+      ++expansion_steps > kMaxExpansionSteps) {
+    return false;
+  }
+  expanding.push_back(&name);
+  for (const clang::Token& token : macro_info.tokens()) {
+    // Token pasting (`##`) is also performed in object-like macros. (`#` is
+    // not an operator in object-like macros, and isn't part of any supported
+    // expression either.)
+    if (token.isOneOf(clang::tok::hash, clang::tok::hashhash,
+                      clang::tok::hashat)) {
+      return false;
+    }
+    if (const clang::IdentifierInfo* identifier = token.getIdentifierInfo()) {
+      // Tokens deserialized from a precompiled header module may not have
+      // loaded their macro definition yet.
+      if (identifier->isOutOfDate()) {
+        if (clang::ExternalPreprocessorSource* external =
+                preprocessor.getExternalSource()) {
+          external->updateOutOfDateIdentifier(*identifier);
+        }
+      }
+      if (identifier->hasMacroDefinition() &&
+          !llvm::is_contained(expanding, identifier)) {
+        clang::MacroDefinition nested_def =
+            preprocessor.getMacroDefinition(identifier);
+        if (nested_def && !nested_def.isAmbiguous()) {
+          if (const clang::MacroInfo* nested_macro_info =
+                  nested_def.getMacroInfo()) {
+            // Function-like macros are only expanded if they are followed by
+            // `(`, which can't be part of a supported expression. Since they
+            // are never supported, `ExpandObjectLikeMacro` fails for them in
+            // either case.
+            if (!ExpandObjectLikeMacro(preprocessor, *identifier,
+                                       *nested_macro_info, expanding,
+                                       expansion_steps, out)) {
+              return false;
+            }
+            continue;
+          }
+        }
+      }
+    }
+    if (out.size() >= kMaxExpandedTokens) return false;
+    out.push_back(token);
+  }
+  expanding.pop_back();
+  return true;
 }
 
 std::optional<clang::BinaryOperatorKind> GetBinaryOperatorKind(
@@ -159,8 +237,9 @@ std::optional<clang::UnaryOperatorKind> GetUnaryOperatorKind(
 
 // A recursive descent parser for the subset of C++ constant expressions that
 // is supported in macro constants: integer, character, and boolean literals,
-// parentheses, unary and binary operators, and `?:`. The expressions are built
-// using `Sema`, so that they have the same types and semantics as in C++.
+// parentheses, unary and binary operators, and `?:`. References to other
+// object-like macros are expanded beforehand. The expressions are built using
+// `Sema`, so that they have the same types and semantics as in C++.
 class MacroExpressionParser {
  public:
   MacroExpressionParser(clang::Sema& sema, llvm::ArrayRef<clang::Token> tokens)
@@ -328,14 +407,18 @@ std::optional<MacroConstant> SynthesizeMacroConstant(
       !end_loc.isFileID()) {
     return std::nullopt;
   }
-  if (macro_info.isFunctionLike() || macro_info.isBuiltinMacro() ||
-      macro_info.getNumTokens() > kMaxTokens) {
+
+  llvm::SmallVector<clang::Token, 16> tokens;
+  llvm::SmallVector<const clang::IdentifierInfo*, 4> expanding;
+  size_t expansion_steps = 0;
+  if (!ExpandObjectLikeMacro(sema.getPreprocessor(), name, macro_info,
+                             expanding, expansion_steps, tokens)) {
     return std::nullopt;
   }
 
   clang::ASTContext& ast_context = sema.getASTContext();
   ScopedDiagnosticSuppression diagnostic_suppression(sema.getDiagnostics());
-  MacroExpressionParser parser(sema, macro_info.tokens());
+  MacroExpressionParser parser(sema, tokens);
   clang::Expr* expr = parser.Parse();
   if (expr == nullptr || diagnostic_suppression.HasErrorOccurred() ||
       expr->containsErrors()) {
@@ -348,8 +431,9 @@ std::optional<MacroConstant> SynthesizeMacroConstant(
   if (!expr->getIntegerConstantExpr(ast_context).has_value())
     return std::nullopt;
 
-  // Make the initializer span the whole macro definition, so that the source
-  // range of the variable is the macro definition.
+  // Make the initializer span the whole macro definition (rather than, say,
+  // the definition of a nested macro), so that the source range of the
+  // variable is the macro definition.
   clang::ExprResult wrapped_expr = sema.ActOnParenExpr(name_loc, end_loc, expr);
   if (!wrapped_expr.isUsable()) return std::nullopt;
   expr = wrapped_expr.get();
