@@ -17,6 +17,7 @@ rust_api_from_cpp(
 crubit_test_cc_library(
     name = "thread_unsafe_types",
     hdrs = ["thread_unsafe_types.h"],
+    deps = ["//support:annotations"],
 )
 
 rust_api_from_cpp(
