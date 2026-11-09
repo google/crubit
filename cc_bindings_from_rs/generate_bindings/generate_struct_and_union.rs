@@ -4457,7 +4457,10 @@ pub fn generate_const<'tcx>(
     };
     let rust_type = ty;
     let cc_type = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
-    let cc_name = format_cc_ident(tcx.item_name(def_id).as_str())?;
+    let Some(unqualified_const_name) = db.symbol_unqualified_name(def_id) else {
+        panic!("`generate_const` called on unnamed constant {}", tcx.def_path_str(def_id));
+    };
+    let cc_name = format_cc_ident(unqualified_const_name.cpp_name.as_str())?;
 
     let cc_value = format_const_value(db, const_value, ty)?;
 
