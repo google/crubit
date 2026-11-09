@@ -77,6 +77,12 @@ impl Default for NoDiscardWithMessage {
 pub struct NoDiscardEnum(::ffi_11::c_uint);
 impl NoDiscardEnum {
     pub const kConstant: NoDiscardEnum = NoDiscardEnum(::ffi_11::new_c_uint(0));
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
 }
 impl From<::ffi_11::c_uint> for NoDiscardEnum {
     fn from(value: ::ffi_11::c_uint) -> NoDiscardEnum {
@@ -98,6 +104,12 @@ pub struct NoDiscardEnumWithMessage(::ffi_11::c_uint);
 impl NoDiscardEnumWithMessage {
     pub const kConstantWithMessage: NoDiscardEnumWithMessage =
         NoDiscardEnumWithMessage(::ffi_11::new_c_uint(0));
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
 }
 impl From<::ffi_11::c_uint> for NoDiscardEnumWithMessage {
     fn from(value: ::ffi_11::c_uint) -> NoDiscardEnumWithMessage {

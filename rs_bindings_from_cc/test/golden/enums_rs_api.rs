@@ -23,6 +23,12 @@ impl Color {
     pub const kRed: Color = Color(::ffi_11::new_c_uint(0));
     pub const kBlue: Color = Color(::ffi_11::new_c_uint(1));
     pub const kGreen: Color = Color(::ffi_11::new_c_uint(2));
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
 }
 impl From<::ffi_11::c_uint> for Color {
     fn from(value: ::ffi_11::c_uint) -> Color {
@@ -40,7 +46,14 @@ impl From<Color> for ::ffi_11::c_uint {
 #[cfi_encoding = "12EnumToRename"]
 ///CRUBIT_ANNOTATE: cpp_type=EnumToRename
 pub struct RenamedEnum(::ffi_11::c_uint);
-impl RenamedEnum {}
+impl RenamedEnum {
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
+}
 impl From<::ffi_11::c_uint> for RenamedEnum {
     fn from(value: ::ffi_11::c_uint) -> RenamedEnum {
         RenamedEnum(value)
@@ -60,6 +73,12 @@ pub struct EnumWithRenamedVariants(::ffi_11::c_uint);
 impl EnumWithRenamedVariants {
     pub const FOO: EnumWithRenamedVariants = EnumWithRenamedVariants(::ffi_11::new_c_uint(0));
     pub const BAR: EnumWithRenamedVariants = EnumWithRenamedVariants(::ffi_11::new_c_uint(1));
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
 }
 impl From<::ffi_11::c_uint> for EnumWithRenamedVariants {
     fn from(value: ::ffi_11::c_uint) -> EnumWithRenamedVariants {
@@ -77,7 +96,14 @@ impl From<EnumWithRenamedVariants> for ::ffi_11::c_uint {
 #[cfi_encoding = "5Empty"]
 ///CRUBIT_ANNOTATE: cpp_type=Empty
 pub struct Empty(::ffi_11::c_uint);
-impl Empty {}
+impl Empty {
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
+}
 impl From<::ffi_11::c_uint> for Empty {
     fn from(value: ::ffi_11::c_uint) -> Empty {
         Empty(value)
@@ -94,7 +120,14 @@ impl From<Empty> for ::ffi_11::c_uint {
 #[cfi_encoding = "9EmptyBool"]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyBool
 pub struct EmptyBool(bool);
-impl EmptyBool {}
+impl EmptyBool {
+    pub const fn from_raw(value: bool) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> bool {
+        self.0
+    }
+}
 impl From<bool> for EmptyBool {
     fn from(value: bool) -> EmptyBool {
         EmptyBool(value)
@@ -111,7 +144,14 @@ impl From<EmptyBool> for bool {
 #[cfi_encoding = "8EmptyInt"]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyInt
 pub struct EmptyInt(::ffi_11::c_uint);
-impl EmptyInt {}
+impl EmptyInt {
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
+}
 impl From<::ffi_11::c_uint> for EmptyInt {
     fn from(value: ::ffi_11::c_uint) -> EmptyInt {
         EmptyInt(value)
@@ -128,7 +168,14 @@ impl From<EmptyInt> for ::ffi_11::c_uint {
 #[cfi_encoding = "9EmptyChar"]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyChar
 pub struct EmptyChar(::ffi_11::c_char);
-impl EmptyChar {}
+impl EmptyChar {
+    pub const fn from_raw(value: ::ffi_11::c_char) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_char {
+        self.0
+    }
+}
 impl From<::ffi_11::c_char> for EmptyChar {
     fn from(value: ::ffi_11::c_char) -> EmptyChar {
         EmptyChar(value)
@@ -148,6 +195,12 @@ pub struct NonEmptyBool(bool);
 impl NonEmptyBool {
     pub const kBool1: NonEmptyBool = NonEmptyBool(false);
     pub const kBool2: NonEmptyBool = NonEmptyBool(true);
+    pub const fn from_raw(value: bool) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> bool {
+        self.0
+    }
 }
 impl From<bool> for NonEmptyBool {
     fn from(value: bool) -> NonEmptyBool {
@@ -168,6 +221,12 @@ pub struct NonEmptyInt(::ffi_11::c_uint);
 impl NonEmptyInt {
     pub const kInt1: NonEmptyInt = NonEmptyInt(::ffi_11::new_c_uint(0));
     pub const kInt2: NonEmptyInt = NonEmptyInt(::ffi_11::new_c_uint(4294967295));
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
 }
 impl From<::ffi_11::c_uint> for NonEmptyInt {
     fn from(value: ::ffi_11::c_uint) -> NonEmptyInt {
@@ -188,6 +247,12 @@ pub struct NonEmptyChar(::ffi_11::c_char);
 impl NonEmptyChar {
     pub const kChar1: NonEmptyChar = NonEmptyChar(::ffi_11::new_c_char(0 as u8));
     pub const kChar2: NonEmptyChar = NonEmptyChar(::ffi_11::new_c_char(97 as u8));
+    pub const fn from_raw(value: ::ffi_11::c_char) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_char {
+        self.0
+    }
 }
 impl From<::ffi_11::c_char> for NonEmptyChar {
     fn from(value: ::ffi_11::c_char) -> NonEmptyChar {
@@ -205,7 +270,14 @@ impl From<NonEmptyChar> for ::ffi_11::c_char {
 #[cfi_encoding = "10EmptyClass"]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyClass
 pub struct EmptyClass(::ffi_11::c_int);
-impl EmptyClass {}
+impl EmptyClass {
+    pub const fn from_raw(value: ::ffi_11::c_int) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_int {
+        self.0
+    }
+}
 impl From<::ffi_11::c_int> for EmptyClass {
     fn from(value: ::ffi_11::c_int) -> EmptyClass {
         EmptyClass(value)
@@ -222,7 +294,14 @@ impl From<EmptyClass> for ::ffi_11::c_int {
 #[cfi_encoding = "14EmptyBoolClass"]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyBoolClass
 pub struct EmptyBoolClass(bool);
-impl EmptyBoolClass {}
+impl EmptyBoolClass {
+    pub const fn from_raw(value: bool) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> bool {
+        self.0
+    }
+}
 impl From<bool> for EmptyBoolClass {
     fn from(value: bool) -> EmptyBoolClass {
         EmptyBoolClass(value)
@@ -239,7 +318,14 @@ impl From<EmptyBoolClass> for bool {
 #[cfi_encoding = "13EmptyIntClass"]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyIntClass
 pub struct EmptyIntClass(::ffi_11::c_int);
-impl EmptyIntClass {}
+impl EmptyIntClass {
+    pub const fn from_raw(value: ::ffi_11::c_int) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_int {
+        self.0
+    }
+}
 impl From<::ffi_11::c_int> for EmptyIntClass {
     fn from(value: ::ffi_11::c_int) -> EmptyIntClass {
         EmptyIntClass(value)
@@ -256,7 +342,14 @@ impl From<EmptyIntClass> for ::ffi_11::c_int {
 #[cfi_encoding = "14EmptyCharClass"]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyCharClass
 pub struct EmptyCharClass(::ffi_11::c_char);
-impl EmptyCharClass {}
+impl EmptyCharClass {
+    pub const fn from_raw(value: ::ffi_11::c_char) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_char {
+        self.0
+    }
+}
 impl From<::ffi_11::c_char> for EmptyCharClass {
     fn from(value: ::ffi_11::c_char) -> EmptyCharClass {
         EmptyCharClass(value)
@@ -276,6 +369,12 @@ pub struct NonEmptyBoolClass(bool);
 impl NonEmptyBoolClass {
     pub const k1: NonEmptyBoolClass = NonEmptyBoolClass(false);
     pub const k2: NonEmptyBoolClass = NonEmptyBoolClass(true);
+    pub const fn from_raw(value: bool) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> bool {
+        self.0
+    }
 }
 impl From<bool> for NonEmptyBoolClass {
     fn from(value: bool) -> NonEmptyBoolClass {
@@ -296,6 +395,12 @@ pub struct NonEmptyIntClass(::ffi_11::c_uint);
 impl NonEmptyIntClass {
     pub const k1: NonEmptyIntClass = NonEmptyIntClass(::ffi_11::new_c_uint(0));
     pub const k2: NonEmptyIntClass = NonEmptyIntClass(::ffi_11::new_c_uint(4294967295));
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
 }
 impl From<::ffi_11::c_uint> for NonEmptyIntClass {
     fn from(value: ::ffi_11::c_uint) -> NonEmptyIntClass {
@@ -316,6 +421,12 @@ pub struct NonEmptyCharClass(::ffi_11::c_char);
 impl NonEmptyCharClass {
     pub const k1: NonEmptyCharClass = NonEmptyCharClass(::ffi_11::new_c_char(0 as u8));
     pub const k2: NonEmptyCharClass = NonEmptyCharClass(::ffi_11::new_c_char(97 as u8));
+    pub const fn from_raw(value: ::ffi_11::c_char) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_char {
+        self.0
+    }
 }
 impl From<::ffi_11::c_char> for NonEmptyCharClass {
     fn from(value: ::ffi_11::c_char) -> NonEmptyCharClass {
@@ -350,6 +461,12 @@ impl EnumWithUnbindableEnumerator {
     pub const kBindable: EnumWithUnbindableEnumerator =
         EnumWithUnbindableEnumerator(::ffi_11::new_c_uint(0)); // Omitting bindings for kUnbindable
                                                                // reason: unknown attribute(s): maybe_unused
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
 }
 impl From<::ffi_11::c_uint> for EnumWithUnbindableEnumerator {
     fn from(value: ::ffi_11::c_uint) -> EnumWithUnbindableEnumerator {

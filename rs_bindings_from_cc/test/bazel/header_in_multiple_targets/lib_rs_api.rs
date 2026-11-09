@@ -82,6 +82,12 @@ pub mod shared_ns {
     impl Color {
         pub const kRed: Color = Color(::ffi_11::new_c_int(0));
         pub const kGreen: Color = Color(::ffi_11::new_c_int(1));
+        pub const fn from_raw(value: ::ffi_11::c_int) -> Self {
+            Self(value)
+        }
+        pub const fn into_raw(self) -> ::ffi_11::c_int {
+            self.0
+        }
     }
     impl From<::ffi_11::c_int> for Color {
         fn from(value: ::ffi_11::c_int) -> Color {

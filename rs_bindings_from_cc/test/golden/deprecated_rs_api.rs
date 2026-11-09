@@ -92,7 +92,14 @@ impl Default for DeprecatedStructWithMessage {
 #[cfi_encoding = "14DeprecatedEnum"]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnum
 pub struct DeprecatedEnum(::ffi_11::c_uint);
-impl DeprecatedEnum {}
+impl DeprecatedEnum {
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
+}
 impl From<::ffi_11::c_uint> for DeprecatedEnum {
     fn from(value: ::ffi_11::c_uint) -> DeprecatedEnum {
         DeprecatedEnum(value)
@@ -110,7 +117,14 @@ impl From<DeprecatedEnum> for ::ffi_11::c_uint {
 #[cfi_encoding = "25DeprecatedEnumWithMessage"]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnumWithMessage
 pub struct DeprecatedEnumWithMessage(::ffi_11::c_uint);
-impl DeprecatedEnumWithMessage {}
+impl DeprecatedEnumWithMessage {
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
+}
 impl From<::ffi_11::c_uint> for DeprecatedEnumWithMessage {
     fn from(value: ::ffi_11::c_uint) -> DeprecatedEnumWithMessage {
         DeprecatedEnumWithMessage(value)
@@ -247,6 +261,12 @@ impl DeprecatedEnumerators {
     #[deprecated = "old"]
     pub const kDeprecatedEnumeratorWithMessage: DeprecatedEnumerators =
         DeprecatedEnumerators(::ffi_11::new_c_uint(1));
+    pub const fn from_raw(value: ::ffi_11::c_uint) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_uint {
+        self.0
+    }
 }
 impl From<::ffi_11::c_uint> for DeprecatedEnumerators {
     fn from(value: ::ffi_11::c_uint) -> DeprecatedEnumerators {

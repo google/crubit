@@ -171,6 +171,12 @@ impl DefaultEnum {
     pub const kZero: DefaultEnum = DefaultEnum(::ffi_11::new_c_int(0));
     pub const kOne: DefaultEnum = DefaultEnum(::ffi_11::new_c_int(1));
     pub const kTwo: DefaultEnum = DefaultEnum(::ffi_11::new_c_int(2));
+    pub const fn from_raw(value: ::ffi_11::c_int) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_int {
+        self.0
+    }
 }
 impl From<::ffi_11::c_int> for DefaultEnum {
     fn from(value: ::ffi_11::c_int) -> DefaultEnum {
@@ -199,6 +205,12 @@ impl I64Enum {
     pub const kNegOne: I64Enum = I64Enum(::ffi_11::new_c_long(-1));
     pub const kZero: I64Enum = I64Enum(::ffi_11::new_c_long(0));
     pub const kOne: I64Enum = I64Enum(::ffi_11::new_c_long(1));
+    pub const fn from_raw(value: ::ffi_11::c_long) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_long {
+        self.0
+    }
 }
 impl From<::ffi_11::c_long> for I64Enum {
     fn from(value: ::ffi_11::c_long) -> I64Enum {
@@ -228,6 +240,12 @@ pub mod some_namespace {
         pub const kZero: EnumInNamespace = EnumInNamespace(::ffi_11::new_c_int(0));
         pub const kOne: EnumInNamespace = EnumInNamespace(::ffi_11::new_c_int(1));
         pub const kTwo: EnumInNamespace = EnumInNamespace(::ffi_11::new_c_int(2));
+        pub const fn from_raw(value: ::ffi_11::c_int) -> Self {
+            Self(value)
+        }
+        pub const fn into_raw(self) -> ::ffi_11::c_int {
+            self.0
+        }
     }
     impl From<::ffi_11::c_int> for EnumInNamespace {
         fn from(value: ::ffi_11::c_int) -> EnumInNamespace {

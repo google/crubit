@@ -61,6 +61,12 @@ impl Default for DisplayableStruct {
 pub struct DisplayableEnum(::ffi_11::c_int);
 impl DisplayableEnum {
     pub const kKnown: DisplayableEnum = DisplayableEnum(::ffi_11::new_c_int(1));
+    pub const fn from_raw(value: ::ffi_11::c_int) -> Self {
+        Self(value)
+    }
+    pub const fn into_raw(self) -> ::ffi_11::c_int {
+        self.0
+    }
 }
 impl From<::ffi_11::c_int> for DisplayableEnum {
     fn from(value: ::ffi_11::c_int) -> DisplayableEnum {
