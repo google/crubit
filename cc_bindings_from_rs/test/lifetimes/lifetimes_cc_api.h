@@ -32,9 +32,8 @@
 
 namespace lifetimes {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: lifetimes_golden :: StructWithLifetime") alignas(8)
-    [[clang::trivial_abi]] StructWithLifetime final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: lifetimes_golden :: StructWithLifetime")
+    [[clang::trivial_abi]] alignas(8) StructWithLifetime final {
  public:
   // Type is not a C++ aggregate: Field `field_with_lifetime` is not
   // default-constructible in C++
@@ -89,8 +88,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: lifetimes_golden :: StructWithLifetimeAndDropGlue") alignas(8)
-    [[clang::trivial_abi]] StructWithLifetimeAndDropGlue final {
+    ":: lifetimes_golden :: StructWithLifetimeAndDropGlue")
+    [[clang::trivial_abi]] alignas(8) StructWithLifetimeAndDropGlue final {
  public:
   // Type is not a C++ aggregate: Field `field_with_lifetime` is not
   // default-constructible in C++

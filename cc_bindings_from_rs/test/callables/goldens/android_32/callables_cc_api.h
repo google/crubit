@@ -44,9 +44,8 @@
 namespace callables {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: callables_golden :: CallbackHolder") alignas(4) [[clang::trivial_abi]]
-CallbackHolder final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: CallbackHolder")
+    [[clang::trivial_abi]] alignas(4) CallbackHolder final {
  public:
   // Default::default
   CallbackHolder();
@@ -83,9 +82,8 @@ CallbackHolder final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: callables_golden :: CppMovableDrop") alignas(4) [[clang::trivial_abi]]
-CppMovableDrop final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: CppMovableDrop")
+    [[clang::trivial_abi]] alignas(4) CppMovableDrop final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -116,9 +114,8 @@ CppMovableDrop final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: callables_golden :: NonCppMovable") alignas(4) [[clang::trivial_abi]]
-NonCppMovable final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: NonCppMovable")
+    [[clang::trivial_abi]] alignas(4) NonCppMovable final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -150,7 +147,7 @@ NonCppMovable final {
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: Point") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: Point")
     [[clang::trivial_abi]] Point final {
  public:
   bool operator==(::callables::Point const& other) const;

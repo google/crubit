@@ -27,8 +27,8 @@ namespace send_sync_types {
 
 //  4. Implements neither Send nor Sync (via raw pointer).
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: send_sync_types_golden :: NeitherSendNorSync") alignas(4)
-    [[clang::trivial_abi]] NeitherSendNorSync final {
+    ":: send_sync_types_golden :: NeitherSendNorSync")
+    [[clang::trivial_abi]] alignas(4) NeitherSendNorSync final {
  public:
   // Type is not a C++ aggregate: Field `1` has a type unsupported in C++
 
@@ -56,8 +56,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 //  1. Implements both Send and Sync.
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: send_sync_types_golden :: SendAndSync") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: send_sync_types_golden :: SendAndSync")
     [[clang::trivial_abi]] SendAndSync final {
  public:
   ::std::int32_t __field0{};
@@ -67,9 +66,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 //  2. Implements Send but NOT Sync (via Cell).
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: send_sync_types_golden :: SendButNotSync") alignas(4)
-    [[clang::trivial_abi]] SendButNotSync final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: send_sync_types_golden :: SendButNotSync")
+    [[clang::trivial_abi]] alignas(4) SendButNotSync final {
  public:
   // Type is not a C++ aggregate: Field `1` has a type unsupported in C++
 
@@ -97,9 +95,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 //  3. Does NOT implement Send, but implements Sync (via MutexGuard).
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: send_sync_types_golden :: SyncButNotSend") alignas(4)
-    [[clang::trivial_abi]] SyncButNotSend final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: send_sync_types_golden :: SyncButNotSend")
+    [[clang::trivial_abi]] alignas(4) SyncButNotSend final {
  public:
   // Type is not a C++ aggregate: Field `1` has a type unsupported in C++
 

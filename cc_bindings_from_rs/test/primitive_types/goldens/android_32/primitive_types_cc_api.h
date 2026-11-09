@@ -40,8 +40,8 @@ void c_char_ptr_arg(decltype(char(0)) const* __param_0);
 namespace primitive_types::field_types {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: primitive_types_golden :: field_types :: Types") alignas(4)
-    [[clang::trivial_abi]] Types final {
+    ":: primitive_types_golden :: field_types :: Types")
+    [[clang::trivial_abi]] alignas(4) Types final {
  public:
   // Type is not a C++ aggregate: Field `i8_func` is not default-constructible
   // in C++
@@ -237,7 +237,7 @@ namespace primitive_types::test_c_void_ptr {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: primitive_types_golden :: test_c_void_ptr :: "
-    "StructWithCVoidPointerMember") alignas(4) [[clang::trivial_abi]]
+    "StructWithCVoidPointerMember") [[clang::trivial_abi]]
 StructWithCVoidPointerMember final {
  public:
   const void* ptr_const{};

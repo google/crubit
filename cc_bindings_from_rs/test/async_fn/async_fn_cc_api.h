@@ -40,8 +40,8 @@ namespace async_fn {
 // async_fn_golden::AsyncFnRustLayoutEquivalent suppressed due to being mapped
 // to an existing C++ type (crubit::test::AsyncFnCppLayoutEquivalent)
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: async_fn_golden :: NotCppMovable") alignas(
-    4) [[clang::trivial_abi]] NotCppMovable final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: async_fn_golden :: NotCppMovable")
+    [[clang::trivial_abi]] alignas(4) NotCppMovable final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -73,9 +73,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: async_fn_golden :: NotCppMovable") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: async_fn_golden :: StructWithDrop") alignas(4) [[clang::trivial_abi]]
-StructWithDrop final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: async_fn_golden :: StructWithDrop")
+    [[clang::trivial_abi]] alignas(4) StructWithDrop final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 

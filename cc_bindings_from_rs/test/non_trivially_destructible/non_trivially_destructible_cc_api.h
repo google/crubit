@@ -26,11 +26,9 @@
 
 namespace non_trivially_destructible {
 
-struct
-    CRUBIT_INTERNAL_RUST_TYPE(
-        ":: non_trivially_destructible_golden :: "
-        "NonTriviallyDestructable") alignas(4) [[clang::trivial_abi]]
-    NonTriviallyDestructable final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: non_trivially_destructible_golden :: NonTriviallyDestructable")
+    [[clang::trivial_abi]] alignas(4) NonTriviallyDestructable final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 

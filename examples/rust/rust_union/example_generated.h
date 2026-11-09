@@ -26,9 +26,8 @@
 
 namespace example_crate {
 
-union CRUBIT_INTERNAL_RUST_TYPE(
-    ":: example_crate_golden :: ReprRustUnion") alignas(8)
-    [[clang::trivial_abi]] ReprRustUnion final {
+union CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: ReprRustUnion")
+    [[clang::trivial_abi]] alignas(8) ReprRustUnion final {
  public:
   // Default::default
   ReprRustUnion();

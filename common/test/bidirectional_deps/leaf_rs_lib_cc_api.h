@@ -28,8 +28,8 @@
 
 namespace leaf_rs_lib {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
-    1) [[clang::trivial_abi]] LeafRsEnum final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum")
+    [[clang::trivial_abi]] alignas(1) LeafRsEnum final {
  public:
   // `leaf_rs_lib_golden::LeafRsEnum` doesn't implement the `Default` trait
   LeafRsEnum() = delete;
@@ -137,8 +137,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
       storage_;
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
-    1) [[clang::trivial_abi]] LeafRsType final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType")
+    [[clang::trivial_abi]] alignas(1) LeafRsType final {
  public:
   // Default::default
   LeafRsType();

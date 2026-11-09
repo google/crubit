@@ -39,8 +39,8 @@ namespace structs::abi_classification {
 //  Expected ABI classification: SSE.  (For indirect confirmation, see the
 //  disassembly at https://godbolt.org/z/b7eeGcrGn).
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: abi_classification :: StructFloat") alignas(4)
-    [[clang::trivial_abi]] StructFloat final {
+    ":: structs_golden :: abi_classification :: StructFloat")
+    [[clang::trivial_abi]] alignas(4) StructFloat final {
  public:
   // `structs_golden::abi_classification::StructFloat` doesn't implement the
   // `Default` trait
@@ -82,8 +82,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 //  Expected ABI classification: integer.  (For indirect confirmation, see
 //  the disassembly at https://godbolt.org/z/b7eeGcrGn).
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: abi_classification :: StructInteger") alignas(4)
-    [[clang::trivial_abi]] StructInteger final {
+    ":: structs_golden :: abi_classification :: StructInteger")
+    [[clang::trivial_abi]] alignas(4) StructInteger final {
  public:
   // `structs_golden::abi_classification::StructInteger` doesn't implement the
   // `Default` trait
@@ -123,8 +123,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 //  Expected ABI classification: memory.  (For indirect confirmation, see
 //  the disassembly at https://godbolt.org/z/b7eeGcrGn).
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: abi_classification :: StructMemory") alignas(1)
-    [[clang::trivial_abi]] __attribute__((packed)) StructMemory final {
+    ":: structs_golden :: abi_classification :: StructMemory")
+    [[clang::trivial_abi]] alignas(1) __attribute__((packed))
+    StructMemory final {
  public:
   // `structs_golden::abi_classification::StructMemory` doesn't implement the
   // `Default` trait
@@ -169,9 +170,8 @@ namespace structs::aggregate_initialization {
 // CRUBIT_ANNOTATE: field_drop_order_does_not_matter=
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: aggregate_initialization :: "
-    "AnnotatedTwoDrops") alignas(4) [[clang::trivial_abi]]
-AnnotatedTwoDrops final {
+    ":: structs_golden :: aggregate_initialization :: AnnotatedTwoDrops")
+    [[clang::trivial_abi]] AnnotatedTwoDrops final {
  public:
   ::rs::alloc::string::String __field0{};
   ::rs::alloc::string::String __field1{};
@@ -181,11 +181,9 @@ AnnotatedTwoDrops final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct
-    CRUBIT_INTERNAL_RUST_TYPE(
-        ":: structs_golden :: aggregate_initialization :: "
-        "BasicAggregate") alignas(4) [[clang::trivial_abi]]
-    BasicAggregate final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: structs_golden :: aggregate_initialization :: BasicAggregate")
+    [[clang::trivial_abi]] BasicAggregate final {
  public:
   ::std::int32_t x{};
   ::std::int32_t y{};
@@ -196,9 +194,8 @@ struct
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: aggregate_initialization :: "
-    "CustomDropStruct") alignas(4) [[clang::trivial_abi]]
-CustomDropStruct final {
+    ":: structs_golden :: aggregate_initialization :: CustomDropStruct")
+    [[clang::trivial_abi]] alignas(4) CustomDropStruct final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -235,9 +232,8 @@ CustomDropStruct final {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: aggregate_initialization :: "
-    "NonExhaustiveStruct") alignas(4) [[clang::trivial_abi]]
-NonExhaustiveStruct final {
+    ":: structs_golden :: aggregate_initialization :: NonExhaustiveStruct")
+    [[clang::trivial_abi]] alignas(4) NonExhaustiveStruct final {
  public:
   // Type is not a C++ aggregate: Type is marked `#[non_exhaustive]`
 
@@ -272,11 +268,9 @@ NonExhaustiveStruct final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct
-    CRUBIT_INTERNAL_RUST_TYPE(
-        ":: structs_golden :: aggregate_initialization :: "
-        "SingleDropField") alignas(4) [[clang::trivial_abi]]
-    SingleDropField final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: structs_golden :: aggregate_initialization :: SingleDropField")
+    [[clang::trivial_abi]] SingleDropField final {
  public:
   ::rs::alloc::string::String __field0{};
 
@@ -286,9 +280,8 @@ struct
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: aggregate_initialization :: "
-    "StructWithPrivateField") alignas(4) [[clang::trivial_abi]]
-StructWithPrivateField final {
+    ":: structs_golden :: aggregate_initialization :: StructWithPrivateField")
+    [[clang::trivial_abi]] alignas(4) StructWithPrivateField final {
  public:
   // Type is not a C++ aggregate: Field `y` is not public
 
@@ -325,11 +318,9 @@ StructWithPrivateField final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct
-    CRUBIT_INTERNAL_RUST_TYPE(
-        ":: structs_golden :: aggregate_initialization :: "
-        "TupleAggregate") alignas(4) [[clang::trivial_abi]]
-    TupleAggregate final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: structs_golden :: aggregate_initialization :: TupleAggregate")
+    [[clang::trivial_abi]] TupleAggregate final {
  public:
   double __field1{};
   ::std::int32_t __field0{};
@@ -340,9 +331,8 @@ struct
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: aggregate_initialization :: "
-    "UnannotatedTwoDrops") alignas(4) [[clang::trivial_abi]]
-UnannotatedTwoDrops final {
+    ":: structs_golden :: aggregate_initialization :: UnannotatedTwoDrops")
+    [[clang::trivial_abi]] alignas(4) UnannotatedTwoDrops final {
  public:
   // Type is not a C++ aggregate: Multiple fields require drop glue (annotate
   // with `#[crubit_annotate::field_drop_order_does_not_matter]` if field drop
@@ -388,8 +378,7 @@ UnannotatedTwoDrops final {
 namespace structs::default_repr {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: default_repr :: Point") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: structs_golden :: default_repr :: Point")
     [[clang::trivial_abi]] Point final {
  public:
   ::std::int32_t x{};
@@ -411,8 +400,8 @@ namespace structs::display {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: display :: DisplayStruct") alignas(4)
-    [[clang::trivial_abi]] DisplayStruct final {
+    ":: structs_golden :: display :: DisplayStruct") [[clang::trivial_abi]]
+DisplayStruct final {
  public:
   // AbslStringify and std::ostream support via std::fmt::Display
   template <typename Sink, typename Str = ::rs::alloc::string::String>
@@ -455,8 +444,8 @@ namespace structs::interior_mutability {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: interior_mutability :: SomeStruct") alignas(4)
-    [[clang::trivial_abi]] SomeStruct final {
+    ":: structs_golden :: interior_mutability :: SomeStruct")
+    [[clang::trivial_abi]] alignas(4) SomeStruct final {
  public:
   // Type is not a C++ aggregate: Field `field` has a type unsupported in C++
 
@@ -488,10 +477,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace structs::keyword_named_fields_and_methods {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct
-    CRUBIT_INTERNAL_RUST_TYPE(
-        ":: structs_golden :: keyword_named_fields_and_methods :: "
-        "AField") alignas(4) [[clang::trivial_abi]] AField final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: structs_golden :: keyword_named_fields_and_methods :: AField")
+    [[clang::trivial_abi]] alignas(4) AField final {
  public:
   // `structs_golden::keyword_named_fields_and_methods::AField` doesn't
   // implement the `Default` trait
@@ -525,8 +513,8 @@ namespace structs::nested_ptr_type_mutability_qualifiers {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: nested_ptr_type_mutability_qualifiers :: "
-    "SomeStruct") alignas(4) [[clang::trivial_abi]] SomeStruct final {
+    ":: structs_golden :: nested_ptr_type_mutability_qualifiers :: SomeStruct")
+    [[clang::trivial_abi]] alignas(4) SomeStruct final {
  public:
   // Type is not a C++ aggregate: Type has a manual `Default` implementation
 
@@ -561,8 +549,8 @@ namespace structs::non_cpp_movable {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: non_cpp_movable :: Point") alignas(4)
-    [[clang::trivial_abi]] Point final {
+    ":: structs_golden :: non_cpp_movable :: Point")
+    [[clang::trivial_abi]] alignas(4) Point final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -607,9 +595,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace structs::repr_c {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: repr_c :: Point") alignas(4) [[clang::trivial_abi]]
-Point final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: structs_golden :: repr_c :: Point")
+    [[clang::trivial_abi]] Point final {
  public:
   ::std::int32_t x{};
   ::std::int32_t y{};
@@ -626,12 +613,67 @@ Point final {
 
 }  // namespace structs::repr_c
 
+namespace structs::requested_alignment_passing_with_no_thunk {
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: structs_golden :: requested_alignment_passing_with_no_thunk :: "
+    "Aligned16") [[clang::trivial_abi]] alignas(16) Aligned16 final {
+ public:
+  double __field0{};
+  double __field1{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: structs_golden :: requested_alignment_passing_with_no_thunk :: Packed")
+    [[clang::trivial_abi]] alignas(1) __attribute__((packed)) Packed final {
+ public:
+  ::std::uint64_t __field0{};
+  ::std::uint8_t __field1{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+::structs::requested_alignment_passing_with_no_thunk::Aligned16
+aligned16_create(double f);
+
+// CRUBIT_ANNOTATE: must_bind=
+double aligned16_inspect(
+    ::structs::requested_alignment_passing_with_no_thunk::Aligned16 s);
+
+// CRUBIT_ANNOTATE: must_bind=
+::structs::requested_alignment_passing_with_no_thunk::Aligned16
+aligned16_multiply(
+    ::structs::requested_alignment_passing_with_no_thunk::Aligned16 x,
+    ::structs::requested_alignment_passing_with_no_thunk::Aligned16 y);
+
+// CRUBIT_ANNOTATE: must_bind=
+::structs::requested_alignment_passing_with_no_thunk::Packed packed_add(
+    ::structs::requested_alignment_passing_with_no_thunk::Packed x,
+    ::structs::requested_alignment_passing_with_no_thunk::Packed y);
+
+// CRUBIT_ANNOTATE: must_bind=
+::structs::requested_alignment_passing_with_no_thunk::Packed packed_create(
+    ::std::uint8_t v);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::uint8_t packed_inspect(
+    ::structs::requested_alignment_passing_with_no_thunk::Packed s);
+
+}  // namespace structs::requested_alignment_passing_with_no_thunk
+
 namespace structs::struct_by_float_passing_with_no_cc_definition {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: struct_by_float_passing_with_no_cc_definition :: "
-    "StructFloat") alignas(4) [[clang::trivial_abi]] StructFloat final {
+    "StructFloat") [[clang::trivial_abi]] alignas(4) StructFloat final {
  public:
   // `structs_golden::struct_by_float_passing_with_no_cc_definition::StructFloat`
   // doesn't implement the `Default` trait
@@ -678,8 +720,8 @@ namespace structs::struct_by_float_passing_with_no_thunk {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: struct_by_float_passing_with_no_thunk :: "
-    "StructFloat") alignas(4) [[clang::trivial_abi]] StructFloat final {
+    ":: structs_golden :: struct_by_float_passing_with_no_thunk :: StructFloat")
+    [[clang::trivial_abi]] StructFloat final {
  public:
   double __field0{};
   float __field1{};
@@ -708,7 +750,7 @@ namespace structs::unsupported_types {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: unsupported_types :: SomeStruct") alignas(4)
+    ":: structs_golden :: unsupported_types :: SomeStruct")
     [[clang::trivial_abi]] SomeStruct final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -734,9 +776,8 @@ namespace structs::zst_fields {
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: zst_fields :: ZstFields") alignas(4)
-    [[clang::trivial_abi]] ZstFields final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: structs_golden :: zst_fields :: ZstFields")
+    [[clang::trivial_abi]] alignas(4) ZstFields final {
  public:
   // Type is not a C++ aggregate: Field `zst1` has a type unsupported in C++
 
@@ -1468,6 +1509,147 @@ inline ::std::int32_t get_x(::structs::repr_c::Point p) {
 }
 
 }  // namespace structs::repr_c
+
+namespace structs::requested_alignment_passing_with_no_thunk {
+
+static_assert(
+    sizeof(::structs::requested_alignment_passing_with_no_thunk::Aligned16) ==
+        16,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::structs::requested_alignment_passing_with_no_thunk::Aligned16) ==
+        16,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<
+              ::structs::requested_alignment_passing_with_no_thunk::Aligned16>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::structs::requested_alignment_passing_with_no_thunk::Aligned16>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::structs::requested_alignment_passing_with_no_thunk::Aligned16>);
+inline void ::structs::requested_alignment_passing_with_no_thunk::Aligned16::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::structs::requested_alignment_passing_with_no_thunk::Aligned16;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(8 == offsetof(__crubit_assert_type, __field1));
+}
+static_assert(
+    sizeof(::structs::requested_alignment_passing_with_no_thunk::Packed) == 9,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::structs::requested_alignment_passing_with_no_thunk::Packed) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<
+              ::structs::requested_alignment_passing_with_no_thunk::Packed>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::structs::requested_alignment_passing_with_no_thunk::Packed>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::structs::requested_alignment_passing_with_no_thunk::Packed>);
+inline void ::structs::requested_alignment_passing_with_no_thunk::Packed::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::structs::requested_alignment_passing_with_no_thunk::Packed;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(8 == offsetof(__crubit_assert_type, __field1));
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_ualigned16_ucreate(
+    double,
+    ::structs::requested_alignment_passing_with_no_thunk::Aligned16* __ret_ptr);
+}
+inline ::structs::requested_alignment_passing_with_no_thunk::Aligned16
+aligned16_create(double f) {
+  crubit::Slot<::structs::requested_alignment_passing_with_no_thunk::Aligned16>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_ualigned16_ucreate(
+          f, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" double
+__crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_ualigned16_uinspect(
+    ::structs::requested_alignment_passing_with_no_thunk::Aligned16*);
+}
+inline double aligned16_inspect(
+    ::structs::requested_alignment_passing_with_no_thunk::Aligned16 s) {
+  return __crubit_internal::
+      __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_ualigned16_uinspect(
+          &s);
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_ualigned16_umultiply(
+    ::structs::requested_alignment_passing_with_no_thunk::Aligned16*,
+    ::structs::requested_alignment_passing_with_no_thunk::Aligned16*,
+    ::structs::requested_alignment_passing_with_no_thunk::Aligned16* __ret_ptr);
+}
+inline ::structs::requested_alignment_passing_with_no_thunk::Aligned16
+aligned16_multiply(
+    ::structs::requested_alignment_passing_with_no_thunk::Aligned16 x,
+    ::structs::requested_alignment_passing_with_no_thunk::Aligned16 y) {
+  crubit::Slot<::structs::requested_alignment_passing_with_no_thunk::Aligned16>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_ualigned16_umultiply(
+          &x, &y, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_upacked_uadd(
+    ::structs::requested_alignment_passing_with_no_thunk::Packed*,
+    ::structs::requested_alignment_passing_with_no_thunk::Packed*,
+    ::structs::requested_alignment_passing_with_no_thunk::Packed* __ret_ptr);
+}
+inline ::structs::requested_alignment_passing_with_no_thunk::Packed packed_add(
+    ::structs::requested_alignment_passing_with_no_thunk::Packed x,
+    ::structs::requested_alignment_passing_with_no_thunk::Packed y) {
+  crubit::Slot<::structs::requested_alignment_passing_with_no_thunk::Packed>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_upacked_uadd(
+          &x, &y, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_upacked_ucreate(
+    ::std::uint8_t,
+    ::structs::requested_alignment_passing_with_no_thunk::Packed* __ret_ptr);
+}
+inline ::structs::requested_alignment_passing_with_no_thunk::Packed
+packed_create(::std::uint8_t v) {
+  crubit::Slot<::structs::requested_alignment_passing_with_no_thunk::Packed>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_upacked_ucreate(
+          v, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uint8_t
+__crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_upacked_uinspect(
+    ::structs::requested_alignment_passing_with_no_thunk::Packed*);
+}
+inline ::std::uint8_t packed_inspect(
+    ::structs::requested_alignment_passing_with_no_thunk::Packed s) {
+  return __crubit_internal::
+      __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_upacked_uinspect(
+          &s);
+}
+
+}  // namespace structs::requested_alignment_passing_with_no_thunk
 
 namespace structs::struct_by_float_passing_with_no_cc_definition {
 

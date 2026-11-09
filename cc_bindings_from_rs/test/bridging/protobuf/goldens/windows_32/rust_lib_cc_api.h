@@ -38,8 +38,8 @@
 namespace rust_lib {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(4)
-    [[clang::trivial_abi]] FooService final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService")
+    [[clang::trivial_abi]] alignas(4) FooService final {
  public:
   // Default::default
   FooService();
@@ -85,9 +85,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(4)
 // an existing C++ type (absl::StatusOr<{T}>)
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: rust_lib_golden :: StructWithProto") alignas(4) [[clang::trivial_abi]]
-StructWithProto final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: StructWithProto")
+    [[clang::trivial_abi]] alignas(4) StructWithProto final {
  public:
   // Type is not a C++ aggregate: Field `stats` requires drop glue but is not
   // C++-movable
@@ -327,7 +326,7 @@ inline absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>
 create_proto_status_or(::std::int32_t num) {
   static_assert(
       sizeof(absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>) ==
-              8 &&
+              12 &&
           alignof(
               absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>) ==
               4,

@@ -29,8 +29,8 @@
 
 namespace example_crate {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
-    4) [[clang::trivial_abi]] MyStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct")
+    [[clang::trivial_abi]] alignas(4) MyStruct final {
  public:
   // Default::default
   MyStruct();

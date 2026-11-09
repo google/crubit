@@ -36,9 +36,8 @@
 
 namespace tuple_structs {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: CloneNoDefault") alignas(4)
-    [[clang::trivial_abi]] CloneNoDefault final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuple_structs_golden :: CloneNoDefault")
+    [[clang::trivial_abi]] alignas(4) CloneNoDefault final {
  public:
   // Type is not a C++ aggregate: Field `value` requires drop glue but is not
   // C++-movable
@@ -67,8 +66,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: CopyNoDefault") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuple_structs_golden :: CopyNoDefault")
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -82,8 +80,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: DefaultAndCloneNoUnpin") alignas(4)
-    [[clang::trivial_abi]] DefaultAndCloneNoUnpin final {
+    ":: tuple_structs_golden :: DefaultAndCloneNoUnpin")
+    [[clang::trivial_abi]] alignas(4) DefaultAndCloneNoUnpin final {
  public:
   // Type is not a C++ aggregate: Field `_marker` has a type unsupported in C++
 
@@ -114,8 +112,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: DefaultNoCopyNoClone") alignas(4)
-    [[clang::trivial_abi]] DefaultNoCopyNoClone final {
+    ":: tuple_structs_golden :: DefaultNoCopyNoClone") [[clang::trivial_abi]]
+DefaultNoCopyNoClone final {
  public:
   ::std::int32_t value{};
 
@@ -123,9 +121,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: DontMoveMe") alignas(4) [[clang::trivial_abi]]
-DontMoveMe final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuple_structs_golden :: DontMoveMe")
+    [[clang::trivial_abi]] alignas(4) DontMoveMe final {
  public:
   // Type is not a C++ aggregate: Field `value` requires drop glue but is not
   // C++-movable
@@ -156,8 +153,8 @@ DontMoveMe final {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructOnePrivateArg") alignas(4)
-    [[clang::trivial_abi]] TupleStructOnePrivateArg final {
+    ":: tuple_structs_golden :: TupleStructOnePrivateArg")
+    [[clang::trivial_abi]] alignas(4) TupleStructOnePrivateArg final {
  public:
   // `tuple_structs_golden::TupleStructOnePrivateArg` doesn't implement the
   // `Default` trait
@@ -192,8 +189,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructOnePublicArg") alignas(4)
-    [[clang::trivial_abi]] TupleStructOnePublicArg final {
+    ":: tuple_structs_golden :: TupleStructOnePublicArg") [[clang::trivial_abi]]
+TupleStructOnePublicArg final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructOnePublicArg create(::std::int32_t arg);
@@ -208,11 +205,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct
-    CRUBIT_INTERNAL_RUST_TYPE(
-        ":: tuple_structs_golden :: "
-        "TupleStructOnePublicArgOnePrivateArg") alignas(4)
-        [[clang::trivial_abi]] TupleStructOnePublicArgOnePrivateArg final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: tuple_structs_golden :: TupleStructOnePublicArgOnePrivateArg")
+    [[clang::trivial_abi]] alignas(4)
+        TupleStructOnePublicArgOnePrivateArg final {
  public:
   // Type is not a C++ aggregate: Field `1` is not public
 
@@ -258,8 +254,8 @@ struct
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructTwoPrivateArgs") alignas(4)
-    [[clang::trivial_abi]] TupleStructTwoPrivateArgs final {
+    ":: tuple_structs_golden :: TupleStructTwoPrivateArgs")
+    [[clang::trivial_abi]] alignas(4) TupleStructTwoPrivateArgs final {
  public:
   // `tuple_structs_golden::TupleStructTwoPrivateArgs` doesn't implement the
   // `Default` trait
@@ -300,7 +296,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructTwoPublicArgs") alignas(4)
+    ":: tuple_structs_golden :: TupleStructTwoPublicArgs")
     [[clang::trivial_abi]] TupleStructTwoPublicArgs final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -322,8 +318,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructWithCloneNoDefault") alignas(4)
-    [[clang::trivial_abi]] TupleStructWithCloneNoDefault final {
+    ":: tuple_structs_golden :: TupleStructWithCloneNoDefault")
+    [[clang::trivial_abi]] alignas(4) TupleStructWithCloneNoDefault final {
  public:
   // Type is not a C++ aggregate: Field `0` is not default-constructible in C++
 
@@ -366,8 +362,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructWithCppImmovableType") alignas(4)
-    [[clang::trivial_abi]] TupleStructWithCppImmovableType final {
+    ":: tuple_structs_golden :: TupleStructWithCppImmovableType")
+    [[clang::trivial_abi]] alignas(4) TupleStructWithCppImmovableType final {
  public:
   // Type is not a C++ aggregate: Field `1` is not default-constructible in C++
 
@@ -416,11 +412,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct
-    CRUBIT_INTERNAL_RUST_TYPE(
-        ":: tuple_structs_golden :: "
-        "TupleStructWithDefaultAndCloneNoUnpin") alignas(4)
-        [[clang::trivial_abi]] TupleStructWithDefaultAndCloneNoUnpin final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: tuple_structs_golden :: TupleStructWithDefaultAndCloneNoUnpin")
+    [[clang::trivial_abi]] TupleStructWithDefaultAndCloneNoUnpin final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin create();
@@ -436,7 +430,7 @@ struct
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructWithDefaultNoCopyNoClone") alignas(4)
+    ":: tuple_structs_golden :: TupleStructWithDefaultNoCopyNoClone")
     [[clang::trivial_abi]] TupleStructWithDefaultNoCopyNoClone final {
  public:
   ::tuple_structs::DefaultNoCopyNoClone __field0{};
@@ -447,7 +441,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructWithNoDefault") alignas(4)
+    ":: tuple_structs_golden :: TupleStructWithNoDefault")
     [[clang::trivial_abi]] TupleStructWithNoDefault final {
  public:
   ::tuple_structs::CopyNoDefault __field0{};
@@ -458,8 +452,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructWithNonExhaustiveCtor") alignas(4)
-    [[clang::trivial_abi]] TupleStructWithNonExhaustiveCtor final {
+    ":: tuple_structs_golden :: TupleStructWithNonExhaustiveCtor")
+    [[clang::trivial_abi]] alignas(4) TupleStructWithNonExhaustiveCtor final {
  public:
   // Type is not a C++ aggregate: Type is marked `#[non_exhaustive]`
 
@@ -580,7 +574,7 @@ namespace tuple_structs {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: TupleStructWithTupleFieldType") alignas(4)
+    ":: tuple_structs_golden :: TupleStructWithTupleFieldType")
     [[clang::trivial_abi]] TupleStructWithTupleFieldType final {
  public:
   // CRUBIT_ANNOTATE: must_bind=

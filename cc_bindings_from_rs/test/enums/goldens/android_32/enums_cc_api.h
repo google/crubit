@@ -34,8 +34,8 @@
 namespace enums::param_name_collisions {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: param_name_collisions :: FooBar") alignas(1)
-    [[clang::trivial_abi]] FooBar final {
+    ":: enums_golden :: param_name_collisions :: FooBar")
+    [[clang::trivial_abi]] alignas(1) FooBar final {
  public:
   // `enums_golden::param_name_collisions::FooBar` doesn't implement the
   // `Default` trait
@@ -108,8 +108,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: param_name_collisions :: KeywordEnum") alignas(1)
-    [[clang::trivial_abi]] KeywordEnum final {
+    ":: enums_golden :: param_name_collisions :: KeywordEnum")
+    [[clang::trivial_abi]] alignas(1) KeywordEnum final {
  public:
   // `enums_golden::param_name_collisions::KeywordEnum` doesn't implement the
   // `Default` trait
@@ -183,8 +183,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: param_name_collisions :: OptionLike") alignas(1)
-    [[clang::trivial_abi]] OptionLike final {
+    ":: enums_golden :: param_name_collisions :: OptionLike")
+    [[clang::trivial_abi]] alignas(1) OptionLike final {
  public:
   // `enums_golden::param_name_collisions::OptionLike` doesn't implement the
   // `Default` trait
@@ -277,8 +277,8 @@ bool is_some(::enums::param_name_collisions::OptionLike some);
 namespace enums::qr_error {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: qr_error :: StructuredQrError") alignas(4)
-    [[clang::trivial_abi]] StructuredQrError final {
+    ":: enums_golden :: qr_error :: StructuredQrError")
+    [[clang::trivial_abi]] alignas(4) StructuredQrError final {
  public:
   // `enums_golden::qr_error::StructuredQrError` doesn't implement the `Default`
   // trait
@@ -551,9 +551,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: qr_error :: QrError") alignas(4) [[clang::trivial_abi]]
-QrError final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: qr_error :: QrError")
+    [[clang::trivial_abi]] alignas(4) QrError final {
  public:
   // `enums_golden::qr_error::QrError` doesn't implement the `Default` trait
   QrError() = delete;
@@ -715,9 +714,8 @@ QrError final {
 
 namespace enums::repr_128 {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_128 :: ReprI128") alignas(16)
-    [[clang::trivial_abi]] ReprI128 final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_128 :: ReprI128")
+    [[clang::trivial_abi]] alignas(16) ReprI128 final {
  public:
   // `enums_golden::repr_128::ReprI128` doesn't implement the `Default` trait
   ReprI128() = delete;
@@ -758,9 +756,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_128 :: ReprU128") alignas(16)
-    [[clang::trivial_abi]] ReprU128 final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_128 :: ReprU128")
+    [[clang::trivial_abi]] alignas(16) ReprU128 final {
  public:
   // `enums_golden::repr_128::ReprU128` doesn't implement the `Default` trait
   ReprU128() = delete;
@@ -801,8 +798,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace enums::repr_c {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
-    4) [[clang::trivial_abi]] MyEnum final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum")
+    [[clang::trivial_abi]] alignas(4) MyEnum final {
  public:
   // Default::default
   MyEnum();
@@ -898,8 +895,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_c :: ReprCWithExtremeDiscriminants") alignas(4)
-    [[clang::trivial_abi]] ReprCWithExtremeDiscriminants final {
+    ":: enums_golden :: repr_c :: ReprCWithExtremeDiscriminants")
+    [[clang::trivial_abi]] alignas(4) ReprCWithExtremeDiscriminants final {
  public:
   // `enums_golden::repr_c::ReprCWithExtremeDiscriminants` doesn't implement the
   // `Default` trait
@@ -991,8 +988,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 //  This enum is **not** a "ZST" (Zero-Sized Type), because of the C
 //  representation (even though it has only a single variant with no payload).
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_c :: ReprCWithSingleNoPayloadVariant") alignas(4)
-    [[clang::trivial_abi]] ReprCWithSingleNoPayloadVariant final {
+    ":: enums_golden :: repr_c :: ReprCWithSingleNoPayloadVariant")
+    [[clang::trivial_abi]] alignas(4) ReprCWithSingleNoPayloadVariant final {
  public:
   // `enums_golden::repr_c::ReprCWithSingleNoPayloadVariant` doesn't implement
   // the `Default` trait
@@ -1040,9 +1037,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace enums::repr_c_clone_active_variant {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_c_clone_active_variant :: "
-    "CloneActiveVariant") alignas(4) [[clang::trivial_abi]]
-CloneActiveVariant final {
+    ":: enums_golden :: repr_c_clone_active_variant :: CloneActiveVariant")
+    [[clang::trivial_abi]] alignas(4) CloneActiveVariant final {
  public:
   // Default::default
   CloneActiveVariant();
@@ -1116,8 +1112,8 @@ bool is_c(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 namespace enums::repr_c_clone_counter {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_c_clone_counter :: CloneCount") alignas(4)
-    [[clang::trivial_abi]] CloneCount final {
+    ":: enums_golden :: repr_c_clone_counter :: CloneCount")
+    [[clang::trivial_abi]] alignas(4) CloneCount final {
  public:
   // Default::default
   CloneCount();
@@ -1169,9 +1165,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace enums::repr_c_drop {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_c_drop :: DropMe") alignas(4)
-    [[clang::trivial_abi]] DropMe final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c_drop :: DropMe")
+    [[clang::trivial_abi]] alignas(4) DropMe final {
  public:
   // Default::default
   DropMe();
@@ -1244,9 +1239,8 @@ namespace enums::repr_c_variant_alignment {
 //  and `alignas(12)` is a hard "requested alignment is not a positive power
 //  of 2" C++ error.
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_c_variant_alignment :: "
-    "OverAlignedNarrowPayload") alignas(16) [[clang::trivial_abi]]
-OverAlignedNarrowPayload final {
+    ":: enums_golden :: repr_c_variant_alignment :: OverAlignedNarrowPayload")
+    [[clang::trivial_abi]] alignas(16) OverAlignedNarrowPayload final {
  public:
   // `enums_golden::repr_c_variant_alignment::OverAlignedNarrowPayload` doesn't
   // implement the `Default` trait
@@ -1314,9 +1308,8 @@ OverAlignedNarrowPayload final {
 //  `enum_alignment - payload_offset` happened to produce a correct value
 //  for it.
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_c_variant_alignment :: "
-    "OverAlignedWidePayload") alignas(16) [[clang::trivial_abi]]
-OverAlignedWidePayload final {
+    ":: enums_golden :: repr_c_variant_alignment :: OverAlignedWidePayload")
+    [[clang::trivial_abi]] alignas(16) OverAlignedWidePayload final {
  public:
   // `enums_golden::repr_c_variant_alignment::OverAlignedWidePayload` doesn't
   // implement the `Default` trait
@@ -1381,9 +1374,8 @@ OverAlignedWidePayload final {
 //  throws away the Rust field's alignment. Without a correct `alignas` on the
 //  payload struct the union lands at offset 4 instead of Rust's 8.
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_c_variant_alignment :: "
-    "UnbindableFieldPayload") alignas(8) [[clang::trivial_abi]]
-UnbindableFieldPayload final {
+    ":: enums_golden :: repr_c_variant_alignment :: UnbindableFieldPayload")
+    [[clang::trivial_abi]] alignas(8) UnbindableFieldPayload final {
  public:
   // `enums_golden::repr_c_variant_alignment::UnbindableFieldPayload` doesn't
   // implement the `Default` trait
@@ -1451,9 +1443,8 @@ UnbindableFieldPayload final {
 //  alignment as `enum_alignment - payload_offset` underflowed `u64` here and
 //  panicked while generating bindings.
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_c_variant_alignment :: "
-    "WideTagNarrowAlignment") alignas(4) [[clang::trivial_abi]]
-WideTagNarrowAlignment final {
+    ":: enums_golden :: repr_c_variant_alignment :: WideTagNarrowAlignment")
+    [[clang::trivial_abi]] alignas(4) WideTagNarrowAlignment final {
  public:
   // `enums_golden::repr_c_variant_alignment::WideTagNarrowAlignment` doesn't
   // implement the `Default` trait
@@ -1519,8 +1510,8 @@ namespace enums::repr_int {
 //  slightly better test for things like encoding the tag value with the
 //  proper endianness, especially given that the tag is 4 bytes wide).
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_int :: IntReprEnumWithNoPayload") alignas(4)
-    [[clang::trivial_abi]] IntReprEnumWithNoPayload final {
+    ":: enums_golden :: repr_int :: IntReprEnumWithNoPayload")
+    [[clang::trivial_abi]] alignas(4) IntReprEnumWithNoPayload final {
  public:
   // `enums_golden::repr_int::IntReprEnumWithNoPayload` doesn't implement the
   // `Default` trait
@@ -1600,11 +1591,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 //  This enum is **not** a "ZST" (Zero-Sized Type), because of `#[repr(u32)]`
 //  (even though it has only a single variant with no payload).
-struct
-    CRUBIT_INTERNAL_RUST_TYPE(
-        ":: enums_golden :: repr_int :: "
-        "IntReprWithSingleNoPayloadVariant") alignas(4) [[clang::trivial_abi]]
-    IntReprWithSingleNoPayloadVariant final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: enums_golden :: repr_int :: IntReprWithSingleNoPayloadVariant")
+    [[clang::trivial_abi]] alignas(4) IntReprWithSingleNoPayloadVariant final {
  public:
   // `enums_golden::repr_int::IntReprWithSingleNoPayloadVariant` doesn't
   // implement the `Default` trait
@@ -1669,8 +1658,8 @@ struct
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_int :: NegReprIntEnum") alignas(1)
-    [[clang::trivial_abi]] NegReprIntEnum final {
+    ":: enums_golden :: repr_int :: NegReprIntEnum")
+    [[clang::trivial_abi]] alignas(1) NegReprIntEnum final {
  public:
   // `enums_golden::repr_int::NegReprIntEnum` doesn't implement the `Default`
   // trait
@@ -1750,9 +1739,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace enums::repr_rust {
 
 //  Doc comment of RustReprEnum.
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_rust :: RustReprEnum") alignas(4)
-    [[clang::trivial_abi]] RustReprEnum final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_rust :: RustReprEnum")
+    [[clang::trivial_abi]] alignas(4) RustReprEnum final {
  public:
   // `enums_golden::repr_rust::RustReprEnum` doesn't implement the `Default`
   // trait
@@ -1900,9 +1888,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_rust :: "
-    "RustReprWithNamingConflictBetweenCtorsAndMethods") alignas(4)
-    [[clang::trivial_abi]]
-    RustReprWithNamingConflictBetweenCtorsAndMethods final {
+    "RustReprWithNamingConflictBetweenCtorsAndMethods")
+    [[clang::trivial_abi]] alignas(4)
+        RustReprWithNamingConflictBetweenCtorsAndMethods final {
  public:
   // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods`
   // doesn't implement the `Default` trait
@@ -2047,9 +2035,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 //  This enum is not a "ZST" (Zero-Sized Type), because of the payload.
 //  There is no tag / discriminant field, because there is only one variant.
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_rust :: "
-    "RustReprWithSingleTuplePayloadVariant") alignas(4) [[clang::trivial_abi]]
-RustReprWithSingleTuplePayloadVariant final {
+    ":: enums_golden :: repr_rust :: RustReprWithSingleTuplePayloadVariant")
+    [[clang::trivial_abi]] alignas(4)
+        RustReprWithSingleTuplePayloadVariant final {
  public:
   // `enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant` doesn't
   // implement the `Default` trait

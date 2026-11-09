@@ -31,8 +31,8 @@
 namespace aliasing_references {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: aliasing_references_golden :: NonFreezeType") alignas(4)
-    [[clang::trivial_abi]] NonFreezeType final {
+    ":: aliasing_references_golden :: NonFreezeType")
+    [[clang::trivial_abi]] alignas(4) NonFreezeType final {
  public:
   // Default::default
   NonFreezeType();
@@ -65,8 +65,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: aliasing_references_golden :: SomeStruct") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: aliasing_references_golden :: SomeStruct")
     [[clang::trivial_abi]] SomeStruct final {
  public:
   void mut_self_and_mut_ref(::std::int32_t& __param_1);

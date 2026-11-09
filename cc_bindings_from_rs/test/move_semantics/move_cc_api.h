@@ -31,7 +31,7 @@
 
 namespace move {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable")
     [[clang::trivial_abi]] Copyable final {
  public:
   static ::move::Copyable from_byte(::std::uint8_t byte);
@@ -47,8 +47,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
-    [[clang::trivial_abi]] Foo final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo")
+    [[clang::trivial_abi]] alignas(8) Foo final {
  public:
   // Default::default
   Foo();
@@ -78,8 +78,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: UnmovableFoo") alignas(8)
-    [[clang::trivial_abi]] UnmovableFoo final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: UnmovableFoo")
+    [[clang::trivial_abi]] alignas(8) UnmovableFoo final {
  public:
   // `move_golden::UnmovableFoo` doesn't implement the `Default` trait
   UnmovableFoo() = delete;

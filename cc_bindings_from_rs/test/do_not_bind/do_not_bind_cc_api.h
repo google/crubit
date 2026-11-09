@@ -24,7 +24,7 @@
 
 namespace do_not_bind {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: do_not_bind_golden :: Struct") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: do_not_bind_golden :: Struct")
     [[clang::trivial_abi]] Struct final {
  public:
   ::std::int32_t bound_inherent_method() const;

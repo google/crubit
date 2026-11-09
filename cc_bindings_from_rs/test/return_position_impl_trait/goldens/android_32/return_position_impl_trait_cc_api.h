@@ -28,8 +28,8 @@
 namespace return_position_impl_trait {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: return_position_impl_trait_golden :: ArcWrapper") alignas(4)
-    [[clang::trivial_abi]] ArcWrapper final {
+    ":: return_position_impl_trait_golden :: ArcWrapper")
+    [[clang::trivial_abi]] alignas(4) ArcWrapper final {
  public:
   // Default::default
   ArcWrapper();

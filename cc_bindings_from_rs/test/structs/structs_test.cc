@@ -4,6 +4,7 @@
 
 #include "cc_bindings_from_rs/test/structs/structs.h"
 
+#include <cstdint>
 #include <sstream>
 #include <type_traits>
 #include <utility>
@@ -115,15 +116,6 @@ float struct_by_float_passing_with_no_thunk__thunkless_inspect(
 #pragma clang diagnostic pop
 
 TEST(StructsTest, DirectFfiThunklessStructFloat) {
-#if defined(_WIN32) && defined(_M_IX86)
-  // TODO(b/522829368): Crubit emits `alignas(8)` on `StructFloat`, so on
-  // i686-pc-windows-msvc clang passes it by pointer while rustc passes it by
-  // value, and the direct `extern "C"` call reads garbage. Remove this skip
-  // once the generator stops emitting an `alignas` that equals the natural
-  // alignment.
-  GTEST_SKIP() << "By-value FFI of over-aligned structs is broken on 32-bit "
-                  "Windows";
-#endif
   namespace test = structs::struct_by_float_passing_with_no_thunk;
   test::StructFloat x =
       struct_by_float_passing_with_no_thunk__thunkless_create(111.0);
@@ -135,6 +127,66 @@ TEST(StructsTest, DirectFfiThunklessStructFloat) {
   EXPECT_EQ(111.0 * 222.0,
             struct_by_float_passing_with_no_thunk__thunkless_inspect(
                 std::move(product)));
+}
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+extern "C" {
+
+structs::requested_alignment_passing_with_no_thunk::Aligned16
+requested_alignment_passing_with_no_thunk__aligned16_create(double);
+
+structs::requested_alignment_passing_with_no_thunk::Aligned16
+    requested_alignment_passing_with_no_thunk__aligned16_multiply(
+        structs::requested_alignment_passing_with_no_thunk::Aligned16,
+        structs::requested_alignment_passing_with_no_thunk::Aligned16);
+
+double requested_alignment_passing_with_no_thunk__aligned16_inspect(
+    structs::requested_alignment_passing_with_no_thunk::Aligned16);
+
+structs::requested_alignment_passing_with_no_thunk::Packed
+requested_alignment_passing_with_no_thunk__packed_create(std::uint8_t);
+
+structs::requested_alignment_passing_with_no_thunk::Packed
+    requested_alignment_passing_with_no_thunk__packed_add(
+        structs::requested_alignment_passing_with_no_thunk::Packed,
+        structs::requested_alignment_passing_with_no_thunk::Packed);
+
+std::uint8_t requested_alignment_passing_with_no_thunk__packed_inspect(
+    structs::requested_alignment_passing_with_no_thunk::Packed);
+
+}  // extern "C"
+#pragma clang diagnostic pop
+
+// `#[repr(align(16))]`: both compilers pass the struct by pointer on 32-bit
+// Windows and by value elsewhere.
+TEST(StructsTest, DirectFfiThunklessAligned16) {
+  namespace test = structs::requested_alignment_passing_with_no_thunk;
+  static_assert(alignof(test::Aligned16) == 16);
+  test::Aligned16 x =
+      requested_alignment_passing_with_no_thunk__aligned16_create(111.0);
+  test::Aligned16 y =
+      requested_alignment_passing_with_no_thunk__aligned16_create(222.0);
+  test::Aligned16 product =
+      requested_alignment_passing_with_no_thunk__aligned16_multiply(
+          std::move(x), std::move(y));
+  EXPECT_EQ(111.0 * 222.0,
+            requested_alignment_passing_with_no_thunk__aligned16_inspect(
+                std::move(product)));
+}
+
+// `#[repr(packed)]`: alignment 1 is not an over-alignment anywhere, so both
+// compilers pass the struct by value.
+TEST(StructsTest, DirectFfiThunklessPacked) {
+  namespace test = structs::requested_alignment_passing_with_no_thunk;
+  static_assert(alignof(test::Packed) == 1);
+  static_assert(sizeof(test::Packed) == 9);
+  test::Packed x = requested_alignment_passing_with_no_thunk__packed_create(11);
+  test::Packed y = requested_alignment_passing_with_no_thunk__packed_create(22);
+  test::Packed sum = requested_alignment_passing_with_no_thunk__packed_add(
+      std::move(x), std::move(y));
+  EXPECT_EQ(33, requested_alignment_passing_with_no_thunk__packed_inspect(
+                    std::move(sum)));
 }
 
 // This is a regression test for b/286876315 - it verifies that the mutability
