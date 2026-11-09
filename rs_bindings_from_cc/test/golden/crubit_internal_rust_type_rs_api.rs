@@ -25,16 +25,8 @@ pub mod crubit {
 
 // namespace crubit::rust_type
 
-// Type bindings for MyI8Struct suppressed due to being mapped to an existing Rust type (i8)
-
 // Note that this is potentially visited, even if the original declaration is
 // skipped due to crubit_internal_rust_type.
-
-// Type bindings for MyI8Class suppressed due to being mapped to an existing Rust type (i8)
-
-// Type bindings for MyI8Enum suppressed due to being mapped to an existing Rust type (i8)
-
-// Type bindings for MyI8Alias suppressed due to being mapped to an existing Rust type (i8)
 
 /// Invalid annotations cause bindings to fail to be generated.
 /// (It's important not to fall back to the underlying type, since the user
@@ -209,20 +201,6 @@ pub fn ReturnContainerOfNonRustMovable(
         )
     }
 }
-
-// Type bindings for Ptr<int> suppressed due to being mapped to an existing Rust type (crate::RustPtr<::ffi_11::c_int>)
-
-// Type bindings for CppTypeWithTemplateArgs<int, float, true> suppressed due to being mapped to an existing Rust type (crate::RustTypeWithReorderedGenerics<::ffi_11::c_int,f32,true>)
-
-// Type bindings for ConvertPtrs<float, int> suppressed due to being mapped to an existing Rust type (crate::RustTypeReordered<f32,::ffi_11::c_int>)
-
-// Type bindings for WithDefault<float> suppressed due to being mapped to an existing Rust type (crate::RustTypeWithDefault<f32,::ffi_11::c_int>)
-
-// Type bindings for MyContainer<NonRustMovable> suppressed due to being mapped to an existing Rust type (crate::MyRustContainer<crate::NonRustMovable>)
-
-// Type bindings for MyContainer<int> suppressed due to being mapped to an existing Rust type (crate::MyRustContainer<::ffi_11::c_int>)
-
-// Type bindings for MyContainer<void> suppressed due to being mapped to an existing Rust type (crate::MyRustContainerVoid)
 
 mod detail {
     #[allow(unused_imports)]

@@ -504,13 +504,6 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
         }
         Item::ExistingRustType(existing_rust_type) => {
             let rs_type_kind = db.rs_type_kind((&**existing_rust_type).into())?;
-            let disable_comment = intern!(
-                db.interner(),
-                "Type bindings for {cpp_type} suppressed due to being mapped to \
-                    an existing Rust type ({rs_type_kind})",
-                cpp_type = db.debug_name(existing_rust_type.id()),
-                rs_type_kind = rs_type_kind.display(db),
-            );
             let assertions = if rs_type_kind.is_complete() {
                 existing_rust_type
                     .size_align()
@@ -526,14 +519,9 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
                 vec![]
             };
 
-            ApiSnippets {
-                generated_items: HashMap::from([(
-                    existing_rust_type.id(),
-                    GeneratedItem::Comment { message: disable_comment },
-                )]),
-                assertions,
-                ..Default::default()
-            }
+            // The C++ type is mapped to an existing Rust type, so there is nothing to generate
+            // other than layout assertions.
+            ApiSnippets { assertions, ..Default::default() }
         }
     };
 

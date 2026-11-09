@@ -505,26 +505,8 @@ pub mod test {
 // error: item `rs::Box<test::NonTrivial>` could not be bound
 //   `rs::Box<T>` cannot be used with `T` = `crate::test::NonTrivial` because `T` is not Rust-movable (`!Unpin`): Rust could move the pointee out of the box, which would relocate a C++ object whose move constructor is non-trivial or deleted. Use `rs::PinBox<T>` (`Pin<Box<T>>`) instead. See crubit.rs/types/box#pinbox.
 
-// Type bindings for rs::Box<test::Point> suppressed due to being mapped to an existing Rust type (::alloc::boxed::Box<crate::test::Point>)
-
-// Type bindings for rs::Box<int> suppressed due to being mapped to an existing Rust type (::alloc::boxed::Box<::ffi_11::c_int>)
-
-// Type bindings for rs::PinBox<test::NonTrivial> suppressed due to being mapped to an existing Rust type (::core::pin::Pin<::alloc::boxed::Box<crate::test::NonTrivial>>)
-
-// Type bindings for rs::PinBox<int> suppressed due to being mapped to an existing Rust type (::core::pin::Pin<::alloc::boxed::Box<::ffi_11::c_int>>)
-
-// Type bindings for rs::SliceRef<const test::NonTrivial> suppressed due to being mapped to an existing Rust type (*const[crate::test::NonTrivial])
-
-// Type bindings for rs::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
-
-// Type bindings for rs::SliceRef<test::NonTrivial> suppressed due to being mapped to an existing Rust type (*mut[crate::test::NonTrivial])
-
-// Type bindings for rs::SliceRef<int> suppressed due to being mapped to an existing Rust type (*mut[::ffi_11::c_int])
-
 // error: item `rs::SliceBox<test::NonTrivial>` could not be bound
 //   `rs::SliceBox<T>` cannot be used with `T` = `crate::test::NonTrivial` because `T` is not Rust-movable (`!Unpin`): Rust could move the pointee out of the box, which would relocate a C++ object whose move constructor is non-trivial or deleted. See crubit.rs/types/box#pinbox.
-
-// Type bindings for rs::SliceBox<int> suppressed due to being mapped to an existing Rust type (::alloc::boxed::Box<[::ffi_11::c_int]>)
 
 /// Class template instantiations that aren't named by a C++ type alias.
 pub mod zz_template_instantiations {
