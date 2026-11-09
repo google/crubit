@@ -53,16 +53,17 @@ fn test_unique_ptr_into_inner_can_be_dropped() {
 }
 
 #[gtest]
-fn test_unique_ptr_as_pin_null() {
+#[should_panic(expected = "dereferencing a null unique_ptr")]
+fn test_unique_ptr_as_pin_null_panics() {
     let mut up = unsafe { unique_ptr::<Arc<()>>::from_raw(std::ptr::null_mut()) };
-    assert_eq!(unique_ptr::as_pin(&mut up), None);
+    let _ = unique_ptr::as_pin(&mut up);
 }
 
 #[gtest]
 fn test_unique_ptr_as_pin_non_null() {
     let rc = Arc::new(());
     let mut up = unique_ptr::new(rc.clone());
-    assert!(unique_ptr::as_pin(&mut up).is_some());
+    assert!(Arc::ptr_eq(&unique_ptr::as_pin(&mut up), &rc));
 }
 
 #[gtest]
@@ -127,9 +128,7 @@ fn test_unique_ptr_with_virtual_destructor() {
     );
     unsafe {
         assert!(test_helpers::unique_ptr_test::Base::is_derived(
-            <std::pin::Pin<&mut _>>::into_inner_unchecked(
-                virtual_unique_ptr::as_pin(&mut p).unwrap()
-            )
+            <std::pin::Pin<&mut _>>::into_inner_unchecked(virtual_unique_ptr::as_pin(&mut p))
         ));
     }
     drop(p);
@@ -353,6 +352,14 @@ fn test_bare_virtual_unique_ptr_deref_mut_null_panics() {
     // SAFETY: `from_raw` accepts a null pointer.
     let mut vp = unsafe { virtual_unique_ptr::<RustVirtual>::from_raw(std::ptr::null_mut()) };
     vp.val = 1;
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null virtual_unique_ptr")]
+fn test_virtual_unique_ptr_as_pin_null_panics() {
+    // SAFETY: `from_raw` accepts a null pointer.
+    let mut vp = unsafe { virtual_unique_ptr::<RustVirtual>::from_raw(std::ptr::null_mut()) };
+    let _ = virtual_unique_ptr::as_pin(&mut vp);
 }
 
 #[gtest]
