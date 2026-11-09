@@ -12,6 +12,17 @@ members = [
   "support/crubit_hash_rust",
   "support/crubit_annotate",
   "support/crubit_support",
+  "support/cargo/ctor",
+  "support/cargo/ctor_proc_macros",
+  "support/cargo/cref",
+  "support/cargo/dyn_callable_rs",
+  "support/cargo/forward_declare",
+  "support/cargo/forward_declare_proc_macros",
+  "support/cargo/inline_cpp_macro",
+  "support/cargo/inline_cpp_utils",
+  "support/cargo/lossy_formatter",
+  "support/cargo/oops",
+  "support/cargo/operator",
 ]
 exclude = [
   "cargo/cc_bindings_from_rs/cargo-cpp_api_from_rust/tests/test_project",
