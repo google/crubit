@@ -18,9 +18,12 @@ _EXPERIMENTAL_CLIENTS = [
 ]
 
 # A feature set containing all supported Crubit features.
-# Add this to the `aspect_hints` of a `cc_library` to generate Rust bindings for that library.
 #
 # See crubit.rs-features#supported
+#
+# NOTE: using this directly outside of crubit/ is deprecated.
+# Use `rust_api_from_cpp` instead of adding this to `aspect_hints`.
+# See http://crubit.rs/cpp#use.
 crubit_feature_hint(
     name = "supported",
     compatible_with = ["//buildenv/target:non_prod"],
