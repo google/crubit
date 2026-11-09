@@ -40,6 +40,24 @@ pub mod counter {
 }
 ```
 
+A member that is only declared in the class, and defined `constexpr` after it in
+the header, is treated the same as one that is initialized in the class:
+
+```c++
+struct Limits {
+  static const int kMax;
+};
+// `Limits::kMax` becomes a `const` in Rust.
+inline constexpr int Limits::kMax = 10;
+```
+
+Some constants can only be written this way: a constant of the class's own type
+(such as `static const Limits kDefault;`) can't be initialized in the class,
+because the class is incomplete there.
+
+Any other out-of-line definition (for example, a non-`constexpr` one, or one in
+a `.cc` file) leaves the member a `static` that refers to the C++ object.
+
 Compile-time constants of other types, such as floating-point or class types,
 and static data members of class template specializations don't receive bindings
 yet.

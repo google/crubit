@@ -7448,6 +7448,157 @@ fn test_top_level_constexpr_string_view_from_mutable_array_is_unsupported() {
 }
 
 #[gtest]
+fn test_only_constexpr_out_of_line_member_definitions_are_constants() {
+    // A static data member that is defined `constexpr` outside its class is a constant, like one
+    // that is initialized in the class. Other variables that are defined after they are declared
+    // keep referring to the C++ object, as they did before out-of-line definitions were looked
+    // at: their authors chose an object with an address over an `inline constexpr`.
+    let proto = ir_proto_from_cc(
+        r#"
+        struct S {
+          static const int kConstexprOutOfLine;
+          static const int kConstOutOfLine;
+        };
+        inline constexpr int S::kConstexprOutOfLine = 5;
+        inline const int S::kConstOutOfLine = 6;
+
+        extern const int kExternThenConstexpr;
+        constexpr int kExternThenConstexpr = 7;
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(ir, quote! { Constant { ... rs_name: "kConstexprOutOfLine", ... } });
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kConstexprOutOfLine", ... } });
+    // The value comes from the definition.
+    let constant = ir.constants().find(|c| c.cc_name() == "kConstexprOutOfLine").unwrap();
+    expect_that!(constant.value(), integer_constant_value(5));
+
+    assert_ir_matches!(ir, quote! { GlobalVar { ... rs_name: "kConstOutOfLine", ... } });
+    assert_ir_not_matches!(ir, quote! { Constant { ... rs_name: "kConstOutOfLine", ... } });
+    assert_ir_matches!(ir, quote! { GlobalVar { ... rs_name: "kExternThenConstexpr", ... } });
+    assert_ir_not_matches!(ir, quote! { Constant { ... rs_name: "kExternThenConstexpr", ... } });
+}
+
+#[gtest]
+fn test_constexpr_out_of_line_string_view_member_definition_is_constant() {
+    // The contents of an out-of-line `constexpr` `string_view` member come from its definition,
+    // like its value would for an integer member.
+    let proto = ir_proto_from_cc(&format!(
+        r#"
+        {MOCK_STD_STRING_VIEW}
+        struct S {{
+          static const std::string_view kName;
+        }};
+        inline constexpr std::string_view S::kName = "out of line";
+        "#
+    ))
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kName", ... } });
+    let constant = ir.constants().find(|c| c.cc_name() == "kName").unwrap();
+    expect_eq!(constant.value(), &ir::ConstantValue::StringView((&b"out of line"[..]).into()));
+}
+
+#[gtest]
+fn test_constexpr_out_of_line_array_member_definitions_are_constants() {
+    // An array's (outermost) bound may be given only by its out-of-line definition, in which case
+    // the in-class declaration has an incomplete type. The dimensions and the element type of the
+    // constant come from the definition.
+    let proto = ir_proto_from_cc(
+        r#"
+        struct S {
+          static const char kChars[];
+          static const char kCharsWithBoundInClass[4];
+          static const int kInts[];
+          static const char kRows[][4];
+        };
+        inline constexpr char S::kChars[] = "abc";
+        inline constexpr char S::kCharsWithBoundInClass[] = "abc";
+        inline constexpr int S::kInts[] = {1, 2, 3};
+        inline constexpr char S::kRows[][4] = {"ab", "cd"};
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kChars", ... } });
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kCharsWithBoundInClass", ... } });
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kInts", ... } });
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kRows", ... } });
+
+    let chars = ir.constants().find(|c| c.cc_name() == "kChars").unwrap();
+    expect_eq!(expect_array_constant(chars), (vec![4], string_literal_row(b"abc")));
+    expect_true!(matches!(
+        chars.type_().unwrap().variant(),
+        CcTypeVariant::Primitive(Primitive::Char)
+    ));
+
+    let chars_with_bound_in_class =
+        ir.constants().find(|c| c.cc_name() == "kCharsWithBoundInClass").unwrap();
+    expect_eq!(
+        expect_array_constant(chars_with_bound_in_class),
+        (vec![4], string_literal_row(b"abc"))
+    );
+    expect_true!(matches!(
+        chars_with_bound_in_class.type_().unwrap().variant(),
+        CcTypeVariant::Primitive(Primitive::Char)
+    ));
+
+    let ints = ir.constants().find(|c| c.cc_name() == "kInts").unwrap();
+    expect_eq!(expect_array_constant(ints), (vec![3], integer_elements(&[1, 2, 3])));
+    expect_true!(matches!(
+        ints.type_().unwrap().variant(),
+        CcTypeVariant::Primitive(Primitive::Int)
+    ));
+
+    let rows = ir.constants().find(|c| c.cc_name() == "kRows").unwrap();
+    expect_eq!(
+        expect_array_constant(rows),
+        (
+            vec![2, 4],
+            TestArrayValue::Arrays {
+                elements: vec![string_literal_row(b"ab"), string_literal_row(b"cd")],
+                filler: None
+            }
+        )
+    );
+    expect_true!(matches!(
+        rows.type_().unwrap().variant(),
+        CcTypeVariant::Primitive(Primitive::Char)
+    ));
+}
+
+#[gtest]
+fn test_unsupported_constexpr_out_of_line_member_definitions_are_unsupported() {
+    // A member with an out-of-line `constexpr` definition is treated like one that is initialized
+    // in the class, including when its type isn't supported for constants: here a floating-point
+    // member, and a member of the class's own type (which can only be defined out of line).
+    let proto = ir_proto_from_cc(
+        r#"
+        struct S {
+          static const double kDouble;
+          static const S kDefault;
+          int i;
+        };
+        inline constexpr double S::kDouble = 1.5;
+        inline constexpr S S::kDefault = {1};
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "S::kDouble", ... } });
+    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "S::kDefault", ... } });
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kDouble", ... } });
+    assert_ir_not_matches!(ir, quote! { Constant { ... rs_name: "kDouble", ... } });
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kDefault", ... } });
+    assert_ir_not_matches!(ir, quote! { Constant { ... rs_name: "kDefault", ... } });
+}
+
+#[gtest]
 fn test_anonymous_enum() {
     let proto = ir_proto_from_cc("enum { kFoo = 1, kBar = 2 };").unwrap();
 

@@ -350,15 +350,27 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::Import(
         {FormattedError::Static("thread_local variables are not supported")});
   }
 
+  // If the declaration doesn't include a definition, check if there is an
+  // out-of-line initializer available that is constexpr. If the out-of-line
+  // definition of the variable is constexpr, we treat the var as a constant.
+  const clang::VarDecl* init_decl = var_decl;
+  if (var_decl->isStaticDataMember() && !var_decl->hasInit()) {
+    const clang::VarDecl* definition = nullptr;
+    if (var_decl->getAnyInitializer(definition) != nullptr &&
+        definition->isConstexpr()) {
+      init_decl = definition;
+    }
+  }
+
   // Note that `[const|inline] T x = /* constant initializer */;` acts like
   // constexpr and does not create an external symbol in Clang. This was
   // apparently done to support constexpr-like patterns before it existed in the
   // language.
   bool is_const_or_inline =
-      var_decl->getType().isConstQualified() || var_decl->isInline();
+      var_decl->getType().isConstQualified() || init_decl->isInline();
   bool has_const_init =
-      var_decl->isConstexpr() ||
-      (is_const_or_inline && var_decl->hasConstantInitialization());
+      init_decl->isConstexpr() ||
+      (is_const_or_inline && init_decl->hasConstantInitialization());
 
   if (!has_const_init && !var_decl->hasExternalFormalLinkage()) {
     return nullptr;
@@ -407,7 +419,7 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::Import(
   }
 
   if (has_const_init) {
-    return ImportConstant(var_decl, *var_name, *enclosing_item_id,
+    return ImportConstant(var_decl, *init_decl, *var_name, *enclosing_item_id,
                           std::move(*unknown_attr), std::move(deprecated));
   }
 
@@ -460,14 +472,16 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::Import(
 }
 
 std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
-    clang::VarDecl* var_decl, TranslatedIdentifier& var_name,
-    std::optional<ItemId> enclosing_item_id,
+    clang::VarDecl* var_decl, const clang::VarDecl& init_decl,
+    TranslatedIdentifier& var_name, std::optional<ItemId> enclosing_item_id,
     std::optional<std::string> unknown_attr,
     std::optional<std::string> deprecated) {
   // For (possibly nested) C-style arrays, the type of the constant is the
-  // innermost element type.
+  // innermost element type. The type comes from the definition: an array that
+  // is declared in the class and defined out of line may only have its bound
+  // there (`static const char kName[];`).
   std::vector<uint64_t> dimensions;
-  clang::QualType value_type = var_decl->getType();
+  clang::QualType value_type = init_decl.getType();
   while (const clang::ConstantArrayType* array_type =
              ictx_.ctx_.getAsConstantArrayType(value_type)) {
     uint64_t dimension = array_type->getZExtSize();
@@ -499,7 +513,7 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
                         "variables are supported")});
   }
 
-  const clang::APValue* value = var_decl->evaluateValue();
+  const clang::APValue* value = init_decl.evaluateValue();
   if (value == nullptr) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
@@ -525,6 +539,8 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
   auto item = std::make_unique<crubit::ffi::Item>();
   auto* constant = item->mutable_constant();
   if (is_string_view) {
+    // This works with var_decl rather than init_decl because the constant
+    // evaluator internally finds the correct definition either way.
     llvm::Expected<std::string> string_view_value =
         EvaluateStringViewContents(ictx_, *var_decl);
     if (!string_view_value) {
@@ -553,7 +569,7 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
     // String-literal rows are only recorded for plain `char` arrays, which
     // Crubit maps to `ffi_11::c_char`.
     const clang::Expr* char_array_init =
-        IsPlainChar(value_type) ? var_decl->getInit() : nullptr;
+        IsPlainChar(value_type) ? init_decl.getInit() : nullptr;
     if (llvm::Error status =
             ConvertArrayValue(*value, dimensions, char_array_init,
                               *constant->mutable_kind()->mutable_array_value());

@@ -108,3 +108,21 @@ fn test_static_data_members() {
     expect_eq!(StructWithStaticMembers::static_inline_int, 13);
     expect_eq!(global::GetStaticInlineIntVal(), 13);
 }
+
+#[gtest]
+fn test_out_of_line_constexpr_static_data_members() {
+    use global::StructWithStaticMembers;
+    // These are `const`s, not `let`s, to check that the bindings are Rust constants.
+    const INT: ffi_11::c_int = StructWithStaticMembers::kOutOfLineConstexprInt;
+    expect_eq!(INT, 14);
+    const STRING_VIEW: &str = StructWithStaticMembers::kOutOfLineConstexprStringView;
+    expect_eq!(STRING_VIEW, "out of line");
+    const CHAR_ARRAY: [ffi_11::c_char; 4] = StructWithStaticMembers::kOutOfLineConstexprCharArray;
+    expect_eq!(CHAR_ARRAY, b"abc\0".map(ffi_11::new_c_char));
+    const MULTIDIMENSIONAL_CHAR_ARRAY: [[ffi_11::c_char; 4]; 2] =
+        StructWithStaticMembers::kOutOfLineConstexprMultidimensionalCharArray;
+    expect_eq!(
+        MULTIDIMENSIONAL_CHAR_ARRAY,
+        [*b"abc\0", *b"d\0\0\0"].map(|row| row.map(ffi_11::new_c_char))
+    );
+}

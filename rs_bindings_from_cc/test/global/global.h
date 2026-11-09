@@ -85,10 +85,26 @@ struct StructWithStaticMembers {
   static constexpr absl::string_view kStaticConstexprStringView = "static";
   static inline int static_inline_int = 13;
 
+  // Defined `constexpr` outside the class, below, so also constants. The
+  // (outermost) bounds of the arrays are only given by their definitions.
+  static const int kOutOfLineConstexprInt;
+  static const absl::string_view kOutOfLineConstexprStringView;
+  static const char kOutOfLineConstexprCharArray[];
+  static const char kOutOfLineConstexprMultidimensionalCharArray[][4];
+
   // Private members should not receive bindings.
  private:
   static int private_static_int;
 };
+
+inline constexpr int StructWithStaticMembers::kOutOfLineConstexprInt = 14;
+inline constexpr absl::string_view
+    StructWithStaticMembers::kOutOfLineConstexprStringView = "out of line";
+inline constexpr char StructWithStaticMembers::kOutOfLineConstexprCharArray[] =
+    "abc";
+inline constexpr char
+    StructWithStaticMembers::kOutOfLineConstexprMultidimensionalCharArray[][4] =
+        {"abc", "d"};
 
 int GetStaticIntVal();
 int GetStaticInlineIntVal();

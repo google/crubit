@@ -205,6 +205,18 @@ impl StructWithStaticMembers {
     pub const kStaticConstexprStringView: &'static str = "static";
 
     pub const static_inline_int: ::ffi_11::c_int = ::ffi_11::new_c_int(13);
+
+    pub const kOutOfLineConstexprInt: ::ffi_11::c_int = ::ffi_11::new_c_int(14);
+
+    pub const kOutOfLineConstexprStringView: &'static str = "out of line";
+
+    pub const kOutOfLineConstexprCharArray: [::ffi_11::c_char; 4] =
+        ::crubit_support::array::c_char_array_from_string_literal(b"abc");
+
+    pub const kOutOfLineConstexprMultidimensionalCharArray: [[::ffi_11::c_char; 4]; 2] = [
+        ::crubit_support::array::c_char_array_from_string_literal(b"abc"),
+        ::crubit_support::array::c_char_array_from_string_literal(b"d"),
+    ];
 }
 
 impl Default for StructWithStaticMembers {
