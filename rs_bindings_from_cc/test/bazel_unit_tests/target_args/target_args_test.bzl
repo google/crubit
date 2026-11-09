@@ -23,7 +23,7 @@ load(
 
 def _is_std(t):
     for std_pattern in [
-        "crubit/support/cc_std:cc_std",
+        "//support/cc_std:cc_std",
         "//:_builtin_hdrs",
     ]:
         if std_pattern in str(t):
@@ -51,7 +51,7 @@ def _lib_has_toolchain_targets_and_headers_test_impl(ctx):
     asserts.equals(env, 3, len(target_args))
     asserts.true(
         env,
-        "crubit/support/cc_std:cc_std" in target_args[0]["t"],
+        "//support/cc_std:cc_std" in target_args[0]["t"],
     )
     asserts.equals(
         env,
@@ -61,7 +61,7 @@ def _lib_has_toolchain_targets_and_headers_test_impl(ctx):
     asserts.equals(
         env,
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:empty",
-        target_args[2]["t"],
+        target_args[2]["t"].lstrip("@"),
     )
 
     return analysistest.end(env)
@@ -87,7 +87,7 @@ def _targets_and_headers_test_impl(ctx):
     asserts.equals(
         env,
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:mylib",
-        target_args[1]["t"],
+        target_args[1]["t"].lstrip("@"),
     )
     asserts.equals(
         env,
@@ -128,12 +128,12 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
     asserts.equals(
         env,
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:bottommest_no_crubit_aspect_hint",
-        target_args[1]["t"],
+        target_args[1]["t"].lstrip("@"),
     )
     asserts.equals(
         env,
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:bottom",
-        target_args[2]["t"],
+        target_args[2]["t"].lstrip("@"),
     )
     asserts.equals(
         env,
@@ -144,7 +144,7 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
     asserts.equals(
         env,
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:middle",
-        target_args[3]["t"],
+        target_args[3]["t"].lstrip("@"),
     )
     asserts.true(
         env,
@@ -156,7 +156,7 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
     asserts.equals(
         env,
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:top",
-        target_args[4]["t"],
+        target_args[4]["t"].lstrip("@"),
     )
     asserts.equals(
         env,
@@ -204,16 +204,16 @@ textual_hdrs_not_in_targets_and_hdrs_test = crubit_make_analysis_test(
 def _toolchain_headers_in_header_analysis_action_test_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
-    analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "CppHeaderAnalysis"][0]
+    analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic in ("CppHeaderAnalysis", "RustBindingsFromCc")][0]
     inputs = analysis_action.inputs.to_list()
     inttypes = [i.path for i in inputs if "inttypes.h" in i.path]
 
     asserts.true(
         env,
-        any([path in [
-            "//nowhere/libc_x86include/inttypes.h",
-            "//nowhere/libc_arminclude/inttypes.h",
-        ] for path in inttypes]),
+        any([
+            path.endswith(("/include/inttypes.h", "/c++/v1/inttypes.h"))
+            for path in inttypes
+        ]),
         "inttypes: %s" % inttypes,
     )
 
@@ -340,7 +340,7 @@ def _generated_headers_specified_with_full_path_impl(ctx):
     )
     asserts.true(
         env,
-        header_path.startswith("bazel-out"),
+        header_path.startswith(analysistest.target_bin_dir_path(env).split("/")[0] + "/"),
     )
 
     return analysistest.end(env)
@@ -378,7 +378,7 @@ def _target_features_empty_test_impl(ctx):
     asserts.equals(
         env,
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:mylib_empty_features",
-        target_args[1]["t"],
+        target_args[1]["t"].lstrip("@"),
     )
     asserts.equals(
         env,
@@ -408,7 +408,7 @@ def _target_features_nonempty_test_impl(ctx):
     asserts.equals(
         env,
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:mylib_nonempty_features",
-        target_args[1]["t"],
+        target_args[1]["t"].lstrip("@"),
     )
     asserts.equals(
         env,
@@ -418,7 +418,12 @@ def _target_features_nonempty_test_impl(ctx):
 
     return analysistest.end(env)
 
-target_features_nonempty_test = crubit_make_analysis_test(_target_features_nonempty_test_impl)
+target_features_nonempty_test = crubit_make_analysis_test(
+    _target_features_nonempty_test_impl,
+    config_settings = {
+        str(Label("//common/bazel_support:globally_enabled_features")): [],
+    },
+)
 
 def _test_target_features_nonempty():
     cc_library(name = "mylib_nonempty_features", hdrs = ["lib.h"], aspect_hints = [

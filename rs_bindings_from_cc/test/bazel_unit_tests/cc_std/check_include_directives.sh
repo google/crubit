@@ -23,11 +23,31 @@
 path_to_test_executable="$1"
 shift
 
+# Expand any multiline @paramfile entries if Crubit arguments were spilled to parameter files.
+expanded_args=()
+for arg in "$@"; do
+    if [[ "${arg}" == @* ]] && [[ -f "${arg#@}" ]]; then
+        mapfile -t _param_args < "${arg#@}"
+        expanded_args+=("${_param_args[@]}")
+    else
+        expanded_args+=("${arg}")
+    fi
+done
+set -- "${expanded_args[@]}"
+
 # Remove all arguments before the `--` from the command line (these are intended
 # for Crubit, not Clang).
-while [[ "$1" != "--" ]]; do
+while (( $# > 0 )) && [[ "$1" != "--" ]]; do
     shift
 done
+if (( $# == 0 )); then
+    cat > "${path_to_test_executable}" <<EOF
+#!/bin/bash
+echo "Error: Did not find '--' separator in Crubit arguments."
+exit 1
+EOF
+    exit 0
+fi
 # Also remove the "--" itself
 shift
 
@@ -37,14 +57,10 @@ shift
 sys_includes=$("${CC}" "$@" -v -E -o /dev/null -x c++ /dev/null 2>&1 \
     | awk '/#include <\.\.\.> search starts here/,/End of search list/')
 
-# TODO(mboehme): If we remove the `crubit_flavor_transition` from the
-# `cc_std_test` rule, we need to add the "stable" versions of these paths so
-# that the test passes in the stable configuration.
 pattern="#include <\.\.\.> search starts here: \+"
-pattern+="third_party/stl/cxx17 \+"
-pattern+="third_party/stl/itanium_abi \+"
-pattern+="nowhere/llvm/src/libcxx/include \+"
-pattern+="End of search list\."
+pattern+="\(.*cxx17 \+[^ ]*itanium_abi \+.*libcxx/include\|[^ ]*llvm_toolchain[^ ]*/include/c++/v1\) \+"
+pattern+=".*clang/[^ ]*/include \+"
+pattern+=".*End of search list\."
 
 # We don't want to assume that the installed grep supports PCRE mode, so we
 # replace newlines with spaces.
@@ -52,12 +68,14 @@ echo "${sys_includes}" | tr '\n' ' ' | grep "${pattern}"
 grep_error=$?
 
 if [[ $grep_error == 0 ]]; then
-    cat >> "${path_to_test_executable}" <<EOF
+    cat > "${path_to_test_executable}" <<EOF
+#!/bin/bash
 echo "Success!"
 exit 0
 EOF
 else
-    cat >> "${path_to_test_executable}" <<EOF
+    cat > "${path_to_test_executable}" <<EOF
+#!/bin/bash
 echo "Error: Didn't see expected system include directories."
 echo "Actual include directories:"
 cat <<SYS_INCLUDES_END
