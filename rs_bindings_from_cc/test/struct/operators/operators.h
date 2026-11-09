@@ -302,4 +302,37 @@ struct OnlyGe final {
 bool operator==(const OnlyGe& lhs, const OnlyGe& rhs);
 bool operator>=(const OnlyGe& lhs, const OnlyGe& rhs);
 
+// `operator==` returns `int` instead of `bool`, so its `PartialEq` impl has an
+// unsatisfied `BindingFailedFor_...` where bound. `PartialOrd` must not be
+// generated for the relational operators (which would otherwise fail to compile
+// because `PartialOrd` requires a satisfied `PartialEq` supertrait).
+struct IntEqWithBoolRelational final {
+  int i;
+
+  friend int operator==(const IntEqWithBoolRelational& lhs,
+                        const IntEqWithBoolRelational& rhs) {
+    return lhs.i == rhs.i;
+  }
+  friend int operator!=(const IntEqWithBoolRelational& lhs,
+                        const IntEqWithBoolRelational& rhs) {
+    return lhs.i != rhs.i;
+  }
+  friend bool operator<(const IntEqWithBoolRelational& lhs,
+                        const IntEqWithBoolRelational& rhs) {
+    return lhs.i < rhs.i;
+  }
+  friend bool operator<=(const IntEqWithBoolRelational& lhs,
+                         const IntEqWithBoolRelational& rhs) {
+    return lhs.i <= rhs.i;
+  }
+  friend bool operator>(const IntEqWithBoolRelational& lhs,
+                        const IntEqWithBoolRelational& rhs) {
+    return lhs.i > rhs.i;
+  }
+  friend bool operator>=(const IntEqWithBoolRelational& lhs,
+                         const IntEqWithBoolRelational& rhs) {
+    return lhs.i >= rhs.i;
+  }
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_
