@@ -26,7 +26,13 @@ pub struct RustDerived {
     /// Types of non-public C++ fields can be elided away
     pub(crate) rust_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
+/// * field `rust_` is represented as opaque bytes
 impl !Send for RustDerived {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
+/// * field `rust_` is represented as opaque bytes
 impl !Sync for RustDerived {}
 unsafe impl ::cxx::ExternType for RustDerived {
     type Id = ::cxx::type_id!("RustDerived");

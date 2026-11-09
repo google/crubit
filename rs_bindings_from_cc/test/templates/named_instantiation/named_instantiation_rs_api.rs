@@ -28,8 +28,6 @@
 pub struct NiIF {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for NiIF {}
-impl !Sync for NiIF {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Ni < int , float >"), crate::NiIF);
 
 impl From<(::ffi_11::c_int, f32)> for NiIF {

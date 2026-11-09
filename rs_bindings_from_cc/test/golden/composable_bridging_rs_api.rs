@@ -28,7 +28,11 @@ pub struct StructWithBridgeField {
     /// crubit.rs/errors/bridge_field: 'crate::RustStruct' is not layout-compatible between Rust and C++.
     pub(crate) bridge_field: [::core::mem::MaybeUninit<u8>; 1],
 }
+/// Cannot infer `Send` because:
+/// * field `bridge_field` is represented as opaque bytes
 impl !Send for StructWithBridgeField {}
+/// Cannot infer `Sync` because:
+/// * field `bridge_field` is represented as opaque bytes
 impl !Sync for StructWithBridgeField {}
 unsafe impl ::cxx::ExternType for StructWithBridgeField {
     type Id = ::cxx::type_id!("StructWithBridgeField");
@@ -80,8 +84,6 @@ pub struct Vec3 {
     pub y: f32,
     pub z: f32,
 }
-impl !Send for Vec3 {}
-impl !Sync for Vec3 {}
 unsafe impl ::cxx::ExternType for Vec3 {
     type Id = ::cxx::type_id!("Vec3");
     type Kind = ::cxx::kind::Trivial;

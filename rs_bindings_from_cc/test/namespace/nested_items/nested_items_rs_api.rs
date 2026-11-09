@@ -31,8 +31,6 @@ pub mod same {
 pub struct Same {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for Same {}
-impl !Sync for Same {}
 unsafe impl ::cxx::ExternType for Same {
     type Id = ::cxx::type_id!("Same");
     type Kind = ::cxx::kind::Trivial;
@@ -70,8 +68,6 @@ pub mod same_items {
     pub struct NestedItem {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for NestedItem {}
-    impl !Sync for NestedItem {}
     unsafe impl ::cxx::ExternType for NestedItem {
         type Id = ::cxx::type_id!("Same :: NestedItem");
         type Kind = ::cxx::kind::Trivial;
@@ -140,8 +136,6 @@ pub mod foo {
     pub struct Foo {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for Foo {}
-    impl !Sync for Foo {}
     unsafe impl ::cxx::ExternType for Foo {
         type Id = ::cxx::type_id!("foo :: Foo");
         type Kind = ::cxx::kind::Trivial;
@@ -168,8 +162,6 @@ pub mod foo {
         pub struct foo {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
-        impl !Send for foo {}
-        impl !Sync for foo {}
         unsafe impl ::cxx::ExternType for foo {
             type Id = ::cxx::type_id!("foo :: Foo :: foo");
             type Kind = ::cxx::kind::Trivial;
@@ -210,8 +202,6 @@ pub mod foo {
             pub struct Item {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
             }
-            impl !Send for Item {}
-            impl !Sync for Item {}
             unsafe impl ::cxx::ExternType for Item {
                 type Id = ::cxx::type_id!("foo :: Foo :: foo :: Item");
                 type Kind = ::cxx::kind::Trivial;
@@ -247,8 +237,6 @@ pub mod foo {
 pub struct OuterRustName {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for OuterRustName {}
-impl !Sync for OuterRustName {}
 unsafe impl ::cxx::ExternType for OuterRustName {
     type Id = ::cxx::type_id!("OuterCpp");
     type Kind = ::cxx::kind::Trivial;
@@ -275,8 +263,6 @@ pub mod outer_rust_name {
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for Inner {}
-    impl !Sync for Inner {}
     unsafe impl ::cxx::ExternType for Inner {
         type Id = ::cxx::type_id!("OuterCpp :: Inner");
         type Kind = ::cxx::kind::Trivial;

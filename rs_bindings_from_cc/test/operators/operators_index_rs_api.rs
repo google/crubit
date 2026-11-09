@@ -24,8 +24,6 @@ pub mod crubit {
         pub struct ItemUnpin {
             pub value: ::ffi_11::c_int,
         }
-        impl !Send for ItemUnpin {}
-        impl !Sync for ItemUnpin {}
         unsafe impl ::cxx::ExternType for ItemUnpin {
             type Id = ::cxx::type_id!("crubit :: test :: ItemUnpin");
             type Kind = ::cxx::kind::Trivial;
@@ -56,8 +54,6 @@ pub mod crubit {
         pub struct ItemNonUnpin {
             pub value: ::ffi_11::c_int,
         }
-        impl !Send for ItemNonUnpin {}
-        impl !Sync for ItemNonUnpin {}
         unsafe impl ::cxx::ExternType for ItemNonUnpin {
             type Id = ::cxx::type_id!("crubit :: test :: ItemNonUnpin");
             type Kind = ::cxx::kind::Opaque;
@@ -141,7 +137,11 @@ pub mod crubit {
             /// Types of non-public C++ fields can be elided away
             pub(crate) items_: [::core::mem::MaybeUninit<u8>; 40],
         }
+        /// Cannot infer `Send` because:
+        /// * field `items_` is represented as opaque bytes
         impl !Send for ContainerUnpinItemUnpin {}
+        /// Cannot infer `Sync` because:
+        /// * field `items_` is represented as opaque bytes
         impl !Sync for ContainerUnpinItemUnpin {}
         unsafe impl ::cxx::ExternType for ContainerUnpinItemUnpin {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerUnpinItemUnpin");
@@ -226,7 +226,11 @@ pub mod crubit {
             pub(crate) items_storage_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 40],
             pub items_: *mut crate::crubit::test::ItemNonUnpin,
         }
+        /// Cannot infer `Send` because:
+        /// * field `items_storage_` is represented as opaque bytes
         impl !Send for ContainerUnpinItemNonUnpin {}
+        /// Cannot infer `Sync` because:
+        /// * field `items_storage_` is represented as opaque bytes
         impl !Sync for ContainerUnpinItemNonUnpin {}
         unsafe impl ::cxx::ExternType for ContainerUnpinItemNonUnpin {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerUnpinItemNonUnpin");
@@ -416,7 +420,11 @@ pub mod crubit {
             /// Types of non-public C++ fields can be elided away
             pub(crate) items_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 40],
         }
+        /// Cannot infer `Send` because:
+        /// * field `items_` is represented as opaque bytes
         impl !Send for ContainerNonUnpinItemUnpin {}
+        /// Cannot infer `Sync` because:
+        /// * field `items_` is represented as opaque bytes
         impl !Sync for ContainerNonUnpinItemUnpin {}
         unsafe impl ::cxx::ExternType for ContainerNonUnpinItemUnpin {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerNonUnpinItemUnpin");
@@ -542,7 +550,11 @@ pub mod crubit {
             /// Types of non-public C++ fields can be elided away
             pub(crate) items_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 40],
         }
+        /// Cannot infer `Send` because:
+        /// * field `items_` is represented as opaque bytes
         impl !Send for ContainerNonUnpinItemNonUnpin {}
+        /// Cannot infer `Sync` because:
+        /// * field `items_` is represented as opaque bytes
         impl !Sync for ContainerNonUnpinItemNonUnpin {}
         unsafe impl ::cxx::ExternType for ContainerNonUnpinItemNonUnpin {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerNonUnpinItemNonUnpin");
@@ -657,8 +669,6 @@ pub mod crubit {
         pub struct ContainerValue {
             pub value: ::ffi_11::c_int,
         }
-        impl !Send for ContainerValue {}
-        impl !Sync for ContainerValue {}
         unsafe impl ::cxx::ExternType for ContainerValue {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerValue");
             type Kind = ::cxx::kind::Trivial;
@@ -693,8 +703,6 @@ pub mod crubit {
         pub struct ContainerRvalue {
             pub value: ::ffi_11::c_int,
         }
-        impl !Send for ContainerRvalue {}
-        impl !Sync for ContainerRvalue {}
         unsafe impl ::cxx::ExternType for ContainerRvalue {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerRvalue");
             type Kind = ::cxx::kind::Trivial;
@@ -732,8 +740,6 @@ pub mod crubit {
         pub struct ContainerMutRefFromConst {
             pub value: ::ffi_11::c_int,
         }
-        impl !Send for ContainerMutRefFromConst {}
-        impl !Sync for ContainerMutRefFromConst {}
         unsafe impl ::cxx::ExternType for ContainerMutRefFromConst {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerMutRefFromConst");
             type Kind = ::cxx::kind::Trivial;
@@ -770,8 +776,6 @@ pub mod crubit {
         pub struct ContainerConstRefFromMut {
             pub value: ::ffi_11::c_int,
         }
-        impl !Send for ContainerConstRefFromMut {}
-        impl !Sync for ContainerConstRefFromMut {}
         unsafe impl ::cxx::ExternType for ContainerConstRefFromMut {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerConstRefFromMut");
             type Kind = ::cxx::kind::Trivial;

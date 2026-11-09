@@ -85,8 +85,6 @@ pub fn map_bridged(
 pub struct ABICompatible {
     pub x: ::ffi_11::c_int,
 }
-impl !Send for ABICompatible {}
-impl !Sync for ABICompatible {}
 unsafe impl ::cxx::ExternType for ABICompatible {
     type Id = ::cxx::type_id!("ABICompatible");
     type Kind = ::cxx::kind::Trivial;
@@ -133,7 +131,11 @@ pub struct LayoutCompatible {
     /// Types of non-public C++ fields can be elided away
     pub(crate) private_: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `private_` is represented as opaque bytes
 impl !Send for LayoutCompatible {}
+/// Cannot infer `Sync` because:
+/// * field `private_` is represented as opaque bytes
 impl !Sync for LayoutCompatible {}
 unsafe impl ::cxx::ExternType for LayoutCompatible {
     type Id = ::cxx::type_id!("LayoutCompatible");

@@ -27,7 +27,11 @@ pub mod test_namespace_bindings {
         /// Types of non-public C++ fields can be elided away
         pub(crate) private_member_variable_: [::core::mem::MaybeUninit<u8>; 4],
     }
+    /// Cannot infer `Send` because:
+    /// * field `private_member_variable_` is represented as opaque bytes
     impl !Send for SomeClass {}
+    /// Cannot infer `Sync` because:
+    /// * field `private_member_variable_` is represented as opaque bytes
     impl !Sync for SomeClass {}
     unsafe impl ::cxx::ExternType for SomeClass {
         type Id = ::cxx::type_id!("test_namespace_bindings :: SomeClass");

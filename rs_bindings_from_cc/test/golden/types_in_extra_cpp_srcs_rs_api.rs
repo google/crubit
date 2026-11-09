@@ -37,8 +37,6 @@ pub struct MyStruct {
     pub a: ::ffi_11::c_int,
     pub b: ::ffi_11::c_int,
 }
-impl !Send for MyStruct {}
-impl !Sync for MyStruct {}
 unsafe impl ::cxx::ExternType for MyStruct {
     type Id = ::cxx::type_id!("MyStruct");
     type Kind = ::cxx::kind::Trivial;

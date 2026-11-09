@@ -22,8 +22,6 @@
 pub struct ForwardDeclaredStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for ForwardDeclaredStruct {}
-impl !Sync for ForwardDeclaredStruct {}
 unsafe impl ::cxx::ExternType for ForwardDeclaredStruct {
     type Id = ::cxx::type_id!("ForwardDeclaredStruct");
     type Kind = ::cxx::kind::Trivial;

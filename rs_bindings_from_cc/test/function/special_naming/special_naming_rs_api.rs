@@ -61,8 +61,6 @@ pub fn asm_name_with_dollar_sign() -> ::ffi_11::c_int {
 pub struct SimpleStruct {
     pub x: ::ffi_11::c_int,
 }
-impl !Send for SimpleStruct {}
-impl !Sync for SimpleStruct {}
 unsafe impl ::cxx::ExternType for SimpleStruct {
     type Id = ::cxx::type_id!("SimpleStruct");
     type Kind = ::cxx::kind::Trivial;
@@ -88,8 +86,6 @@ impl Default for SimpleStruct {
 pub struct OtherStruct {
     pub y: ::ffi_11::c_int,
 }
-impl !Send for OtherStruct {}
-impl !Sync for OtherStruct {}
 unsafe impl ::cxx::ExternType for OtherStruct {
     type Id = ::cxx::type_id!("OtherStruct");
     type Kind = ::cxx::kind::Trivial;

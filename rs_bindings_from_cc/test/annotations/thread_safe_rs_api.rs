@@ -103,7 +103,11 @@ pub mod crubit {
             /// Types of non-public C++ fields can be elided away
             pub(crate) x_: [::core::mem::MaybeUninit<u8>; 4],
         }
+        /// Cannot infer `Send` because:
+        /// * field `x_` is represented as opaque bytes
         impl !Send for RegularStruct {}
+        /// Cannot infer `Sync` because:
+        /// * field `x_` is represented as opaque bytes
         impl !Sync for RegularStruct {}
         unsafe impl ::cxx::ExternType for RegularStruct {
             type Id = ::cxx::type_id!("crubit :: test :: RegularStruct");

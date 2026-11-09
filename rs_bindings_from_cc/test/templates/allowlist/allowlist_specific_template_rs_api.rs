@@ -45,8 +45,6 @@ pub mod zz_template_instantiations {
     pub struct __CcTemplateInst13AlwaysBoundTsIifE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for __CcTemplateInst13AlwaysBoundTsIifE {}
-    impl !Sync for __CcTemplateInst13AlwaysBoundTsIifE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("AlwaysBoundTs < int , float >"),
         crate::zz_template_instantiations::__CcTemplateInst13AlwaysBoundTsIifE
@@ -108,8 +106,6 @@ pub mod zz_template_instantiations {
     pub struct __CcTemplateInst10NotBoundTsIifE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for __CcTemplateInst10NotBoundTsIifE {}
-    impl !Sync for __CcTemplateInst10NotBoundTsIifE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("NotBoundTs < int , float >"),
         crate::zz_template_instantiations::__CcTemplateInst10NotBoundTsIifE

@@ -24,7 +24,11 @@ pub struct DestructionOrderRecorder {
     /// Types of non-public C++ fields can be elided away
     pub(crate) int_field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `int_field_` is represented as opaque bytes
 impl !Send for DestructionOrderRecorder {}
+/// Cannot infer `Sync` because:
+/// * field `int_field_` is represented as opaque bytes
 impl !Sync for DestructionOrderRecorder {}
 unsafe impl ::cxx::ExternType for DestructionOrderRecorder {
     type Id = ::cxx::type_id!("DestructionOrderRecorder");
@@ -153,7 +157,11 @@ pub struct FieldDestructionOrderTester {
     /// Types of non-public C++ fields can be elided away
     pub(crate) field3_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
 }
+/// Cannot infer `Send` because:
+/// * fields `field1_`, `field2_`, `field3_` are represented as opaque bytes
 impl !Send for FieldDestructionOrderTester {}
+/// Cannot infer `Sync` because:
+/// * fields `field1_`, `field2_`, `field3_` are represented as opaque bytes
 impl !Sync for FieldDestructionOrderTester {}
 unsafe impl ::cxx::ExternType for FieldDestructionOrderTester {
     type Id = ::cxx::type_id!("FieldDestructionOrderTester");
@@ -290,7 +298,11 @@ pub struct PrivateOperatorDelete {
     /// Types of non-public C++ fields can be elided away
     pub(crate) int_field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `int_field_` is represented as opaque bytes
 impl !Send for PrivateOperatorDelete {}
+/// Cannot infer `Sync` because:
+/// * field `int_field_` is represented as opaque bytes
 impl !Sync for PrivateOperatorDelete {}
 unsafe impl ::cxx::ExternType for PrivateOperatorDelete {
     type Id = ::cxx::type_id!("PrivateOperatorDelete");

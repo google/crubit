@@ -22,8 +22,6 @@
 pub struct UnpinStructWithRefQualifiedMethods {
     pub i: ::ffi_11::c_int,
 }
-impl !Send for UnpinStructWithRefQualifiedMethods {}
-impl !Sync for UnpinStructWithRefQualifiedMethods {}
 unsafe impl ::cxx::ExternType for UnpinStructWithRefQualifiedMethods {
     type Id = ::cxx::type_id!("UnpinStructWithRefQualifiedMethods");
     type Kind = ::cxx::kind::Trivial;

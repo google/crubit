@@ -36,7 +36,11 @@ pub struct WithBitfields {
     /// * `f8` : 2 bits.
     __bitfields6: [::core::mem::MaybeUninit<u8>; 1],
 }
+/// Cannot infer `Send` because:
+/// * field `f7` is represented as opaque bytes
 impl !Send for WithBitfields {}
+/// Cannot infer `Sync` because:
+/// * field `f7` is represented as opaque bytes
 impl !Sync for WithBitfields {}
 unsafe impl ::cxx::ExternType for WithBitfields {
     type Id = ::cxx::type_id!("WithBitfields");
@@ -73,8 +77,6 @@ pub struct AlignmentRegressionTest {
     /// * `status` : 1 bits.
     __bitfields0: [::core::mem::MaybeUninit<u8>; 4],
 }
-impl !Send for AlignmentRegressionTest {}
-impl !Sync for AlignmentRegressionTest {}
 unsafe impl ::cxx::ExternType for AlignmentRegressionTest {
     type Id = ::cxx::type_id!("AlignmentRegressionTest");
     type Kind = ::cxx::kind::Trivial;

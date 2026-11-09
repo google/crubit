@@ -38,8 +38,6 @@ pub mod zz_template_instantiations {
     pub struct __CcTemplateInst10MyTemplateIiE {
         pub field: ::ffi_11::c_int,
     }
-    impl !Send for __CcTemplateInst10MyTemplateIiE {}
-    impl !Sync for __CcTemplateInst10MyTemplateIiE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("MyTemplate < int >"),
         crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE

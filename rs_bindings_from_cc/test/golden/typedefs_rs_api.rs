@@ -22,8 +22,6 @@
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for SomeStruct {}
-impl !Sync for SomeStruct {}
 unsafe impl ::cxx::ExternType for SomeStruct {
     type Id = ::cxx::type_id!("SomeStruct");
     type Kind = ::cxx::kind::Trivial;
@@ -53,8 +51,6 @@ pub mod some_struct {
 pub struct SomeOtherStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for SomeOtherStruct {}
-impl !Sync for SomeOtherStruct {}
 unsafe impl ::cxx::ExternType for SomeOtherStruct {
     type Id = ::cxx::type_id!("SomeOtherStruct");
     type Kind = ::cxx::kind::Trivial;
@@ -87,8 +83,6 @@ impl Default for SomeOtherStruct {
 pub union SomeUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for SomeUnion {}
-impl !Sync for SomeUnion {}
 unsafe impl ::cxx::ExternType for SomeUnion {
     type Id = ::cxx::type_id!("SomeUnion");
     type Kind = ::cxx::kind::Trivial;
@@ -118,8 +112,6 @@ impl Default for SomeUnion {
 pub union SomeOtherUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for SomeOtherUnion {}
-impl !Sync for SomeOtherUnion {}
 unsafe impl ::cxx::ExternType for SomeOtherUnion {
     type Id = ::cxx::type_id!("SomeOtherUnion");
     type Kind = ::cxx::kind::Trivial;

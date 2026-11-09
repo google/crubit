@@ -30,7 +30,11 @@ pub struct Derived2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 20],
     pub derived_1: ::ffi_11::c_char,
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for Derived2 {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for Derived2 {}
 unsafe impl ::cxx::ExternType for Derived2 {
     type Id = ::cxx::type_id!("Derived2");
@@ -136,7 +140,11 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Derived2 {
 pub struct VirtualDerived2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for VirtualDerived2 {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for VirtualDerived2 {}
 unsafe impl ::cxx::ExternType for VirtualDerived2 {
     type Id = ::cxx::type_id!("VirtualDerived2");

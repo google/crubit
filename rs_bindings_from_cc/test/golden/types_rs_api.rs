@@ -28,8 +28,6 @@
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for SomeStruct {}
-impl !Sync for SomeStruct {}
 unsafe impl ::cxx::ExternType for SomeStruct {
     type Id = ::cxx::type_id!("SomeStruct");
     type Kind = ::cxx::kind::Trivial;
@@ -116,7 +114,11 @@ pub struct FieldTypeTestStruct {
     pub forward_declared_ptr_field: *mut crate::ForwardDeclaredStruct,
     pub cyclic_ptr_field: *mut crate::FieldTypeTestStruct,
 }
+/// Cannot infer `Send` because:
+/// * fields `wchar_t_field`, `ptrdiff_t_field`, `size_t_field` are represented as opaque bytes
 impl !Send for FieldTypeTestStruct {}
+/// Cannot infer `Sync` because:
+/// * fields `wchar_t_field`, `ptrdiff_t_field`, `size_t_field` are represented as opaque bytes
 impl !Sync for FieldTypeTestStruct {}
 unsafe impl ::cxx::ExternType for FieldTypeTestStruct {
     type Id = ::cxx::type_id!("FieldTypeTestStruct");

@@ -58,8 +58,6 @@ pub mod zz_template_instantiations {
     pub struct __CcTemplateInst10DoesNotUseIS_IiEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for __CcTemplateInst10DoesNotUseIS_IiEE {}
-    impl !Sync for __CcTemplateInst10DoesNotUseIS_IiEE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("DoesNotUse < struct DoesNotUse < int >>"),
         crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIS_IiEE
@@ -86,8 +84,6 @@ pub mod zz_template_instantiations {
     pub struct __CcTemplateInst10DoesNotUseIiE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for __CcTemplateInst10DoesNotUseIiE {}
-    impl !Sync for __CcTemplateInst10DoesNotUseIiE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("DoesNotUse < int >"),
         crate::zz_template_instantiations::__CcTemplateInst10DoesNotUseIiE

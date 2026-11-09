@@ -32,7 +32,11 @@
 pub struct CannotUpcastInCrubit {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for CannotUpcastInCrubit {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for CannotUpcastInCrubit {}
 unsafe impl ::cxx::ExternType for CannotUpcastInCrubit {
     type Id = ::cxx::type_id!("CannotUpcastInCrubit");

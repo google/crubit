@@ -22,7 +22,11 @@
 pub struct HasCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
+/// Cannot infer `Send` because:
+/// * non-field data (such as a vtable pointer) is represented as opaque bytes
 impl !Send for HasCustomAlignment {}
+/// Cannot infer `Sync` because:
+/// * non-field data (such as a vtable pointer) is represented as opaque bytes
 impl !Sync for HasCustomAlignment {}
 unsafe impl ::cxx::ExternType for HasCustomAlignment {
     type Id = ::cxx::type_id!("HasCustomAlignment");
@@ -52,8 +56,6 @@ impl Default for HasCustomAlignment {
 pub struct HasFieldWithCustomAlignment {
     pub field: crate::HasCustomAlignment,
 }
-impl !Send for HasFieldWithCustomAlignment {}
-impl !Sync for HasFieldWithCustomAlignment {}
 unsafe impl ::cxx::ExternType for HasFieldWithCustomAlignment {
     type Id = ::cxx::type_id!("HasFieldWithCustomAlignment");
     type Kind = ::cxx::kind::Trivial;
@@ -84,7 +86,11 @@ impl Default for HasFieldWithCustomAlignment {
 pub struct InheritsFromBaseWithCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for InheritsFromBaseWithCustomAlignment {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for InheritsFromBaseWithCustomAlignment {}
 unsafe impl ::cxx::ExternType for InheritsFromBaseWithCustomAlignment {
     type Id = ::cxx::type_id!("InheritsFromBaseWithCustomAlignment");
@@ -116,7 +122,11 @@ impl Default for InheritsFromBaseWithCustomAlignment {
 pub struct HasCustomAlignmentWithGnuAttr {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
+/// Cannot infer `Send` because:
+/// * non-field data (such as a vtable pointer) is represented as opaque bytes
 impl !Send for HasCustomAlignmentWithGnuAttr {}
+/// Cannot infer `Sync` because:
+/// * non-field data (such as a vtable pointer) is represented as opaque bytes
 impl !Sync for HasCustomAlignmentWithGnuAttr {}
 unsafe impl ::cxx::ExternType for HasCustomAlignmentWithGnuAttr {
     type Id = ::cxx::type_id!("HasCustomAlignmentWithGnuAttr");
@@ -154,8 +164,6 @@ pub mod template_with_preferred_name {
     pub struct SpecializedTypeAlias {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for SpecializedTypeAlias {}
-    impl !Sync for SpecializedTypeAlias {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("template_with_preferred_name :: SomeTemplate < int >"),
         crate::template_with_preferred_name::SpecializedTypeAlias

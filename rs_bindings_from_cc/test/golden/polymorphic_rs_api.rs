@@ -22,7 +22,11 @@
 pub struct PolymorphicBase {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
+/// Cannot infer `Send` because:
+/// * non-field data (such as a vtable pointer) is represented as opaque bytes
 impl !Send for PolymorphicBase {}
+/// Cannot infer `Sync` because:
+/// * non-field data (such as a vtable pointer) is represented as opaque bytes
 impl !Sync for PolymorphicBase {}
 unsafe impl ::cxx::ExternType for PolymorphicBase {
     type Id = ::cxx::type_id!("PolymorphicBase");
@@ -108,7 +112,11 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase {
 pub struct PolymorphicBase2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
+/// Cannot infer `Send` because:
+/// * non-field data (such as a vtable pointer) is represented as opaque bytes
 impl !Send for PolymorphicBase2 {}
+/// Cannot infer `Sync` because:
+/// * non-field data (such as a vtable pointer) is represented as opaque bytes
 impl !Sync for PolymorphicBase2 {}
 unsafe impl ::cxx::ExternType for PolymorphicBase2 {
     type Id = ::cxx::type_id!("PolymorphicBase2");
@@ -209,7 +217,11 @@ pub mod polymorphic_base2 {
 pub struct PolymorphicDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for PolymorphicDerived {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for PolymorphicDerived {}
 unsafe impl ::cxx::ExternType for PolymorphicDerived {
     type Id = ::cxx::type_id!("PolymorphicDerived");

@@ -23,8 +23,6 @@ pub struct SV<'a> {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     __marker_a: ::core::marker::PhantomData<&'a ()>,
 }
-impl<'a> !Send for SV<'a> {}
-impl<'a> !Sync for SV<'a> {}
 unsafe impl<'a> ::cxx::ExternType for SV<'a> {
     type Id = ::cxx::type_id!("SV");
     type Kind = ::cxx::kind::Trivial;

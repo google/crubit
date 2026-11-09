@@ -25,7 +25,11 @@ pub struct S {
     /// Types of non-public C++ fields can be elided away
     pub(crate) x_: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `x_` is represented as opaque bytes
 impl !Send for S {}
+/// Cannot infer `Sync` because:
+/// * field `x_` is represented as opaque bytes
 impl !Sync for S {}
 unsafe impl ::cxx::ExternType for S {
     type Id = ::cxx::type_id!("S");
@@ -96,7 +100,13 @@ pub struct T {
     /// Types of non-public C++ fields can be elided away
     pub(crate) y_: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
+/// * field `y_` is represented as opaque bytes
 impl !Send for T {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
+/// * field `y_` is represented as opaque bytes
 impl !Sync for T {}
 unsafe impl ::cxx::ExternType for T {
     type Id = ::cxx::type_id!("T");
@@ -155,7 +165,11 @@ pub struct Chars {
     /// Types of non-public C++ fields can be elided away
     pub(crate) uc_: [::core::mem::MaybeUninit<u8>; 1],
 }
+/// Cannot infer `Send` because:
+/// * fields `c_`, `sc_`, `uc_` are represented as opaque bytes
 impl !Send for Chars {}
+/// Cannot infer `Sync` because:
+/// * fields `c_`, `sc_`, `uc_` are represented as opaque bytes
 impl !Sync for Chars {}
 unsafe impl ::cxx::ExternType for Chars {
     type Id = ::cxx::type_id!("Chars");
@@ -244,7 +258,11 @@ pub struct Bools {
     /// Types of non-public C++ fields can be elided away
     pub(crate) b_: [::core::mem::MaybeUninit<u8>; 1],
 }
+/// Cannot infer `Send` because:
+/// * field `b_` is represented as opaque bytes
 impl !Send for Bools {}
+/// Cannot infer `Sync` because:
+/// * field `b_` is represented as opaque bytes
 impl !Sync for Bools {}
 unsafe impl ::cxx::ExternType for Bools {
     type Id = ::cxx::type_id!("Bools");
@@ -300,7 +318,11 @@ pub struct Pointers {
     /// Types of non-public C++ fields can be elided away
     pub(crate) mut_p_: [::core::mem::MaybeUninit<u8>; 8],
 }
+/// Cannot infer `Send` because:
+/// * fields `p_`, `mut_p_` are represented as opaque bytes
 impl !Send for Pointers {}
+/// Cannot infer `Sync` because:
+/// * fields `p_`, `mut_p_` are represented as opaque bytes
 impl !Sync for Pointers {}
 unsafe impl ::cxx::ExternType for Pointers {
     type Id = ::cxx::type_id!("Pointers");
@@ -393,7 +415,11 @@ pub struct NonTrivial {
     /// Types of non-public C++ fields can be elided away
     pub(crate) mut_p_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
+/// Cannot infer `Send` because:
+/// * fields `p_`, `mut_p_` are represented as opaque bytes
 impl !Send for NonTrivial {}
+/// Cannot infer `Sync` because:
+/// * fields `p_`, `mut_p_` are represented as opaque bytes
 impl !Sync for NonTrivial {}
 unsafe impl ::cxx::ExternType for NonTrivial {
     type Id = ::cxx::type_id!("NonTrivial");
@@ -544,8 +570,6 @@ pub mod non_trivial {
 pub struct Padding {
     pub pad_: ::ffi_11::c_long,
 }
-impl !Send for Padding {}
-impl !Sync for Padding {}
 unsafe impl ::cxx::ExternType for Padding {
     type Id = ::cxx::type_id!("Padding");
     type Kind = ::cxx::kind::Trivial;
@@ -574,7 +598,11 @@ pub struct PointerBase {
     /// Types of non-public C++ fields can be elided away
     pub(crate) base_p_: [::core::mem::MaybeUninit<u8>; 8],
 }
+/// Cannot infer `Send` because:
+/// * field `base_p_` is represented as opaque bytes
 impl !Send for PointerBase {}
+/// Cannot infer `Sync` because:
+/// * field `base_p_` is represented as opaque bytes
 impl !Sync for PointerBase {}
 unsafe impl ::cxx::ExternType for PointerBase {
     type Id = ::cxx::type_id!("PointerBase");
@@ -638,7 +666,11 @@ pub mod pointer_base {
 pub struct DerivedPointers {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for DerivedPointers {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for DerivedPointers {}
 unsafe impl ::cxx::ExternType for DerivedPointers {
     type Id = ::cxx::type_id!("DerivedPointers");
@@ -710,7 +742,11 @@ pub struct MorePointers {
     /// Types of non-public C++ fields can be elided away
     pub(crate) i_: [::core::mem::MaybeUninit<u8>; 8],
 }
+/// Cannot infer `Send` because:
+/// * fields `v_`, `i_` are represented as opaque bytes
 impl !Send for MorePointers {}
+/// Cannot infer `Sync` because:
+/// * fields `v_`, `i_` are represented as opaque bytes
 impl !Sync for MorePointers {}
 unsafe impl ::cxx::ExternType for MorePointers {
     type Id = ::cxx::type_id!("MorePointers");
@@ -803,7 +839,11 @@ pub struct StructWithRecordAndFreeGetter {
     /// Types of non-public C++ fields can be elided away
     pub(crate) s_: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `s_` is represented as opaque bytes
 impl !Send for StructWithRecordAndFreeGetter {}
+/// Cannot infer `Sync` because:
+/// * field `s_` is represented as opaque bytes
 impl !Sync for StructWithRecordAndFreeGetter {}
 unsafe impl ::cxx::ExternType for StructWithRecordAndFreeGetter {
     type Id = ::cxx::type_id!("StructWithRecordAndFreeGetter");
@@ -875,8 +915,6 @@ pub struct TrivialDefault {
     pub a: ::ffi_11::c_int,
     pub p: *const ::ffi_11::c_int,
 }
-impl !Send for TrivialDefault {}
-impl !Sync for TrivialDefault {}
 unsafe impl ::cxx::ExternType for TrivialDefault {
     type Id = ::cxx::type_id!("TrivialDefault");
     type Kind = ::cxx::kind::Trivial;
@@ -907,8 +945,6 @@ pub struct TrivialDefaultNotUnpin {
     pub a: ::ffi_11::c_int,
     pub p: *const ::ffi_11::c_int,
 }
-impl !Send for TrivialDefaultNotUnpin {}
-impl !Sync for TrivialDefaultNotUnpin {}
 unsafe impl ::cxx::ExternType for TrivialDefaultNotUnpin {
     type Id = ::cxx::type_id!("TrivialDefaultNotUnpin");
     type Kind = ::cxx::kind::Opaque;

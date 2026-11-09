@@ -26,7 +26,11 @@
 pub struct Equatable {
     pub value: ::ffi_11::c_int,
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for Equatable {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for Equatable {}
 unsafe impl ::cxx::ExternType for Equatable {
     type Id = ::cxx::type_id!("Equatable");
@@ -63,7 +67,11 @@ impl PartialEq for crate::Equatable {
 pub struct DerivedFromEquatable {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for DerivedFromEquatable {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for DerivedFromEquatable {}
 unsafe impl ::cxx::ExternType for DerivedFromEquatable {
     type Id = ::cxx::type_id!("DerivedFromEquatable");
@@ -94,7 +102,11 @@ impl Default for DerivedFromEquatable {
 pub struct Comparable {
     pub value: ::ffi_11::c_int,
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for Comparable {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for Comparable {}
 unsafe impl ::cxx::ExternType for Comparable {
     type Id = ::cxx::type_id!("Comparable");
@@ -158,7 +170,11 @@ pub mod ns {
     pub struct NamespacedEquatable {
         pub value: ::ffi_11::c_int,
     }
+    /// Cannot infer `Send` because:
+    /// * base class subobjects are not represented as Rust fields
     impl !Send for NamespacedEquatable {}
+    /// Cannot infer `Sync` because:
+    /// * base class subobjects are not represented as Rust fields
     impl !Sync for NamespacedEquatable {}
     unsafe impl ::cxx::ExternType for NamespacedEquatable {
         type Id = ::cxx::type_id!("ns :: NamespacedEquatable");
@@ -202,8 +218,6 @@ pub mod ns {
 pub struct Outer {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for Outer {}
-impl !Sync for Outer {}
 unsafe impl ::cxx::ExternType for Outer {
     type Id = ::cxx::type_id!("Outer");
     type Kind = ::cxx::kind::Trivial;
@@ -230,7 +244,11 @@ pub mod outer {
     pub struct NestedEquatable {
         pub value: ::ffi_11::c_int,
     }
+    /// Cannot infer `Send` because:
+    /// * base class subobjects are not represented as Rust fields
     impl !Send for NestedEquatable {}
+    /// Cannot infer `Sync` because:
+    /// * base class subobjects are not represented as Rust fields
     impl !Sync for NestedEquatable {}
     unsafe impl ::cxx::ExternType for NestedEquatable {
         type Id = ::cxx::type_id!("Outer :: NestedEquatable");
@@ -272,7 +290,11 @@ pub mod outer {
 pub struct NonTrivialEquatable {
     pub value: ::ffi_11::c_int,
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for NonTrivialEquatable {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for NonTrivialEquatable {}
 unsafe impl ::cxx::ExternType for NonTrivialEquatable {
     type Id = ::cxx::type_id!("NonTrivialEquatable");
@@ -360,7 +382,11 @@ impl PartialEq for crate::NonTrivialEquatable {
 pub struct NotEquatable {
     pub value: ::ffi_11::c_int,
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for NotEquatable {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for NotEquatable {}
 unsafe impl ::cxx::ExternType for NotEquatable {
     type Id = ::cxx::type_id!("NotEquatable");
@@ -389,7 +415,11 @@ impl Default for NotEquatable {
 pub struct IntEquatable {
     pub value: ::ffi_11::c_int,
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for IntEquatable {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for IntEquatable {}
 unsafe impl ::cxx::ExternType for IntEquatable {
     type Id = ::cxx::type_id!("IntEquatable");
@@ -419,7 +449,11 @@ impl Default for IntEquatable {
 pub struct MissingMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for MissingMember {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for MissingMember {}
 unsafe impl ::cxx::ExternType for MissingMember {
     type Id = ::cxx::type_id!("MissingMember");

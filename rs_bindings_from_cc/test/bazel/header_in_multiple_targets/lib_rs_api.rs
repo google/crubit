@@ -31,7 +31,11 @@ pub mod shared_ns {
         /// Types of non-public C++ fields can be elided away
         pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
     }
+    /// Cannot infer `Send` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Send for Info {}
+    /// Cannot infer `Sync` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Sync for Info {}
     unsafe impl ::cxx::ExternType for Info {
         type Id = ::cxx::type_id!("shared_ns :: Info");

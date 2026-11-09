@@ -25,7 +25,11 @@ pub struct SomeClass {
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `field_` is represented as opaque bytes
 impl !Send for SomeClass {}
+/// Cannot infer `Sync` because:
+/// * field `field_` is represented as opaque bytes
 impl !Sync for SomeClass {}
 unsafe impl ::cxx::ExternType for SomeClass {
     type Id = ::cxx::type_id!("SomeClass");

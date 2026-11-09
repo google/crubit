@@ -80,8 +80,6 @@ pub mod test {
         pub x: ::ffi_11::c_int,
         pub y: ::ffi_11::c_int,
     }
-    impl !Send for Point {}
-    impl !Sync for Point {}
     unsafe impl ::cxx::ExternType for Point {
         type Id = ::cxx::type_id!("test :: Point");
         type Kind = ::cxx::kind::Trivial;
@@ -127,7 +125,11 @@ pub mod test {
         /// nontrivial fields would be destroyed in the wrong order
         pub(crate) b: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * field `b` is represented as opaque bytes
     impl !Send for Holder {}
+    /// Cannot infer `Sync` because:
+    /// * field `b` is represented as opaque bytes
     impl !Sync for Holder {}
     unsafe impl ::cxx::ExternType for Holder {
         type Id = ::cxx::type_id!("test :: Holder");
@@ -174,8 +176,6 @@ pub mod test {
         pub h: crate::test::Holder,
         pub tag: ::ffi_11::c_int,
     }
-    impl !Send for Outer {}
-    impl !Sync for Outer {}
     unsafe impl ::cxx::ExternType for Outer {
         type Id = ::cxx::type_id!("test :: Outer");
         type Kind = ::cxx::kind::Trivial;
@@ -207,7 +207,11 @@ pub mod test {
         /// Unsupported type 'rs::Box<int>[2]': C-style arrays of non-primitive, non-enum types are not yet supported (b/575922365)
         pub(crate) boxes: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
     }
+    /// Cannot infer `Send` because:
+    /// * field `boxes` is represented as opaque bytes
     impl !Send for ArrayHolder {}
+    /// Cannot infer `Sync` because:
+    /// * field `boxes` is represented as opaque bytes
     impl !Sync for ArrayHolder {}
     unsafe impl ::cxx::ExternType for ArrayHolder {
         type Id = ::cxx::type_id!("test :: ArrayHolder");
@@ -238,8 +242,6 @@ pub mod test {
         __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
         pub val: ::ffi_11::c_int,
     }
-    impl !Send for NonTrivial {}
-    impl !Sync for NonTrivial {}
     unsafe impl ::cxx::ExternType for NonTrivial {
         type Id = ::cxx::type_id!("test :: NonTrivial");
         type Kind = ::cxx::kind::Opaque;
@@ -328,7 +330,11 @@ pub mod test {
         /// nontrivial fields would be destroyed in the wrong order
         pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * field `p` is represented as opaque bytes
     impl !Send for PinHolder {}
+    /// Cannot infer `Sync` because:
+    /// * field `p` is represented as opaque bytes
     impl !Sync for PinHolder {}
     unsafe impl ::cxx::ExternType for PinHolder {
         type Id = ::cxx::type_id!("test :: PinHolder");

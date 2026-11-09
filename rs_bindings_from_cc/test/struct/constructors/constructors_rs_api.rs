@@ -25,8 +25,6 @@ pub struct StructWithUserProvidedConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for StructWithUserProvidedConstructors {}
-impl !Sync for StructWithUserProvidedConstructors {}
 unsafe impl ::cxx::ExternType for StructWithUserProvidedConstructors {
     type Id = ::cxx::type_id!("StructWithUserProvidedConstructors");
     type Kind = ::cxx::kind::Trivial;
@@ -89,8 +87,6 @@ pub struct StructWithExplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for StructWithExplicitConversionConstructor {}
-impl !Sync for StructWithExplicitConversionConstructor {}
 unsafe impl ::cxx::ExternType for StructWithExplicitConversionConstructor {
     type Id = ::cxx::type_id!("StructWithExplicitConversionConstructor");
     type Kind = ::cxx::kind::Trivial;
@@ -133,8 +129,6 @@ pub struct StructWithMultipleConstructors {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for StructWithMultipleConstructors {}
-impl !Sync for StructWithMultipleConstructors {}
 unsafe impl ::cxx::ExternType for StructWithMultipleConstructors {
     type Id = ::cxx::type_id!("StructWithMultipleConstructors");
     type Kind = ::cxx::kind::Trivial;
@@ -227,8 +221,6 @@ pub struct StructWithImplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for StructWithImplicitConversionConstructor {}
-impl !Sync for StructWithImplicitConversionConstructor {}
 unsafe impl ::cxx::ExternType for StructWithImplicitConversionConstructor {
     type Id = ::cxx::type_id!("StructWithImplicitConversionConstructor");
     type Kind = ::cxx::kind::Trivial;
@@ -270,8 +262,6 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithImplicitConversionConstructo
 pub struct OtherSimpleStruct {
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for OtherSimpleStruct {}
-impl !Sync for OtherSimpleStruct {}
 unsafe impl ::cxx::ExternType for OtherSimpleStruct {
     type Id = ::cxx::type_id!("OtherSimpleStruct");
     type Kind = ::cxx::kind::Trivial;
@@ -301,8 +291,6 @@ pub struct StructWithImplicitConversionFromReference {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for StructWithImplicitConversionFromReference {}
-impl !Sync for StructWithImplicitConversionFromReference {}
 unsafe impl ::cxx::ExternType for StructWithImplicitConversionFromReference {
     type Id = ::cxx::type_id!("StructWithImplicitConversionFromReference");
     type Kind = ::cxx::kind::Trivial;
@@ -344,8 +332,6 @@ pub struct StructWithInlineConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for StructWithInlineConstructors {}
-impl !Sync for StructWithInlineConstructors {}
 unsafe impl ::cxx::ExternType for StructWithInlineConstructors {
     type Id = ::cxx::type_id!("StructWithInlineConstructors");
     type Kind = ::cxx::kind::Trivial;
@@ -427,8 +413,6 @@ pub struct StructWithDeletedConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for StructWithDeletedConstructors {}
-impl !Sync for StructWithDeletedConstructors {}
 unsafe impl ::cxx::ExternType for StructWithDeletedConstructors {
     type Id = ::cxx::type_id!("StructWithDeletedConstructors");
     type Kind = ::cxx::kind::Opaque;
@@ -458,7 +442,11 @@ pub struct StructWithPrivateConstructors {
     /// Types of non-public C++ fields can be elided away
     pub(crate) int_field: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `int_field` is represented as opaque bytes
 impl !Send for StructWithPrivateConstructors {}
+/// Cannot infer `Sync` because:
+/// * field `int_field` is represented as opaque bytes
 impl !Sync for StructWithPrivateConstructors {}
 unsafe impl ::cxx::ExternType for StructWithPrivateConstructors {
     type Id = ::cxx::type_id!("StructWithPrivateConstructors");
@@ -487,8 +475,6 @@ pub struct StructWithExplicitlyDefaultedConstructors {
     pub field_with_explicit_initializer: ::ffi_11::c_int,
     pub field_with_no_initializer: ::ffi_11::c_int,
 }
-impl !Send for StructWithExplicitlyDefaultedConstructors {}
-impl !Sync for StructWithExplicitlyDefaultedConstructors {}
 unsafe impl ::cxx::ExternType for StructWithExplicitlyDefaultedConstructors {
     type Id = ::cxx::type_id!("StructWithExplicitlyDefaultedConstructors");
     type Kind = ::cxx::kind::Trivial;
@@ -523,8 +509,6 @@ pub struct NonTrivialStructWithConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
 }
-impl !Send for NonTrivialStructWithConstructors {}
-impl !Sync for NonTrivialStructWithConstructors {}
 unsafe impl ::cxx::ExternType for NonTrivialStructWithConstructors {
     type Id = ::cxx::type_id!("NonTrivialStructWithConstructors");
     type Kind = ::cxx::kind::Opaque;
@@ -635,8 +619,6 @@ pub struct StructWithUnsafeConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub ptr_field: *mut ::ffi_11::c_int,
 }
-impl !Send for StructWithUnsafeConstructor {}
-impl !Sync for StructWithUnsafeConstructor {}
 unsafe impl ::cxx::ExternType for StructWithUnsafeConstructor {
     type Id = ::cxx::type_id!("StructWithUnsafeConstructor");
     type Kind = ::cxx::kind::Trivial;
@@ -682,7 +664,11 @@ pub struct CopyCtorHasUnevaluatableExprInUnevaluatedContext {
     /// Types of non-public C++ fields can be elided away
     pub(crate) int_ptr: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
+/// Cannot infer `Send` because:
+/// * field `int_ptr` is represented as opaque bytes
 impl !Send for CopyCtorHasUnevaluatableExprInUnevaluatedContext {}
+/// Cannot infer `Sync` because:
+/// * field `int_ptr` is represented as opaque bytes
 impl !Sync for CopyCtorHasUnevaluatableExprInUnevaluatedContext {}
 unsafe impl ::cxx::ExternType for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
     type Id = ::cxx::type_id!("CopyCtorHasUnevaluatableExprInUnevaluatedContext");

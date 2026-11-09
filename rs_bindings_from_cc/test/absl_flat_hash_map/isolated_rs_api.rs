@@ -52,8 +52,6 @@ pub mod crubit {
         pub struct NoDestructor {
             __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
         }
-        impl !Send for NoDestructor {}
-        impl !Sync for NoDestructor {}
         unsafe impl ::cxx::ExternType for NoDestructor {
             type Id = ::cxx::type_id!("crubit :: test :: NoDestructor");
             type Kind = ::cxx::kind::Opaque;
@@ -97,8 +95,6 @@ pub mod crubit {
         pub struct NoDelete {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
-        impl !Send for NoDelete {}
-        impl !Sync for NoDelete {}
         unsafe impl ::cxx::ExternType for NoDelete {
             type Id = ::cxx::type_id!("crubit :: test :: NoDelete");
             type Kind = ::cxx::kind::Trivial;
@@ -169,8 +165,6 @@ pub mod zz_template_instantiations {
     pub struct __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {}
-    impl !Sync for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("absl :: flat_hash_map < int , unsigned long , 42 >"),
         crate::zz_template_instantiations::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE

@@ -31,8 +31,6 @@
 pub struct TsIntFloat {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for TsIntFloat {}
-impl !Sync for TsIntFloat {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Ts < int , float >"), crate::TsIntFloat);
 impl TsIntFloat {
     /// # Safety
@@ -85,8 +83,6 @@ pub mod ts_int_float {
 pub struct TsShortDouble {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for TsShortDouble {}
-impl !Sync for TsShortDouble {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("Ts < short , double >"),
     crate::TsShortDouble

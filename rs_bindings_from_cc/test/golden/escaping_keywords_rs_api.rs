@@ -22,8 +22,6 @@
 pub struct r#type {
     pub r#dyn: ::ffi_11::c_int,
 }
-impl !Send for r#type {}
-impl !Sync for r#type {}
 unsafe impl ::cxx::ExternType for r#type {
     type Id = ::cxx::type_id!("type");
     type Kind = ::cxx::kind::Trivial;

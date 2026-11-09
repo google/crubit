@@ -23,8 +23,6 @@ pub mod ns {
     pub struct X {
         pub f: ::ffi_11::c_int,
     }
-    impl !Send for X {}
-    impl !Sync for X {}
     unsafe impl ::cxx::ExternType for X {
         type Id = ::cxx::type_id!("ns :: X");
         type Kind = ::cxx::kind::Trivial;

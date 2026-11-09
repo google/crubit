@@ -26,8 +26,6 @@ pub mod repro {
     pub struct Interval {
         pub nanos: [::ffi_11::c_char; 1],
     }
-    impl !Send for Interval {}
-    impl !Sync for Interval {}
     unsafe impl ::cxx::ExternType for Interval {
         type Id = ::cxx::type_id!("repro :: Interval");
         type Kind = ::cxx::kind::Trivial;
@@ -78,8 +76,6 @@ pub mod zz_template_instantiations {
     pub struct __CcTemplateInstN5repro8NullableINS_8IntervalEEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for __CcTemplateInstN5repro8NullableINS_8IntervalEEE {}
-    impl !Sync for __CcTemplateInstN5repro8NullableINS_8IntervalEEE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("repro :: Nullable < struct repro :: Interval >"),
         crate::zz_template_instantiations::__CcTemplateInstN5repro8NullableINS_8IntervalEEE

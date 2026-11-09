@@ -22,8 +22,6 @@
 pub struct Uncopyable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
-impl !Send for Uncopyable {}
-impl !Sync for Uncopyable {}
 unsafe impl ::cxx::ExternType for Uncopyable {
     type Id = ::cxx::type_id!("Uncopyable");
     type Kind = ::cxx::kind::Opaque;
@@ -55,7 +53,11 @@ pub struct UncopyableDespiteDecl {
     /// Types of non-public C++ fields can be elided away
     pub(crate) vector_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
+/// Cannot infer `Send` because:
+/// * field `vector_` is represented as opaque bytes
 impl !Send for UncopyableDespiteDecl {}
+/// Cannot infer `Sync` because:
+/// * field `vector_` is represented as opaque bytes
 impl !Sync for UncopyableDespiteDecl {}
 unsafe impl ::cxx::ExternType for UncopyableDespiteDecl {
     type Id = ::cxx::type_id!("UncopyableDespiteDecl");

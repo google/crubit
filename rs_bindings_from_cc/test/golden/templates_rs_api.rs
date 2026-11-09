@@ -22,8 +22,6 @@
 pub struct DifferentScope {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for DifferentScope {}
-impl !Sync for DifferentScope {}
 unsafe impl ::cxx::ExternType for DifferentScope {
     type Id = ::cxx::type_id!("DifferentScope");
     type Kind = ::cxx::kind::Trivial;
@@ -56,7 +54,11 @@ pub mod test_namespace_bindings {
         /// Types of non-public C++ fields can be elided away
         pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
     }
+    /// Cannot infer `Send` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Send for MyTypeAlias {}
+    /// Cannot infer `Sync` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Sync for MyTypeAlias {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("test_namespace_bindings :: MyTemplate < int >"),
@@ -84,8 +86,6 @@ pub mod test_namespace_bindings {
     pub struct TemplateParam {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for TemplateParam {}
-    impl !Sync for TemplateParam {}
     unsafe impl ::cxx::ExternType for TemplateParam {
         type Id = ::cxx::type_id!("test_namespace_bindings :: TemplateParam");
         type Kind = ::cxx::kind::Trivial;
@@ -119,7 +119,11 @@ pub mod test_namespace_bindings {
         /// Types of non-public C++ fields can be elided away
         pub(crate) value_: [::core::mem::MaybeUninit<u8>; 1],
     }
+    /// Cannot infer `Send` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Send for TemplateWithStructTemplateParam {}
+    /// Cannot infer `Sync` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Sync for TemplateWithStructTemplateParam {}
     forward_declare::unsafe_define!(forward_declare::symbol!("test_namespace_bindings :: MyTemplate < struct test_namespace_bindings :: TemplateParam >"),crate::test_namespace_bindings::TemplateWithStructTemplateParam);
 
@@ -145,7 +149,11 @@ pub mod test_namespace_bindings {
         /// Types of non-public C++ fields can be elided away
         pub(crate) value_: [::core::mem::MaybeUninit<u8>; 1],
     }
+    /// Cannot infer `Send` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Send for ParamFromDifferentScope {}
+    /// Cannot infer `Sync` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Sync for ParamFromDifferentScope {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("test_namespace_bindings :: MyTemplate < struct DifferentScope >"),
@@ -175,8 +183,6 @@ pub mod test_namespace_bindings {
         pub value1: ::ffi_11::c_int,
         pub value2: f32,
     }
-    impl !Send for AliasToTemplateWithTwoParams {}
-    impl !Sync for AliasToTemplateWithTwoParams {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!(
             "test_namespace_bindings :: TemplateWithTwoParams < int , float >"
@@ -201,8 +207,6 @@ pub mod test_namespace_bindings {
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < struct test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >
     ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct AliasToTemplateOfATemplate{ pub value1: crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,pub value2: ::ffi_11::c_int, }
-    impl !Send for AliasToTemplateOfATemplate {}
-    impl !Sync for AliasToTemplateOfATemplate {}
     forward_declare::unsafe_define!(forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < struct test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"),crate::test_namespace_bindings::AliasToTemplateOfATemplate);
 
     impl Default for AliasToTemplateOfATemplate {
@@ -235,8 +239,6 @@ pub mod test_namespace_bindings {
     pub struct MyCharStruct {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for MyCharStruct {}
-    impl !Sync for MyCharStruct {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("test_namespace_bindings :: MyStruct < char >"),
         crate::test_namespace_bindings::MyCharStruct
@@ -272,8 +274,6 @@ pub mod test_namespace_bindings {
 pub struct TopLevelTemplateWithNonTopLevelParam {
     pub value: crate::test_namespace_bindings::TemplateParam,
 }
-impl !Send for TopLevelTemplateWithNonTopLevelParam {}
-impl !Sync for TopLevelTemplateWithNonTopLevelParam {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(
         "MyTopLevelTemplate < struct test_namespace_bindings :: TemplateParam >"
@@ -320,8 +320,6 @@ pub mod template_template_params {
     pub struct MyTypeAlias {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for MyTypeAlias {}
-    impl !Sync for MyTypeAlias {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!(
             "template_template_params :: MyTemplate < template_template_params :: Policy >"
@@ -361,8 +359,6 @@ pub mod private_classes {
     pub struct HasPrivateType {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for HasPrivateType {}
-    impl !Sync for HasPrivateType {}
     unsafe impl ::cxx::ExternType for HasPrivateType {
         type Id = ::cxx::type_id!("private_classes :: HasPrivateType");
         type Kind = ::cxx::kind::Trivial;
@@ -386,8 +382,6 @@ pub mod zz_template_instantiations {
         pub value1: ::ffi_11::c_int,
         pub value2: ::ffi_11::c_int,
     }
-    impl !Send for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {}
-    impl !Sync for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {}
     forward_declare::unsafe_define!(forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < int , int >"),crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE);
 
     impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {

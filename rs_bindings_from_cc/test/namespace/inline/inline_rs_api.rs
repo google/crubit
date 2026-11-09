@@ -29,8 +29,6 @@ pub mod foo {
         pub struct MyStruct {
             pub value: ::ffi_11::c_int,
         }
-        impl !Send for MyStruct {}
-        impl !Sync for MyStruct {}
         unsafe impl ::cxx::ExternType for MyStruct {
             type Id = ::cxx::type_id!("foo :: inline1 :: MyStruct");
             type Kind = ::cxx::kind::Trivial;

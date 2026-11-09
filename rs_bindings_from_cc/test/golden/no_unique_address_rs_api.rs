@@ -35,7 +35,11 @@ pub struct Struct {
     /// `[[no_unique_address]]` attribute was present.
     pub(crate) field2: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * fields `field1`, `field2` are represented as opaque bytes
 impl !Send for Struct {}
+/// Cannot infer `Sync` because:
+/// * fields `field1`, `field2` are represented as opaque bytes
 impl !Sync for Struct {}
 unsafe impl ::cxx::ExternType for Struct {
     type Id = ::cxx::type_id!("Struct");
@@ -96,7 +100,11 @@ pub struct PaddingBetweenFields {
     /// `[[no_unique_address]]` attribute was present.
     pub(crate) field2: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `field2` is represented as opaque bytes
 impl !Send for PaddingBetweenFields {}
+/// Cannot infer `Sync` because:
+/// * field `field2` is represented as opaque bytes
 impl !Sync for PaddingBetweenFields {}
 unsafe impl ::cxx::ExternType for PaddingBetweenFields {
     type Id = ::cxx::type_id!("PaddingBetweenFields");
@@ -158,8 +166,6 @@ pub struct FieldInTailPadding_InnerStruct {
     /// size: 1, alignment: 1 => offset: 4
     pub inner_char_field: ::ffi_11::c_char,
 }
-impl !Send for FieldInTailPadding_InnerStruct {}
-impl !Sync for FieldInTailPadding_InnerStruct {}
 unsafe impl ::cxx::ExternType for FieldInTailPadding_InnerStruct {
     type Id = ::cxx::type_id!("FieldInTailPadding_InnerStruct");
     type Kind = ::cxx::kind::Opaque;
@@ -254,7 +260,11 @@ pub struct FieldInTailPadding {
     /// offset: 5 (dsize of `s`).
     pub char_in_tail_padding_of_prev_field: ::ffi_11::c_char,
 }
+/// Cannot infer `Send` because:
+/// * field `inner_struct` is represented as opaque bytes
 impl !Send for FieldInTailPadding {}
+/// Cannot infer `Sync` because:
+/// * field `inner_struct` is represented as opaque bytes
 impl !Sync for FieldInTailPadding {}
 unsafe impl ::cxx::ExternType for FieldInTailPadding {
     type Id = ::cxx::type_id!("FieldInTailPadding");

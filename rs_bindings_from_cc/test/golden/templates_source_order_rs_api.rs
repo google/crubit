@@ -25,8 +25,6 @@
 pub struct TopLevel {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for TopLevel {}
-impl !Sync for TopLevel {}
 unsafe impl ::cxx::ExternType for TopLevel {
     type Id = ::cxx::type_id!("TopLevel");
     type Kind = ::cxx::kind::Trivial;
@@ -55,7 +53,11 @@ pub struct Alias1 {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `t` is represented as opaque bytes
 impl !Send for Alias1 {}
+/// Cannot infer `Sync` because:
+/// * field `t` is represented as opaque bytes
 impl !Sync for Alias1 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("MyTemplate < int >"), crate::Alias1);
 
@@ -81,7 +83,11 @@ pub struct Alias2 {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `t` is represented as opaque bytes
 impl !Send for Alias2 {}
+/// Cannot infer `Sync` because:
+/// * field `t` is represented as opaque bytes
 impl !Sync for Alias2 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("MyTemplate < float >"), crate::Alias2);
 
@@ -107,7 +113,11 @@ pub struct Alias3 {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
+/// Cannot infer `Send` because:
+/// * field `t` is represented as opaque bytes
 impl !Send for Alias3 {}
+/// Cannot infer `Sync` because:
+/// * field `t` is represented as opaque bytes
 impl !Sync for Alias3 {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < struct TopLevel >"),
@@ -138,7 +148,11 @@ pub struct Alias4 {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 8],
 }
+/// Cannot infer `Send` because:
+/// * field `t` is represented as opaque bytes
 impl !Send for Alias4 {}
+/// Cannot infer `Sync` because:
+/// * field `t` is represented as opaque bytes
 impl !Sync for Alias4 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("MyTemplate < double >"), crate::Alias4);
 
@@ -164,7 +178,11 @@ pub struct Alias5 {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
+/// Cannot infer `Send` because:
+/// * field `t` is represented as opaque bytes
 impl !Send for Alias5 {}
+/// Cannot infer `Sync` because:
+/// * field `t` is represented as opaque bytes
 impl !Sync for Alias5 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("MyTemplate < bool >"), crate::Alias5);
 
@@ -190,7 +208,11 @@ pub struct Alias6 {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
+/// Cannot infer `Send` because:
+/// * field `t` is represented as opaque bytes
 impl !Send for Alias6 {}
+/// Cannot infer `Sync` because:
+/// * field `t` is represented as opaque bytes
 impl !Sync for Alias6 {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < class MyTemplate < struct TopLevel >>"),
@@ -219,8 +241,6 @@ pub mod test_namespace_bindings {
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for Inner {}
-    impl !Sync for Inner {}
     unsafe impl ::cxx::ExternType for Inner {
         type Id = ::cxx::type_id!("test_namespace_bindings :: Inner");
         type Kind = ::cxx::kind::Trivial;
@@ -254,7 +274,11 @@ pub mod test_namespace_bindings {
         /// Types of non-public C++ fields can be elided away
         pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
     }
+    /// Cannot infer `Send` because:
+    /// * field `t` is represented as opaque bytes
     impl !Send for Alias7 {}
+    /// Cannot infer `Sync` because:
+    /// * field `t` is represented as opaque bytes
     impl !Sync for Alias7 {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("MyTemplate < char >"),
@@ -285,7 +309,11 @@ pub mod test_namespace_bindings {
         /// Types of non-public C++ fields can be elided away
         pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
     }
+    /// Cannot infer `Send` because:
+    /// * field `t` is represented as opaque bytes
     impl !Send for Alias8 {}
+    /// Cannot infer `Sync` because:
+    /// * field `t` is represented as opaque bytes
     impl !Sync for Alias8 {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("MyTemplate < struct test_namespace_bindings :: Inner >"),
@@ -314,7 +342,11 @@ pub mod test_namespace_bindings {
         /// Types of non-public C++ fields can be elided away
         pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
     }
+    /// Cannot infer `Send` because:
+    /// * field `t` is represented as opaque bytes
     impl !Send for Alias9 {}
+    /// Cannot infer `Sync` because:
+    /// * field `t` is represented as opaque bytes
     impl !Sync for Alias9 {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!(

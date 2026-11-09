@@ -32,7 +32,11 @@ pub struct B {
     /// Unsupported type 'A<B::PrivateMember>': Failed to create bindings for template specialization type A<PrivateMember>: Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
     pub(crate) a_: [::core::mem::MaybeUninit<u8>; 1],
 }
+/// Cannot infer `Send` because:
+/// * field `a_` is represented as opaque bytes
 impl !Send for B {}
+/// Cannot infer `Sync` because:
+/// * field `a_` is represented as opaque bytes
 impl !Sync for B {}
 unsafe impl ::cxx::ExternType for B {
     type Id = ::cxx::type_id!("B");

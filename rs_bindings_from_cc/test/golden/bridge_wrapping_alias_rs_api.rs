@@ -27,8 +27,6 @@ extern crate self as inline_cpp_generated_bindings;
 pub struct AliasToInst {
     pub value: ::ffi_11::c_int,
 }
-impl !Send for AliasToInst {}
-impl !Sync for AliasToInst {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TemplateType < int >"),
     crate::AliasToInst

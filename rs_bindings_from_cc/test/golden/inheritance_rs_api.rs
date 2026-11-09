@@ -25,8 +25,6 @@
 pub struct Base0 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for Base0 {}
-impl !Sync for Base0 {}
 unsafe impl ::cxx::ExternType for Base0 {
     type Id = ::cxx::type_id!("Base0");
     type Kind = ::cxx::kind::Trivial;
@@ -58,7 +56,11 @@ pub struct Base1 {
     /// Types of non-public C++ fields can be elided away
     pub(crate) b1_2_: [::core::mem::MaybeUninit<u8>; 8],
 }
+/// Cannot infer `Send` because:
+/// * fields `b1_1_`, `b1_2_` are represented as opaque bytes
 impl !Send for Base1 {}
+/// Cannot infer `Sync` because:
+/// * fields `b1_1_`, `b1_2_` are represented as opaque bytes
 impl !Sync for Base1 {}
 unsafe impl ::cxx::ExternType for Base1 {
     type Id = ::cxx::type_id!("Base1");
@@ -88,7 +90,11 @@ pub struct Base2 {
     /// Types of non-public C++ fields can be elided away
     pub(crate) b2_1_: [::core::mem::MaybeUninit<u8>; 2],
 }
+/// Cannot infer `Send` because:
+/// * field `b2_1_` is represented as opaque bytes
 impl !Send for Base2 {}
+/// Cannot infer `Sync` because:
+/// * field `b2_1_` is represented as opaque bytes
 impl !Sync for Base2 {}
 unsafe impl ::cxx::ExternType for Base2 {
     type Id = ::cxx::type_id!("Base2");
@@ -116,7 +122,11 @@ pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 12],
     pub derived_1: ::ffi_11::c_char,
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for Derived {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for Derived {}
 unsafe impl ::cxx::ExternType for Derived {
     type Id = ::cxx::type_id!("Derived");
@@ -144,7 +154,11 @@ impl Default for Derived {
 pub struct VirtualBase1 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for VirtualBase1 {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for VirtualBase1 {}
 unsafe impl ::cxx::ExternType for VirtualBase1 {
     type Id = ::cxx::type_id!("VirtualBase1");
@@ -250,7 +264,11 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase1 {
 pub struct VirtualBase2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for VirtualBase2 {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for VirtualBase2 {}
 unsafe impl ::cxx::ExternType for VirtualBase2 {
     type Id = ::cxx::type_id!("VirtualBase2");
@@ -356,7 +374,11 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase2 {
 pub struct VirtualDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for VirtualDerived {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for VirtualDerived {}
 unsafe impl ::cxx::ExternType for VirtualDerived {
     type Id = ::cxx::type_id!("VirtualDerived");
@@ -463,7 +485,11 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualDerived {
 pub struct MyAbstractClass {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
+/// Cannot infer `Send` because:
+/// * non-field data (such as a vtable pointer) is represented as opaque bytes
 impl !Send for MyAbstractClass {}
+/// Cannot infer `Sync` because:
+/// * non-field data (such as a vtable pointer) is represented as opaque bytes
 impl !Sync for MyAbstractClass {}
 unsafe impl ::cxx::ExternType for MyAbstractClass {
     type Id = ::cxx::type_id!("MyAbstractClass");
@@ -498,8 +524,6 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for MyAbstractClass {
 pub struct MethodBase1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for MethodBase1 {}
-impl !Sync for MethodBase1 {}
 unsafe impl ::cxx::ExternType for MethodBase1 {
     type Id = ::cxx::type_id!("MethodBase1");
     type Kind = ::cxx::kind::Trivial;
@@ -577,8 +601,6 @@ pub mod method_base1 {
 pub struct MethodBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for MethodBase2 {}
-impl !Sync for MethodBase2 {}
 unsafe impl ::cxx::ExternType for MethodBase2 {
     type Id = ::cxx::type_id!("MethodBase2");
     type Kind = ::cxx::kind::Trivial;
@@ -627,7 +649,11 @@ pub mod method_base2 {
 pub struct MethodDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Send for MethodDerived {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
 impl !Sync for MethodDerived {}
 unsafe impl ::cxx::ExternType for MethodDerived {
     type Id = ::cxx::type_id!("MethodDerived");

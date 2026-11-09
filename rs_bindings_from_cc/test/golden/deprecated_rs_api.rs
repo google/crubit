@@ -35,8 +35,6 @@ pub fn deprecated_function_with_message() {
 pub struct DeprecatedStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for DeprecatedStruct {}
-impl !Sync for DeprecatedStruct {}
 unsafe impl ::cxx::ExternType for DeprecatedStruct {
     type Id = ::cxx::type_id!("DeprecatedStruct");
     type Kind = ::cxx::kind::Trivial;
@@ -66,8 +64,6 @@ impl Default for DeprecatedStruct {
 pub struct DeprecatedStructWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for DeprecatedStructWithMessage {}
-impl !Sync for DeprecatedStructWithMessage {}
 unsafe impl ::cxx::ExternType for DeprecatedStructWithMessage {
     type Id = ::cxx::type_id!("DeprecatedStructWithMessage");
     type Kind = ::cxx::kind::Trivial;
@@ -134,8 +130,6 @@ impl From<DeprecatedEnumWithMessage> for ::ffi_11::c_uint {
 pub struct StructWithDeprecatedCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for StructWithDeprecatedCtor {}
-impl !Sync for StructWithDeprecatedCtor {}
 unsafe impl ::cxx::ExternType for StructWithDeprecatedCtor {
     type Id = ::cxx::type_id!("StructWithDeprecatedCtor");
     type Kind = ::cxx::kind::Trivial;
@@ -164,8 +158,6 @@ impl Default for StructWithDeprecatedCtor {
 pub struct StructWithDeprecatedCtorWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for StructWithDeprecatedCtorWithMessage {}
-impl !Sync for StructWithDeprecatedCtorWithMessage {}
 unsafe impl ::cxx::ExternType for StructWithDeprecatedCtorWithMessage {
     type Id = ::cxx::type_id!("StructWithDeprecatedCtorWithMessage");
     type Kind = ::cxx::kind::Trivial;
@@ -284,8 +276,6 @@ pub struct DeprecatedFields {
     #[deprecated = "old"]
     pub message: ::ffi_11::c_int,
 }
-impl !Send for DeprecatedFields {}
-impl !Sync for DeprecatedFields {}
 unsafe impl ::cxx::ExternType for DeprecatedFields {
     type Id = ::cxx::type_id!("DeprecatedFields");
     type Kind = ::cxx::kind::Trivial;

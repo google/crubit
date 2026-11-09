@@ -28,7 +28,11 @@ pub struct MyTypeAlias {
     /// Types of non-public C++ fields can be elided away
     pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `value_` is represented as opaque bytes
 impl !Send for MyTypeAlias {}
+/// Cannot infer `Sync` because:
+/// * field `value_` is represented as opaque bytes
 impl !Sync for MyTypeAlias {}
 forward_declare::unsafe_define!(forward_declare::symbol!("MyTemplate < int >"), crate::MyTypeAlias);
 impl MyTypeAlias {
@@ -91,7 +95,11 @@ pub mod nested {
         /// Types of non-public C++ fields can be elided away
         pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
     }
+    /// Cannot infer `Send` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Send for NestedAlias {}
+    /// Cannot infer `Sync` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Sync for NestedAlias {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("MyTemplate < float >"),
@@ -188,7 +196,11 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) value_: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Send for __CcTemplateInst10MyTemplateIdE {}
+    /// Cannot infer `Sync` because:
+    /// * field `value_` is represented as opaque bytes
     impl !Sync for __CcTemplateInst10MyTemplateIdE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("MyTemplate < double >"),

@@ -36,8 +36,6 @@ pub fn RTS() -> crate::zz_template_instantiations::__CcTemplateInst2TSIiE {
 pub struct NormalClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for NormalClass {}
-impl !Sync for NormalClass {}
 unsafe impl ::cxx::ExternType for NormalClass {
     type Id = ::cxx::type_id!("NormalClass");
     type Kind = ::cxx::kind::Trivial;
@@ -71,8 +69,6 @@ impl Default for NormalClass {
 pub struct TemplateWithStaticMembersInt {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-impl !Send for TemplateWithStaticMembersInt {}
-impl !Sync for TemplateWithStaticMembersInt {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TemplateWithStaticMembers < int >"),
     crate::TemplateWithStaticMembersInt
@@ -110,8 +106,6 @@ pub mod zz_template_instantiations {
     pub struct __CcTemplateInst2TSIiE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
-    impl !Send for __CcTemplateInst2TSIiE {}
-    impl !Sync for __CcTemplateInst2TSIiE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("TS < int >"),
         crate::zz_template_instantiations::__CcTemplateInst2TSIiE
