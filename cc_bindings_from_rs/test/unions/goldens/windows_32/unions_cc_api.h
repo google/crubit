@@ -27,8 +27,8 @@
 
 namespace unions::repr_c {
 
-union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
-    [[clang::trivial_abi]] U final {
+union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U")
+    [[clang::trivial_abi]] alignas(4) U final {
  public:
   // `unions_golden::repr_c::U` doesn't implement the `Default` trait
   U() = delete;
@@ -56,9 +56,8 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
 
 namespace unions::repr_c_clone {
 
-union CRUBIT_INTERNAL_RUST_TYPE(
-    ":: unions_golden :: repr_c_clone :: U") alignas(4) [[clang::trivial_abi]]
-U final {
+union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_clone :: U")
+    [[clang::trivial_abi]] alignas(4) U final {
  public:
   // `unions_golden::repr_c_clone::U` doesn't implement the `Default` trait
   U() = delete;
@@ -88,8 +87,8 @@ U final {
 
 namespace unions::repr_c_drop {
 
-union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
-    4) [[clang::trivial_abi]] U final {
+union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U")
+    [[clang::trivial_abi]] alignas(4) U final {
  public:
   // Default::default
   U();
@@ -115,9 +114,8 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
 
 namespace unions::repr_c_packed {
 
-union CRUBIT_INTERNAL_RUST_TYPE(
-    ":: unions_golden :: repr_c_packed :: U") alignas(1) [[clang::trivial_abi]]
-__attribute__((packed)) U final {
+union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_packed :: U")
+    [[clang::trivial_abi]] alignas(1) __attribute__((packed)) U final {
  public:
   // `unions_golden::repr_c_packed::U` doesn't implement the `Default` trait
   U() = delete;
@@ -145,8 +143,8 @@ __attribute__((packed)) U final {
 
 namespace unions::repr_rust {
 
-union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
-    [[clang::trivial_abi]] U final {
+union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U")
+    [[clang::trivial_abi]] alignas(4) U final {
  public:
   // `unions_golden::repr_rust::U` doesn't implement the `Default` trait
   U() = delete;
@@ -186,9 +184,8 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
 
 namespace unions::repr_rust_clone {
 
-union CRUBIT_INTERNAL_RUST_TYPE(
-    ":: unions_golden :: repr_rust_clone :: U") alignas(4)
-    [[clang::trivial_abi]] U final {
+union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust_clone :: U")
+    [[clang::trivial_abi]] alignas(4) U final {
  public:
   // `unions_golden::repr_rust_clone::U` doesn't implement the `Default` trait
   U() = delete;
@@ -224,9 +221,8 @@ union CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace unions::repr_rust_drop {
 
-union CRUBIT_INTERNAL_RUST_TYPE(
-    ":: unions_golden :: repr_rust_drop :: U") alignas(4) [[clang::trivial_abi]]
-U final {
+union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust_drop :: U")
+    [[clang::trivial_abi]] alignas(4) U final {
  public:
   // Default::default
   U();
@@ -258,9 +254,8 @@ U final {
 
 namespace unions::repr_rust_packed {
 
-union CRUBIT_INTERNAL_RUST_TYPE(
-    ":: unions_golden :: repr_rust_packed :: U") alignas(1)
-    [[clang::trivial_abi]] __attribute__((packed)) U final {
+union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust_packed :: U")
+    [[clang::trivial_abi]] alignas(1) __attribute__((packed)) U final {
  public:
   // `unions_golden::repr_rust_packed::U` doesn't implement the `Default` trait
   U() = delete;

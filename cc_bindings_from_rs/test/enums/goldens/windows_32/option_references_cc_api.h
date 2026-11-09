@@ -35,9 +35,8 @@
 
 namespace option_references {
 struct ValuesIter;
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_references_golden :: Value") alignas(4) [[clang::trivial_abi]]
-Value final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_references_golden :: Value")
+    [[clang::trivial_abi]] Value final {
  public:
   ::std::int32_t x{};
 
@@ -45,9 +44,8 @@ Value final {
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_references_golden :: Values") alignas(4) [[clang::trivial_abi]]
-Values final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_references_golden :: Values")
+    [[clang::trivial_abi]] alignas(4) Values final {
  public:
   // Default::default
   Values();
@@ -83,9 +81,8 @@ Values final {
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_references_golden :: ValuesIter") alignas(4)
-    [[clang::trivial_abi]] ValuesIter final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_references_golden :: ValuesIter")
+    [[clang::trivial_abi]] alignas(4) ValuesIter final {
  public:
   // `option_references_golden::ValuesIter` doesn't implement the `Default`
   // trait

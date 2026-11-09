@@ -27,8 +27,8 @@
 
 namespace example_crate {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
-    [[clang::trivial_abi]] Color final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color")
+    [[clang::trivial_abi]] alignas(1) Color final {
  public:
   // `example_crate_golden::Color` doesn't implement the `Default` trait
   Color() = delete;

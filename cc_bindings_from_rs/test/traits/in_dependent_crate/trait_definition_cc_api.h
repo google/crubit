@@ -27,9 +27,8 @@
 
 namespace trait_definition {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: trait_definition_golden :: MyStruct") alignas(4) [[clang::trivial_abi]]
-MyStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_definition_golden :: MyStruct")
+    [[clang::trivial_abi]] alignas(4) MyStruct final {
  public:
   // `trait_definition_golden::MyStruct` doesn't implement the `Default` trait
   MyStruct() = delete;

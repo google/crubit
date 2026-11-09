@@ -40,8 +40,8 @@
 
 namespace boxes {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Holder") alignas(4)
-    [[clang::trivial_abi]] Holder final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Holder")
+    [[clang::trivial_abi]] alignas(4) Holder final {
  public:
   // Type is not a C++ aggregate: Type has a manual `Default` implementation
 
@@ -67,8 +67,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Holder") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: NotUnpin") alignas(4)
-    [[clang::trivial_abi]] NotUnpin final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: NotUnpin")
+    [[clang::trivial_abi]] alignas(4) NotUnpin final {
  public:
   // Type is not a C++ aggregate: Field `_pin` is not public
 
@@ -93,7 +93,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: NotUnpin") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Point") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Point")
     [[clang::trivial_abi]] Point final {
  public:
   ::std::int32_t x{};
@@ -103,8 +103,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Point") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Tracked") alignas(4)
-    [[clang::trivial_abi]] Tracked final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Tracked")
+    [[clang::trivial_abi]] alignas(4) Tracked final {
  public:
   // `boxes_golden::Tracked` doesn't implement the `Default` trait
   Tracked() = delete;
@@ -128,8 +128,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Tracked") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: UnmovableHolder") alignas(
-    4) [[clang::trivial_abi]] UnmovableHolder final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: UnmovableHolder")
+    [[clang::trivial_abi]] alignas(4) UnmovableHolder final {
  public:
   // Type is not a C++ aggregate: Field `b` requires drop glue but is not
   // C++-movable
@@ -426,7 +426,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace boxes {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: OptHolder") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: OptHolder")
     [[clang::trivial_abi]] OptHolder final {
  public:
   ::rs::Option<::rs::Box<::std::int32_t>> o{};

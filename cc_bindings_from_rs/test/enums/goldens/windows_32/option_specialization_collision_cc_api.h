@@ -31,8 +31,8 @@
 namespace option_specialization_collision {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_specialization_collision_golden :: Value") alignas(4)
-    [[clang::trivial_abi]] Value final {
+    ":: option_specialization_collision_golden :: Value") [[clang::trivial_abi]]
+Value final {
  public:
   ::rs::Option<::std::int32_t const * $static crubit_nonnull> get() const& $(
       __anon1) CRUBIT_LIFETIME_BOUND;

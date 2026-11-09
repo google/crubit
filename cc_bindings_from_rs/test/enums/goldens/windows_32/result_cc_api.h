@@ -36,8 +36,8 @@
 
 namespace result {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
-    1) [[clang::trivial_abi]] CloneNoDefault final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault")
+    [[clang::trivial_abi]] CloneNoDefault final {
  public:
   ::std::uint8_t val{};
 
@@ -45,7 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault")
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
   ::std::uint8_t val{};
@@ -54,8 +54,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: DropNoDefault") alignas(1)
-    [[clang::trivial_abi]] DropNoDefault final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: DropNoDefault")
+    [[clang::trivial_abi]] alignas(1) DropNoDefault final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -89,7 +89,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: DropNoDefault") alignas(1)
 
 using FreeFunc CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: FreeFunc") =
     crubit::type_identity_t<void(void*, void*)>*;
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault")
     [[clang::trivial_abi]] HasDefault final {
  public:
   static ::result::HasDefault new_(::rs::StrRef val);
@@ -102,7 +102,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault")
     [[clang::trivial_abi]] HasNoDefault final {
  public:
   ::rs::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
@@ -914,8 +914,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: NestedResult") alignas(4)
-    [[clang::trivial_abi]] NestedResult final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: NestedResult")
+    [[clang::trivial_abi]] alignas(4) NestedResult final {
  public:
   // Type is not a C++ aggregate: Field `in_ok` is not default-constructible in
   // C++
@@ -1019,8 +1019,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: GetsResult") alignas(4)
-    [[clang::trivial_abi]] GetsResult final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: GetsResult")
+    [[clang::trivial_abi]] alignas(4) GetsResult final {
  public:
   // Type is not a C++ aggregate: Field `value` is not default-constructible in
   // C++
@@ -1185,9 +1185,8 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: result_golden :: CloneNoDefaultResult") alignas(1)
-    [[clang::trivial_abi]] CloneNoDefaultResult final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefaultResult")
+    [[clang::trivial_abi]] alignas(1) CloneNoDefaultResult final {
  public:
   // Type is not a C++ aggregate: Field `in_ok` is not default-constructible in
   // C++
@@ -1289,9 +1288,8 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: result_golden :: CopyNoDefaultResult") alignas(1) [[clang::trivial_abi]]
-CopyNoDefaultResult final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefaultResult")
+    [[clang::trivial_abi]] alignas(1) CopyNoDefaultResult final {
  public:
   // Type is not a C++ aggregate: Field `in_ok` is not default-constructible in
   // C++
@@ -1462,9 +1460,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: result_golden :: HasDefaultResult") alignas(4) [[clang::trivial_abi]]
-HasDefaultResult final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefaultResult")
+    [[clang::trivial_abi]] alignas(4) HasDefaultResult final {
  public:
   // Type is not a C++ aggregate: Field `in_ok` is not default-constructible in
   // C++
@@ -1570,9 +1567,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: result_golden :: HasNoDefaultResult") alignas(4) [[clang::trivial_abi]]
-HasNoDefaultResult final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefaultResult")
+    [[clang::trivial_abi]] alignas(4) HasNoDefaultResult final {
  public:
   // Type is not a C++ aggregate: Field `in_ok` is not default-constructible in
   // C++
@@ -1823,8 +1819,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: ZStream") alignas(4)
-    [[clang::trivial_abi]] ZStream final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: ZStream")
+    [[clang::trivial_abi]] alignas(4) ZStream final {
  public:
   // Type is not a C++ aggregate: Field `zfree` is not default-constructible in
   // C++
@@ -1921,9 +1917,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace result {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: result_golden :: ResultWithSizeTypes") alignas(4) [[clang::trivial_abi]]
-ResultWithSizeTypes final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: ResultWithSizeTypes")
+    [[clang::trivial_abi]] alignas(4) ResultWithSizeTypes final {
  public:
   // Type is not a C++ aggregate: Field `uval_in_ok` is not
   // default-constructible in C++

@@ -41,9 +41,8 @@
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: AdtHoldingFiveAndSix") alignas(4)
-    [[clang::trivial_abi]] AdtHoldingFiveAndSix final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: AdtHoldingFiveAndSix")
+    [[clang::trivial_abi]] alignas(4) AdtHoldingFiveAndSix final {
  public:
   // `tuples_golden::AdtHoldingFiveAndSix` doesn't implement the `Default` trait
   AdtHoldingFiveAndSix() = delete;
@@ -70,8 +69,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault") alignas(
-    1) [[clang::trivial_abi]] CloneNoDefault final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault")
+    [[clang::trivial_abi]] CloneNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::CloneNoDefault new_(::std::uint8_t val);
@@ -83,7 +82,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault") alignas(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault") alignas(1)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault")
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -96,7 +95,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault") alignas(1)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault")
     [[clang::trivial_abi]] HasDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -112,7 +111,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault")
     [[clang::trivial_abi]] HasNoDefault final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -127,8 +126,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault") alignas(4)
 // CRUBIT_ANNOTATE: must_bind=
 //  The same as NontrivialDrop, but without a C++ move operation. This can be
 //  returned by value, even inside a tuple!
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
-    [[clang::trivial_abi]] NonCppMovable final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable")
+    [[clang::trivial_abi]] alignas(1) NonCppMovable final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -157,8 +156,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
-    1) [[clang::trivial_abi]] NontrivialDrop final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop")
+    [[clang::trivial_abi]] alignas(1) NontrivialDrop final {
  public:
   // Default::default
   NontrivialDrop();
@@ -401,8 +400,8 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
-    [[clang::trivial_abi]] TupleStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct")
+    [[clang::trivial_abi]] alignas(4) TupleStruct final {
  public:
   // Type is not a C++ aggregate: Field `empty_tuple_field` has a type
   // unsupported in C++
@@ -1000,7 +999,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: GetsTuple") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: GetsTuple")
     [[clang::trivial_abi]] GetsTuple final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -1270,8 +1269,7 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: NestedTupleIntermediate1") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NestedTupleIntermediate1")
     [[clang::trivial_abi]] NestedTupleIntermediate1 final {
  public:
   ::rs::Tuple<::rs::Tuple<::std::uint32_t, ::std::uint32_t>, ::std::uint32_t>
@@ -1379,8 +1377,7 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: NestedTupleIntermediate2") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NestedTupleIntermediate2")
     [[clang::trivial_abi]] NestedTupleIntermediate2 final {
  public:
   ::rs::Tuple<::rs::Tuple<::rs::Tuple<::std::uint32_t, ::std::uint32_t>,
@@ -1397,9 +1394,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: NestedTupleStruct") alignas(4) [[clang::trivial_abi]]
-NestedTupleStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NestedTupleStruct")
+    [[clang::trivial_abi]] NestedTupleStruct final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::NestedTupleStruct new_(::std::uint32_t val);
@@ -1498,7 +1494,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace tuples {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TuplesWithU64") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TuplesWithU64")
     [[clang::trivial_abi]] TuplesWithU64 final {
  public:
   ::rs::Tuple<::std::uint64_t, ::std::uint64_t> u64_in_tuple1{};
@@ -1594,9 +1590,8 @@ struct alignas(1)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: CloneNoDefaultTuple") alignas(1) [[clang::trivial_abi]]
-CloneNoDefaultTuple final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefaultTuple")
+    [[clang::trivial_abi]] alignas(1) CloneNoDefaultTuple final {
  public:
   // Type is not a C++ aggregate: Field `in_tuple1` is not default-constructible
   // in C++
@@ -1711,9 +1706,8 @@ struct alignas(1)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: CopyNoDefaultTuple") alignas(1) [[clang::trivial_abi]]
-CopyNoDefaultTuple final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefaultTuple")
+    [[clang::trivial_abi]] alignas(1) CopyNoDefaultTuple final {
  public:
   // Type is not a C++ aggregate: Field `in_tuple1` is not default-constructible
   // in C++
@@ -1832,8 +1826,8 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefaultTuple") alignas(
-    4) [[clang::trivial_abi]] HasDefaultTuple final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefaultTuple")
+    [[clang::trivial_abi]] alignas(4) HasDefaultTuple final {
  public:
   // Type is not a C++ aggregate: Multiple fields require drop glue (annotate
   // with `#[crubit_annotate::field_drop_order_does_not_matter]` if field drop
@@ -1959,9 +1953,8 @@ struct alignas(4)
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: HasNoDefaultTuple") alignas(4) [[clang::trivial_abi]]
-HasNoDefaultTuple final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefaultTuple")
+    [[clang::trivial_abi]] alignas(4) HasNoDefaultTuple final {
  public:
   // Type is not a C++ aggregate: Field `in_tuple1` is not default-constructible
   // in C++
@@ -2162,9 +2155,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace tuples {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: TupleWithSizeTypes") alignas(4) [[clang::trivial_abi]]
-TupleWithSizeTypes final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleWithSizeTypes")
+    [[clang::trivial_abi]] TupleWithSizeTypes final {
  public:
   ::rs::Tuple<::std::uint32_t, ::std::uint8_t> uval_in_tuple1{};
   ::rs::Tuple<::std::uint8_t, ::std::uint32_t> uval_in_tuple2{};
@@ -2461,9 +2453,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: StructWithOptionTuple") alignas(4)
-    [[clang::trivial_abi]] StructWithOptionTuple final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: StructWithOptionTuple")
+    [[clang::trivial_abi]] alignas(4) StructWithOptionTuple final {
  public:
   // Type is not a C++ aggregate: Field `opt_tuple` is not default-constructible
   // in C++

@@ -32,7 +32,7 @@
 
 namespace arrays {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct")
     [[clang::trivial_abi]] ArrayStruct final {
  public:
   ::std::array<::std::int32_t, 2> array{};
@@ -41,8 +41,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
-    [[clang::trivial_abi]] HasDrop final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop")
+    [[clang::trivial_abi]] alignas(4) HasDrop final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -72,9 +72,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: arrays_golden :: HasDropAndDefault") alignas(4) [[clang::trivial_abi]]
-HasDropAndDefault final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDropAndDefault")
+    [[clang::trivial_abi]] alignas(4) HasDropAndDefault final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 

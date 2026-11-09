@@ -32,8 +32,8 @@
 namespace into {
 struct LoopB;
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocTarget") alignas(
-    4) [[clang::trivial_abi]] CloneAllocTarget final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocTarget")
+    [[clang::trivial_abi]] CloneAllocTarget final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   ::rs::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
@@ -49,7 +49,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocTarget") alignas(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocType") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocType")
     [[clang::trivial_abi]] CloneAllocType final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -67,7 +67,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocType") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneCopyTarget") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneCopyTarget")
     [[clang::trivial_abi]] CloneCopyTarget final {
  public:
   // Constructor from `<into_golden::CloneCopyType as
@@ -81,7 +81,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneCopyTarget") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneCopyType") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneCopyType")
     [[clang::trivial_abi]] CloneCopyType final {
  public:
   explicit operator ::into::CloneCopyTarget() const;
@@ -93,9 +93,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneCopyType") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_golden :: CollidingOperators") alignas(4) [[clang::trivial_abi]]
-CollidingOperators final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CollidingOperators")
+    [[clang::trivial_abi]] CollidingOperators final {
  public:
   // Error generating bindings for implementation
   // `<into_golden::CollidingOperators as std::convert::Into<u64>>`: Conversion
@@ -111,7 +110,7 @@ CollidingOperators final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert")
     [[clang::trivial_abi]] Convert final {
  public:
   explicit operator ::std::int32_t();
@@ -133,7 +132,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule")
     [[clang::trivial_abi]] ConvertModule final {
  public:
   explicit operator ::std::int32_t();
@@ -147,8 +146,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(4)
-    [[clang::trivial_abi]] ConvertRef final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef")
+    [[clang::trivial_abi]] alignas(4) ConvertRef final {
  public:
   // `into_golden::ConvertRef` doesn't implement the `Default` trait
   ConvertRef() = delete;
@@ -182,7 +181,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: LoopA") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: LoopA")
     [[clang::trivial_abi]] LoopA final {
  public:
   explicit operator ::into::LoopB();
@@ -198,7 +197,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: LoopA") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: LoopB") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: LoopB")
     [[clang::trivial_abi]] LoopB final {
  public:
   explicit operator ::into::LoopA();
@@ -214,9 +213,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: LoopB") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_golden :: NoCloneCopyDropTarget") alignas(4) [[clang::trivial_abi]]
-NoCloneCopyDropTarget final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NoCloneCopyDropTarget")
+    [[clang::trivial_abi]] NoCloneCopyDropTarget final {
  public:
   // Constructor from `<into_golden::NoCloneCopyDropType as
   // std::convert::Into<into_golden::NoCloneCopyDropTarget>>` is suppressed
@@ -229,9 +227,8 @@ NoCloneCopyDropTarget final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_golden :: NoCloneCopyDropType") alignas(4) [[clang::trivial_abi]]
-NoCloneCopyDropType final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NoCloneCopyDropType")
+    [[clang::trivial_abi]] NoCloneCopyDropType final {
  public:
   explicit operator ::into::NoCloneCopyDropTarget();
 
@@ -242,9 +239,8 @@ NoCloneCopyDropType final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_golden :: NoCloneDefaultTarget") alignas(4) [[clang::trivial_abi]]
-NoCloneDefaultTarget final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NoCloneDefaultTarget")
+    [[clang::trivial_abi]] NoCloneDefaultTarget final {
  public:
   // Constructor from `<into_golden::NoCloneDefaultType as
   // std::convert::Into<into_golden::NoCloneDefaultTarget>>` is suppressed
@@ -257,9 +253,8 @@ NoCloneDefaultTarget final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_golden :: NoCloneDefaultType") alignas(4) [[clang::trivial_abi]]
-NoCloneDefaultType final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NoCloneDefaultType")
+    [[clang::trivial_abi]] NoCloneDefaultType final {
  public:
   explicit operator ::into::NoCloneDefaultTarget();
 
@@ -270,8 +265,8 @@ NoCloneDefaultType final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(4)
-    [[clang::trivial_abi]] NotFfiSafe final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe")
+    [[clang::trivial_abi]] alignas(4) NotFfiSafe final {
  public:
   // `into_golden::NotFfiSafe` doesn't implement the `Default` trait
   NotFfiSafe() = delete;

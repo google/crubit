@@ -33,9 +33,8 @@
 
 namespace traits {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: traits_golden :: AssociatedTypeStruct") alignas(8)
-    [[clang::trivial_abi]] AssociatedTypeStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: AssociatedTypeStruct")
+    [[clang::trivial_abi]] alignas(8) AssociatedTypeStruct final {
  public:
   // Default::default
   AssociatedTypeStruct();
@@ -78,8 +77,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: DifferentTraitSameName")
   using impl = ::rs::impl<T, DifferentTraitSameName>;
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
-    [[clang::trivial_abi]] Foo final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo")
+    [[clang::trivial_abi]] alignas(4) Foo final {
  public:
   // Default::default
   Foo();
@@ -105,8 +104,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
-    8) [[clang::trivial_abi]] LifetimeStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct")
+    [[clang::trivial_abi]] alignas(8) LifetimeStruct final {
  public:
   // `traits_golden::LifetimeStruct` doesn't implement the `Default` trait
   LifetimeStruct() = delete;
@@ -135,8 +134,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeTrait")
   using impl = ::rs::impl<T, LifetimeTrait>;
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
-    [[clang::trivial_abi]] MyStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct")
+    [[clang::trivial_abi]] alignas(4) MyStruct final {
  public:
   // Default::default
   MyStruct();
@@ -162,8 +161,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
-    [[clang::trivial_abi]] MyStruct2 final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2")
+    [[clang::trivial_abi]] alignas(4) MyStruct2 final {
  public:
   // Default::default
   MyStruct2();
@@ -194,8 +193,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyTrait") MyTrait {
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: traits_golden :: StructWithAssociatedConst") alignas(4)
-    [[clang::trivial_abi]] StructWithAssociatedConst final {
+    ":: traits_golden :: StructWithAssociatedConst") [[clang::trivial_abi]]
+StructWithAssociatedConst final {
  public:
   ::std::int32_t x{};
 

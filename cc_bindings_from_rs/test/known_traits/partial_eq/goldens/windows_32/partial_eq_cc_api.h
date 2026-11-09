@@ -32,8 +32,8 @@
 namespace partial_eq::basic_test {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: partial_eq_golden :: basic_test :: MyStruct") alignas(4)
-    [[clang::trivial_abi]] MyStruct final {
+    ":: partial_eq_golden :: basic_test :: MyStruct")
+    [[clang::trivial_abi]] alignas(4) MyStruct final {
  public:
   // `partial_eq_golden::basic_test::MyStruct` doesn't implement the `Default`
   // trait
@@ -67,8 +67,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace partial_eq::bool_and_str_rhs {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: partial_eq_golden :: bool_and_str_rhs :: MyStruct") alignas(4)
-    [[clang::trivial_abi]] MyStruct final {
+    ":: partial_eq_golden :: bool_and_str_rhs :: MyStruct")
+    [[clang::trivial_abi]] alignas(4) MyStruct final {
  public:
   // `partial_eq_golden::bool_and_str_rhs::MyStruct` doesn't implement the
   // `Default` trait
@@ -114,8 +114,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace partial_eq::str_and_ref_str_rhs {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: partial_eq_golden :: str_and_ref_str_rhs :: MyStruct") alignas(4)
-    [[clang::trivial_abi]] MyStruct final {
+    ":: partial_eq_golden :: str_and_ref_str_rhs :: MyStruct")
+    [[clang::trivial_abi]] alignas(4) MyStruct final {
  public:
   // `partial_eq_golden::str_and_ref_str_rhs::MyStruct` doesn't implement the
   // `Default` trait
@@ -155,8 +155,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace partial_eq::tuple_collision {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: partial_eq_golden :: tuple_collision :: MyStruct") alignas(4)
-    [[clang::trivial_abi]] MyStruct final {
+    ":: partial_eq_golden :: tuple_collision :: MyStruct")
+    [[clang::trivial_abi]] alignas(4) MyStruct final {
  public:
   // `partial_eq_golden::tuple_collision::MyStruct` doesn't implement the
   // `Default` trait
@@ -195,8 +195,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace partial_eq::usize_rhs {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: partial_eq_golden :: usize_rhs :: MyStruct") alignas(4)
-    [[clang::trivial_abi]] MyStruct final {
+    ":: partial_eq_golden :: usize_rhs :: MyStruct")
+    [[clang::trivial_abi]] alignas(4) MyStruct final {
  public:
   // `partial_eq_golden::usize_rhs::MyStruct` doesn't implement the `Default`
   // trait

@@ -27,7 +27,7 @@
 
 namespace uses_reexport {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX")
     [[clang::trivial_abi]] InnerX final {
  public:
   ::std::int32_t field{};
@@ -40,8 +40,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX") alignas(4)
 
 namespace uses_reexport {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Bar") alignas(4)
-    [[clang::trivial_abi]] Bar final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Bar")
+    [[clang::trivial_abi]] alignas(4) Bar final {
  public:
   // `uses_reexport_golden::Bar` doesn't implement the `Default` trait
   Bar() = delete;
@@ -64,8 +64,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Bar") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Foo") alignas(4)
-    [[clang::trivial_abi]] Foo final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Foo")
+    [[clang::trivial_abi]] alignas(4) Foo final {
  public:
   // Type is not a C++ aggregate: Field `i` is not public
 
@@ -107,7 +107,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Foo") alignas(4)
 
 namespace uses_reexport {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G")
     [[clang::trivial_abi]] G final {
  public:
   ::std::int32_t field{};
@@ -120,8 +120,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G") alignas(4)
 
 namespace uses_reexport {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: X1") alignas(4)
-    [[clang::trivial_abi]] X1 final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: X1")
+    [[clang::trivial_abi]] alignas(4) X1 final {
  public:
   // `uses_reexport_golden::X1` doesn't implement the `Default` trait
   X1() = delete;

@@ -31,7 +31,7 @@
 
 namespace rs_index {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex")
     [[clang::trivial_abi]] CustomIndex final {
  public:
   static ::rs_index::CustomIndex new_(::std::uintptr_t index);
@@ -42,7 +42,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id")
     [[clang::trivial_abi]] Id final {
  public:
   static ::rs_index::Id new_(::std::int32_t id);
@@ -53,7 +53,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair")
     [[clang::trivial_abi]] IntPair final {
  public:
   static ::rs_index::IntPair new_(::std::int32_t x, ::std::int32_t y);
@@ -85,8 +85,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(4)
-    [[clang::trivial_abi]] Map final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map")
+    [[clang::trivial_abi]] alignas(4) Map final {
  public:
   // `rs_index_golden::Map` doesn't implement the `Default` trait
   Map() = delete;

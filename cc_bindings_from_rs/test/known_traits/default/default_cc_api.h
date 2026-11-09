@@ -27,8 +27,8 @@
 namespace rs_default::derived_impl {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: rs_default_golden :: derived_impl :: SomeStruct") alignas(4)
-    [[clang::trivial_abi]] SomeStruct final {
+    ":: rs_default_golden :: derived_impl :: SomeStruct")
+    [[clang::trivial_abi]] alignas(4) SomeStruct final {
  public:
   // Type is not a C++ aggregate: Field `_private` is not public
 
@@ -61,8 +61,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace rs_default::explicit_impl {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: rs_default_golden :: explicit_impl :: SomeStruct") alignas(4)
-    [[clang::trivial_abi]] SomeStruct final {
+    ":: rs_default_golden :: explicit_impl :: SomeStruct")
+    [[clang::trivial_abi]] alignas(4) SomeStruct final {
  public:
   // Type is not a C++ aggregate: Type has a manual `Default` implementation
 
@@ -98,9 +98,8 @@ namespace rs_default::field_with_no_default {
 //  above is typed correctly in the C++ bindings and not replaced with a
 //  blob of bytes.
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: rs_default_golden :: field_with_no_default :: "
-    "StructWithoutDefault") alignas(4) [[clang::trivial_abi]]
-StructWithoutDefault final {
+    ":: rs_default_golden :: field_with_no_default :: StructWithoutDefault")
+    [[clang::trivial_abi]] alignas(4) StructWithoutDefault final {
  public:
   // `rs_default_golden::field_with_no_default::StructWithoutDefault` doesn't
   // implement the `Default` trait
@@ -128,8 +127,8 @@ StructWithoutDefault final {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: field_with_no_default :: "
-    "StructWithFieldWithNoDefault") alignas(4) [[clang::trivial_abi]]
-StructWithFieldWithNoDefault final {
+    "StructWithFieldWithNoDefault") [[clang::trivial_abi]] alignas(4)
+    StructWithFieldWithNoDefault final {
  public:
   // Type is not a C++ aggregate: Type has a manual `Default` implementation
 
@@ -166,8 +165,8 @@ StructWithFieldWithNoDefault final {
 namespace rs_default::no_impl {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: rs_default_golden :: no_impl :: SomeStruct") alignas(4)
-    [[clang::trivial_abi]] SomeStruct final {
+    ":: rs_default_golden :: no_impl :: SomeStruct")
+    [[clang::trivial_abi]] alignas(4) SomeStruct final {
  public:
   // Type is not a C++ aggregate: Field `_private` is not public
 
@@ -199,7 +198,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace rs_default::transparent_struct {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: rs_default_golden :: transparent_struct :: SomeStruct") alignas(4)
+    ":: rs_default_golden :: transparent_struct :: SomeStruct")
     [[clang::trivial_abi]] SomeStruct final {
  public:
   ::std::int32_t extract_int() const;

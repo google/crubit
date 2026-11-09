@@ -27,8 +27,8 @@
 namespace struct_with_conflicting_fields_and_member_functions {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: struct_with_conflicting_fields_and_member_functions_golden :: "
-    "X") alignas(4) [[clang::trivial_abi]] X final {
+    ":: struct_with_conflicting_fields_and_member_functions_golden :: X")
+    [[clang::trivial_abi]] alignas(4) X final {
  public:
   // Type is not a C++ aggregate: Field `b` is not public
 

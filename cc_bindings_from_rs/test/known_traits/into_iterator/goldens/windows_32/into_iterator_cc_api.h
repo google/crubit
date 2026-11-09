@@ -37,7 +37,7 @@ namespace into_iterator_rust {
 struct MyContainer;
 struct MyIterator;
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: ContainerWithInherentBegin") alignas(4)
+    ":: into_iterator_rust_golden :: ContainerWithInherentBegin")
     [[clang::trivial_abi]] ContainerWithInherentBegin final {
  public:
   ::std::int32_t begin() const;
@@ -55,8 +55,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: ContainerWithRefIntoIter") alignas(4)
-    [[clang::trivial_abi]] ContainerWithRefIntoIter final {
+    ":: into_iterator_rust_golden :: ContainerWithRefIntoIter")
+    [[clang::trivial_abi]] alignas(4) ContainerWithRefIntoIter final {
  public:
   // Type is not a C++ aggregate: Field `iter` is not default-constructible in
   // C++
@@ -91,8 +91,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: MoveOnlyIterator") alignas(4)
-    [[clang::trivial_abi]] MoveOnlyIterator final {
+    ":: into_iterator_rust_golden :: MoveOnlyIterator") [[clang::trivial_abi]]
+MoveOnlyIterator final {
  public:
   template <typename TAdaptedSelf_ = MoveOnlyIterator>
   inline ::rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
@@ -107,8 +107,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: MoveOnlyPayload") alignas(4)
-    [[clang::trivial_abi]] MoveOnlyPayload final {
+    ":: into_iterator_rust_golden :: MoveOnlyPayload") [[clang::trivial_abi]]
+MoveOnlyPayload final {
  public:
   ::std::int32_t mutating_method();
 
@@ -119,8 +119,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: MyContainerIntoIter") alignas(4)
-    [[clang::trivial_abi]] MyContainerIntoIter final {
+    ":: into_iterator_rust_golden :: MyContainerIntoIter")
+    [[clang::trivial_abi]] alignas(4) MyContainerIntoIter final {
  public:
   // `into_iterator_rust_golden::MyContainerIntoIter` doesn't implement the
   // `Default` trait
@@ -153,8 +153,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: MyContainerIter") alignas(4)
-    [[clang::trivial_abi]] MyContainerIter final {
+    ":: into_iterator_rust_golden :: MyContainerIter")
+    [[clang::trivial_abi]] alignas(4) MyContainerIter final {
  public:
   // `into_iterator_rust_golden::MyContainerIter` doesn't implement the
   // `Default` trait
@@ -185,8 +185,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: MyContainerIterMut") alignas(4)
-    [[clang::trivial_abi]] MyContainerIterMut final {
+    ":: into_iterator_rust_golden :: MyContainerIterMut")
+    [[clang::trivial_abi]] alignas(4) MyContainerIterMut final {
  public:
   // `into_iterator_rust_golden::MyContainerIterMut` doesn't implement the
   // `Default` trait
@@ -216,8 +216,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: MyIterator") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_iterator_rust_golden :: MyIterator")
     [[clang::trivial_abi]] MyIterator final {
  public:
   template <typename TAdaptedSelf_ = MyIterator>
@@ -232,8 +231,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: SimpleIntoIter") alignas(4)
-    [[clang::trivial_abi]] SimpleIntoIter final {
+    ":: into_iterator_rust_golden :: SimpleIntoIter") [[clang::trivial_abi]]
+SimpleIntoIter final {
  public:
   template <typename TAdaptedSelf_ = SimpleIntoIter>
   inline ::rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
@@ -358,8 +357,7 @@ struct ::rs::impl<::into_iterator_rust::MyContainerIterMut,
 
 namespace into_iterator_rust {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: MyContainer") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_iterator_rust_golden :: MyContainer")
     [[clang::trivial_abi]] MyContainer final {
  public:
   template <typename TAdaptedSelf_ = MyContainer>

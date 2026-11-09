@@ -28,8 +28,8 @@
 namespace pass_by_value_unmovable {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: pass_by_value_unmovable_golden :: CppMovable") alignas(4)
-    [[clang::trivial_abi]] CppMovable final {
+    ":: pass_by_value_unmovable_golden :: CppMovable")
+    [[clang::trivial_abi]] alignas(4) CppMovable final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -61,8 +61,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: pass_by_value_unmovable_golden :: NotCppMovable") alignas(4)
-    [[clang::trivial_abi]] NotCppMovable final {
+    ":: pass_by_value_unmovable_golden :: NotCppMovable")
+    [[clang::trivial_abi]] alignas(4) NotCppMovable final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 

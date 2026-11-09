@@ -25,8 +25,8 @@
 
 namespace never {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
-    [[clang::trivial_abi]] NeverStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct")
+    [[clang::trivial_abi]] alignas(4) NeverStruct final {
  public:
   // Default::default
   NeverStruct();

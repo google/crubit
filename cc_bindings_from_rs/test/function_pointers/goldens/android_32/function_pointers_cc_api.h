@@ -38,9 +38,8 @@ namespace function_pointers {
 // thunk
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: function_pointers_golden :: CStruct") alignas(4) [[clang::trivial_abi]]
-CStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: function_pointers_golden :: CStruct")
+    [[clang::trivial_abi]] CStruct final {
  public:
   ::std::int32_t field{};
 
@@ -49,9 +48,8 @@ CStruct final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: function_pointers_golden :: HasFnPtrField") alignas(4)
-    [[clang::trivial_abi]] HasFnPtrField final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: function_pointers_golden :: HasFnPtrField")
+    [[clang::trivial_abi]] alignas(4) HasFnPtrField final {
  public:
   // Type is not a C++ aggregate: Field `ptr` is not default-constructible in
   // C++
