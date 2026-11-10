@@ -104,10 +104,6 @@ flagset::flags! {
         /// Generate C++ bindings for Rust enums with one nested struct per variant, built on
         /// `support/rs_std/enum.h` (crubit.rs-enum-api-v2). Only affects cpp_api_from_rust.
         EnumApiV2,
-        /// No effect: `rs_bindings_from_cc` always lets rustc infer `Send` and `Sync` for C++
-        /// records from their fields. Kept until the feature is deleted from build files.
-        InferSendSync,
-
         /// Emit C++ references (`T const&` / `T&`) instead of pointers (`T const*` / `T*`) for
         /// `Iterator::Item` and `IntoIterator::Item` associated types. Only affects
         /// cpp_api_from_rust.
@@ -188,7 +184,6 @@ impl CrubitFeature {
             Self::ImplCxxExternType => "impl_cxx_extern_type",
             Self::NoImplCxxExternType => "no_impl_cxx_extern_type",
             Self::EnumApiV2 => "enum_api_v2",
-            Self::InferSendSync => "infer_send_sync",
             Self::IteratorItemReferences => "iterator_item_references",
             Self::InheritedFriendOperators => "inherited_friend_operators",
             Self::UnsafeTemplateParams => "unsafe_template_params",
@@ -240,7 +235,6 @@ impl CrubitFeature {
             Self::ImplCxxExternType => "//features:impl_cxx_extern_type",
             Self::NoImplCxxExternType => "//features:no_impl_cxx_extern_type",
             Self::EnumApiV2 => "//features:enum_api_v2",
-            Self::InferSendSync => "//features:infer_send_sync",
             Self::IteratorItemReferences => {
                 "//features:iterator_item_references"
             }
@@ -279,8 +273,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::NonnullSmartPointers
                 // Out of `all` until existing `E::MakeV` callers are migrated.
                 - CrubitFeature::EnumApiV2
-                // Standalone opt-in: changes the soundness defaults for Send/Sync.
-                - CrubitFeature::InferSendSync
                 // Out of `all` until callers expecting pointers from iterators are migrated.
                 - CrubitFeature::IteratorItemReferences
                 // Standalone opt-in: treats parameter types with unsafe template arguments as unsafe.
@@ -323,7 +315,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"impl_cxx_extern_type" => CrubitFeature::ImplCxxExternType.into(),
         b"no_impl_cxx_extern_type" => CrubitFeature::NoImplCxxExternType.into(),
         b"enum_api_v2" => CrubitFeature::EnumApiV2.into(),
-        b"infer_send_sync" => CrubitFeature::InferSendSync.into(),
         b"iterator_item_references" => CrubitFeature::IteratorItemReferences.into(),
         b"inherited_friend_operators" => CrubitFeature::InheritedFriendOperators.into(),
         b"unsafe_template_params" => CrubitFeature::UnsafeTemplateParams.into(),
@@ -487,13 +478,6 @@ mod tests {
     fn test_serialized_crubit_feature_enum_api_v2() {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"enum_api_v2\"").unwrap();
         assert_eq!(features, CrubitFeature::EnumApiV2);
-    }
-
-    #[gtest]
-    fn test_serialized_crubit_feature_infer_send_sync() {
-        let SerializedCrubitFeature(features) =
-            serde_json::from_str("\"infer_send_sync\"").unwrap();
-        assert_eq!(features, CrubitFeature::InferSendSync);
     }
 
     #[gtest]

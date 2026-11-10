@@ -18,7 +18,6 @@ SUPPORTED_FEATURES = [
     "reserve_standard_macros",
     "constant_arrays",
     "enum_api_v2",
-    "infer_send_sync",
 ]
 
 # Per-feature denylists live in features/denylists/supported_feature_denylists.bzl, not here, so
