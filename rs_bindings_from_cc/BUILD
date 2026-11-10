@@ -362,8 +362,6 @@ cc_library(
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
-        "@abseil-cpp//absl/log",
-        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
         "@llvm-project//clang:ast",
@@ -575,7 +573,6 @@ crubit_cc_test(
     deps = [
         ":cc_ir",
         ":ir_ffi_support_test_rust",  # build_cleaner: keep
-        "@abseil-cpp//absl/log",
         "@googletest//:gtest_main",
     ],
 )
@@ -669,7 +666,6 @@ cc_library(
         ":cmdline_flags",
         ":ir_from_cc_dependency",
         "//common:cc_ffi_types",
-        "//common:status",
         "@llvm-project//llvm:Support",
     ],
     alwayslink = 1,

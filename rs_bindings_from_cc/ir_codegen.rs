@@ -1044,11 +1044,11 @@ fn generate_cc_struct(schema: &Schema, rec_idx: usize, st: &StructDef) -> c::Tok
                         const $cty& $fname() const { return $(fname)_; }
                         $cty* mutable_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_; }
                         $(if f.has_bit.is_none() =>
-                            void clear_$fname() { $(fname)_.Clear(); }
+                            void clear_$fname() { $(fname)_.clear(); }
                         )
                         $(match inner.cc_type() {
                             FieldType::Str => {
-                                void add_$fname(std::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_.Add(FfiString(value)); }
+                                void add_$fname(std::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_.push_back(FfiString(value)); }
                             }
                             FieldType::Bool
                             | FieldType::I32
@@ -1058,14 +1058,14 @@ fn generate_cc_struct(schema: &Schema, rec_idx: usize, st: &StructDef) -> c::Tok
                             | FieldType::Usize
                             | FieldType::Enum(_) => {
                                 $(let elem_ty = &inner.cc_storage_type())
-                                void add_$fname($elem_ty value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_.Add(value); }
+                                void add_$fname($elem_ty value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_.push_back(value); }
                             }
                             _ => {
                                 $(let elem_ty = &inner.cc_storage_type())
                                 $(if is_fwd {
                                     $elem_ty* add_$fname();
                                 } else {
-                                    $elem_ty* add_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return $(fname)_.Add(); }
+                                    $elem_ty* add_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_.emplace_back(); }
                                 })
                             }
                         })
@@ -1131,7 +1131,7 @@ fn generate_cc_out_of_line(schema: &Schema, rec_idx: usize, rec: &RecordDef) -> 
                                 }
                                 FieldType::Vec(inner) => {
                                     $(let elem_ty = &inner.cc_storage_type())
-                                    inline $elem_ty* $qname::add_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return $(fname)_.Add(); }
+                                    inline $elem_ty* $qname::add_$fname() { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])return &$(fname)_.emplace_back(); }
                                 }
                                 FieldType::Map(_, _) => {}
                                 _ => { $(ref _ => unreachable!()) }

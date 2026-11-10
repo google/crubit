@@ -2236,7 +2236,7 @@ void Importer::Import(
       // target that are unsupported. You have to run it only if label is not
       // equal to the current target; you can skip the current target.
       if (it != id_to_item.end() && !IsUnsupportedAndAlien(id)) {
-        *target_items.Add() = *it->second;
+        target_items.push_back(*it->second);
       }
     }
   }
