@@ -11,7 +11,7 @@ use inline_cpp_generated_bindings as rust_test_with_embedded_cpp_test_extracted_
 use inline_cpp_macro::inline_cpp;
 
 global_cpp! {
-    #include "third_party/absl/strings/string_view.h"
+    #include "absl/strings/string_view.h"
 
     int add_two_ints(int a, int b) { return a + b; }
 
