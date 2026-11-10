@@ -985,5 +985,125 @@ TEST(SmartPointerTest,
   )cc"));
 }
 
+TEST(SmartPointerTest, NonnullSmartPointerFieldSetToNullInDestructor) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+#include <utility>
+    struct SomeResource {};
+    class target {
+     public:
+      ~target() {
+        // Destructors may set nonnull fields to null, e.g. to control teardown
+        // order: the fields can't be accessed after the destructor exits.
+        unique_reset_.reset();
+        unique_reset_nullptr_.reset(nullptr);
+        this->unique_assign_nullptr_ = nullptr;
+        unique_move_assign_ = std::move(nullable_);
+        shared_reset_.reset();
+        shared_assign_ = std::shared_ptr<SomeResource>();
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> unique_reset_;
+      _Nonnull std::unique_ptr<SomeResource> unique_reset_nullptr_;
+      _Nonnull std::unique_ptr<SomeResource> unique_assign_nullptr_;
+      _Nonnull std::unique_ptr<SomeResource> unique_move_assign_;
+      _Nullable std::unique_ptr<SomeResource> nullable_;
+      _Nonnull std::shared_ptr<SomeResource> shared_reset_;
+      _Nonnull std::shared_ptr<SomeResource> shared_assign_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldDereferencedAfterResetInDestructor) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class target {
+     public:
+      ~target() {
+        some_resource_.reset();
+        *some_resource_;  // [[unsafe]]
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest, NonnullSmartPointerSetToNullInDestructorNotFieldOfThis) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    struct Holder {
+      _Nonnull std::unique_ptr<SomeResource> resource;
+    };
+    struct Base {
+      _Nonnull std::unique_ptr<SomeResource> base_resource_;
+    };
+    class target : public Base {
+     public:
+      ~target() {
+        // Fields of other objects, including member subobjects and base
+        // classes (whose destructors still run after this one), and local
+        // variables must still not be set to null.
+        other_->some_resource_.reset();    // [[unsafe]]
+        other_->some_resource_ = nullptr;  // [[unsafe]]
+        holder_.resource.reset();          // [[unsafe]]
+        base_resource_.reset();            // [[unsafe]]
+        _Nonnull std::unique_ptr<SomeResource> local =
+            std::make_unique<SomeResource>();
+        local.reset();  // [[unsafe]]
+      }
+
+     private:
+      target* _Nonnull other_;
+      Holder holder_;
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest, NonnullSmartPointerFieldSetToNullInRegularMethod) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class A {
+     public:
+      void target() {
+        reset_.reset();             // [[unsafe]]
+        assign_nullptr_ = nullptr;  // [[unsafe]]
+      /* [[unsafe]] */ }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> reset_;
+      _Nonnull std::unique_ptr<SomeResource> assign_nullptr_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldSetToNullInRValueRefQualifiedMethod) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class A {
+     public:
+      void target() && {
+        // An `&&`-qualified method consumes the object, so it may set nonnull
+        // fields to null.
+        reset_.reset();
+        assign_nullptr_ = nullptr;
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> reset_;
+      _Nonnull std::unique_ptr<SomeResource> assign_nullptr_;
+    };
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

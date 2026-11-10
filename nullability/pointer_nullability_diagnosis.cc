@@ -447,9 +447,39 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
       /*Callee=*/nullptr, /*ParamName=*/nullptr);
 }
 
+// Returns true if `Method` is `&&`-qualified and non-const. Running such a
+// method moves from the object, after which its member invariants (including
+// member nullability) may no longer hold.
+static bool isNonConstRValueRefQualified(const CXXMethodDecl& Method) {
+  return Method.getRefQualifier() == clang::RQ_RValue && !Method.isConst();
+}
+
+// Returns true if `E` is a field of `*this` declared in the class of the
+// function being analyzed, and that function is a destructor or a non-const
+// `&&`-qualified method. Such functions may set the field to null even if it is
+// annotated nonnull: destructors often reset fields to control teardown order,
+// and the fields can't be accessed after the destructor exits; `&&`-qualified
+// methods consume the object, after which its member invariants may no longer
+// hold.
+static bool isFieldOfDestroyedOrConsumedObject(const Expr& E,
+                                               const Environment& Env) {
+  const auto* Method = dyn_cast_or_null<CXXMethodDecl>(Env.getCurrentFunc());
+  if (Method == nullptr) return false;
+  if (!isa<CXXDestructorDecl>(Method) && !isNonConstRValueRefQualified(*Method))
+    return false;
+  const auto* ME = dyn_cast<MemberExpr>(E.IgnoreParenImpCasts());
+  if (ME == nullptr || !isa<CXXThisExpr>(ME->getBase()->IgnoreParenImpCasts()))
+    return false;
+  // Fields of base classes may still be accessed by the base class destructor.
+  const auto* Field = dyn_cast<FieldDecl>(ME->getMemberDecl());
+  return Field != nullptr && Field->getParent()->getCanonicalDecl() ==
+                                 Method->getParent()->getCanonicalDecl();
+}
+
 static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignment(
     const BinaryOperator* absl_nonnull Op,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
+  if (isFieldOfDestroyedOrConsumedObject(*Op->getLHS(), State.Env)) return {};
   const TypeNullability* LHSNullability =
       State.Lattice.getTypeNullability(Op->getLHS());
   if (!LHSNullability) return {};
@@ -462,6 +492,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignment(
 static SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerAssignment(
     const CXXOperatorCallExpr* absl_nonnull Op,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
+  if (isFieldOfDestroyedOrConsumedObject(*Op->getArg(0), State.Env)) return {};
   const TypeNullability* LHSNullability =
       State.Lattice.getTypeNullability(Op->getArg(0));
   if (!LHSNullability) return {};
@@ -474,6 +505,9 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerAssignment(
 static SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerReset(
     const CXXMemberCallExpr* absl_nonnull MCE,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
+  if (isFieldOfDestroyedOrConsumedObject(*MCE->getImplicitObjectArgument(),
+                                         State.Env))
+    return {};
   const TypeNullability* ObjArgNullability =
       State.Lattice.getTypeNullability(MCE->getImplicitObjectArgument());
   if (!ObjArgNullability) return {};
@@ -1290,13 +1324,6 @@ static CharSourceRange getMethodClosingBraceRange(const CXXMethodDecl& Method) {
 
   return CharSourceRange::getTokenRange(Body->getRBracLoc(),
                                         Body->getRBracLoc());
-}
-
-// Returns true if `Method` is `&&`-qualified and non-const. Running such a
-// method moves from the object, after which its member invariants (including
-// member nullability) may no longer hold.
-static bool isNonConstRValueRefQualified(const CXXMethodDecl& Method) {
-  return Method.getRefQualifier() == clang::RQ_RValue && !Method.isConst();
 }
 
 // Returns true if an object of this class may be moved from before it is

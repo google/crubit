@@ -249,5 +249,72 @@ TEST(PointerNullabilityTest,
   )cc"));
 }
 
+TEST(PointerNullabilityTest, NonnullRawPointerFieldSetToNullInDestructor) {
+  // Destructors may set nonnull fields to null, e.g. to control teardown order:
+  // the fields can't be accessed after the destructor exits. Dereferencing the
+  // field after setting it to null is still unsafe.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct SomeResource {};
+    class target {
+     public:
+      ~target() {
+        some_resource_ = nullptr;
+        this->other_resource_ = nullptr;
+        *some_resource_;  // [[unsafe]]
+      }
+
+     private:
+      SomeResource* _Nonnull some_resource_;
+      SomeResource* _Nonnull other_resource_;
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest,
+     NonnullRawPointerOfOtherObjectSetToNullInDestructor) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct SomeResource {};
+    class target {
+     public:
+      ~target() {
+        other_->some_resource_ = nullptr;  // [[unsafe]]
+      }
+
+     private:
+      target* _Nonnull other_;
+      SomeResource* _Nonnull some_resource_;
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, NonnullRawPointerFieldSetToNullInRegularMethod) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct SomeResource {};
+    class A {
+     public:
+      void target() {
+        some_resource_ = nullptr;  // [[unsafe]]
+      /* [[unsafe]] */ }
+
+     private:
+      SomeResource* _Nonnull some_resource_;
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest,
+     NonnullRawPointerFieldSetToNullInRValueRefQualifiedMethod) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct SomeResource {};
+    class A {
+     public:
+      void target() && { some_resource_ = nullptr; }
+
+     private:
+      SomeResource* _Nonnull some_resource_;
+    };
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
