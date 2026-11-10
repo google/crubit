@@ -67,9 +67,8 @@ generation looks for the `aspect_hints` so that it can find the corresponding
 
 Define a `rust_api_from_cpp` target in the same `BUILD` file as your
 `cc_library` (loaded via
-`load("//bazel:rust_api_from_cpp.bzl",
-"rust_api_from_cpp")`), and add its `.hint` target to the `aspect_hints` of the
-`cc_library`:
+`load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")`),
+and add its `.hint` target to the `aspect_hints` of the `cc_library`:
 
 ```live-snippet
 cs/file:examples/cpp/function/BUILD symbol:\bexample_lib\b
