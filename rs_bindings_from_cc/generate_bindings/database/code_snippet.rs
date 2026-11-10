@@ -17,7 +17,7 @@ use ir::{
     BazelLabel, CcCallingConv, FfiRc, GenericItem, IntegerConstant, Item, ItemId, Namespace,
     RecordType, UnqualifiedIdentifier,
 };
-use proc_macro2::{Ident, Literal, TokenStream};
+use proc_macro2::{Ident, Literal, Spacing, TokenStream, TokenTree};
 use quote::format_ident;
 use quote::{quote, ToTokens};
 use std::collections::HashMap;
@@ -533,6 +533,30 @@ pub fn integer_constant_to_token_stream(
     })
 }
 
+fn token_stream_contains_lifetime(tokens: &TokenStream, lt: &syn::Lifetime) -> bool {
+    let mut iter = tokens.clone().into_iter().peekable();
+    while let Some(tt) = iter.next() {
+        match tt {
+            TokenTree::Group(group) => {
+                if token_stream_contains_lifetime(&group.stream(), lt) {
+                    return true;
+                }
+            }
+            TokenTree::Punct(punct)
+                if punct.as_char() == '\'' && punct.spacing() == Spacing::Joint =>
+            {
+                if let Some(TokenTree::Ident(ident)) = iter.peek()
+                    && ident == &lt.ident
+                {
+                    return true;
+                }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
 pub fn generated_items_to_tokens<'db>(
     generated_items: &HashMap<ItemId, GeneratedItem>,
     db: &crate::BindingsGenerator<'db>,
@@ -633,6 +657,17 @@ pub fn generated_items_to_tokens<'db>(
                     });
                     let lifetime_markers: Vec<TokenStream> = lifetime_params
                         .iter()
+                        .filter(|lt| {
+                            !field_definitions.iter().any(|field_def| {
+                                matches!(
+                                    field_def,
+                                    FieldDefinition::Field {
+                                        field_type: FieldType::Type { ty, .. },
+                                        ..
+                                    } if token_stream_contains_lifetime(ty, lt)
+                                )
+                            })
+                        })
                         .map(|lt| {
                             let field_name = format_ident!("__marker_{}", lt.ident);
                             quote! { #field_name: ::core::marker::PhantomData<& #lt ()> }
