@@ -55,6 +55,15 @@ namespace foo {
 constexpr absl::string_view kNamespacedStringView = "namespaced";
 }  // namespace foo
 
+// `float` and `double` constants are bound as `f32` and `f64` constants with
+// the same bits, including NaN payloads.
+constexpr float kConstexprFloat = 1.5f;
+constexpr double kConstexprDouble = -0.25;
+// Initialized from an integer, so converted to `2.0`.
+constexpr double kConstexprDoubleFromInteger = 2;
+constexpr double kConstexprDoubleNaNWithPayload = __builtin_nan("0x1234");
+constexpr double kConstexprDoubleArray[3] = {1.5, -0.0};
+
 // Also make sure we don't choke on templated variables.
 template <typename T>
 T templated_variable = {};
@@ -83,11 +92,13 @@ struct StructWithStaticMembers {
   static constexpr int kStaticConstexprInt = 12;
   static constexpr int kStaticConstexprIntArray[] = {1, 2, 3};
   static constexpr absl::string_view kStaticConstexprStringView = "static";
+  static constexpr double kStaticConstexprDouble = 0.5;
   static inline int static_inline_int = 13;
 
   // Defined `constexpr` outside the class, below, so also constants. The
   // (outermost) bounds of the arrays are only given by their definitions.
   static const int kOutOfLineConstexprInt;
+  static const float kOutOfLineConstexprFloat;
   static const absl::string_view kOutOfLineConstexprStringView;
   static const char kOutOfLineConstexprCharArray[];
   static const char kOutOfLineConstexprMultidimensionalCharArray[][4];
@@ -98,6 +109,7 @@ struct StructWithStaticMembers {
 };
 
 inline constexpr int StructWithStaticMembers::kOutOfLineConstexprInt = 14;
+inline constexpr float StructWithStaticMembers::kOutOfLineConstexprFloat = 2.5f;
 inline constexpr absl::string_view
     StructWithStaticMembers::kOutOfLineConstexprStringView = "out of line";
 inline constexpr char StructWithStaticMembers::kOutOfLineConstexprCharArray[] =

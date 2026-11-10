@@ -132,8 +132,24 @@ llvm::Error ConvertIntegerElement(const clang::APValue& value,
   return llvm::Error::success();
 }
 
+// Converts `value`, a float or double array element, to `out`.
+llvm::Error ConvertFloatElement(const clang::APValue& value,
+                                crubit::ffi::FloatConstant& out) {
+  if (!value.isFloat()) {
+    return crubit::InvalidArgumentError(
+        "array element did not evaluate to a float");
+  }
+  CRUBIT_ASSIGN_OR_RETURN(crubit::ffi::FloatConstant float_constant,
+                          FloatConstantFromAPValue(value.getFloat()));
+  out = std::move(float_constant);
+  return llvm::Error::success();
+}
+
 // Converts `value`, a (possibly nested) array with the given `dimensions`
 // (outermost first), to `out`.
+//
+// `value_type` is the type of value held in the array. For nested arrays, it is
+// the final leaf value type.
 //
 // `char_array_init` is the initializer expression of a plain `char` array, or
 // null for other arrays. It is only used to find rows initialized by string
@@ -144,6 +160,7 @@ llvm::Error ConvertIntegerElement(const clang::APValue& value,
 // filler.
 llvm::Error ConvertArrayValue(const clang::APValue& value,
                               llvm::ArrayRef<const uint64_t> dimensions,
+                              const clang::QualType& value_type,
                               const clang::Expr* char_array_init,
                               crubit::ffi::ArrayValue& out) {
   CRUBIT_CHECK(!dimensions.empty())
@@ -175,13 +192,13 @@ llvm::Error ConvertArrayValue(const clang::APValue& value,
               ? char_array_init_list->getInit(i)
               : nullptr;
       CRUBIT_RETURN_IF_ERROR(ConvertArrayValue(
-          value.getArrayInitializedElt(i), dimensions.drop_front(1),
+          value.getArrayInitializedElt(i), dimensions.drop_front(1), value_type,
           element_char_array_init, *elements->add_elements()));
     }
     if (filler != nullptr) {
       // The filler has no initializer expression of its own.
       CRUBIT_RETURN_IF_ERROR(ConvertArrayValue(
-          *filler, dimensions.drop_front(1),
+          *filler, dimensions.drop_front(1), value_type,
           /*char_array_init=*/nullptr, *elements->mutable_filler()));
     }
     return llvm::Error::success();
@@ -193,16 +210,32 @@ llvm::Error ConvertArrayValue(const clang::APValue& value,
     return llvm::Error::success();
   }
 
-  auto* elements = out.mutable_kind()->mutable_integer_elements();
-  for (unsigned i = 0; i < num_initialized; ++i) {
-    CRUBIT_RETURN_IF_ERROR(ConvertIntegerElement(
-        value.getArrayInitializedElt(i), *elements->add_elements()));
+  if (value_type->isIntegerType()) {
+    auto* elements = out.mutable_kind()->mutable_integer_elements();
+    for (unsigned i = 0; i < num_initialized; ++i) {
+      CRUBIT_RETURN_IF_ERROR(ConvertIntegerElement(
+          value.getArrayInitializedElt(i), *elements->add_elements()));
+    }
+    if (filler != nullptr) {
+      CRUBIT_RETURN_IF_ERROR(
+          ConvertIntegerElement(*filler, *elements->mutable_filler()));
+    }
+    return llvm::Error::success();
   }
-  if (filler != nullptr) {
-    CRUBIT_RETURN_IF_ERROR(
-        ConvertIntegerElement(*filler, *elements->mutable_filler()));
+  if (value_type->isFloat32Type() || value_type->isDoubleType()) {
+    auto* elements = out.mutable_kind()->mutable_float_elements();
+    for (unsigned i = 0; i < num_initialized; ++i) {
+      CRUBIT_RETURN_IF_ERROR(ConvertFloatElement(
+          value.getArrayInitializedElt(i), *elements->add_elements()));
+    }
+    if (filler != nullptr) {
+      CRUBIT_RETURN_IF_ERROR(
+          ConvertFloatElement(*filler, *elements->mutable_filler()));
+    }
+    return llvm::Error::success();
   }
-  return llvm::Error::success();
+  return crubit::InvalidArgumentError(
+      "array element must be an integer, float, or double");
 }
 
 // Returns true if `type` is `std::string_view`
@@ -502,15 +535,16 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
   bool is_array = !dimensions.empty();
   bool is_string_view = IsStringViewType(ictx_.ctx_, var_decl->getType());
   if (!value_type->isBooleanType() && !value_type->isIntegerType() &&
+      !value_type->isFloat32Type() && !value_type->isDoubleType() &&
       !is_string_view) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
         {is_array ? FormattedError::Static(
-                        "only C-style arrays of boolean and integer elements "
-                        "are supported")
-                  : FormattedError::Static(
-                        "only boolean, integer, and string_view constexpr "
-                        "variables are supported")});
+                        "only C-style arrays of boolean, integer, float, and "
+                        "double elements are supported")
+                  : FormattedError::Static("only boolean, integer, float, "
+                                           "double, and string_view constexpr "
+                                           "variables are supported")});
   }
 
   const clang::APValue* value = init_decl.evaluateValue();
@@ -551,27 +585,38 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
     constant->mutable_kind()->set_string_view_value(
         *std::move(string_view_value));
   } else if (!is_array) {
-    if (!value->isInt()) {
+    if (value->isInt()) {
+      llvm::Expected<crubit::ffi::IntegerConstant> integer_constant =
+          IntegerConstantFromAPValue(value->getInt());
+      if (!integer_constant) {
+        return ictx_.ImportUnsupportedItem(
+            *var_decl, std::nullopt,
+            {FormattedError::FromStatus(integer_constant.takeError())});
+      }
+      *constant->mutable_kind()->mutable_value() = *std::move(integer_constant);
+    } else if (value->isFloat()) {
+      llvm::Expected<crubit::ffi::FloatConstant> float_constant =
+          FloatConstantFromAPValue(value->getFloat());
+      if (!float_constant) {
+        return ictx_.ImportUnsupportedItem(
+            *var_decl, std::nullopt,
+            {FormattedError::FromStatus(float_constant.takeError())});
+      }
+      *constant->mutable_kind()->mutable_float_value() =
+          *std::move(float_constant);
+    } else {
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
-          {FormattedError::Static(
-              "constexpr value did not evaluate to an integer")});
+          {FormattedError::Static("constexpr value did not evaluate to an "
+                                  "integer, float, or double")});
     }
-    llvm::Expected<crubit::ffi::IntegerConstant> integer_constant =
-        IntegerConstantFromAPValue(value->getInt());
-    if (!integer_constant) {
-      return ictx_.ImportUnsupportedItem(
-          *var_decl, std::nullopt,
-          {FormattedError::FromStatus(integer_constant.takeError())});
-    }
-    *constant->mutable_kind()->mutable_value() = *std::move(integer_constant);
   } else {
     // String-literal rows are only recorded for plain `char` arrays, which
     // Crubit maps to `ffi_11::c_char`.
     const clang::Expr* char_array_init =
         IsPlainChar(value_type) ? init_decl.getInit() : nullptr;
     if (llvm::Error status =
-            ConvertArrayValue(*value, dimensions, char_array_init,
+            ConvertArrayValue(*value, dimensions, value_type, char_array_init,
                               *constant->mutable_kind()->mutable_array_value());
         status) {
       return ictx_.ImportUnsupportedItem(

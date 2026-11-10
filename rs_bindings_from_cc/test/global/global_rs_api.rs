@@ -92,6 +92,19 @@ pub const kNonUtf8StringView: &'static [u8] = b"\xFF";
 
 // namespace foo
 
+pub const kConstexprFloat: f32 = f32::from_bits(1069547520);
+
+pub const kConstexprDouble: f64 = f64::from_bits(13821547256400052224);
+
+pub const kConstexprDoubleFromInteger: f64 = f64::from_bits(4611686018427387904);
+
+pub const kConstexprDoubleNaNWithPayload: f64 = f64::from_bits(9221120237041095220);
+
+pub const kConstexprDoubleArray: [f64; 3] = ::crubit_support::array::padded_array(
+    &[f64::from_bits(4609434218613702656), f64::from_bits(9223372036854775808)],
+    f64::from_bits(0),
+);
+
 // error: global variable `templated_variable` could not be bound
 //   templated variables are not supported
 
@@ -204,9 +217,13 @@ impl StructWithStaticMembers {
 
     pub const kStaticConstexprStringView: &'static str = "static";
 
+    pub const kStaticConstexprDouble: f64 = f64::from_bits(4602678819172646912);
+
     pub const static_inline_int: ::ffi_11::c_int = ::ffi_11::new_c_int(13);
 
     pub const kOutOfLineConstexprInt: ::ffi_11::c_int = ::ffi_11::new_c_int(14);
+
+    pub const kOutOfLineConstexprFloat: f32 = f32::from_bits(1075838976);
 
     pub const kOutOfLineConstexprStringView: &'static str = "out of line";
 

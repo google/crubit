@@ -6952,10 +6952,154 @@ fn test_top_level_constexpr_bool() {
     expect_that!(constant.value(), integer_constant_value(0));
 }
 
+/// Matches the `value()` of a scalar `float` or `double` constant with the given IEEE `bits`.
+///
+/// Bits are compared instead of values so that `-0.0` and NaN payloads are checked exactly.
+fn float_constant_bits<'a>(bits: u64) -> impl Matcher<&'a ir::ConstantValue> {
+    pat!(ir::ConstantValue::Float(property!(&ir::FloatConstant.bits(), eq(bits))))
+}
+
+#[gtest]
+fn test_top_level_constexpr_float() {
+    let proto = ir_proto_from_cc("constexpr float x = 1.5f;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let constant = expect_constant(&ir);
+    expect_eq!(constant.cc_name(), "x");
+    expect_that!(constant.value(), float_constant_bits(1.5f32.to_bits() as u64));
+    expect_true!(matches!(
+        constant.type_().unwrap().variant(),
+        CcTypeVariant::Primitive(Primitive::Float)
+    ));
+}
+
+#[gtest]
+fn test_top_level_constexpr_double() {
+    let proto = ir_proto_from_cc("constexpr double x = 1.5;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let constant = expect_constant(&ir);
+    expect_eq!(constant.cc_name(), "x");
+    expect_that!(constant.value(), float_constant_bits(1.5f64.to_bits()));
+    expect_true!(matches!(
+        constant.type_().unwrap().variant(),
+        CcTypeVariant::Primitive(Primitive::Double)
+    ));
+}
+
+#[gtest]
+fn test_top_level_const_double() {
+    // Not `constexpr`, but `const` with a constant initializer.
+    let proto = ir_proto_from_cc("const double x = 0.25;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let constant = expect_constant(&ir);
+    expect_eq!(constant.cc_name(), "x");
+    expect_that!(constant.value(), float_constant_bits(0.25f64.to_bits()));
+}
+
+#[gtest]
+fn test_top_level_constexpr_float_initialized_from_integer() {
+    // The value is converted to the type of the variable.
+    let proto = ir_proto_from_cc("constexpr float x = 3;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let constant = expect_constant(&ir);
+    expect_that!(constant.value(), float_constant_bits(3.0f32.to_bits() as u64));
+}
+
+#[gtest]
+fn test_top_level_constexpr_double_initialized_from_integer() {
+    let proto = ir_proto_from_cc("constexpr double x = -7;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let constant = expect_constant(&ir);
+    expect_that!(constant.value(), float_constant_bits((-7.0f64).to_bits()));
+    expect_true!(matches!(
+        constant.type_().unwrap().variant(),
+        CcTypeVariant::Primitive(Primitive::Double)
+    ));
+}
+
+#[gtest]
+fn test_top_level_constexpr_float_initialized_from_unrepresentable_integer() {
+    // 2^24 + 1 has no exact `float` representation. The value is the one C++ converts it to
+    // (2^24), not the integer.
+    let proto = ir_proto_from_cc("constexpr float x = 16777217;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let constant = expect_constant(&ir);
+    expect_that!(constant.value(), float_constant_bits(16777216.0f32.to_bits() as u64));
+}
+
+#[gtest]
+fn test_top_level_constexpr_floating_point_bits_are_exact() {
+    // Values that a decimal literal can't (NaN payloads) or might not (signed zero, subnormals)
+    // round-trip keep their exact bits.
+    let proto = ir_proto_from_cc(
+        r#"
+        constexpr double kNegativeZero = -0.0;
+        constexpr double kInfinity = __builtin_inf();
+        constexpr double kNegativeInfinity = -__builtin_inf();
+        constexpr double kQuietNaN = __builtin_nan("");
+        constexpr double kQuietNaNWithPayload = __builtin_nan("0x1234");
+        constexpr double kSignalingNaN = __builtin_nans("0x1234");
+        constexpr double kSmallestSubnormal = 0x1p-1074;
+        constexpr float kFloatNegativeZero = -0.0f;
+        constexpr float kFloatQuietNaNWithPayload = __builtin_nanf("0x1234");
+        constexpr float kFloatSmallestSubnormal = 0x1p-149f;
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let negative_zero = ir.constants().find(|c| c.cc_name() == "kNegativeZero").unwrap();
+    expect_that!(negative_zero.value(), float_constant_bits(0x8000_0000_0000_0000));
+    let infinity = ir.constants().find(|c| c.cc_name() == "kInfinity").unwrap();
+    expect_that!(infinity.value(), float_constant_bits(0x7ff0_0000_0000_0000));
+    let negative_infinity = ir.constants().find(|c| c.cc_name() == "kNegativeInfinity").unwrap();
+    expect_that!(negative_infinity.value(), float_constant_bits(0xfff0_0000_0000_0000));
+    let quiet_nan = ir.constants().find(|c| c.cc_name() == "kQuietNaN").unwrap();
+    expect_that!(quiet_nan.value(), float_constant_bits(0x7ff8_0000_0000_0000));
+    let quiet_nan_with_payload =
+        ir.constants().find(|c| c.cc_name() == "kQuietNaNWithPayload").unwrap();
+    expect_that!(quiet_nan_with_payload.value(), float_constant_bits(0x7ff8_0000_0000_1234));
+    let signaling_nan = ir.constants().find(|c| c.cc_name() == "kSignalingNaN").unwrap();
+    expect_that!(signaling_nan.value(), float_constant_bits(0x7ff0_0000_0000_1234));
+    let smallest_subnormal = ir.constants().find(|c| c.cc_name() == "kSmallestSubnormal").unwrap();
+    expect_that!(smallest_subnormal.value(), float_constant_bits(1));
+    let float_negative_zero = ir.constants().find(|c| c.cc_name() == "kFloatNegativeZero").unwrap();
+    expect_that!(float_negative_zero.value(), float_constant_bits(0x8000_0000));
+    let float_quiet_nan_with_payload =
+        ir.constants().find(|c| c.cc_name() == "kFloatQuietNaNWithPayload").unwrap();
+    expect_that!(float_quiet_nan_with_payload.value(), float_constant_bits(0x7fc0_1234));
+    let float_smallest_subnormal =
+        ir.constants().find(|c| c.cc_name() == "kFloatSmallestSubnormal").unwrap();
+    expect_that!(float_smallest_subnormal.value(), float_constant_bits(1));
+}
+
+#[gtest]
+fn test_top_level_constexpr_long_double_is_unsupported() {
+    let proto = ir_proto_from_cc("constexpr long double x = 1.5L;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    expect_eq!(ir.constants().count(), 0);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "x", ...
+            errors: [FormattedError {
+                ... message: "only boolean, integer, float, double, and string_view constexpr variables are supported", ...
+            }], ...
+        }}
+    );
+}
+
 /// A simplified `ir::ArrayValue`, for testing.
 #[derive(Debug, PartialEq)]
 enum TestArrayValue {
     Integers { elements: Vec<i128>, filler: Option<i128> },
+    Floats { elements: Vec<u64>, filler: Option<u64> },
     Arrays { elements: Vec<TestArrayValue>, filler: Option<Box<TestArrayValue>> },
     StringLiteral(Vec<u8>),
 }
@@ -6977,6 +7121,10 @@ fn simplify_array_value(value: &ir::ArrayValue) -> TestArrayValue {
                 .map(|element| simplify_integer(&element))
                 .collect(),
             filler: integers.filler().as_ref().map(simplify_integer),
+        },
+        ir::ArrayValueKind::Floats(floats) => TestArrayValue::Floats {
+            elements: floats.elements().iter().map(ir::FloatConstant::bits).collect(),
+            filler: floats.filler().as_ref().map(ir::FloatConstant::bits),
         },
         ir::ArrayValueKind::Arrays(arrays) => TestArrayValue::Arrays {
             elements: arrays.elements().iter().map(simplify_array_value).collect(),
@@ -7033,6 +7181,38 @@ fn char_elements(bytes: &[u8]) -> TestArrayValue {
 /// Integer elements for the given chars, followed by NUL fillers.
 fn padded_char_elements(bytes: &[u8]) -> TestArrayValue {
     padded_integer_elements(&bytes.iter().map(|&b| b as i128).collect::<Vec<_>>(), 0)
+}
+
+/// Fully initialized `float` elements, as their IEEE bits.
+fn f32_elements(elements: &[f32]) -> TestArrayValue {
+    TestArrayValue::Floats {
+        elements: elements.iter().map(|f| f.to_bits() as u64).collect(),
+        filler: None,
+    }
+}
+
+/// `float` elements, followed by `filler`, as their IEEE bits.
+fn padded_f32_elements(elements: &[f32], filler: f32) -> TestArrayValue {
+    TestArrayValue::Floats {
+        elements: elements.iter().map(|f| f.to_bits() as u64).collect(),
+        filler: Some(filler.to_bits() as u64),
+    }
+}
+
+/// Fully initialized `double` elements, as their IEEE bits.
+fn f64_elements(elements: &[f64]) -> TestArrayValue {
+    TestArrayValue::Floats {
+        elements: elements.iter().map(|f| f.to_bits()).collect(),
+        filler: None,
+    }
+}
+
+/// `double` elements, followed by `filler`, as their IEEE bits.
+fn padded_f64_elements(elements: &[f64], filler: f64) -> TestArrayValue {
+    TestArrayValue::Floats {
+        elements: elements.iter().map(|f| f.to_bits()).collect(),
+        filler: Some(filler.to_bits()),
+    }
 }
 
 fn array_constant_from_cc(cc: &str) -> (Vec<u64>, TestArrayValue) {
@@ -7161,26 +7341,91 @@ fn test_top_level_constexpr_unsigned_char_array_from_string_literal() {
 }
 
 #[gtest]
+fn test_top_level_constexpr_double_array() {
+    // The bits of each element are kept exactly, including the sign of zero.
+    let proto = ir_proto_from_cc("constexpr double x[] = {1.5, -0.0};").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let constant = expect_constant(&ir);
+    expect_eq!(constant.cc_name(), "x");
+    expect_eq!(expect_array_constant(constant), (vec![2], f64_elements(&[1.5, -0.0])));
+    expect_true!(matches!(
+        constant.type_().unwrap().variant(),
+        CcTypeVariant::Primitive(Primitive::Double)
+    ));
+}
+
+#[gtest]
+fn test_top_level_constexpr_float_array() {
+    // The 32 bits of each element are kept exactly, including the sign of zero, which must not be
+    // sign-extended into the 64 bits of the IR.
+    expect_eq!(
+        array_constant_from_cc("constexpr float x[] = {-0.0f, 1.5f};"),
+        (vec![2], f32_elements(&[-0.0, 1.5]))
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_float_array_with_filler() {
+    let proto = ir_proto_from_cc("constexpr float x[4] = {1.5f, 2.5f};").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let constant = expect_constant(&ir);
+    expect_eq!(constant.cc_name(), "x");
+    expect_eq!(expect_array_constant(constant), (vec![4], padded_f32_elements(&[1.5, 2.5], 0.0)));
+    expect_true!(matches!(
+        constant.type_().unwrap().variant(),
+        CcTypeVariant::Primitive(Primitive::Float)
+    ));
+}
+
+#[gtest]
+fn test_top_level_constexpr_multidimensional_double_array() {
+    // The last row is not explicitly initialized, and neither is the last element of the first
+    // row.
+    expect_eq!(
+        array_constant_from_cc("constexpr double x[3][2] = {{1.5}, {2.5, 3.5}};"),
+        (
+            vec![3, 2],
+            padded_array_elements(
+                vec![padded_f64_elements(&[1.5], 0.0), f64_elements(&[2.5, 3.5])],
+                padded_f64_elements(&[], 0.0)
+            )
+        )
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_double_array_initialized_from_integers() {
+    // Each element is converted to `double`, whether it is given as an integer or not, and so is
+    // the filler.
+    expect_eq!(
+        array_constant_from_cc("constexpr double x[4] = {1, 2.5, -3};"),
+        (vec![4], padded_f64_elements(&[1.0, 2.5, -3.0], 0.0))
+    );
+}
+
+#[gtest]
 fn test_top_level_constexpr_unsupported_arrays() {
     let proto = ir_proto_from_cc(
         r#"
         struct S { int i; };
         constexpr S struct_array[] = {{1}};
-        constexpr double double_array[] = {1.0};
-        constexpr double multidimensional_double_array[1][1] = {{1.0}};
+        constexpr long double long_double_array[] = {1.0L};
+        constexpr long double multidimensional_long_double_array[1][1] = {{1.0L}};
         "#,
     )
     .unwrap();
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
     expect_eq!(ir.constants().count(), 0);
-    for name in ["struct_array", "double_array", "multidimensional_double_array"] {
+    for name in ["struct_array", "long_double_array", "multidimensional_long_double_array"] {
         assert_ir_matches!(
             ir,
             quote! { UnsupportedItem {
                 name: #name, ...
                 errors: [FormattedError {
-                    ... message: "only C-style arrays of boolean and integer elements are supported", ...
+                    ... message: "only C-style arrays of boolean, integer, float, and double elements are supported", ...
                 }], ...
             }}
         );
@@ -7394,7 +7639,7 @@ fn test_top_level_constexpr_wstring_view_is_unsupported() {
         quote! { UnsupportedItem {
             name: "x", ...
             errors: [FormattedError {
-                ... message: "only boolean, integer, and string_view constexpr variables are supported", ...
+                ... message: "only boolean, integer, float, double, and string_view constexpr variables are supported", ...
             }], ...
         }}
     );
@@ -7417,7 +7662,7 @@ fn test_top_level_constexpr_string_view_array_is_unsupported() {
         quote! { UnsupportedItem {
             name: "x", ...
             errors: [FormattedError {
-                ... message: "only C-style arrays of boolean and integer elements are supported", ...
+                ... message: "only C-style arrays of boolean, integer, float, and double elements are supported", ...
             }], ...
         }}
     );
@@ -7574,26 +7819,26 @@ fn test_constexpr_out_of_line_array_member_definitions_are_constants() {
 #[gtest]
 fn test_unsupported_constexpr_out_of_line_member_definitions_are_unsupported() {
     // A member with an out-of-line `constexpr` definition is treated like one that is initialized
-    // in the class, including when its type isn't supported for constants: here a floating-point
+    // in the class, including when its type isn't supported for constants: here a `long double`
     // member, and a member of the class's own type (which can only be defined out of line).
     let proto = ir_proto_from_cc(
         r#"
         struct S {
-          static const double kDouble;
+          static const long double kLongDouble;
           static const S kDefault;
           int i;
         };
-        inline constexpr double S::kDouble = 1.5;
+        inline constexpr long double S::kLongDouble = 1.5L;
         inline constexpr S S::kDefault = {1};
         "#,
     )
     .unwrap();
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
-    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "S::kDouble", ... } });
+    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "S::kLongDouble", ... } });
     assert_ir_matches!(ir, quote! { UnsupportedItem { name: "S::kDefault", ... } });
-    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kDouble", ... } });
-    assert_ir_not_matches!(ir, quote! { Constant { ... rs_name: "kDouble", ... } });
+    assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kLongDouble", ... } });
+    assert_ir_not_matches!(ir, quote! { Constant { ... rs_name: "kLongDouble", ... } });
     assert_ir_not_matches!(ir, quote! { GlobalVar { ... rs_name: "kDefault", ... } });
     assert_ir_not_matches!(ir, quote! { Constant { ... rs_name: "kDefault", ... } });
 }

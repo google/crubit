@@ -14,8 +14,8 @@ use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
 use heck::ToSnakeCase;
 use ir::{
-    BazelLabel, CcCallingConv, FfiRc, GenericItem, IntegerConstant, Item, ItemId, Namespace,
-    RecordType, UnqualifiedIdentifier,
+    BazelLabel, CcCallingConv, FfiRc, FloatConstant, GenericItem, IntegerConstant, Item, ItemId,
+    Namespace, RecordType, UnqualifiedIdentifier,
 };
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
@@ -531,6 +531,22 @@ pub fn integer_constant_to_token_stream(
             }
         }
     })
+}
+
+pub fn float_constant_to_token_stream(
+    db: &crate::BindingsGenerator<'_>,
+    float_constant: FloatConstant,
+    underlying_type: &RsTypeKind,
+) -> Result<TokenStream> {
+    let RsTypeKind::Primitive(primitive) = *underlying_type.unalias() else {
+        bail!(
+            "float_constant_to_token_stream called with non-primitive underlying type:\n  {}",
+            underlying_type.display(db),
+        )
+    };
+    let bits = Literal::u64_unsuffixed(float_constant.bits());
+    let name = PrimitiveName::from_primitive(primitive);
+    Ok(quote! { #name::from_bits(#bits) })
 }
 
 pub fn generated_items_to_tokens<'db>(
