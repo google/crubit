@@ -19,6 +19,7 @@ SUPPORTED_FEATURES = [
     "constant_arrays",
     "enum_api_v2",
     "infer_send_sync",
+    "param_name_insensitive_operator_lookup",
 ]
 
 # Per-feature denylists live in features/denylists/supported_feature_denylists.bzl, not here, so
