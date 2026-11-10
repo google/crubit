@@ -4,6 +4,15 @@
 
 # Automatically @generated CMakeLists.txt.
 
+add_library(crubit_support_annotate_internal INTERFACE
+"annotate_internal.h"
+)
+set_target_properties(crubit_support_annotate_internal PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_annotate_internal INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/.."
+)
+
 add_library(crubit_support_annotations INTERFACE
 "annotations.h"
 )
@@ -15,6 +24,7 @@ target_include_directories(crubit_support_annotations INTERFACE
 
 target_link_libraries(crubit_support_annotations INTERFACE
 crubit_support_annotations_internal
+crubit_support_bitwise_relocatability_annotations
 )
 
 add_library(crubit_support_annotations_internal INTERFACE
@@ -24,6 +34,23 @@ set_target_properties(crubit_support_annotations_internal PROPERTIES LINKER_LANG
 
 target_include_directories(crubit_support_annotations_internal INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/.."
+)
+
+target_link_libraries(crubit_support_annotations_internal INTERFACE
+crubit_support_annotate_internal
+)
+
+add_library(crubit_support_bitwise_relocatability_annotations INTERFACE
+"bitwise_relocatability_annotations.h"
+)
+set_target_properties(crubit_support_bitwise_relocatability_annotations PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_bitwise_relocatability_annotations INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/.."
+)
+
+target_link_libraries(crubit_support_bitwise_relocatability_annotations INTERFACE
+crubit_support_annotate_internal
 )
 
 add_library(crubit_support_bridge_cpp INTERFACE

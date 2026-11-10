@@ -14,7 +14,7 @@
 #include <variant>
 #include <vector>
 
-#include "support/annotations.h"
+#include "support/bitwise_relocatability_annotations.h"
 
 struct Trivial {
   int x;

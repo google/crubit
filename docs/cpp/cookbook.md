@@ -43,7 +43,9 @@ crubit.rs/cpp/cookbook#bitwise_relocatable
 One of the ways a type can become non-Rust-movable is if it has a user-provided
 move constructor or destructor. In that case, Crubit will assume that it cannot
 be trivially relocated, **unless** it is annotated with
-`CRUBIT_UNSAFE_BITWISE_RELOCATABLE` (from `support/annotations.h`). Previously,
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE` (from
+`support/bitwise_relocatability_annotations.h`, which `support/annotations.h`
+also includes). Previously,
 [`ABSL_ATTRIBUTE_TRIVIAL_ABI`](https://github.com/abseil/abseil-cpp/blob/master/absl/base/attributes.h#:~:text=ABSL_ATTRIBUTE_TRIVIAL_ABI)
 was recommended for this, but `trivial_abi` alters the C++ calling-convention
 ABI and may not make a type Rust-movable when any of its members is not
@@ -59,6 +61,8 @@ struct LogWhenDestroyed {
 ```
 
 ```c++ {.good}
+#include "support/bitwise_relocatability_annotations.h"
+
 struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE LogWhenDestroyed {
   ~LogWhenDestroyed() {
     std::cerr << "I was destroyed!\n";

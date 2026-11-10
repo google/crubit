@@ -97,11 +97,12 @@ crubit.rs/types/non_rust_movable/intro_short.)
 Types are considered Rust-movable (bitwise relocatable) by default. If the type
 defines a user-provided move constructor or destructor, then it requires a
 special annotation to be considered Rust-movable:
-`CRUBIT_UNSAFE_BITWISE_RELOCATABLE` (defined in `support/annotations.h`, along
-with `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_IF_ELIGIBLE` for templates,
-`CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD`,
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE`. It is defined in
+`support/bitwise_relocatability_annotations.h` (which `support/annotations.h`
+also includes), along with `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_IF_ELIGIBLE` for
+templates, `CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD`,
 `CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX`, and
-`CRUBIT_NEVER_BITWISE_RELOCATABLE`).
+`CRUBIT_NEVER_BITWISE_RELOCATABLE`.
 
 If a type has a non-Rust-movable field or base class, it is not Rust-movable. A
 `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` annotation on a type with

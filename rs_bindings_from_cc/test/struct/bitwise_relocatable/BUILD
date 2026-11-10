@@ -16,7 +16,7 @@ crubit_test_cc_library(
     srcs = ["bitwise_relocatable.cc"],
     hdrs = ["bitwise_relocatable.h"],
     deps = [
-        "//support:annotations",
+        "//support:bitwise_relocatability_annotations",
     ],
 )
 
