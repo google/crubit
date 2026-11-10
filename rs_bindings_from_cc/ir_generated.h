@@ -341,12 +341,12 @@ struct CRUBIT_FFI_TRIVIAL_ABI FuncPointer {
   void set_call_conv(::crubit::ffi::CallingConv value) { call_conv_ = value; }
   const FfiVec<::crubit::ffi::CcType>& param_and_return_types() const { return param_and_return_types_; }
   FfiVec<::crubit::ffi::CcType>* mutable_param_and_return_types() { return &param_and_return_types_; }
-  void clear_param_and_return_types() { param_and_return_types_.Clear(); }
+  void clear_param_and_return_types() { param_and_return_types_.clear(); }
   ::crubit::ffi::CcType* add_param_and_return_types();
   const FfiVec<FfiString>& lifetime_inputs() const { return lifetime_inputs_; }
   FfiVec<FfiString>* mutable_lifetime_inputs() { return &lifetime_inputs_; }
-  void clear_lifetime_inputs() { lifetime_inputs_.Clear(); }
-  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
+  void clear_lifetime_inputs() { lifetime_inputs_.clear(); }
+  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.push_back(FfiString(value)); }
   friend bool operator==(const FuncPointer&, const FuncPointer&) = default;
   bool non_null_{};
   ::crubit::ffi::CallingConv call_conv_{};
@@ -549,11 +549,11 @@ struct CRUBIT_FFI_TRIVIAL_ABI CcType {
   void set_unknown_attr(std::string_view value) { unknown_attr_ = FfiString(value); }
   const FfiVec<FfiString>& explicit_lifetimes() const { return explicit_lifetimes_; }
   FfiVec<FfiString>* mutable_explicit_lifetimes() { return &explicit_lifetimes_; }
-  void clear_explicit_lifetimes() { explicit_lifetimes_.Clear(); }
-  void add_explicit_lifetimes(std::string_view value) { explicit_lifetimes_.Add(FfiString(value)); }
+  void clear_explicit_lifetimes() { explicit_lifetimes_.clear(); }
+  void add_explicit_lifetimes(std::string_view value) { explicit_lifetimes_.push_back(FfiString(value)); }
   const FfiVec<::crubit::ffi::CcType>& template_args() const { return template_args_; }
   FfiVec<::crubit::ffi::CcType>* mutable_template_args() { return &template_args_; }
-  void clear_template_args() { template_args_.Clear(); }
+  void clear_template_args() { template_args_.clear(); }
   ::crubit::ffi::CcType* add_template_args();
   friend bool operator==(const CcType&, const CcType&) = default;
   ::crubit::ffi::cc_type::Variant variant_{};
@@ -719,8 +719,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI FuncParam {
   ::crubit::ffi::Identifier* mutable_identifier() { return &identifier_; }
   const FfiVec<int32_t>& clang_lifetime_capture_by() const { return clang_lifetime_capture_by_; }
   FfiVec<int32_t>* mutable_clang_lifetime_capture_by() { return &clang_lifetime_capture_by_; }
-  void clear_clang_lifetime_capture_by() { clang_lifetime_capture_by_.Clear(); }
-  void add_clang_lifetime_capture_by(int32_t value) { clang_lifetime_capture_by_.Add(value); }
+  void clear_clang_lifetime_capture_by() { clang_lifetime_capture_by_.clear(); }
+  void add_clang_lifetime_capture_by(int32_t value) { clang_lifetime_capture_by_.push_back(value); }
   bool clang_lifetimebound() const { return clang_lifetimebound_; }
   void set_clang_lifetimebound(bool value) { clang_lifetimebound_ = value; }
   bool has_unknown_attr() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -902,12 +902,12 @@ struct CRUBIT_FFI_TRIVIAL_ABI Func {
   ::crubit::ffi::CcType* mutable_return_type() { return &return_type_; }
   const FfiVec<::crubit::ffi::FuncParam>& params() const { return params_; }
   FfiVec<::crubit::ffi::FuncParam>* mutable_params() { return &params_; }
-  void clear_params() { params_.Clear(); }
-  ::crubit::ffi::FuncParam* add_params() { return params_.Add(); }
+  void clear_params() { params_.clear(); }
+  ::crubit::ffi::FuncParam* add_params() { return &params_.emplace_back(); }
   const FfiVec<::crubit::ffi::LifetimeName>& lifetime_params() const { return lifetime_params_; }
   FfiVec<::crubit::ffi::LifetimeName>* mutable_lifetime_params() { return &lifetime_params_; }
-  void clear_lifetime_params() { lifetime_params_.Clear(); }
-  ::crubit::ffi::LifetimeName* add_lifetime_params() { return lifetime_params_.Add(); }
+  void clear_lifetime_params() { lifetime_params_.clear(); }
+  ::crubit::ffi::LifetimeName* add_lifetime_params() { return &lifetime_params_.emplace_back(); }
   bool is_inline() const { return is_inline_; }
   void set_is_inline(bool value) { is_inline_ = value; }
   bool is_always_inline() const { return is_always_inline_; }
@@ -966,8 +966,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Func {
   void set_inline_cpp_source_text(std::string_view value) { has_bits_ |= 0x200ULL; inline_cpp_source_text_ = FfiString(value); }
   const FfiVec<FfiString>& lifetime_inputs() const { return lifetime_inputs_; }
   FfiVec<FfiString>* mutable_lifetime_inputs() { return &lifetime_inputs_; }
-  void clear_lifetime_inputs() { lifetime_inputs_.Clear(); }
-  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
+  void clear_lifetime_inputs() { lifetime_inputs_.clear(); }
+  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.push_back(FfiString(value)); }
   bool has_semantic() const { return (has_bits_ & 0x400ULL) != 0; }
   void clear_semantic() { has_bits_ &= ~0x400ULL; semantic_ = {}; }
   const ::crubit::ffi::MemberFuncSemantic& semantic() const { return semantic_; }
@@ -1285,8 +1285,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Bridge {
   void set_abi_cpp(std::string_view value) { abi_cpp_ = FfiString(value); }
   const FfiVec<::crubit::ffi::CcType>& template_args() const { return template_args_; }
   FfiVec<::crubit::ffi::CcType>* mutable_template_args() { return &template_args_; }
-  void clear_template_args() { template_args_.Clear(); }
-  ::crubit::ffi::CcType* add_template_args() { return template_args_.Add(); }
+  void clear_template_args() { template_args_.clear(); }
+  ::crubit::ffi::CcType* add_template_args() { return &template_args_.emplace_back(); }
   bool has_label_hint() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_label_hint() { has_bits_ &= ~0x1ULL; label_hint_ = {}; }
   std::string_view label_hint() const { return label_hint_.AsView(); }
@@ -1352,8 +1352,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Callable {
   ::crubit::ffi::CcType* mutable_return_type() { return &return_type_; }
   const FfiVec<::crubit::ffi::CcType>& param_types() const { return param_types_; }
   FfiVec<::crubit::ffi::CcType>* mutable_param_types() { return &param_types_; }
-  void clear_param_types() { param_types_.Clear(); }
-  ::crubit::ffi::CcType* add_param_types() { return param_types_.Add(); }
+  void clear_param_types() { param_types_.clear(); }
+  ::crubit::ffi::CcType* add_param_types() { return &param_types_.emplace_back(); }
   friend bool operator==(const Callable&, const Callable&) = default;
   ::crubit::ffi::bridge_type::callable::BackingType backing_type_{};
   ::crubit::ffi::bridge_type::callable::FnTrait fn_trait_{};
@@ -1529,8 +1529,8 @@ namespace array_value {
 struct CRUBIT_FFI_TRIVIAL_ABI IntegerElements {
   const FfiVec<::crubit::ffi::IntegerConstant>& elements() const { return elements_; }
   FfiVec<::crubit::ffi::IntegerConstant>* mutable_elements() { return &elements_; }
-  void clear_elements() { elements_.Clear(); }
-  ::crubit::ffi::IntegerConstant* add_elements() { return elements_.Add(); }
+  void clear_elements() { elements_.clear(); }
+  ::crubit::ffi::IntegerConstant* add_elements() { return &elements_.emplace_back(); }
   bool has_filler() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_filler() { has_bits_ &= ~0x1ULL; filler_ = {}; }
   const ::crubit::ffi::IntegerConstant& filler() const { return filler_; }
@@ -1552,7 +1552,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI ArrayElements {
   ~ArrayElements();
   const FfiVec<::crubit::ffi::ArrayValue>& elements() const { return elements_; }
   FfiVec<::crubit::ffi::ArrayValue>* mutable_elements() { return &elements_; }
-  void clear_elements() { elements_.Clear(); }
+  void clear_elements() { elements_.clear(); }
   ::crubit::ffi::ArrayValue* add_elements();
   bool has_filler() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_filler();
@@ -2250,8 +2250,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI TraitDerives {
   void set_sync(::crubit::ffi::TraitImplPolarity value) { sync_ = value; }
   const FfiVec<FfiString>& custom() const { return custom_; }
   FfiVec<FfiString>* mutable_custom() { return &custom_; }
-  void clear_custom() { custom_.Clear(); }
-  void add_custom(std::string_view value) { custom_.Add(FfiString(value)); }
+  void clear_custom() { custom_.clear(); }
+  void add_custom(std::string_view value) { custom_.push_back(FfiString(value)); }
   friend bool operator==(const TraitDerives&, const TraitDerives&) = default;
   ::crubit::ffi::TraitImplPolarity clone_{};
   ::crubit::ffi::TraitImplPolarity copy_{};
@@ -2316,16 +2316,16 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   ::crubit::ffi::DeclLocation* mutable_decl_loc() { has_bits_ |= 0x20ULL; return &decl_loc_; }
   const FfiVec<::crubit::ffi::BaseClass>& unambiguous_public_bases() const { return unambiguous_public_bases_; }
   FfiVec<::crubit::ffi::BaseClass>* mutable_unambiguous_public_bases() { return &unambiguous_public_bases_; }
-  void clear_unambiguous_public_bases() { unambiguous_public_bases_.Clear(); }
-  ::crubit::ffi::BaseClass* add_unambiguous_public_bases() { return unambiguous_public_bases_.Add(); }
+  void clear_unambiguous_public_bases() { unambiguous_public_bases_.clear(); }
+  ::crubit::ffi::BaseClass* add_unambiguous_public_bases() { return &unambiguous_public_bases_.emplace_back(); }
   const FfiVec<::crubit::ffi::Field>& fields() const { return fields_; }
   FfiVec<::crubit::ffi::Field>* mutable_fields() { return &fields_; }
-  void clear_fields() { fields_.Clear(); }
-  ::crubit::ffi::Field* add_fields() { return fields_.Add(); }
+  void clear_fields() { fields_.clear(); }
+  ::crubit::ffi::Field* add_fields() { return &fields_.emplace_back(); }
   const FfiVec<::crubit::ffi::LifetimeName>& lifetime_params() const { return lifetime_params_; }
   FfiVec<::crubit::ffi::LifetimeName>* mutable_lifetime_params() { return &lifetime_params_; }
-  void clear_lifetime_params() { lifetime_params_.Clear(); }
-  ::crubit::ffi::LifetimeName* add_lifetime_params() { return lifetime_params_.Add(); }
+  void clear_lifetime_params() { lifetime_params_.clear(); }
+  ::crubit::ffi::LifetimeName* add_lifetime_params() { return &lifetime_params_.emplace_back(); }
   const ::crubit::ffi::SizeAlign& size_align() const { return size_align_; }
   ::crubit::ffi::SizeAlign* mutable_size_align() { return &size_align_; }
   const ::crubit::ffi::TraitDerives& trait_derives() const { return trait_derives_; }
@@ -2356,8 +2356,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   void set_not_rust_movable_reason(std::string_view value) { has_bits_ |= 0x80ULL; not_rust_movable_reason_ = FfiString(value); }
   const FfiVec<FfiString>& libcxx_only_fields() const { return libcxx_only_fields_; }
   FfiVec<FfiString>* mutable_libcxx_only_fields() { return &libcxx_only_fields_; }
-  void clear_libcxx_only_fields() { libcxx_only_fields_.Clear(); }
-  void add_libcxx_only_fields(std::string_view value) { libcxx_only_fields_.Add(FfiString(value)); }
+  void clear_libcxx_only_fields() { libcxx_only_fields_.clear(); }
+  void add_libcxx_only_fields(std::string_view value) { libcxx_only_fields_.push_back(FfiString(value)); }
   bool is_inheritable() const { return is_inheritable_; }
   void set_is_inheritable(bool value) { is_inheritable_ = value; }
   bool is_abstract() const { return is_abstract_; }
@@ -2388,8 +2388,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   void set_has_private_or_deleted_operator_delete(bool value) { has_private_or_deleted_operator_delete_ = value; }
   const FfiVec<FfiString>& lifetime_inputs() const { return lifetime_inputs_; }
   FfiVec<FfiString>* mutable_lifetime_inputs() { return &lifetime_inputs_; }
-  void clear_lifetime_inputs() { lifetime_inputs_.Clear(); }
-  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
+  void clear_lifetime_inputs() { lifetime_inputs_.clear(); }
+  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.push_back(FfiString(value)); }
   bool impl_debug() const { return impl_debug_; }
   void set_impl_debug(bool value) { impl_debug_ = value; }
   bool has_private_pointer_or_reference_fields() const { return has_private_pointer_or_reference_fields_; }
@@ -2408,7 +2408,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   void set_is_explicit_class_template_instantiation_definition(bool value) { is_explicit_class_template_instantiation_definition_ = value; }
   const FfiVec<::crubit::ffi::Item>& children() const { return children_; }
   FfiVec<::crubit::ffi::Item>* mutable_children() { return &children_; }
-  void clear_children() { children_.Clear(); }
+  void clear_children() { children_.clear(); }
   ::crubit::ffi::Item* add_children();
   friend bool operator==(const Record&, const Record&) = default;
   uint64_t has_bits_ = 0;
@@ -2547,7 +2547,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Enum {
   void clear_enumerators() { has_bits_ &= ~0x2ULL; enumerators_ = {}; }
   const FfiVec<::crubit::ffi::Enumerator>& enumerators() const { return enumerators_; }
   FfiVec<::crubit::ffi::Enumerator>* mutable_enumerators() { has_bits_ |= 0x2ULL; return &enumerators_; }
-  ::crubit::ffi::Enumerator* add_enumerators() { has_bits_ |= 0x2ULL; return enumerators_.Add(); }
+  ::crubit::ffi::Enumerator* add_enumerators() { has_bits_ |= 0x2ULL; return &enumerators_.emplace_back(); }
   bool has_unknown_attr() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x4ULL; unknown_attr_ = {}; }
   std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
@@ -2687,8 +2687,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI TypeAlias {
   void set_deprecated(std::string_view value) { has_bits_ |= 0x10ULL; deprecated_ = FfiString(value); }
   const FfiVec<FfiString>& lifetime_inputs() const { return lifetime_inputs_; }
   FfiVec<FfiString>* mutable_lifetime_inputs() { return &lifetime_inputs_; }
-  void clear_lifetime_inputs() { lifetime_inputs_.Clear(); }
-  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.Add(FfiString(value)); }
+  void clear_lifetime_inputs() { lifetime_inputs_.clear(); }
+  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.push_back(FfiString(value)); }
   friend bool operator==(const TypeAlias&, const TypeAlias&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::Identifier cc_name_{};
@@ -2749,8 +2749,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem {
   ::crubit::ffi::unsupported_item::Path* mutable_path() { has_bits_ |= 0x2ULL; return &path_; }
   const FfiVec<::crubit::ffi::FormattedError>& errors() const { return errors_; }
   FfiVec<::crubit::ffi::FormattedError>* mutable_errors() { return &errors_; }
-  void clear_errors() { errors_.Clear(); }
-  ::crubit::ffi::FormattedError* add_errors() { return errors_.Add(); }
+  void clear_errors() { errors_.clear(); }
+  ::crubit::ffi::FormattedError* add_errors() { return &errors_.emplace_back(); }
   bool has_decl_loc() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_decl_loc() { has_bits_ &= ~0x4ULL; decl_loc_ = {}; }
   const ::crubit::ffi::DeclLocation& decl_loc() const { return decl_loc_; }
@@ -2769,8 +2769,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem {
   void set_defining_target(std::string_view value) { has_bits_ |= 0x10ULL; defining_target_ = FfiString(value); }
   const FfiVec<FfiString>& do_not_bind() const { return do_not_bind_; }
   FfiVec<FfiString>* mutable_do_not_bind() { return &do_not_bind_; }
-  void clear_do_not_bind() { do_not_bind_.Clear(); }
-  void add_do_not_bind(std::string_view value) { do_not_bind_.Add(FfiString(value)); }
+  void clear_do_not_bind() { do_not_bind_.clear(); }
+  void add_do_not_bind(std::string_view value) { do_not_bind_.push_back(FfiString(value)); }
   friend bool operator==(const UnsupportedItem&, const UnsupportedItem&) = default;
   uint64_t has_bits_ = 0;
   FfiString name_{};
@@ -2840,7 +2840,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Namespace {
   void set_doc_comment(std::string_view value) { has_bits_ |= 0x8ULL; doc_comment_ = FfiString(value); }
   const FfiVec<::crubit::ffi::Item>& children() const { return children_; }
   FfiVec<::crubit::ffi::Item>* mutable_children() { return &children_; }
-  void clear_children() { children_.Clear(); }
+  void clear_children() { children_.clear(); }
   ::crubit::ffi::Item* add_children();
   friend bool operator==(const Namespace&, const Namespace&) = default;
   uint64_t has_bits_ = 0;
@@ -2884,8 +2884,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI ExistingRustType {
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   const FfiVec<::crubit::ffi::TemplateArg>& template_args() const { return template_args_; }
   FfiVec<::crubit::ffi::TemplateArg>* mutable_template_args() { return &template_args_; }
-  void clear_template_args() { template_args_.Clear(); }
-  ::crubit::ffi::TemplateArg* add_template_args() { return template_args_.Add(); }
+  void clear_template_args() { template_args_.clear(); }
+  ::crubit::ffi::TemplateArg* add_template_args() { return &template_args_.emplace_back(); }
   std::string_view owning_target() const { return owning_target_.AsView(); }
   void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_size_align() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -3201,8 +3201,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Item {
 struct CRUBIT_FFI_TRIVIAL_ABI IRProto {
   const FfiVec<::crubit::ffi::HeaderName>& public_headers() const { return public_headers_; }
   FfiVec<::crubit::ffi::HeaderName>* mutable_public_headers() { return &public_headers_; }
-  void clear_public_headers() { public_headers_.Clear(); }
-  ::crubit::ffi::HeaderName* add_public_headers() { return public_headers_.Add(); }
+  void clear_public_headers() { public_headers_.clear(); }
+  ::crubit::ffi::HeaderName* add_public_headers() { return &public_headers_.emplace_back(); }
   std::string_view current_target() const { return current_target_.AsView(); }
   void set_current_target(std::string_view value) { current_target_ = FfiString(value); }
   bool has_crate_root_path() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -3213,12 +3213,12 @@ struct CRUBIT_FFI_TRIVIAL_ABI IRProto {
   FfiMap<FfiString, FfiVec<FfiString>>* mutable_crubit_features() { return &crubit_features_; }
   const FfiVec<FfiString>& unstable_rust_features() const { return unstable_rust_features_; }
   FfiVec<FfiString>* mutable_unstable_rust_features() { return &unstable_rust_features_; }
-  void clear_unstable_rust_features() { unstable_rust_features_.Clear(); }
-  void add_unstable_rust_features(std::string_view value) { unstable_rust_features_.Add(FfiString(value)); }
+  void clear_unstable_rust_features() { unstable_rust_features_.clear(); }
+  void add_unstable_rust_features(std::string_view value) { unstable_rust_features_.push_back(FfiString(value)); }
   const FfiVec<FfiString>& reexported_namespaces() const { return reexported_namespaces_; }
   FfiVec<FfiString>* mutable_reexported_namespaces() { return &reexported_namespaces_; }
-  void clear_reexported_namespaces() { reexported_namespaces_.Clear(); }
-  void add_reexported_namespaces(std::string_view value) { reexported_namespaces_.Add(FfiString(value)); }
+  void clear_reexported_namespaces() { reexported_namespaces_.clear(); }
+  void add_reexported_namespaces(std::string_view value) { reexported_namespaces_.push_back(FfiString(value)); }
   const FfiMap<FfiString, FfiVec<::crubit::ffi::Item>>& top_level_items() const { return top_level_items_; }
   FfiMap<FfiString, FfiVec<::crubit::ffi::Item>>* mutable_top_level_items() { return &top_level_items_; }
   const FfiMap<FfiString, FfiString>& crate_names() const { return crate_names_; }
@@ -3328,7 +3328,7 @@ inline cc_type::FuncPointer::FuncPointer(FuncPointer&&) noexcept = default;
 inline cc_type::FuncPointer& cc_type::FuncPointer::operator=(const FuncPointer&) = default;
 inline cc_type::FuncPointer& cc_type::FuncPointer::operator=(FuncPointer&&) noexcept = default;
 inline cc_type::FuncPointer::~FuncPointer() = default;
-inline ::crubit::ffi::CcType* cc_type::FuncPointer::add_param_and_return_types() { return param_and_return_types_.Add(); }
+inline ::crubit::ffi::CcType* cc_type::FuncPointer::add_param_and_return_types() { return &param_and_return_types_.emplace_back(); }
 static_assert(std::is_standard_layout_v<cc_type::FuncPointer>);
 static_assert(sizeof(size_t) != 8 || (sizeof(cc_type::FuncPointer) == 56 && alignof(cc_type::FuncPointer) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(cc_type::FuncPointer, non_null_) == 0);
@@ -3355,7 +3355,7 @@ inline CcType::CcType(CcType&&) noexcept = default;
 inline CcType& CcType::operator=(const CcType&) = default;
 inline CcType& CcType::operator=(CcType&&) noexcept = default;
 inline CcType::~CcType() = default;
-inline ::crubit::ffi::CcType* CcType::add_template_args() { return template_args_.Add(); }
+inline ::crubit::ffi::CcType* CcType::add_template_args() { return &template_args_.emplace_back(); }
 static_assert(std::is_standard_layout_v<CcType>);
 static_assert(sizeof(size_t) != 8 || (sizeof(CcType) == 136 && alignof(CcType) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(CcType, variant_) == 0);
@@ -3493,7 +3493,7 @@ inline array_value::ArrayElements::ArrayElements(ArrayElements&&) noexcept = def
 inline array_value::ArrayElements& array_value::ArrayElements::operator=(const ArrayElements&) = default;
 inline array_value::ArrayElements& array_value::ArrayElements::operator=(ArrayElements&&) noexcept = default;
 inline array_value::ArrayElements::~ArrayElements() = default;
-inline ::crubit::ffi::ArrayValue* array_value::ArrayElements::add_elements() { return elements_.Add(); }
+inline ::crubit::ffi::ArrayValue* array_value::ArrayElements::add_elements() { return &elements_.emplace_back(); }
 inline void array_value::ArrayElements::clear_filler() { has_bits_ &= ~0x1ULL; filler_ = {}; }
 inline const ::crubit::ffi::ArrayValue& array_value::ArrayElements::filler() const { return filler_.get_or_default(); }
 inline ::crubit::ffi::ArrayValue* array_value::ArrayElements::mutable_filler() { has_bits_ |= 0x1ULL; return &filler_.get_or_init(); }
@@ -3577,7 +3577,7 @@ inline Record::Record(Record&&) noexcept = default;
 inline Record& Record::operator=(const Record&) = default;
 inline Record& Record::operator=(Record&&) noexcept = default;
 inline Record::~Record() = default;
-inline ::crubit::ffi::Item* Record::add_children() { return children_.Add(); }
+inline ::crubit::ffi::Item* Record::add_children() { return &children_.emplace_back(); }
 static_assert(std::is_standard_layout_v<Record>);
 static_assert(sizeof(size_t) != 8 || (sizeof(Record) == 1160 && alignof(Record) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(Record, rs_name_) == 8);
@@ -3723,7 +3723,7 @@ inline Namespace::Namespace(Namespace&&) noexcept = default;
 inline Namespace& Namespace::operator=(const Namespace&) = default;
 inline Namespace& Namespace::operator=(Namespace&&) noexcept = default;
 inline Namespace::~Namespace() = default;
-inline ::crubit::ffi::Item* Namespace::add_children() { return children_.Add(); }
+inline ::crubit::ffi::Item* Namespace::add_children() { return &children_.emplace_back(); }
 static_assert(std::is_standard_layout_v<Namespace>);
 static_assert(sizeof(size_t) != 8 || (sizeof(Namespace) == 176 && alignof(Namespace) == 8));
 static_assert(sizeof(size_t) != 8 || offsetof(Namespace, cc_name_) == 8);
