@@ -139,15 +139,16 @@ forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Inc
 //   Return type of callable is incomplete: struct Incomplete
 
 /// Class template instantiations that aren't named by a C++ type alias.
-pub mod zz_template_instantiations { // error: class `absl::internal_any_invocable::CoreImpl<false, struct MyOption<int>, struct MyOption<int>>` could not be bound
-                                     //   crubit.rs/errors/unknown_target: the type is defined in
-                                     //     third_party/absl/functional/internal/any_invocable.h
-                                     //   which is not a public header of any Crubit-enabled target that
-                                     //     //rs_bindings_from_cc/test/consume_absl:absl_functional
-                                     //   depends on directly. Either enable Crubit on the library that provides the header,
-                                     //   add that library as a direct dependency (and `#include` the header directly),
-                                     //   or move the type to a public header.
-                                     //   template instantiation is not yet supported
+pub mod zz_template_instantiations {
+    // error: class `absl::internal_any_invocable::CoreImpl<false, struct MyOption<int>, struct MyOption<int>>` could not be bound
+    //   crubit.rs/errors/unknown_target: the type is defined in
+    //     third_party/absl/functional/internal/any_invocable.h
+    //   which is not a public header of any Crubit-enabled target that
+    //     //rs_bindings_from_cc/test/consume_absl:absl_functional
+    //   depends on directly. Either enable Crubit on the library that provides the header,
+    //   add that library as a direct dependency (and `#include` the header directly),
+    //   or move the type to a public header.
+    //   template instantiation is not yet supported
 
     // error: class `absl::internal_any_invocable::CoreImpl<false, int, int>` could not be bound
     //   crubit.rs/errors/unknown_target: the type is defined in

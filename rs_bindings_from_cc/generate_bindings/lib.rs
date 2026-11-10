@@ -785,6 +785,7 @@ pub fn generate_bindings_tokens(
             Some(quote! {
                 /// Class template instantiations that aren't named by a C++ type alias.
                 pub mod #module {
+                    __NEWLINE__
                     #template_instantiations_api
                     #mangled_name_aliases
                 }
