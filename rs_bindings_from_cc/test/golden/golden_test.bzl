@@ -88,7 +88,10 @@ def golden_test(
         golden_namespaces: The generated namespaces JSON file for the bindings.
         requires_header_modules: Whether the golden files were generated with precompiled header
             modules (`//rs_bindings_from_cc/bazel_support:use_header_modules`), and differ without
-            them. Such tests are skipped (marked incompatible) when the modules are off.
+            them. When the modules are off, such tests still generate the bindings, but don't
+            compare them with the golden files. (They aren't marked incompatible instead, because
+            CI that passes explicit target lists, like LLVM's Guitar workflows, fails on
+            explicitly requested incompatible targets.)
 
     """
     if not basename:
@@ -96,15 +99,6 @@ def golden_test(
     if not tags:
         tags = []
     tags.append("crubit_golden_test")
-
-    target_compatible_with = None
-    if requires_header_modules:
-        target_compatible_with = select({
-            "//rs_bindings_from_cc/test/golden:header_modules_off": [
-                "//third_party/bazel_platforms:incompatible",
-            ],
-            "//conditions:default": [],
-        })
 
     bindings_name = basename + ".generated_bindings"
 
@@ -166,13 +160,19 @@ def golden_test(
         ]
         owned_files.append(golden_namespaces)
 
+    if requires_header_modules:
+        # With no files to compare, `golden_test.sh` passes.
+        args = select({
+            "//rs_bindings_from_cc/test/golden:header_modules_off": [],
+            "//conditions:default": args,
+        })
+
     sh_test(
         name = name,
         srcs = ["//common:golden_test.sh"],
         args = args,
         data = data,
         tags = tags,
-        target_compatible_with = target_compatible_with,
     )
     native.filegroup(
         name = basename + ".build_cleaner_optout",

@@ -83,8 +83,8 @@ DEPS = {
 }
 
 # Tests whose golden files were generated with precompiled header modules, and
-# differ without them (e.g. in the order of the items). They are skipped when
-# the modules are off (see `header_modules_off`).
+# differ without them (e.g. in the order of the items). They don't compare the
+# golden files when the modules are off (see `header_modules_off`).
 REQUIRES_HEADER_MODULES = [
     "boxes",
 ]

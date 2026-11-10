@@ -55,7 +55,7 @@ crubit_rust_test(
 # modules, so `rs_bindings_from_cc` reads them from the source of the headers instead.
 #
 # The golden file is specific to header modules (without them, `shared.h` is parsed once, in a
-# different place), so the test is skipped when they're off.
+# different place), so the test doesn't compare it when they're off.
 golden_test(
     name = "lib_golden_test",
     basename = "lib",
