@@ -7,7 +7,7 @@ use std::sync::LazyLock;
 
 use arc_anyhow::Result;
 
-use ffi_types::FfiU8Slice;
+use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{
     self, Func, GenericItem, Item, LifetimeId, LifetimeName, Record, TreeIR, TypeWithDeclId, IR,
 };
@@ -189,12 +189,16 @@ fn ir_proto_from_cc_dependency_impl(
             carcinize: bool,
             lazy_import_alien_decls: bool,
             check_importer_invariants: bool,
-        ) -> ir::ir_generated::IR;
+            out_ir: *mut ir::ir_generated::IR,
+            out_error: *mut FfiU8SliceBox,
+        ) -> bool;
     }
 
     let header_source_with_include =
         format!("#include \"{}\"\n\n{}", DEPENDENCY_HEADER_NAME, header_source);
-    let ir_proto = unsafe {
+    let mut out_ir = std::mem::MaybeUninit::uninit();
+    let mut out_error = std::mem::MaybeUninit::uninit();
+    let success = unsafe {
         ir_from_cc_dependency(
             FfiU8Slice::from_slice(platform.target_triple().as_ref()),
             FfiU8Slice::from_slice(header_source_with_include.as_bytes()),
@@ -204,8 +208,19 @@ fn ir_proto_from_cc_dependency_impl(
             carcinize,
             lazy_import_alien_decls,
             check_importer_invariants,
+            out_ir.as_mut_ptr(),
+            out_error.as_mut_ptr(),
         )
     };
+
+    if !success {
+        let out_error = unsafe { out_error.assume_init() };
+        let err_slice = out_error.into_boxed_slice();
+        let err_str = String::from_utf8_lossy(&err_slice).into_owned();
+        arc_anyhow::bail!("IrFromCc reported an error: {}", err_str);
+    }
+
+    let ir_proto = unsafe { out_ir.assume_init() };
     Ok(ir_proto)
 }
 
