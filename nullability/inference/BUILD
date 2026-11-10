@@ -1,6 +1,5 @@
 # Inference of nullability annotations
 
-load("@bazel_tools//tools/build_defs/cc:cc_embed_data.bzl", "cc_embed_data")
 load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
@@ -275,21 +274,11 @@ cc_proto_library(
     deps = [":inference_proto"],
 )
 
-filegroup(
-    name = "replacement_macros_exclude_from_build_cleaner",
-    srcs = ["clang_tidy_nullability_replacement_macros.h"],
-    tags = ["ignore_srcs"],
-    visibility = ["//visibility:private"],
-)
-
-cc_embed_data(
+cc_library(
     name = "clang_tidy_nullability_replacement_macros",
-    srcs = ["clang_tidy_nullability_replacement_macros.h"],
-    outs = [
-        "ctn_replacement_macros.cc",
-        "ctn_replacement_macros.h",
-        "ctn_replacement_macros.o",
-    ],
+    srcs = ["ctn_replacement_macros.cc"],
+    hdrs = ["ctn_replacement_macros.h"],
+    deps = ["@llvm-project//llvm:Support"],
 )
 
 cc_library(
