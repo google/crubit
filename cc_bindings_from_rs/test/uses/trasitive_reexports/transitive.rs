@@ -24,3 +24,11 @@ pub mod public {
 pub struct TransitiveReexportAndDirectReexport {
     pub value: i32,
 }
+
+/// Re-exported by `direct`, and re-exported again by `transitive_reexports`, which can't name
+/// `transitive` directly. Its return type needs a template specialization, which only
+/// `transitive`'s bindings must define: a re-export must not define it again (under a different
+/// spelling of `Transitive`).
+pub fn maybe_transitive(value: i32) -> Option<Transitive> {
+    (value > 0).then_some(Transitive { value })
+}

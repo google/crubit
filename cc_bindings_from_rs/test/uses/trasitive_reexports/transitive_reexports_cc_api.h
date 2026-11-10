@@ -17,7 +17,9 @@
 #pragma clang diagnostic ignored "-Wshadow"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/option.h"
 
+#include <cstdint>
 #include <utility>
 
 #include "cc_bindings_from_rs/test/uses/trasitive_reexports/direct.h"  // IWYU pragma: export
@@ -45,6 +47,10 @@ namespace transitive_reexports {
 using DirectReexportOfTransitive CRUBIT_INTERNAL_RUST_TYPE(
     ":: direct :: TransitiveReexportAndDirectReexport") =
     ::direct::TransitiveReexportAndDirectReexport;
+}
+
+namespace transitive_reexports::reexported {
+using ::direct::maybe_transitive;
 }
 
 namespace transitive_reexports {

@@ -1153,6 +1153,14 @@ fn generate_using<'tcx>(
         })
         .collect();
     if let Some(fn_prereqs) = fn_prereqs {
+        let mut fn_prereqs = fn_prereqs.clone();
+        // A `using` declaration for a function doesn't need the template specializations in the
+        // function's signature: the header that defines the function (see `depend_on_def` above)
+        // already emits them. Emitting them again here can redefine them, because a type that is
+        // only visible through a re-export is spelled differently, which gives the
+        // specialization a different `#ifndef` guard name.
+        fn_prereqs.template_specializations.clear();
+        fn_prereqs.lazy_template_specializations.clear();
         snippet.prereqs += fn_prereqs;
     }
     Ok(snippet)

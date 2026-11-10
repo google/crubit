@@ -29,3 +29,5 @@ impl Direct {
 }
 
 pub use transitive::TransitiveReexportAndDirectReexport;
+
+pub use transitive::maybe_transitive;

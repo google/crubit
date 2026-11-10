@@ -47,4 +47,14 @@ TEST(TransitiveReexportsTest, DirectToTransitiveUseAlias) {
   EXPECT_EQ(1, transitive.value);
 }
 
+TEST(TransitiveReexportsTest, ReexportedFunctionReturningOption) {
+  // `maybe_transitive` returns `rs::Option<transitive::Transitive>`, which is
+  // defined by `transitive`'s bindings. Including the headers of all three
+  // crates must not redefine it.
+  EXPECT_TRUE(
+      transitive_reexports::reexported::maybe_transitive(1).has_value());
+  EXPECT_FALSE(
+      transitive_reexports::reexported::maybe_transitive(0).has_value());
+}
+
 }  // namespace

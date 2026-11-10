@@ -28,3 +28,9 @@ pub fn direct_to_transitive_use_alias(direct: &direct::Direct) -> direct::Transi
 }
 
 pub type DirectReexportOfTransitive = direct::TransitiveReexportAndDirectReexport;
+
+/// Re-exported one module deeper than in `direct`, so `direct` keeps owning the function and this
+/// crate only emits a `using` for it (like `resvg` re-exporting `usvg::tiny_skia_path` functions).
+pub mod reexported {
+    pub use direct::maybe_transitive;
+}
