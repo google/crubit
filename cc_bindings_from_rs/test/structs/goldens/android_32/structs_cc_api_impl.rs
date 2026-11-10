@@ -400,6 +400,108 @@ unsafe extern "C" fn __crubit_thunk_get_ux(p: *mut ::structs_golden::repr_c::Poi
     }
 }
 const _: () = assert!(
+    ::core::mem::size_of::<::structs_golden::requested_alignment_passing_with_no_thunk::Aligned16>(
+    ) == 16
+);
+const _: () = assert!(
+    ::core::mem::align_of::<::structs_golden::requested_alignment_passing_with_no_thunk::Aligned16>(
+    ) == 16
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(
+        ::structs_golden::requested_alignment_passing_with_no_thunk::Aligned16,
+        0
+    ) == 0
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(
+        ::structs_golden::requested_alignment_passing_with_no_thunk::Aligned16,
+        1
+    ) == 8
+);
+const _: () = assert!(
+    ::core::mem::size_of::<::structs_golden::requested_alignment_passing_with_no_thunk::Packed>()
+        == 9
+);
+const _: () = assert!(
+    ::core::mem::align_of::<::structs_golden::requested_alignment_passing_with_no_thunk::Packed>()
+        == 1
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::requested_alignment_passing_with_no_thunk::Packed, 0)
+        == 0
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::requested_alignment_passing_with_no_thunk::Packed, 1)
+        == 8
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_ualigned16_ucreate(
+    f: f64,
+    __ret_ptr: *mut ::structs_golden::requested_alignment_passing_with_no_thunk::Aligned16,
+) -> () {
+    unsafe {
+        __ret_ptr.write(
+            ::structs_golden::requested_alignment_passing_with_no_thunk::aligned16_create(f),
+        );
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_ualigned16_uinspect(
+    s: *mut ::structs_golden::requested_alignment_passing_with_no_thunk::Aligned16,
+) -> f64 {
+    unsafe {
+        let s = s.read();
+        ::structs_golden::requested_alignment_passing_with_no_thunk::aligned16_inspect(s)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_ualigned16_umultiply(
+    x: *mut ::structs_golden::requested_alignment_passing_with_no_thunk::Aligned16,
+    y: *mut ::structs_golden::requested_alignment_passing_with_no_thunk::Aligned16,
+    __ret_ptr: *mut ::structs_golden::requested_alignment_passing_with_no_thunk::Aligned16,
+) -> () {
+    unsafe {
+        let x = x.read();
+        let y = y.read();
+        __ret_ptr.write(
+            ::structs_golden::requested_alignment_passing_with_no_thunk::aligned16_multiply(x, y),
+        );
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_upacked_uadd(
+    x: *mut ::structs_golden::requested_alignment_passing_with_no_thunk::Packed,
+    y: *mut ::structs_golden::requested_alignment_passing_with_no_thunk::Packed,
+    __ret_ptr: *mut ::structs_golden::requested_alignment_passing_with_no_thunk::Packed,
+) -> () {
+    unsafe {
+        let x = x.read();
+        let y = y.read();
+        __ret_ptr
+            .write(::structs_golden::requested_alignment_passing_with_no_thunk::packed_add(x, y));
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_upacked_ucreate(
+    v: u8,
+    __ret_ptr: *mut ::structs_golden::requested_alignment_passing_with_no_thunk::Packed,
+) -> () {
+    unsafe {
+        __ret_ptr
+            .write(::structs_golden::requested_alignment_passing_with_no_thunk::packed_create(v));
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_requested_ualignment_upassing_uwith_uno_uthunk_u_upacked_uinspect(
+    s: *mut ::structs_golden::requested_alignment_passing_with_no_thunk::Packed,
+) -> u8 {
+    unsafe {
+        let s = s.read();
+        ::structs_golden::requested_alignment_passing_with_no_thunk::packed_inspect(s)
+    }
+}
+const _: () = assert!(
     ::core::mem::size_of::<
         ::structs_golden::struct_by_float_passing_with_no_cc_definition::StructFloat,
     >() == 12

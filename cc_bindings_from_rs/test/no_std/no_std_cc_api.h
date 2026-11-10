@@ -28,7 +28,7 @@
 
 namespace no_std {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct")
     [[clang::trivial_abi]] NoStdStruct final {
  public:
   static ::no_std::NoStdStruct new_(::std::int32_t x, float y);

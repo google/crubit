@@ -95,8 +95,7 @@ struct MultiGenericStruct {
   static_assert(false, "This template can only be used via a specialization");
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: NotPartialEqOrDefault") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: generics_golden :: NotPartialEqOrDefault")
     [[clang::trivial_abi]] NotPartialEqOrDefault final {
  public:
   ::std::int32_t __field0{};
@@ -105,8 +104,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: PartialEqAndDefault") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: generics_golden :: PartialEqAndDefault")
     [[clang::trivial_abi]] PartialEqAndDefault final {
  public:
   bool operator==(::generics::PartialEqAndDefault const& other) const;
@@ -242,7 +240,7 @@ namespace generics {
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generics_golden :: DerivedGeneric < :: generics_golden :: "
-    "NotPartialEqOrDefault >") alignas(4)
+    "NotPartialEqOrDefault >")
     [[clang::trivial_abi]] ::generics::DerivedGeneric<
         ::generics::NotPartialEqOrDefault> final {
  public:
@@ -258,8 +256,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020DerivedGeneric_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 
 template <>
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: DerivedGeneric < i32 >") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: generics_golden :: DerivedGeneric < i32 >")
     [[clang::trivial_abi]] ::generics::DerivedGeneric<::std::int32_t> final {
  public:
   bool operator==(
@@ -362,7 +359,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: GenericStruct < [i32 ; 4] >") alignas(4)
+    ":: generics_golden :: GenericStruct < [i32 ; 4] >")
     [[clang::trivial_abi]] ::generics::GenericStruct<
         ::std::array<::std::int32_t, 4>> final {
  public:
@@ -422,7 +419,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generics_golden :: GenericStruct < :: generics_golden :: "
-    "NotPartialEqOrDefault >") alignas(4)
+    "NotPartialEqOrDefault >")
     [[clang::trivial_abi]] ::generics::GenericStruct<
         ::generics::NotPartialEqOrDefault> final {
  public:
@@ -476,7 +473,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generics_golden :: GenericStruct < :: generics_golden :: "
-    "PartialEqAndDefault >") alignas(4)
+    "PartialEqAndDefault >")
     [[clang::trivial_abi]] ::generics::GenericStruct<
         ::generics::PartialEqAndDefault> final {
  public:
@@ -533,8 +530,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020GenericStruct_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 
 template <>
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: GenericStruct < i32 >") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: generics_golden :: GenericStruct < i32 >")
     [[clang::trivial_abi]] ::generics::GenericStruct<::std::int32_t> final {
  public:
   static ::generics::GenericStruct<::std::int32_t> new_(::std::int32_t value);
@@ -615,8 +611,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020GenericStruct_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int64_ut_x00000020_x0000003e
 
 template <>
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: GenericStruct < i64 >") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: generics_golden :: GenericStruct < i64 >")
     [[clang::trivial_abi]] ::generics::GenericStruct<::std::int64_t> final {
  public:
   static ::generics::GenericStruct<::std::int64_t> new_(::std::int64_t value);
@@ -694,8 +689,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020GenericStruct_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 
 template <>
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: GenericStruct < u32 >") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: generics_golden :: GenericStruct < u32 >")
     [[clang::trivial_abi]] ::generics::GenericStruct<::std::uint32_t> final {
  public:
   static ::generics::GenericStruct<::std::uint32_t> new_(::std::uint32_t value);
@@ -773,7 +767,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generics_golden :: GenericStruct < :: generics_golden :: GenericStruct "
-    "< u32 > >") alignas(4)
+    "< u32 > >")
     [[clang::trivial_abi]] ::generics::GenericStruct<
         ::generics::GenericStruct<::std::uint32_t>> final {
  public:
@@ -847,8 +841,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace generics {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: OuterWithNestedGenericField") alignas(4)
-    [[clang::trivial_abi]] OuterWithNestedGenericField final {
+    ":: generics_golden :: OuterWithNestedGenericField") [[clang::trivial_abi]]
+OuterWithNestedGenericField final {
  public:
   ::generics::GenericStruct<::generics::GenericStruct<::std::uint32_t>> field{};
 
@@ -1082,8 +1076,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020Ping_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 
 template <>
-struct CRUBIT_INTERNAL_RUST_TYPE(":: generics_golden :: Ping < i32 >") alignas(
-    4) [[clang::trivial_abi]] ::generics::Ping<::std::int32_t> final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: generics_golden :: Ping < i32 >")
+    [[clang::trivial_abi]] ::generics::Ping<::std::int32_t> final {
  public:
   ::generics::Pong<::generics::Wrapper<::std::int32_t>> to_pong() const;
 
@@ -1100,7 +1094,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: generics_golden :: Ping < i32 >") alignas(
 
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: RenamedSubGeneric < i32 >") alignas(4)
+    ":: generics_golden :: RenamedSubGeneric < i32 >")
     [[clang::trivial_abi]] ::generics::RenamedSubGeneric<::std::int32_t> final {
  public:
   ::std::int32_t item{};
@@ -1117,7 +1111,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generics_golden :: Wrapper < :: generics_golden :: "
-    "NotPartialEqOrDefault >") alignas(4)
+    "NotPartialEqOrDefault >")
     [[clang::trivial_abi]] ::generics::Wrapper<
         ::generics::NotPartialEqOrDefault> final {
  public:
@@ -1136,8 +1130,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020Wrapper_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 
 template <>
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: Wrapper < i32 >") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: generics_golden :: Wrapper < i32 >")
     [[clang::trivial_abi]] ::generics::Wrapper<::std::int32_t> final {
  public:
   explicit operator ::generics::GenericWithDrop<::std::int32_t>();
@@ -1159,8 +1152,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: Pong < :: generics_golden :: Wrapper < i32 > "
-    ">") alignas(4)
+    ":: generics_golden :: Pong < :: generics_golden :: Wrapper < i32 > >")
     [[clang::trivial_abi]] ::generics::Pong<
         ::generics::Wrapper<::std::int32_t>> final {
  public:
@@ -1209,8 +1201,7 @@ struct alignas(4)
 
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: MultiGenericStruct < [i32 ; 4] , [i32 ; 4] "
-    ">") alignas(4)
+    ":: generics_golden :: MultiGenericStruct < [i32 ; 4] , [i32 ; 4] >")
     [[clang::trivial_abi]] ::generics::MultiGenericStruct<
         ::std::array<::std::int32_t, 4>,
         ::std::array<::std::int32_t, 4>> final {
@@ -1260,7 +1251,7 @@ struct alignas(4)
 
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: MultiGenericStruct < bool , f64 >") alignas(4)
+    ":: generics_golden :: MultiGenericStruct < bool , f64 >")
     [[clang::trivial_abi]] ::generics::MultiGenericStruct<bool, double> final {
  public:
   ::rs::Vec<double> seconds{};
@@ -1308,7 +1299,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: MultiGenericStruct < bool , i32 >") alignas(4)
+    ":: generics_golden :: MultiGenericStruct < bool , i32 >")
     [[clang::trivial_abi]] ::generics::MultiGenericStruct<
         bool, ::std::int32_t> final {
  public:
@@ -1328,7 +1319,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: MultiGenericStruct < i32 , i32 >") alignas(4)
+    ":: generics_golden :: MultiGenericStruct < i32 , i32 >")
     [[clang::trivial_abi]] ::generics::MultiGenericStruct<
         ::std::int32_t, ::std::int32_t> final {
  public:
@@ -1379,7 +1370,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: MultiGenericStruct < i64 , i64 >") alignas(4)
+    ":: generics_golden :: MultiGenericStruct < i64 , i64 >")
     [[clang::trivial_abi]] ::generics::MultiGenericStruct<
         ::std::int64_t, ::std::int64_t> final {
  public:
@@ -1428,7 +1419,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: MultiGenericStruct < u32 , u32 >") alignas(4)
+    ":: generics_golden :: MultiGenericStruct < u32 , u32 >")
     [[clang::trivial_abi]] ::generics::MultiGenericStruct<
         ::std::uint32_t, ::std::uint32_t> final {
  public:

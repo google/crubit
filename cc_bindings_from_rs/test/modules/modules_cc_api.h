@@ -42,7 +42,7 @@ namespace [[deprecated]] deprecated_module {
 namespace modules::impl_in_separate_private_module {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: modules_golden :: impl_in_separate_private_module :: Foo") alignas(4)
+    ":: modules_golden :: impl_in_separate_private_module :: Foo")
     [[clang::trivial_abi]] Foo final {
  public:
   static ::modules::impl_in_separate_private_module::Foo create(

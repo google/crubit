@@ -81,8 +81,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyTrait") MyTrait {
   using impl = ::rs::impl<T, MyTrait>;
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: stdlib_golden :: NonCloneableIterator") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: NonCloneableIterator")
     [[clang::trivial_abi]] NonCloneableIterator final {
  public:
   static ::stdlib::NonCloneableIterator new_(::std::int32_t x);
@@ -97,9 +96,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: stdlib_golden :: NonCloneableValue") alignas(4) [[clang::trivial_abi]]
-NonCloneableValue final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: NonCloneableValue")
+    [[clang::trivial_abi]] NonCloneableValue final {
  public:
   ::std::int32_t x{};
 
@@ -107,7 +105,7 @@ NonCloneableValue final {
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator")
     [[clang::trivial_abi]] RefIterator final {
  public:
   static ::stdlib::RefIterator new_(::rs::SliceRef<const ::std::int32_t> slice);

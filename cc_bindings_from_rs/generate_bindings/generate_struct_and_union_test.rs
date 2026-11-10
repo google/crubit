@@ -36,7 +36,7 @@ fn test_generated_bindings_struct() {
             quote! {
                 namespace rust_out {
                     ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Point") alignas(4) [[clang::trivial_abi]] Point final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Point") [[clang::trivial_abi]] Point final {
                         // No point replicating test coverage of
                         // `test_format_item_struct_with_fields`.
                         ...
@@ -124,7 +124,7 @@ fn test_format_struct_cpp_name() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Foo") alignas(4)
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Foo")
                 [[clang::trivial_abi]] Bar final
             }
         );
@@ -155,7 +155,7 @@ fn test_format_struct_cpp_name_with_kythe_annotations() {
                 quote! {
                     __CAPTURE_TAG__ "<crubit_unittests.rs>" "75" "78"
                     __COMMENT__ #comment
-                    struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Foo") alignas(4)
+                    struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Foo")
                     [[clang::trivial_abi]] __CAPTURE_BEGIN__ Bar __CAPTURE_END__ final {
                       ...
                       __CAPTURE_TAG__ "<crubit_unittests.rs>" "101" "102"
@@ -1811,7 +1811,7 @@ fn test_format_item_struct_with_str_reference_is_default_constructible() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithStr") alignas(8)
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithStr")
                 [[clang::trivial_abi]] StructWithStr final {
                   ...
                   ::rs::StrRef s{};
@@ -1834,7 +1834,7 @@ fn test_format_item_struct_with_slice_reference_is_default_constructible() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithSlice") alignas(8)
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithSlice")
                 [[clang::trivial_abi]] StructWithSlice final {
                   ...
                   ::rs::SliceRef<const ::std::int32_t> s{ ::crubit::internal::SliceRefDanglingTag{}, 4 };
@@ -1857,7 +1857,7 @@ fn test_format_item_struct_with_mut_slice_reference_is_default_constructible() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithMutSlice") alignas(8)
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithMutSlice")
                 [[clang::trivial_abi]] StructWithMutSlice final {
                   ...
                   ::rs::SliceRef<::std::int32_t> s{ ::crubit::internal::SliceRefDanglingTag{}, 4 };

@@ -32,7 +32,7 @@
 
 namespace arrays {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct")
     [[clang::trivial_abi]] ArrayStruct final {
  public:
   ::std::array<::std::int32_t, 2> array{};

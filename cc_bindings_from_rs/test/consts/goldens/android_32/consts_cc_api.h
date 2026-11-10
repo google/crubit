@@ -43,7 +43,7 @@ static constexpr ::std::int32_t INT_NEG = INT32_C(-17);
 static constexpr ::std::int32_t INT_POS = INT32_C(42);
 static constexpr ::std::intptr_t ISIZE = INT64_C(42);
 static constexpr ::std::int64_t LARGE_INT = INT64_C(9223372036854775807);
-struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: Point") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: Point")
     [[clang::trivial_abi]] Point final {
  public:
   static const ::consts::Point ZERO;
@@ -93,8 +93,8 @@ static constexpr ::std::uintptr_t SLICE_LENGTH = 11;
 // C++ aggregate: Field `r` is not default-constructible in C++
 
 static constexpr ::std::uint32_t S_IFDIR_ = 16384;
-struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithArray") alignas(
-    4) [[clang::trivial_abi]] StructWithArray final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithArray")
+    [[clang::trivial_abi]] StructWithArray final {
  public:
   bool operator==(::consts::StructWithArray const& other) const;
 
@@ -135,7 +135,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithRef") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithStr") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithStr")
     [[clang::trivial_abi]] StructWithStr final {
  public:
   bool operator==(::consts::StructWithStr const& other) const;
@@ -149,7 +149,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithStr") alignas(4)
 static constexpr ::consts::StructWithStr STRUCT_WITH_STR_CONST =
     ::consts::StructWithStr{.msg = ::rs::StrRef("hello world"),
                             .count = INT32_C(42)};
-struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: TupleStruct") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: TupleStruct")
     [[clang::trivial_abi]] TupleStruct final {
  public:
   bool operator==(::consts::TupleStruct const& other) const;
@@ -161,7 +161,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: TupleStruct") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: NestedStruct") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: NestedStruct")
     [[clang::trivial_abi]] NestedStruct final {
  public:
   bool operator==(::consts::NestedStruct const& other) const;

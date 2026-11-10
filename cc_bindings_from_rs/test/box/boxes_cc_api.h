@@ -93,7 +93,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: NotUnpin") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Point") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Point")
     [[clang::trivial_abi]] Point final {
  public:
   ::std::int32_t x{};
@@ -426,7 +426,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace boxes {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: OptHolder") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: OptHolder")
     [[clang::trivial_abi]] OptHolder final {
  public:
   ::rs::Option<::rs::Box<::std::int32_t>> o{};

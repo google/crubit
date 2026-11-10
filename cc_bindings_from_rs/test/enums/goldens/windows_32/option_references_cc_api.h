@@ -35,9 +35,8 @@
 
 namespace option_references {
 struct ValuesIter;
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_references_golden :: Value") alignas(4) [[clang::trivial_abi]]
-Value final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_references_golden :: Value")
+    [[clang::trivial_abi]] Value final {
  public:
   ::std::int32_t x{};
 

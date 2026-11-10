@@ -83,8 +83,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: BoolAndStr") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocSource") alignas(
-    4) [[clang::trivial_abi]] CloneAllocSource final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocSource")
+    [[clang::trivial_abi]] CloneAllocSource final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
   static ::from::CloneAllocSource create(::rs::StrRef s);
@@ -101,7 +101,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocSource") alignas(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocType") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocType")
     [[clang::trivial_abi]] CloneAllocType final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
@@ -118,7 +118,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocType") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopySource") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopySource")
     [[clang::trivial_abi]] CloneCopySource final {
  public:
   explicit operator ::from::CloneCopyType() const;
@@ -130,7 +130,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopySource") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopyType") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopyType")
     [[clang::trivial_abi]] CloneCopyType final {
  public:
   // Constructor from `<from_golden::CloneCopyType as
@@ -178,7 +178,7 @@ CollidingConstructor final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopA") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopA")
     [[clang::trivial_abi]] LoopA final {
  public:
   explicit operator ::from::LoopB();
@@ -194,7 +194,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopA") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopB") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopB")
     [[clang::trivial_abi]] LoopB final {
  public:
   explicit operator ::from::LoopA();
@@ -210,9 +210,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopB") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: from_golden :: NoCloneCopyDropSource") alignas(4) [[clang::trivial_abi]]
-NoCloneCopyDropSource final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NoCloneCopyDropSource")
+    [[clang::trivial_abi]] NoCloneCopyDropSource final {
  public:
   explicit operator ::from::NoCloneCopyDropType();
 
@@ -223,9 +222,8 @@ NoCloneCopyDropSource final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: from_golden :: NoCloneCopyDropType") alignas(4) [[clang::trivial_abi]]
-NoCloneCopyDropType final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NoCloneCopyDropType")
+    [[clang::trivial_abi]] NoCloneCopyDropType final {
  public:
   // Constructor from `<from_golden::NoCloneCopyDropType as
   // std::convert::From<from_golden::NoCloneCopyDropSource>>` is suppressed
@@ -238,9 +236,8 @@ NoCloneCopyDropType final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: from_golden :: NoCloneDefaultSource") alignas(4) [[clang::trivial_abi]]
-NoCloneDefaultSource final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NoCloneDefaultSource")
+    [[clang::trivial_abi]] NoCloneDefaultSource final {
  public:
   explicit operator ::from::NoCloneDefaultType();
 
@@ -251,9 +248,8 @@ NoCloneDefaultSource final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: from_golden :: NoCloneDefaultType") alignas(4) [[clang::trivial_abi]]
-NoCloneDefaultType final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NoCloneDefaultType")
+    [[clang::trivial_abi]] NoCloneDefaultType final {
  public:
   // Constructor from `<from_golden::NoCloneDefaultType as
   // std::convert::From<from_golden::NoCloneDefaultSource>>` is suppressed
@@ -296,7 +292,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque")
     [[clang::trivial_abi]] Opaque final {
  public:
   explicit operator ::std::int32_t();
