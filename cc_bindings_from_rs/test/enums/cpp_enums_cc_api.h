@@ -52,9 +52,9 @@ namespace cpp_enums::deprecated_enum {
 // CRUBIT_ANNOTATE: cpp_enum=enum class
 enum class CRUBIT_INTERNAL_RUST_TYPE(
     ":: cpp_enums_golden :: deprecated_enum :: Color")
-    [[nodiscard]] [[deprecated("Use NewColor")]] Color : ::std::int32_t{
-        RED = INT32_C(0),
-        BLUE = INT32_C(2),
+    [[nodiscard]] [[deprecated("Use NewColor")]] Color : ::std::int32_t {
+      RED = INT32_C(0),
+      BLUE = INT32_C(2),
     };
 
 }  // namespace cpp_enums::deprecated_enum
