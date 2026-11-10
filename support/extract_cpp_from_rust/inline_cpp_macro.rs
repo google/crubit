@@ -99,7 +99,7 @@ pub fn inline_cpp(_input: TokenStream) -> TokenStream {
 ///
 /// ```ignore
 /// global_cpp! {
-///     #include "third_party/absl/strings/string_view.h"
+///     #include "absl/strings/string_view.h"
 ///
 ///     struct Point {
 ///         int x;

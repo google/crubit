@@ -6,7 +6,7 @@
 #define CRUBIT_NULLABILITY_INFERENCE_PROTO_MATCHERS_H_
 
 #include "llvm/ADT/StringRef.h"
-#include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
+#include "gmock/gmock.h"
 #include "google/protobuf/message.h"
 
 namespace clang::tidy::nullability {

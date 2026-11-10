@@ -67,7 +67,7 @@ pub fn read_proto_ref(p: &FooRequestStats) -> i32 {
 }
 
 #[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
-#[doc = "CRUBIT_ANNOTATE: include_path=third_party/absl/status/statusor.h"]
+#[doc = "CRUBIT_ANNOTATE: include_path=absl/status/statusor.h"]
 #[doc = "CRUBIT_ANNOTATE: derive_rust_movable="]
 #[repr(C)]
 pub struct NewStatusOr<T> {

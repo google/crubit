@@ -2605,7 +2605,7 @@ fn test_unmovable_template_specialization_param_wrapped_in_movable() {
 fn test_bridged_type_with_derive_rust_movable() {
     let test_src = r#"
         #[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
-        #[doc = "CRUBIT_ANNOTATE: include_path=third_party/absl/status/statusor.h"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=absl/status/statusor.h"]
         #[doc = "CRUBIT_ANNOTATE: derive_rust_movable="]
         pub struct StatusOr<T>(std::marker::PhantomData<T>);
         // Has Drop and no Default/Copy -> not C++ move-constructible, but Rust-movable (has UnsafeRelocateTag).
@@ -2658,7 +2658,7 @@ fn test_bridged_type_with_derive_rust_movable() {
 fn test_bridged_type_with_non_cpp_movable_type_arg_rejected() {
     let test_src = r#"
         #[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
-        #[doc = "CRUBIT_ANNOTATE: include_path=third_party/absl/status/statusor.h"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=absl/status/statusor.h"]
         pub struct StatusOr<T>(std::marker::PhantomData<T>);
         #[doc = "CRUBIT_ANNOTATE: cpp_type=MyWrapper<{T}>"]
         #[doc = "CRUBIT_ANNOTATE: include_path=my_wrapper.h"]

@@ -180,7 +180,7 @@ cc_library(
         "@llvm-project//clang:lex",
         "@llvm-project//clang:transformer",
         "@llvm-project//clang:unified_symbol_resolution",
-        "@llvm-project//clang-tools-extra/clang-tidy:tidy_framework",
+        "@llvm-project//clang-tools-extra/clang-tidy:utils",
         "@llvm-project//llvm:Support",
     ],
 )

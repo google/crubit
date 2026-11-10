@@ -30,7 +30,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Testing/TestAST.h"
-#include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
+#include "clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -40,8 +40,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Testing/ADT/StringMapEntry.h"
 #include "llvm/Testing/Support/Error.h"
-#include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
-#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {

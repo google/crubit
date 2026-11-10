@@ -15,7 +15,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "fuzztest/fuzztest.h"
+#include "testing/fuzzing/fuzztest.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 

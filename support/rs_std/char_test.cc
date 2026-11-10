@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "fuzztest/fuzztest.h"
+#include "testing/fuzzing/fuzztest.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
 #include "support/rs_std/internal/is_utf8.h"
