@@ -5,6 +5,9 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_MACRO_CONSTANTS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_MACRO_CONSTANTS_H_
 
+// Used only by macros, which ClangTidy doesn't expand.
+#include "rs_bindings_from_cc/test/golden/not_crubit_exposed.h"  // IWYU pragma: keep
+
 /// A simple integer constant.
 #define INT_CONSTANT 4
 
@@ -80,6 +83,37 @@ constexpr int kAlreadyDeclared = 1;
 #define LEFT_ASSOCIATIVE_CONSTANT (10 - 4 - 3)
 #define SHIFT_VS_ADD_CONSTANT (1 << 2 + 1)
 
+/// Typedefs used by the casts below, instead of e.g. `uint32_t`, because
+/// goldens can't include standard library headers.
+typedef unsigned int MacroUint32;
+namespace macro_constants_ns {
+typedef unsigned char Byte;
+typedef long long Int64;  // NOLINT(google-runtime-int)
+}  // namespace macro_constants_ns
+
+// Casts. These are the casts under test, so cpplint findings about casting
+// style and C integer types are suppressed with `NOLINT`.
+#define C_STYLE_CAST ((unsigned char)1)
+#define C_STYLE_CAST_TO_TYPEDEF ((MacroUint32)1 << 31)
+#define FUNCTIONAL_CAST unsigned(-1)
+#define FUNCTIONAL_CAST_TO_QUALIFIED_TYPEDEF \
+  (macro_constants_ns::Int64(1) << 40)  // NOLINT(readability/casting)
+#define STATIC_CAST static_cast<short>(7)
+#define CAST_TO_BOOL ((bool)2)
+#define GLOBAL_QUALIFIED_CAST ((::MacroUint32)1)
+// Used only by `NAMESPACE_ALIAS_CAST`, which ClangTidy doesn't expand.
+// NOLINTNEXTLINE(misc-unused-alias-decls)
+namespace macro_constants_alias = macro_constants_ns;
+#define NAMESPACE_ALIAS_CAST ((macro_constants_alias::Byte)300)
+#define NESTED_CAST ((int)(signed char)300)
+#define NEGATED_CAST (-(int)1)
+// Casts bind more tightly than binary operators.
+#define CAST_PRECEDENCE ((unsigned char)-1 + 1)
+// cv-qualifiers may appear wherever C++ allows them.
+#define CONST_CAST_TO_KEYWORDS ((unsigned const int)1)
+#define CONST_VOLATILE_CAST_TO_TYPEDEF ((const MacroUint32 volatile)1)
+#define STATIC_CAST_TO_CONST static_cast<const short>(1)
+
 // The following macros are not supported, and are silently ignored.
 #define EMPTY_MACRO
 #define FUNCTION_LIKE_MACRO(x) ((x) + 1)
@@ -113,7 +147,35 @@ constexpr int kAlreadyDeclared = 1;
 #define EMPTY_DAG_11 EMPTY_DAG_10 EMPTY_DAG_10
 #define EMPTY_DAG_12 EMPTY_DAG_11 EMPTY_DAG_11
 #define EXPANSION_STEP_LIMIT (EMPTY_DAG_12 1)
-#define CAST_CONSTANT ((unsigned char)1)
+#define CAST_TO_POINTER ((void*)0)
+#define CAST_TO_UNKNOWN_TYPE ((not_a_type)1)
+#define CAST_TO_WCHAR ((wchar_t)1)
+// Casts to class types are rejected without being checked by the compiler.
+#define CAST_TO_CLASS ClassForCast(1)
+#define C_STYLE_CAST_TO_CLASS ((ClassForCast)1)
+#define CAST_TO_CLASS_TEMPLATE ClassTemplateForCastInt(1)
+// Typedefs that don't receive bindings, e.g. because their target doesn't
+// enable Crubit.
+#define CAST_TO_NON_CRUBIT_TYPEDEF ((NotCrubitExposedInt)1)
+typedef NotCrubitExposedInt LocalAliasToNonCrubitTypedef;
+#define CAST_TO_CHAINED_NON_CRUBIT_TYPEDEF ((LocalAliasToNonCrubitTypedef)1)
+typedef unsigned int __LeadingDunderInt;
+#define CAST_TO_LEADING_DUNDER_TYPEDEF ((__LeadingDunderInt)1)
+using UnknownAttrInt [[gnu::aligned(4)]] = int;
+#define CAST_TO_UNKNOWN_ATTR_TYPEDEF ((UnknownAttrInt)1)
+namespace crate {
+typedef int UnescapableNamespaceInt;
+}  // namespace crate
+#define CAST_TO_UNESCAPABLE_NAMESPACE_TYPEDEF \
+  ((crate::UnescapableNamespaceInt)1)
+#define INVALID_KEYWORD_COMBINATION_CAST ((long short)1)  // NOLINT(runtime/int)
+#define CONFLICTING_SIGNEDNESS_CAST ((signed unsigned)1)
+#define MULTI_KEYWORD_FUNCTIONAL_CAST \
+  unsigned int(1)  // NOLINT(readability/casting)
+// Invalid cv-qualifiers, as in C++.
+#define DUPLICATE_CONST_CAST ((const const int)1)
+#define CONST_INSIDE_QUALIFIED_NAME_CAST ((macro_constants_ns::const Int64)1)
+#define CONST_FUNCTIONAL_CAST const int(1)  // NOLINT(readability/casting)
 
 // The following macros have names that can't be bound, and are reported as
 // errors.

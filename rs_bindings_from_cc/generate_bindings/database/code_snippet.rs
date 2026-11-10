@@ -506,8 +506,8 @@ pub fn integer_constant_to_token_stream(
 ) -> Result<TokenStream> {
     let RsTypeKind::Primitive(primitive) = *underlying_type.unalias() else {
         bail!(
-            "integer_constant_to_token_stream called with non-primitive underlying type:\n  {}",
-            underlying_type.display(db),
+            "constants of type `{}` are not supported",
+            underlying_type.display_cc_type_name_for_rs_type()
         )
     };
     let mut value = integer_literal_tokens(integer_constant, underlying_type.is_bool());

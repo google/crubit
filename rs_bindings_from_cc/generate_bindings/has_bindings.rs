@@ -179,6 +179,20 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindings
             source: error,
         });
     }
+    // Integer constants are emitted as literals, so their type must be primitive (possibly
+    // through type aliases), rather than e.g. an enum, or a type alias from a target without
+    // Crubit, which is forward-declared.
+    if let Item::Constant(constant) = &item
+        && matches!(constant.value(), ir::ConstantValue::Integer(_))
+        && let Some(type_) = constant.type_()
+        && let Ok(rs_type) = db.rs_type_kind(type_.clone())
+        && !rs_type.is_primitive()
+    {
+        return Err(NoBindingsReason::Unsupported(anyhow!(
+            "constants of type `{}` are not supported",
+            rs_type.display_cc_type_name_for_rs_type()
+        )));
+    }
     // A C++ macro's name may not be a valid Rust macro name, e.g. `self` or `_`.
     if let Item::Constant(constant) = &item
         && constant.macro_kind() != MacroKind::NotMacro

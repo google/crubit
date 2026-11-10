@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_MACRO_CONSTANTS_MACRO_CONSTANTS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_MACRO_CONSTANTS_MACRO_CONSTANTS_H_
 
+#include <cstdint>
+
 #include "rs_bindings_from_cc/test/macro_constants/macro_constants_dependency.h"
 #include "rs_bindings_from_cc/test/macro_constants/macro_constants_textual.inc"
 
@@ -23,6 +25,9 @@
 #define CONDITIONAL_CONSTANT (INT_CONSTANT > 3 ? 10 : 20)
 #define BOOL_CONSTANT (INT_CONSTANT == 4 && !false)
 #define CHAR_CONSTANT 'x'
+#define CAST_CONSTANT ((uint8_t)0x1FF)
+#define STATIC_CAST_CONSTANT (static_cast<std::int64_t>(INT_CONSTANT) << 40)
+#define CAST_FROM_UNEXPANDED_DEP_MACRO UNEXPANDED_CAST_HELPER
 
 // Functions returning the values of the macros, as computed by the C++
 // compiler.
@@ -46,6 +51,8 @@ inline int BitwiseConstant() { return BITWISE_CONSTANT; }
 inline int ConditionalConstant() { return CONDITIONAL_CONSTANT; }
 inline bool BoolConstant() { return BOOL_CONSTANT; }
 inline char CharConstant() { return CHAR_CONSTANT; }
+inline uint8_t CastConstant() { return CAST_CONSTANT; }
+inline int64_t StaticCastConstant() { return STATIC_CAST_CONSTANT; }
 
 // The type of an integer literal is the first type in a list that can represent
 // its value. The list depends on the base and suffix, see

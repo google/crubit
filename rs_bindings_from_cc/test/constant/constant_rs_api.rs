@@ -33,5 +33,5 @@ impl From<Foo> for ::ffi_11::c_uint {
     }
 }
 
-// integer_constant_to_token_stream called with non-primitive underlying type:
-//   crate::Foo
+// error: global variable `kEnum` could not be bound
+//   constants of type `Foo` are not supported

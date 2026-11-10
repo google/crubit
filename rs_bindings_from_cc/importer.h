@@ -269,6 +269,11 @@ class Importer final : public ImportContext {
   // like any other constant.
   void ImportMacroConstants();
 
+  // Returns false if `type` is a typedef whose declaration (or that of an alias
+  // it refers to, or of an enclosing namespace) wasn't imported as a type alias
+  // (or namespace), and so isn't in the IR.
+  bool IsTypeDeclImported(clang::QualType type);
+
   clang::Decl* _Nullable CanonicalizeDecl(clang::Decl* _Nonnull decl) const;
   const clang::Decl* _Nullable CanonicalizeDecl(const clang::Decl& decl) const;
   // Like `CanonicalizeDecl`, but only considers the redeclaration chain of

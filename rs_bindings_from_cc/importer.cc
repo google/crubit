@@ -1979,14 +1979,47 @@ void Importer::ImportMacroConstants() {
     return a.first->getName() < b.first->getName();
   });
   for (const auto& [identifier, macro_info] : macros) {
-    if (std::optional<MacroConstant> macro_constant =
-            SynthesizeMacroConstant(sema_, *identifier, *macro_info)) {
-      // The variable must not be found by name lookup: it is not a real C++
-      // declaration.
-      translation_unit->addHiddenDecl(macro_constant->var_decl);
-      macro_constant_is_typed_.insert(
-          {macro_constant->var_decl, macro_constant->is_typed});
+    std::optional<MacroConstant> macro_constant =
+        SynthesizeMacroConstant(sema_, *identifier, *macro_info);
+    if (!macro_constant.has_value()) continue;
+    // The type of the constant may be a typedef (e.g. due to a cast like
+    // `(Foo)1`). Unlike the type of a real variable, it isn't imported with
+    // the variable, so skip the macro if the typedef (or an alias it refers to)
+    // isn't in the IR, e.g. because its namespace can't be bound. Whether an
+    // imported typedef has bindings is checked by `has_bindings`, like for
+    // other constants.
+    if (!IsTypeDeclImported(macro_constant->var_decl->getType())) {
+      continue;
     }
+    // The variable must not be found by name lookup: it is not a real C++
+    // declaration.
+    translation_unit->addHiddenDecl(macro_constant->var_decl);
+    macro_constant_is_typed_.insert(
+        {macro_constant->var_decl, macro_constant->is_typed});
+  }
+}
+
+bool Importer::IsTypeDeclImported(clang::QualType type) {
+  CcType cc_type =
+      ConvertQualType(type, /*lifetimes=*/nullptr,
+                      /*nullable=*/true, /*assume_lifetimes=*/false);
+  if (!cc_type.variant().has_decl()) return true;
+  for (uint64_t id = cc_type.variant().decl();;) {
+    auto* decl = reinterpret_cast<clang::Decl*>(id);
+    const crubit::ffi::Item* item = GetDeclItem(decl);
+    if (item == nullptr || !item->has_type_alias()) return false;
+    for (clang::DeclContext* dc = decl->getDeclContext();
+         !dc->isTranslationUnit(); dc = dc->getParent()) {
+      auto* ns = clang::dyn_cast<clang::NamespaceDecl>(dc);
+      if (ns == nullptr) return false;
+      clang::Decl* canonical_ns = CanonicalizeDecl(ns);
+      if (canonical_ns == nullptr) return false;
+      const crubit::ffi::Item* ns_item = GetDeclItem(canonical_ns);
+      if (ns_item == nullptr || !ns_item->has_namespace_decl()) return false;
+    }
+    const CcType& underlying = item->type_alias().underlying_type();
+    if (!underlying.variant().has_decl()) return true;
+    id = underlying.variant().decl();
   }
 }
 

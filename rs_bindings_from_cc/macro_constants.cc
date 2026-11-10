@@ -10,9 +10,12 @@
 #include "absl/base/nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeBase.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/OperatorPrecedence.h"
@@ -31,6 +34,7 @@
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Casting.h"
 
 namespace crubit {
 namespace {
@@ -235,9 +239,201 @@ std::optional<clang::UnaryOperatorKind> GetUnaryOperatorKind(
   }
 }
 
+// Returns the builtin type named by `tokens`, a sequence of type specifier
+// keywords such as `unsigned long long`, or `std::nullopt` if they don't name
+// a supported builtin type.
+std::optional<clang::QualType> GetBuiltinType(
+    const clang::ASTContext& ast_context, llvm::ArrayRef<clang::Token> tokens) {
+  int num_signed = 0;
+  int num_unsigned = 0;
+  int num_short = 0;
+  int num_long = 0;
+  int num_int = 0;
+  int num_char = 0;
+  // Types that are named by a single keyword, which can't be combined with
+  // any other keyword (e.g. `bool`).
+  std::optional<clang::QualType> standalone_type;
+  int num_standalone = 0;
+  for (const clang::Token& token : tokens) {
+    switch (token.getKind()) {
+      case clang::tok::kw_signed:
+        ++num_signed;
+        break;
+      case clang::tok::kw_unsigned:
+        ++num_unsigned;
+        break;
+      case clang::tok::kw_short:
+        ++num_short;
+        break;
+      case clang::tok::kw_long:
+        ++num_long;
+        break;
+      case clang::tok::kw_int:
+        ++num_int;
+        break;
+      case clang::tok::kw_char:
+        ++num_char;
+        break;
+      case clang::tok::kw_bool:
+        standalone_type = ast_context.BoolTy;
+        ++num_standalone;
+        break;
+      case clang::tok::kw_char16_t:
+        standalone_type = ast_context.Char16Ty;
+        ++num_standalone;
+        break;
+      case clang::tok::kw_char32_t:
+        standalone_type = ast_context.Char32Ty;
+        ++num_standalone;
+        break;
+      default:
+        return std::nullopt;
+    }
+  }
+  const int num_integer_keywords =
+      num_signed + num_unsigned + num_short + num_long + num_int + num_char;
+  if (num_standalone > 0) {
+    if (num_standalone > 1 || num_integer_keywords > 0) return std::nullopt;
+    return standalone_type;
+  }
+  if (num_signed + num_unsigned > 1 || num_int > 1) return std::nullopt;
+  const bool is_unsigned = num_unsigned > 0;
+  if (num_char > 0) {
+    if (num_char > 1 || num_short > 0 || num_long > 0 || num_int > 0) {
+      return std::nullopt;
+    }
+    if (num_signed > 0) return ast_context.SignedCharTy;
+    if (num_unsigned > 0) return ast_context.UnsignedCharTy;
+    return ast_context.CharTy;
+  }
+  if (num_short > 0) {
+    if (num_short > 1 || num_long > 0) return std::nullopt;
+    return is_unsigned ? ast_context.UnsignedShortTy : ast_context.ShortTy;
+  }
+  switch (num_long) {
+    case 0:
+      if (num_integer_keywords == 0) return std::nullopt;
+      return is_unsigned ? ast_context.UnsignedIntTy : ast_context.IntTy;
+    case 1:
+      return is_unsigned ? ast_context.UnsignedLongTy : ast_context.LongTy;
+    case 2:
+      return is_unsigned ? ast_context.UnsignedLongLongTy
+                         : ast_context.LongLongTy;
+    default:
+      return std::nullopt;
+  }
+}
+
+// Returns the type declared by the (possibly qualified) name in `tokens`, such
+// as `uint32_t` or `::std::uint32_t`, or null if there is none.
+//
+// Names are looked up starting from the global namespace, because macros can
+// be expanded anywhere.
+const clang::TypeDecl* absl_nullable LookUpTypeDecl(
+    const clang::ASTContext& ast_context, llvm::ArrayRef<clang::Token> tokens) {
+  const clang::DeclContext* context = ast_context.getTranslationUnitDecl();
+  size_t i = 0;
+  if (i < tokens.size() && tokens[i].is(clang::tok::coloncolon)) ++i;
+  while (true) {
+    if (i >= tokens.size() || !tokens[i].is(clang::tok::identifier)) {
+      return nullptr;
+    }
+    clang::IdentifierInfo* name = tokens[i].getIdentifierInfo();
+    ++i;
+    const bool is_last = i == tokens.size();
+    if (!is_last && !tokens[i].is(clang::tok::coloncolon)) return nullptr;
+
+    const clang::NamedDecl* found = nullptr;
+    for (const clang::NamedDecl* decl : context->lookup(name)) {
+      // E.g. `std::uint32_t` is declared by `using ::uint32_t;`.
+      if (const auto* shadow = llvm::dyn_cast<clang::UsingShadowDecl>(decl)) {
+        decl = shadow->getTargetDecl();
+      }
+      if (is_last ? llvm::isa<clang::TypeDecl>(decl)
+                  : llvm::isa<clang::NamespaceDecl, clang::NamespaceAliasDecl>(
+                        decl)) {
+        found = decl;
+        break;
+      }
+    }
+    if (found == nullptr) return nullptr;
+    if (is_last) return llvm::cast<clang::TypeDecl>(found);
+    if (const auto* alias = llvm::dyn_cast<clang::NamespaceAliasDecl>(found)) {
+      context = alias->getNamespace();
+    } else {
+      context = llvm::cast<clang::NamespaceDecl>(found);
+    }
+    // Skip the `::`.
+    ++i;
+  }
+}
+
+// Returns the type named by `tokens`, or `std::nullopt` if they don't name a
+// supported type.
+//
+// Supported types are builtin integral types (e.g. `unsigned char`) and
+// (possibly qualified) names of such types (e.g. `uint32_t`), optionally with
+// `const` or `volatile` qualifiers, which are ignored since they don't affect
+// the result of a cast.
+//
+// If `simple` is true, only a simple type specifier is accepted, i.e. a single
+// keyword or a name without cv-qualifiers, as required in a functional cast
+// (e.g. `int(x)` or `std::uint32_t(x)`, but not `unsigned int(x)`).
+std::optional<clang::QualType> ParseTypeName(
+    const clang::ASTContext& ast_context, llvm::ArrayRef<clang::Token> tokens,
+    bool simple) {
+  // As in C++, `const` and `volatile` may each appear at most once. They may
+  // appear anywhere among type specifier keywords (e.g. `unsigned const int`),
+  // but not inside a (qualified) name (e.g. `std:: const int64_t`).
+  llvm::SmallVector<clang::Token, 4> unqualified_tokens;
+  bool has_const = false;
+  bool has_volatile = false;
+  // Whether a cv-qualifier follows a part of a name.
+  bool cv_qualifier_after_name = false;
+  for (const clang::Token& token : tokens) {
+    const bool is_name_part =
+        token.isOneOf(clang::tok::identifier, clang::tok::coloncolon);
+    if (token.isOneOf(clang::tok::kw_const, clang::tok::kw_volatile)) {
+      bool& has_qualifier =
+          token.is(clang::tok::kw_const) ? has_const : has_volatile;
+      if (simple || has_qualifier) return std::nullopt;
+      has_qualifier = true;
+      if (!unqualified_tokens.empty() &&
+          unqualified_tokens.back().isOneOf(clang::tok::identifier,
+                                            clang::tok::coloncolon)) {
+        cv_qualifier_after_name = true;
+      }
+      continue;
+    }
+    if (is_name_part && cv_qualifier_after_name) return std::nullopt;
+    unqualified_tokens.push_back(token);
+  }
+  if (unqualified_tokens.empty()) return std::nullopt;
+
+  std::optional<clang::QualType> type;
+  if (unqualified_tokens[0].isOneOf(clang::tok::identifier,
+                                    clang::tok::coloncolon)) {
+    const clang::TypeDecl* type_decl =
+        LookUpTypeDecl(ast_context, unqualified_tokens);
+    if (type_decl == nullptr) return std::nullopt;
+    type = ast_context.getTypeDeclType(type_decl);
+  } else {
+    if (simple && unqualified_tokens.size() != 1) return std::nullopt;
+    type = GetBuiltinType(ast_context, unqualified_tokens);
+  }
+  // Only casts to the types that macro constants can have are supported. In
+  // particular, casts to class types must be rejected before `Sema` sees them:
+  // building them could e.g. instantiate templates as a side effect, even if
+  // the macro is skipped later.
+  if (!type.has_value() || !IsSupportedIntegralType(*type)) return std::nullopt;
+  return type;
+}
+
 // A recursive descent parser for the subset of C++ constant expressions that
 // is supported in macro constants: integer, character, and boolean literals,
-// parentheses, unary and binary operators, and `?:`. References to other
+// parentheses, unary and binary operators, `?:`, and casts (C-style,
+// functional, and `static_cast`) to builtin integral types or names of such
+// types (e.g. `uint32_t`). References to other
 // object-like macros are expanded beforehand. The expressions are built using
 // `Sema`, so that they have the same types and semantics as in C++.
 class MacroExpressionParser {
@@ -253,7 +449,7 @@ class MacroExpressionParser {
   }
 
   // Returns true if the parsed tokens contain a numeric literal with a suffix
-  // (e.g. `42u`) or a `char16_t` or `char32_t` literal (e.g. `u'x'`).
+  // (e.g. `42u`), a `char16_t` or `char32_t` literal (e.g. `u'x'`), or a cast.
   bool is_typed() const { return is_typed_; }
 
  private:
@@ -285,6 +481,26 @@ class MacroExpressionParser {
   bool PeekIs(clang::tok::TokenKind kind) const {
     const clang::Token* token = Peek();
     return token != nullptr && token->is(kind);
+  }
+
+  // If the tokens from the current position up to (but excluding) the next
+  // `terminator` name a type (see `ParseTypeName`), consumes them and returns
+  // the type. Otherwise, consumes nothing and returns `std::nullopt`.
+  std::optional<clang::QualType> TryParseTypeNameUntil(
+      clang::tok::TokenKind terminator, bool simple) {
+    size_t end = position_;
+    while (end < tokens_.size() && !tokens_[end].is(terminator)) ++end;
+    if (end == position_ || end == tokens_.size()) return std::nullopt;
+    std::optional<clang::QualType> type =
+        ParseTypeName(sema_.getASTContext(),
+                      tokens_.slice(position_, end - position_), simple);
+    if (type.has_value()) position_ = end;
+    return type;
+  }
+
+  clang::TypeSourceInfo* TypeSourceInfo(clang::QualType type,
+                                        clang::SourceLocation loc) {
+    return sema_.getASTContext().getTrivialTypeSourceInfo(type, loc);
   }
 
   // conditional-expression:
@@ -335,9 +551,30 @@ class MacroExpressionParser {
   // unary-expression:
   //     primary-expression
   //     (`+` | `-` | `~` | `!`) unary-expression
+  //     `(` type-name `)` unary-expression
   clang::Expr* absl_nullable ParseUnary() {
     const clang::Token* token = Peek();
     if (token == nullptr) return nullptr;
+
+    // A C-style cast, as opposed to a parenthesized expression.
+    if (token->is(clang::tok::l_paren)) {
+      const size_t l_paren_position = position_;
+      clang::SourceLocation l_paren_loc = token->getLocation();
+      ++position_;
+      if (std::optional<clang::QualType> type =
+              TryParseTypeNameUntil(clang::tok::r_paren, /*simple=*/false)) {
+        clang::SourceLocation r_paren_loc = tokens_[position_++].getLocation();
+        clang::Expr* operand = ParseUnary();
+        if (operand == nullptr) return nullptr;
+        is_typed_ = true;
+        return Get(sema_.BuildCStyleCastExpr(l_paren_loc,
+                                             TypeSourceInfo(*type, l_paren_loc),
+                                             r_paren_loc, operand));
+      }
+      position_ = l_paren_position;
+      return ParsePrimary();
+    }
+
     std::optional<clang::UnaryOperatorKind> opcode =
         GetUnaryOperatorKind(token->getKind());
     if (!opcode.has_value()) return ParsePrimary();
@@ -353,11 +590,47 @@ class MacroExpressionParser {
   //     character-literal
   //     boolean-literal
   //     `(` conditional-expression `)`
+  //     `static_cast` `<` type-name `>` `(` conditional-expression `)`
+  //     simple-type-name `(` conditional-expression `)`
   clang::Expr* absl_nullable ParsePrimary() {
     const clang::Token* token = Peek();
     if (token == nullptr) return nullptr;
+
+    // A functional cast, e.g. `uint32_t(1)`.
+    if (std::optional<clang::QualType> type =
+            TryParseTypeNameUntil(clang::tok::l_paren, /*simple=*/true)) {
+      clang::SourceLocation type_loc = token->getLocation();
+      clang::SourceLocation l_paren_loc = tokens_[position_++].getLocation();
+      clang::Expr* operand = ParseConditional();
+      if (operand == nullptr || !PeekIs(clang::tok::r_paren)) return nullptr;
+      clang::SourceLocation r_paren_loc = tokens_[position_++].getLocation();
+      is_typed_ = true;
+      return Get(sema_.BuildCXXFunctionalCastExpr(
+          TypeSourceInfo(*type, type_loc), *type, l_paren_loc, operand,
+          r_paren_loc));
+    }
+
     ++position_;
     switch (token->getKind()) {
+      case clang::tok::kw_static_cast: {
+        clang::SourceLocation op_loc = token->getLocation();
+        if (!PeekIs(clang::tok::less)) return nullptr;
+        clang::SourceLocation l_angle_loc = tokens_[position_++].getLocation();
+        std::optional<clang::QualType> type =
+            TryParseTypeNameUntil(clang::tok::greater, /*simple=*/false);
+        if (!type.has_value()) return nullptr;
+        clang::SourceLocation r_angle_loc = tokens_[position_++].getLocation();
+        if (!PeekIs(clang::tok::l_paren)) return nullptr;
+        clang::SourceLocation l_paren_loc = tokens_[position_++].getLocation();
+        clang::Expr* operand = ParseConditional();
+        if (operand == nullptr || !PeekIs(clang::tok::r_paren)) return nullptr;
+        clang::SourceLocation r_paren_loc = tokens_[position_++].getLocation();
+        is_typed_ = true;
+        return Get(sema_.BuildCXXNamedCast(
+            op_loc, clang::tok::kw_static_cast, TypeSourceInfo(*type, op_loc),
+            operand, clang::SourceRange(l_angle_loc, r_angle_loc),
+            clang::SourceRange(l_paren_loc, r_paren_loc)));
+      }
       case clang::tok::numeric_constant: {
         std::optional<bool> has_suffix = HasSuffix(*token);
         if (!has_suffix.has_value()) return nullptr;

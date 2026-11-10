@@ -14,6 +14,12 @@
 #define UNEXPANDED_INNER_DEPENDENCY_CONSTANT 99
 #define UNEXPANDED_OUTER_DEPENDENCY_CONSTANT \
   (UNEXPANDED_INNER_DEPENDENCY_CONSTANT + 1)
+// If `InnerShadowedType` is not refreshed from the precompiled header module
+// when `UNEXPANDED_CAST_HELPER` is expanded, the cast resolves to the `short`
+// typedef and truncates `0x10000` to `0` instead of expanding to `long long`.
+typedef short InnerShadowedType;     // NOLINT(google-runtime-int)
+#define InnerShadowedType long long  // NOLINT(runtime/int)
+#define UNEXPANDED_CAST_HELPER ((InnerShadowedType)0x10000)
 
 // Ensures that the bindings of this target are not empty.
 inline int DependencyFunction() { return DEPENDENCY_CONSTANT; }

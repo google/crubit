@@ -34,6 +34,12 @@ fn test_values_match_cc() {
         ffi_11::new_c_char(macro_constants::CHAR_CONSTANT!()),
         macro_constants::CharConstant()
     );
+    expect_eq!(macro_constants::CAST_CONSTANT!(), macro_constants::CastConstant());
+    expect_eq!(macro_constants::STATIC_CAST_CONSTANT!(), macro_constants::StaticCastConstant());
+    expect_eq!(
+        macro_constants::CAST_FROM_UNEXPANDED_DEP_MACRO!(),
+        ::ffi_11::new_c_longlong(0x10000)
+    );
 }
 
 #[gtest]
