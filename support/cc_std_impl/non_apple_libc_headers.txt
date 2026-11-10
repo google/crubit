@@ -1,0 +1,9 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#
+# Automatically @generated from support/cc_std_impl/headers.bzl
+# by common/golden_update.sh. Do not edit.
+
+netinet/ether.h
+netinet/in.h
