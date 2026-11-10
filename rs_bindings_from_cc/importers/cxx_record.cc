@@ -1722,8 +1722,8 @@ std::vector<crubit::ffi::Field> CXXRecordDeclImporter::ImportFields(
       // Rust does not support per-field `#[repr(align(N))]` or alignment on
       // `type` aliases, so fields with explicit alignment must be replaced with
       // opaque byte blobs (with padding up to their Clang AST offset) to
-      // preserve struct layout. We return an `absl::Status` error here rather
-      // than relying on `CollectUnknownAttrs` because:
+      // preserve struct layout. We return an error here rather than relying on
+      // `CollectUnknownAttrs` because:
       // 1. Targets with `:experimental` enabled ignore `Ok(Some(attr))` from
       //    `CollectUnknownAttrs`, whereas an `Err` status unconditionally
       //    forces opaque-blob fallback in `field_rs_type_kind_for_layout`.
