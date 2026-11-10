@@ -1,0 +1,8 @@
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -41,3 +41,3 @@
+ bazel_dep(name = "rules_python", version = "1.6.0")
+ 
+-bazel_dep(name = "rules_rust", version = "0.63.0", dev_dependency = True)
++bazel_dep(name = "rules_rust", version = "0.63.0")
+ bazel_dep(name = "rules_ruby", version = "0.20.1", dev_dependency = True)

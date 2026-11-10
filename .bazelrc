@@ -23,6 +23,7 @@ build:generic_clang --host_per_file_copt=^support/.*@-Wenum-compare-conditional,
 
 build --config=generic_clang
 build --@rules_rust//rust/toolchain/channel=nightly
+build --@rules_rust//rust/settings:experimental_use_allocator_libraries_with_mangled_symbols=true
 build --@llvm-project//third-party:llvm_enable_lzma=false
 build --@llvm-project//third-party:llvm_enable_zlib=false
 build --@llvm-project//third-party:llvm_enable_zstd=false

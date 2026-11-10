@@ -355,7 +355,7 @@ cc_test(
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
-        "@google_benchmark",
+        "@google_benchmark//:benchmark",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:testing",

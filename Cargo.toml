@@ -52,7 +52,10 @@ syn = { version = "2", features = [ "extra-traits" ] }
 ra_ap_rustc_lexer = "0.166.0"
 tempfile = "3"
 tracing = "0.1"
-unicode-ident = "1"
+# ra-ap-rustc_lexer 0.166.0 asserts at compile time that unicode-ident and
+# unicode-properties (0.1.4, Unicode 16) share the same Unicode version;
+# unicode-ident 1.0.25+ updated to Unicode 17.
+unicode-ident = "=1.0.24"
 
 [workspace.package]
 
