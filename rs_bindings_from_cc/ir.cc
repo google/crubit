@@ -11,6 +11,7 @@
 
 #include "absl/status/status.h"
 #include "common/status.h"
+#include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
@@ -171,6 +172,21 @@ llvm::Expected<IntegerConstant> IntegerConstantFromAPValue(
                                ? static_cast<uint64_t>(value.getSExtValue())
                                : value.getZExtValue();
   result.set_wrapped_value(wrapped_value);
+  return result;
+}
+
+llvm::Expected<FloatConstant> FloatConstantFromAPValue(
+    const llvm::APFloat& value) {
+  if (llvm::APFloat::getSizeInBits(value.getSemantics()) > 64) {
+    llvm::SmallString<128> value_str;
+    value.toString(value_str);
+    return crubit::InvalidArgumentError(
+        llvm::Twine("floating point format is wider than 64 bits: ") +
+        value_str.str());
+  }
+  llvm::APInt bits = value.bitcastToAPInt();
+  FloatConstant result;
+  result.set_bits(bits.getZExtValue());
   return result;
 }
 

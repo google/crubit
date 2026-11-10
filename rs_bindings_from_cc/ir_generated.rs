@@ -32,6 +32,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, backing_type, $($arg:tt)*) => { $msg.set_backing_type($($arg)*) };
     ($msg:ident, base_record_id, $($arg:tt)*) => { $msg.set_base_record_id($($arg)*) };
     ($msg:ident, begin, $($arg:tt)*) => { $msg.set_begin($($arg)*) };
+    ($msg:ident, bits, $($arg:tt)*) => { $msg.set_bits($($arg)*) };
     ($msg:ident, bool_value, $($arg:tt)*) => { $msg.set_bool_value($($arg)*) };
     ($msg:ident, bridge, $($arg:tt)*) => { $msg.set_bridge($($arg)*) };
     ($msg:ident, bridge_type, $($arg:tt)*) => { $msg.set_bridge_type($($arg)*) };
@@ -87,6 +88,8 @@ macro_rules! __proto_call_setter {
     ($msg:ident, fields, $($arg:tt)*) => { $msg.set_fields($($arg)*) };
     ($msg:ident, filler, $($arg:tt)*) => { $msg.set_filler($($arg)*) };
     ($msg:ident, first_type, $($arg:tt)*) => { $msg.set_first_type($($arg)*) };
+    ($msg:ident, float_elements, $($arg:tt)*) => { $msg.set_float_elements($($arg)*) };
+    ($msg:ident, float_value, $($arg:tt)*) => { $msg.set_float_value($($arg)*) };
     ($msg:ident, fmt, $($arg:tt)*) => { $msg.set_fmt($($arg)*) };
     ($msg:ident, fn_trait, $($arg:tt)*) => { $msg.set_fn_trait($($arg)*) };
     ($msg:ident, func, $($arg:tt)*) => { $msg.set_func($($arg)*) };
@@ -1007,6 +1010,40 @@ mod __defs {
         assert!(core::mem::align_of::<IntegerConstant>() == 8);
         assert!(core::mem::offset_of!(IntegerConstant, is_negative) == 0);
         assert!(core::mem::offset_of!(IntegerConstant, wrapped_value) == 8);
+    };
+
+    #[repr(C)]
+    #[derive(Debug,Clone, Copy, PartialEq, Eq, Hash)]
+    pub struct FloatConstant {
+        pub bits: u64,
+    }
+
+    impl FfiDefault for FloatConstant {
+        const EMPTY_REF: &'static Self = &Self::EMPTY;
+    }
+    impl Default for FloatConstant {
+        fn default() -> Self {
+            Self::EMPTY
+        }
+    }
+
+    impl FloatConstant {
+        pub const EMPTY: Self = Self {
+            bits: 0,
+        };
+        pub fn bits(&self) -> u64 {
+            self.bits
+        }
+        pub fn set_bits(&mut self, val: u64) -> &mut u64 {
+            self.bits = val;
+            &mut self.bits
+        }
+    }
+    #[cfg(target_pointer_width = "64")]
+    const _: () = {
+        assert!(core::mem::size_of::<FloatConstant>() == 8);
+        assert!(core::mem::align_of::<FloatConstant>() == 8);
+        assert!(core::mem::offset_of!(FloatConstant, bits) == 0);
     };
 
     #[repr(C)]
@@ -5836,6 +5873,68 @@ mod __defs {
 
         #[repr(C)]
         #[derive(Clone, PartialEq, Eq, Hash)]
+        pub struct FloatElements {
+            pub has_bits: u64,
+            pub elements: FfiVec<super::FloatConstant>,
+            pub filler: super::FloatConstant,
+        }
+
+        impl core::fmt::Debug for FloatElements {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                f.debug_struct("FloatElements")
+                    .field("elements", &self.elements)
+                    .field("filler", &self.filler())
+                    .finish()
+            }
+        }
+
+        impl super::FfiDefault for FloatElements {
+            const EMPTY_REF: &'static Self = &Self::EMPTY;
+        }
+        impl Default for FloatElements {
+            fn default() -> Self {
+                Self::EMPTY
+            }
+        }
+
+        impl FloatElements {
+            pub const EMPTY: Self = Self {
+                has_bits: 0,
+                elements: FfiVec::EMPTY,
+                filler: super::FloatConstant::EMPTY,
+            };
+            pub fn elements(&self) -> &[super::FloatConstant] {
+                self.elements.as_slice()
+            }
+            pub fn has_filler(&self) -> bool {
+                (self.has_bits & 0x1) != 0
+            }
+            pub fn clear_filler(&mut self) {
+                self.has_bits &= !0x1;
+                self.filler = super::FloatConstant::EMPTY;
+            }
+            pub fn filler(&self) -> Option<super::FloatConstant> {
+                self.has_filler().then(|| self.filler)
+            }
+            pub fn set_elements(&mut self, val: FfiVec<super::FloatConstant>) {
+                self.elements = val;
+            }
+            pub fn set_filler(&mut self, val: super::FloatConstant) -> &mut super::FloatConstant {
+                self.has_bits |= 0x1;
+                self.filler = val;
+                &mut self.filler
+            }
+        }
+        #[cfg(target_pointer_width = "64")]
+        const _: () = {
+            assert!(core::mem::size_of::<FloatElements>() == 40);
+            assert!(core::mem::align_of::<FloatElements>() == 8);
+            assert!(core::mem::offset_of!(FloatElements, elements) == 8);
+            assert!(core::mem::offset_of!(FloatElements, filler) == 32);
+        };
+
+        #[repr(C)]
+        #[derive(Clone, PartialEq, Eq, Hash)]
         pub struct ArrayElements {
             pub has_bits: u64,
             pub elements: FfiVec<super::ArrayValue>,
@@ -5900,8 +5999,9 @@ mod __defs {
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
         pub enum Kind {
             Integers(super::array_value::IntegerElements) = 0,
-            Arrays(super::array_value::ArrayElements) = 1,
-            StringLiteral(FfiVec<u8>) = 2,
+            Floats(super::array_value::FloatElements) = 1,
+            Arrays(super::array_value::ArrayElements) = 2,
+            StringLiteral(FfiVec<u8>) = 3,
         }
 
         impl Default for Kind {
@@ -5918,6 +6018,13 @@ mod __defs {
             pub fn set_integer_elements(&mut self, val: super::array_value::IntegerElements) -> &mut super::array_value::IntegerElements {
                 *self = Self::Integers(val);
                 let Self::Integers(ref mut inner) = *self else {
+                    unreachable!()
+                };
+                inner
+            }
+            pub fn set_float_elements(&mut self, val: super::array_value::FloatElements) -> &mut super::array_value::FloatElements {
+                *self = Self::Floats(val);
+                let Self::Floats(ref mut inner) = *self else {
                     unreachable!()
                 };
                 inner
@@ -6532,8 +6639,9 @@ mod __defs {
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
         pub enum Kind {
             Integer(super::IntegerConstant) = 0,
-            Array(super::ArrayValue) = 1,
-            StringView(FfiVec<u8>) = 2,
+            Float(super::FloatConstant) = 1,
+            Array(super::ArrayValue) = 2,
+            StringView(FfiVec<u8>) = 3,
         }
 
         impl Default for Kind {
@@ -6550,6 +6658,13 @@ mod __defs {
             pub fn set_value(&mut self, val: super::IntegerConstant) -> &mut super::IntegerConstant {
                 *self = Self::Integer(val);
                 let Self::Integer(ref mut inner) = *self else {
+                    unreachable!()
+                };
+                inner
+            }
+            pub fn set_float_value(&mut self, val: super::FloatConstant) -> &mut super::FloatConstant {
+                *self = Self::Float(val);
+                let Self::Float(ref mut inner) = *self else {
                     unreachable!()
                 };
                 inner

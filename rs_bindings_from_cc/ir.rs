@@ -36,12 +36,13 @@ pub use ir_generated::unsupported_item::{
 };
 pub use ir_generated::{
     AccessSpecifier, ArrayValue, BaseClass, BridgeType, CallingConv as CcCallingConv, CcType,
-    Comment, Constant, DeclLocation, Enum, Enumerator, ExistingRustType, Field, FormattedError,
-    Func, FuncParam, GlobalVar, HeaderName, Identifier, IncompleteRecord, InstanceMethodMetadata,
-    IntegerConstant, Item, LifetimeName, MemberFuncSemantic, Namespace, Operator, OwnedPtrConfig,
-    PointerTypeKind, Primitive, Record, RecordType, SafetyAnnotation, SizeAlign, SourceLocation,
-    SpecialMemberFunc, StatusOrOptionalString, TemplateArg, TemplateSpecialization, TraitDerives,
-    TraitImplPolarity, TypeAlias, UnqualifiedIdentifier, UnsupportedItem, UseMod,
+    Comment, Constant, DeclLocation, Enum, Enumerator, ExistingRustType, Field, FloatConstant,
+    FormattedError, Func, FuncParam, GlobalVar, HeaderName, Identifier, IncompleteRecord,
+    InstanceMethodMetadata, IntegerConstant, Item, LifetimeName, MemberFuncSemantic, Namespace,
+    Operator, OwnedPtrConfig, PointerTypeKind, Primitive, Record, RecordType, SafetyAnnotation,
+    SizeAlign, SourceLocation, SpecialMemberFunc, StatusOrOptionalString, TemplateArg,
+    TemplateSpecialization, TraitDerives, TraitImplPolarity, TypeAlias, UnqualifiedIdentifier,
+    UnsupportedItem, UseMod,
 };
 
 /// Common data about all items.
@@ -279,6 +280,9 @@ fn validate_array_value(value: &ArrayValue) -> Result<()> {
         ArrayValueKind::Integers(elements) => {
             validate_num_elements(elements.elements().len(), elements.has_filler(), length)?;
         }
+        ArrayValueKind::Floats(elements) => {
+            validate_num_elements(elements.elements().len(), elements.has_filler(), length)?;
+        }
         ArrayValueKind::Arrays(elements) => {
             validate_num_elements(elements.elements().len(), elements.has_filler(), length)?;
             for elem in elements.elements() {
@@ -348,6 +352,7 @@ fn validate_item(item: &Item) -> Result<()> {
             }
             match constant.kind() {
                 ConstantValue::Integer(_) => {}
+                ConstantValue::Float(_) => {}
                 ConstantValue::Array(array_value) => validate_array_value(array_value)?,
                 ConstantValue::StringView(_) => {
                     ensure!(

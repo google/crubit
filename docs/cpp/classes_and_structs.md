@@ -72,10 +72,10 @@ be used as normal.
 
 ## Static data members {#static_members}
 
-Public static data members get bindings: compile-time integer, `bool`, integer
-array, and string_view constants become associated `const`s of the Rust struct,
-and other static data members become Rust `static`s. See [Static data
-members](static_data_members.md) for details.
+Public static data members get bindings: compile-time integer, `bool`, integer,
+`float`, `double`, array, and string_view constants become associated `const`s
+of the Rust struct, and other static data members become Rust `static`s. See
+[Static data members](static_data_members.md) for details.
 
 <span id="trivially_relocatable"></span>
 

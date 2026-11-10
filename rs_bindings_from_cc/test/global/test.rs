@@ -84,6 +84,22 @@ fn test_constexpr_string_views() {
 }
 
 #[gtest]
+fn test_constexpr_floating_point() {
+    // These are `const`s, not `let`s, to check that the bindings are Rust constants.
+    const FLOAT: f32 = global::kConstexprFloat;
+    expect_eq!(FLOAT, 1.5);
+    const DOUBLE: f64 = global::kConstexprDouble;
+    expect_eq!(DOUBLE, -0.25);
+    const DOUBLE_FROM_INTEGER: f64 = global::kConstexprDoubleFromInteger;
+    expect_eq!(DOUBLE_FROM_INTEGER, 2.0);
+    // NaN is not equal to itself, and `-0.0` is equal to `0.0`, so these compare bits.
+    const NAN_WITH_PAYLOAD: f64 = global::kConstexprDoubleNaNWithPayload;
+    expect_eq!(NAN_WITH_PAYLOAD.to_bits(), 0x7ff8_0000_0000_1234);
+    const DOUBLE_ARRAY: [f64; 3] = global::kConstexprDoubleArray;
+    expect_eq!(DOUBLE_ARRAY.map(f64::to_bits), [1.5, -0.0, 0.0].map(f64::to_bits));
+}
+
+#[gtest]
 fn test_anonymous_enum_constants() {
     expect_eq!(global::kAnonEnumConst, 123);
     expect_eq!(global::foo::kAnonEnumNamespacedConst, 456);
@@ -105,6 +121,7 @@ fn test_static_data_members() {
     expect_eq!(StructWithStaticMembers::kStaticConstexprInt, 12);
     expect_eq!(StructWithStaticMembers::kStaticConstexprIntArray, [1, 2, 3]);
     expect_eq!(StructWithStaticMembers::kStaticConstexprStringView, "static");
+    expect_eq!(StructWithStaticMembers::kStaticConstexprDouble, 0.5);
     expect_eq!(StructWithStaticMembers::static_inline_int, 13);
     expect_eq!(global::GetStaticInlineIntVal(), 13);
 }
@@ -115,6 +132,8 @@ fn test_out_of_line_constexpr_static_data_members() {
     // These are `const`s, not `let`s, to check that the bindings are Rust constants.
     const INT: ffi_11::c_int = StructWithStaticMembers::kOutOfLineConstexprInt;
     expect_eq!(INT, 14);
+    const FLOAT: f32 = StructWithStaticMembers::kOutOfLineConstexprFloat;
+    expect_eq!(FLOAT, 2.5);
     const STRING_VIEW: &str = StructWithStaticMembers::kOutOfLineConstexprStringView;
     expect_eq!(STRING_VIEW, "out of line");
     const CHAR_ARRAY: [ffi_11::c_char; 4] = StructWithStaticMembers::kOutOfLineConstexprCharArray;

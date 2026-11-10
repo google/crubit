@@ -3183,15 +3183,18 @@ impl PrimitiveName {
             Primitive::Uint64T | Primitive::StdUint64T => NativeType("u64"),
         }
     }
-    fn to_token_stream(&self) -> TokenStream {
+}
+
+impl ToTokens for PrimitiveName {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         fn ident(name: &'static str) -> Ident {
             Ident::new(name, proc_macro2::Span::call_site())
         }
         match self {
-            PrimitiveName::NativeType(name) => ident(name).to_token_stream(),
+            PrimitiveName::NativeType(name) => ident(name).to_tokens(tokens),
             PrimitiveName::Ffi11Type(name) => {
                 let name = ident(name);
-                quote! { ::ffi_11::#name }
+                quote! { ::ffi_11::#name }.to_tokens(tokens)
             }
         }
     }

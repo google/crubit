@@ -32,6 +32,7 @@
 #include "rs_bindings_from_cc/ir_generated.h"  // IWYU pragma: export
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/RawCommentList.h"
+#include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMapInfo.h"
@@ -292,6 +293,11 @@ using IntegerConstant = ir_proto::IntegerConstant;
 
 llvm::Expected<IntegerConstant> IntegerConstantFromAPValue(
     const llvm::APSInt& value);
+
+using FloatConstant = ir_proto::FloatConstant;
+
+llvm::Expected<FloatConstant> FloatConstantFromAPValue(
+    const llvm::APFloat& value);
 
 using ir_proto::Operator;
 using UnqualifiedIdentifier = ir_proto::UnqualifiedIdentifier;

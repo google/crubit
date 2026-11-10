@@ -64,10 +64,10 @@ Crubit generates Rust bindings for everyday C++ APIs:
 *   Functions and methods, including overloaded constructors and assignment
     operators. Other overloads are supported when given distinct Rust names with
     [`CRUBIT_RUST_NAME`](../cpp/customizing.md).
-*   `constexpr`/`const` integer, `bool`, C array of integer or `bool`, and
-    `string_view` constants (at namespace scope or as [static data
-    members](../cpp/static_data_members.md)), which become Rust `const`s; other
-    global variables, which become Rust `static`s.
+*   `constexpr`/`const` integer, `bool`, `float`, `double`, C array of integer,
+    `bool`, `float` or `double`, and `string_view` constants (at namespace scope
+    or as [static data members](../cpp/static_data_members.md)), which become
+    Rust `const`s; other global variables, which become Rust `static`s.
 *   References, with lifetimes inferred by Rust's elision rules or given by
     [explicit lifetime annotations](../cpp/references_and_lifetimes.md).
 *   Type aliases, forward-declared types, and concrete class template

@@ -15,8 +15,9 @@ use crubit_abi_type::{
     CrubitAbiTypeToRustExprTokens, CrubitAbiTypeToRustTokens, FullyQualifiedPath,
 };
 use database::code_snippet::{
-    self, integer_constant_to_token_stream, integer_literal_tokens, ApiSnippets, Bindings,
-    BindingsTokens, CppDetails, CppIncludes, DeprecatedAttr, Feature, GeneratedItem, ThunkImpl,
+    self, float_constant_to_token_stream, integer_constant_to_token_stream, integer_literal_tokens,
+    ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, DeprecatedAttr, Feature,
+    GeneratedItem, ThunkImpl,
 };
 use database::db::{BindingsGenerator, CodegenFunctions, Interner};
 use database::intern;
@@ -222,6 +223,11 @@ fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiS
             let type_tokens = type_.to_token_stream(db);
             integer_constant_to_token_stream(db, *value, &type_).map(|value| (type_tokens, value))
         }
+        ConstantValue::Float(value) => {
+            let type_ = db.rs_type_kind(constant.type_().unwrap().clone())?;
+            let type_tokens = type_.to_token_stream(db);
+            float_constant_to_token_stream(db, *value, &type_).map(|value| (type_tokens, value))
+        }
         ConstantValue::Array(array) => {
             // For array constants, `type_` is the innermost element type.
             let type_ = db.rs_type_kind(constant.type_().unwrap().clone())?;
@@ -331,6 +337,14 @@ fn array_value_to_tokens(
                 element_type_tokens.clone(),
                 integers.elements().iter().copied().map(to_tokens).collect::<Result<Vec<_>>>()?,
                 integers.filler().map(to_tokens).transpose()?,
+            )
+        }
+        ArrayValueKind::Floats(floats) => {
+            let to_tokens = |element| float_constant_to_token_stream(db, element, element_type);
+            (
+                element_type_tokens.clone(),
+                floats.elements().iter().copied().map(to_tokens).collect::<Result<Vec<_>>>()?,
+                floats.filler().map(to_tokens).transpose()?,
             )
         }
         ArrayValueKind::Arrays(arrays) => {
