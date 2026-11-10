@@ -88,6 +88,7 @@
 #include "clang/UnifiedSymbolResolution/USRGeneration.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FormatVariadic.h"
@@ -2333,6 +2334,10 @@ const crubit::ffi::Item* _Nullable Importer::GetDeclItem(
     import_cache_insertion_order_.push_back(decl);
   }
 
+  auto* record_decl = clang::dyn_cast<clang::CXXRecordDecl>(decl);
+  if (record_decl != nullptr) {
+    records_in_progress_.push_back(record_decl->getCanonicalDecl());
+  }
   std::unique_ptr<crubit::ffi::Item> result = ImportDecl(decl);
   const crubit::ffi::Item* item_ptr = result.get();
 
@@ -2341,11 +2346,12 @@ const crubit::ffi::Item* _Nullable Importer::GetDeclItem(
                                    : ItemCacheEntry::Status::kFailed;
   entry.proto_item = std::move(result);
 
-  if (auto* record_decl = clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
+  if (record_decl != nullptr) {
     // TODO(forster): Should we even visit the nested decl if we couldn't
     // import the parent? For now we have tests that check that we generate
     // error messages for those decls, so we're visiting.
     ImportDeclsFromDeclContext(*record_decl);
+    records_in_progress_.pop_back();
   }
 
   // Logic for `ClassTemplateSpecializationDecl`: insert them into
@@ -3289,6 +3295,191 @@ std::optional<std::string> Importer::CheckSpecializationInstantiable(
   return errors;
 }
 
+using FlatTemplateArgs = llvm::SmallVector<clang::TemplateArgument, 4>;
+
+// A canonical type that is built from other types (or values) by a type
+// constructor: e.g. `T*` (from `T`), `Expr<T, 3>` (from `T` and `3`),
+// `Expr<T>::Nested` (from `Expr<T>`), or `R(A)` (from `R` and `A`).
+struct ComposedType {
+  // The class template for specializations, the member class of the template
+  // for instantiated member classes, and the type class otherwise.
+  std::variant<const clang::Decl*, clang::Type::TypeClass> constructor;
+  // The types and values that the type is built from. The elements of template
+  // argument packs are in place of the packs.
+  FlatTemplateArgs parts;
+};
+
+// Returns `type` as a `ComposedType`, or `std::nullopt` if it is not built from
+// other types (e.g. `int`, or a class that is not instantiated from a
+// template).
+static std::optional<ComposedType> AsComposedType(const clang::ASTContext& ctx,
+                                                  clang::QualType type) {
+  type = type.getCanonicalType();
+  ComposedType result{.constructor = type->getTypeClass()};
+  auto add_type = [&](clang::QualType part) {
+    result.parts.push_back(clang::TemplateArgument(part));
+  };
+  if (const auto* pointer = type->getAs<clang::PointerType>()) {
+    add_type(pointer->getPointeeType());
+  } else if (const auto* reference = type->getAs<clang::ReferenceType>()) {
+    add_type(reference->getPointeeType());
+  } else if (const auto* member_pointer =
+                 type->getAs<clang::MemberPointerType>()) {
+    add_type(member_pointer->getPointeeType());
+    if (const clang::CXXRecordDecl* record =
+            member_pointer->getMostRecentCXXRecordDecl()) {
+      add_type(ctx.getCanonicalTagType(record));
+    }
+  } else if (const clang::ArrayType* array = ctx.getAsArrayType(type)) {
+    add_type(array->getElementType());
+  } else if (const auto* function = type->getAs<clang::FunctionProtoType>()) {
+    add_type(function->getReturnType());
+    absl::c_for_each(function->param_types(), add_type);
+  } else if (const clang::CXXRecordDecl* record = type->getAsCXXRecordDecl()) {
+    if (const auto* spec =
+            clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(record)) {
+      result.constructor = spec->getSpecializedTemplate()->getCanonicalDecl();
+      for (const clang::TemplateArgument& arg :
+           spec->getTemplateArgs().asArray()) {
+        if (arg.getKind() == clang::TemplateArgument::Pack) {
+          result.parts.append(arg.pack_begin(), arg.pack_end());
+        } else {
+          result.parts.push_back(arg);
+        }
+      }
+    } else if (const clang::CXXRecordDecl* pattern =
+                   record->getInstantiatedFromMemberClass()) {
+      result.constructor = pattern->getCanonicalDecl();
+    } else {
+      return std::nullopt;
+    }
+    if (const auto* parent =
+            clang::dyn_cast<clang::CXXRecordDecl>(record->getDeclContext())) {
+      add_type(ctx.getCanonicalTagType(parent));
+    }
+  } else {
+    return std::nullopt;
+  }
+  return result;
+}
+
+static bool TypeEmbedsIn(const clang::ASTContext& ctx, clang::QualType small,
+                         clang::QualType big);
+
+// Returns true if `small` and `big` are the same value, or are types and
+// `small` embeds in `big` (see `TypeEmbedsIn`).
+static bool TemplateArgEmbedsIn(const clang::ASTContext& ctx,
+                                const clang::TemplateArgument& small,
+                                const clang::TemplateArgument& big) {
+  if (small.getKind() == clang::TemplateArgument::Type &&
+      big.getKind() == clang::TemplateArgument::Type) {
+    return TypeEmbedsIn(ctx, small.getAsType(), big.getAsType());
+  }
+  return small.structurallyEquals(big);
+}
+
+// Returns true if `small` is a type that is the same as `big`, or can be made
+// from `big` by removing parts of it (ignoring qualifiers). E.g. `Expr<int>`
+// embeds in `Expr<Wrap<int>>`, in `Expr<const int*>` and in
+// `Wrap<Expr<int>>`.
+//
+// This is the homeomorphic embedding of the type trees. In every endless
+// sequence of types that are built from finitely many type constructors and
+// values, some type embeds in a later type (Kruskal's tree theorem), so
+// checking for it stops such endless import recursion.
+static bool TypeEmbedsIn(const clang::ASTContext& ctx, clang::QualType small,
+                         clang::QualType big) {
+  small = small.getCanonicalType().getUnqualifiedType();
+  big = big.getCanonicalType().getUnqualifiedType();
+  if (small == big) return true;
+  std::optional<ComposedType> big_composed = AsComposedType(ctx, big);
+  if (!big_composed.has_value()) return false;
+  // `small` embeds in a part of `big`.
+  for (const clang::TemplateArgument& big_part : big_composed->parts) {
+    if (big_part.getKind() == clang::TemplateArgument::Type &&
+        TypeEmbedsIn(ctx, small, big_part.getAsType())) {
+      return true;
+    }
+  }
+  // `small` and `big` have the same type constructor, and the parts of `small`
+  // embed in the parts of `big`, in the same order. (Matching each part of
+  // `small` to the first part of `big` that it can match is enough.)
+  std::optional<ComposedType> small_composed = AsComposedType(ctx, small);
+  if (!small_composed.has_value() ||
+      small_composed->constructor != big_composed->constructor) {
+    return false;
+  }
+  const clang::TemplateArgument* big_part = big_composed->parts.begin();
+  for (const clang::TemplateArgument& small_part : small_composed->parts) {
+    while (big_part != big_composed->parts.end() &&
+           !TemplateArgEmbedsIn(ctx, small_part, *big_part)) {
+      ++big_part;
+    }
+    if (big_part == big_composed->parts.end()) return false;
+    ++big_part;
+  }
+  return true;
+}
+
+// The maximum number of specializations of the same class template whose
+// imports can be in progress at the same time. This stops import recursion that
+// `TypeEmbedsIn` doesn't detect early enough, e.g. through non-type template
+// arguments: `template <int N> struct S { S<N + 1> Next(); };`.
+static constexpr int kMaxNestedImportsOfSameTemplate = 16;
+
+std::optional<FormattedError> Importer::CheckSpecializationRecursion(
+    const clang::ClassTemplateSpecializationDecl& specialization_decl,
+    llvm::StringRef type_string) const {
+  // Explicit specializations are written in the source, so there are only
+  // finitely many of them: importing them can't start an endless recursion.
+  if (specialization_decl.getSpecializationKind() ==
+      clang::TSK_ExplicitSpecialization) {
+    return std::nullopt;
+  }
+  const clang::ClassTemplateDecl* tmpl =
+      specialization_decl.getSpecializedTemplate()->getCanonicalDecl();
+  clang::CanQualType type = ctx_.getCanonicalTagType(&specialization_decl);
+  int count = 0;
+  for (const clang::CXXRecordDecl* in_progress :
+       llvm::reverse(records_in_progress_)) {
+    // A record that is written in the source (not instantiated from a
+    // template) has a fixed set of members, so an endless recursion can't go
+    // through it: it would import the record again, which `GetDeclItem` stops.
+    clang::TemplateSpecializationKind kind =
+        in_progress->getTemplateSpecializationKind();
+    if (kind == clang::TSK_Undeclared ||
+        kind == clang::TSK_ExplicitSpecialization) {
+      break;
+    }
+    const auto* in_progress_spec =
+        clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(in_progress);
+    if (in_progress_spec == nullptr ||
+        in_progress_spec->getSpecializedTemplate()->getCanonicalDecl() !=
+            tmpl) {
+      continue;
+    }
+    // The types embed in each other if they differ only in qualifiers (e.g.
+    // `span<int>` and `span<const int>`): neither is bigger.
+    clang::CanQualType in_progress_type =
+        ctx_.getCanonicalTagType(in_progress_spec);
+    if (TypeEmbedsIn(ctx_, in_progress_type, type) &&
+        !TypeEmbedsIn(ctx_, type, in_progress_type)) {
+      return FormattedError::Substitute(
+          "Template specialization '$0' is not supported: '$1' (which is being "
+          "imported) embeds in it, so importing it could start a recursion "
+          "without an end.",
+          type_string, clang::QualType(in_progress_type).getAsString());
+    }
+    if (++count == kMaxNestedImportsOfSameTemplate) {
+      return FormattedError::Substitute(
+          "Template specialization '$0' is not supported: the imports of $1 "
+          "other specializations of the same class template are in progress.",
+          type_string, kMaxNestedImportsOfSameTemplate);
+    }
+  }
+  return std::nullopt;
+}
+
 CcType Importer::ConvertTemplateSpecializationType(
     const clang::TemplateSpecializationType& type, bool assume_lifetimes) {
   // Qualifiers are handled separately in TypeMapper::ConvertQualType().
@@ -3345,6 +3536,12 @@ CcType Importer::ConvertTemplateSpecializationType(
     return WithAsWrittenTemplateArgs(ConvertTypeDecl(specialization_decl), type,
                                      assume_lifetimes);
 
+  if (std::optional<FormattedError> recursion_error =
+          CheckSpecializationRecursion(*specialization_decl, type_string);
+      recursion_error.has_value()) {
+    return CcType(*std::move(recursion_error));
+  }
+
   if (std::optional<std::string> instantiation_errors =
           CheckSpecializationInstantiable(specialization_decl);
       instantiation_errors.has_value()) {
@@ -3353,9 +3550,6 @@ CcType Importer::ConvertTemplateSpecializationType(
         "emitted:\n$1",
         type_string, *instantiation_errors));
   }
-
-  // TODO(lukasza): Limit specialization depth? (e.g. using
-  // `isSpecializationDepthGreaterThan` from earlier prototypes).
 
   // Import record type arguments before the specialization itself. Importing a
   // specialization like `std::unique_ptr<T>` converts `T`, and if `T` has not
@@ -3892,6 +4086,21 @@ llvm::Expected<CcType> Importer::ConvertUnattributedType(
     if (clang::TagDecl* definition = tag_decl->getDefinition();
         definition != nullptr && sema_.hasReachableDefinition(definition)) {
       tag_decl = definition;
+    }
+    // A specialization can be named without a `TemplateSpecializationType`,
+    // e.g. as a substituted template argument. See also
+    // `ConvertTemplateSpecializationType`.
+    if (const auto* specialization_decl =
+            clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(tag_decl);
+        specialization_decl != nullptr &&
+        !HasBeenAlreadySuccessfullyImported(*specialization_decl)) {
+      if (std::optional<FormattedError> recursion_error =
+              CheckSpecializationRecursion(
+                  *specialization_decl,
+                  clang::QualType(&type, 0).getAsString());
+          recursion_error.has_value()) {
+        return CcType(*std::move(recursion_error));
+      }
     }
     return ConvertTypeDecl(tag_decl);
   } else if (const auto* typedef_type =

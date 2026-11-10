@@ -5,7 +5,7 @@
 
 use arc_anyhow::Result;
 use googletest::matcher::Matcher;
-use googletest::matchers::{contains, eq, is_empty, none, not, pat, some};
+use googletest::matchers::{contains, contains_substring, eq, is_empty, none, not, pat, some};
 use googletest::{expect_eq, expect_that, expect_true, fail, gtest, OrFail};
 use ir::FfiRc as Rc;
 use ir::*;
@@ -5087,6 +5087,269 @@ fn test_std_string_view() {
       ...
     }
     };
+}
+
+/// Class template in `namespace std` whose method returns a "bigger"
+/// specialization of the same template.  Importing the return types of the
+/// methods (which happens for templates in `namespace std`) would never end
+/// without a limit: `Expr<int>` -> `Expr<Expr<int>>` ->
+/// `Expr<Expr<Expr<int>>>` -> ... (libc++'s `<valarray>` expression templates
+/// have the same pattern).
+const RECURSIVE_STD_TEMPLATE: &str = r#"
+    namespace std {
+    template <typename T>
+    struct Expr {
+      Expr<Expr<T>> Next();
+    };
+    }  // namespace std
+"#;
+
+/// Returns the error messages of the return types of all functions in `ir`.
+fn return_type_error_messages(ir: &IR) -> Vec<String> {
+    ir.functions()
+        .filter_map(|func| match func.return_type().variant() {
+            CcTypeVariant::Error(error) => Some(error.message.to_string()),
+            _ => None,
+        })
+        .collect()
+}
+
+const RECURSION_ERROR: &str = "so importing it could start a recursion without an end";
+
+#[gtest]
+fn test_std_template_with_recursive_return_type() -> Result<()> {
+    let proto = ir_proto_from_cc(&format!(
+        r#"
+        {RECURSIVE_STD_TEMPLATE}
+        struct S final {{ std::Expr<int>* p; }};
+        "#
+    ))?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "S", ... } });
+    expect_that!(return_type_error_messages(&ir), contains(contains_substring(RECURSION_ERROR)));
+    Ok(())
+}
+
+#[gtest]
+fn test_std_template_with_recursive_return_type_in_dependency() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        "struct S final { std::Expr<int>* p; };",
+        RECURSIVE_STD_TEMPLATE,
+    )?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "S", ... } });
+    expect_that!(return_type_error_messages(&ir), contains(contains_substring(RECURSION_ERROR)));
+    Ok(())
+}
+
+/// Like `test_std_template_with_recursive_return_type`, but the methods make
+/// the template argument bigger in other ways, and there is more than one such
+/// method (like in `std::__val_expr` in libc++'s `<valarray>`). Stopping only
+/// at some depth would import exponentially many specializations.
+#[gtest]
+fn test_std_template_with_recursive_return_types_via_other_types() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename T> struct Wrap {};
+        template <typename T>
+        struct Expr {
+          Expr<Wrap<T>> Next1();
+          Expr<const T*> Next2();
+          Expr<T(T)> Next3();
+        };
+        }  // namespace std
+        struct S final { std::Expr<int>* p; };
+        "#,
+    )?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "S", ... } });
+    expect_that!(
+        return_type_error_messages(&ir),
+        contains(contains_substring(RECURSION_ERROR)).times(eq(3))
+    );
+    Ok(())
+}
+
+/// An explicit specialization stops the recursion, so `Ptr<int>::Next()` can
+/// be imported.
+#[gtest]
+fn test_std_template_with_return_type_that_is_explicit_specialization() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename T>
+        struct Ptr {
+          Ptr<T*> Next();
+        };
+        template <> struct Ptr<int*> {};
+        }  // namespace std
+        struct S final { std::Ptr<int>* p; };
+        "#,
+    )?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    expect_that!(return_type_error_messages(&ir), is_empty());
+    assert_ir_matches!(ir, quote! { Func { ... rs_name: "Next", ... } });
+    Ok(())
+}
+
+/// Like `test_std_template_with_recursive_return_type`, but the recursion
+/// goes through two templates: `A<int>` -> `B<A<int>>` -> `A<B<A<int>>>` ->
+/// ...
+#[gtest]
+fn test_std_templates_with_mutually_recursive_return_types() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename T> struct B;
+        template <typename T>
+        struct A {
+          B<A<T>> Next();
+        };
+        template <typename T>
+        struct B {
+          A<B<T>> Next();
+        };
+        }  // namespace std
+        struct S final { std::A<int>* p; };
+        "#,
+    )?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "S", ... } });
+    expect_that!(return_type_error_messages(&ir), contains(contains_substring(RECURSION_ERROR)));
+    Ok(())
+}
+
+/// Like `test_std_template_with_recursive_return_type`, but a non-type
+/// template argument grows: `Num<0>` -> `Num<1>` -> `Num<2>` -> ...
+#[gtest]
+fn test_std_template_with_recursive_return_type_via_non_type_argument() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <int N>
+        struct Num {
+          Num<N + 1> Next();
+        };
+        }  // namespace std
+        struct S final { std::Num<0>* p; };
+        "#,
+    )?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "S", ... } });
+    expect_that!(
+        return_type_error_messages(&ir),
+        contains(contains_substring(
+            "other specializations of the same class template are in progress"
+        ))
+    );
+    Ok(())
+}
+
+/// Like `test_std_template_with_recursive_return_types_via_other_types`, but
+/// the template argument grows on the inside: `Expr<Inner<int>>` ->
+/// `Expr<Inner<Wrap1<int>>>` -> ...
+#[gtest]
+fn test_std_template_with_recursive_return_types_growing_inside() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename T> struct Inner {};
+        template <typename T> struct Wrap1 {};
+        template <typename T> struct Wrap2 {};
+        template <typename T> struct Expr {};
+        template <typename T>
+        struct Expr<Inner<T>> {
+          Expr<Inner<Wrap1<T>>> Next1();
+          Expr<Inner<Wrap2<T>>> Next2();
+        };
+        }  // namespace std
+        struct S final { std::Expr<std::Inner<int>>* p; };
+        "#,
+    )?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "S", ... } });
+    expect_that!(
+        return_type_error_messages(&ir),
+        contains(contains_substring(RECURSION_ERROR)).times(eq(2))
+    );
+    Ok(())
+}
+
+/// Like `test_std_template_with_recursive_return_type`, but the return type
+/// names the bigger specialization through a substituted template parameter
+/// (not through a `TemplateSpecializationType`).
+#[gtest]
+fn test_std_template_with_recursive_return_type_via_alias_member() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename U> struct type_identity { using type = U; };
+        template <typename T>
+        struct Expr {
+          typename type_identity<Expr<Expr<T>>>::type Next() { return {}; }
+        };
+        }  // namespace std
+        struct S final { std::Expr<int>* p; };
+        "#,
+    )?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "S", ... } });
+    // The error is reported for the type of the alias `type`.
+    expect_that!(format!("{ir:?}"), contains_substring(RECURSION_ERROR));
+    Ok(())
+}
+
+/// Like `test_std_template_with_recursive_return_type`, but the recursion
+/// goes through member classes of the template.
+#[gtest]
+fn test_std_template_with_recursive_return_types_via_member_classes() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename T>
+        struct Expr {
+          struct Nested1 { Expr<Expr<T>> Next(); };
+          struct Nested2 {};
+          Nested1 n;  // Instantiates `Nested1`.
+          Expr<Nested2> Next();
+        };
+        }  // namespace std
+        struct S final { std::Expr<int>* p; };
+        "#,
+    )?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "S", ... } });
+    expect_that!(
+        return_type_error_messages(&ir),
+        contains(contains_substring(RECURSION_ERROR)).times(eq(2))
+    );
+    Ok(())
+}
+
+/// Nested specializations of the same `std` template that don't recurse
+/// without an end are imported.
+#[gtest]
+fn test_std_template_nested_without_recursion() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        template <typename T> struct Box {
+          T* get();
+          Box<const T> AsConst() const;
+        };
+        }  // namespace std
+        struct Node;
+        struct Holder final { std::Box<Node*> nodes; };
+        struct Node final { std::Box<std::Box<Node*>> Children(); };
+        struct S final { std::Box<std::Box<int>> b; };
+        "#,
+    )?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    expect_that!(return_type_error_messages(&ir), is_empty());
+    assert_ir_matches!(ir, quote! { Func { ... rs_name: "Children", ... } });
+    assert_ir_matches!(ir, quote! { Func { ... rs_name: "AsConst", ... } });
+    Ok(())
 }
 
 #[gtest]

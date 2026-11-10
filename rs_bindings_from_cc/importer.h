@@ -344,6 +344,13 @@ class Importer final : public ImportContext {
   std::optional<std::string> CheckTemplateArgInstantiable(
       const clang::TemplateArgument& arg);
 
+  // Returns an error if importing `specialization_decl` (whose type is
+  // `type_string`) could continue an import recursion without an end. See
+  // `records_in_progress_`.
+  std::optional<FormattedError> CheckSpecializationRecursion(
+      const clang::ClassTemplateSpecializationDecl& specialization_decl,
+      llvm::StringRef type_string) const;
+
   bool RefersToOwnedDefinitionImpl(
       const clang::CXXRecordDecl& decl,
       absl::flat_hash_set<const clang::CXXRecordDecl*>& visited) const;
@@ -385,6 +392,18 @@ class Importer final : public ImportContext {
   // type silently succeed.
   absl::flat_hash_map<const clang::CXXRecordDecl*, std::optional<std::string>>
       instantiation_attempts_;
+
+  // The canonical decls of the records that are being imported (with their
+  // nested decls), outermost first.
+  //
+  // Importing a class template specialization imports its members, and the
+  // types of the members can be specializations that are bigger than the one
+  // being imported. E.g. importing `Expr<int>` imports
+  // `Expr<Expr<int>> Next()`, which imports `Expr<Expr<int>>`, which imports
+  // `Expr<Expr<Expr<int>>>`, and so on. (Clang instantiates `Expr<Expr<int>>`
+  // only when `Next()` is called, so the C++ code compiles.)
+  // `CheckSpecializationRecursion` uses this stack to stop such recursion.
+  std::vector<const clang::CXXRecordDecl*> records_in_progress_;
 
   std::vector<const clang::RawComment*> comments_;
 
