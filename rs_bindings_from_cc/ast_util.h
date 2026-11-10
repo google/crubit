@@ -13,6 +13,7 @@
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "clang/AST/Attr.h"
+#include "clang/AST/CanonicalType.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
@@ -165,6 +166,12 @@ bool ContainsExplicitLifetimes(clang::QualType type);
 // both yield `Foo`.
 clang::QualType StripPointersReferencesAndArrays(
     const clang::ASTContext& ast_context, clang::QualType type);
+
+// Returns true if `candidate` is `target` or `const target&` (ignoring
+// top-level cv-qualifiers on `candidate`), e.g. the type of a function
+// parameter that takes `target` by value or by const reference.
+bool IsTypeValueOrRefToConst(clang::QualType candidate,
+                             clang::CanQualType target);
 
 // Reduces a clang::CallingConv into a crubit::CallingConv, which is a subset.
 // If the variant isn't in the subset, returns an error.

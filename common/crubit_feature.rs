@@ -149,6 +149,10 @@ flagset::flags! {
         /// also keeps `Option<&T>` and `Option<*const T>` from colliding as the same C++ type
         /// (b/575916406). Only affects cpp_api_from_rust.
         OptionReferences,
+
+        /// Implement `Hash` for C++ types that provide `AbslHashValue` (b/566184826). Only affects
+        /// rust_api_from_cpp.
+        AbslHashValue,
     }
 }
 
@@ -198,6 +202,7 @@ impl CrubitFeature {
             Self::MacroConstants => "macro_constants",
             Self::ParamNameInsensitiveOperatorLookup => "param_name_insensitive_operator_lookup",
             Self::OptionReferences => "option_references",
+            Self::AbslHashValue => "absl_hash_value",
         }
     }
 
@@ -256,6 +261,7 @@ impl CrubitFeature {
                 "//features:param_name_insensitive_operator_lookup"
             }
             Self::OptionReferences => "//features:option_references",
+            Self::AbslHashValue => "//features:absl_hash_value",
         }
     }
 }
@@ -289,6 +295,9 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 // Out of `all` until callers expecting `rs::Option<T const*>` for `Option<&T>`
                 // are migrated.
                 - CrubitFeature::OptionReferences
+                // Out of `all` until manual `Hash` impls that conflict with the generated ones are
+                // migrated (e.g. b/581374616).
+                - CrubitFeature::AbslHashValue
         }
         // `supported` automatically implies `types` and `impl_cxx_extern_type`.
         b"supported" => {
@@ -333,6 +342,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
             CrubitFeature::ParamNameInsensitiveOperatorLookup.into()
         }
         b"option_references" => CrubitFeature::OptionReferences.into(),
+        b"absl_hash_value" => CrubitFeature::AbslHashValue.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(

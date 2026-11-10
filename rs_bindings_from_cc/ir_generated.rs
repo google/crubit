@@ -67,6 +67,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, deprecated, $($arg:tt)*) => { $msg.set_deprecated($($arg)*) };
     ($msg:ident, destructor, $($arg:tt)*) => { $msg.set_destructor($($arg)*) };
     ($msg:ident, detected_formatter, $($arg:tt)*) => { $msg.set_detected_formatter($($arg)*) };
+    ($msg:ident, detected_hasher, $($arg:tt)*) => { $msg.set_detected_hasher($($arg)*) };
     ($msg:ident, do_not_bind, $($arg:tt)*) => { $msg.set_do_not_bind($($arg)*) };
     ($msg:ident, doc_comment, $($arg:tt)*) => { $msg.set_doc_comment($($arg)*) };
     ($msg:ident, drop_impl, $($arg:tt)*) => { $msg.set_drop_impl($($arg)*) };
@@ -553,6 +554,24 @@ mod __defs {
                 0 => Some(Self::None),
                 1 => Some(Self::Negative),
                 2 => Some(Self::Positive),
+                _ => None,
+            }
+        }
+    }
+
+    #[repr(i32)]
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum DetectedHasher {
+        #[default]
+        None = 0,
+        AbslHashValue = 1,
+    }
+    impl DetectedHasher {
+        pub const EMPTY: Self = Self::None;
+        pub const fn from_i32(val: i32) -> Option<Self> {
+            match val {
+                0 => Some(Self::None),
+                1 => Some(Self::AbslHashValue),
                 _ => None,
             }
         }
@@ -2811,6 +2830,7 @@ mod __defs {
         pub has_private_pointer_or_reference_fields: bool,
         pub has_template_argument_lifetime: bool,
         pub detected_formatter: bool,
+        pub detected_hasher: DetectedHasher,
         pub deprecated: FfiString,
         pub is_thread_safe: bool,
         pub is_explicit_class_template_instantiation_definition: bool,
@@ -2865,6 +2885,7 @@ mod __defs {
                     && self.has_private_pointer_or_reference_fields == other.has_private_pointer_or_reference_fields
                     && self.has_template_argument_lifetime == other.has_template_argument_lifetime
                     && self.detected_formatter == other.detected_formatter
+                    && self.detected_hasher == other.detected_hasher
                     && self.deprecated == other.deprecated
                     && self.is_thread_safe == other.is_thread_safe
                     && self.is_explicit_class_template_instantiation_definition == other.is_explicit_class_template_instantiation_definition
@@ -2924,6 +2945,7 @@ mod __defs {
                 .field("has_private_pointer_or_reference_fields", &self.has_private_pointer_or_reference_fields)
                 .field("has_template_argument_lifetime", &self.has_template_argument_lifetime)
                 .field("detected_formatter", &self.detected_formatter)
+                .field("detected_hasher", &self.detected_hasher)
                 .field("deprecated", &self.deprecated())
                 .field("is_thread_safe", &self.is_thread_safe)
                 .field("is_explicit_class_template_instantiation_definition", &self.is_explicit_class_template_instantiation_definition)
@@ -2988,6 +3010,7 @@ mod __defs {
             has_private_pointer_or_reference_fields: false,
             has_template_argument_lifetime: false,
             detected_formatter: false,
+            detected_hasher: DetectedHasher::EMPTY,
             deprecated: FfiString::EMPTY,
             is_thread_safe: false,
             is_explicit_class_template_instantiation_definition: false,
@@ -3202,6 +3225,9 @@ mod __defs {
         pub fn detected_formatter(&self) -> bool {
             self.detected_formatter
         }
+        pub fn detected_hasher(&self) -> DetectedHasher {
+            self.detected_hasher
+        }
         pub fn has_deprecated(&self) -> bool {
             (self.has_bits & 0x800) != 0
         }
@@ -3398,6 +3424,9 @@ mod __defs {
             self.detected_formatter = val;
             &mut self.detected_formatter
         }
+        pub fn set_detected_hasher(&mut self, val: DetectedHasher) {
+            self.detected_hasher = val;
+        }
         pub fn set_deprecated(&mut self, val: FfiString) -> &mut FfiString {
             self.has_bits |= 0x800;
             self.deprecated = val;
@@ -3463,6 +3492,7 @@ mod __defs {
         assert!(core::mem::offset_of!(Record, has_private_pointer_or_reference_fields) == 1105);
         assert!(core::mem::offset_of!(Record, has_template_argument_lifetime) == 1106);
         assert!(core::mem::offset_of!(Record, detected_formatter) == 1107);
+        assert!(core::mem::offset_of!(Record, detected_hasher) == 1108);
         assert!(core::mem::offset_of!(Record, deprecated) == 1112);
         assert!(core::mem::offset_of!(Record, is_thread_safe) == 1128);
         assert!(core::mem::offset_of!(Record, is_explicit_class_template_instantiation_definition) == 1129);

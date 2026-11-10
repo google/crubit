@@ -2263,6 +2263,33 @@ fn test_display() -> Result<()> {
 }
 
 #[gtest]
+fn test_absl_hash_value() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct Hashable final {
+            template <typename H>
+            friend H AbslHashValue(H h, const Hashable&) { return h; }
+        };
+    "#,
+    )?;
+    let hash_impl = quote! { impl ::core::hash::Hash for Hashable { ... } };
+
+    // Verify that `hash_impl` is generated when the `absl_hash_value` feature is enabled.
+    let rs_api = generate_bindings_tokens_for_test(make_test_ir_dependency(
+        &proto,
+        Some("absl_hash_value"),
+    )?)?
+    .rs_api;
+    assert_rs_matches!(rs_api, hash_impl.clone());
+
+    // Verify that `hash_impl` is missing when the `absl_hash_value` feature is disabled.
+    let rs_api = generate_bindings_tokens_for_test(make_test_ir_dependency(&proto, None)?)?.rs_api;
+    assert_rs_not_matches!(rs_api, hash_impl);
+
+    Ok(())
+}
+
+#[gtest]
 fn test_thread_safe_annotation_generates_send_sync() -> Result<()> {
     let rs_api = generate_bindings_tokens_from_cc(
         r#"

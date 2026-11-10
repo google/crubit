@@ -322,6 +322,16 @@ rust_test(
 )
 
 cc_library(
+    name = "absl_hash_cpp",
+    hdrs = ["absl_hash.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = ["@abseil-cpp//absl/hash"],
+)
+
+cc_library(
     name = "bridge_cpp",
     hdrs = ["bridge.h"],
     compatible_with = ["//buildenv/target:non_prod"],

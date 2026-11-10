@@ -155,6 +155,14 @@ clang::QualType StripPointersReferencesAndArrays(
   }
 }
 
+bool IsTypeValueOrRefToConst(clang::QualType candidate,
+                             clang::CanQualType target) {
+  return candidate->getCanonicalTypeUnqualified() == target ||
+         (candidate->isLValueReferenceType() &&
+          candidate.getNonReferenceType().getCanonicalType() ==
+              target.withConst());
+}
+
 bool IsClangCoroAnnotation(const clang::Attr& attr) {
   return clang::isa<clang::CoroReturnTypeAttr>(attr) ||
          clang::isa<clang::CoroWrapperAttr>(attr) ||

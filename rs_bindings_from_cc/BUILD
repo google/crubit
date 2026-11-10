@@ -51,6 +51,7 @@ deps_for_bindings(
     name = "deps_for_bindings",
     deps_for_generated_cc_file = [
         "//support/internal:bindings_support",
+        "//support:absl_hash_cpp",
         "//support:bridge_cpp",
         "//support/rs_std:dyn_callable",
         "//support/rs_std:lossy_formatter_for_bindings",
