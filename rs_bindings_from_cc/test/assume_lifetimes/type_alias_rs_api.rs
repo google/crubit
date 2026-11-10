@@ -107,7 +107,13 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) current: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
+    /// Cannot infer `Sync` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("std :: reverse_iterator < const char *>"),
@@ -191,7 +197,13 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) current: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
+    /// Cannot infer `Sync` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("std :: reverse_iterator < const wchar_t *>"),

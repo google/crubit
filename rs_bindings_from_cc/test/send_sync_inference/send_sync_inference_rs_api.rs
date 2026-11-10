@@ -810,7 +810,7 @@ pub mod crubit {
             fn default() -> Self {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
-                    crate::detail::__rust_thunk__dcd8546c__ZN6crubit4test20ThreadAffineTemplateIiEC1Ev(&raw mut tmp as*mut _);
+                    crate::detail::__rust_thunk__b813127c__ZN6crubit4test20ThreadAffineTemplateIiEC1Ev(&raw mut tmp as*mut _);
                     tmp.assume_init()
                 }
             }
@@ -896,7 +896,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test21MemberThreadAffineTagC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__dcd8546c__ZN6crubit4test20ThreadAffineTemplateIiEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__b813127c__ZN6crubit4test20ThreadAffineTemplateIiEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
     }

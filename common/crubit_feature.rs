@@ -104,9 +104,8 @@ flagset::flags! {
         /// Generate C++ bindings for Rust enums with one nested struct per variant, built on
         /// `support/rs_std/enum.h` (crubit.rs-enum-api-v2). Only affects cpp_api_from_rust.
         EnumApiV2,
-        /// Let rustc infer `Send` and `Sync` for C++ records from their fields, instead of
-        /// emitting `impl !Send` / `impl !Sync` for records without an explicit annotation.
-        /// Opaque byte blobs which hold C++ data are marked as neither `Send` nor `Sync`.
+        /// No effect: `rs_bindings_from_cc` always lets rustc infer `Send` and `Sync` for C++
+        /// records from their fields. Kept until the feature is deleted from build files.
         InferSendSync,
 
         /// Emit C++ references (`T const&` / `T&`) instead of pointers (`T const*` / `T*`) for

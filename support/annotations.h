@@ -201,10 +201,9 @@
 // default behavior. To opt out of the default `Debug` implementation, use
 // `CRUBIT_OVERRIDE_DEBUG(false)`.
 //
-// `"!Send"` and `"!Sync"` can be used to opt a type out of `Send` / `Sync`,
-// producing `impl !Send for MyStruct {}` / `impl !Sync for MyStruct {}`. This
-// is already the default, unless the `infer_send_sync` Crubit feature is
-// enabled (see `CRUBIT_UNSAFE_IMPL`). Positive `Send` / `Sync` must use
+// `"!Send"` and `"!Sync"` can be used to opt a type out of `Send` / `Sync`
+// inference (see `CRUBIT_UNSAFE_IMPL`), producing `impl !Send for MyStruct {}`
+// / `impl !Sync for MyStruct {}`. Positive `Send` / `Sync` must use
 // `CRUBIT_UNSAFE_IMPL` instead.
 #define CRUBIT_TRAIT_DERIVE(...)                                         \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_trait_derive" __VA_OPT__(, ) \
@@ -234,12 +233,11 @@
 // unsafe impl Sync for MyStruct {}
 // ```
 //
-// By default, types without this annotation get `impl !Send` and `impl !Sync`.
-// With the `infer_send_sync` Crubit feature, they instead get no impl at all,
-// and Rust infers `Send` and `Sync` from the fields, just as it does for Rust
-// types. Fields that Crubit represents as opaque bytes (e.g. non-public fields,
-// fields of unsupported types, and base class subobjects) are treated as
-// neither `Send` nor `Sync`. Use `CRUBIT_TRAIT_DERIVE("!Send")` /
+// Types without this annotation get no impl at all, and Rust infers `Send` and
+// `Sync` from the fields, just as it does for Rust types. Subobjects that
+// Crubit doesn't represent as typed Rust fields (e.g. non-public fields, fields
+// of unsupported types, base class subobjects, and vtable pointers) make the
+// type neither `Send` nor `Sync`. Use `CRUBIT_TRAIT_DERIVE("!Send")` /
 // `CRUBIT_TRAIT_DERIVE("!Sync")` to opt out of inference for a type which must
 // not be sent or shared between threads, e.g. because it is thread-affine.
 #define CRUBIT_UNSAFE_IMPL(...)                                         \

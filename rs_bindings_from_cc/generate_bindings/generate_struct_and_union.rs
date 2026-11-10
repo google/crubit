@@ -485,7 +485,7 @@ fn field_definition(
 }
 
 /// Lists the C++ subobjects of `record` that are not represented as typed Rust fields, which
-/// prevent `rustc` from inferring `Send` or `Sync` when `infer_send_sync` is enabled.
+/// prevent `rustc` from inferring `Send` or `Sync`.
 ///
 /// Returns markdown bullets, each on a new line, to follow "Cannot infer `Send` because:". Returns
 /// `None` if every C++ subobject is represented as a typed Rust field (or is an integer/enum
@@ -564,23 +564,21 @@ fn unrepresented_subobjects(
 /// annotations.
 ///
 /// Explicit annotations are always honored. Without one, `raw_string_view` is positively
-/// implemented (it is a read-only byte slice view whose bytes can only be accessed via `unsafe`),
-/// and other records are negatively implemented unless `infer_send_sync` is enabled. When
-/// `infer_send_sync` is enabled, no impl is emitted if all C++ subobjects are represented as Rust
-/// fields; otherwise a documented negative impl is emitted explaining what prevented inference.
+/// implemented (it is a read-only byte slice view whose bytes can only be accessed via `unsafe`).
+/// Other records get no impl if all C++ subobjects are represented as Rust fields, so that `rustc`
+/// infers the trait from the fields; otherwise a documented negative impl is emitted explaining
+/// what prevented inference.
 fn send_sync_impl(
     db: &BindingsGenerator,
     record: &Record,
     trait_name: &str,
     annotated: TraitImplPolarity,
-    infer_send_sync: bool,
     unrepresented: Option<&str>,
 ) -> SendSyncImpl {
     match annotated {
         TraitImplPolarity::Positive => SendSyncImpl::Positive,
         TraitImplPolarity::Negative => SendSyncImpl::Negative { doc_comment: None },
         TraitImplPolarity::None if record.is_raw_string_view() => SendSyncImpl::Positive,
-        TraitImplPolarity::None if !infer_send_sync => SendSyncImpl::Negative { doc_comment: None },
         TraitImplPolarity::None => match unrepresented {
             None => SendSyncImpl::None,
             Some(unrepresented) => SendSyncImpl::Negative {
@@ -716,16 +714,6 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         .collect();
 
     let mut fields_that_must_be_copy = vec![];
-    // Send/Sync are a property of the C++ type, so whether to infer them is controlled by the
-    // target which defines the type: for template instantiations that's the template's target, not
-    // the target which happens to instantiate it.
-    let infer_send_sync = {
-        let defining_target = db
-            .defining_target(record.id())
-            .unwrap_or_else(|| record.as_ref().owning_target().clone());
-        ir.target_crubit_features(&defining_target)
-            .contains(crubit_feature::CrubitFeature::InferSendSync)
-    };
 
     // Pair up fields with the preceding and following fields (if any):
     // - the end offset of the previous field determines if we need to insert padding.
@@ -824,11 +812,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
     let allow_direct_init = record.is_aggregate() || record.is_union();
     let head_padding =
         if head_padding_bytes > 0 || !allow_direct_init { Some(head_padding_bytes) } else { None };
-    let unrepresented = if infer_send_sync {
-        unrepresented_subobjects(&record, head_padding_bytes, &field_definitions)
-    } else {
-        None
-    };
+    let unrepresented = unrepresented_subobjects(&record, head_padding_bytes, &field_definitions);
 
     api_snippets.cc_details.push(cc_struct_layout_assertion(db, &record)?);
 
@@ -1154,7 +1138,6 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
             &record,
             "Send",
             record.trait_derives().send,
-            infer_send_sync,
             unrepresented.as_deref(),
         ),
         sync: send_sync_impl(
@@ -1162,7 +1145,6 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
             &record,
             "Sync",
             record.trait_derives().sync,
-            infer_send_sync,
             unrepresented.as_deref(),
         ),
         cxx_impl,

@@ -27,8 +27,6 @@ pub fn MustBindFn() {
 pub struct Copyable {
     pub field: ::ffi_11::c_int,
 }
-impl !Send for Copyable {}
-impl !Sync for Copyable {}
 unsafe impl ::cxx::ExternType for Copyable {
     type Id = ::cxx::type_id!("Copyable");
     type Kind = ::cxx::kind::Trivial;
@@ -57,7 +55,11 @@ pub struct Cloneable {
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `field_` is represented as opaque bytes
 impl !Send for Cloneable {}
+/// Cannot infer `Sync` because:
+/// * field `field_` is represented as opaque bytes
 impl !Sync for Cloneable {}
 unsafe impl ::cxx::ExternType for Cloneable {
     type Id = ::cxx::type_id!("Cloneable");
@@ -179,7 +181,11 @@ pub struct Movable {
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
 }
+/// Cannot infer `Send` because:
+/// * field `field_` is represented as opaque bytes
 impl !Send for Movable {}
+/// Cannot infer `Sync` because:
+/// * field `field_` is represented as opaque bytes
 impl !Sync for Movable {}
 unsafe impl ::cxx::ExternType for Movable {
     type Id = ::cxx::type_id!("Movable");

@@ -244,7 +244,7 @@ static_assert(
     CRUBIT_OFFSET_OF(x, struct crubit::test::ThreadAffineTemplate<int>) == 0);
 
 extern "C" void
-__rust_thunk__dcd8546c__ZN6crubit4test20ThreadAffineTemplateIiEC1Ev(
+__rust_thunk__b813127c__ZN6crubit4test20ThreadAffineTemplateIiEC1Ev(
     struct crubit::test::ThreadAffineTemplate<int>* __this) {
   crubit::construct_at(__this);
 }

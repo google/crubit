@@ -7,8 +7,7 @@
 
 #include "support/annotations.h"
 
-// These types are compiled with the `infer_send_sync` Crubit feature, so
-// `Send` and `Sync` are inferred by rustc from the fields.
+// `Send` and `Sync` are inferred by rustc from the fields of these types.
 
 namespace crubit::test {
 

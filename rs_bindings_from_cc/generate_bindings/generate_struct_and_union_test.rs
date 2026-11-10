@@ -2214,7 +2214,7 @@ fn test_thread_safe_annotation_generates_unsafe_cell_body() -> Result<()> {
 }
 
 #[gtest]
-fn test_non_thread_safe_struct_has_negative_send_sync() -> Result<()> {
+fn test_non_thread_safe_struct_has_no_unsafe_send_sync() -> Result<()> {
     let rs_api = generate_bindings_tokens_from_cc(
         r#"
         struct RegularStruct final {
@@ -2227,10 +2227,6 @@ fn test_non_thread_safe_struct_has_negative_send_sync() -> Result<()> {
     // Non-thread-safe types should NOT have `unsafe impl Send/Sync`.
     assert_rs_not_matches!(rs_api, quote! { unsafe impl Send for RegularStruct {} });
     assert_rs_not_matches!(rs_api, quote! { unsafe impl Sync for RegularStruct {} });
-
-    // They should have negative impls instead.
-    assert_rs_matches!(rs_api, quote! { impl !Send for RegularStruct {} });
-    assert_rs_matches!(rs_api, quote! { impl !Sync for RegularStruct {} });
 
     // And should have normal fields, not UnsafeCell wrapping.
     assert_rs_matches!(rs_api, quote! { pub field: ::ffi_11::c_int });
@@ -2285,37 +2281,6 @@ fn test_infer_send_sync_documents_negative_impls_for_erased_fields() -> Result<(
         }
     );
     assert_rs_not_matches!(rs_api, quote! { PhantomData<*mut ()> });
-    Ok(())
-}
-
-#[gtest]
-fn test_without_infer_send_sync_negative_impls_have_no_doc_comment() -> Result<()> {
-    let rs_api = generate_bindings_tokens_from_cc(
-        r#"
-        struct StructWithUnsupportedField final {
-          volatile int my_field;
-        };
-    "#,
-    )?
-    .rs_api;
-    assert_rs_matches!(
-        rs_api,
-        quote! {
-            pub struct StructWithUnsupportedField {
-                #[doc = ...]
-                pub(crate) my_field: [::core::mem::MaybeUninit<u8>; 4],
-            }
-            impl !Send for StructWithUnsupportedField {}
-            impl !Sync for StructWithUnsupportedField {}
-        }
-    );
-    assert_rs_not_matches!(
-        rs_api,
-        quote! {
-            #[doc = ...]
-            impl !Send for StructWithUnsupportedField {}
-        }
-    );
     Ok(())
 }
 

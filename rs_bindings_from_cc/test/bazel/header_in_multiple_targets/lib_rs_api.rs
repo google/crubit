@@ -160,7 +160,13 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) __f_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
     }
+    /// Cannot infer `Send` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `__f_` is represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE {}
+    /// Cannot infer `Sync` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `__f_` is represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE {}
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: function < int (const class shared_ns :: Info &) >"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE);
     impl __CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE {

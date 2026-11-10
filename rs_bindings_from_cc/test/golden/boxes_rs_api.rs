@@ -542,7 +542,11 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) __size_: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * fields `__begin_`, `__size_` are represented as opaque bytes
     impl !Send for __CcTemplateInstSt16initializer_listIiE {}
+    /// Cannot infer `Sync` because:
+    /// * fields `__begin_`, `__size_` are represented as opaque bytes
     impl !Sync for __CcTemplateInstSt16initializer_listIiE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("std :: initializer_list < int >"),
@@ -653,10 +657,16 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) current: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Send
         for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE
     {
     }
+    /// Cannot infer `Sync` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Sync
         for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE
     {
@@ -710,7 +720,13 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) current: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {}
+    /// Cannot infer `Sync` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {}
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: reverse_iterator < class std :: __wrap_iter < const int *>>"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE);
     impl __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {
@@ -799,7 +815,13 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) current: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE {}
+    /// Cannot infer `Sync` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE {}
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: reverse_iterator < class std :: __wrap_iter < struct test :: NonTrivial *>>"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE);
     impl __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE {
@@ -850,7 +872,13 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) current: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {}
+    /// Cannot infer `Sync` because:
+    /// * base class subobjects are not represented as Rust fields
+    /// * field `current` is represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {}
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: reverse_iterator < class std :: __wrap_iter < int *>>"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE);
     impl __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {
@@ -939,7 +967,11 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) __i_: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * field `__i_` is represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE {}
+    /// Cannot infer `Sync` because:
+    /// * field `__i_` is represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE {}
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: __wrap_iter < const struct test :: NonTrivial *>"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE);
 
@@ -1008,7 +1040,11 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) __i_: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * field `__i_` is represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {}
+    /// Cannot infer `Sync` because:
+    /// * field `__i_` is represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("std :: __wrap_iter < const int *>"),
@@ -1114,7 +1150,11 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) __i_: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * field `__i_` is represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE {}
+    /// Cannot infer `Sync` because:
+    /// * field `__i_` is represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE {}
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: __wrap_iter < struct test :: NonTrivial *>"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE);
 
@@ -1162,7 +1202,11 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) __i_: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * field `__i_` is represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u11__wrap_iterIPiEE {}
+    /// Cannot infer `Sync` because:
+    /// * field `__i_` is represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u11__wrap_iterIPiEE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("std :: __wrap_iter < int *>"),
@@ -1253,7 +1297,11 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) __size_: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * fields `__data_`, `__size_` are represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE {}
+    /// Cannot infer `Sync` because:
+    /// * fields `__data_`, `__size_` are represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE {}
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: span < const struct test :: NonTrivial , 18446744073709551615UL >"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE);
     impl __CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE {
@@ -1514,7 +1562,11 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) __size_: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * fields `__data_`, `__size_` are represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {}
+    /// Cannot infer `Sync` because:
+    /// * fields `__data_`, `__size_` are represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("std :: span < const int , 18446744073709551615UL >"),
@@ -1802,7 +1854,11 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) __size_: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * fields `__data_`, `__size_` are represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE {}
+    /// Cannot infer `Sync` because:
+    /// * fields `__data_`, `__size_` are represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE {}
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: span < struct test :: NonTrivial , 18446744073709551615UL >"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE);
     impl __CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE {
@@ -2042,7 +2098,11 @@ pub mod zz_template_instantiations {
         /// Types of non-public C++ fields can be elided away
         pub(crate) __size_: [::core::mem::MaybeUninit<u8>; 8],
     }
+    /// Cannot infer `Send` because:
+    /// * fields `__data_`, `__size_` are represented as opaque bytes
     impl !Send for __CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {}
+    /// Cannot infer `Sync` because:
+    /// * fields `__data_`, `__size_` are represented as opaque bytes
     impl !Sync for __CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("std :: span < int , 18446744073709551615UL >"),

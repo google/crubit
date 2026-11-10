@@ -475,8 +475,7 @@ llvm::Error AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
 
     if (trait == "Send" || trait == "Sync") {
       if (polarity == TraitImplPolarity::NEGATIVE) {
-        // An explicit opt-out. This is the default unless the
-        // `infer_send_sync` feature is enabled, but it is always allowed.
+        // An explicit opt-out of `Send` / `Sync` inference.
         TraitImplPolarity selected =
             trait == "Send" ? result.send() : result.sync();
         if (selected != TraitImplPolarity::NONE) {
