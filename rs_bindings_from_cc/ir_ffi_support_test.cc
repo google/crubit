@@ -52,6 +52,19 @@ TEST(IrFfiSupportTest, FfiStringRoundtripAcrossRust) {
 
 TEST(IrFfiSupportTest, FfiVecInsertAndRoundtripAcrossRust) {
   FfiVec<FfiString> v = {FfiString("first"), FfiString("third")};
+  EXPECT_EQ(v.front().AsView(), "first");
+  EXPECT_EQ(v.back().AsView(), "third");
+  v.emplace_back("temporary");
+  EXPECT_EQ(v.back().AsView(), "temporary");
+  v.pop_back();
+  EXPECT_EQ(v.size(), 2);
+
+  FfiVec<FfiString> span_copy(v.AsSpan());
+  EXPECT_EQ(span_copy, v);
+  std::vector<FfiString> std_vec = {FfiString("first"), FfiString("third")};
+  FfiVec<FfiString> moved_from_std(std::move(std_vec));
+  EXPECT_EQ(moved_from_std, v);
+
   FfiVec<FfiString> out;
   crubit_test_roundtrip_ffi_vec(&v, &out);
   EXPECT_TRUE(v.empty());
