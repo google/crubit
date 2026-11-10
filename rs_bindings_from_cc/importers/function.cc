@@ -1271,6 +1271,8 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
 
   std::optional<std::string> nodiscard;
   std::optional<std::string> deprecated;
+  // TODO(lukasza): Allow non-default visibility (see cl/1016025999).
+  constexpr bool kAllowNonDefaultVisibility = false;
   auto unknown_attr =
       CollectUnknownAttrs(*function_decl, [&](const clang::Attr& attr) {
         if (auto* unused_attr =
@@ -1306,7 +1308,7 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
                    clang::isa<clang::AbiTagAttr>(attr) ||
                    clang::isa<clang::LocksExcludedAttr>(attr) ||
                    clang::isa<clang::AvailabilityAttr>(attr) ||
-                   IsDefaultVisibilityAttr(attr)) {
+                   IsIgnoredVisibilityAttr(attr, kAllowNonDefaultVisibility)) {
           // These attributes don't affect Rust (`AvailabilityAttr` is already
           // checked via `Decl::isUnavailable` and `Decl::isWeakImported`).
           return true;

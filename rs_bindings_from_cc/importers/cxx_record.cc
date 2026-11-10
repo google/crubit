@@ -1082,20 +1082,18 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
         if (IsKnownAttr(attr)) {
           return true;
         } else if (auto* visibility =
-                       clang::dyn_cast<clang::VisibilityAttr>(&attr)) {
-          // Visibility attributes on user C++ records (e.g. from export macros
-          // like QUICHE_EXPORT) do not affect Rust memory layout or FFI
-          // calling conventions. Only standard library records with hidden
-          // visibility are unsupported.
-          if (record_decl->isInStdNamespace() &&
-              visibility->getVisibility() ==
-                  clang::VisibilityAttr::VisibilityType::Hidden) {
-            attr_error_item = ictx_.ImportUnsupportedItem(
-                *record_decl, std::nullopt,
-                {FormattedError::Static(
-                    "Records from the standard library with "
-                    "hidden visibility are not supported")});
-          }
+                       clang::dyn_cast<clang::VisibilityAttr>(&attr);
+                   visibility && record_decl->isInStdNamespace() &&
+                   visibility->getVisibility() ==
+                       clang::VisibilityAttr::VisibilityType::Hidden) {
+          // TODO(lukasza): Remove this special case (see cl/1016025998).
+          attr_error_item = ictx_.ImportUnsupportedItem(
+              *record_decl, std::nullopt,
+              {FormattedError::Static("Records from the standard library with "
+                                      "hidden visibility are not supported")});
+          return true;
+        } else if (IsIgnoredVisibilityAttr(
+                       attr, /*allow_non_default_visibility=*/true)) {
           return true;
         } else if (auto* unused_attr =
                        clang::dyn_cast<clang::WarnUnusedResultAttr>(&attr)) {
