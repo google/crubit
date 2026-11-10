@@ -184,8 +184,8 @@ llvm::Error AddUseModToIr(IR& ir, llvm::ArrayRef<std::string> extra_rs_srcs) {
       *use_mod_from_src.enclosing_namespace.value()->add_children() =
           std::move(use_mod_from_src.use_mod_item);
     } else {
-      *(*ir.mutable_top_level_items())[ir.current_target()].Add() =
-          std::move(use_mod_from_src.use_mod_item);
+      (*ir.mutable_top_level_items())[ir.current_target()].push_back(
+          std::move(use_mod_from_src.use_mod_item));
     }
   }
   return llvm::Error::success();

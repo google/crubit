@@ -39,8 +39,8 @@ extern "C" ffi::IRProto crubit_test_make_ffi_ir() {
   ir.set_current_target("//test:target");
   *ir.add_public_headers() = HeaderName("foo.h").AsFfi();
   *ir.add_public_headers() = HeaderName("bar.h").AsFfi();
-  auto* item = (*ir.mutable_top_level_items())["//test:target"].Add();
-  auto* func = item->mutable_func();
+  auto& item = (*ir.mutable_top_level_items())["//test:target"].emplace_back();
+  auto* func = item.mutable_func();
   func->set_id(42);
   func->set_is_inline(true);
   func->set_unique_name("c:@F@root_node");

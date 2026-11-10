@@ -82,7 +82,8 @@ class Invocation {
       std::vector<std::string> sorted_features(features.begin(),
                                                features.end());
       absl::c_sort(sorted_features);
-      set.Add(sorted_features.begin(), sorted_features.end());
+      set = ffi::FfiVec<ffi::FfiString>(sorted_features.begin(),
+                                        sorted_features.end());
     }
     for (const auto& [target, name] : crate_names) {
       (*ir_.mutable_crate_names())[target.value()] = ffi::FfiString(name);

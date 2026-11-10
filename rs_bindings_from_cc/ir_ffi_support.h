@@ -16,6 +16,7 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #if __has_cpp_attribute(clang::trivial_abi)
 #define CRUBIT_FFI_TRIVIAL_ABI [[clang::trivial_abi]]
@@ -246,6 +247,20 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiVec {
     }
   }
 
+  explicit FfiVec(llvm::ArrayRef<T> span) : FfiVec() {
+    reserve(span.size());
+    for (const T& item : span) {
+      push_back(item);
+    }
+  }
+
+  explicit FfiVec(std::vector<T>&& vec) : FfiVec() {
+    reserve(vec.size());
+    for (T& item : vec) {
+      push_back(std::move(item));
+    }
+  }
+
   FfiVec(const FfiVec& other) : FfiVec() {
     reserve(other.len_);
     for (size_t i = 0; i < other.len_; ++i) {
@@ -298,15 +313,23 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiVec {
     cap_ = new_cap;
   }
 
-  void Reserve(size_t new_cap) { reserve(new_cap); }
-
-  void push_back(T value) {
+  template <typename... Args>
+  T& emplace_back(Args&&... args) {
     if (len_ == cap_) {
       CRUBIT_CHECK(cap_ <= static_cast<size_t>(-1) / 2);
       reserve(cap_ == 0 ? 4 : cap_ * 2);
     }
-    new (ptr_ + len_) T(std::move(value));
+    T* elem = new (ptr_ + len_) T(std::forward<Args>(args)...);
     ++len_;
+    return *elem;
+  }
+
+  void push_back(T value) { emplace_back(std::move(value)); }
+
+  void pop_back() {
+    CRUBIT_CHECK(len_ > 0);
+    --len_;
+    ptr_[len_].~T();
   }
 
   T* insert(size_t idx, T value) {
@@ -328,33 +351,12 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiVec {
     return ptr_ + idx;
   }
 
-  T* Add() {
-    if (len_ == cap_) {
-      CRUBIT_CHECK(cap_ <= static_cast<size_t>(-1) / 2);
-      reserve(cap_ == 0 ? 4 : cap_ * 2);
-    }
-    T* elem = new (ptr_ + len_) T();
-    ++len_;
-    return elem;
-  }
-
-  void Add(T value) { push_back(std::move(value)); }
-
-  template <typename Iter>
-  void Add(Iter first, Iter last) {
-    for (; first != last; ++first) {
-      push_back(T(*first));
-    }
-  }
-
   void clear() {
     for (size_t i = 0; i < len_; ++i) {
       ptr_[i].~T();
     }
     len_ = 0;
   }
-
-  void Clear() { clear(); }
 
   size_t size() const { return len_; }
   bool empty() const { return len_ == 0; }
@@ -364,6 +366,23 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiVec {
   const T* end() const { return ptr_ + len_; }
   T* begin() { return ptr_; }
   T* end() { return ptr_ + len_; }
+
+  const T& front() const {
+    CRUBIT_CHECK(len_ > 0);
+    return ptr_[0];
+  }
+  T& front() {
+    CRUBIT_CHECK(len_ > 0);
+    return ptr_[0];
+  }
+  const T& back() const {
+    CRUBIT_CHECK(len_ > 0);
+    return ptr_[len_ - 1];
+  }
+  T& back() {
+    CRUBIT_CHECK(len_ > 0);
+    return ptr_[len_ - 1];
+  }
 
   const T& operator[](size_t idx) const {
     CRUBIT_CHECK(idx < len_);
@@ -575,7 +594,6 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiMap {
   size_t size() const { return entries_.size(); }
   bool empty() const { return entries_.empty(); }
   void clear() { entries_.clear(); }
-  void Clear() { entries_.clear(); }
 
   iterator begin() { return entries_.begin(); }
   iterator end() { return entries_.end(); }
