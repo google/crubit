@@ -114,11 +114,33 @@ namespace macro_constants_alias = macro_constants_ns;
 #define CONST_VOLATILE_CAST_TO_TYPEDEF ((const MacroUint32 volatile)1)
 #define STATIC_CAST_TO_CONST static_cast<const short>(1)
 
+// String constants.
+#define STRING_CONSTANT "hello"
+#define CONCATENATED_STRING_CONSTANT \
+  "hello, "                          \
+  "world"
+#define PARENTHESIZED_STRING_CONSTANT (STRING_CONSTANT)
+#define STRING_WITH_ESCAPES "tab\tquote\"newline\n"
+#define UTF8_STRING_CONSTANT u8"caf\u00e9"
+#define NON_UTF8_STRING_CONSTANT "\xff"
+// The result of concatenating ordinary and UTF-8 string literals is a UTF-8
+// string literal.
+#define MIXED_PREFIX_STRING_CONSTANT \
+  "a"                                \
+  u8"b"
+#define STRING_WITH_EMBEDDED_NUL "a\0b"
+
 // The following macros are not supported, and are silently ignored.
 #define EMPTY_MACRO
 #define FUNCTION_LIKE_MACRO(x) ((x) + 1)
 #define FLOAT_CONSTANT 1.5
-#define STRING_CONSTANT "hello"
+#define WIDE_STRING_CONSTANT L"wide"
+#define UTF16_STRING_CONSTANT u"utf16"
+#define UTF32_STRING_CONSTANT U"utf32"
+#define CONCATENATED_WIDE_STRING_CONSTANT \
+  "a"                                     \
+  L"b"
+#define USER_DEFINED_STRING_LITERAL "x"_s
 #define NOT_A_NUMBER 1.2.3
 #define DIVISION_BY_ZERO (1 / 0)
 #define OVERFLOW_CONSTANT (2147483647 + 1)

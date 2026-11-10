@@ -431,11 +431,12 @@ std::optional<clang::QualType> ParseTypeName(
 
 // A recursive descent parser for the subset of C++ constant expressions that
 // is supported in macro constants: integer, character, and boolean literals,
-// parentheses, unary and binary operators, `?:`, and casts (C-style,
-// functional, and `static_cast`) to builtin integral types or names of such
-// types (e.g. `uint32_t`). References to other
-// object-like macros are expanded beforehand. The expressions are built using
-// `Sema`, so that they have the same types and semantics as in C++.
+// (concatenated) ordinary and UTF-8 string literals, parentheses, unary and
+// binary operators, `?:`, and casts (C-style, functional, and `static_cast`)
+// to builtin integral types or names of such types (e.g. `uint32_t`).
+// References to other object-like macros are expanded beforehand. The
+// expressions are built using `Sema`, so that they have the same types and
+// semantics as in C++.
 class MacroExpressionParser {
  public:
   MacroExpressionParser(clang::Sema& sema, llvm::ArrayRef<clang::Token> tokens)
@@ -588,6 +589,7 @@ class MacroExpressionParser {
   // primary-expression:
   //     integer-literal
   //     character-literal
+  //     string-literal+
   //     boolean-literal
   //     `(` conditional-expression `)`
   //     `static_cast` `<` type-name `>` `(` conditional-expression `)`
@@ -647,6 +649,20 @@ class MacroExpressionParser {
       case clang::tok::wide_char_constant:
       case clang::tok::utf8_char_constant:
         return Get(sema_.ActOnCharacterConstant(*token, /*UDLScope=*/nullptr));
+      case clang::tok::string_literal:
+      case clang::tok::wide_string_literal:
+      case clang::tok::utf8_string_literal:
+      case clang::tok::utf16_string_literal:
+      case clang::tok::utf32_string_literal: {
+        // Adjacent string literals are concatenated.
+        const size_t begin = position_ - 1;
+        while (position_ < tokens_.size() &&
+               clang::tok::isStringLiteral(tokens_[position_].getKind())) {
+          ++position_;
+        }
+        return Get(sema_.ActOnStringLiteral(
+            tokens_.slice(begin, position_ - begin), /*UDLScope=*/nullptr));
+      }
       case clang::tok::kw_true:
       case clang::tok::kw_false:
         return Get(
@@ -698,11 +714,18 @@ std::optional<MacroConstant> SynthesizeMacroConstant(
     return std::nullopt;
   }
 
-  // Only integral (including boolean and character) constants are supported.
+  // Only integral (including boolean and character) and (narrow or UTF-8)
+  // string constants are supported.
   clang::QualType type = expr->getType();
-  if (!IsSupportedIntegralType(type)) return std::nullopt;
-  if (!expr->getIntegerConstantExpr(ast_context).has_value())
+  if (const auto* string_literal =
+          llvm::dyn_cast<clang::StringLiteral>(expr->IgnoreParens())) {
+    if (!string_literal->isOrdinary() && !string_literal->isUTF8()) {
+      return std::nullopt;
+    }
+  } else if (!IsSupportedIntegralType(type) ||
+             !expr->getIntegerConstantExpr(ast_context).has_value()) {
     return std::nullopt;
+  }
 
   // Make the initializer span the whole macro definition (rather than, say,
   // the definition of a nested macro), so that the source range of the

@@ -491,6 +491,67 @@ macro_rules! STATIC_CAST_TO_CONST {
     };
 }
 
+// String constants.
+
+#[macro_export]
+macro_rules! STRING_CONSTANT {
+    () => {
+        "hello"
+    };
+}
+
+#[macro_export]
+macro_rules! CONCATENATED_STRING_CONSTANT {
+    () => {
+        "hello, world"
+    };
+}
+
+#[macro_export]
+macro_rules! PARENTHESIZED_STRING_CONSTANT {
+    () => {
+        "hello"
+    };
+}
+
+#[macro_export]
+macro_rules! STRING_WITH_ESCAPES {
+    () => {
+        "tab\tquote\"newline\n"
+    };
+}
+
+#[macro_export]
+macro_rules! UTF8_STRING_CONSTANT {
+    () => {
+        "café"
+    };
+}
+
+#[macro_export]
+macro_rules! NON_UTF8_STRING_CONSTANT {
+    () => {
+        b"\xFF"
+    };
+}
+
+// The result of concatenating ordinary and UTF-8 string literals is a UTF-8
+// string literal.
+
+#[macro_export]
+macro_rules! MIXED_PREFIX_STRING_CONSTANT {
+    () => {
+        "ab"
+    };
+}
+
+#[macro_export]
+macro_rules! STRING_WITH_EMBEDDED_NUL {
+    () => {
+        "a\0b"
+    };
+}
+
 // The following macros are not supported, and are silently ignored.
 
 // Incomplete conditionals, which fail partway through parsing.

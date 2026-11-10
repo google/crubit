@@ -40,6 +40,14 @@ fn test_values_match_cc() {
         macro_constants::CAST_FROM_UNEXPANDED_DEP_MACRO!(),
         ::ffi_11::new_c_longlong(0x10000)
     );
+    expect_eq!(
+        macro_constants::STRING_CONSTANT!().len(),
+        macro_constants::StringConstantLength() as usize
+    );
+    expect_eq!(
+        macro_constants::LONG_STRING_CONSTANT!().len(),
+        macro_constants::LongStringConstantLength() as usize
+    );
 }
 
 #[gtest]
@@ -156,4 +164,11 @@ fn test_literal_types() {
         assert_type::<c_ulonglong>(HEX_L_ULLONG_MAX!());
         assert_type::<c_ulonglong>(DECIMAL_UL_UINT_MAX_PLUS_1!());
     }
+}
+
+#[gtest]
+fn test_strings() {
+    let string: &'static str = macro_constants::STRING_CONSTANT!();
+    expect_eq!(string, "hello, world");
+    expect_eq!(macro_constants::LONG_STRING_CONSTANT!(), "0123456789abcdef".repeat(80));
 }

@@ -28,6 +28,33 @@
 #define CAST_CONSTANT ((uint8_t)0x1FF)
 #define STATIC_CAST_CONSTANT (static_cast<std::int64_t>(INT_CONSTANT) << 40)
 #define CAST_FROM_UNEXPANDED_DEP_MACRO UNEXPANDED_CAST_HELPER
+// A string that is longer than the maximum number of elements of array
+// constants, to check that strings are neither limited nor evaluated element by
+// element.
+#define LONG_STRING_CONSTANT                                         \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" \
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+#define STRING_CONSTANT \
+  "hello, "             \
+  "world"
 
 // Functions returning the values of the macros, as computed by the C++
 // compiler.
@@ -53,6 +80,10 @@ inline bool BoolConstant() { return BOOL_CONSTANT; }
 inline char CharConstant() { return CHAR_CONSTANT; }
 inline uint8_t CastConstant() { return CAST_CONSTANT; }
 inline int64_t StaticCastConstant() { return STATIC_CAST_CONSTANT; }
+inline int StringConstantLength() { return sizeof(STRING_CONSTANT) - 1; }
+inline int LongStringConstantLength() {
+  return sizeof(LONG_STRING_CONSTANT) - 1;
+}
 
 // The type of an integer literal is the first type in a list that can represent
 // its value. The list depends on the base and suffix, see

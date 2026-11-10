@@ -94,6 +94,21 @@ bool IsPlainChar(clang::QualType type) {
   }
 }
 
+// If `var_decl` is a macro constant that was defined as a narrow or UTF-8
+// string literal (e.g. `#define FOO "abc"`), returns the string literal.
+// Otherwise, returns null.
+const clang::StringLiteral* GetMacroConstantStringLiteral(
+    const ImportContext& ictx, const clang::VarDecl& var_decl) {
+  if (!ictx.IsTypedMacroConstant(var_decl).has_value() ||
+      var_decl.getInit() == nullptr) {
+    return nullptr;
+  }
+  // `SynthesizeMacroConstant` only synthesizes string constants for ordinary
+  // and UTF-8 string literals.
+  return llvm::dyn_cast<clang::StringLiteral>(
+      var_decl.getInit()->IgnoreParens());
+}
+
 // If `init` initializes a one-dimensional `char` array of the given `size` by
 // a narrow string literal which leaves room for its NULL terminator, returns
 // the string literal. Otherwise, returns null.
@@ -510,6 +525,12 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
   }
   bool is_array = !dimensions.empty();
   bool is_string_view = IsStringViewType(ictx_.ctx_, var_decl->getType());
+  // Macro constants that are string literals are imported like `string_view`
+  // constants (i.e. as `&'static str`), rather than as `char` arrays.
+  // TODO(b/578526770): Consider doing the same for `char` array constexpr
+  // variables.
+  const clang::StringLiteral* macro_string_literal =
+      GetMacroConstantStringLiteral(ictx_, *var_decl);
   if (!value_type->isBooleanType() && !value_type->isIntegerType() &&
       !is_string_view) {
     return ictx_.ImportUnsupportedItem(
@@ -522,13 +543,21 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
                         "variables are supported")});
   }
 
-  const clang::APValue* value = init_decl.evaluateValue();
-  if (value == nullptr) {
-    return ictx_.ImportUnsupportedItem(
-        *var_decl, std::nullopt,
-        {FormattedError::Static("unable to evaluate constexpr value")});
+  // The bytes of a macro string literal are read directly from the literal, so
+  // it isn't evaluated (which would build a value for every character).
+  const clang::APValue* value = nullptr;
+  if (macro_string_literal == nullptr) {
+    value = init_decl.evaluateValue();
+    if (value == nullptr) {
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          {FormattedError::Static("unable to evaluate constexpr value")});
+    }
   }
-  if (is_array) {
+
+  // String literals are emitted as a single string literal, rather than
+  // element by element, so they don't need to be limited.
+  if (is_array && macro_string_literal == nullptr) {
     uint64_t num_initialized =
         CountInitializedElements(*value, dimensions.size());
     if (num_initialized > kMaxInitializedArrayElements) {
@@ -559,6 +588,10 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
     }
     constant->mutable_kind()->set_string_view_value(
         *std::move(string_view_value));
+  } else if (macro_string_literal != nullptr) {
+    // The bytes of the string, without the NUL terminator.
+    constant->mutable_kind()->set_string_view_value(
+        macro_string_literal->getBytes().str());
   } else if (!is_array) {
     if (!value->isInt()) {
       return ictx_.ImportUnsupportedItem(
@@ -589,7 +622,7 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
     }
   }
 
-  if (!is_string_view) {
+  if (!is_string_view && macro_string_literal == nullptr) {
     CcType type =
         ictx_.ConvertQualType(value_type, nullptr, /*nullable=*/true,
                               ictx_.AreAssumedLifetimesEnabledForTarget(
