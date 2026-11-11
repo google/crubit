@@ -6,12 +6,7 @@
 
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
-load("@rules_rust//rust:defs.bzl", "rust_common")
-load(
-    "@rules_rust//rust:rust_common.bzl",
-    "BuildInfo",
-    "CrateInfo",
-)
+load("@rules_rust//rust:rust_common.bzl", "BuildInfo", "CrateInfo", "rust_common")
 
 # buildifier: disable=bzl-visibility
 load(
