@@ -1602,3 +1602,76 @@ fn test_format_cc_type_is_pointer() {
         }
     });
 }
+
+#[test]
+fn test_format_ty_for_cc_rejects_non_bitwise_relocatable_by_value() {
+    let preamble = quote! {
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=::MockDynamic"]
+        #[repr(C)]
+        pub struct MockDynamic {
+            _data: usize,
+            _pin: std::marker::PhantomPinned,
+        }
+        impl Drop for MockDynamic {
+            fn drop(&mut self) {}
+        }
+
+        pub struct StructWithDynamic {
+            pub dynamic: MockDynamic,
+        }
+    };
+    for location in [
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        TypeLocation::FnReturn { is_constructor: false },
+    ] {
+        test_ty(
+            location,
+            &[
+                (
+                    "StructWithDynamic",
+                    "crubit.rs/errors/unsupported_type: Type `StructWithDynamic` cannot be passed \
+                     or returned by value because it is neither C++ move-constructible nor \
+                     bitwise-relocatable",
+                ),
+                (
+                    "MockDynamic",
+                    "crubit.rs/errors/unsupported_type: Type `MockDynamic` cannot be passed \
+                     or returned by value because it is neither C++ move-constructible nor \
+                     bitwise-relocatable",
+                ),
+            ],
+            preamble.clone(),
+            |desc, tcx, ty, expected_err| {
+                let db = bindings_db_for_tests(tcx);
+                let err = db
+                    .format_ty_for_cc(ty, location)
+                    .expect_err(&format!("Expecting error for: {desc}"));
+                assert_eq!(format!("{err:#}"), *expected_err, "{desc}");
+            },
+        );
+        let expected_ref = if matches!(location, TypeLocation::FnParam { .. }) {
+            ":: rust_out :: StructWithDynamic const * $ static crubit_nonnull"
+        } else {
+            ":: rust_out :: StructWithDynamic const & $ static"
+        };
+        let expected_box = if location.admits_movable() {
+            ":: rs :: Movable < :: rs :: Box < :: rust_out :: StructWithDynamic > >"
+        } else {
+            ":: rs :: Box < :: rust_out :: StructWithDynamic >"
+        };
+        test_ty(
+            location,
+            &[
+                ("&'static StructWithDynamic", expected_ref),
+                ("Box<StructWithDynamic>", expected_box),
+            ],
+            preamble.clone(),
+            |desc, tcx, ty, expected| {
+                let db = bindings_db_for_tests(tcx);
+                let actual = db.format_ty_for_cc(ty, location).unwrap().tokens.to_string();
+                let expected = expected.parse::<TokenStream>().unwrap().to_string();
+                assert_eq!(actual, expected, "{desc}");
+            },
+        );
+    }
+}

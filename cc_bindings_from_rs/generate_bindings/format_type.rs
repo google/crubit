@@ -402,15 +402,43 @@ fn is_cpp_relocatable<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool 
         return true;
     }
     let ty::TyKind::Adt(adt_def, substs) = ty.kind() else {
-        return false;
+        return db.is_bitwise_relocatable(ty);
     };
     if let Ok(attrs) = crubit_attr::get_attrs(db.tcx(), adt_def.did())
         && attrs.cpp_type.is_some()
     {
         return attrs.derive_rust_movable && substs.types().all(|t| is_cpp_relocatable(db, t));
     }
-    // Rust-defined ADTs always receive a `T(::crubit::UnsafeRelocateTag, T&&)` constructor.
-    true
+    db.is_bitwise_relocatable(ty)
+}
+
+fn requires_relocatable_in_cc(location: TypeLocation) -> bool {
+    matches!(
+        location,
+        TypeLocation::FnParam { .. }
+            | TypeLocation::FnReturn { .. }
+            | TypeLocation::NestedBridgeable
+            | TypeLocation::ClosureReturn
+            | TypeLocation::IteratorItem
+    )
+}
+
+fn ensure_cpp_relocatable_if_by_value<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+    location: TypeLocation,
+) -> Result<()> {
+    if requires_relocatable_in_cc(location)
+        && !db.is_cpp_move_constructible(ty)
+        && !db.is_bitwise_relocatable(ty)
+        && !db.is_proto_message(ty)
+    {
+        bail!(
+            "crubit.rs/errors/unsupported_type: Type `{ty}` cannot be passed or returned by value \
+             because it is neither C++ move-constructible nor bitwise-relocatable"
+        );
+    }
+    Ok(())
 }
 
 struct ExpandedCppType {
@@ -979,6 +1007,16 @@ fn format_ty_for_cc_impl<'tcx>(
                 let Some(adt_spec) = db.parse_adt_template_specialization(ty) else {
                     bail!("Tuple type `{ty}` is not supported in this context");
                 };
+                if requires_relocatable_in_cc(location)
+                    && !db.is_bitwise_relocatable(ty)
+                    && db.move_ctor_and_assignment_operator_codegen_style(ty).is_none()
+                {
+                    bail!(
+                        "crubit.rs/errors/unsupported_type: Type `{ty}` cannot be passed or \
+                         returned by value because it is neither C++ move-constructible nor \
+                         bitwise-relocatable"
+                    );
+                }
                 let adt_spec = adt_spec.as_ref().map_err(Clone::clone)?;
                 let mut snippet = adt_spec.self_ty_cc.clone();
                 snippet.prereqs.depend_on_spec(db, location, adt_spec);
@@ -1009,6 +1047,7 @@ fn format_ty_for_cc_impl<'tcx>(
             }
         }
         ty::TyKind::Array(element_type, length) => {
+            ensure_cpp_relocatable_if_by_value(db, ty, location)?;
             // We need to be able to handle expressions at the type level that are not simple
             // numeric literals.
             let target_size = evaluate_const_as_u64(db.tcx(), length)?;
@@ -1212,6 +1251,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 .map(|r| r.as_ref().map_err(Clone::clone))
                 .transpose()?
             {
+                ensure_cpp_relocatable_if_by_value(db, ty, location)?;
                 let mut snippet = adt_spec.self_ty_cc.clone();
                 snippet.prereqs.depend_on_spec(db, location, adt_spec);
                 if !db.is_cpp_move_constructible(ty) && location.admits_movable() {
@@ -1266,6 +1306,7 @@ fn format_ty_for_cc_impl<'tcx>(
                     tokens = quote! { #tokens crubit_nonnull };
                 }
 
+                ensure_cpp_relocatable_if_by_value(db, ty, location)?;
                 if !db.is_cpp_move_constructible(ty)
                     && matches!(location, TypeLocation::FnParam { .. })
                 {
@@ -1335,6 +1376,8 @@ fn format_ty_for_cc_impl<'tcx>(
             let canonical_name = db.symbol_canonical_name(def_id)?;
 
             let mut tokens = canonical_name.format_for_cc(db)?;
+
+            ensure_cpp_relocatable_if_by_value(db, ty, location)?;
 
             // Wrap in ::rs::Movable if the type is not C++ movable.
             if !db.is_cpp_move_constructible(ty) && location.admits_movable() {

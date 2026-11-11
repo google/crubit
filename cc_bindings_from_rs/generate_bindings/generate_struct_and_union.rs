@@ -1785,6 +1785,7 @@ pub enum NotAggregateReason {
     IncompatibleBridgedField(Symbol),
     UnsupportedFieldType(Symbol),
     FieldWithDropNotMovable(Symbol),
+    FieldNotBitwiseRelocatable(Symbol),
     MultipleDropFields,
 }
 
@@ -1809,6 +1810,9 @@ impl std::fmt::Display for NotAggregateReason {
             }
             Self::FieldWithDropNotMovable(field) => {
                 write!(f, "Field `{field}` requires drop glue but is not C++-movable")
+            }
+            Self::FieldNotBitwiseRelocatable(field) => {
+                write!(f, "Field `{field}` is not bitwise-relocatable in C++")
             }
             Self::MultipleDropFields => write!(
                 f,
@@ -1931,6 +1935,9 @@ pub fn is_struct_aggregate<'tcx>(
         }
         if !is_type_default_constructible_in_cpp(db, ty) {
             return Err(NotAggregateReason::FieldNotDefaultConstructible(field_def.name));
+        }
+        if !db.is_bitwise_relocatable(ty) {
+            return Err(NotAggregateReason::FieldNotBitwiseRelocatable(field_def.name));
         }
         if ty.needs_drop(tcx, typing_env) {
             // In C++, an aggregate's move constructor is implicitly deleted if any
@@ -2174,15 +2181,8 @@ pub fn generate_adt<'tcx>(
         generate_move_ctor_and_assignment_operator(db, core)
     };
 
-    let relocating_ctor_snippets = if is_aggregate {
-        ApiSnippets::default()
-    } else {
-        generate_relocating_ctor(
-            db,
-            &core.common.cc_short_name,
-            &core.common.cc_fully_qualified_name,
-        )
-    };
+    let relocating_ctor_snippets =
+        if is_aggregate { ApiSnippets::default() } else { generate_relocating_ctor(db, core) };
 
     let mut member_function_names = HashSet::<String>::new();
     let self_is_not_generic =
@@ -2423,7 +2423,9 @@ pub fn generate_adt<'tcx>(
         if needs_explicit_alignas {
             attributes.push(quote! {alignas(#alignment)});
         }
-        attributes.push(quote! {[[clang::trivial_abi]]});
+        if db.is_bitwise_relocatable(core.common.self_ty) {
+            attributes.push(quote! {[[clang::trivial_abi]]});
+        }
         if is_packed {
             attributes.push(quote! { __attribute__((packed)) })
         }
@@ -4018,12 +4020,17 @@ pub fn generate_fields<'tcx>(
     }
 }
 
-/// Generates the `(UnsafeRelocateTag, T&&)` constructor for the given ADT.
+/// Generates the `(UnsafeRelocateTag, T&&)` constructor for the given ADT if it is
+/// bitwise-relocatable (`is_bitwise_relocatable`).
 pub fn generate_relocating_ctor<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    adt_cc_name: &TokenStream,
-    cc_fully_qualified_name: &TokenStream,
+    core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
+    if !db.is_bitwise_relocatable(core.common.self_ty) {
+        return ApiSnippets::default();
+    }
+    let adt_cc_name = &core.common.cc_short_name;
+    let cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
     let main_api = CcSnippet::with_include(
         quote! {
             #adt_cc_name(::crubit::UnsafeRelocateTag, #adt_cc_name&& value); __NEWLINE__

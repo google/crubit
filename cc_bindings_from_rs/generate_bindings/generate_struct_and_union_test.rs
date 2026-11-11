@@ -2800,3 +2800,89 @@ fn test_multiple_inherent_impl_blocks_ordered_by_def_path() {
         );
     });
 }
+
+#[test]
+fn test_non_bitwise_relocatable_cpp_field_omits_relocating_ctor_and_trivial_abi() {
+    let test_src = r#"
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=::MockDynamic"]
+        #[repr(C)]
+        pub struct MockDynamic {
+            _data: usize,
+            _pin: std::marker::PhantomPinned,
+        }
+        impl Drop for MockDynamic {
+            fn drop(&mut self) {}
+        }
+
+        pub struct StructWithCppDynamicField {
+            pub dynamic: MockDynamic,
+        }
+
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=::MockDynamicNoDtor"]
+        #[repr(C)]
+        pub struct MockDynamicNoDtor {
+            _data: usize,
+            _pin: std::marker::PhantomPinned,
+        }
+
+        pub struct StructWithCppDynamicNoDtorField {
+            pub dynamic: MockDynamicNoDtor,
+        }
+
+        pub struct RustOnlyNonUnpin {
+            _private: i32,
+            _pin: std::marker::PhantomPinned,
+        }
+
+        pub struct StructWithBoxedCppDynamicField {
+            _boxed: Box<MockDynamic>,
+        }
+    "#;
+    test_format_item(test_src, "StructWithCppDynamicField", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_not_matches!(result.main_api.tokens, quote! { [[clang::trivial_abi]] });
+        assert_cc_not_matches!(result.main_api.tokens, quote! { UnsafeRelocateTag });
+        assert_cc_not_matches!(result.cc_details.tokens, quote! { memcpy });
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                struct ... StructWithCppDynamicField final {
+                    ...
+                    StructWithCppDynamicField(StructWithCppDynamicField&&) = delete;
+                    ...
+                };
+            }
+        );
+    });
+    test_format_item(test_src, "StructWithCppDynamicNoDtorField", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_not_matches!(result.main_api.tokens, quote! { [[clang::trivial_abi]] });
+        assert_cc_not_matches!(result.main_api.tokens, quote! { UnsafeRelocateTag });
+        assert_cc_not_matches!(
+            result.cc_details.tokens,
+            quote! { is_trivially_move_constructible_v }
+        );
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                struct ... StructWithCppDynamicNoDtorField final {
+                    ...
+                    ~StructWithCppDynamicNoDtorField() = default;
+                    ...
+                    StructWithCppDynamicNoDtorField(StructWithCppDynamicNoDtorField&&) = delete;
+                    ...
+                };
+            }
+        );
+    });
+    test_format_item(test_src, "RustOnlyNonUnpin", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(result.main_api.tokens, quote! { [[clang::trivial_abi]] });
+        assert_cc_matches!(result.main_api.tokens, quote! { UnsafeRelocateTag });
+    });
+    test_format_item(test_src, "StructWithBoxedCppDynamicField", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(result.main_api.tokens, quote! { [[clang::trivial_abi]] });
+        assert_cc_matches!(result.main_api.tokens, quote! { UnsafeRelocateTag });
+    });
+}
