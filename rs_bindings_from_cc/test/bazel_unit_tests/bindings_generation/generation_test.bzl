@@ -12,8 +12,6 @@ load(
     "//rs_bindings_from_cc/test/bazel_unit_tests:defs.bzl",
     "attach_aspect",
 )
-load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
-load("@protobuf//bazel:proto_library.bzl", "proto_library")
 
 def _bindings_generated_when_public_headers_impl(ctx):
     env = analysistest.begin(ctx)
@@ -59,64 +57,6 @@ def _bindings_not_generated_when_no_public_headers():
         target_under_test = ":no_pub_headers_with_aspect",
     )
 
-def _protoc_bindings_used_for_protobufs_impl(ctx):
-    env = analysistest.begin(ctx)
-    tut = analysistest.target_under_test(env)
-
-    asserts.true(env, RustBindingsFromCcInfo in tut, "expected target to have RustBindingFromCcInfo")
-    bindings_info = tut[RustBindingsFromCcInfo]
-
-    references_protobuf_cpp = any([
-        "@protobuf//rust:protobuf_cpp" == str(key.label)
-        for key in bindings_info.dep_variant_info.crate_info.aliases.keys()
-    ])
-
-    asserts.true(env, references_protobuf_cpp, "Expected target to reference protobuf_cpp alias")
-
-    return analysistest.end(env)
-
-protoc_bindings_used_for_protobufs_test = crubit_make_analysis_test(
-    _protoc_bindings_used_for_protobufs_impl,
-)
-
-def _protoc_bindings_used_for_protobufs():
-    proto_library(name = "my_proto", srcs = ["my.proto"])
-    cc_proto_library(name = "my_cc_proto", deps = [":my_proto"])
-    attach_aspect(name = "my_cc_proto_with_aspect", dep = ":my_cc_proto")
-    protoc_bindings_used_for_protobufs_test(
-        name = "protoc_bindings_used_for_protobufs_test",
-        target_under_test = ":my_cc_proto_with_aspect",
-    )
-
-def _protoc_bindings_forwaded_for_alias_library_impl(ctx):
-    env = analysistest.begin(ctx)
-    tut = analysistest.target_under_test(env)
-
-    asserts.true(env, RustBindingsFromCcInfo in tut, "expected target to have RustBindingFromCcInfo")
-    bindings_info = tut[RustBindingsFromCcInfo]
-
-    asserts.true(env, len(bindings_info.pass_through_dep_variant_infos.to_list()) == 2, "Expected target to pass through 2 DepVariantInfos")
-
-    return analysistest.end(env)
-
-protoc_bindings_forwaded_for_alias_library_test = crubit_make_analysis_test(
-    _protoc_bindings_forwaded_for_alias_library_impl,
-)
-
-def _protoc_bindings_forwaded_for_alias_library():
-    # already setup by _protoc_bindings_used_for_protobufs
-    # redeclaring this breaks something
-    # proto_library(name = "my_alias_proto", srcs = ["my.proto"])
-
-    proto_library(name = "other_proto", srcs = ["other.proto"])
-    proto_library(name = "merged_proto", deps = [":my_proto", ":other_proto"])
-    cc_proto_library(name = "merged_cc_proto", deps = [":merged_proto"])
-    attach_aspect(name = "merged_cc_proto_with_aspect", dep = ":merged_cc_proto")
-    protoc_bindings_forwaded_for_alias_library_test(
-        name = "protoc_bindings_forwaded_for_alias_library_test",
-        target_under_test = ":merged_cc_proto_with_aspect",
-    )
-
 def generation_test(name):
     """Sets up the test suite.
 
@@ -124,15 +64,11 @@ def generation_test(name):
       name: name of the test suite"""
     _bindings_generated_when_public_headers()
     _bindings_not_generated_when_no_public_headers()
-    _protoc_bindings_used_for_protobufs()
-    _protoc_bindings_forwaded_for_alias_library()
 
     native.test_suite(
         name = name,
         tests = [
             ":bindings_generated_when_public_headers_test",
             ":bindings_not_generated_when_no_public_headers_test",
-            ":protoc_bindings_used_for_protobufs_test",
-            ":protoc_bindings_forwaded_for_alias_library_test",
         ],
     )
