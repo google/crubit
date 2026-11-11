@@ -2757,6 +2757,9 @@ fn generate_variant_ctor<'db, 'tcx>(
         .enumerate()
         .map(|(i, field_ty)| {
             let cpp_type = db.format_ty_for_cc(field_ty, TypeLocation::Other)?;
+            if get_layout(tcx, field_ty)?.size().bytes() == 0 {
+                bail!("Field `{i}` is zero-sized");
+            }
             let cc_name = anonymous_field_ident(i);
             let cpp_type = cpp_type.into_tokens(&mut main_api_prereqs);
             Ok(quote! { #cpp_type #cc_name })
@@ -2908,9 +2911,28 @@ fn generate_variant_ctor<'db, 'tcx>(
     }
 }
 
+#[derive(Copy, Clone)]
+enum FieldSize {
+    /// Rust field is 0 bytes; in C++ it is omitted when `padding == 0`, or replaced with
+    /// `padding` bytes of trailing/alignment padding.
+    ZeroSized { padding: u64 },
+    /// Rust field is non-zero-sized (or layout failed) and occupies `bytes` in C++.
+    NonZeroSized { bytes: u64 },
+}
+
+impl FieldSize {
+    /// Number of bytes the emitted C++ member occupies (or `0` if omitted).
+    fn bytes(self) -> u64 {
+        match self {
+            FieldSize::ZeroSized { padding } => padding,
+            FieldSize::NonZeroSized { bytes } => bytes,
+        }
+    }
+}
+
 struct Field<'db, 'tcx> {
     cpp_type: Result<&'db CcSnippet<'tcx>>,
-    size: u64,
+    size: FieldSize,
     cc_name: Ident,
     rs_name: TokenStream,
     is_public: bool,
@@ -3014,7 +3036,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                         cpp_type: Err(anyhow!(
                             "No support for bindings of individual non-repr(C) `enum`s"
                         )),
-                        size: self.layout.size.bytes(),
+                        size: FieldSize::NonZeroSized { bytes: self.layout.size.bytes() },
                         cc_name: format_ident!("__opaque_blob_of_bytes"),
                         rs_name: quote! { __opaque_blob_of_bytes },
                         is_public: false,
@@ -3164,11 +3186,17 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         has_cpp_type: bool,
         offset: u64,
         offset_of_next_field: u64,
-    ) -> u64 {
-        if !has_cpp_type && !self.adt_def.is_some_and(|adt| adt.is_union()) {
+    ) -> FieldSize {
+        let rs_size = get_layout(self.db.tcx(), ty).ok().map(|layout| layout.size().bytes());
+        let cc_size = if !has_cpp_type && !self.adt_def.is_some_and(|adt| adt.is_union()) {
             offset_of_next_field - offset
         } else {
-            get_layout(self.db.tcx(), ty).map_or(0, |layout| layout.size().bytes())
+            rs_size.unwrap_or(0)
+        };
+        if rs_size == Some(0) {
+            FieldSize::ZeroSized { padding: cc_size }
+        } else {
+            FieldSize::NonZeroSized { bytes: cc_size }
         }
     }
 
@@ -3285,7 +3313,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         } else {
             let cc_assertions: TokenStream = fields
                 .iter()
-                .filter(|field| field.size != 0)
+                .filter(|field| field.size.bytes() != 0)
                 .map(|Field { cc_name, offset, .. }| {
                     let offset = Literal::u64_unsuffixed(*offset);
                     quote! { static_assert(#offset == offsetof(__crubit_assert_type, #cc_name)); }
@@ -3343,13 +3371,20 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         current_visibility: &mut CcFieldVisState,
     ) -> CcSnippet<'tcx> {
         let cc_name = &field.cc_name;
-        let size = field.size;
-        let msg = format!("Field type has been replaced with a blob of bytes: {err:#}");
+        let size = field.size.bytes();
 
         if size == 0 {
             let msg = format!("Field `{cc_name}` omitted: C++ does not support zero-sized types.");
             return CcSnippet::new(quote! {__NEWLINE__ __COMMENT__ #msg});
         }
+        let msg = match field.size {
+            FieldSize::ZeroSized { .. } => {
+                format!("Zero-sized field has been replaced with padding: {err:#}")
+            }
+            FieldSize::NonZeroSized { .. } => {
+                format!("Field type has been replaced with a blob of bytes: {err:#}")
+            }
+        };
         let visibility = current_visibility.set_is_public(false);
         let size = Literal::u64_unsuffixed(size);
         let tokens = quote! {
@@ -3374,7 +3409,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             quote! { #cc_name }
         };
 
-        let size = field.size;
+        let size = field.size.bytes();
         let cpp_type = match field.cpp_type {
             Err(ref err) => return self.emit_field_err(&field, err, current_visibility),
             Ok(cpp_type) => cpp_type,
@@ -3557,7 +3592,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 EnumKind::OpaqueBlobOfBytes => variants
                     .iter()
                     .flat_map(|v| &v.fields)
-                    .filter(|field| field.size != 0)
+                    .filter(|field| field.size.bytes() != 0)
                     .map(|Field { cc_name, offset, .. }| {
                         let offset = Literal::u64_unsuffixed(*offset);
                         quote! {
@@ -3596,7 +3631,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                             if variant_def.fields.is_empty() {
                                 quote! {}
                             } else {
-                                variant_layout.fields.iter().filter(|field| field.cpp_type.is_ok() && field.size != 0 ).flat_map(move |Field { cc_name, offset, .. }| {
+                                variant_layout.fields.iter().filter(|field| field.cpp_type.is_ok() && field.size.bytes() != 0 ).flat_map(move |Field { cc_name, offset, .. }| {
                                     let offset = Literal::u64_unsuffixed(*offset);
                                     quote! {
                                         {

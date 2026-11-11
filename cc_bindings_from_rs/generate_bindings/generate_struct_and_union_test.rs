@@ -1710,6 +1710,81 @@ fn test_format_item_zst_and_unsupported_field_at_same_offset() {
         );
     });
 }
+
+#[test]
+fn test_format_item_public_empty_array_field() {
+    let test_src = r#"
+    pub struct EmptyArrayAggregate {
+        pub x: u64,
+        pub empty: [u8; 0],
+    }
+
+    pub struct EmptyArrayWithTailPadding {
+        pub x: u64,
+        pub y: u32,
+        pub empty: [u8; 0],
+    }
+
+    pub struct TupleWithEmptyArray(pub u32, pub [u8; 0]);
+    "#;
+
+    test_format_item(test_src, "EmptyArrayAggregate", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                __COMMENT__ "Type is not a C++ aggregate: Field `empty` has a type unsupported in C++"
+                ...
+                __COMMENT__ "Field `empty` omitted: C++ does not support zero-sized types."
+                ...
+            }
+        );
+        assert_cc_not_matches!(main_api.tokens, quote! { ::std::array<::std::uint8_t, 0> });
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                static_assert(sizeof(::rust_out::EmptyArrayAggregate) == 8, ...);
+            }
+        );
+    });
+
+    test_format_item(test_src, "EmptyArrayWithTailPadding", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_not_matches!(main_api.tokens, quote! { ::std::array<::std::uint8_t, 0> });
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                __COMMENT__ "Zero-sized field has been replaced with padding: Zero-sized types (ZSTs) are not supported (b/258259459)"
+                ::std::array<unsigned char, 4> empty;
+                ...
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                static_assert(sizeof(::rust_out::EmptyArrayWithTailPadding) == 16, ...);
+            }
+        );
+    });
+
+    test_format_item(test_src, "TupleWithEmptyArray", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_not_matches!(main_api.tokens, quote! { ::std::array<::std::uint8_t, 0> });
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                __COMMENT__ "Field `__field1` omitted: C++ does not support zero-sized types."
+                ...
+            }
+        );
+    });
+}
 #[test]
 fn test_format_item_struct_with_pinned_reference_fields() {
     let test_src = r#"

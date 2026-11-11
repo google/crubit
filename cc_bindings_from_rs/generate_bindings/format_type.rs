@@ -755,7 +755,14 @@ pub fn format_ty_for_cc<'tcx>(
     ty: Ty<'tcx>,
     location: TypeLocation,
 ) -> Result<CcSnippet<'tcx>> {
-    format_ty_for_cc_impl(db, ty, location, /* apply_default_nullability= */ true)
+    let snippet =
+        format_ty_for_cc_impl(db, ty, location, /* apply_default_nullability= */ true)?;
+    if matches!(location, TypeLocation::Field)
+        && get_layout(db.tcx(), ty).is_ok_and(|layout| layout.size().bytes() == 0)
+    {
+        bail!("Zero-sized types (ZSTs) are not supported (b/258259459)");
+    }
+    Ok(snippet)
 }
 
 /// Which Rust owning box type is being formatted. See `format_box_for_cc`.

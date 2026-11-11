@@ -14,6 +14,21 @@ extern crate core;
 const _: () = assert!(::core::mem::size_of::<::arrays_golden::ArrayStruct>() == 8);
 const _: () = assert!(::core::mem::align_of::<::arrays_golden::ArrayStruct>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::arrays_golden::ArrayStruct, array) == 0);
+const _: () = assert!(::core::mem::size_of::<::arrays_golden::EmptyArrayDropStruct>() == 8);
+const _: () = assert!(::core::mem::align_of::<::arrays_golden::EmptyArrayDropStruct>() == 4);
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aEmptyArrayDropStruct(
+    __self: *mut ::arrays_golden::EmptyArrayDropStruct,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+const _: () = assert!(::core::mem::offset_of!(::arrays_golden::EmptyArrayDropStruct, x) == 0);
+const _: () = assert!(::core::mem::offset_of!(::arrays_golden::EmptyArrayDropStruct, y) == 4);
+const _: () = assert!(::core::mem::offset_of!(::arrays_golden::EmptyArrayDropStruct, empty) == 6);
+const _: () = assert!(::core::mem::size_of::<::arrays_golden::EmptyArrayStruct>() == 4);
+const _: () = assert!(::core::mem::align_of::<::arrays_golden::EmptyArrayStruct>() == 4);
+const _: () = assert!(::core::mem::offset_of!(::arrays_golden::EmptyArrayStruct, x) == 0);
+const _: () = assert!(::core::mem::offset_of!(::arrays_golden::EmptyArrayStruct, empty) == 4);
 const _: () = assert!(::core::mem::size_of::<::arrays_golden::HasDrop>() == 4);
 const _: () = assert!(::core::mem::align_of::<::arrays_golden::HasDrop>() == 4);
 #[unsafe(no_mangle)]
@@ -47,6 +62,16 @@ extern "C" fn __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDr
     unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::arrays_golden::HasDropAndDefault, x) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create_uempty_uarray_udrop_ustruct(
+    x: u32,
+    y: u16,
+    __ret_ptr: *mut ::arrays_golden::EmptyArrayDropStruct,
+) -> () {
+    unsafe {
+        __ret_ptr.write(::arrays_golden::create_empty_array_drop_struct(x, y));
+    }
+}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_uarray_uid(
     array: *mut [i32; 2],

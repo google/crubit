@@ -66,6 +66,14 @@ TEST(ArraysTest, EmptyArrayInOut) {
   EXPECT_EQ(arrays::function_with_empty_array(array), array);
 }
 
+TEST(ArraysTest, EmptyArrayInStruct) {
+  static_assert(sizeof(arrays::EmptyArrayStruct) == 4);
+  static_assert(sizeof(arrays::EmptyArrayDropStruct) == 8);
+  arrays::EmptyArrayDropStruct s = arrays::create_empty_array_drop_struct(1, 2);
+  EXPECT_EQ(s.x, 1);
+  EXPECT_EQ(s.y, 2);
+}
+
 TEST(ArraysTest, NestedArraysInOut) {
   std::array<int32_t, 2> a = {1, 2};
   std::array<int32_t, 2> b = {3, 4};

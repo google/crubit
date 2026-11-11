@@ -41,6 +41,74 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct")
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: arrays_golden :: EmptyArrayDropStruct") alignas(4)
+    [[clang::trivial_abi]] EmptyArrayDropStruct final {
+ public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
+  // `arrays_golden::EmptyArrayDropStruct` doesn't implement the `Default` trait
+  EmptyArrayDropStruct() = delete;
+
+  // Drop::drop
+  ~EmptyArrayDropStruct();
+
+  // C++ move operations are unavailable for this type. See
+  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
+  // are C++ movable.
+  EmptyArrayDropStruct(EmptyArrayDropStruct&&) = delete;
+  ::arrays::EmptyArrayDropStruct& operator=(EmptyArrayDropStruct&&) = delete;
+  // `arrays_golden::EmptyArrayDropStruct` doesn't implement the `Clone` trait
+  EmptyArrayDropStruct(const EmptyArrayDropStruct&) = delete;
+  EmptyArrayDropStruct& operator=(const EmptyArrayDropStruct&) = delete;
+  EmptyArrayDropStruct(::crubit::UnsafeRelocateTag,
+                       EmptyArrayDropStruct&& value);
+
+  union {
+    ::std::uint32_t x;
+  };
+  union {
+    ::std::uint16_t y;
+  };
+
+ private:
+  // Zero-sized field has been replaced with padding: Zero-sized types (ZSTs)
+  // are not supported (b/258259459)
+  ::std::array<unsigned char, 2> empty;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: arrays_golden :: EmptyArrayStruct") alignas(4) [[clang::trivial_abi]]
+EmptyArrayStruct final {
+ public:
+  // Type is not a C++ aggregate: Field `empty` has a type unsupported in C++
+
+  // `arrays_golden::EmptyArrayStruct` doesn't implement the `Default` trait
+  EmptyArrayStruct() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~EmptyArrayStruct() = default;
+  EmptyArrayStruct(EmptyArrayStruct&&) = default;
+  EmptyArrayStruct& operator=(EmptyArrayStruct&&) = default;
+
+  // `arrays_golden::EmptyArrayStruct` doesn't implement the `Clone` trait
+  EmptyArrayStruct(const EmptyArrayStruct&) = delete;
+  EmptyArrayStruct& operator=(const EmptyArrayStruct&) = delete;
+  EmptyArrayStruct(::crubit::UnsafeRelocateTag, EmptyArrayStruct&& value);
+
+  union {
+    ::std::uint32_t x;
+  };
+  // Field `empty` omitted: C++ does not support zero-sized types.
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
     [[clang::trivial_abi]] HasDrop final {
  public:
@@ -99,6 +167,10 @@ HasDropAndDefault final {
  private:
   static void __crubit_field_offset_assertions();
 };
+
+// CRUBIT_ANNOTATE: must_bind=
+::rs::Movable<::arrays::EmptyArrayDropStruct> create_empty_array_drop_struct(
+    ::std::uint32_t x, ::std::uint16_t y);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::array<::std::int32_t, 2> function_with_array_id(
@@ -259,6 +331,51 @@ inline void ::arrays::ArrayStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(__crubit_assert_type, array));
 }
 static_assert(
+    sizeof(::arrays::EmptyArrayDropStruct) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::arrays::EmptyArrayDropStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aEmptyArrayDropStruct(
+    ::arrays::EmptyArrayDropStruct&);
+}
+inline ::arrays::EmptyArrayDropStruct::~EmptyArrayDropStruct() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aEmptyArrayDropStruct(
+          *this);
+}
+inline ::arrays::EmptyArrayDropStruct::EmptyArrayDropStruct(
+    ::crubit::UnsafeRelocateTag, EmptyArrayDropStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline void ::arrays::EmptyArrayDropStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::arrays::EmptyArrayDropStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
+  static_assert(4 == offsetof(__crubit_assert_type, y));
+  static_assert(6 == offsetof(__crubit_assert_type, empty));
+}
+static_assert(
+    sizeof(::arrays::EmptyArrayStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::arrays::EmptyArrayStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<::arrays::EmptyArrayStruct>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::arrays::EmptyArrayStruct>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::arrays::EmptyArrayStruct>);
+inline ::arrays::EmptyArrayStruct::EmptyArrayStruct(::crubit::UnsafeRelocateTag,
+                                                    EmptyArrayStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline void ::arrays::EmptyArrayStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::arrays::EmptyArrayStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
+}
+static_assert(
     sizeof(::arrays::HasDrop) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
@@ -338,6 +455,21 @@ inline void ::arrays::HasDropAndDefault::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::arrays::HasDropAndDefault;
   static_assert(0 == offsetof(__crubit_assert_type, x));
 }
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create_uempty_uarray_udrop_ustruct(
+    ::std::uint32_t, ::std::uint16_t,
+    ::arrays::EmptyArrayDropStruct* __ret_ptr);
+}
+inline ::rs::Movable<::arrays::EmptyArrayDropStruct>
+create_empty_array_drop_struct(::std::uint32_t x, ::std::uint16_t y) {
+  crubit::Slot<::arrays::EmptyArrayDropStruct> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create_uempty_uarray_udrop_ustruct(
+      x, y, __return_value_storage);
+  return ::rs::Movable<::arrays::EmptyArrayDropStruct>::TakeFromSlot(
+      ::std::move(__return_value_ret_val_holder));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uarray_uid(void*,
                                                          void* __ret_ptr);

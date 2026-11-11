@@ -118,3 +118,25 @@ pub fn function_with_nested_drop_default_arrays(
 pub fn function_with_empty_array(array: [i32; 0]) -> [i32; 0] {
     array
 }
+
+#[must_bind]
+pub struct EmptyArrayStruct {
+    pub x: u32,
+    pub empty: [u8; 0],
+}
+
+#[must_bind]
+pub struct EmptyArrayDropStruct {
+    pub x: u32,
+    pub y: u16,
+    pub empty: [u8; 0],
+}
+
+impl Drop for EmptyArrayDropStruct {
+    fn drop(&mut self) {}
+}
+
+#[must_bind]
+pub fn create_empty_array_drop_struct(x: u32, y: u16) -> EmptyArrayDropStruct {
+    EmptyArrayDropStruct { x, y, empty: [] }
+}
