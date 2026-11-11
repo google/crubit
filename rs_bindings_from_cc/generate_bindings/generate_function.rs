@@ -295,7 +295,9 @@ fn api_func_shape_for_operator_ne(
     // If operator== is present, don't generate ne, rely on rust's default ne.
     let eq_binding =
         db.get_binding(UnqualifiedIdentifier::Operator(Operator::new("==")), param_types.into());
-    if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) = eq_binding {
+    if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. }, _)) =
+        eq_binding
+    {
         // operator== is present, skipping bindings for operator!=
         return Ok(None);
     }
@@ -548,7 +550,7 @@ fn api_func_shape_for_operator_partial_ord(
             UnqualifiedIdentifier::Operator(Operator::new(preferred_op_name)),
             param_types.into(),
         );
-        if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialOrd { .. }, .. })) =
+        if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialOrd { .. }, .. }, true)) =
             preferred_binding
         {
             bail_to_errors!(
@@ -592,7 +594,7 @@ fn api_func_shape_for_operator_partial_ord(
     let partialeq_binding =
         db.get_binding(UnqualifiedIdentifier::Operator(Operator::new("==")), param_types.into());
     match partialeq_binding {
-        Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) => {}
+        Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. }, true)) => {}
         _ => errors.add(anyhow!("operator{op_name} where operator== is missing.")),
     }
     let func_name = make_rs_ident(op.rs_method_name());
@@ -1295,7 +1297,7 @@ pub fn get_binding(
     db: &BindingsGenerator,
     expected_function_name: std::rc::Rc<UnqualifiedIdentifier>,
     expected_param_types: Rc<[RsTypeKind]>,
-) -> Option<(Ident, ImplKind)> {
+) -> Option<(Ident, ImplKind, bool)> {
     // Lifetime names depend on the names of the C++ parameters (e.g. `&'__this T` in a member
     // function VS `&'lhs T` in a non-member function), so with this feature, lifetimes are ignored
     // when finding the corresponding function. Lifetimes are not ignored when generating the
@@ -1304,32 +1306,27 @@ pub fn get_binding(
         .ir()
         .target_crubit_features(db.ir().current_target())
         .contains(crubit_feature::CrubitFeature::ParamNameInsensitiveOperatorLookup);
-    db.ir()
-        .get_functions_by_name(&expected_function_name)
-        .filter(|function| {
-            generate_function(db, (*function).clone(), None).ok().flatten().is_some()
-        })
-        .find_map(|function| {
-            let Ok((mut function_param_types, return_type)) =
-                rs_type_kinds_for_func(db, function.clone())
-            else {
-                return None;
-            };
-            if function_param_types.len() != expected_param_types.len()
-                || !function_param_types.iter().zip(expected_param_types.iter()).all(
-                    |(actual, expected)| {
-                        if ignore_lifetimes {
-                            actual.eq_ignoring_lifetimes(expected, false)
-                        } else {
-                            actual == expected
-                        }
-                    },
-                )
-            {
-                return None;
-            }
-            api_func_shape_if_some(db, function, &mut function_param_types, &return_type)
-        })
+    db.ir().get_functions_by_name(&expected_function_name).find_map(|function| {
+        let generated_function = db.generate_function((*function).clone(), None).ok().flatten()?;
+        let (mut function_param_types, return_type) =
+            rs_type_kinds_for_func(db, function.clone()).ok()?;
+        if function_param_types.len() != expected_param_types.len()
+            || !function_param_types.iter().zip(expected_param_types.iter()).all(
+                |(actual, expected)| {
+                    if ignore_lifetimes {
+                        actual.eq_ignoring_lifetimes(expected, false)
+                    } else {
+                        actual == expected
+                    }
+                },
+            )
+        {
+            return None;
+        }
+        let (ident, impl_kind) =
+            api_func_shape_if_some(db, function, &mut function_param_types, &return_type)?;
+        Some((ident, impl_kind, generated_function.status.is_ok()))
+    })
 }
 
 /// Implementation of `BindingsGenerator::is_record_clonable`.

@@ -1724,6 +1724,43 @@ fn test_impl_lt_missing_eq_impl() -> Result<()> {
     Ok(())
 }
 
+/// When `operator==` fails to bind (for example, because its return type is `int` rather than
+/// `bool`, producing an uncallable `PartialEq` impl with an unsatisfied `BindingFailedFor_...`
+/// bound), `PartialOrd` must not be implemented for `operator<`.
+#[gtest]
+fn test_impl_lt_when_eq_has_invalid_return_type() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        struct SomeStruct final {
+            inline int operator==(const SomeStruct& other) const {
+                return i == other.i;
+            }
+            inline int operator!=(const SomeStruct& other) const {
+                return i != other.i;
+            }
+            inline bool operator<(const SomeStruct& other) const {
+                return i < other.i;
+            }
+            int i;
+        };"#,
+    )?
+    .rs_api;
+    assert_rs_not_matches!(rs_api, quote! { impl PartialOrd });
+    let rs_api_str = rs_api.to_string();
+    expect_that!(
+        rs_api_str,
+        contains_substring(
+            "comparison operator return type must be `bool`, found: ::ffi_11::c_int"
+        )
+    );
+    expect_that!(rs_api_str, contains_substring("operator< where operator== is missing"));
+    expect_that!(
+        rs_api_str,
+        not(contains_substring("Cannot generate bindings for overloaded function"))
+    );
+    Ok(())
+}
+
 #[gtest]
 fn test_impl_gt_for_member_function() -> Result<()> {
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc(

@@ -222,14 +222,15 @@ memoized::query_group! {
 
         #[return_ref]
         /// Returns the generated bindings for a function with the given name and param
-        /// types. If none exists, returns None.
+        /// types, along with whether the binding succeeded without errors
+        /// (`GeneratedFunction::status.is_ok()`). If none exists, returns None.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:get_binding
         fn get_binding_memoized(
             &self,
             expected_function_name: Rc<UnqualifiedIdentifier>,
             expected_param_types: Rc<[RsTypeKind]>,
-        ) -> Option<&(Ident, ImplKind)>;
+        ) -> Option<&(Ident, ImplKind, bool)>;
 
         #[return_ref]
         /// Returns a collection of unqualified member functions of the given record.
@@ -278,7 +279,7 @@ impl<'db> BindingsGenerator<'db> {
         &self,
         expected_function_name: UnqualifiedIdentifier,
         expected_param_types: Rc<[RsTypeKind]>,
-    ) -> Option<&(Ident, ImplKind)> {
+    ) -> Option<&(Ident, ImplKind, bool)> {
         self.get_binding_memoized(Rc::new(expected_function_name), expected_param_types)
     }
 
