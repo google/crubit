@@ -1587,6 +1587,7 @@ impl RsTypeKind {
         kind: BoxKind,
         existing_rust_type: FfiRc<ExistingRustType>,
         options: &LifetimeOptions,
+        template_args: &Option<Rc<[CcType]>>,
     ) -> Result<Self> {
         let pointee = match kind {
             BoxKind::StrBox => None,
