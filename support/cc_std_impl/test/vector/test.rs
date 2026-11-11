@@ -9,6 +9,7 @@ use static_assertions::assert_impl_all;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::hash::BuildHasher;
+use std::marker::PhantomPinned;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::rc::Rc;
 
@@ -88,6 +89,9 @@ fn test_vector_deref_mut() {
 fn test_vector_debug() {
     let v = cc_std::std::vector::from([1, 2, 3]);
     expect_eq!(format!("{:?}", v), "[1, 2, 3]");
+
+    let v_not_unpin = cc_std::std::vector::<PhantomPinned>::new();
+    expect_eq!(format!("{:?}", v_not_unpin), "[]");
 }
 
 struct InstanceCounted {

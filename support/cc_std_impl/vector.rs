@@ -123,6 +123,20 @@ impl<T> vector<T> {
         }
     }
 
+    pub fn as_ptr(&self) -> *const T {
+        self.begin
+    }
+
+    pub fn as_slice(&self) -> &[T] {
+        unsafe {
+            if self.begin.is_null() {
+                &[]
+            } else {
+                core::slice::from_raw_parts(self.begin, self.len())
+            }
+        }
+    }
+
     fn end(&self) -> *mut T {
         #[cfg(feature = "len_capacity_encoding")]
         {
@@ -454,22 +468,8 @@ impl<T: Unpin> vector<T> {
         result
     }
 
-    pub fn as_ptr(&self) -> *const T {
-        self.begin
-    }
-
     pub fn as_mut_ptr(&mut self) -> *mut T {
         self.begin as *mut _
-    }
-
-    pub fn as_slice(&self) -> &[T] {
-        unsafe {
-            if self.begin.is_null() {
-                &[]
-            } else {
-                core::slice::from_raw_parts(self.begin, self.len())
-            }
-        }
     }
 
     pub fn as_mut_slice(&mut self) -> &mut [T] {
@@ -525,7 +525,7 @@ impl<T> AsMut<vector<T>> for vector<T> {
     }
 }
 
-impl<T: Unpin> AsRef<[T]> for vector<T> {
+impl<T> AsRef<[T]> for vector<T> {
     fn as_ref(&self) -> &[T] {
         self.as_slice()
     }
@@ -537,7 +537,7 @@ impl<T: Unpin> AsMut<[T]> for vector<T> {
     }
 }
 
-impl<T: Unpin> Borrow<[T]> for vector<T> {
+impl<T> Borrow<[T]> for vector<T> {
     fn borrow(&self) -> &[T] {
         self.as_slice()
     }
@@ -549,7 +549,7 @@ impl<T: Unpin> BorrowMut<[T]> for vector<T> {
     }
 }
 
-impl<T: Unpin + Debug> Debug for vector<T> {
+impl<T: Debug> Debug for vector<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_list().entries(self.as_slice()).finish()
     }
@@ -577,7 +577,7 @@ impl<T> Drop for vector<T> {
     }
 }
 
-impl<T: Unpin, I: SliceIndex<[T]>> Index<I> for vector<T> {
+impl<T, I: SliceIndex<[T]>> Index<I> for vector<T> {
     type Output = I::Output;
     fn index(&self, index: I) -> &Self::Output {
         self.as_slice().index(index)
@@ -622,7 +622,7 @@ impl<T: Clone> vector<T> {
     }
 }
 
-impl<T: Unpin + Clone> Clone for vector<T> {
+impl<T: Clone> Clone for vector<T> {
     fn clone(&self) -> Self {
         unsafe {
             let vec = ManuallyDrop::new(create_vec_from_raw_parts(
@@ -644,7 +644,7 @@ impl<T: Unpin> Extend<T> for vector<T> {
     }
 }
 
-impl<T: Hash + Unpin> Hash for vector<T> {
+impl<T: Hash> Hash for vector<T> {
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_slice().hash(state);
@@ -657,7 +657,7 @@ unsafe impl<T: Send> Send for vector<T> {}
 /// `vector` is `Sync` if `T` is `Sync` because it uniquely owns its contents.
 unsafe impl<T: Sync> Sync for vector<T> {}
 
-impl<T: PartialOrd + Unpin> PartialOrd<vector<T>> for vector<T> {
+impl<T: PartialOrd> PartialOrd<vector<T>> for vector<T> {
     #[inline]
     fn partial_cmp(&self, other: &vector<T>) -> Option<Ordering> {
         PartialOrd::partial_cmp(self.as_slice(), other.as_slice())
@@ -666,7 +666,7 @@ impl<T: PartialOrd + Unpin> PartialOrd<vector<T>> for vector<T> {
 
 impl<T: Eq> Eq for vector<T> {}
 
-impl<T: Ord + Unpin> Ord for vector<T> {
+impl<T: Ord> Ord for vector<T> {
     #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
         Ord::cmp(self.as_slice(), other.as_slice())
@@ -816,7 +816,7 @@ impl<T: Unpin> IntoIterator for vector<T> {
     }
 }
 
-impl<'a, T: Unpin> IntoIterator for &'a vector<T> {
+impl<'a, T> IntoIterator for &'a vector<T> {
     type Item = &'a T;
     type IntoIter = slice::Iter<'a, T>;
 
@@ -864,7 +864,7 @@ impl<T: Unpin> From<Vec<T>> for vector<T> {
     }
 }
 
-impl<T: Unpin> From<Vec<T, Allocator>> for vector<T> {
+impl<T> From<Vec<T, Allocator>> for vector<T> {
     /// Creates a `vector<T>` from a `Vec<T, StdAllocator>`.
     ///
     /// Ownership of elements from `v` are taken by the returned `vector<T>`.
