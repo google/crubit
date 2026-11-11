@@ -147,6 +147,15 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:rs_type_kind_safety
         fn rs_type_kind_safety(&self, rs_type_kind: RsTypeKind) -> Option<UnsafeReason>;
 
+        #[break_cycles_with = Err(anyhow!("Cycle detected: lifetime_defaults_transform_item"))]
+        fn lifetime_defaults_transform_item(&self, item: ir::Item) -> Result<ir::Item>;
+        #[break_cycles_with = Err(anyhow!("Cycle detected: lifetime_defaults_transform_record"))]
+        fn lifetime_defaults_transform_record(&self, record: FfiRc<ir::Record>) -> Result<FfiRc<ir::Record>>;
+        #[break_cycles_with = Err(anyhow!("Cycle detected: lifetime_defaults_transform_func"))]
+        fn lifetime_defaults_transform_func(&self, func: FfiRc<ir::Func>) -> Result<FfiRc<ir::Func>>;
+        #[break_cycles_with = Err(anyhow!("Cycle detected: lifetime_defaults_transform_type_alias"))]
+        fn lifetime_defaults_transform_type_alias(&self, type_alias: FfiRc<ir::TypeAlias>) -> Result<FfiRc<ir::TypeAlias>>;
+
         #[break_cycles_with = None]
         /// Returns whether the given field is unsafe to access.
         ///

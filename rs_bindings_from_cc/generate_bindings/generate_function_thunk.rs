@@ -13,7 +13,6 @@ use database::rs_snippet::{
 use error_report::{anyhow, bail};
 use ir::*;
 use itertools::Itertools;
-use lifetime_defaults_transform::lifetime_defaults_transform_func;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use std::borrow::Cow;
@@ -196,18 +195,18 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
 #[cfg_attr(enable_heap_profiling, inline(never))]
 pub fn generate_function_thunk(
     db: &BindingsGenerator,
-    func: &Func,
+    func: ir::FfiRc<ir::Func>,
     param_idents: &[Ident],
     param_types: &[RsTypeKind],
     return_type: &RsTypeKind,
 ) -> Result<Thunk> {
     let assume_lifetimes = db
         .ir()
-        .target_crubit_features(func.owning_target())
+        .target_crubit_features(func.as_ref().owning_target())
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
 
-    // TODO(b/454627672): is it worth caching this?
-    let func = if assume_lifetimes { &lifetime_defaults_transform_func(db, func)? } else { func };
+    let func_rc = if assume_lifetimes { db.lifetime_defaults_transform_func(func)? } else { func };
+    let func: &ir::Func = &func_rc;
 
     // The first parameter is the output parameter, if any.
     let mut param_types = param_types.iter();

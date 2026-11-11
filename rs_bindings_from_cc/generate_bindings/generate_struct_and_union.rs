@@ -20,7 +20,6 @@ use flagset::FlagSet;
 use generate_comment::generate_doc_comment;
 use ir::*;
 use itertools::Itertools;
-use lifetime_defaults_transform::lifetime_defaults_transform_record;
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use quote::ToTokens;
@@ -883,7 +882,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
     // with `type_has_repr_align`, which sees the untransformed record.
     let has_repr_align = record_has_repr_align(db, &record);
     let record = if assume_lifetimes {
-        FfiRc::new(lifetime_defaults_transform_record(db, &record)?)
+        db.lifetime_defaults_transform_record(record.clone())?
     } else {
         record
     };
