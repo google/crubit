@@ -716,6 +716,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
 
 [[package]]
+name = "cref"
+version = "0.0.0"
+
+[[package]]
 name = "crubit_abi_type"
 version = "0.0.0"
 dependencies = [
@@ -773,6 +777,32 @@ version = "0.1.0"
 dependencies = [
  "ffi_11",
  "googletest",
+]
+
+[[package]]
+name = "ctor"
+version = "0.0.0"
+dependencies = [
+ "ctor_proc_macros",
+]
+
+[[package]]
+name = "ctor_proc_macros"
+version = "0.0.0"
+dependencies = [
+ "googletest",
+ "proc-macro2",
+ "quote",
+ "static_assertions",
+ "syn 2.0.119",
+ "token_stream_matchers",
+]
+
+[[package]]
+name = "dyn_callable_rs"
+version = "0.0.0"
+dependencies = [
+ "crubit_bridge_rust",
 ]
 
 [[package]]
@@ -867,6 +897,23 @@ name = "flagset"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7ac824320a75a52197e8f2d787f6a38b6718bb6897a35142d749af3c0e8f4fe"
+
+[[package]]
+name = "forward_declare"
+version = "0.0.0"
+dependencies = [
+ "cref",
+ "forward_declare_proc_macros",
+]
+
+[[package]]
+name = "forward_declare_proc_macros"
+version = "0.0.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
 
 [[package]]
 name = "futures"
@@ -1009,6 +1056,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "964de6e86d545b246d84badc0fef527924ace5134f30641c203ef52ba83f58d5"
 
 [[package]]
+name = "inline_cpp_macro"
+version = "0.0.0"
+dependencies = [
+ "inline_cpp_utils",
+ "quote",
+]
+
+[[package]]
+name = "inline_cpp_utils"
+version = "0.0.0"
+
+[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1098,6 +1157,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 
 [[package]]
+name = "lossy_formatter"
+version = "0.0.0"
+dependencies = [
+ "googletest",
+]
+
+[[package]]
 name = "memchr"
 version = "2.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1150,6 +1216,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
+name = "oops"
+version = "0.0.0"
+dependencies = [
+ "googletest",
+]
+
+[[package]]
 name = "open-enum"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1168,6 +1241,10 @@ dependencies = [
  "quote",
  "syn 2.0.119",
 ]
+
+[[package]]
+name = "operator"
+version = "0.0.0"
 
 [[package]]
 name = "phf"

@@ -1,0 +1,20 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate inline_cpp_utils.
+
+[package]
+name = "inline_cpp_utils"
+edition.workspace = true
+
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+path = "../../../../support/extract_cpp_from_rust/inline_cpp_utils.rs"
+
+doctest = false
+
+[dependencies]

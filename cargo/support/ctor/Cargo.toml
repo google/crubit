@@ -1,0 +1,24 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate ctor.
+
+[package]
+name = "ctor"
+edition.workspace = true
+
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+path = "../../../support/ctor.rs"
+
+doctest = false
+
+[features]
+default = ["same_abi"]
+same_abi = []
+[dependencies]
+ctor_proc_macros = { path = "../../../cargo/support/ctor_proc_macros"}

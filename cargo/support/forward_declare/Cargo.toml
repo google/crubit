@@ -1,0 +1,25 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate forward_declare.
+
+[package]
+name = "forward_declare"
+edition.workspace = true
+
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+path = "../../../support/forward_declare.rs"
+
+doctest = false
+
+[features]
+default = ["unstable"]
+unstable = []
+[dependencies]
+cref = { path = "../../../cargo/support/cref"}
+forward_declare_proc_macros = { path = "../../../cargo/support/forward_declare_proc_macros"}
