@@ -138,14 +138,12 @@ fn test_cmd_line_api() {
 /// Successful runs on ordinary headers should not print anything to stderr
 /// (except for the known lines allowlisted below).
 /// `--stderrthreshold=1` makes warnings visible (as they are in builds that do
-/// not set the threshold, e.g. the OSS build); `--undefok` keeps the command
-/// valid in builds that don't register the absl log flags.
+/// not set the threshold, e.g. the OSS build).
 #[gtest]
 fn test_no_log_spam_on_success() {
     let mut inv = TestInvocation::new();
     inv.write_header("hello_world.h", "int foo();\n");
     inv.extra_crubit_args.push("--stderrthreshold=1".to_string());
-    inv.extra_crubit_args.push("--undefok=stderrthreshold".to_string());
 
     let out = inv.run_and_expect_success();
 

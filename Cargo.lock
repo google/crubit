@@ -1404,6 +1404,7 @@ version = "0.0.0"
 dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_logging_sys",
  "status_sys",
 ]
 
@@ -1766,6 +1767,7 @@ dependencies = [
  "rs_bindings_from_cc_generate_bindings_and_metadata_sys",
  "rs_bindings_from_cc_profiling_sys",
  "rs_bindings_from_cc_src_code_gen_ffi_sys",
+ "status_sys",
 ]
 
 [[package]]
@@ -1779,6 +1781,7 @@ dependencies = [
  "rs_bindings_from_cc_ast_util_sys",
  "rs_bindings_from_cc_cc_ir_sys",
  "rs_bindings_from_cc_class_template_sys",
+ "rs_bindings_from_cc_cmdline_sys",
  "rs_bindings_from_cc_cxx_record_sys",
  "rs_bindings_from_cc_enum_constant_sys",
  "rs_bindings_from_cc_enum_sys",
@@ -1820,6 +1823,7 @@ dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_cmdline_sys",
  "rs_bindings_from_cc_ir_from_cc_sys",
  "status_sys",
 ]
@@ -1830,6 +1834,7 @@ version = "0.0.0"
 dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_cmdline_sys",
  "rs_bindings_from_cc_frontend_action_sys",
  "rs_bindings_from_cc_profiling_sys",
  "status_sys",
@@ -1897,6 +1902,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "rs_bindings_from_cc_logging_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+]
+
+[[package]]
 name = "rs_bindings_from_cc_multiplatform_ir_testing"
 version = "0.0.0"
 dependencies = [
@@ -1930,6 +1942,7 @@ dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
  "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_cmdline_sys",
  "rs_bindings_from_cc_ir_from_cc_dependency_sys",
 ]
 

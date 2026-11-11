@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "common/ffi_types.h"
-#include "rs_bindings_from_cc/cmdline_flags.h"
+#include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_ffi_support.h"
 #include "rs_bindings_from_cc/ir_from_cc_dependency.h"

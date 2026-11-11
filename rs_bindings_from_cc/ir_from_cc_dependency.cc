@@ -9,7 +9,7 @@
 
 #include "common/ffi_types.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/cmdline_flags.h"
+#include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "llvm/ADT/StringSet.h"

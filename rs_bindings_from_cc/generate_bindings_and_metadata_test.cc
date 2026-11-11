@@ -51,7 +51,7 @@ Cmdline MakeCmdline(std::string header) {
   args.headers_to_targets[args.public_headers[0]] = args.current_target;
   args.target_to_features[args.current_target] = {"supported"};
   llvm::Expected<Cmdline> cmdline = Cmdline::Create(args);
-  CRUBIT_CHECK(bool(cmdline)) << llvm::toString(cmdline.takeError());
+  CRUBIT_CHECK(cmdline) << llvm::toString(cmdline.takeError());
   return *cmdline;
 }
 
@@ -92,7 +92,7 @@ llvm::Expected<llvm::DenseMap<Identifier, Identifier>> GetInstantiationsFor(
   args.srcs_to_scan_for_instantiations = {a_rs_path};
   args.instantiations_out = "instantiations_out";
   llvm::Expected<Cmdline> cmdline = Cmdline::Create(args);
-  CRUBIT_CHECK(bool(cmdline)) << llvm::toString(cmdline.takeError());
+  CRUBIT_CHECK(cmdline) << llvm::toString(cmdline.takeError());
 
   CRUBIT_ASSIGN_OR_RETURN(
       BindingsAndMetadata result,
@@ -306,7 +306,7 @@ TEST(GenerateBindingsAndMetadataTest,
   CmdlineArgs args = MakeCmdline("a.h").args();
   args.extra_cpp_srcs = {extra_cc_path};
   llvm::Expected<Cmdline> cmdline = Cmdline::Create(args);
-  CRUBIT_CHECK(bool(cmdline)) << llvm::toString(cmdline.takeError());
+  CRUBIT_CHECK(cmdline) << llvm::toString(cmdline.takeError());
 
   std::vector<std::string> clang_args = DefaultClangArgs();
   clang_args.push_back("-include");

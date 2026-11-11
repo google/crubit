@@ -9,6 +9,7 @@ extern crate annotations_consumer_sys;
 extern crate ast_util_sys;
 extern crate cc_ir_sys;
 extern crate class_template_sys;
+extern crate cmdline_sys;
 extern crate cxx_record_sys;
 extern crate enum_constant_sys;
 extern crate enum_sys;

@@ -6,7 +6,7 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_DEPENDENCY_H_
 
 #include "common/ffi_types.h"
-#include "rs_bindings_from_cc/cmdline_flags.h"
+#include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"

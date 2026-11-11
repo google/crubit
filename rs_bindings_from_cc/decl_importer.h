@@ -23,7 +23,7 @@
 #include "lifetime_annotations/type_lifetimes.h"
 #include "nullability/pragma.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/cmdline_flags.h"
+#include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_generated.h"
 #include "clang/AST/Decl.h"

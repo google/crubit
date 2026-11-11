@@ -97,35 +97,21 @@ llvm::Expected<BindingsAndMetadata> GenerateBindingsAndMetadata(
     }
   }
 
-  llvm::DenseMap<HeaderName, BazelLabel> headers_to_targets;
-  for (const auto& [k, v] : args.headers_to_targets) {
-    headers_to_targets[k] = v;
-  }
-  llvm::DenseMap<BazelLabel, llvm::StringSet<>> target_to_features;
-  for (const auto& [k, v] : args.target_to_features) {
-    for (const auto& f : v) {
-      target_to_features[k].insert(f);
-    }
-  }
-  llvm::DenseMap<BazelLabel, std::string> target_to_crate_name;
-  for (const auto& [k, v] : args.target_to_crate_name) {
-    target_to_crate_name[k] = v;
-  }
   CRUBIT_ASSIGN_OR_RETURN(
       IR ir, IrFromCc(IrFromCcOptions{
                  .current_target = args.current_target,
                  .public_headers = args.public_headers,
                  .virtual_headers_contents_for_testing =
                      std::move(virtual_headers_contents_for_testing),
-                 .headers_to_targets = headers_to_targets,
+                 .headers_to_targets = args.headers_to_targets,
                  .extra_rs_srcs = args.extra_rs_srcs,
                  .extra_cpp_srcs = args.extra_cpp_srcs,
                  .reexported_namespaces = args.reexported_namespaces,
                  .unstable_rust_features = args.unstable_rust_features,
                  .clang_args = clang_args_view,
                  .extra_instantiations = requested_instantiations,
-                 .crubit_features = target_to_features,
-                 .crate_names = target_to_crate_name,
+                 .crubit_features = args.target_to_features,
+                 .crate_names = args.target_to_crate_name,
                  .driver_path = args.driver_path,
                  .do_not_bind_allowlist = std::move(do_not_bind_allowlist),
                  .kythe_annotations = args.kythe_annotations,
