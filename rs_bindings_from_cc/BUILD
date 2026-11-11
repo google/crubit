@@ -343,12 +343,18 @@ cc_library(
     deps = [
         ":ast_consumer",
         ":decl_importer",
+        "//common:check",
         "//common:status",
         "//common:string_view_conversion",
         "//lifetime_annotations",
         "//nullability:pragma",
+        "@abseil-cpp//absl/cleanup",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",
+        "@llvm-project//clang:lex",
+        "@llvm-project//clang:parse",
+        "@llvm-project//clang:sema",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -363,6 +369,7 @@ cc_library(
         "//common:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:frontend",
+        "@llvm-project//clang:parse",
     ],
 )
 
@@ -412,6 +419,7 @@ cc_library(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:lex",
+        "@llvm-project//clang:parse",
         "@llvm-project//clang:sema",
         "@llvm-project//clang:unified_symbol_resolution",
         "@llvm-project//llvm:Support",

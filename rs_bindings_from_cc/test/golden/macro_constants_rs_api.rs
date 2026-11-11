@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:macro_constants_cc
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -491,6 +491,89 @@ macro_rules! STATIC_CAST_TO_CONST {
     };
 }
 
+/// Macros can use any C++ constant expression, e.g. calls to `constexpr`
+/// functions and references to `constexpr` variables.
+#[inline(always)]
+pub fn MacroConstantsSquare(x: ::ffi_11::c_int) -> ::ffi_11::c_int {
+    unsafe { crate::detail::__rust_thunk___Z20MacroConstantsSquarei(x) }
+}
+
+pub const kMacroConstantsInt: ::ffi_11::c_int = ::ffi_11::new_c_int(6);
+
+#[macro_export]
+macro_rules! CONSTEXPR_CALL_CONSTANT {
+    () => {
+        49
+    };
+}
+
+#[macro_export]
+macro_rules! CONSTEXPR_VARIABLE_CONSTANT {
+    () => {
+        7
+    };
+}
+
+#[macro_export]
+macro_rules! CONSTEXPR_VARIABLE_REFERENCE {
+    () => {
+        6
+    };
+}
+
+// Clang accepts some invalid C++ as an extension, and so do macro constants.
+
+#[macro_export]
+macro_rules! GNU_CONDITIONAL_CONSTANT {
+    () => {
+        2
+    };
+}
+
+#[macro_export]
+macro_rules! DUPLICATE_CONST_CAST {
+    () => {
+        ::ffi_11::new_c_int(1)
+    };
+}
+
+// Constructs that are usually only seen inside functions work too.
+
+#[macro_export]
+macro_rules! LAMBDA_CALL {
+    () => {
+        1
+    };
+}
+
+#[macro_export]
+macro_rules! LAMBDA_WITH_LOCAL {
+    () => {
+        2
+    };
+}
+
+#[macro_export]
+macro_rules! REQUIRES_EXPRESSION {
+    () => {
+        true
+    };
+}
+
+#[macro_export]
+macro_rules! SUBSCRIPT {
+    () => {
+        97
+    };
+}
+
+#[macro_export]
+macro_rules! BRACED_FUNCTIONAL_CAST {
+    () => {
+        ::ffi_11::new_c_int(3)
+    };
+}
+
 // String constants.
 
 #[macro_export]
@@ -556,7 +639,90 @@ macro_rules! STRING_WITH_EMBEDDED_NUL {
 
 // Incomplete conditionals, which fail partway through parsing.
 
-// Casts to class types are rejected without being checked by the compiler.
+// Clang can fold this as an extension, but it isn't a C++ constant expression.
+
+// TODO(b/584772073): The type of `sizeof`, `size_t` (spelled `__size_t` by
+// Clang), doesn't have bindings yet.
+
+// error: global variable `SIZEOF_CONSTANT` could not be bound
+//   Unsupported type 'const __size_t': Unsupported clang::Type class 'PredefinedSugar'
+
+// Parsing this declares `struct MacroDeclaredStruct`, which isn't imported.
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "20SizeofDeclaredStruct"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=SizeofDeclaredStruct
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct SizeofDeclaredStruct {
+    pub field: ::ffi_11::c_int,
+}
+unsafe impl ::cxx::ExternType for SizeofDeclaredStruct {
+    type Id = ::cxx::type_id!("SizeofDeclaredStruct");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("SizeofDeclaredStruct"),
+    crate::SizeofDeclaredStruct
+);
+
+impl Default for SizeofDeclaredStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN20SizeofDeclaredStructC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+// Unlike `MacroDeclaredStruct`, this struct is declared by the header (and
+// imported).
+// TODO(b/584772073): `sizeof` is still unsupported because of its type.
+
+// error: global variable `SIZEOF_DECLARED_STRUCT` could not be bound
+//   Unsupported type 'const __size_t': Unsupported clang::Type class 'PredefinedSugar'
+
+// Macros are parsed at the end of the header, so a struct that is declared
+// after the macro is complete there, and refers to the same struct.
+// TODO(b/584772073): `sizeof` is still unsupported because of its type.
+
+// error: global variable `SIZEOF_LATER_DECLARED_STRUCT` could not be bound
+//   Unsupported type 'const __size_t': Unsupported clang::Type class 'PredefinedSugar'
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "25SizeofLaterDeclaredStruct"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=SizeofLaterDeclaredStruct
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct SizeofLaterDeclaredStruct {
+    pub field: ::ffi_11::c_int,
+}
+unsafe impl ::cxx::ExternType for SizeofLaterDeclaredStruct {
+    type Id = ::cxx::type_id!("SizeofLaterDeclaredStruct");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("SizeofLaterDeclaredStruct"),
+    crate::SizeofLaterDeclaredStruct
+);
+
+impl Default for SizeofLaterDeclaredStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN25SizeofLaterDeclaredStructC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+// Constructs that aren't allowed outside a function, or in a constant
+// expression.
+
+// Casts to class types are rejected, because of their type.
 
 // Typedefs that don't receive bindings, e.g. because their target doesn't
 // enable Crubit.
@@ -613,3 +779,32 @@ macro_rules! CAST_TO_LEADING_DUNDER_TYPEDEF {
 
 // error: global variable `DOLLAR$CONSTANT` could not be bound
 //   `DOLLAR$CONSTANT` is not a valid Rust macro name
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___Z20MacroConstantsSquarei(
+            x: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN20SizeofDeclaredStructC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN25SizeofLaterDeclaredStructC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+    }
+}
+
+const _: () = {
+    assert!(::core::mem::size_of::<crate::SizeofDeclaredStruct>() == 4);
+    assert!(::core::mem::align_of::<crate::SizeofDeclaredStruct>() == 4);
+    static_assertions::assert_impl_all!(crate::SizeofDeclaredStruct: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::SizeofDeclaredStruct: Drop);
+    assert!(::core::mem::offset_of!(crate::SizeofDeclaredStruct, field) == 0);
+    assert!(::core::mem::size_of::<crate::SizeofLaterDeclaredStruct>() == 4);
+    assert!(::core::mem::align_of::<crate::SizeofLaterDeclaredStruct>() == 4);
+    static_assertions::assert_impl_all!(crate::SizeofLaterDeclaredStruct: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::SizeofLaterDeclaredStruct: Drop);
+    assert!(::core::mem::offset_of!(crate::SizeofLaterDeclaredStruct, field) == 0);
+};
