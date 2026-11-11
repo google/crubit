@@ -382,7 +382,6 @@ cc_library(
         ":bazel_types",
         ":cc_ir",
         ":clang_compat_macros",
-        ":cmdline",
         ":decl_importer",
         ":recording_diagnostic_consumer",
         ":type_map",
