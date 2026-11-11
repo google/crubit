@@ -185,11 +185,16 @@ fn generate_cpp_enum<'tcx>(
             if !is_supported_associated_item(tcx, assoc_item.def_id) {
                 return None;
             }
-            let ty::AssocKind::Const { name, .. } = assoc_item.kind else {
+            let ty::AssocKind::Const { .. } = assoc_item.kind else {
                 db.fatal_errors().report(&format!(
                     "C++ enums can only have `const`s as public items, found: {:?}",
                     assoc_item.kind
                 ));
+                return None;
+            };
+            let Some(name) = assoc_item.opt_name() else {
+                // Anonymous associated constants (`pub const _: ...`) do not define a named
+                // enumerator.
                 return None;
             };
             let enumerator_name = format_cc_ident(db, name.as_str()).unwrap();
@@ -317,7 +322,11 @@ pub fn generate_associated_item<'db, 'tcx>(
             );
             })
         }
-        ty::AssocKind::Const { .. } => generate_const(db, def_id, generic_args).map(Cow::Owned),
+        ty::AssocKind::Const { .. } => {
+            // Anonymous associated constants (`pub const _: ...`) cannot be named or referenced.
+            let _ = assoc_item.opt_name()?;
+            generate_const(db, def_id, generic_args).map(Cow::Owned)
+        }
         // TODO: b/405132277 - Rust does not support inherent associated types, but should support
         // associated types when adding traits.
         ty::AssocKind::Type { .. } => {
