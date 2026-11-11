@@ -7,7 +7,7 @@ extern crate rustc_span;
 
 use crate::adt_core_bindings::{AdtCoreBindings, CopyCodegenStyle, MoveCodegenStyle};
 use crate::code_snippet::{
-    AdtTemplateSpecialization, ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs,
+    AdtTemplateSpecialization, ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs, FormattedCcType,
 };
 use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths, UnqualifiedName};
 use crate::include_guard::IncludeGuard;
@@ -249,15 +249,15 @@ memoized::query_group! {
       fn format_top_level_ns_for_crate(&self, krate: CrateNum) -> &[Symbol];
 
       #[return_ref]
-      /// Formats `ty` into a `CcSnippet` that represents how the type should be
-      /// spelled in a C++ declaration of a function parameter or field.
+      /// Formats `ty` into a `FormattedCcType` carrying its C++ `CcSnippet` and whether the
+      /// resulting C++ type is a top-level pointer.
       ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:format_ty_for_cc
-      fn format_ty_for_cc(
+      /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:format_cc_type
+      fn format_cc_type(
           &self,
           ty: Ty<'tcx>,
           location: TypeLocation,
-      ) -> Result<&CcSnippet<'tcx>>;
+      ) -> Result<&FormattedCcType<'tcx>>;
 
       #[return_ref]
       /// Formats `ty` into a `CcSnippet` that represents how the type should be
@@ -431,6 +431,15 @@ memoized::query_group! {
 }
 
 impl<'tcx> BindingsGenerator<'tcx> {
+    /// Formats `ty` into a `CcSnippet` representing how the type is spelled in a C++ declaration.
+    pub fn format_ty_for_cc(
+        &self,
+        ty: Ty<'tcx>,
+        location: TypeLocation,
+    ) -> Result<&CcSnippet<'tcx>> {
+        Ok(&self.format_cc_type(ty, location)?.snippet)
+    }
+
     /// Returns the include for the given Crubit runtime support header.
     pub fn support_header(&self, suffix: &str) -> CcInclude {
         CcInclude::support_lib_header(self.crubit_support_path_format().clone(), suffix.into())

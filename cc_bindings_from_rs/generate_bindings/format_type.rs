@@ -23,7 +23,8 @@ use crubit_abi_type::CrubitAbiType;
 use crubit_attr::{CppConvertibleAttrs, CppLayoutEquivalentAttrs};
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{
-    CcPrerequisites, CcSnippet, CcSnippets, CrubitAbiTypeWithCcPrereqs, TemplateSpecialization,
+    CcPrerequisites, CcSnippet, CcSnippets, CrubitAbiTypeWithCcPrereqs, FormattedCcType,
+    TemplateSpecialization,
 };
 use database::{rename_c_stdlib_functions, rename_clang_builtin_macros, TypeLocation};
 use database::{BindingsGenerator, GenericArgs};
@@ -412,6 +413,13 @@ fn is_cpp_relocatable<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool 
     true
 }
 
+struct ExpandedCppType {
+    tokens: TokenStream,
+    /// Whether `adt` is a nullability wrapper (`Nullable<Ptr>` or `NonNull<Ptr>`) whose inner
+    /// `Ptr` formats as a top-level C++ pointer type.
+    wrapper_inner_is_pointer: bool,
+}
+
 fn format_existing_cpp_type_with_placeholders<'tcx>(
     db: &BindingsGenerator<'tcx>,
     cpp_type_str: &str,
@@ -419,7 +427,7 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
     substs: GenericArgs<'tcx>,
     prereqs: &mut CcPrerequisites<'tcx>,
     location: TypeLocation,
-) -> Result<TokenStream> {
+) -> Result<ExpandedCppType> {
     let tcx = db.tcx();
     let generics = tcx.generics_of(adt.did());
     let mut result_str = cpp_type_str.to_string();
@@ -436,7 +444,7 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
             db.fatal_errors().report(&format!(
                 "`cpp_type` `{cpp_type_str}` is missing a generic parameter for `{{{placeholder_name}}}`",
             ));
-            return Ok(quote! {});
+            return Ok(ExpandedCppType { tokens: quote! {}, wrapper_inner_is_pointer: false });
         }
         start_idx = absolute_start + end + 1;
     }
@@ -456,6 +464,7 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
             | TypeLocation::NestedBridgeable
     );
     let is_wrapper = is_nullability_wrapper(db, adt.did());
+    let mut wrapper_inner_is_pointer = false;
 
     for (param, subst) in generics.own_params.iter().zip(substs.iter()) {
         let ty::GenericArgKind::Type(ty) = subst.kind() else {
@@ -479,7 +488,7 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
         }
         // Inside `Nullable<Ptr>` or `NonNull<Ptr>`, the wrapper's own `cpp_type` supplies the
         // nullability annotation, so `Ptr` must not get its default one.
-        let snippet = format_ty_for_cc_impl(
+        let formatted = format_ty_for_cc_impl(
             db,
             ty,
             TypeLocation::Other,
@@ -491,7 +500,10 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
                 "`{ty}` has no layout-compatible C++ type, but is used as a generic parameter\n  {err}"
             )
         })?;
-        let tokens = snippet.into_tokens(prereqs);
+        if is_wrapper {
+            wrapper_inner_is_pointer = formatted.is_pointer;
+        }
+        let tokens = formatted.into_tokens(prereqs);
         result_str = result_str.replace(&placeholder, &tokens.to_string());
     }
 
@@ -500,13 +512,14 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
         "Failed to expand all placeholders in `cpp_type` `{cpp_type_str}`: `{result_str}`"
     );
 
-    Ok(result_str.parse::<TokenStream>().unwrap_or_else(|err| {
+    let tokens = result_str.parse::<TokenStream>().unwrap_or_else(|err| {
         db.fatal_errors().report(&format!(
             "Failed to parse `cpp_type` `{}` after placeholder expansion: {err}",
             result_str
         ));
         quote! {}
-    }))
+    });
+    Ok(ExpandedCppType { tokens, wrapper_inner_is_pointer })
 }
 
 fn cstdint<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {
@@ -698,10 +711,11 @@ fn format_ref_for_cc<'tcx>(
     referent: Ty<'tcx>,
     mutability: Mutability,
     location: TypeLocation,
-) -> Result<CcSnippet<'tcx>> {
+) -> Result<FormattedCcType<'tcx>> {
     if let ty::TyKind::Slice(element_ty) = *referent.kind() {
         check_slice_layout(db.tcx(), ty);
-        return format_slice_ref_for_cc(db, element_ty, mutability);
+        return format_slice_ref_for_cc(db, element_ty, mutability)
+            .map(FormattedCcType::non_pointer);
     }
 
     if matches!(referent.kind(), ty::TyKind::Str) {
@@ -709,7 +723,7 @@ fn format_ref_for_cc<'tcx>(
         if mutability.is_mut() {
             bail!("Mutable references to `str` are not yet supported.")
         }
-        return Ok(format_str_ref_for_cc(db));
+        return Ok(FormattedCcType::non_pointer(format_str_ref_for_cc(db)));
     }
 
     let mutability = if mutability.is_mut() || is_cpp_thread_safe(db, referent)? {
@@ -719,9 +733,10 @@ fn format_ref_for_cc<'tcx>(
     };
 
     let treat_ref_as_ptr = treat_ref_as_ptr(db, ty, location);
+    let is_pointer = matches!(treat_ref_as_ptr, RefConvert::ToPtr { .. });
 
     let mut prereqs = CcPrerequisites::default();
-    let ptr_or_ref_prefix = if let RefConvert::ToPtr { .. } = treat_ref_as_ptr {
+    let ptr_or_ref_prefix = if is_pointer {
         format_non_owning_pointer_prefix(db, region, referent, &mut prereqs)
     } else if matches!(location, TypeLocation::FnParam { .. }) {
         // Omit the lifetime of parameter-location references whose lifetime is trivial.
@@ -740,21 +755,21 @@ fn format_ref_for_cc<'tcx>(
         ptr_or_ref_prefix.clone(),
     ) {
         snippet.prereqs += prereqs;
-        return Ok(snippet);
+        return Ok(FormattedCcType { snippet, is_pointer });
     }
 
     let tokens = format_pointer_or_reference_ty_for_cc(db, referent, mutability, ptr_or_ref_prefix)
         .with_context(|| format!("Failed to format the referent of the reference type `{ty}`"))?
         .into_tokens(&mut prereqs);
-    Ok(CcSnippet { tokens, prereqs })
+    Ok(FormattedCcType { snippet: CcSnippet { tokens, prereqs }, is_pointer })
 }
 
-/// Implementation of `BindingsGenerator::format_ty_for_cc`.
-pub fn format_ty_for_cc<'tcx>(
+/// Implementation of `BindingsGenerator::format_cc_type`.
+pub fn format_cc_type<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
     location: TypeLocation,
-) -> Result<CcSnippet<'tcx>> {
+) -> Result<FormattedCcType<'tcx>> {
     let snippet =
         format_ty_for_cc_impl(db, ty, location, /* apply_default_nullability= */ true)?;
     if matches!(location, TypeLocation::Field)
@@ -788,7 +803,7 @@ fn format_box_for_cc<'tcx>(
     pointee: Ty<'tcx>,
     kind: BoxKind,
     location: TypeLocation,
-) -> Result<CcSnippet<'tcx>> {
+) -> Result<FormattedCcType<'tcx>> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
     let header_name = match kind {
@@ -842,7 +857,7 @@ fn format_box_for_cc<'tcx>(
         snippet.prereqs.includes.insert(db.support_header("movable.h"));
         snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
     }
-    Ok(snippet)
+    Ok(FormattedCcType::non_pointer(snippet))
 }
 
 /// Formats `ty` as a C++ type.
@@ -856,7 +871,7 @@ fn format_ty_for_cc_impl<'tcx>(
     ty: Ty<'tcx>,
     location: TypeLocation,
     apply_default_nullability: bool,
-) -> Result<CcSnippet<'tcx>> {
+) -> Result<FormattedCcType<'tcx>> {
     let tcx = db.tcx();
 
     // Normalize the type to resolve projections (associated types).
@@ -866,8 +881,8 @@ fn format_ty_for_cc_impl<'tcx>(
         ty,
     )
     .map_err(|_| anyhow!("Failed to normalize type: {ty}"))?;
-    fn keyword<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {
-        CcSnippet::new(tokens)
+    fn keyword<'tcx>(tokens: TokenStream) -> FormattedCcType<'tcx> {
+        FormattedCcType::non_pointer(CcSnippet::new(tokens))
     }
 
     let needle_ty = tcx.erase_and_anonymize_regions(ty);
@@ -880,11 +895,12 @@ fn format_ty_for_cc_impl<'tcx>(
                 ));
                 quote! {}
             });
+        let is_pointer = code_gen_utils::is_cpp_pointer_type(tokens.clone()).is_some();
         let mut prereqs = CcPrerequisites::default();
         for include_path in &specialization.include_paths {
             prereqs.includes.insert(include_from_path(db, include_path.as_ref()));
         }
-        return Ok(CcSnippet { tokens, prereqs });
+        return Ok(FormattedCcType { snippet: CcSnippet { tokens, prereqs }, is_pointer });
     }
 
     if let Some(info) = get_callable_info(tcx, ty)? {
@@ -936,7 +952,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 quote! { ::rs::Fn<#ret_snippet(#(#param_snippets),*) &&> }
             }
         };
-        return Ok(CcSnippet { tokens, prereqs });
+        return Ok(FormattedCcType::non_pointer(CcSnippet { tokens, prereqs }));
     }
 
     Ok(match *ty.kind() {
@@ -966,7 +982,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 let adt_spec = adt_spec.as_ref().map_err(Clone::clone)?;
                 let mut snippet = adt_spec.self_ty_cc.clone();
                 snippet.prereqs.depend_on_spec(db, location, adt_spec);
-                return Ok(snippet);
+                return Ok(FormattedCcType::non_pointer(snippet));
             } else {
                 let mut prereqs = CcPrerequisites::default();
                 prereqs.includes.insert(CcInclude::tuple());
@@ -986,10 +1002,10 @@ fn format_ty_for_cc_impl<'tcx>(
                             .into_tokens(&mut prereqs),
                     );
                 }
-                CcSnippet {
+                FormattedCcType::non_pointer(CcSnippet {
                     prereqs,
                     tokens: quote! { ::std::tuple<#(#cc_types),*> },
-                }
+                })
             }
         }
         ty::TyKind::Array(element_type, length) => {
@@ -1001,7 +1017,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 .format_ty_for_cc(element_type, TypeLocation::Other)?
                 .map_snippets(|cc_element_ty| quote! { ::std::array<#cc_element_ty, #c_int> });
             snippet.prereqs.includes.insert(CcInclude::array());
-            snippet
+            FormattedCcType::non_pointer(snippet)
         }
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#bool documents
@@ -1040,7 +1056,10 @@ fn format_ty_for_cc_impl<'tcx>(
                 })
             ));
 
-            CcSnippet::with_include(quote! { ::rs::char_ }, db.support_header("rs_std/char.h"))
+            FormattedCcType::non_pointer(CcSnippet::with_include(
+                quote! { ::rs::char_ },
+                db.support_header("rs_std/char.h"),
+            ))
         }
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
@@ -1053,8 +1072,12 @@ fn format_ty_for_cc_impl<'tcx>(
         // documents that "Rust does not support C platforms on which the C native integer type are
         // not compatible with any of Rust's fixed-width integer type (e.g. because of
         // padding-bits, lack of 2's complement, etc.)."
-        ty::TyKind::Int(int_ty) => format_int_ty_for_cc(tcx, int_ty, location)?,
-        ty::TyKind::Uint(uint_ty) => format_uint_ty_for_cc(tcx, uint_ty, location)?,
+        ty::TyKind::Int(int_ty) => {
+            FormattedCcType::non_pointer(format_int_ty_for_cc(tcx, int_ty, location)?)
+        }
+        ty::TyKind::Uint(uint_ty) => {
+            FormattedCcType::non_pointer(format_uint_ty_for_cc(tcx, uint_ty, location)?)
+        }
 
         ty::TyKind::Adt(adt, substs)
             if is_rvalue_reference(db, adt.did()) || is_ctor_by_value(db, adt.did()) =>
@@ -1063,10 +1086,11 @@ fn format_ty_for_cc_impl<'tcx>(
             // (Likely this should be merged with the handling for actual Rust references.)
             let referent = substs[1].expect_ty();
             let mut prereqs = CcPrerequisites::default();
-            let sigil = if matches!(
+            let is_ref = matches!(
                 location,
                 TypeLocation::FnParam { .. } | TypeLocation::FnReturn { .. }
-            ) {
+            );
+            let sigil = if is_ref {
                 quote! { && }
             } else {
                 let region = substs[0]
@@ -1078,7 +1102,7 @@ fn format_ty_for_cc_impl<'tcx>(
             let mut snippet =
                 format_pointer_or_reference_ty_for_cc(db, referent, Mutability::Mut, sigil)?;
             snippet.prereqs += prereqs;
-            return Ok(snippet);
+            return Ok(FormattedCcType { snippet, is_pointer: !is_ref });
         }
 
         ty::TyKind::Adt(adt, substs) if is_std_ptr_non_null(tcx, adt.did()) => {
@@ -1111,7 +1135,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 })?
             };
             snippet.prereqs.includes.insert(db.support_header("annotations_internal.h"));
-            return Ok(snippet);
+            return Ok(FormattedCcType::pointer(snippet));
         }
 
         ty::TyKind::Adt(adt, substs) => {
@@ -1175,12 +1199,13 @@ fn format_ty_for_cc_impl<'tcx>(
                     .prereqs
                     .clone();
                 prereqs.includes.insert(CcInclude::optional());
-                let inner_tokens = format_ty_for_cc(db, inner_ty, TypeLocation::NestedBridgeable)?
+                let inner_tokens = db
+                    .format_ty_for_cc(inner_ty, TypeLocation::NestedBridgeable)?
                     .into_tokens(&mut prereqs);
-                return Ok(CcSnippet {
+                return Ok(FormattedCcType::non_pointer(CcSnippet {
                     tokens: quote! { ::std::optional<#inner_tokens> },
                     prereqs,
-                });
+                }));
             } else if let Some(adt_spec) = db
                 .parse_adt_template_specialization(ty)
                 .as_ref()
@@ -1193,7 +1218,7 @@ fn format_ty_for_cc_impl<'tcx>(
                     snippet.prereqs.includes.insert(db.support_header("movable.h"));
                     snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
                 }
-                return Ok(snippet);
+                return Ok(FormattedCcType::non_pointer(snippet));
             } else if let Some((cpp_type, include_paths)) =
                 cpp_layout_equivalent_type(db, ty)?
             {
@@ -1201,15 +1226,19 @@ fn format_ty_for_cc_impl<'tcx>(
 
                 let cpp_type_str = cpp_type.as_ref();
 
+                let mut is_pointer = matches!(cpp_type, CcType::Pointer(_));
                 let mut tokens = if cpp_type_str.contains('{') {
-                    format_existing_cpp_type_with_placeholders(
-                        db,
-                        cpp_type_str,
-                        adt,
-                        substs,
-                        &mut prereqs,
-                        location,
-                    )?
+                    let ExpandedCppType { tokens, wrapper_inner_is_pointer } =
+                        format_existing_cpp_type_with_placeholders(
+                            db,
+                            cpp_type_str,
+                            adt,
+                            substs,
+                            &mut prereqs,
+                            location,
+                        )?;
+                    is_pointer |= wrapper_inner_is_pointer;
+                    tokens
                 } else {
                     match cpp_type_str.parse::<TokenStream>() {
                         Ok(tokens) => tokens,
@@ -1242,21 +1271,28 @@ fn format_ty_for_cc_impl<'tcx>(
                 {
                     prereqs.includes.insert(db.support_header("movable.h"));
                     tokens = quote! { ::rs::Movable< #tokens > };
+                    is_pointer = false;
                 }
-                return Ok(CcSnippet { tokens, prereqs });
+                return Ok(FormattedCcType {
+                    snippet: CcSnippet { tokens, prereqs },
+                    is_pointer,
+                });
             } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
                 match bridged_type {
                     BridgedType::ExternCFuncConverters { include_paths, cpp_type, .. } => {
                         if db.is_proto_message(ty) && !location.is_bridgeable() {
-                            return Ok(format_layout_compatible_cpp_type_for_rust_proto_msg(
-                                db,
-                                &include_paths,
-                                &cpp_type,
+                            return Ok(FormattedCcType::non_pointer(
+                                format_layout_compatible_cpp_type_for_rust_proto_msg(
+                                    db,
+                                    &include_paths,
+                                    &cpp_type,
+                                ),
                             ));
                         }
                         location.check_bridgeable()?;
                         prereqs.includes.extend(include_paths.iter().cloned());
 
+                        let is_pointer = matches!(cpp_type, CcType::Pointer(_));
                         let cpp_type_str = cpp_type.as_ref();
                         let tokens = match cpp_type_str.parse::<TokenStream>() {
                             Ok(tokens) => tokens,
@@ -1268,7 +1304,10 @@ fn format_ty_for_cc_impl<'tcx>(
                                 quote! {}
                             }
                         };
-                        return Ok(CcSnippet { tokens, prereqs });
+                        return Ok(FormattedCcType {
+                            snippet: CcSnippet { tokens, prereqs },
+                            is_pointer,
+                        });
                     }
                     BridgedType::Option(_) => {
                         unreachable!(
@@ -1303,25 +1342,28 @@ fn format_ty_for_cc_impl<'tcx>(
                 tokens = quote! { ::rs::Movable< #tokens > };
             }
 
-            CcSnippet { tokens, prereqs }
+            FormattedCcType::non_pointer(CcSnippet { tokens, prereqs })
         }
 
         ty::TyKind::RawPtr(pointee_ty, mutbl) => {
             if let ty::TyKind::Slice(slice_ty) = pointee_ty.kind() {
                 check_slice_layout(db.tcx(), ty);
-                return format_slice_ref_for_cc(db, *slice_ty, mutbl);
+                return format_slice_ref_for_cc(db, *slice_ty, mutbl)
+                    .map(FormattedCcType::non_pointer);
             }
             // Early return in case we handle a transparent pointer type.
             if let Some(snippet) =
                 format_transparent_pointee_or_reference_for_cc(db, pointee_ty, mutbl, quote! { * })
             {
-                return Ok(snippet);
+                return Ok(FormattedCcType::pointer(snippet));
             }
 
-            format_pointer_or_reference_ty_for_cc(db, pointee_ty, mutbl, quote! { * })
-                .with_context(|| {
-                    format!("Failed to format the pointee of the pointer type `{ty}`")
-                })?
+            FormattedCcType::pointer(
+                format_pointer_or_reference_ty_for_cc(db, pointee_ty, mutbl, quote! { * })
+                    .with_context(|| {
+                        format!("Failed to format the pointee of the pointer type `{ty}`")
+                    })?,
+            )
         }
 
         ty::TyKind::Ref(region, referent, mutability) => {
@@ -1374,21 +1416,17 @@ fn format_ty_for_cc_impl<'tcx>(
             // arrays).  Because of this, C++ references are only used for
             // top-level return types and parameter types (and pointers are used
             // in other locations).
-            let ptr_or_ref_sigil = match location {
+            let (ptr_or_ref_sigil, is_pointer) = match location {
                 TypeLocation::FnReturn { .. }
                 | TypeLocation::FnParam { .. }
-                | TypeLocation::Const => {
-                    quote! { & }
-                }
+                | TypeLocation::Const => (quote! { & }, false),
                 TypeLocation::NestedBridgeable
                 | TypeLocation::Other
                 | TypeLocation::IteratorItem
                 | TypeLocation::ClosureReturn
                 | TypeLocation::Field
                 | TypeLocation::TemplateArg
-                | TypeLocation::OptionArg => {
-                    quote! { * }
-                }
+                | TypeLocation::OptionArg => (quote! { * }, true),
             };
 
             let mut prereqs = CcPrerequisites::default();
@@ -1407,7 +1445,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 > #ptr_or_ref_sigil
             };
 
-            CcSnippet { tokens, prereqs }
+            FormattedCcType { snippet: CcSnippet { tokens, prereqs }, is_pointer }
         }
         ty::TyKind::Param(_) => bail!(
             "crubit.rs/errors/unsupported_type: Generic type parameter `{ty}` is not supported without monomorphization"
@@ -1688,12 +1726,11 @@ pub struct CcParamTy<'db, 'tcx> {
     pub is_lifetime_bound: bool,
 }
 
-/// Returns the C++ parameter types, both for thunks and non-thunks
-fn format_param_types_for_cc_impl<'db, 'tcx>(
+/// Returns the C++ parameter types for the C++ API.
+pub fn format_param_types_for_cc_api<'db, 'tcx>(
     db: &'db BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     has_self_param: bool,
-    is_thunk: bool,
 ) -> Result<Vec<CcParamTy<'db, 'tcx>>> {
     let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
     let param_types = sig_mid.inputs();
@@ -1706,8 +1743,7 @@ fn format_param_types_for_cc_impl<'db, 'tcx>(
         let is_self_param = i == 0 && has_self_param;
         let location = TypeLocation::FnParam { elided_is_output, is_self_param };
 
-        if !is_thunk
-            && ctor_plain_values
+        if ctor_plain_values
             && let ty::TyKind::Adt(adt, substs) = param_type.kind()
             && is_ctor_by_value(db, adt.did())
         {
@@ -1728,22 +1764,25 @@ fn format_param_types_for_cc_impl<'db, 'tcx>(
     Ok(snippets)
 }
 
-/// Returns the C++ parameter types for the C++ API.
-pub fn format_param_types_for_cc_api<'db, 'tcx>(
-    db: &'db BindingsGenerator<'tcx>,
-    sig_mid: &ty::FnSig<'tcx>,
-    has_self_param: bool,
-) -> Result<Vec<CcParamTy<'db, 'tcx>>> {
-    format_param_types_for_cc_impl(db, sig_mid, has_self_param, /* is_thunk= */ false)
-}
-
 /// Returns the C++ parameter types for the thunks.
 pub fn format_param_types_for_cc_thunk<'db, 'tcx>(
     db: &'db BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     has_self_param: bool,
-) -> Result<Vec<CcParamTy<'db, 'tcx>>> {
-    format_param_types_for_cc_impl(db, sig_mid, has_self_param, /* is_thunk= */ true)
+) -> Result<Vec<&'db FormattedCcType<'tcx>>> {
+    let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
+    sig_mid
+        .inputs()
+        .iter()
+        .copied()
+        .enumerate()
+        .map(|(i, param_type)| {
+            let is_self_param = i == 0 && has_self_param;
+            let location = TypeLocation::FnParam { elided_is_output, is_self_param };
+            db.format_cc_type(param_type, location)
+                .with_context(|| format!("Error handling parameter #{i} of type `{param_type}`"))
+        })
+        .collect()
 }
 
 fn try_ty_as_maybe_uninit<'tcx>(

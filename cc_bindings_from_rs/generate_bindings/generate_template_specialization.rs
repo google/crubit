@@ -103,6 +103,7 @@ fn parse_unit_in_specialization<'tcx>(
                 db.tokens().rs_unit_t.clone(),
                 db.support_header("rs_std/unit.h"),
             ),
+            is_cc_pointer: false,
             for_rs,
             ty,
         })

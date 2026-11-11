@@ -412,7 +412,7 @@ fn new_database_impl<'db>(
         def_id_by_symbol,
         format_cc_ident_symbol,
         format_top_level_ns_for_crate,
-        format_type::format_ty_for_cc,
+        format_type::format_cc_type,
         format_type::format_ty_for_rs,
         format_type::supports_nullable_trait_id,
         format_type::delete_trait_id,

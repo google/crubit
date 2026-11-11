@@ -1455,3 +1455,150 @@ fn test_format_ty_for_rs_cpp_specialization_alias() {
         },
     );
 }
+
+#[test]
+fn test_format_cc_type_is_pointer() {
+    let preamble = quote! {
+        #[repr(C)]
+        pub struct SomeStruct {
+            pub x: i32,
+        }
+
+        pub mod ctor {
+            pub struct RvalueReference<'a, T: ?Sized>(pub &'a mut T);
+        }
+
+        pub mod cc_std {
+            pub mod std {
+                #[allow(non_camel_case_types)]
+                #[doc="CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>"]
+                #[doc="CRUBIT_ANNOTATE: include_path = <memory>"]
+                #[doc="CRUBIT_ANNOTATE: cpp_move_constructible = "]
+                pub struct unique_ptr<T>(pub *mut T);
+
+                pub unsafe trait SupportsNullable {}
+                unsafe impl<T> SupportsNullable for unique_ptr<T> {}
+                unsafe impl SupportsNullable for crate::MovableLayoutPtr {}
+
+                #[doc="CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nullable"]
+                #[doc="CRUBIT_ANNOTATE: include_path = <crubit/support/annotations_internal.h>"]
+                #[doc="CRUBIT_ANNOTATE: cpp_move_constructible = "]
+                #[repr(transparent)]
+                pub struct Nullable<Ptr>(pub Ptr);
+            }
+        }
+
+        #[doc="CRUBIT_ANNOTATE: cpp_type = CppType*"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
+        #[derive(Clone, Copy)]
+        #[repr(transparent)]
+        pub struct MovableLayoutPtr(*mut core::ffi::c_void);
+
+        #[doc="CRUBIT_ANNOTATE: cpp_type = CppType*"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
+        #[repr(transparent)]
+        pub struct NonMovableLayoutPtr(*mut core::ffi::c_void);
+        impl Drop for NonMovableLayoutPtr {
+            fn drop(&mut self) {}
+        }
+
+        #[doc="CRUBIT_ANNOTATE: cpp_type = CppType*"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
+        #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = cpp_ptr_to_rust"]
+        #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = rust_to_cpp_ptr"]
+        #[repr(transparent)]
+        pub struct BridgedPtr(*mut core::ffi::c_void);
+
+        #[doc="CRUBIT_ANNOTATE: cpp_type = CppType"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
+        #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = cpp_val_to_rust"]
+        #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = rust_to_cpp_val"]
+        pub struct BridgedVal(pub i32);
+
+        pub mod spec_internal {
+            #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::Generic<{T}>"]
+            #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/generic.h"]
+            #[repr(transparent)]
+            pub struct Generic<T>(pub *mut T);
+        }
+
+        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::SpecialPtr*"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/generic.h"]
+        #[doc="CRUBIT_ANNOTATE: specializes_cpp_type ="]
+        pub type SpecializedPtr = spec_internal::Generic<i32>;
+
+        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::SpecialVal"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/generic.h"]
+        #[doc="CRUBIT_ANNOTATE: specializes_cpp_type ="]
+        pub type SpecializedVal = spec_internal::Generic<u32>;
+    };
+
+    let fn_param = TypeLocation::FnParam { is_self_param: false, elided_is_output: false };
+    let fn_return = TypeLocation::FnReturn { is_constructor: false };
+    let cases: &[(&str, &[(TypeLocation, bool)])] = &[
+        ("i32", &[(TypeLocation::Other, false)]),
+        ("*const i32", &[(fn_param, true)]),
+        ("*mut core::mem::MaybeUninit<i32>", &[(TypeLocation::Other, true)]),
+        ("*const [i32]", &[(fn_param, false)]),
+        ("&'static [i32]", &[(fn_param, false)]),
+        ("&'static str", &[(fn_param, false)]),
+        ("&i32", &[(fn_param, false)]),
+        ("&'static i32", &[(fn_return, false), (fn_param, true), (TypeLocation::Field, true)]),
+        ("core::pin::Pin<&i32>", &[(fn_param, false)]),
+        (
+            "core::pin::Pin<&'static i32>",
+            &[(fn_return, false), (fn_param, true), (TypeLocation::Field, true)],
+        ),
+        ("core::ptr::NonNull<i32>", &[(fn_param, true)]),
+        (
+            "ctor::RvalueReference<'static, SomeStruct>",
+            &[(fn_param, false), (fn_return, false), (TypeLocation::Field, true)],
+        ),
+        (
+            "extern \"C\" fn(i32) -> i32",
+            &[
+                (fn_param, false),
+                (fn_return, false),
+                (TypeLocation::Const, false),
+                (TypeLocation::Field, true),
+                (TypeLocation::OptionArg, true),
+            ],
+        ),
+        ("std::boxed::Box<i32>", &[(TypeLocation::Field, false)]),
+        ("core::option::Option<*const i32>", &[(TypeLocation::Field, false), (fn_return, false)]),
+        ("MovableLayoutPtr", &[(fn_param, true), (TypeLocation::OptionArg, true)]),
+        (
+            "NonMovableLayoutPtr",
+            &[(fn_return, true), (TypeLocation::Other, true), (fn_param, false)],
+        ),
+        ("core::pin::Pin<NonMovableLayoutPtr>", &[(fn_return, false)]),
+        ("cc_std::std::unique_ptr<SomeStruct>", &[(fn_param, false)]),
+        ("cc_std::std::Nullable<cc_std::std::unique_ptr<SomeStruct>>", &[(fn_param, false)]),
+        ("cc_std::std::Nullable<MovableLayoutPtr>", &[(fn_param, true)]),
+        ("BridgedPtr", &[(fn_return, true)]),
+        ("BridgedVal", &[(fn_return, false)]),
+        ("SpecializedPtr", &[(fn_return, true)]),
+        ("SpecializedVal", &[(fn_return, false)]),
+    ];
+
+    test_ty(fn_param, cases, preamble, |desc, tcx, ty, expectations| {
+        let db = bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::Generics
+                | crubit_feature::CrubitFeature::NonnullSmartPointers,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        for &(location, expected_is_pointer) in *expectations {
+            let formatted = db.format_cc_type(ty, location).unwrap_or_else(|e| {
+                panic!("format_cc_type failed for {desc} at {location:?}: {e:#}")
+            });
+            assert_eq!(
+                formatted.is_pointer, expected_is_pointer,
+                "{desc} at {location:?} formatted as `{}`",
+                formatted.snippet.tokens,
+            );
+        }
+    });
+}

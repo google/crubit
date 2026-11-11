@@ -188,7 +188,7 @@ pub fn generate_thunk_decl<'tcx>(
                         BridgedType::ExternCFuncConverters {
                             cpp_type: bridged_cpp_type, ..
                         } => {
-                            let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
+                            let cpp_type = cpp_type.into_tokens(&mut prereqs);
                             if matches!(bridged_cpp_type, CcType::Pointer { .. }) {
                                 Ok(quote! { #cpp_type })
                             } else {
@@ -198,21 +198,20 @@ pub fn generate_thunk_decl<'tcx>(
                         BridgedType::Option(_) => Ok(quote! { unsigned char* }),
                     },
                     ParamAbi::Value(ValueAbi::ByValue) => {
-                        let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
+                        let cpp_type = cpp_type.into_tokens(&mut prereqs);
                         Ok(quote! { #cpp_type })
                     }
                     ParamAbi::Value(ValueAbi::LegacyTuple(_)) => Ok(quote! { void** }),
                     ParamAbi::Value(ValueAbi::Array) => Ok(quote! { void* }),
                     ParamAbi::Value(ValueAbi::ByPointer) => {
-                        if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
-                            let underlying_ty = db
-                                .format_ty_for_cc(ty, TypeLocation::Other)?
-                                .into_tokens(&mut prereqs);
-                            Ok(quote! { #underlying_ty* })
-                        } else {
-                            let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
-                            Ok(quote! { #cpp_type* })
-                        }
+                        let cpp_type =
+                            if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
+                                db.format_cc_type(ty, TypeLocation::Other)?
+                            } else {
+                                cpp_type
+                            };
+                        let cpp_type = cpp_type.into_tokens(&mut prereqs);
+                        Ok(quote! { #cpp_type* })
                     }
                 }
             })

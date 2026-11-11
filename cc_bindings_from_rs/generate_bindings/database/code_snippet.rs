@@ -229,9 +229,31 @@ pub enum EnumSpecializationKind<'tcx> {
 }
 
 #[derive(Clone, Debug)]
+pub struct FormattedCcType<'tcx> {
+    pub snippet: CcSnippet<'tcx>,
+    /// Whether `snippet` spells a top-level C++ pointer type (for example `T*` or a C++ function
+    /// pointer `crubit::type_identity_t<R(Args...)>*`), rather than a value, reference (`T&` /
+    /// `T&&`), or class-annotated smart pointer. Forming an outer pointer `snippet*` to a pointer
+    /// type creates a multi-level C++ pointer whose outer nullability is not inferred by
+    /// `#pragma clang assume_nonnull`.
+    pub is_pointer: bool,
+}
+
+impl<'tcx> FormattedCcType<'tcx> {
+    pub fn non_pointer(snippet: CcSnippet<'tcx>) -> Self {
+        Self { snippet, is_pointer: false }
+    }
+
+    pub fn pointer(snippet: CcSnippet<'tcx>) -> Self {
+        Self { snippet, is_pointer: true }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct FormattedTy<'tcx> {
     pub ty: Ty<'tcx>,
     pub for_cc: CcSnippet<'tcx>,
+    pub is_cc_pointer: bool,
     pub for_rs: TokenStream,
 }
 impl<'tcx> FormattedTy<'tcx> {
@@ -240,9 +262,10 @@ impl<'tcx> FormattedTy<'tcx> {
         location: crate::TypeLocation,
         db: &BindingsGenerator<'tcx>,
     ) -> Result<Self> {
-        let for_cc = db.format_ty_for_cc(ty, location)?.clone();
+        let FormattedCcType { snippet: for_cc, is_pointer: is_cc_pointer } =
+            db.format_cc_type(ty, location)?.clone();
         let for_rs = db.format_ty_for_rs(ty)?.clone();
-        Ok(Self { ty, for_cc, for_rs })
+        Ok(Self { ty, for_cc, is_cc_pointer, for_rs })
     }
 }
 impl PartialEq for FormattedTy<'_> {
@@ -449,6 +472,22 @@ impl<'a, 'tcx> CcSnippets<'tcx> for &'a CcSnippet<'tcx> {
     fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> &'a TokenStream {
         *prereqs_accumulator += &self.prereqs;
         &self.tokens
+    }
+}
+
+impl<'tcx> CcSnippets<'tcx> for FormattedCcType<'tcx> {
+    type Tokens = TokenStream;
+
+    fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> TokenStream {
+        self.snippet.into_tokens(prereqs_accumulator)
+    }
+}
+
+impl<'a, 'tcx> CcSnippets<'tcx> for &'a FormattedCcType<'tcx> {
+    type Tokens = &'a TokenStream;
+
+    fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> &'a TokenStream {
+        (&self.snippet).into_tokens(prereqs_accumulator)
     }
 }
 
