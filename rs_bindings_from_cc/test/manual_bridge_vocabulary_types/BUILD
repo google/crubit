@@ -27,6 +27,7 @@ cc_library(
 
 cc_library(
     name = "unique_ptr_lib",
+    srcs = ["unique_ptr_lib.cc"],
     hdrs = ["unique_ptr_lib.h"],
     aspect_hints = [
         "//features:supported",

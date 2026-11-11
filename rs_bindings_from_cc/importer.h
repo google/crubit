@@ -324,6 +324,17 @@ class Importer final : public ImportContext {
   CcType ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType& type, bool assume_lifetimes);
 
+  // Converts `specialization_decl` into a CcType, instantiating and importing
+  // it first if needed.
+  CcType ConvertClassTemplateSpecializationDecl(
+      clang::ClassTemplateSpecializationDecl& specialization_decl,
+      llvm::StringRef type_string);
+
+  // Returns an error `CcType` if `template_decl` belongs to a target that does
+  // not support Crubit.
+  std::optional<CcType> CheckTemplateCrubitEnabled(
+      clang::TemplateDecl& template_decl, llvm::StringRef type_string);
+
   // Attaches the template arguments of `type` as written at this use site to
   // `converted`, so that per-use information the shared specialization decl
   // cannot carry (e.g. nullability or lifetimes) reaches codegen.

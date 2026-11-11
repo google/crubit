@@ -5,6 +5,7 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_UNIQUE_PTR_LIB_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_UNIQUE_PTR_LIB_H_
 
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -58,5 +59,16 @@ inline std::unique_ptr<DeletedDestructorType> MakeUniquePtrDeletedDestructor() {
   return nullptr;
 }
 inline std::unique_ptr<NoBindings> MakeUniquePtrNoBindings() { return nullptr; }
+
+class VirtualBase {
+ public:
+  virtual ~VirtualBase() = default;
+  virtual int Value() const = 0;
+};
+
+using VirtualBaseFactory = std::function<std::unique_ptr<VirtualBase>()>;
+
+CRUBIT_MUST_BIND
+std::unique_ptr<VirtualBase> MakeVirtualBase();
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_UNIQUE_PTR_LIB_H_

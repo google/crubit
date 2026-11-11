@@ -52,3 +52,9 @@ fn test_unique_ptr_final_type() {
 fn test_unique_ptr_no_bindings() {
     assert!(!item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrNoBindings))
 }
+
+#[gtest]
+fn test_unique_ptr_after_std_function() {
+    let _: cc_std::std::Nullable<cc_std::std::virtual_unique_ptr<unique_ptr_lib::VirtualBase>> =
+        unique_ptr_lib::MakeVirtualBase();
+}

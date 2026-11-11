@@ -3321,64 +3321,63 @@ std::optional<std::string> Importer::CheckSpecializationInstantiable(
   return errors;
 }
 
-CcType Importer::ConvertTemplateSpecializationType(
-    const clang::TemplateSpecializationType& type, bool assume_lifetimes) {
-  // Qualifiers are handled separately in TypeMapper::ConvertQualType().
-  std::string type_string = clang::QualType(&type, 0).getAsString();
-
-  auto* specialization_decl =
-      clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
-          type.getAsCXXRecordDecl());
-  if (!specialization_decl) {
+std::optional<CcType> Importer::CheckTemplateCrubitEnabled(
+    clang::TemplateDecl& template_decl, llvm::StringRef type_string) {
+  clang::TemplateDecl* resolved_decl = &template_decl;
+  // Resolve template_decl to its definition if possible.
+  if (auto* class_template_decl =
+          clang::dyn_cast<clang::ClassTemplateDecl>(resolved_decl)) {
+    if (clang::CXXRecordDecl* definition =
+            class_template_decl->getTemplatedDecl()->getDefinition()) {
+      if (auto* definition_template_decl =
+              definition->getDescribedClassTemplate()) {
+        resolved_decl = definition_template_decl;
+      }
+    }
+  }
+  auto target = GetOwningTarget(*resolved_decl);
+  if (IsCrubitEnabledForTarget(target)) {
+    return std::nullopt;
+  }
+  if (std::optional<llvm::StringRef> header = HeaderOfUnknownTarget(target);
+      header.has_value()) {
     return CcType(FormattedError::Substitute(
-        "Template specialization '$0' without an associated record decl "
-        "is not supported.",
-        type_string));
+        "crubit.rs/errors/unknown_target: Failed to complete template "
+        "specialization type $0:\n"
+        "the template is defined in\n"
+        "  $1\n"
+        "which is not a public header of any Crubit-enabled target that\n"
+        "  $2\n"
+        "depends on directly. Either enable Crubit on the library that "
+        "provides the header,\n"
+        "add that library as a direct dependency (and `#include` the "
+        "header directly),\n"
+        "or move the template to a public header.",
+        type_string, *header, invocation_.target_.value()));
   }
+  return CcType(FormattedError::Substitute(
+      "Failed to complete template specialization type $0: template "
+      "belongs to target $1, which does not support Crubit.",
+      type_string, target.value()));
+}
 
-  if (auto* template_decl = type.getTemplateName().getAsTemplateDecl()) {
-    // Resolve template_decl to its definition if possible.
-    if (auto* class_template_decl =
-            clang::dyn_cast<clang::ClassTemplateDecl>(template_decl)) {
-      if (clang::CXXRecordDecl* definition =
-              class_template_decl->getTemplatedDecl()->getDefinition()) {
-        if (auto* definition_template_decl =
-                definition->getDescribedClassTemplate()) {
-          template_decl = definition_template_decl;
-        }
-      }
-    }
-    auto target = GetOwningTarget(*template_decl);
-    if (!IsCrubitEnabledForTarget(target)) {
-      if (std::optional<llvm::StringRef> header = HeaderOfUnknownTarget(target);
-          header.has_value()) {
-        return CcType(FormattedError::Substitute(
-            "crubit.rs/errors/unknown_target: Failed to complete template "
-            "specialization type $0:\n"
-            "the template is defined in\n"
-            "  $1\n"
-            "which is not a public header of any Crubit-enabled target that\n"
-            "  $2\n"
-            "depends on directly. Either enable Crubit on the library that "
-            "provides the header,\n"
-            "add that library as a direct dependency (and `#include` the "
-            "header directly),\n"
-            "or move the template to a public header.",
-            type_string, *header, invocation_.target_.value()));
-      }
-      return CcType(FormattedError::Substitute(
-          "Failed to complete template specialization type $0: template "
-          "belongs to target $1, which does not support Crubit.",
-          type_string, target.value()));
+CcType Importer::ConvertClassTemplateSpecializationDecl(
+    clang::ClassTemplateSpecializationDecl& specialization_decl,
+    llvm::StringRef type_string) {
+  if (clang::ClassTemplateDecl* template_decl =
+          specialization_decl.getSpecializedTemplate()) {
+    if (std::optional<CcType> error =
+            CheckTemplateCrubitEnabled(*template_decl, type_string)) {
+      return *error;
     }
   }
 
-  if (HasBeenAlreadySuccessfullyImported(*specialization_decl))
-    return WithAsWrittenTemplateArgs(ConvertTypeDecl(specialization_decl), type,
-                                     assume_lifetimes);
+  if (HasBeenAlreadySuccessfullyImported(specialization_decl)) {
+    return ConvertTypeDecl(&specialization_decl);
+  }
 
   if (std::optional<std::string> instantiation_errors =
-          CheckSpecializationInstantiable(specialization_decl);
+          CheckSpecializationInstantiable(&specialization_decl);
       instantiation_errors.has_value()) {
     return CcType(FormattedError::Substitute(
         "Failed to complete template specialization type $0: Diagnostics "
@@ -3403,7 +3402,7 @@ CcType Importer::ConvertTemplateSpecializationType(
   // doesn't import specializations (e.g. `std::allocator<T>`) that the
   // specialization's importer would not.
   for (const clang::TemplateArgument& arg :
-       specialization_decl->getTemplateArgs().asArray()) {
+       specialization_decl.getTemplateArgs().asArray()) {
     if (arg.getKind() != clang::TemplateArgument::Type) continue;
     auto* arg_record = arg.getAsType()->getAsCXXRecordDecl();
     if (arg_record == nullptr ||
@@ -3416,15 +3415,43 @@ CcType Importer::ConvertTemplateSpecializationType(
   }
 
   llvm::Error import_status =
-      CheckImportStatus(GetDeclItem(specialization_decl));
+      CheckImportStatus(GetDeclItem(&specialization_decl));
   if (import_status) {
     return CcType(FormattedError::Substitute(
         "Failed to create bindings for template specialization type $0: $1",
         type_string, llvm::toString(std::move(import_status))));
   }
 
-  return WithAsWrittenTemplateArgs(ConvertTypeDecl(specialization_decl), type,
-                                   assume_lifetimes);
+  return ConvertTypeDecl(&specialization_decl);
+}
+
+CcType Importer::ConvertTemplateSpecializationType(
+    const clang::TemplateSpecializationType& type, bool assume_lifetimes) {
+  // Qualifiers are handled separately in TypeMapper::ConvertQualType().
+  std::string type_string = clang::QualType(&type, 0).getAsString();
+
+  auto* specialization_decl =
+      clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
+          type.getAsCXXRecordDecl());
+  if (!specialization_decl) {
+    return CcType(FormattedError::Substitute(
+        "Template specialization '$0' without an associated record decl "
+        "is not supported.",
+        type_string));
+  }
+
+  if (auto* template_decl = type.getTemplateName().getAsTemplateDecl();
+      template_decl != nullptr &&
+      template_decl != specialization_decl->getSpecializedTemplate()) {
+    if (std::optional<CcType> error =
+            CheckTemplateCrubitEnabled(*template_decl, type_string)) {
+      return *error;
+    }
+  }
+
+  return WithAsWrittenTemplateArgs(
+      ConvertClassTemplateSpecializationDecl(*specialization_decl, type_string),
+      type, assume_lifetimes);
 }
 
 CcType Importer::WithAsWrittenTemplateArgs(
@@ -3924,6 +3951,11 @@ llvm::Expected<CcType> Importer::ConvertUnattributedType(
     if (clang::TagDecl* definition = tag_decl->getDefinition();
         definition != nullptr && sema_.hasReachableDefinition(definition)) {
       tag_decl = definition;
+    }
+    if (auto* specialization_decl =
+            clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(tag_decl)) {
+      return ConvertClassTemplateSpecializationDecl(
+          *specialization_decl, clang::QualType(tag_type, 0).getAsString());
     }
     return ConvertTypeDecl(tag_decl);
   } else if (const auto* typedef_type =
