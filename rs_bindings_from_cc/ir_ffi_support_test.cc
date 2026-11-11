@@ -4,7 +4,8 @@
 
 #include "rs_bindings_from_cc/ir_ffi_support.h"
 
-#include <utility>
+#include <string>
+#include <string_view>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -134,6 +135,23 @@ TEST(IrFfiSupportTest, FfiMapMaintainsSortedOrderAcrossLanguages) {
   same_map["z"] = FfiString("26");
   same_map["a"] = FfiString("updated_1");
   EXPECT_EQ(out, same_map);
+
+  // Heterogeneous lookups with FfiString, std::string, and string_view.
+  EXPECT_TRUE(out.contains(FfiString("m")));
+  EXPECT_TRUE(out.contains(std::string("z")));
+  EXPECT_TRUE(out.contains(std::string_view("a")));
+  EXPECT_EQ(out.at(FfiString("m")).AsView(), "13");
+  EXPECT_EQ(out.at(std::string("z")).AsView(), "26");
+
+  // Non-string key support.
+  FfiMap<int, int> int_map;
+  int_map[20] = 200;
+  int_map[10] = 100;
+  EXPECT_TRUE(int_map.contains(10));
+  EXPECT_FALSE(int_map.contains(15));
+  EXPECT_EQ(int_map.at(20), 200);
+  EXPECT_EQ(int_map.entries()[0].first, 10);
+  EXPECT_EQ(int_map.entries()[1].first, 20);
 }
 
 }  // namespace

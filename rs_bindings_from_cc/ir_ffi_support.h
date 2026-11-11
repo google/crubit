@@ -156,8 +156,8 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiString {
     return llvm::StringRef(lhs) < llvm::StringRef(rhs.AsView());
   }
 
-  // Operators for const char* to avoid ambiguity between StringRef and
-  // string_view
+  // Operators for const char* and std::string to avoid ambiguity between
+  // StringRef and string_view.
   friend bool operator==(const FfiString& lhs, const char* rhs) {
     return lhs == std::string_view(rhs);
   }
@@ -174,6 +174,25 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiString {
     return lhs < std::string_view(rhs);
   }
   friend bool operator<(const char* lhs, const FfiString& rhs) {
+    return std::string_view(lhs) < rhs;
+  }
+
+  friend bool operator==(const FfiString& lhs, const std::string& rhs) {
+    return lhs == std::string_view(rhs);
+  }
+  friend bool operator!=(const FfiString& lhs, const std::string& rhs) {
+    return lhs != std::string_view(rhs);
+  }
+  friend bool operator==(const std::string& lhs, const FfiString& rhs) {
+    return std::string_view(lhs) == rhs;
+  }
+  friend bool operator!=(const std::string& lhs, const FfiString& rhs) {
+    return std::string_view(lhs) != rhs;
+  }
+  friend bool operator<(const FfiString& lhs, const std::string& rhs) {
+    return lhs < std::string_view(rhs);
+  }
+  friend bool operator<(const std::string& lhs, const FfiString& rhs) {
     return std::string_view(lhs) < rhs;
   }
 
@@ -600,43 +619,48 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiMap {
   const_iterator begin() const { return entries_.begin(); }
   const_iterator end() const { return entries_.end(); }
 
-  iterator find(llvm::StringRef key) {
-    auto it = std::lower_bound(begin(), end(), key,
-                               [](const value_type& entry, llvm::StringRef k) {
-                                 return entry.first < k;
-                               });
+  template <typename Key = K>
+  iterator find(const Key& key) {
+    auto it = std::lower_bound(
+        begin(), end(), key,
+        [](const value_type& entry, const Key& k) { return entry.first < k; });
     if (it != end() && it->first == key) return it;
     return end();
   }
 
-  const_iterator find(llvm::StringRef key) const {
-    auto it = std::lower_bound(begin(), end(), key,
-                               [](const value_type& entry, llvm::StringRef k) {
-                                 return entry.first < k;
-                               });
+  template <typename Key = K>
+  const_iterator find(const Key& key) const {
+    auto it = std::lower_bound(
+        begin(), end(), key,
+        [](const value_type& entry, const Key& k) { return entry.first < k; });
     if (it != end() && it->first == key) return it;
     return end();
   }
 
-  bool contains(llvm::StringRef key) const { return find(key) != end(); }
+  template <typename Key = K>
+  bool contains(const Key& key) const {
+    return find(key) != end();
+  }
 
-  V& at(llvm::StringRef key) {
+  template <typename Key = K>
+  V& at(const Key& key) {
     auto it = find(key);
     CRUBIT_CHECK(it != end());
     return it->second;
   }
 
-  const V& at(llvm::StringRef key) const {
+  template <typename Key = K>
+  const V& at(const Key& key) const {
     auto it = find(key);
     CRUBIT_CHECK(it != end());
     return it->second;
   }
 
-  V& operator[](llvm::StringRef key) {
-    auto it = std::lower_bound(begin(), end(), key,
-                               [](const value_type& entry, llvm::StringRef k) {
-                                 return entry.first < k;
-                               });
+  template <typename Key = K>
+  V& operator[](const Key& key) {
+    auto it = std::lower_bound(
+        begin(), end(), key,
+        [](const value_type& entry, const Key& k) { return entry.first < k; });
     if (it != end() && it->first == key) return it->second;
     size_t idx = static_cast<size_t>(it - begin());
     return entries_.insert(idx, value_type{K(key), V()})->second;

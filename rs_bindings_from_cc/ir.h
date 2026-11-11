@@ -13,7 +13,6 @@
 
 #include <stdint.h>
 
-#include <algorithm>
 #include <cstddef>
 #include <iomanip>
 #include <memory>
@@ -398,16 +397,7 @@ std::vector<const T* _Nonnull> get_items_if(const ir_proto::IRProto& ir_proto) {
     }
   };
 
-  // Sort target keys to iterate `top_level_items()` deterministically.
-  std::vector<std::string> target_keys;
-  target_keys.reserve(ir_proto.top_level_items().size());
-  for (const auto& [target, _] : ir_proto.top_level_items()) {
-    target_keys.push_back(std::string(target));
-  }
-  std::sort(target_keys.begin(), target_keys.end());
-
-  for (const auto& target : target_keys) {
-    const auto& item_list = ir_proto.top_level_items().at(target);
+  for (const auto& [target, item_list] : ir_proto.top_level_items()) {
     for (const auto& item : item_list) {
       process_item(process_item, item);
     }
@@ -433,15 +423,7 @@ std::vector<T* _Nonnull> get_items_if(ir_proto::IRProto& ir_proto) {
     }
   };
 
-  std::vector<std::string> target_keys;
-  target_keys.reserve(ir_proto.top_level_items().size());
-  for (const auto& [target, _] : ir_proto.top_level_items()) {
-    target_keys.push_back(std::string(target));
-  }
-  std::sort(target_keys.begin(), target_keys.end());
-
-  for (const auto& target : target_keys) {
-    auto& item_list = (*ir_proto.mutable_top_level_items())[target];
+  for (auto& [target, item_list] : *ir_proto.mutable_top_level_items()) {
     for (auto& item : item_list) {
       process_item(process_item, item);
     }
