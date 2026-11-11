@@ -114,6 +114,27 @@ namespace macro_constants_alias = macro_constants_ns;
 #define CONST_VOLATILE_CAST_TO_TYPEDEF ((const MacroUint32 volatile)1)
 #define STATIC_CAST_TO_CONST static_cast<const short>(1)
 
+// Macros can use any C++ constant expression, e.g. calls to `constexpr`
+// functions and references to `constexpr` variables.
+constexpr int MacroConstantsSquare(int x) { return x * x; }
+constexpr int kMacroConstantsInt = 6;
+#define CONSTEXPR_CALL_CONSTANT MacroConstantsSquare(7)
+#define CONSTEXPR_VARIABLE_CONSTANT (kMacroConstantsInt + 1)
+#define CONSTEXPR_VARIABLE_REFERENCE kMacroConstantsInt
+// Clang accepts some invalid C++ as an extension, and so do macro constants.
+#define GNU_CONDITIONAL_CONSTANT (0 ?: 2)
+#define DUPLICATE_CONST_CAST ((const const int)1)
+// Constructs that are usually only seen inside functions work too.
+#define LAMBDA_CALL ([] { return 1; }())
+#define LAMBDA_WITH_LOCAL \
+  ([] {                   \
+    int y = 2;            \
+    return y;             \
+  }())
+#define REQUIRES_EXPRESSION (requires { 1; })
+#define SUBSCRIPT ("abc"[0])
+#define BRACED_FUNCTIONAL_CAST int{3}
+
 // String constants.
 #define STRING_CONSTANT "hello"
 #define CONCATENATED_STRING_CONSTANT \
@@ -149,7 +170,6 @@ namespace macro_constants_alias = macro_constants_ns;
 #define CONDITIONAL_WITHOUT_BRANCHES 1 ?
 #define CONDITIONAL_WITHOUT_COLON 1 ? 2
 #define CONDITIONAL_WITHOUT_FALSE_BRANCH (1 ? 2 :)
-#define CONDITIONAL_WITHOUT_TRUE_BRANCH (1 ?: 2)
 #define CONDITIONAL_WITHOUT_CONDITION (? 1 : 2)
 #define WIDE_CHAR_CONSTANT L'x'
 #define UTF8_CHAR_CONSTANT u8'x'
@@ -170,9 +190,48 @@ namespace macro_constants_alias = macro_constants_ns;
 #define EMPTY_DAG_12 EMPTY_DAG_11 EMPTY_DAG_11
 #define EXPANSION_STEP_LIMIT (EMPTY_DAG_12 1)
 #define CAST_TO_POINTER ((void*)0)
+// Clang can fold this as an extension, but it isn't a C++ constant expression.
+#define FOLDED_POINTER_TO_INT64 ((macro_constants_ns::Int64)(void*)0)
+// TODO(b/584772073): The type of `sizeof`, `size_t` (spelled `__size_t` by
+// Clang), doesn't have bindings yet.
+#define SIZEOF_CONSTANT sizeof(int)
+// Parsing this declares `struct MacroDeclaredStruct`, which isn't imported.
+#define SIZEOF_UNDECLARED_STRUCT sizeof(struct MacroDeclaredStruct)
+struct SizeofDeclaredStruct {
+  int field;
+};
+// Unlike `MacroDeclaredStruct`, this struct is declared by the header (and
+// imported).
+// TODO(b/584772073): `sizeof` is still unsupported because of its type.
+#define SIZEOF_DECLARED_STRUCT sizeof(struct SizeofDeclaredStruct)
+// Macros are parsed at the end of the header, so a struct that is declared
+// after the macro is complete there, and refers to the same struct.
+// TODO(b/584772073): `sizeof` is still unsupported because of its type.
+#define SIZEOF_LATER_DECLARED_STRUCT sizeof(struct SizeofLaterDeclaredStruct)
+struct SizeofLaterDeclaredStruct {
+  int field;
+};
+// Constructs that aren't allowed outside a function, or in a constant
+// expression.
+#define STATEMENT_EXPRESSION ({ 1; })
+#define STATEMENT_EXPRESSION_WITH_DECLARATION \
+  ({                                          \
+    int x = 1;                                \
+    x;                                        \
+  })
+#define TRAILING_SEMICOLON 1;
+#define ASM_STATEMENT asm("nop")
+#define ATTRIBUTE [[nodiscard]] 1
+#define COMPOUND_LITERAL ((int[]){1, 2}[0])
+#define LAMBDA_WITH_STATIC_LOCAL \
+  ([] {                          \
+    static int z = 2;            \
+    return z;                    \
+  }())
+#define LAMBDA_WITH_CAPTURE_DEFAULT ([&] { return 3; }())
 #define CAST_TO_UNKNOWN_TYPE ((not_a_type)1)
 #define CAST_TO_WCHAR ((wchar_t)1)
-// Casts to class types are rejected without being checked by the compiler.
+// Casts to class types are rejected, because of their type.
 #define CAST_TO_CLASS ClassForCast(1)
 #define C_STYLE_CAST_TO_CLASS ((ClassForCast)1)
 #define CAST_TO_CLASS_TEMPLATE ClassTemplateForCastInt(1)
@@ -195,7 +254,6 @@ typedef int UnescapableNamespaceInt;
 #define MULTI_KEYWORD_FUNCTIONAL_CAST \
   unsigned int(1)  // NOLINT(readability/casting)
 // Invalid cv-qualifiers, as in C++.
-#define DUPLICATE_CONST_CAST ((const const int)1)
 #define CONST_INSIDE_QUALIFIED_NAME_CAST ((macro_constants_ns::const Int64)1)
 #define CONST_FUNCTIONAL_CAST const int(1)  // NOLINT(readability/casting)
 

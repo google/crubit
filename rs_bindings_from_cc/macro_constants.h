@@ -11,6 +11,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Lex/MacroInfo.h"
+#include "clang/Parse/Parser.h"
 #include "clang/Sema/Sema.h"
 
 namespace crubit {
@@ -28,13 +29,15 @@ struct MacroConstant {
 
 // Returns a `constexpr` variable equivalent to the object-like macro `name`
 // (defined by `macro_info`), e.g. `constexpr int FOO = 4;` for
-// `#define FOO 4`, or nullopt if the macro isn't a supported constant
-// expression (see `MacroExpressionParser`). Reports no diagnostics.
+// `#define FOO 4`, or nullopt if the macro isn't supported. The macro is
+// supported if its expansion is a single C++ constant expression of a supported
+// type, parsed by `parser` (the parser of the translation unit) after the end
+// of the translation unit. Reports no diagnostics.
 //
 // The variable belongs to the translation unit, but isn't added to it: callers
 // can add it with `addHiddenDecl`, so that name lookup doesn't find it.
 std::optional<MacroConstant> SynthesizeMacroConstant(
-    clang::Sema& sema, const clang::IdentifierInfo& name,
+    clang::Sema& sema, clang::Parser& parser, const clang::IdentifierInfo& name,
     const clang::MacroInfo& macro_info);
 
 }  // namespace crubit

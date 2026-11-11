@@ -72,10 +72,10 @@ Crubit generates Rust bindings for everyday C++ APIs:
     [explicit lifetime annotations](../cpp/references_and_lifetimes.md).
 *   Type aliases, forward-declared types, and concrete class template
     specializations such as `MyTemplate<int>`.
-*   Object-like macros which expand to simple integral or string constants, such
-    as `#define FOO 4`, `#define BAR (FOO + 3)`, or `#define NAME "foo"`, with
-    the `macro_constants` feature. They are bound as `macro_rules!`, so `FOO` is
-    used as `FOO!()`.
+*   Object-like macros which expand to an integral or string constant
+    expression, such as `#define FOO 4`, `#define BAR (FOO + kBar)`, or
+    `#define NAME "foo"`, with the `macro_constants` feature. They are bound as
+    `macro_rules!`, so `FOO` is used as `FOO!()`.
     *   String macros (ordinary or UTF-8 string literals) expand to a string
         literal (`&'static str`), or to a byte string literal
         (`&'static [u8; N]`) if the string isn't valid UTF-8.
@@ -97,8 +97,7 @@ and overriding C++ methods from Rust (b/313733992), checking that C++ code
 actually honors the elided or annotated lifetimes, C++ templates with generic
 (non-concrete) type parameters (see [Generics and
 Templates](limits.md#generics)), non-type `using` aliases, constants of other
-types (e.g. floating-point or class types), and macros other than simple
-constants.
+types (e.g. floating-point or class types), and macros other than constants.
 
 ## C++ bindings for Rust libraries
 

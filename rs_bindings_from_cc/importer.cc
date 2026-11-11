@@ -337,11 +337,12 @@ const clang::ClassTemplateDecl* _Nullable LookupCanonicalImplInNamespace(
 }  // namespace
 
 Importer::Importer(Invocation& invocation, clang::ASTContext& ctx,
-                   clang::Sema& sema)
+                   clang::Sema& sema, clang::Parser& parser)
     : ImportContext(invocation, ctx, sema),
       mangler_(CRUBIT_DIE_IF_NULL(ctx_.createMangleContext())),
       itanium_tag_name_mangler_(CRUBIT_DIE_IF_NULL(
           clang::ItaniumMangleContext::create(ctx_, ctx_.getDiagnostics()))),
+      parser_(parser),
       module_comments_(ctx.getSourceManager()),
       rs_core_fmt_debug_(LookupRsCoreFmtDebug(&ctx)),
       rs_impl_(LookupCanonicalImplInNamespace(&ctx, "rs")),
@@ -847,6 +848,7 @@ std::vector<clang::Decl*> Importer::GetCanonicalChildren(
     }
   }
   for (clang::Decl* decl : children) {
+    if (decls_from_macro_parsing_.contains(decl)) continue;
     if (!is_always_instantiate) {
       if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(decl)) {
         if (!llvm::isa<clang::CXXConstructorDecl>(decl) &&
@@ -1977,9 +1979,28 @@ void Importer::ImportMacroConstants() {
     if (IsBeforeInSourceOrder(sm, loc_b, loc_a)) return false;
     return a.first->getName() < b.first->getName();
   });
+
+  // Parsing a macro may add declarations to the end of the translation unit,
+  // even if the macro is rejected afterwards: e.g. `sizeof(struct S)` declares
+  // `S`. They aren't declared by the headers, so they are excluded from the
+  // import. `last_decl` is the last declaration of the translation unit that
+  // has been accounted for (as a declaration of the headers, a synthesized
+  // variable, or a declaration from parsing a macro).
+  clang::Decl* last_decl = nullptr;
+  for (clang::Decl* decl : translation_unit->decls()) last_decl = decl;
+  auto exclude_decls_from_parsing = [&] {
+    clang::Decl* decl = last_decl != nullptr ? last_decl->getNextDeclInContext()
+                                             : *translation_unit->decls_begin();
+    for (; decl != nullptr; decl = decl->getNextDeclInContext()) {
+      decls_from_macro_parsing_.insert(decl);
+      last_decl = decl;
+    }
+  };
+
   for (const auto& [identifier, macro_info] : macros) {
     std::optional<MacroConstant> macro_constant =
-        SynthesizeMacroConstant(sema_, *identifier, *macro_info);
+        SynthesizeMacroConstant(sema_, parser_, *identifier, *macro_info);
+    exclude_decls_from_parsing();
     if (!macro_constant.has_value()) continue;
     // The type of the constant may be a typedef (e.g. due to a cast like
     // `(Foo)1`). Unlike the type of a real variable, it isn't imported with
@@ -1993,6 +2014,7 @@ void Importer::ImportMacroConstants() {
     // The variable must not be found by name lookup: it is not a real C++
     // declaration.
     translation_unit->addHiddenDecl(macro_constant->var_decl);
+    last_decl = macro_constant->var_decl;
     macro_constant_is_typed_.insert(
         {macro_constant->var_decl, macro_constant->is_typed});
   }

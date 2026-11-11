@@ -13,6 +13,7 @@
 #include "clang/AST/ASTConsumer.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
+#include "clang/Parse/Parser.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSet.h"
 
@@ -32,9 +33,18 @@ class FrontendAction : public clang::ASTFrontendAction {
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
       clang::CompilerInstance& instance, llvm::StringRef) override;
 
+  // Parses the translation unit like `clang::ParseAST`, but owns the `Parser`
+  // and keeps the translation unit open for incremental processing, so that
+  // the `AstConsumer` can parse macro constants after the end of the
+  // translation unit.
+  void ExecuteAction() override;
+
  private:
   Invocation& invocation_;
   llvm::StringSet<> in_memory_files_;
+  // The parser of the translation unit, which is only set while
+  // `ExecuteAction` runs. The `AstConsumer` refers to this member.
+  std::unique_ptr<clang::Parser> parser_;
 };
 
 }  // namespace crubit

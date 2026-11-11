@@ -8432,3 +8432,50 @@ fn test_static_data_members_of_nested_class_in_template_specialization() {
         }
     );
 }
+
+#[gtest]
+fn test_macro_constants_with_unbalanced_brackets() {
+    // Each macro is parsed on its own, up to its end, so unbalanced brackets in a macro don't
+    // affect the other macros, or the rest of the header. (This is tested here rather than in a
+    // golden test, because clang-format can't format a header with unbalanced brackets.)
+    let unbalanced_macros = [
+        ("UNBALANCED_OPEN_BRACE", "{"),
+        ("UNBALANCED_CLOSE_BRACE", "}"),
+        ("UNBALANCED_OPEN_PAREN", "(1"),
+        ("UNBALANCED_CLOSE_PAREN", "1)"),
+        ("UNBALANCED_OPEN_SQUARE", "["),
+        ("UNBALANCED_CLOSE_SQUARE", "]"),
+        ("UNBALANCED_OPEN_STATEMENT_EXPRESSION", "({ 1;"),
+        ("UNBALANCED_CLOSE_STATEMENT_EXPRESSION", "1; })"),
+        ("UNBALANCED_OPEN_LAMBDA", "[] {"),
+        ("UNBALANCED_CLOSE_LAMBDA", "return 1; }()"),
+        ("UNBALANCED_OPEN_TEMPLATE", "static_cast<int"),
+        ("UNBALANCED_OPEN_ATTRIBUTE", "[["),
+    ];
+    let mut header = String::new();
+    for (i, (name, expansion)) in unbalanced_macros.iter().enumerate() {
+        header.push_str(&format!("#define {name} {expansion}\n#define BALANCED_{i} {i}\n"));
+    }
+    header.push_str("constexpr int kAfterUnbalancedMacros = 1;\n");
+    let proto = ir_testing::ir_proto_from_cc_dependency(
+        test_platform(),
+        &header,
+        "// empty header",
+        Some("macro_constants"),
+        /* kythe_annotations= */ false,
+        /* carcinize= */ false,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let is_bound = |name: &str| ir.constants().any(|c| c.cc_name() == name);
+    let bound_unbalanced_macros: Vec<&str> =
+        unbalanced_macros.iter().map(|(name, _)| *name).filter(|name| is_bound(name)).collect();
+    expect_that!(bound_unbalanced_macros, is_empty());
+    let unbound_balanced_macros: Vec<String> = (0..unbalanced_macros.len())
+        .map(|i| format!("BALANCED_{i}"))
+        .filter(|name| !is_bound(name))
+        .collect();
+    expect_that!(unbound_balanced_macros, is_empty());
+    expect_true!(is_bound("kAfterUnbalancedMacros"));
+}
