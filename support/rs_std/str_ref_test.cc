@@ -12,10 +12,10 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "testing/fuzzing/fuzztest.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 
@@ -199,14 +199,24 @@ TEST(ImplicitConversionTest, ToAbslStringView) {
 }
 #endif
 
-void Fuzzer(std::string data) {
-  const std::optional<StrRef> s = StrRef::FromUtf8(data);
-  ASSERT_TRUE(s.has_value());
-  EXPECT_EQ(data, *s);
-  const std::string data_copy(s->data(), s->data() + s->size());
-  EXPECT_EQ(data, data_copy);
+TEST(StrTest, RoundTripValidUtf8Strings) {
+  const std::vector<std::string> test_cases = {
+      "",
+      "a",
+      "hello, world!",
+      std::string("embedded\0nul", 12),
+      "\xc3\xa9",          // 2-byte UTF-8 (é)
+      "\xea\x99\xae",      // 3-byte UTF-8 (ꙮ)
+      "\xf0\x9f\x9e\x80",  // 4-byte UTF-8
+      "ASCII + \xc3\xa9 + \xe2\x9c\x85 + \xf0\x9f\xa6\x80",
+  };
+  for (const std::string& data : test_cases) {
+    const std::optional<StrRef> s = StrRef::FromUtf8(data);
+    ASSERT_TRUE(s.has_value());
+    EXPECT_EQ(data, *s);
+    const std::string data_copy(s->data(), s->data() + s->size());
+    EXPECT_EQ(data, data_copy);
+  }
 }
-
-FUZZ_TEST(StrFuzzTest, Fuzzer).WithDomains(fuzztest::Utf8String());
 
 }  // namespace

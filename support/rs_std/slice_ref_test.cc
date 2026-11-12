@@ -16,7 +16,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "testing/fuzzing/fuzztest.h"
 #include "absl/types/span.h"
 
 namespace {
@@ -318,13 +317,16 @@ TEST(SliceRefTest, DanglingTagConstructorMatchesDefault) {
             std::bit_cast<Bytes>(Slice()));
 }
 
-void Fuzzer(std::vector<uint8_t> data) {
-  const rs_std::SliceRef<const uint8_t> s = data;
-  EXPECT_EQ(absl::Span<const uint8_t>(data), s.to_span());
-  const std::vector<uint8_t> data_copy(s.data(), s.data() + s.size());
-  EXPECT_EQ(data, data_copy);
+TEST(SliceTest, RoundTripVectors) {
+  const std::vector<std::vector<uint8_t>> test_cases = {
+      {}, {0}, {255}, {0, 1, 2, 0, 254, 255}, std::vector<uint8_t>(1024, 0xab),
+  };
+  for (const std::vector<uint8_t>& data : test_cases) {
+    const rs_std::SliceRef<const uint8_t> s = data;
+    EXPECT_EQ(absl::Span<const uint8_t>(data), s.to_span());
+    const std::vector<uint8_t> data_copy(s.data(), s.data() + s.size());
+    EXPECT_EQ(data, data_copy);
+  }
 }
-
-FUZZ_TEST(SliceFuzzTest, Fuzzer);
 
 }  // namespace

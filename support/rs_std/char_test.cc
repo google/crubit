@@ -8,11 +8,11 @@
 
 #include <array>
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "testing/fuzzing/fuzztest.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
 #include "support/rs_std/internal/is_utf8.h"
@@ -174,16 +174,20 @@ TEST(CharTest, DefaultConstructedValue) {
   EXPECT_EQ(0, uint32_t{c});
 }
 
-void ExpectEncodedIsUtf8(uint32_t data) {
-  std::optional<rs_std::char_> c = rs_std::char_::from_u32(data);
-  if (!c.has_value()) {
-    return;
+TEST(CharTest, AllValidCodePointsEncodeToValidUtf8) {
+  for (uint32_t data = 0; data <= 0x110000; ++data) {
+    std::optional<rs_std::char_> c = rs_std::char_::from_u32(data);
+    const bool should_be_valid =
+        data <= 0x10ffff && (data < 0xd800 || data > 0xdfff);
+    ASSERT_EQ(c.has_value(), should_be_valid);
+    if (!c.has_value()) {
+      continue;
+    }
+    std::array<uint8_t, 4> buffer;
+    rs_std::StrRef str = c->encode_utf8(absl::MakeSpan(buffer));
+    ASSERT_TRUE(rs::internal::IsUtf8(str.to_string_view()));
   }
-  std::array<uint8_t, 4> buffer;
-  rs_std::StrRef str = c->encode_utf8(absl::MakeSpan(buffer));
-  EXPECT_TRUE(rs::internal::IsUtf8(str.to_string_view()));
 }
-FUZZ_TEST(ExpectEncodedIsUtf8FuzzTest, ExpectEncodedIsUtf8);
 
 struct EncodeTestCase {
   uint32_t data;
@@ -196,7 +200,7 @@ struct EncodeTestCase {
 class EncodedIsUtf8BytesTest : public testing::TestWithParam<EncodeTestCase> {};
 
 TEST_P(EncodedIsUtf8BytesTest, EncodedIsUtf8Bytes) {
-  auto [data, expected_utf8_bytes] = GetParam();
+  const auto& [data, expected_utf8_bytes] = GetParam();
   std::optional<rs_std::char_> c = rs_std::char_::from_u32(data);
   if (!c.has_value()) {
     return;

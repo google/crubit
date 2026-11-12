@@ -58,8 +58,7 @@ crubit_cc_test(
     ],
     deps = [
         ":int",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -85,9 +84,7 @@ crubit_cc_test(
         "//support/rs_std/internal:is_utf8",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",
-        "@fuzztest",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -175,16 +172,11 @@ crubit_cc_test(
     tags = [
         "no_android",
         "no_ios",
-        # Continuous fuzzing (autofuzz) is not supported for Crubit targets because crubit_cc_test uses
-        # a custom transition to the LLVM unstable toolchain.
-        "noautofuzz",
     ],
     deps = [
         ":slice_ref",
         "@abseil-cpp//absl/types:span",
-        "@fuzztest",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -220,9 +212,7 @@ crubit_cc_test(
         ":str_ref",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
-        "@fuzztest",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -263,8 +253,7 @@ crubit_cc_test(
     deps = [
         ":dyn_callable",
         "@abseil-cpp//absl/functional:any_invocable",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -285,8 +274,7 @@ crubit_cc_test(
     ],
     deps = [
         ":fn_ref",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -308,8 +296,7 @@ crubit_cc_test(
     deps = [
         ":fn",
         "//support:movable",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -349,8 +336,7 @@ crubit_cc_test(
     ],
     deps = [
         ":iterator_adapter",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -433,8 +419,7 @@ crubit_cc_test(
     ],
     deps = [
         ":unit",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -464,8 +449,7 @@ crubit_cc_test(
     ],
     deps = [
         ":enum",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -478,8 +462,7 @@ crubit_cc_test(
     ],
     deps = [
         ":enum",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -496,8 +479,7 @@ crubit_cc_test(
     deps = [
         ":enum",
         "@abseil-cpp//absl/base:core_headers",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 

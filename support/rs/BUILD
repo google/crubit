@@ -84,8 +84,7 @@ crubit_cc_test(
         "//support:movable",
         "//support:unsafe_relocate_tag",
         "//support/internal:bindings_support",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -100,8 +99,7 @@ crubit_cc_test(
         ":slice_box",
         "//support:unsafe_relocate_tag",
         "//support/rs_std:slice_ref",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -117,7 +115,6 @@ crubit_cc_test(
         "//support:movable",
         "//support:unsafe_relocate_tag",
         "//support/rs_std:str_ref",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
