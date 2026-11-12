@@ -19,6 +19,7 @@
 #include <optional>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -112,7 +113,8 @@ class HeaderName {
 
   template <typename H>
   friend H AbslHashValue(H h, const HeaderName& header_name) {
-    return H::combine(std::move(h), header_name.IncludePath());
+    return H::combine(std::move(h),
+                      std::string_view(header_name.IncludePath()));
   }
 
  private:
@@ -161,7 +163,8 @@ class FormattedError final {
 
   template <typename H>
   friend H AbslHashValue(H h, const FormattedError& e) {
-    return H::combine(std::move(h), e.fmt(), e.message());
+    return H::combine(std::move(h), std::string_view(e.fmt()),
+                      std::string_view(e.message()));
   }
 
   // Returns a FormattedError for a static string. The string is used as both
@@ -272,7 +275,7 @@ class Identifier {
 
   template <typename H>
   friend H AbslHashValue(H h, const Identifier& i) {
-    return H::combine(std::move(h), i.Ident());
+    return H::combine(std::move(h), std::string_view(i.Ident()));
   }
 
   bool operator==(const Identifier& other) const {

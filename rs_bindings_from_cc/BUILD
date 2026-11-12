@@ -533,7 +533,10 @@ crubit_cc_test(
     name = "ir_ffi_support_test",
     srcs = ["ir_ffi_support_test.cc"],
     # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
-    tags = ["no_windows"],
+    tags = [
+        "no_test_android_arm",
+        "no_windows",
+    ],
     deps = [
         ":cc_ir",
         ":ir_ffi_support_test_rust",  # build_cleaner: keep

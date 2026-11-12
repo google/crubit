@@ -14,8 +14,8 @@ TEST(CheckTest, CheckSuccess) {
 }
 
 TEST(CheckTest, CheckDeath) {
-  EXPECT_DEATH(CRUBIT_CHECK(false) << "Death message",
-               "Check failed: false Death message");
+  EXPECT_DEATH_IF_SUPPORTED(CRUBIT_CHECK(false) << "Death message",
+                            "Check failed: false Death message");
 }
 
 TEST(CheckTest, DcheckEvaluation) {
@@ -36,7 +36,7 @@ TEST(CheckTest, DieIfNullSuccess) {
 
 TEST(CheckTest, DieIfNullDeath) {
   int* ptr = nullptr;
-  EXPECT_DEATH(CRUBIT_DIE_IF_NULL(ptr), "Must not be null");
+  EXPECT_DEATH_IF_SUPPORTED(CRUBIT_DIE_IF_NULL(ptr), "Must not be null");
 }
 
 }  // namespace

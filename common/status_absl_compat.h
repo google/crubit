@@ -10,6 +10,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "common/status.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
 
 namespace crubit {
@@ -31,7 +32,9 @@ inline absl::Status ToAbslStatus(llvm::Error error) {
 
 inline llvm::Error FromAbslStatus(const absl::Status& s) {
   if (s.ok()) return llvm::Error::success();
-  return MakeStatusError(static_cast<StatusCode>(s.code()), s.message());
+  return MakeStatusError(
+      static_cast<StatusCode>(s.code()),
+      llvm::StringRef(s.message().data(), s.message().size()));
 }
 
 class AbslErrorReturn {

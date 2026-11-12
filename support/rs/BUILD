@@ -74,6 +74,10 @@ cc_library(
 crubit_cc_test(
     name = "box_test",
     srcs = ["box_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":box",
         ":pin_box",
@@ -88,6 +92,10 @@ crubit_cc_test(
 crubit_cc_test(
     name = "slice_box_test",
     srcs = ["slice_box_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":slice_box",
         "//support:unsafe_relocate_tag",
@@ -100,6 +108,10 @@ crubit_cc_test(
 crubit_cc_test(
     name = "str_box_test",
     srcs = ["str_box_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
     deps = [
         ":str_box",
         "//support:movable",
