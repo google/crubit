@@ -974,8 +974,9 @@ pub fn generate_function<'tcx>(
     };
     check_fn_sig(&sig_mid)?;
 
-    // For `fn f() -> impl Future<Output = T>` or `async fn f() -> T`:
-    //   * `rs_return_type` is `impl Future<Output = T>`
+    // For `fn f() -> impl Future<Output = T>`, `async fn f() -> T`, or
+    // `fn f() -> Pin<Box<dyn Future<Output = T>>>`:
+    //   * `rs_return_type` is `impl Future<Output = T>` or `Pin<Box<dyn Future<Output = T>>>`
     //   * `future_output_ty` is `Some(T)`
     //   * `is_async` is true
     let rs_return_type = sig_mid.output();

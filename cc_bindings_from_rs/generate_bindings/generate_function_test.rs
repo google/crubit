@@ -1591,6 +1591,52 @@ fn test_format_item_unsupported_fn_returning_impl_fn_once() {
 }
 
 #[test]
+fn test_format_item_unsupported_fn_returning_pin_box_dyn_future_not_send() {
+    let test_src = r#"
+            use std::future::Future;
+            use std::pin::Pin;
+
+            pub fn returns_future() -> Pin<Box<dyn Future<Output = i32>>> {
+                Box::pin(async { 42 })
+            }
+        "#;
+    test_format_item(test_src, "returns_future", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "Crubit currently only supports async functions that return a Send future."
+        );
+    });
+}
+
+#[test]
+fn test_format_item_unsupported_fn_returning_pin_box_dyn_future_bridged_associated_type() {
+    let test_src = r#"
+            use std::future::Future;
+            use std::pin::Pin;
+
+            pub trait HasOutput {
+                type Output;
+            }
+            pub struct S;
+            impl HasOutput for S {
+                type Output = Option<i32>;
+            }
+
+            pub fn returns_future() -> Pin<Box<dyn Future<Output = <S as HasOutput>::Output> + Send>> {
+                Box::pin(async { Some(42) })
+            }
+        "#;
+    test_format_item(test_src, "returns_future", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "Crubit currently does not support async functions returning bridged types that require conversion thunks, found `std::option::Option<i32>`."
+        );
+    });
+}
+
+#[test]
 fn test_format_item_unsupported_fn_async_not_send() {
     let test_src = r#"
             pub async fn async_function(_: *const ()) {}

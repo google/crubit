@@ -142,6 +142,9 @@ return_cpp_layout_equivalent(::std::int32_t x);
 
 ::crubit::DynErasedFuture<::std::int32_t> return_impl_future(::std::int32_t x);
 
+::crubit::DynErasedFuture<::std::int32_t> return_pin_box_dyn_future(
+    ::std::int32_t x);
+
 ::crubit::DynErasedFuture<::async_fn::StructWithDrop> return_struct_with_drop(
     ::std::int32_t x);
 
@@ -281,6 +284,19 @@ inline ::crubit::DynErasedFuture<::std::int32_t> return_impl_future(
   ::crubit::Slot<::crubit::DynErasedFuture<::std::int32_t>>
       __return_value_ret_val_holder;
   __crubit_internal::__crubit_thunk_return_uimpl_ufuture(
+      x, __return_value_ret_val_holder.Get());
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_upin_ubox_udyn_ufuture(
+    ::std::int32_t, ::crubit::DynErasedFuture<::std::int32_t>* __ret_ptr);
+}
+inline ::crubit::DynErasedFuture<::std::int32_t> return_pin_box_dyn_future(
+    ::std::int32_t x) {
+  ::crubit::Slot<::crubit::DynErasedFuture<::std::int32_t>>
+      __return_value_ret_val_holder;
+  __crubit_internal::__crubit_thunk_return_upin_ubox_udyn_ufuture(
       x, __return_value_ret_val_holder.Get());
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }

@@ -4,6 +4,7 @@
 
 use std::ffi::c_void;
 use std::future;
+use std::pin::Pin;
 use std::rc::Rc;
 use std::task::Poll;
 
@@ -129,6 +130,11 @@ pub fn return_impl_future(x: i32) -> impl std::future::Future<Output = i32> {
 // 7. non-`async fn` which returns a `Box<dyn Future>`
 pub fn return_box_dyn_future(x: i32) -> Box<dyn std::future::Future<Output = i32>> {
     Box::new(future::ready(x))
+}
+
+// 7b. non-`async fn` which returns a `Pin<Box<dyn Future>>`
+pub fn return_pin_box_dyn_future(x: i32) -> Pin<Box<dyn std::future::Future<Output = i32> + Send>> {
+    Box::pin(future::ready(x))
 }
 
 // 8. a non-Send return type

@@ -25,7 +25,7 @@ use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use query_compiler::{
     is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, normalize_ty,
-    try_normalize,
+    try_normalize, try_normalize_non_body,
 };
 use quote::format_ident;
 use quote::quote;
@@ -171,7 +171,8 @@ pub fn generate_thunk_decl<'tcx>(
     let actual_output_ty = if is_async {
         dyn_erased_future_output_ty(tcx, sig_mid.output()).ok_or_else(|| {
             anyhow!(
-                "crubit.rs-bug: expected `impl Future` or `async`, found `{}`",
+                "crubit.rs-bug: expected `impl Future`, `async`, or `Pin<Box<dyn Future>>`, \
+                 found `{}`",
                 sig_mid.output()
             )
         })?
@@ -1199,8 +1200,16 @@ pub fn fn_arg_idents(tcx: TyCtxt, def_id: DefId) -> Vec<Option<rustc_span::Ident
 }
 
 /// Returns `T` if Crubit binds `ty` as `crubit::DynErasedFuture<T>` in C++, i.e. if `ty` is
-/// `impl Future<Output = T>` (which includes what `async fn f() -> T` returns).
+/// either:
+///
+/// * `impl Future<Output = T>`, which includes what `async fn f() -> T` returns, or
+/// * `Pin<Box<dyn Future<Output = T>>>`.
 pub fn dyn_erased_future_output_ty<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Option<Ty<'tcx>> {
+    impl_future_output_ty(tcx, ty).or_else(|| pinned_box_dyn_future_output_ty(tcx, ty))
+}
+
+/// Returns `T` if `ty` is `impl Future<Output = T>`.
+fn impl_future_output_ty<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Option<Ty<'tcx>> {
     // Check that `ty` is an `impl Trait` opaque type (from `-> impl ...` or `async fn`), and
     // look up the `DefId` of `core::future::Future::Output`.
     let alias_ty = ty_as_alias_ty(ty)?;
@@ -1231,6 +1240,34 @@ pub fn dyn_erased_future_output_ty<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Opt
             }
         },
     )
+}
+
+/// Returns `T` if `ty` is `Pin<Box<dyn Future<Output = T>>>`.
+fn pinned_box_dyn_future_output_ty<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Option<Ty<'tcx>> {
+    // Check that `ty` is `Pin<Box<dyn ...>>` and get the bounds of `dyn ...` (e.g. `Future`,
+    // `Future::Output = T`, `Send`), and look up the `DefId` of `core::future::Future::Output`.
+    let ty::TyKind::Dynamic(predicates, ..) = ty.pinned_ty()?.boxed_ty()?.kind() else {
+        return None;
+    };
+    let future_output_id = tcx.lang_items().future_output()?;
+
+    // Match the associated-type bound `Future::Output = T` (from `dyn Future<Output = T>`, as
+    // opposed to e.g. `FnOnce::Output = T` from `dyn FnOnce() -> T`). Skipping the `for<'a>`
+    // binder is fine because `Future` has no lifetime parameters, so rustc rejects
+    // `dyn for<'a> Future<Output = &'a T>` (E0582) and `T` can't mention a bound lifetime.
+    let unnormalized_output_ty = predicates.projection_bounds().find_map(|projection| {
+        let projection = projection.skip_binder();
+        if projection.def_id == future_output_id {
+            projection.term.as_type()
+        } else {
+            None
+        }
+    })?;
+
+    // Resolve any associated types in `T` (e.g. turning
+    // `<std::vec::IntoIter<i32> as Iterator>::Item` into `i32`) so callers like `is_bridged_type`
+    // see the concrete output type rather than an unnormalized projection.
+    try_normalize_non_body(tcx, ty::ParamEnv::empty(), unnormalized_output_ty).ok()
 }
 
 pub fn thunk_qualifier(core: &AdtCoreBindings<'_>) -> TokenStream {

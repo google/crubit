@@ -97,6 +97,15 @@ TEST(AsyncFnTest, ReturnImplFuture) {
   EXPECT_EQ(std::move(out).AssumeInitAndTakeValue(), 42);
 }
 
+TEST(AsyncFnTest, ReturnPinBoxDynFuture) {
+  NoopWaker waker;
+  crubit::DynErasedFuture<int32_t> fut =
+      async_fn::return_pin_box_dyn_future(42);
+  crubit::Slot<int32_t> out;
+  ASSERT_TRUE(fut.Poll(&waker, out.Get()));
+  EXPECT_EQ(std::move(out).AssumeInitAndTakeValue(), 42);
+}
+
 // The following functions are not generated in C++ due to lack of support,
 // exactly as expected:
 //
