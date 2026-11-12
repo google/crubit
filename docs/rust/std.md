@@ -7,8 +7,9 @@ automatically generated for those types under the namespaces `rs::std`,
 
 ## Working with `String` in C++ {#string}
 
-Rust's `String` becomes `rs::std::string::String` in C++ (also spelled
-`rs::alloc::string::String`). It can be constructed from a C++ string literal:
+Rust's `String` becomes `rs::String` in C++ (an alias for
+`rs::alloc::string::String`, also spelled `rs::std::string::String`). It can be
+constructed from a C++ string literal:
 
 ```c++
 rs::std::string::String s("hello, world!");
@@ -210,9 +211,9 @@ Rust function traits and callable parameters receive bindings through
 `rs::FnRef` and `rs::Fn`:
 
 *   **`rs::FnRef<Sig>`** (`support/rs_std/fn_ref.h`):
-    Non-owning, borrowed view of a callable corresponding to `&dyn Fn` or `&mut
-    dyn FnMut` (or generic `impl Fn` / `impl FnMut`). Does not allocate on the
-    heap.
+    Non-owning, borrowed view of a callable corresponding to `&dyn Fn` or
+    `&mut dyn FnMut` (or generic `impl Fn` / `impl FnMut`). Does not allocate on
+    the heap.
 *   **`rs::Fn<Sig>`** (`support/rs_std/fn.h`): Owning,
     heap-allocated callable corresponding to `Box<dyn Fn>`, `Box<dyn FnMut>`, or
     `Box<dyn FnOnce>` (or generic `impl FnOnce + 'static`). `rs::Fn<Sig &&>`

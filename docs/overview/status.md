@@ -17,37 +17,38 @@ additionally [ABI-compatible](../types/index.md#abi-compatibility), and
 [bridged](../types/index.md#abi-compatibility) (converted by value). See
 [Types](../types/index.md) for what each of these means in practice.
 
-| Type                                       | C++                         | Rust                      |
-| :----------------------------------------- | :-------------------------- | :------------------------ |
-| **Primitives**                             |                             |                           |
-| Integers                                   | `int32_t`, `int64_t`, etc.  | `i32`, `i64`, etc.        |
-| Floating point                             | `float`, `double`           | `f32`, `f64`              |
-| **Pointers & References**                  |                             |                           |
-| Raw pointers                               | `T*`, `const T*`            | `*mut T`, `*const T`      |
-| References                                 | `const T&`, `T&`            | `&T`, `&mut T`            |
-| String slices                              | `rs::StrRef`                | `&str`                    |
-| Slices                                     | `rs::SliceRef<T>`           | `&[T]`, `&mut [T]`        |
-| **Smart Pointers**                         |                             |                           |
-| [Unique pointer](../cpp/std.md#unique_ptr) | `std::unique_ptr<T>`        | `cpp_std::unique_ptr<T>`  |
-| [Shared pointer](../cpp/std.md#shared_ptr) | `std::shared_ptr<T>`        | `cpp_std::shared_ptr<T>`  |
-| **Containers**                             |                             |                           |
-| [C++ vector](../cpp/std.md#vector)         | `std::vector<T>`            | `cpp_std::vector<T>`      |
-| [Rust `Vec`](../rust/std.md#vec)           | `rs::Vec<T>`                | `Vec<T>`                  |
-| Fixed-size array                           | `std::array<T, N>`, `T[N]`  | `[T; N]`                  |
-| **Strings**                                |                             |                           |
-| [String view](../cpp/std.md#string_view)   | `std::string_view`          | `cpp_std::string_view`    |
-| [C++ string](../cpp/std.md#string)         | `std::string`               | `cpp_std::string_wrapper` |
-| [Rust `String`](../rust/std.md#string)     | `rs::alloc::string::String` | `String`                  |
-| **Option & Result**                        |                             |                           |
-| [C++ optional](../cpp/std.md#optional)     | `std::optional<T>`          | `cpp_std::optional<T>`    |
-| [Rust `Option`](../rust/std.md#option)     | `rs::Option<T>`             | `Option<T>`               |
-| [Rust `Result`](../rust/std.md#result)     | `rs::Result<T, E>`          | `Result<T, E>`            |
-| **Other**                                  |                             |                           |
-| User-defined types                         | `struct`, `class`           | `struct`, `enum`, `union` |
-| [Tuples](../rust/std.md#tuple)             | `rs::Tuple<T1, T2, ..>`     | `(T1, T2, ..)`            |
-| Protocol Buffers                           | C++ proto                   | Rust proto                |
-| Status                                     | `absl::Status`              | `status::Status`          |
-| StatusOr                                   | `absl::StatusOr<T>`         | `status::StatusOr<T>`     |
+| Type                                       | C++                        | Rust                      |
+| :----------------------------------------- | :------------------------- | :------------------------ |
+| **Primitives**                             |                            |                           |
+| Integers                                   | `int32_t`, `int64_t`, etc. | `i32`, `i64`, etc.        |
+| Floating point                             | `float`, `double`          | `f32`, `f64`              |
+| **Pointers & References**                  |                            |                           |
+| Raw pointers                               | `T*`, `const T*`           | `*mut T`, `*const T`      |
+| References                                 | `const T&`, `T&`           | `&T`, `&mut T`            |
+| String slices                              | `rs::StrRef`               | `&str`                    |
+| Slices                                     | `rs::SliceRef<T>`          | `&[T]`, `&mut [T]`        |
+| **Smart Pointers**                         |                            |                           |
+| [Unique pointer](../cpp/std.md#unique_ptr) | `std::unique_ptr<T>`       | `cpp_std::unique_ptr<T>`  |
+| [Shared pointer](../cpp/std.md#shared_ptr) | `std::shared_ptr<T>`       | `cpp_std::shared_ptr<T>`  |
+| [Rust `Box`](../types/box.md)              | `rs::Box<T>`               | `Box<T>`                  |
+| **Containers**                             |                            |                           |
+| [C++ vector](../cpp/std.md#vector)         | `std::vector<T>`           | `cpp_std::vector<T>`      |
+| [Rust `Vec`](../rust/std.md#vec)           | `rs::Vec<T>`               | `Vec<T>`                  |
+| Fixed-size array                           | `std::array<T, N>`, `T[N]` | `[T; N]`                  |
+| **Strings**                                |                            |                           |
+| [String view](../cpp/std.md#string_view)   | `std::string_view`         | `cpp_std::string_view`    |
+| [C++ string](../cpp/std.md#string)         | `std::string`              | `cpp_std::string_wrapper` |
+| [Rust `String`](../rust/std.md#string)     | `rs::String`               | `String`                  |
+| **Option & Result**                        |                            |                           |
+| [C++ optional](../cpp/std.md#optional)     | `std::optional<T>`         | `cpp_std::optional<T>`    |
+| [Rust `Option`](../rust/std.md#option)     | `rs::Option<T>`            | `Option<T>`               |
+| [Rust `Result`](../rust/std.md#result)     | `rs::Result<T, E>`         | `Result<T, E>`            |
+| **Other**                                  |                            |                           |
+| User-defined types                         | `struct`, `class`          | `struct`, `enum`, `union` |
+| [Tuples](../rust/std.md#tuple)             | `rs::Tuple<T1, T2, ..>`    | `(T1, T2, ..)`            |
+| Protocol Buffers                           | C++ proto                  | Rust proto                |
+| Status                                     | `absl::Status`             | `status::Status`          |
+| StatusOr                                   | `absl::StatusOr<T>`        | `status::StatusOr<T>`     |
 
 Not yet supported: Rust `!` (b/254507801), `()` except as a return type or a
 generic argument such as `Result<(), E>` (b/254099023), `std::byte`

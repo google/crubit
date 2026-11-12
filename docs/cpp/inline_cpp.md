@@ -69,19 +69,26 @@ cc_library(
 
 rust_api_from_cpp(
     name = "widget_rust",
-    cpp_target = ":widget",
-    root_namespaces = ["widget"],
     srcs = ["widget_custom.rs"],
+    cpp_target = ":widget",
     embedded_cpp = True,
+    root_namespaces = ["widget"],
 )
 ```
 
-Inside `widget_custom.rs`, you can use `inline_cpp!` to bridge the C++ template
-factory method directly into the crate's public API:
+Setting `embedded_cpp = True` extracts `global_cpp!` and `inline_cpp!` blocks
+from `srcs` and injects `inline_cpp_macro` automatically. Inside
+`widget_custom.rs`, you can use `global_cpp!` and `inline_cpp!` to bridge the
+C++ template factory method directly into the crate's public API:
 
 ```rust
 // widget_custom.rs (compiled directly into the widget_rust crate)
-use inline_cpp_macro::inline_cpp;
+use inline_cpp_macro::{global_cpp, inline_cpp};
+
+global_cpp! {
+    #include "path/to/widget.h"
+    #include "support/rs_std/str_ref.h"
+}
 
 impl Widget {
     /// Ergonomic Rust wrapper over a C++ factory function template.
