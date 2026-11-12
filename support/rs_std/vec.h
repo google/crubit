@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <initializer_list>
 #include <iterator>
 #include <memory>
 #include <type_traits>
@@ -80,6 +81,18 @@ class VecBase {
     reserve(other.size());
     for (T& elem : other) {
       emplace_back(::std::move(elem));
+    }
+  }
+
+  // Constructs a vector with a copy of the elements of `init`.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors do not throw
+  // (terminating if they do).
+  VecBase(::std::initializer_list<T> init) noexcept : VecBase() {
+    init_empty();
+    reserve(init.size());
+    for (const T& elem : init) {
+      emplace_back(elem);
     }
   }
 

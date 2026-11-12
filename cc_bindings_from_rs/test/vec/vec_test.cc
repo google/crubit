@@ -6,6 +6,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 #include <numeric>
 #include <span>
 #include <type_traits>
@@ -287,6 +288,44 @@ TEST(VecTest, ConstructFromStdVectorMove) {
   rs::Vec<int32_t> empty_v(std::move(empty_src));
   EXPECT_TRUE(empty_v.empty());
   EXPECT_EQ(vec::take_vec(std::move(empty_v)), 0);
+}
+
+TEST(VecTest, ConstructFromInitializerList) {
+  static_assert(
+      std::is_nothrow_constructible_v<rs::Vec<int32_t>,
+                                      std::initializer_list<int32_t>>);
+  static_assert(
+      std::is_convertible_v<std::initializer_list<int32_t>, rs::Vec<int32_t>>);
+
+  rs::Vec<int32_t> v = {1, 2, 3, 4};
+  EXPECT_EQ(v.size(), 4);
+  EXPECT_GE(v.capacity(), 4);
+  EXPECT_EQ(v[0], 1);
+  EXPECT_EQ(v[1], 2);
+  EXPECT_EQ(v[2], 3);
+  EXPECT_EQ(v[3], 4);
+  EXPECT_EQ(vec::take_vec(std::move(v)), 10);
+
+  rs::Vec<int32_t> direct{5, 6};
+  EXPECT_EQ(direct.size(), 2);
+  EXPECT_EQ(direct[0], 5);
+  EXPECT_EQ(direct[1], 6);
+
+  direct = {7, 8, 9};
+  EXPECT_EQ(direct.size(), 3);
+  EXPECT_EQ(vec::take_vec(std::move(direct)), 24);
+
+  rs::Vec<int32_t> empty_v = {};
+  EXPECT_TRUE(empty_v.empty());
+  EXPECT_EQ(empty_v.capacity(), 0);
+  EXPECT_EQ(vec::take_vec(std::move(empty_v)), 0);
+
+  rs::Vec<int32_t> empty_init_list(std::initializer_list<int32_t>{});
+  EXPECT_TRUE(empty_init_list.empty());
+  EXPECT_EQ(empty_init_list.capacity(), 0);
+  EXPECT_EQ(vec::take_vec(std::move(empty_init_list)), 0);
+
+  EXPECT_EQ(vec::take_vec({10, 20, 30}), 60);
 }
 
 }  // namespace
