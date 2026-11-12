@@ -298,6 +298,8 @@ pub mod zz_template_instantiations {
         }
     }
 
+    impl<'__this>From<&'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>for bool{ #[inline(always)]fn from(args: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE)->Self{ let mut __this=args;unsafe{ crate::detail::__rust_thunk__5db54a69__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEEcvbEv(__this) } } }
+
     pub mod cc_template_inst_n_st3_u8function_i_fi_rkn9shared_ns4_info_eeee {
         ///CRUBIT_ANNOTATE: do_not_bind=
         #[inline(always)]
@@ -362,6 +364,11 @@ mod detail {
             __this: ::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,
             __f: ::core::pin::Pin<&'__f mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,
         );
+        pub(crate) unsafe fn __rust_thunk__5db54a69__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEEcvbEv<
+            '__this,
+        >(
+            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE,
+        ) -> bool;
         pub(crate) unsafe fn __rust_thunk__2aa8490e__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEE11target_typeEv<
             '__this,
         >(

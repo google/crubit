@@ -4849,3 +4849,184 @@ fn test_c_array_function_decay_and_omission() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! { fn take_fn_ptr_with_array });
     Ok(())
 }
+
+#[gtest]
+fn test_conversion_operator_enabled_by_assume_lifetimes() -> Result<()> {
+    let header = "struct Src { int value; explicit operator int() const; };";
+
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(header)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'__this> From<&'__this crate::Src> for ::ffi_11::c_int {
+                #[inline(always)]
+                fn from(args: &'__this crate::Src) -> Self { ... }
+            }
+        }
+    );
+
+    let BindingsTokens { rs_api: rs_api_without_assume_lifetimes, .. } =
+        generate_bindings_tokens_from_cc(header)?;
+    assert_rs_not_matches!(
+        rs_api_without_assume_lifetimes,
+        quote! {
+            impl ... From<...> for ::ffi_11::c_int
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_conversion_operator_conflicting_ffi_11_type_alias_primitives() -> Result<()> {
+    // `char16_t` maps to `u16` and `unsigned short` maps to `::ffi_11::c_ushort` (`pub type
+    // c_ushort = u16;`), and similarly `char32_t` (`u32`) collides with `unsigned int`
+    // (`::ffi_11::c_uint`, `pub type c_uint = u32;`), as in `absl::uint128` / `absl::int128`.
+    // The colliding Rust `From` impls must be detected as ambiguous and omitted while
+    // non-colliding conversion operators still receive bindings.
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct Src {
+            int value;
+            explicit operator char16_t() const;
+            explicit operator unsigned short() const;
+            explicit operator char32_t() const;
+            explicit operator unsigned int() const;
+            explicit operator int() const;
+        };
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'__this> From<&'__this crate::Src> for ::ffi_11::c_int { ... }
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { impl ... From<...> for u16 });
+    assert_rs_not_matches!(rs_api, quote! { impl ... From<...> for ::ffi_11::c_ushort });
+    assert_rs_not_matches!(rs_api, quote! { impl ... From<...> for u32 });
+    assert_rs_not_matches!(rs_api, quote! { impl ... From<...> for ::ffi_11::c_uint });
+    Ok(())
+}
+
+#[gtest]
+fn test_conversion_operator_conflicting_with_converting_constructor() -> Result<()> {
+    // When `Dst` has `Dst(const Src&)` and `Src` has `operator Dst() const` in the same target,
+    // both would emit `impl<'...> From<&'... crate::Src> for crate::Dst` with different lifetime
+    // parameter names (`'b` vs `'__this`). Both must be detected as ambiguous so the generated
+    // Rust crate does not fail with E0119.
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct Src;
+        struct Dst {
+            int value;
+            explicit Dst(const Src& src);
+        };
+        struct Src {
+            int value;
+            explicit operator Dst() const;
+            explicit operator int() const;
+        };
+        "#,
+    )?;
+    assert_rs_not_matches!(rs_api, quote! { impl ... From<...> for crate::Dst });
+    assert_rs_not_matches!(rs_api, quote! { impl ... From<...> for Dst });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'__this> From<&'__this crate::Src> for ::ffi_11::c_int { ... }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_conversion_operators_to_multiple_non_path_types() -> Result<()> {
+    // Non-path Rust target types such as raw pointers must not collapse to `self_type: None` in
+    // `FunctionId` and falsely mark distinct conversion operators as ambiguous.
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct Src {
+            int value;
+            explicit operator int*() const;
+            explicit operator double*() const;
+        };
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'__this> From<&'__this crate::Src> for *mut ::ffi_11::c_int { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'__this> From<&'__this crate::Src> for *mut f64 { ... }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_conversion_operator_rvalue_to_self_omitted() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct Src {
+            int value;
+            explicit operator Src() &&;
+        };
+        "#,
+    )?;
+    assert_rs_not_matches!(rs_api, quote! { impl ... From<crate::Src> for crate::Src });
+    Ok(())
+}
+
+#[gtest]
+fn test_distinct_pair_instantiations_with_same_bridged_tuple_keep_pinned_drop() -> Result<()> {
+    // `std::pair<const std::string, NonTrivial>` and `std::pair<std::string, NonTrivial>` both
+    // bridge by value to `(::cc_std::std::string, crate::NonTrivial)`, while behind pointers both
+    // also emit distinct unbridged `__CcTemplateInst...` structs with
+    // `#[::ctor::recursively_pinned(PinnedDrop)]`. `FunctionId` for `ImplFor::T` must identify the
+    // unbridged struct rather than the bridged tuple so the two `PinnedDrop` impls do not collide.
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        namespace std {
+        inline namespace __u {
+        template <typename CharT>
+        class basic_string {
+            CharT c;
+          public:
+            ~basic_string();
+        };
+        using string = basic_string<char>;
+        template <typename T1, typename T2>
+        struct pair {
+            T1 first;
+            T2 second;
+        };
+        }  // namespace __u
+        }  // namespace std
+
+        struct NonTrivial {
+            int x;
+            ~NonTrivial();
+        };
+
+        void takes_const_first(const std::pair<const std::string, NonTrivial>* p);
+        void takes_mut_first(const std::pair<std::string, NonTrivial>* p);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::ctor::PinnedDrop for __CcTemplateInstNSt3__u4pairIKNS_12basic_stringIcEE10NonTrivialEE { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::ctor::PinnedDrop for __CcTemplateInstNSt3__u4pairINS_12basic_stringIcEE10NonTrivialEE { ... }
+        }
+    );
+    Ok(())
+}

@@ -1879,7 +1879,21 @@ impl RsTypeKind {
         {
             return Rc::new(self.clone());
         }
-        all_static_lifetimes_internal(self, strip_aliases)
+        all_static_lifetimes_internal(
+            self,
+            strip_aliases,
+            /* canonicalize_primitives= */ false,
+        )
+    }
+
+    /// Returns a canonicalized representation of `self` for [`crate::function_types::FunctionId`]
+    /// deduplication: all lifetimes are replaced with `'static`, type aliases are stripped, and
+    /// `ffi_11` primitive type aliases (such as `c_ushort` vs `u16` for `unsigned short` vs
+    /// `char16_t`) are normalized to their underlying Rust primitive types.
+    pub fn canonical_for_function_id(&self) -> Rc<RsTypeKind> {
+        all_static_lifetimes_internal(
+            self, /* strip_aliases= */ true, /* canonicalize_primitives= */ true,
+        )
     }
 
     /// Returns `true` if `self` and `other` are the same type, ignoring all [`Lifetime`]s
@@ -2818,17 +2832,51 @@ impl RsTypeKind {
     }
 }
 
-fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTypeKind> {
+fn canonical_primitive_for_function_id(primitive: Primitive) -> Primitive {
+    match primitive {
+        Primitive::SignedChar | Primitive::Int8T | Primitive::StdInt8T => Primitive::Int8T,
+        Primitive::UnsignedChar | Primitive::Uint8T | Primitive::StdUint8T => Primitive::Uint8T,
+        Primitive::Short | Primitive::Int16T | Primitive::StdInt16T => Primitive::Int16T,
+        Primitive::UnsignedShort
+        | Primitive::Char16T
+        | Primitive::Uint16T
+        | Primitive::StdUint16T => Primitive::Uint16T,
+        Primitive::Int | Primitive::Int32T | Primitive::StdInt32T => Primitive::Int32T,
+        Primitive::UnsignedInt
+        | Primitive::Char32T
+        | Primitive::Uint32T
+        | Primitive::StdUint32T => Primitive::Uint32T,
+        Primitive::StdInt64T => Primitive::Int64T,
+        Primitive::StdUint64T => Primitive::Uint64T,
+        Primitive::PtrdiffT
+        | Primitive::StdPtrdiffT
+        | Primitive::IntptrT
+        | Primitive::StdIntptrT => Primitive::PtrdiffT,
+        Primitive::SizeT | Primitive::StdSizeT | Primitive::UintptrT | Primitive::StdUintptrT => {
+            Primitive::SizeT
+        }
+        other => other,
+    }
+}
+
+fn all_static_lifetimes_internal(
+    t: &RsTypeKind,
+    strip_aliases: bool,
+    canonicalize_primitives: bool,
+) -> Rc<RsTypeKind> {
+    let recurse = |inner: &RsTypeKind| {
+        all_static_lifetimes_internal(inner, strip_aliases, canonicalize_primitives)
+    };
     match t {
         RsTypeKind::Error { .. } => Rc::new(t.clone()),
         RsTypeKind::Pointer { pointee, kind, mutability } => Rc::new(RsTypeKind::Pointer {
-            pointee: all_static_lifetimes_internal(pointee, strip_aliases),
+            pointee: recurse(pointee),
             kind: *kind,
             mutability: *mutability,
         }),
         RsTypeKind::Reference { referent, mutability, lifetime: _, is_cref } => {
             Rc::new(RsTypeKind::Reference {
-                referent: all_static_lifetimes_internal(referent, strip_aliases),
+                referent: recurse(referent),
                 mutability: *mutability,
                 lifetime: Lifetime::new("static"),
                 is_cref: *is_cref,
@@ -2836,7 +2884,7 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
         }
         RsTypeKind::RvalueReference { referent, mutability, lifetime: _ } => {
             Rc::new(RsTypeKind::RvalueReference {
-                referent: all_static_lifetimes_internal(referent, strip_aliases),
+                referent: recurse(referent),
                 mutability: *mutability,
                 lifetime: Lifetime::new("static"),
             })
@@ -2845,12 +2893,10 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
             Rc::new(RsTypeKind::FuncPtr {
                 option: *option,
                 cc_calling_conv: *cc_calling_conv,
-                return_type: all_static_lifetimes_internal(return_type, strip_aliases),
+                return_type: recurse(return_type),
                 param_types: param_types
                     .iter()
-                    .map(|param_type| {
-                        all_static_lifetimes_internal(param_type, strip_aliases).as_ref().clone()
-                    })
+                    .map(|param_type| recurse(param_type).as_ref().clone())
                     .collect(),
             })
         }
@@ -2869,55 +2915,30 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
                 Rc::new(match r.as_ref() {
                     UniformReprTemplateType::StdVector { element_type } => {
                         UniformReprTemplateType::StdVector {
-                            element_type: all_static_lifetimes_internal(
-                                element_type,
-                                strip_aliases,
-                            )
-                            .as_ref()
-                            .clone(),
+                            element_type: recurse(element_type).as_ref().clone(),
                         }
                     }
                     UniformReprTemplateType::StdOptional { element_type } => {
                         UniformReprTemplateType::StdOptional {
-                            element_type: all_static_lifetimes_internal(
-                                element_type,
-                                strip_aliases,
-                            )
-                            .as_ref()
-                            .clone(),
+                            element_type: recurse(element_type).as_ref().clone(),
                         }
                     }
                     UniformReprTemplateType::StdSharedPtr { element_type, is_nullable } => {
                         UniformReprTemplateType::StdSharedPtr {
-                            element_type: all_static_lifetimes_internal(
-                                element_type,
-                                strip_aliases,
-                            )
-                            .as_ref()
-                            .clone(),
+                            element_type: recurse(element_type).as_ref().clone(),
                             is_nullable: *is_nullable,
                         }
                     }
                     UniformReprTemplateType::StdUniquePtr { element_type, is_nullable } => {
                         UniformReprTemplateType::StdUniquePtr {
-                            element_type: all_static_lifetimes_internal(
-                                element_type,
-                                strip_aliases,
-                            )
-                            .as_ref()
-                            .clone(),
+                            element_type: recurse(element_type).as_ref().clone(),
                             is_nullable: *is_nullable,
                         }
                     }
                     UniformReprTemplateType::StdAtomic { in_cc_std, element_type } => {
                         UniformReprTemplateType::StdAtomic {
                             in_cc_std: *in_cc_std,
-                            element_type: all_static_lifetimes_internal(
-                                element_type,
-                                strip_aliases,
-                            )
-                            .as_ref()
-                            .clone(),
+                            element_type: recurse(element_type).as_ref().clone(),
                         }
                     }
                     UniformReprTemplateType::AbslSpan {
@@ -2928,9 +2949,7 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
                     } => UniformReprTemplateType::AbslSpan {
                         is_const: *is_const,
                         include_lifetime: *include_lifetime,
-                        element_type: all_static_lifetimes_internal(element_type, strip_aliases)
-                            .as_ref()
-                            .clone(),
+                        element_type: recurse(element_type).as_ref().clone(),
                         lifetime: lifetime.as_ref().map(|_| Lifetime::new("static")),
                     },
                     UniformReprTemplateType::StdStringView { in_cc_std, lifetime: _ } => {
@@ -2950,12 +2969,8 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
                 Rc::new(match customize_methods.as_ref() {
                     CustomizeMethodsKind::AbslFlatHashMap { key_type, value_type } => {
                         CustomizeMethodsKind::AbslFlatHashMap {
-                            key_type: all_static_lifetimes_internal(key_type, strip_aliases)
-                                .as_ref()
-                                .clone(),
-                            value_type: all_static_lifetimes_internal(value_type, strip_aliases)
-                                .as_ref()
-                                .clone(),
+                            key_type: recurse(key_type).as_ref().clone(),
+                            value_type: recurse(value_type).as_ref().clone(),
                         }
                     }
                 })
@@ -2964,11 +2979,11 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
         RsTypeKind::Enum { .. } => Rc::new(t.clone()),
         RsTypeKind::TypeAlias { type_alias, underlying_type, crate_path, lifetimes } => {
             if strip_aliases {
-                all_static_lifetimes_internal(underlying_type, strip_aliases)
+                recurse(underlying_type)
             } else {
                 Rc::new(RsTypeKind::TypeAlias {
                     type_alias: type_alias.clone(),
-                    underlying_type: all_static_lifetimes_internal(underlying_type, strip_aliases),
+                    underlying_type: recurse(underlying_type),
                     crate_path: crate_path.clone(),
                     lifetimes: lifetimes
                         .iter()
@@ -2977,9 +2992,15 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
                 })
             }
         }
-        RsTypeKind::Primitive(_) => Rc::new(t.clone()),
+        RsTypeKind::Primitive(primitive) => {
+            Rc::new(RsTypeKind::Primitive(if canonicalize_primitives {
+                canonical_primitive_for_function_id(*primitive)
+            } else {
+                *primitive
+            }))
+        }
         RsTypeKind::CArray { element_type, num_elements } => Rc::new(RsTypeKind::CArray {
-            element_type: all_static_lifetimes_internal(element_type, strip_aliases),
+            element_type: recurse(element_type),
             num_elements: *num_elements,
         }),
         RsTypeKind::BridgeType { bridge_type, original_type } => Rc::new(RsTypeKind::BridgeType {
@@ -2996,11 +3017,7 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
                     abi_cpp: abi_cpp.clone(),
                     generic_types: generic_types
                         .iter()
-                        .map(|generic_type| {
-                            all_static_lifetimes_internal(generic_type, strip_aliases)
-                                .as_ref()
-                                .clone()
-                        })
+                        .map(|generic_type| recurse(generic_type).as_ref().clone())
                         .collect(),
                     label_hint: label_hint.clone(),
                 },
@@ -3018,31 +3035,26 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
                         },
                     }
                 }
-                BridgeRsTypeKind::StdOptional(element_type) => BridgeRsTypeKind::StdOptional(
-                    all_static_lifetimes_internal(element_type, strip_aliases),
-                ),
-                BridgeRsTypeKind::StdPair(first, second) => BridgeRsTypeKind::StdPair(
-                    all_static_lifetimes_internal(first, strip_aliases),
-                    all_static_lifetimes_internal(second, strip_aliases),
-                ),
+                BridgeRsTypeKind::StdOptional(element_type) => {
+                    BridgeRsTypeKind::StdOptional(recurse(element_type))
+                }
+                BridgeRsTypeKind::StdPair(first, second) => {
+                    BridgeRsTypeKind::StdPair(recurse(first), recurse(second))
+                }
                 BridgeRsTypeKind::StdString { .. } => bridge_type.clone(),
                 BridgeRsTypeKind::Callable(k) => BridgeRsTypeKind::Callable(Rc::new(Callable {
-                    return_type: all_static_lifetimes_internal(&k.return_type, strip_aliases),
+                    return_type: recurse(&k.return_type),
                     param_types: k
                         .param_types
                         .iter()
-                        .map(|param_type| {
-                            all_static_lifetimes_internal(param_type, strip_aliases)
-                                .as_ref()
-                                .clone()
-                        })
+                        .map(|param_type| recurse(param_type).as_ref().clone())
                         .collect(),
                     ..k.as_ref().clone()
                 })),
                 BridgeRsTypeKind::C9Co { has_reference_param, result_type, lifetime } => {
                     BridgeRsTypeKind::C9Co {
                         has_reference_param: *has_reference_param,
-                        result_type: all_static_lifetimes_internal(result_type, strip_aliases),
+                        result_type: recurse(result_type),
                         lifetime: lifetime.as_ref().map(|_| Lifetime::new("static")),
                     }
                 }
@@ -3052,7 +3064,7 @@ fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTy
         RsTypeKind::ExistingRustType { .. } => Rc::new(t.clone()),
         RsTypeKind::Box { kind, pointee, existing_rust_type } => Rc::new(RsTypeKind::Box {
             kind: *kind,
-            pointee: pointee.as_ref().map(|p| all_static_lifetimes_internal(p, strip_aliases)),
+            pointee: pointee.as_ref().map(|p| recurse(p)),
             existing_rust_type: existing_rust_type.clone(),
         }),
     }

@@ -23,7 +23,7 @@ crubit_test_cc_library(
     name = "conversion_operators",
     srcs = ["conversion_operators.cc"],
     hdrs = ["conversion_operators.h"],
-    aspect_hints = ["//features:assume_this_lifetimes"],
+    aspect_hints = ["//features:supported"],
     deps = [":foreign_type"],
 )
 

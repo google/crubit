@@ -26,9 +26,9 @@ pub struct GeneratedFunction {
 /// Uniquely identifies a generated Rust function.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct FunctionId {
-    // If the function is on a trait impl, contains the name of the Self type for
-    // which the trait is being implemented.
-    pub self_type: Option<syn::Path>,
+    // If the function is on a trait impl, contains the canonical Rust Self type
+    // for which the trait is being implemented.
+    pub self_type: Option<syn::Type>,
     // Fully qualified path of the function. For functions in impl blocks, this
     // includes the name of the type or trait on which the function is being
     // implemented, e.g. `Default::default`.
@@ -190,6 +190,40 @@ impl TraitName {
     /// Returns the lifetimes used in this trait name.
     pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + use<'_> {
         self.params().iter().flat_map(|p| p.lifetimes())
+    }
+
+    /// Returns a copy of `self` with every [`RsTypeKind`] argument transformed by `f`.
+    pub fn map_args(&self, mut f: impl FnMut(&RsTypeKind) -> Rc<RsTypeKind>) -> Self {
+        fn map_slice(
+            params: &[RsTypeKind],
+            f: &mut impl FnMut(&RsTypeKind) -> Rc<RsTypeKind>,
+        ) -> Rc<[RsTypeKind]> {
+            params.iter().map(|p| f(p).as_ref().clone()).collect()
+        }
+        match self {
+            Self::Clone => Self::Clone,
+            Self::Default => Self::Default,
+            Self::Delete => Self::Delete,
+            Self::CtorNew(params) => Self::CtorNew(map_slice(params, &mut f)),
+            Self::From(params) => Self::From(map_slice(params, &mut f)),
+            Self::UnsafeCtorNew(params) => Self::UnsafeCtorNew(map_slice(params, &mut f)),
+            Self::UnsafeFrom(params) => Self::UnsafeFrom(map_slice(params, &mut f)),
+            Self::PartialEq { param, negate_thunk_result } => {
+                Self::PartialEq { param: f(param), negate_thunk_result: *negate_thunk_result }
+            }
+            Self::PartialOrd { param, op } => Self::PartialOrd { param: f(param), op: *op },
+            Self::CcIndex { index_type, output_type } => {
+                Self::CcIndex { index_type: f(index_type), output_type: f(output_type) }
+            }
+            Self::CcIndexMut { index_type, output_type } => {
+                Self::CcIndexMut { index_type: f(index_type), output_type: f(output_type) }
+            }
+            Self::Other { name, params, is_unsafe_fn } => Self::Other {
+                name: name.clone(),
+                params: map_slice(params, &mut f),
+                is_unsafe_fn: *is_unsafe_fn,
+            },
+        }
     }
 }
 

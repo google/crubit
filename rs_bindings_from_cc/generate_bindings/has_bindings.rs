@@ -314,10 +314,11 @@ fn func_has_bindings(db: &BindingsGenerator, func: FfiRc<Func>) -> Result<(), No
     let enabled_features = ir.target_crubit_features(target);
 
     if matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator)
+        && !enabled_features.contains(CrubitFeature::AssumeLifetimes)
         && !enabled_features.contains(CrubitFeature::AssumeThisLifetimes)
     {
         return Err(NoBindingsReason::Unsupported(anyhow!(
-            "Conversion operators are only supported when AssumeThisLifetimes is enabled"
+            "Conversion operators are only supported when AssumeLifetimes or AssumeThisLifetimes is enabled"
         )));
     }
 

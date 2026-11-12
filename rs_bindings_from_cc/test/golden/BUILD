@@ -134,9 +134,6 @@ ASPECT_HINTS = {
     "template_instantiation": [
         "//features:template_instantiation",
     ],
-    "conversion_operators": [
-        "//features:assume_this_lifetimes",
-    ],
     "typedef_incomplete_types": [
         "//features:forward_declare",
     ],
