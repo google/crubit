@@ -2691,3 +2691,98 @@ fn test_box_rejects_non_unpin_and_incomplete_pointees() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_unnameable_template_instantiation_with_nested_static_var_has_doc_hidden_mod() -> Result<()>
+{
+    let mut proto = ir_proto_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        struct Donor {
+            static int count;
+        };
+        template <typename T>
+        struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
+            void Method() const {}
+        };
+        void Foo(MyTemplate<int> t);
+        "#,
+    )?;
+
+    // Clang importer does not yet import nested items of template specializations directly, so
+    // reparent `Donor::count` onto `MyTemplate<int>` in `IRProto` to verify that any non-empty
+    // nested-items module on a mangled template instantiation is `#[doc(hidden)]` and omits method
+    // free functions.
+    let target = proto.current_target.clone();
+    let mut items = proto.top_level_items.get(&target).unwrap().to_vec();
+    let mut count_item = None;
+    let mut template_id = None;
+    for item in &mut items {
+        if let ir::ir_rust_proto::Item::Record(ref mut rec) = *item {
+            if rec.rs_name.identifier.as_str() == "Donor" {
+                let rec_mut = rec.make_mut();
+                for child in rec_mut.children.as_slice() {
+                    if matches!(child, ir::ir_rust_proto::Item::GlobalVar(_)) {
+                        count_item = Some(child.clone());
+                    }
+                }
+                rec_mut.children = Default::default();
+            } else if rec.rs_name.identifier.as_str() == "__CcTemplateInst10MyTemplateIiE" {
+                template_id = Some(rec.id);
+            }
+        }
+    }
+    let mut count_item = count_item.expect("Donor::count GlobalVar should exist");
+    let template_id = template_id.expect("__CcTemplateInst10MyTemplateIiE should exist");
+    if let ir::ir_rust_proto::Item::GlobalVar(ref mut gv) = count_item {
+        gv.make_mut().set_enclosing_item_id(template_id);
+    }
+    for item in &mut items {
+        if let ir::ir_rust_proto::Item::Record(ref mut rec) = *item
+            && rec.id == template_id
+        {
+            let mut children = rec.children.to_vec();
+            children.push(count_item);
+            rec.make_mut().children = children.into();
+            break;
+        }
+    }
+    proto.top_level_items.insert(target, items.into());
+
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub mod zz_template_instantiations {
+                ...
+                impl __CcTemplateInst10MyTemplateIiE {
+                    ...
+                    #[inline(always)]
+                    pub fn Method<'a>(&'a self) {
+                        unsafe { crate::detail::...(self) }
+                    }
+                }
+                ...
+                #[doc(hidden)]
+                pub mod cc_template_inst10_my_template_ii_e {
+                    unsafe extern "C" {
+                        ...
+                        pub static mut count: ::ffi_11::c_int;
+                    }
+                }
+            }
+        }
+    );
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            pub mod cc_template_inst10_my_template_ii_e {
+                ...
+                pub fn Method ...
+            }
+        }
+    );
+    Ok(())
+}

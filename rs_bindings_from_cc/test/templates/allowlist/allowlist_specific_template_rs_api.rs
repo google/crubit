@@ -56,7 +56,7 @@ pub mod zz_template_instantiations {
         /// * `__this`: raw pointer
         #[inline(always)]
         pub unsafe fn Member(__this: *mut Self) {
-            unsafe { self::cc_template_inst13_always_bound_ts_iif_e::Member(__this) }
+            unsafe { crate::detail::__rust_thunk__56d34d81__ZN13AlwaysBoundTsIifE6MemberEv(__this) }
         }
     }
 
@@ -81,20 +81,6 @@ pub mod zz_template_instantiations {
         #[inline(always)]
         fn ctor_new(args: (::ffi_11::c_int, f32)) -> Self::CtorType {
             <Self as From<(::ffi_11::c_int, f32)>>::from(args)
-        }
-    }
-
-    pub mod cc_template_inst13_always_bound_ts_iif_e {
-        /// # Safety
-        ///
-        /// The caller must ensure that the following unsafe arguments are not misused by the function:
-        /// * `__this`: raw pointer
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub unsafe fn Member(
-            __this: *mut crate::zz_template_instantiations::__CcTemplateInst13AlwaysBoundTsIifE,
-        ) {
-            unsafe { crate::detail::__rust_thunk__56d34d81__ZN13AlwaysBoundTsIifE6MemberEv(__this) }
         }
     }
 

@@ -856,12 +856,16 @@ pub fn generated_items_to_tokens<'db>(
                     }
                     .to_tokens(tokens);
                 }
-                let record_ir = db.find_decl::<FfiRc<ir::Record>>(*id).unwrap();
-                let module_name = db.record_to_associated_module_name(record_ir.clone()).unwrap();
                 if !free_functions.is_empty() || !nested_items.is_empty() {
+                    let record_ir = db.find_decl::<FfiRc<ir::Record>>(*id).unwrap();
+                    let module_name =
+                        db.record_to_associated_module_name(record_ir.clone()).unwrap();
+                    let doc_hidden =
+                        record_ir.is_rs_name_mangled().then(|| quote! { #[doc(hidden)] });
                     let nested_items_to_tokens =
                         generated_items_to_token_stream(generated_items, db, nested_items);
                     quote! {
+                        #doc_hidden
                         pub mod #module_name {
                             __NEWLINE__
                             #( #free_functions )*

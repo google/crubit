@@ -176,9 +176,7 @@ pub mod zz_template_instantiations {
             __f: ::core::pin::Pin<&'__f mut Self>,
         ) {
             unsafe {
-                self::cc_template_inst_n_st3_u8function_i_fi_rkn9shared_ns4_info_eeee::swap(
-                    self, __f,
-                )
+                crate::detail::__rust_thunk__44069562__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEE4swapERS6_(self,__f)
             }
         }
         #[must_use]
@@ -187,9 +185,7 @@ pub mod zz_template_instantiations {
             &'__this self,
         ) -> ::cref::CRef<'__this, ::cc_std::std::type_info> {
             unsafe {
-                self::cc_template_inst_n_st3_u8function_i_fi_rkn9shared_ns4_info_eeee::target_type(
-                    self,
-                )
+                crate::detail::__rust_thunk__2aa8490e__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEE11target_typeEv(self)
             }
         }
     }
@@ -299,29 +295,6 @@ pub mod zz_template_instantiations {
     }
 
     impl<'__this>From<&'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>for bool{ #[inline(always)]fn from(args: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE)->Self{ let mut __this=args;unsafe{ crate::detail::__rust_thunk__5db54a69__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEEcvbEv(__this) } } }
-
-    pub mod cc_template_inst_n_st3_u8function_i_fi_rkn9shared_ns4_info_eeee {
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn swap<'__f, '__this>(
-            __this: ::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,
-            __f: ::core::pin::Pin<&'__f mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,
-        ) {
-            unsafe {
-                crate::detail::__rust_thunk__44069562__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEE4swapERS6_(__this,__f)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn target_type<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE,
-        ) -> ::cref::CRef<'__this, ::cc_std::std::type_info> {
-            unsafe {
-                crate::detail::__rust_thunk__2aa8490e__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEE11target_typeEv(__this)
-            }
-        }
-    }
 }
 mod detail {
     #[allow(unused_imports)]

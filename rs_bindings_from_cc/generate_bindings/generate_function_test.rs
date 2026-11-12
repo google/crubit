@@ -5030,3 +5030,216 @@ fn test_distinct_pair_instantiations_with_same_bridged_tuple_keep_pinned_drop() 
     );
     Ok(())
 }
+
+#[gtest]
+fn test_unnameable_template_instantiation_methods_omit_mod() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        template <typename T>
+        struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
+            void Method() const {}
+            void MutMethod() {}
+            static void StaticMethod() {}
+        };
+        void Foo(MyTemplate<int> t);
+        "#,
+    )?;
+    assert_rs_not_matches!(rs_api, quote! { mod cc_template_inst10_my_template_ii_e });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub mod zz_template_instantiations {
+                ...
+                impl __CcTemplateInst10MyTemplateIiE {
+                    ...
+                    #[inline(always)]
+                    pub fn Method<'a>(&'a self) {
+                        unsafe { crate::detail::...(self) }
+                    }
+                    ...
+                    #[inline(always)]
+                    pub fn MutMethod<'a>(&'a mut self) {
+                        unsafe { crate::detail::...(self) }
+                    }
+                    ...
+                    #[inline(always)]
+                    pub fn StaticMethod() {
+                        unsafe { crate::detail::...() }
+                    }
+                }
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unnameable_template_instantiation_inherited_virtual_base_methods() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        class Base {
+          public:
+            ~Base() {}
+            void MutBaseMethod() {}
+        };
+        template <typename T>
+        struct MyTemplate : public virtual Base {};
+        void Foo(MyTemplate<int>& t);
+        "#,
+    )?;
+    assert_rs_not_matches!(rs_api, quote! { mod cc_template_inst10_my_template_ii_e });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub mod zz_template_instantiations {
+                ...
+                impl __CcTemplateInst10MyTemplateIiE {
+                    ...
+                    #[inline(always)]
+                    pub fn MutBaseMethod<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+                        unsafe {
+                            crate::detail::...(unsafe {
+                                ::core::pin::Pin::new_unchecked(
+                                    &mut *oops::VirtualUpcast::<_>::virtual_upcast(
+                                        self.get_unchecked_mut() as *mut _
+                                    )
+                                )
+                            })
+                        }
+                    }
+                }
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_named_template_instantiation_preserves_mod() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        template <typename T>
+        struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
+            void Method() const {}
+        };
+        using MyAlias = MyTemplate<int>;
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl MyAlias {
+                ...
+                #[inline(always)]
+                pub fn Method<'a>(&'a self) {
+                    unsafe { self::my_alias::Method(self) }
+                }
+            }
+            ...
+            pub mod my_alias {
+                ...
+                pub fn Method<'a>(__this: &'a crate::MyAlias) {
+                    unsafe { crate::detail::...(__this) }
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_derived_class_from_unnameable_template_preserves_mod() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        template <typename T>
+        struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
+            void Method() const {}
+        };
+        void Foo(MyTemplate<int> t);
+        struct Derived : public MyTemplate<int> {};
+        "#,
+    )?;
+    assert_rs_not_matches!(rs_api, quote! { mod cc_template_inst10_my_template_ii_e });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl Derived {
+                ...
+                #[inline(always)]
+                pub fn Method<'a>(&'a self) {
+                    unsafe { self::derived::Method(unsafe { oops::Upcast::<_>::upcast(self) }) }
+                }
+            }
+            ...
+            pub mod derived {
+                ...
+                pub fn Method<'a>(
+                    __this: &'a crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE
+                ) {
+                    unsafe { crate::detail::...(__this) }
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unnameable_template_instantiation_inherited_method_with_inline_cpp() -> Result<()> {
+    let mut proto = multiplatform_ir_testing::ir_proto_from_cc_with_inline_cpp(
+        r#"
+        #pragma clang lifetime_elision
+        class Base {
+          public:
+            ~Base() {}
+            void MutBaseMethod() {}
+        };
+        template <typename T>
+        struct MyTemplate : public virtual Base {};
+        inline void Foo(MyTemplate<int>& t) {}
+        "#,
+    )?;
+    let target = proto.current_target.clone();
+    let mut items = proto.top_level_items.get(&target).unwrap().to_vec();
+    for item in &mut items {
+        if let ir::ir_rust_proto::Item::UnsupportedItem(ref mut u) = *item {
+            u.make_mut().must_bind = false;
+        }
+    }
+    proto.top_level_items.insert(target, items.into());
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(make_test_ir(&proto)?)?;
+    assert_rs_not_matches!(rs_api, quote! { mod cc_template_inst10_my_template_ii_e });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub mod zz_template_instantiations {
+                ...
+                impl __CcTemplateInst10MyTemplateIiE {
+                    ...
+                    #[inline(always)]
+                    pub fn MutBaseMethod<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+                        unsafe {
+                            (::inline_cpp_macro::inline_cpp! { ... })(
+                                (::core::pin::Pin::into_inner_unchecked(unsafe {
+                                    ::core::pin::Pin::new_unchecked(
+                                        &mut *oops::VirtualUpcast::<_>::virtual_upcast(
+                                            self.get_unchecked_mut() as *mut _
+                                        )
+                                    )
+                                }) as *const _)
+                            )
+                        }
+                    }
+                }
+                ...
+            }
+        }
+    );
+    Ok(())
+}

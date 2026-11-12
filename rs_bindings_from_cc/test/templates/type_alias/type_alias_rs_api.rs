@@ -211,11 +211,20 @@ pub mod zz_template_instantiations {
         pub fn Create(
             value: f64,
         ) -> crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIdE {
-            unsafe { self::cc_template_inst10_my_template_id_e::Create(value) }
+            unsafe {
+                let mut __crubit_return = ::core::mem::MaybeUninit::<
+                    crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIdE,
+                >::uninit();
+                crate::detail::__rust_thunk__5a9d55c6__ZN10MyTemplateIdE6CreateEd(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    value,
+                );
+                __crubit_return.assume_init()
+            }
         }
         #[inline(always)]
         pub fn value<'__this>(&'__this self) -> ::cref::CRef<'__this, f64> {
-            unsafe { self::cc_template_inst10_my_template_id_e::value(self) }
+            unsafe { crate::detail::__rust_thunk__758630aa__ZNK10MyTemplateIdE5valueEv(self) }
         }
     }
 
@@ -229,32 +238,6 @@ pub mod zz_template_instantiations {
                 );
                 tmp.assume_init()
             }
-        }
-    }
-
-    pub mod cc_template_inst10_my_template_id_e {
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn Create(
-            value: f64,
-        ) -> crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIdE {
-            unsafe {
-                let mut __crubit_return = ::core::mem::MaybeUninit::<
-                    crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIdE,
-                >::uninit();
-                crate::detail::__rust_thunk__5a9d55c6__ZN10MyTemplateIdE6CreateEd(
-                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
-                    value,
-                );
-                __crubit_return.assume_init()
-            }
-        }
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn value<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIdE,
-        ) -> ::cref::CRef<'__this, f64> {
-            unsafe { crate::detail::__rust_thunk__758630aa__ZNK10MyTemplateIdE5valueEv(__this) }
         }
     }
 

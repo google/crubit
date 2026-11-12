@@ -2265,7 +2265,7 @@ pub fn generate_function(
             // `carcinize` is enabled.
             if let Some(body_tokens) = func.source_text_as_token_stream()
                 && let Some(inline_cpp_body) =
-                    generate_inline_cpp_call(db, &func, &thunk_args, body_tokens)?
+                    generate_inline_cpp_call(db, &func, &param_types, &thunk_args, body_tokens)?
             {
                 return Ok(adjust_thunk_result_if_needed(
                     &impl_kind,
@@ -2282,8 +2282,8 @@ pub fn generate_function(
                 &param_value_adjustments,
                 thunkless_impl.as_ref(),
                 thunk_ident(db, &func),
-                thunk_prepare,
-                thunk_args,
+                thunk_prepare.clone(),
+                thunk_args.clone(),
             )
         } else {
             let mut result = quote! {
@@ -2394,209 +2394,179 @@ pub fn generate_function(
             let fn_generic_params =
                 format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
 
-            // Generate the free function.
-            let free_param_idents = {
-                // Replace `self` with `__this`.
-                let mut idents = param_idents.clone();
-                if format_first_param_as_self {
-                    idents[0] = make_rs_ident("__this");
-                }
-                if is_renamed_unpin_constructor {
-                    idents[1..].to_vec()
-                } else {
-                    idents
-                }
-            };
-            let mut free_param_types = param_types.clone();
-            let mut free_return_type = return_type.clone();
-            // When generating the free function, shift `ImplKind::Struct` to `ImplKind::None`.
-            let free_impl_kind = ImplKind::None { is_unsafe };
-
-            // Ignore `errors` because `function_signature` for the member method already
-            // checked parameters.
-            let free_errors = Errors::new();
-            let BindingsSignature {
-                lifetimes: free_lifetimes,
-                lifetimes_including_impl: _,
-                params: free_api_params,
-                return_type_fragment: free_return_type_fragment,
-                thunk_prepare: free_thunk_prepare,
-                thunk_args: free_thunk_args,
-                features: free_features,
-            } = free_errors.consolidate_on_err(function_signature(
-                db,
-                func.clone(),
-                &free_impl_kind,
-                &free_param_idents,
-                &mut free_param_types,
-                &mut free_return_type,
-                None,
-                &free_errors,
-            ))?;
-            free_errors.discard();
-
-            // Update main features mapping
-            features |= free_features;
-
-            let free_func_body = if reportable_status.is_ok() {
-                // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when
-                // `carcinize` is enabled.
-                if let Some(body_tokens) = func.source_text_as_token_stream()
-                    && let Some(inline_cpp_body) =
-                        generate_inline_cpp_call(db, &func, &free_thunk_args, body_tokens)?
-                {
-                    inline_cpp_body
-                } else {
-                    generate_func_body(
-                        db,
-                        &impl_kind,
-                        &crate_root_path,
-                        &free_return_type,
-                        &free_param_types,
-                        &param_value_adjustments,
-                        thunkless_impl.as_ref(),
-                        thunk_ident(db, &func),
-                        free_thunk_prepare,
-                        free_thunk_args,
-                    )?
-                }
-            } else {
-                // Use the `unreachable` body
-                create_func_body()?
-            };
-
-            let free_fn_generic_params =
-                format_generic_params(&free_lifetimes, std::iter::empty::<syn::Ident>());
-
-            // Add the free method to the mapping, which we will extract and put into
-            // snippets inside db later.
-            free_functions_map.insert(
-                derived_record.as_deref().unwrap_or(record.as_ref()).id(),
-                vec![quote! {
-                    #capture_tags
-                    #doc_comment
-                    #deprecated_attr
-                    #must_use_attr
-                    // C++ already has the original method, so `cc_bindings_from_rs` must not
-                    // generate C++ bindings for this Rust-only free function (e.g. when it is
-                    // reached through a `pub use` re-export).
-                    #[doc = "CRUBIT_ANNOTATE: do_not_bind="]
-                    #[inline(always)]
-                    #visibility
-                    #unsafety
-                    fn #bracketed_func_name #free_fn_generic_params(
-                        #( #free_api_params ),*
-                    ) #arrow #free_return_type_fragment {
-                        #free_func_body
-                    }
-                }],
-            );
-
-            // For constructors which have been renamed to methods, skip the `__this` parameter,
-            // as it isn't accepted as an argument to the underlying function.
-            let param_idents = if is_renamed_unpin_constructor {
-                param_idents[1..].to_vec()
-            } else {
-                param_idents.clone()
-            };
-
-            // Delegate from the method to the free function.
-            // When translating args, `__this` acts as the first arg.
-            let method_delegation_args = param_idents
-                .iter()
-                .enumerate()
-                .map(|(i, ident)| -> Result<TokenStream> {
-                    if i == 0 && impl_kind.format_first_param_as_self() {
-                        if let Some(derived_record) = &derived_record {
-                            let RsTypeKind::Reference { mutability, referent, .. } = &param_types[0] else {
-                                bail!("Expected reference type for `self` parameter of method");
-                            };
-                            let use_virtual_upcast = derived_record
-                                .unambiguous_public_bases()
-                                .iter()
-                                .any(|x| x.base_record_id() == record.id() && x.offset().is_none());
-                            let is_item_unpin = match referent.as_ref() {
-                                RsTypeKind::Record { record, .. } => record.is_unpin(),
-                                _ => true,
-                            };
-                            let is_mut = mutability == &Mutability::Mut;
-                            Ok(
-                                match (is_mut, is_item_unpin, use_virtual_upcast) {
-                                    (true, false, true) => quote! {
-                                        // SAFETY: Calling `get_unchecked_mut` on `self` is safe, as `virtual_upcast` does not move or copy the
-                                        // underlying object to a different memory address.
-                                        // Calling `virtual_upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced
-                                        // to a `Derived` object.
-                                        // Dereferencing the returned pointer is safe, as it is a valid, properly aligned, and initialized pointer
-                                        // to the `base` subobject with the same lifetime as `self`.
-                                        // `Pin::new_unchecked` is safe as the because the underlying object `self` was already pinned.
-                                        unsafe { ::std::pin::Pin::new_unchecked(&mut *oops::VirtualUpcast::<_>::virtual_upcast(self.get_unchecked_mut() as *mut _)) }
-                                    },
-                                    (true, false, false) => quote! {
-                                        // SAFETY: Calling `get_unchecked_mut` on `self` is safe, as `upcast` does not move or copy the underlying
-                                        // object to a different memory address.
-                                        // Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
-                                        // `Derived` object.
-                                        // Dereferencing the returned pointer is safe, as it is a valid, properly aligned, and initialized pointer
-                                        // to the `base` subobject with the same lifetime as `self`.
-                                        // `Pin::new_unchecked` is safe as the because the underlying object `self` was already pinned.
-                                        unsafe { ::std::pin::Pin::new_unchecked(&mut *oops::Upcast::<_>::upcast(self.get_unchecked_mut() as *mut _)) }
-                                    },
-                                    (true, true, true) => quote! {
-                                        // SAFETY: Calling `virtual_upcast` on self is safe, as self is a valid reference to `Derived`, and
-                                        // dereferenced to a `Derived` object.
-                                        // Dereferencing the returned pointer from `virtual_upcast` is safe, as it is a valid, properly aligned,
-                                        // and initialized pointer the `base` subobject with the same lifetime as `self`.
-                                        unsafe { &mut *oops::VirtualUpcast::<_>::virtual_upcast(self as *mut _) }
-                                    },
-                                    (true, true, false) => quote! {
-                                        // SAFETY: Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
-                                        // `Derived` object.
-                                        // Dereferencing the returned pointer from `upcast` is safe, as it is a valid, properly aligned, and
-                                        // initialized pointer to the `base` subobject with the same lifetime as `self`.
-                                        unsafe { &mut *oops::Upcast::<_>::upcast(self as *mut _) }
-                                    },
-                                    (false, _, true) =>  quote! {
-                                        // SAFETY: Calling `virtual_upcast` on self is safe, as self is a valid reference to `Derived`, and
-                                        // dereferenced to a `Derived` object.
-                                        // Dereferencing the returned pointer from `virtual_upcast` is safe, as it is a valid, properly aligned, and
-                                        // initialized pointer to the `base` subobject with the same lifetime as `self`.
-                                        unsafe { & *oops::VirtualUpcast::<_>::virtual_upcast(self as *const _) }
-                                    },
-                                    (false, _, false) =>  quote! {
-                                        // SAFETY: Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
-                                        // `Derived` object.
-                                        unsafe { oops::Upcast::<_>::upcast(self) }
-                                    },
-                                })
-                        } else {
-                            Ok(quote! { self })
+            if target_record.is_rs_name_mangled() {
+                // Unnameable template instantiations (`__CcTemplateInst...`) cannot have their
+                // methods customized by handwritten Rust `srcs`, so skip emitting duplicate
+                // free-function wrappers in `cc_template_inst_...` submodules and inline the body
+                // directly into the inherent method.
+                let func_body = create_func_body()?;
+                member_functions_map.insert(
+                    derived_record.as_deref().unwrap_or(record.as_ref()).id(),
+                    vec![quote! {
+                        #capture_tags
+                        #doc_comment
+                        #deprecated_attr
+                        #must_use_attr
+                        #[inline(always)]
+                        #visibility
+                        #unsafety
+                        fn #bracketed_func_name #fn_generic_params(
+                            #( #api_params ),*
+                        ) #arrow #quoted_return_type #unsatisfied_where_clause {
+                            #func_body
                         }
+                    }],
+                );
+            } else {
+                // Generate the free function.
+                let free_param_idents = {
+                    // Replace `self` with `__this`.
+                    let mut idents = param_idents.clone();
+                    if format_first_param_as_self {
+                        idents[0] = make_rs_ident("__this");
+                    }
+                    if is_renamed_unpin_constructor {
+                        idents[1..].to_vec()
                     } else {
-                        Ok(quote! { #ident })
+                        idents
                     }
-                })
-                .collect::<Result<Vec<_>>>()?;
+                };
+                let mut free_param_types = param_types.clone();
+                let mut free_return_type = return_type.clone();
+                // When generating the free function, shift `ImplKind::Struct` to `ImplKind::None`.
+                let free_impl_kind = ImplKind::None { is_unsafe };
 
-            let mod_name = db.record_to_associated_module_name(target_record.clone())?;
+                // Ignore `errors` because `function_signature` for the member method already
+                // checked parameters.
+                let free_errors = Errors::new();
+                let BindingsSignature {
+                    lifetimes: free_lifetimes,
+                    lifetimes_including_impl: _,
+                    params: free_api_params,
+                    return_type_fragment: free_return_type_fragment,
+                    thunk_prepare: free_thunk_prepare,
+                    thunk_args: free_thunk_args,
+                    features: free_features,
+                } = free_errors.consolidate_on_err(function_signature(
+                    db,
+                    func.clone(),
+                    &free_impl_kind,
+                    &free_param_idents,
+                    &mut free_param_types,
+                    &mut free_return_type,
+                    None,
+                    &free_errors,
+                ))?;
+                free_errors.discard();
 
-            member_functions_map.insert(
-                derived_record.as_deref().unwrap_or(record.as_ref()).id(),
-                vec![quote! {
-                    #capture_tags
-                    #doc_comment
-                    #deprecated_attr
-                    #must_use_attr
-                    #[inline(always)]
-                    #visibility
-                    #unsafety
-                    fn #bracketed_func_name #fn_generic_params(
-                        #( #api_params ),*
-                    ) #arrow #quoted_return_type #unsatisfied_where_clause {
-                        unsafe { self::#mod_name::#func_name(#( #method_delegation_args ),*) }
+                // Update main features mapping
+                features |= free_features;
+
+                let free_func_body = if reportable_status.is_ok() {
+                    // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when
+                    // `carcinize` is enabled.
+                    if let Some(body_tokens) = func.source_text_as_token_stream()
+                        && let Some(inline_cpp_body) = generate_inline_cpp_call(
+                            db,
+                            &func,
+                            &free_param_types,
+                            &free_thunk_args,
+                            body_tokens,
+                        )?
+                    {
+                        inline_cpp_body
+                    } else {
+                        generate_func_body(
+                            db,
+                            &impl_kind,
+                            &crate_root_path,
+                            &free_return_type,
+                            &free_param_types,
+                            &param_value_adjustments,
+                            thunkless_impl.as_ref(),
+                            thunk_ident(db, &func),
+                            free_thunk_prepare,
+                            free_thunk_args,
+                        )?
                     }
-                }],
-            );
+                } else {
+                    // Use the `unreachable` body
+                    create_func_body()?
+                };
+
+                let free_fn_generic_params =
+                    format_generic_params(&free_lifetimes, std::iter::empty::<syn::Ident>());
+
+                // Add the free method to the mapping, which we will extract and put into
+                // snippets inside db later.
+                free_functions_map.insert(
+                    derived_record.as_deref().unwrap_or(record.as_ref()).id(),
+                    vec![quote! {
+                        #capture_tags
+                        #doc_comment
+                        #deprecated_attr
+                        #must_use_attr
+                        // C++ already has the original method, so `cc_bindings_from_rs` must not
+                        // generate C++ bindings for this Rust-only free function (e.g. when it is
+                        // reached through a `pub use` re-export).
+                        #[doc = "CRUBIT_ANNOTATE: do_not_bind="]
+                        #[inline(always)]
+                        #visibility
+                        #unsafety
+                        fn #bracketed_func_name #free_fn_generic_params(
+                            #( #free_api_params ),*
+                        ) #arrow #free_return_type_fragment {
+                            #free_func_body
+                        }
+                    }],
+                );
+
+                // For constructors which have been renamed to methods, skip the `__this` parameter,
+                // as it isn't accepted as an argument to the underlying function.
+                let param_idents = if is_renamed_unpin_constructor {
+                    param_idents[1..].to_vec()
+                } else {
+                    param_idents.clone()
+                };
+
+                // Delegate from the method to the free function.
+                // When translating args, `__this` acts as the first arg.
+                let method_delegation_args = param_idents
+                    .iter()
+                    .enumerate()
+                    .map(|(i, ident)| -> Result<TokenStream> {
+                        if i == 0 && impl_kind.format_first_param_as_self() {
+                            if let Some(derived_record) = derived_record.as_deref() {
+                                upcast_self_to_base(record, derived_record, &param_types[0])
+                            } else {
+                                Ok(quote! { self })
+                            }
+                        } else {
+                            Ok(quote! { #ident })
+                        }
+                    })
+                    .collect::<Result<Vec<_>>>()?;
+
+                let mod_name = db.record_to_associated_module_name(target_record.clone())?;
+
+                member_functions_map.insert(
+                    derived_record.as_deref().unwrap_or(record.as_ref()).id(),
+                    vec![quote! {
+                        #capture_tags
+                        #doc_comment
+                        #deprecated_attr
+                        #must_use_attr
+                        #[inline(always)]
+                        #visibility
+                        #unsafety
+                        fn #bracketed_func_name #fn_generic_params(
+                            #( #api_params ),*
+                        ) #arrow #quoted_return_type #unsatisfied_where_clause {
+                            unsafe { self::#mod_name::#func_name(#( #method_delegation_args ),*) }
+                        }
+                    }],
+                );
+            }
             api_func = quote! {
                 #unimplemented_trait_def
             };
@@ -3497,7 +3467,8 @@ fn function_signature(
         // If param_types[0] exists, so do api_params[0] and thunk_args[0].
         match impl_kind {
             ImplKind::None { .. } => unreachable!(),
-            ImplKind::Struct { .. } | ImplKind::Trait { impl_for: ImplFor::T, .. } => {
+            ImplKind::Struct { record, .. }
+            | ImplKind::Trait { impl_for: ImplFor::T, record, .. } => {
                 if matches!(
                     impl_kind,
                     ImplKind::Trait { trait_name: TraitName::CcIndexMut { .. }, .. }
@@ -3526,12 +3497,8 @@ fn function_signature(
                             first_api_param.format_as_self_param().with_context(|| {
                                 format!("for parameter type {}", first_api_param.display(db))
                             })?;
-                        thunk_args[0] = if derived_record.is_some() {
-                            quote! {
-                                // SAFETY: Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
-                                // `Derived` object.
-                                unsafe { oops::Upcast::<_>::upcast(self) }
-                            }
+                        thunk_args[0] = if let Some(derived_record) = derived_record.as_deref() {
+                            upcast_self_to_base(record, derived_record, first_api_param)?
                         } else {
                             quote! { self }
                         };
@@ -3576,11 +3543,13 @@ fn function_signature(
                             // `&T` -- there is no `&mut T` impl -- so `&mut
                             // self` has to be laundered through `*mut _` to
                             // find an applicable impl, then reborrowed.
+                            //
+                            // SAFETY: Calling `upcast` on `&mut self` is safe, as `self` is a valid
+                            // reference to `Derived`, and dereferenced to a `Derived` object.
+                            // Dereferencing the returned pointer from `upcast` is safe, as it is a
+                            // valid, properly aligned, and initialized pointer to the `base`
+                            // subobject with the same lifetime as `self`.
                             thunk_args[0] = quote! {
-                                // SAFETY: Calling `upcast` on &mut self is safe, as self is a valid reference to `Derived`, and dereferenced to
-                                // a `Derived` object.
-                                // Dereferencing the returned pointer from `upcast` is safe, as it is a valid, properly aligned, and initialized
-                                // pointer to the `base` subobject with the same lifetime as `self`.
                                 unsafe { &mut *oops::Upcast::<_>::upcast(&mut self as *mut _) }
                             };
                         } else {
@@ -3595,9 +3564,9 @@ fn function_signature(
                 // has that type and can be passed to a thunk via the expression `self`.
                 api_params[0] = quote! { self };
                 if derived_record.is_some() {
+                    // SAFETY: Calling `upcast` on `self` is safe, as `self` is a valid reference to
+                    // `Derived`, and dereferenced to a `Derived` object.
                     thunk_args[0] = quote! {
-                        // SAFETY: Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
-                        // `Derived` object.
                         unsafe { oops::Upcast::<_>::upcast(self) }
                     };
                 } else {
@@ -3611,9 +3580,9 @@ fn function_signature(
         && thunk_args[0].to_string() == "__this"
     {
         let arg_this = thunk_args[0].clone();
+        // SAFETY: Calling `upcast` on `arg_this` is safe, as `self` is a valid reference to
+        // `Derived`, and dereferenced to a `Derived` object.
         thunk_args[0] = quote! {
-            // SAFETY: Calling `upcast` on arg_this is safe, as self is a valid reference to `Derived`, and dereferenced to a
-            // `Derived` object.
             unsafe { oops::Upcast::<_>::upcast(#arg_this) }
         };
     } else if matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator)
@@ -4038,4 +4007,86 @@ pub fn adjust_signature_for_indexing_traits(
 /// information please see the corresponding doc comment in `db.rs`.
 pub fn mangled_name_counts(db: &BindingsGenerator<'_>) -> HashMap<Rc<str>, usize> {
     db.ir().functions().map(|f| Rc::from(f.mangled_name())).counts()
+}
+
+fn upcast_self_to_base(
+    record: &Record,
+    derived_record: &Record,
+    self_param_type: &RsTypeKind,
+) -> Result<TokenStream> {
+    let RsTypeKind::Reference { mutability, referent, .. } = self_param_type else {
+        bail!("Expected reference type for `self` parameter of method");
+    };
+    let use_virtual_upcast = derived_record
+        .unambiguous_public_bases()
+        .iter()
+        .any(|x| x.base_record_id() == record.id() && x.offset().is_none());
+    let is_item_unpin = match referent.as_ref() {
+        RsTypeKind::Record { record, .. } => record.is_unpin(),
+        _ => true,
+    };
+    let is_mut = mutability == &Mutability::Mut;
+    Ok(match (is_mut, is_item_unpin, use_virtual_upcast) {
+        (true, false, true) => {
+            // SAFETY: Calling `get_unchecked_mut` on `self` is safe, as `virtual_upcast` does not
+            // move or copy the underlying object to a different memory address.
+            // Calling `virtual_upcast` on `self` is safe, as `self` is a valid reference to
+            // `Derived`, and dereferenced to a `Derived` object.
+            // Dereferencing the returned pointer is safe, as it is a valid, properly aligned, and
+            // initialized pointer to the `base` subobject with the same lifetime as `self`.
+            // `Pin::new_unchecked` is safe because the underlying object `self` was already pinned.
+            quote! {
+                unsafe { ::core::pin::Pin::new_unchecked(&mut *oops::VirtualUpcast::<_>::virtual_upcast(self.get_unchecked_mut() as *mut _)) }
+            }
+        }
+        (true, false, false) => {
+            // SAFETY: Calling `get_unchecked_mut` on `self` is safe, as `upcast` does not move or
+            // copy the underlying object to a different memory address.
+            // Calling `upcast` on `self` is safe, as `self` is a valid reference to `Derived`, and
+            // dereferenced to a `Derived` object.
+            // Dereferencing the returned pointer is safe, as it is a valid, properly aligned, and
+            // initialized pointer to the `base` subobject with the same lifetime as `self`.
+            // `Pin::new_unchecked` is safe because the underlying object `self` was already pinned.
+            quote! {
+                unsafe { ::core::pin::Pin::new_unchecked(&mut *oops::Upcast::<_>::upcast(self.get_unchecked_mut() as *mut _)) }
+            }
+        }
+        (true, true, true) => {
+            // SAFETY: Calling `virtual_upcast` on `self` is safe, as `self` is a valid reference to
+            // `Derived`, and dereferenced to a `Derived` object.
+            // Dereferencing the returned pointer from `virtual_upcast` is safe, as it is a valid,
+            // properly aligned, and initialized pointer to the `base` subobject with the same
+            // lifetime as `self`.
+            quote! {
+                unsafe { &mut *oops::VirtualUpcast::<_>::virtual_upcast(self as *mut _) }
+            }
+        }
+        (true, true, false) => {
+            // SAFETY: Calling `upcast` on `self` is safe, as `self` is a valid reference to
+            // `Derived`, and dereferenced to a `Derived` object.
+            // Dereferencing the returned pointer from `upcast` is safe, as it is a valid, properly
+            // aligned, and initialized pointer to the `base` subobject with the same lifetime as
+            // `self`.
+            quote! {
+                unsafe { &mut *oops::Upcast::<_>::upcast(self as *mut _) }
+            }
+        }
+        (false, _, true) => {
+            // SAFETY: Calling `virtual_upcast` on `self` is safe, as `self` is a valid reference to
+            // `Derived`, and dereferenced to a `Derived` object.
+            // Dereferencing the returned pointer from `virtual_upcast` is safe, as it is a valid,
+            // properly aligned, and initialized pointer to the `base` subobject with the same
+            // lifetime as `self`.
+            quote! {
+                unsafe { & *oops::VirtualUpcast::<_>::virtual_upcast(self as *const _) }
+            }
+        }
+        (false, _, false) => {
+            // SAFETY: Calling `upcast` on `self` is safe, as `self` is a valid reference to
+            // `Derived`, and dereferenced to a `Derived` object.
+            quote! {
+                unsafe { oops::Upcast::<_>::upcast(self) }
+            }
+        }
+    })
 }

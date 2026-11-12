@@ -1019,6 +1019,7 @@ pub fn generate_cc_thunk_parts(
 pub fn generate_inline_cpp_call(
     db: &BindingsGenerator,
     func: &Func,
+    param_types: &[RsTypeKind],
     thunk_args: &[TokenStream],
     body_tokens: TokenStream,
 ) -> Result<Option<TokenStream>> {
@@ -1028,7 +1029,7 @@ pub fn generate_inline_cpp_call(
 
     let CcThunkParts {
         return_type_name,
-        param_types,
+        param_types: cc_param_types,
         param_idents,
         conversion_stmts,
         return_stmt,
@@ -1040,10 +1041,14 @@ pub fn generate_inline_cpp_call(
 
     let adjusted_thunk_args = thunk_args
         .iter()
-        .zip(func.params().iter())
-        .map(|(arg, param)| {
-            let rs_type = db.rs_type_kind(param.type_().clone())?;
+        .zip(param_types.iter())
+        .map(|(arg, rs_type)| {
             Ok(match rs_type {
+                RsTypeKind::Reference { mutability: Mutability::Mut, referent, .. }
+                    if !referent.is_unpin() =>
+                {
+                    quote! { (::core::pin::Pin::into_inner_unchecked(#arg) as *const _) }
+                }
                 RsTypeKind::Record { .. }
                 | RsTypeKind::Reference { .. }
                 | RsTypeKind::Pointer { .. } => quote! { (#arg as *const _) },
@@ -1083,7 +1088,7 @@ pub fn generate_inline_cpp_call(
         unsafe {
             (::inline_cpp_macro::inline_cpp! {
                 (
-                #(#param_types #param_idents), *)->#return_type_name
+                #(#cc_param_types #param_idents), *)->#return_type_name
                 #body_block
             })( #( #adjusted_thunk_args ),* )
         }

@@ -100,7 +100,9 @@ pub mod zz_template_instantiations {
         #[must_use]
         #[inline(always)]
         pub fn base<'__this>(&'__this self) -> *const ::ffi_11::c_char {
-            unsafe { self::cc_template_inst_n_st3_u16reverse_iterator_ip_kc_ee::base(self) }
+            unsafe {
+                crate::detail::__rust_thunk__0c525269__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(self)
+            }
         }
     }
 
@@ -145,21 +147,6 @@ pub mod zz_template_instantiations {
         #[inline(always)]
         unsafe fn ctor_new(args: *const ::ffi_11::c_char) -> Self::CtorType {
             unsafe { <Self as ::ctor::UnsafeFrom<*const ::ffi_11::c_char>>::unsafe_from(args) }
-        }
-    }
-
-    pub mod cc_template_inst_n_st3_u16reverse_iterator_ip_kc_ee {
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn base<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
-        ) -> *const ::ffi_11::c_char {
-            unsafe {
-                crate::detail::__rust_thunk__0c525269__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(
-                    __this,
-                )
-            }
         }
     }
 

@@ -556,27 +556,35 @@ pub mod zz_template_instantiations {
         #[must_use]
         #[inline(always)]
         pub fn data<'__this>(&'__this self) -> *const ::ffi_11::c_int {
-            unsafe { self::cc_template_inst_st16initializer_list_ii_e::data(self) }
+            unsafe {
+                crate::detail::__rust_thunk__e0afde84__ZNKSt16initializer_listIiE4dataEv(self)
+            }
         }
         #[must_use]
         #[inline(always)]
         pub fn size<'__this>(&'__this self) -> usize {
-            unsafe { self::cc_template_inst_st16initializer_list_ii_e::size(self) }
+            unsafe {
+                crate::detail::__rust_thunk__7c4f83b4__ZNKSt16initializer_listIiE4sizeEv(self)
+            }
         }
         #[must_use]
         #[inline(always)]
         pub fn empty<'__this>(&'__this self) -> bool {
-            unsafe { self::cc_template_inst_st16initializer_list_ii_e::empty(self) }
+            unsafe {
+                crate::detail::__rust_thunk__c77c867f__ZNKSt16initializer_listIiE5emptyEv(self)
+            }
         }
         #[must_use]
         #[inline(always)]
         pub fn begin<'__this>(&'__this self) -> *const ::ffi_11::c_int {
-            unsafe { self::cc_template_inst_st16initializer_list_ii_e::begin(self) }
+            unsafe {
+                crate::detail::__rust_thunk__23995e40__ZNKSt16initializer_listIiE5beginEv(self)
+            }
         }
         #[must_use]
         #[inline(always)]
         pub fn end<'__this>(&'__this self) -> *const ::ffi_11::c_int {
-            unsafe { self::cc_template_inst_st16initializer_list_ii_e::end(self) }
+            unsafe { crate::detail::__rust_thunk__2f3b1219__ZNKSt16initializer_listIiE3endEv(self) }
         }
     }
 
@@ -589,59 +597,6 @@ pub mod zz_template_instantiations {
                     &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
-            }
-        }
-    }
-
-    pub mod cc_template_inst_st16initializer_list_ii_e {
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn data<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstSt16initializer_listIiE,
-        ) -> *const ::ffi_11::c_int {
-            unsafe {
-                crate::detail::__rust_thunk__e0afde84__ZNKSt16initializer_listIiE4dataEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn size<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstSt16initializer_listIiE,
-        ) -> usize {
-            unsafe {
-                crate::detail::__rust_thunk__7c4f83b4__ZNKSt16initializer_listIiE4sizeEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn empty<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstSt16initializer_listIiE,
-        ) -> bool {
-            unsafe {
-                crate::detail::__rust_thunk__c77c867f__ZNKSt16initializer_listIiE5emptyEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn begin<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstSt16initializer_listIiE,
-        ) -> *const ::ffi_11::c_int {
-            unsafe {
-                crate::detail::__rust_thunk__23995e40__ZNKSt16initializer_listIiE5beginEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn end<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstSt16initializer_listIiE,
-        ) -> *const ::ffi_11::c_int {
-            unsafe {
-                crate::detail::__rust_thunk__2f3b1219__ZNKSt16initializer_listIiE3endEv(__this)
             }
         }
     }
@@ -676,7 +631,9 @@ pub mod zz_template_instantiations {
         #[must_use]
         #[inline(always)]        pub fn base<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ipkn4test10_non_trivial_eeeee::base(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
     }
@@ -696,18 +653,6 @@ pub mod zz_template_instantiations {
 
     impl From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE{ #[inline(always)]fn from(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE)->Self{ let mut __x=args;let mut __x=::core::mem::MaybeUninit::new(__x);let mut tmp=::core::mem::MaybeUninit::<Self>::zeroed();unsafe{ crate::detail::__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1ES6_(&raw mut tmp as*mut _,__x.as_mut_ptr());tmp.assume_init() } } }
     impl::ctor::CtorNew<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE{ type CtorType=Self;type Error=::ctor::Infallible;#[inline(always)]fn ctor_new(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE)->Self::CtorType{ <Self as From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>>::from(args) } }
-
-    pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ipkn4test10_non_trivial_eeeee {
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn base<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-    }
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE"]
@@ -736,9 +681,11 @@ pub mod zz_template_instantiations {
             &'__this self,
         ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
             unsafe {
-                self::cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ip_ki_eeee::base(
-                    self,
-                )
+                let mut __crubit_return = ::core::mem::MaybeUninit::<
+                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
+                >::uninit();
+                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
     }
@@ -787,23 +734,6 @@ pub mod zz_template_instantiations {
         }
     }
 
-    pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ip_ki_eeee {
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn base<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE,
-        ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
-            unsafe {
-                let mut __crubit_return = ::core::mem::MaybeUninit::<
-                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
-                >::uninit();
-                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-    }
-
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE"]
     #[repr(C, align(8))]
@@ -828,7 +758,9 @@ pub mod zz_template_instantiations {
         #[must_use]
         #[inline(always)]        pub fn base<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ipn4test10_non_trivial_eeeee::base(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
     }
@@ -848,18 +780,6 @@ pub mod zz_template_instantiations {
 
     impl From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE{ #[inline(always)]fn from(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE)->Self{ let mut __x=args;let mut __x=::core::mem::MaybeUninit::new(__x);let mut tmp=::core::mem::MaybeUninit::<Self>::zeroed();unsafe{ crate::detail::__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1ES5_(&raw mut tmp as*mut _,__x.as_mut_ptr());tmp.assume_init() } } }
     impl::ctor::CtorNew<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE{ type CtorType=Self;type Error=::ctor::Infallible;#[inline(always)]fn ctor_new(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE)->Self::CtorType{ <Self as From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>>::from(args) } }
-
-    pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ipn4test10_non_trivial_eeeee {
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn base<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-    }
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE"]
@@ -888,9 +808,11 @@ pub mod zz_template_instantiations {
             &'__this self,
         ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE {
             unsafe {
-                self::cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_i_pi_eeee::base(
-                    self,
-                )
+                let mut __crubit_return = ::core::mem::MaybeUninit::<
+                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
+                >::uninit();
+                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
     }
@@ -936,23 +858,6 @@ pub mod zz_template_instantiations {
             <Self as From<
                 crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
             >>::from(args)
-        }
-    }
-
-    pub mod cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_i_pi_eeee {
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn base<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE,
-        ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE {
-            unsafe {
-                let mut __crubit_return = ::core::mem::MaybeUninit::<
-                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
-                >::uninit();
-                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
         }
     }
 
@@ -1308,85 +1213,99 @@ pub mod zz_template_instantiations {
         #[must_use]
         #[inline(always)]        pub fn first<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::first(self,__count)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn last<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::last(self,__count)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn subspan<'__this>(&'__this self,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::subspan(self,__offset,__count)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__offset,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn size<'__this>(&'__this self) -> usize {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::size(self)
+                crate::detail::__rust_thunk__abf5a514__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4sizeEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn size_bytes<'__this>(&'__this self) -> usize {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::size_bytes(self)
+                crate::detail::__rust_thunk__db8aea99__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE10size_bytesEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn empty<'__this>(&'__this self) -> bool {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::empty(self)
+                crate::detail::__rust_thunk__adeb3748__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5emptyEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn front<'__this>(&'__this self) -> ::cref::CRef<'__this, crate::test::NonTrivial> {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::front(self)
+                crate::detail::__rust_thunk__0eff2f4e__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5frontEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn back<'__this>(&'__this self) -> ::cref::CRef<'__this, crate::test::NonTrivial> {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::back(self)
+                crate::detail::__rust_thunk__0b709465__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4backEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn data<'__this>(&'__this self) -> *const crate::test::NonTrivial {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::data(self)
+                crate::detail::__rust_thunk__c9d70a3c__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4dataEv(self)
             }
         }
         #[must_use]
         #[inline(always)]        pub fn begin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::begin(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5beginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn end<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::end(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE3endEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn rbegin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::rbegin(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE>::uninit();
+                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn rend<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee::rend(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE>::uninit();
+                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
     }
@@ -1423,132 +1342,6 @@ pub mod zz_template_instantiations {
         }
     }
 
-    pub mod cc_template_inst_n_st3_u4span_ikn4test10_non_trivial_e_lm18446744073709551615_eee {
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn first<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn last<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn subspan<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__offset,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn size<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> usize {
-            unsafe {
-                crate::detail::__rust_thunk__abf5a514__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4sizeEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn size_bytes<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> usize {
-            unsafe {
-                crate::detail::__rust_thunk__db8aea99__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE10size_bytesEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn empty<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> bool {
-            unsafe {
-                crate::detail::__rust_thunk__adeb3748__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5emptyEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn front<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> ::cref::CRef<'__this, crate::test::NonTrivial> {
-            unsafe {
-                crate::detail::__rust_thunk__0eff2f4e__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5frontEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn back<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> ::cref::CRef<'__this, crate::test::NonTrivial> {
-            unsafe {
-                crate::detail::__rust_thunk__0b709465__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4backEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn data<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> *const crate::test::NonTrivial {
-            unsafe {
-                crate::detail::__rust_thunk__c9d70a3c__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4dataEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn begin<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5beginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn end<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE3endEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn rbegin<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE>::uninit();
-                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn rend<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE>::uninit();
-                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-    }
-
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE"]
     #[repr(C, align(8))]
@@ -1576,69 +1369,67 @@ pub mod zz_template_instantiations {
         #[must_use]
         #[inline(always)]        pub fn first<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::first(
-                    self, __count,
-                )
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIKiLm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn last<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::last(
-                    self, __count,
-                )
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIKiLm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn subspan<'__this>(&'__this self,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::subspan(
-                    self, __offset, __count,
-                )
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIKiLm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__offset,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn size<'__this>(&'__this self) -> usize {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::size(self)
+                crate::detail::__rust_thunk__abf5a514__ZNKSt3__u4spanIKiLm18446744073709551615EE4sizeEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn size_bytes<'__this>(&'__this self) -> usize {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::size_bytes(
-                    self,
-                )
+                crate::detail::__rust_thunk__db8aea99__ZNKSt3__u4spanIKiLm18446744073709551615EE10size_bytesEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn empty<'__this>(&'__this self) -> bool {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::empty(self)
+                crate::detail::__rust_thunk__adeb3748__ZNKSt3__u4spanIKiLm18446744073709551615EE5emptyEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn front<'__this>(&'__this self) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::front(self)
+                crate::detail::__rust_thunk__0eff2f4e__ZNKSt3__u4spanIKiLm18446744073709551615EE5frontEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn back<'__this>(&'__this self) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::back(self)
+                crate::detail::__rust_thunk__0b709465__ZNKSt3__u4spanIKiLm18446744073709551615EE4backEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn data<'__this>(&'__this self) -> *const ::ffi_11::c_int {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::data(self)
+                crate::detail::__rust_thunk__c9d70a3c__ZNKSt3__u4spanIKiLm18446744073709551615EE4dataEv(self)
             }
         }
         #[must_use]
@@ -1647,7 +1438,11 @@ pub mod zz_template_instantiations {
             &'__this self,
         ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::begin(self)
+                let mut __crubit_return = ::core::mem::MaybeUninit::<
+                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
+                >::uninit();
+                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIKiLm18446744073709551615EE5beginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
@@ -1656,19 +1451,27 @@ pub mod zz_template_instantiations {
             &'__this self,
         ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::end(self)
+                let mut __crubit_return = ::core::mem::MaybeUninit::<
+                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
+                >::uninit();
+                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIKiLm18446744073709551615EE3endEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn rbegin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::rbegin(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE>::uninit();
+                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIKiLm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn rend<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee::rend(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE>::uninit();
+                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIKiLm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
     }
@@ -1705,142 +1508,6 @@ pub mod zz_template_instantiations {
         }
     }
 
-    pub mod cc_template_inst_n_st3_u4span_i_ki_lm18446744073709551615_eee {
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn first<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIKiLm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn last<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIKiLm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn subspan<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIKiLm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__offset,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn size<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
-        ) -> usize {
-            unsafe {
-                crate::detail::__rust_thunk__abf5a514__ZNKSt3__u4spanIKiLm18446744073709551615EE4sizeEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn size_bytes<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
-        ) -> usize {
-            unsafe {
-                crate::detail::__rust_thunk__db8aea99__ZNKSt3__u4spanIKiLm18446744073709551615EE10size_bytesEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn empty<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
-        ) -> bool {
-            unsafe {
-                crate::detail::__rust_thunk__adeb3748__ZNKSt3__u4spanIKiLm18446744073709551615EE5emptyEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn front<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
-        ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
-            unsafe {
-                crate::detail::__rust_thunk__0eff2f4e__ZNKSt3__u4spanIKiLm18446744073709551615EE5frontEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn back<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
-        ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
-            unsafe {
-                crate::detail::__rust_thunk__0b709465__ZNKSt3__u4spanIKiLm18446744073709551615EE4backEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn data<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
-        ) -> *const ::ffi_11::c_int {
-            unsafe {
-                crate::detail::__rust_thunk__c9d70a3c__ZNKSt3__u4spanIKiLm18446744073709551615EE4dataEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn begin<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
-        ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
-            unsafe {
-                let mut __crubit_return = ::core::mem::MaybeUninit::<
-                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
-                >::uninit();
-                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIKiLm18446744073709551615EE5beginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn end<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE,
-        ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
-            unsafe {
-                let mut __crubit_return = ::core::mem::MaybeUninit::<
-                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE,
-                >::uninit();
-                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIKiLm18446744073709551615EE3endEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn rbegin<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE>::uninit();
-                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIKiLm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn rend<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE>::uninit();
-                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIKiLm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-    }
-
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE"]
     #[repr(C, align(8))]
@@ -1865,85 +1532,99 @@ pub mod zz_template_instantiations {
         #[must_use]
         #[inline(always)]        pub fn first<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::first(self,__count)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn last<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::last(self,__count)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn subspan<'__this>(&'__this self,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::subspan(self,__offset,__count)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__offset,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn size<'__this>(&'__this self) -> usize {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::size(self)
+                crate::detail::__rust_thunk__abf5a514__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4sizeEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn size_bytes<'__this>(&'__this self) -> usize {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::size_bytes(self)
+                crate::detail::__rust_thunk__db8aea99__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE10size_bytesEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn empty<'__this>(&'__this self) -> bool {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::empty(self)
+                crate::detail::__rust_thunk__adeb3748__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5emptyEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn front<'__this>(&'__this self) -> ::cref::CMut<'__this, crate::test::NonTrivial> {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::front(self)
+                crate::detail::__rust_thunk__0eff2f4e__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5frontEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn back<'__this>(&'__this self) -> ::cref::CMut<'__this, crate::test::NonTrivial> {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::back(self)
+                crate::detail::__rust_thunk__0b709465__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4backEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn data<'__this>(&'__this self) -> *mut crate::test::NonTrivial {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::data(self)
+                crate::detail::__rust_thunk__c9d70a3c__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4dataEv(self)
             }
         }
         #[must_use]
         #[inline(always)]        pub fn begin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::begin(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5beginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn end<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::end(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE3endEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn rbegin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::rbegin(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE>::uninit();
+                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn rend<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee::rend(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE>::uninit();
+                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
     }
@@ -1955,132 +1636,6 @@ pub mod zz_template_instantiations {
             unsafe {
                 crate::detail::__rust_thunk__a2602314__ZNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEC1Ev(&raw mut tmp as*mut _);
                 tmp.assume_init()
-            }
-        }
-    }
-
-    pub mod cc_template_inst_n_st3_u4span_in4test10_non_trivial_e_lm18446744073709551615_eee {
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn first<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn last<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn subspan<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__offset,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn size<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> usize {
-            unsafe {
-                crate::detail::__rust_thunk__abf5a514__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4sizeEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn size_bytes<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> usize {
-            unsafe {
-                crate::detail::__rust_thunk__db8aea99__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE10size_bytesEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn empty<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> bool {
-            unsafe {
-                crate::detail::__rust_thunk__adeb3748__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5emptyEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn front<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> ::cref::CMut<'__this, crate::test::NonTrivial> {
-            unsafe {
-                crate::detail::__rust_thunk__0eff2f4e__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5frontEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn back<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> ::cref::CMut<'__this, crate::test::NonTrivial> {
-            unsafe {
-                crate::detail::__rust_thunk__0b709465__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4backEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn data<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE,
-        ) -> *mut crate::test::NonTrivial {
-            unsafe {
-                crate::detail::__rust_thunk__c9d70a3c__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4dataEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn begin<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5beginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn end<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE3endEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn rbegin<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE>::uninit();
-                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn rend<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE>::uninit();
-                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
             }
         }
     }
@@ -2112,62 +1667,68 @@ pub mod zz_template_instantiations {
         #[must_use]
         #[inline(always)]        pub fn first<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::first(
-                    self, __count,
-                )
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIiLm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn last<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::last(
-                    self, __count,
-                )
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIiLm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn subspan<'__this>(&'__this self,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::subspan(
-                    self, __offset, __count,
-                )
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIiLm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__offset,__count);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn size<'__this>(&'__this self) -> usize {
-            unsafe { self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::size(self) }
+            unsafe {
+                crate::detail::__rust_thunk__abf5a514__ZNKSt3__u4spanIiLm18446744073709551615EE4sizeEv(self)
+            }
         }
         #[must_use]
         #[inline(always)]
         pub fn size_bytes<'__this>(&'__this self) -> usize {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::size_bytes(self)
+                crate::detail::__rust_thunk__db8aea99__ZNKSt3__u4spanIiLm18446744073709551615EE10size_bytesEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn empty<'__this>(&'__this self) -> bool {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::empty(self)
+                crate::detail::__rust_thunk__adeb3748__ZNKSt3__u4spanIiLm18446744073709551615EE5emptyEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn front<'__this>(&'__this self) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::front(self)
+                crate::detail::__rust_thunk__0eff2f4e__ZNKSt3__u4spanIiLm18446744073709551615EE5frontEv(self)
             }
         }
         #[must_use]
         #[inline(always)]
         pub fn back<'__this>(&'__this self) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
-            unsafe { self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::back(self) }
+            unsafe {
+                crate::detail::__rust_thunk__0b709465__ZNKSt3__u4spanIiLm18446744073709551615EE4backEv(self)
+            }
         }
         #[must_use]
         #[inline(always)]
         pub fn data<'__this>(&'__this self) -> *mut ::ffi_11::c_int {
-            unsafe { self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::data(self) }
+            unsafe {
+                crate::detail::__rust_thunk__c9d70a3c__ZNKSt3__u4spanIiLm18446744073709551615EE4dataEv(self)
+            }
         }
         #[must_use]
         #[inline(always)]
@@ -2175,7 +1736,11 @@ pub mod zz_template_instantiations {
             &'__this self,
         ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE {
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::begin(self)
+                let mut __crubit_return = ::core::mem::MaybeUninit::<
+                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
+                >::uninit();
+                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIiLm18446744073709551615EE5beginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
@@ -2183,17 +1748,29 @@ pub mod zz_template_instantiations {
         pub fn end<'__this>(
             &'__this self,
         ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE {
-            unsafe { self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::end(self) }
+            unsafe {
+                let mut __crubit_return = ::core::mem::MaybeUninit::<
+                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
+                >::uninit();
+                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIiLm18446744073709551615EE3endEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
+            }
         }
         #[must_use]
         #[inline(always)]        pub fn rbegin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE{
             unsafe {
-                self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::rbegin(self)
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE>::uninit();
+                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIiLm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
             }
         }
         #[must_use]
         #[inline(always)]        pub fn rend<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE{
-            unsafe { self::cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee::rend(self) }
+            unsafe {
+                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE>::uninit();
+                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIiLm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                __crubit_return.assume_init()
+            }
         }
     }
 
@@ -2206,142 +1783,6 @@ pub mod zz_template_instantiations {
                     &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
-            }
-        }
-    }
-
-    pub mod cc_template_inst_n_st3_u4span_ii_lm18446744073709551615_eee {
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn first<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIiLm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn last<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIiLm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn subspan<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIiLm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,__this,__offset,__count);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn size<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
-        ) -> usize {
-            unsafe {
-                crate::detail::__rust_thunk__abf5a514__ZNKSt3__u4spanIiLm18446744073709551615EE4sizeEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn size_bytes<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
-        ) -> usize {
-            unsafe {
-                crate::detail::__rust_thunk__db8aea99__ZNKSt3__u4spanIiLm18446744073709551615EE10size_bytesEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn empty<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
-        ) -> bool {
-            unsafe {
-                crate::detail::__rust_thunk__adeb3748__ZNKSt3__u4spanIiLm18446744073709551615EE5emptyEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn front<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
-        ) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
-            unsafe {
-                crate::detail::__rust_thunk__0eff2f4e__ZNKSt3__u4spanIiLm18446744073709551615EE5frontEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn back<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
-        ) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
-            unsafe {
-                crate::detail::__rust_thunk__0b709465__ZNKSt3__u4spanIiLm18446744073709551615EE4backEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn data<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
-        ) -> *mut ::ffi_11::c_int {
-            unsafe {
-                crate::detail::__rust_thunk__c9d70a3c__ZNKSt3__u4spanIiLm18446744073709551615EE4dataEv(__this)
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn begin<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
-        ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE {
-            unsafe {
-                let mut __crubit_return = ::core::mem::MaybeUninit::<
-                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
-                >::uninit();
-                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIiLm18446744073709551615EE5beginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]
-        pub fn end<'__this>(
-            __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE,
-        ) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE {
-            unsafe {
-                let mut __crubit_return = ::core::mem::MaybeUninit::<
-                    crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPiEE,
-                >::uninit();
-                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIiLm18446744073709551615EE3endEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn rbegin<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE>::uninit();
-                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIiLm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
-            }
-        }
-        #[must_use]
-        ///CRUBIT_ANNOTATE: do_not_bind=
-        #[inline(always)]        pub fn rend<'__this>(__this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE{
-            unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE>::uninit();
-                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIiLm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
-                __crubit_return.assume_init()
             }
         }
     }

@@ -4,7 +4,8 @@
 
 use cref::CRef;
 use forward_declare::CppCast;
-use googletest::gtest;
+use googletest::matchers::eq;
+use googletest::{expect_that, gtest};
 
 #[gtest]
 fn test_alias_to_template_instantiation() {
@@ -63,5 +64,9 @@ fn test_unaliased_instantiation_keeps_mangled_name() {
     let s: type_alias::zz_template_instantiations::__CcTemplateInst10MyTemplateIdE =
         type_alias::MakeUnaliased(7.0);
     // SAFETY: s is alive while s.value() is alive; no other references to s exist.
-    assert_eq!(7.0, *unsafe { CRef::unchanging(s.value()) });
+    expect_that!(*unsafe { CRef::unchanging(s.value()) }, eq(7.0));
+
+    let s2 = type_alias::zz_template_instantiations::__CcTemplateInst10MyTemplateIdE::Create(9.0);
+    // SAFETY: s2 is alive while s2.value() is alive; no other references to s2 exist.
+    expect_that!(*unsafe { CRef::unchanging(s2.value()) }, eq(9.0));
 }
