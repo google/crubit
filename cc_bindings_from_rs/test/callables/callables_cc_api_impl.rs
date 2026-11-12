@@ -612,7 +612,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_uhrtb_ustr_uto_ustr_u_x00000026dy
                     *mut &str,
                     *mut core::ffi::c_void,
                 ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                let mut __ret_storage = ::core::mem::MaybeUninit::<&str>::uninit();
+                let mut __ret_storage = ::core::mem::MaybeUninit::<&'static str>::uninit();
                 unsafe {
                     __invoker(
                         f.data(),
@@ -772,7 +772,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_ustr_uto_ustr_u_x00000027a_u_x000
                     *mut &str,
                     *mut core::ffi::c_void,
                 ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                let mut __ret_storage = ::core::mem::MaybeUninit::<&str>::uninit();
+                let mut __ret_storage = ::core::mem::MaybeUninit::<&'static str>::uninit();
                 unsafe {
                     __invoker(
                         f.data(),
