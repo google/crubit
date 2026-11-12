@@ -27,9 +27,9 @@ use format_type::{
 };
 use generate_comment::{generate_deprecated_tag, generate_doc_comment, must_use_attr_of};
 use generate_function_thunk::{
-    classify_param_abi, classify_value_abi, fn_arg_idents, function_symbol_name,
-    generate_thunk_decl, generate_thunk_impl, get_async_future_output_ty, make_thunk_name,
-    ParamAbi, ThunkKind, ValueAbi,
+    classify_param_abi, classify_value_abi, dyn_erased_future_output_ty, fn_arg_idents,
+    function_symbol_name, generate_thunk_decl, generate_thunk_impl, make_thunk_name, ParamAbi,
+    ThunkKind, ValueAbi,
 };
 use get_generic_args::GenericClausesExt;
 use itertools::Itertools;
@@ -974,16 +974,29 @@ pub fn generate_function<'tcx>(
     };
     check_fn_sig(&sig_mid)?;
 
+    // For `fn f() -> impl Future<Output = T>` or `async fn f() -> T`:
+    //   * `rs_return_type` is `impl Future<Output = T>`
+    //   * `future_output_ty` is `Some(T)`
+    //   * `is_async` is true
     let rs_return_type = sig_mid.output();
-    let is_async = tcx.asyncness(def_id).is_async();
-    let actual_rs_return_type = if is_async {
+    let future_output_ty = dyn_erased_future_output_ty(tcx, rs_return_type);
+    let is_async = future_output_ty.is_some();
+
+    // Unwrap `T` for `DynErasedFuture<T>` (or keep `R` for a synchronous `fn f() -> R`), after
+    // checking `DynErasedFuture`'s two requirements:
+    //   * the future must be `Send`, because `DynErasedFuture` wraps
+    //     `Pin<Box<dyn ErasedFuture + Send>>` so C++ coroutines can poll it across threads (see
+    //     http://b/453897096 and http://b/527855222);
+    //   * `T` cannot be a bridged type (e.g. `#[crubit_annotate::cpp_convertible]`), because
+    //     `ErasedFuture::poll_erased` writes `T` straight into a C++ `T*` slot without running a
+    //     conversion thunk (see http://b/453897096#comment10 and http://b/523234159).
+    let actual_rs_return_type = if let Some(future_output_ty) = future_output_ty {
         let send_trait_id = tcx
             .get_diagnostic_item(sym::Send)
             .ok_or_else(|| anyhow!("crubit.rs-bug: Send trait not found"))?;
         if !db.does_type_implement_trait(rs_return_type, send_trait_id) {
             bail!("Crubit currently only supports async functions that return a Send future.");
         }
-        let future_output_ty = get_async_future_output_ty(tcx, rs_return_type)?;
         if is_bridged_type(db, future_output_ty)?.is_some() {
             bail!(
                 "Crubit currently does not support async functions returning bridged types that require conversion thunks, found `{future_output_ty}`."

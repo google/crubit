@@ -169,7 +169,12 @@ pub fn generate_thunk_decl<'tcx>(
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
     let actual_output_ty = if is_async {
-        get_async_future_output_ty(tcx, sig_mid.output())?
+        dyn_erased_future_output_ty(tcx, sig_mid.output()).ok_or_else(|| {
+            anyhow!(
+                "crubit.rs-bug: expected `impl Future` or `async`, found `{}`",
+                sig_mid.output()
+            )
+        })?
     } else {
         sig_mid.output()
     };
@@ -978,7 +983,7 @@ pub fn generate_trait_thunks<'tcx>(
             .expect("Normalization should succeed since this code typechecked");
 
         let thunk_name_cc_ident = format_cc_ident(db, &thunk_name)?;
-        let is_async = tcx.asyncness(method.def_id).is_async();
+        let is_async = dyn_erased_future_output_ty(tcx, sig_mid.output()).is_some();
         cc_thunk_decls += generate_thunk_decl(
             db,
             &sig_mid,
@@ -1193,25 +1198,39 @@ pub fn fn_arg_idents(tcx: TyCtxt, def_id: DefId) -> Vec<Option<rustc_span::Ident
     }
 }
 
-/// If `rs_return_type` represents an async future desugared type, extracts and returns its `Output`
-/// type.
-pub fn get_async_future_output_ty<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    rs_return_type: Ty<'tcx>,
-) -> Result<Ty<'tcx>> {
-    let Some(alias_ty) = ty_as_alias_ty(rs_return_type) else {
-        bail!(
-            "async functions should always return a TyKind::Alias (`{rs_return_type}`), this should never happen."
-        );
-    };
-    if alias_ty_as_opaque_def_id(tcx, alias_ty).is_none() {
-        bail!(
-            "crubit.rs-bug: Future::Output alias is not an opaque type (`{rs_return_type}`), this should never happen."
-        );
-    };
-    format_type::get_associated_type(tcx, rs_return_type, sym::Output).ok_or_else(|| {
-        anyhow!("Failed to find Future::Output associated type in bounds of {:?}", rs_return_type)
-    })
+/// Returns `T` if Crubit binds `ty` as `crubit::DynErasedFuture<T>` in C++, i.e. if `ty` is
+/// `impl Future<Output = T>` (which includes what `async fn f() -> T` returns).
+pub fn dyn_erased_future_output_ty<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Option<Ty<'tcx>> {
+    // Check that `ty` is an `impl Trait` opaque type (from `-> impl ...` or `async fn`), and
+    // look up the `DefId` of `core::future::Future::Output`.
+    let alias_ty = ty_as_alias_ty(ty)?;
+    let opaque_def_id = alias_ty_as_opaque_def_id(tcx, alias_ty)?;
+    let future_output_id = tcx.lang_items().future_output()?;
+
+    // Walk the bounds on `impl ...` (e.g. `Future`, `Future::Output = ...`, `Send`), substituting
+    // concrete generic arguments (`alias_ty.args`) into each bound. For example, on `impl<U>
+    // Foo<U>` with `fn get(self) -> impl Future<Output = U>`, instantiating `Foo<i32>::get`
+    // substitutes `U = i32`, turning `Future::Output = U` into `Future::Output = i32`.
+    tcx.explicit_item_bounds(opaque_def_id).iter_instantiated_copied(tcx, alias_ty.args).find_map(
+        |unnormalized| {
+            // Resolve any associated types inside the bound (e.g. turning
+            // `Future::Output = <std::vec::IntoIter<i32> as Iterator>::Item` into
+            // `Future::Output = i32`).
+            let (clause, _span) = normalize_ty(tcx, tcx.param_env(opaque_def_id), unnormalized);
+
+            // Match the associated-type bound `<_ as Future>::Output = T` (from
+            // `impl Future<Output = T>`, as opposed to e.g. `<_ as FnOnce<()>>::Output = T`
+            // from `impl FnOnce() -> T`) and return `T`.
+            match clause.kind().skip_binder() {
+                ty::ClauseKind::Projection(projection)
+                    if projection.def_id() == future_output_id =>
+                {
+                    projection.term.as_type()
+                }
+                _ => None,
+            }
+        },
+    )
 }
 
 pub fn thunk_qualifier(core: &AdtCoreBindings<'_>) -> TokenStream {

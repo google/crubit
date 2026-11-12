@@ -18,6 +18,8 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
+#include "support/rs_std/dyn_erased_future.h"
 
 #include <array>
 #include <cstddef>
@@ -64,17 +66,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // function return type `impl std::ops::Drop + 'static`: The following Rust type
 // is not supported yet: impl std::ops::Drop + 'static
 
-// Error generating bindings for function
-// `return_position_impl_trait_golden::return_impl_future_trivial`: Error
-// formatting function return type `impl std::future::Future<Output = i32> +
-// 'static`: The following Rust type is not supported yet: impl
-// std::future::Future<Output = i32> + 'static
+::crubit::DynErasedFuture<::std::int32_t> return_impl_future_trivial(
+    ::std::int32_t x);
 
-// Error generating bindings for function
-// `return_position_impl_trait_golden::return_impl_future_with_drop`: Error
-// formatting function return type `impl std::future::Future<Output = ()> +
-// 'static`: The following Rust type is not supported yet: impl
-// std::future::Future<Output = ()> + 'static
+::crubit::DynErasedFuture<void> return_impl_future_with_drop(
+    ::return_position_impl_trait::ArcWrapper const* $(__anon1)
+        crubit_nonnull wrapper CRUBIT_LIFETIME_BOUND);
 
 // Error generating bindings for function
 // `return_position_impl_trait_golden::return_impl_iterator_trivial`: Error
@@ -169,6 +166,33 @@ inline void ::return_position_impl_trait::ArcWrapper::
   using __crubit_assert_type = ::return_position_impl_trait::ArcWrapper;
   static_assert(0 == offsetof(__crubit_assert_type, arc));
 }
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_uimpl_ufuture_utrivial(
+    ::std::int32_t, ::crubit::DynErasedFuture<::std::int32_t>* __ret_ptr);
+}
+inline ::crubit::DynErasedFuture<::std::int32_t> return_impl_future_trivial(
+    ::std::int32_t x) {
+  ::crubit::Slot<::crubit::DynErasedFuture<::std::int32_t>>
+      __return_value_ret_val_holder;
+  __crubit_internal::__crubit_thunk_return_uimpl_ufuture_utrivial(
+      x, __return_value_ret_val_holder.Get());
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_uimpl_ufuture_uwith_udrop(
+    ::return_position_impl_trait::ArcWrapper const* $(__anon1) crubit_nonnull,
+    ::crubit::DynErasedFuture<void>* __ret_ptr);
+}
+inline ::crubit::DynErasedFuture<void> return_impl_future_with_drop(
+    ::return_position_impl_trait::ArcWrapper const* $(__anon1)
+        crubit_nonnull wrapper CRUBIT_LIFETIME_BOUND) {
+  ::crubit::Slot<::crubit::DynErasedFuture<void>> __return_value_ret_val_holder;
+  __crubit_internal::__crubit_thunk_return_uimpl_ufuture_uwith_udrop(
+      wrapper, __return_value_ret_val_holder.Get());
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
 }  // namespace return_position_impl_trait
 
 #pragma clang diagnostic pop

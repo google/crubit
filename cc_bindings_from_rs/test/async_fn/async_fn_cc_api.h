@@ -140,10 +140,7 @@ extern "C" void convert_rust_to_cpp_async_fn(const void* _rs_in,
 ::crubit::DynErasedFuture<crubit::test::AsyncFnCppLayoutEquivalent>
 return_cpp_layout_equivalent(::std::int32_t x);
 
-// Error generating bindings for function `async_fn_golden::return_impl_future`:
-// Error formatting function return type `impl std::future::Future<Output =
-// i32>`: The following Rust type is not supported yet: impl
-// std::future::Future<Output = i32>
+::crubit::DynErasedFuture<::std::int32_t> return_impl_future(::std::int32_t x);
 
 ::crubit::DynErasedFuture<::async_fn::StructWithDrop> return_struct_with_drop(
     ::std::int32_t x);
@@ -271,6 +268,19 @@ return_cpp_layout_equivalent(::std::int32_t x) {
       ::crubit::DynErasedFuture<crubit::test::AsyncFnCppLayoutEquivalent>>
       __return_value_ret_val_holder;
   __crubit_internal::__crubit_thunk_return_ucpp_ulayout_uequivalent(
+      x, __return_value_ret_val_holder.Get());
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_uimpl_ufuture(
+    ::std::int32_t, ::crubit::DynErasedFuture<::std::int32_t>* __ret_ptr);
+}
+inline ::crubit::DynErasedFuture<::std::int32_t> return_impl_future(
+    ::std::int32_t x) {
+  ::crubit::Slot<::crubit::DynErasedFuture<::std::int32_t>>
+      __return_value_ret_val_holder;
+  __crubit_internal::__crubit_thunk_return_uimpl_ufuture(
       x, __return_value_ret_val_holder.Get());
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }

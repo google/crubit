@@ -62,3 +62,25 @@ unsafe extern "C" fn __crubit_thunk_refcount(
 ) -> usize {
     unsafe { ::return_position_impl_trait_golden::ArcWrapper::refcount(__self) }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uimpl_ufuture_utrivial(
+    x: i32,
+    __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(
+            ::return_position_impl_trait_golden::return_impl_future_trivial(x),
+        ));
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uimpl_ufuture_uwith_udrop(
+    wrapper: &'static ::return_position_impl_trait_golden::ArcWrapper,
+    __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(
+            ::return_position_impl_trait_golden::return_impl_future_with_drop(wrapper),
+        ));
+    }
+}

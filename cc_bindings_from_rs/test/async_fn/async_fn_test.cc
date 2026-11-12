@@ -89,15 +89,20 @@ TEST(AsyncFnTest, ReturnUnmovable) {
   EXPECT_EQ(movable->__field0, 789);
 }
 
+TEST(AsyncFnTest, ReturnImplFuture) {
+  NoopWaker waker;
+  crubit::DynErasedFuture<int32_t> fut = async_fn::return_impl_future(42);
+  crubit::Slot<int32_t> out;
+  ASSERT_TRUE(fut.Poll(&waker, out.Get()));
+  EXPECT_EQ(std::move(out).AssumeInitAndTakeValue(), 42);
+}
+
 // The following functions are not generated in C++ due to lack of support,
 // exactly as expected:
 //
 // 1. return_bridged_convertible:
 //    Fails to generate bindings because Crubit correctly rejects async
 //    functions returning bridged types that require conversion thunks.
-//
-// 2. return_impl_future:
-//    Fails to generate bindings because `impl Future` is not yet supported.
 //
 // 4. return_box_dyn_future:
 //    Fails to generate bindings because `Box` is not yet supported.

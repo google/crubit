@@ -1577,6 +1577,20 @@ fn test_format_item_fn_async_returning_type() {
 }
 
 #[test]
+fn test_format_item_unsupported_fn_returning_impl_fn_once() {
+    // `impl FnOnce() -> i32` has an associated `Output` type too, but isn't a future.
+    let test_src = r#"
+            pub fn returns_closure() -> impl FnOnce() -> i32 {
+                || 42
+            }
+        "#;
+    test_format_item(test_src, "returns_closure", |result| {
+        let err = result.unwrap_err();
+        assert!(err.contains("not supported yet"), "Unexpected error: {err}");
+    });
+}
+
+#[test]
 fn test_format_item_unsupported_fn_async_not_send() {
     let test_src = r#"
             pub async fn async_function(_: *const ()) {}

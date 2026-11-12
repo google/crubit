@@ -81,6 +81,17 @@ unsafe extern "C" fn __crubit_thunk_return_ucpp_ulayout_uequivalent(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uimpl_ufuture(
+    x: i32,
+    __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
+) -> () {
+    unsafe {
+        __ret_ptr.write(::crubit_support::dyn_erased_future::DynErasedFuture::new(
+            ::async_fn_golden::return_impl_future(x),
+        ));
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_ustruct_uwith_udrop(
     x: i32,
     __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
