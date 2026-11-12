@@ -4,9 +4,12 @@
 
 #include "cc_bindings_from_rs/test/vec/vec.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <numeric>
 #include <span>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -242,6 +245,48 @@ TEST(VecTest, MoveOperations) {
     EXPECT_EQ(a.size(), 1);
     EXPECT_EQ(a[0], 42);
   }
+}
+
+TEST(VecTest, ConstructFromStdVectorCopy) {
+  static_assert(std::is_nothrow_constructible_v<rs::Vec<int32_t>,
+                                                const std::vector<int32_t>&>);
+  static_assert(
+      !std::is_convertible_v<const std::vector<int32_t>&, rs::Vec<int32_t>>);
+  static_assert(!std::is_convertible_v<std::vector<int32_t>, rs::Vec<int32_t>>);
+
+  const std::vector<int32_t> src = {1, 2, 3, 4, 5};
+  rs::Vec<int32_t> v(src);
+  EXPECT_EQ(v.size(), 5);
+  EXPECT_GE(v.capacity(), 5);
+  EXPECT_EQ(src.size(), 5);
+  for (size_t i = 0; i < src.size(); ++i) {
+    EXPECT_EQ(v[i], src[i]);
+  }
+  EXPECT_EQ(vec::take_vec(std::move(v)), 15);
+
+  const std::vector<int32_t> empty_src;
+  rs::Vec<int32_t> empty_v(empty_src);
+  EXPECT_TRUE(empty_v.empty());
+  EXPECT_EQ(vec::take_vec(std::move(empty_v)), 0);
+}
+
+TEST(VecTest, ConstructFromStdVectorMove) {
+  static_assert(std::is_nothrow_constructible_v<rs::Vec<int32_t>,
+                                                std::vector<int32_t>&&>);
+
+  std::vector<int32_t> src = {7, 8, 9};
+  rs::Vec<int32_t> v(std::move(src));
+  EXPECT_EQ(v.size(), 3);
+  EXPECT_GE(v.capacity(), 3);
+  EXPECT_EQ(v[0], 7);
+  EXPECT_EQ(v[1], 8);
+  EXPECT_EQ(v[2], 9);
+  EXPECT_EQ(vec::take_vec(std::move(v)), 24);
+
+  std::vector<int32_t> empty_src;
+  rs::Vec<int32_t> empty_v(std::move(empty_src));
+  EXPECT_TRUE(empty_v.empty());
+  EXPECT_EQ(vec::take_vec(std::move(empty_v)), 0);
 }
 
 }  // namespace

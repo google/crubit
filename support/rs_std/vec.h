@@ -13,7 +13,9 @@
 #include <cstring>
 #include <iterator>
 #include <memory>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "support/internal/check.h"
 #include "support/internal/cpp_config.h"
@@ -52,6 +54,34 @@ class VecBase {
   using const_iterator = const T*;
   using reverse_iterator = ::std::reverse_iterator<iterator>;
   using const_reverse_iterator = ::std::reverse_iterator<const_iterator>;
+
+  // Constructs a vector with a copy of the elements of `other`.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors do not throw
+  // (terminating if they do).
+  template <typename Alloc, typename Elem = T>
+    requires(::std::is_copy_constructible_v<Elem>)
+  explicit VecBase(const ::std::vector<T, Alloc>& other) noexcept : VecBase() {
+    init_empty();
+    reserve(other.size());
+    for (const T& elem : other) {
+      emplace_back(elem);
+    }
+  }
+
+  // Constructs a vector by moving the elements of `other`.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors do not throw
+  // (terminating if they do).
+  template <typename Alloc, typename Elem = T>
+    requires(::std::is_move_constructible_v<Elem>)
+  explicit VecBase(::std::vector<T, Alloc>&& other) noexcept : VecBase() {
+    init_empty();
+    reserve(other.size());
+    for (T& elem : other) {
+      emplace_back(::std::move(elem));
+    }
+  }
 
   // Returns a pointer to the contiguous element buffer, or a dangling pointer
   // if empty.
@@ -222,6 +252,13 @@ class VecBase {
   }
 
  protected:
+  VecBase() noexcept = default;
+  VecBase(const VecBase&) noexcept = default;
+  VecBase(VecBase&&) noexcept = default;
+  VecBase& operator=(const VecBase&) noexcept = default;
+  VecBase& operator=(VecBase&&) noexcept = default;
+  ~VecBase() = default;
+
   // Destroys all elements, deallocates the underlying buffer, and reinitializes
   // the vector to the empty state (`ptr = alignof(T), len = 0, cap = 0`).
   void destroy() noexcept {

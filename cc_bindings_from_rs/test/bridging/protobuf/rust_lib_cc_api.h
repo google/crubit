@@ -146,6 +146,8 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     Vec<::proto::Rust<::foo_service::FooRequestStats>>
     : public ::rs::VecBase<::proto::Rust<::foo_service::FooRequestStats>> {
  public:
+  using ::rs::VecBase<::proto::Rust<::foo_service::FooRequestStats>>::VecBase;
+
   // Default::default
   Vec() noexcept;
 

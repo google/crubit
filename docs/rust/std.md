@@ -168,9 +168,16 @@ rs::SliceRef<const int32_t> slice = v;
 
 ### Modifying a `Vec` from C++
 
-Elements can be added, removed, and constructed in place from C++:
+An `rs::Vec<T>` can be constructed empty or explicitly from a `std::vector<T>`
+(copying from `const std::vector<T>&` or moving elements from
+`std::vector<T>&&`), and elements can be added, removed, and constructed in
+place from C++:
 
 ```c++
+std::vector<int32_t> src = {1, 2, 3};
+rs::Vec<int32_t> from_vec(src);             // Copies elements from src.
+rs::Vec<int32_t> moved_vec(std::move(src)); // Moves elements out of src.
+
 rs::Vec<int32_t> v;
 v.reserve(3);         // Total capacity, like std::vector::reserve.
 v.push_back(1);

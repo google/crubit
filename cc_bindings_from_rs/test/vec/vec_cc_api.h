@@ -90,6 +90,8 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     ":: alloc :: vec :: Vec < i32 >")::rs::Vec<::std::int32_t>
     : public ::rs::VecBase<::std::int32_t> {
  public:
+  using ::rs::VecBase<::std::int32_t>::VecBase;
+
   // Default::default
   Vec() noexcept;
 
@@ -136,6 +138,8 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     ":: alloc :: vec :: Vec < u8 >")::rs::Vec<::std::uint8_t>
     : public ::rs::VecBase<::std::uint8_t> {
  public:
+  using ::rs::VecBase<::std::uint8_t>::VecBase;
+
   // Default::default
   Vec() noexcept;
 

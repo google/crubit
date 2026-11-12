@@ -1288,6 +1288,7 @@ fn specialize_vec<'tcx>(
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
         ::rs::Vec<#inner_ty_cc> : public ::rs::VecBase<#inner_ty_cc> { __NEWLINE__
         public:
+            using ::rs::VecBase<#inner_ty_cc>::VecBase; __NEWLINE__
             #default_ctor_decl __NEWLINE__
             #main_api_tokens __NEWLINE__
             #drop_decl __NEWLINE__
