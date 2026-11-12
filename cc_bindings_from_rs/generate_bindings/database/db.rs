@@ -427,6 +427,11 @@ memoized::query_group! {
       /// Returns the generic args if `impl_id` applies to `target_ty` matching the first trait argument.
       fn does_trait_impl_apply_by_first_arg(&self, impl_id: DefId, target_ty: Ty<'tcx>) -> Option<GenericArgs<'tcx>>;
 
+      /// Returns whether `ty` can be made layout-compatible in C++ bindings.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:can_be_made_layout_compatible
+      fn can_be_made_layout_compatible(&self, ty: Ty<'tcx>) -> Result<bool>;
+
   }
 }
 

@@ -15,8 +15,8 @@ extern crate rustc_trait_selection;
 
 use avoid_colliding_types::{AvoidCollidingTypes, TypeCollisionRisk};
 use format_type::{
-    can_be_made_layout_compatible, format_cc_ident, get_cc_template_args,
-    replace_all_regions_with_static, BridgedBuiltin, CcParamTy,
+    format_cc_ident, get_cc_template_args, replace_all_regions_with_static, BridgedBuiltin,
+    CcParamTy,
 };
 use generate_comment::{generate_deprecated_tag, generate_doc_comment, generate_must_use_tag};
 use generate_ctor::{
@@ -1771,7 +1771,7 @@ fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
             }
             // Errors are treated as layout-compatible here; they will be reported when the
             // type is actually formatted.
-            if !can_be_made_layout_compatible(db, ty).unwrap_or(true) {
+            if !db.can_be_made_layout_compatible(ty).unwrap_or(true) {
                 return false;
             }
             if let Some(default_trait_id) = tcx.get_diagnostic_item(sym::Default)
@@ -1832,7 +1832,7 @@ pub fn is_struct_aggregate<'tcx>(
         if get_layout(tcx, ty).is_err() {
             return Err(NotAggregateReason::FieldLayoutError(field_def.name));
         }
-        if !can_be_made_layout_compatible(db, ty).unwrap_or(true) {
+        if !db.can_be_made_layout_compatible(ty).unwrap_or(true) {
             return Err(NotAggregateReason::IncompatibleBridgedField(field_def.name));
         }
         if db.format_ty_for_cc(ty, TypeLocation::Field).is_err() {
@@ -3176,7 +3176,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
     /// Ensures that a field of type `ty` has a valid C++ type and returns it, if so.
     fn prepare_field_type(&self, ty: Ty<'tcx>) -> Result<&'a CcSnippet<'tcx>> {
         get_layout(self.db.tcx(), ty)?;
-        if !can_be_made_layout_compatible(self.db, ty).unwrap_or(true) {
+        if !self.db.can_be_made_layout_compatible(ty).unwrap_or(true) {
             bail!(
                 "Field is a bridged type and might not be layout-compatible
                 with the C++ type (b/400633609)"

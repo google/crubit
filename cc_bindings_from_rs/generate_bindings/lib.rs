@@ -435,6 +435,7 @@ fn new_database_impl<'db>(
         query_compiler::does_type_implement_trait,
         does_impl_apply,
         does_trait_impl_apply_by_first_arg,
+        format_type::can_be_made_layout_compatible,
     )
 }
 

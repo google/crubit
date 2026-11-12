@@ -22,7 +22,7 @@ use code_gen_utils::CcInclude;
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets};
 use database::{AdtCoreBindings, BindingsGenerator, GenericArgs, TypeLocation};
 use error_report::{anyhow, bail, ensure};
-use format_type::{can_be_made_layout_compatible, format_cc_ident};
+use format_type::format_cc_ident;
 use generate_comment::{generate_deprecated_tag, generate_doc_comment};
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{field_def_is_pub_and_stable, get_layout, normalize_ty};
@@ -342,7 +342,7 @@ fn analyze_field<'db, 'tcx>(
     let size = get_layout(tcx, ty)?.size().bytes();
     ensure!(size != 0, "Field `{name}` is zero-sized, and C++ does not support zero-sized types");
     ensure!(
-        can_be_made_layout_compatible(db, ty).unwrap_or(true),
+        db.can_be_made_layout_compatible(ty).unwrap_or(true),
         "Field `{name}` is a bridged type and might not be layout-compatible with the C++ type \
          (b/400633609)"
     );
