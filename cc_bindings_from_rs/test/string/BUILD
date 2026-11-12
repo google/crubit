@@ -28,7 +28,10 @@ crubit_cc_test(
     srcs = ["string_test.cc"],
     deps = [
         ":string_cc_api",
+        "//support/rs:str_box",
         "//support/rs_std",
+        "//support/rs_std:str_ref",
+        "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
     ],
 )
