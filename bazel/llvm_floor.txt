@@ -1,0 +1,7 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# The oldest llvm-project commit against which rs_bindings_from_cc builds.
+# Tested by the nightly test matrix.
+6cd72b33224f0c3002b41e0e356eb2ab94ab3545
