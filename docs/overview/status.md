@@ -124,7 +124,7 @@ Crubit generates C++ bindings for everyday Rust APIs:
 > [Traits](../rust/traits.md).
 
 Unreleased (behind feature flags): generic types (`generics`), and richer
-bindings for enums with payloads and non-`repr(C)` unions.
+bindings for non-`repr(C)` unions.
 
 Not yet supported: `dyn Trait` objects, defining C++ abstractions from Rust
 (inheriting from or defining a C++ base class), statics and complex `const`
