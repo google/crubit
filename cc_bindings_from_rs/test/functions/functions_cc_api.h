@@ -887,7 +887,7 @@ inline ::std::int32_t accept_ctor_array(
 namespace __crubit_internal {
 extern "C" ::std::int32_t
 __crubit_thunk_accept_uctor_utuple_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
-    void**);
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline ::std::int32_t accept_ctor_tuple(
     ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
@@ -924,7 +924,7 @@ inline ::std::int32_t accept_rvalue_reference_array(
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_accept_urvalue_ureference_utuple(
-    void**);
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline ::std::int32_t accept_rvalue_reference_tuple(
     ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
@@ -974,7 +974,7 @@ return_rvalue_reference_array(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_urvalue_ureference_utuple(
     ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&,
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<
     ::functions::generic_fn_tests::ctor_trait_tests::CppMovable *

@@ -291,7 +291,8 @@ inline ::rs::Movable<::rs_index::Map>(Map::new_)(::std::uintptr_t row_size,
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000028usize_x0000002c_x00000020usize_x00000029(
-    ::rs_index::Map const&, void**, ::rs::StrRef* __ret_ptr);
+    ::rs_index::Map const&, void* crubit_nonnull* crubit_nonnull,
+    ::rs::StrRef* __ret_ptr);
 }
 inline ::rs::StrRef(Map::operator[])(
     ::std::tuple<::std::uintptr_t, ::std::uintptr_t> index) const& $(__anon1)

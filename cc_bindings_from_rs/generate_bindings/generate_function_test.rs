@@ -2902,3 +2902,160 @@ fn test_unmovable_self_with_unsatisfied_copy_where_bound_in_method() {
         );
     });
 }
+
+#[test]
+fn test_legacy_tuple_thunk_multi_level_pointer_nullability() {
+    let test_src = r#"
+        pub fn swap_tuple(t: (i32, i64)) -> (i64, i32) {
+            (t.1, t.0)
+        }
+    "#;
+    test_format_item(test_src, "swap_tuple", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            format_cc_includes(&result.cc_details.prereqs.includes),
+            quote! {
+                ...
+                __HASH_TOKEN__ include <crubit/support/for/tests/annotations_internal.h>
+                ...
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                namespace __crubit_internal {
+                extern "C" void ...(
+                    void* crubit_nonnull* crubit_nonnull,
+                    void* crubit_nonnull* crubit_nonnull __ret_ptr);
+                }
+                ...
+            }
+        );
+    });
+}
+
+#[test]
+fn test_bridged_pointer_return_thunk_multi_level_nullability() {
+    let test_src = r#"
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppType*"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+        #[doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_struct_to_cpp_pointer"]
+        #[doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_pointer_to_rust_struct"]
+        pub struct BridgedPtr {
+            pub ptr: *const core::ffi::c_void,
+        }
+
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppStruct"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+        #[doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_to_cpp_struct"]
+        #[doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_to_rust_struct"]
+        pub struct BridgedStruct {
+            pub x: i32,
+        }
+
+        pub fn roundtrip_ptr(p: BridgedPtr) -> BridgedPtr { p }
+        pub fn roundtrip_struct(s: BridgedStruct) -> BridgedStruct { s }
+    "#;
+    test_format_item(test_src, "roundtrip_ptr", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            format_cc_includes(&result.cc_details.prereqs.includes),
+            quote! {
+                ...
+                __HASH_TOKEN__ include <crubit/support/for/tests/annotations_internal.h>
+                ...
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                namespace __crubit_internal {
+                extern "C" void ...(CppType* ..., CppType* ...* crubit_nonnull __ret_ptr);
+                }
+                ...
+            }
+        );
+    });
+    test_format_item(test_src, "roundtrip_struct", |result| {
+        let result = result.unwrap().unwrap();
+        let includes = format_cc_includes(&result.cc_details.prereqs.includes).to_string();
+        assert!(!includes.contains("annotations_internal"), "includes: {includes}");
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                namespace __crubit_internal {
+                extern "C" void ...(CppStruct*, CppStruct* __ret_ptr);
+                }
+                ...
+            }
+        );
+    });
+}
+
+#[test]
+fn test_by_pointer_cpp_layout_equivalent_pointer_thunk_multi_level_nullability() {
+    // `#[repr(transparent)]` `cpp_layout_equivalent` pointer types that are non-movable (forcing
+    // `!is_c_abi_compatible_by_value` and `::rs::Movable<CppType*>` unwrapping via
+    // `TypeLocation::Other`) or wrapped in `cc_std::std::Nullable<Ptr>` are passed and returned
+    // `ByPointer` across the `extern "C"` thunk boundary (`CppType**`), requiring `crubit_nonnull`
+    // on both the parameter pointer and `__ret_ptr`.
+    let test_src = r#"
+        pub mod cc_std {
+            pub mod std {
+                pub unsafe trait SupportsNullable {}
+                unsafe impl SupportsNullable for crate::MovablePtr {}
+
+                #[doc = "CRUBIT_ANNOTATE: cpp_type={Ptr} crubit_nullable"]
+                #[doc = "CRUBIT_ANNOTATE: include_path=<crubit/support/annotations_internal.h>"]
+                #[doc = "CRUBIT_ANNOTATE: cpp_move_constructible="]
+                #[repr(transparent)]
+                pub struct Nullable<Ptr>(pub Ptr);
+            }
+        }
+
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppType*"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+        #[derive(Clone, Copy)]
+        #[repr(transparent)]
+        pub struct MovablePtr(*mut core::ffi::c_void);
+
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppType*"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+        #[repr(transparent)]
+        pub struct NonMovableByPtr(*mut core::ffi::c_void);
+        impl Drop for NonMovableByPtr {
+            fn drop(&mut self) {}
+        }
+
+        pub fn roundtrip_nullable(
+            p: cc_std::std::Nullable<MovablePtr>,
+        ) -> cc_std::std::Nullable<MovablePtr> {
+            p
+        }
+        pub fn roundtrip_non_movable(p: NonMovableByPtr) -> NonMovableByPtr { p }
+    "#;
+    for fn_name in ["roundtrip_nullable", "roundtrip_non_movable"] {
+        test_format_item(test_src, fn_name, |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                format_cc_includes(&result.cc_details.prereqs.includes),
+                quote! {
+                    ...
+                    __HASH_TOKEN__ include <crubit/support/for/tests/annotations_internal.h>
+                    ...
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C" void ...(
+                        CppType* ...* crubit_nonnull,
+                        CppType* ...* crubit_nonnull __ret_ptr);
+                    }
+                    ...
+                }
+            );
+        });
+    }
+}

@@ -498,7 +498,8 @@ inline ::arrays::ArrayStruct function_with_array_struct_id(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uarray_utuple_uid(
-    void**, void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull,
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::std::array<::std::int32_t, 2>,
                     ::std::array<::std::int32_t, 2>>

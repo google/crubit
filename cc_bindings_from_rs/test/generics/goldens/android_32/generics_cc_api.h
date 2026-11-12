@@ -3206,7 +3206,7 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_first_uand_ulen_ubool(
     ::generics::MultiGenericStruct<bool, ::std::int32_t> const&,
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<bool, ::std::uintptr_t>(
     ::generics::MultiGenericStruct<bool, ::std::int32_t>::first_and_len)()
@@ -3381,7 +3381,7 @@ static_assert(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_first_uand_ulen_ui32(
     ::generics::MultiGenericStruct<::std::int32_t, ::std::int32_t> const&,
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::std::int32_t, ::std::uintptr_t>(
     ::generics::MultiGenericStruct<::std::int32_t,

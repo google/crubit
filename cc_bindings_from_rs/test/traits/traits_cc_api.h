@@ -668,7 +668,8 @@ namespace traits {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes_utraits_ugolden_x0000003a_x0000003aMyStruct(
-    ::traits::MyStruct const&, ::traits::Foo*, void** __ret_ptr);
+    ::traits::MyStruct const&, ::traits::Foo*,
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 }  // namespace traits
 inline ::std::tuple<::std::int32_t, ::std::int32_t>(
@@ -749,7 +750,8 @@ namespace traits {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes_utraits_ugolden_x0000003a_x0000003aMyStruct2(
-    ::traits::MyStruct2 const&, ::traits::Foo*, void** __ret_ptr);
+    ::traits::MyStruct2 const&, ::traits::Foo*,
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 }  // namespace traits
 inline ::std::tuple<::std::int32_t, ::std::int32_t>(

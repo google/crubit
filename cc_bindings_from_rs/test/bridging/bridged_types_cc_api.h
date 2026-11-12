@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wshadow"
+#include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
 #include <utility>
@@ -99,7 +100,7 @@ namespace bridged_types::test_format_bridged_return_type_by_pointer {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_upointer(
-    CppType** __ret_ptr);
+    CppType** crubit_nonnull __ret_ptr);
 }
 inline CppType* test_format_bridged_return_type_by_pointer() {
   crubit::Slot<CppType*> __return_value_ret_val_holder;

@@ -139,6 +139,23 @@ fn is_drop_not_default<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool
     !db.does_type_implement_trait(ty, trait_id)
 }
 
+/// Appends a thunk-level indirection `*` to `pointee`, adding `crubit_nonnull` when
+/// `pointee_is_pointer` is true (since `#pragma clang assume_nonnull` does not infer outer
+/// nullability on multi-level pointers).
+fn format_thunk_ptr<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    prereqs: &mut CcPrerequisites<'tcx>,
+    pointee: &TokenStream,
+    pointee_is_pointer: bool,
+) -> TokenStream {
+    if pointee_is_pointer {
+        prereqs.includes.insert(db.support_header("annotations_internal.h"));
+        quote! { #pointee* crubit_nonnull }
+    } else {
+        quote! { #pointee* }
+    }
+}
+
 /// Formats a C++ declaration of a C-ABI-compatible-function wrapper around a Rust function.
 pub fn generate_thunk_decl<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -156,17 +173,19 @@ pub fn generate_thunk_decl<'tcx>(
     } else {
         sig_mid.output()
     };
-    let main_api_ret_type = if is_async {
+    let (main_api_ret_type, ret_is_pointer) = if is_async {
         let cc_ret_ty = db
             .format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })?
             .into_tokens(&mut prereqs);
         prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
-        quote! { ::crubit::DynErasedFuture<#cc_ret_ty> }
+        (quote! { ::crubit::DynErasedFuture<#cc_ret_ty> }, false)
     } else {
-        db.format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })
-            .with_context(|| format!("Error formatting function return type `{actual_output_ty}`"))?
-            .into_tokens(&mut prereqs)
-            .clone()
+        let formatted_ret = db
+            .format_cc_type(actual_output_ty, TypeLocation::FnReturn { is_constructor })
+            .with_context(|| {
+                format!("Error formatting function return type `{actual_output_ty}`")
+            })?;
+        (formatted_ret.into_tokens(&mut prereqs).clone(), formatted_ret.is_pointer)
     };
 
     let mut thunk_params = {
@@ -188,11 +207,12 @@ pub fn generate_thunk_decl<'tcx>(
                         BridgedType::ExternCFuncConverters {
                             cpp_type: bridged_cpp_type, ..
                         } => {
-                            let cpp_type = cpp_type.into_tokens(&mut prereqs);
+                            let is_pointer = cpp_type.is_pointer;
+                            let cpp_type_tokens = cpp_type.into_tokens(&mut prereqs);
                             if matches!(bridged_cpp_type, CcType::Pointer { .. }) {
-                                Ok(quote! { #cpp_type })
+                                Ok(quote! { #cpp_type_tokens })
                             } else {
-                                Ok(quote! { #cpp_type* })
+                                Ok(format_thunk_ptr(db, &mut prereqs, cpp_type_tokens, is_pointer))
                             }
                         }
                         BridgedType::Option(_) => Ok(quote! { unsigned char* }),
@@ -201,17 +221,20 @@ pub fn generate_thunk_decl<'tcx>(
                         let cpp_type = cpp_type.into_tokens(&mut prereqs);
                         Ok(quote! { #cpp_type })
                     }
-                    ParamAbi::Value(ValueAbi::LegacyTuple(_)) => Ok(quote! { void** }),
+                    ParamAbi::Value(ValueAbi::LegacyTuple(_)) => {
+                        prereqs.includes.insert(db.support_header("annotations_internal.h"));
+                        Ok(quote! { void* crubit_nonnull* crubit_nonnull })
+                    }
                     ParamAbi::Value(ValueAbi::Array) => Ok(quote! { void* }),
                     ParamAbi::Value(ValueAbi::ByPointer) => {
-                        let cpp_type =
+                        let formatted =
                             if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
                                 db.format_cc_type(ty, TypeLocation::Other)?
                             } else {
                                 cpp_type
                             };
-                        let cpp_type = cpp_type.into_tokens(&mut prereqs);
-                        Ok(quote! { #cpp_type* })
+                        let pointee = formatted.into_tokens(&mut prereqs);
+                        Ok(format_thunk_ptr(db, &mut prereqs, pointee, formatted.is_pointer))
                     }
                 }
             })
@@ -228,7 +251,9 @@ pub fn generate_thunk_decl<'tcx>(
     } else {
         match classify_value_abi(db, sig_mid.output(), is_constructor)? {
             ValueAbi::Bridged(BridgedType::ExternCFuncConverters { .. }) | ValueAbi::ByPointer => {
-                thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
+                let ret_ptr_ty =
+                    format_thunk_ptr(db, &mut prereqs, &main_api_ret_type, ret_is_pointer);
+                thunk_params.push(quote! { #ret_ptr_ty __ret_ptr });
                 db.tokens().void.clone()
             }
             ValueAbi::Bridged(BridgedType::Option(_)) => {
@@ -237,7 +262,8 @@ pub fn generate_thunk_decl<'tcx>(
             }
             ValueAbi::ByValue => main_api_ret_type,
             ValueAbi::LegacyTuple(_) => {
-                thunk_params.push(quote! { void** __ret_ptr });
+                prereqs.includes.insert(db.support_header("annotations_internal.h"));
+                thunk_params.push(quote! { void* crubit_nonnull* crubit_nonnull __ret_ptr });
                 db.tokens().void.clone()
             }
             ValueAbi::Array => {

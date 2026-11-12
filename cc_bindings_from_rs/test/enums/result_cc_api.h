@@ -2331,7 +2331,7 @@ inline ::rs::Result<::std::uint8_t, ::std::uint8_t> return_result_by_value() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uresult_udrop_uno_udefault_utuple(
-    bool, void** __ret_ptr);
+    bool, void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<
     ::rs::Movable<::rs::Result<::std::uint8_t, ::result::DropNoDefault>>>
@@ -2417,7 +2417,8 @@ inline ::std::uint8_t take_result_drop_no_default_ok(
 }
 
 namespace __crubit_internal {
-extern "C" bool __crubit_thunk_take_uresult_udrop_uno_udefault_utuple(void**);
+extern "C" bool __crubit_thunk_take_uresult_udrop_uno_udefault_utuple(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline bool take_result_drop_no_default_tuple(
     ::std::tuple<

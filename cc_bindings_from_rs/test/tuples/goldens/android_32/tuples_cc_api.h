@@ -3023,7 +3023,8 @@ inline void assert_nontrivial_drop_count(::std::uint8_t drop_count) {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_uadt_uin_utuple(void**);
+extern "C" void __crubit_thunk_param_uadt_uin_utuple(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_adt_in_tuple(
     ::std::tuple<::tuples::AdtHoldingFiveAndSix> adt) {
@@ -3035,7 +3036,7 @@ inline void param_adt_in_tuple(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_param_uc_uabi_ucompatible_ufive_uin_utuple(
-    void**);
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_c_abi_compatible_five_in_tuple(
     ::std::tuple<::std::int32_t> five) {
@@ -3047,7 +3048,8 @@ inline void param_c_abi_compatible_five_in_tuple(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_uffi_ualias_uin_utuple(void**);
+extern "C" void __crubit_thunk_param_uffi_ualias_uin_utuple(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_ffi_alias_in_tuple(::std::tuple<::std::int8_t> five) {
   auto&& five_0 = ::std::get<0>(five);
@@ -3059,7 +3061,8 @@ inline void param_ffi_alias_in_tuple(::std::tuple<::std::int8_t> five) {
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_param_unested_utuple_uwith_unon_ucpp_umovable_uat_u2nd(void**);
+__crubit_thunk_param_unested_utuple_uwith_unon_ucpp_umovable_uat_u2nd(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_nested_tuple_with_non_cpp_movable_at_2nd(
     ::std::tuple<
@@ -3084,7 +3087,8 @@ inline void param_nested_tuple_with_non_cpp_movable_at_2nd(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_unested_utuples(void**);
+extern "C" void __crubit_thunk_param_unested_utuples(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_nested_tuples(
     ::std::tuple<::std::tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>
@@ -3103,7 +3107,8 @@ inline void param_nested_tuples(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uat_u1st(void**);
+extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uat_u1st(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_non_cpp_movable_at_1st(
     ::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
@@ -3123,7 +3128,8 @@ inline void param_non_cpp_movable_at_1st(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uat_u2nd(void**);
+extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uat_u2nd(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_non_cpp_movable_at_2nd(
     ::std::tuple<::std::int32_t, ::rs::Movable<::tuples::NonCppMovable>,
@@ -3143,7 +3149,8 @@ inline void param_non_cpp_movable_at_2nd(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uat_u3rd(void**);
+extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uat_u3rd(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_non_cpp_movable_at_3rd(
     ::std::tuple<::std::int32_t, ::std::int32_t,
@@ -3163,7 +3170,8 @@ inline void param_non_cpp_movable_at_3rd(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uin_utuple(void**);
+extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uin_utuple(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_non_cpp_movable_in_tuple(
     ::std::tuple<::rs::Movable<::tuples::NonCppMovable>> v) {
@@ -3177,7 +3185,8 @@ inline void param_non_cpp_movable_in_tuple(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_unon_ucpp_umovable_umulti(void**);
+extern "C" void __crubit_thunk_param_unon_ucpp_umovable_umulti(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_non_cpp_movable_multi(
     ::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
@@ -3199,7 +3208,8 @@ inline void param_non_cpp_movable_multi(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_unontrivial_udrop_uin_utuple(void**);
+extern "C" void __crubit_thunk_param_unontrivial_udrop_uin_utuple(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_nontrivial_drop_in_tuple(
     ::std::tuple<::tuples::NontrivialDrop> nontrivial_drop) {
@@ -3212,7 +3222,8 @@ inline void param_nontrivial_drop_in_tuple(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_uoption_uin_utuple(void**);
+extern "C" void __crubit_thunk_param_uoption_uin_utuple(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_option_in_tuple(
     ::std::tuple<::rs::Option<::std::int32_t>> opt) {
@@ -3223,7 +3234,8 @@ inline void param_option_in_tuple(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_utriply_unested_utuple(void**);
+extern "C" void __crubit_thunk_param_utriply_unested_utuple(
+    void* crubit_nonnull* crubit_nonnull);
 }
 inline void param_triply_nested_tuple(
     ::std::tuple<::std::tuple<::std::tuple<::std::int32_t>>> v) {
@@ -3248,7 +3260,8 @@ inline void reset_non_cpp_movable_drop_count() {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_uadt_uin_utuple(void** __ret_ptr);
+extern "C" void __crubit_thunk_return_uadt_uin_utuple(
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::tuples::AdtHoldingFiveAndSix> return_adt_in_tuple() {
   crubit::Slot<::tuples::AdtHoldingFiveAndSix> __return_value_0_ret_val_holder;
@@ -3262,7 +3275,7 @@ inline ::std::tuple<::tuples::AdtHoldingFiveAndSix> return_adt_in_tuple() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uc_uabi_ucompatible_ufive_uin_utuple(
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::std::int32_t> return_c_abi_compatible_five_in_tuple() {
   ::std::int32_t __return_value_0_ret_val_holder;
@@ -3274,7 +3287,8 @@ inline ::std::tuple<::std::int32_t> return_c_abi_compatible_five_in_tuple() {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_uffi_ualias_uin_utuple(void** __ret_ptr);
+extern "C" void __crubit_thunk_return_uffi_ualias_uin_utuple(
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::std::int8_t> return_ffi_alias_in_tuple() {
   ::std::int8_t __return_value_0_ret_val_holder;
@@ -3288,7 +3302,7 @@ inline ::std::tuple<::std::int8_t> return_ffi_alias_in_tuple() {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_return_unested_utuple_uwith_unon_ucpp_umovable_uat_u2nd(
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<
     ::std::int32_t,
@@ -3316,7 +3330,8 @@ return_nested_tuple_with_non_cpp_movable_at_2nd() {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_unested_utuples(void** __ret_ptr);
+extern "C" void __crubit_thunk_return_unested_utuples(
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::std::tuple<::std::int32_t, ::std::int32_t>,
                     ::std::int32_t>
@@ -3343,7 +3358,7 @@ return_nested_tuples() {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_return_unew_unon_ucpp_umovable_uin_unested_utuple(
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::std::tuple<::rs::Movable<::tuples::NonCppMovable>>>
 return_new_non_cpp_movable_in_nested_tuple() {
@@ -3361,7 +3376,7 @@ return_new_non_cpp_movable_in_nested_tuple() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_unew_unon_ucpp_umovable_uin_utuple(
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::rs::Movable<::tuples::NonCppMovable>>
 return_new_non_cpp_movable_in_tuple() {
@@ -3376,7 +3391,7 @@ return_new_non_cpp_movable_in_tuple() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_unew_unontrivial_udrop_uin_utuple(
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::tuples::NontrivialDrop>
 return_new_nontrivial_drop_in_tuple() {
@@ -3391,7 +3406,7 @@ return_new_nontrivial_drop_in_tuple() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_unon_ucpp_umovable_uat_u1st(
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
                     ::std::int32_t>
@@ -3415,7 +3430,7 @@ return_non_cpp_movable_at_1st() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_unon_ucpp_umovable_uat_u2nd(
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::std::int32_t, ::rs::Movable<::tuples::NonCppMovable>,
                     ::std::int32_t>
@@ -3439,7 +3454,7 @@ return_non_cpp_movable_at_2nd() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_unon_ucpp_umovable_uat_u3rd(
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::std::int32_t, ::std::int32_t,
                     ::rs::Movable<::tuples::NonCppMovable>>
@@ -3462,7 +3477,7 @@ return_non_cpp_movable_at_3rd() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_unon_ucpp_umovable_umulti(
-    void** __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
                     ::rs::Movable<::tuples::NonCppMovable>>
@@ -3486,7 +3501,8 @@ return_non_cpp_movable_multi() {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_uoption_uin_utuple(void** __ret_ptr);
+extern "C" void __crubit_thunk_return_uoption_uin_utuple(
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::rs::Option<::std::int32_t>> return_option_in_tuple() {
   crubit::Slot<::rs::Option<::std::int32_t>> __return_value_0_ret_val_holder;
@@ -3513,7 +3529,8 @@ inline ::rs::Option<::std::int32_t> return_option_in_tuple_ref(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_utriply_unested_utuple(void** __ret_ptr);
+extern "C" void __crubit_thunk_return_utriply_unested_utuple(
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::std::tuple<::std::tuple<::std::int32_t>>>
 return_triply_nested_tuple() {

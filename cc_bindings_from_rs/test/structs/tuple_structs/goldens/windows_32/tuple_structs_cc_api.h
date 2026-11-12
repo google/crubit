@@ -1314,7 +1314,8 @@ static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructWithTupleFieldType>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    void**, ::tuple_structs::TupleStructWithTupleFieldType* __ret_ptr);
+    void* crubit_nonnull* crubit_nonnull,
+    ::tuple_structs::TupleStructWithTupleFieldType* __ret_ptr);
 }
 inline ::tuple_structs::TupleStructWithTupleFieldType(
     TupleStructWithTupleFieldType::create)(
@@ -1334,7 +1335,8 @@ inline ::tuple_structs::TupleStructWithTupleFieldType(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_get_uarg(
-    ::tuple_structs::TupleStructWithTupleFieldType*, void** __ret_ptr);
+    ::tuple_structs::TupleStructWithTupleFieldType*,
+    void* crubit_nonnull* crubit_nonnull __ret_ptr);
 }
 inline ::std::tuple<::std::int32_t, ::std::int32_t>(
     TupleStructWithTupleFieldType::get_arg)() const {
