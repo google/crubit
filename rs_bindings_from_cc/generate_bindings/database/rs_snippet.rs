@@ -3776,7 +3776,7 @@ mod tests {
     }
 
     fn existing_rust_type_proto_to_rs_type_kind(
-        proto: &ir_rust_proto::ExistingRustType,
+        proto: &ir_generated::ExistingRustType,
     ) -> RsTypeKind {
         RsTypeKind::new_existing_rust_type(
             EmptyDatabase::new(),
@@ -3790,9 +3790,9 @@ mod tests {
     fn make_existing_rust_type_proto(
         name: &str,
         is_same_abi: bool,
-    ) -> ir_rust_proto::ExistingRustType {
+    ) -> ir_generated::ExistingRustType {
         proto! {
-            ir_rust_proto::ExistingRustType {
+            ir_generated::ExistingRustType {
                 rs_name: name,
                 unique_name: name,
                 is_same_abi: is_same_abi,
@@ -3950,15 +3950,15 @@ mod tests {
         expect_that!(prim.allowed_behind_multi_element_ptr(), eq(true));
 
         let enum_proto = proto! {
-            ir_rust_proto::Enum {
-                cc_name: ir_rust_proto::Identifier { identifier: "MyEnum" },
-                rs_name: ir_rust_proto::Identifier { identifier: "MyEnum" },
+            ir_generated::Enum {
+                cc_name: ir_generated::Identifier { identifier: "MyEnum" },
+                rs_name: ir_generated::Identifier { identifier: "MyEnum" },
                 unique_name: "MyEnum",
                 mangled_cc_name: "6MyEnum",
                 id: 0u64,
                 owning_target: "//foo/bar",
-                underlying_type: ir_rust_proto::CcType {
-                    variant: __ { primitive: ir_rust_proto::Primitive::Int },
+                underlying_type: ir_generated::CcType {
+                    variant: __ { primitive: ir_generated::Primitive::Int },
                 },
                 enumerators: [],
             }
@@ -3970,21 +3970,21 @@ mod tests {
         expect_that!(enum_.allowed_behind_multi_element_ptr(), eq(true));
     }
 
-    fn make_incomplete_record_proto() -> ir_rust_proto::IncompleteRecord {
+    fn make_incomplete_record_proto() -> ir_generated::IncompleteRecord {
         proto! {
-            ir_rust_proto::IncompleteRecord {
-                cc_name: ir_rust_proto::Identifier { identifier: "MyStruct" },
-                rs_name: ir_rust_proto::Identifier { identifier: "MyStruct" },
+            ir_generated::IncompleteRecord {
+                cc_name: ir_generated::Identifier { identifier: "MyStruct" },
+                rs_name: ir_generated::Identifier { identifier: "MyStruct" },
                 unique_name: "MyStruct",
                 id: 0u64,
                 owning_target: "//foo/bar",
-                record_type: ir_rust_proto::RecordType::Class,
+                record_type: ir_generated::RecordType::Class,
             }
         }
     }
 
     fn incomplete_record_proto_to_rs_type_kind(
-        proto: &ir_rust_proto::IncompleteRecord,
+        proto: &ir_generated::IncompleteRecord,
     ) -> RsTypeKind {
         RsTypeKind::IncompleteRecord {
             incomplete_record: FfiRc::new(proto.clone()),
@@ -4004,14 +4004,14 @@ mod tests {
     fn test_alias_incomplete_record_only_allowed_behind_single_element_ptr() {
         let proto = make_incomplete_record_proto();
         let alias_proto = proto! {
-            ir_rust_proto::TypeAlias {
-                cc_name: ir_rust_proto::Identifier { identifier: "MyAlias" },
-                rs_name: ir_rust_proto::Identifier { identifier: "MyAlias" },
+            ir_generated::TypeAlias {
+                cc_name: ir_generated::Identifier { identifier: "MyAlias" },
+                rs_name: ir_generated::Identifier { identifier: "MyAlias" },
                 unique_name: "MyAlias",
                 id: 1u64,
                 owning_target: "//foo/bar",
-                underlying_type: ir_rust_proto::CcType {
-                    variant: __ { primitive: ir_rust_proto::Primitive::Int },
+                underlying_type: ir_generated::CcType {
+                    variant: __ { primitive: ir_generated::Primitive::Int },
                 },
             }
         };
@@ -4047,14 +4047,14 @@ mod tests {
         let int = RsTypeKind::Primitive(Primitive::Int32T);
         let int_alias = RsTypeKind::TypeAlias {
             type_alias: FfiRc::new(proto! {
-                ir_rust_proto::TypeAlias {
-                    cc_name: ir_rust_proto::Identifier { identifier: "MyAlias" },
-                    rs_name: ir_rust_proto::Identifier { identifier: "MyAlias" },
+                ir_generated::TypeAlias {
+                    cc_name: ir_generated::Identifier { identifier: "MyAlias" },
+                    rs_name: ir_generated::Identifier { identifier: "MyAlias" },
                     unique_name: "MyAlias",
                     id: 1u64,
                     owning_target: "//foo/bar",
-                    underlying_type: ir_rust_proto::CcType {
-                        variant: __ { primitive: ir_rust_proto::Primitive::Int },
+                    underlying_type: ir_generated::CcType {
+                        variant: __ { primitive: ir_generated::Primitive::Int },
                     },
                 }
             }),
@@ -4155,9 +4155,7 @@ mod tests {
 
     #[gtest]
     fn test_resolve_bridge_rust_name_success() {
-        use ir_rust_proto::IRProto;
-
-        let proto = proto!(IRProto {
+        let proto = proto!(ir_generated::IR {
             current_target: "//foo:bar",
             crate_names: [("@abseil-cpp//absl/status:status", "absl_status")]
         });
@@ -4213,9 +4211,7 @@ mod tests {
         expected = "Internal error: validated hint mismatch slipped through: crate name `status` in Rust path `::status::absl::StatusOr` does not match target name `other` in hint `@abseil-cpp//absl/status:other`"
     )]
     fn test_resolve_bridge_rust_name_mismatch_panics() {
-        use ir_rust_proto::IRProto;
-
-        let proto = proto!(IRProto {
+        let proto = proto!(ir_generated::IR {
             current_target: "//foo:bar",
             crate_names: [("@abseil-cpp//absl/status:other", "absl_status")]
         });

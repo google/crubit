@@ -5,19 +5,19 @@
 //! Utilities for generating IR for the `multiplatformat_testing::test_platform` in tests.
 
 use arc_anyhow::Result;
-use ir::ir_rust_proto::IRProto;
+use ir::ir_generated;
 use ir_testing::with_full_lifetime_macros;
 use multiplatform_testing::test_platform;
 
-pub fn ir_proto_from_cc(header: &str) -> Result<IRProto> {
+pub fn ir_proto_from_cc(header: &str) -> Result<ir_generated::IR> {
     ir_testing::ir_proto_from_cc(test_platform(), header)
 }
 
-pub fn ir_proto_from_cc_annotated(header: &str) -> Result<IRProto> {
+pub fn ir_proto_from_cc_annotated(header: &str) -> Result<ir_generated::IR> {
     ir_testing::ir_proto_from_cc_annotated(test_platform(), header)
 }
 
-pub fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<IRProto> {
+pub fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<ir_generated::IR> {
     ir_testing::ir_proto_from_cc_dependency(
         test_platform(),
         header,
@@ -28,7 +28,7 @@ pub fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<IRP
     )
 }
 
-pub fn ir_proto_from_cc_with_inline_cpp(header: &str) -> Result<IRProto> {
+pub fn ir_proto_from_cc_with_inline_cpp(header: &str) -> Result<ir_generated::IR> {
     ir_testing::ir_proto_from_cc_dependency(
         test_platform(),
         header,
@@ -42,7 +42,7 @@ pub fn ir_proto_from_cc_with_inline_cpp(header: &str) -> Result<IRProto> {
 pub fn ir_proto_from_cc_dependency_with_lazy_import(
     header: &str,
     dep_header: &str,
-) -> Result<IRProto> {
+) -> Result<ir_generated::IR> {
     ir_testing::ir_proto_from_cc_dependency_with_lazy_import(
         test_platform(),
         header,
@@ -51,7 +51,7 @@ pub fn ir_proto_from_cc_dependency_with_lazy_import(
     )
 }
 
-pub fn ir_proto_from_record_impl_debug_cc(header: &str) -> Result<IRProto> {
+pub fn ir_proto_from_record_impl_debug_cc(header: &str) -> Result<ir_generated::IR> {
     ir_testing::ir_proto_from_cc_dependency(
         test_platform(),
         header,
@@ -65,7 +65,7 @@ pub fn ir_proto_from_record_impl_debug_cc(header: &str) -> Result<IRProto> {
 pub fn ir_proto_from_inherited_friend_operators_cc(
     header: &str,
     dep_header: &str,
-) -> Result<IRProto> {
+) -> Result<ir_generated::IR> {
     ir_testing::ir_proto_from_cc_dependency(
         test_platform(),
         header,
@@ -76,7 +76,7 @@ pub fn ir_proto_from_inherited_friend_operators_cc(
     )
 }
 
-pub fn ir_proto_from_assumed_lifetimes_cc(program: &str) -> Result<IRProto> {
+pub fn ir_proto_from_assumed_lifetimes_cc(program: &str) -> Result<ir_generated::IR> {
     let mut full_program = with_full_lifetime_macros();
     full_program.push_str(program);
     ir_testing::ir_proto_from_cc_dependency(
@@ -92,7 +92,7 @@ pub fn ir_proto_from_assumed_lifetimes_cc(program: &str) -> Result<IRProto> {
 pub fn ir_proto_from_assumed_lifetimes_cc_dependency(
     header: &str,
     dep_header: &str,
-) -> Result<IRProto> {
+) -> Result<ir_generated::IR> {
     let mut full_program = with_full_lifetime_macros();
     full_program.push_str(header);
     ir_testing::ir_proto_from_cc_dependency(

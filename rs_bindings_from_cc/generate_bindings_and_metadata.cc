@@ -31,11 +31,8 @@
 
 namespace crubit {
 
-namespace ir_proto = ::crubit::ffi;
-
-const ir_proto::Namespace* _Nullable FindNamespace(const IR& ir,
-                                                   llvm::StringRef name) {
-  for (const auto* ns : get_items_if<ir_proto::Namespace>(ir)) {
+const Namespace* _Nullable FindNamespace(const IR& ir, llvm::StringRef name) {
+  for (const auto* ns : get_items_if<Namespace>(ir)) {
     if (llvm::StringRef(ns->cc_name().identifier()) ==
         kInstantiationsNamespaceName) {
       return ns;
@@ -44,18 +41,18 @@ const ir_proto::Namespace* _Nullable FindNamespace(const IR& ir,
   return nullptr;
 }
 
-std::vector<const ir_proto::Record* _Nonnull> FindInstantiationsInNamespace(
+std::vector<const Record* _Nonnull> FindInstantiationsInNamespace(
     const IR& ir, ItemId namespace_id) {
   llvm::DenseSet<ItemId> record_ids;
-  for (const auto* type_alias : get_items_if<ir_proto::TypeAlias>(ir)) {
+  for (const auto* type_alias : get_items_if<TypeAlias>(ir)) {
     if (ItemId(type_alias->enclosing_item_id()) == namespace_id) {
       CRUBIT_CHECK(type_alias->underlying_type().variant().has_decl());
       record_ids.insert(ItemId(type_alias->underlying_type().variant().decl()));
     }
   }
 
-  std::vector<const ir_proto::Record* _Nonnull> result;
-  for (const auto* record : get_items_if<ir_proto::Record>(ir)) {
+  std::vector<const Record* _Nonnull> result;
+  for (const auto* record : get_items_if<Record>(ir)) {
     if (record_ids.find(ItemId(record->id())) != record_ids.end()) {
       result.push_back(record);
     }
@@ -129,7 +126,7 @@ llvm::Expected<BindingsAndMetadata> GenerateBindingsAndMetadata(
   llvm::DenseMap<Identifier, Identifier> instantiations;
   if (const auto* _Nullable ns =
           FindNamespace(ir, kInstantiationsNamespaceName)) {
-    std::vector<const ir_proto::Record* _Nonnull> records =
+    std::vector<const Record* _Nonnull> records =
         FindInstantiationsInNamespace(ir, ItemId(ns->id()));
     for (const auto* record : records) {
       // An instantiation named after a type alias has the name of the alias,

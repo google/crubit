@@ -10,7 +10,7 @@ use generate_bindings::new_database;
 use googletest::matchers::contains_substring;
 use googletest::{assert_that, gtest};
 use ir_matchers::assert_ir_matches;
-use ir_testing::{make_test_ir_dependency, retrieve_record, IRProto};
+use ir_testing::{make_test_ir_dependency, retrieve_record};
 use lifetime_defaults_transform::{
     lifetime_defaults_transform, record_lifetime_arity, BindingContext,
 };
@@ -24,7 +24,7 @@ fn transform_ir(ir: ir::IR) -> Result<ir::IR> {
     lifetime_defaults_transform(&factory.make_db(), factory.ir())
 }
 
-fn transform_from_proto(proto: &IRProto) -> Result<ir::IR> {
+fn transform_from_proto(proto: &ir::ir_generated::IR) -> Result<ir::IR> {
     transform_ir(make_test_ir_dependency(proto, Some("assume_lifetimes"))?)
 }
 

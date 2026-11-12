@@ -87,7 +87,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Namespace;
 struct CRUBIT_FFI_TRIVIAL_ABI UseMod;
 struct CRUBIT_FFI_TRIVIAL_ABI ExistingRustType;
 struct CRUBIT_FFI_TRIVIAL_ABI Item;
-struct CRUBIT_FFI_TRIVIAL_ABI IRProto;
+struct CRUBIT_FFI_TRIVIAL_ABI IR;
 struct CRUBIT_FFI_TRIVIAL_ABI GenerateBindingsRequest;
 struct CRUBIT_FFI_TRIVIAL_ABI GenerateBindingsResponse;
 
@@ -3198,7 +3198,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Item {
   } payload_;
 };
 
-struct CRUBIT_FFI_TRIVIAL_ABI IRProto {
+struct CRUBIT_FFI_TRIVIAL_ABI IR {
   const FfiVec<::crubit::ffi::HeaderName>& public_headers() const { return public_headers_; }
   FfiVec<::crubit::ffi::HeaderName>* mutable_public_headers() { return &public_headers_; }
   void clear_public_headers() { public_headers_.clear(); }
@@ -3223,7 +3223,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI IRProto {
   FfiMap<FfiString, FfiVec<::crubit::ffi::Item>>* mutable_top_level_items() { return &top_level_items_; }
   const FfiMap<FfiString, FfiString>& crate_names() const { return crate_names_; }
   FfiMap<FfiString, FfiString>* mutable_crate_names() { return &crate_names_; }
-  friend bool operator==(const IRProto&, const IRProto&) = default;
+  friend bool operator==(const IR&, const IR&) = default;
   uint64_t has_bits_ = 0;
   FfiVec<::crubit::ffi::HeaderName> public_headers_{};
   FfiString current_target_{};
@@ -3236,8 +3236,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI IRProto {
 };
 
 struct CRUBIT_FFI_TRIVIAL_ABI GenerateBindingsRequest {
-  const ::crubit::ffi::IRProto& ir() const { return ir_; }
-  ::crubit::ffi::IRProto* mutable_ir() { return &ir_; }
+  const ::crubit::ffi::IR& ir() const { return ir_; }
+  ::crubit::ffi::IR* mutable_ir() { return &ir_; }
   std::string_view crubit_support_path_format() const { return crubit_support_path_format_.AsView(); }
   void set_crubit_support_path_format(std::string_view value) { crubit_support_path_format_ = FfiString(value); }
   std::string_view crubit_support_versioned_path_format() const { return crubit_support_versioned_path_format_.AsView(); }
@@ -3257,7 +3257,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI GenerateBindingsRequest {
   std::string_view kythe_default_corpus() const { return kythe_default_corpus_.AsView(); }
   void set_kythe_default_corpus(std::string_view value) { kythe_default_corpus_ = FfiString(value); }
   friend bool operator==(const GenerateBindingsRequest&, const GenerateBindingsRequest&) = default;
-  ::crubit::ffi::IRProto ir_{};
+  ::crubit::ffi::IR ir_{};
   FfiString crubit_support_path_format_{};
   FfiString crubit_support_versioned_path_format_{};
   FfiString clang_format_exe_path_{};
@@ -3286,29 +3286,83 @@ struct CRUBIT_FFI_TRIVIAL_ABI GenerateBindingsResponse {
 };
 
 static_assert(std::is_standard_layout_v<HeaderName>);
-static_assert(sizeof(size_t) != 8 || (sizeof(HeaderName) == 16 && alignof(HeaderName) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(HeaderName, name_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(HeaderName) == 16 &&
+    alignof(HeaderName) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(HeaderName, name_) ==
+    0);
 static_assert(std::is_standard_layout_v<LifetimeName>);
-static_assert(sizeof(size_t) != 8 || (sizeof(LifetimeName) == 24 && alignof(LifetimeName) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(LifetimeName, name_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(LifetimeName, id_) == 16);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(LifetimeName) == 24 &&
+    alignof(LifetimeName) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(LifetimeName, name_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(LifetimeName, id_) ==
+    16);
 static_assert(std::is_standard_layout_v<SourceLocation>);
-static_assert(sizeof(size_t) != 8 || (sizeof(SourceLocation) == 24 && alignof(SourceLocation) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(SourceLocation, path_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(SourceLocation, line_) == 16);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(SourceLocation) == 24 &&
+    alignof(SourceLocation) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(SourceLocation, path_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(SourceLocation, line_) ==
+    16);
 static_assert(std::is_standard_layout_v<decl_location::ByteRange>);
-static_assert(sizeof(size_t) != 8 || (sizeof(decl_location::ByteRange) == 8 && alignof(decl_location::ByteRange) == 4));
-static_assert(sizeof(size_t) != 8 || offsetof(decl_location::ByteRange, begin_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(decl_location::ByteRange, end_) == 4);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(decl_location::ByteRange) == 8 &&
+    alignof(decl_location::ByteRange) == 4));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(decl_location::ByteRange, begin_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(decl_location::ByteRange, end_) ==
+    4);
 static_assert(std::is_standard_layout_v<DeclLocation>);
-static_assert(sizeof(size_t) != 8 || (sizeof(DeclLocation) == 64 && alignof(DeclLocation) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(DeclLocation, spelling_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(DeclLocation, expansion_) == 32);
-static_assert(sizeof(size_t) != 8 || offsetof(DeclLocation, name_range_) == 56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(DeclLocation) == 64 &&
+    alignof(DeclLocation) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(DeclLocation, spelling_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(DeclLocation, expansion_) ==
+    32);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(DeclLocation, name_range_) ==
+    56);
 static_assert(std::is_standard_layout_v<FormattedError>);
-static_assert(sizeof(size_t) != 8 || (sizeof(FormattedError) == 32 && alignof(FormattedError) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(FormattedError, fmt_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(FormattedError, message_) == 16);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(FormattedError) == 32 &&
+    alignof(FormattedError) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(FormattedError, fmt_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(FormattedError, message_) ==
+    16);
 inline cc_type::PointerType::PointerType() = default;
 inline cc_type::PointerType::PointerType(const PointerType&) = default;
 inline cc_type::PointerType::PointerType(PointerType&&) noexcept = default;
@@ -3318,10 +3372,22 @@ inline cc_type::PointerType::~PointerType() = default;
 inline const ::crubit::ffi::CcType& cc_type::PointerType::pointee_type() const { return pointee_type_.get_or_default(); }
 inline ::crubit::ffi::CcType* cc_type::PointerType::mutable_pointee_type() { return &pointee_type_.get_or_init(); }
 static_assert(std::is_standard_layout_v<cc_type::PointerType>);
-static_assert(sizeof(size_t) != 8 || (sizeof(cc_type::PointerType) == 24 && alignof(cc_type::PointerType) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(cc_type::PointerType, kind_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(cc_type::PointerType, lifetime_) == 12);
-static_assert(sizeof(size_t) != 8 || offsetof(cc_type::PointerType, pointee_type_) == 16);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(cc_type::PointerType) == 24 &&
+    alignof(cc_type::PointerType) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(cc_type::PointerType, kind_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(cc_type::PointerType, lifetime_) ==
+    12);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(cc_type::PointerType, pointee_type_) ==
+    16);
 inline cc_type::FuncPointer::FuncPointer() = default;
 inline cc_type::FuncPointer::FuncPointer(const FuncPointer&) = default;
 inline cc_type::FuncPointer::FuncPointer(FuncPointer&&) noexcept = default;
@@ -3330,11 +3396,26 @@ inline cc_type::FuncPointer& cc_type::FuncPointer::operator=(FuncPointer&&) noex
 inline cc_type::FuncPointer::~FuncPointer() = default;
 inline ::crubit::ffi::CcType* cc_type::FuncPointer::add_param_and_return_types() { return &param_and_return_types_.emplace_back(); }
 static_assert(std::is_standard_layout_v<cc_type::FuncPointer>);
-static_assert(sizeof(size_t) != 8 || (sizeof(cc_type::FuncPointer) == 56 && alignof(cc_type::FuncPointer) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(cc_type::FuncPointer, non_null_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(cc_type::FuncPointer, call_conv_) == 4);
-static_assert(sizeof(size_t) != 8 || offsetof(cc_type::FuncPointer, param_and_return_types_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(cc_type::FuncPointer, lifetime_inputs_) == 32);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(cc_type::FuncPointer) == 56 &&
+    alignof(cc_type::FuncPointer) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(cc_type::FuncPointer, non_null_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(cc_type::FuncPointer, call_conv_) ==
+    4);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(cc_type::FuncPointer, param_and_return_types_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(cc_type::FuncPointer, lifetime_inputs_) ==
+    32);
 inline cc_type::ConstantArrayType::ConstantArrayType() = default;
 inline cc_type::ConstantArrayType::ConstantArrayType(const ConstantArrayType&) = default;
 inline cc_type::ConstantArrayType::ConstantArrayType(ConstantArrayType&&) noexcept = default;
@@ -3344,11 +3425,23 @@ inline cc_type::ConstantArrayType::~ConstantArrayType() = default;
 inline const ::crubit::ffi::CcType& cc_type::ConstantArrayType::element_type() const { return element_type_.get_or_default(); }
 inline ::crubit::ffi::CcType* cc_type::ConstantArrayType::mutable_element_type() { return &element_type_.get_or_init(); }
 static_assert(std::is_standard_layout_v<cc_type::ConstantArrayType>);
-static_assert(sizeof(size_t) != 8 || (sizeof(cc_type::ConstantArrayType) == 16 && alignof(cc_type::ConstantArrayType) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(cc_type::ConstantArrayType, num_elements_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(cc_type::ConstantArrayType, element_type_) == 8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(cc_type::ConstantArrayType) == 16 &&
+    alignof(cc_type::ConstantArrayType) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(cc_type::ConstantArrayType, num_elements_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(cc_type::ConstantArrayType, element_type_) ==
+    8);
 static_assert(std::is_standard_layout_v<cc_type::Variant>);
-static_assert(sizeof(size_t) != 8 || (sizeof(cc_type::Variant) == 64 && alignof(cc_type::Variant) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(cc_type::Variant) == 64 &&
+    alignof(cc_type::Variant) == 8));
 inline CcType::CcType() = default;
 inline CcType::CcType(const CcType&) = default;
 inline CcType::CcType(CcType&&) noexcept = default;
@@ -3357,136 +3450,460 @@ inline CcType& CcType::operator=(CcType&&) noexcept = default;
 inline CcType::~CcType() = default;
 inline ::crubit::ffi::CcType* CcType::add_template_args() { return &template_args_.emplace_back(); }
 static_assert(std::is_standard_layout_v<CcType>);
-static_assert(sizeof(size_t) != 8 || (sizeof(CcType) == 136 && alignof(CcType) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(CcType, variant_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(CcType, is_const_) == 64);
-static_assert(sizeof(size_t) != 8 || offsetof(CcType, is_nonnull_) == 65);
-static_assert(sizeof(size_t) != 8 || offsetof(CcType, unknown_attr_) == 72);
-static_assert(sizeof(size_t) != 8 || offsetof(CcType, explicit_lifetimes_) == 88);
-static_assert(sizeof(size_t) != 8 || offsetof(CcType, template_args_) == 112);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(CcType) == 136 &&
+    alignof(CcType) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(CcType, variant_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(CcType, is_const_) ==
+    64);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(CcType, is_nonnull_) ==
+    65);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(CcType, unknown_attr_) ==
+    72);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(CcType, explicit_lifetimes_) ==
+    88);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(CcType, template_args_) ==
+    112);
 static_assert(std::is_standard_layout_v<Identifier>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Identifier) == 16 && alignof(Identifier) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(Identifier, identifier_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Identifier) == 16 &&
+    alignof(Identifier) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Identifier, identifier_) ==
+    0);
 static_assert(std::is_standard_layout_v<IntegerConstant>);
-static_assert(sizeof(size_t) != 8 || (sizeof(IntegerConstant) == 16 && alignof(IntegerConstant) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(IntegerConstant, is_negative_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(IntegerConstant, wrapped_value_) == 8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(IntegerConstant) == 16 &&
+    alignof(IntegerConstant) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IntegerConstant, is_negative_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IntegerConstant, wrapped_value_) ==
+    8);
 static_assert(std::is_standard_layout_v<Operator>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Operator) == 16 && alignof(Operator) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(Operator, name_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Operator) == 16 &&
+    alignof(Operator) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Operator, name_) ==
+    0);
 static_assert(std::is_standard_layout_v<UnqualifiedIdentifier>);
-static_assert(sizeof(size_t) != 8 || (sizeof(UnqualifiedIdentifier) == 24 && alignof(UnqualifiedIdentifier) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(UnqualifiedIdentifier) == 24 &&
+    alignof(UnqualifiedIdentifier) == 8));
 static_assert(std::is_standard_layout_v<FuncParam>);
-static_assert(sizeof(size_t) != 8 || (sizeof(FuncParam) == 208 && alignof(FuncParam) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(FuncParam, type_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(FuncParam, identifier_) == 144);
-static_assert(sizeof(size_t) != 8 || offsetof(FuncParam, clang_lifetime_capture_by_) == 160);
-static_assert(sizeof(size_t) != 8 || offsetof(FuncParam, clang_lifetimebound_) == 184);
-static_assert(sizeof(size_t) != 8 || offsetof(FuncParam, unknown_attr_) == 192);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(FuncParam) == 208 &&
+    alignof(FuncParam) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(FuncParam, type_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(FuncParam, identifier_) ==
+    144);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(FuncParam, clang_lifetime_capture_by_) ==
+    160);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(FuncParam, clang_lifetimebound_) ==
+    184);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(FuncParam, unknown_attr_) ==
+    192);
 static_assert(std::is_standard_layout_v<InstanceMethodMetadata>);
-static_assert(sizeof(size_t) != 8 || (sizeof(InstanceMethodMetadata) == 8 && alignof(InstanceMethodMetadata) == 4));
-static_assert(sizeof(size_t) != 8 || offsetof(InstanceMethodMetadata, reference_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(InstanceMethodMetadata, is_const_) == 4);
-static_assert(sizeof(size_t) != 8 || offsetof(InstanceMethodMetadata, is_virtual_) == 5);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(InstanceMethodMetadata) == 8 &&
+    alignof(InstanceMethodMetadata) == 4));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(InstanceMethodMetadata, reference_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(InstanceMethodMetadata, is_const_) ==
+    4);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(InstanceMethodMetadata, is_virtual_) ==
+    5);
 static_assert(std::is_standard_layout_v<member_func_semantic::Setter>);
-static_assert(sizeof(size_t) != 8 || (sizeof(member_func_semantic::Setter) == 144 && alignof(member_func_semantic::Setter) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(member_func_semantic::Setter, type_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(member_func_semantic::Setter, offset_) == 136);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(member_func_semantic::Setter) == 144 &&
+    alignof(member_func_semantic::Setter) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(member_func_semantic::Setter, type_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(member_func_semantic::Setter, offset_) ==
+    136);
 static_assert(std::is_standard_layout_v<member_func_semantic::Getter>);
-static_assert(sizeof(size_t) != 8 || (sizeof(member_func_semantic::Getter) == 144 && alignof(member_func_semantic::Getter) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(member_func_semantic::Getter, type_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(member_func_semantic::Getter, offset_) == 136);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(member_func_semantic::Getter) == 144 &&
+    alignof(member_func_semantic::Getter) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(member_func_semantic::Getter, type_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(member_func_semantic::Getter, offset_) ==
+    136);
 static_assert(std::is_standard_layout_v<MemberFuncSemantic>);
-static_assert(sizeof(size_t) != 8 || (sizeof(MemberFuncSemantic) == 152 && alignof(MemberFuncSemantic) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(MemberFuncSemantic) == 152 &&
+    alignof(MemberFuncSemantic) == 8));
 static_assert(std::is_standard_layout_v<Func>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Func) == 680 && alignof(Func) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(Func, cc_name_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, rs_name_) == 32);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, unique_name_) == 56);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, owning_target_) == 72);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, mangled_name_) == 88);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, doc_comment_) == 104);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, return_type_) == 120);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, params_) == 256);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, lifetime_params_) == 280);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, is_inline_) == 304);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, is_always_inline_) == 305);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, instance_method_metadata_) == 308);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, is_extern_c_) == 316);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, is_noreturn_) == 317);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, is_variadic_) == 318);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, is_consteval_) == 319);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, nodiscard_) == 320);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, deprecated_) == 336);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, unknown_attr_) == 352);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, call_conv_) == 368);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, is_member_or_descendant_of_class_template_) == 372);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, safety_annotation_) == 376);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, decl_loc_) == 384);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, id_) == 448);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, enclosing_item_id_) == 456);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, adl_enclosing_record_) == 464);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, must_bind_) == 472);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, inline_cpp_source_text_) == 480);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, lifetime_inputs_) == 496);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, semantic_) == 520);
-static_assert(sizeof(size_t) != 8 || offsetof(Func, is_pub_crate_) == 672);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Func) == 680 &&
+    alignof(Func) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, cc_name_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, rs_name_) ==
+    32);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, unique_name_) ==
+    56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, owning_target_) ==
+    72);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, mangled_name_) ==
+    88);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, doc_comment_) ==
+    104);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, return_type_) ==
+    120);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, params_) ==
+    256);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, lifetime_params_) ==
+    280);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, is_inline_) ==
+    304);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, is_always_inline_) ==
+    305);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, instance_method_metadata_) ==
+    308);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, is_extern_c_) ==
+    316);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, is_noreturn_) ==
+    317);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, is_variadic_) ==
+    318);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, is_consteval_) ==
+    319);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, nodiscard_) ==
+    320);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, deprecated_) ==
+    336);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, unknown_attr_) ==
+    352);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, call_conv_) ==
+    368);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, is_member_or_descendant_of_class_template_) ==
+    372);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, safety_annotation_) ==
+    376);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, decl_loc_) ==
+    384);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, id_) ==
+    448);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, enclosing_item_id_) ==
+    456);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, adl_enclosing_record_) ==
+    464);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, must_bind_) ==
+    472);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, inline_cpp_source_text_) ==
+    480);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, lifetime_inputs_) ==
+    496);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, semantic_) ==
+    520);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Func, is_pub_crate_) ==
+    672);
 static_assert(std::is_standard_layout_v<StatusOrOptionalString>);
-static_assert(sizeof(size_t) != 8 || (sizeof(StatusOrOptionalString) == 24 && alignof(StatusOrOptionalString) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(StatusOrOptionalString) == 24 &&
+    alignof(StatusOrOptionalString) == 8));
 static_assert(std::is_standard_layout_v<Field>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Field) == 264 && alignof(Field) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(Field, rust_identifier_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, cpp_identifier_) == 24);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, doc_comment_) == 40);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, type_) == 56);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, access_) == 192);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, offset_) == 200);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, size_) == 208);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, unknown_attr_) == 216);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, is_no_unique_address_) == 240);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, is_bitfield_) == 241);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, is_inheritable_) == 242);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, is_mutable_) == 243);
-static_assert(sizeof(size_t) != 8 || offsetof(Field, deprecated_) == 248);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Field) == 264 &&
+    alignof(Field) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, rust_identifier_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, cpp_identifier_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, doc_comment_) ==
+    40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, type_) ==
+    56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, access_) ==
+    192);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, offset_) ==
+    200);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, size_) ==
+    208);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, unknown_attr_) ==
+    216);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, is_no_unique_address_) ==
+    240);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, is_bitfield_) ==
+    241);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, is_inheritable_) ==
+    242);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, is_mutable_) ==
+    243);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Field, deprecated_) ==
+    248);
 static_assert(std::is_standard_layout_v<BaseClass>);
-static_assert(sizeof(size_t) != 8 || (sizeof(BaseClass) == 24 && alignof(BaseClass) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(BaseClass, base_record_id_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(BaseClass, offset_) == 16);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(BaseClass) == 24 &&
+    alignof(BaseClass) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(BaseClass, base_record_id_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(BaseClass, offset_) ==
+    16);
 static_assert(std::is_standard_layout_v<SizeAlign>);
-static_assert(sizeof(size_t) != 8 || (sizeof(SizeAlign) == 16 && alignof(SizeAlign) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(SizeAlign, size_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(SizeAlign, alignment_) == 8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(SizeAlign) == 16 &&
+    alignof(SizeAlign) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(SizeAlign, size_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(SizeAlign, alignment_) ==
+    8);
 static_assert(std::is_standard_layout_v<TemplateArg>);
-static_assert(sizeof(size_t) != 8 || (sizeof(TemplateArg) == 144 && alignof(TemplateArg) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(TemplateArg) == 144 &&
+    alignof(TemplateArg) == 8));
 static_assert(std::is_standard_layout_v<bridge_type::Bridge>);
-static_assert(sizeof(size_t) != 8 || (sizeof(bridge_type::Bridge) == 96 && alignof(bridge_type::Bridge) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::Bridge, rust_name_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::Bridge, abi_rust_) == 24);
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::Bridge, abi_cpp_) == 40);
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::Bridge, template_args_) == 56);
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::Bridge, label_hint_) == 80);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(bridge_type::Bridge) == 96 &&
+    alignof(bridge_type::Bridge) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::Bridge, rust_name_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::Bridge, abi_rust_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::Bridge, abi_cpp_) ==
+    40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::Bridge, template_args_) ==
+    56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::Bridge, label_hint_) ==
+    80);
 static_assert(std::is_standard_layout_v<bridge_type::StdOptional>);
-static_assert(sizeof(size_t) != 8 || (sizeof(bridge_type::StdOptional) == 136 && alignof(bridge_type::StdOptional) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::StdOptional, inner_type_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(bridge_type::StdOptional) == 136 &&
+    alignof(bridge_type::StdOptional) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::StdOptional, inner_type_) ==
+    0);
 static_assert(std::is_standard_layout_v<bridge_type::StdPair>);
-static_assert(sizeof(size_t) != 8 || (sizeof(bridge_type::StdPair) == 272 && alignof(bridge_type::StdPair) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::StdPair, first_type_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::StdPair, second_type_) == 136);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(bridge_type::StdPair) == 272 &&
+    alignof(bridge_type::StdPair) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::StdPair, first_type_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::StdPair, second_type_) ==
+    136);
 static_assert(std::is_standard_layout_v<bridge_type::ProtoMessageBridge>);
-static_assert(sizeof(size_t) != 8 || (sizeof(bridge_type::ProtoMessageBridge) == 16 && alignof(bridge_type::ProtoMessageBridge) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::ProtoMessageBridge, rust_name_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(bridge_type::ProtoMessageBridge) == 16 &&
+    alignof(bridge_type::ProtoMessageBridge) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::ProtoMessageBridge, rust_name_) ==
+    0);
 static_assert(std::is_standard_layout_v<bridge_type::Callable>);
-static_assert(sizeof(size_t) != 8 || (sizeof(bridge_type::Callable) == 168 && alignof(bridge_type::Callable) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::Callable, backing_type_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::Callable, fn_trait_) == 4);
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::Callable, return_type_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(bridge_type::Callable, param_types_) == 144);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(bridge_type::Callable) == 168 &&
+    alignof(bridge_type::Callable) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::Callable, backing_type_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::Callable, fn_trait_) ==
+    4);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::Callable, return_type_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(bridge_type::Callable, param_types_) ==
+    144);
 static_assert(std::is_standard_layout_v<BridgeType>);
-static_assert(sizeof(size_t) != 8 || (sizeof(BridgeType) == 280 && alignof(BridgeType) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(BridgeType) == 280 &&
+    alignof(BridgeType) == 8));
 static_assert(std::is_standard_layout_v<array_value::IntegerElements>);
-static_assert(sizeof(size_t) != 8 || (sizeof(array_value::IntegerElements) == 48 && alignof(array_value::IntegerElements) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(array_value::IntegerElements, elements_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(array_value::IntegerElements, filler_) == 32);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(array_value::IntegerElements) == 48 &&
+    alignof(array_value::IntegerElements) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(array_value::IntegerElements, elements_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(array_value::IntegerElements, filler_) ==
+    32);
 inline array_value::ArrayElements::ArrayElements() = default;
 inline array_value::ArrayElements::ArrayElements(const ArrayElements&) = default;
 inline array_value::ArrayElements::ArrayElements(ArrayElements&&) noexcept = default;
@@ -3498,79 +3915,247 @@ inline void array_value::ArrayElements::clear_filler() { has_bits_ &= ~0x1ULL; f
 inline const ::crubit::ffi::ArrayValue& array_value::ArrayElements::filler() const { return filler_.get_or_default(); }
 inline ::crubit::ffi::ArrayValue* array_value::ArrayElements::mutable_filler() { has_bits_ |= 0x1ULL; return &filler_.get_or_init(); }
 static_assert(std::is_standard_layout_v<array_value::ArrayElements>);
-static_assert(sizeof(size_t) != 8 || (sizeof(array_value::ArrayElements) == 40 && alignof(array_value::ArrayElements) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(array_value::ArrayElements, elements_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(array_value::ArrayElements, filler_) == 32);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(array_value::ArrayElements) == 40 &&
+    alignof(array_value::ArrayElements) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(array_value::ArrayElements, elements_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(array_value::ArrayElements, filler_) ==
+    32);
 static_assert(std::is_standard_layout_v<array_value::Kind>);
-static_assert(sizeof(size_t) != 8 || (sizeof(array_value::Kind) == 56 && alignof(array_value::Kind) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(array_value::Kind) == 56 &&
+    alignof(array_value::Kind) == 8));
 static_assert(std::is_standard_layout_v<ArrayValue>);
-static_assert(sizeof(size_t) != 8 || (sizeof(ArrayValue) == 64 && alignof(ArrayValue) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(ArrayValue, kind_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(ArrayValue, length_) == 56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(ArrayValue) == 64 &&
+    alignof(ArrayValue) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ArrayValue, kind_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ArrayValue, length_) ==
+    56);
 static_assert(std::is_standard_layout_v<constant::Kind>);
-static_assert(sizeof(size_t) != 8 || (sizeof(constant::Kind) == 72 && alignof(constant::Kind) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(constant::Kind) == 72 &&
+    alignof(constant::Kind) == 8));
 static_assert(std::is_standard_layout_v<Constant>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Constant) == 424 && alignof(Constant) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, kind_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, cc_name_) == 80);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, rs_name_) == 96);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, unique_name_) == 112);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, id_) == 128);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, owning_target_) == 136);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, decl_loc_) == 152);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, unknown_attr_) == 216);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, enclosing_item_id_) == 232);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, type_) == 240);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, must_bind_) == 376);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, deprecated_) == 384);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, doc_comment_) == 400);
-static_assert(sizeof(size_t) != 8 || offsetof(Constant, macro_kind_) == 416);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Constant) == 424 &&
+    alignof(Constant) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, kind_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, cc_name_) ==
+    80);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, rs_name_) ==
+    96);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, unique_name_) ==
+    112);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, id_) ==
+    128);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, owning_target_) ==
+    136);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, decl_loc_) ==
+    152);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, unknown_attr_) ==
+    216);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, enclosing_item_id_) ==
+    232);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, type_) ==
+    240);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, must_bind_) ==
+    376);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, deprecated_) ==
+    384);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, doc_comment_) ==
+    400);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Constant, macro_kind_) ==
+    416);
 static_assert(std::is_standard_layout_v<template_specialization::StdVector>);
-static_assert(sizeof(size_t) != 8 || (sizeof(template_specialization::StdVector) == 136 && alignof(template_specialization::StdVector) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(template_specialization::StdVector, element_type_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(template_specialization::StdVector) == 136 &&
+    alignof(template_specialization::StdVector) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(template_specialization::StdVector, element_type_) ==
+    0);
 static_assert(std::is_standard_layout_v<template_specialization::StdOptional>);
-static_assert(sizeof(size_t) != 8 || (sizeof(template_specialization::StdOptional) == 136 && alignof(template_specialization::StdOptional) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(template_specialization::StdOptional, element_type_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(template_specialization::StdOptional) == 136 &&
+    alignof(template_specialization::StdOptional) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(template_specialization::StdOptional, element_type_) ==
+    0);
 static_assert(std::is_standard_layout_v<template_specialization::StdSharedPtr>);
-static_assert(sizeof(size_t) != 8 || (sizeof(template_specialization::StdSharedPtr) == 136 && alignof(template_specialization::StdSharedPtr) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(template_specialization::StdSharedPtr, element_type_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(template_specialization::StdSharedPtr) == 136 &&
+    alignof(template_specialization::StdSharedPtr) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(template_specialization::StdSharedPtr, element_type_) ==
+    0);
 static_assert(std::is_standard_layout_v<template_specialization::StdUniquePtr>);
-static_assert(sizeof(size_t) != 8 || (sizeof(template_specialization::StdUniquePtr) == 136 && alignof(template_specialization::StdUniquePtr) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(template_specialization::StdUniquePtr, element_type_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(template_specialization::StdUniquePtr) == 136 &&
+    alignof(template_specialization::StdUniquePtr) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(template_specialization::StdUniquePtr, element_type_) ==
+    0);
 static_assert(std::is_standard_layout_v<template_specialization::AbslSpan>);
-static_assert(sizeof(size_t) != 8 || (sizeof(template_specialization::AbslSpan) == 136 && alignof(template_specialization::AbslSpan) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(template_specialization::AbslSpan, element_type_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(template_specialization::AbslSpan) == 136 &&
+    alignof(template_specialization::AbslSpan) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(template_specialization::AbslSpan, element_type_) ==
+    0);
 static_assert(std::is_standard_layout_v<template_specialization::C9Co>);
-static_assert(sizeof(size_t) != 8 || (sizeof(template_specialization::C9Co) == 136 && alignof(template_specialization::C9Co) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(template_specialization::C9Co, element_type_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(template_specialization::C9Co) == 136 &&
+    alignof(template_specialization::C9Co) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(template_specialization::C9Co, element_type_) ==
+    0);
 static_assert(std::is_standard_layout_v<template_specialization::StdAtomic>);
-static_assert(sizeof(size_t) != 8 || (sizeof(template_specialization::StdAtomic) == 136 && alignof(template_specialization::StdAtomic) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(template_specialization::StdAtomic, element_type_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(template_specialization::StdAtomic) == 136 &&
+    alignof(template_specialization::StdAtomic) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(template_specialization::StdAtomic, element_type_) ==
+    0);
 static_assert(std::is_standard_layout_v<template_specialization::AbslFlatHashMap>);
-static_assert(sizeof(size_t) != 8 || (sizeof(template_specialization::AbslFlatHashMap) == 272 && alignof(template_specialization::AbslFlatHashMap) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(template_specialization::AbslFlatHashMap, key_type_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(template_specialization::AbslFlatHashMap, value_type_) == 136);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(template_specialization::AbslFlatHashMap) == 272 &&
+    alignof(template_specialization::AbslFlatHashMap) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(template_specialization::AbslFlatHashMap, key_type_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(template_specialization::AbslFlatHashMap, value_type_) ==
+    136);
 static_assert(std::is_standard_layout_v<template_specialization::AbslFlatHashSet>);
-static_assert(sizeof(size_t) != 8 || (sizeof(template_specialization::AbslFlatHashSet) == 136 && alignof(template_specialization::AbslFlatHashSet) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(template_specialization::AbslFlatHashSet, element_type_) == 0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(template_specialization::AbslFlatHashSet) == 136 &&
+    alignof(template_specialization::AbslFlatHashSet) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(template_specialization::AbslFlatHashSet, element_type_) ==
+    0);
 static_assert(std::is_standard_layout_v<template_specialization::Kind>);
-static_assert(sizeof(size_t) != 8 || (sizeof(template_specialization::Kind) == 280 && alignof(template_specialization::Kind) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(template_specialization::Kind) == 280 &&
+    alignof(template_specialization::Kind) == 8));
 static_assert(std::is_standard_layout_v<TemplateSpecialization>);
-static_assert(sizeof(size_t) != 8 || (sizeof(TemplateSpecialization) == 296 && alignof(TemplateSpecialization) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(TemplateSpecialization, defining_target_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(TemplateSpecialization, kind_) == 16);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(TemplateSpecialization) == 296 &&
+    alignof(TemplateSpecialization) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TemplateSpecialization, defining_target_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TemplateSpecialization, kind_) ==
+    16);
 static_assert(std::is_standard_layout_v<TraitDerives>);
-static_assert(sizeof(size_t) != 8 || (sizeof(TraitDerives) == 48 && alignof(TraitDerives) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(TraitDerives, clone_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(TraitDerives, copy_) == 4);
-static_assert(sizeof(size_t) != 8 || offsetof(TraitDerives, debug_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(TraitDerives, send_) == 12);
-static_assert(sizeof(size_t) != 8 || offsetof(TraitDerives, sync_) == 16);
-static_assert(sizeof(size_t) != 8 || offsetof(TraitDerives, custom_) == 24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(TraitDerives) == 48 &&
+    alignof(TraitDerives) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TraitDerives, clone_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TraitDerives, copy_) ==
+    4);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TraitDerives, debug_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TraitDerives, send_) ==
+    12);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TraitDerives, sync_) ==
+    16);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TraitDerives, custom_) ==
+    24);
 static_assert(std::is_standard_layout_v<OwnedPtrConfig>);
-static_assert(sizeof(size_t) != 8 || (sizeof(OwnedPtrConfig) == 32 && alignof(OwnedPtrConfig) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(OwnedPtrConfig, owned_ptr_type_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(OwnedPtrConfig, drop_impl_) == 16);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(OwnedPtrConfig) == 32 &&
+    alignof(OwnedPtrConfig) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(OwnedPtrConfig, owned_ptr_type_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(OwnedPtrConfig, drop_impl_) ==
+    16);
 inline Record::Record() = default;
 inline Record::Record(const Record&) = default;
 inline Record::Record(Record&&) noexcept = default;
@@ -3579,144 +4164,534 @@ inline Record& Record::operator=(Record&&) noexcept = default;
 inline Record::~Record() = default;
 inline ::crubit::ffi::Item* Record::add_children() { return &children_.emplace_back(); }
 static_assert(std::is_standard_layout_v<Record>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Record) == 1160 && alignof(Record) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(Record, rs_name_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, cc_name_) == 24);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, unique_name_) == 40);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, mangled_cc_name_) == 56);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, id_) == 72);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, owning_target_) == 80);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, template_specialization_) == 96);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, unknown_attr_) == 392);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, doc_comment_) == 408);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, bridge_type_) == 424);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, owned_ptr_config_) == 704);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, decl_loc_) == 736);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, unambiguous_public_bases_) == 800);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, fields_) == 824);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, lifetime_params_) == 848);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, size_align_) == 872);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, trait_derives_) == 888);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_derived_class_) == 936);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, has_virtual_bases_) == 937);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, override_alignment_) == 938);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, pack_) == 944);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, safety_annotation_) == 952);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, copy_constructor_) == 956);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, move_constructor_) == 960);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, destructor_) == 964);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_rust_movable_) == 968);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, not_rust_movable_reason_) == 976);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, libcxx_only_fields_) == 992);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_inheritable_) == 1016);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_abstract_) == 1017);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, nodiscard_) == 1024);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, record_type_) == 1040);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_aggregate_) == 1044);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_canonical_alias_) == 1045);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, mangled_rs_name_) == 1048);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, enclosing_item_id_) == 1064);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, must_bind_) == 1072);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, overloads_operator_delete_) == 1073);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, has_private_or_deleted_operator_delete_) == 1074);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, lifetime_inputs_) == 1080);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, impl_debug_) == 1104);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, has_private_pointer_or_reference_fields_) == 1105);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, has_template_argument_lifetime_) == 1106);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, detected_formatter_) == 1107);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, deprecated_) == 1112);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_thread_safe_) == 1128);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, is_explicit_class_template_instantiation_definition_) == 1129);
-static_assert(sizeof(size_t) != 8 || offsetof(Record, children_) == 1136);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Record) == 1160 &&
+    alignof(Record) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, rs_name_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, cc_name_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, unique_name_) ==
+    40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, mangled_cc_name_) ==
+    56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, id_) ==
+    72);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, owning_target_) ==
+    80);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, template_specialization_) ==
+    96);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, unknown_attr_) ==
+    392);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, doc_comment_) ==
+    408);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, bridge_type_) ==
+    424);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, owned_ptr_config_) ==
+    704);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, decl_loc_) ==
+    736);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, unambiguous_public_bases_) ==
+    800);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, fields_) ==
+    824);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, lifetime_params_) ==
+    848);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, size_align_) ==
+    872);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, trait_derives_) ==
+    888);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, is_derived_class_) ==
+    936);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, has_virtual_bases_) ==
+    937);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, override_alignment_) ==
+    938);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, pack_) ==
+    944);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, safety_annotation_) ==
+    952);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, copy_constructor_) ==
+    956);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, move_constructor_) ==
+    960);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, destructor_) ==
+    964);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, is_rust_movable_) ==
+    968);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, not_rust_movable_reason_) ==
+    976);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, libcxx_only_fields_) ==
+    992);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, is_inheritable_) ==
+    1016);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, is_abstract_) ==
+    1017);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, nodiscard_) ==
+    1024);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, record_type_) ==
+    1040);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, is_aggregate_) ==
+    1044);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, is_canonical_alias_) ==
+    1045);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, mangled_rs_name_) ==
+    1048);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, enclosing_item_id_) ==
+    1064);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, must_bind_) ==
+    1072);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, overloads_operator_delete_) ==
+    1073);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, has_private_or_deleted_operator_delete_) ==
+    1074);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, lifetime_inputs_) ==
+    1080);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, impl_debug_) ==
+    1104);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, has_private_pointer_or_reference_fields_) ==
+    1105);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, has_template_argument_lifetime_) ==
+    1106);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, detected_formatter_) ==
+    1107);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, deprecated_) ==
+    1112);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, is_thread_safe_) ==
+    1128);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, is_explicit_class_template_instantiation_definition_) ==
+    1129);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, children_) ==
+    1136);
 static_assert(std::is_standard_layout_v<IncompleteRecord>);
-static_assert(sizeof(size_t) != 8 || (sizeof(IncompleteRecord) == 120 && alignof(IncompleteRecord) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, cc_name_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, rs_name_) == 24);
-static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, unique_name_) == 40);
-static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, id_) == 56);
-static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, owning_target_) == 64);
-static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, unknown_attr_) == 80);
-static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, record_type_) == 96);
-static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, enclosing_item_id_) == 104);
-static_assert(sizeof(size_t) != 8 || offsetof(IncompleteRecord, must_bind_) == 112);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(IncompleteRecord) == 120 &&
+    alignof(IncompleteRecord) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IncompleteRecord, cc_name_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IncompleteRecord, rs_name_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IncompleteRecord, unique_name_) ==
+    40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IncompleteRecord, id_) ==
+    56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IncompleteRecord, owning_target_) ==
+    64);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IncompleteRecord, unknown_attr_) ==
+    80);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IncompleteRecord, record_type_) ==
+    96);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IncompleteRecord, enclosing_item_id_) ==
+    104);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IncompleteRecord, must_bind_) ==
+    112);
 static_assert(std::is_standard_layout_v<Enumerator>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Enumerator) == 88 && alignof(Enumerator) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(Enumerator, identifier_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(Enumerator, value_) == 24);
-static_assert(sizeof(size_t) != 8 || offsetof(Enumerator, unknown_attr_) == 40);
-static_assert(sizeof(size_t) != 8 || offsetof(Enumerator, deprecated_) == 56);
-static_assert(sizeof(size_t) != 8 || offsetof(Enumerator, doc_comment_) == 72);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Enumerator) == 88 &&
+    alignof(Enumerator) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enumerator, identifier_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enumerator, value_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enumerator, unknown_attr_) ==
+    40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enumerator, deprecated_) ==
+    56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enumerator, doc_comment_) ==
+    72);
 static_assert(std::is_standard_layout_v<Enum>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Enum) == 400 && alignof(Enum) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, cc_name_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, rs_name_) == 24);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, unique_name_) == 40);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, mangled_cc_name_) == 56);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, id_) == 72);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, owning_target_) == 80);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, decl_loc_) == 96);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, underlying_type_) == 160);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, enumerators_) == 296);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, unknown_attr_) == 320);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, enclosing_item_id_) == 336);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, must_bind_) == 344);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, detected_formatter_) == 345);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, nodiscard_) == 352);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, deprecated_) == 368);
-static_assert(sizeof(size_t) != 8 || offsetof(Enum, doc_comment_) == 384);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Enum) == 400 &&
+    alignof(Enum) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, cc_name_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, rs_name_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, unique_name_) ==
+    40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, mangled_cc_name_) ==
+    56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, id_) ==
+    72);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, owning_target_) ==
+    80);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, decl_loc_) ==
+    96);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, underlying_type_) ==
+    160);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, enumerators_) ==
+    296);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, unknown_attr_) ==
+    320);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, enclosing_item_id_) ==
+    336);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, must_bind_) ==
+    344);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, detected_formatter_) ==
+    345);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, nodiscard_) ==
+    352);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, deprecated_) ==
+    368);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Enum, doc_comment_) ==
+    384);
 static_assert(std::is_standard_layout_v<GlobalVar>);
-static_assert(sizeof(size_t) != 8 || (sizeof(GlobalVar) == 360 && alignof(GlobalVar) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, cc_name_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, rs_name_) == 24);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, unique_name_) == 40);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, id_) == 56);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, owning_target_) == 64);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, decl_loc_) == 80);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, unknown_attr_) == 144);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, enclosing_item_id_) == 160);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, mangled_name_) == 168);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, type_) == 184);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, must_bind_) == 320);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, deprecated_) == 328);
-static_assert(sizeof(size_t) != 8 || offsetof(GlobalVar, doc_comment_) == 344);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(GlobalVar) == 360 &&
+    alignof(GlobalVar) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, cc_name_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, rs_name_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, unique_name_) ==
+    40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, id_) ==
+    56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, owning_target_) ==
+    64);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, decl_loc_) ==
+    80);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, unknown_attr_) ==
+    144);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, enclosing_item_id_) ==
+    160);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, mangled_name_) ==
+    168);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, type_) ==
+    184);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, must_bind_) ==
+    320);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, deprecated_) ==
+    328);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GlobalVar, doc_comment_) ==
+    344);
 static_assert(std::is_standard_layout_v<TypeAlias>);
-static_assert(sizeof(size_t) != 8 || (sizeof(TypeAlias) == 368 && alignof(TypeAlias) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, cc_name_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, rs_name_) == 24);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, unique_name_) == 40);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, id_) == 56);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, owning_target_) == 64);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, doc_comment_) == 80);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, unknown_attr_) == 96);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, underlying_type_) == 112);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, decl_loc_) == 248);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, enclosing_item_id_) == 312);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, names_template_instantiation_) == 320);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, must_bind_) == 321);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, deprecated_) == 328);
-static_assert(sizeof(size_t) != 8 || offsetof(TypeAlias, lifetime_inputs_) == 344);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(TypeAlias) == 368 &&
+    alignof(TypeAlias) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, cc_name_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, rs_name_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, unique_name_) ==
+    40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, id_) ==
+    56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, owning_target_) ==
+    64);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, doc_comment_) ==
+    80);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, unknown_attr_) ==
+    96);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, underlying_type_) ==
+    112);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, decl_loc_) ==
+    248);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, enclosing_item_id_) ==
+    312);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, names_template_instantiation_) ==
+    320);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, must_bind_) ==
+    321);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, deprecated_) ==
+    328);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(TypeAlias, lifetime_inputs_) ==
+    344);
 static_assert(std::is_standard_layout_v<unsupported_item::Path>);
-static_assert(sizeof(size_t) != 8 || (sizeof(unsupported_item::Path) == 40 && alignof(unsupported_item::Path) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(unsupported_item::Path, ident_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(unsupported_item::Path, enclosing_item_id_) == 32);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(unsupported_item::Path) == 40 &&
+    alignof(unsupported_item::Path) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(unsupported_item::Path, ident_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(unsupported_item::Path, enclosing_item_id_) ==
+    32);
 static_assert(std::is_standard_layout_v<UnsupportedItem>);
-static_assert(sizeof(size_t) != 8 || (sizeof(UnsupportedItem) == 248 && alignof(UnsupportedItem) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, name_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, unique_name_) == 24);
-static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, kind_) == 40);
-static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, path_) == 48);
-static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, errors_) == 88);
-static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, decl_loc_) == 112);
-static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, inline_cpp_source_text_) == 176);
-static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, id_) == 192);
-static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, must_bind_) == 200);
-static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, defining_target_) == 208);
-static_assert(sizeof(size_t) != 8 || offsetof(UnsupportedItem, do_not_bind_) == 224);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(UnsupportedItem) == 248 &&
+    alignof(UnsupportedItem) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UnsupportedItem, name_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UnsupportedItem, unique_name_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UnsupportedItem, kind_) ==
+    40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UnsupportedItem, path_) ==
+    48);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UnsupportedItem, errors_) ==
+    88);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UnsupportedItem, decl_loc_) ==
+    112);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UnsupportedItem, inline_cpp_source_text_) ==
+    176);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UnsupportedItem, id_) ==
+    192);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UnsupportedItem, must_bind_) ==
+    200);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UnsupportedItem, defining_target_) ==
+    208);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UnsupportedItem, do_not_bind_) ==
+    224);
 static_assert(std::is_standard_layout_v<Comment>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Comment) == 32 && alignof(Comment) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(Comment, text_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(Comment, id_) == 16);
-static_assert(sizeof(size_t) != 8 || offsetof(Comment, must_bind_) == 24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Comment) == 32 &&
+    alignof(Comment) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Comment, text_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Comment, id_) ==
+    16);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Comment, must_bind_) ==
+    24);
 inline Namespace::Namespace() = default;
 inline Namespace::Namespace(const Namespace&) = default;
 inline Namespace::Namespace(Namespace&&) noexcept = default;
@@ -3725,70 +4700,244 @@ inline Namespace& Namespace::operator=(Namespace&&) noexcept = default;
 inline Namespace::~Namespace() = default;
 inline ::crubit::ffi::Item* Namespace::add_children() { return &children_.emplace_back(); }
 static_assert(std::is_standard_layout_v<Namespace>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Namespace) == 176 && alignof(Namespace) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, cc_name_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, rs_name_) == 24);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, unique_name_) == 40);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, id_) == 56);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, canonical_namespace_id_) == 64);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, unknown_attr_) == 72);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, owning_target_) == 88);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, enclosing_item_id_) == 104);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, is_inline_) == 112);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, must_bind_) == 113);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, deprecated_) == 120);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, doc_comment_) == 136);
-static_assert(sizeof(size_t) != 8 || offsetof(Namespace, children_) == 152);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Namespace) == 176 &&
+    alignof(Namespace) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, cc_name_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, rs_name_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, unique_name_) ==
+    40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, id_) ==
+    56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, canonical_namespace_id_) ==
+    64);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, unknown_attr_) ==
+    72);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, owning_target_) ==
+    88);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, enclosing_item_id_) ==
+    104);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, is_inline_) ==
+    112);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, must_bind_) ==
+    113);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, deprecated_) ==
+    120);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, doc_comment_) ==
+    136);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Namespace, children_) ==
+    152);
 static_assert(std::is_standard_layout_v<UseMod>);
-static_assert(sizeof(size_t) != 8 || (sizeof(UseMod) == 48 && alignof(UseMod) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(UseMod, path_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(UseMod, mod_name_) == 16);
-static_assert(sizeof(size_t) != 8 || offsetof(UseMod, id_) == 32);
-static_assert(sizeof(size_t) != 8 || offsetof(UseMod, must_bind_) == 40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(UseMod) == 48 &&
+    alignof(UseMod) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UseMod, path_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UseMod, mod_name_) ==
+    16);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UseMod, id_) ==
+    32);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(UseMod, must_bind_) ==
+    40);
 static_assert(std::is_standard_layout_v<ExistingRustType>);
-static_assert(sizeof(size_t) != 8 || (sizeof(ExistingRustType) == 160 && alignof(ExistingRustType) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, rs_name_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, cc_name_) == 24);
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, unique_name_) == 40);
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, template_args_) == 56);
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, owning_target_) == 80);
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, size_align_) == 96);
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, is_same_abi_) == 112);
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, id_) == 120);
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, must_bind_) == 128);
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, impl_debug_) == 129);
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, label_hint_) == 136);
-static_assert(sizeof(size_t) != 8 || offsetof(ExistingRustType, is_trivially_copyable_) == 152);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(ExistingRustType) == 160 &&
+    alignof(ExistingRustType) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, rs_name_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, cc_name_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, unique_name_) ==
+    40);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, template_args_) ==
+    56);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, owning_target_) ==
+    80);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, size_align_) ==
+    96);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, is_same_abi_) ==
+    112);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, id_) ==
+    120);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, must_bind_) ==
+    128);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, impl_debug_) ==
+    129);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, label_hint_) ==
+    136);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, is_trivially_copyable_) ==
+    152);
 static_assert(std::is_standard_layout_v<Item>);
-static_assert(sizeof(size_t) != 8 || (sizeof(Item) == 16 && alignof(Item) == 8));
-static_assert(std::is_standard_layout_v<IRProto>);
-static_assert(sizeof(size_t) != 8 || (sizeof(IRProto) == 184 && alignof(IRProto) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(IRProto, public_headers_) == 8);
-static_assert(sizeof(size_t) != 8 || offsetof(IRProto, current_target_) == 32);
-static_assert(sizeof(size_t) != 8 || offsetof(IRProto, crate_root_path_) == 48);
-static_assert(sizeof(size_t) != 8 || offsetof(IRProto, crubit_features_) == 64);
-static_assert(sizeof(size_t) != 8 || offsetof(IRProto, unstable_rust_features_) == 88);
-static_assert(sizeof(size_t) != 8 || offsetof(IRProto, reexported_namespaces_) == 112);
-static_assert(sizeof(size_t) != 8 || offsetof(IRProto, top_level_items_) == 136);
-static_assert(sizeof(size_t) != 8 || offsetof(IRProto, crate_names_) == 160);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Item) == 16 &&
+    alignof(Item) == 8));
+static_assert(std::is_standard_layout_v<IR>);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(IR) == 184 &&
+    alignof(IR) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IR, public_headers_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IR, current_target_) ==
+    32);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IR, crate_root_path_) ==
+    48);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IR, crubit_features_) ==
+    64);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IR, unstable_rust_features_) ==
+    88);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IR, reexported_namespaces_) ==
+    112);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IR, top_level_items_) ==
+    136);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(IR, crate_names_) ==
+    160);
 static_assert(std::is_standard_layout_v<GenerateBindingsRequest>);
-static_assert(sizeof(size_t) != 8 || (sizeof(GenerateBindingsRequest) == 288 && alignof(GenerateBindingsRequest) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsRequest, ir_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsRequest, crubit_support_path_format_) == 184);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsRequest, crubit_support_versioned_path_format_) == 200);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsRequest, clang_format_exe_path_) == 216);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsRequest, rustfmt_exe_path_) == 232);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsRequest, rustfmt_config_path_) == 248);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsRequest, generate_error_report_) == 264);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsRequest, is_golden_test_) == 265);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsRequest, kythe_annotations_) == 266);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsRequest, kythe_default_corpus_) == 272);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(GenerateBindingsRequest) == 288 &&
+    alignof(GenerateBindingsRequest) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsRequest, ir_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsRequest, crubit_support_path_format_) ==
+    184);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsRequest, crubit_support_versioned_path_format_) ==
+    200);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsRequest, clang_format_exe_path_) ==
+    216);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsRequest, rustfmt_exe_path_) ==
+    232);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsRequest, rustfmt_config_path_) ==
+    248);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsRequest, generate_error_report_) ==
+    264);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsRequest, is_golden_test_) ==
+    265);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsRequest, kythe_annotations_) ==
+    266);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsRequest, kythe_default_corpus_) ==
+    272);
 static_assert(std::is_standard_layout_v<GenerateBindingsResponse>);
-static_assert(sizeof(size_t) != 8 || (sizeof(GenerateBindingsResponse) == 64 && alignof(GenerateBindingsResponse) == 8));
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsResponse, rs_api_) == 0);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsResponse, rs_api_impl_) == 16);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsResponse, error_report_) == 32);
-static_assert(sizeof(size_t) != 8 || offsetof(GenerateBindingsResponse, fatal_errors_) == 48);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(GenerateBindingsResponse) == 64 &&
+    alignof(GenerateBindingsResponse) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsResponse, rs_api_) ==
+    0);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsResponse, rs_api_impl_) ==
+    16);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsResponse, error_report_) ==
+    32);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(GenerateBindingsResponse, fatal_errors_) ==
+    48);
 
 // NOLINTEND(*-readability-class-member-naming,*-readability-constant-naming)
 }  // namespace crubit::ffi

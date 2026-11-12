@@ -51,19 +51,16 @@ static constexpr llvm::StringRef kVirtualInputPath =
 
 namespace {
 
-namespace ir_proto = ::crubit::ffi;
-
 struct UseModFromSrc {
-  ir_proto::Item use_mod_item;
+  Item use_mod_item;
   // The namespace that this UseMod should be added to. If not set, the UseMod
   // is a top-level item.
-  std::optional<ir_proto::Namespace*> enclosing_namespace;
+  std::optional<Namespace*> enclosing_namespace;
 };
 
 llvm::Expected<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
     IR& ir, llvm::ArrayRef<std::string> extra_rs_srcs) {
-  std::vector<ir_proto::Namespace*> all_namespaces =
-      get_items_if<ir_proto::Namespace>(ir);
+  std::vector<Namespace*> all_namespaces = get_items_if<Namespace>(ir);
   llvm::StringMap<ItemId> name_to_top_level_ns;
   llvm::DenseSet<ItemId> top_level_item_id_set;
   if (auto it = ir.top_level_items().find(ir.current_target());
@@ -74,7 +71,7 @@ llvm::Expected<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
       }
     }
   }
-  llvm::DenseMap<ItemId, ir_proto::Namespace*> id_to_namespace;
+  llvm::DenseMap<ItemId, Namespace*> id_to_namespace;
   for (auto ns : all_namespaces) {
     if (ns->owning_target() != ir.current_target()) {
       continue;
@@ -89,7 +86,7 @@ llvm::Expected<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
   }
 
   auto follow_mod_path_to_ns =
-      [&](llvm::StringRef mod_path) -> std::optional<ir_proto::Namespace*> {
+      [&](llvm::StringRef mod_path) -> std::optional<Namespace*> {
     if (mod_path.empty()) {
       return std::nullopt;
     }
@@ -148,14 +145,14 @@ llvm::Expected<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
     // name of the file without the `.rs`, but it's also annoying to handle name
     // collisions.
     ItemId id(reinterpret_cast<uintptr_t>(&extra_source_info));
-    ir_proto::Item item;
+    Item item;
     auto* use_mod = item.mutable_use_mod();
     use_mod->set_path(extra_source_file_path);
     use_mod->mutable_mod_name()->set_identifier(
         (llvm::Twine("__crubit_mod_") + llvm::Twine(i++)).str());
     use_mod->set_id(id.value());
 
-    std::optional<ir_proto::Namespace*> enclosing_namespace = std::nullopt;
+    std::optional<Namespace*> enclosing_namespace = std::nullopt;
     if (!mod_path.empty()) {
       if (auto ns = follow_mod_path_to_ns(mod_path); ns.has_value()) {
         enclosing_namespace = std::move(ns);

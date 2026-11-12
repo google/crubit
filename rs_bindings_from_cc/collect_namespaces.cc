@@ -59,10 +59,10 @@ class NamespaceTrie {
   BazelLabel label_;
   // A map of item id to the IR Namespace item. It allows us to look up the
   // children namespace items.
-  llvm::DenseMap<ItemId, const ir_proto::Namespace*>& id_to_namespace_;
+  llvm::DenseMap<ItemId, const Namespace*>& id_to_namespace_;
 
   // Creates a node from a Namespace and inserts it into the trie.
-  void InsertNode(int parent_idx, const ir_proto::Namespace& ns) {
+  void InsertNode(int parent_idx, const Namespace& ns) {
     auto name = ns.rs_name().identifier();
     auto parent = &trie_nodes_[parent_idx];
     int child_idx;
@@ -99,9 +99,8 @@ class NamespaceTrie {
   }
 
  public:
-  NamespaceTrie(
-      BazelLabel label,
-      llvm::DenseMap<ItemId, const ir_proto::Namespace*>& id_to_namespace)
+  NamespaceTrie(BazelLabel label,
+                llvm::DenseMap<ItemId, const Namespace*>& id_to_namespace)
       : label_(label), id_to_namespace_(id_to_namespace) {}
 
   NamespaceTrie(NamespaceTrie&) = delete;
@@ -109,7 +108,7 @@ class NamespaceTrie {
 
   // Creates a trie node from the top level namespace and inserts it into the
   // trie.
-  void InsertTopLevel(const ir_proto::Namespace& ns) {
+  void InsertTopLevel(const Namespace& ns) {
     auto name = ns.rs_name().identifier();
     // If the namespace is not already in the trie, add it. Else add any
     // reopened namespaces to the existing entry.
@@ -146,8 +145,8 @@ class NamespaceTrie {
 
 // Returns the current target's namespace hierarchy in JSON serializable format.
 NamespacesHierarchy CollectNamespaces(const IR& ir) {
-  auto all_namespaces = get_items_if<ir_proto::Namespace>(ir);
-  llvm::DenseMap<ItemId, const ir_proto::Namespace*> id_to_namespace;
+  auto all_namespaces = get_items_if<Namespace>(ir);
+  llvm::DenseMap<ItemId, const Namespace*> id_to_namespace;
   for (auto ns : all_namespaces) {
     // We are not interested in namespaces from different targets.
     if (ns->owning_target() != ir.current_target()) {

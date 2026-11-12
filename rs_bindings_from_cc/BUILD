@@ -222,8 +222,6 @@ cc_library(
     srcs = [],
     hdrs = ["bazel_types.h"],
     deps = [
-        "//common:check",
-        "//common:status",
         "//common:string_type",
         "@llvm-project//llvm:Support",
     ],
@@ -233,11 +231,7 @@ cc_library(
     name = "profiling",
     srcs = ["profiling.cc"],
     hdrs = ["profiling.h"],
-    deps = [
-        "//common:check",
-        "//common:status",
-        "@llvm-project//llvm:Support",
-    ] + select({
+    deps = ["@llvm-project//llvm:Support"] + select({
         "//conditions:default": [],
     }),
 )
@@ -249,10 +243,6 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":cc_ir",
-        "//common:cc_ffi_types",
-        "//common:check",
-        "//common:status",
-        "//support/rs_std/internal:is_utf8",
         "@llvm-project//clang:ast",
         "@llvm-project//llvm:Support",
     ],
@@ -265,10 +255,7 @@ cc_library(
     deps = [
         ":cc_ir",
         "//common:annotation_reader",
-        "//common:cc_ffi_types",
         "//common:check",
-        "//common:status",
-        "//support/rs_std/internal:is_utf8",
         "@llvm-project//clang:ast",
         "@llvm-project//llvm:Support",
     ],
@@ -343,7 +330,6 @@ cc_library(
     deps = [
         ":ast_consumer",
         ":decl_importer",
-        "//common:status",
         "//common:string_view_conversion",
         "//lifetime_annotations",
         "//nullability:pragma",
@@ -555,7 +541,7 @@ rust_library(
     ],
     deps = [
         ":ir",
-        ":proto_from_cc",
+        ":ir_from_cc_dependency",
         "//common:arc_anyhow",
         "//common:crubit_feature",
         "//common:ffi_types",
@@ -615,27 +601,8 @@ cc_library(
         ":cmdline",
         ":ir_from_cc",
         "//common:cc_ffi_types",
-        "//common:status",
-        "@abseil-cpp//absl/container:flat_hash_set",
-        "@abseil-cpp//absl/log",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//llvm:Support",
     ],
-)
-
-cc_library(
-    name = "proto_from_cc",
-    testonly = 1,
-    srcs = ["proto_from_cc.cc"],
-    deps = [
-        ":cc_ir",
-        ":cmdline",
-        ":ir_from_cc_dependency",
-        "//common:cc_ffi_types",
-        "@llvm-project//llvm:Support",
-    ],
-    alwayslink = 1,
 )
 
 multiplatform_rust_test(
@@ -719,7 +686,6 @@ cc_library(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:sema",
-        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -788,12 +754,9 @@ crubit_cc_test(
     tags = ["no_windows"],
     deps = [
         ":cc_collect_instantiations",
-        "//common:check",
-        "//common:status",
         "//common:status_test_matchers",
         "//common:test_utils",
         "@googletest//:gtest_main",
-        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -847,15 +810,12 @@ crubit_cc_test(
     ],
     deps = [
         ":cc_ir",
-        ":cmdline",
         ":collect_namespaces",
         ":ir_from_cc",
-        "//common:check",
         "//common:status",
         "//common:status_macros",
         "//common:status_test_matchers",
         "@googletest//:gtest_main",
-        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -864,10 +824,7 @@ cc_library(
     srcs = ["logging.cc"],
     hdrs = ["logging.h"],
     visibility = ["//:__subpackages__"],
-    deps = [
-        "//common:check",
-        "@llvm-project//llvm:Support",
-    ],
+    deps = ["@llvm-project//llvm:Support"],
 )
 
 crubit_cc_test(

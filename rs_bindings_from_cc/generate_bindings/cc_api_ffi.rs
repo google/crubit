@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use ir::ir_ffi_support::FfiString;
-use ir::ir_generated::{GenerateBindingsRequest, GenerateBindingsResponse, IRProto};
+use ir::ir_generated::{GenerateBindingsRequest, GenerateBindingsResponse, IR};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::process;
 
@@ -27,14 +27,14 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     .unwrap_or_else(|_| process::abort());
 }
 
-/// Formats an `IRProto` using its Rust `Debug` representation.
+/// Formats an `IR` using its Rust `Debug` representation.
 ///
 /// # Safety
 ///
-/// * `ir` must be a valid pointer to an initialized `IRProto`.
+/// * `ir` must be a valid pointer to an initialized `IR`.
 /// * `out` must be a valid pointer to an initialized `FfiString`.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn FormatIrDebugImpl(ir: *const IRProto, out: *mut FfiString) {
+pub unsafe extern "C" fn FormatIrDebugImpl(ir: *const IR, out: *mut FfiString) {
     catch_unwind(AssertUnwindSafe(|| unsafe {
         *out = format!("{:#?}", *ir).into();
     }))

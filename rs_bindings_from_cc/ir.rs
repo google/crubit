@@ -10,7 +10,6 @@ use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
 pub mod ir_ffi_support;
 pub mod ir_generated;
-pub use ir_generated as ir_rust_proto;
 
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -381,7 +380,7 @@ fn validate_item(item: &Item) -> Result<()> {
     Ok(())
 }
 
-pub fn proto_to_ir(proto: &ir_rust_proto::IRProto) -> Result<IR> {
+pub fn proto_to_ir(proto: &ir_generated::IR) -> Result<IR> {
     let public_headers = proto.public_headers().to_vec();
 
     let crate_root_path = proto.crate_root_path().map(FfiString::from);
@@ -2064,17 +2063,16 @@ pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ide
 mod tests {
     use super::*;
     use googletest::gtest;
-    use ir_rust_proto::IRProto;
 
     #[gtest]
     fn test_identifier_debug_print() {
-        let identifier = ir_rust_proto::proto!(ir_rust_proto::Identifier { identifier: "hello" });
+        let identifier = ir_generated::proto!(ir_generated::Identifier { identifier: "hello" });
         assert_eq!(format!("{identifier:?}"), "\"hello\"");
     }
 
     #[gtest]
     fn test_unqualified_identifier_debug_print() {
-        let identifier = ir_rust_proto::proto!(ir_rust_proto::Identifier { identifier: "hello" });
+        let identifier = ir_generated::proto!(ir_generated::Identifier { identifier: "hello" });
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Identifier(identifier)), "\"hello\"");
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Constructor), "Constructor");
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Destructor), "Destructor");
@@ -2082,7 +2080,7 @@ mod tests {
 
     #[gtest]
     fn test_used_headers() {
-        let proto = ir_rust_proto::proto!(IRProto {
+        let proto = ir_generated::proto!(ir_generated::IR {
             public_headers: [__ { name: "foo/bar.h" }],
             current_target: "//foo:bar",
         });
@@ -2102,14 +2100,14 @@ mod tests {
 
     #[gtest]
     fn test_empty_crate_root_path() {
-        let proto = ir_rust_proto::proto!(IRProto { current_target: "//foo:bar" });
+        let proto = ir_generated::proto!(ir_generated::IR { current_target: "//foo:bar" });
         let ir = proto_to_ir(&proto).unwrap();
         assert_eq!(ir.crate_root_path(), None);
     }
 
     #[gtest]
     fn test_crate_root_path() {
-        let proto = ir_rust_proto::proto!(IRProto {
+        let proto = ir_generated::proto!(ir_generated::IR {
             crate_root_path: "__cc_template_instantiations_rs_api",
             current_target: "//foo:bar",
         });
@@ -2251,7 +2249,7 @@ mod tests {
 
     #[gtest]
     fn test_make_ir_happy_path() {
-        let proto = ir_rust_proto::proto!(IRProto {
+        let proto = ir_generated::proto!(ir_generated::IR {
             current_target: "//foo:bar",
             top_level_items: [(
                 "//foo:bar",
@@ -2292,7 +2290,7 @@ mod tests {
 
     #[gtest]
     fn test_make_ir_redeclarations() {
-        let proto = ir_rust_proto::proto!(IRProto {
+        let proto = ir_generated::proto!(ir_generated::IR {
             current_target: "//foo:bar",
             top_level_items: [(
                 "//foo:bar",
@@ -2339,7 +2337,7 @@ mod tests {
 
     #[gtest]
     fn test_proto_crate_names() {
-        let proto = ir_rust_proto::proto!(IRProto {
+        let proto = ir_generated::proto!(ir_generated::IR {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "custom_crate")]
         });
@@ -2352,7 +2350,7 @@ mod tests {
 
     #[gtest]
     fn test_proto_crate_names_invalid_ident() {
-        let proto = ir_rust_proto::proto!(IRProto {
+        let proto = ir_generated::proto!(ir_generated::IR {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "invalid*crate")]
         });
@@ -2368,7 +2366,7 @@ mod tests {
 
     #[gtest]
     fn test_rs_imported_crate_name_with_custom_name() {
-        let proto = ir_rust_proto::proto!(IRProto {
+        let proto = ir_generated::proto!(ir_generated::IR {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "custom_crate")],
         });
@@ -2379,7 +2377,7 @@ mod tests {
 
     #[gtest]
     fn test_rs_imported_crate_name_without_custom_name() {
-        let proto = ir_rust_proto::proto!(IRProto { current_target: "//foo:bar" });
+        let proto = ir_generated::proto!(ir_generated::IR { current_target: "//foo:bar" });
         let ir = proto_to_ir(&proto).unwrap();
         let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
         assert_eq!(crate_ident.to_string(), "target");
@@ -2404,14 +2402,14 @@ mod tests {
             // Negative case: an unrelated target.
             ("//rs_bindings_from_cc:ir", false),
         ] {
-            let record = ir_rust_proto::proto!(crate::ir_rust_proto::Record {
+            let record = ir_generated::proto!(crate::ir_generated::Record {
                 rs_name: __ { identifier: "string_view" },
                 trait_derives: __ {
-                    clone: crate::ir_rust_proto::TraitImplPolarity::None,
-                    copy: crate::ir_rust_proto::TraitImplPolarity::None,
-                    debug: crate::ir_rust_proto::TraitImplPolarity::None,
-                    send: crate::ir_rust_proto::TraitImplPolarity::None,
-                    sync: crate::ir_rust_proto::TraitImplPolarity::None,
+                    clone: crate::ir_generated::TraitImplPolarity::None,
+                    copy: crate::ir_generated::TraitImplPolarity::None,
+                    debug: crate::ir_generated::TraitImplPolarity::None,
+                    send: crate::ir_generated::TraitImplPolarity::None,
+                    sync: crate::ir_generated::TraitImplPolarity::None,
                 },
                 template_specialization: __ {
                     defining_target: defining_target,
@@ -2425,7 +2423,7 @@ mod tests {
     #[gtest]
     fn test_constant_array_type_validate_num_elements() {
         let make_proto = |num_elements: usize| {
-            ir_rust_proto::proto!(IRProto {
+            ir_generated::proto!(ir_generated::IR {
                 current_target: "//foo:bar",
                 top_level_items: [(
                     "//foo:bar",
@@ -2470,18 +2468,18 @@ mod tests {
         use googletest::{expect_eq, expect_ne};
         use std::hash::BuildHasher;
 
-        let r1 = ir_rust_proto::proto!(crate::ir_rust_proto::Record {
+        let r1 = ir_generated::proto!(crate::ir_generated::Record {
             id: 42u64,
             rs_name: __ { identifier: "Foo" },
             cc_name: __ { identifier: "Foo" },
             children: [__ { comment: __ { text: "child comment", id: 43u64, must_bind: false } }],
         });
-        let r2 = ir_rust_proto::proto!(crate::ir_rust_proto::Record {
+        let r2 = ir_generated::proto!(crate::ir_generated::Record {
             id: 42u64,
             rs_name: __ { identifier: "Bar" },
             cc_name: __ { identifier: "Bar" },
         });
-        let r3 = ir_rust_proto::proto!(crate::ir_rust_proto::Record {
+        let r3 = ir_generated::proto!(crate::ir_generated::Record {
             id: 99u64,
             rs_name: __ { identifier: "Foo" },
             cc_name: __ { identifier: "Foo" },

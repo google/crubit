@@ -35,8 +35,6 @@
 
 namespace crubit {
 
-namespace ir_proto = ::crubit::ffi;
-
 // Stateful entry to prevent re-entrant imports, and to track the underlying
 // proto item we should store the AST node in.
 struct ItemCacheEntry {
@@ -205,8 +203,7 @@ class Importer final : public ImportContext {
   // generated for it. The mangled name is kept in `Record::mangled_rs_name`, so
   // that it can still be generated as a hidden alias of the renamed struct.
   void NameTemplateInstantiationsAfterTypeAliases(
-      const absl::flat_hash_map<ItemId, ir_proto::Item* absl_nonnull>&
-          id_to_item,
+      const absl::flat_hash_map<ItemId, Item* absl_nonnull>& id_to_item,
       std::vector<ItemId>& instantiation_ids);
 
   void FindAlwaysInstantiateSpecs(const clang::DeclContext& decl_context);

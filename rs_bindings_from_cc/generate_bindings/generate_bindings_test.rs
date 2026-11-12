@@ -2718,11 +2718,11 @@ fn test_unnameable_template_instantiation_with_nested_static_var_has_doc_hidden_
     let mut count_item = None;
     let mut template_id = None;
     for item in &mut items {
-        if let ir::ir_rust_proto::Item::Record(ref mut rec) = *item {
+        if let ir::Item::Record(ref mut rec) = *item {
             if rec.rs_name.identifier.as_str() == "Donor" {
                 let rec_mut = rec.make_mut();
                 for child in rec_mut.children.as_slice() {
-                    if matches!(child, ir::ir_rust_proto::Item::GlobalVar(_)) {
+                    if matches!(child, ir::Item::GlobalVar(_)) {
                         count_item = Some(child.clone());
                     }
                 }
@@ -2734,11 +2734,11 @@ fn test_unnameable_template_instantiation_with_nested_static_var_has_doc_hidden_
     }
     let mut count_item = count_item.expect("Donor::count GlobalVar should exist");
     let template_id = template_id.expect("__CcTemplateInst10MyTemplateIiE should exist");
-    if let ir::ir_rust_proto::Item::GlobalVar(ref mut gv) = count_item {
+    if let ir::Item::GlobalVar(ref mut gv) = count_item {
         gv.make_mut().set_enclosing_item_id(template_id);
     }
     for item in &mut items {
-        if let ir::ir_rust_proto::Item::Record(ref mut rec) = *item
+        if let ir::Item::Record(ref mut rec) = *item
             && rec.id == template_id
         {
             let mut children = rec.children.to_vec();

@@ -8,7 +8,6 @@ use std::sync::LazyLock;
 use arc_anyhow::Result;
 
 use ffi_types::FfiU8Slice;
-pub use ir::ir_rust_proto::IRProto;
 use ir::{
     self, Func, GenericItem, Item, LifetimeId, LifetimeName, Record, TreeIR, TypeWithDeclId, IR,
 };
@@ -17,15 +16,16 @@ use ir::{
 pub fn ir_proto_from_cc(
     platform: multiplatform_testing::Platform,
     header_source: &str,
-) -> Result<IRProto> {
+) -> Result<ir::ir_generated::IR> {
     ir_proto_from_cc_dependency(platform, header_source, "// empty header", None, false, false)
 }
 
-/// Generates `IRProto` from a header containing `header_source` with source annotations.
+/// Generates `ir::ir_generated::IR` from a header containing `header_source` with source
+/// annotations.
 pub fn ir_proto_from_cc_annotated(
     platform: multiplatform_testing::Platform,
     header_source: &str,
-) -> Result<IRProto> {
+) -> Result<ir::ir_generated::IR> {
     ir_proto_from_cc_dependency(platform, header_source, "// empty header", None, true, false)
 }
 
@@ -117,7 +117,7 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR {
 }
 
 /// Target of the dependency used by `ir_from_cc_dependency`.
-/// Needs to be kept in sync with `kDependencyTarget` in `proto_from_cc.cc`.
+/// Needs to be kept in sync with `kDependencyTarget` in `ir_from_cc_dependency.h`.
 pub const DEPENDENCY_TARGET: &str = "//test:dependency";
 
 /// Generates `IR` from a header that depends on another header.
@@ -132,7 +132,7 @@ pub fn ir_proto_from_cc_dependency(
     extra_feature: Option<&str>,
     kythe_annotations: bool,
     carcinize: bool,
-) -> Result<IRProto> {
+) -> Result<ir::ir_generated::IR> {
     ir_proto_from_cc_dependency_impl(
         platform,
         header_source,
@@ -154,7 +154,7 @@ pub fn ir_proto_from_cc_dependency_with_lazy_import(
     header_source: &str,
     dependency_header_source: &str,
     extra_feature: Option<&str>,
-) -> Result<IRProto> {
+) -> Result<ir::ir_generated::IR> {
     ir_proto_from_cc_dependency_impl(
         platform,
         header_source,
@@ -176,11 +176,11 @@ fn ir_proto_from_cc_dependency_impl(
     carcinize: bool,
     lazy_import_alien_decls: bool,
     check_importer_invariants: bool,
-) -> Result<IRProto> {
+) -> Result<ir::ir_generated::IR> {
     const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
 
     unsafe extern "C" {
-        fn proto_from_cc_dependency(
+        fn ir_from_cc_dependency(
             target_triple: FfiU8Slice,
             header_source: FfiU8Slice,
             dependency_header_source: FfiU8Slice,
@@ -189,13 +189,13 @@ fn ir_proto_from_cc_dependency_impl(
             carcinize: bool,
             lazy_import_alien_decls: bool,
             check_importer_invariants: bool,
-        ) -> IRProto;
+        ) -> ir::ir_generated::IR;
     }
 
     let header_source_with_include =
         format!("#include \"{}\"\n\n{}", DEPENDENCY_HEADER_NAME, header_source);
     let ir_proto = unsafe {
-        proto_from_cc_dependency(
+        ir_from_cc_dependency(
             FfiU8Slice::from_slice(platform.target_triple().as_ref()),
             FfiU8Slice::from_slice(header_source_with_include.as_bytes()),
             FfiU8Slice::from_slice(dependency_header_source.as_bytes()),
@@ -209,11 +209,14 @@ fn ir_proto_from_cc_dependency_impl(
     Ok(ir_proto)
 }
 
-pub fn make_test_ir(proto: &IRProto) -> Result<IR> {
+pub fn make_test_ir(proto: &ir::ir_generated::IR) -> Result<IR> {
     make_test_ir_dependency(proto, None)
 }
 
-pub fn make_test_ir_dependency(proto: &IRProto, extra_feature: Option<&str>) -> Result<IR> {
+pub fn make_test_ir_dependency(
+    proto: &ir::ir_generated::IR,
+    extra_feature: Option<&str>,
+) -> Result<IR> {
     let mut ir = ir::proto_to_ir(proto)?;
     update_test_ir(&mut ir, extra_feature);
     Ok(ir)
@@ -326,7 +329,7 @@ mod tests {
     #[gtest]
     fn test_in_memory_ffi_ir_from_cc() {
         unsafe extern "C" {
-            fn crubit_test_make_ffi_ir() -> ir::ir_generated::IRProto;
+            fn crubit_test_make_ffi_ir() -> ir::ir_generated::IR;
         }
         let ir_proto = unsafe { crubit_test_make_ffi_ir() };
         assert_eq!(ir_proto.current_target(), "//test:target");

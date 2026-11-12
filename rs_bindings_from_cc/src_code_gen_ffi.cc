@@ -14,7 +14,7 @@ namespace crubit {
 extern "C" void GenerateBindingsImpl(ffi::GenerateBindingsRequest* request,
                                      ffi::GenerateBindingsResponse* response);
 
-extern "C" void FormatIrDebugImpl(const ffi::IRProto* ir, ffi::FfiString* out);
+extern "C" void FormatIrDebugImpl(const ffi::IR* ir, ffi::FfiString* out);
 
 ffi::GenerateBindingsResponse GenerateBindingsCall(
     ffi::GenerateBindingsRequest&& request) {
@@ -23,7 +23,7 @@ ffi::GenerateBindingsResponse GenerateBindingsCall(
   return response;
 }
 
-std::string FormatIrDebug(const ffi::IRProto& ir) {
+std::string FormatIrDebug(const ffi::IR& ir) {
   ffi::FfiString out;
   FormatIrDebugImpl(&ir, &out);
   return out.ToString();

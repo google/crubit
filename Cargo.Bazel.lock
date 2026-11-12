@@ -1,5 +1,5 @@
 {
-  "checksum": "c0cc87da3c511bca9f93fad9bb53a84c98b58759ed2b5bd71cbe9da2a6a1f944",
+  "checksum": "dcea96738bb05c5f1427c957dbb7fec4bb5e2f21681c8bbff51f9944dcb42c44",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -1174,10 +1174,6 @@
     "cc_bindings_from_rs_generate_enum 0.0.0": {
       "common_attrs": {
         "deps": [
-          {
-            "id": "flagset 0.4.7",
-            "target": "flagset"
-          },
           {
             "id": "itertools 0.13.0",
             "target": "itertools"
@@ -6358,6 +6354,35 @@
       ],
       "version": "0.0.0"
     },
+    "rs_bindings_from_cc_logging_sys 0.0.0": {
+      "build_script_attrs": {},
+      "common_attrs": {
+        "edition": "2024",
+        "extra_deps": [
+          ":build_script_build"
+        ]
+      },
+      "library_target_name": "rs_bindings_from_cc_logging_sys",
+      "license_file": "../../../LICENSE",
+      "name": "rs_bindings_from_cc_logging_sys",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rs_bindings_from_cc_logging_sys",
+            "crate_root": "lib.rs"
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs"
+          }
+        }
+      ],
+      "version": "0.0.0"
+    },
     "rs_bindings_from_cc_multiplatform_ir_testing 0.0.0": {
       "common_attrs": {
         "edition": "2024"
@@ -6423,35 +6448,6 @@
         {
           "Library": {
             "crate_name": "rs_bindings_from_cc_profiling_sys",
-            "crate_root": "lib.rs"
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs"
-          }
-        }
-      ],
-      "version": "0.0.0"
-    },
-    "rs_bindings_from_cc_proto_from_cc_sys 0.0.0": {
-      "build_script_attrs": {},
-      "common_attrs": {
-        "edition": "2024",
-        "extra_deps": [
-          ":build_script_build"
-        ]
-      },
-      "library_target_name": "rs_bindings_from_cc_proto_from_cc_sys",
-      "license_file": "../../../LICENSE",
-      "name": "rs_bindings_from_cc_proto_from_cc_sys",
-      "package_url": "https://github.com/google/crubit",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rs_bindings_from_cc_proto_from_cc_sys",
             "crate_root": "lib.rs"
           }
         },
@@ -8327,10 +8323,10 @@
     "rs_bindings_from_cc_ir_matchers 0.0.0": "cargo/rs_bindings_from_cc/ir_matchers",
     "rs_bindings_from_cc_ir_testing 0.0.0": "cargo/rs_bindings_from_cc/ir_testing",
     "rs_bindings_from_cc_lifetime_defaults_transform 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/lifetime_defaults_transform",
+    "rs_bindings_from_cc_logging_sys 0.0.0": "cargo/rs_bindings_from_cc/logging_sys",
     "rs_bindings_from_cc_multiplatform_ir_testing 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/multiplatform_ir_testing",
     "rs_bindings_from_cc_namespace_sys 0.0.0": "cargo/rs_bindings_from_cc/importers/namespace_sys",
     "rs_bindings_from_cc_profiling_sys 0.0.0": "cargo/rs_bindings_from_cc/profiling_sys",
-    "rs_bindings_from_cc_proto_from_cc_sys 0.0.0": "cargo/rs_bindings_from_cc/proto_from_cc_sys",
     "rs_bindings_from_cc_recording_diagnostic_consumer_sys 0.0.0": "cargo/rs_bindings_from_cc/recording_diagnostic_consumer_sys",
     "rs_bindings_from_cc_rs_type_kind 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/rs_type_kind",
     "rs_bindings_from_cc_src_code_gen_ffi_sys 0.0.0": "cargo/rs_bindings_from_cc/src_code_gen_ffi_sys",

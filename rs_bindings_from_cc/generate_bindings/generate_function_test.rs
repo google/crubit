@@ -5208,7 +5208,7 @@ fn test_unnameable_template_instantiation_inherited_method_with_inline_cpp() -> 
     let target = proto.current_target.clone();
     let mut items = proto.top_level_items.get(&target).unwrap().to_vec();
     for item in &mut items {
-        if let ir::ir_rust_proto::Item::UnsupportedItem(ref mut u) = *item {
+        if let ir::Item::UnsupportedItem(ref mut u) = *item {
             u.make_mut().must_bind = false;
         }
     }

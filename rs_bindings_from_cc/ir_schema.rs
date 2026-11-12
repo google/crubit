@@ -727,7 +727,7 @@ pub(crate) fn schema() -> Schema {
             UseMod(Box(UseMod)),
             ExistingRustType(Box(ExistingRustType)),
         }
-        struct IRProto {
+        struct IR {
             public_headers: Vec(HeaderName),
             current_target: Str,
             #[optional]
@@ -739,7 +739,7 @@ pub(crate) fn schema() -> Schema {
             crate_names: Map(Str, Str),
         }
         struct GenerateBindingsRequest {
-            ir: IRProto,
+            ir: IR,
             crubit_support_path_format: Str,
             crubit_support_versioned_path_format: Str,
             clang_format_exe_path: Str,

@@ -16,7 +16,7 @@ pub fn generate_bindings(
     response: &mut GenerateBindingsResponse,
 ) {
     let ir = ir::proto_to_ir(request.ir())
-        .with_context(|| "Failed to deserialize IRProto".to_string())
+        .with_context(|| "Failed to deserialize IR".to_string())
         .unwrap();
     let crubit_support_path_format: &str = request.crubit_support_path_format();
     let crubit_support_versioned_path_format: &str = request.crubit_support_versioned_path_format();

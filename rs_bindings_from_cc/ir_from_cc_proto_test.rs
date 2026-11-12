@@ -4,7 +4,7 @@
 
 use arc_anyhow::Result;
 use googletest::gtest;
-use ir::{ir_rust_proto, MemberFuncSemantic};
+use ir::{ir_generated, MemberFuncSemantic};
 use ir_testing::make_test_ir;
 use multiplatform_ir_testing::ir_proto_from_cc;
 use multiplatform_testing::test_platform;
@@ -224,7 +224,7 @@ fn test_type_alias_proto() -> Result<()> {
 
 #[gtest]
 fn test_member_func_semantic_proto() -> Result<()> {
-    let semantic_setter = ir::proto!(ir_rust_proto::MemberFuncSemantic {
+    let semantic_setter = ir::proto!(ir_generated::MemberFuncSemantic {
         setter: __ {
             r#type: __ { variant: __ { primitive: ir::Primitive::Int } },
             offset: 32usize
@@ -236,7 +236,7 @@ fn test_member_func_semantic_proto() -> Result<()> {
     assert_eq!(s.offset, 32);
     assert!(matches!(s.type_.variant(), ir::CcTypeVariant::Primitive(ir::Primitive::Int)));
 
-    let semantic_getter = ir::proto!(ir_rust_proto::MemberFuncSemantic {
+    let semantic_getter = ir::proto!(ir_generated::MemberFuncSemantic {
         getter: __ {
             r#type: __ { variant: __ { primitive: ir::Primitive::Int } },
             offset: 32usize

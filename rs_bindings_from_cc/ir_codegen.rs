@@ -1101,7 +1101,10 @@ fn generate_cc_out_of_line(schema: &Schema, rec_idx: usize, rec: &RecordDef) -> 
             let layout = schema.union_layout(u);
             quote! {
                 static_assert(std::is_standard_layout_v<$qname>);
-                static_assert(sizeof(size_t) != 8 || (sizeof($qname) == $(layout.size) && alignof($qname) == $(layout.align)));
+                static_assert(
+                    sizeof(size_t) != 8 ||
+                    (sizeof($qname) == $(layout.size) &&
+                     alignof($qname) == $(layout.align)));
             }
         }
         RecordDef::Struct(st) => {
@@ -1140,9 +1143,15 @@ fn generate_cc_out_of_line(schema: &Schema, rec_idx: usize, rec: &RecordDef) -> 
                     })
                 })
                 static_assert(std::is_standard_layout_v<$qname>);
-                static_assert(sizeof(size_t) != 8 || (sizeof($qname) == $(st_layout.layout.size) && alignof($qname) == $(st_layout.layout.align)));
+                static_assert(
+                    sizeof(size_t) != 8 ||
+                    (sizeof($qname) == $(st_layout.layout.size) &&
+                     alignof($qname) == $(st_layout.layout.align)));
                 $(for foff in st_layout.field_offsets join ($['\r']) =>
-                    static_assert(sizeof(size_t) != 8 || offsetof($qname, $(foff.cc_name)_) == $(foff.offset));
+                    static_assert(
+                        sizeof(size_t) != 8 ||
+                        offsetof($qname, $(foff.cc_name)_) ==
+                            $(foff.offset));
                 )
             }
         }

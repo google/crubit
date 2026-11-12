@@ -5460,7 +5460,7 @@ mod __defs {
 
     #[repr(C)]
     #[derive(Clone, PartialEq, Eq, Hash)]
-    pub struct IRProto {
+    pub struct IR {
         pub has_bits: u64,
         pub public_headers: FfiVec<HeaderName>,
         pub current_target: FfiString,
@@ -5472,9 +5472,9 @@ mod __defs {
         pub crate_names: FfiMap<FfiString, FfiString>,
     }
 
-    impl core::fmt::Debug for IRProto {
+    impl core::fmt::Debug for IR {
         fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-            f.debug_struct("IRProto")
+            f.debug_struct("IR")
                 .field("public_headers", &self.public_headers)
                 .field("current_target", &self.current_target)
                 .field("crate_root_path", &self.crate_root_path())
@@ -5487,16 +5487,16 @@ mod __defs {
         }
     }
 
-    impl FfiDefault for IRProto {
+    impl FfiDefault for IR {
         const EMPTY_REF: &'static Self = &Self::EMPTY;
     }
-    impl Default for IRProto {
+    impl Default for IR {
         fn default() -> Self {
             Self::EMPTY
         }
     }
 
-    impl IRProto {
+    impl IR {
         pub const EMPTY: Self = Self {
             has_bits: 0,
             public_headers: FfiVec::EMPTY,
@@ -5569,22 +5569,22 @@ mod __defs {
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<IRProto>() == 184);
-        assert!(core::mem::align_of::<IRProto>() == 8);
-        assert!(core::mem::offset_of!(IRProto, public_headers) == 8);
-        assert!(core::mem::offset_of!(IRProto, current_target) == 32);
-        assert!(core::mem::offset_of!(IRProto, crate_root_path) == 48);
-        assert!(core::mem::offset_of!(IRProto, crubit_features) == 64);
-        assert!(core::mem::offset_of!(IRProto, unstable_rust_features) == 88);
-        assert!(core::mem::offset_of!(IRProto, reexported_namespaces) == 112);
-        assert!(core::mem::offset_of!(IRProto, top_level_items) == 136);
-        assert!(core::mem::offset_of!(IRProto, crate_names) == 160);
+        assert!(core::mem::size_of::<IR>() == 184);
+        assert!(core::mem::align_of::<IR>() == 8);
+        assert!(core::mem::offset_of!(IR, public_headers) == 8);
+        assert!(core::mem::offset_of!(IR, current_target) == 32);
+        assert!(core::mem::offset_of!(IR, crate_root_path) == 48);
+        assert!(core::mem::offset_of!(IR, crubit_features) == 64);
+        assert!(core::mem::offset_of!(IR, unstable_rust_features) == 88);
+        assert!(core::mem::offset_of!(IR, reexported_namespaces) == 112);
+        assert!(core::mem::offset_of!(IR, top_level_items) == 136);
+        assert!(core::mem::offset_of!(IR, crate_names) == 160);
     };
 
     #[repr(C)]
     #[derive(Debug,Clone, PartialEq, Eq, Hash)]
     pub struct GenerateBindingsRequest {
-        pub ir: IRProto,
+        pub ir: IR,
         pub crubit_support_path_format: FfiString,
         pub crubit_support_versioned_path_format: FfiString,
         pub clang_format_exe_path: FfiString,
@@ -5607,7 +5607,7 @@ mod __defs {
 
     impl GenerateBindingsRequest {
         pub const EMPTY: Self = Self {
-            ir: IRProto::EMPTY,
+            ir: IR::EMPTY,
             crubit_support_path_format: FfiString::EMPTY,
             crubit_support_versioned_path_format: FfiString::EMPTY,
             clang_format_exe_path: FfiString::EMPTY,
@@ -5618,7 +5618,7 @@ mod __defs {
             kythe_annotations: false,
             kythe_default_corpus: FfiString::EMPTY,
         };
-        pub fn ir(&self) -> &IRProto {
+        pub fn ir(&self) -> &IR {
             &self.ir
         }
         pub fn crubit_support_path_format(&self) -> &str {
@@ -5648,7 +5648,7 @@ mod __defs {
         pub fn kythe_default_corpus(&self) -> &str {
             self.kythe_default_corpus.as_str()
         }
-        pub fn set_ir(&mut self, val: IRProto) -> &mut IRProto {
+        pub fn set_ir(&mut self, val: IR) -> &mut IR {
             self.ir = val;
             &mut self.ir
         }

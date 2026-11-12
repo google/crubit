@@ -42,7 +42,6 @@
 
 namespace crubit {
 
-namespace ir_proto = ::crubit::ffi;
 namespace internal {
 inline std::string Substitute(llvm::StringRef format,
                               llvm::ArrayRef<std::string> args) {
@@ -88,8 +87,6 @@ inline void AppendToString(std::string& s, llvm::StringRef ref) {
 inline void AppendToString(std::string& s, const std::string& ref) { s += ref; }
 inline void AppendToString(std::string& s, const char* ref) { s += ref; }
 }  // namespace internal
-
-struct Item;
 
 namespace internal {
 inline constexpr int kJsonIndent = 2;
@@ -231,11 +228,51 @@ class FormattedError final {
   ffi::FormattedError inner_;
 };
 
-using ir_proto::CallingConv;
-using ir_proto::CcType;
-using ir_proto::PointerTypeKind;
-using ir_proto::Primitive;
-using ir_proto::SafetyAnnotation;
+using ffi::AccessSpecifier;
+using ffi::ArrayValue;
+using ffi::BaseClass;
+using ffi::BridgeType;
+using ffi::CallingConv;
+using ffi::CcType;
+using ffi::Comment;
+using ffi::Constant;
+using ffi::DeclLocation;
+using ffi::Enum;
+using ffi::Enumerator;
+using ffi::ExistingRustType;
+using ffi::Field;
+using ffi::Func;
+using ffi::FuncParam;
+using ffi::GenerateBindingsRequest;
+using ffi::GenerateBindingsResponse;
+using ffi::GlobalVar;
+using ffi::IncompleteRecord;
+using ffi::InstanceMethodMetadata;
+using ffi::IntegerConstant;
+using ffi::IR;
+using ffi::Item;
+using ffi::LifetimeName;
+using ffi::MemberFuncSemantic;
+using ffi::Namespace;
+using ffi::Operator;
+using ffi::OwnedPtrConfig;
+using ffi::PointerTypeKind;
+using ffi::Primitive;
+using ffi::Record;
+using ffi::RecordType;
+using ffi::SafetyAnnotation;
+using ffi::SizeAlign;
+using ffi::SourceLocation;
+using ffi::SpecialMemberFunc;
+using ffi::StatusOrOptionalString;
+using ffi::TemplateArg;
+using ffi::TemplateSpecialization;
+using ffi::TraitDerives;
+using ffi::TraitImplPolarity;
+using ffi::TypeAlias;
+using ffi::UnqualifiedIdentifier;
+using ffi::UnsupportedItem;
+using ffi::UseMod;
 
 llvm::StringRef PrimitiveSpelling(Primitive primitive);
 CcType CcTypeDecl(ItemId id);
@@ -290,13 +327,8 @@ inline std::ostream& operator<<(std::ostream& o, const Identifier& id) {
   return o << std::setw(internal::kJsonIndent) << id.Ident().str();
 }
 
-using IntegerConstant = ir_proto::IntegerConstant;
-
 llvm::Expected<IntegerConstant> IntegerConstantFromAPValue(
     const llvm::APSInt& value);
-
-using ir_proto::Operator;
-using UnqualifiedIdentifier = ir_proto::UnqualifiedIdentifier;
 
 struct TranslatedUnqualifiedIdentifier {
   UnqualifiedIdentifier cc_identifier;
@@ -311,81 +343,73 @@ struct TranslatedIdentifier {
   Identifier& rs_identifier();
 };
 
-using ir_proto::BridgeType;
-using ir_proto::OwnedPtrConfig;
-using ir_proto::SpecialMemberFunc;
-using ir_proto::TemplateArg;
-using ir_proto::TemplateSpecialization;
-using ir_proto::TraitDerives;
-using ir_proto::TraitImplPolarity;
-
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
 template <typename T>
-const T* _Nullable get_item_if(const ir_proto::Item& item) {
-  if constexpr (std::is_same_v<T, ir_proto::Record>) {
+const T* _Nullable get_item_if(const Item& item) {
+  if constexpr (std::is_same_v<T, Record>) {
     return item.has_record() ? &item.record() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::Func>) {
+  } else if constexpr (std::is_same_v<T, Func>) {
     return item.has_func() ? &item.func() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::Enum>) {
+  } else if constexpr (std::is_same_v<T, Enum>) {
     return item.has_enum_decl() ? &item.enum_decl() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::UnsupportedItem>) {
+  } else if constexpr (std::is_same_v<T, UnsupportedItem>) {
     return item.has_unsupported_item() ? &item.unsupported_item() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::IncompleteRecord>) {
+  } else if constexpr (std::is_same_v<T, IncompleteRecord>) {
     return item.has_incomplete_record() ? &item.incomplete_record() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::Namespace>) {
+  } else if constexpr (std::is_same_v<T, Namespace>) {
     return item.has_namespace_decl() ? &item.namespace_decl() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::TypeAlias>) {
+  } else if constexpr (std::is_same_v<T, TypeAlias>) {
     return item.has_type_alias() ? &item.type_alias() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::Constant>) {
+  } else if constexpr (std::is_same_v<T, Constant>) {
     return item.has_constant() ? &item.constant() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::GlobalVar>) {
+  } else if constexpr (std::is_same_v<T, GlobalVar>) {
     return item.has_global_var() ? &item.global_var() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::Comment>) {
+  } else if constexpr (std::is_same_v<T, Comment>) {
     return item.has_comment() ? &item.comment() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::ExistingRustType>) {
+  } else if constexpr (std::is_same_v<T, ExistingRustType>) {
     return item.has_existing_rust_type() ? &item.existing_rust_type() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::UseMod>) {
+  } else if constexpr (std::is_same_v<T, UseMod>) {
     return item.has_use_mod() ? &item.use_mod() : nullptr;
   }
 }
 
 template <typename T>
-T* _Nullable get_item_if(ir_proto::Item& item) {
-  if constexpr (std::is_same_v<T, ir_proto::Record>) {
+T* _Nullable get_item_if(Item& item) {
+  if constexpr (std::is_same_v<T, Record>) {
     return item.has_record() ? item.mutable_record() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::Func>) {
+  } else if constexpr (std::is_same_v<T, Func>) {
     return item.has_func() ? item.mutable_func() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::Enum>) {
+  } else if constexpr (std::is_same_v<T, Enum>) {
     return item.has_enum_decl() ? item.mutable_enum_decl() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::UnsupportedItem>) {
+  } else if constexpr (std::is_same_v<T, UnsupportedItem>) {
     return item.has_unsupported_item() ? item.mutable_unsupported_item()
                                        : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::IncompleteRecord>) {
+  } else if constexpr (std::is_same_v<T, IncompleteRecord>) {
     return item.has_incomplete_record() ? item.mutable_incomplete_record()
                                         : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::Namespace>) {
+  } else if constexpr (std::is_same_v<T, Namespace>) {
     return item.has_namespace_decl() ? item.mutable_namespace_decl() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::TypeAlias>) {
+  } else if constexpr (std::is_same_v<T, TypeAlias>) {
     return item.has_type_alias() ? item.mutable_type_alias() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::Constant>) {
+  } else if constexpr (std::is_same_v<T, Constant>) {
     return item.has_constant() ? item.mutable_constant() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::GlobalVar>) {
+  } else if constexpr (std::is_same_v<T, GlobalVar>) {
     return item.has_global_var() ? item.mutable_global_var() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::Comment>) {
+  } else if constexpr (std::is_same_v<T, Comment>) {
     return item.has_comment() ? item.mutable_comment() : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::ExistingRustType>) {
+  } else if constexpr (std::is_same_v<T, ExistingRustType>) {
     return item.has_existing_rust_type() ? item.mutable_existing_rust_type()
                                          : nullptr;
-  } else if constexpr (std::is_same_v<T, ir_proto::UseMod>) {
+  } else if constexpr (std::is_same_v<T, UseMod>) {
     return item.has_use_mod() ? item.mutable_use_mod() : nullptr;
   }
 }
 
 template <typename T>
-std::vector<const T* _Nonnull> get_items_if(const ir_proto::IRProto& ir_proto) {
+std::vector<const T* _Nonnull> get_items_if(const IR& ir) {
   std::vector<const T* _Nonnull> filtered_items;
-  auto process_item = [&](auto& self, const ir_proto::Item& item) -> void {
+  auto process_item = [&](auto& self, const Item& item) -> void {
     if (const T* val = get_item_if<T>(item)) {
       filtered_items.push_back(val);
     }
@@ -400,7 +424,7 @@ std::vector<const T* _Nonnull> get_items_if(const ir_proto::IRProto& ir_proto) {
     }
   };
 
-  for (const auto& [target, item_list] : ir_proto.top_level_items()) {
+  for (const auto& [target, item_list] : ir.top_level_items()) {
     for (const auto& item : item_list) {
       process_item(process_item, item);
     }
@@ -409,9 +433,9 @@ std::vector<const T* _Nonnull> get_items_if(const ir_proto::IRProto& ir_proto) {
 }
 
 template <typename T>
-std::vector<T* _Nonnull> get_items_if(ir_proto::IRProto& ir_proto) {
+std::vector<T* _Nonnull> get_items_if(IR& ir) {
   std::vector<T* _Nonnull> filtered_items;
-  auto process_item = [&](auto& self, ir_proto::Item& item) -> void {
+  auto process_item = [&](auto& self, Item& item) -> void {
     if (T* val = get_item_if<T>(item)) {
       filtered_items.push_back(val);
     }
@@ -426,15 +450,13 @@ std::vector<T* _Nonnull> get_items_if(ir_proto::IRProto& ir_proto) {
     }
   };
 
-  for (auto& [target, item_list] : *ir_proto.mutable_top_level_items()) {
+  for (auto& [target, item_list] : *ir.mutable_top_level_items()) {
     for (auto& item : item_list) {
       process_item(process_item, item);
     }
   }
   return filtered_items;
 }
-
-using IR = ir_proto::IRProto;
 
 }  // namespace crubit
 

@@ -97,8 +97,6 @@
 
 namespace crubit {
 
-namespace ir_proto = ::crubit::ffi;
-
 namespace {
 
 constexpr llvm::StringRef kTypeStatusPayloadUrl =

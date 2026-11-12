@@ -4803,7 +4803,7 @@ fn test_member_function_constructor() {
     }
 }
 
-fn get_func_names(proto: &ir_rust_proto::IRProto) -> Vec<ir::UnqualifiedIdentifier> {
+fn get_func_names(proto: &ir_generated::IR) -> Vec<ir::UnqualifiedIdentifier> {
     let ir = ir_testing::make_test_ir(proto).unwrap();
     ir.functions().map(|f| f.rs_name().clone()).collect()
 }

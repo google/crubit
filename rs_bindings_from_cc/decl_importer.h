@@ -40,8 +40,6 @@
 
 namespace crubit {
 
-namespace ir_proto = ::crubit::ffi;
-
 // Top-level parameters as well as return value of an importer invocation.
 class Invocation {
  public:

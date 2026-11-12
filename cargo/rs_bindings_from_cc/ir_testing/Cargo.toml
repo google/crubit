@@ -19,7 +19,7 @@ doctest = false
 
 [dependencies]
 ir = { path = "../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
-proto_from_cc_sys = { path = "../../../cargo/rs_bindings_from_cc/proto_from_cc_sys", package = "rs_bindings_from_cc_proto_from_cc_sys"}
+ir_from_cc_dependency_sys = { path = "../../../cargo/rs_bindings_from_cc/ir_from_cc_dependency_sys", package = "rs_bindings_from_cc_ir_from_cc_dependency_sys"}
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 crubit_feature = { path = "../../../cargo/common/crubit_feature"}
 ffi_types = { path = "../../../cargo/common/ffi_types"}

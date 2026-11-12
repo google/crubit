@@ -17,8 +17,8 @@ CRUBIT_PROFILE_NOINLINE
 ffi::GenerateBindingsResponse GenerateBindingsCall(
     ffi::GenerateBindingsRequest&& request);
 
-// Formats an IRProto using its Rust Debug representation (for `--ir_out`).
-std::string FormatIrDebug(const ffi::IRProto& ir);
+// Formats an IR using its Rust Debug representation (for `--ir_out`).
+std::string FormatIrDebug(const ffi::IR& ir);
 
 }  // namespace crubit
 
