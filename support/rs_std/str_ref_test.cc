@@ -145,7 +145,35 @@ TEST(StrTest, OStream) {
 TEST(StrTest, FromUtf8OnNonUtf8ReturnsNullopt) {
   // Uncomment to see compiler error.
   // static constexpr StrRef kStrRef = "a\x80";
+  static_assert(!StrRef::FromUtf8("a\x80").has_value());
+  static_assert(!StrRef::FromUtf8("\xe0\x80\x80").has_value());
+  static_assert(!StrRef::FromUtf8("\xe0\x9f\xbf").has_value());
+  static_assert(!StrRef::FromUtf8("\xed\xa0\x80").has_value());
+  static_assert(!StrRef::FromUtf8("\xed\xbf\xbf").has_value());
+  static_assert(!StrRef::FromUtf8("\xf0\x80\x80\x80").has_value());
+  static_assert(!StrRef::FromUtf8("\xf0\x8f\xbf\xbf").has_value());
+  static_assert(!StrRef::FromUtf8("\xf4\x90\x80\x80").has_value());
+  static_assert(!StrRef::FromUtf8("\xf4\xbf\xbf\xbf").has_value());
+  static_assert(StrRef::FromUtf8("\xe0\xa0\x80").has_value());
+  static_assert(StrRef::FromUtf8("\xed\x9f\xbf").has_value());
+  static_assert(StrRef::FromUtf8("\xee\x80\x80").has_value());
+  static_assert(StrRef::FromUtf8("\xf0\x90\x80\x80").has_value());
+  static_assert(StrRef::FromUtf8("\xf4\x8f\xbf\xbf").has_value());
+
   EXPECT_FALSE(StrRef::FromUtf8("a\x80").has_value());
+  EXPECT_FALSE(StrRef::FromUtf8("\xe0\x80\x80").has_value());
+  EXPECT_FALSE(StrRef::FromUtf8("\xe0\x9f\xbf").has_value());
+  EXPECT_FALSE(StrRef::FromUtf8("\xed\xa0\x80").has_value());
+  EXPECT_FALSE(StrRef::FromUtf8("\xed\xbf\xbf").has_value());
+  EXPECT_FALSE(StrRef::FromUtf8("\xf0\x80\x80\x80").has_value());
+  EXPECT_FALSE(StrRef::FromUtf8("\xf0\x8f\xbf\xbf").has_value());
+  EXPECT_FALSE(StrRef::FromUtf8("\xf4\x90\x80\x80").has_value());
+  EXPECT_FALSE(StrRef::FromUtf8("\xf4\xbf\xbf\xbf").has_value());
+  EXPECT_TRUE(StrRef::FromUtf8("\xe0\xa0\x80").has_value());
+  EXPECT_TRUE(StrRef::FromUtf8("\xed\x9f\xbf").has_value());
+  EXPECT_TRUE(StrRef::FromUtf8("\xee\x80\x80").has_value());
+  EXPECT_TRUE(StrRef::FromUtf8("\xf0\x90\x80\x80").has_value());
+  EXPECT_TRUE(StrRef::FromUtf8("\xf4\x8f\xbf\xbf").has_value());
 }
 
 TEST(ImplicitConversionTest, FromConstString) {
