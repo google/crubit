@@ -28,6 +28,11 @@ struct CRUBIT_MUST_BIND HasMutableFields {
   mutable NonCopy non_copy;
 };
 
+template <bool b>
+struct CRUBIT_OVERRIDE_DEBUG(b) Templated {};
+
+using TemplatedOptIn CRUBIT_MUST_BIND = Templated<true>;
+using TemplatedOptOut CRUBIT_MUST_BIND = Templated<false>;
 enum class CRUBIT_MUST_BIND Enum { kOne = 1 };
 
 union CRUBIT_MUST_BIND Union {

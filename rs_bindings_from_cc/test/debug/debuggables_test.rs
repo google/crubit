@@ -5,7 +5,8 @@
 use debuggables::{
     has_anonymous_union, rust_keywords, Abstract, AliasedDebuggable, ArrayDebuggable, Debuggable,
     Enum, EnumArrayDebuggable, Exhaustive, HasAnonymousUnion, HasMutableFields, HasNonDebuggable,
-    MixedOpaqueArrayDebuggable, NonCopy, OptOut, RustKeywords, Union, UnscopedDebugEnum,
+    MixedOpaqueArrayDebuggable, NonCopy, OptOut, RustKeywords, TemplatedOptIn, TemplatedOptOut,
+    Union, UnscopedDebugEnum,
 };
 use existing_rust_debuggable::ExistingRustDebuggable;
 use googletest::{expect_eq, gtest};
@@ -121,4 +122,14 @@ fn test_has_mutable_fields() {
         format!("{:?}", HasMutableFields::default()),
         "HasMutableFields { i: Cell { value: 0 }, .. }"
     );
+}
+
+#[gtest]
+fn test_templated_opt_in() {
+    expect_eq!(format!("{:?}", TemplatedOptIn::default()), "Templated<true>");
+}
+
+#[gtest]
+fn test_templated_opt_out() {
+    assert_not_impl_any!(TemplatedOptOut: Debug);
 }

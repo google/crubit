@@ -9,6 +9,10 @@ load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
 )
+load(
+    "//rs_bindings_from_cc/test/golden:golden_test.bzl",
+    "golden_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -44,6 +48,13 @@ cc_library(
 rust_api_from_cpp(
     name = "debuggables_rust",
     cpp_target = ":debuggables",
+)
+
+golden_test(
+    name = "debuggables_golden_test",
+    basename = "debuggables",
+    cc_library = ":debuggables",
+    golden_rs = "debuggables_rs_api.rs",
 )
 
 crubit_rust_test(
