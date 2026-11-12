@@ -1910,9 +1910,6 @@ pub fn is_cpp_constexpr_move_constructible<'tcx>(
                 }
                 ty::AdtKind::Enum => {
                     !adt_def.repr().c()
-                        && db
-                            .crate_features(adt_def.did().krate)
-                            .contains(crubit_feature::CrubitFeature::EnumApiV2)
                         && adt_def.variants().iter().any(|variant| {
                             variant.fields.iter().all(|f| {
                                 let field_ty = f.ty(tcx, substs);
@@ -2145,7 +2142,7 @@ pub fn generate_adt<'tcx>(
         })
         .collect();
 
-    // With `EnumApiV2`, variants are constructed with `V::Make` instead of `MakeV`.
+    // Enums with per-variant bindings construct variants with `V::Make` instead of `MakeV`.
     let enum_layout = generate_enum::analyze_enum(db, core, &member_function_names);
     let is_enum_api_v2 = matches!(enum_layout, Ok(Some(_)));
     let adt_based_ctors = if is_aggregate || is_enum_api_v2 {
@@ -2186,10 +2183,10 @@ pub fn generate_adt<'tcx>(
             .into_values()
             .exactly_one()
             .expect("Expecting a single `drop` method");
-        // An `EnumApiV2` enum with drop glue (but no `Drop` impl of its own) gets a `constexpr`
-        // destructor that skips the Rust drop during constant evaluation: `VariadicUnionStorage`
-        // only lets trivially destructible variants be constructed at compile time, so the skipped
-        // drop never skips anything. See `VariadicUnionStorage` in
+        // An enum with per-variant bindings and drop glue (but no `Drop` impl of its own) gets a
+        // `constexpr` destructor that skips the Rust drop during constant evaluation:
+        // `VariadicUnionStorage` only lets trivially destructible variants be constructed at
+        // compile time, so the skipped drop never skips anything. See `VariadicUnionStorage` in
         // `support/rs_std/internal/enum.h`.
         let is_constexpr_enum_dtor = is_enum_api_v2
             && core

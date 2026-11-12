@@ -32,7 +32,5 @@ itertools.workspace = true
 proc-macro2.workspace = true
 quote.workspace = true
 syn.workspace = true
-crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
-flagset.workspace = true
 format_type = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/format_type", package = "cc_bindings_from_rs_format_type"}
 generate_comment = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_comment", package = "cc_bindings_from_rs_generate_comment"}

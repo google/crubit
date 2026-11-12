@@ -2855,9 +2855,6 @@ fn test_is_cpp_constexpr_move_constructible() {
         assert!(!db.is_cpp_constexpr_move_constructible(find_ty("StructWithDrop")));
         assert!(db.is_cpp_constexpr_move_constructible(find_ty("TrivialEnum")));
         assert!(!db.is_cpp_constexpr_move_constructible(find_ty("EnumWithDrop")));
-
-        let db_without_v2 = bindings_db_for_tests(tcx);
-        assert!(!db_without_v2.is_cpp_constexpr_move_constructible(find_ty("TrivialEnum")));
     });
 }
 

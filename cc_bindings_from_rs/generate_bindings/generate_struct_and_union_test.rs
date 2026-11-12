@@ -2762,24 +2762,6 @@ fn test_format_item_enum_api_v2_fallback() {
     }
 }
 
-/// Without the feature, enums keep their existing bindings.
-#[test]
-fn test_format_item_enum_api_v2_feature_disabled() {
-    let test_src = r#"
-        #[derive(Clone, Copy)]
-        pub enum Shape {
-            Point,
-            Circle(i32),
-        }
-    "#;
-    test_format_item(test_src, "Shape", |result| {
-        let result = result.unwrap().unwrap();
-        assert_cc_matches!(result.main_api.tokens, quote! { ... __opaque_blob_of_bytes ... });
-        assert_cc_not_matches!(result.main_api.tokens, quote! { VariadicUnionStorage });
-        assert_cc_not_matches!(result.main_api.tokens, quote! { enum_api_v2 });
-    });
-}
-
 #[test]
 fn test_multiple_inherent_impl_blocks_ordered_by_def_path() {
     let test_src = r#"

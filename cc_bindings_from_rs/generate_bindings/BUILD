@@ -210,10 +210,8 @@ rust_library(
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_abi_type",
-        "//common:crubit_feature",
         "//common:dyn_format",
         "//common:error_report",
-        "@crate_index//:flagset",  # v0_4
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1

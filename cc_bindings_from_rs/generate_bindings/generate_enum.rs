@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-//! Bindings for non-`repr(C)` Rust enums under `CrubitFeature::EnumApiV2`.
+//! Bindings for non-`repr(C)` Rust enums.
 //!
 //! Each variant becomes a struct nested in the enum, deriving from
 //! `::crubit::internal::Variant`, and the enum holds them in a
@@ -19,7 +19,6 @@ extern crate rustc_span;
 
 use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
-use crubit_feature::CrubitFeature;
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets};
 use database::{AdtCoreBindings, BindingsGenerator, GenericArgs, TypeLocation};
 use error_report::{anyhow, bail, ensure};
@@ -41,7 +40,7 @@ use rustc_span::def_id::DefId;
 use std::collections::HashSet;
 use std::ops::RangeInclusive;
 
-/// What `EnumApiV2` needs to know about an enum to generate its bindings.
+/// What we need to know about an enum to generate its per-variant bindings.
 pub struct EnumLayout<'db, 'tcx> {
     /// The enum's `Discriminant` type: the type of every variant's `kDiscriminant`, and of the
     /// value its tag encoding decodes. Is the declared discriminant type (`isize` by default) for
@@ -171,11 +170,11 @@ struct EnumField<'db, 'tcx> {
     attributes: Vec<TokenStream>,
 }
 
-/// Returns `Ok(None)` if `EnumApiV2` doesn't apply to `core`: the feature is off, `core` is not
-/// an enum, or it is a `#[repr(C)]` enum, which keeps its own bindings.
+/// Returns `Ok(None)` if `core` is not an enum, or is a `#[repr(C)]` enum, which keeps its own
+/// bindings.
 ///
-/// Otherwise, returns the enum's layout, or the reason it can't use `EnumApiV2` and falls back
-/// to an opaque blob of bytes.
+/// Otherwise, returns the enum's layout, or the reason it can't get per-variant bindings and
+/// falls back to an opaque blob of bytes.
 ///
 /// `member_function_names` are the names of the enum's members so far, which variant names must
 /// not collide with.
@@ -187,10 +186,7 @@ pub fn analyze_enum<'db, 'tcx>(
     let TyKind::Adt(adt_def, generic_args) = core.common.self_ty.kind() else {
         return Ok(None);
     };
-    if !adt_def.is_enum()
-        || adt_def.repr().c()
-        || !db.crate_features(db.source_crate_num()).contains(CrubitFeature::EnumApiV2)
-    {
+    if !adt_def.is_enum() || adt_def.repr().c() {
         return Ok(None);
     }
     let (adt_def, generic_args) = (*adt_def, *generic_args);
