@@ -1918,7 +1918,7 @@ fn append_explicit_trait_impls<'tcx>(
         };
         // We explicitly want to allow ADTs that specify cpp_type.
         // These are typically C++ types that have generated Rust bindings.
-        if canonical_name.unqualified.cpp_type.is_none() && db.adt_needs_bindings(*did).is_err() {
+        if canonical_name.unqualified.cpp_type.is_none() && db.generate_adt_core(*did).is_err() {
             continue;
         }
         let Ok(adt_cc_name) = canonical_name.format_for_cc(db) else {
@@ -1960,7 +1960,7 @@ fn append_negative_auto_trait_impls<'tcx>(
             continue;
         }
         if canonical_name.unqualified.cpp_type.is_none()
-            && db.adt_needs_bindings(self_def_id).is_err()
+            && db.generate_adt_core(self_def_id).is_err()
         {
             continue;
         }

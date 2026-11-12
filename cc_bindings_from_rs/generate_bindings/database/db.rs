@@ -351,12 +351,6 @@ memoized::query_group! {
       fn generate_function(&self, def_id: DefId, generic_args: Option<GenericArgs<'tcx>>, method_name_override: Option<&'static str>, static_method_mode: StaticMethodMode) -> Result<&ApiSnippets<'tcx>>;
 
       #[return_ref]
-      /// Determines if an ADT needs bindings generated in the current crate. This is a distinct method from `generate_adt_core` because we may want core binding information for a type that does not support bindings. For example, when generating bindings that use a type that isn't defined in the current crate.
-      ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/generate_struct_and_union.rs?q=function:adt_supports_bindings
-      fn adt_needs_bindings(&self, def_id: DefId) -> Result<&AdtCoreBindings<'tcx>>;
-
-      #[return_ref]
       /// Generates the bindings for the core of an algebraic data type (an ADT - a
       /// struct, an enum, or a union) represented by `def_id`.
       ///

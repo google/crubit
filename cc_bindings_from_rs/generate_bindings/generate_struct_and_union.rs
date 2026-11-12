@@ -2439,25 +2439,6 @@ pub fn generate_adt<'tcx>(
     ApiSnippets { main_api, cc_details, rs_details }
 }
 
-/// Implementation of `BindingsGenerator::adt_needs_bindings`.
-pub fn adt_needs_bindings<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    def_id: DefId,
-) -> Result<AdtCoreBindings<'tcx>> {
-    let tcx = db.tcx();
-
-    let fully_qualified_name = db.symbol_canonical_name(def_id)?;
-    if let Some(cpp_type) = fully_qualified_name.unqualified.cpp_type {
-        let item_name = tcx.def_path_str(def_id);
-        bail!(
-            "Type bindings for {item_name} suppressed due to being mapped to \
-                    an existing C++ type ({cpp_type})"
-        );
-    }
-
-    db.generate_adt_core(def_id).cloned()
-}
-
 fn adt_cc_keyword(adt_def: ty::AdtDef<'_>, crubit_attrs: &crubit_attr::CrubitAttrs) -> TokenStream {
     match adt_def.adt_kind() {
         ty::AdtKind::Struct => match crubit_attrs.cpp_enum {
