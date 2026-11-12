@@ -301,7 +301,6 @@ cc_library(
     hdrs = ["status_macros.h"],
     deps = [
         ":status_absl_compat",
-        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@llvm-project//llvm:Support",

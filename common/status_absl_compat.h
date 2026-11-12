@@ -17,17 +17,10 @@ namespace crubit {
 
 inline absl::Status ToAbslStatus(llvm::Error error) {
   if (!error) return absl::OkStatus();
-  absl::Status result = absl::UnknownError("Unknown error");
-  llvm::handleAllErrors(
-      std::move(error),
-      [&](const StatusError& err) {
-        result = absl::Status(static_cast<absl::StatusCode>(err.code()),
-                              err.message());
-      },
-      [&](const llvm::ErrorInfoBase& err) {
-        result = absl::UnknownError(err.message());
-      });
-  return result;
+  absl::Status status(static_cast<absl::StatusCode>(GetStatusCode(error)),
+                      GetStatusMessage(error));
+  llvm::consumeError(std::move(error));
+  return status;
 }
 
 inline llvm::Error FromAbslStatus(const absl::Status& s) {
@@ -37,35 +30,14 @@ inline llvm::Error FromAbslStatus(const absl::Status& s) {
       llvm::StringRef(s.message().data(), s.message().size()));
 }
 
-class AbslErrorReturn {
+// Adapter returned on the error path of `CRUBIT_RETURN_IF_ERROR` and
+// `CRUBIT_ASSIGN_OR_RETURN` that converts between `llvm::Error` /
+// `llvm::Expected<T>` and `absl::Status` / `absl::StatusOr<T>`.
+class ErrorReturn {
  public:
-  explicit AbslErrorReturn(absl::Status status) : status_(std::move(status)) {}
-  AbslErrorReturn(AbslErrorReturn&&) = default;
-  AbslErrorReturn& operator=(AbslErrorReturn&&) = default;
-
-  operator absl::Status() && { return std::move(status_); }
-
-  template <typename T>
-  operator absl::StatusOr<T>() && {
-    return std::move(status_);
-  }
-
-  operator llvm::Error() && { return FromAbslStatus(status_); }
-
-  template <typename T>
-  operator llvm::Expected<T>() && {
-    return FromAbslStatus(status_);
-  }
-
- private:
-  absl::Status status_;
-};
-
-class LlvmErrorReturn {
- public:
-  explicit LlvmErrorReturn(llvm::Error error) : error_(std::move(error)) {}
-  LlvmErrorReturn(LlvmErrorReturn&&) = default;
-  LlvmErrorReturn& operator=(LlvmErrorReturn&&) = default;
+  explicit ErrorReturn(llvm::Error error) : error_(std::move(error)) {}
+  explicit ErrorReturn(const absl::Status& status)
+      : error_(FromAbslStatus(status)) {}
 
   operator llvm::Error() && { return std::move(error_); }
 

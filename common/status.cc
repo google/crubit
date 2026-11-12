@@ -7,7 +7,6 @@
 #include <string>
 
 #include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/Twine.h"
 #include "llvm/Support/Error.h"
 
 namespace crubit {
@@ -54,30 +53,17 @@ llvm::StringRef StatusCodeToString(StatusCode code) {
   return "UNKNOWN";
 }
 
-llvm::Error MakeStatusError(StatusCode code, const llvm::Twine& message) {
-  return llvm::make_error<StatusError>(code, message.str());
-}
-
 StatusCode GetStatusCode(const llvm::Error& error) {
-  StatusCode result = StatusCode::kOk;
-  bool found_any_error = false;
+  StatusCode code = StatusCode::kOk;
   llvm::visitErrors(error, [&](const llvm::ErrorInfoBase& err) {
-    found_any_error = true;
-    if (err.isA<StatusError>()) {
-      result = static_cast<const StatusError&>(err).code();
-    }
+    code = err.isA<StatusError>() ? static_cast<const StatusError&>(err).code()
+                                  : StatusCode::kUnknown;
   });
-  if (found_any_error && result == StatusCode::kOk) {
-    result = StatusCode::kUnknown;
-  }
-  return result;
+  return code;
 }
 
 std::string GetStatusMessage(const llvm::Error& error) {
-  bool has_error = false;
-  llvm::visitErrors(error,
-                    [&](const llvm::ErrorInfoBase& err) { has_error = true; });
-  if (!has_error) return "OK";
+  if (GetStatusCode(error) == StatusCode::kOk) return "OK";
   return llvm::toStringWithoutConsuming(error);
 }
 

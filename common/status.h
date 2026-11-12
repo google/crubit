@@ -6,6 +6,7 @@
 #define CRUBIT_COMMON_STATUS_H_
 
 #include <string>
+#include <utility>
 
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
@@ -14,6 +15,7 @@
 
 namespace crubit {
 
+// Canonical status codes matching `absl::StatusCode` integer values.
 enum class StatusCode {
   kOk = 0,
   kCancelled = 1,
@@ -31,11 +33,12 @@ enum class StatusCode {
   kInternal = 13,
   kUnavailable = 14,
   kDataLoss = 15,
-  kUnauthenticated = 16
+  kUnauthenticated = 16,
 };
 
 llvm::StringRef StatusCodeToString(StatusCode code);
 
+// An `llvm::ErrorInfo` payload carrying a `StatusCode` and message string.
 class StatusError final : public llvm::ErrorInfo<StatusError> {
  public:
   static char ID;
@@ -45,9 +48,7 @@ class StatusError final : public llvm::ErrorInfo<StatusError> {
 
   StatusCode code() const { return code_; }
   std::string message() const override { return message_; }
-
   void log(llvm::raw_ostream& os) const override { os << message_; }
-
   std::error_code convertToErrorCode() const override {
     return llvm::inconvertibleErrorCode();
   }
@@ -57,7 +58,10 @@ class StatusError final : public llvm::ErrorInfo<StatusError> {
   std::string message_;
 };
 
-llvm::Error MakeStatusError(StatusCode code, const llvm::Twine& message);
+inline llvm::Error MakeStatusError(StatusCode code,
+                                   const llvm::Twine& message) {
+  return llvm::make_error<StatusError>(code, message.str());
+}
 
 inline llvm::Error InvalidArgumentError(const llvm::Twine& message) {
   return MakeStatusError(StatusCode::kInvalidArgument, message);
@@ -78,6 +82,7 @@ inline llvm::Error NotFoundError(const llvm::Twine& message) {
   return MakeStatusError(StatusCode::kNotFound, message);
 }
 
+// Non-consuming inspection helpers for `llvm::Error`.
 StatusCode GetStatusCode(const llvm::Error& error);
 std::string GetStatusMessage(const llvm::Error& error);
 
