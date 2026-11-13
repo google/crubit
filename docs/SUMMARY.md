@@ -100,5 +100,6 @@
 -   [Thunks for class template member functions](./design/thunks_for_class_template_member_functions.md)
 -   [`Unpin` for C++ Types](./design/unpin.md)
 -   [Bitwise relocatability and Rust-movability](./design/bitwise_relocatable.md)
+-   [Opt-in Safe Bindings for C Pointers](./design/noescape_pointers.md)
 -   [Problem Description: forward-declared types](./design/forward_declarations.md)
 -   [Pre-RFC: Allow stride != size](./design/pre_rfc_separate_size_stride.md)
