@@ -5,24 +5,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
-#[proc_macro]
-pub fn symbol(input: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(input as syn::LitStr);
-    let string = input.value();
-    let parts = string.chars().map(|c| {
-        let c = syn::LitChar::new(c, input.span());
-        quote! {
-          ::forward_declare::internal::C<#c>
-        }
-    });
-
-    TokenStream::from(quote! {
-      ::forward_declare::internal::Symbol<(
-          #(#parts,)*
-      )>
-    })
-}
-
 struct ForwardDeclareArgs {
     vis: syn::Visibility,
     ident: syn::Ident,

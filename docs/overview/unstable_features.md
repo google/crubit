@@ -135,9 +135,9 @@ For each feature we use, we document the following:
     than `Symbol<"Foo">` that Rust will even hide the type entirely, forcing you
     to read the name from a separate file (which may not be available to you if
     you were doing a remote build).
-*   **Exit strategy:** The `Symbol<(...)>` approach works and is tested, and we
-    can switch back with a single flag flip. The only impact is a regression on
-    error messages.
+*   **Exit strategy:** We can switch `symbol!` back to generating a tuple type
+    `Symbol<(C<'F'>, C<'o'>, C<'o'>)>` via a proc macro. The only impact is a
+    regression on error messages.
 
 ### `super_let`
 

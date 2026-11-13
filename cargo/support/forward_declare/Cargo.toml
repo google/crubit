@@ -17,9 +17,6 @@ path = "../../../support/forward_declare.rs"
 
 doctest = false
 
-[features]
-default = ["unstable"]
-unstable = []
 [dependencies]
 cref = { path = "../../../cargo/support/cref"}
 forward_declare_proc_macros = { path = "../../../cargo/support/forward_declare_proc_macros"}

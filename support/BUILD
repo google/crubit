@@ -7,13 +7,6 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 
-exports_files(
-    srcs = glob(["*"]),
-    visibility = [
-        ":__subpackages__",
-    ],
-)
-
 rust_library(
     name = "cpp_std",
     srcs = ["cpp_std.rs"],
@@ -197,7 +190,6 @@ rust_library(
     name = "forward_declare",
     srcs = ["forward_declare.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
-    crate_features = ["unstable"],
     edition = "2024",
     proc_macro_deps = [":forward_declare_proc_macros"],
     visibility = [
@@ -212,9 +204,6 @@ rust_proc_macro(
     name = "forward_declare_proc_macros",
     srcs = ["forward_declare_proc_macros.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
-    visibility = [
-        ":__subpackages__",
-    ],
     deps = [
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
@@ -228,14 +217,6 @@ rust_test(
     deps = [
         ":forward_declare",
         "@crate_index//:googletest",
-    ],
-)
-
-rust_test(
-    name = "forward_declare_unstable_test",
-    srcs = ["forward_declare_unstable_test.rs"],
-    deps = [
-        ":forward_declare",
     ],
 )
 

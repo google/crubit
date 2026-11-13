@@ -1,5 +1,5 @@
 {
-  "checksum": "dcea96738bb05c5f1427c957dbb7fec4bb5e2f21681c8bbff51f9944dcb42c44",
+  "checksum": "44f4eaf120200799a3c6671192973baf2a8f6a4fe9f1f19605e83b24aa759c4f",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -2751,10 +2751,6 @@
     },
     "forward_declare 0.0.0": {
       "common_attrs": {
-        "crate_features": [
-          "default",
-          "unstable"
-        ],
         "edition": "2024"
       },
       "library_target_name": "forward_declare",

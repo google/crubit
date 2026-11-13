@@ -1,12 +1,8 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#![feature(negative_impls)]
-#![cfg_attr(
-    feature = "unstable",
-    allow(incomplete_features),
-    feature(unsized_const_params, adt_const_params)
-)]
+#![allow(incomplete_features)]
+#![feature(negative_impls, unsized_const_params, adt_const_params)]
 
 //! This crate provides facilities for safely casting across multiple Rust types
 //! that represent the same C++ type. A `forward_declare::Incomplete<symbol!("Foo"), ...>`
@@ -214,10 +210,7 @@
 //! ```
 
 pub use forward_declare_proc_macros::forward_declare;
-#[cfg(not(feature = "unstable"))]
-pub use forward_declare_proc_macros::symbol;
 
-#[cfg(feature = "unstable")]
 #[macro_export]
 macro_rules! symbol {
     ($name:literal) => {
@@ -227,21 +220,6 @@ macro_rules! symbol {
 
 /// Public to be exposed to macros, but otherwise for internal use only.
 pub mod internal {
-    /// `Symbol` type, equivalent to const &'static str values, but usable in
-    /// generics in stable Rust.
-    ///
-    /// Every symbol is a tuple of `C`: for example, `symbol!("xy")` is
-    /// `Symbol((C<'x'>, C<'y'>))`
-    #[cfg(not(feature = "unstable"))]
-    #[repr(C)]
-    pub struct Symbol<T>(std::marker::PhantomData<T>);
-
-    /// A character in a symbol string.
-    #[cfg(not(feature = "unstable"))]
-    #[repr(C)]
-    pub struct C<const CHAR: char>;
-
-    #[cfg(feature = "unstable")]
     pub struct Symbol<const SYMBOL: &'static str>;
 
     /// Types that implement the `CppType` trait with the same `Name` can be
@@ -519,7 +497,6 @@ mod ref_transmutability {
     }
 
     /// Safety: See the doc comment for the `ref_transmutability` module.
-    #[cfg(feature = "unstable")]
     unsafe impl<'a, T: ?Sized> CppType for cref::CRef<'a, T>
     where
         T: CppType,
@@ -587,7 +564,6 @@ mod mut_ref_transmutability {
     }
 
     /// Safety: See the doc comment for the `mut_ref_transmutability` module.
-    #[cfg(feature = "unstable")]
     unsafe impl<'a, T: ?Sized> CppType for cref::CMut<'a, T>
     where
         T: CppType,

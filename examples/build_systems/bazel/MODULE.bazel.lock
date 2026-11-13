@@ -916,7 +916,7 @@
           "FILE:@@//rust_lib/Cargo.toml ca4f59299f25ee5b48ba6eb5b55f4fe178f53bff4b4ae4ba5fecdede08fae2e7",
           "FILE:@@rules_crubit+//Cargo.lock 9bffa7b136098115485b9baaabaaa3f6e0bea51a644a3cfd30195ff14c36f268",
           "FILE:@@rules_crubit+//Cargo.toml 49cd2d0906d83b3c7d3b7061f1b8517023c6814ac2fdeee994d8809b2b486c4b",
-          "FILE:@@rules_crubit+//Cargo.Bazel.lock 791e48023288248bce0a94462deead7482b7c4a2354564c25a63b66a1efd76e4"
+          "FILE:@@rules_crubit+//Cargo.Bazel.lock 2fb543cfc63681cb8760bf18628b0160116c82d187c6683892b661b379fb61e1"
         ],
         "generatedRepoSpecs": {
           "crates": {

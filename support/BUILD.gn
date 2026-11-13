@@ -245,9 +245,6 @@ rust_static_library("forward_declare") {
     "$crubit_src_dir/support:cref",
     "$crubit_src_dir/support:forward_declare_proc_macros",
   ]
-  features = [
-    "unstable",
-  ]
   allow_unsafe = true
   no_clippy = true
 }
