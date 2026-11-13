@@ -1211,7 +1211,8 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
         specialization_decl->getSpecializedTemplateOrPartial();
     clang::NamedDecl* decl;
     if (auto* template_decl =
-            instantiation_source.dyn_cast<clang::ClassTemplateDecl*>()) {
+            llvm::dyn_cast_if_present<clang::ClassTemplateDecl*>(
+                instantiation_source)) {
       // `getSpecializedTemplateOrPartial()` can return a ClassTemplateDecl
       // corresponding to a forward declaration, even if a definition is
       // available elsewhere. If we have a forward declaration, we need to
@@ -1227,8 +1228,8 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
       }
       decl = template_decl;
     } else {
-      decl = instantiation_source
-                 .dyn_cast<clang::ClassTemplatePartialSpecializationDecl*>();
+      decl = llvm::dyn_cast_if_present<
+          clang::ClassTemplatePartialSpecializationDecl*>(instantiation_source);
     }
     if (!ictx_.invocation_.should_instantiate_template_from_path(
             ictx_.sema_.getSourceManager(), decl->getLocation())) {

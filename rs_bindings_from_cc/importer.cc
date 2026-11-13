@@ -624,11 +624,12 @@ static clang::SourceRange GetSourceRangeForOrdering(
   }
   auto pattern = spec->getSpecializedTemplateOrPartial();
   const clang::Decl* pattern_decl = nullptr;
-  if (auto* partial =
-          pattern.dyn_cast<clang::ClassTemplatePartialSpecializationDecl*>()) {
+  if (auto* partial = llvm::dyn_cast_if_present<
+          clang::ClassTemplatePartialSpecializationDecl*>(pattern)) {
     pattern_decl = partial;
   } else {
-    pattern_decl = pattern.dyn_cast<clang::ClassTemplateDecl*>();
+    pattern_decl =
+        llvm::dyn_cast_if_present<clang::ClassTemplateDecl*>(pattern);
   }
   if (pattern_decl == nullptr) return decl.getSourceRange();
   return GetRepresentativeCopy(pattern_decl, ast_context.getSourceManager(),
@@ -1815,8 +1816,8 @@ std::optional<std::string> Importer::GetTemplateArgumentLifetimeParam(
       clang::TSK_ExplicitSpecialization) {
     return std::nullopt;
   }
-  auto* template_decl = specialization_decl.getSpecializedTemplateOrPartial()
-                            .dyn_cast<clang::ClassTemplateDecl*>();
+  auto* template_decl = llvm::dyn_cast_if_present<clang::ClassTemplateDecl*>(
+      specialization_decl.getSpecializedTemplateOrPartial());
   if (template_decl == nullptr) return std::nullopt;
   // The special support for these templates (e.g. `absl::Span`) already decides
   // what their arguments' lifetimes mean.
@@ -2702,8 +2703,8 @@ bool Importer::RefersToOwnedDefinitionImpl(
   if (auto* spec =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(&decl)) {
     auto primary_or_partial = spec->getSpecializedTemplateOrPartial();
-    if (auto* primary =
-            primary_or_partial.dyn_cast<clang::ClassTemplateDecl*>()) {
+    if (auto* primary = llvm::dyn_cast_if_present<clang::ClassTemplateDecl*>(
+            primary_or_partial)) {
       if (auto* primary_def = primary->getTemplatedDecl()->getDefinition()) {
         if (IsFromCurrentTargetAndNotUnderSpecialization(*primary_def) ||
             (primary_def != &decl &&
@@ -2711,9 +2712,9 @@ bool Importer::RefersToOwnedDefinitionImpl(
           return true;
         }
       }
-    } else if (auto* partial =
-                   primary_or_partial.dyn_cast<
-                       clang::ClassTemplatePartialSpecializationDecl*>()) {
+    } else if (auto* partial = llvm::dyn_cast_if_present<
+                   clang::ClassTemplatePartialSpecializationDecl*>(
+                   primary_or_partial)) {
       if (auto* partial_def = partial->getDefinition()) {
         if (IsFromCurrentTargetAndNotUnderSpecialization(*partial_def) ||
             (partial_def != &decl &&
