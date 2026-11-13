@@ -166,20 +166,10 @@ bool IsClangCoroAnnotation(const clang::Attr& attr) {
          clang::isa<clang::CoroOnlyDestroyWhenCompleteAttr>(attr);
 }
 
-bool IsIgnoredVisibilityAttr(const clang::Attr& attr,
-                             bool allow_non_default_visibility) {
-  if (auto* visibility_attr = clang::dyn_cast<clang::VisibilityAttr>(&attr)) {
-    return allow_non_default_visibility ||
-           visibility_attr->getVisibility() ==
-               clang::VisibilityAttr::VisibilityType::Default;
-  }
-  if (auto* type_visibility_attr =
-          clang::dyn_cast<clang::TypeVisibilityAttr>(&attr)) {
-    return allow_non_default_visibility ||
-           type_visibility_attr->getVisibility() ==
-               clang::TypeVisibilityAttr::VisibilityType::Default;
-  }
-  return clang::isa<clang::DLLImportAttr>(attr) ||
+bool IsIgnoredVisibilityAttr(const clang::Attr& attr) {
+  return clang::isa<clang::VisibilityAttr>(attr) ||
+         clang::isa<clang::TypeVisibilityAttr>(attr) ||
+         clang::isa<clang::DLLImportAttr>(attr) ||
          clang::isa<clang::DLLExportAttr>(attr) ||
          clang::isa<clang::DLLImportStaticLocalAttr>(attr) ||
          clang::isa<clang::DLLExportStaticLocalAttr>(attr) ||
