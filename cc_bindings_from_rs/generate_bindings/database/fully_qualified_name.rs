@@ -328,6 +328,10 @@ impl PublicPaths {
         &self.canonical_path
     }
 
+    pub fn iter(&self) -> impl Iterator<Item = &ExportedPath> {
+        std::iter::once(&self.canonical_path).chain(self.aliases.iter())
+    }
+
     /// Turn `self` into it's canonical path and aliases. This should only be used on a definition
     /// defined in the source crate.
     pub fn into_canonical_and_aliases(self) -> (ExportedPath, Vec<ExportedPath>) {

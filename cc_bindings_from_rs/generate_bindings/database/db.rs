@@ -33,6 +33,17 @@ use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::rc::Rc;
 
+/// Resolved C++ identifier names for type and trait aliases emitted in the source crate,
+/// disambiguated against other declarations and child namespaces in the same C++ scope.
+#[derive(Default)]
+pub struct DisambiguatedAliases {
+    /// Canonical `pub type` declarations defined in the source crate, keyed by alias `DefId`.
+    pub canonical: HashMap<DefId, Result<String>>,
+    /// Non-canonical `pub use` re-exports and redirected ADT/trait aliases, keyed by
+    /// `(target_def_id, mod_path, rs_name)`.
+    pub exported: HashMap<(DefId, Vec<Symbol>, Symbol), Result<String>>,
+}
+
 /// A specialization of a C++ type.
 ///
 /// For example, `std::vector<int>` and `std::vector<double>` are two different
@@ -229,6 +240,13 @@ memoized::query_group! {
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:all_public_paths_by_def_id
       fn all_public_paths_by_def_id(&self) -> &HashMap<DefId, PublicPaths>;
+
+      #[return_ref]
+      /// Computes collision-disambiguated C++ identifier names for all type and trait aliases
+      /// emitted in the source crate.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:disambiguated_cc_alias_names
+      fn disambiguated_cc_alias_names(&self) -> &DisambiguatedAliases;
 
       /// Finds the `DefId` of a public item by its name in the given crate.
       ///
