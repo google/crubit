@@ -240,6 +240,41 @@ static_assert(sizeof(FfiString) == 2 * sizeof(size_t));
 static_assert(alignof(FfiString) == alignof(size_t));
 static_assert(std::is_standard_layout_v<FfiString>);
 
+// A name of a public header of the C++ library, with a `#[repr(C)]` layout
+// matching `HeaderName` in Rust (`FfiString`).
+struct CRUBIT_FFI_TRIVIAL_ABI HeaderName {
+  HeaderName() = default;
+  explicit HeaderName(llvm::StringRef name) : data(name) {}
+  explicit HeaderName(std::string_view name)
+      : data(llvm::StringRef(name.data(), name.size())) {}
+  explicit HeaderName(const std::string& name) : data(llvm::StringRef(name)) {}
+  explicit HeaderName(const char* name) : data(llvm::StringRef(name)) {}
+
+  std::string_view name() const { return data.AsView(); }
+  void set_name(std::string_view value) { data = FfiString(value); }
+
+  llvm::StringRef IncludePath() const { return data.AsView(); }
+
+  friend bool operator==(const HeaderName&, const HeaderName&) = default;
+  friend bool operator!=(const HeaderName&, const HeaderName&) = default;
+
+  template <typename H>
+  friend H AbslHashValue(H h, const HeaderName& header_name) {
+    return H::combine(std::move(h), header_name.name());
+  }
+
+  friend std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
+    return o << h.name();
+  }
+
+ private:
+  FfiString data{};
+};
+
+static_assert(sizeof(HeaderName) == sizeof(FfiString));
+static_assert(alignof(HeaderName) == alignof(FfiString));
+static_assert(std::is_standard_layout_v<HeaderName>);
+
 // An owned contiguous vector with a `#[repr(C)]` layout shared between C++ and
 // Rust.
 template <typename T>
@@ -872,6 +907,23 @@ struct DenseMapInfo<crubit::ffi::FormattedError> {
   }
   static bool isEqual(const crubit::ffi::FormattedError& LHS,
                       const crubit::ffi::FormattedError& RHS) {
+    return LHS == RHS;
+  }
+};
+
+template <>
+struct DenseMapInfo<crubit::ffi::HeaderName> {
+  static crubit::ffi::HeaderName getEmptyKey() {
+    return crubit::ffi::HeaderName("\x01<empty>");
+  }
+  static crubit::ffi::HeaderName getTombstoneKey() {
+    return crubit::ffi::HeaderName("\x01<tombstone>");
+  }
+  static unsigned getHashValue(const crubit::ffi::HeaderName& Val) {
+    return static_cast<unsigned>(llvm::hash_value(Val.IncludePath()));
+  }
+  static bool isEqual(const crubit::ffi::HeaderName& LHS,
+                      const crubit::ffi::HeaderName& RHS) {
     return LHS == RHS;
   }
 };

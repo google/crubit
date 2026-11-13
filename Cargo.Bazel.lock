@@ -1,5 +1,5 @@
 {
-  "checksum": "44f4eaf120200799a3c6671192973baf2a8f6a4fe9f1f19605e83b24aa759c4f",
+  "checksum": "f47f9e7e5af4457f121a62c4fee6fd87b8d5414bdb6bda7b5e04f3e74c015869",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -1935,10 +1935,6 @@
     "code_gen_utils 0.0.0": {
       "common_attrs": {
         "deps": [
-          {
-            "id": "flagset 0.4.7",
-            "target": "flagset"
-          },
           {
             "id": "heck 0.5.0",
             "target": "heck"
