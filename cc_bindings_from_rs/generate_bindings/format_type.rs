@@ -634,50 +634,51 @@ fn escaping_bound_vars_err<'tcx>(tcx: TyCtxt<'tcx>, kind_str: &str, ty: Ty<'tcx>
     )
 }
 
+enum DynReceiver {
+    Bare,
+    Ref(Mutability),
+    Box,
+}
+
+fn extract_dyn_trait_preds<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    ty: Ty<'tcx>,
+) -> Option<(DynReceiver, &'tcx ty::List<ty::PolyExistentialPredicate<'tcx>>)> {
+    match *ty.kind() {
+        ty::TyKind::Dynamic(preds, _) => Some((DynReceiver::Bare, preds)),
+        ty::TyKind::Ref(_, referent, mutability) => match referent.kind() {
+            ty::TyKind::Dynamic(preds, _) => Some((DynReceiver::Ref(mutability), *preds)),
+            _ => None,
+        },
+        ty::TyKind::Adt(adt, substs) if tcx.is_lang_item(adt.did(), LangItem::OwnedBox) => {
+            substs.first().and_then(|a| a.as_type()).and_then(|referent| match referent.kind() {
+                ty::TyKind::Dynamic(preds, _) => Some((DynReceiver::Box, *preds)),
+                _ => None,
+            })
+        }
+        _ => None,
+    }
+}
+
 pub fn get_callable_info<'tcx>(
     tcx: TyCtxt<'tcx>,
     ty: Ty<'tcx>,
 ) -> Result<Option<CallableInfo<'tcx>>> {
-    let (kind, principal) = match *ty.kind() {
-        ty::TyKind::Ref(_, referent, mutability) => {
-            let ty::TyKind::Dynamic(preds, _) = referent.kind() else {
-                return Ok(None);
-            };
-            let Some(principal) = preds.principal() else {
-                return Ok(None);
-            };
-            let Some(closure_kind) = tcx.fn_trait_kind_from_def_id(principal.skip_binder().def_id)
-            else {
-                return Ok(None);
-            };
-            let kind = match (closure_kind, mutability) {
-                (ty::ClosureKind::Fn, Mutability::Not) => CallableKind::FnRef,
-                (ty::ClosureKind::FnMut, Mutability::Mut) => CallableKind::FnMutRef,
-                _ => return Ok(None),
-            };
-            (kind, principal)
-        }
-        ty::TyKind::Adt(adt, substs) if tcx.is_lang_item(adt.did(), LangItem::OwnedBox) => {
-            let Some(referent) = substs.first().and_then(|a| a.as_type()) else {
-                return Ok(None);
-            };
-            let ty::TyKind::Dynamic(preds, _) = referent.kind() else {
-                return Ok(None);
-            };
-            let Some(principal) = preds.principal() else {
-                return Ok(None);
-            };
-            let Some(closure_kind) = tcx.fn_trait_kind_from_def_id(principal.skip_binder().def_id)
-            else {
-                return Ok(None);
-            };
-            let kind = match closure_kind {
-                ty::ClosureKind::Fn => CallableKind::FnBox,
-                ty::ClosureKind::FnMut => CallableKind::FnMutBox,
-                ty::ClosureKind::FnOnce => CallableKind::FnOnceBox,
-            };
-            (kind, principal)
-        }
+    let Some((receiver, preds)) = extract_dyn_trait_preds(tcx, ty) else {
+        return Ok(None);
+    };
+    let Some(principal) = preds.principal() else {
+        return Ok(None);
+    };
+    let Some(closure_kind) = tcx.fn_trait_kind_from_def_id(principal.skip_binder().def_id) else {
+        return Ok(None);
+    };
+    let kind = match (receiver, closure_kind) {
+        (DynReceiver::Ref(Mutability::Not), ty::ClosureKind::Fn) => CallableKind::FnRef,
+        (DynReceiver::Ref(Mutability::Mut), ty::ClosureKind::FnMut) => CallableKind::FnMutRef,
+        (DynReceiver::Box, ty::ClosureKind::Fn) => CallableKind::FnBox,
+        (DynReceiver::Box, ty::ClosureKind::FnMut) => CallableKind::FnMutBox,
+        (DynReceiver::Box, ty::ClosureKind::FnOnce) => CallableKind::FnOnceBox,
         _ => return Ok(None),
     };
 
@@ -1536,22 +1537,7 @@ pub fn get_associated_type<'tcx>(
             });
     }
 
-    let dyn_preds = match *ty.kind() {
-        ty::TyKind::Dynamic(preds, _) => Some(preds),
-        ty::TyKind::Ref(_, referent, _) => match referent.kind() {
-            ty::TyKind::Dynamic(preds, _) => Some(*preds),
-            _ => None,
-        },
-        ty::TyKind::Adt(adt, substs) if tcx.is_lang_item(adt.did(), LangItem::OwnedBox) => {
-            substs.first().and_then(|a| a.as_type()).and_then(|referent| match referent.kind() {
-                ty::TyKind::Dynamic(preds, _) => Some(*preds),
-                _ => None,
-            })
-        }
-        _ => None,
-    };
-
-    dyn_preds.and_then(|preds| {
+    extract_dyn_trait_preds(tcx, ty).and_then(|(_, preds)| {
         preds.projection_bounds().find_map(|proj| {
             let proj = tcx.instantiate_bound_regions_uncached(proj, |_| tcx.lifetimes.re_static);
             if tcx.item_name(proj.def_id) == assoc_name {
@@ -2240,10 +2226,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 }
                 return Ok(CrubitAbiTypeWithCcPrereqs {
                     crubit_abi_type: CrubitAbiType::Transmute {
-                        rust_type: {
-                            let parts = fully_qualified_name.rs_name_parts();
-                            quote! { #(::#parts)* }
-                        },
+                        rust_type: fully_qualified_name.format_for_rs(),
                         cpp_type: cpp_type.as_str().parse().expect("Malformed cpp_type annotation"),
                     },
                     prereqs,
@@ -2304,10 +2287,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 }
 
                 CrubitAbiType::Transmute {
-                    rust_type: {
-                        let parts = fully_qualified_name.rs_name_parts();
-                        quote! { #(::#parts)* }
-                    },
+                    rust_type: fully_qualified_name.format_for_rs(),
                     cpp_type: fully_qualified_name.format_for_cc(db)?,
                 }
             }
