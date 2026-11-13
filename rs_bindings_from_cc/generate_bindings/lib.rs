@@ -1320,6 +1320,33 @@ fn record_safety(db: &BindingsGenerator, record: FfiRc<Record>) -> Option<Unsafe
     )))
 }
 
+fn cc_type_uses_cstddef(ir: &IR, cc_type: &CcType) -> bool {
+    let in_variant = match cc_type.variant() {
+        CcTypeVariant::Primitive(p) => {
+            matches!(p, Primitive::StdSizeT | Primitive::StdPtrdiffT)
+        }
+        CcTypeVariant::Pointer(ptr) => cc_type_uses_cstddef(ir, ptr.pointee_type()),
+        CcTypeVariant::FuncPointer(fp) => {
+            fp.param_and_return_types().iter().any(|t| cc_type_uses_cstddef(ir, t))
+        }
+        CcTypeVariant::ConstantArray(arr) => cc_type_uses_cstddef(ir, arr.element_type()),
+        CcTypeVariant::Decl(id) => {
+            if let Some(Item::TypeAlias(alias)) = ir.get_decl(*id) {
+                cc_type_uses_cstddef(ir, alias.underlying_type())
+            } else {
+                false
+            }
+        }
+        CcTypeVariant::Error(_) => false,
+    };
+    in_variant || cc_type.template_args().iter().any(|t| cc_type_uses_cstddef(ir, t))
+}
+
+fn func_uses_cstddef(ir: &IR, func: &Func) -> bool {
+    cc_type_uses_cstddef(ir, func.return_type())
+        || func.params().iter().any(|p| cc_type_uses_cstddef(ir, p.type_()))
+}
+
 fn generate_rs_api_impl_includes(
     db: &BindingsGenerator,
     crubit_support_path_format: Format<1>,
@@ -1330,8 +1357,16 @@ fn generate_rs_api_impl_includes(
     let ir = db.ir();
 
     internal_includes.insert(CcInclude::memory()); // ubiquitous.
-    if ir.records().next().is_some() {
+    if ir.records().next().is_some()
+        || (!cc_details.is_empty()
+            && ir
+                .functions()
+                .filter(|f| f.owning_target().as_ref() == Some(ir.current_target()))
+                .any(|f| func_uses_cstddef(ir, f)))
+    {
         internal_includes.insert(CcInclude::cstddef());
+    }
+    if ir.records().next().is_some() {
         internal_includes.insert(CcInclude::SupportLibHeader(
             crubit_support_versioned_path_format.clone(),
             intern!(db.interner(), "sizeof.h"),

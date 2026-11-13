@@ -101,6 +101,9 @@ using ns::ExampleEnum;
 TEST(UsingEnum, ExampleEnum);
 
 TEST(DeclTypeBool, decltype(true || false));
+TEST(DeclTypeSize, decltype(sizeof(0)));
+TEST(DeclTypePtrDiff, decltype(static_cast<const char*>(nullptr) -
+                               static_cast<const char*>(nullptr)));
 
 struct CRUBIT_INTERNAL_RUST_TYPE("i8") MyI8Struct final {
   signed char x;

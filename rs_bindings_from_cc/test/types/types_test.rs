@@ -137,6 +137,8 @@ type_is!(
     UsingEnum => types_nonptr::ns::ExampleEnum,
 
     DeclTypeBool => bool,
+    DeclTypeSize => usize,
+    DeclTypePtrDiff => isize,
 
     ExistingRustTypeStruct => i8,
     ExistingRustTypeClass => i8,

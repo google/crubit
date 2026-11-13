@@ -8484,3 +8484,154 @@ fn test_static_data_members_of_nested_class_in_template_specialization() {
         }
     );
 }
+
+#[gtest]
+fn test_predefined_sugar_types() -> Result<()> {
+    let header = r#"
+        using SizeAlias = decltype(sizeof(0));
+        using PtrDiffAlias = decltype(static_cast<const char*>(nullptr) - static_cast<const char*>(nullptr));
+        constexpr auto kSizeOfInt = sizeof(int);
+        constexpr auto kPtrDiff = static_cast<const int*>(nullptr) - static_cast<const int*>(nullptr);
+        #define MACRO_SIZE_ZU 1zu
+        #define MACRO_SIZE_UZ 1uz
+        #define MACRO_SIGNED_SIZE_Z 1z
+    "#;
+    let proto = ir_testing::ir_proto_from_cc_dependency(
+        test_platform(),
+        header,
+        "// empty header",
+        Some("macro_constants"),
+        /* kythe_annotations= */ false,
+        /* carcinize= */ false,
+    )?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("macro_constants"))?;
+
+    let expected_signed_size_primitive = match test_platform() {
+        multiplatform_testing::Platform::X86Linux
+        | multiplatform_testing::Platform::ArmLinux
+        | multiplatform_testing::Platform::X86MacOS
+        | multiplatform_testing::Platform::ArmMacOS => quote! { Primitive(Long) },
+        multiplatform_testing::Platform::X86Windows => quote! { Primitive(LongLong) },
+        multiplatform_testing::Platform::I686Windows => quote! { Primitive(Int) },
+        other => unreachable!("unexpected platform: {other:?}"),
+    };
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            TypeAlias {
+                cc_name: "SizeAlias",
+                rs_name: "SizeAlias",
+                ...
+                underlying_type: CcType {
+                    variant: Primitive(StdSizeT),
+                    is_const: false,
+                    ...
+                },
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            TypeAlias {
+                cc_name: "PtrDiffAlias",
+                rs_name: "PtrDiffAlias",
+                ...
+                underlying_type: CcType {
+                    variant: Primitive(StdPtrdiffT),
+                    is_const: false,
+                    ...
+                },
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Constant {
+                ...
+                cc_name: "kSizeOfInt",
+                rs_name: "kSizeOfInt",
+                ...
+                type_: Some(CcType {
+                    variant: Primitive(StdSizeT),
+                    is_const: true,
+                    ...
+                }),
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Constant {
+                ...
+                cc_name: "kPtrDiff",
+                rs_name: "kPtrDiff",
+                ...
+                type_: Some(CcType {
+                    variant: Primitive(StdPtrdiffT),
+                    is_const: true,
+                    ...
+                }),
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Constant {
+                ...
+                cc_name: "MACRO_SIZE_ZU",
+                rs_name: "MACRO_SIZE_ZU",
+                ...
+                type_: Some(CcType {
+                    variant: Primitive(StdSizeT),
+                    is_const: true,
+                    ...
+                }),
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Constant {
+                ...
+                cc_name: "MACRO_SIZE_UZ",
+                rs_name: "MACRO_SIZE_UZ",
+                ...
+                type_: Some(CcType {
+                    variant: Primitive(StdSizeT),
+                    is_const: true,
+                    ...
+                }),
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Constant {
+                ...
+                cc_name: "MACRO_SIGNED_SIZE_Z",
+                rs_name: "MACRO_SIGNED_SIZE_Z",
+                ...
+                type_: Some(CcType {
+                    variant: #expected_signed_size_primitive,
+                    is_const: true,
+                    ...
+                }),
+                ...
+            }
+        }
+    );
+    Ok(())
+}

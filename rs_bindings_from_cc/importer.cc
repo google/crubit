@@ -3997,6 +3997,18 @@ llvm::Expected<CcType> Importer::ConvertUnattributedType(
   } else if (const auto* decltype_type = type.getAs<clang::DecltypeType>()) {
     return ConvertQualType(decltype_type->getUnderlyingType(), lifetimes,
                            /*nullable=*/true, assume_lifetimes);
+  } else if (const auto* predefined_sugar_type =
+                 type.getAs<clang::PredefinedSugarType>()) {
+    switch (predefined_sugar_type->getKind()) {
+      case clang::PredefinedSugarType::Kind::SizeT:
+        return CcType(Primitive::STD_SIZE_T);
+      case clang::PredefinedSugarType::Kind::PtrdiffT:
+        return CcType(Primitive::STD_PTRDIFF_T);
+      case clang::PredefinedSugarType::Kind::SignedSizeT:
+        return ConvertQualType(predefined_sugar_type->desugar(), lifetimes,
+                               /*nullable=*/true, assume_lifetimes);
+    }
+    LOG(FATAL) << "All PredefinedSugarType::Kind values should be handled";
   } else if (const auto* array_type =
                  ctx_.getAsConstantArrayType(clang::QualType(&type, 0))) {
     std::optional<int64_t> num_elements = array_type->getSize().trySExtValue();

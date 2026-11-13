@@ -14,11 +14,10 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-// error: type alias `PtrDiff` could not be bound
-//   Unsupported type 'decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr))': Unsupported type '__ptrdiff_t': Unsupported clang::Type class 'PredefinedSugar'
+/// To avoid relying on cstdef
+pub type PtrDiff = isize;
 
-// error: type alias `Size` could not be bound
-//   Unsupported type 'decltype(sizeof (0))': Unsupported type '__size_t': Unsupported clang::Type class 'PredefinedSugar'
+pub type Size = usize;
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "10SomeStruct"]
@@ -52,8 +51,6 @@ forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::s
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
 ///   * `wchar_t_field`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'wchar_t': Unsupported builtin type
-///   * `ptrdiff_t_field`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type alias PtrDiff
-///   * `size_t_field`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type alias Size
 ///   * `ptr_field`: raw pointer
 ///   * `void_ptr_field`: raw pointer
 ///   * `const_void_ptr_field`: raw pointer
@@ -91,12 +88,8 @@ pub struct FieldTypeTestStruct {
     pub signed_int_field: ::ffi_11::c_int,
     pub signed_long_field: ::ffi_11::c_long,
     pub signed_long_long_field: ::ffi_11::c_longlong,
-    /// Reason for representing this field as a blob of bytes:
-    /// Unsupported type alias PtrDiff
-    pub(crate) ptrdiff_t_field: [::core::mem::MaybeUninit<u8>; 8],
-    /// Reason for representing this field as a blob of bytes:
-    /// Unsupported type alias Size
-    pub(crate) size_t_field: [::core::mem::MaybeUninit<u8>; 8],
+    pub ptrdiff_t_field: crate::PtrDiff,
+    pub size_t_field: crate::Size,
     pub float_field: f32,
     pub double_field: f64,
     pub ptr_field: *mut ::ffi_11::c_int,
@@ -115,10 +108,10 @@ pub struct FieldTypeTestStruct {
     pub cyclic_ptr_field: *mut crate::FieldTypeTestStruct,
 }
 /// Cannot infer `Send` because:
-/// * fields `wchar_t_field`, `ptrdiff_t_field`, `size_t_field` are represented as opaque bytes
+/// * field `wchar_t_field` is represented as opaque bytes
 impl !Send for FieldTypeTestStruct {}
 /// Cannot infer `Sync` because:
-/// * fields `wchar_t_field`, `ptrdiff_t_field`, `size_t_field` are represented as opaque bytes
+/// * field `wchar_t_field` is represented as opaque bytes
 impl !Sync for FieldTypeTestStruct {}
 unsafe impl ::cxx::ExternType for FieldTypeTestStruct {
     type Id = ::cxx::type_id!("FieldTypeTestStruct");

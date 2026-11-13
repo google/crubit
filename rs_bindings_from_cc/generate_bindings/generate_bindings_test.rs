@@ -2816,3 +2816,36 @@ fn test_reexported_namespaces() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_predefined_sugar_types_without_cstddef_include() -> Result<()> {
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc(
+        r#"
+            using Size = decltype(sizeof(0));
+            using PtrDiff = decltype(static_cast<int*>(nullptr) - static_cast<int*>(nullptr));
+            inline decltype(sizeof(0)) identity_size(decltype(sizeof(0)) x) { return x; }
+            inline PtrDiff identity_ptrdiff(PtrDiff x) { return x; }
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub type Size = usize;
+            ...
+            pub type PtrDiff = isize;
+            ...
+            pub fn identity_size(x: usize) -> usize { ... }
+            ...
+            pub fn identity_ptrdiff(x: crate::PtrDiff) -> crate::PtrDiff { ... }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            ...
+            __HASH_TOKEN__ include < cstddef >
+            ...
+        }
+    );
+    Ok(())
+}
