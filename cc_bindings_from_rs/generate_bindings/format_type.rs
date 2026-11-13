@@ -218,18 +218,11 @@ fn is_cpp_thread_safe<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Resul
 fn format_non_owning_pointer_prefix<'tcx>(
     db: &BindingsGenerator<'tcx>,
     region: ty::Region<'tcx>,
-    referent: Ty<'tcx>,
     prereqs: &mut CcPrerequisites<'tcx>,
 ) -> TokenStream {
     let lifetime = format_region_as_cc_lifetime(db, region, prereqs);
-    // Don't annotate maybe uninit with crubit_nonnull.
-    let annotation = if try_ty_as_maybe_uninit(db, referent).is_some() {
-        quote! {}
-    } else {
-        prereqs.includes.insert(db.support_header("annotations_internal.h"));
-        quote! { crubit_nonnull }
-    };
-    quote! { * #lifetime #annotation }
+    prereqs.includes.insert(db.support_header("annotations_internal.h"));
+    quote! { * #lifetime crubit_nonnull }
 }
 
 /// Implementation of `BindingsGenerator::format_top_level_ns_for_crate`.
@@ -738,7 +731,7 @@ fn format_ref_for_cc<'tcx>(
 
     let mut prereqs = CcPrerequisites::default();
     let ptr_or_ref_prefix = if is_pointer {
-        format_non_owning_pointer_prefix(db, region, referent, &mut prereqs)
+        format_non_owning_pointer_prefix(db, region, &mut prereqs)
     } else if matches!(location, TypeLocation::FnParam { .. }) {
         // Omit the lifetime of parameter-location references whose lifetime is trivial.
         // References with non-trivial lifetimes will be converted to pointers above.
@@ -1097,7 +1090,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 let region = substs[0]
                     .as_region()
                     .expect("RvalueReference/ByValue's first parameter should be a lifetime");
-                format_non_owning_pointer_prefix(db, region, referent, &mut prereqs)
+                format_non_owning_pointer_prefix(db, region, &mut prereqs)
             };
 
             let mut snippet =
@@ -1254,17 +1247,24 @@ fn format_ty_for_cc_impl<'tcx>(
                 };
 
                 // Under `nonnull_smart_pointers`, a bare smart pointer is non-null, and
-                // `Nullable<Ptr>` is the spelling for one that may be null.
-                if apply_default_nullability
-                    && db
+                // `Nullable<Ptr>` is the spelling for one that may be null. Bridged raw C++
+                // pointers (`CcType::Pointer`) may be null unless explicitly wrapped.
+                if apply_default_nullability {
+                    if db
                         .crate_features(db.source_crate_num())
                         .contains(CrubitFeature::NonnullSmartPointers)
-                    && is_smart_pointer(db, ty)?
-                {
-                    prereqs
-                        .includes
-                        .insert(db.support_header("annotations_internal.h"));
-                    tokens = quote! { #tokens crubit_nonnull };
+                        && is_smart_pointer(db, ty)?
+                    {
+                        prereqs
+                            .includes
+                            .insert(db.support_header("annotations_internal.h"));
+                        tokens = quote! { #tokens crubit_nonnull };
+                    } else if matches!(cpp_type, CcType::Pointer(_)) {
+                        prereqs
+                            .includes
+                            .insert(db.support_header("annotations_internal.h"));
+                        tokens = quote! { #tokens crubit_nullable };
+                    }
                 }
 
                 if !db.is_cpp_move_constructible(ty)
@@ -1295,7 +1295,7 @@ fn format_ty_for_cc_impl<'tcx>(
 
                         let is_pointer = matches!(cpp_type, CcType::Pointer(_));
                         let cpp_type_str = cpp_type.as_ref();
-                        let tokens = match cpp_type_str.parse::<TokenStream>() {
+                        let mut tokens = match cpp_type_str.parse::<TokenStream>() {
                             Ok(tokens) => tokens,
                             Err(err) => {
                                 db.fatal_errors().report(&format!(
@@ -1305,6 +1305,12 @@ fn format_ty_for_cc_impl<'tcx>(
                                 quote! {}
                             }
                         };
+                        if apply_default_nullability && is_pointer {
+                            prereqs
+                                .includes
+                                .insert(db.support_header("annotations_internal.h"));
+                            tokens = quote! { #tokens crubit_nullable };
+                        }
                         return Ok(FormattedCcType {
                             snippet: CcSnippet { tokens, prereqs },
                             is_pointer,
@@ -1353,18 +1359,26 @@ fn format_ty_for_cc_impl<'tcx>(
                     .map(FormattedCcType::non_pointer);
             }
             // Early return in case we handle a transparent pointer type.
-            if let Some(snippet) =
-                format_transparent_pointee_or_reference_for_cc(db, pointee_ty, mutbl, quote! { * })
-            {
-                return Ok(FormattedCcType::pointer(snippet));
-            }
-
-            FormattedCcType::pointer(
-                format_pointer_or_reference_ty_for_cc(db, pointee_ty, mutbl, quote! { * })
-                    .with_context(|| {
-                        format!("Failed to format the pointee of the pointer type `{ty}`")
-                    })?,
-            )
+            let mut snippet = if let Some(snippet) = format_transparent_pointee_or_reference_for_cc(
+                db,
+                pointee_ty,
+                mutbl,
+                quote! { * crubit_nullable },
+            ) {
+                snippet
+            } else {
+                format_pointer_or_reference_ty_for_cc(
+                    db,
+                    pointee_ty,
+                    mutbl,
+                    quote! { * crubit_nullable },
+                )
+                .with_context(|| {
+                    format!("Failed to format the pointee of the pointer type `{ty}`")
+                })?
+            };
+            snippet.prereqs.includes.insert(db.support_header("annotations_internal.h"));
+            FormattedCcType::pointer(snippet)
         }
 
         ty::TyKind::Ref(region, referent, mutability) => {
@@ -1412,6 +1426,11 @@ fn format_ty_for_cc_impl<'tcx>(
             let abi = sig.abi();
             assert!(matches!(abi, rustc_abi::ExternAbi::C { .. }));
 
+            let mut prereqs = CcPrerequisites::default();
+            prereqs
+                .includes
+                .insert(db.support_header("internal/cxx20_backports.h"));
+
             // C++ references are not rebindable and therefore can't be used to replicate
             // semantics of Rust field types (or, say, element types of Rust
             // arrays).  Because of this, C++ references are only used for
@@ -1427,13 +1446,11 @@ fn format_ty_for_cc_impl<'tcx>(
                 | TypeLocation::ClosureReturn
                 | TypeLocation::Field
                 | TypeLocation::TemplateArg
-                | TypeLocation::OptionArg => (quote! { * }, true),
+                | TypeLocation::OptionArg => {
+                    prereqs.includes.insert(db.support_header("annotations_internal.h"));
+                    (quote! { * crubit_nonnull }, true)
+                }
             };
-
-            let mut prereqs = CcPrerequisites::default();
-            prereqs
-                .includes
-                .insert(db.support_header("internal/cxx20_backports.h"));
 
             let ret_type = format_ret_ty_for_cc(db, &sig)?.into_tokens(&mut prereqs);
             let param_types =

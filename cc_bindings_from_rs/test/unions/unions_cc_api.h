@@ -105,7 +105,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value);
 
-  ::std::int32_t* x;
+  ::std::int32_t* crubit_nullable x;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -242,12 +242,12 @@ U final {
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value);
 
-  void set_x(::std::int32_t* x);
+  void set_x(::std::int32_t* crubit_nullable x);
 
-  ::std::int32_t* get_x() const;
+  ::std::int32_t* crubit_nullable get_x() const;
 
   struct {
-    ::std::int32_t* value;
+    ::std::int32_t* crubit_nullable value;
   } x;
 
  private:
@@ -634,18 +634,18 @@ inline ::unions::repr_rust_drop::U::U(::crubit::UnsafeRelocateTag, U&& value) {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_set_ux(::unions::repr_rust_drop::U&,
-                                      ::std::int32_t*);
+                                      ::std::int32_t* crubit_nullable);
 }
-inline void(U::set_x)(::std::int32_t* x) {
+inline void(U::set_x)(::std::int32_t* crubit_nullable x) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ux(self, x);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t* __crubit_thunk_get_ux(
-    ::unions::repr_rust_drop::U const&);
+extern "C" ::std::int32_t* crubit_nullable
+__crubit_thunk_get_ux(::unions::repr_rust_drop::U const&);
 }
-inline ::std::int32_t*(U::get_x)() const {
+inline ::std::int32_t* crubit_nullable(U::get_x)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ux(self);
 }

@@ -1142,7 +1142,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   struct alignas(4) __crubit_A_struct {
    public:
-    ::std::int32_t* p;
+    ::std::int32_t* crubit_nullable p;
   };
 
   enum class Tag : ::std::int8_t {
@@ -1207,7 +1207,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Variant Q has no size, so no struct is generated.
 
   struct alignas(4) __crubit_C_struct {
-    ::std::int32_t* p;
+    ::std::int32_t* crubit_nullable p;
   };
 
   enum class Tag : ::std::uint32_t {

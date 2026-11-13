@@ -102,7 +102,8 @@ crubit::test::MyStatusOr<int32_t> create_status_with_secret_alias();
 // CRUBIT_ANNOTATE: must_bind=
 bool is_ok_secret(crubit::test::MyStatusOr<int32_t> status);
 
-extern "C" void no_op_void_converter(const void* __param_0, void* __param_1);
+extern "C" void no_op_void_converter(const void* crubit_nullable __param_0,
+                                     void* crubit_nullable __param_1);
 
 // CRUBIT_ANNOTATE: must_bind=
 crubit::test::MyOptional<::std::int32_t> return_optional_by_value(

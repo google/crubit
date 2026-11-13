@@ -1270,7 +1270,7 @@ fn test_format_item_fn_abi_compatible_types() {
             result.main_api.tokens,
             quote! {
                 double call_abi_compat(
-                    ::rs::FnRef<double(::std::int32_t, bool, ::std::int32_t const*) const> f);
+                    ::rs::FnRef<double(::std::int32_t, bool, ::std::int32_t const* crubit_nullable) const> f);
             }
         );
         assert_rs_matches!(

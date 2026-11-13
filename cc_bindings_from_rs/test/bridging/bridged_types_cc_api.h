@@ -30,7 +30,8 @@ namespace bridged_types::test_format_bridged_func_arg_by_pointer {
 // bridged_types_golden::test_format_bridged_func_arg_by_pointer::RustTypeView
 // suppressed due to being mapped to an existing C++ type (CppType const*)
 
-void test_format_bridged_func_arg_by_pointer(CppType const* __param_0);
+void test_format_bridged_func_arg_by_pointer(
+    CppType const* crubit_nullable __param_0);
 
 }  // namespace bridged_types::test_format_bridged_func_arg_by_pointer
 
@@ -54,7 +55,7 @@ namespace bridged_types::test_format_bridged_return_type_by_pointer {
 // bridged_types_golden::test_format_bridged_return_type_by_pointer::RustTypeOwned
 // suppressed due to being mapped to an existing C++ type (CppType*)
 
-CppType* test_format_bridged_return_type_by_pointer();
+CppType* crubit_nullable test_format_bridged_return_type_by_pointer();
 
 }  // namespace bridged_types::test_format_bridged_return_type_by_pointer
 
@@ -74,9 +75,10 @@ namespace bridged_types::test_format_bridged_func_arg_by_pointer {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_test_uformat_ubridged_ufunc_uarg_uby_upointer(
-    CppType const*);
+    CppType const* crubit_nullable);
 }
-inline void test_format_bridged_func_arg_by_pointer(CppType const* __param_0) {
+inline void test_format_bridged_func_arg_by_pointer(
+    CppType const* crubit_nullable __param_0) {
   return __crubit_internal::
       __crubit_thunk_test_uformat_ubridged_ufunc_uarg_uby_upointer(__param_0);
 }
@@ -100,10 +102,10 @@ namespace bridged_types::test_format_bridged_return_type_by_pointer {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_upointer(
-    CppType** crubit_nonnull __ret_ptr);
+    CppType * crubit_nullable * crubit_nonnull __ret_ptr);
 }
-inline CppType* test_format_bridged_return_type_by_pointer() {
-  crubit::Slot<CppType*> __return_value_ret_val_holder;
+inline CppType* crubit_nullable test_format_bridged_return_type_by_pointer() {
+  crubit::Slot<CppType * crubit_nullable> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
       __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_upointer(

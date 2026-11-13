@@ -39,7 +39,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr")
 
   ::std::uintptr_t get_str_len() const;
 
-  ::std::uint8_t const* get_str_data() const;
+  ::std::uint8_t const* crubit_nullable get_str_data() const;
 
   ::rs::StrRef str_field{};
 
@@ -49,7 +49,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr")
 
 ::rs::StrRef foo_as_str();
 
-::std::uint8_t const* get_str_data(::rs::StrRef s);
+::std::uint8_t const* crubit_nullable get_str_data(::rs::StrRef s);
 
 ::std::uintptr_t get_str_len(::rs::StrRef s);
 
@@ -88,10 +88,11 @@ inline ::std::uintptr_t(TypeWithStr::get_str_len)() const {
 }
 
 namespace __crubit_internal {
-extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(
-    ::str::TypeWithStr const&);
+extern "C" ::std::uint8_t const* crubit_nullable
+__crubit_thunk_get_ustr_udata(::str::TypeWithStr const&);
 }
-inline ::std::uint8_t const*(TypeWithStr::get_str_data)() const {
+inline ::std::uint8_t const* crubit_nullable(
+    TypeWithStr::get_str_data)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ustr_udata(self);
 }
@@ -110,9 +111,10 @@ inline ::rs::StrRef foo_as_str() {
 }
 
 namespace __crubit_internal {
-extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(::rs::StrRef*);
+extern "C" ::std::uint8_t const* crubit_nullable
+__crubit_thunk_get_ustr_udata(::rs::StrRef*);
 }
-inline ::std::uint8_t const* get_str_data(::rs::StrRef s) {
+inline ::std::uint8_t const* crubit_nullable get_str_data(::rs::StrRef s) {
   return __crubit_internal::__crubit_thunk_get_ustr_udata(&s);
 }
 

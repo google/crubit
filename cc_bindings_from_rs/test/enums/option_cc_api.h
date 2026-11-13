@@ -66,7 +66,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault")
 };
 
 using FreeFunc CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: FreeFunc") =
-    crubit::type_identity_t<void(void*, void*)>*;
+    crubit::type_identity_t<void(void* crubit_nullable,
+                                 void* crubit_nullable)>* crubit_nonnull;
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault")
     [[clang::trivial_abi]] HasDefault final {
@@ -525,11 +526,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
 // Error generating bindings for struct `option_golden::Unit`: Zero-sized types
 // (ZSTs) are not supported (b/258259459)
 
-using Voidpf CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: Voidpf") = void*;
+using Voidpf CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: Voidpf") =
+    void* crubit_nullable;
 
 // CRUBIT_ANNOTATE: must_bind=
-::rs::Option<::std::int32_t const*> pass_option_ptr(
-    ::rs::Option<::std::int32_t const*> x);
+::rs::Option<::std::int32_t const * crubit_nullable> pass_option_ptr(
+    ::rs::Option<::std::int32_t const * crubit_nullable> x);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::rs::Option<::rs::Result<::std::int32_t, ::rs::alloc::string::String>>
@@ -630,14 +632,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: UnitOptionField")
 
 }  // namespace option
 
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unullable_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unullable_x00000020_x0000003e
 template <>
 struct alignas(8)
     CRUBIT_INTERNAL_RUST_TYPE("core :: option :: Option < * const i32 >")::rs::
-        Option<::std::int32_t const*>
-    : public ::rs::OptionBase<::rs::Option<::std::int32_t const*>,
-                              ::std::int32_t const*> {
+        Option<::std::int32_t const * crubit_nullable>
+    : public ::rs::OptionBase<
+          ::rs::Option<::std::int32_t const * crubit_nullable>,
+          ::std::int32_t const * crubit_nullable> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -647,22 +650,27 @@ struct alignas(8)
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
-  using base_type = ::rs::OptionBase<::rs::Option<::std::int32_t const*>,
-                                     ::std::int32_t const*>;
+  using base_type =
+      ::rs::OptionBase<::rs::Option<::std::int32_t const * crubit_nullable>,
+                       ::std::int32_t const * crubit_nullable>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires ::rs::OptionForwardConstructible<Option, ::std::int32_t const*, U>
+    requires ::rs::OptionForwardConstructible<
+        Option, ::std::int32_t const * crubit_nullable, U>
   Option(U&& value) noexcept;
   template <typename U>
-    requires ::rs::OptionForwardConstructible<Option, ::std::int32_t const*, U>
+    requires ::rs::OptionForwardConstructible<
+        Option, ::std::int32_t const * crubit_nullable, U>
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires ::rs::OptionFromStdOptional<::std::int32_t const*, Opt>
+    requires ::rs::OptionFromStdOptional<::std::int32_t const * crubit_nullable,
+                                         Opt>
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires ::rs::OptionFromStdOptional<::std::int32_t const*, Opt>
+    requires ::rs::OptionFromStdOptional<::std::int32_t const * crubit_nullable,
+                                         Opt>
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -672,11 +680,13 @@ struct alignas(8)
   friend base_type;
   using tag_type = ::std::uint64_t;
   static constexpr tag_type kNoneVal = 0;
-  ::std::int32_t const** some_ptr() noexcept {
-    return reinterpret_cast<::std::int32_t const**>(storage_ + 8);
+  ::std::int32_t const * crubit_nullable * some_ptr() noexcept {
+    return reinterpret_cast<::std::int32_t const * crubit_nullable*>(storage_ +
+                                                                     8);
   }
-  ::std::int32_t const* const* some_const_ptr() const noexcept {
-    return reinterpret_cast<::std::int32_t const* const*>(storage_ + 8);
+  ::std::int32_t const* crubit_nullable const* some_const_ptr() const noexcept {
+    return reinterpret_cast<::std::int32_t const * crubit_nullable const*>(
+        storage_ + 8);
   }
   void set_some_tag() noexcept { set_tag(1); }
   constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
@@ -1790,16 +1800,22 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions")
 
 }  // namespace option
 
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullable_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullable_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullable_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullable_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     "core :: option :: Option < unsafe extern \"C\" fn (* mut :: core :: ffi "
     ":: c_void , * mut :: core :: ffi :: c_void) >")::rs::
-    Option<crubit::type_identity_t<void(void*, void*)>*>
+    Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                        void* crubit_nullable)> *
+           crubit_nonnull>
     : public ::rs::OptionBase<
-          ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>,
-          crubit::type_identity_t<void(void*, void*)>*> {
+          ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                                    void* crubit_nullable)> *
+                       crubit_nonnull>,
+          crubit::type_identity_t<void(void* crubit_nullable,
+                                       void* crubit_nullable)> *
+              crubit_nonnull> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -1810,26 +1826,44 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = ::rs::OptionBase<
-      ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>,
-      crubit::type_identity_t<void(void*, void*)>*>;
+      ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                                void* crubit_nullable)> *
+                   crubit_nonnull>,
+      crubit::type_identity_t<void(void* crubit_nullable,
+                                   void* crubit_nullable)> *
+          crubit_nonnull>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
     requires ::rs::OptionForwardConstructible<
-        Option, crubit::type_identity_t<void(void*, void*)>*, U>
+        Option,
+        crubit::type_identity_t<void(void* crubit_nullable,
+                                     void* crubit_nullable)> *
+            crubit_nonnull,
+        U>
   Option(U&& value) noexcept;
   template <typename U>
     requires ::rs::OptionForwardConstructible<
-        Option, crubit::type_identity_t<void(void*, void*)>*, U>
+        Option,
+        crubit::type_identity_t<void(void* crubit_nullable,
+                                     void* crubit_nullable)> *
+            crubit_nonnull,
+        U>
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires ::rs::OptionFromStdOptional<
-        crubit::type_identity_t<void(void*, void*)>*, Opt>
+        crubit::type_identity_t<void(void* crubit_nullable,
+                                     void* crubit_nullable)> *
+            crubit_nonnull,
+        Opt>
   Option(Opt&& value) noexcept;
   template <typename Opt>
     requires ::rs::OptionFromStdOptional<
-        crubit::type_identity_t<void(void*, void*)>*, Opt>
+        crubit::type_identity_t<void(void* crubit_nullable,
+                                     void* crubit_nullable)> *
+            crubit_nonnull,
+        Opt>
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -1839,14 +1873,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   friend base_type;
   using tag_type = ::std::uint64_t;
   static constexpr tag_type kNoneVal = 0;
-  crubit::type_identity_t<void(void*, void*)>** some_ptr() noexcept {
-    return reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
-        storage_);
+  crubit::type_identity_t<void(void* crubit_nullable, void* crubit_nullable)> *
+      crubit_nonnull * some_ptr() noexcept {
+    return reinterpret_cast<crubit::type_identity_t<void(
+                                void* crubit_nullable, void* crubit_nullable)> *
+                            crubit_nonnull*>(storage_);
   }
-  crubit::type_identity_t<void(void*, void*)>* const* some_const_ptr()
-      const noexcept {
-    return reinterpret_cast<
-        crubit::type_identity_t<void(void*, void*)>* const*>(storage_);
+  crubit::type_identity_t<void(void* crubit_nullable, void* crubit_nullable)>*
+      crubit_nonnull const*
+      some_const_ptr() const noexcept {
+    return reinterpret_cast<crubit::type_identity_t<void(
+                                void* crubit_nullable, void* crubit_nullable)> *
+                            crubit_nonnull const*>(storage_);
   }
   void set_some_tag() noexcept {}
   constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
@@ -1864,7 +1902,10 @@ namespace option {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: ZStream")
     [[clang::trivial_abi]] ZStream final {
  public:
-  ::rs::Option<crubit::type_identity_t<void(void*, void*)>*> zfree{};
+  ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                            void* crubit_nullable)> *
+               crubit_nonnull>
+      zfree{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -2712,12 +2753,12 @@ inline void ::option::ZStream::__crubit_field_offset_assertions() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_pass_uoption_uptr(
-    ::rs::Option<::std::int32_t const*>*,
-    ::rs::Option<::std::int32_t const*>* __ret_ptr);
+    ::rs::Option<::std::int32_t const * crubit_nullable>*,
+    ::rs::Option<::std::int32_t const * crubit_nullable>* __ret_ptr);
 }
-inline ::rs::Option<::std::int32_t const*> pass_option_ptr(
-    ::rs::Option<::std::int32_t const*> x) {
-  crubit::Slot<::rs::Option<::std::int32_t const*>>
+inline ::rs::Option<::std::int32_t const * crubit_nullable> pass_option_ptr(
+    ::rs::Option<::std::int32_t const * crubit_nullable> x) {
+  crubit::Slot<::rs::Option<::std::int32_t const * crubit_nullable>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_pass_uoption_uptr(&x,
@@ -2887,31 +2928,33 @@ inline ::rs::Option<::rs::unit_t>::Option(::std::in_place_t ip,
 
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unullable_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020crubit_unullable_x00000020_x0000003e
 static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs::Option<::std::int32_t const*>>);
-static_assert(
-    ::std::is_trivially_copy_assignable_v<::rs::Option<::std::int32_t const*>>);
+              ::rs::Option<::std::int32_t const * crubit_nullable>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              ::rs::Option<::std::int32_t const * crubit_nullable>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              ::rs::Option<::std::int32_t const*>>);
-static_assert(
-    ::std::is_trivially_move_assignable_v<::rs::Option<::std::int32_t const*>>);
-inline ::rs::Option<::std::int32_t const*>::Option(::crubit::UnsafeRelocateTag,
-                                                   Option&& value) {
+              ::rs::Option<::std::int32_t const * crubit_nullable>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::rs::Option<::std::int32_t const * crubit_nullable>>);
+inline ::rs::Option<::std::int32_t const * crubit_nullable>::Option(
+    ::crubit::UnsafeRelocateTag, Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-static_assert(
-    ::std::is_trivially_destructible_v<::rs::Option<::std::int32_t const*>>);
+static_assert(::std::is_trivially_destructible_v<
+              ::rs::Option<::std::int32_t const * crubit_nullable>>);
 inline constexpr ::std::uint64_t(
-    ::rs::Option<::std::int32_t const*>::tag)() const& noexcept {
+    ::rs::Option<::std::int32_t const * crubit_nullable>::tag)()
+    const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     __bytes[i] = storage_[0 + i];
   }
   return ::std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline constexpr void(::rs::Option<::std::int32_t const*>::set_tag)(
+inline constexpr void(
+    ::rs::Option<::std::int32_t const * crubit_nullable>::set_tag)(
     ::std::uint64_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
@@ -2921,41 +2964,48 @@ inline constexpr void(::rs::Option<::std::int32_t const*>::set_tag)(
   }
 }
 
-inline constexpr ::rs::Option<::std::int32_t const*>::Option(
+inline constexpr ::rs::Option<::std::int32_t const * crubit_nullable>::Option(
     ::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr ::rs::Option<::std::int32_t const*>& ::rs::Option<
-    ::std::int32_t const*>::operator=(::std::nullopt_t) noexcept {
+inline constexpr ::rs::Option<::std::int32_t const * crubit_nullable>& ::rs::
+    Option<::std::int32_t const * crubit_nullable>::operator=(
+        ::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
-  requires ::rs::OptionForwardConstructible<::rs::Option<::std::int32_t const*>,
-                                            ::std::int32_t const*, U>
-inline ::rs::Option<::std::int32_t const*>::Option(U&& value) noexcept
+  requires ::rs::OptionForwardConstructible<
+      ::rs::Option<::std::int32_t const * crubit_nullable>,
+      ::std::int32_t const * crubit_nullable, U>
+inline ::rs::Option<::std::int32_t const * crubit_nullable>::Option(
+    U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires ::rs::OptionForwardConstructible<::rs::Option<::std::int32_t const*>,
-                                            ::std::int32_t const*, U>
-inline ::rs::Option<::std::int32_t const*>& ::rs::Option<
-    ::std::int32_t const*>::operator=(U&& value) noexcept {
+  requires ::rs::OptionForwardConstructible<
+      ::rs::Option<::std::int32_t const * crubit_nullable>,
+      ::std::int32_t const * crubit_nullable, U>
+inline ::rs::Option<::std::int32_t const * crubit_nullable>& ::rs::Option<
+    ::std::int32_t const * crubit_nullable>::operator=(U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires ::rs::OptionFromStdOptional<::std::int32_t const*, Opt>
-inline ::rs::Option<::std::int32_t const*>::Option(Opt&& value) noexcept
+  requires ::rs::OptionFromStdOptional<::std::int32_t const * crubit_nullable,
+                                       Opt>
+inline ::rs::Option<::std::int32_t const * crubit_nullable>::Option(
+    Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires ::rs::OptionFromStdOptional<::std::int32_t const*, Opt>
-inline ::rs::Option<::std::int32_t const*>& ::rs::Option<
-    ::std::int32_t const*>::operator=(Opt&& value) noexcept {
+  requires ::rs::OptionFromStdOptional<::std::int32_t const * crubit_nullable,
+                                       Opt>
+inline ::rs::Option<::std::int32_t const * crubit_nullable>& ::rs::Option<
+    ::std::int32_t const * crubit_nullable>::operator=(Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline ::rs::Option<::std::int32_t const*>::Option(::std::in_place_t ip,
-                                                   Args&&... args) noexcept
+inline ::rs::Option<::std::int32_t const * crubit_nullable>::Option(
+    ::std::in_place_t ip, Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
@@ -4278,25 +4328,38 @@ inline ::rs::Option<::std::uint8_t>::Option(::std::in_place_t ip,
 
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullable_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullable_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020crubit_unullable_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000020crubit_unullable_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
 static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>>);
+              ::rs::Option<crubit::type_identity_t<void(
+                               void* crubit_nullable, void* crubit_nullable)> *
+                           crubit_nonnull>>);
 static_assert(::std::is_trivially_copy_assignable_v<
-              ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>>);
+              ::rs::Option<crubit::type_identity_t<void(
+                               void* crubit_nullable, void* crubit_nullable)> *
+                           crubit_nonnull>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>>);
+              ::rs::Option<crubit::type_identity_t<void(
+                               void* crubit_nullable, void* crubit_nullable)> *
+                           crubit_nonnull>>);
 static_assert(::std::is_trivially_move_assignable_v<
-              ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>>);
-inline ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
-    ::crubit::UnsafeRelocateTag, Option&& value) {
+              ::rs::Option<crubit::type_identity_t<void(
+                               void* crubit_nullable, void* crubit_nullable)> *
+                           crubit_nonnull>>);
+inline ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                                 void* crubit_nullable)> *
+                    crubit_nonnull>::Option(::crubit::UnsafeRelocateTag,
+                                            Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
 static_assert(::std::is_trivially_destructible_v<
-              ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>>);
+              ::rs::Option<crubit::type_identity_t<void(
+                               void* crubit_nullable, void* crubit_nullable)> *
+                           crubit_nonnull>>);
 inline constexpr ::std::uint64_t(
-    ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>::tag)()
-    const& noexcept {
+    ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                              void* crubit_nullable)> *
+                 crubit_nonnull>::tag)() const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
     __bytes[i] = storage_[0 + i];
@@ -4304,8 +4367,9 @@ inline constexpr ::std::uint64_t(
   return ::std::bit_cast<::std::uint64_t>(__bytes);
 }
 inline constexpr void(
-    ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>::set_tag)(
-    ::std::uint64_t tag) noexcept {
+    ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                              void* crubit_nullable)> *
+                 crubit_nonnull>::set_tag)(::std::uint64_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
           tag);
@@ -4314,50 +4378,82 @@ inline constexpr void(
   }
 }
 
-inline constexpr ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>::
-    Option(::std::nullopt_t) noexcept
+inline constexpr ::rs::Option<
+    crubit::type_identity_t<void(void* crubit_nullable,
+                                 void* crubit_nullable)> *
+    crubit_nonnull>::Option(::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>& ::
-rs::Option<crubit::type_identity_t<void(void*, void*)>*>::operator=(
-    ::std::nullopt_t) noexcept {
+inline constexpr ::rs::Option<
+    crubit::type_identity_t<void(void* crubit_nullable,
+                                 void* crubit_nullable)> *
+    crubit_nonnull>& ::
+rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                        void* crubit_nullable)> *
+           crubit_nonnull>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
   requires ::rs::OptionForwardConstructible<
-      ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>,
-      crubit::type_identity_t<void(void*, void*)>*, U>
-inline ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
-    U&& value) noexcept
+      ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                                void* crubit_nullable)> *
+                   crubit_nonnull>,
+      crubit::type_identity_t<void(void* crubit_nullable,
+                                   void* crubit_nullable)> *
+          crubit_nonnull,
+      U>
+inline ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                                 void* crubit_nullable)> *
+                    crubit_nonnull>::Option(U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
   requires ::rs::OptionForwardConstructible<
-      ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>,
-      crubit::type_identity_t<void(void*, void*)>*, U>
-inline ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>& ::rs::
-    Option<crubit::type_identity_t<void(void*, void*)>*>::operator=(
-        U&& value) noexcept {
+      ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                                void* crubit_nullable)> *
+                   crubit_nonnull>,
+      crubit::type_identity_t<void(void* crubit_nullable,
+                                   void* crubit_nullable)> *
+          crubit_nonnull,
+      U>
+inline ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                                 void* crubit_nullable)> *
+                    crubit_nonnull>& ::
+rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                        void* crubit_nullable)> *
+           crubit_nonnull>::operator=(U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
   requires ::rs::OptionFromStdOptional<
-      crubit::type_identity_t<void(void*, void*)>*, Opt>
-inline ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
-    Opt&& value) noexcept
+      crubit::type_identity_t<void(void* crubit_nullable,
+                                   void* crubit_nullable)> *
+          crubit_nonnull,
+      Opt>
+inline ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                                 void* crubit_nullable)> *
+                    crubit_nonnull>::Option(Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
   requires ::rs::OptionFromStdOptional<
-      crubit::type_identity_t<void(void*, void*)>*, Opt>
-inline ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>& ::rs::
-    Option<crubit::type_identity_t<void(void*, void*)>*>::operator=(
-        Opt&& value) noexcept {
+      crubit::type_identity_t<void(void* crubit_nullable,
+                                   void* crubit_nullable)> *
+          crubit_nonnull,
+      Opt>
+inline ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                                 void* crubit_nullable)> *
+                    crubit_nonnull>& ::
+rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                        void* crubit_nullable)> *
+           crubit_nonnull>::operator=(Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline ::rs::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
-    ::std::in_place_t ip, Args&&... args) noexcept
+inline ::rs::Option<crubit::type_identity_t<void(void* crubit_nullable,
+                                                 void* crubit_nullable)> *
+                    crubit_nonnull>::Option(::std::in_place_t ip,
+                                            Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif

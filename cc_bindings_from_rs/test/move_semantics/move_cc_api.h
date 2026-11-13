@@ -121,7 +121,8 @@ void consume_foo(::move::Foo _foo);
 //  * `out` must be properly aligned.
 //  * `out` must point to uninitialized memory (otherwise the previous value
 //  will be leaked).
-void initialize_unmovable_foo(::move::UnmovableFoo* out, ::std::uint8_t byte);
+void initialize_unmovable_foo(::move::UnmovableFoo* crubit_nullable out,
+                              ::std::uint8_t byte);
 
 ::rs::Movable<::move::UnmovableFoo> new_unmovable_foo(::std::uint8_t byte);
 
@@ -366,10 +367,10 @@ inline ::std::uint8_t consume_unmovable_foo(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_initialize_uunmovable_ufoo(::move::UnmovableFoo*,
-                                                          ::std::uint8_t);
+extern "C" void __crubit_thunk_initialize_uunmovable_ufoo(
+    ::move::UnmovableFoo* crubit_nullable, ::std::uint8_t);
 }
-inline void initialize_unmovable_foo(::move::UnmovableFoo* out,
+inline void initialize_unmovable_foo(::move::UnmovableFoo* crubit_nullable out,
                                      ::std::uint8_t byte) {
   return __crubit_internal::__crubit_thunk_initialize_uunmovable_ufoo(out,
                                                                       byte);

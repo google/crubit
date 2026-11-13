@@ -537,10 +537,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
 
   union {
-    float const** mut_const_ptr;
+    float const * crubit_nullable * crubit_nullable mut_const_ptr;
   };
   union {
-    float* const* const_mut_ptr;
+    float* crubit_nullable const* crubit_nullable const_mut_ptr;
   };
 
  private:

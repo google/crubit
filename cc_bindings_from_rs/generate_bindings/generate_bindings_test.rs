@@ -181,11 +181,11 @@ fn test_generated_bindings_prereq_fwd_decls_for_ptr_param() {
                     // below also matters.
                     struct S;
                     ...
-                    void F(::rust_out::S const* __param_0);
+                    void F(::rust_out::S const* crubit_nullable __param_0);
                     ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S final { ... }
                     ...
-                    inline void F(::rust_out::S const* __param_0) { ... }
+                    inline void F(::rust_out::S const* crubit_nullable __param_0) { ... }
                     ...
                 }  // namespace rust_out
             }
@@ -289,9 +289,9 @@ fn test_generated_bindings_prereq_fwd_decls_for_generic_struct() {
                     template <typename T>
                     struct s;
                     ...
-                    void f1(::rust_out::s<::std::int32_t> const* __param_0);
+                    void f1(::rust_out::s<::std::int32_t> const* crubit_nullable __param_0);
                     ...
-                    void f2(::rust_out::s<::std::int32_t> const* __param_0);
+                    void f2(::rust_out::s<::std::int32_t> const* crubit_nullable __param_0);
                     ...
                     template <typename T>
                     struct s {
@@ -385,7 +385,7 @@ fn test_generated_bindings_prereq_fwd_decls_not_needed_inside_struct_definition(
             bindings.cc_api,
             quote! {
                 static ::rust_out::S create(); ...
-                ::rust_out::S const* field{}; ...
+                ::rust_out::S const* crubit_nullable field{}; ...
             }
         );
     });
@@ -911,7 +911,7 @@ fn test_format_item_slice_of_const_pointers() {
                     public:
                       ...
                       static ::rust_out::PtrVec new_(
-                          ::rs::SliceRef<const void* const> contents
+                          ::rs::SliceRef<const void* crubit_nullable const> contents
                       );
                     ...
                 };
@@ -936,7 +936,7 @@ fn test_format_item_slice_of_mut_pointers() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                ::rs::Vec<void*> to_vec(::rs::SliceRef<void* const> slice);
+                ::rs::Vec<void* crubit_nullable> to_vec(::rs::SliceRef<void* crubit_nullable const> slice);
             }
         );
     });
@@ -3814,7 +3814,7 @@ fn test_option_references() {
             bindings.cc_api,
             quote! {
                 ...
-                ::rs::Option<::rust_out::Value const*> by_ptr(...);
+                ::rs::Option<::rust_out::Value const* crubit_nullable> by_ptr(...);
                 ...
             }
         );
@@ -3861,10 +3861,10 @@ fn test_option_references() {
                 ...
                 template<>
                 struct alignas(...) CRUBIT_INTERNAL_RUST_TYPE(...)
-                ::rs::Option<::rust_out::Value const*>
+                ::rs::Option<::rust_out::Value const* crubit_nullable>
                     : public ::rs::OptionBase<
-                        ::rs::Option<::rust_out::Value const*>,
-                        ::rust_out::Value const*> {
+                        ::rs::Option<::rust_out::Value const* crubit_nullable>,
+                        ::rust_out::Value const* crubit_nullable> {
                     ...
                 };
                 ...

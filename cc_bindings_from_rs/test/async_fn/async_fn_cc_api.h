@@ -109,16 +109,16 @@ StructWithDrop final {
 //  `cpp_in` must be a valid pointer to a `AsyncFnCppConvertible` that will not
 //  be used again. `rs_out` must be a valid pointer to uninitialized memory
 //  suitable for writing a `AsyncFnRustConvertible`.
-extern "C" void convert_cpp_to_rust_async_fn(const void* _cpp_in,
-                                             void* _rs_out);
+extern "C" void convert_cpp_to_rust_async_fn(
+    const void* crubit_nullable _cpp_in, void* crubit_nullable _rs_out);
 
 //  # Safety
 //
 //  `rs_in` must be a valid pointer to an `AsyncFnRustConvertible` that will not
 //  be used again. `cpp_out` must be a valid pointer to uninitialized memory
 //  suitable for writing a `AsyncFnCppConvertible`.
-extern "C" void convert_rust_to_cpp_async_fn(const void* _rs_in,
-                                             void* _cpp_out);
+extern "C" void convert_rust_to_cpp_async_fn(const void* crubit_nullable _rs_in,
+                                             void* crubit_nullable _cpp_out);
 
 ::crubit::DynErasedFuture<void> do_nothing();
 

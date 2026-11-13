@@ -56,12 +56,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(4)
   FooService(::crubit::UnsafeRelocateTag, FooService&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  bool handle_request(const ::foo_service::FooRequest* req,
-                      ::foo_service::FooResponse* rsp);
+  bool handle_request(const ::foo_service::FooRequest* crubit_nullable req,
+                      ::foo_service::FooResponse* crubit_nullable rsp);
 
   // CRUBIT_ANNOTATE: must_bind=
-  const ::foo_service::FooRequestStats* request_stats() const& $(__anon1)
-      CRUBIT_LIFETIME_BOUND;
+  const ::foo_service::FooRequestStats* crubit_nullable
+  request_stats() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   // CRUBIT_ANNOTATE: must_bind=
   ::foo_service::FooRequestStats clone_request_stats() const;
@@ -130,7 +130,7 @@ create_proto_status_or(::std::int32_t num);
 //
 //  `p` must be valid for reads.
 ::std::int32_t read_proto_pointer(
-    ::proto::Rust<::foo_service::FooRequestStats> const* p);
+    ::proto::Rust<::foo_service::FooRequestStats> const* crubit_nullable p);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t read_proto_ref(
@@ -217,21 +217,22 @@ inline ::rust_lib::FooService::FooService(::crubit::UnsafeRelocateTag,
 }
 
 namespace __crubit_internal {
-extern "C" bool __crubit_thunk_handle_urequest(::rust_lib::FooService&,
-                                               const ::foo_service::FooRequest*,
-                                               ::foo_service::FooResponse*);
+extern "C" bool __crubit_thunk_handle_urequest(
+    ::rust_lib::FooService&, const ::foo_service::FooRequest* crubit_nullable,
+    ::foo_service::FooResponse* crubit_nullable);
 }
-inline bool(FooService::handle_request)(const ::foo_service::FooRequest* req,
-                                        ::foo_service::FooResponse* rsp) {
+inline bool(FooService::handle_request)(
+    const ::foo_service::FooRequest* crubit_nullable req,
+    ::foo_service::FooResponse* crubit_nullable rsp) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_handle_urequest(self, req, rsp);
 }
 
 namespace __crubit_internal {
-extern "C" const ::foo_service::FooRequestStats* __crubit_thunk_request_ustats(
-    ::rust_lib::FooService const&);
+extern "C" const ::foo_service::FooRequestStats* crubit_nullable
+__crubit_thunk_request_ustats(::rust_lib::FooService const&);
 }
-inline const ::foo_service::FooRequestStats*(
+inline const ::foo_service::FooRequestStats* crubit_nullable(
     FooService::request_stats)() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_request_ustats(self);
@@ -373,10 +374,10 @@ inline ::rust_lib::StructWithProto create_struct_with_proto(
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_read_uproto_upointer(
-    ::proto::Rust<::foo_service::FooRequestStats> const*);
+    ::proto::Rust<::foo_service::FooRequestStats> const* crubit_nullable);
 }
 inline ::std::int32_t read_proto_pointer(
-    ::proto::Rust<::foo_service::FooRequestStats> const* p) {
+    ::proto::Rust<::foo_service::FooRequestStats> const* crubit_nullable p) {
   return __crubit_internal::__crubit_thunk_read_uproto_upointer(p);
 }
 

@@ -129,8 +129,9 @@ double add_f64(double x, double y);
 //  `std::int32_t` is one such example - it requires `#include <cstdint>`.
 ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y);
 
-void add_i32_via_ptr(::std::int32_t const* x, ::std::int32_t const* y,
-                     ::std::int32_t* sum);
+void add_i32_via_ptr(::std::int32_t const* crubit_nullable x,
+                     ::std::int32_t const* crubit_nullable y,
+                     ::std::int32_t* crubit_nullable sum);
 
 ::std::int32_t apply_binary_i32_op(
     ::std::int32_t x, ::std::int32_t y,
@@ -559,12 +560,13 @@ inline ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y) {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_add_ui32_uvia_uptr(::std::int32_t const*,
-                                                  ::std::int32_t const*,
-                                                  ::std::int32_t*);
+extern "C" void __crubit_thunk_add_ui32_uvia_uptr(
+    ::std::int32_t const* crubit_nullable,
+    ::std::int32_t const* crubit_nullable, ::std::int32_t* crubit_nullable);
 }
-inline void add_i32_via_ptr(::std::int32_t const* x, ::std::int32_t const* y,
-                            ::std::int32_t* sum) {
+inline void add_i32_via_ptr(::std::int32_t const* crubit_nullable x,
+                            ::std::int32_t const* crubit_nullable y,
+                            ::std::int32_t* crubit_nullable sum) {
   return __crubit_internal::__crubit_thunk_add_ui32_uvia_uptr(x, y, sum);
 }
 

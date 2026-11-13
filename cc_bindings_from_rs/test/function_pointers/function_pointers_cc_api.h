@@ -73,7 +73,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::function_pointers::HasFnPtrField with_add_ten();
 
   union {
-    crubit::type_identity_t<::std::int32_t(::std::int32_t)>* ptr;
+    crubit::type_identity_t<::std::int32_t(::std::int32_t)>* crubit_nonnull ptr;
   };
 
  private:
@@ -105,8 +105,8 @@ void call_fn_ptr_no_args_or_return(crubit::type_identity_t<void()>& fn_ptr);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t call_fn_ptr_with_repr_c_struct_ptr_containing_seven(
-    crubit::type_identity_t<
-        ::std::int32_t(::function_pointers::CStruct const*)>& fn_ptr);
+    crubit::type_identity_t<::std::int32_t(
+        ::function_pointers::CStruct const* crubit_nullable)>& fn_ptr);
 
 // Error generating bindings for function
 // `function_pointers_golden::call_fn_ptr_with_repr_c_struct_ref`: Error
@@ -198,11 +198,11 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t
 __crubit_thunk_call_ufn_uptr_uwith_urepr_uc_ustruct_uptr_ucontaining_useven(
     crubit::type_identity_t<
-        ::std::int32_t(::function_pointers::CStruct const*)>&);
+        ::std::int32_t(::function_pointers::CStruct const* crubit_nullable)>&);
 }
 inline ::std::int32_t call_fn_ptr_with_repr_c_struct_ptr_containing_seven(
-    crubit::type_identity_t<
-        ::std::int32_t(::function_pointers::CStruct const*)>& fn_ptr) {
+    crubit::type_identity_t<::std::int32_t(
+        ::function_pointers::CStruct const* crubit_nullable)>& fn_ptr) {
   return __crubit_internal::
       __crubit_thunk_call_ufn_uptr_uwith_urepr_uc_ustruct_uptr_ucontaining_useven(
           fn_ptr);

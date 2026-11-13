@@ -15,6 +15,8 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wshadow"
+#include "support/annotations_internal.h"
+
 #include "cpp_ns/cpp_type.h"
 
 namespace layout_equivalent_pointers::test_format_func_arg_pointer_like {
@@ -25,7 +27,8 @@ namespace layout_equivalent_pointers::test_format_func_arg_pointer_like {
 // layout_equivalent_pointers_golden::test_format_func_arg_pointer_like::RustTypeView
 // suppressed due to being mapped to an existing C++ type (const CppType*)
 
-void test_format_func_arg_pointer_like(const CppType* __param_0);
+void test_format_func_arg_pointer_like(
+    const CppType* crubit_nullable __param_0);
 
 }  // namespace layout_equivalent_pointers::test_format_func_arg_pointer_like
 
@@ -37,7 +40,7 @@ namespace layout_equivalent_pointers::test_format_return_type_pointer_like {
 // layout_equivalent_pointers_golden::test_format_return_type_pointer_like::RustTypeOwned
 // suppressed due to being mapped to an existing C++ type (CppType*)
 
-CppType* test_format_return_type_pointer_like();
+CppType* crubit_nullable test_format_return_type_pointer_like();
 
 }  // namespace layout_equivalent_pointers::test_format_return_type_pointer_like
 
@@ -45,9 +48,10 @@ namespace layout_equivalent_pointers::test_format_func_arg_pointer_like {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_test_uformat_ufunc_uarg_upointer_ulike(
-    const CppType*);
+    const CppType* crubit_nullable);
 }
-inline void test_format_func_arg_pointer_like(const CppType* __param_0) {
+inline void test_format_func_arg_pointer_like(
+    const CppType* crubit_nullable __param_0) {
   return __crubit_internal::
       __crubit_thunk_test_uformat_ufunc_uarg_upointer_ulike(__param_0);
 }
@@ -57,9 +61,10 @@ inline void test_format_func_arg_pointer_like(const CppType* __param_0) {
 namespace layout_equivalent_pointers::test_format_return_type_pointer_like {
 
 namespace __crubit_internal {
-extern "C" CppType* __crubit_thunk_test_uformat_ureturn_utype_upointer_ulike();
+extern "C" CppType* crubit_nullable
+__crubit_thunk_test_uformat_ureturn_utype_upointer_ulike();
 }
-inline CppType* test_format_return_type_pointer_like() {
+inline CppType* crubit_nullable test_format_return_type_pointer_like() {
   return __crubit_internal::
       __crubit_thunk_test_uformat_ureturn_utype_upointer_ulike();
 }
