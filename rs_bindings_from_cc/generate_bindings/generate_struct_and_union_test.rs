@@ -1544,6 +1544,43 @@ fn test_unambiguous_public_bases_private_ambiguity() -> Result<()> {
 }
 
 #[gtest]
+fn test_unambiguous_public_bases_from_dependency_with_lazy_import() -> Result<()> {
+    let proto = multiplatform_ir_testing::ir_proto_from_cc_dependency_with_lazy_import(
+        "
+        struct Derived : public dep_ns::DirectBase, public virtual dep_ns::VirtualBase {};
+    ",
+        "
+        namespace dep_ns {
+        struct IndirectBase {};
+        struct DirectBase : public IndirectBase {};
+        struct VirtualBase {};
+        }  // namespace dep_ns
+    ",
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe impl oops::Inherits<::dependency::dep_ns::DirectBase> for crate::Derived
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe impl oops::Inherits<::dependency::dep_ns::IndirectBase> for crate::Derived
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe impl oops::InheritsVirtual<::dependency::dep_ns::VirtualBase> for crate::Derived
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_virtual_thunk() -> Result<()> {
     assert_cc_matches!(
         generate_bindings_tokens_from_cc("struct Polymorphic { virtual void Foo(); };")?

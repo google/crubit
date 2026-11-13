@@ -1832,6 +1832,10 @@ CXXRecordDeclImporter::GetUnambiguousPublicBases(
 
       clang::CXXRecordDecl* base_record_decl =
           CRUBIT_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
+      if (!clang::isa<clang::ClassTemplateSpecializationDecl>(
+              base_record_decl)) {
+        ictx_.EnsureSuccessfullyImported(base_record_decl);
+      }
       if (!ictx_.HasBeenAlreadySuccessfullyImported(*base_record_decl)) {
         continue;
       }

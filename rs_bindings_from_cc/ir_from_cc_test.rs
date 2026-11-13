@@ -3598,6 +3598,58 @@ fn test_referenced_forward_declared_nested_record_in_dependency_is_imported_lazi
 }
 
 #[gtest]
+fn test_base_classes_in_dependency_are_imported_lazily() -> Result<()> {
+    // Regression test for b/584422449: direct and indirect base classes in a
+    // dependency header must be imported lazily when a derived class in the
+    // current target inherits from them, even if nothing else in the current
+    // target names those base classes.
+    let dependency_src = r#"
+                namespace dep_ns {
+                struct IndirectBase {};
+                struct DirectBase : public IndirectBase {};
+                struct VirtualBase {};
+                struct UnreferencedInDependency {};
+                }  // namespace dep_ns "#;
+    let current_target_src = r#"
+                struct Derived : public dep_ns::DirectBase,
+                                 public virtual dep_ns::VirtualBase {}; "#;
+    let proto = ir_proto_from_cc_dependency_with_lazy_import(current_target_src, dependency_src)?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
+
+    let direct_base_id = retrieve_record(&ir, "DirectBase").id();
+    let indirect_base_id = retrieve_record(&ir, "IndirectBase").id();
+    let virtual_base_id = retrieve_record(&ir, "VirtualBase").id();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "Derived", ...
+                unambiguous_public_bases: [
+                    BaseClass {
+                        base_record_id: ItemId(#direct_base_id), ...
+                    },
+                    BaseClass {
+                        base_record_id: ItemId(#indirect_base_id), ...
+                    },
+                    BaseClass {
+                        base_record_id: ItemId(#virtual_base_id), ...
+                    },
+                ], ...
+            }
+        }
+    );
+    assert_ir_not_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "UnreferencedInDependency", ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_unreferenced_decls_in_dependency_are_imported_eagerly_by_default() -> Result<()> {
     // Lazy import of alien declarations is opt-in: by default, unreferenced
     // declarations from dependencies are still imported.
