@@ -23,7 +23,9 @@ use generate_ctor::{
     generate_copy_ctor_and_assignment_operator, generate_default_ctor,
     generate_move_ctor_and_assignment_operator,
 };
-use generate_enum::{anonymous_field_ident, scalar_value_to_string};
+use generate_enum::{
+    anonymous_field_ident, int_literal_of_ty, scalar_value_to_string, scalar_value_to_tokens,
+};
 use generate_function::{
     bool_constraint_template_prefix, cc_param_to_c_abi, format_variant_ctor_cc_name,
     generate_thunk_call, Param, ThunkSelfParameter,
@@ -56,7 +58,6 @@ use quote::{format_ident, quote};
 use rustc_abi::VariantLayout;
 use rustc_abi::{Endian, FieldIdx, FieldsShape, LayoutData, VariantIdx, Variants};
 
-use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::fast_reject::DeepRejectCtxt;
 use rustc_middle::ty::layout::PrimitiveExt;
@@ -222,10 +223,7 @@ fn generate_cpp_enum<'tcx>(
                     panic!("Unexpected non-scalar ConstValue type in cpp_enum: {other:?}")
                 }
             };
-            let enumerator_value = scalar_value_to_string(tcx, scalar, value_kind)
-                .unwrap()
-                .parse::<TokenStream>()
-                .unwrap();
+            let enumerator_value = scalar_value_to_tokens(tcx, scalar, value_kind).unwrap();
 
             Some(quote! { #opt_doc_comment #bracketed_enumerator_name = #enumerator_value, })
         })
@@ -2914,13 +2912,8 @@ fn generate_variant_ctor<'db, 'tcx>(
                         .self_ty
                         .discriminant_for_variant(tcx, variant_index)
                         .expect("Invalid VariantIdx");
-                    let (discr_size, _signed) = discr.ty.int_size_and_signed(tcx);
-                    let (scalar_int, _) = ty::ScalarInt::truncate_from_uint(discr.val, discr_size);
-                    let tag_literal =
-                        scalar_value_to_string(tcx, Scalar::Int(scalar_int), *discr.ty.kind())
-                            .expect("tag to be a valid scalar constant")
-                            .parse::<TokenStream>()
-                            .expect("tag string to consist of valid scalar tokens");
+                    let tag_literal = int_literal_of_ty(tcx, discr.val, discr.ty)
+                        .expect("tag to be a valid scalar constant");
                     quote! {
                         return #adt_cc_name(PrivateTagCtorTag{}, Tag { #tag_literal });
                     }
@@ -3779,19 +3772,12 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                             let cc_variant_name =
                                 format_cc_ident(self.db, variant_def.name.as_str())
                                     .unwrap_or_else(|_err| format_ident!("err_field"));
-                            let (tag_size, _signed) = tag_ty.int_size_and_signed(tcx);
-                            let (scalar_int, _) = ty::ScalarInt::truncate_from_uint(
-                                adt_def.discriminant_for_variant(tcx, variant_index).val,
-                                tag_size,
-                            );
-                            let tag_value = scalar_value_to_string(
+                            let tag_value = int_literal_of_ty(
                                 tcx,
-                                Scalar::Int(scalar_int),
-                                *tag_ty.kind(),
+                                adt_def.discriminant_for_variant(tcx, variant_index).val,
+                                tag_ty,
                             )
-                            .expect("tag to be a valid scalar constant")
-                            .parse::<TokenStream>()
-                            .expect("tag string to consist of valid scalar tokens");
+                            .expect("tag to be a valid scalar constant");
                             quote! {
                                 __NEWLINE__ #cc_variant_name = #tag_value,
                             }

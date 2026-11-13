@@ -26,13 +26,13 @@ use database::{
     AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, GenericArgs, StaticMethodMode,
     TypeLocation,
 };
-use error_report::{anyhow, ensure};
+use error_report::ensure;
 use format_type::{format_with_cc_body, replace_all_regions_with_static};
 use generate_ctor::{
     generate_copy_ctor_and_assignment_operator, generate_default_ctor,
     generate_move_ctor_and_assignment_operator,
 };
-use generate_enum::{anonymous_field_ident, scalar_value_to_string};
+use generate_enum::{anonymous_field_ident, int_literal_of_ty};
 use generate_struct_and_union::{
     are_generics_enabled, generate_adt, generate_adt_core_for_ty, generate_associated_item,
     generate_fields, generate_relocating_ctor, get_generic_adt_header, has_type_or_const_vars,
@@ -566,17 +566,45 @@ fn get_option_variant_indices<'tcx>(tcx: TyCtxt<'tcx>, adt: AdtDef<'tcx>) -> Opt
     }
 }
 
-fn literal_of_tag_ty<'tcx>(tcx: TyCtxt<'tcx>, val: u128, ty: Ty<'tcx>) -> TokenStream {
-    use rustc_middle::mir::interpret::Scalar;
-    use rustc_middle::ty::ScalarInt;
-    let (size, _) = ty.int_size_and_signed(tcx);
-    let (scalar_int, _) = ScalarInt::truncate_from_uint(val, size);
-    scalar_value_to_string(tcx, Scalar::Int(scalar_int), *ty.kind())
-        .and_then(|s| {
-            s.parse::<TokenStream>()
-                .map_err(|_| anyhow!("scalar_value_to_string produced invalid tokens"))
-        })
-        .expect("tag to be valid scalar tokens")
+fn generate_tag_accessors<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    self_cc_type: TokenStream,
+    tag_type_cc: &TokenStream,
+    tag_field_offset: u64,
+    storage_ident: TokenStream,
+) -> ApiSnippets<'tcx> {
+    let tag_offset = Literal::u64_unsuffixed(tag_field_offset);
+    let byte_index = match tcx.sess.target.options.endian {
+        rustc_abi::Endian::Little => quote! { i },
+        rustc_abi::Endian::Big => quote! { sizeof(#tag_type_cc) - 1 - i },
+    };
+    ApiSnippets {
+        main_api: CcSnippet::new(quote! {
+            constexpr #tag_type_cc tag() const& noexcept; __NEWLINE__
+            constexpr void set_tag(#tag_type_cc tag) noexcept; __NEWLINE__
+        }),
+        cc_details: CcSnippet::with_include(
+            quote! {
+                inline constexpr #tag_type_cc ( #self_cc_type::tag ) () const& noexcept {
+                    ::std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
+                    for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
+                        __bytes[#byte_index] = #storage_ident[#tag_offset + i];
+                    }
+                    return ::std::bit_cast<#tag_type_cc>(__bytes);
+                }
+                __NEWLINE__
+                inline constexpr void ( #self_cc_type::set_tag )(#tag_type_cc tag) noexcept {
+                    auto __bytes = ::std::bit_cast<::std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
+                    for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
+                        #storage_ident[#tag_offset + i] = __bytes[#byte_index];
+                    }
+                }
+                __NEWLINE__
+            },
+            CcInclude::bit(),
+        ),
+        ..Default::default()
+    }
 }
 
 struct ResultVariantIndices {
@@ -1352,43 +1380,13 @@ fn specialize_result<'tcx>(
         unreachable!("Result<T, E> must be an ADT");
     };
     let ResultVariantIndices { ok_idx, err_idx } = get_result_variant_indices(tcx, *adt);
-    let tag_offset = Literal::u64_unsuffixed(layout.fields().offset(tag_field.as_usize()).bytes());
-    let endian = tcx.sess.target.options.endian;
-    let byte_index_read = match endian {
-        rustc_abi::Endian::Little => quote! { i },
-        rustc_abi::Endian::Big => quote! { sizeof(#tag_type_cc_tokens) - 1 - i },
-    };
-    let byte_index_write = match endian {
-        rustc_abi::Endian::Little => quote! { i },
-        rustc_abi::Endian::Big => quote! { sizeof(#tag_type_cc_tokens) - 1 - i },
-    };
-    let tag_method = ApiSnippets {
-        main_api: CcSnippet::new(quote! {
-            constexpr #tag_type_cc_tokens tag() const& noexcept; __NEWLINE__
-            constexpr void set_tag(#tag_type_cc_tokens tag) noexcept; __NEWLINE__
-        }),
-        cc_details: CcSnippet::with_include(
-            quote! {
-                inline constexpr #tag_type_cc_tokens ( ::rs::Result<#ok_ty_tokens, #err_ty_tokens>::tag ) () const& noexcept {
-                    ::std::array<unsigned char, sizeof(#tag_type_cc_tokens)> __bytes = {};
-                    for (::std::size_t i = 0; i < sizeof(#tag_type_cc_tokens); ++i) {
-                        __bytes[#byte_index_read] = __storage[#tag_offset + i];
-                    }
-                    return ::std::bit_cast<#tag_type_cc_tokens>(__bytes);
-                }
-                __NEWLINE__
-                inline constexpr void ( ::rs::Result<#ok_ty_tokens, #err_ty_tokens>::set_tag )(#tag_type_cc_tokens tag) noexcept {
-                    auto __bytes = ::std::bit_cast<::std::array<unsigned char, sizeof(#tag_type_cc_tokens)>>(tag);
-                    for (::std::size_t i = 0; i < sizeof(#tag_type_cc_tokens); ++i) {
-                        __storage[#tag_offset + i] = __bytes[#byte_index_write];
-                    }
-                }
-                __NEWLINE__
-            },
-            CcInclude::bit(),
-        ),
-        ..Default::default()
-    };
+    let tag_method = generate_tag_accessors(
+        tcx,
+        quote! { ::rs::Result<#ok_ty_tokens, #err_ty_tokens> },
+        &tag_type_cc_tokens,
+        layout.fields().offset(tag_field.as_usize()).bytes(),
+        quote! { __storage },
+    );
 
     let needs_drop = adt_spec.self_ty_rs.needs_drop(tcx, ty::TypingEnv::fully_monomorphized());
     let discr_for_ok = adt_spec.self_ty_rs.discriminant_for_variant(tcx, ok_idx).expect(
@@ -1396,13 +1394,15 @@ fn specialize_result<'tcx>(
             check that the type can be formatted as a C++ type. That should exclude this case \
             from occurring",
     );
-    let ok_discr_val = literal_of_tag_ty(tcx, discr_for_ok.val, tag_type);
+    let ok_discr_val =
+        int_literal_of_ty(tcx, discr_for_ok.val, tag_type).expect("tag to be valid scalar tokens");
     let discr_for_err = adt_spec.self_ty_rs.discriminant_for_variant(tcx, err_idx).expect(
         "We do not support zero sized types. Before generating a specialization, we\
             check that the type can be formatted as a C++ type. That should exclude this case \
             from occurring",
     );
-    let err_discr_val = literal_of_tag_ty(tcx, discr_for_err.val, tag_type);
+    let err_discr_val =
+        int_literal_of_ty(tcx, discr_for_err.val, tag_type).expect("tag to be valid scalar tokens");
 
     #[rustversion::before(2026-05-18)]
     let (ok_offset, err_offset) = {
@@ -1452,7 +1452,8 @@ fn specialize_result<'tcx>(
                 let ok_relative_idx =
                     ok_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
                 let ok_relative_val =
-                    literal_of_tag_ty(tcx, niche_start + ok_relative_idx, tag_type);
+                    int_literal_of_ty(tcx, niche_start + ok_relative_idx, tag_type)
+                        .expect("tag to be valid scalar tokens");
                 has_value_impl = quote! { tag() == #ok_relative_val };
                 (
                     quote! { set_tag(#ok_relative_val); },
@@ -1471,7 +1472,8 @@ fn specialize_result<'tcx>(
                 let err_relative_idx =
                     err_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
                 let err_relative_val =
-                    literal_of_tag_ty(tcx, niche_start + err_relative_idx, tag_type);
+                    int_literal_of_ty(tcx, niche_start + err_relative_idx, tag_type)
+                        .expect("tag to be valid scalar tokens");
                 has_value_impl = quote! { tag() != #err_relative_val };
                 (
                     quote! { set_tag(#err_relative_val); },
@@ -1595,40 +1597,13 @@ fn specialize_option<'tcx>(
     let OptionVariantIndices { some_idx, none_idx } = get_option_variant_indices(tcx, *adt);
 
     prereqs.includes.insert(CcInclude::optional());
-    let tag_offset = Literal::u64_unsuffixed(layout.fields().offset(tag_field.as_usize()).bytes());
-
-    let endian = tcx.sess.target.options.endian;
-    let endian_index = match endian {
-        rustc_abi::Endian::Little => quote! { i },
-        rustc_abi::Endian::Big => quote! { sizeof(#tag_type_cc) - 1 - i },
-    };
-    let tag_method = ApiSnippets {
-        main_api: CcSnippet::new(quote! {
-            constexpr #tag_type_cc tag() const& noexcept; __NEWLINE__
-            constexpr void set_tag(#tag_type_cc tag) noexcept; __NEWLINE__
-        }),
-        cc_details: CcSnippet::with_include(
-            quote! {
-                inline constexpr #tag_type_cc ( ::rs::Option<#ty_tokens>::tag ) () const& noexcept {
-                    ::std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
-                    for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
-                        __bytes[#endian_index] = storage_[#tag_offset + i];
-                    }
-                    return ::std::bit_cast<#tag_type_cc>(__bytes);
-                }
-                __NEWLINE__
-                inline constexpr void ( ::rs::Option<#ty_tokens>::set_tag )(#tag_type_cc tag) noexcept {
-                    auto __bytes = ::std::bit_cast<::std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
-                    for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
-                        storage_[#tag_offset + i] = __bytes[#endian_index];
-                    }
-                }
-                __NEWLINE__
-            },
-            CcInclude::bit(),
-        ),
-        ..Default::default()
-    };
+    let tag_method = generate_tag_accessors(
+        tcx,
+        quote! { ::rs::Option<#ty_tokens> },
+        &tag_type_cc,
+        layout.fields().offset(tag_field.as_usize()).bytes(),
+        quote! { storage_ },
+    );
 
     let expect_msg =
             "Please file a bug at crubit.rs-bug. We do not support zero sized types. Before generating \
@@ -1636,7 +1611,8 @@ fn specialize_option<'tcx>(
             exclude this case from occurring.";
     let discr_for_none =
         adt_spec.self_ty_rs.discriminant_for_variant(tcx, none_idx).expect(expect_msg);
-    let none_discr_val = literal_of_tag_ty(tcx, discr_for_none.val, tag_type);
+    let none_discr_val = int_literal_of_ty(tcx, discr_for_none.val, tag_type)
+        .expect("tag to be valid scalar tokens");
     let option_api = match tag_encoding {
         rustc_abi::TagEncoding::Direct => {
             // Option::None is variant 0. Option::Some is variant 1.
@@ -1659,7 +1635,8 @@ fn specialize_option<'tcx>(
             );
             let discr_for_some =
                 adt_spec.self_ty_rs.discriminant_for_variant(tcx, some_idx).expect(expect_msg);
-            let some_discr_val = literal_of_tag_ty(tcx, discr_for_some.val, tag_type);
+            let some_discr_val = int_literal_of_ty(tcx, discr_for_some.val, tag_type)
+                .expect("tag to be valid scalar tokens");
 
             OptionApiGenerator {
                 arg_ty: ty_tokens.clone(),
@@ -1684,7 +1661,8 @@ fn specialize_option<'tcx>(
             let none_relative_idx =
                 none_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
             let none_relative_val =
-                literal_of_tag_ty(tcx, niche_start + none_relative_idx, tag_type);
+                int_literal_of_ty(tcx, niche_start + none_relative_idx, tag_type)
+                    .expect("tag to be valid scalar tokens");
             OptionApiGenerator {
                 arg_ty: ty_tokens.clone(),
                 needs_drop,
