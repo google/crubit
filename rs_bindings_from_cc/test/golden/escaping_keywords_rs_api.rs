@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "4type"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=type
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=type")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct r#type {
     pub r#dyn: ::ffi_11::c_int,
 }

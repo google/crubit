@@ -20,8 +20,8 @@ pub mod test_namespace {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N14test_namespace3FooE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace :: Foo
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace :: Foo")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Foo {
         pub x: ::ffi_11::c_int,
     }

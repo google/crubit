@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "10SomeStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SomeStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -46,8 +46,8 @@ pub mod some_struct {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "15SomeOtherStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeOtherStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SomeOtherStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct SomeOtherStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -78,8 +78,8 @@ impl Default for SomeOtherStruct {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "9SomeUnion"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeUnion
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SomeUnion")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub union SomeUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -107,8 +107,8 @@ impl Default for SomeUnion {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "14SomeOtherUnion"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeOtherUnion
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SomeOtherUnion")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub union SomeOtherUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

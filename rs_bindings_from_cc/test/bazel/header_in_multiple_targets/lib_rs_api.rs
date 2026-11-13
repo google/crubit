@@ -23,8 +23,8 @@ pub mod shared_ns {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N9shared_ns4InfoE"]
     #[repr(C, align(4))]
-    ///CRUBIT_ANNOTATE: cpp_type=shared_ns :: Info
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=shared_ns :: Info")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Info {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -66,7 +66,7 @@ pub mod shared_ns {
 
     pub mod info {
         /// Returns the value.
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn value<'__this>(__this: &'__this crate::shared_ns::Info) -> ::ffi_11::c_int {
             unsafe { crate::detail::__rust_thunk___ZNK9shared_ns4Info5valueEv(__this) }
@@ -77,7 +77,7 @@ pub mod shared_ns {
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
     #[cfi_encoding = "N9shared_ns5ColorE"]
-    ///CRUBIT_ANNOTATE: cpp_type=shared_ns :: Color
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=shared_ns :: Color")]
     pub struct Color(::ffi_11::c_int);
     impl Color {
         pub const kRed: Color = Color(::ffi_11::new_c_int(0));
@@ -152,8 +152,11 @@ pub mod zz_template_instantiations {
     #[::ctor::recursively_pinned(PinnedDrop)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: function < int (const class shared_ns :: Info &) >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: function < int (const class shared_ns :: Info &) >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE {
         __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
         /// Reason for representing this field as a blob of bytes:

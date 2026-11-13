@@ -24,8 +24,8 @@ extern crate self as inline_cpp_generated_bindings;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Thing"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Thing
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Thing")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct RawThing {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub value: i32,
@@ -89,7 +89,7 @@ pub mod raw_thing {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn Close(__this: *mut crate::RawThing) {
         unsafe { crate::detail::__rust_thunk___ZN5Thing5CloseEv(__this) }
@@ -100,8 +100,8 @@ pub mod raw_thing {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "11CustomThing"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=CustomThing
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=CustomThing")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct CustomRawThing {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub value: i32,
@@ -165,7 +165,7 @@ pub mod custom_raw_thing {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn CustomDropImpl(__this: *mut crate::CustomRawThing) {
         unsafe { crate::detail::__rust_thunk___ZN11CustomThing14CustomDropImplEv(__this) }

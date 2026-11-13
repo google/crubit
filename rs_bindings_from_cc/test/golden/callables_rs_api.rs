@@ -80,8 +80,8 @@ pub fn map_bridged(
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "13ABICompatible"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ABICompatible
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ABICompatible")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct ABICompatible {
     pub x: ::ffi_11::c_int,
 }
@@ -123,8 +123,8 @@ pub fn map_abi_compatible(
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "16LayoutCompatible"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=LayoutCompatible
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=LayoutCompatible")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct LayoutCompatible {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -157,7 +157,7 @@ impl LayoutCompatible {
 }
 
 pub mod layout_compatible {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {
         unsafe {
@@ -169,7 +169,7 @@ pub mod layout_compatible {
             __crubit_return.assume_init()
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn get<'__this>(__this: &'__this crate::LayoutCompatible) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK16LayoutCompatible3getEv(__this) }

@@ -18,8 +18,8 @@ pub mod example {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N7example7CounterE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=example :: Counter
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=example :: Counter")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Counter {
         pub value: ::ffi_11::c_int,
     }
@@ -62,24 +62,24 @@ pub mod example {
     }
 
     pub mod counter {
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn Get<'__this>(__this: &'__this crate::example::Counter) -> ::ffi_11::c_int {
             unsafe { crate::detail::__rust_thunk___ZNK7example7Counter3GetEv(__this) }
         }
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn Increment<'__this>(__this: &'__this mut crate::example::Counter) {
             unsafe { crate::detail::__rust_thunk___ZN7example7Counter9IncrementEv(__this) }
         }
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn GetRef<'__this>(
             __this: &'__this crate::example::Counter,
         ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
             unsafe { crate::detail::__rust_thunk___ZNK7example7Counter6GetRefEv(__this) }
         }
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn GetMutRef<'__this>(
             __this: &'__this mut crate::example::Counter,
@@ -114,8 +114,8 @@ pub mod example {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N7example6NumberE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=example :: Number
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=example :: Number")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Number {
         pub value: ::ffi_11::c_int,
     }
@@ -161,7 +161,7 @@ pub mod example {
     pub mod number {
         /// The result may refer to `this` or to `other`, but lifetime elision ties the
         /// result only to `this`.
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn GetLarger<'__this, 'other>(
             __this: &'__this crate::example::Number,
@@ -170,7 +170,7 @@ pub mod example {
             unsafe { crate::detail::__rust_thunk___ZNK7example6Number9GetLargerERKi(__this, other) }
         }
         /// The result may refer to `this` or to `other`.
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn GetLargerWithLifetimes<'a>(
             __this: &'a crate::example::Number,

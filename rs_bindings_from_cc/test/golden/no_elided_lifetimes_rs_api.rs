@@ -22,8 +22,8 @@ pub fn free_function<'p1>(p1: &'p1 mut ::ffi_11::c_int) -> ::cref::CMut<'p1, ::f
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "1S"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=S
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=S")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct S {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -63,7 +63,7 @@ impl Default for S {
 }
 
 pub mod s {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn const_method<'__this, 'p1, 'p2>(
         __this: &'__this crate::S,
@@ -72,7 +72,7 @@ pub mod s {
     ) -> ::cref::CMut<'__this, ::ffi_11::c_int> {
         unsafe { crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn method<'__this, 'p1, 'p2>(
         __this: &'__this mut crate::S,
@@ -87,7 +87,10 @@ pub mod s {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "44TriviallyCopyableButNontriviallyDestructible"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
+#[cfg_attr(
+    not(doc),
+    doc = "CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible"
+)]
 pub struct TriviallyCopyableButNontriviallyDestructible {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
@@ -159,8 +162,8 @@ pub unsafe fn take_pointer(p: *mut ::ffi_11::c_int) {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "12WrappedValue"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=WrappedValue
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=WrappedValue")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct WrappedValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

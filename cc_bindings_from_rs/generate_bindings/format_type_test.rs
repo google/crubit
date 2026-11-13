@@ -769,7 +769,7 @@ fn test_format_ty_for_rs_failures() {
         ),
     ];
     let preamble = quote! {
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppTypeConstGenericStruct"]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=CppTypeConstGenericStruct")]
         pub struct CppTypeConstGenericStruct<const N: usize> {
             pub arr: [u8; N],
         }
@@ -907,27 +907,27 @@ fn unique_ptr_preamble() -> TokenStream {
         pub mod cc_std {
             pub mod std {
                 #[allow(non_camel_case_types)]
-                #[doc="CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>"]
-                #[doc="CRUBIT_ANNOTATE: include_path = <memory>"]
-                #[doc="CRUBIT_ANNOTATE: cpp_move_constructible = "]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>")]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = <memory>")]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible = ")]
                 pub struct unique_ptr<T>(pub *mut T);
 
                 #[allow(non_camel_case_types)]
-                #[doc="CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>"]
-                #[doc="CRUBIT_ANNOTATE: include_path = <memory>"]
-                #[doc="CRUBIT_ANNOTATE: cpp_move_constructible = "]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>")]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = <memory>")]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible = ")]
                 pub struct virtual_unique_ptr<T: crate::operator::Delete>(pub *mut T);
 
                 pub unsafe trait SupportsNullable {}
                 unsafe impl<T> SupportsNullable for unique_ptr<T> {}
                 unsafe impl<T: crate::operator::Delete> SupportsNullable for virtual_unique_ptr<T> {}
 
-                #[doc="CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nonnull"]
-                #[doc="CRUBIT_ANNOTATE: include_path = <crubit/support/annotations_internal.h>"]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nonnull")]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = <crubit/support/annotations_internal.h>")]
                 pub struct NonNull<Ptr>(pub Ptr);
 
-                #[doc="CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nullable"]
-                #[doc="CRUBIT_ANNOTATE: include_path = <crubit/support/annotations_internal.h>"]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nullable")]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = <crubit/support/annotations_internal.h>")]
                 pub struct Nullable<Ptr>(pub Ptr);
             }
         }
@@ -1227,10 +1227,10 @@ fn test_format_ty_for_cc_ignored_symbols_fails() {
 #[test]
 fn test_is_bridged_type_never_bridges_vec_or_result() {
     let preamble = quote! {
-        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::CppType"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
-        #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = convert_rust_to_cpp_type"]
-        #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = convert_cpp_to_rust_type"]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = cpp_ns::CppType")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter = convert_rust_to_cpp_type")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter = convert_cpp_to_rust_type")]
         pub struct BridgedRustType {
             pub x: i32,
         }
@@ -1261,16 +1261,16 @@ fn test_is_bridged_type_never_bridges_vec_or_result() {
 #[test]
 fn test_cpp_layout_equivalent_type_is_not_bridged_type() {
     let preamble = quote! {
-        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::LayoutEquivalentType"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/layout_equivalent_type.h"]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = cpp_ns::LayoutEquivalentType")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/layout_equivalent_type.h")]
         pub struct LayoutEquivalentRustType {
             pub x: i32,
         }
 
-        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::BridgedType"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/bridged_type.h"]
-        #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = convert_rust_to_cpp_type"]
-        #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = convert_cpp_to_rust_type"]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = cpp_ns::BridgedType")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/bridged_type.h")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter = convert_rust_to_cpp_type")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter = convert_cpp_to_rust_type")]
         pub struct BridgedRustType {
             pub x: i32,
         }
@@ -1298,23 +1298,23 @@ fn test_cpp_layout_equivalent_type_is_not_bridged_type() {
 #[test]
 fn test_repr_transparent_cpp_type_is_not_c_abi_compatible_by_value_without_same_abi() {
     let preamble = quote! {
-        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::LayoutEquivalentType"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/layout_equivalent_type.h"]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = cpp_ns::LayoutEquivalentType")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/layout_equivalent_type.h")]
         #[repr(transparent)]
         pub struct TransparentLayoutEquivalentRustType {
             pub ptr: *mut core::ffi::c_void,
         }
 
-        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::SameAbiType"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/same_abi_type.h"]
-        #[doc="CRUBIT_ANNOTATE: same_abi ="]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = cpp_ns::SameAbiType")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/same_abi_type.h")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: same_abi =")]
         #[repr(transparent)]
         pub struct TransparentSameAbiRustType {
             pub ptr: *mut core::ffi::c_void,
         }
 
-        #[doc="CRUBIT_ANNOTATE: cpp_type = const cpp_ns::CppType*"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = const cpp_ns::CppType*")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h")]
         #[repr(transparent)]
         pub struct TransparentCppPointerRustType {
             pub ptr: *const core::ffi::c_void,
@@ -1409,8 +1409,8 @@ fn test_format_ty_for_cc_iterator_item_references() {
 fn test_format_ty_for_rs_cpp_specialization_alias() {
     let preamble = quote! {
         pub mod internal {
-            #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatusOr<{T}>"]
-            #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatusOr<{T}>")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h")]
             #[repr(C)]
             pub struct MyStatusOr<T> {
                 pub has_value: bool,
@@ -1418,14 +1418,14 @@ fn test_format_ty_for_rs_cpp_specialization_alias() {
             }
         }
 
-        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatus"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h"]
-        #[doc="CRUBIT_ANNOTATE: specializes_cpp_type ="]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatus")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: specializes_cpp_type =")]
         pub type MyStatus = internal::MyStatusOr<()>;
 
         mod private_mod {
-            #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatusOr<{T}>"]
-            #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatusOr<{T}>")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h")]
             #[repr(C)]
             pub struct UnexportedStatusOr<T> {
                 pub has_value: bool,
@@ -1433,9 +1433,9 @@ fn test_format_ty_for_rs_cpp_specialization_alias() {
             }
         }
 
-        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatus"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h"]
-        #[doc="CRUBIT_ANNOTATE: specializes_cpp_type ="]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = cpp_ns::MyStatus")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/my_status.h")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: specializes_cpp_type =")]
         #[allow(private_interfaces)]
         pub type ReexportedStatusOnly = private_mod::UnexportedStatusOr<()>;
     };
@@ -1471,65 +1471,65 @@ fn test_format_cc_type_is_pointer() {
         pub mod cc_std {
             pub mod std {
                 #[allow(non_camel_case_types)]
-                #[doc="CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>"]
-                #[doc="CRUBIT_ANNOTATE: include_path = <memory>"]
-                #[doc="CRUBIT_ANNOTATE: cpp_move_constructible = "]
+                #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>")]
+                #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path = <memory>")]
+                #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_move_constructible = ")]
                 pub struct unique_ptr<T>(pub *mut T);
 
                 pub unsafe trait SupportsNullable {}
                 unsafe impl<T> SupportsNullable for unique_ptr<T> {}
                 unsafe impl SupportsNullable for crate::MovableLayoutPtr {}
 
-                #[doc="CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nullable"]
-                #[doc="CRUBIT_ANNOTATE: include_path = <crubit/support/annotations_internal.h>"]
-                #[doc="CRUBIT_ANNOTATE: cpp_move_constructible = "]
+                #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nullable")]
+                #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path = <crubit/support/annotations_internal.h>")]
+                #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_move_constructible = ")]
                 #[repr(transparent)]
                 pub struct Nullable<Ptr>(pub Ptr);
             }
         }
 
-        #[doc="CRUBIT_ANNOTATE: cpp_type = CppType*"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type = CppType*")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h")]
         #[derive(Clone, Copy)]
         #[repr(transparent)]
         pub struct MovableLayoutPtr(*mut core::ffi::c_void);
 
-        #[doc="CRUBIT_ANNOTATE: cpp_type = CppType*"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type = CppType*")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h")]
         #[repr(transparent)]
         pub struct NonMovableLayoutPtr(*mut core::ffi::c_void);
         impl Drop for NonMovableLayoutPtr {
             fn drop(&mut self) {}
         }
 
-        #[doc="CRUBIT_ANNOTATE: cpp_type = CppType*"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
-        #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = cpp_ptr_to_rust"]
-        #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = rust_to_cpp_ptr"]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type = CppType*")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = cpp_ptr_to_rust")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = rust_to_cpp_ptr")]
         #[repr(transparent)]
         pub struct BridgedPtr(*mut core::ffi::c_void);
 
-        #[doc="CRUBIT_ANNOTATE: cpp_type = CppType"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
-        #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = cpp_val_to_rust"]
-        #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = rust_to_cpp_val"]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type = CppType")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = cpp_val_to_rust")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = rust_to_cpp_val")]
         pub struct BridgedVal(pub i32);
 
         pub mod spec_internal {
-            #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::Generic<{T}>"]
-            #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/generic.h"]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::Generic<{T}>")]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path = cpp_ns/generic.h")]
             #[repr(transparent)]
             pub struct Generic<T>(pub *mut T);
         }
 
-        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::SpecialPtr*"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/generic.h"]
-        #[doc="CRUBIT_ANNOTATE: specializes_cpp_type ="]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::SpecialPtr*")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path = cpp_ns/generic.h")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: specializes_cpp_type =")]
         pub type SpecializedPtr = spec_internal::Generic<i32>;
 
-        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::SpecialVal"]
-        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/generic.h"]
-        #[doc="CRUBIT_ANNOTATE: specializes_cpp_type ="]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::SpecialVal")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path = cpp_ns/generic.h")]
+        #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: specializes_cpp_type =")]
         pub type SpecializedVal = spec_internal::Generic<u32>;
     };
 

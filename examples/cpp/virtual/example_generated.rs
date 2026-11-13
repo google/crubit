@@ -18,8 +18,8 @@
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "11RustDerived"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=RustDerived
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=RustDerived")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct RustDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
     /// Reason for representing this field as a blob of bytes:
@@ -132,12 +132,12 @@ unsafe impl ::operator::Delete for crate::RustDerived {
 }
 
 pub mod rust_derived {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Method1<'__this>(__this: &'__this crate::RustDerived) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK11RustDerived7Method1Ev(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Upcast<'__this>(
         __this: ::core::pin::Pin<&'__this mut crate::RustDerived>,

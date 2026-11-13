@@ -20,8 +20,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "8TopLevel"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TopLevel
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TopLevel")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TopLevel {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -45,8 +45,8 @@ impl Default for TopLevel {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Alias1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -75,8 +75,8 @@ impl Default for Alias1 {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10MyTemplateIfE"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < float >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < float >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Alias2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -105,8 +105,8 @@ impl Default for Alias2 {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10MyTemplateI8TopLevelE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < struct TopLevel >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < struct TopLevel >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Alias3 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -140,8 +140,8 @@ impl Default for Alias3 {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10MyTemplateIdE"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < double >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < double >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Alias4 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -170,8 +170,8 @@ impl Default for Alias4 {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10MyTemplateIbE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < bool >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < bool >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Alias5 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -200,8 +200,11 @@ impl Default for Alias5 {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10MyTemplateIS_I8TopLevelEE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < class MyTemplate < struct TopLevel >>
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(
+    not(doc),
+    doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < class MyTemplate < struct TopLevel >>"
+)]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Alias6 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -236,8 +239,8 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N23test_namespace_bindings5InnerE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: Inner
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: Inner")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -266,8 +269,8 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst10MyTemplateIcE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < char >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < char >")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Alias7 {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -301,8 +304,11 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < struct test_namespace_bindings :: Inner >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < struct test_namespace_bindings :: Inner >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Alias8 {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -334,8 +340,11 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < class MyTemplate < struct test_namespace_bindings :: Inner >>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < class MyTemplate < struct test_namespace_bindings :: Inner >>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Alias9 {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:

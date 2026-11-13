@@ -23,8 +23,8 @@ pub mod ns {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N2ns3FooE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ns :: Foo
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ns :: Foo")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Foo {
         /// A field
         pub i: ::ffi_11::c_int,
@@ -74,8 +74,8 @@ pub fn foo() {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "3Bar"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Bar
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Bar")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Bar {
     pub i: ::ffi_11::c_int,
 }
@@ -100,8 +100,8 @@ impl Default for Bar {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "13HasNoComments"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=HasNoComments
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=HasNoComments")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct HasNoComments {
     pub i: ::ffi_11::c_int,
 }

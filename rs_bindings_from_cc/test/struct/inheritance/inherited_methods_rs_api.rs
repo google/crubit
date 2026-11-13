@@ -18,7 +18,7 @@
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "10Nonmovable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Nonmovable
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Nonmovable")]
 pub struct Nonmovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
@@ -47,8 +47,8 @@ impl ::ctor::CtorNew<()> for Nonmovable {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "4Base"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Base
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Base")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Base {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -155,12 +155,12 @@ pub trait BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable {}
 //   Cannot generate bindings for overloaded function
 
 pub mod base {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn has_bindings<'__this>(__this: &'__this crate::Base) -> bool {
         unsafe { crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn no_bindings<'__this>(
         __this: &'__this crate::Base,
@@ -176,7 +176,7 @@ pub mod base {
     /// methods they have no implicit `this` parameter. Parameters naming the
     /// enclosing class must therefore keep their declared type in the bindings
     /// generated for `Derived`, rather than being rewritten to `Self`.
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_no_params() {
         unsafe { crate::detail::__rust_thunk___ZN4Base16static_no_paramsEv() }
@@ -185,7 +185,7 @@ pub mod base {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `a`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn static_ptr_param(a: *mut crate::Base) {
         unsafe { crate::detail::__rust_thunk___ZN4Base16static_ptr_paramEPS_(a) }
@@ -195,17 +195,17 @@ pub mod base {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `a`: raw pointer
     /// * `b`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn static_two_ptr_params(a: *mut crate::Base, b: *mut crate::Base) {
         unsafe { crate::detail::__rust_thunk___ZN4Base21static_two_ptr_paramsEPS_S0_(a, b) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_ref_param<'a>(a: &'a crate::Base) {
         unsafe { crate::detail::__rust_thunk___ZN4Base16static_ref_paramERKS_(a) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_value_param(a: crate::Base) {
         let mut a = ::core::mem::MaybeUninit::new(a);
@@ -215,7 +215,7 @@ pub mod base {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `a`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn static_ptr_return(a: *mut crate::Base) -> *mut crate::Base {
         unsafe { crate::detail::__rust_thunk___ZN4Base17static_ptr_returnEPS_(a) }
@@ -225,8 +225,8 @@ pub mod base {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "7Derived"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Derived
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Derived")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -319,12 +319,12 @@ unsafe impl oops::Inherits<crate::Base> for crate::Derived {
 }
 
 pub mod derived {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn has_bindings<'__this>(__this: &'__this crate::Base) -> bool {
         unsafe { crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn no_bindings<'__this>(
         __this: &'__this crate::Base,
@@ -340,7 +340,7 @@ pub mod derived {
     /// methods they have no implicit `this` parameter. Parameters naming the
     /// enclosing class must therefore keep their declared type in the bindings
     /// generated for `Derived`, rather than being rewritten to `Self`.
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_no_params() {
         unsafe { crate::detail::__rust_thunk___ZN4Base16static_no_paramsEv() }
@@ -349,7 +349,7 @@ pub mod derived {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `a`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn static_ptr_param(a: *mut crate::Base) {
         unsafe { crate::detail::__rust_thunk___ZN4Base16static_ptr_paramEPS_(a) }
@@ -358,12 +358,12 @@ pub mod derived {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `a`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn static_ptr_return(a: *mut crate::Base) -> *mut crate::Base {
         unsafe { crate::detail::__rust_thunk___ZN4Base17static_ptr_returnEPS_(a) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_ref_param<'a>(a: &'a crate::Base) {
         unsafe { crate::detail::__rust_thunk___ZN4Base16static_ref_paramERKS_(a) }
@@ -373,12 +373,12 @@ pub mod derived {
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `a`: raw pointer
     /// * `b`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn static_two_ptr_params(a: *mut crate::Base, b: *mut crate::Base) {
         unsafe { crate::detail::__rust_thunk___ZN4Base21static_two_ptr_paramsEPS_S0_(a, b) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_value_param(a: crate::Base) {
         let mut a = ::core::mem::MaybeUninit::new(a);

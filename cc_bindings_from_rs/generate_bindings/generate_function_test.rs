@@ -628,7 +628,7 @@ fn test_format_item_fn_reused_reference_lifetime_struct() {
 #[test]
 fn test_format_fn_cpp_name() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_name=Create"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_name=Create")]
             pub fn foo() {}
         "#;
     test_format_item(test_src, "foo", |result| {
@@ -2221,7 +2221,7 @@ fn test_format_item_fn_repr_transparent_coroutine() {
 #[test]
 fn test_imported_cpp_type_pass_by_value_unmovable() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=SomeCppType"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SomeCppType")]
             pub struct ImportedCppType {
                 pub x: i32,
             }
@@ -2259,8 +2259,8 @@ fn test_imported_cpp_type_pass_by_value_unmovable() {
 #[test]
 fn test_imported_cpp_type_pass_by_value_movable() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=SomeCppType"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SomeCppType")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
             pub struct ImportedCppType {
                 pub x: i32,
             }
@@ -2285,8 +2285,8 @@ fn test_imported_cpp_type_pass_by_value_movable() {
 #[test]
 fn test_imported_cpp_type_return_by_value_movable() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=SomeCppType"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SomeCppType")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
             pub struct ImportedCppType {
                 pub x: i32,
             }
@@ -2664,9 +2664,9 @@ fn test_unmovable_template_specialization_param_wrapped_in_movable() {
 #[test]
 fn test_bridged_type_with_derive_rust_movable() {
     let test_src = r#"
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
-        #[doc = "CRUBIT_ANNOTATE: include_path=absl/status/statusor.h"]
-        #[doc = "CRUBIT_ANNOTATE: derive_rust_movable="]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=absl/status/statusor.h")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: derive_rust_movable=")]
         pub struct StatusOr<T>(std::marker::PhantomData<T>);
         // Has Drop and no Default/Copy -> not C++ move-constructible, but Rust-movable (has UnsafeRelocateTag).
         pub struct Unmovable(pub i32);
@@ -2674,7 +2674,7 @@ fn test_bridged_type_with_derive_rust_movable() {
             fn drop(&mut self) {}
         }
         // Imported C++ type without cpp_move_constructible -> neither C++ move-constructible nor relocatable.
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppUnmovable"]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=CppUnmovable")]
         pub struct CppUnmovable(pub i32);
         impl Drop for CppUnmovable {
             fn drop(&mut self) {}
@@ -2717,11 +2717,11 @@ fn test_bridged_type_with_derive_rust_movable() {
 #[test]
 fn test_bridged_type_with_non_cpp_movable_type_arg_rejected() {
     let test_src = r#"
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
-        #[doc = "CRUBIT_ANNOTATE: include_path=absl/status/statusor.h"]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=absl/status/statusor.h")]
         pub struct StatusOr<T>(std::marker::PhantomData<T>);
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=MyWrapper<{T}>"]
-        #[doc = "CRUBIT_ANNOTATE: include_path=my_wrapper.h"]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyWrapper<{T}>")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=my_wrapper.h")]
         pub struct MyWrapper<T>(std::marker::PhantomData<T>);
         // Has Drop and no Default/Copy -> not C++ move-constructible.
         pub struct Unmovable(pub i32);
@@ -2754,9 +2754,9 @@ fn test_bridged_type_with_non_cpp_movable_type_arg_rejected() {
 #[test]
 fn test_bridged_type_with_cpp_move_constructible_allows_unmovable_type_arg() {
     let test_src = r#"
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=std::unique_ptr<{T}>"]
-        #[doc = "CRUBIT_ANNOTATE: include_path=<memory>"]
-        #[doc = "CRUBIT_ANNOTATE: cpp_move_constructible="]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=std::unique_ptr<{T}>")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=<memory>")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct UniquePtr<T>(std::marker::PhantomData<T>);
         pub struct Unmovable(pub i32);
         impl Drop for Unmovable {

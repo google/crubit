@@ -24,8 +24,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test13StructOldNameE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructOldName
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructOldName")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct StructNewName {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -54,8 +54,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test10SomeStructE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: SomeStruct
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: SomeStruct")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct SomeStruct {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             pub field_new_name: ::ffi_11::c_int,
@@ -101,7 +101,7 @@ pub mod crubit {
         }
 
         pub mod some_struct {
-            ///CRUBIT_ANNOTATE: do_not_bind=
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
             #[inline(always)]
             pub fn ConstructorNewName(
                 a: ::ffi_11::c_int,
@@ -123,7 +123,7 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///CRUBIT_ANNOTATE: do_not_bind=
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
             #[inline(always)]
             pub unsafe fn MethodNewName(__this: *const crate::crubit::test::SomeStruct) {
                 unsafe {

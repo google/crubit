@@ -19,8 +19,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test9ItemUnpinE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ItemUnpin
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ItemUnpin")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ItemUnpin {
             pub value: ::ffi_11::c_int,
         }
@@ -50,7 +50,7 @@ pub mod crubit {
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[cfi_encoding = "N6crubit4test12ItemNonUnpinE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ItemNonUnpin
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ItemNonUnpin")]
         pub struct ItemNonUnpin {
             pub value: ::ffi_11::c_int,
         }
@@ -129,8 +129,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test23ContainerUnpinItemUnpinE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerUnpinItemUnpin
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerUnpinItemUnpin"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ContainerUnpinItemUnpin {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             /// Reason for representing this field as a blob of bytes:
@@ -217,8 +220,11 @@ pub mod crubit {
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[cfi_encoding = "N6crubit4test26ContainerUnpinItemNonUnpinE"]
         #[repr(C, align(8))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerUnpinItemNonUnpin
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerUnpinItemNonUnpin"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ContainerUnpinItemNonUnpin {
             __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
             /// Reason for representing this field as a blob of bytes:
@@ -413,7 +419,10 @@ pub mod crubit {
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[cfi_encoding = "N6crubit4test26ContainerNonUnpinItemUnpinE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerNonUnpinItemUnpin
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerNonUnpinItemUnpin"
+        )]
         pub struct ContainerNonUnpinItemUnpin {
             __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
             /// Reason for representing this field as a blob of bytes:
@@ -543,7 +552,10 @@ pub mod crubit {
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[cfi_encoding = "N6crubit4test29ContainerNonUnpinItemNonUnpinE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerNonUnpinItemNonUnpin
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerNonUnpinItemNonUnpin"
+        )]
         pub struct ContainerNonUnpinItemNonUnpin {
             __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
             /// Reason for representing this field as a blob of bytes:
@@ -664,8 +676,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test14ContainerValueE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerValue
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerValue")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ContainerValue {
             pub value: ::ffi_11::c_int,
         }
@@ -698,8 +710,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test15ContainerRvalueE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerRvalue
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerRvalue")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ContainerRvalue {
             pub value: ::ffi_11::c_int,
         }
@@ -735,8 +747,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test24ContainerMutRefFromConstE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerMutRefFromConst
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerMutRefFromConst"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ContainerMutRefFromConst {
             pub value: ::ffi_11::c_int,
         }
@@ -771,8 +786,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test24ContainerConstRefFromMutE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerConstRefFromMut
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainerConstRefFromMut"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ContainerConstRefFromMut {
             pub value: ::ffi_11::c_int,
         }

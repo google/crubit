@@ -18,8 +18,8 @@
 #[must_use]
 #[cfi_encoding = "9NoDiscard"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NoDiscard
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NoDiscard")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NoDiscard {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -44,8 +44,8 @@ impl Default for NoDiscard {
 #[must_use = "You really should use this"]
 #[cfi_encoding = "20NoDiscardWithMessage"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NoDiscardWithMessage
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NoDiscardWithMessage")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NoDiscardWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -73,7 +73,7 @@ impl Default for NoDiscardWithMessage {
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[must_use]
 #[cfi_encoding = "13NoDiscardEnum"]
-///CRUBIT_ANNOTATE: cpp_type=NoDiscardEnum
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NoDiscardEnum")]
 pub struct NoDiscardEnum(::ffi_11::c_uint);
 impl NoDiscardEnum {
     pub const kConstant: NoDiscardEnum = NoDiscardEnum(::ffi_11::new_c_uint(0));
@@ -93,7 +93,7 @@ impl From<NoDiscardEnum> for ::ffi_11::c_uint {
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[must_use = "You really should use this"]
 #[cfi_encoding = "24NoDiscardEnumWithMessage"]
-///CRUBIT_ANNOTATE: cpp_type=NoDiscardEnumWithMessage
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NoDiscardEnumWithMessage")]
 pub struct NoDiscardEnumWithMessage(::ffi_11::c_uint);
 impl NoDiscardEnumWithMessage {
     pub const kConstantWithMessage: NoDiscardEnumWithMessage =
@@ -125,8 +125,8 @@ pub fn crubit_nodiscard_message() -> *mut ::ffi_11::c_void {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "13NodiscardCtor"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NodiscardCtor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NodiscardCtor")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NodiscardCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -159,8 +159,8 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "24NodiscardCtorWithMessage"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NodiscardCtorWithMessage
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NodiscardCtorWithMessage")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NodiscardCtorWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

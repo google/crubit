@@ -229,7 +229,7 @@ impl OptionWithSizeTypes {
     }
 }
 
-#[doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char(0))"]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char(0))")]
 #[repr(transparent)]
 pub struct BridgedType(u8);
 

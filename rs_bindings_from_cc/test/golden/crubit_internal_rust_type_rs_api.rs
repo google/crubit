@@ -52,8 +52,8 @@ pub type BadSameAbiAttr = ::ffi_11::c_uchar;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "26ExistingRustTypeFieldTypes"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ExistingRustTypeFieldTypes
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ExistingRustTypeFieldTypes")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct ExistingRustTypeFieldTypes {
     pub my_i8_struct: i8,
     pub my_i8_class: i8,
@@ -158,8 +158,8 @@ pub fn AcceptSpecialized(
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "14NonRustMovable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NonRustMovable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonRustMovable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NonRustMovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub x: ::ffi_11::c_int,

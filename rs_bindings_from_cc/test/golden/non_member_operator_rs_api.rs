@@ -18,8 +18,8 @@ pub mod ns {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N2ns1XE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ns :: X
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ns :: X")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct X {
         pub f: ::ffi_11::c_int,
     }

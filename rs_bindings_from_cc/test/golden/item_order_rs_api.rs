@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "11FirstStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=FirstStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=FirstStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct FirstStruct {
     pub field: ::ffi_11::c_int,
 }
@@ -47,8 +47,8 @@ pub fn first_func() -> ::ffi_11::c_int {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "12SecondStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SecondStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SecondStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct SecondStruct {
     pub field: ::ffi_11::c_int,
 }

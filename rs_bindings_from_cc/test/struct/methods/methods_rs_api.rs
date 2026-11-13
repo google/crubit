@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "9SomeClass"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeClass
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SomeClass")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct SomeClass {
     pub int_var: ::ffi_11::c_int,
 }
@@ -59,7 +59,7 @@ impl Default for SomeClass {
 }
 
 pub mod some_class {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_factory_method(int_var_initial_value: ::ffi_11::c_int) -> crate::SomeClass {
         unsafe {
@@ -71,7 +71,7 @@ pub mod some_class {
             __crubit_return.assume_init()
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_method_that_multiplies_its_args(
         x: ::ffi_11::c_int,
@@ -85,7 +85,7 @@ pub mod some_class {
     }
     /// Using an `inline` method forces generation of a C++ thunk in
     /// methods_rs_api_impl.cc (helping add test coverage for such thunks).
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_inline_method(arg: ::ffi_11::c_int) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass20static_inline_methodEi(arg) }
@@ -95,8 +95,8 @@ pub mod some_class {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "15InstanceMethods"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=InstanceMethods
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=InstanceMethods")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct InstanceMethods {
     pub int_field: ::ffi_11::c_int,
 }
@@ -162,26 +162,26 @@ impl Default for InstanceMethods {
 }
 
 pub mod instance_methods {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn get_int_field(__this: &crate::InstanceMethods) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK15InstanceMethods13get_int_fieldEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn set_int_field(__this: &mut crate::InstanceMethods, new_value: ::ffi_11::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN15InstanceMethods13set_int_fieldEi(__this, new_value)
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn inline_get_int_field(__this: &crate::InstanceMethods) -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZNK15InstanceMethods20inline_get_int_fieldEv(__this)
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn inline_set_int_field(__this: &mut crate::InstanceMethods, new_value: ::ffi_11::c_int) {
         unsafe {
@@ -194,7 +194,7 @@ pub mod instance_methods {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `input_ref`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn takes_and_returns_ref(
         __this: &mut crate::InstanceMethods,
@@ -206,19 +206,19 @@ pub mod instance_methods {
             )
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn ref_qualified(__this: &mut crate::InstanceMethods) {
         unsafe { crate::detail::__rust_thunk___ZNR15InstanceMethods13ref_qualifiedEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn const_ref_qualified(__this: &crate::InstanceMethods) {
         unsafe {
             crate::detail::__rust_thunk___ZNKR15InstanceMethods19const_ref_qualifiedEv(__this)
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn rvalue_qualified(__this: &mut crate::InstanceMethods) {
         unsafe { crate::detail::__rust_thunk___ZNO15InstanceMethods16rvalue_qualifiedEv(__this) }

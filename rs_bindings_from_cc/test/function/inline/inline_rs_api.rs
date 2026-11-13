@@ -24,8 +24,8 @@ pub fn hello_world_inline() -> ::ffi_11::c_int {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "10SomeStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SomeStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SomeStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct SomeStruct {
     pub int_field: ::ffi_11::c_int,
 }

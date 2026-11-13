@@ -147,8 +147,8 @@ pub mod foo {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "18StructWithAnonEnum"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithAnonEnum
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithAnonEnum")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithAnonEnum {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -181,8 +181,8 @@ impl Default for StructWithAnonEnum {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "23StructWithStaticMembers"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithStaticMembers
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithStaticMembers")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithStaticMembers {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

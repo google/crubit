@@ -24,8 +24,8 @@
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "10Nontrivial"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Nontrivial
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Nontrivial")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -282,39 +282,39 @@ impl<'__this, 'rhs> ::core::ops::Add<&'rhs crate::Nontrivial> for &'__this crate
 //   Compound assignment operators are not supported for non-Unpin types, found ::core::pin::Pin<&'__this mut crate::Nontrivial>
 
 pub mod nontrivial {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Unqualified<'__this>(__this: ::core::pin::Pin<&'__this mut crate::Nontrivial>) {
         unsafe { crate::detail::__rust_thunk___ZN10Nontrivial11UnqualifiedEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn ConstQualified<'__this>(__this: &'__this crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNK10Nontrivial14ConstQualifiedEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn LvalueRefQualified<'__this>(__this: ::core::pin::Pin<&'__this mut crate::Nontrivial>) {
         unsafe { crate::detail::__rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn ConstLvalueRefQualified<'__this>(__this: &'__this crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn RvalueRefQualified<'__this>(__this: ::core::pin::Pin<&'__this mut crate::Nontrivial>) {
         unsafe { crate::detail::__rust_thunk___ZNO10Nontrivial18RvalueRefQualifiedEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn ConstRvalueRefQualified<'__this>(__this: &'__this crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv(__this) }
     }
     /// Takes a non-Unpin type by value (as a `Ctor`) and returns a non-Unpin type,
     /// while also capturing the lifetime of `this`.
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn TakesByValueMember<'__this>(
         __this: &'__this crate::Nontrivial,
@@ -341,8 +341,8 @@ pub mod nontrivial {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "16NontrivialInline"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NontrivialInline
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NontrivialInline")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NontrivialInline {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -514,7 +514,7 @@ impl ::ctor::PinnedDrop for NontrivialInline {
 }
 
 pub mod nontrivial_inline {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn MemberFunction<'__this>(__this: ::core::pin::Pin<&'__this mut crate::NontrivialInline>) {
         unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(__this) }
@@ -531,8 +531,8 @@ pub mod nontrivial_inline {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "17NontrivialMembers"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NontrivialMembers
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NontrivialMembers")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NontrivialMembers {
     pub nontrivial_member: crate::Nontrivial,
 }
@@ -641,8 +641,8 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for NontrivialMembers {
 /// Nontrivial, but trivially relocatable and final (and therefore Unpin).
 #[cfi_encoding = "15NontrivialUnpin"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NontrivialUnpin
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NontrivialUnpin")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NontrivialUnpin {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -813,7 +813,7 @@ impl Drop for NontrivialUnpin {
 }
 
 pub mod nontrivial_unpin {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn MemberFunction<'__this>(__this: &'__this mut crate::NontrivialUnpin) {
         unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv(__this) }
@@ -949,8 +949,8 @@ pub fn TakesUnpinByConstRvalueReference(
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "17NontrivialByValue"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NontrivialByValue
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NontrivialByValue")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NontrivialByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -1005,7 +1005,7 @@ where
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "10Nonmovable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Nonmovable
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Nonmovable")]
 pub struct Nonmovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
@@ -1045,7 +1045,7 @@ impl ::ctor::PinnedDrop for Nonmovable {
 }
 
 pub mod nonmovable {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn MemberFunction<'__this>(__this: ::core::pin::Pin<&'__this mut crate::Nonmovable>) {
         unsafe { crate::detail::__rust_thunk___ZN10Nonmovable14MemberFunctionEv(__this) }

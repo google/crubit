@@ -18,7 +18,7 @@
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "15PolymorphicBase"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=PolymorphicBase")]
 pub struct PolymorphicBase {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
@@ -108,7 +108,7 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "16PolymorphicBase2"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase2
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=PolymorphicBase2")]
 pub struct PolymorphicBase2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
@@ -201,7 +201,7 @@ unsafe impl ::operator::Delete for crate::PolymorphicBase2 {
 }
 
 pub mod polymorphic_base2 {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Foo<'__this>(__this: ::core::pin::Pin<&'__this mut crate::PolymorphicBase2>) {
         unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase23FooEv(__this) }
@@ -212,8 +212,8 @@ pub mod polymorphic_base2 {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "18PolymorphicDerived"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=PolymorphicDerived
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=PolymorphicDerived")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct PolymorphicDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
 }

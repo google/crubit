@@ -53,8 +53,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst10DoesNotUseIS_IiEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=DoesNotUse < struct DoesNotUse < int >>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DoesNotUse < struct DoesNotUse < int >>")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInst10DoesNotUseIS_IiEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -79,8 +79,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst10DoesNotUseIiE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=DoesNotUse < int >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DoesNotUse < int >")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInst10DoesNotUseIiE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }

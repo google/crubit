@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "17DisplayableStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DisplayableStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DisplayableStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct DisplayableStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -57,7 +57,7 @@ impl Default for DisplayableStruct {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "15DisplayableEnum"]
-///CRUBIT_ANNOTATE: cpp_type=DisplayableEnum
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DisplayableEnum")]
 pub struct DisplayableEnum(::ffi_11::c_int);
 impl DisplayableEnum {
     pub const kKnown: DisplayableEnum = DisplayableEnum(::ffi_11::new_c_int(1));

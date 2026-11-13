@@ -100,8 +100,8 @@ pub fn CallIntMapper(
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "6Widget"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Widget
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Widget")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Widget {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

@@ -4424,7 +4424,7 @@ fn test_method_free_function_is_do_not_bind() -> Result<()> {
         quote! {
             pub mod my_struct {
                 ...
-                #[doc = "CRUBIT_ANNOTATE: do_not_bind="]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
                 #[inline(always)]
                 pub unsafe fn Method(__this: *mut crate::MyStruct) { ... }
             }

@@ -21,8 +21,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "10EmptyUnion"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=EmptyUnion
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EmptyUnion")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub union EmptyUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -47,8 +47,8 @@ impl Default for EmptyUnion {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "10Nontrivial"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Nontrivial
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Nontrivial")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -108,8 +108,8 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "13UnionToRename"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=UnionToRename
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=UnionToRename")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub union RenamedUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -134,7 +134,10 @@ impl Default for RenamedUnion {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "44TriviallyCopyableButNontriviallyDestructible"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
+#[cfg_attr(
+    not(doc),
+    doc = "CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible"
+)]
 pub struct TriviallyCopyableButNontriviallyDestructible {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
@@ -201,8 +204,8 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "13NonEmptyUnion"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyUnion
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonEmptyUnion")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub union NonEmptyUnion {
     pub bool_field: bool,
     pub char_field: ::ffi_11::c_char,
@@ -236,7 +239,7 @@ impl Default for NonEmptyUnion {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "12NonCopyUnion"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonCopyUnion")]
 pub union NonCopyUnion {
     pub trivial_member: bool,
     pub nontrivial_member: ::core::mem::ManuallyDrop<crate::Nontrivial>,
@@ -256,8 +259,8 @@ forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion"), crate:
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "13NonCopyUnion2"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion2
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonCopyUnion2")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub union NonCopyUnion2 {
     pub trivial_member: bool,
     pub nontrivial_member:
@@ -305,8 +308,8 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for NonCopyUnion2 {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "20UnionWithOpaqueField"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=UnionWithOpaqueField
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=UnionWithOpaqueField")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub union UnionWithOpaqueField {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported `volatile` qualifier: volatile char[42]
@@ -341,8 +344,8 @@ impl Default for UnionWithOpaqueField {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "21TrivialButInheritable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TrivialButInheritable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TrivialButInheritable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TrivialButInheritable {
     pub x: ::ffi_11::c_int,
 }
@@ -373,8 +376,8 @@ impl Default for TrivialButInheritable {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "20UnionWithInheritable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=UnionWithInheritable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=UnionWithInheritable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub union UnionWithInheritable {
     pub t: crate::TrivialButInheritable,
 }
@@ -405,8 +408,8 @@ impl Default for UnionWithInheritable {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "12TypedefUnion"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TypedefUnion
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TypedefUnion")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub union TypedefUnion {
     pub trivial_member: bool,
 }
@@ -434,8 +437,8 @@ impl Default for TypedefUnion {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "27TypedefUnionWithInheritable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TypedefUnionWithInheritable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TypedefUnionWithInheritable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub union TypedefUnionWithInheritable {
     pub t: crate::TrivialButInheritable,
 }

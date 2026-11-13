@@ -20,8 +20,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MyTypeAlias {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -58,7 +58,7 @@ impl Default for MyTypeAlias {
 }
 
 pub mod my_type_alias {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Create(value: ::ffi_11::c_int) -> crate::MyTypeAlias {
         unsafe {
@@ -70,7 +70,7 @@ pub mod my_type_alias {
             __crubit_return.assume_init()
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn value<'__this>(
         __this: &'__this crate::MyTypeAlias,
@@ -87,8 +87,8 @@ pub mod nested {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst10MyTemplateIfE"]
     #[repr(C, align(4))]
-    ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < float >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < float >")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct NestedAlias {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -130,7 +130,7 @@ pub mod nested {
     }
 
     pub mod nested_alias {
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn Create(value: f32) -> crate::nested::NestedAlias {
             unsafe {
@@ -143,7 +143,7 @@ pub mod nested {
                 __crubit_return.assume_init()
             }
         }
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn value<'__this>(
             __this: &'__this crate::nested::NestedAlias,
@@ -188,8 +188,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst10MyTemplateIdE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < double >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < double >")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInst10MyTemplateIdE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:

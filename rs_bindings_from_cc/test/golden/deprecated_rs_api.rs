@@ -30,8 +30,8 @@ pub fn deprecated_function_with_message() {
 #[deprecated]
 #[cfi_encoding = "16DeprecatedStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DeprecatedStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct DeprecatedStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -59,8 +59,8 @@ impl Default for DeprecatedStruct {
 #[deprecated = "old"]
 #[cfi_encoding = "27DeprecatedStructWithMessage"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedStructWithMessage
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DeprecatedStructWithMessage")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct DeprecatedStructWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -90,7 +90,7 @@ impl Default for DeprecatedStructWithMessage {
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[deprecated]
 #[cfi_encoding = "14DeprecatedEnum"]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnum
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DeprecatedEnum")]
 pub struct DeprecatedEnum(::ffi_11::c_uint);
 impl DeprecatedEnum {}
 impl From<::ffi_11::c_uint> for DeprecatedEnum {
@@ -108,7 +108,7 @@ impl From<DeprecatedEnum> for ::ffi_11::c_uint {
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[deprecated = "old"]
 #[cfi_encoding = "25DeprecatedEnumWithMessage"]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnumWithMessage
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DeprecatedEnumWithMessage")]
 pub struct DeprecatedEnumWithMessage(::ffi_11::c_uint);
 impl DeprecatedEnumWithMessage {}
 impl From<::ffi_11::c_uint> for DeprecatedEnumWithMessage {
@@ -125,8 +125,8 @@ impl From<DeprecatedEnumWithMessage> for ::ffi_11::c_uint {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "24StructWithDeprecatedCtor"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithDeprecatedCtor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithDeprecatedCtor")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithDeprecatedCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -153,8 +153,8 @@ impl Default for StructWithDeprecatedCtor {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "35StructWithDeprecatedCtorWithMessage"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithDeprecatedCtorWithMessage
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithDeprecatedCtorWithMessage")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithDeprecatedCtorWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -238,7 +238,7 @@ pub mod MergeDeprecatedWithDeprecatedNamespace {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "21DeprecatedEnumerators"]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedEnumerators
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DeprecatedEnumerators")]
 pub struct DeprecatedEnumerators(::ffi_11::c_uint);
 impl DeprecatedEnumerators {
     #[deprecated]
@@ -268,8 +268,8 @@ pub type DeprecatedUsingWithMessage = ::ffi_11::c_int;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "16DeprecatedFields"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DeprecatedFields
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DeprecatedFields")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct DeprecatedFields {
     #[deprecated]
     pub no_message: ::ffi_11::c_int,

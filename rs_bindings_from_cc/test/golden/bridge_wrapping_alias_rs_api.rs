@@ -22,8 +22,8 @@ extern crate self as inline_cpp_generated_bindings;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst12TemplateTypeIiE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TemplateType < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TemplateType < int >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct AliasToInst {
     pub value: ::ffi_11::c_int,
 }

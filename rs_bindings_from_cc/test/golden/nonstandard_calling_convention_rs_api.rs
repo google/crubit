@@ -27,8 +27,8 @@ pub fn function_win64(a: ::ffi_11::c_int) -> ::ffi_11::c_int {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "9SomeClass"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: SomeClass
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=:: SomeClass")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct SomeClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -61,7 +61,7 @@ impl Default for SomeClass {
 }
 
 pub mod some_class {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn function_vectorcall<'__this>(
         __this: &'__this mut crate::SomeClass,
@@ -70,7 +70,7 @@ pub mod some_class {
     ) -> f32 {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass19function_vectorcallEff(__this, a, b) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn function_win64<'__this>(
         __this: &'__this mut crate::SomeClass,

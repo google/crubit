@@ -20,8 +20,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Base0"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Base0
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Base0")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Base0 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -45,8 +45,8 @@ impl Default for Base0 {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Base1"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=Base1
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Base1")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Base1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -82,8 +82,8 @@ impl Default for Base1 {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Base2"]
 #[repr(C, align(2))]
-///CRUBIT_ANNOTATE: cpp_type=Base2
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Base2")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Base2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -116,8 +116,8 @@ impl Default for Base2 {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "7Derived"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=Derived
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Derived")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 12],
     pub derived_1: ::ffi_11::c_char,
@@ -149,8 +149,8 @@ impl Default for Derived {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "12VirtualBase1"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=VirtualBase1
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=VirtualBase1")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct VirtualBase1 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
@@ -259,8 +259,8 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase1 {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "12VirtualBase2"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=VirtualBase2
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=VirtualBase2")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct VirtualBase2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
@@ -369,8 +369,8 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase2 {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "14VirtualDerived"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=VirtualDerived
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=VirtualDerived")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct VirtualDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
 }
@@ -481,7 +481,7 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualDerived {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "15MyAbstractClass"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=MyAbstractClass
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyAbstractClass")]
 pub struct MyAbstractClass {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
@@ -519,8 +519,8 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for MyAbstractClass {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "11MethodBase1"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MethodBase1
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MethodBase1")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MethodBase1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -564,7 +564,7 @@ impl Default for MethodBase1 {
 }
 
 pub mod method_base1 {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Public<'__this>(__this: &'__this mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(__this) }
@@ -573,7 +573,7 @@ pub mod method_base1 {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__param_0`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn Equals<'__this>(
         __this: &'__this mut crate::MethodBase1,
@@ -581,12 +581,12 @@ pub mod method_base1 {
     ) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(__this, __param_0) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Colliding1<'__this>(__this: &'__this mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Colliding2<'__this>(__this: &'__this mut crate::MethodBase1) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(__this) }
@@ -596,8 +596,8 @@ pub mod method_base1 {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "11MethodBase2"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MethodBase2
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MethodBase2")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MethodBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -629,12 +629,12 @@ impl Default for MethodBase2 {
 }
 
 pub mod method_base2 {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Colliding1<'__this>(__this: &'__this mut crate::MethodBase2) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Colliding2<'__this>(__this: &'__this mut crate::MethodBase2) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(__this) }
@@ -644,8 +644,8 @@ pub mod method_base2 {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "13MethodDerived"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MethodDerived
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MethodDerived")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MethodDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

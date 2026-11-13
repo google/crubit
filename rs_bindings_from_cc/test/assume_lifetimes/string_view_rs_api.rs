@@ -76,8 +76,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const char *>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const char *>")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -153,8 +153,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const wchar_t *>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const wchar_t *>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:

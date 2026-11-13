@@ -17,7 +17,7 @@
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "5Color"]
-///CRUBIT_ANNOTATE: cpp_type=Color
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Color")]
 pub struct Color(::ffi_11::c_uint);
 impl Color {
     pub const kRed: Color = Color(::ffi_11::new_c_uint(0));

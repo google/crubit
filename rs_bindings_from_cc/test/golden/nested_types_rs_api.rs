@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "3Foo"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Foo
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Foo")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Foo {
     pub foo: ::ffi_11::c_int,
 }
@@ -43,8 +43,8 @@ pub mod foo {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N3Foo3BarE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=Foo :: Bar
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Foo :: Bar")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Bar {
         pub bar: ::ffi_11::c_int,
     }
@@ -69,8 +69,8 @@ pub mod foo {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N3Foo3Bar3BazE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=Foo :: Bar :: Baz
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Foo :: Bar :: Baz")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Baz {
             pub baz: ::ffi_11::c_int,
         }
@@ -99,8 +99,8 @@ pub mod foo {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "18already_snake_case"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=already_snake_case
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=already_snake_case")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct already_snake_case {
     pub i: crate::already_snake_case_items::Inner,
 }
@@ -128,8 +128,8 @@ pub mod already_snake_case_items {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N18already_snake_case5InnerE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=already_snake_case :: Inner
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=already_snake_case :: Inner")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -159,8 +159,8 @@ pub mod already_snake_case_items {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "25ConflictingSnakeCaseNames"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct ConflictingSnakeCaseNames {
     pub i: crate::conflicting_snake_case_names::Inner,
 }
@@ -188,8 +188,8 @@ pub mod conflicting_snake_case_names {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N25ConflictingSnakeCaseNames5InnerE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames :: Inner
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames :: Inner")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -219,8 +219,8 @@ pub mod conflicting_snake_case_names {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "26ConflictingSnakeCaseNames_"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames_
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames_")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct ConflictingSnakeCaseNames_ {
     pub i: crate::conflicting_snake_case_names_items::Inner,
 }
@@ -250,8 +250,8 @@ pub mod conflicting_snake_case_names_items {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N26ConflictingSnakeCaseNames_5InnerE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames_ :: Inner
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames_ :: Inner")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -281,8 +281,8 @@ pub mod conflicting_snake_case_names_items {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "21OnlyOneHasNestedItems"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct OnlyOneHasNestedItems {
     pub i: crate::only_one_has_nested_items::Inner,
 }
@@ -310,8 +310,8 @@ pub mod only_one_has_nested_items {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N21OnlyOneHasNestedItems5InnerE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems :: Inner
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems :: Inner")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -341,8 +341,8 @@ pub mod only_one_has_nested_items {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "22OnlyOneHasNestedItems_"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems_
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=OnlyOneHasNestedItems_")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct OnlyOneHasNestedItems_ {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -371,8 +371,8 @@ impl Default for OnlyOneHasNestedItems_ {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "19SameNameAsNamespace"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=SameNameAsNamespace
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SameNameAsNamespace")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct SameNameAsNamespace {
     pub i: crate::same_name_as_namespace_items::Inner,
 }
@@ -400,8 +400,8 @@ pub mod same_name_as_namespace_items {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N19SameNameAsNamespace5InnerE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=SameNameAsNamespace :: Inner
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SameNameAsNamespace :: Inner")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -434,8 +434,8 @@ pub mod same_name_as_namespace {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N22same_name_as_namespace3FooE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=same_name_as_namespace :: Foo
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=same_name_as_namespace :: Foo")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Foo {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -464,8 +464,8 @@ pub mod same_name_as_namespace {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N22same_name_as_namespace3BarE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=same_name_as_namespace :: Bar
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=same_name_as_namespace :: Bar")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Bar {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -498,8 +498,11 @@ pub mod no_longer_top_level {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N19no_longer_top_level18already_snake_caseE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: already_snake_case
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: already_snake_case"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct already_snake_case {
         pub i: crate::no_longer_top_level::already_snake_case_items::Inner,
     }
@@ -529,8 +532,11 @@ pub mod no_longer_top_level {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N19no_longer_top_level18already_snake_case5InnerE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: already_snake_case :: Inner
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: already_snake_case :: Inner"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Inner {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -558,8 +564,11 @@ pub mod no_longer_top_level {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N19no_longer_top_level25ConflictingSnakeCaseNamesE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct ConflictingSnakeCaseNames {
         pub i: crate::no_longer_top_level::conflicting_snake_case_names::Inner,
     }
@@ -587,8 +596,11 @@ pub mod no_longer_top_level {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N19no_longer_top_level25ConflictingSnakeCaseNames5InnerE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames :: Inner
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames :: Inner"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Inner {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -616,8 +628,11 @@ pub mod no_longer_top_level {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N19no_longer_top_level26ConflictingSnakeCaseNames_E"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames_
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames_"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct ConflictingSnakeCaseNames_ {
         pub i: crate::no_longer_top_level::conflicting_snake_case_names_items::Inner,
     }
@@ -645,8 +660,11 @@ pub mod no_longer_top_level {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N19no_longer_top_level26ConflictingSnakeCaseNames_5InnerE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames_ :: Inner
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames_ :: Inner"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Inner {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -674,8 +692,11 @@ pub mod no_longer_top_level {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N19no_longer_top_level21OnlyOneHasNestedItemsE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct OnlyOneHasNestedItems {
         pub i: crate::no_longer_top_level::only_one_has_nested_items::Inner,
     }
@@ -705,8 +726,11 @@ pub mod no_longer_top_level {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N19no_longer_top_level21OnlyOneHasNestedItems5InnerE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems :: Inner
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems :: Inner"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Inner {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -734,8 +758,11 @@ pub mod no_longer_top_level {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N19no_longer_top_level22OnlyOneHasNestedItems_E"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems_
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: OnlyOneHasNestedItems_"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct OnlyOneHasNestedItems_ {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -766,8 +793,11 @@ pub mod no_longer_top_level {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N19no_longer_top_level19SameNameAsNamespaceE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: SameNameAsNamespace
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: SameNameAsNamespace"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct SameNameAsNamespace {
         pub i: crate::no_longer_top_level::same_name_as_namespace_items::Inner,
     }
@@ -797,8 +827,11 @@ pub mod no_longer_top_level {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N19no_longer_top_level19SameNameAsNamespace5InnerE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: SameNameAsNamespace :: Inner
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: SameNameAsNamespace :: Inner"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Inner {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -829,8 +862,11 @@ pub mod no_longer_top_level {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N19no_longer_top_level22same_name_as_namespace3FooE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: same_name_as_namespace :: Foo
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: same_name_as_namespace :: Foo"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Foo {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -857,8 +893,11 @@ pub mod no_longer_top_level {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N19no_longer_top_level22same_name_as_namespace3BarE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: same_name_as_namespace :: Bar
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: same_name_as_namespace :: Bar"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Bar {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -891,8 +930,8 @@ pub mod no_longer_top_level {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "23ContainsForwardDeclared"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ContainsForwardDeclared
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ContainsForwardDeclared")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct ContainsForwardDeclared {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -920,8 +959,8 @@ pub mod contains_forward_declared {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N23ContainsForwardDeclared6NestedE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ContainsForwardDeclared :: Nested
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ContainsForwardDeclared :: Nested")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Nested {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }

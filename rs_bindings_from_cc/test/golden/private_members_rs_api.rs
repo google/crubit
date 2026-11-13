@@ -18,8 +18,8 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N23test_namespace_bindings9SomeClassE"]
     #[repr(C, align(4))]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: SomeClass
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: SomeClass")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct SomeClass {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         pub public_member_variable_: ::ffi_11::c_int,
@@ -66,7 +66,7 @@ pub mod test_namespace_bindings {
     }
 
     pub mod some_class {
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn public_method<'__this>(
             __this: &'__this mut crate::test_namespace_bindings::SomeClass,
@@ -77,7 +77,7 @@ pub mod test_namespace_bindings {
                 )
             }
         }
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn public_static_method() {
             unsafe {

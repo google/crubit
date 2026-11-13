@@ -124,7 +124,7 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: FfiRc<Enum>) -> Result<ApiSn
         #deprecated_attr
         #must_use_attr
         #cfi_encoding_attr
-        #[doc=#annotation]
+        #[cfg_attr(not(doc), doc=#annotation)]
         pub struct #bracketed_enum_name(#underlying_type_tokens);
         impl #name {
             #enumerators

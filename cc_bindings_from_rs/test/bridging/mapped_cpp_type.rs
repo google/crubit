@@ -48,7 +48,7 @@ pub fn create_generic_mapped_cpp_type(x: i32) -> GenericMappedCppType<i32> {
     cpp_type = "mapped_cpp_type::UnmovableMappedCppType",
     include_path = "cc_bindings_from_rs/test/bridging/mapped_cpp_type_def.h"
 )]
-#[doc = "CRUBIT_ANNOTATE: derive_rust_movable="]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: derive_rust_movable=")]
 #[repr(C)]
 pub struct UnmovableMappedCppType(pub i32);
 

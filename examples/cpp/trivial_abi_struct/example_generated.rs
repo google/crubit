@@ -19,7 +19,7 @@
 #[derive(Clone)]
 #[cfi_encoding = "8Position"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Position
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Position")]
 pub struct Position {
     pub x: ::ffi_11::c_int,
     pub y: ::ffi_11::c_int,

@@ -21,8 +21,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "9Equatable"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=Equatable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Equatable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Equatable {
     pub value: ::ffi_11::c_int,
 }
@@ -62,8 +62,8 @@ impl PartialEq for crate::Equatable {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "20DerivedFromEquatable"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=DerivedFromEquatable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DerivedFromEquatable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct DerivedFromEquatable {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
 }
@@ -97,8 +97,8 @@ impl Default for DerivedFromEquatable {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "10Comparable"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=Comparable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Comparable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Comparable {
     pub value: ::ffi_11::c_int,
 }
@@ -165,8 +165,8 @@ pub mod ns {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N2ns19NamespacedEquatableE"]
     #[repr(C, align(4))]
-    ///CRUBIT_ANNOTATE: cpp_type=ns :: NamespacedEquatable
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ns :: NamespacedEquatable")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct NamespacedEquatable {
         pub value: ::ffi_11::c_int,
     }
@@ -213,8 +213,8 @@ pub mod ns {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Outer"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Outer
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Outer")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Outer {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -239,8 +239,8 @@ pub mod outer {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N5Outer15NestedEquatableE"]
     #[repr(C, align(4))]
-    ///CRUBIT_ANNOTATE: cpp_type=Outer :: NestedEquatable
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Outer :: NestedEquatable")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct NestedEquatable {
         pub value: ::ffi_11::c_int,
     }
@@ -286,7 +286,7 @@ pub mod outer {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "19NonTrivialEquatable"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=NonTrivialEquatable
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonTrivialEquatable")]
 pub struct NonTrivialEquatable {
     pub value: ::ffi_11::c_int,
 }
@@ -377,8 +377,8 @@ impl PartialEq for crate::NonTrivialEquatable {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "12NotEquatable"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=NotEquatable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NotEquatable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NotEquatable {
     pub value: ::ffi_11::c_int,
 }
@@ -410,8 +410,8 @@ impl Default for NotEquatable {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "12IntEquatable"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=IntEquatable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=IntEquatable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct IntEquatable {
     pub value: ::ffi_11::c_int,
 }
@@ -444,8 +444,8 @@ impl Default for IntEquatable {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "13MissingMember"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MissingMember
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MissingMember")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MissingMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

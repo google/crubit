@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 pub mod test_format_func_arg_pointer_like {
-    #[doc = "CRUBIT_ANNOTATE: cpp_type=const CppType*"]
-    #[doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=const CppType*")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h")]
     #[repr(transparent)]
     pub struct RustTypeView {
         pub cpp_type: *const core::ffi::c_void,
@@ -15,8 +15,8 @@ pub mod test_format_func_arg_pointer_like {
 }
 
 pub mod test_format_return_type_pointer_like {
-    #[doc = "CRUBIT_ANNOTATE: cpp_type=CppType*"]
-    #[doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=CppType*")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h")]
     #[repr(transparent)]
     pub struct RustTypeOwned {
         pub cpp_type: *mut core::ffi::c_void,

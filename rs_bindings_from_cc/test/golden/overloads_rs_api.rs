@@ -55,8 +55,8 @@ pub fn AlsoTemplateOverload() {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "3Foo"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Foo
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Foo")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Foo {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -98,7 +98,7 @@ impl Default for Foo {
 }
 
 pub mod foo {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn BarBridgedInt<'__this>(
         __this: &'__this mut crate::Foo,
@@ -109,7 +109,7 @@ pub mod foo {
             crate::detail::__rust_thunk___ZN3Foo3BarE6SizeofIiE(__this, __param_0.as_mut_ptr())
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn BarBridgedFloat<'__this>(
         __this: &'__this mut crate::Foo,
@@ -120,7 +120,7 @@ pub mod foo {
             crate::detail::__rust_thunk___ZN3Foo3BarE6SizeofIfE(__this, __param_0.as_mut_ptr())
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Bar<'__this>(__this: &'__this mut crate::Foo, __param_0: ::ffi_11::c_int) {
         unsafe { crate::detail::__rust_thunk___ZN3Foo3BarEi(__this, __param_0) }
@@ -132,8 +132,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst6SizeofIfE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=Sizeof < float >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Sizeof < float >")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInst6SizeofIfE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -159,8 +159,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst6SizeofIiE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=Sizeof < int >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Sizeof < int >")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInst6SizeofIiE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }

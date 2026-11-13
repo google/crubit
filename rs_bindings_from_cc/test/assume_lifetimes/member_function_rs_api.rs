@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "1S"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=S
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=S")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct S {
     pub int_field: ::ffi_11::c_int,
 }
@@ -50,14 +50,14 @@ impl Default for S {
 }
 
 pub mod s {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn int_accessor<'__this>(
         __this: &'__this crate::S,
     ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
         unsafe { crate::detail::__rust_thunk___ZNK1S12int_accessorEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn me<'__this>(__this: &'__this mut crate::S) -> ::cref::CMut<'__this, crate::S> {
         unsafe { crate::detail::__rust_thunk___ZN1S2meEv(__this) }

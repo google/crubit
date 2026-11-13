@@ -126,10 +126,12 @@ impl KeyValueList {
 
 /// Creates a doc comment for a single `key=value` pair.
 ///
-/// The values appear as `#[doc="CRUBIT_ANNOTATE: key=value"]`.
+/// The values appear as `#[doc="CRUBIT_ANNOTATE: key=value"]` in the compiled crate (and so in
+/// its rmeta, where Crubit reads them back). They are emitted under `cfg_attr(not(doc), ...)`
+/// so that rustdoc, which always sets `cfg(doc)`, does not render them.
 fn key_value_to_doc_comment(key: &str, value: &str) -> TokenStream {
     let value = format!("CRUBIT_ANNOTATE: {}={}", key, value);
-    TokenStream::from(quote! { #[doc=#value] })
+    TokenStream::from(quote! { #[cfg_attr(not(doc), doc=#value)] })
 }
 
 fn key_value_list_with_keys_to_doc_comment(

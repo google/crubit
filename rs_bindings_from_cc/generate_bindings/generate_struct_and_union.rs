@@ -8,10 +8,10 @@ use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, make_rs_lif
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::{
     ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, CfiEncodingAttr,
-    DeleteImpl, DeprecatedAttr, DeriveAttr, DisplayImpl, DocCommentAttr, Feature, FieldDefinition,
-    FieldType, GeneratedItem, MustUseAttr, NoUniqueAddressAccessor, RecursivelyPinnedAttr,
-    SendSyncImpl, SizeofImpl, StructOrUnion, Thunk, ThunkImpl, UpcastImpl, UpcastImplBody,
-    Visibility,
+    CrubitAnnotateAttr, DeleteImpl, DeprecatedAttr, DeriveAttr, DisplayImpl, Feature,
+    FieldDefinition, FieldType, GeneratedItem, MustUseAttr, NoUniqueAddressAccessor,
+    RecursivelyPinnedAttr, SendSyncImpl, SizeofImpl, StructOrUnion, Thunk, ThunkImpl, UpcastImpl,
+    UpcastImplBody, Visibility,
 };
 use database::rs_snippet::{should_derive_clone, RsTypeKind};
 use database::{intern, BindingsGenerator};
@@ -1111,18 +1111,18 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         // TODO(b/481405536): we should do this unconditionally.
         internally_mutable_unknown_fields: !record.should_derive_copy(),
         crubit_annotations: {
-            let mut annotations = vec![DocCommentAttr(intern!(
+            let mut annotations = vec![CrubitAnnotateAttr(intern!(
                 db.interner(),
                 "CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}"
             ))];
             if record.is_thread_safe() {
-                annotations.push(DocCommentAttr(intern!(
+                annotations.push(CrubitAnnotateAttr(intern!(
                     db.interner(),
                     "CRUBIT_ANNOTATE: cpp_thread_safe="
                 )));
             }
             if record.move_constructor() != SpecialMemberFunc::Unavailable {
-                annotations.push(DocCommentAttr(intern!(
+                annotations.push(CrubitAnnotateAttr(intern!(
                     db.interner(),
                     "CRUBIT_ANNOTATE: cpp_move_constructible="
                 )));

@@ -713,8 +713,8 @@ fn test_generated_bindings_module_deprecated_named_args() {
 #[gtest]
 fn test_format_bridged_type_pointer_like_errors() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=const CppType*"]
-            #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=const CppType*")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h")]
             pub struct MissingReprTransparent {
                 pub cpp_type: *const core::ffi::c_void,
             }
@@ -722,8 +722,8 @@ fn test_format_bridged_type_pointer_like_errors() {
             #[unsafe(no_mangle)]
             pub fn with_missing_repr_transparent(_: MissingReprTransparent) {}
 
-            #[doc="CRUBIT_ANNOTATE: cpp_type=const CppType*"]
-            #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=const CppType*")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h")]
             #[repr(transparent)]
             pub struct NotPointerLike {
                 pub value: i32,
@@ -757,18 +757,18 @@ fn test_format_bridged_type_pointer_like_errors() {
 #[gtest]
 fn test_format_brided_type_deduplicate_extern_c_decls() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=CppType*"]
-            #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
-            #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_struct_to_cpp_pointer"]
-            #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_pointer_to_rust_struct"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=CppType*")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_struct_to_cpp_pointer")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_pointer_to_rust_struct")]
             pub struct RustType1 {
                 pub cpp_type: *const core::ffi::c_void,
             }
 
-            #[doc="CRUBIT_ANNOTATE: cpp_type=CppType*"]
-            #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
-            #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_struct_to_cpp_pointer"]
-            #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_pointer_to_rust_struct"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=CppType*")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_struct_to_cpp_pointer")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_pointer_to_rust_struct")]
             pub struct RustType2 {
                 pub cpp_type: *const core::ffi::c_void,
             }
@@ -795,10 +795,10 @@ fn test_format_brided_type_deduplicate_extern_c_decls() {
 #[gtest]
 fn test_bridged_type_unsupported() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=cpp_ns::CppType"]
-            #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
-            #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=convert_rust_to_cpp_type"]
-            #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=convert_cpp_to_rust_type"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=cpp_ns::CppType")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter=convert_rust_to_cpp_type")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter=convert_cpp_to_rust_type")]
             pub struct RustType {
                 pub x: i32,
             }
@@ -1718,7 +1718,7 @@ fn test_generate_bindings_use_glob_of_do_not_bind_fn() {
     // "unsupported" comment.
     let test_src = r#"
         pub mod test_mod {
-            #[doc="CRUBIT_ANNOTATE: do_not_bind="]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
             pub fn hidden_fn() {}
 
             pub fn visible_fn() {}
@@ -2197,9 +2197,9 @@ fn test_generate_bindings_c_stdlib_conflict_top_level_submod() {
 fn test_trait_impl_for_mapped_cpp_type() {
     let test_src = r#"
             #![allow(unused)]
-            #[doc = "CRUBIT_ANNOTATE: cpp_type=::some_ns::SomeCppStruct"]
-            #[doc = "CRUBIT_ANNOTATE: include_path=some_ns/some_cpp_struct.h"]
-            #[doc = "CRUBIT_ANNOTATE: include_path=some_ns/another_header.h"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=::some_ns::SomeCppStruct")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=some_ns/some_cpp_struct.h")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=some_ns/another_header.h")]
             pub struct SomeCppStruct(i32);
 
             impl std::iter::Iterator for SomeCppStruct {
@@ -2240,7 +2240,7 @@ fn test_trait_impl_for_generic_mapped_cpp_type_does_not_panic() {
     // `generate_function` with "Callers should filter out generics".
     let test_src = r#"
             #![allow(unused, non_camel_case_types)]
-            #[doc = "CRUBIT_ANNOTATE: cpp_type=std::shared_ptr"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=std::shared_ptr")]
             pub struct shared_ptr<T>(std::marker::PhantomData<T>);
 
             pub struct RpcService(i32);
@@ -2286,7 +2286,7 @@ fn test_into_iterator_with_generic_into_iter_does_not_panic() {
     // should gracefully report unsupported rather than panicking in `generate_function`.
     let test_src = r#"
             #![allow(unused)]
-            #[doc = "CRUBIT_ANNOTATE: cpp_type = ::some_ns::GenericIter<{T}>"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = ::some_ns::GenericIter<{T}>")]
             pub struct GenericIter<T>(pub T);
 
             impl std::iter::Iterator for GenericIter<i32> {
@@ -2333,8 +2333,8 @@ fn test_generic_mapped_cpp_type_with_derived_trait() {
     let test_src = r#"
             #![allow(unused)]
             #[derive(Debug, PartialEq, Eq)]
-            #[doc = "CRUBIT_ANNOTATE: cpp_type=::some_ns::SomeCppStruct<{T}>"]
-            #[doc = "CRUBIT_ANNOTATE: include_path=some_ns/some_cpp_struct.h"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=::some_ns::SomeCppStruct<{T}>")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=some_ns/some_cpp_struct.h")]
             pub struct SomeCppStruct<T>(i32, std::marker::PhantomData<T>);
 
             impl<T> std::iter::Iterator for SomeCppStruct<T> {
@@ -2624,7 +2624,7 @@ fn test_should_receive_bindings_ignored_file() {
 #[gtest]
 fn test_should_receive_bindings_do_not_bind() {
     let test_src = r#"
-        #[doc="CRUBIT_ANNOTATE: do_not_bind="]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         pub fn fn_do_not_bind() {}
         pub fn fn_allowed() {}
     "#;
@@ -2644,17 +2644,17 @@ fn test_should_receive_bindings_do_not_bind() {
 #[gtest]
 fn test_allow_unbindable_type_suppresses_warning() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: allow_unbindable_type=")]
             pub struct SomeStruct {
                 pub x: i32,
             }
 
-            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: allow_unbindable_type=")]
             pub enum SomeEnum {
                 A,
             }
 
-            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: allow_unbindable_type=")]
             pub union SomeUnion {
                 pub a: i32,
             }
@@ -2696,7 +2696,7 @@ fn test_unbindable_types_warning_on_private_defs() {
                     y: i32,
                 }
 
-                #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: allow_unbindable_type=")]
                 struct AnnotatedNestedPrivateStruct {
                     z: i32,
                 }
@@ -2730,8 +2730,8 @@ fn test_is_cpp_move_constructible() {
             fn drop(&mut self) {}
         }
 
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppMovable"]
-        #[doc = "CRUBIT_ANNOTATE: cpp_move_constructible="]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=CppMovable")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct CppMovable {
             ptr: *mut i32,
         }
@@ -2739,7 +2739,7 @@ fn test_is_cpp_move_constructible() {
             fn drop(&mut self) {}
         }
 
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppNonMovable"]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=CppNonMovable")]
         pub struct CppNonMovable {
             ptr: *mut i32,
         }
@@ -2747,7 +2747,7 @@ fn test_is_cpp_move_constructible() {
             fn drop(&mut self) {}
         }
 
-        #[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>")]
         pub struct StatusOr<T> {
             data: std::mem::MaybeUninit<T>,
         }
@@ -4015,7 +4015,7 @@ fn test_generic_adt_unsupported_method_reports_errors_per_specialization() {
             }
 
             impl<T> Point<T> {
-                #[doc = "CRUBIT_ANNOTATE: must_bind="]
+                #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
                 pub fn generic_method<U>(&self, _u: U) {}
             }
 

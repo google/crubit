@@ -31,8 +31,8 @@ pub fn RTS() -> crate::zz_template_instantiations::__CcTemplateInst2TSIiE {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "11NormalClass"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NormalClass
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NormalClass")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NormalClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -64,8 +64,8 @@ impl Default for NormalClass {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst25TemplateWithStaticMembersIiE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TemplateWithStaticMembers < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TemplateWithStaticMembers < int >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TemplateWithStaticMembersInt {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -101,8 +101,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst2TSIiE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=TS < int >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TS < int >")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInst2TSIiE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }

@@ -19,8 +19,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test23ArgumentToBoundOverloadE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToBoundOverload
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToBoundOverload"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ArgumentToBoundOverload {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -49,8 +52,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test25ArgumentToUnboundOverloadE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToUnboundOverload
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToUnboundOverload"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ArgumentToUnboundOverload {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -90,8 +96,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test30StructWithDoNotBindConstructorE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindConstructor
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindConstructor"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct StructWithDoNotBindConstructor {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -130,8 +139,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test25StructWithDoNotBindMethodE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindMethod
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindMethod"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct StructWithDoNotBindMethod {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -175,7 +187,7 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///CRUBIT_ANNOTATE: do_not_bind=
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
             #[inline(always)]
             pub unsafe fn DoNotBindMethod(
                 __this: *mut crate::crubit::test::StructWithDoNotBindMethod,

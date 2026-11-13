@@ -22,8 +22,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "6Struct"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=Struct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Struct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Struct {
     /// Nobody would ever use a no_unique_address int/char field, this is just
     /// enough to test that the transmute is correct.
@@ -65,7 +65,7 @@ impl Default for Struct {
 }
 
 pub mod r#struct {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Make(f1: ::ffi_11::c_int, f2: ::ffi_11::c_char) -> crate::Struct {
         unsafe {
@@ -88,8 +88,8 @@ pub mod r#struct {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "20PaddingBetweenFields"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=PaddingBetweenFields
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=PaddingBetweenFields")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct PaddingBetweenFields {
     /// size: 1, alignment: 1 => offset: 0
     pub field1: ::ffi_11::c_char,
@@ -133,7 +133,7 @@ impl Default for PaddingBetweenFields {
 }
 
 pub mod padding_between_fields {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn Make(f1: ::ffi_11::c_char, f2: ::ffi_11::c_int) -> crate::PaddingBetweenFields {
         unsafe {
@@ -159,7 +159,7 @@ pub mod padding_between_fields {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "30FieldInTailPadding_InnerStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding_InnerStruct
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding_InnerStruct")]
 pub struct FieldInTailPadding_InnerStruct {
     /// size: 4, alignment: 4 => offset: 0
     pub inner_int_field: ::ffi_11::c_int,
@@ -250,8 +250,8 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "18FieldInTailPadding"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct FieldInTailPadding {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:

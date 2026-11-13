@@ -65,10 +65,10 @@ fn test_generated_bindings_struct() {
 #[test]
 fn test_format_bridged_type_in_generic_types() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::CppType"]
-            #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
-            #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = convert_rust_to_cpp_type"]
-            #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = convert_cpp_to_rust_type"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type = cpp_ns::CppType")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter = convert_rust_to_cpp_type")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter = convert_cpp_to_rust_type")]
             pub struct RustType {
                 pub x: i32,
             }
@@ -102,7 +102,7 @@ fn test_format_bridged_type_in_generic_types() {
 #[test]
 fn test_format_struct_cpp_name() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_name=Bar"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_name=Bar")]
             pub struct Foo {
                 pub x: i32,
             }
@@ -134,7 +134,7 @@ fn test_format_struct_cpp_name() {
 #[test]
 fn test_format_struct_cpp_name_with_kythe_annotations() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_name=Bar"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_name=Bar")]
             pub struct Foo {
                 pub x: i32,
             }
@@ -153,12 +153,12 @@ fn test_format_struct_cpp_name_with_kythe_annotations() {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    __CAPTURE_TAG__ "<crubit_unittests.rs>" "75" "78"
+                    __CAPTURE_TAG__ "<crubit_unittests.rs>" "97" "100"
                     __COMMENT__ #comment
                     struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Foo")
                     [[clang::trivial_abi]] __CAPTURE_BEGIN__ Bar __CAPTURE_END__ final {
                       ...
-                      __CAPTURE_TAG__ "<crubit_unittests.rs>" "101" "102"
+                      __CAPTURE_TAG__ "<crubit_unittests.rs>" "123" "124"
                       __COMMENT__ #field_comment
                       ::std :: int32_t __CAPTURE_BEGIN__ x __CAPTURE_END__ {};
                       ...
@@ -476,7 +476,7 @@ fn test_format_item_struct_fields_with_doc_comments() {
 #[test]
 fn test_format_item_enum_with_kythe_annotations() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_enum=enum class")]
             #[repr(transparent)]
             pub struct SomeEnum(i32);
             impl SomeEnum {
@@ -495,14 +495,14 @@ fn test_format_item_enum_with_kythe_annotations() {
             let main_api = &result.main_api;
             let comment =
                 "CRUBIT_ANNOTATE: cpp_enum=enum class\n\nGenerated from: <crubit_unittests.rs>;l=4";
-            let provenance_0 = quote! { __CAPTURE_TAG__ "<crubit_unittests.rs>" "184" "193" __COMMENT__ "Generated from: <crubit_unittests.rs>;l=6" };
-            let provenance_1 = quote! { __CAPTURE_TAG__ "<crubit_unittests.rs>" "245" "254" __COMMENT__ "Generated from: <crubit_unittests.rs>;l=7" };
-            let provenance_2 = quote! { __CAPTURE_TAG__ "<crubit_unittests.rs>" "306" "315" __COMMENT__ "Generated from: <crubit_unittests.rs>;l=8" };
+            let provenance_0 = quote! { __CAPTURE_TAG__ "<crubit_unittests.rs>" "206" "215" __COMMENT__ "Generated from: <crubit_unittests.rs>;l=6" };
+            let provenance_1 = quote! { __CAPTURE_TAG__ "<crubit_unittests.rs>" "267" "276" __COMMENT__ "Generated from: <crubit_unittests.rs>;l=7" };
+            let provenance_2 = quote! { __CAPTURE_TAG__ "<crubit_unittests.rs>" "328" "337" __COMMENT__ "Generated from: <crubit_unittests.rs>;l=8" };
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
                     ...
-                    __CAPTURE_TAG__ "<crubit_unittests.rs>" "115" "123" __COMMENT__ #comment
+                    __CAPTURE_TAG__ "<crubit_unittests.rs>" "137" "145" __COMMENT__ #comment
                     enum class CRUBIT_INTERNAL_RUST_TYPE(...) __CAPTURE_BEGIN__ SomeEnum __CAPTURE_END__
                     ... {
                     ... #provenance_0 __CAPTURE_BEGIN__ VARIANT_0 __CAPTURE_END__ = ...
@@ -637,7 +637,7 @@ fn test_format_item_doc_comments_tuple_struct() {
 #[should_panic]
 fn test_cpp_enum_fails_if_not_repr_transparent() {
     let test_src = r#"
-    #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_enum=enum class")]
     pub struct Color(i32);
 
     impl Color {
@@ -653,7 +653,7 @@ fn test_cpp_enum_fails_if_not_repr_transparent() {
 #[should_panic]
 fn test_cpp_enum_fails_if_implements_method() {
     let test_src = r#"
-    #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_enum=enum class")]
     #[repr(transparent)]
     pub struct Color(i32);
 
@@ -675,7 +675,7 @@ fn test_cpp_enum_fails_for_rust_union() {
     let test_src = r#"
     #![feature(transparent_unions)]
 
-    #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_enum=enum class")]
     #[repr(transparent)]
     pub union Color {
         value: i32,
@@ -699,7 +699,7 @@ fn test_cpp_enum_fails_for_rust_union() {
 #[should_panic]
 fn test_cpp_enum_fails_for_rust_enum() {
     let test_src = r#"
-    #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_enum=enum class")]
     #[repr(transparent)]
     enum Color {
         Value(i32),
@@ -712,7 +712,7 @@ fn test_cpp_enum_fails_for_rust_enum() {
 #[test]
 fn test_cpp_enum_fails_for_generic_struct() {
     let test_src = r#"
-    #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_enum=enum class")]
     #[repr(transparent)]
     pub struct Color<T>(pub T);
     "#;
@@ -781,7 +781,7 @@ fn test_repr_c_union_unknown_fields() {
 #[test]
 fn test_format_cpp_name_for_struct() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=cpp_ns::CppType"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=cpp_ns::CppType")]
             pub struct RustType {
                 pub x: i32,
             }
@@ -1269,7 +1269,7 @@ fn test_format_item_struct_not_aggregate_with_two_drop_fields() {
 #[test]
 fn test_format_item_struct_aggregate_with_two_drop_fields_annotated() {
     let test_src = r#"
-        #[doc = "CRUBIT_ANNOTATE: field_drop_order_does_not_matter="]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: field_drop_order_does_not_matter=")]
         pub struct TwoDrops(pub String, pub String);
     "#;
     test_format_item(test_src, "TwoDrops", |result| {

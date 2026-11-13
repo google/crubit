@@ -26,8 +26,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst2TsIifE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Ts < int , float >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Ts < int , float >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TsIntFloat {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -68,7 +68,7 @@ pub mod ts_int_float {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `__this`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn Member(__this: *mut crate::TsIntFloat) {
         unsafe { crate::detail::__rust_thunk__f7010ef7__ZN2TsIifE6MemberEv(__this) }
@@ -78,8 +78,8 @@ pub mod ts_int_float {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst2TsIsdE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Ts < short , double >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Ts < short , double >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TsShortDouble {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

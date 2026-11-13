@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "14DifferentScope"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DifferentScope
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DifferentScope")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct DifferentScope {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -46,8 +46,11 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE"]
     #[repr(C, align(4))]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyTemplate < int >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyTemplate < int >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct MyTypeAlias {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -81,8 +84,11 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N23test_namespace_bindings13TemplateParamE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateParam
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateParam"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct TemplateParam {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -111,8 +117,11 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyTemplate < struct test_namespace_bindings :: TemplateParam >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyTemplate < struct test_namespace_bindings :: TemplateParam >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct TemplateWithStructTemplateParam {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -141,8 +150,11 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyTemplate < struct DifferentScope >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyTemplate < struct DifferentScope >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct ParamFromDifferentScope {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -177,8 +189,11 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < int , float >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < int , float >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct AliasToTemplateWithTwoParams {
         pub value1: ::ffi_11::c_int,
         pub value2: f32,
@@ -204,8 +219,11 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < struct test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < struct test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct AliasToTemplateOfATemplate{ pub value1: crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,pub value2: ::ffi_11::c_int, }
     forward_declare::unsafe_define!(forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < struct test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"),crate::test_namespace_bindings::AliasToTemplateOfATemplate);
 
@@ -234,8 +252,11 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN23test_namespace_bindings8MyStructIcEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyStruct < char >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyStruct < char >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct MyCharStruct {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -269,8 +290,11 @@ pub mod test_namespace_bindings {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MyTopLevelTemplate < struct test_namespace_bindings :: TemplateParam >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(
+    not(doc),
+    doc = "CRUBIT_ANNOTATE: cpp_type=MyTopLevelTemplate < struct test_namespace_bindings :: TemplateParam >"
+)]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TopLevelTemplateWithNonTopLevelParam {
     pub value: crate::test_namespace_bindings::TemplateParam,
 }
@@ -315,8 +339,11 @@ pub mod template_template_params {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=template_template_params :: MyTemplate < template_template_params :: Policy >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=template_template_params :: MyTemplate < template_template_params :: Policy >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct MyTypeAlias {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -354,8 +381,8 @@ pub mod private_classes {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N15private_classes14HasPrivateTypeE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=private_classes :: HasPrivateType
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=private_classes :: HasPrivateType")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct HasPrivateType {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -376,8 +403,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < int , int >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < int , int >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
         pub value1: ::ffi_11::c_int,
         pub value2: ::ffi_11::c_int,

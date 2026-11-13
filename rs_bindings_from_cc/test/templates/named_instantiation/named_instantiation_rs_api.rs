@@ -23,8 +23,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst2NiIifE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Ni < int , float >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Ni < int , float >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NiIF {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

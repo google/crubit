@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "9Noninline"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Noninline
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Noninline")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Noninline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -62,27 +62,27 @@ impl Default for Noninline {
 }
 
 pub mod noninline {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn UnqualifiedMethod<'__this>(__this: &'__this mut crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZN9Noninline17UnqualifiedMethodEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn LvalueMethod<'__this>(__this: &'__this mut crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNR9Noninline12LvalueMethodEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn LvalueMethodConst<'__this>(__this: &'__this crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNKR9Noninline17LvalueMethodConstEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn RvalueMethod<'__this>(__this: &'__this mut crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNO9Noninline12RvalueMethodEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn RvalueMethodConst<'__this>(__this: &'__this crate::Noninline) {
         unsafe { crate::detail::__rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(__this) }
@@ -92,8 +92,8 @@ pub mod noninline {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "6Inline"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Inline
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Inline")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Inline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -137,27 +137,27 @@ impl Default for Inline {
 }
 
 pub mod inline {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn UnqualifiedMethod<'__this>(__this: &'__this mut crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZN6Inline17UnqualifiedMethodEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn LvalueMethod<'__this>(__this: &'__this mut crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNR6Inline12LvalueMethodEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn LvalueMethodConst<'__this>(__this: &'__this crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNKR6Inline17LvalueMethodConstEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn RvalueMethod<'__this>(__this: &'__this mut crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNO6Inline12RvalueMethodEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn RvalueMethodConst<'__this>(__this: &'__this crate::Inline) {
         unsafe { crate::detail::__rust_thunk___ZNKO6Inline17RvalueMethodConstEv(__this) }

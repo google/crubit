@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "17TrivialCustomType"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TrivialCustomType
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TrivialCustomType")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TrivialCustomType {
     pub i: ::ffi_11::c_int,
 }
@@ -49,8 +49,8 @@ impl Default for TrivialCustomType {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "20NontrivialCustomType"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NontrivialCustomType
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NontrivialCustomType")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NontrivialCustomType {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub i: ::ffi_11::c_int,

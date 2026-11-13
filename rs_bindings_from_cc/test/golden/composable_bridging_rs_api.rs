@@ -21,8 +21,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "21StructWithBridgeField"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithBridgeField
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithBridgeField")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithBridgeField {
     /// Reason for representing this field as a blob of bytes:
     /// crubit.rs/errors/bridge_field: 'crate::RustStruct' is not layout-compatible between Rust and C++.
@@ -77,8 +77,8 @@ pub type CppStructAlias = crate::RustStruct;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "4Vec3"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Vec3
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Vec3")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
@@ -165,7 +165,7 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::ffi_11::c_char> {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "11DefaultEnum"]
-///CRUBIT_ANNOTATE: cpp_type=DefaultEnum
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DefaultEnum")]
 pub struct DefaultEnum(::ffi_11::c_int);
 impl DefaultEnum {
     pub const kZero: DefaultEnum = DefaultEnum(::ffi_11::new_c_int(0));
@@ -193,7 +193,7 @@ pub fn ReturnsDefaultEnumInComposableBridgeType() -> crate::MyOption<crate::Defa
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "7I64Enum"]
-///CRUBIT_ANNOTATE: cpp_type=I64Enum
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=I64Enum")]
 pub struct I64Enum(::ffi_11::c_long);
 impl I64Enum {
     pub const kNegOne: I64Enum = I64Enum(::ffi_11::new_c_long(-1));
@@ -222,7 +222,7 @@ pub mod some_namespace {
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
     #[cfi_encoding = "N14some_namespace15EnumInNamespaceE"]
-    ///CRUBIT_ANNOTATE: cpp_type=some_namespace :: EnumInNamespace
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=some_namespace :: EnumInNamespace")]
     pub struct EnumInNamespace(::ffi_11::c_int);
     impl EnumInNamespace {
         pub const kZero: EnumInNamespace = EnumInNamespace(::ffi_11::new_c_int(0));
@@ -258,8 +258,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < const int *>>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < const int *>>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -338,8 +341,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < class std :: basic_string_view < char , struct std :: char_traits < char >> *>>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < class std :: basic_string_view < char , struct std :: char_traits < char >> *>>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE
     {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
@@ -366,8 +372,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const char *>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const char *>")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -443,8 +449,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const wchar_t *>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const wchar_t *>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -480,8 +489,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPKiEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < const int *>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < const int *>")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -590,8 +599,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < class std :: basic_string_view < char , struct std :: char_traits < char >> *>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < class std :: basic_string_view < char , struct std :: char_traits < char >> *>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -654,7 +666,10 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: span < const int , 18446744073709551615UL >
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: span < const int , 18446744073709551615UL >"
+    )]
     pub struct __CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -820,7 +835,10 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: span < class std :: basic_string_view < char , struct std :: char_traits < char >>, 18446744073709551615UL >
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: span < class std :: basic_string_view < char , struct std :: char_traits < char >>, 18446744073709551615UL >"
+    )]
     pub struct __CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE
     {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],

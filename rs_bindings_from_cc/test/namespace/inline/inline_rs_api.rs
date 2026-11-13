@@ -24,8 +24,8 @@ pub mod foo {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N3foo7inline18MyStructE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=foo :: inline1 :: MyStruct
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=foo :: inline1 :: MyStruct")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct MyStruct {
             pub value: ::ffi_11::c_int,
         }

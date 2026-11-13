@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "1S"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=S
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=S")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct S {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -72,17 +72,17 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for S {
 }
 
 pub mod s {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn x<'__this>(__this: &'__this crate::S) -> ::ffi_11::c_int {
         unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn get_x<'__this>(__this: &'__this mut crate::S) -> ::ffi_11::c_int {
         unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn set_x<'__this>(__this: &'__this mut crate::S, x: ::ffi_11::c_int) {
         unsafe { (&raw mut *__this).cast::<::ffi_11::c_int>().write(x) }
@@ -92,8 +92,8 @@ pub mod s {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "1T"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=T
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=T")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct T {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
     /// Reason for representing this field as a blob of bytes:
@@ -159,22 +159,22 @@ unsafe impl oops::Inherits<crate::S> for crate::T {
 }
 
 pub mod t {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn y<'__this>(__this: &'__this crate::T) -> f32 {
         unsafe { (&raw const *__this).byte_add(4).cast::<f32>().read() }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn get_x<'__this>(__this: &'__this mut crate::S) -> ::ffi_11::c_int {
         unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn set_x<'__this>(__this: &'__this mut crate::S, x: ::ffi_11::c_int) {
         unsafe { (&raw mut *__this).cast::<::ffi_11::c_int>().write(x) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn x<'__this>(__this: &'__this crate::S) -> ::ffi_11::c_int {
         unsafe { (&raw const *__this).cast::<::ffi_11::c_int>().read() }
@@ -184,8 +184,8 @@ pub mod t {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Chars"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Chars
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Chars")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Chars {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -248,32 +248,32 @@ impl Default for Chars {
 }
 
 pub mod chars {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn c<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_char {
         unsafe { (&raw const *__this).cast::<::ffi_11::c_char>().read() }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn sc<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_schar {
         unsafe { (&raw const *__this).byte_add(1).cast::<::ffi_11::c_schar>().read() }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn uc<'__this>(__this: &'__this mut crate::Chars) -> ::ffi_11::c_uchar {
         unsafe { (&raw const *__this).byte_add(2).cast::<::ffi_11::c_uchar>().read() }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn set_c<'__this>(__this: &'__this mut crate::Chars, c: ::ffi_11::c_char) {
         unsafe { (&raw mut *__this).cast::<::ffi_11::c_char>().write(c) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn set_sc<'__this>(__this: &'__this mut crate::Chars, sc: ::ffi_11::c_schar) {
         unsafe { (&raw mut *__this).byte_add(1).cast::<::ffi_11::c_schar>().write(sc) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn set_uc<'__this>(__this: &'__this mut crate::Chars, uc: ::ffi_11::c_uchar) {
         unsafe { (&raw mut *__this).byte_add(2).cast::<::ffi_11::c_uchar>().write(uc) }
@@ -283,8 +283,8 @@ pub mod chars {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Bools"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Bools
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Bools")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Bools {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -325,12 +325,12 @@ impl Default for Bools {
 }
 
 pub mod bools {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn b<'__this>(__this: &'__this mut crate::Bools) -> bool {
         unsafe { (&raw const *__this).cast::<bool>().read() }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn set_b<'__this>(__this: &'__this mut crate::Bools, b: bool) {
         unsafe { (&raw mut *__this).cast::<bool>().write(b) }
@@ -340,8 +340,8 @@ pub mod bools {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "8Pointers"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=Pointers
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Pointers")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Pointers {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -401,7 +401,7 @@ impl Default for Pointers {
 }
 
 pub mod pointers {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn p<'__this>(__this: &'__this crate::Pointers) -> *const ::ffi_11::c_int {
         unsafe { (&raw const *__this).cast::<*const ::ffi_11::c_int>().read() }
@@ -410,12 +410,12 @@ pub mod pointers {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `p`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn set_p<'__this>(__this: &'__this mut crate::Pointers, p: *const ::ffi_11::c_int) {
         unsafe { (&raw mut *__this).cast::<*const ::ffi_11::c_int>().write(p) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn mut_p<'__this>(__this: &'__this crate::Pointers) -> *mut ::ffi_11::c_int {
         unsafe { (&raw const *__this).byte_add(8).cast::<*mut ::ffi_11::c_int>().read() }
@@ -424,7 +424,7 @@ pub mod pointers {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `mut_p`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn set_mut_p<'__this>(
         __this: &'__this mut crate::Pointers,
@@ -438,7 +438,7 @@ pub mod pointers {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "10NonTrivial"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=NonTrivial
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonTrivial")]
 pub struct NonTrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -548,7 +548,7 @@ impl ::ctor::PinnedDrop for NonTrivial {
 }
 
 pub mod non_trivial {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn p<'__this>(__this: &'__this crate::NonTrivial) -> *const crate::NonTrivial {
         unsafe { (&raw const *__this).cast::<*const crate::NonTrivial>().read() }
@@ -557,7 +557,7 @@ pub mod non_trivial {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `p`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn set_p<'__this>(
         __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
@@ -569,7 +569,7 @@ pub mod non_trivial {
                 .write(p)
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn mut_p<'__this>(
         __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
@@ -580,7 +580,7 @@ pub mod non_trivial {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `mut_p`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn set_mut_p<'__this>(
         __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
@@ -598,8 +598,8 @@ pub mod non_trivial {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "7Padding"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Padding
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Padding")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Padding {
     pub pad_: ::ffi_11::c_long,
 }
@@ -623,8 +623,8 @@ impl Default for Padding {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "11PointerBase"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=PointerBase
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=PointerBase")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct PointerBase {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -669,7 +669,7 @@ impl Default for PointerBase {
 }
 
 pub mod pointer_base {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn base_p<'__this>(__this: &'__this crate::PointerBase) -> *const ::ffi_11::c_int {
         unsafe { (&raw const *__this).cast::<*const ::ffi_11::c_int>().read() }
@@ -678,7 +678,7 @@ pub mod pointer_base {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `base_p`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn set_base_p<'__this>(
         __this: &'__this mut crate::PointerBase,
@@ -694,8 +694,8 @@ pub mod pointer_base {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "15DerivedPointers"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=DerivedPointers
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DerivedPointers")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct DerivedPointers {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
 }
@@ -769,7 +769,7 @@ unsafe impl oops::Inherits<crate::PointerBase> for crate::DerivedPointers {
 }
 
 pub mod derived_pointers {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn p<'__this>(__this: &'__this crate::DerivedPointers) -> *const ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK15DerivedPointers1pEv(__this) }
@@ -778,7 +778,7 @@ pub mod derived_pointers {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `p`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn set_p<'__this>(
         __this: &'__this mut crate::DerivedPointers,
@@ -786,7 +786,7 @@ pub mod derived_pointers {
     ) {
         unsafe { crate::detail::__rust_thunk___ZN15DerivedPointers5set_pEPKi(__this, p) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn base_p<'__this>(__this: &'__this crate::PointerBase) -> *const ::ffi_11::c_int {
         unsafe { (&raw const *__this).cast::<*const ::ffi_11::c_int>().read() }
@@ -795,7 +795,7 @@ pub mod derived_pointers {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `base_p`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn set_base_p<'__this>(
         __this: &'__this mut crate::PointerBase,
@@ -810,8 +810,8 @@ forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Inc
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "12MorePointers"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=MorePointers
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MorePointers")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MorePointers {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -871,7 +871,7 @@ impl Default for MorePointers {
 }
 
 pub mod more_pointers {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn v<'__this>(__this: &'__this crate::MorePointers) -> *mut ::ffi_11::c_void {
         unsafe { (&raw const *__this).cast::<*mut ::ffi_11::c_void>().read() }
@@ -880,7 +880,7 @@ pub mod more_pointers {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `v`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn set_v<'__this>(
         __this: &'__this mut crate::MorePointers,
@@ -888,7 +888,7 @@ pub mod more_pointers {
     ) {
         unsafe { (&raw mut *__this).cast::<*mut ::ffi_11::c_void>().write(v) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn i<'__this>(__this: &'__this crate::MorePointers) -> *mut crate::Incomplete {
         unsafe { (&raw const *__this).byte_add(8).cast::<*mut crate::Incomplete>().read() }
@@ -897,7 +897,7 @@ pub mod more_pointers {
     ///
     /// The caller must ensure that the following unsafe arguments are not misused by the function:
     /// * `i`: raw pointer
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub unsafe fn set_i<'__this>(
         __this: &'__this mut crate::MorePointers,
@@ -910,8 +910,8 @@ pub mod more_pointers {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "29StructWithRecordAndFreeGetter"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=StructWithRecordAndFreeGetter
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithRecordAndFreeGetter")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithRecordAndFreeGetter {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -970,7 +970,7 @@ pub fn free_get_s<'__param_0>(
 }
 
 pub mod struct_with_record_and_free_getter {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn s<'__this>(__this: &'__this crate::StructWithRecordAndFreeGetter) -> crate::S {
         unsafe { (&raw const *__this).cast::<crate::S>().read() }
@@ -988,8 +988,8 @@ pub mod struct_with_record_and_free_getter {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "14TrivialDefault"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TrivialDefault
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TrivialDefault")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TrivialDefault {
     pub a: ::ffi_11::c_int,
     pub p: *const ::ffi_11::c_int,
@@ -1019,7 +1019,7 @@ impl Default for TrivialDefault {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "22TrivialDefaultNotUnpin"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TrivialDefaultNotUnpin
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TrivialDefaultNotUnpin")]
 pub struct TrivialDefaultNotUnpin {
     pub a: ::ffi_11::c_int,
     pub p: *const ::ffi_11::c_int,

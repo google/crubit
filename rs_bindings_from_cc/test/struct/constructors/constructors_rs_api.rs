@@ -20,7 +20,7 @@
 /// is non-trivial.
 #[cfi_encoding = "34StructWithUserProvidedConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithUserProvidedConstructors
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithUserProvidedConstructors")]
 pub struct StructWithUserProvidedConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -81,8 +81,8 @@ impl Clone for StructWithUserProvidedConstructors {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "39StructWithExplicitConversionConstructor"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithExplicitConversionConstructor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithExplicitConversionConstructor")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithExplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -123,8 +123,8 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithExplicitConversionConstructo
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "30StructWithMultipleConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithMultipleConstructors
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithMultipleConstructors")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithMultipleConstructors {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -215,8 +215,8 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)>
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "39StructWithImplicitConversionConstructor"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithImplicitConversionConstructor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithImplicitConversionConstructor")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithImplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -257,8 +257,8 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithImplicitConversionConstructo
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "17OtherSimpleStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=OtherSimpleStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=OtherSimpleStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct OtherSimpleStruct {
     pub int_field: ::ffi_11::c_int,
 }
@@ -285,8 +285,8 @@ impl Default for OtherSimpleStruct {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "41StructWithImplicitConversionFromReference"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithImplicitConversionFromReference
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithImplicitConversionFromReference")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithImplicitConversionFromReference {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -327,7 +327,7 @@ impl<'other> ::ctor::CtorNew<&'other crate::OtherSimpleStruct>
 /// `generate_rs_api_impl`.
 #[cfi_encoding = "28StructWithInlineConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithInlineConstructors
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithInlineConstructors")]
 pub struct StructWithInlineConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -408,7 +408,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithInlineConstructors {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "29StructWithDeletedConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithDeletedConstructors
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithDeletedConstructors")]
 pub struct StructWithDeletedConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -435,7 +435,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstruct
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "29StructWithPrivateConstructors"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=StructWithPrivateConstructors
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithPrivateConstructors")]
 pub struct StructWithPrivateConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -469,7 +469,7 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithPrivateConstruct
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "41StructWithExplicitlyDefaultedConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithExplicitlyDefaultedConstructors
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithExplicitlyDefaultedConstructors")]
 pub struct StructWithExplicitlyDefaultedConstructors {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field_with_explicit_initializer: ::ffi_11::c_int,
@@ -504,7 +504,7 @@ impl Default for StructWithExplicitlyDefaultedConstructors {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "32NonTrivialStructWithConstructors"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NonTrivialStructWithConstructors
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonTrivialStructWithConstructors")]
 pub struct NonTrivialStructWithConstructors {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -613,8 +613,8 @@ impl ::ctor::PinnedDrop for NonTrivialStructWithConstructors {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "27StructWithUnsafeConstructor"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=StructWithUnsafeConstructor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithUnsafeConstructor")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithUnsafeConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub ptr_field: *mut ::ffi_11::c_int,
@@ -657,7 +657,10 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor
 
 #[cfi_encoding = "48CopyCtorHasUnevaluatableExprInUnevaluatedContext"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=CopyCtorHasUnevaluatableExprInUnevaluatedContext
+#[cfg_attr(
+    not(doc),
+    doc = "CRUBIT_ANNOTATE: cpp_type=CopyCtorHasUnevaluatableExprInUnevaluatedContext"
+)]
 pub struct CopyCtorHasUnevaluatableExprInUnevaluatedContext {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:

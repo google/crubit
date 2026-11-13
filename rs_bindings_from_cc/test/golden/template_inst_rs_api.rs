@@ -33,8 +33,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInst10MyTemplateIiE {
         pub field: ::ffi_11::c_int,
     }

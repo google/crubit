@@ -21,10 +21,10 @@ fn attrs_for_named_def(tcx: TyCtxt, name: &str) -> Result<CrubitAttrs> {
 #[test]
 fn test_bridged_type() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=CppType"]
-            #[doc="CRUBIT_ANNOTATE: include_path=crubit/cpp_type.h"]
-            #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_to_cpp"]
-            #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_to_rust"]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type=CppType")]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path=crubit/cpp_type.h")]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_to_cpp")]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_to_rust")]
             pub struct SomeStruct;
     "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -54,7 +54,7 @@ fn test_missing() {
 #[test]
 fn test_cpp_type() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=A C++ Type"]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type=A C++ Type")]
             pub struct SomeStruct;
         "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -66,7 +66,7 @@ fn test_cpp_type() {
 #[test]
 fn test_cpp_name() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_name=Create"]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_name=Create")]
             pub fn new() -> i32 { 0 }
         "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -78,8 +78,8 @@ fn test_cpp_name() {
 #[test]
 fn test_cpp_name_multi() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_name=Create"]
-            #[doc="CRUBIT_ANNOTATE: cpp_name=Create"]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_name=Create")]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_name=Create")]
             pub fn new() -> i32 { 0 }
         "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -91,8 +91,8 @@ fn test_cpp_name_multi() {
 #[test]
 fn test_cpp_type_multi() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=X"]
-            #[doc="CRUBIT_ANNOTATE: cpp_type=X"]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type=X")]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type=X")]
             pub struct SomeStruct;
         "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -104,9 +104,9 @@ fn test_cpp_type_multi() {
 #[test]
 fn test_include_path_multi() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=CppType"]
-            #[doc="CRUBIT_ANNOTATE: include_path=crubit/cpp_type1.h"]
-            #[doc="CRUBIT_ANNOTATE: include_path=crubit/cpp_type2.h"]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type=CppType")]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path=crubit/cpp_type1.h")]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: include_path=crubit/cpp_type2.h")]
             pub struct SomeStruct;
     "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -124,7 +124,7 @@ fn test_include_path_multi() {
 #[test]
 fn test_cpp_thread_safe() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_thread_safe="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_thread_safe=")]
             pub struct SomeStruct;
     "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -140,7 +140,7 @@ fn test_cpp_thread_safe() {
 #[test]
 fn test_do_not_bind() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: do_not_bind="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: do_not_bind=")]
             pub fn foo() {}
     "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -154,7 +154,7 @@ fn test_do_not_bind() {
 #[test]
 fn test_do_not_bind_invalid_on_struct() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: do_not_bind="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: do_not_bind=")]
             pub struct SomeStruct;
     "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -169,7 +169,7 @@ fn test_do_not_bind_invalid_on_struct() {
 #[test]
 fn test_field_drop_order_does_not_matter() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: field_drop_order_does_not_matter="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: field_drop_order_does_not_matter=")]
             pub struct SomeStruct;
     "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -183,7 +183,7 @@ fn test_field_drop_order_does_not_matter() {
 #[test]
 fn test_field_drop_order_does_not_matter_invalid_on_fn() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: field_drop_order_does_not_matter="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: field_drop_order_does_not_matter=")]
             pub fn foo() {}
     "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -197,8 +197,8 @@ fn test_field_drop_order_does_not_matter_invalid_on_fn() {
 #[test]
 fn test_cpp_smf_attributes() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=CppType"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type=CppType")]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_move_constructible=")]
             pub struct SomeStruct;
     "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -215,13 +215,13 @@ fn test_cpp_smf_attributes() {
 #[test]
 fn test_allow_unbindable_type() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: allow_unbindable_type=")]
             pub struct SomeStruct;
 
-            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: allow_unbindable_type=")]
             pub enum SomeEnum {}
 
-            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: allow_unbindable_type=")]
             pub union SomeUnion {
                 pub a: i32,
             }
@@ -239,7 +239,7 @@ fn test_allow_unbindable_type() {
 #[test]
 fn test_allow_unbindable_type_invalid_on_type_alias() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: allow_unbindable_type=")]
             pub type SomeType = i32;
     "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -254,7 +254,7 @@ fn test_allow_unbindable_type_invalid_on_type_alias() {
 #[test]
 fn test_allow_unbindable_type_invalid_on_fn() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: allow_unbindable_type=")]
             pub fn foo() {}
     "#;
     run_compiler_for_testing(test_src, |tcx| {
@@ -269,8 +269,8 @@ fn test_allow_unbindable_type_invalid_on_fn() {
 #[test]
 fn test_derive_rust_movable() {
     let test_src = r#"
-            #[doc="CRUBIT_ANNOTATE: cpp_type=CppWrapper<{T}>"]
-            #[doc="CRUBIT_ANNOTATE: derive_rust_movable="]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: cpp_type=CppWrapper<{T}>")]
+            #[cfg_attr(not(doc), doc="CRUBIT_ANNOTATE: derive_rust_movable=")]
             pub struct RustMovableWrapper<T>(core::marker::PhantomData<T>);
     "#;
     run_compiler_for_testing(test_src, |tcx| {

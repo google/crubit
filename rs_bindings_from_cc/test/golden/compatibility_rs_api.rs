@@ -23,7 +23,7 @@
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "14CompatibleType"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=CompatibleType
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=CompatibleType")]
 pub struct CompatibleType {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
@@ -57,12 +57,12 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for CompatibleType {
 }
 
 pub mod compatible_type {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn renamed_default_constructor(__this: *mut crate::CompatibleType) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ev(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn renamed_copy_constructor<'__param_0>(
         __this: *mut crate::CompatibleType,
@@ -70,7 +70,7 @@ pub mod compatible_type {
     ) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1ERKS_(__this, __param_0) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn renamed_constructor(__this: *mut crate::CompatibleType, __param_0: ::ffi_11::c_int) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ei(__this, __param_0) }

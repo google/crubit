@@ -18,8 +18,8 @@ pub mod foo {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N3foo3BarE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=foo :: Bar
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=foo :: Bar")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Bar {
         pub x: ::ffi_11::c_int,
     }
@@ -47,7 +47,7 @@ pub mod foo {
     }
 
     pub mod bar {
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn MyMethod<'__this>(__this: &'__this mut crate::foo::Bar) {
             unsafe { crate::detail::__rust_thunk___ZN3foo3Bar8MyMethodEv(__this) }

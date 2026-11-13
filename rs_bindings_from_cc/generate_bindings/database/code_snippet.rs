@@ -1147,7 +1147,7 @@ pub struct Record {
     pub align: Option<usize>,
     pub pack: Option<usize>,
     pub internally_mutable_unknown_fields: bool,
-    pub crubit_annotations: Vec<DocCommentAttr>,
+    pub crubit_annotations: Vec<CrubitAnnotateAttr>,
     pub struct_or_union: StructOrUnion,
     pub ident: Ident,
     pub id: ItemId,
@@ -1270,6 +1270,16 @@ impl ToTokens for DebugImpl {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct DocCommentAttr(pub Rc<str>);
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct CrubitAnnotateAttr(pub Rc<str>);
+
+impl ToTokens for CrubitAnnotateAttr {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let Self(doc_comment) = self;
+        quote! { #[cfg_attr(not(doc), doc = #doc_comment)] }.to_tokens(tokens);
+    }
+}
 
 impl ToTokens for DocCommentAttr {
     fn to_tokens(&self, tokens: &mut TokenStream) {

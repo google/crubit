@@ -17,7 +17,7 @@
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "5Color"]
-///CRUBIT_ANNOTATE: cpp_type=Color
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Color")]
 pub struct Color(::ffi_11::c_uint);
 impl Color {
     pub const kRed: Color = Color(::ffi_11::new_c_uint(0));
@@ -38,7 +38,7 @@ impl From<Color> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "12EnumToRename"]
-///CRUBIT_ANNOTATE: cpp_type=EnumToRename
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EnumToRename")]
 pub struct RenamedEnum(::ffi_11::c_uint);
 impl RenamedEnum {}
 impl From<::ffi_11::c_uint> for RenamedEnum {
@@ -55,7 +55,7 @@ impl From<RenamedEnum> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "23EnumWithRenamedVariants"]
-///CRUBIT_ANNOTATE: cpp_type=EnumWithRenamedVariants
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EnumWithRenamedVariants")]
 pub struct EnumWithRenamedVariants(::ffi_11::c_uint);
 impl EnumWithRenamedVariants {
     pub const FOO: EnumWithRenamedVariants = EnumWithRenamedVariants(::ffi_11::new_c_uint(0));
@@ -75,7 +75,7 @@ impl From<EnumWithRenamedVariants> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "5Empty"]
-///CRUBIT_ANNOTATE: cpp_type=Empty
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Empty")]
 pub struct Empty(::ffi_11::c_uint);
 impl Empty {}
 impl From<::ffi_11::c_uint> for Empty {
@@ -92,7 +92,7 @@ impl From<Empty> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "9EmptyBool"]
-///CRUBIT_ANNOTATE: cpp_type=EmptyBool
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EmptyBool")]
 pub struct EmptyBool(bool);
 impl EmptyBool {}
 impl From<bool> for EmptyBool {
@@ -109,7 +109,7 @@ impl From<EmptyBool> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "8EmptyInt"]
-///CRUBIT_ANNOTATE: cpp_type=EmptyInt
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EmptyInt")]
 pub struct EmptyInt(::ffi_11::c_uint);
 impl EmptyInt {}
 impl From<::ffi_11::c_uint> for EmptyInt {
@@ -126,7 +126,7 @@ impl From<EmptyInt> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "9EmptyChar"]
-///CRUBIT_ANNOTATE: cpp_type=EmptyChar
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EmptyChar")]
 pub struct EmptyChar(::ffi_11::c_char);
 impl EmptyChar {}
 impl From<::ffi_11::c_char> for EmptyChar {
@@ -143,7 +143,7 @@ impl From<EmptyChar> for ::ffi_11::c_char {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "12NonEmptyBool"]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyBool
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonEmptyBool")]
 pub struct NonEmptyBool(bool);
 impl NonEmptyBool {
     pub const kBool1: NonEmptyBool = NonEmptyBool(false);
@@ -163,7 +163,7 @@ impl From<NonEmptyBool> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "11NonEmptyInt"]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyInt
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonEmptyInt")]
 pub struct NonEmptyInt(::ffi_11::c_uint);
 impl NonEmptyInt {
     pub const kInt1: NonEmptyInt = NonEmptyInt(::ffi_11::new_c_uint(0));
@@ -183,7 +183,7 @@ impl From<NonEmptyInt> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "12NonEmptyChar"]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyChar
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonEmptyChar")]
 pub struct NonEmptyChar(::ffi_11::c_char);
 impl NonEmptyChar {
     pub const kChar1: NonEmptyChar = NonEmptyChar(::ffi_11::new_c_char(0 as u8));
@@ -203,7 +203,7 @@ impl From<NonEmptyChar> for ::ffi_11::c_char {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "10EmptyClass"]
-///CRUBIT_ANNOTATE: cpp_type=EmptyClass
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EmptyClass")]
 pub struct EmptyClass(::ffi_11::c_int);
 impl EmptyClass {}
 impl From<::ffi_11::c_int> for EmptyClass {
@@ -220,7 +220,7 @@ impl From<EmptyClass> for ::ffi_11::c_int {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "14EmptyBoolClass"]
-///CRUBIT_ANNOTATE: cpp_type=EmptyBoolClass
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EmptyBoolClass")]
 pub struct EmptyBoolClass(bool);
 impl EmptyBoolClass {}
 impl From<bool> for EmptyBoolClass {
@@ -237,7 +237,7 @@ impl From<EmptyBoolClass> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "13EmptyIntClass"]
-///CRUBIT_ANNOTATE: cpp_type=EmptyIntClass
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EmptyIntClass")]
 pub struct EmptyIntClass(::ffi_11::c_int);
 impl EmptyIntClass {}
 impl From<::ffi_11::c_int> for EmptyIntClass {
@@ -254,7 +254,7 @@ impl From<EmptyIntClass> for ::ffi_11::c_int {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "14EmptyCharClass"]
-///CRUBIT_ANNOTATE: cpp_type=EmptyCharClass
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EmptyCharClass")]
 pub struct EmptyCharClass(::ffi_11::c_char);
 impl EmptyCharClass {}
 impl From<::ffi_11::c_char> for EmptyCharClass {
@@ -271,7 +271,7 @@ impl From<EmptyCharClass> for ::ffi_11::c_char {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "17NonEmptyBoolClass"]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyBoolClass
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonEmptyBoolClass")]
 pub struct NonEmptyBoolClass(bool);
 impl NonEmptyBoolClass {
     pub const k1: NonEmptyBoolClass = NonEmptyBoolClass(false);
@@ -291,7 +291,7 @@ impl From<NonEmptyBoolClass> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "16NonEmptyIntClass"]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyIntClass
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonEmptyIntClass")]
 pub struct NonEmptyIntClass(::ffi_11::c_uint);
 impl NonEmptyIntClass {
     pub const k1: NonEmptyIntClass = NonEmptyIntClass(::ffi_11::new_c_uint(0));
@@ -311,7 +311,7 @@ impl From<NonEmptyIntClass> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "17NonEmptyCharClass"]
-///CRUBIT_ANNOTATE: cpp_type=NonEmptyCharClass
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonEmptyCharClass")]
 pub struct NonEmptyCharClass(::ffi_11::c_char);
 impl NonEmptyCharClass {
     pub const k1: NonEmptyCharClass = NonEmptyCharClass(::ffi_11::new_c_char(0 as u8));
@@ -344,7 +344,7 @@ pub const kAnonGreen: ::ffi_11::c_uint = ::ffi_11::new_c_uint(2);
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "28EnumWithUnbindableEnumerator"]
-///CRUBIT_ANNOTATE: cpp_type=EnumWithUnbindableEnumerator
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EnumWithUnbindableEnumerator")]
 pub struct EnumWithUnbindableEnumerator(::ffi_11::c_uint);
 impl EnumWithUnbindableEnumerator {
     pub const kBindable: EnumWithUnbindableEnumerator =
@@ -365,7 +365,7 @@ impl From<EnumWithUnbindableEnumerator> for ::ffi_11::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "15TypedefAnonEnum"]
-///CRUBIT_ANNOTATE: cpp_type=TypedefAnonEnum
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TypedefAnonEnum")]
 pub struct TypedefAnonEnum(::ffi_11::c_uint);
 impl TypedefAnonEnum {
     pub const kTypedefAnonRed: TypedefAnonEnum = TypedefAnonEnum(::ffi_11::new_c_uint(0));
@@ -397,7 +397,7 @@ pub fn consume_typedef_anon_enum(e: crate::TypedefAnonEnum) {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "13TypedefAnonE8"]
-///CRUBIT_ANNOTATE: cpp_type=TypedefAnonE8
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TypedefAnonE8")]
 pub struct TypedefAnonE8(::ffi_11::c_uchar);
 impl TypedefAnonE8 {
     pub const kTypedefAnonE8: TypedefAnonE8 = TypedefAnonE8(::ffi_11::new_c_uchar(0));
@@ -419,7 +419,7 @@ pub mod my_ns {
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
     #[cfi_encoding = "N5my_ns13TypedefAnonNsE"]
-    ///CRUBIT_ANNOTATE: cpp_type=my_ns :: TypedefAnonNs
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=my_ns :: TypedefAnonNs")]
     pub struct TypedefAnonNs(::ffi_11::c_uint);
     impl TypedefAnonNs {
         pub const kTypedefAnonNs: TypedefAnonNs = TypedefAnonNs(::ffi_11::new_c_uint(0));

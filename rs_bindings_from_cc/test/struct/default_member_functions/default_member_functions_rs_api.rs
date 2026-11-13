@@ -18,7 +18,7 @@
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "10Uncopyable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Uncopyable
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Uncopyable")]
 pub struct Uncopyable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
@@ -46,7 +46,7 @@ impl ::ctor::CtorNew<()> for Uncopyable {
 
 #[cfi_encoding = "21UncopyableDespiteDecl"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=UncopyableDespiteDecl
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=UncopyableDespiteDecl")]
 pub struct UncopyableDespiteDecl {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:

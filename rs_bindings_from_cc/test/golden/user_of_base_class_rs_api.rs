@@ -24,8 +24,8 @@
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "8Derived2"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=Derived2
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Derived2")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Derived2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 20],
     pub derived_1: ::ffi_11::c_char,
@@ -135,8 +135,8 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Derived2 {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "15VirtualDerived2"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=VirtualDerived2
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=VirtualDerived2")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct VirtualDerived2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
 }

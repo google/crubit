@@ -31,8 +31,8 @@ extern crate self as inline_cpp_generated_bindings;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "8MyStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MyStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MyStruct {
     pub a: ::ffi_11::c_int,
     pub b: ::ffi_11::c_int,

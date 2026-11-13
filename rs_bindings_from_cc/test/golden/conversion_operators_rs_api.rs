@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "15DstLocalMovable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DstLocalMovable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DstLocalMovable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct DstLocalMovable {
     pub val: ::ffi_11::c_int,
 }
@@ -46,7 +46,7 @@ impl Default for DstLocalMovable {
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "18DstLocalNonMovable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DstLocalNonMovable
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DstLocalNonMovable")]
 pub struct DstLocalNonMovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub val: ::ffi_11::c_int,
@@ -63,8 +63,8 @@ forward_declare::unsafe_define!(
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "3Src"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Src
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Src")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Src {
     pub value: ::ffi_11::c_int,
 }

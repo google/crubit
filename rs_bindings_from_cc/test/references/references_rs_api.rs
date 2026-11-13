@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "22TypeWithPtrConstructor"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TypeWithPtrConstructor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TypeWithPtrConstructor")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TypeWithPtrConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -61,8 +61,8 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "29TypeWithNonNullPtrConstructor"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TypeWithNonNullPtrConstructor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TypeWithNonNullPtrConstructor")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TypeWithNonNullPtrConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -105,8 +105,8 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstruct
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "28TypeWithReferenceConstructor"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TypeWithReferenceConstructor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=TypeWithReferenceConstructor")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TypeWithReferenceConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

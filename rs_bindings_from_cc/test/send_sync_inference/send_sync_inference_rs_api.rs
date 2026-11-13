@@ -20,8 +20,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test5PlainE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: Plain
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: Plain")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Plain {
             pub x: ::ffi_11::c_int,
             pub y: f32,
@@ -50,8 +50,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test5EmptyE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: Empty
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: Empty")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Empty {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -79,8 +79,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test13ContainsPlainE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainsPlain
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainsPlain")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ContainsPlain {
             pub plain: crate::crubit::test::Plain,
         }
@@ -111,8 +111,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test17NonAggregatePlainE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NonAggregatePlain
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NonAggregatePlain")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct NonAggregatePlain {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             pub x_: ::ffi_11::c_int,
@@ -144,8 +144,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test21WithZeroWidthBitfieldE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithZeroWidthBitfield
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithZeroWidthBitfield"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct WithZeroWidthBitfield {
             /// * `a` : 4 bits.
             /// * `b` : 4 bits.
@@ -183,8 +186,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test11WithPointerE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithPointer
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithPointer")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct WithPointer {
             pub p: *mut ::ffi_11::c_int,
         }
@@ -220,8 +223,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test19ContainsWithPointerE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainsWithPointer
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ContainsWithPointer"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ContainsWithPointer {
             pub with_pointer: crate::crubit::test::WithPointer,
         }
@@ -251,8 +257,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test16WithPrivateFieldE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithPrivateField
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithPrivateField")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct WithPrivateField {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             pub public_field_: ::ffi_11::c_int,
@@ -298,8 +304,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test20WithUnsupportedFieldE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithUnsupportedField
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithUnsupportedField"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct WithUnsupportedField {
             /// Reason for representing this field as a blob of bytes:
             /// Unsupported `volatile` qualifier: volatile int
@@ -336,8 +345,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test4BaseE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: Base
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: Base")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Base {
             pub base_field: ::ffi_11::c_int,
         }
@@ -365,8 +374,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test7DerivedE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: Derived
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: Derived")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct Derived {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
             pub derived_field: ::ffi_11::c_int,
@@ -403,8 +412,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test7NotSendE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NotSend
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NotSend")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct NotSend {
             pub x: ::ffi_11::c_int,
         }
@@ -435,8 +444,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test7NotSyncE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NotSync
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NotSync")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct NotSync {
             pub x: ::ffi_11::c_int,
         }
@@ -467,8 +476,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test14NotSendNotSyncE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NotSendNotSync
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NotSendNotSync")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct NotSendNotSync {
             pub x: ::ffi_11::c_int,
         }
@@ -506,8 +515,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test16ExplicitSendSyncE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ExplicitSendSync
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ExplicitSendSync")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ExplicitSendSync {
             pub p: *mut ::ffi_11::c_int,
         }
@@ -539,8 +548,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test15ThreadAffineTagE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadAffineTag
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadAffineTag")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ThreadAffineTag {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -572,8 +581,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test26DerivedFromThreadAffineTagE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: DerivedFromThreadAffineTag
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: DerivedFromThreadAffineTag"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct DerivedFromThreadAffineTag {
             pub x: ::ffi_11::c_int,
         }
@@ -609,8 +621,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test9EmptyBaseE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: EmptyBase
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: EmptyBase")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct EmptyBase {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -639,8 +651,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test23DerivedFromPrivateEmptyE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: DerivedFromPrivateEmpty
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: DerivedFromPrivateEmpty"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct DerivedFromPrivateEmpty {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             pub x_: ::ffi_11::c_int,
@@ -679,8 +694,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test30NoUniqueAddressThreadAffineTagE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NoUniqueAddressThreadAffineTag
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NoUniqueAddressThreadAffineTag"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct NoUniqueAddressThreadAffineTag {
             pub x: ::ffi_11::c_int,
         }
@@ -721,8 +739,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test26WithZeroLengthPointerArrayE"]
         #[repr(C, align(8))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithZeroLengthPointerArray
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: WithZeroLengthPointerArray"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct WithZeroLengthPointerArray {
             pub x: f64,
         }
@@ -758,8 +779,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test21MemberThreadAffineTagE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: MemberThreadAffineTag
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: MemberThreadAffineTag"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct MemberThreadAffineTag {
             pub tag: crate::crubit::test::ThreadAffineTag,
             pub x: ::ffi_11::c_int,
@@ -793,8 +817,11 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "__CcTemplateInstN6crubit4test20ThreadAffineTemplateIiEE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadAffineTemplate < int >
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadAffineTemplate < int >"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ThreadAffineTemplateInt {
             pub x: ::ffi_11::c_int,
         }

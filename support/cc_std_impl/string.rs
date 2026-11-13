@@ -32,10 +32,10 @@ use std::os::unix::ffi::OsStrExt;
 /// O(n).
 // TODO: Make it mutable?.
 // TODO: add a dependency on `crubit_annotate` to use that directly rather than doc attributes.
-#[doc = "CRUBIT_ANNOTATE: cpp_type=::std::string"]
-#[doc = "CRUBIT_ANNOTATE: include_path=<string>"]
-#[doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_string_to_rust_string"]
-#[doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_string_to_cpp_string"]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=::std::string")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=<string>")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_string_to_rust_string")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_string_to_cpp_string")]
 #[allow(non_snake_case)]
 #[repr(C)]
 pub struct string_wrapper {
@@ -414,9 +414,7 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
 #[ctor::recursively_pinned(PinnedDrop)]
 pub struct string {
     _opaque: core::cfg_select! {
-        any(target_arch = "x86_64", target_arch = "aarch64", target_arch = "riscv64") => {
-            [u8; 24]
-        }
+        any(target_arch = "x86_64", target_arch = "aarch64", target_arch = "riscv64") => [u8; 24],
         any(target_arch = "arm", target_arch = "x86") => [u8; 12],
         _ => {
             compile_error!("string is only supported on x86_64, aarch64, riscv64, arm, and x86")

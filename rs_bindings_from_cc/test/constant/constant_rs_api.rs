@@ -17,7 +17,7 @@
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "3Foo"]
-///CRUBIT_ANNOTATE: cpp_type=Foo
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Foo")]
 pub struct Foo(::ffi_11::c_uint);
 impl Foo {
     pub const BAR: Foo = Foo(::ffi_11::new_c_uint(0));

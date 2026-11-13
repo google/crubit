@@ -66,9 +66,9 @@ pub fn read_proto_ref(p: &FooRequestStats) -> i32 {
     p.num_requests()
 }
 
-#[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
-#[doc = "CRUBIT_ANNOTATE: include_path=absl/status/statusor.h"]
-#[doc = "CRUBIT_ANNOTATE: derive_rust_movable="]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=absl/status/statusor.h")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: derive_rust_movable=")]
 #[repr(C)]
 pub struct NewStatusOr<T> {
     status: usize,

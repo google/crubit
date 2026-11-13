@@ -21,8 +21,8 @@ pub mod repro {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N5repro8IntervalE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=repro :: Interval
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=repro :: Interval")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Interval {
         pub nanos: [::ffi_11::c_char; 1],
     }
@@ -71,8 +71,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN5repro8NullableINS_8IntervalEEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=repro :: Nullable < struct repro :: Interval >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=repro :: Nullable < struct repro :: Interval >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstN5repro8NullableINS_8IntervalEEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }

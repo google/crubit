@@ -22,8 +22,8 @@ pub mod crubit {
         #[::ctor::recursively_pinned]
         #[cfi_encoding = "N6crubit4test16ThreadSafeStructE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafeStruct
-        ///CRUBIT_ANNOTATE: cpp_thread_safe=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafeStruct")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_thread_safe=")]
         pub struct ThreadSafeStruct {
             __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; 4]>,
         }
@@ -68,7 +68,7 @@ pub mod crubit {
         }
 
         pub mod thread_safe_struct {
-            ///CRUBIT_ANNOTATE: do_not_bind=
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
             #[inline(always)]
             pub fn ConstGet(__this: &crate::crubit::test::ThreadSafeStruct) -> ::ffi_11::c_int {
                 unsafe {
@@ -80,7 +80,7 @@ pub mod crubit {
             /// A non-const method for testing the generation behavior.
             /// The implementation doesn't actually do anything non-const, but it doesn't
             /// matter for what we are testing, here.
-            ///CRUBIT_ANNOTATE: do_not_bind=
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
             #[inline(always)]
             pub fn NonConstGet(__this: &crate::crubit::test::ThreadSafeStruct) -> ::ffi_11::c_int {
                 unsafe {
@@ -95,8 +95,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test13RegularStructE"]
         #[repr(C, align(4))]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: RegularStruct
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: RegularStruct")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct RegularStruct {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             /// Reason for representing this field as a blob of bytes:
@@ -154,7 +154,7 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///CRUBIT_ANNOTATE: do_not_bind=
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
             #[inline(always)]
             pub unsafe fn ConstGet(
                 __this: *const crate::crubit::test::RegularStruct,
@@ -167,7 +167,7 @@ pub mod crubit {
             ///
             /// The caller must ensure that the following unsafe arguments are not misused by the function:
             /// * `__this`: raw pointer
-            ///CRUBIT_ANNOTATE: do_not_bind=
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
             #[inline(always)]
             pub unsafe fn NonConstGet(
                 __this: *mut crate::crubit::test::RegularStruct,
@@ -183,9 +183,9 @@ pub mod crubit {
         /// Unpin thread-safe type with custom assignment
         #[cfi_encoding = "N6crubit4test15ThreadSafeUnpinE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafeUnpin
-        ///CRUBIT_ANNOTATE: cpp_thread_safe=
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafeUnpin")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_thread_safe=")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ThreadSafeUnpin {
             __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; 1]>,
         }
@@ -282,9 +282,9 @@ pub mod crubit {
         #[::ctor::recursively_pinned(PinnedDrop)]
         #[cfi_encoding = "N6crubit4test16ThreadSafePinnedE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafePinned
-        ///CRUBIT_ANNOTATE: cpp_thread_safe=
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafePinned")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_thread_safe=")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct ThreadSafePinned {
             __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; 1]>,
         }

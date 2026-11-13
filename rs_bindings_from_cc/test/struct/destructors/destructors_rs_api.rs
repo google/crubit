@@ -16,8 +16,8 @@
 #![deny(warnings)]
 #[cfi_encoding = "24DestructionOrderRecorder"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=DestructionOrderRecorder
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DestructionOrderRecorder")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct DestructionOrderRecorder {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -116,7 +116,7 @@ impl Drop for DestructionOrderRecorder {
 }
 
 pub mod destruction_order_recorder {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn RecordDestruction(int_field: ::ffi_11::c_int) {
         unsafe {
@@ -125,14 +125,14 @@ pub mod destruction_order_recorder {
             )
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn GetDestructionRecord() -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorder20GetDestructionRecordEv()
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn ClearDestructionRecord() {
         unsafe {
@@ -143,8 +143,8 @@ pub mod destruction_order_recorder {
 
 #[cfi_encoding = "27FieldDestructionOrderTester"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=FieldDestructionOrderTester
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=FieldDestructionOrderTester")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct FieldDestructionOrderTester {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -273,7 +273,7 @@ impl
 }
 
 pub mod field_destruction_order_tester {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn DestructFromCpp(
         field1: ::ffi_11::c_int,
@@ -291,7 +291,7 @@ pub mod field_destruction_order_tester {
 #[derive(Clone)]
 #[cfi_encoding = "21PrivateOperatorDelete"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=PrivateOperatorDelete
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=PrivateOperatorDelete")]
 pub struct PrivateOperatorDelete {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:

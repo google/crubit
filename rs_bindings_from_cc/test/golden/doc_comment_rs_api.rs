@@ -20,8 +20,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "17DocCommentSlashes"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DocCommentSlashes
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DocCommentSlashes")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct DocCommentSlashes {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// A field.
@@ -93,13 +93,13 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for DocCommentSlashes {
 
 pub mod doc_comment_slashes {
     /// A non-static member function (`const` flavor).
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn get_field_value<'__this>(__this: &'__this crate::DocCommentSlashes) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(__this) }
     }
     /// A non-static member function (non-`const` flavor).
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn set_field_value<'__this>(
         __this: &'__this mut crate::DocCommentSlashes,
@@ -112,7 +112,7 @@ pub mod doc_comment_slashes {
         }
     }
     /// A static method.
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_method() -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
@@ -125,8 +125,8 @@ pub mod doc_comment_slashes {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "14DocCommentBang"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=DocCommentBang
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DocCommentBang")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct DocCommentBang {
     /// A field
     pub i: ::ffi_11::c_int,
@@ -154,8 +154,8 @@ impl Default for DocCommentBang {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "24MultilineCommentTwoStars"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MultilineCommentTwoStars
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MultilineCommentTwoStars")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MultilineCommentTwoStars {
     /// A field
     pub i: ::ffi_11::c_int,
@@ -186,8 +186,8 @@ impl Default for MultilineCommentTwoStars {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "11LineComment"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=LineComment
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=LineComment")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct LineComment {
     /// A field
     pub i: ::ffi_11::c_int,
@@ -215,8 +215,8 @@ impl Default for LineComment {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "16MultilineOneStar"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MultilineOneStar
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MultilineOneStar")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MultilineOneStar {
     /// A field
     pub i: ::ffi_11::c_int,
@@ -263,8 +263,8 @@ pub type MyTypeAlias = crate::DocCommentSlashes;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MyInstantiation {
     /// Data member.
     pub value: ::ffi_11::c_int,
@@ -291,8 +291,8 @@ impl Default for MyInstantiation {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst10MyTemplateIfE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MyTemplate < float >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MyTemplate < float >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MySpecializedInstantiation {
     /// Data member in a specialization.
     pub value: f32,
@@ -325,7 +325,7 @@ impl Default for MySpecializedInstantiation {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "14DocCommentEnum"]
-///CRUBIT_ANNOTATE: cpp_type=DocCommentEnum
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DocCommentEnum")]
 pub struct DocCommentEnum(::ffi_11::c_uint);
 impl DocCommentEnum {
     /// Red color variant.
@@ -352,8 +352,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInst13OuterTemplateIiE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=OuterTemplate < int >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=OuterTemplate < int >")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInst13OuterTemplateIiE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }

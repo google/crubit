@@ -842,8 +842,8 @@ fn test_leading_colons_for_cpp_type() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            #[doc = "CRUBIT_ANNOTATE: cpp_type=:: S"]
-            #[doc = "CRUBIT_ANNOTATE: cpp_move_constructible="]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=:: S")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
             pub struct S
         }
     );

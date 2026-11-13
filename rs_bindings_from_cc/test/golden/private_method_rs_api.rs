@@ -20,8 +20,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Outer"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Outer
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Outer")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Outer {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

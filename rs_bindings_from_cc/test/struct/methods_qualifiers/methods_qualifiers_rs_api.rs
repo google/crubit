@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "34UnpinStructWithRefQualifiedMethods"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=UnpinStructWithRefQualifiedMethods
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=UnpinStructWithRefQualifiedMethods")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct UnpinStructWithRefQualifiedMethods {
     pub i: ::ffi_11::c_int,
 }
@@ -79,7 +79,7 @@ impl Default for UnpinStructWithRefQualifiedMethods {
 }
 
 pub mod unpin_struct_with_ref_qualified_methods {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn increment_i<'__this>(__this: &'__this mut crate::UnpinStructWithRefQualifiedMethods) {
         unsafe {
@@ -88,7 +88,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
             )
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn unqualified_get_i<'__this>(
         __this: &'__this mut crate::UnpinStructWithRefQualifiedMethods,
@@ -97,7 +97,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
             crate::detail::__rust_thunk___ZN34UnpinStructWithRefQualifiedMethods17unqualified_get_iEv(__this)
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn const_qualified_get_i<'__this>(
         __this: &'__this crate::UnpinStructWithRefQualifiedMethods,
@@ -106,7 +106,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
             crate::detail::__rust_thunk___ZNK34UnpinStructWithRefQualifiedMethods21const_qualified_get_iEv(__this)
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn lvalue_ref_qualified_get_i<'__this>(
         __this: &'__this mut crate::UnpinStructWithRefQualifiedMethods,
@@ -115,7 +115,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
             crate::detail::__rust_thunk___ZNR34UnpinStructWithRefQualifiedMethods26lvalue_ref_qualified_get_iEv(__this)
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn const_lvalue_ref_qualified_get_i<'__this>(
         __this: &'__this crate::UnpinStructWithRefQualifiedMethods,
@@ -124,7 +124,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
             crate::detail::__rust_thunk___ZNKR34UnpinStructWithRefQualifiedMethods32const_lvalue_ref_qualified_get_iEv(__this)
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn rvalue_ref_qualified_get_i<'__this>(
         __this: &'__this mut crate::UnpinStructWithRefQualifiedMethods,
@@ -133,7 +133,7 @@ pub mod unpin_struct_with_ref_qualified_methods {
             crate::detail::__rust_thunk___ZNO34UnpinStructWithRefQualifiedMethods26rvalue_ref_qualified_get_iEv(__this)
         }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn const_rvalue_ref_qualified_get_i<'__this>(
         __this: &'__this crate::UnpinStructWithRefQualifiedMethods,

@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "18HasCustomAlignment"]
 #[repr(C, align(64))]
-///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignment
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=HasCustomAlignment")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct HasCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -51,8 +51,8 @@ impl Default for HasCustomAlignment {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "27HasFieldWithCustomAlignment"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=HasFieldWithCustomAlignment
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=HasFieldWithCustomAlignment")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct HasFieldWithCustomAlignment {
     pub field: crate::HasCustomAlignment,
 }
@@ -81,8 +81,8 @@ impl Default for HasFieldWithCustomAlignment {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "35InheritsFromBaseWithCustomAlignment"]
 #[repr(C, align(64))]
-///CRUBIT_ANNOTATE: cpp_type=InheritsFromBaseWithCustomAlignment
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=InheritsFromBaseWithCustomAlignment")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct InheritsFromBaseWithCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -117,8 +117,8 @@ impl Default for InheritsFromBaseWithCustomAlignment {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "29HasCustomAlignmentWithGnuAttr"]
 #[repr(C, align(64))]
-///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignmentWithGnuAttr
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=HasCustomAlignmentWithGnuAttr")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct HasCustomAlignmentWithGnuAttr {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -159,8 +159,11 @@ pub mod template_with_preferred_name {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=template_with_preferred_name :: SomeTemplate < int >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=template_with_preferred_name :: SomeTemplate < int >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct SpecializedTypeAlias {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }

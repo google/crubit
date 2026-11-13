@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[doc = "CRUBIT_ANNOTATE: cpp_enum=enum class"]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_enum=enum class")]
 #[repr(transparent)]
 pub struct SomeEnum(i32);
 impl SomeEnum {

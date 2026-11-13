@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "9SomeClass"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=SomeClass
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SomeClass")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct SomeClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -65,7 +65,7 @@ impl Default for SomeClass {
 
 pub mod some_class {
     /// Example of a factory method.
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_factory_method(initial_value_of_field: ::ffi_11::c_int) -> crate::SomeClass {
         unsafe {
@@ -78,7 +78,7 @@ pub mod some_class {
         }
     }
     /// Static method working on primitive types (and unrelated to the struct).
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn static_method_that_multiplies_its_args(
         x: ::ffi_11::c_int,

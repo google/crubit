@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "11PlainStruct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=PlainStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=PlainStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct PlainStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -42,8 +42,8 @@ impl Default for PlainStruct {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "37StructWithLifetimeboundMemberFunction"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundMemberFunction
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundMemberFunction")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithLifetimeboundMemberFunction {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -85,7 +85,7 @@ impl Default for StructWithLifetimeboundMemberFunction {
 }
 
 pub mod struct_with_lifetimebound_member_function {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn f<'__this>(
         __this: &'__this crate::StructWithLifetimeboundMemberFunction,
@@ -104,8 +104,8 @@ pub mod struct_with_lifetimebound_member_function {
 #[derive(Clone, Copy)]
 #[cfi_encoding = "40StructWithLifetimeboundRefMemberFunction"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefMemberFunction
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefMemberFunction")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithLifetimeboundRefMemberFunction<'__implicit> {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -150,7 +150,7 @@ impl<'__implicit> Default for StructWithLifetimeboundRefMemberFunction<'__implic
 }
 
 pub mod struct_with_lifetimebound_ref_member_function {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn f<'__implicit, '__this>(
         __this: &'__this crate::StructWithLifetimeboundRefMemberFunction<'__implicit>,
@@ -165,7 +165,7 @@ pub mod struct_with_lifetimebound_ref_member_function {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "40DropClassWithLifetimeboundMemberFunction"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=DropClassWithLifetimeboundMemberFunction
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DropClassWithLifetimeboundMemberFunction")]
 pub struct DropClassWithLifetimeboundMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -256,7 +256,7 @@ impl ::ctor::PinnedDrop for DropClassWithLifetimeboundMemberFunction {
 }
 
 pub mod drop_class_with_lifetimebound_member_function {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn f<'__this>(
         __this: &'__this crate::DropClassWithLifetimeboundMemberFunction,
@@ -276,7 +276,7 @@ pub mod drop_class_with_lifetimebound_member_function {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "43DropClassWithLifetimeboundRefMemberFunction"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=DropClassWithLifetimeboundRefMemberFunction
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DropClassWithLifetimeboundRefMemberFunction")]
 pub struct DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -385,7 +385,7 @@ impl<'__implicit> ::ctor::PinnedDrop for DropClassWithLifetimeboundRefMemberFunc
 }
 
 pub mod drop_class_with_lifetimebound_ref_member_function {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn f<'__implicit, '__this>(
         __this: &'__this crate::DropClassWithLifetimeboundRefMemberFunction<'__implicit>,
@@ -401,8 +401,8 @@ pub mod drop_class_with_lifetimebound_ref_member_function {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "27StructWithLifetimeboundCtor"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundCtor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundCtor")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithLifetimeboundCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -451,8 +451,8 @@ impl ::ctor::CtorNew<crate::PlainStruct> for StructWithLifetimeboundCtor {
 #[derive(Clone, Copy)]
 #[cfi_encoding = "30StructWithLifetimeboundRefCtor"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefCtor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefCtor")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct StructWithLifetimeboundRefCtor<'__implicit> {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -508,7 +508,7 @@ impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "31DropStructWithLifetimeboundCtor"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithLifetimeboundCtor
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DropStructWithLifetimeboundCtor")]
 pub struct DropStructWithLifetimeboundCtor {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -605,7 +605,7 @@ impl ::ctor::PinnedDrop for DropStructWithLifetimeboundCtor {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "34DropStructWithLifetimeboundRefCtor"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithLifetimeboundRefCtor
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DropStructWithLifetimeboundRefCtor")]
 pub struct DropStructWithLifetimeboundRefCtor<'__implicit> {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -725,7 +725,7 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithLifetimeboundRefCtor<'__i
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "41DropStructWithRefCtorAndRefMemberFunction"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithRefCtorAndRefMemberFunction
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DropStructWithRefCtorAndRefMemberFunction")]
 pub struct DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -852,7 +852,7 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithRefCtorAndRefMemberFuncti
 }
 
 pub mod drop_struct_with_ref_ctor_and_ref_member_function {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn f<'__implicit, '__this>(
         __this: &'__this crate::DropStructWithRefCtorAndRefMemberFunction<'__implicit>,
@@ -867,7 +867,7 @@ pub mod drop_struct_with_ref_ctor_and_ref_member_function {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "35DropStructWithCtorAndMemberFunction"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithCtorAndMemberFunction
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DropStructWithCtorAndMemberFunction")]
 pub struct DropStructWithCtorAndMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -964,7 +964,7 @@ impl ::ctor::PinnedDrop for DropStructWithCtorAndMemberFunction {
 }
 
 pub mod drop_struct_with_ctor_and_member_function {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn f<'__this>(
         __this: &'__this crate::DropStructWithCtorAndMemberFunction,
@@ -984,7 +984,7 @@ pub mod drop_struct_with_ctor_and_member_function {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "38DropStructWithCtorAndRefMemberFunction"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithCtorAndRefMemberFunction
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DropStructWithCtorAndRefMemberFunction")]
 pub struct DropStructWithCtorAndRefMemberFunction {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -1083,7 +1083,7 @@ impl ::ctor::PinnedDrop for DropStructWithCtorAndRefMemberFunction {
 }
 
 pub mod drop_struct_with_ctor_and_ref_member_function {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn f<'__this>(
         __this: &'__this crate::DropStructWithCtorAndRefMemberFunction,
@@ -1098,7 +1098,7 @@ pub mod drop_struct_with_ctor_and_ref_member_function {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "38DropStructWithRefCtorAndMemberFunction"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=DropStructWithRefCtorAndMemberFunction
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DropStructWithRefCtorAndMemberFunction")]
 pub struct DropStructWithRefCtorAndMemberFunction<'__implicit> {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -1225,7 +1225,7 @@ impl<'__implicit> ::ctor::PinnedDrop for DropStructWithRefCtorAndMemberFunction<
 
 pub mod drop_struct_with_ref_ctor_and_member_function {
     /// This is a degenerate case, since `PlainStruct` binds no lifetimes.
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn f<'__implicit, '__this>(
         __this: &'__this crate::DropStructWithRefCtorAndMemberFunction<'__implicit>,

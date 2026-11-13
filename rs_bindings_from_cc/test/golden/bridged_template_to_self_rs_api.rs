@@ -24,8 +24,8 @@ pub mod ns {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N2ns6MemberE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ns :: Member
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ns :: Member")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Member {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -66,8 +66,8 @@ pub mod ns {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N2ns11InstructionE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ns :: Instruction
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ns :: Instruction")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Instruction {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -108,7 +108,7 @@ pub mod ns {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `parent`: raw pointer
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub unsafe fn Create(
             parent: *mut crate::ns::Region,
@@ -122,8 +122,8 @@ pub mod ns {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N2ns6RegionE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=ns :: Region
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ns :: Region")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Region {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -166,7 +166,7 @@ pub mod ns {
         ///
         /// The caller must ensure that the following unsafe arguments are not misused by the function:
         /// * `instruction`: unsafe bridge type
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub unsafe fn Append<'__this>(
             __this: &'__this mut crate::ns::Region,
@@ -176,7 +176,7 @@ pub mod ns {
                 crate::detail::__rust_thunk___ZN2ns6Region6AppendENS_5MyBoxINS_11InstructionEEE(__this,::crubit_support::bridge::unstable_encode!(@crate::MyBoxAbi(::crubit_support::bridge::transmute_abi::<crate::ns::Instruction>()),crate::MyBoxAbi<::crubit_support::bridge::TransmuteAbi<crate::ns::Instruction>>,instruction).as_ptr()as*const u8)
             }
         }
-        ///CRUBIT_ANNOTATE: do_not_bind=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
         #[inline(always)]
         pub fn Pop<'__this>(
             __this: &'__this mut crate::ns::Region,

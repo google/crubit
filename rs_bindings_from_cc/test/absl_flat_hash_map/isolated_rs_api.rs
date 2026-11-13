@@ -48,7 +48,7 @@ pub mod crubit {
         #[::ctor::recursively_pinned]
         #[cfi_encoding = "N6crubit4test12NoDestructorE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NoDestructor
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NoDestructor")]
         pub struct NoDestructor {
             __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
         }
@@ -90,8 +90,8 @@ pub mod crubit {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N6crubit4test8NoDeleteE"]
         #[repr(C)]
-        ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NoDelete
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: NoDelete")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct NoDelete {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -160,8 +160,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=absl :: flat_hash_map < int , unsigned long , 42 >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=absl :: flat_hash_map < int , unsigned long , 42 >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }

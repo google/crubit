@@ -22,7 +22,7 @@ fn test_generate_enum_basic() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "5Color"]
-            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Color")]
             pub struct Color(::ffi_11::#int_ty);
             impl Color {
                 pub const kRed: Color = Color(::ffi_11::#new_int(5));
@@ -56,7 +56,7 @@ fn test_generate_enum_basic_with_annotations() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "5Color"]
-            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Color")]
             pub struct __CAPTURE_BEGIN__ Color __CAPTURE_END__ (::ffi_11::#int_ty);
             impl Color {
                 pub const kRed: Color = Color(::ffi_11::#new_int(5));
@@ -94,7 +94,7 @@ fn test_generate_scoped_enum_basic() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "5Color"]
-            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Color")]
             pub struct Color(::ffi_11::c_int);
             impl Color {
                 pub const kRed: Color = Color(::ffi_11::new_c_int(-5));
@@ -134,7 +134,7 @@ fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "5Color"]
-            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Color")]
             pub struct Color(::ffi_11::c_longlong);
             impl Color {
                 pub const kViolet: Color = Color(::ffi_11::new_c_longlong(-9223372036854775808));
@@ -175,7 +175,7 @@ fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "5Color"]
-            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Color")]
             pub struct Color(::ffi_11::c_ulonglong);
             impl Color {
                 pub const kRed: Color = Color(::ffi_11::new_c_ulonglong(0));
@@ -209,7 +209,7 @@ fn test_generate_enum_with_32_bit_signed_vals() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "5Color"]
-            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Color")]
             pub struct Color(::ffi_11::c_int);
             impl Color {
                 pub const kViolet: Color = Color(::ffi_11::new_c_int(-2147483648));
@@ -246,7 +246,7 @@ fn test_generate_enum_with_32_bit_unsigned_vals() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "5Color"]
-            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Color")]
             pub struct Color(::ffi_11::c_uint);
             impl Color {
                 pub const kRed: Color = Color(::ffi_11::new_c_uint(0));
@@ -278,7 +278,7 @@ fn test_generate_enum_bool() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "4Bool"]
-            #[doc="CRUBIT_ANNOTATE: cpp_type=Bool"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Bool")]
             pub struct Bool(bool);
             impl Bool {
                 pub const kFalse: Bool = Bool(false);
@@ -312,7 +312,7 @@ fn test_generate_enum_bool_alias() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "4Bool"]
-            #[doc="CRUBIT_ANNOTATE: cpp_type=Bool"]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Bool")]
             pub struct Bool(crate::MyBool);
             impl Bool {
                 pub const kFalse: Bool = Bool(false);

@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "6Struct"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Struct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Struct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Struct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -50,12 +50,12 @@ impl Default for Struct {
 }
 
 pub mod r#struct {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn AccessNone<'__this>(__this: &'__this mut crate::Struct) {
         unsafe { crate::detail::__rust_thunk___ZN6Struct10AccessNoneEv(__this) }
     }
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn AccessPublic<'__this>(__this: &'__this mut crate::Struct) {
         unsafe { crate::detail::__rust_thunk___ZN6Struct12AccessPublicEv(__this) }
@@ -65,8 +65,8 @@ pub mod r#struct {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Class"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Class
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Class")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Class {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -94,7 +94,7 @@ impl Default for Class {
 }
 
 pub mod class {
-    ///CRUBIT_ANNOTATE: do_not_bind=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
     #[inline(always)]
     pub fn AccessPublic<'__this>(__this: &'__this mut crate::Class) {
         unsafe { crate::detail::__rust_thunk___ZN5Class12AccessPublicEv(__this) }

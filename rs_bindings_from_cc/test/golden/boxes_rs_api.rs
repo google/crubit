@@ -74,8 +74,8 @@ pub mod test {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "N4test5PointE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test :: Point
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=test :: Point")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct Point {
         pub x: ::ffi_11::c_int,
         pub y: ::ffi_11::c_int,
@@ -119,7 +119,7 @@ pub mod test {
 
     #[cfi_encoding = "N4test6HolderE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=test :: Holder
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=test :: Holder")]
     pub struct Holder {
         /// Reason for representing this field as a blob of bytes:
         /// nontrivial fields would be destroyed in the wrong order
@@ -171,7 +171,7 @@ pub mod test {
 
     #[cfi_encoding = "N4test5OuterE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test :: Outer
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=test :: Outer")]
     pub struct Outer {
         pub h: crate::test::Holder,
         pub tag: ::ffi_11::c_int,
@@ -201,7 +201,7 @@ pub mod test {
     ///   * `boxes`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'rs::Box<int>[2]': C-style arrays of non-primitive, non-enum types are not yet supported (b/575922365)
     #[cfi_encoding = "N4test11ArrayHolderE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=test :: ArrayHolder
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=test :: ArrayHolder")]
     pub struct ArrayHolder {
         /// Reason for representing this field as a blob of bytes:
         /// Unsupported type 'rs::Box<int>[2]': C-style arrays of non-primitive, non-enum types are not yet supported (b/575922365)
@@ -236,8 +236,8 @@ pub mod test {
     #[::ctor::recursively_pinned(PinnedDrop)]
     #[cfi_encoding = "N4test10NonTrivialE"]
     #[repr(C)]
-    ///CRUBIT_ANNOTATE: cpp_type=test :: NonTrivial
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=test :: NonTrivial")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct NonTrivial {
         __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
         pub val: ::ffi_11::c_int,
@@ -324,7 +324,7 @@ pub mod test {
 
     #[cfi_encoding = "N4test9PinHolderE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=test :: PinHolder
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=test :: PinHolder")]
     pub struct PinHolder {
         /// Reason for representing this field as a blob of bytes:
         /// nontrivial fields would be destroyed in the wrong order
@@ -531,8 +531,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstSt16initializer_listIiE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: initializer_list < int >
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=std :: initializer_list < int >")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstSt16initializer_listIiE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -604,8 +604,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < const struct test :: NonTrivial *>>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < const struct test :: NonTrivial *>>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -657,8 +660,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < const int *>>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < const int *>>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -737,8 +743,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < struct test :: NonTrivial *>>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < struct test :: NonTrivial *>>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -784,8 +793,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < int *>>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < class std :: __wrap_iter < int *>>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -864,8 +876,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < const struct test :: NonTrivial *>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < const struct test :: NonTrivial *>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -937,8 +952,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPKiEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < const int *>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < const int *>")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -1047,8 +1062,11 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < struct test :: NonTrivial *>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < struct test :: NonTrivial *>"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -1099,8 +1117,8 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u11__wrap_iterIPiEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < int *>
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=std :: __wrap_iter < int *>")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct __CcTemplateInstNSt3__u11__wrap_iterIPiEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -1192,7 +1210,10 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: span < const struct test :: NonTrivial , 18446744073709551615UL >
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: span < const struct test :: NonTrivial , 18446744073709551615UL >"
+    )]
     pub struct __CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -1345,7 +1366,10 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: span < const int , 18446744073709551615UL >
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: span < const int , 18446744073709551615UL >"
+    )]
     pub struct __CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -1511,7 +1535,10 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: span < struct test :: NonTrivial , 18446744073709551615UL >
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: span < struct test :: NonTrivial , 18446744073709551615UL >"
+    )]
     pub struct __CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:
@@ -1643,7 +1670,10 @@ pub mod zz_template_instantiations {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE"]
     #[repr(C, align(8))]
-    ///CRUBIT_ANNOTATE: cpp_type=std :: span < int , 18446744073709551615UL >
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: span < int , 18446744073709551615UL >"
+    )]
     pub struct __CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         /// Reason for representing this field as a blob of bytes:

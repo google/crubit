@@ -17,8 +17,8 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "10Debuggable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Debuggable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Debuggable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Debuggable {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -49,8 +49,8 @@ pub type AliasedDebuggable = crate::Debuggable;
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "6OptOut"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=OptOut
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=OptOut")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct OptOut {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -73,8 +73,8 @@ impl Default for OptOut {
 
 #[cfi_encoding = "7NonCopy"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=NonCopy
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NonCopy")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct NonCopy {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
@@ -131,8 +131,8 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for NonCopy {
 
 #[cfi_encoding = "16HasMutableFields"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=HasMutableFields
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=HasMutableFields")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct HasMutableFields {
     pub i: ::core::cell::Cell<::ffi_11::c_int>,
     pub non_copy: ::core::cell::Cell<crate::NonCopy>,
@@ -200,8 +200,8 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for HasMutableFields
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst9TemplatedILb1EE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Templated < true >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Templated < true >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TemplatedOptIn {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -229,8 +229,8 @@ impl Default for TemplatedOptIn {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst9TemplatedILb0EE"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Templated < false >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Templated < false >")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct TemplatedOptOut {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -253,7 +253,7 @@ impl Default for TemplatedOptOut {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "4Enum"]
-///CRUBIT_ANNOTATE: cpp_type=Enum
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Enum")]
 pub struct Enum(::ffi_11::c_int);
 impl Enum {
     pub const kOne: Enum = Enum(::ffi_11::new_c_int(1));
@@ -276,8 +276,8 @@ impl From<Enum> for ::ffi_11::c_int {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Union"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Union
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Union")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub union Union {
     pub i: ::ffi_11::c_int,
     pub d: f64,
@@ -313,8 +313,8 @@ impl Default for Union {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "10Exhaustive"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Exhaustive
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Exhaustive")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct Exhaustive {
     pub primitive: ::ffi_11::c_int,
     pub pointer: *const ::ffi_11::c_void,
@@ -360,8 +360,8 @@ impl Default for Exhaustive {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "12RustKeywords"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=RustKeywords
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=RustKeywords")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct RustKeywords {
     pub r#type: crate::rust_keywords::Type,
     pub r#use: crate::rust_keywords::Use,
@@ -398,7 +398,7 @@ pub mod rust_keywords {
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
     #[cfi_encoding = "N12RustKeywords4TypeE"]
-    ///CRUBIT_ANNOTATE: cpp_type=RustKeywords :: Type
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=RustKeywords :: Type")]
     pub struct Type(::ffi_11::c_int);
     impl Type {
         pub const kCereal: Type = Type(::ffi_11::new_c_int(0));
@@ -418,7 +418,7 @@ pub mod rust_keywords {
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
     #[cfi_encoding = "N12RustKeywords3UseE"]
-    ///CRUBIT_ANNOTATE: cpp_type=RustKeywords :: Use
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=RustKeywords :: Use")]
     pub struct Use(::ffi_11::c_int);
     impl Use {
         pub const kToEat: Use = Use(::ffi_11::new_c_int(0));
@@ -440,8 +440,8 @@ pub mod rust_keywords {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "16HasNonDebuggable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=HasNonDebuggable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=HasNonDebuggable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct HasNonDebuggable {
     pub debuggable: crate::Debuggable,
     pub non_debuggable: crate::OptOut,
@@ -482,8 +482,8 @@ impl Default for HasNonDebuggable {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "17HasAnonymousUnion"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=HasAnonymousUnion
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=HasAnonymousUnion")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct HasAnonymousUnion {
     pub tag: crate::has_anonymous_union::Tag,
     __padding1: [::core::mem::MaybeUninit<u8>; 4],
@@ -526,7 +526,7 @@ pub mod has_anonymous_union {
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
     #[cfi_encoding = "N17HasAnonymousUnion3TagE"]
-    ///CRUBIT_ANNOTATE: cpp_type=HasAnonymousUnion :: Tag
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=HasAnonymousUnion :: Tag")]
     pub struct Tag(::ffi_11::c_int);
     impl Tag {
         pub const kUninit: Tag = Tag(::ffi_11::new_c_int(0));
@@ -549,7 +549,7 @@ pub mod has_anonymous_union {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "8Abstract"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=Abstract
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=Abstract")]
 pub struct Abstract {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
@@ -585,7 +585,7 @@ unsafe impl ::operator::Delete for crate::Abstract {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[cfi_encoding = "13AbstractOptIn"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=AbstractOptIn
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=AbstractOptIn")]
 pub struct AbstractOptIn {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
@@ -630,8 +630,8 @@ pub fn abstract_opt_in_instance() -> *const crate::AbstractOptIn {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "15ArrayDebuggable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ArrayDebuggable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=ArrayDebuggable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct ArrayDebuggable {
     pub large: [::ffi_11::c_char; 64],
     pub matrix: [[::ffi_11::c_int; 3]; 2],
@@ -673,8 +673,8 @@ impl Default for ArrayDebuggable {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "26MixedOpaqueArrayDebuggable"]
 #[repr(C, align(8))]
-///CRUBIT_ANNOTATE: cpp_type=MixedOpaqueArrayDebuggable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=MixedOpaqueArrayDebuggable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct MixedOpaqueArrayDebuggable {
     pub header: ::ffi_11::c_int,
     pub arr: [::ffi_11::c_int; 2],
@@ -723,7 +723,7 @@ impl Default for MixedOpaqueArrayDebuggable {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[cfi_encoding = "17UnscopedDebugEnum"]
-///CRUBIT_ANNOTATE: cpp_type=UnscopedDebugEnum
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=UnscopedDebugEnum")]
 pub struct UnscopedDebugEnum(::ffi_11::c_uint);
 impl UnscopedDebugEnum {
     pub const kFirst: UnscopedDebugEnum = UnscopedDebugEnum(::ffi_11::new_c_uint(10));
@@ -743,8 +743,8 @@ impl From<UnscopedDebugEnum> for ::ffi_11::c_uint {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "19EnumArrayDebuggable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=EnumArrayDebuggable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=EnumArrayDebuggable")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct EnumArrayDebuggable {
     pub unscoped: [crate::UnscopedDebugEnum; 2],
     pub scoped: [crate::Enum; 2],
