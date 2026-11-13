@@ -23,7 +23,6 @@
 namespace crubit::ffi {
 // NOLINTBEGIN(*-readability-class-member-naming,*-readability-constant-naming)
 
-struct CRUBIT_FFI_TRIVIAL_ABI HeaderName;
 struct CRUBIT_FFI_TRIVIAL_ABI LifetimeName;
 struct CRUBIT_FFI_TRIVIAL_ABI SourceLocation;
 namespace decl_location { struct CRUBIT_FFI_TRIVIAL_ABI ByteRange; }
@@ -230,15 +229,6 @@ enum MacroKind : int32_t {
   TYPED_MACRO = 2,
 };
 }  // namespace constant
-
-struct CRUBIT_FFI_TRIVIAL_ABI HeaderName {
-  HeaderName() = default;
-  explicit HeaderName(std::string_view name) { set_name(name); }
-  std::string_view name() const { return name_.AsView(); }
-  void set_name(std::string_view value) { name_ = FfiString(value); }
-  friend bool operator==(const HeaderName&, const HeaderName&) = default;
-  FfiString name_{};
-};
 
 struct CRUBIT_FFI_TRIVIAL_ABI LifetimeName {
   std::string_view name() const { return name_.AsView(); }
@@ -3285,15 +3275,6 @@ struct CRUBIT_FFI_TRIVIAL_ABI GenerateBindingsResponse {
   FfiString fatal_errors_{};
 };
 
-static_assert(std::is_standard_layout_v<HeaderName>);
-static_assert(
-  sizeof(size_t) != 8 ||
-  (sizeof(HeaderName) == 16 &&
-    alignof(HeaderName) == 8));
-static_assert(
-  sizeof(size_t) != 8 ||
-  offsetof(HeaderName, name_) ==
-    0);
 static_assert(std::is_standard_layout_v<LifetimeName>);
 static_assert(
   sizeof(size_t) != 8 ||
