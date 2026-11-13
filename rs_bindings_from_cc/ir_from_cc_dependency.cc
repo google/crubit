@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/ir_from_cc_dependency.h"
 
+#include <new>
 #include <string>
 #include <utility>
 
@@ -13,8 +14,7 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "llvm/ADT/StringSet.h"
-#include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 
@@ -59,13 +59,11 @@ llvm::Expected<IR> IrFromCcDependency(
 }
 
 // This is intended to be called from Rust tests.
-extern "C" ffi::IR ir_from_cc_dependency(FfiU8Slice target_triple,
-                                         FfiU8Slice header_source,
-                                         FfiU8Slice dependency_header_source,
-                                         FfiU8Slice extra_feature,
-                                         bool kythe_annotations, bool carcinize,
-                                         bool lazy_import_alien_decls,
-                                         bool check_importer_invariants) {
+extern "C" bool ir_from_cc_dependency(
+    FfiU8Slice target_triple, FfiU8Slice header_source,
+    FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
+    bool kythe_annotations, bool carcinize, bool lazy_import_alien_decls,
+    bool check_importer_invariants, ffi::IR* out_ir, FfiU8SliceBox* out_error) {
   auto ir = IrFromCcDependency(
       target_triple, header_source, dependency_header_source, extra_feature,
       kythe_annotations,
@@ -73,10 +71,12 @@ extern "C" ffi::IR ir_from_cc_dependency(FfiU8Slice target_triple,
       lazy_import_alien_decls, check_importer_invariants);
 
   if (!ir) {
-    llvm::report_fatal_error(llvm::formatv("IrFromCc reported an error: {0}",
-                                           llvm::toString(ir.takeError())));
+    std::string err = llvm::toString(ir.takeError());
+    new (out_error) FfiU8SliceBox(AllocFfiU8SliceBox(MakeFfiU8Slice(err)));
+    return false;
   }
-  return *std::move(ir);
+  new (out_ir) ffi::IR(*std::move(ir));
+  return true;
 }
 
 extern "C" ffi::IR crubit_test_make_ffi_ir() {
