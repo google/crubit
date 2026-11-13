@@ -309,6 +309,21 @@ alias(
 )
 
 cc_library(
+    name = "never",
+    hdrs = [
+        "never.h",
+        "//support/rs_std:never.h",
+    ],
+    aspect_hints = ["//features:supported"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//support:annotations_internal",
+        "//support/internal:cpp_config",
+    ],
+)
+
+cc_library(
     name = "option",
     hdrs = [
         "option.h",
@@ -318,6 +333,7 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
     deps = [
+        ":never",
         ":unit",
         "//support/internal:bindings_support",
         "//support/internal:cpp_config",
@@ -334,6 +350,7 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
     deps = [
+        ":never",
         ":unit",
         "//support/internal:bindings_support",
         "//support/internal:cpp_config",

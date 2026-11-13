@@ -233,6 +233,16 @@ class Decoder {
   const unsigned char* buf_;
 };
 
+namespace internal {
+template <typename T>
+struct NeverAbi {
+  using Value = T;
+  static constexpr size_t kSize = 0;
+  void Encode(Value, Encoder&) && { __builtin_unreachable(); }
+  Value Decode(Decoder&) && { __builtin_unreachable(); }
+};
+}  // namespace internal
+
 // A Crubit ABI for encoding and decoding a value of type `T` by copying the
 // memory of the value using `memcpy`.
 template <typename T>

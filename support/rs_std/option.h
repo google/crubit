@@ -16,6 +16,7 @@
 #include "support/internal/cpp_config.h"
 #include "support/internal/move_assign.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/never.h"
 #include "support/rs_std/unit.h"
 
 #ifdef CRUBIT_INTERNAL_RS_NAMESPACE
@@ -162,7 +163,7 @@ class OptionBase {
   // Intentionally implicit to support conversion to std::optional<T>.
   // NOLINTNEXTLINE(google-explicit-constructor)
   operator ::std::optional<T>() && noexcept
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     if (!has_value()) {
       return ::std::nullopt;
@@ -190,32 +191,32 @@ class OptionBase {
   }
 
   T& operator*() &
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     check_has_value();
     return *derived().some_ptr();
   }
   const T& operator*() const&
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     check_has_value();
     return *derived().some_const_ptr();
   }
   T&& operator*() &&
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     check_has_value();
     return ::std::move(*derived().some_ptr());
   }
 
   T* operator->()
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     check_has_value();
     return derived().some_ptr();
   }
   const T* operator->() const
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     check_has_value();
     return derived().some_const_ptr();
@@ -227,23 +228,24 @@ class OptionBase {
   // Unlike `std::optional::value()`, which throws `std::bad_optional_access`,
   // `value()` on a `None` option CHECK-fails.
   T& value() &
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     return **this;
   }
   const T& value() const&
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     return **this;
   }
   T&& value() &&
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     return *::std::move(*this);
   }
 
   template <typename U = ::std::remove_cv_t<T>>
-    requires(!::rs::is_unit_t_v<T> && ::std::is_copy_constructible_v<T> &&
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T> &&
+             ::std::is_copy_constructible_v<T> &&
              ::std::is_convertible_v<U &&, T>)
   T value_or(U&& default_value) const& {
     return has_value() ? **this
@@ -253,7 +255,7 @@ class OptionBase {
   // Unlike `std::optional::value_or() &&`, which leaves a moved-from value in
   // the optional, this leaves `*this` as `None`.
   template <typename U = ::std::remove_cv_t<T>>
-    requires(!::rs::is_unit_t_v<T> &&
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T> &&
              (::std::is_move_constructible_v<T> ||
               requires(T x) {
                 T(::crubit::UnsafeRelocateTag{}, ::std::move(x));
@@ -289,7 +291,7 @@ bool operator==(const OptionBase<Derived, T>& lhs,
   if (lhs.has_value() != rhs.has_value()) {
     return false;
   }
-  if constexpr (::rs::is_unit_t_v<T>) {
+  if constexpr (::rs::is_unit_t_v<T> || ::rs::is_never_t_v<T>) {
     return true;
   } else {
     return !lhs.has_value() || static_cast<bool>(*lhs == *rhs);
@@ -302,7 +304,7 @@ bool operator==(const OptionBase<Derived, T>& opt, ::std::nullopt_t) noexcept {
 }
 
 template <typename Derived, typename T, typename U>
-  requires(!::rs::is_unit_t_v<T> &&
+  requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T> &&
            !::std::is_base_of_v<OptionBase<Derived, T>, ::std::decay_t<U>> &&
            !::std::is_same_v<::std::decay_t<U>, ::std::nullopt_t> &&
            requires(const T& a, const U& b) {

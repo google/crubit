@@ -2137,8 +2137,6 @@ fn test_format_item_fn_with_destructuring_parameter_name() {
 #[test]
 fn test_format_item_unsupported_fn_param_type_never() {
     let test_src = r#"
-            #![feature(never_type)]
-
             #[unsafe(no_mangle)]
             pub extern "C" fn fn_with_params(_param: !) {}
         "#;
@@ -2147,7 +2145,7 @@ fn test_format_item_unsupported_fn_param_type_never() {
         assert_eq!(
             err,
             "Error handling parameter #0 of type `!`: \
-             The never type `!` is only supported as a return type (b/254507801)"
+             The never type `!` is not supported as a parameter type (b/254507801)"
         );
     });
 }

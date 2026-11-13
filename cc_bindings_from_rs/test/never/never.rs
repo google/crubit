@@ -30,3 +30,31 @@ impl NeverStruct {
         panic!("You can't do that as a method!");
     }
 }
+
+pub fn option_never() -> Option<!> {
+    None
+}
+
+pub fn result_unit_never() -> Result<(), !> {
+    Ok(())
+}
+
+pub fn result_never_unit() -> Result<!, ()> {
+    Err(())
+}
+
+pub fn result_i32_never() -> Result<i32, !> {
+    Ok(42)
+}
+
+pub fn result_never_i32() -> Result<!, i32> {
+    Err(42)
+}
+
+pub fn result_never_never() -> Result<!, !> {
+    panic!("Neither variant of `Result<!, !>` can be constructed")
+}
+
+pub fn result_string_never() -> Result<String, !> {
+    Ok("hello world".into())
+}

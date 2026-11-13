@@ -21,6 +21,7 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs/char.h"
+#include "support/rs/never.h"
 #include "support/rs/slice_ref.h"
 #include "support/rs/traits.h"
 
@@ -440,11 +441,9 @@ struct ::rs::impl<
   // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::CtorType`:
   // Generic types are not supported yet (b/259749095)
 
-  // Error generating bindings for associated type
-  // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as
-  // ctor::CtorNew<ctor::RvalueReference<'a,
-  // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::Error`:
-  // The never type `!` is only supported as a return type (b/254507801)
+  using Error CRUBIT_INTERNAL_RUST_TYPE(
+      "<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as :: "
+      "ctor :: CtorNew>::Error") = ::rs::never_t;
 
   // Error generating bindings for associated function
   // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as

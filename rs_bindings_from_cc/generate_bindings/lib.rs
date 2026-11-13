@@ -1656,7 +1656,14 @@ fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<C
                 db,
             )?;
 
-            Ok(CrubitAbiType::Transmute { rust_type: rs_type_kind.to_token_stream(db), cpp_type })
+            if existing_rust_type.rs_name() == "!" {
+                Ok(CrubitAbiType::Never { cpp_type })
+            } else {
+                Ok(CrubitAbiType::Transmute {
+                    rust_type: rs_type_kind.to_token_stream(db),
+                    cpp_type,
+                })
+            }
         }
         RsTypeKind::CArray { .. } => {
             bail!("C-style array types cannot be bridged by value (b/575922365)")
@@ -1966,6 +1973,7 @@ fn generate_dyn_callable_invoker_and_manager_decls(
                 PassingConvention::Ctor => None,
                 PassingConvention::OwnedPtr => None,
                 PassingConvention::Void => unreachable!("parameter types cannot be void"),
+                PassingConvention::Never => None,
             }
         })
         .collect::<Option<TokenStream>>()?;
@@ -1992,6 +2000,9 @@ fn generate_dyn_callable_invoker_and_manager_decls(
             decl_return_type_tokens = db.tokens().void.clone();
         }
         PassingConvention::Ctor => {
+            return None;
+        }
+        PassingConvention::Never => {
             return None;
         }
         PassingConvention::OwnedPtr => {
@@ -2076,6 +2087,7 @@ fn generate_dyn_callable_invoker_and_manager_defs(
                 PassingConvention::Ctor => None,
                 PassingConvention::OwnedPtr => None,
                 PassingConvention::Void => unreachable!("parameter types cannot be void"),
+                PassingConvention::Never => None,
             }
         })
         .collect::<Option<TokenStream>>()?;
@@ -2141,6 +2153,9 @@ fn generate_dyn_callable_invoker_and_manager_defs(
             out_param = Some(quote! { , bridge_buffer: *mut ::core::ffi::c_uchar });
         }
         PassingConvention::Ctor => {
+            return None;
+        }
+        PassingConvention::Never => {
             return None;
         }
         PassingConvention::OwnedPtr => {
@@ -2236,6 +2251,7 @@ fn generate_any_invocable_invoker_decl(
                 }
                 PassingConvention::Ctor => None,
                 PassingConvention::Void => unreachable!("parameter types cannot be void"),
+                PassingConvention::Never => None,
             }
         })
         .collect::<Option<TokenStream>>()?;
@@ -2260,6 +2276,9 @@ fn generate_any_invocable_invoker_decl(
             return_type_fragment = None;
         }
         PassingConvention::Ctor => {
+            return None;
+        }
+        PassingConvention::Never => {
             return None;
         }
         PassingConvention::Void => {
@@ -2352,6 +2371,7 @@ fn generate_any_invocable_invoker_def(
                 PassingConvention::Ctor => None,
                 PassingConvention::OwnedPtr => None,
                 PassingConvention::Void => unreachable!("parameter types cannot be void"),
+                PassingConvention::Never => None,
             }
         })
         .collect::<Option<TokenStream>>()?;
@@ -2407,6 +2427,9 @@ fn generate_any_invocable_invoker_def(
             out_param = Some(quote! { , unsigned char* out });
         }
         PassingConvention::Ctor => {
+            return None;
+        }
+        PassingConvention::Never => {
             return None;
         }
         PassingConvention::OwnedPtr => {

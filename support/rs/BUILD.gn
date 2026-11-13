@@ -169,6 +169,25 @@ source_set("lossy_formatter_for_bindings") {
   ]
 }
 
+source_set("never") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "never.h",
+    "../rs_std/never.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support:annotations_internal",
+    "$crubit_src_dir/support/internal:cpp_config",
+  ]
+}
+
 source_set("option") {
   public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
@@ -183,6 +202,7 @@ source_set("option") {
     "../rs_std/option.h",
   ]
   deps = [
+    "$crubit_src_dir/support/rs:never",
     "$crubit_src_dir/support/rs:unit",
     "$crubit_src_dir/support/internal:bindings_support",
     "$crubit_src_dir/support/internal:cpp_config",
@@ -225,6 +245,7 @@ source_set("result") {
     "../rs_std/result.h",
   ]
   deps = [
+    "$crubit_src_dir/support/rs:never",
     "$crubit_src_dir/support/rs:unit",
     "$crubit_src_dir/support/internal:bindings_support",
     "$crubit_src_dir/support/internal:cpp_config",
@@ -423,6 +444,7 @@ group("rs_cpp") {
     ":int",
     ":iterator_adapter",
     ":lossy_formatter_for_bindings",
+    ":never",
     ":option",
     ":pin_box",
     ":result",

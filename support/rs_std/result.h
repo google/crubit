@@ -15,6 +15,7 @@
 #include "support/internal/check.h"
 #include "support/internal/cpp_config.h"
 #include "support/internal/move_assign.h"
+#include "support/rs_std/never.h"
 #include "support/rs_std/unit.h"
 
 #ifdef CRUBIT_INTERNAL_RS_NAMESPACE
@@ -175,105 +176,105 @@ class ResultBase {
   }
 
   constexpr T& value() &
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     CheckHasOk();
     return *derived().ok_ptr();
   }
   constexpr const T& value() const&
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     CheckHasOk();
     return *derived().ok_const_ptr();
   }
   constexpr T&& value() &&
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     CheckHasOk();
     return ::std::move(*derived().ok_ptr());
   }
   constexpr const T&& value() const&&
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     CheckHasOk();
     return ::std::move(*derived().ok_const_ptr());
   }
 
   constexpr E& error() &
-    requires(!::rs::is_unit_t_v<E>)
+    requires(!::rs::is_unit_t_v<E> && !::rs::is_never_t_v<E>)
   {
     CheckHasErr();
     return *derived().err_ptr();
   }
   constexpr const E& error() const&
-    requires(!::rs::is_unit_t_v<E>)
+    requires(!::rs::is_unit_t_v<E> && !::rs::is_never_t_v<E>)
   {
     CheckHasErr();
     return *derived().err_const_ptr();
   }
   constexpr E&& error() &&
-    requires(!::rs::is_unit_t_v<E>)
+    requires(!::rs::is_unit_t_v<E> && !::rs::is_never_t_v<E>)
   {
     CheckHasErr();
     return ::std::move(*derived().err_ptr());
   }
   constexpr const E&& error() const&&
-    requires(!::rs::is_unit_t_v<E>)
+    requires(!::rs::is_unit_t_v<E> && !::rs::is_never_t_v<E>)
   {
     CheckHasErr();
     return ::std::move(*derived().err_const_ptr());
   }
 
   constexpr E& err() &
-    requires(!::rs::is_unit_t_v<E>)
+    requires(!::rs::is_unit_t_v<E> && !::rs::is_never_t_v<E>)
   {
     return error();
   }
   constexpr const E& err() const&
-    requires(!::rs::is_unit_t_v<E>)
+    requires(!::rs::is_unit_t_v<E> && !::rs::is_never_t_v<E>)
   {
     return error();
   }
   constexpr E&& err() &&
-    requires(!::rs::is_unit_t_v<E>)
+    requires(!::rs::is_unit_t_v<E> && !::rs::is_never_t_v<E>)
   {
     return ::std::move(error());
   }
   constexpr const E&& err() const&&
-    requires(!::rs::is_unit_t_v<E>)
+    requires(!::rs::is_unit_t_v<E> && !::rs::is_never_t_v<E>)
   {
     return ::std::move(error());
   }
 
   constexpr T& operator*() &
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     return value();
   }
   constexpr const T& operator*() const&
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     return value();
   }
   constexpr T&& operator*() &&
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     return ::std::move(value());
   }
   constexpr const T&& operator*() const&&
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     return ::std::move(value());
   }
 
   constexpr T* operator->()
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     CheckHasOk();
     return derived().ok_ptr();
   }
   constexpr const T* operator->() const
-    requires(!::rs::is_unit_t_v<T>)
+    requires(!::rs::is_unit_t_v<T> && !::rs::is_never_t_v<T>)
   {
     CheckHasOk();
     return derived().ok_const_ptr();

@@ -486,6 +486,11 @@ impl UniformReprTemplateType {
                     // The rust implementation doesn't specialize bool like C++ does.
                     return Ok(None);
                 }
+                if element_type.is_never() {
+                    // `size_of::<!>() == 0` does not match C++, so `!` cannot use layout-compatible
+                    // wrappers.
+                    return Ok(None);
+                }
                 Ok(Some(Rc::new(UniformReprTemplateType::StdVector { element_type })))
             }
             Some(TemplateSpecializationKind::StdOptional(o)) => {
@@ -494,6 +499,11 @@ impl UniformReprTemplateType {
                 ensure!(element_type.is_destructible(),
                     "`{}` can't be used in a Rust std::optional<T> because it has a deleted or non-public destructor",
                     element_type.display(db));
+                if element_type.is_never() {
+                    // `size_of::<!>() == 0` does not match C++, so `!` cannot use layout-compatible
+                    // wrappers.
+                    return Ok(None);
+                }
                 Ok(Some(Rc::new(UniformReprTemplateType::StdOptional { element_type })))
             }
             Some(TemplateSpecializationKind::StdVariant(v)) => {
@@ -519,6 +529,11 @@ impl UniformReprTemplateType {
                 let is_const = element_type.is_const();
                 if lifetimes.len() > 1 {
                     bail!("Internal error: span was given too many lifetimes.")
+                }
+                if element_type_kind.is_never() {
+                    // `size_of::<!>() == 0` does not match C++, so `!` cannot use layout-compatible
+                    // wrappers.
+                    return Ok(None);
                 }
                 Ok(Some(Rc::new(UniformReprTemplateType::AbslSpan {
                     is_const,
@@ -1164,7 +1179,9 @@ impl BridgeRsTypeKind {
                 let parsed_hint = if let Some(hint_str) = b.label_hint() {
                     if hint_str.starts_with("//") {
                         let label = BazelLabel::from(hint_str);
-                        validate_bridge_path_prefix(b.rust_name(), &label, "Rust path")?;
+                        if b.rust_name() != "!" {
+                            validate_bridge_path_prefix(b.rust_name(), &label, "Rust path")?;
+                        }
                         validate_bridge_path_prefix(b.abi_rust(), &label, "Rust ABI path")?;
                         Some(label)
                     } else {
@@ -1360,6 +1377,7 @@ impl BridgeRsTypeKind {
                     let mut layout_compatible_inner = inner.clone();
                     layout_compatible_inner.force_layout_compatible();
                     layout_compatible_inner.pass_by_value_bridges()
+                        || layout_compatible_inner.is_never()
                 })
             });
             if !keeps_bridging {
@@ -2443,6 +2461,9 @@ impl RsTypeKind {
     /// Returns true if the type can be passed by value through `extern "C"` ABI
     /// thunks.
     pub fn is_c_abi_compatible_by_value(&self) -> bool {
+        if self.is_never() {
+            return false;
+        }
         match self.unalias() {
             RsTypeKind::Error { .. } => true,
             RsTypeKind::Pointer { .. } => true,
@@ -3072,6 +3093,15 @@ impl RsTypeKind {
         }
     }
 
+    pub fn is_never(&self) -> bool {
+        match self.unalias() {
+            RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
+                existing_rust_type.rs_name() == "!"
+            }
+            _ => false,
+        }
+    }
+
     /// Returns the passing convention for this `RsTypeKind`.
     ///
     /// This is used to determine how the type should be passed across the FFI boundary.
@@ -3079,6 +3109,8 @@ impl RsTypeKind {
         if self.is_owned_ptr() {
             // owned_ptr is a subset of is_c_abi_compatible_by_value, so must be checked before.
             PassingConvention::OwnedPtr
+        } else if self.is_never() {
+            PassingConvention::Never
         } else if self.is_void() {
             // void is a subset of is_c_abi_compatible_by_value, so must be checked before.
             PassingConvention::Void
@@ -3510,6 +3542,9 @@ fn interpolate_existing_rust_type<'a>(
 pub enum PassingConvention {
     /// ABI compatible types may be passed by value across the C boundary.
     AbiCompatible,
+
+    /// Never type `!`.
+    Never,
 
     /// Layout compatible types have the same layout, but may have different ABIs.
     /// Notably, a pointer to a Rust instance of this type may be reinterpreted as
@@ -4037,7 +4072,7 @@ fn fully_qualify_type_impl(
     // Primitive types are special-cased.
     if matches!(
         type_expression_suffix.trim(),
-        "char"
+        "!" | "char"
             | "bool"
             | "i8"
             | "u8"
@@ -4617,6 +4652,13 @@ mod tests {
             }),
             quote! {i32},
         );
+
+        assert_rs_matches!(
+            fully_qualify_type_impl("!", || {
+                quote! {crate}
+            }),
+            quote! {!},
+        );
     }
 
     #[gtest]
@@ -4680,6 +4722,9 @@ mod tests {
             resolve_bridge_rust_name("::status::absl::StatusOr", &hint_shorthand, &ir),
             "::absl_status::absl::StatusOr"
         );
+
+        // 7. Primitive type "!"
+        assert_eq!(resolve_bridge_rust_name("!", &hint_ok, &ir), "!");
     }
 
     #[gtest]

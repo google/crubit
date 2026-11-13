@@ -258,6 +258,7 @@ pub fn generate_function_thunk(
                 return_type_fragment = None;
             }
             PassingConvention::AbiCompatible
+            | PassingConvention::Never
             | PassingConvention::Void
             | PassingConvention::OwnedPtr => {}
         }
@@ -298,7 +299,8 @@ pub fn generate_function_thunk(
             }
             PassingConvention::AbiCompatible
             | PassingConvention::Void
-            | PassingConvention::OwnedPtr => param_type.to_token_stream(db),
+            | PassingConvention::OwnedPtr
+            | PassingConvention::Never => param_type.to_token_stream(db),
         }))
         .collect_vec();
 
@@ -723,6 +725,7 @@ pub fn generate_cc_thunk_parts(
                     }
                 }
                 PassingConvention::AbiCompatible
+                | PassingConvention::Never
                 | PassingConvention::Void
                 | PassingConvention::OwnedPtr => {
                     // The `inline_cpp!` body is the original C++ source text, which refers to
@@ -775,6 +778,7 @@ pub fn generate_cc_thunk_parts(
                     }
                 }
                 PassingConvention::AbiCompatible
+                | PassingConvention::Never
                 | PassingConvention::Void
                 | PassingConvention::OwnedPtr => {
                     param_idents.push(ident);
@@ -860,6 +864,7 @@ pub fn generate_cc_thunk_parts(
                             }
                         }
                         PassingConvention::Void => unreachable!("parameter types cannot be void"),
+                        PassingConvention::Never => Ok(quote! { #ident }),
                     }
                 }
             }
@@ -887,6 +892,7 @@ pub fn generate_cc_thunk_parts(
         PassingConvention::AbiCompatible
         | PassingConvention::OwnedPtr
         | PassingConvention::Void => return_type_cpp_spelling.clone(),
+        PassingConvention::Never => db.tokens().void.clone(),
     };
 
     let return_stmt = match kind {
@@ -909,6 +915,9 @@ pub fn generate_cc_thunk_parts(
                 let out_param = &param_idents[0];
                 let return_expr = quote! { ([&]() #body_tokens)() };
                 quote! { new(#out_param) #return_type_cpp_spelling(#return_expr) }
+            }
+            PassingConvention::Never => {
+                quote! { #body_tokens; CRUBIT_UNREACHABLE(); }
             }
             PassingConvention::Void
             | PassingConvention::AbiCompatible
@@ -974,6 +983,7 @@ pub fn generate_cc_thunk_parts(
                     quote! {new(#out_param) auto(#return_expr)}
                 }
                 PassingConvention::Void => return_expr,
+                PassingConvention::Never => quote! { #return_expr; CRUBIT_UNREACHABLE() },
                 PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
                     match func.return_type().variant() {
                         CcTypeVariant::Pointer(pointer)

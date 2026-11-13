@@ -199,13 +199,17 @@ fn generate_invoker_function_pointer(
                 bail!("Ctor not supported");
             }
             PassingConvention::Void => bail!("parameter types cannot be void"),
+            PassingConvention::Never => {
+                arg_exprs.push(quote! { match #param_ident {} });
+            }
         }
     }
 
     let out_param_arg = match callable.return_type.passing_convention() {
         PassingConvention::AbiCompatible
         | PassingConvention::Void
-        | PassingConvention::OwnedPtr => None,
+        | PassingConvention::OwnedPtr
+        | PassingConvention::Never => None,
         PassingConvention::LayoutCompatible => {
             arg_transforms.extend(quote! {
                 ::crubit::Slot<#cpp_return_type> out;
@@ -257,6 +261,12 @@ fn generate_invoker_function_pointer(
         }
         PassingConvention::Void => {
             // No need to return anything.
+        }
+        PassingConvention::Never => {
+            invoke_ffi_and_transform_to_cpp = quote! {
+                #invoke_ffi_and_transform_to_cpp;
+                ::core::panic!("C++ function returning never_t returned");
+            };
         }
     }
 
@@ -333,6 +343,9 @@ fn generate_make_cpp_invoker_tokens(
                 });
             }
             PassingConvention::Void => bail!("parameter types cannot be void"),
+            PassingConvention::Never => {
+                arg_exprs.push(quote! { match #param_ident {} });
+            }
         }
     }
 
@@ -350,6 +363,7 @@ fn generate_make_cpp_invoker_tokens(
             bail!("Ctor not supported");
         }
         PassingConvention::OwnedPtr => {}
+        PassingConvention::Never => {}
     };
 
     let mut invoke_ffi_and_transform_to_rust = quote! {
@@ -392,6 +406,12 @@ fn generate_make_cpp_invoker_tokens(
             // Append semicolon to the statement.
             invoke_ffi_and_transform_to_rust = quote! {
                 #invoke_ffi_and_transform_to_rust;
+            }
+        }
+        PassingConvention::Never => {
+            invoke_ffi_and_transform_to_rust = quote! {
+                #invoke_ffi_and_transform_to_rust;
+                ::core::unreachable!("C++ function returning never_t returned");
             }
         }
     }

@@ -234,6 +234,22 @@ pub struct Decoder {
     buf: *const u8,
 }
 
+#[doc(hidden)]
+pub struct NeverAbi;
+
+// SAFETY: A `!` value never exists, so it cannot be encoded or decoded.
+// `SIZE` is 0 so C++ allocations can be skipped for containers of `!`.
+unsafe impl CrubitAbi for NeverAbi {
+    type Value = !;
+    const SIZE: usize = 0;
+    unsafe fn encode(self, value: !, _encoder: &mut Encoder) {
+        match value {}
+    }
+    unsafe fn decode(self, _decoder: &mut Decoder) -> ! {
+        ::core::unreachable!()
+    }
+}
+
 /// A [`CrubitAbi`] for encoding a value by transmuting it into the buffer.
 pub struct TransmuteAbi<T>(pub PhantomData<T>);
 

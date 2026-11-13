@@ -126,6 +126,21 @@ target_include_directories(crubit_support_rs_lossy_formatter_for_bindings INTERF
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
+add_library(crubit_support_rs_never INTERFACE
+"never.h"
+"../rs_std/never.h"
+)
+set_target_properties(crubit_support_rs_never PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_rs_never INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
+target_link_libraries(crubit_support_rs_never INTERFACE
+crubit_support_annotations_internal
+crubit_support_internal_cpp_config
+)
+
 add_library(crubit_support_rs_option INTERFACE
 "option.h"
 "../rs_std/option.h"
@@ -137,6 +152,7 @@ target_include_directories(crubit_support_rs_option INTERFACE
 )
 
 target_link_libraries(crubit_support_rs_option INTERFACE
+crubit_support_rs_never
 crubit_support_rs_unit
 crubit_support_internal_bindings_support
 crubit_support_internal_cpp_config
@@ -170,6 +186,7 @@ target_include_directories(crubit_support_rs_result INTERFACE
 )
 
 target_link_libraries(crubit_support_rs_result INTERFACE
+crubit_support_rs_never
 crubit_support_rs_unit
 crubit_support_internal_bindings_support
 crubit_support_internal_cpp_config

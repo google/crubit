@@ -1011,10 +1011,13 @@ fn format_ty_for_cc_impl<'tcx>(
             TypeLocation::FnReturn | TypeLocation::ClosureReturn => {
                 keyword(db.tokens().void.clone())
             }
-            _ => {
-                // TODO(b/254507801): Maybe translate into `crubit::Never`?
-                bail!("The never type `!` is only supported as a return type (b/254507801)");
+            TypeLocation::FnParam { .. } => {
+                bail!("The never type `!` is not supported as a parameter type (b/254507801)");
             }
+            _ => FormattedCcType::non_pointer(CcSnippet::with_include(
+                db.tokens().rs_never_t.clone(),
+                db.support_header("rs/never.h"),
+            )),
         },
         ty::TyKind::Tuple(types) => {
             if types.is_empty()
