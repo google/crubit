@@ -297,19 +297,42 @@ impl raw_string_view {
         self.into()
     }
 
-    /// Converts a raw string view to a pointer to a `str`, failing if the bytes referenced by the
-    /// raw string view are not valid UTF-8.
-    ///
-    /// The returned pointer refers directly to the bytes referred to the raw string view, and is
-    /// valid under the same conditions as the slice returned by `as_raw_bytes`.
+    /// Converts a raw string view to a `&str`, failing if the bytes referenced by the raw string
+    /// view are not valid UTF-8.
     ///
     /// # Safety
     ///
-    /// Behavior is undefined if accessing the result of `as_raw_bytes` would be undefined.
-    pub unsafe fn to_str(&self) -> Result<*const str, core::str::Utf8Error> {
+    /// The caller must ensure that for the duration of the call to `to_str`—and, if `Ok` is
+    /// returned, for the entire lifetime `'a` of the returned `&'a str`—it is valid to form a
+    /// shared byte slice `&[u8]` from `self.as_raw_bytes()` and read its contents. Specifically:
+    ///
+    /// - If `self.len() > 0`, the `raw_string_view`'s data pointer must be non-null, all
+    ///   `self.len()` bytes must lie within a single live allocated object, and `self.len() <=
+    ///   isize::MAX as usize`.
+    /// - All `self.len()` bytes must be initialized `u8` values.
+    /// - No byte in the viewed range may be mutated through any access path (including C++ code,
+    ///   concurrent threads, or raw pointers), and no exclusive reference (`&mut`) may overlap any
+    ///   part of the viewed range.
+    pub unsafe fn to_str<'a>(self) -> Result<&'a str, core::str::Utf8Error> {
+        // SAFETY:
+        // - `self.as_raw_bytes()` produces `*const [u8]` of length `self.len()`, replacing a null
+        //   data pointer with `ptr::NonNull::dangling()`.
+        // - `u8` has alignment 1, so any non-null pointer is aligned.
+        // - By the caller's `# Safety` preconditions, if `self.len() > 0` the data pointer is
+        //   non-null, all `self.len()` bytes lie within a single live allocation with `self.len()
+        //   <= isize::MAX as usize`, all bytes are initialized, and for the duration of this call
+        //   no mutation or overlapping `&mut` reference occurs.
+        // - Thus dereferencing `*const [u8]` to `&[u8]` satisfies `core::slice::from_raw_parts` and
+        //   Rust reference validity/aliasing rules.
         let bytes: &[u8] = unsafe { &*self.as_raw_bytes() };
-        let res: *const str = core::str::from_utf8(bytes)?;
-        Ok(res)
+        let s: &str = core::str::from_utf8(bytes)?;
+        // SAFETY:
+        // - `core::str::from_utf8` guarantees `s` points to the same initialized, valid UTF-8 byte
+        //   slice as `bytes`.
+        // - By the caller's `# Safety` preconditions, since `Ok` is returned, the underlying
+        //   allocation remains live and immutable with no overlapping `&mut` references for the
+        //   entire lifetime `'a`.
+        Ok(unsafe { &*(s as *const str) })
     }
 
     /// Returns the length of the underlying string.
