@@ -14,6 +14,7 @@
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
+#include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_generated.h"
@@ -306,6 +307,14 @@ std::unique_ptr<crubit::ffi::Item> ExistingRustTypeImporter::Import(
   }
 
   clang::ASTContext& context = type_decl->getASTContext();
+  llvm::Expected<std::vector<llvm::StringRef>> lifetime_inputs =
+      CollectLifetimeInputs(context, type_decl);
+  if (!lifetime_inputs) {
+    return ictx_.HardError(*type_decl,
+                           FormattedError::PrefixedStrCat(
+                               "Invalid lifetime_params attribute",
+                               llvm::toString(lifetime_inputs.takeError())));
+  }
   clang::QualType cc_qualtype = context.getTypeDeclType(type_decl);
   const clang::Type* cpp_type = cc_qualtype.getTypePtr();
   if (cpp_type == nullptr) return nullptr;
@@ -325,6 +334,9 @@ std::unique_ptr<crubit::ffi::Item> ExistingRustTypeImporter::Import(
   existing->set_unique_name(ictx_.GetUniqueName(*type_decl));
   for (auto& arg : format_args) {
     *existing->add_template_args() = std::move(arg);
+  }
+  for (llvm::StringRef lifetime : *lifetime_inputs) {
+    existing->add_lifetime_inputs(std::string(lifetime));
   }
   existing->set_owning_target(ictx_.GetOwningTarget(*type_decl).value());
   if (!cpp_type->isIncompleteType()) {

@@ -262,8 +262,8 @@ pub fn decl_lifetime_arity(db: &BindingsGenerator, item_id: ir::ItemId) -> Resul
             bail!("Incomplete records unhandled for lifetimes: {:?}", item.cc_name_as_str())
         }
         Item::Enum(_ec) => bail!("Enums unhandled for lifetimes: {:?}", item.cc_name_as_str()),
-        Item::ExistingRustType(_ec) => {
-            bail!("Existing Rust types unhandled for lifetimes: {:?}", item.cc_name_as_str())
+        Item::ExistingRustType(existing_rust_type) => {
+            Ok(existing_rust_type.lifetime_inputs().len())
         }
         Item::Func(_) => {
             bail!("Unexpected function found in type position: {:?}", item.cc_name_as_str())
@@ -439,10 +439,37 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         }
     }
 
-    fn decl_binds_lifetimes(&mut self, id: &ItemId) -> Result<bool> {
-        // TODO(zarko): We currently only expect 0 or 1 lifetimes per type. This function will
-        // probably go away entirely and be replaced with decl_lifetime_arity or lifetime_arity.
-        Ok(self.db.decl_lifetime_arity(*id) == Ok(1))
+    fn decl_lifetime_arity_nonzero(&self, id: &ItemId) -> Option<usize> {
+        self.db.decl_lifetime_arity(*id).ok().filter(|&arity| arity > 0)
+    }
+
+    fn bind_explicit_lifetimes(
+        &mut self,
+        lifetimes: &[FfiString],
+        new_bindings: &mut Vec<Rc<str>>,
+    ) -> (Vec<Rc<str>>, LifetimeState) {
+        if lifetimes.is_empty() {
+            return (vec![], LifetimeState::Unseen);
+        }
+        let renamed: Vec<Rc<str>> = lifetimes
+            .iter()
+            .map(|id| {
+                let id_rc = Rc::from(id.as_str());
+                self.bindings
+                    .get_or_push_new_binding(&id_rc, |name| new_bindings.push(name.clone()))
+            })
+            .collect();
+        if renamed.iter().any(|l| l.as_ref() == "unknown") {
+            return (vec![], LifetimeState::Unknown);
+        }
+        let state = if let Some(first) = renamed.first()
+            && renamed.iter().all(|l| l == first)
+        {
+            LifetimeState::Single(first.clone())
+        } else {
+            LifetimeState::Unknown
+        };
+        (renamed, state)
     }
 
     /// Adds lifetimes to a type in input position. Returns the new type paired with a LifetimeState
@@ -458,7 +485,8 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         this_lifetimebound_names: Option<&[Rc<str>]>,
     ) -> Result<LifetimeResult> {
         match ty.variant() {
-            CcTypeVariant::Decl(id) if self.decl_binds_lifetimes(id)? => {
+            CcTypeVariant::Decl(id) if self.decl_lifetime_arity_nonzero(id).is_some() => {
+                let arity = self.decl_lifetime_arity_nonzero(id).unwrap();
                 let mut new_ty = ty.clone();
                 if let Some(type_arg) = self.type_arg_for_use(*id, ty.decl_template_args()) {
                     let LifetimeResult { ty: type_arg, .. } = self.add_lifetime_to_input_type(
@@ -470,27 +498,37 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     )?;
                     *new_ty.template_args_mut() = [type_arg].into();
                 };
-                let mut state =
-                    self.get_state_for_annotated_lifetime(ty.explicit_lifetimes(), new_bindings);
-                let explicit_lifetimes = if state == LifetimeState::Unseen {
+                let (explicit_lifetimes, state) = if !ty.explicit_lifetimes().is_empty() {
+                    if ty.explicit_lifetimes().len() == arity {
+                        self.bind_explicit_lifetimes(ty.explicit_lifetimes(), new_bindings)
+                    } else {
+                        (vec![], LifetimeState::Unknown)
+                    }
+                } else {
                     match this_lifetimebound_names {
-                        Some(this_bound) if !this_bound.is_empty() => {
-                            state = if this_bound.len() == 1 {
+                        Some(this_bound) if !this_bound.is_empty() && this_bound.len() == arity => {
+                            let state = if this_bound.len() == 1 {
                                 LifetimeState::Single(this_bound[0].clone())
                             } else {
                                 LifetimeState::Unknown
                             };
-                            this_bound.to_vec()
+                            (this_bound.to_vec(), state)
                         }
                         _ => {
-                            let lifetime = self.bindings.push_fresh_binding(name_hint);
-                            new_bindings.push(lifetime.clone());
-                            state = LifetimeState::Single(lifetime.clone());
-                            self.get_lifetime_for_state(&state)
+                            let mut fresh = Vec::with_capacity(arity);
+                            for _ in 0..arity {
+                                let lifetime = self.bindings.push_fresh_binding(name_hint);
+                                new_bindings.push(lifetime.clone());
+                                fresh.push(lifetime);
+                            }
+                            let state = if fresh.len() == 1 {
+                                LifetimeState::Single(fresh[0].clone())
+                            } else {
+                                LifetimeState::Unknown
+                            };
+                            (fresh, state)
                         }
                     }
-                } else {
-                    self.get_lifetime_for_state(&state)
                 };
                 *new_ty.explicit_lifetimes_mut() = explicit_lifetimes.into_iter().collect();
 
@@ -589,28 +627,27 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         match ty.variant() {
             CcTypeVariant::Decl(id) => {
                 let mut new_ty = ty.clone();
-                if self.decl_binds_lifetimes(id)? {
+                if let Some(arity) = self.decl_lifetime_arity_nonzero(id) {
                     // If there's a previously-annotated lifetime, use that.
                     if !ty.explicit_lifetimes().is_empty() {
-                        *new_ty.explicit_lifetimes_mut() = ty
-                            .explicit_lifetimes()
-                            .iter()
-                            .map(|l| {
-                                let l_rc = Rc::from(l.as_str());
-                                self.bindings.get_or_push_new_binding(&l_rc, |name| {
-                                    new_bindings.push(name.clone())
-                                })
-                            })
-                            .collect();
-                        if new_ty.explicit_lifetimes().iter().any(|l| l.as_str() == "unknown") {
+                        if ty.explicit_lifetimes().len() == arity {
+                            let (explicit_lifetimes, _) =
+                                self.bind_explicit_lifetimes(ty.explicit_lifetimes(), new_bindings);
+                            *new_ty.explicit_lifetimes_mut() =
+                                explicit_lifetimes.into_iter().collect();
+                        } else {
                             new_ty.explicit_lifetimes_mut().clear();
                         }
-                    } else if !lifetime_hint.is_empty() {
+                    } else if lifetime_hint.len() == arity {
                         *new_ty.explicit_lifetimes_mut() = lifetime_hint.iter().cloned().collect();
                     } else if generate_fresh_if_empty {
-                        let lifetime = self.bindings.push_fresh_binding(None);
-                        new_bindings.push(lifetime.clone());
-                        *new_ty.explicit_lifetimes_mut() = [FfiString::from(lifetime)].into();
+                        let mut fresh = Vec::with_capacity(arity);
+                        for _ in 0..arity {
+                            let lifetime = self.bindings.push_fresh_binding(None);
+                            new_bindings.push(lifetime.clone());
+                            fresh.push(FfiString::from(lifetime));
+                        }
+                        *new_ty.explicit_lifetimes_mut() = fresh.into();
                     }
                 }
                 if let Some(elt) = self.type_arg_for_use(*id, ty.decl_template_args()) {
@@ -825,6 +862,12 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                             .push(self.bindings.push_new_binding(&Rc::from(name.as_str())));
                     });
                 }
+            }
+            Item::ExistingRustType(existing_rust_type) => {
+                existing_rust_type.lifetime_inputs().iter().for_each(|name| {
+                    this_lifetimebound_names
+                        .push(self.bindings.push_new_binding(&Rc::from(name.as_str())));
+                });
             }
             _ => (),
         };

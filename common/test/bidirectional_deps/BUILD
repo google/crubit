@@ -46,6 +46,7 @@ crubit_test_cc_library(
     aspect_hints = ["//features:supported"],
     deps = [
         ":leaf_rs_lib_cc_api",
+        "//support:lifetime_annotations",
     ],
 )
 

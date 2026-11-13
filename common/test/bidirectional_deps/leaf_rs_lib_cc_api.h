@@ -17,6 +17,7 @@
 #pragma clang diagnostic ignored "-Wshadow"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
 #include "support/rs_std/enum.h"
 
 #include <array>
@@ -137,6 +138,33 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
       storage_;
 };
 
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: leaf_rs_lib_golden :: LeafRsLifetime < { 'a } >")
+    $lifetime_params("a") alignas(1)
+        [[clang::trivial_abi]] LeafRsLifetime final {
+ public:
+  // `leaf_rs_lib_golden::LeafRsLifetime` doesn't implement the `Default` trait
+  LeafRsLifetime() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~LeafRsLifetime() = default;
+  LeafRsLifetime(LeafRsLifetime&&) = default;
+  LeafRsLifetime& operator=(LeafRsLifetime&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  LeafRsLifetime(const LeafRsLifetime&) = default;
+  LeafRsLifetime& operator=(const LeafRsLifetime&) = default;
+  LeafRsLifetime(::crubit::UnsafeRelocateTag, LeafRsLifetime && value);
+
+ private:
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 1> field;
+  // Field `_marker` omitted: C++ does not support zero-sized types.
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
     1) [[clang::trivial_abi]] LeafRsType final {
  public:
@@ -162,13 +190,24 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
   static void __crubit_field_offset_assertions();
 };
 
+using StaticLeafRsLifetime CRUBIT_INTERNAL_RUST_TYPE(
+    ":: leaf_rs_lib_golden :: StaticLeafRsLifetime") =
+    ::leaf_rs_lib::LeafRsLifetime;
+
+::leaf_rs_lib::LeafRsLifetime static_lifetime();
+
 ::std::uint8_t unwrap(::leaf_rs_lib::LeafRsType x);
 
 ::std::uint8_t unwrap_enum(::leaf_rs_lib::LeafRsEnum x);
 
+::std::uint8_t unwrap_lifetime(::leaf_rs_lib::LeafRsLifetime x);
+
 ::leaf_rs_lib::LeafRsType wrap(::std::uint8_t x);
 
 ::leaf_rs_lib::LeafRsEnum wrap_enum(::std::uint8_t x);
+
+::leaf_rs_lib::LeafRsLifetime wrap_lifetime(
+    ::std::uint8_t const* $a crubit_nonnull x);
 
 static_assert(
     sizeof(::leaf_rs_lib::LeafRsEnum) == 1,
@@ -188,6 +227,33 @@ inline ::leaf_rs_lib::LeafRsEnum::LeafRsEnum(::crubit::UnsafeRelocateTag,
   ::std::memcpy(this, &value, sizeof(value));
 }
 
+using LeafRsLifetimeAlias CRUBIT_INTERNAL_RUST_TYPE(
+    ":: leaf_rs_lib_golden :: LeafRsLifetime < { 'a } >")
+    $lifetime_params("a") = ::leaf_rs_lib::LeafRsLifetime;
+static_assert(
+    sizeof(::leaf_rs_lib::LeafRsLifetime) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::leaf_rs_lib::LeafRsLifetime) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    ::std::is_trivially_destructible_v<::leaf_rs_lib::LeafRsLifetime>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsLifetime>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsLifetime>);
+static_assert(
+    ::std::is_trivially_copy_constructible_v<::leaf_rs_lib::LeafRsLifetime>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<::leaf_rs_lib::LeafRsLifetime>);
+inline ::leaf_rs_lib::LeafRsLifetime::LeafRsLifetime(
+    ::crubit::UnsafeRelocateTag, LeafRsLifetime&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline void ::leaf_rs_lib::LeafRsLifetime::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::leaf_rs_lib::LeafRsLifetime;
+  static_assert(0 == offsetof(__crubit_assert_type, field));
+}
 using LeafRsTypeAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: leaf_rs_lib_golden :: LeafRsType") = ::leaf_rs_lib::LeafRsType;
 static_assert(
@@ -222,6 +288,17 @@ inline void ::leaf_rs_lib::LeafRsType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(__crubit_assert_type, field));
 }
 namespace __crubit_internal {
+extern "C" void __crubit_thunk_static_ulifetime(
+    ::leaf_rs_lib::LeafRsLifetime* __ret_ptr);
+}
+inline ::leaf_rs_lib::LeafRsLifetime static_lifetime() {
+  crubit::Slot<::leaf_rs_lib::LeafRsLifetime> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_static_ulifetime(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
 extern "C" ::std::uint8_t __crubit_thunk_unwrap(::leaf_rs_lib::LeafRsType*);
 }
 inline ::std::uint8_t unwrap(::leaf_rs_lib::LeafRsType x) {
@@ -234,6 +311,14 @@ extern "C" ::std::uint8_t __crubit_thunk_unwrap_uenum(
 }
 inline ::std::uint8_t unwrap_enum(::leaf_rs_lib::LeafRsEnum x) {
   return __crubit_internal::__crubit_thunk_unwrap_uenum(&x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uint8_t __crubit_thunk_unwrap_ulifetime(
+    ::leaf_rs_lib::LeafRsLifetime*);
+}
+inline ::std::uint8_t unwrap_lifetime(::leaf_rs_lib::LeafRsLifetime x) {
+  return __crubit_internal::__crubit_thunk_unwrap_ulifetime(&x);
 }
 
 namespace __crubit_internal {
@@ -255,6 +340,19 @@ inline ::leaf_rs_lib::LeafRsEnum wrap_enum(::std::uint8_t x) {
   crubit::Slot<::leaf_rs_lib::LeafRsEnum> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_wrap_uenum(x, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_wrap_ulifetime(
+    ::std::uint8_t const* $a crubit_nonnull,
+    ::leaf_rs_lib::LeafRsLifetime* __ret_ptr);
+}
+inline ::leaf_rs_lib::LeafRsLifetime wrap_lifetime(
+    ::std::uint8_t const* $a crubit_nonnull x) {
+  crubit::Slot<::leaf_rs_lib::LeafRsLifetime> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_wrap_ulifetime(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 

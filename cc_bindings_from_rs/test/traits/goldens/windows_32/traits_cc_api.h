@@ -105,8 +105,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
-    4) [[clang::trivial_abi]] LifetimeStruct final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: traits_golden :: LifetimeStruct < { 'a } >")
+    $lifetime_params("a") alignas(4)
+        [[clang::trivial_abi]] LifetimeStruct final {
  public:
   // `traits_golden::LifetimeStruct` doesn't implement the `Default` trait
   LifetimeStruct() = delete;
@@ -119,7 +121,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
   // `traits_golden::LifetimeStruct` doesn't implement the `Clone` trait
   LifetimeStruct(const LifetimeStruct&) = delete;
   LifetimeStruct& operator=(const LifetimeStruct&) = delete;
-  LifetimeStruct(::crubit::UnsafeRelocateTag, LifetimeStruct&& value);
+  LifetimeStruct(::crubit::UnsafeRelocateTag, LifetimeStruct && value);
 
  private:
   // Field type has been replaced with a blob of bytes: Field is private

@@ -1775,7 +1775,28 @@ bool Importer::IsAlwaysInstantiate(
   return false;
 }
 
+// Returns the type that `type` spells, looking only through attributes (such
+// as a lifetime) and parentheses. Unlike `getAs<T>()`, this does not look
+// through typedefs: their underlying type is converted, and so handled,
+// separately.
+static const clang::Type& StripAttributes(const clang::Type& type);
+
 std::optional<size_t> Importer::CountLifetimes(clang::QualType type) const {
+  // Check type aliases annotated with `crubit_internal_rust_type` before
+  // canonicalizing, since the alias may declare different lifetime parameters
+  // than its underlying C++ type (e.g. a Rust type alias fixing `'static` or
+  // forwarding `$lifetime_params(...)`).
+  if (const auto* typedef_type =
+          clang::dyn_cast<clang::TypedefType>(&StripAttributes(*type))) {
+    const clang::TypedefNameDecl* decl = typedef_type->getDecl();
+    for (const auto* attr : decl->specific_attrs<clang::AnnotateAttr>()) {
+      if (attr->getAnnotation() == "crubit_internal_rust_type") {
+        auto lifetime_inputs = CollectLifetimeInputs(ctx_, decl);
+        if (!lifetime_inputs) return std::nullopt;
+        return lifetime_inputs->size();
+      }
+    }
+  }
   type = type.getCanonicalType();
   if (type->isPointerType() || type->isReferenceType()) {
     clang::QualType pointee_type = type->getPointeeType();
@@ -1788,7 +1809,15 @@ std::optional<size_t> Importer::CountLifetimes(clang::QualType type) const {
   const clang::CXXRecordDecl* record_decl = type->getAsCXXRecordDecl();
   if (record_decl == nullptr) return 0;
   record_decl = record_decl->getDefinitionOrSelf();
-  if (!AreAssumedLifetimesEnabledForTarget(GetOwningTarget(*record_decl))) {
+  bool is_existing_rust_type = false;
+  for (const auto* attr : record_decl->specific_attrs<clang::AnnotateAttr>()) {
+    if (attr->getAnnotation() == "crubit_internal_rust_type") {
+      is_existing_rust_type = true;
+      break;
+    }
+  }
+  if (!is_existing_rust_type &&
+      !AreAssumedLifetimesEnabledForTarget(GetOwningTarget(*record_decl))) {
     return 0;
   }
   if (const auto* specialization_decl =
@@ -3957,7 +3986,7 @@ llvm::Expected<CcType> Importer::ConvertUnattributedType(
     }
     return ConvertTypeDecl(tag_decl);
   } else if (const auto* typedef_type =
-                 type.getAsAdjusted<clang::TypedefType>()) {
+                 clang::dyn_cast<clang::TypedefType>(&StripAttributes(type))) {
     if (!IsInSystemHeader(typedef_type->getDecl()->getLocation()) &&
         EnsureSuccessfullyImported(typedef_type->getDecl())) {
       return ConvertTypeDecl(typedef_type->getDecl());

@@ -5143,6 +5143,7 @@ mod __defs {
         pub cc_name: FfiString,
         pub unique_name: FfiString,
         pub template_args: FfiVec<TemplateArg>,
+        pub lifetime_inputs: FfiVec<FfiString>,
         pub owning_target: BazelLabel,
         pub size_align: SizeAlign,
         pub is_same_abi: bool,
@@ -5162,6 +5163,7 @@ mod __defs {
                     && self.cc_name == other.cc_name
                     && self.unique_name == other.unique_name
                     && self.template_args == other.template_args
+                    && self.lifetime_inputs == other.lifetime_inputs
                     && self.owning_target == other.owning_target
                     && self.size_align == other.size_align
                     && self.is_same_abi == other.is_same_abi
@@ -5184,6 +5186,7 @@ mod __defs {
                 .field("cc_name", &self.cc_name)
                 .field("unique_name", &self.unique_name)
                 .field("template_args", &self.template_args)
+                .field("lifetime_inputs", &self.lifetime_inputs)
                 .field("owning_target", &self.owning_target)
                 .field("size_align", &self.size_align())
                 .field("is_same_abi", &self.is_same_abi)
@@ -5212,6 +5215,7 @@ mod __defs {
             cc_name: FfiString::EMPTY,
             unique_name: FfiString::EMPTY,
             template_args: FfiVec::EMPTY,
+            lifetime_inputs: FfiVec::EMPTY,
             owning_target: BazelLabel::EMPTY,
             size_align: SizeAlign::EMPTY,
             is_same_abi: false,
@@ -5232,6 +5236,9 @@ mod __defs {
         }
         pub fn template_args(&self) -> &[TemplateArg] {
             self.template_args.as_slice()
+        }
+        pub fn lifetime_inputs(&self) -> &[FfiString] {
+            self.lifetime_inputs.as_slice()
         }
         pub fn owning_target(&self) -> &BazelLabel {
             &self.owning_target
@@ -5286,6 +5293,9 @@ mod __defs {
         pub fn set_template_args(&mut self, val: FfiVec<TemplateArg>) {
             self.template_args = val;
         }
+        pub fn set_lifetime_inputs(&mut self, val: FfiVec<FfiString>) {
+            self.lifetime_inputs = val;
+        }
         pub fn set_owning_target(&mut self, val: BazelLabel) -> &mut BazelLabel {
             self.owning_target = val;
             &mut self.owning_target
@@ -5323,20 +5333,21 @@ mod __defs {
     }
     #[cfg(target_pointer_width = "64")]
     const _: () = {
-        assert!(core::mem::size_of::<ExistingRustType>() == 160);
+        assert!(core::mem::size_of::<ExistingRustType>() == 184);
         assert!(core::mem::align_of::<ExistingRustType>() == 8);
         assert!(core::mem::offset_of!(ExistingRustType, rs_name) == 8);
         assert!(core::mem::offset_of!(ExistingRustType, cc_name) == 24);
         assert!(core::mem::offset_of!(ExistingRustType, unique_name) == 40);
         assert!(core::mem::offset_of!(ExistingRustType, template_args) == 56);
-        assert!(core::mem::offset_of!(ExistingRustType, owning_target) == 80);
-        assert!(core::mem::offset_of!(ExistingRustType, size_align) == 96);
-        assert!(core::mem::offset_of!(ExistingRustType, is_same_abi) == 112);
-        assert!(core::mem::offset_of!(ExistingRustType, id) == 120);
-        assert!(core::mem::offset_of!(ExistingRustType, must_bind) == 128);
-        assert!(core::mem::offset_of!(ExistingRustType, impl_debug) == 129);
-        assert!(core::mem::offset_of!(ExistingRustType, label_hint) == 136);
-        assert!(core::mem::offset_of!(ExistingRustType, is_trivially_copyable) == 152);
+        assert!(core::mem::offset_of!(ExistingRustType, lifetime_inputs) == 80);
+        assert!(core::mem::offset_of!(ExistingRustType, owning_target) == 104);
+        assert!(core::mem::offset_of!(ExistingRustType, size_align) == 120);
+        assert!(core::mem::offset_of!(ExistingRustType, is_same_abi) == 136);
+        assert!(core::mem::offset_of!(ExistingRustType, id) == 144);
+        assert!(core::mem::offset_of!(ExistingRustType, must_bind) == 152);
+        assert!(core::mem::offset_of!(ExistingRustType, impl_debug) == 153);
+        assert!(core::mem::offset_of!(ExistingRustType, label_hint) == 160);
+        assert!(core::mem::offset_of!(ExistingRustType, is_trivially_copyable) == 176);
     };
 
     #[repr(C, u32)]

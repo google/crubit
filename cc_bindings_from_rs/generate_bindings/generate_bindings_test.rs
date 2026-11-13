@@ -3543,7 +3543,8 @@ fn test_iterator_item_references() {
             bindings.cc_api,
             quote! {
                 ...
-                using MyRefAlias CRUBIT_INTERNAL_RUST_TYPE(...) = ::std::int32_t const* $a crubit_nonnull;
+                using MyRefAlias CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: MyRefAlias < { 'a } >")
+                    $lifetime_params("a") = ::std::int32_t const* $a crubit_nonnull;
                 ...
             }
         );

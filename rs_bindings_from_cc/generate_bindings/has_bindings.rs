@@ -216,7 +216,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindings
             // decl_lifetime_arity is safe to call on non-AssumeLifetimes Items (inasmuch as it
             // won't panic), but doing so may change the behavior of programs that don't have the
             // feature turned on.
-            if matches!(item, Item::Record(_)) {
+            if matches!(item, Item::Record(_) | Item::ExistingRustType(_)) {
                 // Only check those item kinds that decl_lifetime_arity explicitly supports.
                 if let Some(ot) = &item.owning_target()
                     && db.ir().target_crubit_features(ot).contains(CrubitFeature::AssumeLifetimes)

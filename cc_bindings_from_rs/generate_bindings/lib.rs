@@ -20,7 +20,8 @@ extern crate rustc_type_ir;
 
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{
-    format_cc_includes, make_rs_ident, CcInclude, CommonTokens, NamespaceQualifier,
+    format_cc_includes, make_rs_ident, make_rs_lifetime_ident, CcInclude, CommonTokens,
+    NamespaceQualifier,
 };
 use database::code_snippet::{
     AdtTemplateSpecialization, ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, ExternCDecl,
@@ -50,7 +51,7 @@ use generate_struct_and_union::{
     does_impl_apply, does_trait_impl_apply_by_first_arg, from_trait_impls_by_argument,
     generate_adt, generate_adt_core, generate_const, generate_generic_adt_declaration,
     generate_generic_adt_fwd_decl, get_generic_adt_header, into_trait_impls_by_destination,
-    is_cpp_constexpr_move_constructible, GenericAdtHeader,
+    is_cpp_constexpr_move_constructible, lifetime_params_for_def, GenericAdtHeader,
 };
 use generate_template_specialization::append_trait_impls;
 use generate_unsupported::generate_unsupported_def;
@@ -1330,7 +1331,17 @@ fn create_type_alias<'tcx>(
     alias_type: Ty<'tcx>,
 ) -> Result<CcSnippet<'tcx>> {
     let fully_qualified_name = db.symbol_canonical_name(def_id)?;
-    let rs_type = format!("{}", fully_qualified_name.format_for_rs());
+    let rs_path = fully_qualified_name.format_for_rs();
+    let lifetime_params = lifetime_params_for_def(db.tcx(), def_id);
+    let rs_type = if lifetime_params.is_empty() {
+        format!("{rs_path}")
+    } else {
+        let lt_placeholders = lifetime_params.iter().map(|name| {
+            let lt = make_rs_lifetime_ident(name);
+            quote! { { #lt } }
+        });
+        quote! { #rs_path < #(#lt_placeholders),* > }.to_string()
+    };
     create_type_alias_with_rs_type(
         db,
         def_id,
@@ -1338,6 +1349,7 @@ fn create_type_alias<'tcx>(
         alias_name,
         alias_type,
         TypeLocation::Other,
+        &lifetime_params,
     )
 }
 

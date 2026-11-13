@@ -968,9 +968,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: generics_golden :: LifetimeAndTypeGeneric < 'static , i32 >") alignas(4)
-    [[clang::trivial_abi]] ::generics::LifetimeAndTypeGeneric<
-        ::std::int32_t> final {
+    ":: generics_golden :: LifetimeAndTypeGeneric < { 'a } , i32 >")
+    $lifetime_params("a") alignas(4)
+        [[clang::trivial_abi]] ::generics::LifetimeAndTypeGeneric<
+            ::std::int32_t> final {
  public:
   // Type is not a C++ aggregate: Field `reference` is not default-constructible
   // in C++
@@ -989,7 +990,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   LifetimeAndTypeGeneric(const LifetimeAndTypeGeneric&) = delete;
   LifetimeAndTypeGeneric& operator=(const LifetimeAndTypeGeneric&) = delete;
   LifetimeAndTypeGeneric(::crubit::UnsafeRelocateTag,
-                         LifetimeAndTypeGeneric&& value);
+                         LifetimeAndTypeGeneric && value);
 
   union {
     ::std::int32_t const* $static crubit_nonnull reference;
