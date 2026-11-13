@@ -1277,46 +1277,51 @@ fn format_ty_for_cc_impl<'tcx>(
                     snippet: CcSnippet { tokens, prereqs },
                     is_pointer,
                 });
-            } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
-                match bridged_type {
-                    BridgedType::ExternCFuncConverters { include_paths, cpp_type, .. } => {
-                        if db.is_proto_message(ty) && !location.is_bridgeable() {
-                            return Ok(FormattedCcType::non_pointer(
-                                format_layout_compatible_cpp_type_for_rust_proto_msg(
-                                    db,
-                                    &include_paths,
-                                    &cpp_type,
-                                ),
-                            ));
-                        }
-                        location.check_bridgeable()?;
-                        prereqs.includes.extend(include_paths.iter().cloned());
-
-                        let is_pointer = matches!(cpp_type, CcType::Pointer(_));
-                        let cpp_type_str = cpp_type.as_ref();
-                        let tokens = match cpp_type_str.parse::<TokenStream>() {
-                            Ok(tokens) => tokens,
-                            Err(err) => {
-                                db.fatal_errors().report(&format!(
-                                    "Failed to parse `cpp_type` `{}`: {err}",
-                                    cpp_type_str
-                                ));
-                                quote! {}
-                            }
-                        };
-                        return Ok(FormattedCcType {
-                            snippet: CcSnippet { tokens, prereqs },
-                            is_pointer,
-                        });
-                    }
-                    BridgedType::Option(_) => {
-                        unreachable!(
-                            "Option is handled by is_bridged_option or parse_adt_template_specialization"
-                        )
-                    }
-                }
             } else {
                 let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
+                ensure!(
+                    has_cpp_type || !has_non_lifetime_substs(substs) || adt.is_pin(),
+                    "Generic types are not supported yet (b/259749095)"
+                );
+                if let Some(bridged_type) = is_bridged_type(db, ty)? {
+                    match bridged_type {
+                        BridgedType::ExternCFuncConverters { include_paths, cpp_type, .. } => {
+                            if db.is_proto_message(ty) && !location.is_bridgeable() {
+                                return Ok(FormattedCcType::non_pointer(
+                                    format_layout_compatible_cpp_type_for_rust_proto_msg(
+                                        db,
+                                        &include_paths,
+                                        &cpp_type,
+                                    ),
+                                ));
+                            }
+                            location.check_bridgeable()?;
+                            prereqs.includes.extend(include_paths.iter().cloned());
+
+                            let is_pointer = matches!(cpp_type, CcType::Pointer(_));
+                            let cpp_type_str = cpp_type.as_ref();
+                            let tokens = match cpp_type_str.parse::<TokenStream>() {
+                                Ok(tokens) => tokens,
+                                Err(err) => {
+                                    db.fatal_errors().report(&format!(
+                                        "Failed to parse `cpp_type` `{}`: {err}",
+                                        cpp_type_str
+                                    ));
+                                    quote! {}
+                                }
+                            };
+                            return Ok(FormattedCcType {
+                                snippet: CcSnippet { tokens, prereqs },
+                                is_pointer,
+                            });
+                        }
+                        BridgedType::Option(_) => {
+                            unreachable!(
+                                "Option is handled by is_bridged_option or parse_adt_template_specialization"
+                            )
+                        }
+                    }
+                }
                 ensure!(
                     has_cpp_type || !has_non_lifetime_substs(substs),
                     "Generic types are not supported yet (b/259749095)"
@@ -2471,18 +2476,20 @@ pub fn cpp_layout_equivalent_type<'tcx>(
 }
 
 /// Returns a `BridgedType` for an ADT manually annotated with
-/// `#[crubit_annotate::cpp_convertible]`. Returns `None` if the type is not annotated with
-/// `cpp_convertible`. Returns an error if getting the attributes fails.
+/// `#[crubit_annotate::cpp_convertible]`, along with whether the ADT has a `cpp_type` annotation.
+/// Returns `(None, has_cpp_type)` if the type is not annotated with `cpp_convertible`.
+/// Returns an error if getting the attributes fails.
 fn is_bridged_adt<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
-) -> Result<Option<BridgedType<'static>>> {
+) -> Result<(Option<BridgedType<'static>>, bool)> {
     // We take a `Ty` instead of adt + substs directly so we can use `Ty` in error messages.
     let ty::TyKind::Adt(adt, _) = ty.kind() else {
         panic!("should only be called on an ADT type");
     };
     let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
         .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
+    let has_cpp_type = attrs.cpp_type.is_some();
 
     let Some(CppConvertibleAttrs {
         include_paths,
@@ -2491,7 +2498,7 @@ fn is_bridged_adt<'tcx>(
         rust_to_cpp_converter,
     }) = attrs.get_cpp_convertible_attrs(db.crubit_support_path_format())?
     else {
-        return Ok(None);
+        return Ok((None, has_cpp_type));
     };
 
     if include_paths.is_empty() {
@@ -2504,15 +2511,18 @@ fn is_bridged_adt<'tcx>(
         bail!("Failed to parse CrubitAttrs.cpp_type for {ty} = {cpp_type}");
     };
 
-    Ok(Some(BridgedType::ExternCFuncConverters {
-        cpp_type: match code_gen_utils::is_cpp_pointer_type(ts) {
-            Some(_) => CcType::Pointer(cpp_type),
-            None => CcType::Other(cpp_type),
-        },
-        include_paths,
-        cpp_to_rust_converter,
-        rust_to_cpp_converter,
-    }))
+    Ok((
+        Some(BridgedType::ExternCFuncConverters {
+            cpp_type: match code_gen_utils::is_cpp_pointer_type(ts) {
+                Some(_) => CcType::Pointer(cpp_type),
+                None => CcType::Other(cpp_type),
+            },
+            include_paths,
+            cpp_to_rust_converter,
+            rust_to_cpp_converter,
+        }),
+        has_cpp_type,
+    ))
 }
 
 /// Returns whether a type can be made layout-compatible.
@@ -2539,7 +2549,7 @@ pub fn can_be_made_layout_compatible<'tcx>(
         && let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt)
     {
         // Option can be made layout-compatible if its only type parameter is.
-        return can_be_made_layout_compatible(db, substs[0].expect_ty());
+        return db.can_be_made_layout_compatible(substs[0].expect_ty());
     }
     Ok(false)
 }
@@ -2548,7 +2558,7 @@ fn ensure_layout_compatible_pointee<'tcx>(
     db: &BindingsGenerator<'tcx>,
     pointee: Ty<'tcx>,
 ) -> Result<()> {
-    if !can_be_made_layout_compatible(db, pointee)? {
+    if !db.can_be_made_layout_compatible(pointee)? {
         bail!(
             "crubit.rs/errors/unsupported_type: `{pointee}` cannot be passed by-pointer because it is not layout-compatible"
         )
@@ -2594,7 +2604,8 @@ pub fn is_bridged_type<'db, 'tcx>(
                 return is_bridged_type(db, inner_pointer);
             }
 
-            if let Some(bridged_type) = is_bridged_adt(db, ty)? {
+            let (bridged_adt, has_cpp_type) = is_bridged_adt(db, ty)?;
+            if let Some(bridged_type) = bridged_adt {
                 return Ok(Some(bridged_type));
             }
 
@@ -2623,15 +2634,18 @@ pub fn is_bridged_type<'db, 'tcx>(
                 }
             }
 
-            // The ADT is not bridged, so check if any of its generic type arguments are
-            // not layout-compatible (e.g. `Box<BridgedType>` cannot be formatted).
-            for subst in substs {
-                if let Some(ty) = subst.as_type()
-                    && !can_be_made_layout_compatible(db, ty)?
-                {
-                    bail!(
-                        "crubit.rs/errors/unsupported_type: non-layout-compatible type `{ty}` cannot be used as a generic parameter."
-                    );
+            // Unannotated generic Rust ADTs (other than `Box` and `BridgedBuiltin`, handled
+            // above or via `OwnedBox`) are not supported in C++ bindings (b/259749095), so only
+            // check generic type arguments when the ADT can actually be formatted as a generic.
+            if has_cpp_type || db.tcx().is_lang_item(adt.did(), LangItem::OwnedBox) {
+                for subst in substs {
+                    if let Some(ty) = subst.as_type()
+                        && !db.can_be_made_layout_compatible(ty)?
+                    {
+                        bail!(
+                            "crubit.rs/errors/unsupported_type: non-layout-compatible type `{ty}` cannot be used as a generic parameter."
+                        );
+                    }
                 }
             }
             Ok(None)
