@@ -1086,7 +1086,9 @@ impl BridgeRsTypeKind {
                 let parsed_hint = if let Some(hint_str) = b.label_hint() {
                     if hint_str.starts_with("//") {
                         let label = BazelLabel::from(hint_str);
-                        validate_bridge_path_prefix(b.rust_name(), &label, "Rust path")?;
+                        if b.rust_name() != "!" {
+                            validate_bridge_path_prefix(b.rust_name(), &label, "Rust path")?;
+                        }
                         validate_bridge_path_prefix(b.abi_rust(), &label, "Rust ABI path")?;
                         Some(label)
                     } else {
@@ -3591,7 +3593,7 @@ fn fully_qualify_type_impl(
     // Primitive types are special-cased.
     if matches!(
         type_expression_suffix.trim(),
-        "char"
+        "!" | "char"
             | "bool"
             | "i8"
             | "u8"
@@ -4141,6 +4143,13 @@ mod tests {
             }),
             quote! {i32},
         );
+
+        assert_rs_matches!(
+            fully_qualify_type_impl("!", || {
+                quote! {crate}
+            }),
+            quote! {!},
+        );
     }
 
     #[gtest]
@@ -4204,6 +4213,9 @@ mod tests {
             resolve_bridge_rust_name("::status::absl::StatusOr", &hint_shorthand, &ir),
             "::absl_status::absl::StatusOr"
         );
+
+        // 7. Primitive type "!"
+        assert_eq!(resolve_bridge_rust_name("!", &hint_ok, &ir), "!");
     }
 
     #[gtest]

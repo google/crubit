@@ -343,6 +343,27 @@ unsafe_impl_crubit_abi_for_tuple! {
     unsafe impl CrubitAbi for (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6, a7: A7, a8: A8, a9: A9, a10: A10, a11: A11, a12: A12,);
 }
 
+/// A [`CrubitAbi`] for the `!` (never) type.
+#[derive(Default, Clone, Copy)]
+pub struct NeverAbi;
+
+// SAFETY: The ABI contract for `NeverAbi` is that it has zero size and cannot be constructed or
+// decoded.
+unsafe impl CrubitAbi for NeverAbi {
+    type Value = !;
+    const SIZE: usize = 0;
+
+    #[inline(always)]
+    unsafe fn encode(self, value: Self::Value, _encoder: &mut Encoder) {
+        match value {}
+    }
+
+    #[inline(always)]
+    unsafe fn decode(self, _decoder: &mut Decoder) -> Self::Value {
+        unreachable!("Attempted to decode a value of NeverAbi")
+    }
+}
+
 /// A [`CrubitAbi`] for encoding an `Option` by encoding a bool followed by the value if the bool
 /// is true.
 #[derive(Clone, Default)]
@@ -716,5 +737,10 @@ mod tests {
             )
         };
         expect_eq!(value, original);
+    }
+
+    #[gtest]
+    fn test_never_abi() {
+        expect_eq!(NeverAbi::SIZE, 0);
     }
 }
