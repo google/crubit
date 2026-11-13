@@ -8,6 +8,20 @@ import("../crubit.gni")
 import("//build/rust/rust_macro.gni")
 import("//build/rust/rust_static_library.gni")
 
+source_set("annotate_internal") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "annotate_internal.h",
+  ]
+}
+
 source_set("annotations") {
   public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
@@ -22,6 +36,7 @@ source_set("annotations") {
   ]
   deps = [
     "$crubit_src_dir/support:annotations_internal",
+    "$crubit_src_dir/support:bitwise_relocatability_annotations",
   ]
 }
 
@@ -36,6 +51,26 @@ source_set("annotations_internal") {
 
   public = [
     "annotations_internal.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support:annotate_internal",
+  ]
+}
+
+source_set("bitwise_relocatability_annotations") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "bitwise_relocatability_annotations.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support:annotate_internal",
   ]
 }
 
@@ -330,8 +365,10 @@ rust_static_library("operator") {
 
 group("support_cpp") {
   public_deps = [
+    ":annotate_internal",
     ":annotations",
     ":annotations_internal",
+    ":bitwise_relocatability_annotations",
     ":bridge_cpp",
     ":lifetime_annotations",
     ":movable",

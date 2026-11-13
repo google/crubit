@@ -7,6 +7,8 @@
 #ifndef CRUBIT_SUPPORT_ANNOTATIONS_INTERNAL_H_
 #define CRUBIT_SUPPORT_ANNOTATIONS_INTERNAL_H_
 
+#include "support/annotate_internal.h"  // IWYU pragma: export
+
 #if defined(__clang__)
 #define CRUBIT_TRIVIAL_ABI [[clang::trivial_abi]]
 #define CRUBIT_VIEW [[gsl::Pointer]]
@@ -39,16 +41,6 @@
 #define CRUBIT_UNREACHABLE() __assume(false)
 #else
 #define CRUBIT_UNREACHABLE() __builtin_unreachable()
-#endif
-
-// Style waiver granted in crubit.rs-style-waiver-attribute-annotate
-#if defined(__clang__) && __has_cpp_attribute(clang::annotate) && \
-    __has_cpp_attribute(clang::annotate_type)
-#define CRUBIT_INTERNAL_ANNOTATE(...) [[clang::annotate(__VA_ARGS__)]]
-#define CRUBIT_INTERNAL_ANNOTATE_TYPE(...) [[clang::annotate_type(__VA_ARGS__)]]
-#else
-#define CRUBIT_INTERNAL_ANNOTATE(...)
-#define CRUBIT_INTERNAL_ANNOTATE_TYPE(...)
 #endif
 
 #define CRUBIT_INTERNAL_EXPAND_AND_CONCAT_IMPL(a, b) a##b

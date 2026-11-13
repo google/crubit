@@ -79,6 +79,13 @@ rust_proc_macro(
 )
 
 cc_library(
+    name = "annotate_internal",
+    hdrs = ["annotate_internal.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
     name = "annotations",
     hdrs = ["annotations.h"],
     compatible_with = ["//buildenv/target:non_prod"],
@@ -87,6 +94,7 @@ cc_library(
     ],
     deps = [
         ":annotations_internal",
+        ":bitwise_relocatability_annotations",
     ],
 )
 
@@ -97,7 +105,23 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [],
+    deps = [
+        ":annotate_internal",
+    ],
+)
+
+# Small header with only the bitwise-relocatability annotations. Keep its
+# transitive includes small: it is used by widely included C++ headers.
+cc_library(
+    name = "bitwise_relocatability_annotations",
+    hdrs = ["bitwise_relocatability_annotations.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        ":annotate_internal",
+    ],
 )
 
 cc_library(
