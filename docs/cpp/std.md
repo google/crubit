@@ -96,9 +96,10 @@ API: support/cc_std_impl/vector.rs
 `cpp_std::trivial_optional<T>` in Rust. `trivial_optional` is used when
 `T: Copy`, which allows `optional` of trivially copyable types to also be
 trivially copyable (see the `trivial_optional` docs in the API below). Convert
-to and from a Rust `Option<T>` with `From`/`Into`, e.g. `Option::from(opt)` or
-`Some(x).into()`. When `T` is `!Unpin`, construct `cpp_std::optional<T>` in
-place via `ctor::CtorNew<Option<A>>` (`optional::<T>::ctor_new(opt)`) or
+to and from a Rust `Option<T>` with `.into_option()` or `From`/`Into`, e.g.
+`opt.into_option()`, `Option::from(opt)`, or `Some(x).into()`. When `T` is
+`!Unpin`, construct `cpp_std::optional<T>` in place via
+`ctor::CtorNew<Option<A>>` (`optional::<T>::ctor_new(opt)`) or
 `optional::ctor_from_option`.
 
 API: support/cc_std_impl/optional.rs
