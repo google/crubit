@@ -187,9 +187,14 @@ def _get_root_namespaces(aspect_ctx):
     return collections.uniq(root_namespaces)
 
 def _get_additional_rust_deps_from_provider(provider):
-    """Returns `deps`, `link_deps`, and `cc_deps` associated with the `provider`.
+    """Returns `deps`, `link_deps`, `cc_deps`, and `generated_cpp_support_deps_bindings` associated with the `provider`.
     """
-    return provider.deps + getattr(provider, "link_deps", []) + provider.cc_deps
+    return (
+        provider.deps +
+        getattr(provider, "link_deps", []) +
+        provider.cc_deps +
+        getattr(provider, "generated_cpp_support_deps_bindings", [])
+    )
 
 def _get_additional_rust_deps(aspect_ctx):
     """Returns DepVariantInfo of `deps` and `cc_deps` associated with the `_target`.
@@ -225,6 +230,15 @@ def _get_generated_cpp_support_deps(aspect_ctx):
             info = hint[AdditionalRustSrcsProviderInfo]
             generated_cpp_support_deps.extend(info.generated_cpp_support_deps)
     return generated_cpp_support_deps
+
+def _get_additional_target_args(aspect_ctx):
+    transitive = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            info = hint[AdditionalRustSrcsProviderInfo]
+            if hasattr(info, "generated_cpp_support_deps_target_args"):
+                transitive.append(info.generated_cpp_support_deps_target_args)
+    return depset(transitive = transitive)
 
 def _get_support_cc_infos(binding_infos):
     """Returns the `support_cc_info`s of `binding_infos` that have one."""
@@ -314,7 +328,7 @@ def _make_all_deps_and_target_args(ctx, extra_rule_specific_deps, direct):
             t[RustBindingsFromCcInfo].target_args
             for t in all_deps
             if RustBindingsFromCcInfo in t
-        ],
+        ] + ([_get_additional_target_args(ctx)] if hasattr(ctx.rule.attr, "aspect_hints") else []),
     )
 
     return (all_deps, target_args)
@@ -481,6 +495,13 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             if RustBindingsFromCcInfo in dep:
                 if struct(label = dep.label) not in aliases:
                     aliases[dep] = crubit_encode_raw_string_as_crate_name(str(dep.label))
+
+        for hint in ctx.rule.attr.aspect_hints:
+            if AdditionalRustSrcsProviderInfo in hint:
+                for binding in getattr(hint[AdditionalRustSrcsProviderInfo], "generated_cpp_support_deps_bindings", []):
+                    if struct(label = binding.crate_info.owner) not in aliases:
+                        # Note: The key in `aliases` must be a Label object when it doesn't match an actual Target in `deps`!
+                        aliases[struct(label = binding.crate_info.owner)] = crubit_encode_raw_string_as_crate_name(str(binding.crate_info.owner))
 
         # Collect dependencies of manual bindings attached to this target.
         # The Rust sources of manual bindings expect their dependencies to be
