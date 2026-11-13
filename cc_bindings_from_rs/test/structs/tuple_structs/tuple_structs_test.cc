@@ -116,12 +116,12 @@ TEST(TupleStructsTest, TupleStructWithDefaultNoCopyNoCloneIsConstructible) {
   EXPECT_EQ(arg.__field0.value, 0);
 }
 
-TEST(TupleStructsTest,
-     TupleStructWithCloneNoDefaultIsNotDirectlyConstructible) {
+TEST(TupleStructsTest, TupleStructWithCloneNoDefaultIsConstructible) {
   static_assert(
-      !std::is_constructible_v<TupleStructWithCloneNoDefault, CloneNoDefault>);
-  TupleStructWithCloneNoDefault arg =
+      std::is_constructible_v<TupleStructWithCloneNoDefault, CloneNoDefault>);
+  TupleStructWithCloneNoDefault created =
       TupleStructWithCloneNoDefault::create(891);
+  TupleStructWithCloneNoDefault arg(created.__field0);
   EXPECT_EQ(arg.get_value(), 891);
 }
 

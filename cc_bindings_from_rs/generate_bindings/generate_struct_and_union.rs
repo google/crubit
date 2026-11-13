@@ -2722,10 +2722,6 @@ fn generate_variant_ctor<'db, 'tcx>(
         panic!("Attempted to generate constructor for a non-ADT type: {:?}", core.common.self_ty)
     };
 
-    let default_trait_id = tcx.get_diagnostic_item(sym::Default).expect("Default trait not found");
-    let clone_trait_id = tcx.lang_items().copy_trait().expect("Copy trait not found");
-    let unpin_trait_id = tcx.lang_items().unpin_trait().expect("Unpin trait not found");
-
     let field_tys = variant
         .fields
         .iter()
@@ -2740,11 +2736,7 @@ fn generate_variant_ctor<'db, 'tcx>(
             #[rustversion::since(2026-05-13)]
             let ty = normalize_ty(tcx, tcx.param_env(field_def.did), ty);
 
-            let is_default = db.does_type_implement_trait(ty, default_trait_id);
-            let is_clone = db.does_type_implement_trait(ty, clone_trait_id);
-            let is_unpin = db.does_type_implement_trait(ty, unpin_trait_id);
-            let is_movable_in_cpp = (is_default && is_unpin) || is_clone;
-            if !is_movable_in_cpp {
+            if !db.is_cpp_move_constructible(ty) {
                 // If one of our fields isn't movable in C++, we can't generate a C++ constructor.
                 bail!("Field `{}` is not movable in C++", field_def.name)
             }

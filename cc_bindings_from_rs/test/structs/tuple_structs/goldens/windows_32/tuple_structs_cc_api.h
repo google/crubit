@@ -330,6 +330,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Default` trait
   TupleStructWithCloneNoDefault() = delete;
 
+  // Synthesized tuple constructor
+  explicit TupleStructWithCloneNoDefault(
+      ::tuple_structs::CloneNoDefault __field0)
+      : __field0(::std::move(__field0)) {}
+
   // Drop::drop
   ~TupleStructWithCloneNoDefault();
 
