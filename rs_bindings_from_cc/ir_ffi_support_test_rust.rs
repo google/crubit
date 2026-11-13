@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use ir::ir_ffi_support::{FfiMap, FfiRc, FfiString, FfiVec};
+use ir::ir_ffi_support::{BazelLabel, FfiMap, FfiRc, FfiString, FfiVec};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn crubit_test_roundtrip_ffi_string(s: &mut FfiString, out: &mut FfiString) {
@@ -57,5 +57,27 @@ pub extern "C" fn crubit_test_roundtrip_ffi_map(
     assert_eq!(owned_from_cpp.get("z").map(FfiString::as_str), Some("26"));
     owned_from_cpp.insert(FfiString::from_str("m"), FfiString::from_str("13"));
     owned_from_cpp.insert(FfiString::from_str("a"), FfiString::from_str("updated_1"));
+    *out = owned_from_cpp;
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn crubit_test_roundtrip_bazel_label_map(
+    map: &mut FfiMap<BazelLabel, FfiString>,
+    out: &mut FfiMap<BazelLabel, FfiString>,
+) {
+    let mut owned_from_cpp = std::mem::take(map);
+    assert_eq!(
+        owned_from_cpp.get(&BazelLabel::from("//a/pkg:alpha")).map(FfiString::as_str),
+        Some("1")
+    );
+    assert_eq!(
+        owned_from_cpp.get(&BazelLabel::from("//z/pkg:beta")).map(FfiString::as_str),
+        Some("2")
+    );
+    assert_eq!(
+        owned_from_cpp.get(&BazelLabel::from("//b/foo:foo")).map(FfiString::as_str),
+        Some("3")
+    );
+    owned_from_cpp.insert(BazelLabel::from("@@//rust/pkg:added"), FfiString::from_str("4"));
     *out = owned_from_cpp;
 }

@@ -3,3 +3,5 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated lib.rs for the cc_library bazel_types.
+
+extern crate cc_ir_sys;
