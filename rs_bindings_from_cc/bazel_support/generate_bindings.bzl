@@ -73,7 +73,8 @@ def generate_bindings(
         extra_cpp_srcs,
         unstable_rust_features,
         extra_rs_bindings_from_cc_cli_flags,
-        use_header_modules = False):
+        use_header_modules = False,
+        per_file_copts = []):
     """Runs the bindings generator.
 
     Args:
@@ -93,6 +94,8 @@ def generate_bindings(
       extra_rs_bindings_from_cc_cli_flags: CLI flags to be passed to `rs_bindings_from_cc`.
       use_header_modules: Whether to use the precompiled `.pic.pcm` header modules of the
         dependencies. `feature_configuration` must enable `module_maps` iff this is true.
+      per_file_copts: The `--per_file_copt`s that apply to the bindings action. They are added
+        after the other flags, like `cc_common.compile` does.
 
     Returns:
       tuple(cc_output, rs_output, namespaces_output, error_report_output): The generated source files.
@@ -211,7 +214,7 @@ def generate_bindings(
                 )
             )
             if not f.startswith("-Xactionanalyzer")
-        ],
+        ] + per_file_copts,
         preprocessor_defines = depset(
             local_defines,
             transitive = [compilation_context.defines],

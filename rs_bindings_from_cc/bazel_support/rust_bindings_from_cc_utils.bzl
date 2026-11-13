@@ -41,16 +41,44 @@ load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 # passed ("modules semantics was enabled in precompiled file ... but is currently disabled").
 _NO_MODULES_FLAGS = ["-fno-modules", "-fno-cxx-modules"]
 
-def _has_fno_modules(ctx, attr):
+def _per_file_copts(cc_toolchain, source_file, label):
+    """Returns the `--per_file_copt`s that apply to the bindings action.
+
+    Bazel adds the matching `--per_file_copt`s to the compile actions it creates itself (the
+    `.pcm` header modules of the deps, `_rust_api_impl.cc`), but not to the bindings action, which
+    is created with `cc_common.create_compile_action`. The bindings action must get the same flags,
+    or it parses the headers in a different configuration than they are compiled in; with header
+    modules, Clang then rejects the `.pcm`s ("configuration mismatch", b/582351896).
+
+    Args:
+      cc_toolchain: The C++ toolchain.
+      source_file: The source file of the bindings action, which the regexes are matched against.
+      label: The label of the target, which the regexes are also matched against.
+
+    Returns:
+      A list of flags; empty where `cc_common.per_file_copts` isn't available.
+    """
+    if not hasattr(cc_common, "per_file_copts"):
+        return []
+    return cc_common.per_file_copts(
+        cc_toolchain = cc_toolchain,
+        source_file = source_file,
+        label = label,
+    )
+
+def _has_fno_modules(ctx, attr, per_file_copts):
     """Returns whether the bindings actions are passed a flag that turns modules off.
 
     The flags checked are the ones that both `generate_bindings` and `compile_cc` pass: the global
-    `--copt`/`--cxxopt`s and the target's `copts`. (`--per_file_copt` is not visible to Starlark.)
+    `--copt`/`--cxxopt`s, the target's `copts`, and the matching `--per_file_copt`s.
     """
-    flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.cxxopts + getattr(attr, "copts", [])
+    flags = (
+        ctx.fragments.cpp.copts + ctx.fragments.cpp.cxxopts + getattr(attr, "copts", []) +
+        per_file_copts
+    )
     return any([flag in flags for flag in _NO_MODULES_FLAGS])
 
-def _may_use_header_modules(ctx, attr, compilation_context, compile_textually):
+def _may_use_header_modules(ctx, attr, compilation_context, compile_textually, per_file_copts):
     """Returns whether bindings generation may use header modules.
 
     Header modules are only actually used if the target also uses header modules (that is, its
@@ -61,6 +89,7 @@ def _may_use_header_modules(ctx, attr, compilation_context, compile_textually):
       attr: The current rule's attributes.
       compilation_context: The compilation context of the headers to generate bindings for.
       compile_textually: The `compile_textually` argument of `generate_and_compile_bindings`.
+      per_file_copts: The `--per_file_copt`s that apply to the bindings action.
 
     Returns:
       Whether bindings generation may use header modules.
@@ -71,7 +100,7 @@ def _may_use_header_modules(ctx, attr, compilation_context, compile_textually):
     # `rs_bindings_from_cc` gets the same `copts` as the `_rust_api_impl.cc` compile, so the same
     # reasons to compile it textually apply. (`extra_cpp_srcs` doesn't matter here, because
     # `layering_check` is off for bindings generation, see `_configure_features_for_bindings`.)
-    if compile_textually or _has_fno_modules(ctx, attr):
+    if compile_textually or _has_fno_modules(ctx, attr, per_file_copts):
         return False
 
     # The header modules of `@abseil-cpp//absl/status` are built without `CRUBIT_OLD_STATUS`, so
@@ -218,8 +247,15 @@ def generate_and_compile_bindings(
         ]
 
     cc_toolchain = find_cpp_toolchain(ctx)
+    per_file_copts = _per_file_copts(cc_toolchain, public_hdrs[0], ctx.label)
 
-    use_header_modules = _may_use_header_modules(ctx, attr, compilation_context, compile_textually)
+    use_header_modules = _may_use_header_modules(
+        ctx,
+        attr,
+        compilation_context,
+        compile_textually,
+        per_file_copts,
+    )
     feature_configuration_for_bindings = _configure_features_for_bindings(
         ctx,
         cc_toolchain,
@@ -251,6 +287,7 @@ def generate_and_compile_bindings(
         unstable_rust_features = unstable_rust_features,
         extra_rs_bindings_from_cc_cli_flags = extra_rs_bindings_from_cc_cli_flags,
         use_header_modules = use_header_modules,
+        per_file_copts = per_file_copts,
     )
 
     # Relocate the rs files so that they can be read by rustc using relative paths.
@@ -308,7 +345,9 @@ def generate_and_compile_bindings(
     #   (which needs `"module_maps"`), and may include headers of transitive deps.
     #   TODO(b/573160050): Remove this case once `cpp_srcs` users declare their includes in
     #   `generated_cpp_support_deps`.
-    compile_textually = compile_textually or extra_cpp_srcs or _has_fno_modules(ctx, attr)
+    compile_textually = (
+        compile_textually or extra_cpp_srcs or _has_fno_modules(ctx, attr, per_file_copts)
+    )
     feature_configuration_for_cc_compile = cc_common.configure_features(
         ctx = ctx,
         cc_toolchain = cc_toolchain,
