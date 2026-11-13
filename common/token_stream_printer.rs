@@ -573,7 +573,14 @@ fn clang_format(input: String, clang_format_exe_path: &Path) -> Result<String> {
         input,
         "clang-format",
         clang_format_exe_path,
-        [OsStr::new("--style=google"), OsStr::new("--sort-includes=false")],
+        [
+            // Skip `UsingDeclarationsSorter` and `ObjCHeaderStyleGuesser` (which runs when stdin's
+            // `<stdin>` filename has no extension or `.h`), avoiding two full-file lex +
+            // `TokenAnnotator` passes on generated C++ files.
+            OsStr::new("--style={BasedOnStyle: Google, SortUsingDeclarations: Never}"),
+            OsStr::new("--sort-includes=false"),
+            OsStr::new("--assume-filename=input.cc"),
+        ],
     )
 }
 
@@ -908,6 +915,8 @@ fn foo(
     fn test_cc_tokens_to_formatted_string_for_tests() {
         let input = quote! {
             namespace ns {
+            using b::B;
+            using a::A;
             void foo() {}
             void bar() {}
             }
@@ -916,6 +925,8 @@ fn foo(
         assert_eq!(
             output,
             r#"namespace ns {
+using b::B;
+using a::A;
 void foo() {}
 void bar() {}
 }  // namespace ns"#
