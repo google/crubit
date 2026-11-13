@@ -58,6 +58,7 @@ use rustc_abi::{Endian, FieldIdx, FieldsShape, LayoutData, VariantIdx, Variants}
 
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
+use rustc_middle::ty::fast_reject::DeepRejectCtxt;
 use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
@@ -95,9 +96,17 @@ pub fn non_blanket_impls_for_ty<'tcx, 'a>(
     trait_def_id: DefId,
     self_ty: Ty<'tcx>,
 ) -> impl Iterator<Item = (DefId, GenericArgs<'tcx>)> + 'a {
-    let tcx = db.tcx();
-    tcx.non_blanket_impls_for_ty(trait_def_id, self_ty).filter_map(move |impl_id| {
-        let impl_args = db.does_impl_apply(impl_id, self_ty)?;
+    non_blanket_impls_for_ty_with_mode(db, trait_def_id, self_ty, ImplMatchMode::SelfTy)
+}
+
+fn non_blanket_impls_for_ty_with_mode<'tcx, 'a>(
+    db: &'a BindingsGenerator<'tcx>,
+    trait_def_id: DefId,
+    self_ty: Ty<'tcx>,
+    mode: ImplMatchMode,
+) -> impl Iterator<Item = (DefId, GenericArgs<'tcx>)> + 'a {
+    db.tcx().non_blanket_impls_for_ty(trait_def_id, self_ty).filter_map(move |impl_id| {
+        let impl_args = does_impl_apply_with_mode(db, impl_id, self_ty, mode)?;
         Some((impl_id, impl_args))
     })
 }
@@ -403,7 +412,84 @@ fn get_trait_ref_from_impl_id<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId) -> ty::Tr
     get_instantiated_trait_ref(tcx, impl_id, ty::GenericArgs::identity_for_item(tcx, impl_id))
 }
 
-pub fn does_impl_apply<'tcx>(
+/// Specifies how an uninstantiated impl is matched against a target type during fast-rejection.
+#[derive(Clone, Copy)]
+enum ImplMatchMode {
+    /// Match the impl's `Self` type (`impl ... for SelfTy`).
+    SelfTy,
+    /// Match the impl's `Self` type, excluding blanket reference impls (`impl<T, ...> Trait for
+    /// &T`) whose uninstantiated referent is a bare type parameter.
+    NonBlanketRefSelfTy,
+    /// Match the trait impl's first generic argument (`impl Trait<Arg, ...> for ...`).
+    FirstTraitArg,
+}
+
+/// Fast-rejects impls that cannot match `target_ty` before memoizing or constructing a full
+/// `InferCtxt` and `ObligationCtxt`.
+fn may_impl_apply<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    impl_id: DefId,
+    target_ty: Ty<'tcx>,
+    mode: ImplMatchMode,
+) -> bool {
+    let uninstantiated_ty = match mode {
+        ImplMatchMode::SelfTy => tcx.type_of(impl_id).skip_binder(),
+        ImplMatchMode::NonBlanketRefSelfTy => {
+            let self_ty = tcx.type_of(impl_id).skip_binder();
+            // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it also
+            // holds blanket impls like `impl<A, B> PartialEq<&B> for &A`. Exclude impls whose
+            // uninstantiated referent is a bare type parameter.
+            if matches!(
+                self_ty.kind(),
+                ty::TyKind::Ref(_, referent_ty, _) if matches!(referent_ty.kind(), ty::TyKind::Param(_))
+            ) {
+                return false;
+            }
+            self_ty
+        }
+        ImplMatchMode::FirstTraitArg => {
+            tcx.impl_trait_header(impl_id).trait_ref.skip_binder().args.type_at(1)
+        }
+    };
+    DeepRejectCtxt::relate_rigid_infer(tcx).types_may_unify(target_ty, uninstantiated_ty)
+}
+
+fn does_impl_apply<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    impl_id: DefId,
+    target_ty: Ty<'tcx>,
+) -> Option<GenericArgs<'tcx>> {
+    does_impl_apply_with_mode(db, impl_id, target_ty, ImplMatchMode::SelfTy)
+}
+
+fn does_impl_apply_with_mode<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    impl_id: DefId,
+    target_ty: Ty<'tcx>,
+    mode: ImplMatchMode,
+) -> Option<GenericArgs<'tcx>> {
+    if !may_impl_apply(db.tcx(), impl_id, target_ty, mode) {
+        return None;
+    }
+    match mode {
+        ImplMatchMode::SelfTy | ImplMatchMode::NonBlanketRefSelfTy => {
+            db.does_impl_apply_memoized(impl_id, target_ty)
+        }
+        ImplMatchMode::FirstTraitArg => {
+            db.does_trait_impl_apply_by_first_arg_memoized(impl_id, target_ty)
+        }
+    }
+}
+
+fn does_trait_impl_apply_by_first_arg<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    impl_id: DefId,
+    target_ty: Ty<'tcx>,
+) -> Option<GenericArgs<'tcx>> {
+    does_impl_apply_with_mode(db, impl_id, target_ty, ImplMatchMode::FirstTraitArg)
+}
+
+pub fn does_impl_apply_memoized<'tcx>(
     db: &BindingsGenerator<'tcx>,
     impl_id: DefId,
     target_ty: Ty<'tcx>,
@@ -411,7 +497,7 @@ pub fn does_impl_apply<'tcx>(
     does_impl_apply_inner(db.tcx(), impl_id, target_ty, /* match_first_trait_arg= */ false)
 }
 
-pub fn does_trait_impl_apply_by_first_arg<'tcx>(
+pub fn does_trait_impl_apply_by_first_arg_memoized<'tcx>(
     db: &BindingsGenerator<'tcx>,
     impl_id: DefId,
     target_ty: Ty<'tcx>,
@@ -620,7 +706,7 @@ fn generate_into_impls<'tcx>(
     let from_impls =
         from_map.get(&def_id).into_iter().flat_map(|vec| vec.iter()).filter_map(|from_impl_id| {
             let impl_args =
-                db.does_trait_impl_apply_by_first_arg(*from_impl_id, core.common.self_ty)?;
+                does_trait_impl_apply_by_first_arg(db, *from_impl_id, core.common.self_ty)?;
             let trait_ref = get_instantiated_trait_ref(tcx, *from_impl_id, impl_args);
             let from_middle_ty = trait_ref.args.type_at(0);
 
@@ -883,7 +969,7 @@ fn generate_constructor_impls<'tcx>(
     let into_map = db.into_trait_impls_by_destination(def_id.krate);
     let into_impls =
         into_map.get(&def_id).into_iter().flat_map(|vec| vec.iter()).filter_map(|impl_id| {
-            let impl_args = db.does_trait_impl_apply_by_first_arg(*impl_id, core.common.self_ty)?;
+            let impl_args = does_trait_impl_apply_by_first_arg(db, *impl_id, core.common.self_ty)?;
             let trait_ref = get_instantiated_trait_ref(tcx, *impl_id, impl_args);
             let src_ty = trait_ref.args.type_at(0);
             if src_ty.flags().intersects(has_type_or_const_vars()) {
@@ -1095,7 +1181,12 @@ fn operator_impls_for_ty<'tcx>(
 
     let ref_to_self_ty = Ty::new_ref(tcx, tcx.lifetimes.re_erased, self_ty, ty::Mutability::Not);
     for (_, impl_id) in candidates {
-        if let Some(impl_args) = db.does_impl_apply(impl_id, ref_to_self_ty) {
+        if let Some(impl_args) = does_impl_apply_with_mode(
+            db,
+            impl_id,
+            ref_to_self_ty,
+            ImplMatchMode::NonBlanketRefSelfTy,
+        ) {
             let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
             if !overloads_covered_by_adt_impls
                 .contains(&operator_rhs_ty(trait_ref).map(|ty| erase_regions(tcx, ty)))
@@ -2111,7 +2202,7 @@ pub fn generate_adt<'tcx>(
             if self_is_not_generic {
                 Some((impl_id, None))
             } else {
-                let impl_args = db.does_impl_apply(impl_id, core.common.self_ty)?;
+                let impl_args = does_impl_apply(db, impl_id, core.common.self_ty)?;
                 Some((impl_id, Some(impl_args)))
             }
         })
