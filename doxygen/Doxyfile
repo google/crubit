@@ -16,7 +16,6 @@ GENERATE_HTML          = YES
 GENERATE_LATEX         = NO
 GENERATE_XML           = NO
 
-# TODO: add custom stylesheet b/523378095
 HTML_EXTRA_STYLESHEET  =
 
 ENABLE_PREPROCESSING   = YES
