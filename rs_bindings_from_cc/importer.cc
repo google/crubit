@@ -1490,13 +1490,13 @@ std::vector<ItemId> Importer::ImportInheritedFriendOperators(
 
     crubit::ffi::Func* func = item->mutable_func();
     if (enclosing_namespace_id.has_value()) {
-      func->set_enclosing_item_id(enclosing_namespace_id->value());
+      func->set_enclosing_item_id(*enclosing_namespace_id);
     } else {
       func->clear_enclosing_item_id();
     }
     // The operator is only visible through ADL on arguments of type
     // `record_decl`, rather than through the base class that declares it.
-    func->set_adl_enclosing_record(record_id.value());
+    func->set_adl_enclosing_record(record_id);
     item_ids.push_back(GenerateItemId(*function_decl));
   }
   return item_ids;
@@ -2002,8 +2002,8 @@ bool Importer::IsTypeDeclImported(clang::QualType type) {
       ConvertQualType(type, /*lifetimes=*/nullptr,
                       /*nullable=*/true, /*assume_lifetimes=*/false);
   if (!cc_type.variant().has_decl()) return true;
-  for (uint64_t id = cc_type.variant().decl();;) {
-    auto* decl = reinterpret_cast<clang::Decl*>(id);
+  for (ItemId id = cc_type.variant().decl();;) {
+    auto* decl = reinterpret_cast<clang::Decl*>(id.value());
     const crubit::ffi::Item* item = GetDeclItem(decl);
     if (item == nullptr || !item->has_type_alias()) return false;
     for (clang::DeclContext* dc = decl->getDeclContext();
@@ -2038,7 +2038,7 @@ void Importer::Import(
     auto item = std::make_unique<crubit::ffi::Item>();
     auto* c = item->mutable_comment();
     c->set_text(comment->getFormattedText(sm, sm.getDiagnostics()));
-    c->set_id(GenerateItemId(*comment).value());
+    c->set_id(GenerateItemId(*comment));
     ordered_items.push_back({GetSourceOrderKey(*comment), item.get()});
     comment_items.push_back(std::move(item));
   }
@@ -3082,7 +3082,7 @@ std::unique_ptr<crubit::ffi::Item> Importer::ImportUnsupportedItem(
   }
   *unsupported->mutable_decl_loc() =
       ConvertDeclLocation(original_decl.getBeginLoc(), nullptr);
-  unsupported->set_id(GenerateItemId(original_decl).value());
+  unsupported->set_id(GenerateItemId(original_decl));
   unsupported->set_defining_target(GetOwningTarget(original_decl).value());
   unsupported->set_must_bind(is_hard_error || invocation_.carcinize_mode() ==
                                                   CarcinizeMode::kStrict);
@@ -4207,7 +4207,7 @@ Importer::GetUnsupportedItemPathForTemplateDecl(
   crubit::ffi::UnsupportedItem::Path path;
   *path.mutable_ident() = std::move(names->cc_identifier);
   if (enclosing_item_id->has_value()) {
-    path.set_enclosing_item_id((*enclosing_item_id)->value());
+    path.set_enclosing_item_id(**enclosing_item_id);
   }
   return path;
 }
@@ -4429,7 +4429,7 @@ void Importer::NameTemplateInstantiationsAfterTypeAliases(
           !alias.lifetime_inputs().empty()) {
         continue;
       }
-      ItemId id(type.variant().decl());
+      ItemId id = type.variant().decl();
       if (!renameable.contains(id) || !renamed.insert(id).second) continue;
 
       crubit::ffi::Item* target_item = get_item(id);

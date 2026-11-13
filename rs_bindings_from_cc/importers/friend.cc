@@ -67,9 +67,9 @@ std::unique_ptr<crubit::ffi::Item> FriendDeclImporter::Import(
   // allows us to prevent generation of bindings in the case that the enclosing
   // record is not visible, as ADL is necessary for the friend function to be
   // found.
-  item->mutable_func()->set_id(ictx_.GenerateItemId(*friend_decl).value());
+  item->mutable_func()->set_id(ictx_.GenerateItemId(*friend_decl));
   item->mutable_func()->set_adl_enclosing_record(
-      ictx_.GenerateItemId(*enclosing_record_decl).value());
+      ictx_.GenerateItemId(*enclosing_record_decl));
   return item;
 }
 

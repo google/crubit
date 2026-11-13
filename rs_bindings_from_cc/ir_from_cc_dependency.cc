@@ -86,7 +86,7 @@ extern "C" ffi::IR crubit_test_make_ffi_ir() {
   *ir.add_public_headers() = HeaderName("bar.h").AsFfi();
   auto& item = (*ir.mutable_top_level_items())["//test:target"].emplace_back();
   auto* func = item.mutable_func();
-  func->set_id(42);
+  func->set_id(ItemId(42));
   func->set_is_inline(true);
   func->set_unique_name("c:@F@root_node");
   func->mutable_rs_name()->mutable_oper()->set_name("+=");

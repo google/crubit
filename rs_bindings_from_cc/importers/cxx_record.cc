@@ -1384,14 +1384,14 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
     incomplete->mutable_cc_name()->set_identifier(cc_name);
     incomplete->mutable_rs_name()->set_identifier(rs_name);
     incomplete->set_unique_name(ictx_.GetUniqueName(*record_decl));
-    incomplete->set_id(ictx_.GenerateItemId(*record_decl).value());
+    incomplete->set_id(ictx_.GenerateItemId(*record_decl));
     incomplete->set_owning_target(owning_target.value());
     if (unknown_attr->has_value()) {
       incomplete->set_unknown_attr(std::move(**unknown_attr));
     }
     incomplete->set_record_type(*record_type);
     if (enclosing_item_id.has_value()) {
-      incomplete->set_enclosing_item_id(enclosing_item_id->value());
+      incomplete->set_enclosing_item_id(*enclosing_item_id);
     }
     return item;
   }
@@ -1532,7 +1532,7 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
   record->mutable_cc_name()->set_identifier(cc_name);
   record->set_unique_name(ictx_.GetUniqueName(*record_decl));
   record->set_mangled_cc_name(ictx_.GetMangledName(*record_decl));
-  record->set_id(id.value());
+  record->set_id(id);
   record->set_owning_target(owning_target.value());
   if (template_specialization.has_value()) {
     *record->mutable_template_specialization() =
@@ -1602,7 +1602,7 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
   record->set_is_explicit_class_template_instantiation_definition(
       is_explicit_class_template_instantiation_definition);
   if (enclosing_item_id.has_value()) {
-    record->set_enclosing_item_id(enclosing_item_id->value());
+    record->set_enclosing_item_id(*enclosing_item_id);
   }
   record->set_overloads_operator_delete(
       MayOverloadOperatorDelete(*record_decl));
@@ -1855,8 +1855,7 @@ CXXRecordDeclImporter::GetUnambiguousPublicBases(
       CRUBIT_CHECK((!offset.has_value() || *offset >= 0) &&
                    "Concrete base classes should have non-negative offsets.");
       crubit::ffi::BaseClass base_class;
-      base_class.set_base_record_id(
-          ictx_.GenerateItemId(*base_record_decl).value());
+      base_class.set_base_record_id(ictx_.GenerateItemId(*base_record_decl));
       if (offset.has_value()) {
         base_class.set_offset(*offset);
       }

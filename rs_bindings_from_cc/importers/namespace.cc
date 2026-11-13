@@ -87,15 +87,15 @@ std::unique_ptr<crubit::ffi::Item> NamespaceDeclImporter::Import(
   ns->mutable_cc_name()->set_identifier(identifier->cc_identifier.Ident());
   ns->mutable_rs_name()->set_identifier(identifier->cc_identifier.Ident());
   ns->set_unique_name(ictx_.GetUniqueName(*namespace_decl));
-  ns->set_id(id.value());
+  ns->set_id(id);
   ns->set_canonical_namespace_id(
-      ictx_.GenerateItemId(*namespace_decl->getCanonicalDecl()).value());
+      ictx_.GenerateItemId(*namespace_decl->getCanonicalDecl()));
   if (unknown_attr->has_value()) {
     ns->set_unknown_attr(std::move(**unknown_attr));
   }
   ns->set_owning_target(ictx_.GetOwningTarget(*namespace_decl).value());
   if (enclosing_item_id->has_value()) {
-    ns->set_enclosing_item_id((*enclosing_item_id)->value());
+    ns->set_enclosing_item_id(**enclosing_item_id);
   }
   ns->set_is_inline(namespace_decl->isInline());
   if (deprecated.has_value()) {

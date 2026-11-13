@@ -25,6 +25,7 @@
 #endif
 #include "common/check.h"
 #include "common/ffi_types.h"
+#include "common/strong_int.h"
 #include "support/rs_std/internal/is_utf8.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMapInfo.h"
@@ -678,6 +679,14 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiMap {
  private:
   FfiVec<value_type> entries_;
 };
+
+// An integer uniquely identifying an Item across the FFI IR so cross-item
+// references (for example between types and records, or enclosing items for
+// comments and unsupported declarations) do not depend on tree containment.
+CRUBIT_DEFINE_STRONG_INT_TYPE(ItemId, uint64_t);
+static_assert(sizeof(ItemId) == sizeof(uint64_t));
+static_assert(alignof(ItemId) == alignof(uint64_t));
+static_assert(std::is_standard_layout_v<ItemId>);
 
 }  // namespace crubit::ffi
 

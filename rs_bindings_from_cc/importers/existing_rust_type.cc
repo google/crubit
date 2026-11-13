@@ -336,7 +336,7 @@ std::unique_ptr<crubit::ffi::Item> ExistingRustTypeImporter::Import(
         cc_qualtype.isTriviallyCopyableType(context));
   }
   existing->set_is_same_abi(*is_same_abi);
-  existing->set_id(ictx_.GenerateItemId(*type_decl).value());
+  existing->set_id(ictx_.GenerateItemId(*type_decl));
   existing->set_impl_debug(ictx_.IsRecordImplDebugEnabledForTarget(
                                ictx_.GetOwningTarget(*type_decl)) &&
                            ictx_.ImplementsCoreFmtDebug(*type_decl));

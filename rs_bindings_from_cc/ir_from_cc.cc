@@ -67,7 +67,7 @@ llvm::Expected<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
       it != ir.top_level_items().end()) {
     for (const auto& item : it->second) {
       if (item.has_namespace_decl()) {
-        top_level_item_id_set.insert(ItemId(item.namespace_decl().id()));
+        top_level_item_id_set.insert(item.namespace_decl().id());
       }
     }
   }
@@ -79,10 +79,10 @@ llvm::Expected<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
     // If a namespace is open more than once, we pick the last one of them as
     // it will serve as the canonical namespace without any number suffix in
     // the name.
-    if (top_level_item_id_set.contains(ItemId(ns->id()))) {
-      name_to_top_level_ns[ns->cc_name().identifier()] = ItemId(ns->id());
+    if (top_level_item_id_set.contains(ns->id())) {
+      name_to_top_level_ns[ns->cc_name().identifier()] = ns->id();
     }
-    id_to_namespace.insert({ItemId(ns->id()), ns});
+    id_to_namespace.insert({ns->id(), ns});
   }
 
   auto follow_mod_path_to_ns =
@@ -112,7 +112,7 @@ llvm::Expected<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
         if (child_item.has_namespace_decl() &&
             llvm::StringRef(
                 child_item.namespace_decl().cc_name().identifier()) == part) {
-          ns_id = ItemId(child_item.namespace_decl().id());
+          ns_id = child_item.namespace_decl().id();
           found = true;
           break;
         }
@@ -150,7 +150,7 @@ llvm::Expected<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
     use_mod->set_path(extra_source_file_path);
     use_mod->mutable_mod_name()->set_identifier(
         (llvm::Twine("__crubit_mod_") + llvm::Twine(i++)).str());
-    use_mod->set_id(id.value());
+    use_mod->set_id(id);
 
     std::optional<Namespace*> enclosing_namespace = std::nullopt;
     if (!mod_path.empty()) {

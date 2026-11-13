@@ -435,8 +435,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Variant {
     return &payload_.func_pointer_;
   }
   bool has_decl() const { return tag_ == kDecl; }
-  uint64_t decl() const { return has_decl() ? payload_.decl_ : static_cast<uint64_t>(0); }
-  void set_decl(uint64_t value) { Destroy(); tag_ = kDecl; payload_.decl_ = value; }
+  ::crubit::ffi::ItemId decl() const { return has_decl() ? payload_.decl_ : static_cast<::crubit::ffi::ItemId>(0); }
+  void set_decl(::crubit::ffi::ItemId value) { Destroy(); tag_ = kDecl; payload_.decl_ = value; }
   bool has_error() const { return tag_ == kError; }
   const ::crubit::ffi::FormattedError& error() const { return has_error() ? payload_.error_ : DefaultValue<::crubit::ffi::FormattedError>(); }
   ::crubit::ffi::FormattedError* mutable_error() {
@@ -489,7 +489,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Variant {
       case kPrimitive: new (&payload_.primitive_) ::crubit::ffi::Primitive(other.payload_.primitive_); break;
       case kPointer: new (&payload_.pointer_) ::crubit::ffi::cc_type::PointerType(other.payload_.pointer_); break;
       case kFuncPointer: new (&payload_.func_pointer_) ::crubit::ffi::cc_type::FuncPointer(other.payload_.func_pointer_); break;
-      case kDecl: new (&payload_.decl_) uint64_t(other.payload_.decl_); break;
+      case kDecl: new (&payload_.decl_) ::crubit::ffi::ItemId(other.payload_.decl_); break;
       case kError: new (&payload_.error_) ::crubit::ffi::FormattedError(other.payload_.error_); break;
       case kConstantArray: new (&payload_.constant_array_) ::crubit::ffi::cc_type::ConstantArrayType(other.payload_.constant_array_); break;
       default: CRUBIT_CHECK(false);
@@ -502,7 +502,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Variant {
       case kPrimitive: new (&payload_.primitive_) ::crubit::ffi::Primitive(std::move(other.payload_.primitive_)); break;
       case kPointer: new (&payload_.pointer_) ::crubit::ffi::cc_type::PointerType(std::move(other.payload_.pointer_)); break;
       case kFuncPointer: new (&payload_.func_pointer_) ::crubit::ffi::cc_type::FuncPointer(std::move(other.payload_.func_pointer_)); break;
-      case kDecl: new (&payload_.decl_) uint64_t(std::move(other.payload_.decl_)); break;
+      case kDecl: new (&payload_.decl_) ::crubit::ffi::ItemId(std::move(other.payload_.decl_)); break;
       case kError: new (&payload_.error_) ::crubit::ffi::FormattedError(std::move(other.payload_.error_)); break;
       case kConstantArray: new (&payload_.constant_array_) ::crubit::ffi::cc_type::ConstantArrayType(std::move(other.payload_.constant_array_)); break;
       default: CRUBIT_CHECK(false);
@@ -520,7 +520,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Variant {
     ::crubit::ffi::Primitive primitive_;
     ::crubit::ffi::cc_type::PointerType pointer_;
     ::crubit::ffi::cc_type::FuncPointer func_pointer_;
-    uint64_t decl_;
+    ::crubit::ffi::ItemId decl_;
     ::crubit::ffi::FormattedError error_;
     ::crubit::ffi::cc_type::ConstantArrayType constant_array_;
   } payload_;
@@ -948,16 +948,16 @@ struct CRUBIT_FFI_TRIVIAL_ABI Func {
   void clear_decl_loc() { has_bits_ &= ~0x40ULL; decl_loc_ = {}; }
   const ::crubit::ffi::DeclLocation& decl_loc() const { return decl_loc_; }
   ::crubit::ffi::DeclLocation* mutable_decl_loc() { has_bits_ |= 0x40ULL; return &decl_loc_; }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x80ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x80ULL; enclosing_item_id_ = {}; }
-  uint64_t enclosing_item_id() const { return enclosing_item_id_; }
-  void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x80ULL; enclosing_item_id_ = value; }
+  ::crubit::ffi::ItemId enclosing_item_id() const { return enclosing_item_id_; }
+  void set_enclosing_item_id(::crubit::ffi::ItemId value) { has_bits_ |= 0x80ULL; enclosing_item_id_ = value; }
   bool has_adl_enclosing_record() const { return (has_bits_ & 0x100ULL) != 0; }
   void clear_adl_enclosing_record() { has_bits_ &= ~0x100ULL; adl_enclosing_record_ = {}; }
-  uint64_t adl_enclosing_record() const { return adl_enclosing_record_; }
-  void set_adl_enclosing_record(uint64_t value) { has_bits_ |= 0x100ULL; adl_enclosing_record_ = value; }
+  ::crubit::ffi::ItemId adl_enclosing_record() const { return adl_enclosing_record_; }
+  void set_adl_enclosing_record(::crubit::ffi::ItemId value) { has_bits_ |= 0x100ULL; adl_enclosing_record_ = value; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
   bool has_inline_cpp_source_text() const { return (has_bits_ & 0x200ULL) != 0; }
@@ -999,9 +999,9 @@ struct CRUBIT_FFI_TRIVIAL_ABI Func {
   bool is_member_or_descendant_of_class_template_{};
   ::crubit::ffi::SafetyAnnotation safety_annotation_{};
   ::crubit::ffi::DeclLocation decl_loc_{};
-  uint64_t id_{};
-  uint64_t enclosing_item_id_{};
-  uint64_t adl_enclosing_record_{};
+  ::crubit::ffi::ItemId id_{};
+  ::crubit::ffi::ItemId enclosing_item_id_{};
+  ::crubit::ffi::ItemId adl_enclosing_record_{};
   bool must_bind_{};
   FfiString inline_cpp_source_text_{};
   FfiVec<FfiString> lifetime_inputs_{};
@@ -1157,15 +1157,15 @@ struct CRUBIT_FFI_TRIVIAL_ABI Field {
 };
 
 struct CRUBIT_FFI_TRIVIAL_ABI BaseClass {
-  uint64_t base_record_id() const { return base_record_id_; }
-  void set_base_record_id(uint64_t value) { base_record_id_ = value; }
+  ::crubit::ffi::ItemId base_record_id() const { return base_record_id_; }
+  void set_base_record_id(::crubit::ffi::ItemId value) { base_record_id_ = value; }
   bool has_offset() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_offset() { has_bits_ &= ~0x1ULL; offset_ = {}; }
   int64_t offset() const { return offset_; }
   void set_offset(int64_t value) { has_bits_ |= 0x1ULL; offset_ = value; }
   friend bool operator==(const BaseClass&, const BaseClass&) = default;
   uint64_t has_bits_ = 0;
-  uint64_t base_record_id_{};
+  ::crubit::ffi::ItemId base_record_id_{};
   int64_t offset_{};
 };
 
@@ -1820,8 +1820,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Constant {
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
   std::string_view unique_name() const { return unique_name_.AsView(); }
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
   std::string_view owning_target() const { return owning_target_.AsView(); }
   void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_decl_loc() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -1834,8 +1834,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Constant {
   void set_unknown_attr(std::string_view value) { has_bits_ |= 0x2ULL; unknown_attr_ = FfiString(value); }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x4ULL; enclosing_item_id_ = {}; }
-  uint64_t enclosing_item_id() const { return enclosing_item_id_; }
-  void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x4ULL; enclosing_item_id_ = value; }
+  ::crubit::ffi::ItemId enclosing_item_id() const { return enclosing_item_id_; }
+  void set_enclosing_item_id(::crubit::ffi::ItemId value) { has_bits_ |= 0x4ULL; enclosing_item_id_ = value; }
   bool has_type() const { return (has_bits_ & 0x8ULL) != 0; }
   void clear_type() { has_bits_ &= ~0x8ULL; type_ = {}; }
   const ::crubit::ffi::CcType& type() const { return type_; }
@@ -1858,11 +1858,11 @@ struct CRUBIT_FFI_TRIVIAL_ABI Constant {
   ::crubit::ffi::Identifier cc_name_{};
   ::crubit::ffi::Identifier rs_name_{};
   FfiString unique_name_{};
-  uint64_t id_{};
+  ::crubit::ffi::ItemId id_{};
   FfiString owning_target_{};
   ::crubit::ffi::DeclLocation decl_loc_{};
   FfiString unknown_attr_{};
-  uint64_t enclosing_item_id_{};
+  ::crubit::ffi::ItemId enclosing_item_id_{};
   ::crubit::ffi::CcType type_{};
   bool must_bind_{};
   FfiString deprecated_{};
@@ -2286,8 +2286,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   std::string_view mangled_cc_name() const { return mangled_cc_name_.AsView(); }
   void set_mangled_cc_name(std::string_view value) { mangled_cc_name_ = FfiString(value); }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
   std::string_view owning_target() const { return owning_target_.AsView(); }
   void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_template_specialization() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -2378,8 +2378,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   void set_mangled_rs_name(std::string_view value) { has_bits_ |= 0x200ULL; mangled_rs_name_ = FfiString(value); }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x400ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x400ULL; enclosing_item_id_ = {}; }
-  uint64_t enclosing_item_id() const { return enclosing_item_id_; }
-  void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x400ULL; enclosing_item_id_ = value; }
+  ::crubit::ffi::ItemId enclosing_item_id() const { return enclosing_item_id_; }
+  void set_enclosing_item_id(::crubit::ffi::ItemId value) { has_bits_ |= 0x400ULL; enclosing_item_id_ = value; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
   bool overloads_operator_delete() const { return overloads_operator_delete_; }
@@ -2416,7 +2416,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   ::crubit::ffi::Identifier cc_name_{};
   FfiString unique_name_{};
   FfiString mangled_cc_name_{};
-  uint64_t id_{};
+  ::crubit::ffi::ItemId id_{};
   FfiString owning_target_{};
   ::crubit::ffi::TemplateSpecialization template_specialization_{};
   FfiString unknown_attr_{};
@@ -2447,7 +2447,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   bool is_aggregate_{};
   bool is_canonical_alias_{};
   FfiString mangled_rs_name_{};
-  uint64_t enclosing_item_id_{};
+  ::crubit::ffi::ItemId enclosing_item_id_{};
   bool must_bind_{};
   bool overloads_operator_delete_{};
   bool has_private_or_deleted_operator_delete_{};
@@ -2469,8 +2469,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI IncompleteRecord {
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
   std::string_view unique_name() const { return unique_name_.AsView(); }
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
   std::string_view owning_target() const { return owning_target_.AsView(); }
   void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_unknown_attr() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -2481,8 +2481,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI IncompleteRecord {
   void set_record_type(::crubit::ffi::RecordType value) { record_type_ = value; }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x2ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x2ULL; enclosing_item_id_ = {}; }
-  uint64_t enclosing_item_id() const { return enclosing_item_id_; }
-  void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x2ULL; enclosing_item_id_ = value; }
+  ::crubit::ffi::ItemId enclosing_item_id() const { return enclosing_item_id_; }
+  void set_enclosing_item_id(::crubit::ffi::ItemId value) { has_bits_ |= 0x2ULL; enclosing_item_id_ = value; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
   friend bool operator==(const IncompleteRecord&, const IncompleteRecord&) = default;
@@ -2490,11 +2490,11 @@ struct CRUBIT_FFI_TRIVIAL_ABI IncompleteRecord {
   ::crubit::ffi::Identifier cc_name_{};
   ::crubit::ffi::Identifier rs_name_{};
   FfiString unique_name_{};
-  uint64_t id_{};
+  ::crubit::ffi::ItemId id_{};
   FfiString owning_target_{};
   FfiString unknown_attr_{};
   ::crubit::ffi::RecordType record_type_{};
-  uint64_t enclosing_item_id_{};
+  ::crubit::ffi::ItemId enclosing_item_id_{};
   bool must_bind_{};
 };
 
@@ -2533,8 +2533,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Enum {
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   std::string_view mangled_cc_name() const { return mangled_cc_name_.AsView(); }
   void set_mangled_cc_name(std::string_view value) { mangled_cc_name_ = FfiString(value); }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
   std::string_view owning_target() const { return owning_target_.AsView(); }
   void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_decl_loc() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -2554,8 +2554,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Enum {
   void set_unknown_attr(std::string_view value) { has_bits_ |= 0x4ULL; unknown_attr_ = FfiString(value); }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x8ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x8ULL; enclosing_item_id_ = {}; }
-  uint64_t enclosing_item_id() const { return enclosing_item_id_; }
-  void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x8ULL; enclosing_item_id_ = value; }
+  ::crubit::ffi::ItemId enclosing_item_id() const { return enclosing_item_id_; }
+  void set_enclosing_item_id(::crubit::ffi::ItemId value) { has_bits_ |= 0x8ULL; enclosing_item_id_ = value; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
   bool detected_formatter() const { return detected_formatter_; }
@@ -2578,13 +2578,13 @@ struct CRUBIT_FFI_TRIVIAL_ABI Enum {
   ::crubit::ffi::Identifier rs_name_{};
   FfiString unique_name_{};
   FfiString mangled_cc_name_{};
-  uint64_t id_{};
+  ::crubit::ffi::ItemId id_{};
   FfiString owning_target_{};
   ::crubit::ffi::DeclLocation decl_loc_{};
   ::crubit::ffi::CcType underlying_type_{};
   FfiVec<::crubit::ffi::Enumerator> enumerators_{};
   FfiString unknown_attr_{};
-  uint64_t enclosing_item_id_{};
+  ::crubit::ffi::ItemId enclosing_item_id_{};
   bool must_bind_{};
   bool detected_formatter_{};
   FfiString nodiscard_{};
@@ -2599,8 +2599,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI GlobalVar {
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
   std::string_view unique_name() const { return unique_name_.AsView(); }
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
   std::string_view owning_target() const { return owning_target_.AsView(); }
   void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_decl_loc() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -2613,8 +2613,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI GlobalVar {
   void set_unknown_attr(std::string_view value) { has_bits_ |= 0x2ULL; unknown_attr_ = FfiString(value); }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x4ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x4ULL; enclosing_item_id_ = {}; }
-  uint64_t enclosing_item_id() const { return enclosing_item_id_; }
-  void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x4ULL; enclosing_item_id_ = value; }
+  ::crubit::ffi::ItemId enclosing_item_id() const { return enclosing_item_id_; }
+  void set_enclosing_item_id(::crubit::ffi::ItemId value) { has_bits_ |= 0x4ULL; enclosing_item_id_ = value; }
   bool has_mangled_name() const { return (has_bits_ & 0x8ULL) != 0; }
   void clear_mangled_name() { has_bits_ &= ~0x8ULL; mangled_name_ = {}; }
   std::string_view mangled_name() const { return mangled_name_.AsView(); }
@@ -2636,11 +2636,11 @@ struct CRUBIT_FFI_TRIVIAL_ABI GlobalVar {
   ::crubit::ffi::Identifier cc_name_{};
   ::crubit::ffi::Identifier rs_name_{};
   FfiString unique_name_{};
-  uint64_t id_{};
+  ::crubit::ffi::ItemId id_{};
   FfiString owning_target_{};
   ::crubit::ffi::DeclLocation decl_loc_{};
   FfiString unknown_attr_{};
-  uint64_t enclosing_item_id_{};
+  ::crubit::ffi::ItemId enclosing_item_id_{};
   FfiString mangled_name_{};
   ::crubit::ffi::CcType type_{};
   bool must_bind_{};
@@ -2655,8 +2655,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI TypeAlias {
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
   std::string_view unique_name() const { return unique_name_.AsView(); }
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
   std::string_view owning_target() const { return owning_target_.AsView(); }
   void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_doc_comment() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -2675,8 +2675,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI TypeAlias {
   ::crubit::ffi::DeclLocation* mutable_decl_loc() { has_bits_ |= 0x4ULL; return &decl_loc_; }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x8ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x8ULL; enclosing_item_id_ = {}; }
-  uint64_t enclosing_item_id() const { return enclosing_item_id_; }
-  void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x8ULL; enclosing_item_id_ = value; }
+  ::crubit::ffi::ItemId enclosing_item_id() const { return enclosing_item_id_; }
+  void set_enclosing_item_id(::crubit::ffi::ItemId value) { has_bits_ |= 0x8ULL; enclosing_item_id_ = value; }
   bool names_template_instantiation() const { return names_template_instantiation_; }
   void set_names_template_instantiation(bool value) { names_template_instantiation_ = value; }
   bool must_bind() const { return must_bind_; }
@@ -2694,13 +2694,13 @@ struct CRUBIT_FFI_TRIVIAL_ABI TypeAlias {
   ::crubit::ffi::Identifier cc_name_{};
   ::crubit::ffi::Identifier rs_name_{};
   FfiString unique_name_{};
-  uint64_t id_{};
+  ::crubit::ffi::ItemId id_{};
   FfiString owning_target_{};
   FfiString doc_comment_{};
   FfiString unknown_attr_{};
   ::crubit::ffi::CcType underlying_type_{};
   ::crubit::ffi::DeclLocation decl_loc_{};
-  uint64_t enclosing_item_id_{};
+  ::crubit::ffi::ItemId enclosing_item_id_{};
   bool names_template_instantiation_{};
   bool must_bind_{};
   FfiString deprecated_{};
@@ -2713,12 +2713,12 @@ struct CRUBIT_FFI_TRIVIAL_ABI Path {
   ::crubit::ffi::UnqualifiedIdentifier* mutable_ident() { return &ident_; }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x1ULL; enclosing_item_id_ = {}; }
-  uint64_t enclosing_item_id() const { return enclosing_item_id_; }
-  void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x1ULL; enclosing_item_id_ = value; }
+  ::crubit::ffi::ItemId enclosing_item_id() const { return enclosing_item_id_; }
+  void set_enclosing_item_id(::crubit::ffi::ItemId value) { has_bits_ |= 0x1ULL; enclosing_item_id_ = value; }
   friend bool operator==(const Path&, const Path&) = default;
   uint64_t has_bits_ = 0;
   ::crubit::ffi::UnqualifiedIdentifier ident_{};
-  uint64_t enclosing_item_id_{};
+  ::crubit::ffi::ItemId enclosing_item_id_{};
 };
 }  // namespace unsupported_item
 
@@ -2759,8 +2759,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem {
   void clear_inline_cpp_source_text() { has_bits_ &= ~0x8ULL; inline_cpp_source_text_ = {}; }
   std::string_view inline_cpp_source_text() const { return inline_cpp_source_text_.AsView(); }
   void set_inline_cpp_source_text(std::string_view value) { has_bits_ |= 0x8ULL; inline_cpp_source_text_ = FfiString(value); }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
   bool has_defining_target() const { return (has_bits_ & 0x10ULL) != 0; }
@@ -2780,7 +2780,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem {
   FfiVec<::crubit::ffi::FormattedError> errors_{};
   ::crubit::ffi::DeclLocation decl_loc_{};
   FfiString inline_cpp_source_text_{};
-  uint64_t id_{};
+  ::crubit::ffi::ItemId id_{};
   bool must_bind_{};
   FfiString defining_target_{};
   FfiVec<FfiString> do_not_bind_{};
@@ -2789,13 +2789,13 @@ struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem {
 struct CRUBIT_FFI_TRIVIAL_ABI Comment {
   std::string_view text() const { return text_.AsView(); }
   void set_text(std::string_view value) { text_ = FfiString(value); }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
   friend bool operator==(const Comment&, const Comment&) = default;
   FfiString text_{};
-  uint64_t id_{};
+  ::crubit::ffi::ItemId id_{};
   bool must_bind_{};
 };
 
@@ -2812,10 +2812,10 @@ struct CRUBIT_FFI_TRIVIAL_ABI Namespace {
   ::crubit::ffi::Identifier* mutable_rs_name() { return &rs_name_; }
   std::string_view unique_name() const { return unique_name_.AsView(); }
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
-  uint64_t canonical_namespace_id() const { return canonical_namespace_id_; }
-  void set_canonical_namespace_id(uint64_t value) { canonical_namespace_id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
+  ::crubit::ffi::ItemId canonical_namespace_id() const { return canonical_namespace_id_; }
+  void set_canonical_namespace_id(::crubit::ffi::ItemId value) { canonical_namespace_id_ = value; }
   bool has_unknown_attr() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x1ULL; unknown_attr_ = {}; }
   std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
@@ -2824,8 +2824,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Namespace {
   void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x2ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x2ULL; enclosing_item_id_ = {}; }
-  uint64_t enclosing_item_id() const { return enclosing_item_id_; }
-  void set_enclosing_item_id(uint64_t value) { has_bits_ |= 0x2ULL; enclosing_item_id_ = value; }
+  ::crubit::ffi::ItemId enclosing_item_id() const { return enclosing_item_id_; }
+  void set_enclosing_item_id(::crubit::ffi::ItemId value) { has_bits_ |= 0x2ULL; enclosing_item_id_ = value; }
   bool is_inline() const { return is_inline_; }
   void set_is_inline(bool value) { is_inline_ = value; }
   bool must_bind() const { return must_bind_; }
@@ -2847,11 +2847,11 @@ struct CRUBIT_FFI_TRIVIAL_ABI Namespace {
   ::crubit::ffi::Identifier cc_name_{};
   ::crubit::ffi::Identifier rs_name_{};
   FfiString unique_name_{};
-  uint64_t id_{};
-  uint64_t canonical_namespace_id_{};
+  ::crubit::ffi::ItemId id_{};
+  ::crubit::ffi::ItemId canonical_namespace_id_{};
   FfiString unknown_attr_{};
   FfiString owning_target_{};
-  uint64_t enclosing_item_id_{};
+  ::crubit::ffi::ItemId enclosing_item_id_{};
   bool is_inline_{};
   bool must_bind_{};
   FfiString deprecated_{};
@@ -2864,14 +2864,14 @@ struct CRUBIT_FFI_TRIVIAL_ABI UseMod {
   void set_path(std::string_view value) { path_ = FfiString(value); }
   const ::crubit::ffi::Identifier& mod_name() const { return mod_name_; }
   ::crubit::ffi::Identifier* mutable_mod_name() { return &mod_name_; }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
   friend bool operator==(const UseMod&, const UseMod&) = default;
   FfiString path_{};
   ::crubit::ffi::Identifier mod_name_{};
-  uint64_t id_{};
+  ::crubit::ffi::ItemId id_{};
   bool must_bind_{};
 };
 
@@ -2894,8 +2894,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI ExistingRustType {
   ::crubit::ffi::SizeAlign* mutable_size_align() { has_bits_ |= 0x1ULL; return &size_align_; }
   bool is_same_abi() const { return is_same_abi_; }
   void set_is_same_abi(bool value) { is_same_abi_ = value; }
-  uint64_t id() const { return id_; }
-  void set_id(uint64_t value) { id_ = value; }
+  ::crubit::ffi::ItemId id() const { return id_; }
+  void set_id(::crubit::ffi::ItemId value) { id_ = value; }
   bool must_bind() const { return must_bind_; }
   void set_must_bind(bool value) { must_bind_ = value; }
   bool impl_debug() const { return impl_debug_; }
@@ -2915,7 +2915,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI ExistingRustType {
   FfiString owning_target_{};
   ::crubit::ffi::SizeAlign size_align_{};
   bool is_same_abi_{};
-  uint64_t id_{};
+  ::crubit::ffi::ItemId id_{};
   bool must_bind_{};
   bool impl_debug_{};
   FfiString label_hint_{};

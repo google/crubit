@@ -44,6 +44,9 @@ impl FieldType {
     }
 
     fn cc_storage_type(&self) -> String {
+        if let Self::Newtype("ItemId", _) = self {
+            return "::crubit::ffi::ItemId".to_string();
+        }
         match self.cc_type() {
             Self::Unit => unreachable!("Unit has no C++ storage field"),
             Self::Bool => "bool".to_string(),

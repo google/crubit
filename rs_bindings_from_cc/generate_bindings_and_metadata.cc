@@ -45,15 +45,15 @@ std::vector<const Record* _Nonnull> FindInstantiationsInNamespace(
     const IR& ir, ItemId namespace_id) {
   llvm::DenseSet<ItemId> record_ids;
   for (const auto* type_alias : get_items_if<TypeAlias>(ir)) {
-    if (ItemId(type_alias->enclosing_item_id()) == namespace_id) {
+    if (type_alias->enclosing_item_id() == namespace_id) {
       CRUBIT_CHECK(type_alias->underlying_type().variant().has_decl());
-      record_ids.insert(ItemId(type_alias->underlying_type().variant().decl()));
+      record_ids.insert(type_alias->underlying_type().variant().decl());
     }
   }
 
   std::vector<const Record* _Nonnull> result;
   for (const auto* record : get_items_if<Record>(ir)) {
-    if (record_ids.find(ItemId(record->id())) != record_ids.end()) {
+    if (record_ids.find(record->id()) != record_ids.end()) {
       result.push_back(record);
     }
   }
@@ -127,7 +127,7 @@ llvm::Expected<BindingsAndMetadata> GenerateBindingsAndMetadata(
   if (const auto* _Nullable ns =
           FindNamespace(ir, kInstantiationsNamespaceName)) {
     std::vector<const Record* _Nonnull> records =
-        FindInstantiationsInNamespace(ir, ItemId(ns->id()));
+        FindInstantiationsInNamespace(ir, ns->id());
     for (const auto* record : records) {
       // An instantiation named after a type alias has the name of the alias,
       // in the alias's module, so `cc_template!` uses the mangled name, which

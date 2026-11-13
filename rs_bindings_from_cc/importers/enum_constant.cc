@@ -92,7 +92,7 @@ std::unique_ptr<crubit::ffi::Item> EnumConstantDeclImporter::Import(
   constant->mutable_rs_name()->set_identifier(
       enumerator_name->rs_identifier().Ident());
   constant->set_unique_name(ictx_.GetUniqueName(*enum_constant_decl));
-  constant->set_id(ictx_.GenerateItemId(*enum_constant_decl).value());
+  constant->set_id(ictx_.GenerateItemId(*enum_constant_decl));
   constant->set_owning_target(
       ictx_.GetOwningTarget(*enum_constant_decl).value());
   *constant->mutable_decl_loc() =
@@ -102,7 +102,7 @@ std::unique_ptr<crubit::ffi::Item> EnumConstantDeclImporter::Import(
     constant->set_unknown_attr(std::move(**unknown_attr));
   }
   if (enclosing_item_id->has_value()) {
-    constant->set_enclosing_item_id((*enclosing_item_id)->value());
+    constant->set_enclosing_item_id(**enclosing_item_id);
   }
   if (deprecated.has_value()) {
     constant->set_deprecated(std::move(*deprecated));
