@@ -296,6 +296,22 @@ impl<'tcx> CcPrerequisites<'tcx> {
             && lazy_template_specializations.is_empty()
     }
 
+    /// Returns an iterator over both eager and lazy template specializations.
+    pub fn all_template_specializations(
+        &self,
+    ) -> impl Iterator<Item = &TemplateSpecialization<'tcx>> {
+        self.template_specializations.iter().chain(self.lazy_template_specializations.iter())
+    }
+
+    /// Drains and returns an iterator over both eager and lazy template specializations.
+    pub fn take_all_template_specializations(
+        &mut self,
+    ) -> impl Iterator<Item = TemplateSpecialization<'tcx>> {
+        std::mem::take(&mut self.template_specializations)
+            .into_iter()
+            .chain(std::mem::take(&mut self.lazy_template_specializations))
+    }
+
     /// Weakens all dependencies to only require a forward declaration. Example
     /// usage scenarios:
     /// - Computing prerequisites of pointer types (the pointee type can just be forward-declared),
