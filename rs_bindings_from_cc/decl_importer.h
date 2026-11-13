@@ -72,7 +72,7 @@ class Invocation {
     CRUBIT_CHECK(!header_targets_.empty());
 
     for (const auto& header : public_headers_) {
-      *ir_.add_public_headers() = header.AsFfi();
+      *ir_.add_public_headers() = header;
     }
     ir_.set_current_target(target_.value());
     for (const auto& [target, features] : crubit_features) {

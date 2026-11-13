@@ -82,8 +82,8 @@ extern "C" ffi::IR ir_from_cc_dependency(FfiU8Slice target_triple,
 extern "C" ffi::IR crubit_test_make_ffi_ir() {
   ffi::IR ir;
   ir.set_current_target("//test:target");
-  *ir.add_public_headers() = HeaderName("foo.h").AsFfi();
-  *ir.add_public_headers() = HeaderName("bar.h").AsFfi();
+  *ir.add_public_headers() = HeaderName("foo.h");
+  *ir.add_public_headers() = HeaderName("bar.h");
   auto& item = (*ir.mutable_top_level_items())["//test:target"].emplace_back();
   auto* func = item.mutable_func();
   func->set_id(42);

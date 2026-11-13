@@ -97,36 +97,6 @@ inline constexpr int kJsonIndent = 2;
 inline constexpr llvm::StringRef kInstantiationsNamespaceName =
     "__cc_template_instantiations";
 
-// A name of a public header of the C++ library.
-class HeaderName {
- public:
-  explicit HeaderName(llvm::StringRef name) { inner_.set_name(name); }
-
-  llvm::StringRef IncludePath() const { return inner_.name(); }
-
-  const ffi::HeaderName& AsFfi() const { return inner_; }
-  // NOLINTNEXTLINE(google-explicit-constructor)
-  operator const ffi::HeaderName&() const { return inner_; }
-
-  template <typename H>
-  friend H AbslHashValue(H h, const HeaderName& header_name) {
-    return H::combine(std::move(h),
-                      std::string_view(header_name.IncludePath()));
-  }
-
- private:
-  // Header pathname in the format suitable for a quote include.
-  ffi::HeaderName inner_;
-};
-
-inline bool operator==(const HeaderName& lhs, const HeaderName& rhs) {
-  return lhs.IncludePath() == rhs.IncludePath();
-}
-
-inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
-  return o << h.IncludePath().str();
-}
-
 // An integer uniquely identifying an Item across the FFI IR so cross-item
 // references (for example between types and records, or enclosing items for
 // comments and unsupported declarations) do not depend on tree containment.
@@ -246,6 +216,7 @@ using ffi::FuncParam;
 using ffi::GenerateBindingsRequest;
 using ffi::GenerateBindingsResponse;
 using ffi::GlobalVar;
+using ffi::HeaderName;
 using ffi::IncompleteRecord;
 using ffi::InstanceMethodMetadata;
 using ffi::IntegerConstant;
@@ -461,23 +432,6 @@ std::vector<T* _Nonnull> get_items_if(IR& ir) {
 }  // namespace crubit
 
 namespace llvm {
-
-template <>
-struct DenseMapInfo<crubit::HeaderName> {
-  static crubit::HeaderName getEmptyKey() {
-    return crubit::HeaderName("\x01<empty>");
-  }
-  static crubit::HeaderName getTombstoneKey() {
-    return crubit::HeaderName("\x01<tombstone>");
-  }
-  static unsigned getHashValue(const crubit::HeaderName& Val) {
-    return static_cast<unsigned>(llvm::hash_value(Val.IncludePath()));
-  }
-  static bool isEqual(const crubit::HeaderName& LHS,
-                      const crubit::HeaderName& RHS) {
-    return LHS == RHS;
-  }
-};
 
 template <>
 struct DenseMapInfo<crubit::Identifier> {
