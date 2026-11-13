@@ -84,8 +84,8 @@ std::unique_ptr<crubit::ffi::Item> NamespaceDeclImporter::Import(
 
   auto item = std::make_unique<crubit::ffi::Item>();
   auto* ns = item->mutable_namespace_decl();
-  ns->mutable_cc_name()->set_identifier(identifier->cc_identifier.Ident());
-  ns->mutable_rs_name()->set_identifier(identifier->cc_identifier.Ident());
+  *ns->mutable_cc_name() = identifier->cc_identifier;
+  *ns->mutable_rs_name() = identifier->cc_identifier;
   ns->set_unique_name(ictx_.GetUniqueName(*namespace_decl));
   ns->set_id(id.value());
   ns->set_canonical_namespace_id(

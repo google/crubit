@@ -1751,11 +1751,11 @@ std::vector<crubit::ffi::Field> CXXRecordDeclImporter::ImportFields(
     crubit::ffi::Field proto_field;
     if (auto rust_id = GetTranslatedFieldName(field_decl);
         rust_id.has_value()) {
-      proto_field.mutable_rust_identifier()->set_identifier(rust_id->Ident());
+      *proto_field.mutable_rust_identifier() = *std::move(rust_id);
     }
     if (auto cpp_id = StringRefToOptionalIdentifier(field_decl->getName());
         cpp_id.has_value()) {
-      proto_field.mutable_cpp_identifier()->set_identifier(cpp_id->Ident());
+      *proto_field.mutable_cpp_identifier() = *std::move(cpp_id);
     }
     if (auto comment = ictx_.GetComment(*field_decl); comment.has_value()) {
       proto_field.set_doc_comment(*comment);

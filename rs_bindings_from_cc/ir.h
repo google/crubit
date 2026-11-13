@@ -246,6 +246,7 @@ using ffi::FuncParam;
 using ffi::GenerateBindingsRequest;
 using ffi::GenerateBindingsResponse;
 using ffi::GlobalVar;
+using ffi::Identifier;
 using ffi::IncompleteRecord;
 using ffi::InstanceMethodMetadata;
 using ffi::IntegerConstant;
@@ -283,49 +284,6 @@ CcType LValueReferenceTo(CcType pointee_type,
                          std::optional<LifetimeId> lifetime);
 CcType RValueReferenceTo(CcType pointee_type,
                          std::optional<LifetimeId> lifetime);
-
-// An identifier involved in bindings.
-//
-// For example, the identifier for the C++ function `int Add(int a, int b);`
-// is `Identifier("Add")`.
-//
-// This also includes operator names, such as "operator==". Non-symbol tokens in
-// the operator name are separated by a single space. For example:
-//
-//  * `Identifier("operator==")`
-//  * `Identifier("operator new[]")`
-//  * `Identifier("operator co_await")`
-//
-// Invariants:
-//     `identifier` cannot be empty.
-class Identifier {
- public:
-  explicit Identifier(llvm::StringRef identifier) {
-    CRUBIT_CHECK(!identifier.empty());
-    inner_.set_identifier(identifier);
-  }
-
-  llvm::StringRef Ident() const { return inner_.identifier(); }
-  const ffi::Identifier& AsFfi() const { return inner_; }
-  // NOLINTNEXTLINE(google-explicit-constructor)
-  operator const ffi::Identifier&() const { return inner_; }
-
-  template <typename H>
-  friend H AbslHashValue(H h, const Identifier& i) {
-    return H::combine(std::move(h), std::string_view(i.Ident()));
-  }
-
-  bool operator==(const Identifier& other) const {
-    return Ident() == other.Ident();
-  }
-
- private:
-  ffi::Identifier inner_;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const Identifier& id) {
-  return o << std::setw(internal::kJsonIndent) << id.Ident().str();
-}
 
 llvm::Expected<IntegerConstant> IntegerConstantFromAPValue(
     const llvm::APSInt& value);
@@ -475,23 +433,6 @@ struct DenseMapInfo<crubit::HeaderName> {
   }
   static bool isEqual(const crubit::HeaderName& LHS,
                       const crubit::HeaderName& RHS) {
-    return LHS == RHS;
-  }
-};
-
-template <>
-struct DenseMapInfo<crubit::Identifier> {
-  static crubit::Identifier getEmptyKey() {
-    return crubit::Identifier("\x01<empty>");
-  }
-  static crubit::Identifier getTombstoneKey() {
-    return crubit::Identifier("\x01<tombstone>");
-  }
-  static unsigned getHashValue(const crubit::Identifier& Val) {
-    return static_cast<unsigned>(llvm::hash_value(Val.Ident()));
-  }
-  static bool isEqual(const crubit::Identifier& LHS,
-                      const crubit::Identifier& RHS) {
     return LHS == RHS;
   }
 };

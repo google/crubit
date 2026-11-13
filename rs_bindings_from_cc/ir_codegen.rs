@@ -479,6 +479,10 @@ impl RecordDef {
     fn cc_qual_name(&self) -> String {
         self.item().cc_qual_name()
     }
+
+    fn is_cc_handwritten(&self) -> bool {
+        matches!(self.name(), "Identifier")
+    }
 }
 
 fn align_up(offset: usize, align: usize) -> usize {
@@ -1182,7 +1186,7 @@ fn generate_cc(schema: &Schema) -> String {
         namespace crubit::ffi $("{")
         $("// NOLINTBEGIN(*-readability-class-member-naming,*-readability-constant-naming)")
 
-        $(for rec in &schema.records join ($['\r']) {
+        $(for rec in schema.records.iter().filter(|r| !r.is_cc_handwritten()) join ($['\r']) {
             $(if let Some(ns) = rec.ns() {
                 namespace $ns { struct CRUBIT_FFI_TRIVIAL_ABI $(rec.name()); }
             } else {
@@ -1198,14 +1202,14 @@ fn generate_cc(schema: &Schema) -> String {
             $(if let Some(ns) = en.item.ns() => $("}  // namespace ")$ns)
         })
 
-        $(for (rec_idx, rec) in schema.records.iter().enumerate() join ($['\n']) =>
+        $(for (rec_idx, rec) in schema.records.iter().enumerate().filter(|(_, r)| !r.is_cc_handwritten()) join ($['\n']) =>
             $(match rec {
                 RecordDef::Union(u) => $(generate_cc_union(schema, u)),
                 RecordDef::Struct(st) => $(generate_cc_struct(schema, rec_idx, st)),
             })
         )
 
-        $(for (rec_idx, rec) in schema.records.iter().enumerate() join ($['\r']) =>
+        $(for (rec_idx, rec) in schema.records.iter().enumerate().filter(|(_, r)| !r.is_cc_handwritten()) join ($['\r']) =>
             $(generate_cc_out_of_line(schema, rec_idx, rec))
         )
 
