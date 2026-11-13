@@ -3969,58 +3969,30 @@ enum PassingMode {
     MutRef,
 }
 
-fn get_into_iter_ty<'tcx>(
+fn get_into_iterator_assoc_ty<'tcx>(
     tcx: TyCtxt<'tcx>,
     self_ty: Ty<'tcx>,
     into_iterator_trait_id: DefId,
+    assoc_name: &str,
 ) -> Result<Ty<'tcx>> {
-    let into_iter_assoc_item = tcx
+    let assoc_sym = Symbol::intern(assoc_name);
+    let assoc_item = tcx
         .associated_items(into_iterator_trait_id)
         .in_definition_order()
-        .find(|item| {
-            item.name() == rustc_span::symbol::Symbol::intern("IntoIter")
-                && matches!(item.kind, ty::AssocKind::Type { .. })
-        })
-        .expect("IntoIter to be a required associated item of IntoIterator");
+        .find(|item| item.name() == assoc_sym && matches!(item.kind, ty::AssocKind::Type { .. }))
+        .unwrap_or_else(|| panic!("{assoc_name} to be a required associated item of IntoIterator"));
 
     #[rustversion::before(2026-06-25)]
-    let projection_ty = Ty::new_projection(tcx, into_iter_assoc_item.def_id, [self_ty]);
+    let projection_ty = Ty::new_projection(tcx, assoc_item.def_id, [self_ty]);
     #[rustversion::since(2026-06-25)]
-    let projection_ty =
-        Ty::new_projection(tcx, ty::IsRigid::No, into_iter_assoc_item.def_id, [self_ty]);
+    let projection_ty = Ty::new_projection(tcx, ty::IsRigid::No, assoc_item.def_id, [self_ty]);
 
     query_compiler::try_normalize(
         tcx,
         rustc_middle::ty::TypingEnv::fully_monomorphized(),
         projection_ty,
     )
-    .map_err(|_| anyhow!("Failed to normalize `<{} as IntoIterator>::IntoIter`", self_ty))
-}
-
-fn get_into_iter_item_ty<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    self_ty: Ty<'tcx>,
-    into_iterator_trait_id: DefId,
-) -> Result<Ty<'tcx>> {
-    let item_assoc_item = tcx
-        .associated_items(into_iterator_trait_id)
-        .in_definition_order()
-        .find(|item| {
-            item.name() == Symbol::intern("Item") && matches!(item.kind, ty::AssocKind::Type { .. })
-        })
-        .expect("Item to be a required associated item of IntoIterator");
-
-    #[rustversion::before(2026-06-25)]
-    let projection_ty = Ty::new_projection(tcx, item_assoc_item.def_id, [self_ty]);
-    #[rustversion::since(2026-06-25)]
-    let projection_ty = Ty::new_projection(tcx, ty::IsRigid::No, item_assoc_item.def_id, [self_ty]);
-
-    query_compiler::try_normalize(
-        tcx,
-        rustc_middle::ty::TypingEnv::fully_monomorphized(),
-        projection_ty,
-    )
-    .map_err(|_| anyhow!("Failed to normalize `<{} as IntoIterator>::Item`", self_ty))
+    .map_err(|_| anyhow!("Failed to normalize `<{self_ty} as IntoIterator>::{assoc_name}`"))
 }
 
 fn generate_begin_and_end_for_type<'tcx>(
@@ -4067,9 +4039,10 @@ fn generate_begin_and_end_for_type<'tcx>(
         return Ok(None);
     }
 
-    let into_iter_ty = get_into_iter_ty(tcx, check_ty, into_iterator_trait_id)?;
+    let into_iter_ty =
+        get_into_iterator_assoc_ty(tcx, check_ty, into_iterator_trait_id, "IntoIter")?;
 
-    let item_ty = get_into_iter_item_ty(tcx, check_ty, into_iterator_trait_id)?;
+    let item_ty = get_into_iterator_assoc_ty(tcx, check_ty, into_iterator_trait_id, "Item")?;
 
     let _ = db
         .format_ty_for_cc(item_ty, TypeLocation::IteratorItem)
