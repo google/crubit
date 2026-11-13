@@ -96,6 +96,7 @@ pub mod foo {
         }
     }
     #[allow(unused_imports)]
+    #[doc(inline)]
     pub use inline1::*;
 
     // namespace inline1

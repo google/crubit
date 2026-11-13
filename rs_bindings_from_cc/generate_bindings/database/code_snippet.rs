@@ -931,6 +931,7 @@ pub fn generated_items_to_tokens<'db>(
                     // (transitively).
                     quote! {
                         __HASH_TOKEN__ [allow(unused_imports)]
+                        #[doc(inline)]
                         pub use #name::*;
                     }
                     .to_tokens(tokens);

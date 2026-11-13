@@ -14,6 +14,7 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+#[doc(inline)]
 pub use crate::test_namespace::*;
 pub mod test_namespace {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]

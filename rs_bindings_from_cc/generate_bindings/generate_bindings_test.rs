@@ -1043,6 +1043,7 @@ fn test_inline_namespace() -> Result<()> {
                     pub struct MyStruct {...} ...
                 }
                 __HASH_TOKEN__[allow(unused_imports)]
+                #[doc(inline)]
                 pub use inner::*;
                 ...
                 pub fn processMyStruct(
@@ -1085,6 +1086,7 @@ fn test_inline_namespace_not_marked_inline() -> Result<()> {
                ...
            }
            __HASH_TOKEN__[allow(unused_imports)]
+           #[doc(inline)]
            pub use my_inline::*;
            ...
         }
@@ -2782,6 +2784,34 @@ fn test_unnameable_template_instantiation_with_nested_static_var_has_doc_hidden_
                 ...
                 pub fn Method ...
             }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_reexported_namespaces() -> Result<()> {
+    let mut proto = ir_testing::ir_proto_from_cc(
+        multiplatform_testing::Platform::X86Linux,
+        r#"
+        namespace test_namespace {}
+        namespace outer { namespace inner {} }
+        "#,
+    )?;
+    proto.reexported_namespaces.push("test_namespace".into());
+    proto.reexported_namespaces.push("outer::inner".into());
+
+    let ir = ir_testing::make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[doc(inline)]
+            pub use crate::test_namespace::*;
+
+            #[doc(inline)]
+            pub use crate::outer::inner::*;
         }
     );
     Ok(())

@@ -882,7 +882,10 @@ pub fn generate_bindings_tokens(
     let reexports = ir.reexported_namespaces().iter().map(|ns| {
         let path = ns.split("::").map(make_rs_ident);
         // First `*` is the quote! repeating macro, second `*` is the Rust glob import.
-        quote! { pub use crate::#( #path )::*::*; }
+        quote! {
+            #[doc(inline)]
+            pub use crate::#( #path )::*::*;
+        }
     });
 
     Ok(BindingsTokens {

@@ -14,7 +14,9 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
+#[doc(inline)]
 pub use crate::absl::*;
+#[doc(inline)]
 pub use crate::base::*;
 pub mod absl {
     #[inline(always)]

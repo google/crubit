@@ -182,6 +182,7 @@ pub mod test_namespace_bindings_inline {
         }
     }
     #[allow(unused_imports)]
+    #[doc(inline)]
     pub use inner::*;
 
     // namespace inner
