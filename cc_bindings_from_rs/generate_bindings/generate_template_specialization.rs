@@ -64,6 +64,28 @@ use rustc_middle::ty::Unnormalized;
 use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
 
+/// Returns an identifier-safe name for `symbol` for use in a template specialization include
+/// guard, with fixed-width integer typedefs replaced by the fundamental types they alias so
+/// that equivalent specializations share a guard.
+fn canonicalize_name_for_guard(symbol: &str) -> String {
+    // Unsigned typedefs come first because their names contain the signed typedef names.
+    const INT_TYPEDEFS: &[(&str, &str)] = &[
+        ("uint8_t", "unsigned char"),
+        ("uint16_t", "unsigned short"),
+        ("uint32_t", "unsigned int"),
+        ("int8_t", "signed char"),
+        ("int16_t", "short"),
+        ("int32_t", "int"),
+    ];
+    let mut s = symbol.to_string();
+    for (typedef, canonical) in INT_TYPEDEFS {
+        for prefix in [":: std :: ", "std :: ", ""] {
+            s = s.replace(&format!("{prefix}{typedef}"), canonical);
+        }
+    }
+    escape_non_identifier_chars(&s)
+}
+
 pub fn parse_adt_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
@@ -2043,7 +2065,7 @@ fn ifdef_guard_specialization_with_location<'tcx>(
         .collect::<Vec<_>>();
 
     let name = quote! { #template_name<#(#formatted_tys),*> }.to_string();
-    let name = escape_non_identifier_chars(&name);
+    let name = canonicalize_name_for_guard(&name);
     let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
     let main_api_tokens = wrap_in_ifdef_guard(&guard_name, main_api);
 
