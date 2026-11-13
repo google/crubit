@@ -78,8 +78,7 @@ class NamespaceTrie {
 
     for (const auto& child_item : ns.children()) {
       if (child_item.has_namespace_decl()) {
-        auto it =
-            id_to_namespace_.find(ItemId(child_item.namespace_decl().id()));
+        auto it = id_to_namespace_.find(child_item.namespace_decl().id());
         if (it == id_to_namespace_.end()) {
           continue;
         }
@@ -121,8 +120,7 @@ class NamespaceTrie {
 
     for (const auto& child_item : ns.children()) {
       if (child_item.has_namespace_decl()) {
-        auto child_it =
-            id_to_namespace_.find(ItemId(child_item.namespace_decl().id()));
+        auto child_it = id_to_namespace_.find(child_item.namespace_decl().id());
         if (child_it != id_to_namespace_.end()) {
           InsertNode(node_idx, *child_it->second);
         }
@@ -152,7 +150,7 @@ NamespacesHierarchy CollectNamespaces(const IR& ir) {
     if (ns->owning_target() != ir.current_target()) {
       continue;
     }
-    id_to_namespace.insert({ItemId(ns->id()), ns});
+    id_to_namespace.insert({ns->id(), ns});
   }
 
   NamespaceTrie trie(BazelLabel(std::string(ir.current_target())),
@@ -161,7 +159,7 @@ NamespacesHierarchy CollectNamespaces(const IR& ir) {
   if (target_it != ir.top_level_items().end()) {
     for (const auto& item : target_it->second) {
       if (item.has_namespace_decl()) {
-        auto it = id_to_namespace.find(ItemId(item.namespace_decl().id()));
+        auto it = id_to_namespace.find(item.namespace_decl().id());
         if (it != id_to_namespace.end()) {
           trie.InsertTopLevel(*it->second);
         }

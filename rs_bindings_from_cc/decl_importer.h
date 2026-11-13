@@ -236,7 +236,7 @@ class ImportContext {
     crubit::ffi::UnsupportedItem::Path path;
     *path.mutable_ident() = std::move(ident);
     if (enclosing_item_id.has_value()) {
-      path.set_enclosing_item_id(enclosing_item_id->value());
+      path.set_enclosing_item_id(*enclosing_item_id);
     }
     return ImportUnsupportedItem(decl, std::move(path), std::move(errors),
                                  is_hard_error);

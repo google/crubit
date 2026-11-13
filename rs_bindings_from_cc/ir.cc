@@ -127,7 +127,7 @@ llvm::StringRef PrimitiveSpelling(Primitive primitive) {
 
 CcType CcTypeDecl(ItemId id) {
   CcType result;
-  result.mutable_variant()->set_decl(id.value());
+  result.mutable_variant()->set_decl(id);
   return result;
 }
 

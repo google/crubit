@@ -185,7 +185,7 @@ std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
     existing->set_unique_name(ictx_.GetUniqueName(*enum_decl));
     existing->set_owning_target(ictx_.GetOwningTarget(*enum_decl).value());
     existing->set_is_same_abi(false);
-    existing->set_id(ictx_.GenerateItemId(*enum_decl).value());
+    existing->set_id(ictx_.GenerateItemId(*enum_decl));
     return item;
   }
 
@@ -210,7 +210,7 @@ std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
       (*enum_name).rs_identifier().Ident());
   proto_enum->set_unique_name(ictx_.GetUniqueName(*enum_decl));
   proto_enum->set_mangled_cc_name(ictx_.GetMangledName(*enum_decl));
-  proto_enum->set_id(ictx_.GenerateItemId(*enum_decl).value());
+  proto_enum->set_id(ictx_.GenerateItemId(*enum_decl));
   proto_enum->set_owning_target(std::move(owning_target).value());
   *proto_enum->mutable_decl_loc() =
       ictx_.ConvertDeclLocation(enum_decl->getBeginLoc(), &name_info);
@@ -227,7 +227,7 @@ std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
     proto_enum->set_unknown_attr(std::move(**unknown_attr));
   }
   if (enclosing_item_id->has_value()) {
-    proto_enum->set_enclosing_item_id((*enclosing_item_id)->value());
+    proto_enum->set_enclosing_item_id(**enclosing_item_id);
   }
   proto_enum->set_detected_formatter(*detected_formatter);
   if (nodiscard.has_value()) {

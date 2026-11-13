@@ -127,11 +127,6 @@ inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
   return o << h.IncludePath().str();
 }
 
-// An integer uniquely identifying an Item across the FFI IR so cross-item
-// references (for example between types and records, or enclosing items for
-// comments and unsupported declarations) do not depend on tree containment.
-CRUBIT_DEFINE_STRONG_INT_TYPE(ItemId, uintptr_t);
-
 inline std::string DebugStringFromDecl(const clang::Decl& decl) {
   auto canonical_decl_id = reinterpret_cast<uintptr_t>(decl.getCanonicalDecl());
   auto decl_id = reinterpret_cast<uintptr_t>(&decl);
@@ -251,6 +246,7 @@ using ffi::InstanceMethodMetadata;
 using ffi::IntegerConstant;
 using ffi::IR;
 using ffi::Item;
+using ffi::ItemId;
 using ffi::LifetimeName;
 using ffi::MemberFuncSemantic;
 using ffi::Namespace;

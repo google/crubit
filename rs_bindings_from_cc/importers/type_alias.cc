@@ -87,7 +87,7 @@ std::unique_ptr<crubit::ffi::Item> crubit::TypeAliasImporter::Import(
       existing->set_owning_target(ictx_.GetOwningTarget(*decl).value());
       // To be paranoid, assume Rust proto enums are not ABI compatible.
       existing->set_is_same_abi(false);
-      existing->set_id(ictx_.GenerateItemId(*decl).value());
+      existing->set_id(ictx_.GenerateItemId(*decl));
       return item;
     }
   }
@@ -221,7 +221,7 @@ std::unique_ptr<crubit::ffi::Item> crubit::TypeAliasImporter::Import(
       identifier->cc_identifier.Ident());
   type_alias->mutable_rs_name()->set_identifier(rs_name);
   type_alias->set_unique_name(ictx_.GetUniqueName(*decl));
-  type_alias->set_id(ictx_.GenerateItemId(*decl).value());
+  type_alias->set_id(ictx_.GenerateItemId(*decl));
   type_alias->set_owning_target(ictx_.GetOwningTarget(*decl).value());
   if (auto doc = ictx_.GetComment(*decl); doc.has_value()) {
     type_alias->set_doc_comment(std::move(*doc));
@@ -233,7 +233,7 @@ std::unique_ptr<crubit::ffi::Item> crubit::TypeAliasImporter::Import(
   *type_alias->mutable_decl_loc() =
       ictx_.ConvertDeclLocation(decl->getBeginLoc(), nullptr);
   if (enclosing_item_id->has_value()) {
-    type_alias->set_enclosing_item_id((*enclosing_item_id)->value());
+    type_alias->set_enclosing_item_id(**enclosing_item_id);
   }
   if (deprecated.has_value()) {
     type_alias->set_deprecated(std::move(*deprecated));
@@ -292,13 +292,12 @@ std::unique_ptr<crubit::ffi::Item> TypeAliasImporter::ImportFunctionAlias(
         item->mutable_unsupported_item();
     unsupported->set_name(using_decl.getQualifiedNameAsString());
     unsupported->set_unique_name(unique_name);
-    unsupported->set_id(id.value());
+    unsupported->set_id(id);
     *unsupported->mutable_decl_loc() = decl_loc;
     unsupported->set_defining_target(owning_target.value());
     if (unsupported->has_path()) {
       if (enclosing_item_id->has_value()) {
-        unsupported->mutable_path()->set_enclosing_item_id(
-            (*enclosing_item_id)->value());
+        unsupported->mutable_path()->set_enclosing_item_id(**enclosing_item_id);
       } else {
         unsupported->mutable_path()->clear_enclosing_item_id();
       }
@@ -310,11 +309,11 @@ std::unique_ptr<crubit::ffi::Item> TypeAliasImporter::ImportFunctionAlias(
       << "Importing a FunctionDecl should produce a Func";
   crubit::ffi::Func* func = item->mutable_func();
   func->set_unique_name(unique_name);
-  func->set_id(id.value());
+  func->set_id(id);
   *func->mutable_decl_loc() = decl_loc;
   func->set_owning_target(owning_target.value());
   if (enclosing_item_id->has_value()) {
-    func->set_enclosing_item_id((*enclosing_item_id)->value());
+    func->set_enclosing_item_id(**enclosing_item_id);
   } else {
     func->clear_enclosing_item_id();
   }

@@ -1383,12 +1383,12 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
   func->set_safety_annotation(safety_annotation);
   *func->mutable_decl_loc() =
       ictx_.ConvertDeclLocation(function_decl->getBeginLoc(), &name_info);
-  func->set_id(ictx_.GenerateItemId(*function_decl).value());
+  func->set_id(ictx_.GenerateItemId(*function_decl));
   if (enclosing_item_id->has_value()) {
-    func->set_enclosing_item_id((*enclosing_item_id)->value());
+    func->set_enclosing_item_id(**enclosing_item_id);
   }
   if (adl_enclosing_record.has_value()) {
-    func->set_adl_enclosing_record(adl_enclosing_record->value());
+    func->set_adl_enclosing_record(*adl_enclosing_record);
   }
   for (const auto& lifetime_input : lifetime_inputs) {
     func->add_lifetime_inputs(lifetime_input);
