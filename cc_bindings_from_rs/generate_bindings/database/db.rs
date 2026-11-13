@@ -330,6 +330,13 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:is_cpp_constexpr_move_constructible
       fn is_cpp_constexpr_move_constructible(&self, ty: Ty<'tcx>) -> bool;
 
+      /// Returns true if `ty` can be safely relocated in memory via bitwise `memcpy` in C++
+      /// (i.e. it does not contain inline any C++ type that is `!Unpin` and not
+      /// `derive_rust_movable`, such as polymorphic dynamic classes or `std::string`).
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:is_bitwise_relocatable
+      fn is_bitwise_relocatable(&self, ty: Ty<'tcx>) -> bool;
+
       #[return_ref]
       /// Generates bindings for a HIR item idenfied by `def_id`.  Returns `None` if
       /// the item can be ignored. Returns an `Err` if the bindings could not be

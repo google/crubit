@@ -142,7 +142,7 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
                 let pointee = substs[0].expect_ty();
                 return is_abi_compatible_pointee(db, pointee);
             }
-            if !db.is_cpp_move_constructible(ty) {
+            if !db.is_cpp_move_constructible(ty) || !db.is_bitwise_relocatable(ty) {
                 return false;
             }
             let attrs = crubit_attr::get_attrs(tcx, adt.did()).unwrap_or_default();
