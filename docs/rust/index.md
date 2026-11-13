@@ -89,10 +89,12 @@ generated bindings comes from the actual `rust_library` rule. For example, the
 
 The crate name might make a poor namespace. In addition, typically, multiple C++
 headers and build targets share the same namespace. To customize the namespace
-name, use `cc_bindings_from_rust_library_config`:
+name, or to add extra headers/sources, use the macro arguments on
+`cpp_api_from_rust` and attach the generated `<name>.hint` to the
+`rust_library`'s `aspect_hints`:
 
 ```live-snippet
-cs/file:examples/rust/library_config/BUILD symbol:custom_namespace|example_crate
+cs/file:examples/rust/library_config/BUILD symbol:example_crate|example_crate_cc_api
 ```
 
 Now, instead of the crate name, the generated bindings will use the namespace
@@ -100,6 +102,26 @@ name you provided:
 
 ```live-snippet
 cs/file:examples/rust/library_config/main.cc content:^[^/\n].*
+```
+
+If your crate only receives C++ bindings transitively and you do not have a
+`cpp_api_from_rust` target of your own, use the standalone
+`cpp_api_from_rust_library_config` (loaded from
+`//bazel:cpp_api_from_rust_library_config.bzl`) instead:
+
+```python
+load("//bazel:cpp_api_from_rust_library_config.bzl", "cpp_api_from_rust_library_config")
+
+cpp_api_from_rust_library_config(
+    name = "custom_namespace",
+    namespace = "my::library",
+)
+
+rust_library(
+    name = "example_crate",
+    srcs = ["example.rs"],
+    aspect_hints = [":custom_namespace"],
+)
 ```
 
 ### Look at the generated bindings {#examine}
