@@ -307,6 +307,14 @@ llvm::Expected<IR> IrFromCc(IrFromCcOptions options) {
     }
     command_line.emplace_back(options.clang_args[i]);
   }
+
+  // rs_bindings_from_cc only checks for compilation errors, and the target's
+  // own C++ compile action already enforces warnings on its headers; passing
+  // `-w` after `options.clang_args` suppresses warnings (including `-Werror`
+  // upgrades) and skips expensive CFG/dataflow warning passes in
+  // `clang::sema::AnalysisBasedWarnings::IssueWarnings` (such as
+  // `-Wthread-safety`, `-Wlifetime-safety-*`, and `-Wunsafe-buffer-usage`).
+  command_line.push_back("-w");
   command_line.push_back(std::string(kVirtualInputPath));
 
   absl::flat_hash_map<HeaderName, BazelLabel> header_targets_absl;
