@@ -1804,17 +1804,13 @@ enum RsLifetimeMode {
     Default,
     /// Omits lifetimes on references (`&T`) and formats generic lifetime arguments as `'_`.
     ClosureParam,
-    /// Omits lifetimes on references (`&T`) and formats generic lifetime arguments as `'static`.
-    ClosureReturn,
 }
 
 impl RsLifetimeMode {
     fn format_ty<'tcx>(self, db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
         match self {
             Self::Default => db.format_ty_for_rs(ty).cloned(),
-            Self::ClosureParam | Self::ClosureReturn => {
-                format_ty_for_rs_with_lifetime_mode(db, ty, self)
-            }
+            Self::ClosureParam => format_ty_for_rs_with_lifetime_mode(db, ty, self),
         }
     }
 }
@@ -1900,20 +1896,16 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
     format_ty_for_rs_with_lifetime_mode(db, ty, RsLifetimeMode::Default)
 }
 
-/// Formats a closure parameter or return type `ty` for Rust in `..._cc_api_impl.rs`.
+/// Formats a closure parameter type `ty` for Rust in `..._cc_api_impl.rs`.
 ///
 /// Unlike [`format_ty_for_rs`], this omits explicit lifetimes on references (`&T` instead of
-/// `&'static T`) so Rust can infer higher-ranked lifetimes on closure parameters, and formats
-/// generic lifetime arguments as `'_` for parameters (`is_return_ty == false`) or `'static` for
-/// return types (`is_return_ty == true`).
+/// `&'static T`) and formats generic lifetime arguments as `'_` so Rust can infer higher-ranked
+/// lifetimes on closure parameters.
 pub fn format_ty_for_closure_param_rs<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
-    is_return_ty: bool,
 ) -> Result<TokenStream> {
-    let lifetime_mode =
-        if is_return_ty { RsLifetimeMode::ClosureReturn } else { RsLifetimeMode::ClosureParam };
-    format_ty_for_rs_with_lifetime_mode(db, ty, lifetime_mode)
+    format_ty_for_rs_with_lifetime_mode(db, ty, RsLifetimeMode::ClosureParam)
 }
 
 fn format_ty_for_rs_with_lifetime_mode<'tcx>(
@@ -2038,7 +2030,7 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
                         .map(|subst| match subst.kind() {
                             ty::GenericArgKind::Type(ty) => lifetime_mode.format_ty(db, ty),
                             ty::GenericArgKind::Lifetime(_) => match lifetime_mode {
-                                RsLifetimeMode::Default | RsLifetimeMode::ClosureReturn => {
+                                RsLifetimeMode::Default => {
                                     Ok(db.tokens().lifetime_static.clone())
                                 }
                                 RsLifetimeMode::ClosureParam => {
@@ -2085,7 +2077,7 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
         ty::TyKind::Ref(region, referent_ty, mutability) => {
             let lifetime = match lifetime_mode {
                 RsLifetimeMode::Default => format_region_as_rs_lifetime(db.tcx(), region),
-                RsLifetimeMode::ClosureParam | RsLifetimeMode::ClosureReturn => quote! {},
+                RsLifetimeMode::ClosureParam => quote! {},
             };
             let mutability = match mutability {
                 Mutability::Mut => quote! { mut },

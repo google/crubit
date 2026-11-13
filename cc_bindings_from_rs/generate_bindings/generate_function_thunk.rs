@@ -768,7 +768,7 @@ fn format_ref_as_raw_ptr_for_invoker<'tcx>(
     ) {
         return Ok(None);
     }
-    let referent = format_ty_for_closure_param_rs(db, *referent_ty, false)?;
+    let referent = format_ty_for_closure_param_rs(db, *referent_ty)?;
     Ok(Some(match mutability {
         Mutability::Mut => (Mutability::Mut, quote! { *mut #referent }),
         Mutability::Not => (Mutability::Not, quote! { *const #referent }),
@@ -781,7 +781,7 @@ fn format_callable_thunk_arg<'tcx>(
     is_generic_param: bool,
     info: &CallableInfo<'tcx>,
 ) -> Result<TokenStream> {
-    let rs_ret_ty = format_ty_for_closure_param_rs(db, info.return_ty, true)?;
+    let rs_ret_ty = db.format_ty_for_rs(info.return_ty)?.clone();
     let is_ret_unit = info.return_ty.is_unit();
     let is_ret_c_abi_compat = is_c_abi_compatible_by_value(db, info.return_ty);
 
@@ -792,7 +792,7 @@ fn format_callable_thunk_arg<'tcx>(
 
     for (arg_idx, &param_ty) in info.param_tys.iter().enumerate() {
         let arg_name = format_ident!("__arg_{arg_idx}");
-        let rs_param_ty = format_ty_for_closure_param_rs(db, param_ty, false)?;
+        let rs_param_ty = format_ty_for_closure_param_rs(db, param_ty)?;
         closure_params.push(quote! { #arg_name: #rs_param_ty });
 
         if is_c_abi_compatible_by_value(db, param_ty) {
