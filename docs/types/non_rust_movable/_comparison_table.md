@@ -328,7 +328,7 @@ let x = emplace!(
 <section>
 
 ```rust {.no-copy}
-let x = T::new(1, 2);
+let x = T::from((1, 2));
 ```
 
 </section>

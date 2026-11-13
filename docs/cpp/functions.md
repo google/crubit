@@ -19,6 +19,7 @@ parameter and return types are supported by Crubit:
 Additionally, code can call member functions defined in C++ if the parameter and
 return types are supported by Crubit (see above). Non-static member functions
 become Rust methods, and static member functions become associated functions.
+For C++ constructors, see [Constructors](classes_and_structs.md#constructors).
 
 ## Examples
 
