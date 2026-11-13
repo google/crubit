@@ -1108,7 +1108,7 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
 
     crubit::ffi::FuncParam proto_param;
     *proto_param.mutable_type() = std::move(param_type);
-    proto_param.mutable_identifier()->set_identifier(param_name->Ident());
+    *proto_param.mutable_identifier() = *std::move(param_name);
     if (unknown_attr->has_value()) {
       proto_param.set_unknown_attr(std::move(**unknown_attr));
     }

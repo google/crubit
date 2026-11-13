@@ -467,10 +467,8 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::Import(
   ictx_.MarkAsSuccessfullyImported(*var_decl);
   auto item = std::make_unique<crubit::ffi::Item>();
   auto* global_var = item->mutable_global_var();
-  global_var->mutable_cc_name()->set_identifier(
-      var_name->cc_identifier.Ident());
-  global_var->mutable_rs_name()->set_identifier(
-      var_name->rs_identifier().Ident());
+  *global_var->mutable_cc_name() = var_name->cc_identifier;
+  *global_var->mutable_rs_name() = var_name->rs_identifier();
   global_var->set_unique_name(ictx_.GetUniqueName(*var_decl));
   global_var->set_id(ictx_.GenerateItemId(*var_decl).value());
   global_var->set_owning_target(ictx_.GetOwningTarget(*var_decl).value());
@@ -631,8 +629,8 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
   }
 
   ictx_.MarkAsSuccessfullyImported(*var_decl);
-  constant->mutable_cc_name()->set_identifier(var_name.cc_identifier.Ident());
-  constant->mutable_rs_name()->set_identifier(var_name.rs_identifier().Ident());
+  *constant->mutable_cc_name() = var_name.cc_identifier;
+  *constant->mutable_rs_name() = var_name.rs_identifier();
   constant->set_unique_name(ictx_.GetUniqueName(*var_decl));
   constant->set_id(ictx_.GenerateItemId(*var_decl).value());
   constant->set_owning_target(ictx_.GetOwningTarget(*var_decl).value());
