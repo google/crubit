@@ -384,7 +384,7 @@ pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
     #[allow(deprecated)]
     for attr in tcx.get_all_attrs(did) {
         let Attribute::Parsed(AttributeKind::DocComment { comment, .. }) = attr else { continue };
-        let Some((_, key_value)) = comment.as_str().split_once("CRUBIT_ANNOTATE:") else {
+        let Some(key_value) = comment.as_str().trim_start().strip_prefix("CRUBIT_ANNOTATE:") else {
             continue;
         };
         let Some((key, value)) = key_value.split_once("=") else {
