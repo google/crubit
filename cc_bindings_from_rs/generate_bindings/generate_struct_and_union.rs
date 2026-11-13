@@ -48,8 +48,8 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
     as_ref_or_pinned_ref, field_def_is_pub_and_stable, get_layout, get_tag_size_with_padding,
-    get_validated_layout, is_copy, is_std_ptr_non_null, matches_qualified_name, normalize_ty,
-    should_receive_bindings, SortedByDef,
+    get_validated_layout, is_copy, is_std_ptr_non_null, normalize_ty, should_receive_bindings,
+    SortedByDef,
 };
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
@@ -4405,21 +4405,6 @@ pub fn generate_const<'tcx>(
         if !explicit_predicates.clauses().is_empty() {
             bail!("Associated constants with their own predicates are not supported");
         }
-    }
-    // TODO: b/457843120 - Remove this workaround once we can properly support float constants.
-    let unsupported_consts = [
-        ["core", "f32", "INFINITY"],
-        ["core", "f64", "INFINITY"],
-        ["core", "f32", "NEG_INFINITY"],
-        ["core", "f64", "NEG_INFINITY"],
-        ["core", "f32", "NAN"],
-        ["core", "f64", "NAN"],
-    ];
-    if unsupported_consts.iter().any(|const_path| matches_qualified_name(db, def_id, const_path)) {
-        bail!(
-            "Cannot generate bindings to unsupported constant: {}",
-            tcx.item_name(def_id).as_str()
-        )
     }
     let (ty, const_value) = match generic_args {
         Some(args) => {

@@ -14,6 +14,7 @@
 #![feature(stmt_expr_attributes)]
 
 extern crate rustc_abi;
+extern crate rustc_apfloat;
 extern crate rustc_middle;
 extern crate rustc_span;
 
@@ -33,6 +34,7 @@ use rustc_abi::{
     FieldIdx, FieldsShape, Integer, IntegerType, Layout, Primitive, TagEncoding, VariantIdx,
     Variants,
 };
+use rustc_apfloat::{ieee, Category, Float};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::ty::layout::IntegerExt;
 use rustc_middle::ty::{self, TyCtxt, TyKind};
@@ -674,6 +676,29 @@ fn generate_variant<'tcx>(
     }
 }
 
+/// Formats a target IEEE-754 float into a C++ `constexpr` literal or Clang/GCC builtin call,
+/// preserving `-0.0`, subnormals, infinities, and NaN sign, quiet/signaling bit, and payload.
+fn format_apfloat<S: ieee::Semantics>(value: ieee::IeeeFloat<S>, suffix: &str) -> String {
+    let sign = if value.is_negative() { "-" } else { "" };
+    match value.category() {
+        Category::Infinity => format!("{sign}__builtin_inf{suffix}()"),
+        Category::NaN => {
+            let payload = value.to_bits() & S::NAN_PAYLOAD_MASK & !S::QNAN_SIGNIFICAND;
+            if payload == 0 {
+                format!(r#"{sign}__builtin_nan{suffix}("")"#)
+            } else {
+                let sig = if value.is_signaling() { "s" } else { "" };
+                format!(r#"{sign}__builtin_nan{sig}{suffix}("0x{payload:x}")"#)
+            }
+        }
+        Category::Zero | Category::Normal => {
+            let s = value.to_string();
+            let dot_zero = if s.contains(['.', 'e', 'E']) { "" } else { ".0" };
+            format!("{s}{dot_zero}{suffix}")
+        }
+    }
+}
+
 /// Returns a string representation of the value of a given numeric Scalar having a given TyKind.
 pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Result<String> {
     let scalar = match scalar {
@@ -695,14 +720,6 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
     use ty::TyKind;
     use ty::UintTy::*;
 
-    fn format_float(value: String, suffix: &str) -> String {
-        if value.contains('.') || value.contains('e') || value.contains('E') {
-            format!("{value}{suffix}")
-        } else {
-            format!("{value}.0{suffix}")
-        }
-    }
-
     Ok(match kind {
         TyKind::Bool => scalar.try_to_bool().unwrap().to_string(),
         TyKind::Int(I8) => scalar.to_i8().to_string(),
@@ -712,14 +729,8 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
         TyKind::Uint(U16) => format!("UINT16_C({})", scalar.to_u16()),
         TyKind::Uint(U32) => format!("UINT32_C({})", scalar.to_u32()),
         TyKind::Uint(U64) => format!("UINT64_C({})", scalar.to_u64()),
-        TyKind::Float(F32) => {
-            let s = scalar.to_f32().to_string();
-            format_float(s, "f")
-        }
-        TyKind::Float(F64) => {
-            let s = scalar.to_f64().to_string();
-            format_float(s, "L")
-        }
+        TyKind::Float(F32) => format_apfloat(scalar.to_f32(), "f"),
+        TyKind::Float(F64) => format_apfloat(scalar.to_f64(), ""),
         TyKind::Uint(Usize) => format!("UINT64_C({})", scalar.to_target_usize(tcx)),
 
         // Signed integer minimums cannot be expressed with literals, as `-<int>` parses as a unary
