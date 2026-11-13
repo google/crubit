@@ -156,8 +156,26 @@ TEST(ConstsTest, FloatRoundtrip) {
                  << std::hex << expected_bits);
     EXPECT_EQ(std::bit_cast<uint32_t>(float_value), expected_bits);
     EXPECT_EQ(consts::f32_to_bits(float_value), expected_bits);
-    EXPECT_EQ(std::bit_cast<uint32_t>(consts::roundtrip_f32(float_value)),
-              expected_bits);
+    uint32_t roundtrip_bits =
+        std::bit_cast<uint32_t>(consts::roundtrip_f32(float_value));
+#if defined(__i386__) || defined(_M_IX86)
+    // On 32-bit x86 (System V i386 and Win32 cdecl), returning float/double
+    // from extern "C" functions passes the value through the 80-bit x87 st(0)
+    // register, which quiets signaling NaNs while preserving sign and payload.
+    constexpr uint32_t kExpMask = 0x7f800000u;
+    constexpr uint32_t kQuietBit = 0x00400000u;
+    constexpr uint32_t kPayloadMask = 0x003fffffu;
+    const bool is_snan = (expected_bits & kExpMask) == kExpMask &&
+                         (expected_bits & kQuietBit) == 0 &&
+                         (expected_bits & kPayloadMask) != 0;
+    if (is_snan) {
+      EXPECT_TRUE(roundtrip_bits == expected_bits ||
+                  roundtrip_bits == (expected_bits | kQuietBit))
+          << "roundtrip_bits=0x" << std::hex << roundtrip_bits;
+      return;
+    }
+#endif
+    EXPECT_EQ(roundtrip_bits, expected_bits);
   };
   check_f32(consts::RUST_F32_MIN, 0xff7fffffu);
   check_f32(consts::RUST_F32_MAX, 0x7f7fffffu);
@@ -185,8 +203,26 @@ TEST(ConstsTest, FloatRoundtrip) {
                  << std::hex << expected_bits);
     EXPECT_EQ(std::bit_cast<uint64_t>(float_value), expected_bits);
     EXPECT_EQ(consts::f64_to_bits(float_value), expected_bits);
-    EXPECT_EQ(std::bit_cast<uint64_t>(consts::roundtrip_f64(float_value)),
-              expected_bits);
+    uint64_t roundtrip_bits =
+        std::bit_cast<uint64_t>(consts::roundtrip_f64(float_value));
+#if defined(__i386__) || defined(_M_IX86)
+    // On 32-bit x86 (System V i386 and Win32 cdecl), returning float/double
+    // from extern "C" functions passes the value through the 80-bit x87 st(0)
+    // register, which quiets signaling NaNs while preserving sign and payload.
+    constexpr uint64_t kExpMask = 0x7ff0000000000000ull;
+    constexpr uint64_t kQuietBit = 0x0008000000000000ull;
+    constexpr uint64_t kPayloadMask = 0x0007ffffffffffffull;
+    const bool is_snan = (expected_bits & kExpMask) == kExpMask &&
+                         (expected_bits & kQuietBit) == 0 &&
+                         (expected_bits & kPayloadMask) != 0;
+    if (is_snan) {
+      EXPECT_TRUE(roundtrip_bits == expected_bits ||
+                  roundtrip_bits == (expected_bits | kQuietBit))
+          << "roundtrip_bits=0x" << std::hex << roundtrip_bits;
+      return;
+    }
+#endif
+    EXPECT_EQ(roundtrip_bits, expected_bits);
   };
   check_f64(consts::RUST_F64_MIN, 0xffefffffffffffffull);
   check_f64(consts::RUST_F64_MAX, 0x7fefffffffffffffull);
