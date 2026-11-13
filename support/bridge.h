@@ -269,7 +269,7 @@ struct TupleAbi {
         [&](auto&&... args) {
           return std::apply(
               [&](auto&&... abis) {
-                (std::move(abis).Encode(args, encoder), ...);
+                (std::move(abis).Encode(std::move(args), encoder), ...);
               },
               std::move(abis));
         },
@@ -278,7 +278,7 @@ struct TupleAbi {
   Value Decode(Decoder& decoder) && {
     return std::apply(
         [&](Abis&&... abis) {
-          return std::make_tuple(std::move(abis).Decode(decoder)...);
+          return Value{std::move(abis).Decode(decoder)...};
         },
         std::move(abis));
   }
