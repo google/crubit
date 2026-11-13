@@ -179,7 +179,7 @@ pub mod zz_template_instantiations {
             __f: ::core::pin::Pin<&'__f mut Self>,
         ) {
             unsafe {
-                crate::detail::__rust_thunk__44069562__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEE4swapERS6_(self,__f)
+                crate::detail::__rust_thunk__6e34f4cd__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEE4swapERS6_(self,__f)
             }
         }
         #[must_use]
@@ -188,7 +188,7 @@ pub mod zz_template_instantiations {
             &'__this self,
         ) -> ::cref::CRef<'__this, ::cc_std::std::type_info> {
             unsafe {
-                crate::detail::__rust_thunk__2aa8490e__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEE11target_typeEv(self)
+                crate::detail::__rust_thunk__28d79d83__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEE11target_typeEv(self)
             }
         }
     }
@@ -201,7 +201,7 @@ pub mod zz_template_instantiations {
             unsafe {
                 ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                     let () = args;
-                    crate::detail::__rust_thunk__f12ce4cd__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1Ev(__crubit_dest as*mut::core::ffi::c_void);
+                    crate::detail::__rust_thunk__c5724f35__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1Ev(__crubit_dest as*mut::core::ffi::c_void);
                 })
             }
         }
@@ -217,7 +217,7 @@ pub mod zz_template_instantiations {
             unsafe {
                 ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                     let mut __param_0 = args;
-                    crate::detail::__rust_thunk__e98edf78__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1ERKS6_(__crubit_dest as*mut::core::ffi::c_void,__param_0);
+                    crate::detail::__rust_thunk__b1be59e0__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1ERKS6_(__crubit_dest as*mut::core::ffi::c_void,__param_0);
                 })
             }
         }
@@ -244,7 +244,7 @@ pub mod zz_template_instantiations {
             unsafe {
                 ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
                     let mut __param_0 = args;
-                    crate::detail::__rust_thunk__62bbc79a__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1EOS6_(__crubit_dest as*mut::core::ffi::c_void,__param_0);
+                    crate::detail::__rust_thunk__b3f6c8aa__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1EOS6_(__crubit_dest as*mut::core::ffi::c_void,__param_0);
                 })
             }
         }
@@ -267,7 +267,7 @@ pub mod zz_template_instantiations {
         #[inline(always)]
         fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __f: &'__f Self) {
             unsafe {
-                crate::detail::__rust_thunk__0a536d7f__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEaSERKS6_(self,__f);
+                crate::detail::__rust_thunk__4e5bdb92__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEaSERKS6_(self,__f);
             }
         }
     }
@@ -281,7 +281,7 @@ pub mod zz_template_instantiations {
             __f: ::ctor::RvalueReference<'_, Self>,
         ) {
             unsafe {
-                crate::detail::__rust_thunk__4e5bdb92__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEaSEOS6_(self,__f);
+                crate::detail::__rust_thunk__8a85e4cd__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEaSEOS6_(self,__f);
             }
         }
     }
@@ -290,14 +290,14 @@ pub mod zz_template_instantiations {
         #[inline(always)]
         unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
             unsafe {
-                crate::detail::__rust_thunk__fbe0e9d2__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEED1Ev(
+                crate::detail::__rust_thunk__6a804c16__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEED1Ev(
                     self,
                 )
             }
         }
     }
 
-    impl<'__this>From<&'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>for bool{ #[inline(always)]fn from(args: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE)->Self{ let mut __this=args;unsafe{ crate::detail::__rust_thunk__5db54a69__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEEcvbEv(__this) } } }
+    impl<'__this>From<&'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>for bool{ #[inline(always)]fn from(args: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE)->Self{ let mut __this=args;unsafe{ crate::detail::__rust_thunk__db7d8013__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEEcvbEv(__this) } } }
 }
 mod detail {
     #[allow(unused_imports)]
@@ -311,41 +311,41 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN6lib_ns11LibFunctionEi(
             x: ::ffi_11::c_int,
         ) -> ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk__f12ce4cd__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__c5724f35__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__e98edf78__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1ERKS6_<
+        pub(crate) unsafe fn __rust_thunk__b1be59e0__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1ERKS6_<
             '__param_0,
         >(
             __this: *mut ::core::ffi::c_void,
             __param_0: &'__param_0 crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE,
         );
-        pub(crate) unsafe fn __rust_thunk__62bbc79a__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1EOS6_<
+        pub(crate) unsafe fn __rust_thunk__b3f6c8aa__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEC1EOS6_<
             '__unelided,
         >(
             __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'__unelided,crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,
         );
-        pub(crate)unsafe fn __rust_thunk__0a536d7f__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEaSERKS6_<'__f,'__this>(__this: ::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,__f: &'__f crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE)->::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>;
-        pub(crate)unsafe fn __rust_thunk__4e5bdb92__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEaSEOS6_<'__this>(__this: ::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,__f: ::ctor::RvalueReference<'_,crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>)->::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>;
-        pub(crate) unsafe fn __rust_thunk__fbe0e9d2__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEED1Ev<
+        pub(crate)unsafe fn __rust_thunk__4e5bdb92__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEaSERKS6_<'__f,'__this>(__this: ::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,__f: &'__f crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE)->::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>;
+        pub(crate)unsafe fn __rust_thunk__8a85e4cd__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEEaSEOS6_<'__this>(__this: ::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,__f: ::ctor::RvalueReference<'_,crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>)->::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>;
+        pub(crate) unsafe fn __rust_thunk__6a804c16__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEED1Ev<
             '__this,
         >(
             __this: ::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,
         );
-        pub(crate) unsafe fn __rust_thunk__44069562__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEE4swapERS6_<
+        pub(crate) unsafe fn __rust_thunk__6e34f4cd__ZNSt3__u8functionIFiRKN9shared_ns4InfoEEE4swapERS6_<
             '__f,
             '__this,
         >(
             __this: ::core::pin::Pin<&'__this mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,
             __f: ::core::pin::Pin<&'__f mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>,
         );
-        pub(crate) unsafe fn __rust_thunk__5db54a69__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEEcvbEv<
+        pub(crate) unsafe fn __rust_thunk__db7d8013__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEEcvbEv<
             '__this,
         >(
             __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE,
         ) -> bool;
-        pub(crate) unsafe fn __rust_thunk__2aa8490e__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEE11target_typeEv<
+        pub(crate) unsafe fn __rust_thunk__28d79d83__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEE11target_typeEv<
             '__this,
         >(
             __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE,
