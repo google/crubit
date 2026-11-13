@@ -4,7 +4,10 @@
 
 use arc_anyhow::{anyhow, Result};
 use database::code_snippet::BindingsTokens;
-use database::rs_snippet::{interpolate_spelled_rust_type, Mutability, RsTypeKind};
+use database::rs_snippet::{
+    interpolate_spelled_rust_type, interpolate_spelled_rust_type_with_lifetimes, Mutability,
+    RsTypeKind,
+};
 use googletest::matchers::{contains_substring, not};
 use googletest::{expect_eq, expect_that, gtest};
 use ir::IR;
@@ -17,6 +20,7 @@ use multiplatform_ir_testing::{
 use multiplatform_testing::test_platform;
 use quote::quote;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
+use std::collections::HashMap;
 use test_generators::{
     generate_bindings_tokens_for_test, generate_bindings_tokens_from_assumed_lifetimes_cc,
     generate_bindings_tokens_from_cc, generate_bindings_tokens_from_cc_dependency, TestDbFactory,
@@ -1665,6 +1669,36 @@ fn test_interpolate_spelled_rust_type() {
         interpolate_spelled_rust_type(input, &mut substs.into_iter()).unwrap(),
         expected
     );
+}
+
+#[gtest]
+fn test_interpolate_spelled_rust_type_with_lifetimes() {
+    let substs = [Ok(quote! { ::ffi_11::c_int })];
+    let lifetime_substs = HashMap::from([("a", quote! { 'a }), ("b", quote! { 'static })]);
+    let mut used = false;
+    let input = quote! { MyType<{'a}, {}, {'b}> };
+    let expected = quote! { MyType<'a, ::ffi_11::c_int, 'static> };
+    assert_rs_matches!(
+        interpolate_spelled_rust_type_with_lifetimes(
+            input,
+            &mut substs.into_iter(),
+            &lifetime_substs,
+            &mut used,
+        )
+        .unwrap(),
+        expected
+    );
+    assert!(used);
+
+    let mut used_unknown = false;
+    let err = interpolate_spelled_rust_type_with_lifetimes(
+        quote! { MyType<{'missing}> },
+        &mut std::iter::empty(),
+        &lifetime_substs,
+        &mut used_unknown,
+    )
+    .unwrap_err();
+    expect_that!(err.to_string(), contains_substring("Lifetime `'missing` is not declared"));
 }
 
 #[gtest]

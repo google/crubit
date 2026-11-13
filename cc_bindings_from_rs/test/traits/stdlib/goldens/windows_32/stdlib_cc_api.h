@@ -105,8 +105,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: NonCloneableValue")
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator")
-    [[clang::trivial_abi]] RefIterator final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator < { 'a } >")
+    $lifetime_params("a") [[clang::trivial_abi]] RefIterator final {
  public:
   static ::stdlib::RefIterator new_(::rs::SliceRef<const ::std::int32_t> slice);
   template <typename TAdaptedSelf_ = RefIterator>

@@ -1033,11 +1033,34 @@ fn api_func_shape_for_constructor(
         // TODO(b/331685208): instead, return `impl Ctor` from `ctor_new`. It's infeasible (and
         // expensive) to deep-copy the RsTypeKind and mutate all sublifetimes.
         for param in &mut params[..] {
-            if let RsTypeKind::Reference { lifetime, .. }
-            | RsTypeKind::RvalueReference { lifetime, .. } = param
-                && lifetime.is_elided()
-            {
-                *lifetime = Lifetime::new("__unelided");
+            match param {
+                RsTypeKind::Reference { lifetime, .. }
+                | RsTypeKind::RvalueReference { lifetime, .. }
+                    if lifetime.is_elided() =>
+                {
+                    *lifetime = Lifetime::new("__unelided");
+                }
+                RsTypeKind::ExistingRustType { lifetimes, .. }
+                    if lifetimes.iter().any(Lifetime::is_elided) =>
+                {
+                    let new_lifetimes: Rc<[Lifetime]> = lifetimes
+                        .iter()
+                        .enumerate()
+                        .map(|(i, lt)| {
+                            if lt.is_elided() {
+                                if lifetimes.len() == 1 {
+                                    Lifetime::new("__unelided")
+                                } else {
+                                    Lifetime::new(&format!("__unelided_{i}"))
+                                }
+                            } else {
+                                lt.clone()
+                            }
+                        })
+                        .collect();
+                    *lifetimes = new_lifetimes;
+                }
+                _ => {}
             }
         }
         // Check if there's still any elided lifetimes after the minimal transform above:
@@ -1965,6 +1988,7 @@ fn rs_type_kinds_for_func(
                     LifetimeOptions {
                         infer_lifetimes: infer_param_lifetimes,
                         is_return_type: false,
+                        is_param: true,
 
                         // Only interesting for the return type.
                         have_reference_param: false,
@@ -2018,6 +2042,7 @@ fn rs_type_kinds_for_func(
                 LifetimeOptions {
                     infer_lifetimes,
                     is_return_type: true,
+                    is_param: false,
 
                     have_reference_param: param_types.iter().any(|pt| {
                         matches!(

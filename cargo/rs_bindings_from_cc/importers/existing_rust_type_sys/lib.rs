@@ -5,4 +5,5 @@
 // Automatically @generated lib.rs for the cc_library existing_rust_type.
 
 extern crate annotation_reader_sys;
+extern crate ast_util_sys;
 extern crate cc_ir_sys;

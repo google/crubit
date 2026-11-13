@@ -2886,6 +2886,10 @@ struct CRUBIT_FFI_TRIVIAL_ABI ExistingRustType {
   FfiVec<::crubit::ffi::TemplateArg>* mutable_template_args() { return &template_args_; }
   void clear_template_args() { template_args_.clear(); }
   ::crubit::ffi::TemplateArg* add_template_args() { return &template_args_.emplace_back(); }
+  const FfiVec<FfiString>& lifetime_inputs() const { return lifetime_inputs_; }
+  FfiVec<FfiString>* mutable_lifetime_inputs() { return &lifetime_inputs_; }
+  void clear_lifetime_inputs() { lifetime_inputs_.clear(); }
+  void add_lifetime_inputs(std::string_view value) { lifetime_inputs_.push_back(FfiString(value)); }
   std::string_view owning_target() const { return owning_target_.AsView(); }
   void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
   bool has_size_align() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -2912,6 +2916,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI ExistingRustType {
   FfiString cc_name_{};
   FfiString unique_name_{};
   FfiVec<::crubit::ffi::TemplateArg> template_args_{};
+  FfiVec<FfiString> lifetime_inputs_{};
   FfiString owning_target_{};
   ::crubit::ffi::SizeAlign size_align_{};
   bool is_same_abi_{};
@@ -4780,7 +4785,7 @@ static_assert(
 static_assert(std::is_standard_layout_v<ExistingRustType>);
 static_assert(
   sizeof(size_t) != 8 ||
-  (sizeof(ExistingRustType) == 160 &&
+  (sizeof(ExistingRustType) == 184 &&
     alignof(ExistingRustType) == 8));
 static_assert(
   sizeof(size_t) != 8 ||
@@ -4800,36 +4805,40 @@ static_assert(
     56);
 static_assert(
   sizeof(size_t) != 8 ||
-  offsetof(ExistingRustType, owning_target_) ==
+  offsetof(ExistingRustType, lifetime_inputs_) ==
     80);
 static_assert(
   sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, owning_target_) ==
+    104);
+static_assert(
+  sizeof(size_t) != 8 ||
   offsetof(ExistingRustType, size_align_) ==
-    96);
-static_assert(
-  sizeof(size_t) != 8 ||
-  offsetof(ExistingRustType, is_same_abi_) ==
-    112);
-static_assert(
-  sizeof(size_t) != 8 ||
-  offsetof(ExistingRustType, id_) ==
     120);
 static_assert(
   sizeof(size_t) != 8 ||
-  offsetof(ExistingRustType, must_bind_) ==
-    128);
-static_assert(
-  sizeof(size_t) != 8 ||
-  offsetof(ExistingRustType, impl_debug_) ==
-    129);
-static_assert(
-  sizeof(size_t) != 8 ||
-  offsetof(ExistingRustType, label_hint_) ==
+  offsetof(ExistingRustType, is_same_abi_) ==
     136);
 static_assert(
   sizeof(size_t) != 8 ||
-  offsetof(ExistingRustType, is_trivially_copyable_) ==
+  offsetof(ExistingRustType, id_) ==
+    144);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, must_bind_) ==
     152);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, impl_debug_) ==
+    153);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, label_hint_) ==
+    160);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(ExistingRustType, is_trivially_copyable_) ==
+    176);
 static_assert(std::is_standard_layout_v<Item>);
 static_assert(
   sizeof(size_t) != 8 ||

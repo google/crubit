@@ -1580,6 +1580,7 @@ version = "0.0.0"
 dependencies = [
  "annotation_reader_sys",
  "crubit_build",
+ "rs_bindings_from_cc_ast_util_sys",
  "rs_bindings_from_cc_cc_ir_sys",
 ]
 

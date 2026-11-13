@@ -701,6 +701,7 @@ pub(crate) fn schema() -> Schema {
             cc_name: Str,
             unique_name: Str,
             template_args: Vec(TemplateArg),
+            lifetime_inputs: Vec(Str),
             owning_target: BazelLabel,
             #[optional]
             size_align: SizeAlign,

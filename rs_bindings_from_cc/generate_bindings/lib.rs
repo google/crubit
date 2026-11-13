@@ -949,7 +949,25 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
             None
         }
         RsTypeKind::Enum { .. } | RsTypeKind::Primitive(..) => None,
-        RsTypeKind::ExistingRustType { type_args, .. } => {
+        RsTypeKind::ExistingRustType { existing_rust_type, type_args, lifetimes, .. } => {
+            let arity = existing_rust_type.lifetime_inputs().len();
+            if arity != 0
+                && lifetimes.len() != arity
+                && db
+                    .ir()
+                    .target_crubit_features(db.ir().current_target())
+                    .contains(crubit_feature::CrubitFeature::AssumeLifetimes)
+            {
+                return Some(UnsafeReason(intern!(
+                    db.interner(),
+                    "type {} has {} lifetime parameter{}, but {} {} provided; callers must ensure that arguments have the appropriate lifetime",
+                    existing_rust_type.rs_name(),
+                    arity,
+                    if arity == 1 { "" } else { "s" },
+                    lifetimes.len(),
+                    if lifetimes.len() == 1 { "was" } else { "were" }
+                )));
+            }
             template_params_safety(db, type_args.iter().cloned())
         }
         RsTypeKind::Box { pointee, .. } => {

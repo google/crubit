@@ -55,8 +55,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: ContainerWithRefIntoIter") alignas(8)
-    [[clang::trivial_abi]] ContainerWithRefIntoIter final {
+    ":: into_iterator_rust_golden :: ContainerWithRefIntoIter < { 'a } >")
+    $lifetime_params("a") alignas(8)
+        [[clang::trivial_abi]] ContainerWithRefIntoIter final {
  public:
   // Type is not a C++ aggregate: Field `iter` is not default-constructible in
   // C++
@@ -75,7 +76,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ContainerWithRefIntoIter(const ContainerWithRefIntoIter&) = delete;
   ContainerWithRefIntoIter& operator=(const ContainerWithRefIntoIter&) = delete;
   ContainerWithRefIntoIter(::crubit::UnsafeRelocateTag,
-                           ContainerWithRefIntoIter&& value);
+                           ContainerWithRefIntoIter && value);
 
   // Error generating bindings for struct
   // `into_iterator_rust_golden::ContainerWithRefIntoIter`:
@@ -153,8 +154,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: MyContainerIter") alignas(8)
-    [[clang::trivial_abi]] MyContainerIter final {
+    ":: into_iterator_rust_golden :: MyContainerIter < { 'a } >")
+    $lifetime_params("a") alignas(8)
+        [[clang::trivial_abi]] MyContainerIter final {
  public:
   // `into_iterator_rust_golden::MyContainerIter` doesn't implement the
   // `Default` trait
@@ -169,7 +171,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   MyContainerIter(const MyContainerIter&) = delete;
   MyContainerIter& operator=(const MyContainerIter&) = delete;
-  MyContainerIter(::crubit::UnsafeRelocateTag, MyContainerIter&& value);
+  MyContainerIter(::crubit::UnsafeRelocateTag, MyContainerIter && value);
   template <typename TAdaptedSelf_ = MyContainerIter>
   inline ::rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return ::rs::IteratorAdapter<TAdaptedSelf_*>(this);
@@ -185,8 +187,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: into_iterator_rust_golden :: MyContainerIterMut") alignas(8)
-    [[clang::trivial_abi]] MyContainerIterMut final {
+    ":: into_iterator_rust_golden :: MyContainerIterMut < { 'a } >")
+    $lifetime_params("a") alignas(8)
+        [[clang::trivial_abi]] MyContainerIterMut final {
  public:
   // `into_iterator_rust_golden::MyContainerIterMut` doesn't implement the
   // `Default` trait
@@ -201,7 +204,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Clone` trait
   MyContainerIterMut(const MyContainerIterMut&) = delete;
   MyContainerIterMut& operator=(const MyContainerIterMut&) = delete;
-  MyContainerIterMut(::crubit::UnsafeRelocateTag, MyContainerIterMut&& value);
+  MyContainerIterMut(::crubit::UnsafeRelocateTag, MyContainerIterMut && value);
   template <typename TAdaptedSelf_ = MyContainerIterMut>
   inline ::rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return ::rs::IteratorAdapter<TAdaptedSelf_*>(this);

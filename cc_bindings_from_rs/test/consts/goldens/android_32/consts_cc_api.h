@@ -17,6 +17,7 @@
 #pragma clang diagnostic ignored "-Wshadow"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
 #include "support/rs_std/str_ref.h"
 #include "support/rs_std/traits.h"
 
@@ -106,8 +107,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithArray")
 static constexpr ::consts::StructWithArray STRUCT_WITH_ARRAY_CONST =
     ::consts::StructWithArray{
         .values = ::std::array<::std::int32_t, 2>{INT32_C(100), INT32_C(200)}};
-struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithRef") alignas(4)
-    [[clang::trivial_abi]] StructWithRef final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithRef < { 'a } >")
+    $lifetime_params("a") alignas(4)
+        [[clang::trivial_abi]] StructWithRef final {
  public:
   // Type is not a C++ aggregate: Field `r` is not default-constructible in C++
 
@@ -123,7 +125,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithRef") alignas(4)
   // assignment operator.
   StructWithRef(const StructWithRef&) = default;
   StructWithRef& operator=(const StructWithRef&) = default;
-  StructWithRef(::crubit::UnsafeRelocateTag, StructWithRef&& value);
+  StructWithRef(::crubit::UnsafeRelocateTag, StructWithRef && value);
 
   bool operator==(::consts::StructWithRef const& other) const;
 
@@ -135,8 +137,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithRef") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithStr")
-    [[clang::trivial_abi]] StructWithStr final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithStr < { 'a } >")
+    $lifetime_params("a") [[clang::trivial_abi]] StructWithStr final {
  public:
   bool operator==(::consts::StructWithStr const& other) const;
 

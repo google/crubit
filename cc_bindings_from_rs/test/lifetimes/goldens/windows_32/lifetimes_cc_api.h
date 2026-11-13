@@ -33,8 +33,9 @@
 namespace lifetimes {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: lifetimes_golden :: StructWithLifetime") alignas(4)
-    [[clang::trivial_abi]] StructWithLifetime final {
+    ":: lifetimes_golden :: StructWithLifetime < { 'a } >")
+    $lifetime_params("a") alignas(4)
+        [[clang::trivial_abi]] StructWithLifetime final {
  public:
   // Type is not a C++ aggregate: Field `field_with_lifetime` is not
   // default-constructible in C++
@@ -52,7 +53,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // assignment operator.
   StructWithLifetime(const StructWithLifetime&) = default;
   StructWithLifetime& operator=(const StructWithLifetime&) = default;
-  StructWithLifetime(::crubit::UnsafeRelocateTag, StructWithLifetime&& value);
+  StructWithLifetime(::crubit::UnsafeRelocateTag, StructWithLifetime && value);
 
   static ::lifetimes::StructWithLifetime from_ref(
       ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
@@ -61,8 +62,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   ::std::int32_t value() const;
 
-  ::std::int32_t const& $(__anon1)
-      borrow_from_self() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+  ::std::int32_t const& $(__anon1) borrow_from_self() const& $(__anon1)
+      CRUBIT_LIFETIME_BOUND;
 
   static ::lifetimes::StructWithLifetime make_static_42();
 
@@ -89,8 +90,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: lifetimes_golden :: StructWithLifetimeAndDropGlue") alignas(4)
-    [[clang::trivial_abi]] StructWithLifetimeAndDropGlue final {
+    ":: lifetimes_golden :: StructWithLifetimeAndDropGlue < { 'a } >")
+    $lifetime_params("a") alignas(4)
+        [[clang::trivial_abi]] StructWithLifetimeAndDropGlue final {
  public:
   // Type is not a C++ aggregate: Field `field_with_lifetime` is not
   // default-constructible in C++
@@ -114,7 +116,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructWithLifetimeAndDropGlue& operator=(
       const StructWithLifetimeAndDropGlue&) = delete;
   StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
-                                StructWithLifetimeAndDropGlue&& value);
+                                StructWithLifetimeAndDropGlue && value);
 
   static ::rs::Movable<::lifetimes::StructWithLifetimeAndDropGlue>
   make_static_42();

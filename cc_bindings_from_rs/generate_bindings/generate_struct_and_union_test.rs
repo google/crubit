@@ -237,7 +237,8 @@ fn test_format_item_unsupported_lifetime_generic_struct() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Point") alignas(8)
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Point < { 'a } >")
+                $lifetime_params("a") alignas(8)
                 [[clang::trivial_abi]] Point final
                 {
                  public:
@@ -1799,7 +1800,8 @@ fn test_format_item_struct_with_pinned_reference_fields() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithPinnedRefs") alignas(8)
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithPinnedRefs < { 'a } >")
+                $lifetime_params("a") alignas(8)
                 [[clang::trivial_abi]] StructWithPinnedRefs final {
                  public:
                   ...
@@ -1830,7 +1832,8 @@ fn test_format_item_struct_with_reference_field_not_default_constructible() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithRef") alignas(8)
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithRef < { 'a } >")
+                $lifetime_params("a") alignas(8)
                 [[clang::trivial_abi]] StructWithRef final {
                  public:
                   ...
@@ -1886,7 +1889,8 @@ fn test_format_item_struct_with_str_reference_is_default_constructible() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithStr")
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithStr < { 'a } >")
+                $lifetime_params("a")
                 [[clang::trivial_abi]] StructWithStr final {
                   ...
                   ::rs::StrRef s{};
@@ -1909,7 +1913,8 @@ fn test_format_item_struct_with_slice_reference_is_default_constructible() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithSlice")
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithSlice < { 'a } >")
+                $lifetime_params("a")
                 [[clang::trivial_abi]] StructWithSlice final {
                   ...
                   ::rs::SliceRef<const ::std::int32_t> s{ ::crubit::internal::SliceRefDanglingTag{}, 4 };
@@ -1932,7 +1937,8 @@ fn test_format_item_struct_with_mut_slice_reference_is_default_constructible() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithMutSlice")
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithMutSlice < { 'a } >")
+                $lifetime_params("a")
                 [[clang::trivial_abi]] StructWithMutSlice final {
                   ...
                   ::rs::SliceRef<::std::int32_t> s{ ::crubit::internal::SliceRefDanglingTag{}, 4 };

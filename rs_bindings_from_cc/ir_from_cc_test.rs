@@ -1210,6 +1210,45 @@ fn test_crubit_internal_rust_type_annotation_with_templates() {
 }
 
 #[gtest]
+fn test_crubit_internal_rust_type_annotation_with_lifetime_params() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_rust_type", "MyRustType<{'a}, {'b}>")]]
+               [[clang::annotate("lifetime_params", "a", "b")]]
+               MyCppType {
+            int foo;
+        };
+        using MyAlias [[clang::annotate("crubit_internal_rust_type", "MyRustAlias<{'a}>")]]
+                      [[clang::annotate("lifetime_params", "a")]] = MyCppType;
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ExistingRustType {
+                rs_name: "MyRustType<{'a}, {'b}>",
+                cc_name: "MyCppType", ...
+                lifetime_inputs: ["a", "b"], ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ExistingRustType {
+                rs_name: "MyRustAlias<{'a}>",
+                cc_name: "MyAlias", ...
+                lifetime_inputs: ["a"], ...
+            }
+        }
+    );
+}
+
+#[gtest]
 fn test_struct_with_unsafe_annotation() {
     let proto = ir_proto_from_cc(
         r#"

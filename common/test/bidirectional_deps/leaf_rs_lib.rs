@@ -39,3 +39,24 @@ pub fn unwrap_enum(x: LeafRsEnum) -> u8 {
 }
 
 pub use LeafRsType as LeafRsTypeAlias;
+
+#[derive(Copy, Clone)]
+pub struct LeafRsLifetime<'a> {
+    field: u8,
+    _marker: core::marker::PhantomData<&'a u8>,
+}
+
+pub fn wrap_lifetime<'a>(x: &'a u8) -> LeafRsLifetime<'a> {
+    LeafRsLifetime { field: *x, _marker: core::marker::PhantomData }
+}
+
+pub fn unwrap_lifetime(x: LeafRsLifetime<'_>) -> u8 {
+    x.field
+}
+
+pub fn static_lifetime() -> LeafRsLifetime<'static> {
+    LeafRsLifetime { field: 42, _marker: core::marker::PhantomData }
+}
+
+pub use LeafRsLifetime as LeafRsLifetimeAlias;
+pub type StaticLeafRsLifetime = LeafRsLifetime<'static>;

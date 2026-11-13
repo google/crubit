@@ -34,7 +34,9 @@ use generate_function_thunk::{
 use generate_unsupported::{generate_unsupported_def_with_args, report_must_bind_error};
 
 use arc_anyhow::{Context, Result};
-use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, CcInclude};
+use code_gen_utils::{
+    format_nonportable_cc_type_name, make_rs_ident, make_rs_lifetime_ident, CcInclude,
+};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, RsSnippet, StdHashTemplateSpecialization,
     TemplateSpecialization, TraitImplTemplateSpecialization,
@@ -364,6 +366,7 @@ pub fn generate_associated_item<'db, 'tcx>(
                         name.as_str(),
                         alias_type,
                         type_location,
+                        &[],
                     )
                     .map(|snippet| Cow::Owned(snippet.into_main_api()))
                 })
@@ -2316,7 +2319,10 @@ pub fn generate_adt<'tcx>(
     let alignment = Literal::u64_unsuffixed(core.common.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.common.size_in_bytes);
     let main_api = {
-        let rs_type = core.rs_fully_qualified_name.to_string();
+        let lifetime_params: Vec<String> =
+            core.def_id.map(|def_id| lifetime_params_for_def(tcx, def_id)).unwrap_or_default();
+        let rs_type = format_adt_rs_type_for_annotation(db, core, &lifetime_params)
+            .unwrap_or_else(|_| core.rs_fully_qualified_name.to_string());
         let repr = core.def_id.map(|id| tcx.adt_def(id).repr());
         let is_packed = repr.is_some_and(|r| r.packed());
 
@@ -2329,6 +2335,9 @@ pub fn generate_adt<'tcx>(
             !is_aggregate || is_packed || repr.is_some_and(|r| r.align.is_some());
 
         let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
+        if !lifetime_params.is_empty() {
+            attributes.push(quote! {$lifetime_params(#(#lifetime_params),*)});
+        }
         if needs_explicit_alignas {
             attributes.push(quote! {alignas(#alignment)});
         }
@@ -2397,6 +2406,9 @@ pub fn generate_adt<'tcx>(
             },
         );
         snippet.prereqs.includes.insert(db.support_header("annotations_internal.h"));
+        if !lifetime_params.is_empty() {
+            snippet.prereqs.includes.insert(db.support_header("lifetime_annotations.h"));
+        }
         if let Some(def_id) = core.def_id {
             snippet.prereqs.fwd_decls.remove(&def_id);
         }
@@ -2571,6 +2583,52 @@ pub fn generate_generic_adt_declaration<'tcx>(
         };
         __NEWLINE__
     })
+}
+
+/// Formats the Rust type path for `CRUBIT_INTERNAL_RUST_TYPE(...)`, preserving lifetime
+/// parameters as `{'a}` interpolation placeholders so `rs_bindings_from_cc` can substitute
+/// use-site lifetimes from C++ back into Rust.
+fn format_adt_rs_type_for_annotation<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+    lifetime_params: &[String],
+) -> Result<String> {
+    let Some(def_id) = core.def_id else {
+        return Ok(core.rs_fully_qualified_name.to_string());
+    };
+    if lifetime_params.is_empty() {
+        return Ok(core.rs_fully_qualified_name.to_string());
+    }
+    let tcx = db.tcx();
+    let generics = tcx.generics_of(def_id);
+    let type_name = db.symbol_canonical_name(def_id)?.format_for_rs();
+    let TyKind::Adt(_, substs) = core.common.self_ty.kind() else {
+        return Ok(core.rs_fully_qualified_name.to_string());
+    };
+    let generic_args = generics
+        .own_params
+        .iter()
+        .zip(substs.iter())
+        .map(|(param, subst)| match subst.kind() {
+            ty::GenericArgKind::Lifetime(_) => {
+                let lt_name = param
+                    .name
+                    .as_str()
+                    .strip_prefix('\'')
+                    .expect("Rust lifetime parameters should start with `'`");
+                let lt = make_rs_lifetime_ident(lt_name);
+                Ok(quote! { { #lt } })
+            }
+            ty::GenericArgKind::Type(arg_ty) => {
+                let static_arg_ty = replace_all_regions_with_static(tcx, arg_ty);
+                Ok(db.format_ty_for_rs(static_arg_ty)?.clone())
+            }
+            ty::GenericArgKind::Const(_) => {
+                bail!("`const`-generic ADTs are not supported yet (b/259749095)")
+            }
+        })
+        .collect::<Result<Vec<_>>>()?;
+    Ok(quote! { #type_name < #(#generic_args),* > }.to_string())
 }
 
 /// Implementation of `BindingsGenerator::generate_adt_core`.
@@ -4513,6 +4571,22 @@ pub fn generate_const<'tcx>(
     })
 }
 
+/// Returns the bare lifetime parameter names (without leading `'`) declared directly on `def_id`.
+pub fn lifetime_params_for_def<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Vec<String> {
+    tcx.generics_of(def_id)
+        .own_params
+        .iter()
+        .filter(|p| matches!(p.kind, ty::GenericParamDefKind::Lifetime))
+        .map(|p| {
+            p.name
+                .as_str()
+                .strip_prefix('\'')
+                .expect("Rust lifetime parameters should start with `'`")
+                .to_string()
+        })
+        .collect()
+}
+
 pub fn create_type_alias_with_rs_type<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
@@ -4520,12 +4594,16 @@ pub fn create_type_alias_with_rs_type<'tcx>(
     alias_name: &str,
     alias_type: Ty<'tcx>,
     type_location: TypeLocation,
+    lifetime_params: &[String],
 ) -> Result<CcSnippet<'tcx>> {
     let doc_comment = generate_doc_comment(db, def_id);
     let cc_bindings = db.format_ty_for_cc(alias_type, type_location)?;
     let alias_name = format_cc_ident(db, alias_name).context("Error formatting type alias name")?;
 
     let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
+    if !lifetime_params.is_empty() {
+        attributes.push(quote! {$lifetime_params(#(#lifetime_params),*)});
+    }
     if let Some(cc_deprecated_tag) = generate_deprecated_tag(db.tcx(), def_id) {
         attributes.push(cc_deprecated_tag);
     }
@@ -4541,6 +4619,9 @@ pub fn create_type_alias_with_rs_type<'tcx>(
     });
     snippet.prereqs.move_defs_to_fwd_decls();
     snippet.prereqs.includes.insert(db.support_header("annotations_internal.h"));
+    if !lifetime_params.is_empty() {
+        snippet.prereqs.includes.insert(db.support_header("lifetime_annotations.h"));
+    }
 
     Ok(snippet)
 }
