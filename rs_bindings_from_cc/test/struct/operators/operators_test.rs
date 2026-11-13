@@ -393,3 +393,8 @@ fn test_only_ge() {
     expect_eq!(s2.partial_cmp(&s1), Some(core::cmp::Ordering::Greater));
     expect_eq!(s1.partial_cmp(&s1), Some(core::cmp::Ordering::Equal));
 }
+
+#[gtest]
+fn test_int_eq_with_bool_relational_does_not_implement_partial_ord() {
+    assert_not_impl_any!(IntEqWithBoolRelational: PartialEq, PartialOrd);
+}

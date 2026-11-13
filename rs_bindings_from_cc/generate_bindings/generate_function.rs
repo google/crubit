@@ -9,7 +9,8 @@ use database::code_snippet::{
     ApiSnippets, DeprecatedAttr, Feature, GeneratedItem, MustUseAttr, Thunk, Visibility,
 };
 use database::function_types::{
-    FunctionId, GeneratedFunction, ImplFor, ImplKind, PartialOrdOp, TraitName,
+    ApiFuncShape, FunctionBinding, FunctionId, GeneratedFunction, ImplFor, ImplKind, PartialOrdOp,
+    TraitName,
 };
 use database::rs_snippet::{
     format_generic_params, format_generic_params_replacing_by_self, should_derive_clone,
@@ -291,11 +292,15 @@ fn api_func_shape_for_operator_ne(
     func: &Func,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
-) -> ErrorsOr<Option<(Ident, ImplKind)>> {
+) -> ErrorsOr<Option<ApiFuncShape>> {
     // If operator== is present, don't generate ne, rely on rust's default ne.
     let eq_binding =
         db.get_binding(UnqualifiedIdentifier::Operator(Operator::new("==")), param_types.into());
-    if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) = eq_binding {
+    if let Some(FunctionBinding {
+        impl_kind: ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. },
+        ..
+    }) = eq_binding
+    {
         // operator== is present, skipping bindings for operator!=
         return Ok(None);
     }
@@ -315,7 +320,7 @@ fn api_func_shape_for_operator_ne(
         /* format_first_param_as_self= */ true,
         /* force_const_reference_params= */ true,
     );
-    Ok(Some((func_name, impl_kind)))
+    Ok(Some(ApiFuncShape { func_name, impl_kind }))
 }
 
 fn api_func_shape_for_operator_eq(
@@ -323,7 +328,7 @@ fn api_func_shape_for_operator_eq(
     func: &Func,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
-) -> ErrorsOr<(Ident, ImplKind)> {
+) -> ErrorsOr<ApiFuncShape> {
     // C++ requires that operator== is binary.
     let [param_1, param_2] = param_types else {
         panic!("Expected operator== to have exactly two parameters. Found: {func:?}");
@@ -340,7 +345,7 @@ fn api_func_shape_for_operator_eq(
         /* format_first_param_as_self= */ true,
         /* force_const_reference_params= */ true,
     );
-    Ok((func_name, impl_kind))
+    Ok(ApiFuncShape { func_name, impl_kind })
 }
 
 /// TODO: b/242938276 - For now, just emit one impl per overload, either CcIndex or CcIndexMut.
@@ -357,7 +362,7 @@ fn api_func_shape_for_operator_index(
     param_types: &mut [RsTypeKind],
     return_type: &RsTypeKind,
     errors: &Errors,
-) -> ErrorsOr<(Ident, ImplKind)> {
+) -> ErrorsOr<ApiFuncShape> {
     let CcTypeVariant::Pointer(pointee) = func.return_type().variant() else {
         bail_to_errors!(
             errors,
@@ -439,7 +444,7 @@ fn generate_cc_operator_index_nonmut_impls(
     index_type: Rc<RsTypeKind>,
     return_type: &RsTypeKind,
     errors: &Errors,
-) -> ErrorsOr<(Ident, ImplKind)> {
+) -> ErrorsOr<ApiFuncShape> {
     let func_name = make_rs_ident("cc_index");
 
     let output_type: Rc<RsTypeKind> = match return_type {
@@ -476,7 +481,7 @@ fn generate_cc_operator_index_nonmut_impls(
         associated_return_type: Some(make_rs_ident("Output")),
         force_const_reference_params: false,
     };
-    Ok((func_name, impl_kind))
+    Ok(ApiFuncShape { func_name, impl_kind })
 }
 
 fn generate_cc_operator_index_mut_impls(
@@ -486,7 +491,7 @@ fn generate_cc_operator_index_mut_impls(
     index_type: Rc<RsTypeKind>,
     return_type: &RsTypeKind,
     errors: &Errors,
-) -> ErrorsOr<(Ident, ImplKind)> {
+) -> ErrorsOr<ApiFuncShape> {
     let func_name = make_rs_ident("cc_index_mut");
 
     let output_type: Rc<RsTypeKind> = match return_type {
@@ -520,7 +525,7 @@ fn generate_cc_operator_index_mut_impls(
         associated_return_type: Some(make_rs_ident("Output")),
         force_const_reference_params: false,
     };
-    Ok((func_name, impl_kind))
+    Ok(ApiFuncShape { func_name, impl_kind })
 }
 
 /// Generates the shape of a `PartialOrd` impl backed by one of the C++ comparison operators
@@ -538,7 +543,7 @@ fn api_func_shape_for_operator_partial_ord(
     param_types: &mut [RsTypeKind],
     op: PartialOrdOp,
     errors: &Errors,
-) -> ErrorsOr<(Ident, ImplKind)> {
+) -> ErrorsOr<ApiFuncShape> {
     let op_name = op.cc_name();
     // If a more preferred relational operator already implements `PartialOrd` for these operand
     // types, rely on the default `PartialOrd` methods instead of generating a conflicting impl.
@@ -548,8 +553,11 @@ fn api_func_shape_for_operator_partial_ord(
             UnqualifiedIdentifier::Operator(Operator::new(preferred_op_name)),
             param_types.into(),
         );
-        if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialOrd { .. }, .. })) =
-            preferred_binding
+        if let Some(FunctionBinding {
+            impl_kind: ImplKind::Trait { trait_name: TraitName::PartialOrd { .. }, .. },
+            status: Ok(()),
+            ..
+        }) = preferred_binding
         {
             bail_to_errors!(
                 errors,
@@ -592,7 +600,11 @@ fn api_func_shape_for_operator_partial_ord(
     let partialeq_binding =
         db.get_binding(UnqualifiedIdentifier::Operator(Operator::new("==")), param_types.into());
     match partialeq_binding {
-        Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) => {}
+        Some(FunctionBinding {
+            impl_kind: ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. },
+            status: Ok(()),
+            ..
+        }) => {}
         _ => errors.add(anyhow!("operator{op_name} where operator== is missing.")),
     }
     let func_name = make_rs_ident(op.rs_method_name());
@@ -602,7 +614,7 @@ fn api_func_shape_for_operator_partial_ord(
         /* format_first_param_as_self= */ true,
         /* force_const_reference_params= */ true,
     );
-    Ok((func_name, impl_kind))
+    Ok(ApiFuncShape { func_name, impl_kind })
 }
 
 fn api_func_shape_for_operator_assign(
@@ -611,7 +623,7 @@ fn api_func_shape_for_operator_assign(
     maybe_record: Option<&FfiRc<Record>>,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
-) -> Option<(Ident, ImplKind)> {
+) -> Option<ApiFuncShape> {
     assert_eq!(param_types.len(), 2, "Unexpected number of parameters in operator=: {func:?}");
     let Some(record) = maybe_record else {
         errors.add(anyhow!("operator= must be a member function"));
@@ -651,24 +663,24 @@ fn api_func_shape_for_operator_assign(
         associated_return_type: None,
         force_const_reference_params: false,
     };
-    Some((func_name, impl_kind))
+    Some(ApiFuncShape { func_name, impl_kind })
 }
 
 fn api_func_shape_for_operator_unary_plus(
     db: &BindingsGenerator,
     param_type: &RsTypeKind,
     errors: &Errors,
-) -> ErrorsOr<(Ident, ImplKind)> {
+) -> ErrorsOr<ApiFuncShape> {
     let (record, _) = extract_first_operator_parameter(db, param_type, errors)?;
-    Ok((
-        make_rs_ident("unary_plus"),
-        ImplKind::Struct {
+    Ok(ApiFuncShape {
+        func_name: make_rs_ident("unary_plus"),
+        impl_kind: ImplKind::Struct {
             is_unsafe: false,
             record,
             format_first_param_as_self: true,
             is_renamed_unpin_constructor: false,
         },
-    ))
+    })
 }
 
 fn extract_first_operator_parameter(
@@ -788,7 +800,7 @@ fn api_func_shape_for_operator(
     return_type: &RsTypeKind,
     op: &Operator,
     errors: &Errors,
-) -> Option<(Ident, ImplKind)> {
+) -> Option<ApiFuncShape> {
     if let SafetyAnnotation::Unsafe = func.safety_annotation() {
         report_fatal_func_error(db, func, "Unsafe annotations on operators are not supported");
     }
@@ -836,7 +848,7 @@ fn api_func_shape_for_operator(
                     associated_return_type: None,
                     force_const_reference_params: false,
                 };
-                Some((func_name, impl_kind))
+                Some(ApiFuncShape { func_name, impl_kind })
             } else {
                 let (record, impl_for) =
                     extract_first_operator_parameter(db, &param_types[0], errors).ok()?;
@@ -854,7 +866,7 @@ fn api_func_shape_for_operator(
                     associated_return_type: Some(make_rs_ident("Output")),
                     force_const_reference_params: false,
                 };
-                Some((func_name, impl_kind))
+                Some(ApiFuncShape { func_name, impl_kind })
             }
         }
     }
@@ -866,7 +878,7 @@ fn api_func_shape_for_identifier(
     maybe_record: Option<&FfiRc<Record>>,
     param_types: &mut [RsTypeKind],
     id: &Identifier,
-) -> (Ident, ImplKind) {
+) -> ApiFuncShape {
     let is_unsafe = match func.safety_annotation() {
         SafetyAnnotation::Unannotated => {
             let mut param_type_iter = param_types.iter();
@@ -885,7 +897,9 @@ fn api_func_shape_for_identifier(
     };
 
     let func_name = make_rs_ident(id.as_str());
-    let Some(record) = maybe_record else { return (func_name, ImplKind::None { is_unsafe }) };
+    let Some(record) = maybe_record else {
+        return ApiFuncShape { func_name, impl_kind: ImplKind::None { is_unsafe } };
+    };
     let is_renamed_unpin_constructor = func.cc_name().is_constructor() && record.is_unpin();
     let format_first_param_as_self = if func.is_instance_method() {
         let Some(first_param) = param_types.first() else {
@@ -895,15 +909,15 @@ fn api_func_shape_for_identifier(
     } else {
         false
     };
-    (
+    ApiFuncShape {
         func_name,
-        ImplKind::Struct {
+        impl_kind: ImplKind::Struct {
             record: record.clone(),
             format_first_param_as_self,
             is_renamed_unpin_constructor,
             is_unsafe,
         },
-    )
+    }
 }
 
 fn api_func_shape_for_destructor(
@@ -911,7 +925,7 @@ fn api_func_shape_for_destructor(
     func: &Func,
     maybe_record: Option<&FfiRc<Record>>,
     param_types: &mut [RsTypeKind],
-) -> Option<(Ident, ImplKind)> {
+) -> Option<ApiFuncShape> {
     if let SafetyAnnotation::Unsafe = func.safety_annotation() {
         report_fatal_func_error(db, func, "Unsafe annotations on destructors are not supported");
     }
@@ -938,7 +952,7 @@ fn api_func_shape_for_destructor(
             associated_return_type: None,
             force_const_reference_params: false,
         };
-        Some((func_name, impl_kind))
+        Some(ApiFuncShape { func_name, impl_kind })
     } else {
         materialize_ctor_in_caller(func, param_types);
         let func_name = make_rs_ident("pinned_drop");
@@ -955,7 +969,7 @@ fn api_func_shape_for_destructor(
             associated_return_type: None,
             force_const_reference_params: false,
         };
-        Some((func_name, impl_kind))
+        Some(ApiFuncShape { func_name, impl_kind })
     }
 }
 
@@ -1010,7 +1024,7 @@ fn api_func_shape_for_constructor(
     maybe_record: Option<&FfiRc<Record>>,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
-) -> Option<(Ident, ImplKind)> {
+) -> Option<ApiFuncShape> {
     let Some(record) = maybe_record else {
         panic!("Constructors must be associated with a record.");
     };
@@ -1064,7 +1078,7 @@ fn api_func_shape_for_constructor(
             associated_return_type: Some(make_rs_ident("CtorType")),
             force_const_reference_params: false,
         };
-        return Some((make_rs_ident("ctor_new"), impl_kind));
+        return Some(ApiFuncShape { func_name: make_rs_ident("ctor_new"), impl_kind });
     }
 
     if unsafe_params.is_some() {
@@ -1075,7 +1089,7 @@ fn api_func_shape_for_constructor(
             /* format_first_param_as_self= */ false,
             /* force_const_reference_params= */ false,
         );
-        return Some((func_name, impl_kind));
+        return Some(ApiFuncShape { func_name, impl_kind });
     }
 
     match func.params().len() {
@@ -1094,7 +1108,7 @@ fn api_func_shape_for_constructor(
                 /* format_first_param_as_self= */ false,
                 /* force_const_reference_params= */ false,
             );
-            Some((func_name, impl_kind))
+            Some(ApiFuncShape { func_name, impl_kind })
         }
         2 if param_types[1].is_shared_ref_to(record) => {
             // Copy constructor.
@@ -1109,7 +1123,7 @@ fn api_func_shape_for_constructor(
                 /* format_first_param_as_self= */ true,
                 /* force_const_reference_params= */ false,
             );
-            Some((func_name, impl_kind))
+            Some(ApiFuncShape { func_name, impl_kind })
         }
         _ => {
             if param_types.len() == 2
@@ -1127,7 +1141,7 @@ fn api_func_shape_for_constructor(
                 /* format_first_param_as_self= */ false,
                 /* force_const_reference_params= */ false,
             );
-            Some((func_name, impl_kind))
+            Some(ApiFuncShape { func_name, impl_kind })
         }
     }
 }
@@ -1137,7 +1151,7 @@ fn api_func_shape_for_conversion_operator(
     maybe_record: Option<&FfiRc<Record>>,
     param_types: &mut [RsTypeKind],
     return_type: &RsTypeKind,
-) -> Option<(Ident, ImplKind)> {
+) -> Option<ApiFuncShape> {
     let Some(src_record) = maybe_record else {
         panic!("Conversion operators must be associated with a record.")
     };
@@ -1218,7 +1232,7 @@ fn api_func_shape_for_conversion_operator(
         associated_return_type,
         force_const_reference_params: false,
     };
-    Some((func_name, impl_kind))
+    Some(ApiFuncShape { func_name, impl_kind })
 }
 
 /// Returns the shape of the generated Rust API for a given function definition.
@@ -1230,14 +1244,14 @@ fn api_func_shape_for_conversion_operator(
 /// Returns:
 ///  * `None`: the function imported as "nothing". (For example, a defaulted destructor might be
 ///    mapped to no `Drop` impl at all.)
-///  * `(func_name, impl_kind)`: The function name and ImplKind.
+///  * `Some(ApiFuncShape)`: The function name and `ImplKind`.
 fn api_func_shape(
     db: &BindingsGenerator,
     func: &Func,
     param_types: &mut [RsTypeKind],
     return_type: &RsTypeKind,
     errors: &Errors,
-) -> Option<(Ident, ImplKind)> {
+) -> Option<ApiFuncShape> {
     let maybe_record = match func.enclosing_item_id().map(|id| db.find_untyped_decl(id)) {
         None => None,
         Some(ir::Item::Namespace(_)) => None,
@@ -1286,7 +1300,7 @@ fn api_func_shape_if_some(
     func: &Func,
     param_types: &mut [RsTypeKind],
     return_type: &RsTypeKind,
-) -> Option<(Ident, ImplKind)> {
+) -> Option<ApiFuncShape> {
     let errors = Errors::new();
     let shape = api_func_shape(db, func, param_types, return_type, &errors);
     if !errors.is_empty() {
@@ -1301,7 +1315,7 @@ pub fn get_binding(
     db: &BindingsGenerator,
     expected_function_name: std::rc::Rc<UnqualifiedIdentifier>,
     expected_param_types: Rc<[RsTypeKind]>,
-) -> Option<(Ident, ImplKind)> {
+) -> Option<FunctionBinding> {
     // Lifetime names depend on the names of the C++ parameters (e.g. `&'__this T` in a member
     // function VS `&'lhs T` in a non-member function), so with this feature, lifetimes are ignored
     // when finding the corresponding function. Lifetimes are not ignored when generating the
@@ -1310,32 +1324,27 @@ pub fn get_binding(
         .ir()
         .target_crubit_features(db.ir().current_target())
         .contains(crubit_feature::CrubitFeature::ParamNameInsensitiveOperatorLookup);
-    db.ir()
-        .get_functions_by_name(&expected_function_name)
-        .filter(|function| {
-            generate_function(db, (*function).clone(), None).ok().flatten().is_some()
-        })
-        .find_map(|function| {
-            let Ok((mut function_param_types, return_type)) =
-                rs_type_kinds_for_func(db, function.clone())
-            else {
-                return None;
-            };
-            if function_param_types.len() != expected_param_types.len()
-                || !function_param_types.iter().zip(expected_param_types.iter()).all(
-                    |(actual, expected)| {
-                        if ignore_lifetimes {
-                            actual.eq_ignoring_lifetimes(expected, false)
-                        } else {
-                            actual == expected
-                        }
-                    },
-                )
-            {
-                return None;
-            }
-            api_func_shape_if_some(db, function, &mut function_param_types, &return_type)
-        })
+    db.ir().get_functions_by_name(&expected_function_name).find_map(|function| {
+        let generated_function = db.generate_function((*function).clone(), None).ok().flatten()?;
+        let (mut function_param_types, return_type) =
+            rs_type_kinds_for_func(db, function.clone()).ok()?;
+        if function_param_types.len() != expected_param_types.len()
+            || !function_param_types.iter().zip(expected_param_types.iter()).all(
+                |(actual, expected)| {
+                    if ignore_lifetimes {
+                        actual.eq_ignoring_lifetimes(expected, false)
+                    } else {
+                        actual == expected
+                    }
+                },
+            )
+        {
+            return None;
+        }
+        let ApiFuncShape { func_name, impl_kind } =
+            api_func_shape_if_some(db, function, &mut function_param_types, &return_type)?;
+        Some(FunctionBinding { func_name, impl_kind, status: generated_function.status.clone() })
+    })
 }
 
 /// Implementation of `BindingsGenerator::is_record_clonable`.
@@ -1363,7 +1372,7 @@ pub fn is_record_clonable(db: &BindingsGenerator<'_>, record: FfiRc<Record>) -> 
                     return false;
                 }
                 api_func_shape_if_some(db, function, &mut function_param_types, &return_type)
-                    .is_some_and(|(func_name, _)| func_name == *"clone")
+                    .is_some_and(|shape| shape.func_name == *"clone")
             })
 }
 
@@ -2123,13 +2132,12 @@ pub fn generate_function(
     let (mut param_types, mut return_type) = rs_type_kinds_for_func(db, func.clone())?;
 
     let errors = Errors::new();
-    let (func_name, impl_kind) =
-        if let Some(values) = api_func_shape(db, &func, &mut param_types, &return_type, &errors) {
-            values
-        } else {
-            errors.consolidate()?;
-            return Ok(None);
-        };
+    let Some(ApiFuncShape { func_name, impl_kind }) =
+        api_func_shape(db, &func, &mut param_types, &return_type, &errors)
+    else {
+        errors.consolidate()?;
+        return Ok(None);
+    };
     if impl_kind.is_unsafe() {
         db.errors().add_category(error_report::Category::Unsafe);
     }
@@ -3841,13 +3849,14 @@ fn has_matching_cc_index(db: &BindingsGenerator, record: &Record, index_type: &R
                 return false;
             };
             let result = api_func_shape(db, f, &mut param_types, &return_type, &Errors::new());
-            if let Some((
-                _,
-                ImplKind::Trait {
-                    trait_name: TraitName::CcIndex { index_type: const_index_type, .. },
-                    ..
-                },
-            )) = result
+            if let Some(ApiFuncShape {
+                impl_kind:
+                    ImplKind::Trait {
+                        trait_name: TraitName::CcIndex { index_type: const_index_type, .. },
+                        ..
+                    },
+                ..
+            }) = result
             {
                 return const_index_type.eq_ignoring_lifetimes(index_type, true);
             }

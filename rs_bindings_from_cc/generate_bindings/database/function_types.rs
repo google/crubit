@@ -23,6 +23,27 @@ pub struct GeneratedFunction {
     pub status: Result<()>,
 }
 
+/// The Rust API shape (name and impl kind) for a generated function.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ApiFuncShape {
+    /// The name of the generated Rust function.
+    pub func_name: Ident,
+    /// The impl block or module context in which the function is generated.
+    pub impl_kind: ImplKind,
+}
+
+/// Binding metadata returned by `BindingsGenerator::get_binding`.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FunctionBinding {
+    /// The name of the generated Rust function.
+    pub func_name: Ident,
+    /// The impl block or module context in which the function is generated.
+    pub impl_kind: ImplKind,
+    /// The status of function generation (`Ok(())` if callable, `Err` if
+    /// bindings generation encountered errors).
+    pub status: Result<()>,
+}
+
 /// Uniquely identifies a generated Rust function.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct FunctionId {

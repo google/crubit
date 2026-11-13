@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::code_snippet::{ApiSnippets, NoBindingsReason, ResolvedName};
-use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
+use crate::function_types::{FunctionBinding, FunctionId, GeneratedFunction};
 use crate::rs_snippet::{LifetimeOptions, RsTypeKind, UnsafeReason};
 use arc_anyhow::{anyhow, Error, Result};
 use code_gen_utils::{make_rs_ident, CommonTokens};
@@ -11,7 +11,6 @@ use crubit_abi_type::CrubitAbiType;
 use error_report::{bail, ensure, ErrorReporting, ReportFatalError};
 use heck::ToSnakeCase;
 use ir::{CcType, Enum, FfiRc, Field, Func, GenericItem, Record, UnqualifiedIdentifier, IR};
-use proc_macro2::Ident;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Arguments, Write as _};
@@ -221,15 +220,15 @@ memoized::query_group! {
         fn is_record_clonable(&self, record: FfiRc<Record>) -> bool;
 
         #[return_ref]
-        /// Returns the generated bindings for a function with the given name and param
-        /// types. If none exists, returns None.
+        /// Returns the generated bindings metadata for a function with the given
+        /// name and param types. If none exists, returns `None`.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:get_binding
         fn get_binding_memoized(
             &self,
             expected_function_name: Rc<UnqualifiedIdentifier>,
             expected_param_types: Rc<[RsTypeKind]>,
-        ) -> Option<&(Ident, ImplKind)>;
+        ) -> Option<&FunctionBinding>;
 
         #[return_ref]
         /// Returns a collection of unqualified member functions of the given record.
@@ -278,7 +277,7 @@ impl<'db> BindingsGenerator<'db> {
         &self,
         expected_function_name: UnqualifiedIdentifier,
         expected_param_types: Rc<[RsTypeKind]>,
-    ) -> Option<&(Ident, ImplKind)> {
+    ) -> Option<&FunctionBinding> {
         self.get_binding_memoized(Rc::new(expected_function_name), expected_param_types)
     }
 
