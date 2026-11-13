@@ -2137,39 +2137,25 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
         let mut includes = cc_details_prereqs.includes;
         let mut ordered_main_apis: Vec<(Node, TokenStream)> = Vec::new();
         for node in ordered_ids.into_iter() {
-            match &node {
-                Node::Def(def_id) => {
-                    let CcSnippet {
-                        tokens: cc_tokens,
-                        prereqs:
-                            CcPrerequisites {
-                                includes: mut inner_includes,
-                                fwd_decls: inner_fwd_decls,
-                                .. // `defs` and `specializations` have already been utilized by `toposort` above
-                            },
-                    } = main_apis.remove(def_id).unwrap();
-                    fwd_decls.extend(inner_fwd_decls.difference(&already_declared).copied());
-                    already_declared.extend(inner_fwd_decls);
-                    already_declared.insert(*def_id);
-                    includes.append(&mut inner_includes);
-                    ordered_main_apis.push((node, cc_tokens));
-                }
-                Node::Specialization(spec) => {
-                    let CcSnippet {
-                        tokens: cc_tokens,
-                        prereqs:
-                            CcPrerequisites {
-                                includes: mut inner_includes,
-                                fwd_decls: inner_fwd_decls,
-                                .. // `defs` and `specializations` have already been utilized by `toposort` above
-                            },
-                    } = specializations.remove(spec).unwrap();
-                    fwd_decls.extend(inner_fwd_decls.difference(&already_declared).copied());
-                    already_declared.extend(inner_fwd_decls);
-                    includes.append(&mut inner_includes);
-                    ordered_main_apis.push((node, cc_tokens));
-                }
+            let CcSnippet {
+                tokens: cc_tokens,
+                prereqs:
+                    CcPrerequisites {
+                        includes: mut inner_includes,
+                        fwd_decls: inner_fwd_decls,
+                        .. // `defs` and `specializations` have already been utilized by `toposort` above
+                    },
+            } = match &node {
+                Node::Def(def_id) => main_apis.remove(def_id).unwrap(),
+                Node::Specialization(spec) => specializations.remove(spec).unwrap(),
+            };
+            fwd_decls.extend(inner_fwd_decls.difference(&already_declared).copied());
+            already_declared.extend(inner_fwd_decls);
+            if let Node::Def(def_id) = &node {
+                already_declared.insert(*def_id);
             }
+            includes.append(&mut inner_includes);
+            ordered_main_apis.push((node, cc_tokens));
         }
 
         let fwd_decls = fwd_decls
