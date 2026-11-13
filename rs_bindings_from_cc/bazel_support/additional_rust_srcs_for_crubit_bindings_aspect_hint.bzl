@@ -92,8 +92,7 @@ def make_additional_rust_srcs_provider(
         cpp_srcs,
         deps,
         cc_deps,
-        generated_cpp_support_deps = [],
-        cc_support_deps = [],
+        cpp_deps = [],
         unstable_rust_features = [],
         root_namespaces = [],
         aliases = {},
@@ -107,9 +106,9 @@ def make_additional_rust_srcs_provider(
         deps = _get_additional_rust_deps_variant_info(deps),
         link_deps = _get_additional_rust_link_deps_variant_info(link_deps),
         cc_deps = _get_additional_cc_deps_variant_info(cc_deps),
-        generated_cpp_support_deps = [
+        cpp_deps = [
             dep[CcInfo]
-            for dep in (generated_cpp_support_deps + cc_support_deps)
+            for dep in cpp_deps
         ],
         cpp_srcs = cpp_srcs,
         unstable_rust_features = unstable_rust_features,
@@ -158,8 +157,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.cpp_srcs,
         ctx.attr.deps,
         ctx.attr.cc_deps,
-        ctx.attr.generated_cpp_support_deps,
-        ctx.attr.cc_support_deps,
+        ctx.attr.cpp_deps,
         ctx.attr.unstable_rust_features,
         ctx.attr.root_namespaces,
         aliases = aliases,
@@ -212,11 +210,7 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             default = [],
             aspects = [rust_bindings_from_cc_aspect],
         ),
-        "generated_cpp_support_deps": attr.label_list(
-            mandatory = False,
-            default = [],
-        ),
-        "cc_support_deps": attr.label_list(
+        "cpp_deps": attr.label_list(
             mandatory = False,
             default = [],
         ),
@@ -263,8 +257,7 @@ def additional_rust_srcs_for_crubit_bindings(
         deps = [],
         link_deps = [],
         cc_deps = [],
-        generated_cpp_support_deps = [],
-        cc_support_deps = [],
+        cpp_deps = [],
         unstable_rust_features = [],
         crubit_features = ["supported"],
         root_namespaces = [],
@@ -301,7 +294,7 @@ def additional_rust_srcs_for_crubit_bindings(
             Note: if `cpp_srcs` is non-empty, the generated C++ implementation is compiled
             textually, without precompiled header modules, which is slower. Other than the wrapped
             library's own headers, headers included by `cpp_srcs` should come from
-            `generated_cpp_support_deps`.
+            `cpp_deps`.
         namespace_path: This allows Rust source files define new entries inside of a specific
             existing C++ namespace instead of the top level namespace. For modules which are not
             existing namespace names, use `pub mod` statement in the Rust source file instead.
@@ -310,11 +303,11 @@ def additional_rust_srcs_for_crubit_bindings(
         link_deps: List of other native libraries to be linked to this library target.
         cc_deps: List of cc_library targets whose crubit-generated bindings will be made available
             to this library target.
-        generated_cpp_support_deps: List of cc_library targets of support libraries for generated C++ code.
+        cpp_deps: C++ dependencies of the generated C++ implementation (`_rust_api_impl.cc`),
+            which also compiles `cpp_srcs`, such as headers included by `cpp_srcs`.
             For example, C++ types that have composable bridging should define their supporting
             Crubit ABI types here so they're available to generated code without being exposed to
             Crubit.
-        cc_support_deps: Deprecated. Use generated_cpp_support_deps instead.
         root_namespaces: List of C++ namespaces to re-export at the root of the generated Rust bindings.
         unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
         crubit_features: List of Crubit features to enable.
@@ -335,8 +328,7 @@ def additional_rust_srcs_for_crubit_bindings(
         deps = deps,
         link_deps = link_deps,
         cc_deps = cc_deps,
-        generated_cpp_support_deps = generated_cpp_support_deps,
-        cc_support_deps = cc_support_deps,
+        cpp_deps = cpp_deps,
         unstable_rust_features = unstable_rust_features,
         crubit_features = [
             f if (f.startswith("//") or f.startswith(":")) else "//features:" + f

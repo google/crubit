@@ -110,7 +110,7 @@ def rust_api_from_cpp(
         cpp_api_deps = [],
         srcs_mod = "",
         root_namespaces = [],
-        generated_cpp_support_deps = [],
+        cpp_deps = [],
         unstable_rust_features = [],
         crubit_features = [],
         types_only = False,
@@ -142,7 +142,7 @@ def rust_api_from_cpp(
         textually, without precompiled header modules (slower) and without
         `layering_check` (b/573160050).
         Other than the wrapped library's own headers, headers included by
-        `cpp_srcs` should come from `generated_cpp_support_deps`.
+        `cpp_srcs` should come from `cpp_deps`.
       deps: Dependencies for the Rust API.
       link_deps: Native C++ dependencies to link into the Rust library.
       cpp_api_deps: Additional C++ dependencies propagated to `cpp_api_from_rust`
@@ -152,7 +152,10 @@ def rust_api_from_cpp(
         creating a dependency cycle).
       srcs_mod: Controls which module inside the Rust crate the additional rust sources are added to.
       root_namespaces: List of C++ namespaces to re-export at the root of the generated Rust bindings.
-      generated_cpp_support_deps: C++ dependencies of the generated C++ target (e.g. ABI support libraries required by the generated bindings).
+      cpp_deps: C++ dependencies of the generated C++ implementation (`_rust_api_impl.cc`),
+        which also compiles `cpp_srcs` and C++ embedded via `inline_cpp!`/`global_cpp!`: for
+        example, ABI support libraries for bridged types and headers included by `cpp_srcs`.
+        Unlike `cpp_api_deps`, these are not propagated to `cpp_api_from_rust` dependents.
       unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
       crubit_features: List of additional Crubit features to enable on top of
         `supported` for bindings generation (e.g. `["infer_send_sync"]` or
@@ -170,7 +173,7 @@ def rust_api_from_cpp(
         embedded C++ is extracted and added to `cpp_srcs` (see there for the build cost).
         `inline_cpp!` in `srcs` fails to compile without it. `global_cpp!` blocks must
         `#include` every header the embedded C++ uses, including the headers of `cpp_target`.
-        Include only headers of `cpp_target` or `generated_cpp_support_deps`: other headers
+        Include only headers of `cpp_target` or `cpp_deps`: other headers
         build today, but will break once `cpp_srcs` is compiled with `layering_check`
         (b/573160050).
       **kwargs: Additional arguments passed to the underlying rule.
@@ -235,7 +238,7 @@ def rust_api_from_cpp(
             link_deps = [d for d in link_deps if d != cpp_target],
             namespace_path = srcs_mod,
             root_namespaces = root_namespaces,
-            generated_cpp_support_deps = generated_cpp_support_deps,
+            cpp_deps = cpp_deps,
             unstable_rust_features = unstable_rust_features,
             crubit_features = crubit_features,
             aliases = aliases,
