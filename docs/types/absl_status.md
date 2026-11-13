@@ -72,7 +72,7 @@ When using `googletest` alongside `status::{ok, err}`, import matchers with
 aliases to avoid name collisions:
 
 ```rust
-use googletest::matchers::{eq, err as is_err, ok as is_ok, status_is};
+use googletest::matchers::{eq, err as is_err, ok as is_ok, status_is_v2};
 use status::StatusCodeError;
 ```
 
@@ -80,7 +80,7 @@ You can then assert on `Status` or `StatusOr` values:
 
 ```rust
 expect_that!(result, is_ok(eq(&42)));
-expect_that!(result, is_err(status_is(StatusCodeError::INTERNAL)));
+expect_that!(result, is_err(status_is_v2(eq(StatusCodeError::INTERNAL))));
 ```
 
 ## Types inside `StatusOr` must be layout-compatible {#layout-compatibility}

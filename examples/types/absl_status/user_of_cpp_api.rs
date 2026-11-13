@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use googletest::matchers::{eq, ok as is_ok, status_is};
+use googletest::matchers::{eq, ok as is_ok, status_is_v2};
 use googletest::{expect_that, gtest};
 use status::StatusCodeError;
 
@@ -14,7 +14,8 @@ fn test_returns_status() {
     let status = cpp_api::ReturnsStatus(false);
     expect_that!(
         status,
-        status_is(StatusCodeError::INTERNAL).with_message(eq("Something went wrong, oh no!"))
+        status_is_v2(eq(StatusCodeError::INTERNAL))
+            .with_message(eq("Something went wrong, oh no!"))
     );
 }
 
@@ -26,7 +27,8 @@ fn test_returns_status_or_int() {
     let status_or_int = cpp_api::ReturnsStatusOrInt(false);
     expect_that!(
         status_or_int,
-        status_is(StatusCodeError::INTERNAL).with_message(eq("Something went wrong, oh no!"))
+        status_is_v2(eq(StatusCodeError::INTERNAL))
+            .with_message(eq("Something went wrong, oh no!"))
     );
 }
 
@@ -41,6 +43,7 @@ fn test_returns_status_with_proto() {
     let status = cpp_api::ReturnsStatusWithProto(false, msg.as_mut());
     expect_that!(
         status,
-        status_is(StatusCodeError::INTERNAL).with_message(eq("Something went wrong, oh no!"))
+        status_is_v2(eq(StatusCodeError::INTERNAL))
+            .with_message(eq("Something went wrong, oh no!"))
     );
 }
