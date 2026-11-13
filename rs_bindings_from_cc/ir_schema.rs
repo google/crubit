@@ -729,14 +729,14 @@ pub(crate) fn schema() -> Schema {
         }
         struct IR {
             public_headers: Vec(HeaderName),
-            current_target: Str,
+            current_target: BazelLabel,
             #[optional]
             crate_root_path: Str,
-            crubit_features: Map(Str, Vec(Str)),
+            crubit_features: Map(BazelLabel, Vec(Str)),
             unstable_rust_features: Vec(Str),
             reexported_namespaces: Vec(Str),
-            top_level_items: Map(Str, Vec(Item)),
-            crate_names: Map(Str, Str),
+            top_level_items: Map(BazelLabel, Vec(Item)),
+            crate_names: Map(BazelLabel, Str),
         }
         struct GenerateBindingsRequest {
             ir: IR,

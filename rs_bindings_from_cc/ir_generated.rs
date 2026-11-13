@@ -5463,13 +5463,13 @@ mod __defs {
     pub struct IR {
         pub has_bits: u64,
         pub public_headers: FfiVec<HeaderName>,
-        pub current_target: FfiString,
+        pub current_target: BazelLabel,
         pub crate_root_path: FfiString,
-        pub crubit_features: FfiMap<FfiString, FfiVec<FfiString>>,
+        pub crubit_features: FfiMap<BazelLabel, FfiVec<FfiString>>,
         pub unstable_rust_features: FfiVec<FfiString>,
         pub reexported_namespaces: FfiVec<FfiString>,
-        pub top_level_items: FfiMap<FfiString, FfiVec<Item>>,
-        pub crate_names: FfiMap<FfiString, FfiString>,
+        pub top_level_items: FfiMap<BazelLabel, FfiVec<Item>>,
+        pub crate_names: FfiMap<BazelLabel, FfiString>,
     }
 
     impl core::fmt::Debug for IR {
@@ -5500,7 +5500,7 @@ mod __defs {
         pub const EMPTY: Self = Self {
             has_bits: 0,
             public_headers: FfiVec::EMPTY,
-            current_target: FfiString::EMPTY,
+            current_target: BazelLabel::EMPTY,
             crate_root_path: FfiString::EMPTY,
             crubit_features: FfiMap::EMPTY,
             unstable_rust_features: FfiVec::EMPTY,
@@ -5511,8 +5511,8 @@ mod __defs {
         pub fn public_headers(&self) -> &[HeaderName] {
             self.public_headers.as_slice()
         }
-        pub fn current_target(&self) -> &str {
-            self.current_target.as_str()
+        pub fn current_target(&self) -> &BazelLabel {
+            &self.current_target
         }
         pub fn has_crate_root_path(&self) -> bool {
             (self.has_bits & 0x1) != 0
@@ -5524,7 +5524,7 @@ mod __defs {
         pub fn crate_root_path(&self) -> Option<&str> {
             self.has_crate_root_path().then(|| self.crate_root_path.as_str())
         }
-        pub fn crubit_features(&self) -> &FfiMap<FfiString, FfiVec<FfiString>> {
+        pub fn crubit_features(&self) -> &FfiMap<BazelLabel, FfiVec<FfiString>> {
             &self.crubit_features
         }
         pub fn unstable_rust_features(&self) -> &[FfiString] {
@@ -5533,16 +5533,16 @@ mod __defs {
         pub fn reexported_namespaces(&self) -> &[FfiString] {
             self.reexported_namespaces.as_slice()
         }
-        pub fn top_level_items(&self) -> &FfiMap<FfiString, FfiVec<Item>> {
+        pub fn top_level_items(&self) -> &FfiMap<BazelLabel, FfiVec<Item>> {
             &self.top_level_items
         }
-        pub fn crate_names(&self) -> &FfiMap<FfiString, FfiString> {
+        pub fn crate_names(&self) -> &FfiMap<BazelLabel, FfiString> {
             &self.crate_names
         }
         pub fn set_public_headers(&mut self, val: FfiVec<HeaderName>) {
             self.public_headers = val;
         }
-        pub fn set_current_target(&mut self, val: FfiString) -> &mut FfiString {
+        pub fn set_current_target(&mut self, val: BazelLabel) -> &mut BazelLabel {
             self.current_target = val;
             &mut self.current_target
         }
@@ -5551,7 +5551,7 @@ mod __defs {
             self.crate_root_path = val;
             &mut self.crate_root_path
         }
-        pub fn set_crubit_features(&mut self, val: FfiMap<FfiString, FfiVec<FfiString>>) {
+        pub fn set_crubit_features(&mut self, val: FfiMap<BazelLabel, FfiVec<FfiString>>) {
             self.crubit_features = val;
         }
         pub fn set_unstable_rust_features(&mut self, val: FfiVec<FfiString>) {
@@ -5560,10 +5560,10 @@ mod __defs {
         pub fn set_reexported_namespaces(&mut self, val: FfiVec<FfiString>) {
             self.reexported_namespaces = val;
         }
-        pub fn set_top_level_items(&mut self, val: FfiMap<FfiString, FfiVec<Item>>) {
+        pub fn set_top_level_items(&mut self, val: FfiMap<BazelLabel, FfiVec<Item>>) {
             self.top_level_items = val;
         }
-        pub fn set_crate_names(&mut self, val: FfiMap<FfiString, FfiString>) {
+        pub fn set_crate_names(&mut self, val: FfiMap<BazelLabel, FfiString>) {
             self.crate_names = val;
         }
     }

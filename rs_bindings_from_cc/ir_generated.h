@@ -890,8 +890,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Func {
   ::crubit::ffi::UnqualifiedIdentifier* mutable_rs_name() { return &rs_name_; }
   std::string_view unique_name() const { return unique_name_.AsView(); }
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
-  std::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& owning_target() const { return owning_target_; }
+  void set_owning_target(::crubit::ffi::BazelLabel value) { owning_target_ = std::move(value); }
   std::string_view mangled_name() const { return mangled_name_.AsView(); }
   void set_mangled_name(std::string_view value) { mangled_name_ = FfiString(value); }
   bool has_doc_comment() const { return (has_bits_ & 0x1ULL) != 0; }
@@ -979,7 +979,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Func {
   ::crubit::ffi::UnqualifiedIdentifier cc_name_{};
   ::crubit::ffi::UnqualifiedIdentifier rs_name_{};
   FfiString unique_name_{};
-  FfiString owning_target_{};
+  ::crubit::ffi::BazelLabel owning_target_{};
   FfiString mangled_name_{};
   FfiString doc_comment_{};
   ::crubit::ffi::CcType return_type_{};
@@ -1822,8 +1822,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Constant {
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  std::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& owning_target() const { return owning_target_; }
+  void set_owning_target(::crubit::ffi::BazelLabel value) { owning_target_ = std::move(value); }
   bool has_decl_loc() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_decl_loc() { has_bits_ &= ~0x1ULL; decl_loc_ = {}; }
   const ::crubit::ffi::DeclLocation& decl_loc() const { return decl_loc_; }
@@ -1859,7 +1859,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Constant {
   ::crubit::ffi::Identifier rs_name_{};
   FfiString unique_name_{};
   uint64_t id_{};
-  FfiString owning_target_{};
+  ::crubit::ffi::BazelLabel owning_target_{};
   ::crubit::ffi::DeclLocation decl_loc_{};
   FfiString unknown_attr_{};
   uint64_t enclosing_item_id_{};
@@ -2228,12 +2228,12 @@ struct CRUBIT_FFI_TRIVIAL_ABI TemplateSpecialization {
   using AbslFlatHashMap = ::crubit::ffi::template_specialization::AbslFlatHashMap;
   using AbslFlatHashSet = ::crubit::ffi::template_specialization::AbslFlatHashSet;
   using Kind = ::crubit::ffi::template_specialization::Kind;
-  std::string_view defining_target() const { return defining_target_.AsView(); }
-  void set_defining_target(std::string_view value) { defining_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& defining_target() const { return defining_target_; }
+  void set_defining_target(::crubit::ffi::BazelLabel value) { defining_target_ = std::move(value); }
   const ::crubit::ffi::template_specialization::Kind& kind() const { return kind_; }
   ::crubit::ffi::template_specialization::Kind* mutable_kind() { return &kind_; }
   friend bool operator==(const TemplateSpecialization&, const TemplateSpecialization&) = default;
-  FfiString defining_target_{};
+  ::crubit::ffi::BazelLabel defining_target_{};
   ::crubit::ffi::template_specialization::Kind kind_{};
 };
 
@@ -2288,8 +2288,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   void set_mangled_cc_name(std::string_view value) { mangled_cc_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  std::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& owning_target() const { return owning_target_; }
+  void set_owning_target(::crubit::ffi::BazelLabel value) { owning_target_ = std::move(value); }
   bool has_template_specialization() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_template_specialization() { has_bits_ &= ~0x1ULL; template_specialization_ = {}; }
   const ::crubit::ffi::TemplateSpecialization& template_specialization() const { return template_specialization_; }
@@ -2417,7 +2417,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   FfiString unique_name_{};
   FfiString mangled_cc_name_{};
   uint64_t id_{};
-  FfiString owning_target_{};
+  ::crubit::ffi::BazelLabel owning_target_{};
   ::crubit::ffi::TemplateSpecialization template_specialization_{};
   FfiString unknown_attr_{};
   FfiString doc_comment_{};
@@ -2471,8 +2471,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI IncompleteRecord {
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  std::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& owning_target() const { return owning_target_; }
+  void set_owning_target(::crubit::ffi::BazelLabel value) { owning_target_ = std::move(value); }
   bool has_unknown_attr() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x1ULL; unknown_attr_ = {}; }
   std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
@@ -2491,7 +2491,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI IncompleteRecord {
   ::crubit::ffi::Identifier rs_name_{};
   FfiString unique_name_{};
   uint64_t id_{};
-  FfiString owning_target_{};
+  ::crubit::ffi::BazelLabel owning_target_{};
   FfiString unknown_attr_{};
   ::crubit::ffi::RecordType record_type_{};
   uint64_t enclosing_item_id_{};
@@ -2535,8 +2535,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Enum {
   void set_mangled_cc_name(std::string_view value) { mangled_cc_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  std::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& owning_target() const { return owning_target_; }
+  void set_owning_target(::crubit::ffi::BazelLabel value) { owning_target_ = std::move(value); }
   bool has_decl_loc() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_decl_loc() { has_bits_ &= ~0x1ULL; decl_loc_ = {}; }
   const ::crubit::ffi::DeclLocation& decl_loc() const { return decl_loc_; }
@@ -2579,7 +2579,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Enum {
   FfiString unique_name_{};
   FfiString mangled_cc_name_{};
   uint64_t id_{};
-  FfiString owning_target_{};
+  ::crubit::ffi::BazelLabel owning_target_{};
   ::crubit::ffi::DeclLocation decl_loc_{};
   ::crubit::ffi::CcType underlying_type_{};
   FfiVec<::crubit::ffi::Enumerator> enumerators_{};
@@ -2601,8 +2601,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI GlobalVar {
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  std::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& owning_target() const { return owning_target_; }
+  void set_owning_target(::crubit::ffi::BazelLabel value) { owning_target_ = std::move(value); }
   bool has_decl_loc() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_decl_loc() { has_bits_ &= ~0x1ULL; decl_loc_ = {}; }
   const ::crubit::ffi::DeclLocation& decl_loc() const { return decl_loc_; }
@@ -2637,7 +2637,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI GlobalVar {
   ::crubit::ffi::Identifier rs_name_{};
   FfiString unique_name_{};
   uint64_t id_{};
-  FfiString owning_target_{};
+  ::crubit::ffi::BazelLabel owning_target_{};
   ::crubit::ffi::DeclLocation decl_loc_{};
   FfiString unknown_attr_{};
   uint64_t enclosing_item_id_{};
@@ -2657,8 +2657,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI TypeAlias {
   void set_unique_name(std::string_view value) { unique_name_ = FfiString(value); }
   uint64_t id() const { return id_; }
   void set_id(uint64_t value) { id_ = value; }
-  std::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& owning_target() const { return owning_target_; }
+  void set_owning_target(::crubit::ffi::BazelLabel value) { owning_target_ = std::move(value); }
   bool has_doc_comment() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_doc_comment() { has_bits_ &= ~0x1ULL; doc_comment_ = {}; }
   std::string_view doc_comment() const { return doc_comment_.AsView(); }
@@ -2695,7 +2695,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI TypeAlias {
   ::crubit::ffi::Identifier rs_name_{};
   FfiString unique_name_{};
   uint64_t id_{};
-  FfiString owning_target_{};
+  ::crubit::ffi::BazelLabel owning_target_{};
   FfiString doc_comment_{};
   FfiString unknown_attr_{};
   ::crubit::ffi::CcType underlying_type_{};
@@ -2765,8 +2765,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem {
   void set_must_bind(bool value) { must_bind_ = value; }
   bool has_defining_target() const { return (has_bits_ & 0x10ULL) != 0; }
   void clear_defining_target() { has_bits_ &= ~0x10ULL; defining_target_ = {}; }
-  std::string_view defining_target() const { return defining_target_.AsView(); }
-  void set_defining_target(std::string_view value) { has_bits_ |= 0x10ULL; defining_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& defining_target() const { return defining_target_; }
+  void set_defining_target(::crubit::ffi::BazelLabel value) { has_bits_ |= 0x10ULL; defining_target_ = std::move(value); }
   const FfiVec<FfiString>& do_not_bind() const { return do_not_bind_; }
   FfiVec<FfiString>* mutable_do_not_bind() { return &do_not_bind_; }
   void clear_do_not_bind() { do_not_bind_.clear(); }
@@ -2782,7 +2782,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem {
   FfiString inline_cpp_source_text_{};
   uint64_t id_{};
   bool must_bind_{};
-  FfiString defining_target_{};
+  ::crubit::ffi::BazelLabel defining_target_{};
   FfiVec<FfiString> do_not_bind_{};
 };
 
@@ -2820,8 +2820,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Namespace {
   void clear_unknown_attr() { has_bits_ &= ~0x1ULL; unknown_attr_ = {}; }
   std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
   void set_unknown_attr(std::string_view value) { has_bits_ |= 0x1ULL; unknown_attr_ = FfiString(value); }
-  std::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& owning_target() const { return owning_target_; }
+  void set_owning_target(::crubit::ffi::BazelLabel value) { owning_target_ = std::move(value); }
   bool has_enclosing_item_id() const { return (has_bits_ & 0x2ULL) != 0; }
   void clear_enclosing_item_id() { has_bits_ &= ~0x2ULL; enclosing_item_id_ = {}; }
   uint64_t enclosing_item_id() const { return enclosing_item_id_; }
@@ -2850,7 +2850,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Namespace {
   uint64_t id_{};
   uint64_t canonical_namespace_id_{};
   FfiString unknown_attr_{};
-  FfiString owning_target_{};
+  ::crubit::ffi::BazelLabel owning_target_{};
   uint64_t enclosing_item_id_{};
   bool is_inline_{};
   bool must_bind_{};
@@ -2886,8 +2886,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI ExistingRustType {
   FfiVec<::crubit::ffi::TemplateArg>* mutable_template_args() { return &template_args_; }
   void clear_template_args() { template_args_.clear(); }
   ::crubit::ffi::TemplateArg* add_template_args() { return &template_args_.emplace_back(); }
-  std::string_view owning_target() const { return owning_target_.AsView(); }
-  void set_owning_target(std::string_view value) { owning_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& owning_target() const { return owning_target_; }
+  void set_owning_target(::crubit::ffi::BazelLabel value) { owning_target_ = std::move(value); }
   bool has_size_align() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_size_align() { has_bits_ &= ~0x1ULL; size_align_ = {}; }
   const ::crubit::ffi::SizeAlign& size_align() const { return size_align_; }
@@ -2912,7 +2912,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI ExistingRustType {
   FfiString cc_name_{};
   FfiString unique_name_{};
   FfiVec<::crubit::ffi::TemplateArg> template_args_{};
-  FfiString owning_target_{};
+  ::crubit::ffi::BazelLabel owning_target_{};
   ::crubit::ffi::SizeAlign size_align_{};
   bool is_same_abi_{};
   uint64_t id_{};
@@ -3203,14 +3203,14 @@ struct CRUBIT_FFI_TRIVIAL_ABI IR {
   FfiVec<::crubit::ffi::HeaderName>* mutable_public_headers() { return &public_headers_; }
   void clear_public_headers() { public_headers_.clear(); }
   ::crubit::ffi::HeaderName* add_public_headers() { return &public_headers_.emplace_back(); }
-  std::string_view current_target() const { return current_target_.AsView(); }
-  void set_current_target(std::string_view value) { current_target_ = FfiString(value); }
+  const ::crubit::ffi::BazelLabel& current_target() const { return current_target_; }
+  void set_current_target(::crubit::ffi::BazelLabel value) { current_target_ = std::move(value); }
   bool has_crate_root_path() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_crate_root_path() { has_bits_ &= ~0x1ULL; crate_root_path_ = {}; }
   std::string_view crate_root_path() const { return crate_root_path_.AsView(); }
   void set_crate_root_path(std::string_view value) { has_bits_ |= 0x1ULL; crate_root_path_ = FfiString(value); }
-  const FfiMap<FfiString, FfiVec<FfiString>>& crubit_features() const { return crubit_features_; }
-  FfiMap<FfiString, FfiVec<FfiString>>* mutable_crubit_features() { return &crubit_features_; }
+  const FfiMap<::crubit::ffi::BazelLabel, FfiVec<FfiString>>& crubit_features() const { return crubit_features_; }
+  FfiMap<::crubit::ffi::BazelLabel, FfiVec<FfiString>>* mutable_crubit_features() { return &crubit_features_; }
   const FfiVec<FfiString>& unstable_rust_features() const { return unstable_rust_features_; }
   FfiVec<FfiString>* mutable_unstable_rust_features() { return &unstable_rust_features_; }
   void clear_unstable_rust_features() { unstable_rust_features_.clear(); }
@@ -3219,20 +3219,20 @@ struct CRUBIT_FFI_TRIVIAL_ABI IR {
   FfiVec<FfiString>* mutable_reexported_namespaces() { return &reexported_namespaces_; }
   void clear_reexported_namespaces() { reexported_namespaces_.clear(); }
   void add_reexported_namespaces(std::string_view value) { reexported_namespaces_.push_back(FfiString(value)); }
-  const FfiMap<FfiString, FfiVec<::crubit::ffi::Item>>& top_level_items() const { return top_level_items_; }
-  FfiMap<FfiString, FfiVec<::crubit::ffi::Item>>* mutable_top_level_items() { return &top_level_items_; }
-  const FfiMap<FfiString, FfiString>& crate_names() const { return crate_names_; }
-  FfiMap<FfiString, FfiString>* mutable_crate_names() { return &crate_names_; }
+  const FfiMap<::crubit::ffi::BazelLabel, FfiVec<::crubit::ffi::Item>>& top_level_items() const { return top_level_items_; }
+  FfiMap<::crubit::ffi::BazelLabel, FfiVec<::crubit::ffi::Item>>* mutable_top_level_items() { return &top_level_items_; }
+  const FfiMap<::crubit::ffi::BazelLabel, FfiString>& crate_names() const { return crate_names_; }
+  FfiMap<::crubit::ffi::BazelLabel, FfiString>* mutable_crate_names() { return &crate_names_; }
   friend bool operator==(const IR&, const IR&) = default;
   uint64_t has_bits_ = 0;
   FfiVec<::crubit::ffi::HeaderName> public_headers_{};
-  FfiString current_target_{};
+  ::crubit::ffi::BazelLabel current_target_{};
   FfiString crate_root_path_{};
-  FfiMap<FfiString, FfiVec<FfiString>> crubit_features_{};
+  FfiMap<::crubit::ffi::BazelLabel, FfiVec<FfiString>> crubit_features_{};
   FfiVec<FfiString> unstable_rust_features_{};
   FfiVec<FfiString> reexported_namespaces_{};
-  FfiMap<FfiString, FfiVec<::crubit::ffi::Item>> top_level_items_{};
-  FfiMap<FfiString, FfiString> crate_names_{};
+  FfiMap<::crubit::ffi::BazelLabel, FfiVec<::crubit::ffi::Item>> top_level_items_{};
+  FfiMap<::crubit::ffi::BazelLabel, FfiString> crate_names_{};
 };
 
 struct CRUBIT_FFI_TRIVIAL_ABI GenerateBindingsRequest {

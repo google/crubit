@@ -222,8 +222,7 @@ cc_library(
     srcs = [],
     hdrs = ["bazel_types.h"],
     deps = [
-        "//common:string_type",
-        "@llvm-project//llvm:Support",
+        ":cc_ir",
     ],
 )
 
@@ -454,7 +453,6 @@ cc_library(
     ],
     visibility = ["//:__subpackages__"],
     deps = [
-        ":bazel_types",
         "//common:cc_ffi_types",
         "//common:check",
         "//common:status",

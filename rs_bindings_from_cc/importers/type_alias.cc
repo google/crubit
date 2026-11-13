@@ -84,7 +84,7 @@ std::unique_ptr<crubit::ffi::Item> crubit::TypeAliasImporter::Import(
       existing->set_rs_name(ProtoEnumToRustName(*decl));
       existing->set_cc_name(decl->getQualifiedNameAsString());
       existing->set_unique_name(ictx_.GetUniqueName(*decl));
-      existing->set_owning_target(ictx_.GetOwningTarget(*decl).value());
+      existing->set_owning_target(ictx_.GetOwningTarget(*decl));
       // To be paranoid, assume Rust proto enums are not ABI compatible.
       existing->set_is_same_abi(false);
       existing->set_id(ictx_.GenerateItemId(*decl).value());
@@ -222,7 +222,7 @@ std::unique_ptr<crubit::ffi::Item> crubit::TypeAliasImporter::Import(
   type_alias->mutable_rs_name()->set_identifier(rs_name);
   type_alias->set_unique_name(ictx_.GetUniqueName(*decl));
   type_alias->set_id(ictx_.GenerateItemId(*decl).value());
-  type_alias->set_owning_target(ictx_.GetOwningTarget(*decl).value());
+  type_alias->set_owning_target(ictx_.GetOwningTarget(*decl));
   if (auto doc = ictx_.GetComment(*decl); doc.has_value()) {
     type_alias->set_doc_comment(std::move(*doc));
   }
@@ -294,7 +294,7 @@ std::unique_ptr<crubit::ffi::Item> TypeAliasImporter::ImportFunctionAlias(
     unsupported->set_unique_name(unique_name);
     unsupported->set_id(id.value());
     *unsupported->mutable_decl_loc() = decl_loc;
-    unsupported->set_defining_target(owning_target.value());
+    unsupported->set_defining_target(std::move(owning_target));
     if (unsupported->has_path()) {
       if (enclosing_item_id->has_value()) {
         unsupported->mutable_path()->set_enclosing_item_id(
@@ -312,7 +312,7 @@ std::unique_ptr<crubit::ffi::Item> TypeAliasImporter::ImportFunctionAlias(
   func->set_unique_name(unique_name);
   func->set_id(id.value());
   *func->mutable_decl_loc() = decl_loc;
-  func->set_owning_target(owning_target.value());
+  func->set_owning_target(std::move(owning_target));
   if (enclosing_item_id->has_value()) {
     func->set_enclosing_item_id((*enclosing_item_id)->value());
   } else {

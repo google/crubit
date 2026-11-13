@@ -1003,6 +1003,18 @@ impl PartialEq for BazelLabel {
     }
 }
 
+impl PartialEq<str> for BazelLabel {
+    fn eq(&self, other: &str) -> bool {
+        self.as_str() == other
+    }
+}
+
+impl PartialEq<&str> for BazelLabel {
+    fn eq(&self, other: &&str) -> bool {
+        self.as_str() == *other
+    }
+}
+
 impl PartialOrd for BazelLabel {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
