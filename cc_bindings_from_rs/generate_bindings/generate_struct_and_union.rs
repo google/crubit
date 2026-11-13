@@ -631,11 +631,8 @@ fn snippets_introduce_recursive_specialization<'tcx>(
     snippets
         .main_api
         .prereqs
-        .template_specializations
-        .iter()
-        .chain(snippets.main_api.prereqs.lazy_template_specializations.iter())
-        .chain(snippets.cc_details.prereqs.template_specializations.iter())
-        .chain(snippets.cc_details.prereqs.lazy_template_specializations.iter())
+        .all_template_specializations()
+        .chain(snippets.cc_details.prereqs.all_template_specializations())
         .any(|spec| match spec {
             TemplateSpecialization::Adt(adt) => {
                 // Because we eagerly instantiate all template specializations, we need
