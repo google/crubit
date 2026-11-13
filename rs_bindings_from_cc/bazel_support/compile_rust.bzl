@@ -16,6 +16,7 @@ load(
     "rustc_compile_action",
 )
 
+load("@bazel_skylib//lib:collections.bzl", "collections")
 load("@bazel_skylib//lib:structs.bzl", "structs")
 
 _extra_rustc_flags = [
@@ -63,7 +64,24 @@ def _filter_rustc_flags(flags):
         ])
     ]
 
-def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage, allow_lto = True, aliases = {}, remap_path_prefix = {}, extra_named_deps = depset(), compile_data = [], rustc_env = {}):
+def compile_rust(
+        ctx,
+        attr,
+        src,
+        extra_srcs,
+        deps,
+        crate_name,
+        include_coverage,
+        allow_lto = True,
+        aliases = {},
+        remap_path_prefix = {},
+        extra_named_deps = depset(),
+        compile_data = [],
+        compile_data_targets = [],
+        crate_features = [],
+        rustc_flags = [],
+        rustc_env = {},
+        rustc_env_files = []):
     """Compiles a Rust source file.
 
     Args:
@@ -79,7 +97,11 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
       remap_path_prefix: (dict, optional) A dict of {symlink_path: source_path} to be remapped by rustc.
       extra_named_deps: (depset[AliasableDepInfo], optional) Extra dependencies with custom crate names used for the compilation of the generated bindings.
       compile_data: (list[File], optional) Additional files needed at compile time (e.g. for `include_str!`).
+      compile_data_targets: (list[Target], optional) Targets from `compile_data` for `$(location ...)` expansion.
+      crate_features: (list[str], optional) Features to enable via `--cfg feature="..."`.
+      rustc_flags: (list[str], optional) Additional compiler flags to pass to `rustc`.
       rustc_env: (dict, optional) Environment variables to set when running rustc.
+      rustc_env_files: (list[File], optional) Files containing additional environment variables for `rustc`.
 
     Returns:
       A DepVariantInfo provider.
@@ -109,8 +131,14 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
     # TODO(b/336367148): We should inherit almost nothing from `attr`, but for now, at least, we
     # should omit the rustc_flags.
     attr_args = structs.to_dict(attr)
-    if "rustc_flags" in attr_args:
-        attr_args["rustc_flags"] = _filter_rustc_flags(attr_args["rustc_flags"])
+    if crate_features:
+        attr_args["crate_features"] = collections.uniq(
+            attr_args.get("crate_features", []) + crate_features,
+        )
+    if "rustc_flags" in attr_args or rustc_flags:
+        attr_args["rustc_flags"] = _filter_rustc_flags(attr_args.get("rustc_flags", [])) + rustc_flags
+    if rustc_env:
+        attr_args["rustc_env"] = attr_args.get("rustc_env", {}) | rustc_env
 
     if _rust_version_ge("0.67"):
         srcs = [src] + extra_srcs
@@ -145,8 +173,9 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             edition = "2024",
             is_test = False,
             rustc_env = rustc_env,
+            rustc_env_files = rustc_env_files,
             compile_data = depset([remap_paths_file] + compile_data),
-            compile_data_targets = depset([]),
+            compile_data_targets = depset(compile_data_targets),
             owner = ctx.label,
         ),
         rust_flags = remapped_flags + _extra_rustc_flags,

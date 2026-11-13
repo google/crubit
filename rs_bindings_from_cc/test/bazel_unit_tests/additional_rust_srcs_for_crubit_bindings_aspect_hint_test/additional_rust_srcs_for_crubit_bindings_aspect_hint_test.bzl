@@ -294,12 +294,255 @@ conflicting_crubit_targets_fail_test = crubit_make_analysis_test(
     expect_failure = True,
 )
 
+def _test_rust_library_options_propagate():
+    native.genrule(
+        name = "env_file_1",
+        outs = ["env_file_1.env"],
+        cmd = "echo 'FROM_FILE_1=one' > $@",
+        tags = ["manual"],
+    )
+    native.genrule(
+        name = "env_file_2",
+        outs = ["env_file_2.env"],
+        cmd = "echo 'FROM_FILE_2=two' > $@",
+        tags = ["manual"],
+    )
+    additional_rust_srcs_for_crubit_bindings(
+        name = "rust_options_hint_a",
+        srcs = ["stub.rs"],
+        crate_features = select({
+            "//conditions:default": ["feat_a", "shared_feat"],
+        }),
+        rustc_flags = ["--cfg", "custom_cfg_a", "--cfg", "custom_cfg_b"],
+        rustc_env = {
+            "ENV_A": "val_a",
+            "SHARED_ENV": "same",
+        },
+        rustc_env_files = [":env_file_1"],
+        tags = ["manual"],
+    )
+    additional_rust_srcs_for_crubit_bindings(
+        name = "rust_options_hint_b",
+        srcs = ["inner.rs"],
+        crate_features = ["shared_feat", "feat_b"],
+        rustc_flags = ["-A", "dead_code", "-A", "unused_imports"],
+        rustc_env = {
+            "ENV_B": "val_b",
+            "SHARED_ENV": "same",
+        },
+        rustc_env_files = [":env_file_1", ":env_file_2"],
+        tags = ["manual"],
+    )
+    cc_library(
+        name = "cc_lib_with_rust_options",
+        hdrs = ["empty.h"],
+        aspect_hints = [
+            ":rust_options_hint_a",
+            ":rust_options_hint_b",
+        ],
+        tags = ["manual"],
+    )
+    attach_aspect(
+        name = "aspect_for_cc_lib_with_rust_options",
+        dep = ":cc_lib_with_rust_options",
+    )
+    rust_library_options_propagate_test(
+        name = "additional_rust_srcs_for_crubit_bindings_rust_options_propagate_test",
+        target_under_test = ":aspect_for_cc_lib_with_rust_options",
+    )
+
+    # Also verify `rust_api_from_cpp` with no `srcs` does not collapse `.hint` into a plain
+    # `crubit_features` alias when only `crate_features`/`rustc_flags`/`rustc_env`/`rustc_env_files`
+    # are specified, and still does not set `CRUBIT_TARGET`.
+    cc_library(
+        name = "cc_lib_for_rust_api_from_cpp_options_no_srcs",
+        hdrs = ["empty.h"],
+        aspect_hints = [":cc_lib_for_rust_api_from_cpp_options_no_srcs_rust.hint"],
+        tags = ["manual"],
+    )
+    rust_api_from_cpp(
+        name = "cc_lib_for_rust_api_from_cpp_options_no_srcs_rust",
+        cpp_target = ":cc_lib_for_rust_api_from_cpp_options_no_srcs",
+        crate_features = select({
+            "//conditions:default": ["no_srcs_feat"],
+        }),
+        rustc_flags = ["--cfg", "no_srcs_cfg"],
+        rustc_env = {"NO_SRCS_ENV": "yes"},
+        rustc_env_files = [":env_file_1"],
+        tags = ["manual"],
+    )
+    attach_aspect(
+        name = "aspect_for_cc_lib_for_rust_api_from_cpp_options_no_srcs",
+        dep = ":cc_lib_for_rust_api_from_cpp_options_no_srcs",
+    )
+    rust_api_from_cpp_options_no_srcs_test(
+        name = "rust_api_from_cpp_rust_options_without_srcs_test",
+        target_under_test = ":aspect_for_cc_lib_for_rust_api_from_cpp_options_no_srcs",
+    )
+
+def _has_flag_pair(argv, first, second):
+    for i in range(len(argv) - 1):
+        if argv[i] == first and argv[i + 1] == second:
+            return True
+    return False
+
+def _rust_library_options_propagate_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+    rustc_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "Rustc"][0]
+    argv = rustc_action.argv
+
+    for feat in ("feat_a", "shared_feat", "feat_b"):
+        asserts.true(
+            env,
+            _has_flag_pair(argv, "--cfg", 'feature="%s"' % feat),
+            "Expected --cfg feature=\"%s\" in rustc argv: %s" % (feat, argv),
+        )
+    shared_feat_count = len([f for f in argv if f == 'feature="shared_feat"'])
+    asserts.equals(env, 1, shared_feat_count, "Expected crate_features to be deduplicated")
+
+    # Verify repeated flag prefixes (`--cfg`, `-A`) are preserved rather than deduplicated.
+    for pair in [
+        ("--cfg", "custom_cfg_a"),
+        ("--cfg", "custom_cfg_b"),
+        ("-A", "dead_code"),
+        ("-A", "unused_imports"),
+    ]:
+        asserts.true(
+            env,
+            _has_flag_pair(argv, pair[0], pair[1]),
+            "Expected flag pair %s in rustc argv: %s" % (pair, argv),
+        )
+
+    asserts.equals(env, "val_a", rustc_action.env.get("ENV_A", ""))
+    asserts.equals(env, "val_b", rustc_action.env.get("ENV_B", ""))
+    asserts.equals(env, "same", rustc_action.env.get("SHARED_ENV", ""))
+
+    env_file_flags = [
+        argv[i + 1]
+        for i in range(len(argv) - 1)
+        if argv[i] == "--env-file"
+    ]
+    asserts.equals(
+        env,
+        2,
+        len(env_file_flags),
+        "Expected 2 deduplicated --env-file flags, got %s" % env_file_flags,
+    )
+    asserts.true(
+        env,
+        any([p.endswith("env_file_1.env") for p in env_file_flags]),
+        "Expected env_file_1.env in --env-file flags: %s" % env_file_flags,
+    )
+    asserts.true(
+        env,
+        any([p.endswith("env_file_2.env") for p in env_file_flags]),
+        "Expected env_file_2.env in --env-file flags: %s" % env_file_flags,
+    )
+    return analysistest.end(env)
+
+rust_library_options_propagate_test = crubit_make_analysis_test(_rust_library_options_propagate_test_impl)
+
+def _rust_api_from_cpp_options_no_srcs_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+    rustc_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "Rustc"][0]
+    argv = rustc_action.argv
+
+    asserts.true(
+        env,
+        _has_flag_pair(argv, "--cfg", 'feature="no_srcs_feat"'),
+        "Expected --cfg feature=\"no_srcs_feat\" in rustc argv: %s" % argv,
+    )
+    asserts.true(
+        env,
+        _has_flag_pair(argv, "--cfg", "no_srcs_cfg"),
+        "Expected --cfg no_srcs_cfg in rustc argv: %s" % argv,
+    )
+    asserts.equals(env, "yes", rustc_action.env.get("NO_SRCS_ENV", ""))
+    asserts.equals(env, "", rustc_action.env.get("CRUBIT_TARGET", ""))
+    asserts.true(
+        env,
+        any([argv[i] == "--env-file" and argv[i + 1].endswith("env_file_1.env") for i in range(len(argv) - 1)]),
+        "Expected --env-file env_file_1.env in rustc argv: %s" % argv,
+    )
+    return analysistest.end(env)
+
+rust_api_from_cpp_options_no_srcs_test = crubit_make_analysis_test(_rust_api_from_cpp_options_no_srcs_test_impl)
+
+def _test_conflicting_rustc_env_fail():
+    additional_rust_srcs_for_crubit_bindings(
+        name = "rustc_env_a_hint",
+        srcs = ["stub.rs"],
+        rustc_env = {"CONFLICT_VAR": "a"},
+        tags = ["manual"],
+    )
+    additional_rust_srcs_for_crubit_bindings(
+        name = "rustc_env_b_hint",
+        srcs = ["inner.rs"],
+        rustc_env = {"CONFLICT_VAR": "b"},
+        tags = ["manual"],
+    )
+    cc_library(
+        name = "cc_lib_with_conflicting_rustc_env",
+        hdrs = ["empty.h"],
+        aspect_hints = [
+            ":rustc_env_a_hint",
+            ":rustc_env_b_hint",
+        ],
+        tags = ["manual"],
+    )
+    attach_aspect(
+        name = "aspect_for_cc_lib_with_conflicting_rustc_env",
+        dep = ":cc_lib_with_conflicting_rustc_env",
+        tags = ["manual"],
+    )
+    conflicting_rustc_env_fail_test(
+        name = "conflicting_rustc_env_fail_test",
+        target_under_test = ":aspect_for_cc_lib_with_conflicting_rustc_env",
+    )
+
+def _conflicting_rustc_env_fail_impl(ctx):
+    env = analysistest.begin(ctx)
+    asserts.expect_failure(env, "set different `rustc_env` values for `CONFLICT_VAR`")
+    return analysistest.end(env)
+
+conflicting_rustc_env_fail_test = crubit_make_analysis_test(
+    _conflicting_rustc_env_fail_impl,
+    expect_failure = True,
+)
+
+def _test_reserved_crubit_target_env_fail():
+    additional_rust_srcs_for_crubit_bindings(
+        name = "reserved_crubit_target_env_hint",
+        srcs = ["stub.rs"],
+        rustc_env = {"CRUBIT_TARGET": "//pkg:custom"},
+        tags = ["manual"],
+    )
+    reserved_crubit_target_env_fail_test(
+        name = "reserved_crubit_target_env_fail_test",
+        target_under_test = ":reserved_crubit_target_env_hint",
+    )
+
+def _reserved_crubit_target_env_fail_impl(ctx):
+    env = analysistest.begin(ctx)
+    asserts.expect_failure(env, "cannot set reserved variable `CRUBIT_TARGET`")
+    return analysistest.end(env)
+
+reserved_crubit_target_env_fail_test = crubit_make_analysis_test(
+    _reserved_crubit_target_env_fail_impl,
+    expect_failure = True,
+)
+
 def additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite(name):
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli()
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_generates_bindings_when_no_public_headers()
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate()
     _test_rust_api_from_cpp_srcs_set_crubit_target()
     _test_conflicting_crubit_targets_fail()
+    _test_rust_library_options_propagate()
+    _test_conflicting_rustc_env_fail()
+    _test_reserved_crubit_target_env_fail()
     native.test_suite(
         name = name,
         tests = [
@@ -309,5 +552,9 @@ def additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite(name):
             ":rust_api_from_cpp_srcs_set_crubit_target_test",
             ":rust_api_from_cpp_without_srcs_no_crubit_target_test",
             ":conflicting_crubit_targets_fail_test",
+            ":additional_rust_srcs_for_crubit_bindings_rust_options_propagate_test",
+            ":rust_api_from_cpp_rust_options_without_srcs_test",
+            ":conflicting_rustc_env_fail_test",
+            ":reserved_crubit_target_env_fail_test",
         ],
     )

@@ -112,6 +112,10 @@ def rust_api_from_cpp(
         root_namespaces = [],
         generated_cpp_support_deps = [],
         unstable_rust_features = [],
+        crate_features = [],
+        rustc_flags = [],
+        rustc_env = {},
+        rustc_env_files = [],
         crubit_features = [],
         types_only = False,
         aliases = {},
@@ -154,6 +158,13 @@ def rust_api_from_cpp(
       root_namespaces: List of C++ namespaces to re-export at the root of the generated Rust bindings.
       generated_cpp_support_deps: C++ dependencies of the generated C++ target (e.g. ABI support libraries required by the generated bindings).
       unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
+      crate_features: List of features to enable for this crate (passed to `rustc` via
+        `--cfg feature="..."`, matching `rust_library.crate_features`).
+      rustc_flags: List of compiler flags passed to `rustc` (matching `rust_library.rustc_flags`).
+      rustc_env: Dictionary of additional `"key": "value"` environment variables to set for `rustc`
+        (matching `rust_library.rustc_env`).
+      rustc_env_files: Files containing additional environment variables to set for `rustc`
+        (matching `rust_library.rustc_env_files`).
       crubit_features: List of additional Crubit features to enable on top of
         `supported` for bindings generation (e.g. `["infer_send_sync"]` or
         `["experimental"]`). Valid features are defined in
@@ -219,7 +230,22 @@ def rust_api_from_cpp(
         cpp_srcs = cpp_srcs + [":" + extracted_cpp]
 
     hint_name = name + ".hint"
-    if not srcs and not compile_data and not cpp_srcs and not deps and not link_deps and not root_namespaces and len(crubit_features) == 1:
+    if (
+        not srcs and
+        not compile_data and
+        not cpp_srcs and
+        not deps and
+        not link_deps and
+        not root_namespaces and
+        not generated_cpp_support_deps and
+        not unstable_rust_features and
+        not crate_features and
+        not rustc_flags and
+        not rustc_env and
+        not rustc_env_files and
+        not aliases and
+        len(crubit_features) == 1
+    ):
         native.alias(
             name = hint_name,
             actual = crubit_features[0],
@@ -237,6 +263,10 @@ def rust_api_from_cpp(
             root_namespaces = root_namespaces,
             generated_cpp_support_deps = generated_cpp_support_deps,
             unstable_rust_features = unstable_rust_features,
+            crate_features = crate_features,
+            rustc_flags = rustc_flags,
+            rustc_env = rustc_env,
+            rustc_env_files = rustc_env_files,
             crubit_features = crubit_features,
             aliases = aliases,
             warn_on_raw_cc_deps = warn_on_raw_cc_deps,

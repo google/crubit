@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+load("@bazel_skylib//lib:collections.bzl", "collections")
 load(
     "@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl",
     "AdditionalRustSrcsProviderInfo",
@@ -90,19 +91,42 @@ def _bindings_for_toolchain_headers_impl(ctx):
         header_includes.append(hdr)
     extra_rs_srcs = []
     extra_rs_compile_data = []
+    extra_rs_compile_data_targets = []
     extra_rs_deps = []
+    extra_crate_features = []
+    extra_rustc_flags = []
+    extra_rustc_env = {}
+    rustc_env_owners = {}
+    extra_rustc_env_files = []
     for target in ctx.attr.extra_rs_srcs:
         if AdditionalRustSrcsProviderInfo in target:
-            for src in target[AdditionalRustSrcsProviderInfo].srcs:
-                extra_rs_srcs.extend([(f, target[AdditionalRustSrcsProviderInfo].namespace_path) for f in src.files.to_list()])
+            provider = target[AdditionalRustSrcsProviderInfo]
+            for src in provider.srcs:
+                extra_rs_srcs.extend([(f, provider.namespace_path) for f in src.files.to_list()])
             extra_rs_compile_data.extend([
-                (f, target[AdditionalRustSrcsProviderInfo].namespace_path)
-                for f in getattr(target[AdditionalRustSrcsProviderInfo], "compile_data", [])
+                (f, provider.namespace_path)
+                for f in getattr(provider, "compile_data", [])
             ])
-            extra_rs_deps.extend(target[AdditionalRustSrcsProviderInfo].deps)
-            if hasattr(target[AdditionalRustSrcsProviderInfo], "link_deps"):
-                extra_rs_deps.extend(target[AdditionalRustSrcsProviderInfo].link_deps)
-            if target[AdditionalRustSrcsProviderInfo].cc_deps:
+            extra_rs_compile_data_targets.extend(getattr(provider, "compile_data_targets", []))
+            extra_crate_features.extend(getattr(provider, "crate_features", []))
+            extra_rustc_flags.extend(getattr(provider, "rustc_flags", []))
+            for key, value in getattr(provider, "rustc_env", {}).items():
+                if key in extra_rustc_env and extra_rustc_env[key] != value:
+                    fail("In {}: extra_rs_srcs {} and {} set different `rustc_env` values for `{}`: {} vs {}".format(
+                        ctx.label,
+                        rustc_env_owners[key],
+                        target.label,
+                        key,
+                        repr(extra_rustc_env[key]),
+                        repr(value),
+                    ))
+                extra_rustc_env[key] = value
+                rustc_env_owners[key] = target.label
+            extra_rustc_env_files.extend(getattr(provider, "rustc_env_files", []))
+            extra_rs_deps.extend(provider.deps)
+            if hasattr(provider, "link_deps"):
+                extra_rs_deps.extend(provider.link_deps)
+            if provider.cc_deps:
                 fail("toolchain_headers do not accept additional Rust cc_deps")
         else:
             extra_rs_srcs.extend([(f, "") for f in target.files.to_list()])
@@ -120,6 +144,11 @@ def _bindings_for_toolchain_headers_impl(ctx):
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
         extra_rs_compile_data = extra_rs_compile_data,
+        extra_rs_compile_data_targets = collections.uniq(extra_rs_compile_data_targets),
+        crate_features = collections.uniq(extra_crate_features),
+        rustc_flags = extra_rustc_flags,
+        rustc_env = extra_rustc_env,
+        rustc_env_files = collections.uniq(extra_rustc_env_files),
         deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
         deps_for_rs_file = depset(extra_rs_deps + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file),
         # No `CcInfo` owns the toolchain headers, so the `_rust_api_impl.cc` compile owns them.

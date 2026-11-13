@@ -13,6 +13,8 @@ generated Rust bindings of this C++ target.
         "srcs": "The Rust source files to be included in addition to generated Rust bindings.",
         "compile_data": "List of files available to the Rust source files at compile time " +
                         "(e.g. via `include_str!` or `include_bytes!`).",
+        "compile_data_targets": "List of Target objects from `compile_data`, used for `$(location ...)` " +
+                                "expansion in `rustc_flags` and `rustc_env`.",
         "namespace_path": "The namespace path for the Rust source files.",
         "deps": "List of DepVariantInfo of other libraries to be linked to this library target. " +
                 "These can be either other `rust_library` targets or `cc_library` targets if " +
@@ -22,6 +24,10 @@ generated Rust bindings of this C++ target.
                    "will be linked to this library target.",
         "generated_cpp_support_deps": "List of CcInfo of support libraries for generated C++ code.",
         "unstable_rust_features": "List of unstable rustc features to enable via `#![feature(...)]`.",
+        "crate_features": "List of features to enable for this crate via `--cfg feature=\"...\"`.",
+        "rustc_flags": "List of additional compiler flags passed to `rustc`.",
+        "rustc_env": "Dictionary of additional environment variables to set for `rustc`.",
+        "rustc_env_files": "List of files containing additional environment variables to set for `rustc`.",
         "cpp_srcs": "List of C++ source files to be concatenated to the Crubit-generated C++ source.",
         "root_namespaces": "List of C++ namespaces to re-export at the root of the generated Rust bindings.",
         "aliases": "A label-to-string dictionary mapping targets to their crate names for renaming.",

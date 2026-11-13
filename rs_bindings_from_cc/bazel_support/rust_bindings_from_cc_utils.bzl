@@ -171,7 +171,11 @@ def generate_and_compile_bindings(
         extra_named_deps = depset(),
         use_label_encoded_names_for_deps = False,
         extra_rs_compile_data = [],
+        extra_rs_compile_data_targets = [],
+        crate_features = [],
+        rustc_flags = [],
         rustc_env = {},
+        rustc_env_files = [],
         extra_hdrs = [],
         compile_textually = False,
         exported_cc_infos = [],
@@ -206,7 +210,12 @@ def generate_and_compile_bindings(
       extra_rs_compile_data: list[tuple[file, str]]: Files (and the module path of the
         `extra_rs_srcs` which may use them) that must be available when compiling the Rust crate,
         e.g. for `include_str!` or `include_bytes!`.
+      extra_rs_compile_data_targets: list[Target]: Targets from `compile_data` for `$(location ...)`
+        expansion in `rustc_flags` and `rustc_env`.
+      crate_features: list[str]: Crate features to enable via `--cfg feature="..."`.
+      rustc_flags: list[str]: Additional compiler flags to pass to `rustc`.
       rustc_env: dict[str, str]: Environment variables to set when compiling the Rust crate.
+      rustc_env_files: list[File]: Files containing additional environment variables for `rustc`.
       extra_hdrs: list[File]: Additional headers owned by the `_rust_api_impl.cc` compile itself
         (not already owned by a `CcInfo` in `deps_for_cc_file`), such as the headers of
         `bindings_for_toolchain_headers` or the synthetic empty header for headerless targets. When
@@ -399,8 +408,12 @@ def generate_and_compile_bindings(
         aliases = aliases,
         remap_path_prefix = remap_paths,
         extra_named_deps = extra_named_deps,
-        compile_data = compile_data_relocated,
+        compile_data = compile_data_relocated + [file for (file, _) in extra_rs_compile_data],
+        compile_data_targets = extra_rs_compile_data_targets,
+        crate_features = crate_features,
+        rustc_flags = rustc_flags,
         rustc_env = rustc_env,
+        rustc_env_files = rustc_env_files,
     )
 
     if use_label_encoded_names_for_deps:
