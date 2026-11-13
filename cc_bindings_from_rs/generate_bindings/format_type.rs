@@ -747,13 +747,17 @@ fn format_ref_for_cc<'tcx>(
         quote! { & #lifetime }
     };
 
-    // Early return in case we handle a transparent reference type.
-    if let Some(mut snippet) = format_transparent_pointee_or_reference_for_cc(
-        db,
-        referent,
-        mutability,
-        ptr_or_ref_prefix.clone(),
-    ) {
+    // Early return in case we handle a transparent reference type, except for `self` receiver
+    // parameters where the C++ method body passes `*this` (the enclosing ADT specialization, e.g.
+    // `::rs::core::mem::MaybeUninit<T>&`) directly to the thunk.
+    if !matches!(location, TypeLocation::FnParam { is_self_param: true, .. })
+        && let Some(mut snippet) = format_transparent_pointee_or_reference_for_cc(
+            db,
+            referent,
+            mutability,
+            ptr_or_ref_prefix.clone(),
+        )
+    {
         snippet.prereqs += prereqs;
         return Ok(FormattedCcType { snippet, is_pointer });
     }
