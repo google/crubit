@@ -9,7 +9,7 @@ use crate::adt_core_bindings::{AdtCoreBindings, CopyCodegenStyle, MoveCodegenSty
 use crate::code_snippet::{
     AdtTemplateSpecialization, ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs, FormattedCcType,
 };
-use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths, UnqualifiedName};
+use crate::fully_qualified_name::{FullyQualifiedName, PublicPathTable, UnqualifiedName};
 use crate::include_guard::IncludeGuard;
 use crate::type_location::TypeLocation;
 use crate::{GenericArgs, StaticMethodMode};
@@ -216,7 +216,7 @@ memoized::query_group! {
       /// visible_parent_map(), strictly those within the provided crate.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:public_paths_by_def_id
-      fn public_paths_by_def_id(&self, crate_num: CrateNum) -> &HashMap<DefId, PublicPaths>;
+      fn public_paths_by_def_id(&self, crate_num: CrateNum) -> &PublicPathTable;
 
       #[return_ref]
       /// Computes a mapping from a `DefId` to a list of public paths that reference it in the
@@ -228,7 +228,7 @@ memoized::query_group! {
       /// re-export of a definition will only be used if the defining crate has no paths.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:all_public_paths_by_def_id
-      fn all_public_paths_by_def_id(&self) -> &HashMap<DefId, PublicPaths>;
+      fn all_public_paths_by_def_id(&self) -> &PublicPathTable;
 
       /// Finds the `DefId` of a public item by its name in the given crate.
       ///

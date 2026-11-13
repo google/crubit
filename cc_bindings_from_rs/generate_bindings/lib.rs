@@ -27,8 +27,8 @@ use database::code_snippet::{
     RsSnippet, TemplateSpecialization,
 };
 use database::{
-    rename_clang_builtin_macros, CoreBindingsCommon, ExportedPath, FullyQualifiedName, PublicPaths,
-    StaticMethodMode, TypeLocation, UnqualifiedName,
+    rename_clang_builtin_macros, CoreBindingsCommon, CrateOwnershipRank, ExportedPath,
+    FullyQualifiedName, PublicPathTable, StaticMethodMode, TypeLocation, UnqualifiedName,
 };
 pub use database::{
     BindingsGenerator, CopyCodegenStyle, CppTypeSpecialization, IncludeGuard, MoveCodegenStyle,
@@ -111,7 +111,7 @@ fn warn_unbindable_types(db: &BindingsGenerator) {
     let mut checked_def_ids = HashSet::new();
 
     // Check all public definitions across all reachable crates.
-    for def_id in db.all_public_paths_by_def_id().keys().copied() {
+    for def_id in db.all_public_paths_by_def_id().def_ids() {
         checked_def_ids.insert(def_id);
         check_unbindable_type(db, def_id);
     }
@@ -233,15 +233,15 @@ fn specializations<'tcx>(db: &crate::BindingsGenerator<'tcx>) -> Vec<CppTypeSpec
     // matches a type, and `HashMap` iteration order changes from run to run. Sort by the alias
     // itself, not by the type it's an alias of, so that the order of aliases of the same type, and
     // of the errors reported below, is stable too.
-    let mut alias_def_ids: Vec<DefId> = db
-        .all_public_paths_by_def_id()
-        .iter()
-        .flat_map(|(adt_or_alias_def_id, paths)| {
-            std::iter::once(*adt_or_alias_def_id).chain(
-                paths
-                    .clone()
-                    .into_extern_aliases()
+    let public_paths = db.all_public_paths_by_def_id();
+    let mut alias_def_ids: Vec<DefId> = public_paths
+        .def_ids()
+        .flat_map(|adt_or_alias_def_id| {
+            std::iter::once(adt_or_alias_def_id).chain(
+                public_paths
+                    .canonical(adt_or_alias_def_id)
                     .into_iter()
+                    .chain(public_paths.aliases(adt_or_alias_def_id))
                     .filter_map(|path| path.type_alias_def_id),
             )
         })
@@ -565,10 +565,7 @@ pub fn generate_bindings<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<BindingsT
 }
 
 /// Implementation of `BindingsGenerator::public_paths_by_def_id`.
-fn public_paths_by_def_id(
-    db: &BindingsGenerator<'_>,
-    crate_num: CrateNum,
-) -> HashMap<DefId, PublicPaths> {
+fn public_paths_by_def_id(db: &BindingsGenerator<'_>, crate_num: CrateNum) -> PublicPathTable {
     /// This is retooled logic from rustc's `visible_parent_map` function. Except where that
     /// only selects the shortest visible path, we track all paths and defer selecting the
     /// correct one to callers.
@@ -577,7 +574,7 @@ fn public_paths_by_def_id(
 
     let tcx = db.tcx();
     let crate_name = tcx.crate_name(crate_num);
-    let mut visible_parent_map = HashMap::default();
+    let mut visible_parent_map = PublicPathTable::default();
 
     let bfs_queue = &mut VecDeque::new();
     let mut module_seen_set = HashSet::new();
@@ -686,21 +683,15 @@ fn public_paths_by_def_id(
             return;
         }
 
-        let path = ExportedPath {
+        visible_parent_map.insert(ExportedPath {
+            def_id,
             path: parent.to_vec(),
             name: child.ident.name,
             type_alias_def_id,
             is_doc_hidden,
             is_reexport: !child.reexport_chain.is_empty(),
             krate: crate_num,
-        };
-        use std::collections::hash_map::Entry;
-        match visible_parent_map.entry(def_id) {
-            Entry::Vacant(vacant) => {
-                vacant.insert(PublicPaths::new(path));
-            }
-            Entry::Occupied(mut occupied) => occupied.get_mut().insert(path),
-        }
+        });
         // TODO: b/459865403 - Support bindings for `pub extern crate core`.
         let is_extern_crate_core = |child: &ModChild| {
             child
@@ -730,47 +721,9 @@ fn public_paths_by_def_id(
     visible_parent_map
 }
 
-/// The ownership priority of a crate that exposes a public path for a `DefId`.
-///
-/// When an item is re-exported across multiple crates, Crubit uses this rank to choose which
-/// crate provides the canonical C++ definition (versus emitting a `using` alias).
-///
-/// Variants are listed in ascending priority of ownership.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
-enum CrateOwnershipRank {
-    /// A crate re-exporting an item it did not define (e.g. `pub use std::io::Error;`).
-    TransitiveReexport = 0,
-
-    /// A standard library crate (`std` or `alloc`) stably re-exporting an item that was
-    /// defined internally/unstably in `core` or `alloc` (e.g. `std::io::Error` is a stable
-    /// re-export for the unstable `core::io::error::Error`). We attribute ownership to the
-    /// standard library re-export in this case, since it is the canonical owner.
-    StdlibStableReexport = 1,
-
-    /// The crate that actually defined the item (`def_id.krate`, e.g. `core` for
-    /// `core::option::Option`).
-    DefiningCrate = 2,
-}
-
-impl CrateOwnershipRank {
-    fn new(tcx: TyCtxt<'_>, def_id: DefId, krate: CrateNum) -> Self {
-        if krate == def_id.krate {
-            return Self::DefiningCrate;
-        }
-
-        if matches!(tcx.crate_name(def_id.krate).as_str(), "core" | "alloc")
-            && matches!(tcx.crate_name(krate).as_str(), "std" | "alloc")
-        {
-            return Self::StdlibStableReexport;
-        }
-
-        Self::TransitiveReexport
-    }
-}
-
-fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, PublicPaths> {
+fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> PublicPathTable {
     let tcx = db.tcx();
-    let mut out = HashMap::new();
+    let mut out = PublicPathTable::default();
 
     // TODO(b/458768435): LOCAL_CRATE is not included in list of `used_crates`, so while we still
     // have `--enable-rmeta-interface` (and some users that are not on the rmeta interface) we
@@ -788,48 +741,11 @@ fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, Publ
         if !has_crate_header && !is_direct_extern {
             continue;
         }
-        let public_paths = db.public_paths_by_def_id(krate);
-        for (&def_id, paths) in public_paths {
-            if !has_crate_header {
-                let Ok(attrs) = crubit_attr::get_attrs(tcx, def_id) else {
-                    continue;
-                };
-                if attrs.cpp_type.is_none() && !attrs.specializes_cpp_type {
-                    continue;
-                }
-            }
-            use std::collections::hash_map::Entry;
-            match out.entry(def_id) {
-                Entry::Vacant(vacant) => {
-                    vacant.insert(paths.clone());
-                }
-                Entry::Occupied(mut occupied) => {
-                    let existing_paths = occupied.get_mut();
-                    let existing_rank =
-                        CrateOwnershipRank::new(tcx, def_id, existing_paths.canonical().krate);
-                    let new_rank = CrateOwnershipRank::new(tcx, def_id, paths.canonical().krate);
-                    let mut paths = paths.clone();
-                    match new_rank.cmp(&existing_rank) {
-                        Ordering::Greater => {
-                            // The new crate has higher ownership priority, so make it canonical
-                            // and retain the old paths as aliases.
-                            std::mem::swap(existing_paths, &mut paths);
-                            existing_paths.insert_aliases(paths);
-                        }
-                        Ordering::Less => {
-                            // The existing crate has higher ownership priority, so keep it
-                            // canonical and add the new paths as aliases.
-                            existing_paths.insert_aliases(paths);
-                        }
-                        Ordering::Equal => {
-                            // Both crates have equal ownership priority, so merge paths together
-                            // picking canonical by ordering.
-                            existing_paths.merge(paths);
-                        }
-                    }
-                }
-            }
-        }
+        out.extend(tcx, db.public_paths_by_def_id(krate), |def_id| {
+            has_crate_header
+                || crubit_attr::get_attrs(tcx, def_id)
+                    .is_ok_and(|attrs| attrs.cpp_type.is_some() || attrs.specializes_cpp_type)
+        });
     }
     out
 }
@@ -846,11 +762,11 @@ fn def_id_by_symbol(
     // share `name`, pick one in a stable order rather than in `HashMap` iteration order, which
     // changes from run to run.
     public_paths
-        .iter()
-        .filter(|(def_id, paths)| {
-            paths.canonical().name == name && tcx.def_kind(**def_id) == DefKind::Struct
+        .def_ids()
+        .filter(|&def_id| {
+            public_paths.canonical(def_id).is_some_and(|path| path.name == name)
+                && tcx.def_kind(def_id) == DefKind::Struct
         })
-        .map(|(def_id, _)| *def_id)
         .min_by(|lhs, rhs| stable_def_id_cmp(tcx, *lhs, *rhs))
 }
 
@@ -882,8 +798,8 @@ fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<
     let tcx = db.tcx();
     let item_name = db
         .all_public_paths_by_def_id()
-        .get(&def_id)
-        .map(|path| path.canonical().name)
+        .canonical(def_id)
+        .map(|path| path.name)
         .or_else(|| tcx.opt_item_name(def_id))?;
     let rs_name = item_name;
     let attributes = crubit_attr::get_attrs(tcx, def_id)
@@ -920,14 +836,11 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
     should_receive_bindings(db, def_id)?;
 
     let (full_path_strs, type_alias_def_id, krate_num) = {
-        let paths = db
-            .all_public_paths_by_def_id()
-            .get(&def_id)
-            .ok_or_else(|| anyhow!("Not a public or a supported reexported type (b/262052635)."))?;
-
         // Select a canonical path for this symbol from available paths.
-        // Our paths are kept in sorted order, so the canonical path will be the first one.
-        let canonical_path = paths.canonical();
+        let canonical_path = db
+            .all_public_paths_by_def_id()
+            .canonical(def_id)
+            .ok_or_else(|| anyhow!("Not a public or a supported reexported type (b/262052635)."))?;
 
         // `DefiningCrate` outranks everything, so a `TransitiveReexport` winner proves the stdlib
         // withheld a path for this item on purpose: the walk above drops everything under
@@ -1504,27 +1417,11 @@ pub fn format_namespace_bound_cc_tokens(
     iter.collect()
 }
 
-enum FormattedAliases<'db> {
-    None,
-    Local(&'db [ExportedPath]),
-    Extern(&'db PublicPaths),
-}
-
-impl<'db> FormattedAliases<'db> {
-    fn for_each(&self, f: impl FnMut(&'db ExportedPath)) {
-        match *self {
-            FormattedAliases::None => {}
-            FormattedAliases::Local(aliases) => aliases.iter().for_each(f),
-            FormattedAliases::Extern(paths) => paths.extern_aliases().for_each(f),
-        }
-    }
-}
-
 struct FormattedItem<'db, 'tcx> {
     def_id: DefId,
     cpp_ns_path: &'db NamespaceQualifier,
     snippets: Option<ApiSnippets<'tcx>>,
-    aliases: FormattedAliases<'db>,
+    aliases: Vec<&'db ExportedPath>,
 }
 
 /// Items from the Rust prelude that, in addition to their canonical C++ spelling (e.g.
@@ -1626,36 +1523,41 @@ fn formatted_items_in_crate<'db, 'tcx>(
     let tcx = db.tcx();
     let defs_in_crate = db.public_paths_by_def_id(db.source_crate_num());
     defs_in_crate
-        .iter()
-        .filter_map(|(def_id, paths)| {
-            if crubit_attr::get_attrs(tcx, *def_id).unwrap().specializes_cpp_type {
+        .def_ids()
+        .filter_map(|def_id| {
+            if crubit_attr::get_attrs(tcx, def_id).unwrap().specializes_cpp_type {
                 return None;
             }
             let mut snippets = None;
-            let canonical_name = db.symbol_canonical_name(*def_id).ok()?;
+            let canonical_name = db.symbol_canonical_name(def_id).ok()?;
             let aliases = if canonical_name.krate_num == db.source_crate_num() {
                 // We only want to call `generate_item` on DefIds from our source crate. External
                 // crate DefIds might appear in this map if our crate re-exports them, but we don't
                 // want to regenerate those definitions.
-                generate_unsupported::error_scope!(db, *def_id);
-                let (api_snippets, aliases) = match db.generate_item(*def_id) {
+                generate_unsupported::error_scope!(db, def_id);
+                let (api_snippets, aliases) = match db.generate_item(def_id) {
                     Ok(None) => return None,
                     Ok(Some(api_snippets)) => {
                         // Only generate aliases if we generate a definition.
-                        (api_snippets.clone(), FormattedAliases::Local(paths.aliases()))
+                        (api_snippets.clone(), defs_in_crate.aliases(def_id).collect())
                     }
                     Err(err) => (
-                        generate_unsupported_def(db, *def_id, err.clone()).into_main_api(),
-                        FormattedAliases::None,
+                        generate_unsupported_def(db, def_id, err.clone()).into_main_api(),
+                        Vec::new(),
                     ),
                 };
                 snippets = Some(api_snippets);
                 aliases
             } else {
-                FormattedAliases::Extern(paths)
+                // An external crate's definition is only aliased, by each of our paths for it.
+                defs_in_crate
+                    .canonical(def_id)
+                    .into_iter()
+                    .chain(defs_in_crate.aliases(def_id))
+                    .collect()
             };
             Some(FormattedItem {
-                def_id: *def_id,
+                def_id,
                 cpp_ns_path: &canonical_name.cpp_ns_path,
                 snippets,
                 aliases,
@@ -1978,7 +1880,7 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
         // We delay handling aliases until after sorting by def id to ensure they are emitted in a
         // deterministic order, same as the main api definitions. This is important for caching and
         // testing.
-        item.aliases.for_each(|alias| {
+        item.aliases.into_iter().for_each(|alias| {
             let using_snippets = generate_using(db, &alias.name, def_id)
                 .unwrap_or_else(|err| generate_unsupported_def(db, def_id, err));
             cc_details.push(CcDetails::new(

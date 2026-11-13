@@ -1902,7 +1902,7 @@ fn append_negative_auto_trait_impls<'tcx>(
     trait_impls: &mut Vec<TemplateSpecialization<'tcx>>,
 ) {
     let tcx = db.tcx();
-    for &self_def_id in db.public_paths_by_def_id(db.source_crate_num()).keys() {
+    for self_def_id in db.public_paths_by_def_id(db.source_crate_num()).def_ids() {
         let (DefKind::Struct | DefKind::Enum | DefKind::Union) = tcx.def_kind(self_def_id) else {
             continue;
         };
