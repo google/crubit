@@ -11,7 +11,10 @@ load(
 
 package(
     default_applicable_licenses = ["//:license"],
-    default_visibility = ["//:__subpackages__"],
+    default_visibility = [
+        "//:__subpackages__",
+        "//prototypes/projects/rust_team/crubit/crubyte:__subpackages__",
+    ],
 )
 
 rust_library(
