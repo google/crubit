@@ -18,14 +18,14 @@
 //! let y : *mut Base = x.upcast();
 //! let z : *mut VirtualBase = x.virtual_upcast();
 //!
-//! // Upcasting a pinned mutable reference:
-//! let mut d = ...;
-//! let p_d: Pin<&mut Derived> = Pin::new(&mut d);
+//! // Upcasting a pinned mutable reference (only if `Base` is `!Unpin`):
+//! let p_d: Pin<&mut Derived> = ...;
 //! let p_b: Pin<&mut Base> = p_d.upcast();
 //! ```
 //!
 //! To implement upcasting, implement the `Inherits` trait for non-virtual bases and
-//! `InheritsVirtual` for virtual bases.
+//! `InheritsVirtual` for virtual bases. To also allow upcasting `Pin<&mut Derived>`, implement
+//! `InheritsPinned`, which is only sound if `Base` is `!Unpin`.
 //!
 //! ## Downcasting
 //!
@@ -116,9 +116,11 @@ where
 /// because for a valid pinned Derived reference, Inherits promises to return a valid base
 /// object inside Derived. Since the base subobject lives inside the pinned derived object,
 /// the pointer to the base object remains valid and pinned for the same lifetime.
+///
+/// Safe code cannot then overwrite the whole base subobject; see `InheritsPinned`.
 unsafe impl<'a, Derived, Base> Upcast<Pin<&'a mut Base>> for Pin<&'a mut Derived>
 where
-    Derived: Inherits<Base>,
+    Derived: InheritsPinned<Base>,
 {
     unsafe fn upcast(self: Pin<&'a mut Derived>) -> Pin<&'a mut Base> {
         // SAFETY: By the safety contract of `Upcast::upcast`, `self` is a valid pinned reference
@@ -174,6 +176,24 @@ unsafe impl<T> Inherits<T> for T {
         derived
     }
 }
+
+/// Marker trait that allows upcasting `Pin<&mut Self>` to `Pin<&mut Base>`.
+///
+/// Safe code must never be able to overwrite a whole base subobject from Rust: that copies
+/// `size_of::<Base>()` bytes, including tail padding where C++ may store fields of the derived
+/// class (b/216195042#comment14). A `Pin<&mut Base>` allows three kinds of writes:
+///
+/// * Through `&mut Base` (`*b = x`, `mem::swap`): requires `Base: Unpin`.
+/// * `Pin::set`: requires a by-value `Base`, which safe code cannot obtain for a non-Rust-movable
+///   C++ type (`#[recursively_pinned]` adds a private field, and `ctor::construct` requires
+///   `Unpin`).
+/// * Calling C++ methods, including `operator=` via `ctor::Assign`: C++ only writes the base's own
+///   fields. (The Rust-side `Assign` impls require `Unpin`.)
+///
+/// # Safety
+///
+/// `Base` must not implement `Unpin`, and safe code must not be able to create a `Base` by value.
+pub unsafe trait InheritsPinned<Base>: Inherits<Base> {}
 
 /// Trait for upcasting a Derived class pointer to its virtual Base class.
 ///
@@ -311,7 +331,8 @@ mod test {
         unsafe {
             let _: *const Base = (&derived as *const Derived).upcast();
             let _: *mut Base = (&mut derived as *mut Derived).upcast();
-            let _: Pin<&mut Base> = Pin::new(&mut derived).upcast();
+            // let _: Pin<&mut Base> = Pin::new(&mut derived).upcast(); // does not compile
+            // (`Base` is `Unpin`, so there is no `InheritsPinned` impl)
         }
 
         // This write must not be UB:
@@ -343,6 +364,8 @@ mod test {
                 unsafe { &(*derived).base }
             }
         }
+        // SAFETY: `Base` is `!Unpin`.
+        unsafe impl InheritsPinned<Base> for Derived {}
         let mut derived = Derived::default();
         // SAFETY: `derived` is a valid pointer to a `Derived` value.
         assert_eq!(ptr_location(&derived.base), unsafe {

@@ -787,8 +787,19 @@ pub fn generated_items_to_tokens<'db>(
                     match upcast_impl_or_err {
                         Ok(UpcastImpl { base_name, derived_name, body }) => {
                             match body {
-                                UpcastImplBody::PointerOffset { offset } => {
+                                UpcastImplBody::PointerOffset { offset, base_is_unpin } => {
                                     let offset = Literal::i64_unsuffixed(*offset);
+                                    let inherits_pinned_impl = if *base_is_unpin {
+                                        quote! {}
+                                    } else {
+                                        quote! {
+                                            // SAFETY: `#base_name` is not Rust-movable, so it is generated with
+                                            // `#[recursively_pinned]`: it is `!Unpin`, and safe code cannot create it by value.
+                                            unsafe impl oops::InheritsPinned<#base_name> for #derived_name {}
+                                            __NEWLINE__
+                                            __NEWLINE__
+                                        }
+                                    };
                                     quote! {
                                         // SAFETY: `#base_name` is an unambiguous, public base class of `#derived_name`.
                                         // `upcast_ptr` correctly returns a pointer to the base subobject at `#offset`,
@@ -805,6 +816,7 @@ pub fn generated_items_to_tokens<'db>(
                                         }
                                         __NEWLINE__
                                         __NEWLINE__
+                                        #inherits_pinned_impl
                                     }
                                     .to_tokens(tokens);
                                 }
@@ -1199,7 +1211,10 @@ pub struct DeleteImpl {
 
 #[derive(Clone, Debug)]
 pub enum UpcastImplBody {
-    PointerOffset { offset: i64 },
+    /// `base_is_unpin` is whether the base class is `Unpin` (Rust-movable). If it is not, an
+    /// `oops::InheritsPinned` impl is also generated.
+    PointerOffset { offset: i64, base_is_unpin: bool },
+    /// Virtual bases only get raw-pointer upcasts, so no `Unpin` check is needed.
     CastThunk { crate_root_path: Option<Ident>, cast_fn_name: Ident },
 }
 
