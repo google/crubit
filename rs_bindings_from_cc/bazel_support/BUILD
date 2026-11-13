@@ -57,6 +57,7 @@ bzl_library(
     deps = [
         ":providers_bzl",
         ":rust_bindings_from_cc_utils_bzl",
+        "@bazel_skylib//lib:collections",
         "@rules_cc//cc/common",
     ],
 )
@@ -133,6 +134,7 @@ bzl_library(
     srcs = ["compile_rust.bzl"],
     visibility = ["//cc_bindings_from_rs/bazel_support:__pkg__"],
     deps = [
+        "@bazel_skylib//lib:collections",
         "@bazel_skylib//lib:structs",
     ],
 )

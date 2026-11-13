@@ -129,6 +129,15 @@ def _get_additional_rust_compile_data(aspect_ctx):
             )
     return collections.uniq(compile_data)
 
+def _get_additional_rust_compile_data_targets(aspect_ctx):
+    compile_data_targets = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            compile_data_targets.extend(
+                getattr(hint[AdditionalRustSrcsProviderInfo], "compile_data_targets", []),
+            )
+    return collections.uniq(compile_data_targets)
+
 def _get_additional_cpp_srcs_from_provider(provider):
     """Returns `extra_cpp_srcs` associated with the `provider`."""
     srcs = []
@@ -153,17 +162,63 @@ def _get_unstable_rust_features(aspect_ctx):
             features.extend(hint[AdditionalRustSrcsProviderInfo].unstable_rust_features)
     return collections.uniq(features)
 
+def _get_crate_features(aspect_ctx):
+    features = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            features.extend(getattr(hint[AdditionalRustSrcsProviderInfo], "crate_features", []))
+    return collections.uniq(features)
+
+def _get_rustc_flags(aspect_ctx):
+    flags = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            # Do not deduplicate: repeated flag prefixes such as `["--cfg", "a", "--cfg", "b"]`
+            # or `["-A", "dead_code", "-A", "unused_imports"]` are order- and count-sensitive.
+            flags.extend(getattr(hint[AdditionalRustSrcsProviderInfo], "rustc_flags", []))
+    return flags
+
+def _get_rustc_env_files(aspect_ctx):
+    env_files = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            env_files.extend(getattr(hint[AdditionalRustSrcsProviderInfo], "rustc_env_files", []))
+    return collections.uniq(env_files)
+
 def _get_rustc_env(aspect_ctx, extra_rs_srcs):
     """Returns the rustc env for the bindings crate.
 
-    `CRUBIT_TARGET` is read by the `inline_cpp!` macro to compute thunk names. It is set whenever
-    the crate has extra Rust srcs, so that `inline_cpp!` there fails to compile (missing thunk)
-    instead of expanding to its `unreachable!()` placeholder and panicking if called. It must
-    match the label used by `extract_cpp` only if a hint extracts the embedded C++; otherwise any
-    value works.
+    Merges user-specified `rustc_env` from `AdditionalRustSrcsProviderInfo` hints (failing on
+    conflicting values for the same key). Also sets `CRUBIT_TARGET` whenever the crate has extra
+    Rust srcs: `CRUBIT_TARGET` is read by the `inline_cpp!` macro to compute thunk names, so that
+    `inline_cpp!` there fails to compile (missing thunk) instead of expanding to its
+    `unreachable!()` placeholder and panicking if called. It must match the label used by
+    `extract_cpp` only if a hint extracts the embedded C++; otherwise any value works.
     """
+    rustc_env = {}
+    env_owners = {}
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            hint_env = getattr(hint[AdditionalRustSrcsProviderInfo], "rustc_env", {})
+            for key, value in hint_env.items():
+                if key == "CRUBIT_TARGET":
+                    fail("In {}: aspect hint {} cannot set reserved `rustc_env` variable `CRUBIT_TARGET`.".format(
+                        aspect_ctx.label,
+                        hint.label,
+                    ))
+                if key in rustc_env and rustc_env[key] != value:
+                    fail("In {}: aspect hints {} and {} set different `rustc_env` values for `{}`: {} vs {}".format(
+                        aspect_ctx.label,
+                        env_owners[key],
+                        hint.label,
+                        key,
+                        repr(rustc_env[key]),
+                        repr(value),
+                    ))
+                rustc_env[key] = value
+                env_owners[key] = hint.label
     if not extra_rs_srcs:
-        return {}
+        return rustc_env
     hints_by_crubit_target = {}
     for hint in aspect_ctx.rule.attr.aspect_hints:
         if AdditionalRustSrcsProviderInfo in hint:
@@ -177,7 +232,8 @@ def _get_rustc_env(aspect_ctx, extra_rs_srcs):
             hints_by_crubit_target,
         ))
     crubit_targets = hints_by_crubit_target.keys()
-    return {"CRUBIT_TARGET": crubit_targets[0] if crubit_targets else str(aspect_ctx.label)}
+    rustc_env["CRUBIT_TARGET"] = crubit_targets[0] if crubit_targets else str(aspect_ctx.label)
+    return rustc_env
 
 def _get_root_namespaces(aspect_ctx):
     root_namespaces = []
@@ -546,7 +602,11 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
         extra_rs_compile_data = extra_rs_compile_data,
+        extra_rs_compile_data_targets = _get_additional_rust_compile_data_targets(ctx),
+        crate_features = _get_crate_features(ctx),
+        rustc_flags = _get_rustc_flags(ctx),
         rustc_env = _get_rustc_env(ctx, extra_rs_srcs),
+        rustc_env_files = _get_rustc_env_files(ctx),
         unstable_rust_features = unstable_rust_features,
         deps_for_cc_file = [target[CcInfo]] + [
             d.cc_info
