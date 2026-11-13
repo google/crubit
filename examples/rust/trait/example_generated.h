@@ -61,7 +61,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyTrait") MyTrait {
   using impl = ::rs::impl<T, MyTrait>;
 };
 
-}  // namespace example_crate
+}
 
 template <>
 struct ::rs::impl<::example_crate::MyStruct, ::example_crate::MyTrait> {
@@ -117,7 +117,7 @@ inline void ::example_crate::MyStruct::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::example_crate::MyStruct;
   static_assert(0 == offsetof(__crubit_assert_type, x));
 }
-}  // namespace example_crate
+}
 
 namespace example_crate {
 namespace __crubit_internal {
@@ -125,7 +125,7 @@ extern "C" ::std::int32_t
 __crubit_thunk_MyTrait_uadd_uwith_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
     ::example_crate::MyStruct const&, ::std::int32_t);
 }
-}  // namespace example_crate
+}
 inline ::std::int32_t(
     ::rs::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::add_with)(
     ::example_crate::MyStruct const& self, ::std::int32_t y) {
@@ -140,7 +140,7 @@ extern "C" void
 __crubit_thunk_MyTrait_udescribe_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
     ::example_crate::MyStruct const&, ::rs::StrRef* __ret_ptr);
 }
-}  // namespace example_crate
+}
 inline ::rs::StrRef(
     ::rs::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::describe)(
     ::example_crate::MyStruct const& self) {

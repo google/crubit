@@ -32,7 +32,7 @@ namespace bridged_types::test_format_bridged_func_arg_by_pointer {
 
 void test_format_bridged_func_arg_by_pointer(CppType const* __param_0);
 
-}  // namespace bridged_types::test_format_bridged_func_arg_by_pointer
+}
 
 namespace bridged_types::test_format_bridged_func_arg_by_value {
 
@@ -44,7 +44,7 @@ namespace bridged_types::test_format_bridged_func_arg_by_value {
 
 void test_format_bridged_func_arg_by_value(cpp_ns::CppType _a);
 
-}  // namespace bridged_types::test_format_bridged_func_arg_by_value
+}
 
 namespace bridged_types::test_format_bridged_return_type_by_pointer {
 
@@ -56,7 +56,7 @@ namespace bridged_types::test_format_bridged_return_type_by_pointer {
 
 CppType* test_format_bridged_return_type_by_pointer();
 
-}  // namespace bridged_types::test_format_bridged_return_type_by_pointer
+}
 
 namespace bridged_types::test_format_bridged_return_type_by_value {
 
@@ -68,7 +68,7 @@ namespace bridged_types::test_format_bridged_return_type_by_value {
 
 cpp_ns::CppType test_format_bridged_return_type_by_value();
 
-}  // namespace bridged_types::test_format_bridged_return_type_by_value
+}
 
 namespace bridged_types::test_format_bridged_func_arg_by_pointer {
 
@@ -81,7 +81,7 @@ inline void test_format_bridged_func_arg_by_pointer(CppType const* __param_0) {
       __crubit_thunk_test_uformat_ubridged_ufunc_uarg_uby_upointer(__param_0);
 }
 
-}  // namespace bridged_types::test_format_bridged_func_arg_by_pointer
+}
 
 namespace bridged_types::test_format_bridged_func_arg_by_value {
 
@@ -94,7 +94,7 @@ inline void test_format_bridged_func_arg_by_value(cpp_ns::CppType _a) {
       __crubit_thunk_test_uformat_ubridged_ufunc_uarg_uby_uvalue(&_a);
 }
 
-}  // namespace bridged_types::test_format_bridged_func_arg_by_value
+}
 
 namespace bridged_types::test_format_bridged_return_type_by_pointer {
 
@@ -111,7 +111,7 @@ inline CppType* test_format_bridged_return_type_by_pointer() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace bridged_types::test_format_bridged_return_type_by_pointer
+}
 
 namespace bridged_types::test_format_bridged_return_type_by_value {
 
@@ -128,7 +128,7 @@ inline cpp_ns::CppType test_format_bridged_return_type_by_value() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace bridged_types::test_format_bridged_return_type_by_value
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_BRIDGING_BRIDGED_TYPES_GOLDEN

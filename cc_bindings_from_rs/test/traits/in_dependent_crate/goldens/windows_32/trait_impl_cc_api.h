@@ -49,7 +49,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: NotImplemented")
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace trait_impl
+}
 
 template <>
 struct ::rs::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait> {
@@ -93,7 +93,7 @@ inline void ::trait_impl::NotImplemented::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::trait_impl::NotImplemented;
   static_assert(0 == offsetof(__crubit_assert_type, foo));
 }
-}  // namespace trait_impl
+}
 
 namespace trait_impl {
 namespace __crubit_internal {
@@ -101,7 +101,7 @@ extern "C" ::std::int32_t
 __crubit_thunk_MyTrait_udo_usomething_utrait_uimpl_ugolden_x0000003a_x0000003aMyStruct(
     ::trait_impl::MyStruct const&);
 }
-}  // namespace trait_impl
+}
 inline ::std::int32_t(::rs::impl<::trait_impl::MyStruct,
                                  ::trait_definition::MyTrait>::do_something)(
     ::trait_impl::MyStruct const& self) {

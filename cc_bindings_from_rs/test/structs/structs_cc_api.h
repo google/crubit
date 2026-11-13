@@ -162,7 +162,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace structs::abi_classification
+}
 
 namespace structs::aggregate_initialization {
 
@@ -376,7 +376,7 @@ UnannotatedTwoDrops final {
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace structs::aggregate_initialization
+}
 
 namespace structs::default_repr {
 
@@ -397,7 +397,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: structs_golden :: default_repr :: Point")
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t get_x(::structs::default_repr::Point p);
 
-}  // namespace structs::default_repr
+}
 
 namespace structs::display {
 
@@ -433,7 +433,7 @@ DisplayStruct final {
 // CRUBIT_ANNOTATE: must_bind=
 ::structs::display::DisplayStruct create(::std::int32_t value);
 
-}  // namespace structs::display
+}
 
 namespace structs::dynamically_sized_type {
 
@@ -475,7 +475,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace structs::interior_mutability
+}
 
 namespace structs::keyword_named_fields_and_methods {
 
@@ -511,7 +511,7 @@ struct
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace structs::keyword_named_fields_and_methods
+}
 
 namespace structs::nested_ptr_type_mutability_qualifiers {
 
@@ -547,7 +547,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace structs::nested_ptr_type_mutability_qualifiers
+}
 
 namespace structs::non_cpp_movable {
 
@@ -594,7 +594,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t get_x(::structs::non_cpp_movable::Point const& p);
 
-}  // namespace structs::non_cpp_movable
+}
 
 namespace structs::repr_c {
 
@@ -615,7 +615,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: structs_golden :: repr_c :: Point")
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t get_x(::structs::repr_c::Point p);
 
-}  // namespace structs::repr_c
+}
 
 namespace structs::requested_alignment_passing_with_no_thunk {
 
@@ -671,7 +671,7 @@ aligned16_multiply(
 ::std::uint8_t packed_inspect(
     ::structs::requested_alignment_passing_with_no_thunk::Packed s);
 
-}  // namespace structs::requested_alignment_passing_with_no_thunk
+}
 
 namespace structs::struct_by_float_passing_with_no_cc_definition {
 
@@ -719,7 +719,7 @@ no_mangle_multiply(
     ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat x,
     ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat y);
 
-}  // namespace structs::struct_by_float_passing_with_no_cc_definition
+}
 
 namespace structs::struct_by_float_passing_with_no_thunk {
 
@@ -749,7 +749,7 @@ thunkless_multiply(
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat x,
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat y);
 
-}  // namespace structs::struct_by_float_passing_with_no_thunk
+}
 
 namespace structs::unsupported_types {
 
@@ -767,7 +767,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace structs::unsupported_types
+}
 
 namespace structs::zst_fields {
 
@@ -819,7 +819,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t get_value(::structs::zst_fields::ZstFields x);
 
-}  // namespace structs::zst_fields
+}
 
 template <>
 struct ::rs::impl<::structs::display::DisplayStruct, ::rs::core::fmt::Display> {
@@ -1026,7 +1026,7 @@ inline void ::structs::abi_classification::StructMemory::
   static_assert(0 == offsetof(__crubit_assert_type, _padding));
   static_assert(1 == offsetof(__crubit_assert_type, i));
 }
-}  // namespace structs::abi_classification
+}
 
 namespace structs::aggregate_initialization {
 
@@ -1240,7 +1240,7 @@ inline void ::structs::aggregate_initialization::UnannotatedTwoDrops::
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
   static_assert(24 == offsetof(__crubit_assert_type, __field1));
 }
-}  // namespace structs::aggregate_initialization
+}
 
 namespace structs::default_repr {
 
@@ -1281,7 +1281,7 @@ inline ::std::int32_t get_x(::structs::default_repr::Point p) {
   return __crubit_internal::__crubit_thunk_get_ux(&p);
 }
 
-}  // namespace structs::default_repr
+}
 
 namespace structs::display {
 
@@ -1317,7 +1317,7 @@ inline ::structs::display::DisplayStruct create(::std::int32_t value) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace structs::display
+}
 
 namespace structs::interior_mutability {
 
@@ -1352,7 +1352,7 @@ inline void ::structs::interior_mutability::SomeStruct::
   using __crubit_assert_type = ::structs::interior_mutability::SomeStruct;
   static_assert(0 == offsetof(__crubit_assert_type, field));
 }
-}  // namespace structs::interior_mutability
+}
 
 namespace structs::keyword_named_fields_and_methods {
 
@@ -1387,7 +1387,7 @@ inline void ::structs::keyword_named_fields_and_methods::AField::
       ::structs::keyword_named_fields_and_methods::AField;
   static_assert(0 == offsetof(__crubit_assert_type, operator__));
 }
-}  // namespace structs::keyword_named_fields_and_methods
+}
 
 namespace structs::nested_ptr_type_mutability_qualifiers {
 
@@ -1425,7 +1425,7 @@ inline void ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct::
   static_assert(0 == offsetof(__crubit_assert_type, mut_const_ptr));
   static_assert(8 == offsetof(__crubit_assert_type, const_mut_ptr));
 }
-}  // namespace structs::nested_ptr_type_mutability_qualifiers
+}
 
 namespace structs::non_cpp_movable {
 
@@ -1477,7 +1477,7 @@ inline ::std::int32_t get_x(::structs::non_cpp_movable::Point const& p) {
   return __crubit_internal::__crubit_thunk_get_ux(p);
 }
 
-}  // namespace structs::non_cpp_movable
+}
 
 namespace structs::repr_c {
 
@@ -1514,7 +1514,7 @@ inline ::std::int32_t get_x(::structs::repr_c::Point p) {
   return __crubit_internal::__crubit_thunk_get_ux(&p);
 }
 
-}  // namespace structs::repr_c
+}
 
 namespace structs::requested_alignment_passing_with_no_thunk {
 
@@ -1655,7 +1655,7 @@ inline ::std::uint8_t packed_inspect(
           &s);
 }
 
-}  // namespace structs::requested_alignment_passing_with_no_thunk
+}
 
 namespace structs::struct_by_float_passing_with_no_cc_definition {
 
@@ -1733,7 +1733,7 @@ no_mangle_multiply(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace structs::struct_by_float_passing_with_no_cc_definition
+}
 
 namespace structs::struct_by_float_passing_with_no_thunk {
 
@@ -1805,7 +1805,7 @@ thunkless_multiply(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace structs::struct_by_float_passing_with_no_thunk
+}
 
 namespace structs::unsupported_types {
 
@@ -1838,7 +1838,7 @@ inline void ::structs::unsupported_types::SomeStruct::
   using __crubit_assert_type = ::structs::unsupported_types::SomeStruct;
   static_assert(0 == offsetof(__crubit_assert_type, unsupported_field));
 }
-}  // namespace structs::unsupported_types
+}
 
 namespace structs::zst_fields {
 
@@ -1882,7 +1882,7 @@ inline ::std::int32_t get_value(::structs::zst_fields::ZstFields x) {
   return __crubit_internal::__crubit_thunk_get_uvalue(&x);
 }
 
-}  // namespace structs::zst_fields
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_STRUCTS_STRUCTS_GOLDEN

@@ -60,7 +60,7 @@ inline void ::cpp_name::Replaced::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::cpp_name::Replaced;
   static_assert(0 == offsetof(__crubit_assert_type, x));
 }
-}  // namespace cpp_name
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_CPP_NAME_GOLDEN

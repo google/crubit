@@ -56,7 +56,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace rs_default::derived_impl
+}
 
 namespace rs_default::explicit_impl {
 
@@ -90,7 +90,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace rs_default::explicit_impl
+}
 
 namespace rs_default::field_with_no_default {
 
@@ -161,7 +161,7 @@ StructWithFieldWithNoDefault final {
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace rs_default::field_with_no_default
+}
 
 namespace rs_default::no_impl {
 
@@ -194,7 +194,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace rs_default::no_impl
+}
 
 namespace rs_default::transparent_struct {
 
@@ -210,7 +210,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace rs_default::transparent_struct
+}
 
 namespace rs_default::derived_impl {
 
@@ -254,7 +254,7 @@ inline void ::rs_default::derived_impl::SomeStruct::
   using __crubit_assert_type = ::rs_default::derived_impl::SomeStruct;
   static_assert(0 == offsetof(__crubit_assert_type, field));
 }
-}  // namespace rs_default::derived_impl
+}
 
 namespace rs_default::explicit_impl {
 
@@ -298,7 +298,7 @@ inline void ::rs_default::explicit_impl::SomeStruct::
   using __crubit_assert_type = ::rs_default::explicit_impl::SomeStruct;
   static_assert(0 == offsetof(__crubit_assert_type, field));
 }
-}  // namespace rs_default::explicit_impl
+}
 
 namespace rs_default::field_with_no_default {
 
@@ -374,7 +374,7 @@ inline void ::rs_default::field_with_no_default::StructWithoutDefault::
       ::rs_default::field_with_no_default::StructWithoutDefault;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace rs_default::field_with_no_default
+}
 
 namespace rs_default::no_impl {
 
@@ -399,7 +399,7 @@ inline void ::rs_default::no_impl::SomeStruct::
   using __crubit_assert_type = ::rs_default::no_impl::SomeStruct;
   static_assert(0 == offsetof(__crubit_assert_type, field));
 }
-}  // namespace rs_default::no_impl
+}
 
 namespace rs_default::transparent_struct {
 
@@ -428,7 +428,7 @@ inline void ::rs_default::transparent_struct::SomeStruct::
   using __crubit_assert_type = ::rs_default::transparent_struct::SomeStruct;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace rs_default::transparent_struct
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_DEFAULT_RS_DEFAULT_GOLDEN

@@ -73,7 +73,7 @@ inline void ::tag_decl_annotations::SomeStruct::
   using __crubit_assert_type = ::tag_decl_annotations::SomeStruct;
   static_assert(0 == offsetof(__crubit_assert_type, f));
 }
-}  // namespace tag_decl_annotations
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_TAG_DECL_ANNOTATIONS_TAG_DECL_ANNOTATIONS_GOLDEN

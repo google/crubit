@@ -333,7 +333,7 @@ inline void ::rs_index::Map::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(__crubit_assert_type, data));
   static_assert(24 == offsetof(__crubit_assert_type, row_size));
 }
-}  // namespace rs_index
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INDEX_RS_INDEX_GOLDEN

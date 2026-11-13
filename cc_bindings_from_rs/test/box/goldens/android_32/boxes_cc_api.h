@@ -222,7 +222,7 @@ void mutate_box(::rs::Box<::std::int32_t>& b);
 
 ::std::uintptr_t tracked_strong_count(::boxes::Tracked const& t);
 
-}  // namespace boxes
+}
 
 template <>
 struct ::rs::impl<::boxes::NotUnpin, ::rs::core::marker::Unpin> {
@@ -435,7 +435,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: OptHolder")
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace boxes
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrBox_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020StrBox_x00000020_x0000003e
@@ -1030,7 +1030,7 @@ inline ::std::uintptr_t tracked_strong_count(::boxes::Tracked const& t) {
   return __crubit_internal::__crubit_thunk_tracked_ustrong_ucount(t);
 }
 
-}  // namespace boxes
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Box_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020const_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Box_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020const_x00000020_x0000002a_x00000020crubit_unonnull_x00000020_x0000003e

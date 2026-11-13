@@ -890,7 +890,7 @@ inline void ::from::OpaqueRef::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::from::OpaqueRef;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace from
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_FROM_FROM_GOLDEN

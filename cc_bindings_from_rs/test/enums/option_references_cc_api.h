@@ -136,7 +136,7 @@ bool same_value(::rs::Option<::option_references::Value const & $static> a,
 ::std::int32_t x_or(::rs::Option<::option_references::Value const & $static> v,
                     ::std::int32_t default_);
 
-}  // namespace option_references
+}
 
 template <>
 struct ::rs::impl<::option_references::ValuesIter, ::rs::core::iter::Iterator> {
@@ -552,7 +552,7 @@ inline ::std::int32_t x_or(
   return __crubit_internal::__crubit_thunk_x_uor(&v, default_);
 }
 
-}  // namespace option_references
+}
 
 namespace option_references {
 namespace __crubit_internal {
@@ -561,7 +561,7 @@ __crubit_thunk_Iterator_unext_uoption_ureferences_ugolden_x0000003a_x0000003aVal
     ::option_references::ValuesIter&,
     ::rs::Option<::std::int32_t const & $static>* __ret_ptr);
 }
-}  // namespace option_references
+}
 inline ::rs::Option<::std::int32_t const & $static>(
     ::rs::impl<::option_references::ValuesIter,
                ::rs::core::iter::Iterator>::next)(

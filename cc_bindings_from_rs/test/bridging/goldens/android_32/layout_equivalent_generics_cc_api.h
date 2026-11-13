@@ -435,7 +435,7 @@ inline crubit::test::MyStatus return_status_or_unit_alias() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace layout_equivalent_generics
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_BRIDGING_LAYOUT_EQUIVALENT_GENERICS_GOLDEN

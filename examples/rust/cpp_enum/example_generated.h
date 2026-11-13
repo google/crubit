@@ -34,7 +34,7 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
   Magenta = INT32_C(7),
 };
 
-}  // namespace example_crate
+}
 
 template <>
 struct ::rs::impl<::example_crate::Color, ::rs::core::cmp::Eq> {

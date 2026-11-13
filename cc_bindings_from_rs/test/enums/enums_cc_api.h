@@ -272,7 +272,7 @@ bool is_none(::enums::param_name_collisions::OptionLike const& none);
 
 bool is_some(::enums::param_name_collisions::OptionLike some);
 
-}  // namespace enums::param_name_collisions
+}
 
 namespace enums::qr_error {
 
@@ -711,7 +711,7 @@ QrError final {
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace enums::qr_error
+}
 
 namespace enums::repr_128 {
 
@@ -797,7 +797,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace enums::repr_128
+}
 
 namespace enums::repr_c {
 
@@ -1035,7 +1035,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace enums::repr_c
+}
 
 namespace enums::repr_c_clone_active_variant {
 
@@ -1111,7 +1111,7 @@ bool is_b(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 
 bool is_c(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 
-}  // namespace enums::repr_c_clone_active_variant
+}
 
 namespace enums::repr_c_clone_counter {
 
@@ -1165,7 +1165,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace enums::repr_c_clone_counter
+}
 
 namespace enums::repr_c_drop {
 
@@ -1235,7 +1235,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace enums::repr_c_drop
+}
 
 namespace enums::repr_c_variant_alignment {
 
@@ -1510,7 +1510,7 @@ WideTagNarrowAlignment final {
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace enums::repr_c_variant_alignment
+}
 
 namespace enums::repr_int {
 
@@ -1745,7 +1745,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       storage_;
 };
 
-}  // namespace enums::repr_int
+}
 
 namespace enums::repr_rust {
 
@@ -2122,7 +2122,7 @@ RustReprWithSingleTuplePayloadVariant final {
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace enums::repr_rust
+}
 
 template <>
 struct ::rs::impl<::enums::param_name_collisions::FooBar, ::rs::core::cmp::Eq> {
@@ -2341,7 +2341,7 @@ inline bool is_some(::enums::param_name_collisions::OptionLike some) {
   return __crubit_internal::__crubit_thunk_is_usome(&some);
 }
 
-}  // namespace enums::param_name_collisions
+}
 
 namespace enums::qr_error {
 
@@ -2464,7 +2464,7 @@ inline void ::enums::qr_error::StructuredQrError::
     static_assert(8 == offsetof(__crubit_assert_type, __field0));
   }
 }
-}  // namespace enums::qr_error
+}
 
 namespace enums::repr_128 {
 
@@ -2572,7 +2572,7 @@ inline void ::enums::repr_128::ReprU128::__crubit_field_offset_assertions() {
     static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
   }
 }
-}  // namespace enums::repr_128
+}
 
 namespace enums::repr_c {
 
@@ -2833,7 +2833,7 @@ inline bool(ReprCWithSingleNoPayloadVariant::is_single_variant)() const {
 }
 inline void ::enums::repr_c::ReprCWithSingleNoPayloadVariant::
     __crubit_field_offset_assertions() {}
-}  // namespace enums::repr_c
+}
 
 namespace enums::repr_c_clone_active_variant {
 
@@ -2994,7 +2994,7 @@ inline bool is_c(
   return __crubit_internal::__crubit_thunk_is_uc(e);
 }
 
-}  // namespace enums::repr_c_clone_active_variant
+}
 
 namespace enums::repr_c_clone_counter {
 
@@ -3064,7 +3064,7 @@ inline void ::enums::repr_c_clone_counter::CloneCount::
     static_assert(0 == offsetof(__crubit_assert_variant_type, p));
   }
 }
-}  // namespace enums::repr_c_clone_counter
+}
 
 namespace enums::repr_c_drop {
 
@@ -3162,7 +3162,7 @@ inline void ::enums::repr_c_drop::DropMe::__crubit_field_offset_assertions() {
     static_assert(0 == offsetof(__crubit_assert_variant_type, p));
   }
 }
-}  // namespace enums::repr_c_drop
+}
 
 namespace enums::repr_c_variant_alignment {
 
@@ -3488,7 +3488,7 @@ inline void ::enums::repr_c_variant_alignment::WideTagNarrowAlignment::
     static_assert(0 == offsetof(__crubit_assert_variant_type, __field0));
   }
 }
-}  // namespace enums::repr_c_variant_alignment
+}
 
 namespace enums::repr_int {
 
@@ -3590,7 +3590,7 @@ inline bool(NegReprIntEnum::is_minus_two)() const {
   return __crubit_internal::__crubit_thunk_is_uminus_utwo(self);
 }
 
-}  // namespace enums::repr_int
+}
 
 namespace enums::repr_rust {
 
@@ -3814,7 +3814,7 @@ inline void ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant::
     static_assert(0 == offsetof(__crubit_assert_type, __field0));
   }
 }
-}  // namespace enums::repr_rust
+}
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ENUMS_ENUMS_GOLDEN
