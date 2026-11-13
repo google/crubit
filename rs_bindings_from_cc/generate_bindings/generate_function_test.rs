@@ -7,7 +7,7 @@ use code_gen_utils::make_rs_ident;
 use crubit_feature::CrubitFeature;
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{format_generic_params, Lifetime};
-use generate_function_thunk::thunk_ident;
+use generate_function_thunk::{generate_function_thunk_impl, thunk_ident};
 use googletest::prelude::{assert_that, contains_substring, expect_that, gtest, not, OrFail as _};
 
 use ir::{Func, Item, UnqualifiedIdentifier};
@@ -5278,5 +5278,40 @@ fn test_unnameable_template_instantiation_inherited_method_with_inline_cpp() -> 
             }
         }
     );
+    Ok(())
+}
+
+#[gtest]
+fn test_non_trivially_copyable_existing_rust_type_param_includes_slot_header() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace crubit::rust_type {
+        template <typename...>
+        struct Args {};
+        }
+        struct NonUnpin { ~NonUnpin(); };
+        template <typename T>
+        struct [[clang::annotate("crubit_internal_rust_type", "RustContainer<{}>", crubit::rust_type::Args<T>())]] Container final {
+          ~Container();
+        };
+        void TakeContainer(Container<NonUnpin> c);
+        "#,
+    )?;
+    let factory = TestDbFactory::new(make_test_ir(&proto)?);
+    let db = factory.make_db();
+    let func = retrieve_func(factory.ir(), "TakeContainer");
+    let thunk = generate_function_thunk_impl(&db, &func)?
+        .expect("TakeContainer should generate a C++ thunk");
+    assert!(thunk.needs_slot_header());
+
+    let BindingsTokens { rs_api_impl, .. } =
+        generate_bindings_tokens_for_test(make_test_ir(&proto)?)?;
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            ::crubit::Slot<Container<NonUnpin>>*
+        }
+    );
+    assert_cc_matches!(rs_api_impl, quote! { AssumeInitAndTakeValue() });
     Ok(())
 }
