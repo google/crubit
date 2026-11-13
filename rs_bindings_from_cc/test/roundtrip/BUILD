@@ -11,6 +11,7 @@ crubit_test_cc_library(
     hdrs = ["roundtrip.h"],
     deps = [
         "//support:annotations",
+        "//support/rs_std",
         "//support/rs_std:char",
     ],
 )
@@ -20,11 +21,28 @@ rust_api_from_cpp(
     cpp_target = ":roundtrip",
 )
 
+crubit_test_cc_library(
+    name = "roundtrip_experimental",
+    hdrs = ["roundtrip_experimental.h"],
+    aspect_hints = ["//features:experimental"],
+    deps = [
+        "//support:annotations",
+        "//support/rs_std",
+    ],
+)
+
+rust_api_from_cpp(
+    name = "roundtrip_experimental_rust",
+    cpp_target = ":roundtrip_experimental",
+)
+
 crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
     deps = [
+        ":roundtrip_experimental_rust",
         ":roundtrip_rust",
+        "//support:ctor",
         "@crate_index//:googletest",
     ],
 )

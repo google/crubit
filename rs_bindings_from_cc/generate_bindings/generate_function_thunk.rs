@@ -706,6 +706,7 @@ pub fn generate_cc_thunk_parts(
                             RsTypeKind::ExistingRustType { existing_rust_type, .. }
                                 if !existing_rust_type.is_trivially_copyable()
                         ) {
+                            needs_slot_header = true;
                             quote! {
                                 std::move(*reinterpret_cast<::crubit::Slot<#cpp_type>*>(#ffi_ident))
                                     .AssumeInitAndTakeValue()
@@ -839,6 +840,7 @@ pub fn generate_cc_thunk_parts(
                                 RsTypeKind::ExistingRustType { existing_rust_type, .. }
                                     if !existing_rust_type.is_trivially_copyable()
                             ) {
+                                needs_slot_header = true;
                                 let cpp_type = cpp_type_name::format_cpp_type(&rs_type_kind, db)?;
                                 Ok(quote! {
                                     std::move(*reinterpret_cast<::crubit::Slot<#cpp_type>*>(#ident))

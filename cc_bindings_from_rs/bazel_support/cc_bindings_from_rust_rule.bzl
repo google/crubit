@@ -681,29 +681,21 @@ cc_bindings_from_rust_aspect = aspect(
     fragments = ["cpp"],
 )
 
-def _cc_bindings_from_rust_rule_impl(ctx):
-    crate = ctx.attr.crate
-    providers = [
-        crate[CcBindingsFromRustInfo].cc_info,
-        # If we try to generate rust bindings of c++ bindings of this rust crate, we get back
-        # the original rust crate again.
-        RustBindingsFromCcInfo(
-            cc_info = None,
-            dep_variant_info = DepVariantInfo(
-                crate_info = crate[CrateInfo] if CrateInfo in crate else None,
-                dep_info = crate[DepInfo] if DepInfo in crate else None,
-                build_info = crate[BuildInfo] if BuildInfo in crate else None,
-                cc_info = crate[CcInfo] if CcInfo in crate else None,
-            ),
-            pass_through_dep_variant_infos = depset(),
-            target_args = depset([
+def _make_round_trip_rust_bindings_info(label, headers, dep_variant_info, dep_targets = []):
+    """Creates a `RustBindingsFromCcInfo` so `rs_bindings_from_cc` recognizes Rust-defined headers."""
+    return RustBindingsFromCcInfo(
+        cc_info = None,
+        dep_variant_info = dep_variant_info,
+        pass_through_dep_variant_infos = depset(),
+        target_args = depset(
+            direct = [
                 # Mark the headers as being owned by the (bindings for the) crate, so that
                 # rs_bindings_from_cc doesn't assume that they're owned by the current target or
                 # that they don't have bindings.
                 json.encode(
                     {
-                        "t": str(crate.label),
-                        "h": [h.path for h in crate[CcBindingsFromRustInfo].headers],
+                        "t": str(label),
+                        "h": [h.path for h in headers],
                         # Note: the feature set is a lie, crubit won't run on this target.
                         # The "pun" we're relying on is that Crubit will think that
                         # "everything will get bindings if I run rs_bindings_from_cc on it".
@@ -713,9 +705,32 @@ def _cc_bindings_from_rust_rule_impl(ctx):
                         "f": ["all"],
                     },
                 ),
-            ]),
-            namespaces = None,
-            additional_rust_srcs = depset(),
+            ],
+            transitive = [
+                dep[RustBindingsFromCcInfo].target_args
+                for dep in dep_targets
+                if RustBindingsFromCcInfo in dep
+            ],
+        ),
+        namespaces = None,
+        additional_rust_srcs = depset(),
+    )
+
+def _cc_bindings_from_rust_rule_impl(ctx):
+    crate = ctx.attr.crate
+    providers = [
+        crate[CcBindingsFromRustInfo].cc_info,
+        # If we try to generate rust bindings of c++ bindings of this rust crate, we get back
+        # the original rust crate again.
+        _make_round_trip_rust_bindings_info(
+            label = crate.label,
+            headers = crate[CcBindingsFromRustInfo].headers,
+            dep_variant_info = DepVariantInfo(
+                crate_info = crate[CrateInfo] if CrateInfo in crate else None,
+                dep_info = crate[DepInfo] if DepInfo in crate else None,
+                build_info = crate[BuildInfo] if BuildInfo in crate else None,
+                cc_info = crate[CcInfo] if CcInfo in crate else None,
+            ),
         ),
     ]
     if OutputGroupInfo in crate:
@@ -867,10 +882,18 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
         ),
     )
 
+    rust_bindings_from_cc_info = _make_round_trip_rust_bindings_info(
+        label = ctx.label,
+        headers = [bindings_info.h_file],
+        dep_variant_info = None,
+        dep_targets = ctx.attr.deps,
+    )
+
     return [
         self_info,
         bindings_info,
         cc_info,
+        rust_bindings_from_cc_info,
         OutputGroupInfo(out = output_depset, out_compiled = out_compiled),
     ]
 
