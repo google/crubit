@@ -1239,7 +1239,7 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
               "Class template instantiation forbidden by blocklist",
               record_decl->getQualifiedNameAsString())});
     }
-    ts.set_defining_target(ictx_.GetOwningTarget(*decl).value());
+    ts.set_defining_target(ictx_.GetOwningTarget(*decl));
     if (clang::TypedefNameDecl* alias_decl =
             ictx_.GetTemplateSpecializationAlias(specialization_decl)) {
       llvm::Expected<TranslatedIdentifier> alias_name =
@@ -1385,7 +1385,7 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
     incomplete->mutable_rs_name()->set_identifier(rs_name);
     incomplete->set_unique_name(ictx_.GetUniqueName(*record_decl));
     incomplete->set_id(ictx_.GenerateItemId(*record_decl).value());
-    incomplete->set_owning_target(owning_target.value());
+    incomplete->set_owning_target(std::move(owning_target));
     if (unknown_attr->has_value()) {
       incomplete->set_unknown_attr(std::move(**unknown_attr));
     }
@@ -1533,7 +1533,7 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
   record->set_unique_name(ictx_.GetUniqueName(*record_decl));
   record->set_mangled_cc_name(ictx_.GetMangledName(*record_decl));
   record->set_id(id.value());
-  record->set_owning_target(owning_target.value());
+  record->set_owning_target(std::move(owning_target));
   if (template_specialization.has_value()) {
     *record->mutable_template_specialization() =
         *std::move(template_specialization);

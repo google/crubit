@@ -74,9 +74,9 @@ class Invocation {
     for (const auto& header : public_headers_) {
       *ir_.add_public_headers() = header.AsFfi();
     }
-    ir_.set_current_target(target_.value());
+    ir_.set_current_target(target_);
     for (const auto& [target, features] : crubit_features) {
-      auto& set = (*ir_.mutable_crubit_features())[target.value()];
+      auto& set = (*ir_.mutable_crubit_features())[target];
       std::vector<std::string> sorted_features(features.begin(),
                                                features.end());
       absl::c_sort(sorted_features);
@@ -84,7 +84,7 @@ class Invocation {
                                         sorted_features.end());
     }
     for (const auto& [target, name] : crate_names) {
-      (*ir_.mutable_crate_names())[target.value()] = ffi::FfiString(name);
+      (*ir_.mutable_crate_names())[target] = ffi::FfiString(name);
     }
   }
 

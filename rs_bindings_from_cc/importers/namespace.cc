@@ -93,7 +93,7 @@ std::unique_ptr<crubit::ffi::Item> NamespaceDeclImporter::Import(
   if (unknown_attr->has_value()) {
     ns->set_unknown_attr(std::move(**unknown_attr));
   }
-  ns->set_owning_target(ictx_.GetOwningTarget(*namespace_decl).value());
+  ns->set_owning_target(ictx_.GetOwningTarget(*namespace_decl));
   if (enclosing_item_id->has_value()) {
     ns->set_enclosing_item_id((*enclosing_item_id)->value());
   }

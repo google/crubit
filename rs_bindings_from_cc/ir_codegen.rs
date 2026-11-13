@@ -44,6 +44,9 @@ impl FieldType {
     }
 
     fn cc_storage_type(&self) -> String {
+        if let Self::Newtype("BazelLabel", _) = self {
+            return "::crubit::ffi::BazelLabel".to_string();
+        }
         match self.cc_type() {
             Self::Unit => unreachable!("Unit has no C++ storage field"),
             Self::Bool => "bool".to_string(),
@@ -1017,8 +1020,14 @@ fn generate_cc_struct(schema: &Schema, rec_idx: usize, st: &StructDef) -> c::Tok
                         void set_$fname($cty value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = value; }
                     }
                     FieldType::Str => {
-                        std::string_view $fname() const { return $(fname)_.AsView(); }
-                        void set_$fname(std::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = FfiString(value); }
+                        $(if matches!(f.ty, FieldType::Newtype("BazelLabel", _)) {
+                            $(let cty = &f.ty.cc_storage_type())
+                            const $cty& $fname() const { return $(fname)_; }
+                            void set_$fname($cty value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = std::move(value); }
+                        } else {
+                            std::string_view $fname() const { return $(fname)_.AsView(); }
+                            void set_$fname(std::string_view value) { $(if let Some(m) = &set_bit => has_bits_ |= $m;$[' '])$(fname)_ = FfiString(value); }
+                        })
                     }
                     FieldType::Bytes => {
                         std::string_view $fname() const { return std::string_view(reinterpret_cast<const char*>($(fname)_.data()), $(fname)_.size()); }

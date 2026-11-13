@@ -155,8 +155,7 @@ NamespacesHierarchy CollectNamespaces(const IR& ir) {
     id_to_namespace.insert({ItemId(ns->id()), ns});
   }
 
-  NamespaceTrie trie(BazelLabel(std::string(ir.current_target())),
-                     id_to_namespace);
+  NamespaceTrie trie(ir.current_target(), id_to_namespace);
   auto target_it = ir.top_level_items().find(ir.current_target());
   if (target_it != ir.top_level_items().end()) {
     for (const auto& item : target_it->second) {

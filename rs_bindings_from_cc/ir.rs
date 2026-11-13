@@ -398,7 +398,7 @@ pub fn proto_to_ir(proto: &ir_generated::IR) -> Result<IR> {
                 features |= feature_flags;
             }
             Ok::<_, Error>((
-                BazelLabel::from(target.clone()),
+                target.clone(),
                 crubit_feature::SerializedCrubitFeatures::resolved(features),
             ))
         })
@@ -415,7 +415,7 @@ pub fn proto_to_ir(proto: &ir_generated::IR) -> Result<IR> {
             let ident = try_make_rs_ident(name_str.as_str()).with_context(|| {
                 format!("Invalid crate name identifier: {:?}", name_str.as_str())
             })?;
-            Ok::<_, Error>((BazelLabel::from(target.clone()), ident))
+            Ok::<_, Error>((target.clone(), ident))
         })
         .try_collect()?;
 
@@ -426,13 +426,13 @@ pub fn proto_to_ir(proto: &ir_generated::IR) -> Result<IR> {
             for item in item_list.iter() {
                 validate_item(item)?;
             }
-            Ok::<_, Error>((BazelLabel::from(target.clone()), item_list.to_vec()))
+            Ok::<_, Error>((target.clone(), item_list.to_vec()))
         })
         .try_collect()?;
 
     let tree_ir = TreeIR {
         public_headers,
-        current_target: BazelLabel::from(proto.current_target.clone()),
+        current_target: proto.current_target.clone(),
         crate_root_path,
         crubit_features,
         crate_names,

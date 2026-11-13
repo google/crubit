@@ -473,7 +473,7 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::Import(
       var_name->rs_identifier().Ident());
   global_var->set_unique_name(ictx_.GetUniqueName(*var_decl));
   global_var->set_id(ictx_.GenerateItemId(*var_decl).value());
-  global_var->set_owning_target(ictx_.GetOwningTarget(*var_decl).value());
+  global_var->set_owning_target(ictx_.GetOwningTarget(*var_decl));
   *global_var->mutable_decl_loc() =
       ictx_.ConvertDeclLocation(var_decl->getBeginLoc(), nullptr);
   if (mangled_name.has_value()) {
@@ -635,7 +635,7 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
   constant->mutable_rs_name()->set_identifier(var_name.rs_identifier().Ident());
   constant->set_unique_name(ictx_.GetUniqueName(*var_decl));
   constant->set_id(ictx_.GenerateItemId(*var_decl).value());
-  constant->set_owning_target(ictx_.GetOwningTarget(*var_decl).value());
+  constant->set_owning_target(ictx_.GetOwningTarget(*var_decl));
   *constant->mutable_decl_loc() =
       ictx_.ConvertDeclLocation(var_decl->getBeginLoc(), nullptr);
   if (unknown_attr.has_value()) {

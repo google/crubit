@@ -326,7 +326,7 @@ std::unique_ptr<crubit::ffi::Item> ExistingRustTypeImporter::Import(
   for (auto& arg : format_args) {
     *existing->add_template_args() = std::move(arg);
   }
-  existing->set_owning_target(ictx_.GetOwningTarget(*type_decl).value());
+  existing->set_owning_target(ictx_.GetOwningTarget(*type_decl));
   if (!cpp_type->isIncompleteType()) {
     auto* size_align = existing->mutable_size_align();
     size_align->set_size(context.getTypeSizeInChars(cpp_type).getQuantity());

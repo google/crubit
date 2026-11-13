@@ -1345,7 +1345,7 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
   *func->mutable_cc_name() = translated_name->cc_identifier;
   *func->mutable_rs_name() = translated_name->rs_identifier();
   func->set_unique_name(ictx_.GetUniqueName(*function_decl));
-  func->set_owning_target(ictx_.GetOwningTarget(*function_decl).value());
+  func->set_owning_target(ictx_.GetOwningTarget(*function_decl));
   if (doc_comment.has_value()) {
     func->set_doc_comment(*doc_comment);
   }

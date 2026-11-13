@@ -206,6 +206,7 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiString {
   }
 
   friend struct llvm::DenseMapInfo<FfiString>;
+  friend struct llvm::DenseMapInfo<class BazelLabel>;
   constexpr FfiString(uintptr_t sentinel_tag, std::nullptr_t)
       : dangling_ptr_(sentinel_tag), len_(0) {}
 
@@ -236,6 +237,168 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiString {
 static_assert(sizeof(FfiString) == 2 * sizeof(size_t));
 static_assert(alignof(FfiString) == alignof(size_t));
 static_assert(std::is_standard_layout_v<FfiString>);
+
+// Representation of a Bazel label (for example //foo/bar:baz) with a
+// C-compatible layout matching `BazelLabel` in Rust (`FfiString`).
+class CRUBIT_FFI_TRIVIAL_ABI BazelLabel {
+ public:
+  constexpr BazelLabel() = default;
+  explicit BazelLabel(FfiString value) noexcept : value_(std::move(value)) {}
+  explicit BazelLabel(llvm::StringRef value) : value_(value) {}
+  explicit BazelLabel(std::string_view value)
+      : value_(llvm::StringRef(value.data(), value.size())) {}
+  explicit BazelLabel(const std::string& value)
+      : value_(llvm::StringRef(value)) {}
+  explicit BazelLabel(const char* value) : value_(llvm::StringRef(value)) {}
+
+  llvm::StringRef value() const { return value_.AsView(); }
+  llvm::StringRef AsView() const { return value_.AsView(); }
+  bool empty() const { return value_.empty(); }
+
+  llvm::StringRef target_name() const { return TargetName(AsView()); }
+  llvm::StringRef package_name() const { return PackageName(AsView()); }
+
+  friend bool operator==(const BazelLabel& lhs, const BazelLabel& rhs) {
+    return ComponentsOf(lhs.AsView()) == ComponentsOf(rhs.AsView());
+  }
+  friend bool operator!=(const BazelLabel& lhs, const BazelLabel& rhs) {
+    return !(lhs == rhs);
+  }
+  friend bool operator<(const BazelLabel& lhs, const BazelLabel& rhs) {
+    return ComponentsOf(lhs.AsView()) < ComponentsOf(rhs.AsView());
+  }
+  friend bool operator>(const BazelLabel& lhs, const BazelLabel& rhs) {
+    return rhs < lhs;
+  }
+  friend bool operator<=(const BazelLabel& lhs, const BazelLabel& rhs) {
+    return !(rhs < lhs);
+  }
+  friend bool operator>=(const BazelLabel& lhs, const BazelLabel& rhs) {
+    return !(lhs < rhs);
+  }
+
+  friend bool operator==(const BazelLabel& lhs, llvm::StringRef rhs) {
+    return ComponentsOf(lhs.AsView()) == ComponentsOf(rhs);
+  }
+  friend bool operator!=(const BazelLabel& lhs, llvm::StringRef rhs) {
+    return !(lhs == rhs);
+  }
+  friend bool operator==(llvm::StringRef lhs, const BazelLabel& rhs) {
+    return ComponentsOf(lhs) == ComponentsOf(rhs.AsView());
+  }
+  friend bool operator!=(llvm::StringRef lhs, const BazelLabel& rhs) {
+    return !(lhs == rhs);
+  }
+  friend bool operator<(const BazelLabel& lhs, llvm::StringRef rhs) {
+    return ComponentsOf(lhs.AsView()) < ComponentsOf(rhs);
+  }
+  friend bool operator<(llvm::StringRef lhs, const BazelLabel& rhs) {
+    return ComponentsOf(lhs) < ComponentsOf(rhs.AsView());
+  }
+
+  friend bool operator==(const BazelLabel& lhs, std::string_view rhs) {
+    return lhs == llvm::StringRef(rhs.data(), rhs.size());
+  }
+  friend bool operator!=(const BazelLabel& lhs, std::string_view rhs) {
+    return lhs != llvm::StringRef(rhs.data(), rhs.size());
+  }
+  friend bool operator==(std::string_view lhs, const BazelLabel& rhs) {
+    return llvm::StringRef(lhs.data(), lhs.size()) == rhs;
+  }
+  friend bool operator!=(std::string_view lhs, const BazelLabel& rhs) {
+    return llvm::StringRef(lhs.data(), lhs.size()) != rhs;
+  }
+  friend bool operator<(const BazelLabel& lhs, std::string_view rhs) {
+    return lhs < llvm::StringRef(rhs.data(), rhs.size());
+  }
+  friend bool operator<(std::string_view lhs, const BazelLabel& rhs) {
+    return llvm::StringRef(lhs.data(), lhs.size()) < rhs;
+  }
+
+  friend bool operator==(const BazelLabel& lhs, const char* rhs) {
+    return lhs == llvm::StringRef(rhs);
+  }
+  friend bool operator!=(const BazelLabel& lhs, const char* rhs) {
+    return lhs != llvm::StringRef(rhs);
+  }
+  friend bool operator==(const char* lhs, const BazelLabel& rhs) {
+    return llvm::StringRef(lhs) == rhs;
+  }
+  friend bool operator!=(const char* lhs, const BazelLabel& rhs) {
+    return llvm::StringRef(lhs) != rhs;
+  }
+  friend bool operator<(const BazelLabel& lhs, const char* rhs) {
+    return lhs < llvm::StringRef(rhs);
+  }
+  friend bool operator<(const char* lhs, const BazelLabel& rhs) {
+    return llvm::StringRef(lhs) < rhs;
+  }
+
+  friend bool operator==(const BazelLabel& lhs, const std::string& rhs) {
+    return lhs == llvm::StringRef(rhs);
+  }
+  friend bool operator!=(const BazelLabel& lhs, const std::string& rhs) {
+    return lhs != llvm::StringRef(rhs);
+  }
+  friend bool operator==(const std::string& lhs, const BazelLabel& rhs) {
+    return llvm::StringRef(lhs) == rhs;
+  }
+  friend bool operator!=(const std::string& lhs, const BazelLabel& rhs) {
+    return llvm::StringRef(lhs) != rhs;
+  }
+  friend bool operator<(const BazelLabel& lhs, const std::string& rhs) {
+    return lhs < llvm::StringRef(rhs);
+  }
+  friend bool operator<(const std::string& lhs, const BazelLabel& rhs) {
+    return llvm::StringRef(lhs) < rhs;
+  }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const BazelLabel& s) {
+    auto [target, pkg] = ComponentsOf(s.AsView());
+    return H::combine(std::move(h),
+                      std::string_view(target.data(), target.size()),
+                      std::string_view(pkg.data(), pkg.size()));
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const BazelLabel& s) {
+    return os << s.value_;
+  }
+
+  friend struct llvm::DenseMapInfo<BazelLabel>;
+
+ private:
+  static llvm::StringRef TargetName(llvm::StringRef s) {
+    size_t colon = s.find(':');
+    if (colon != llvm::StringRef::npos) {
+      return s.substr(colon + 1);
+    }
+    size_t slash = s.rfind('/');
+    if (slash != llvm::StringRef::npos) {
+      return s.substr(slash + 1);
+    }
+    return s;
+  }
+
+  static llvm::StringRef PackageName(llvm::StringRef s) {
+    size_t colon = s.rfind(':');
+    if (colon != llvm::StringRef::npos) {
+      return s.substr(0, colon);
+    }
+    return s;
+  }
+
+  static std::pair<llvm::StringRef, llvm::StringRef> ComponentsOf(
+      llvm::StringRef s) {
+    return {TargetName(s), PackageName(s)};
+  }
+
+  FfiString value_;
+};
+
+static_assert(sizeof(BazelLabel) == sizeof(FfiString));
+static_assert(alignof(BazelLabel) == alignof(FfiString));
+static_assert(std::is_standard_layout_v<BazelLabel>);
 
 // An owned contiguous vector with a `#[repr(C)]` layout shared between C++ and
 // Rust.
@@ -698,6 +861,31 @@ struct DenseMapInfo<crubit::ffi::FfiString> {
     if ((LHS.len_ == 0 && LHS.dangling_ptr_ != 1) ||
         (RHS.len_ == 0 && RHS.dangling_ptr_ != 1)) {
       return LHS.dangling_ptr_ == RHS.dangling_ptr_ && LHS.len_ == RHS.len_;
+    }
+    return LHS == RHS;
+  }
+};
+
+template <>
+struct DenseMapInfo<crubit::ffi::BazelLabel> {
+  static crubit::ffi::BazelLabel getEmptyKey() {
+    return crubit::ffi::BazelLabel(
+        DenseMapInfo<crubit::ffi::FfiString>::getEmptyKey());
+  }
+  static crubit::ffi::BazelLabel getTombstoneKey() {
+    return crubit::ffi::BazelLabel(
+        DenseMapInfo<crubit::ffi::FfiString>::getTombstoneKey());
+  }
+  static unsigned getHashValue(const crubit::ffi::BazelLabel& Val) {
+    return static_cast<unsigned>(
+        llvm::hash_combine(Val.target_name(), Val.package_name()));
+  }
+  static bool isEqual(const crubit::ffi::BazelLabel& LHS,
+                      const crubit::ffi::BazelLabel& RHS) {
+    if ((LHS.value_.len_ == 0 && LHS.value_.dangling_ptr_ != 1) ||
+        (RHS.value_.len_ == 0 && RHS.value_.dangling_ptr_ != 1)) {
+      return DenseMapInfo<crubit::ffi::FfiString>::isEqual(LHS.value_,
+                                                           RHS.value_);
     }
     return LHS == RHS;
   }
