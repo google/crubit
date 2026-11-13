@@ -502,18 +502,28 @@ pub fn should_receive_bindings<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId
 /// against `name`. Name must include the crate in its path.
 pub fn matches_qualified_name(db: &BindingsGenerator<'_>, item_did: DefId, name: &[&str]) -> bool {
     let tcx = db.tcx();
+    let [krate_name, middle @ .., item_name] = name else {
+        return false;
+    };
+    if tcx.crate_name(item_did.krate).as_str() != *krate_name {
+        return false;
+    }
+    if tcx.opt_item_name(item_did).is_none_or(|sym| sym.as_str() != *item_name) {
+        return false;
+    }
     let path = tcx.def_path(item_did);
-    if path.data.len() + 1 != name.len() {
+    if path.data.len() != middle.len() + 1 {
         return false;
     }
     // This will always return false for anonymous path data because the caller won't be able to
     // specify the `disambiguator` that gets inserted into the symbol. That's fine. It is expected
     // this function will only be called to check for non-anonymous paths.
-    [tcx.crate_name(path.krate)]
-        .into_iter()
-        .chain(path.data.into_iter().map(|seg| seg.as_sym(/* verbose= */ false)))
-        .zip(name.iter().map(|s| Symbol::intern(s)))
-        .all(|(sym, expected)| sym == expected)
+    path.data
+        .iter()
+        .take(middle.len())
+        .map(|seg| seg.as_sym(/* verbose= */ false))
+        .zip(middle.iter().copied())
+        .all(|(sym, expected)| sym.as_str() == expected)
 }
 
 fn cmp_def_path_segment(

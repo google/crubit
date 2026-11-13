@@ -2361,10 +2361,13 @@ impl BridgedBuiltin {
     /// Determines if an AdtDef is for a Result, Option, or Vec.
     pub fn new(db: &BindingsGenerator<'_>, adt: AdtDef<'_>) -> Option<Self> {
         let tcx = db.tcx();
-        if tcx.is_diagnostic_item(rustc_span::symbol::sym::Vec, adt.did())
-            || matches_qualified_name(db, adt.did(), &["alloc", "vec", "Vec"])
-        {
-            return Some(BridgedBuiltin::Vec);
+        if adt.is_struct() {
+            if tcx.is_diagnostic_item(rustc_span::symbol::sym::Vec, adt.did())
+                || matches_qualified_name(db, adt.did(), &["alloc", "vec", "Vec"])
+            {
+                return Some(BridgedBuiltin::Vec);
+            }
+            return None;
         }
 
         let variant = adt.variants().iter().next()?;
