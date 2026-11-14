@@ -326,10 +326,6 @@ fn rs_type_kind_with_lifetime_elision_impl(
                             db.rs_type_kind_with_lifetime_elision(underlying_type, lifetime_options)
                         {
                             return Ok(ty);
-                        } else {
-                            // TODO(b/481368622): this fails if we fall through to comprehensive
-                            // fallbacks.
-                            return Err(unsupported_alias_error());
                         }
                     }
                     // If it still fails, hide the error. Most users only need to know

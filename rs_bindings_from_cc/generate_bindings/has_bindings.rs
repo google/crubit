@@ -53,6 +53,36 @@ fn cc_type_has_bindings<'a>(
     Ok(())
 }
 
+/// Checks if the generated `RsTypeKind` for a given `CcType` contains an `RsTypeKind::Error`.
+/// If it does, returns a `NoBindingsReason::DependencyFailed`. Otherwise, returns the `RsTypeKind`.
+fn check_rs_type_kind_for_errors(
+    db: &BindingsGenerator,
+    item_id: ItemId,
+    type_: CcType,
+) -> Result<RsTypeKind, NoBindingsReason> {
+    match db.rs_type_kind(type_) {
+        Err(error) => Err(NoBindingsReason::DependencyFailed {
+            type_name: db.debug_name(item_id),
+            blocker: None,
+            source: error,
+        }),
+        Ok(rs_type_kind) => {
+            if let Some(RsTypeKind::Error { error, visibility_override: None, .. }) = rs_type_kind
+                .dfs_iter()
+                .find(|t| matches!(t, RsTypeKind::Error { visibility_override: None, .. }))
+            {
+                Err(NoBindingsReason::DependencyFailed {
+                    type_name: db.debug_name(item_id),
+                    blocker: None,
+                    source: error.clone(),
+                })
+            } else {
+                Ok(rs_type_kind)
+            }
+        }
+    }
+}
+
 /// Implementation of `BindingsGenerator::has_bindings`.
 pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindingsReason> {
     if let Some(name) = item.cc_name_as_str() {
@@ -160,24 +190,13 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindings
         // underlying type is never going to be or refer to this type, because the current
         // enum is not defined at the time that the underlying type is evaluated.
         // Not even forward declarations help. You just can't do `enum Foo: Something<Foo>;`.
-        if let Err(error) = db.rs_type_kind(enum_.underlying_type().clone()) {
-            return Err(NoBindingsReason::DependencyFailed {
-                type_name: db.debug_name(enum_.id()),
-                blocker: None,
-                source: error,
-            });
-        }
+        check_rs_type_kind_for_errors(db, enum_.id(), enum_.underlying_type().clone())?;
     }
     // Require that the underlying type exists. Otherwise, the constant can't.
     if let Item::Constant(constant) = &item
         && let Some(type_) = constant.type_()
-        && let Err(error) = db.rs_type_kind(type_.clone())
     {
-        return Err(NoBindingsReason::DependencyFailed {
-            type_name: db.debug_name(constant.id()),
-            blocker: None,
-            source: error,
-        });
+        check_rs_type_kind_for_errors(db, constant.id(), type_.clone())?;
     }
     // Integer constants are emitted as literals, so their type must be primitive (possibly
     // through type aliases), rather than e.g. an enum, or a type alias from a target without
@@ -258,23 +277,18 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindings
             }
         }
         // Global variables receive bindings if the underlying type has bindings.
-        Item::GlobalVar(ref global_var) => match db.rs_type_kind(global_var.type_().clone()) {
-            Ok(rs_type_kind) => {
-                if let Some(c_array) = rs_type_kind.contains_c_array() {
-                    return Err(NoBindingsReason::Unsupported(anyhow!(
-                        "C-style array global variables are not yet supported: \
-                        {} (b/575922365)",
-                        c_array.display_cc_type_name_for_rs_type(),
-                    )));
-                }
-                Ok(())
+        Item::GlobalVar(ref global_var) => {
+            let rs_type_kind =
+                check_rs_type_kind_for_errors(db, item.id(), global_var.type_().clone())?;
+            if let Some(c_array) = rs_type_kind.contains_c_array() {
+                return Err(NoBindingsReason::Unsupported(anyhow!(
+                    "C-style array global variables are not yet supported: \
+                    {} (b/575922365)",
+                    c_array.display_cc_type_name_for_rs_type(),
+                )));
             }
-            Err(error) => Err(NoBindingsReason::DependencyFailed {
-                type_name: db.debug_name(item.id()),
-                blocker: None,
-                source: error,
-            }),
-        },
+            Ok(())
+        }
         // Other items are public.
         Item::Comment(_)
         | Item::Constant(_)

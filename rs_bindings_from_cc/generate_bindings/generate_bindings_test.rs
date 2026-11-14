@@ -2849,3 +2849,61 @@ fn test_predefined_sugar_types_without_cstddef_include() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_failed_type_alias_comprehensive_fallback() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        enum Legacy { kLegacyA = 0 };
+        using BadAlias = __underlying_type(Legacy);
+        void foo(BadAlias x);
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let func = retrieve_func(db.ir(), "foo");
+    let rs_type = db.rs_type_kind(func.params()[0].type_().clone())?;
+    match rs_type {
+        RsTypeKind::Error { symbol, error, .. } => {
+            expect_eq!(&*symbol, "BadAlias");
+            expect_that!(error.to_string(), contains_substring("Unsupported type alias BadAlias"));
+        }
+        other => panic!("Expected RsTypeKind::Error, got {other:?}"),
+    }
+    Ok(())
+}
+
+#[gtest]
+fn test_generate_bindings_global_var_with_failed_type() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        enum Legacy { kLegacyA = 0 };
+        using BadAlias = __underlying_type(Legacy);
+        extern BadAlias g_val;
+        extern BadAlias* g_ptr;
+        "#,
+    )?
+    .rs_api;
+    // The global variables should NOT be generated, because their types evaluate to
+    // RsTypeKind::Error.
+    assert_rs_not_matches!(rs_api, quote! { pub static g_val });
+    assert_rs_not_matches!(rs_api, quote! { pub static mut g_val });
+    assert_rs_not_matches!(rs_api, quote! { pub static mut g_ptr });
+    assert_rs_not_matches!(rs_api, quote! { Incomplete });
+    Ok(())
+}
+
+#[gtest]
+fn test_generate_bindings_constant_with_failed_type() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        enum Legacy { kLegacyA = 0 };
+        using BadAlias = __underlying_type(Legacy);
+        const BadAlias kMyConst = 1;
+        "#,
+    )?;
+    assert_rs_not_matches!(rs_api.rs_api, quote! { pub const kMyConst });
+    assert_rs_not_matches!(rs_api.rs_api, quote! { Incomplete });
+    Ok(())
+}
