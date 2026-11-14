@@ -400,11 +400,428 @@ pub mod crubit {
                 unsafe { crate::detail::__rust_thunk___ZN6crubit4test16ThreadSafePinnedD1Ev(self) }
             }
         }
+
+        /// Not Rust-movable: type is polymorphic
+        #[::ctor::recursively_pinned(PinnedDrop)]
+        #[cfi_encoding = "N6crubit4test19ThreadSafeInterfaceE"]
+        #[repr(C, align(8))]
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafeInterface"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_thread_safe=")]
+        pub struct ThreadSafeInterface {
+            __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; 8]>,
+        }
+        unsafe impl Send for ThreadSafeInterface {}
+        unsafe impl Sync for ThreadSafeInterface {}
+        unsafe impl ::cxx::ExternType for ThreadSafeInterface {
+            type Id = ::cxx::type_id!("crubit :: test :: ThreadSafeInterface");
+            type Kind = ::cxx::kind::Opaque;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ThreadSafeInterface"),
+            crate::crubit::test::ThreadSafeInterface
+        );
+        impl ThreadSafeInterface {
+            #[inline(always)]
+            pub fn IncrementAndGet(&self) -> ::ffi_11::c_int {
+                unsafe { self::thread_safe_interface::IncrementAndGet(self) }
+            }
+            #[inline(always)]
+            pub fn Get(&self) -> ::ffi_11::c_int {
+                unsafe { self::thread_safe_interface::Get(self) }
+            }
+        }
+
+        // error: constructor `crubit::test::ThreadSafeInterface::ThreadSafeInterface` could not be bound
+        //   `ThreadSafeInterface` can be used by-value because it has pure virtual functions that are not overridden
+
+        // error: constructor `crubit::test::ThreadSafeInterface::ThreadSafeInterface` could not be bound
+        //   `ThreadSafeInterface` can be used by-value because it has pure virtual functions that are not overridden
+
+        impl ::ctor::Assign<&Self> for ThreadSafeInterface {
+            #[inline(always)]
+            fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &Self) {
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test19ThreadSafeInterfaceaSERKS1_(
+                        self, __param_0,
+                    );
+                }
+            }
+        }
+
+        impl ::ctor::PinnedDrop for ThreadSafeInterface {
+            #[inline(always)]
+            unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test19ThreadSafeInterfaceD1Ev(self)
+                }
+            }
+        }
+
+        unsafe impl ::operator::Delete for crate::crubit::test::ThreadSafeInterface {
+            #[inline(always)]
+            unsafe fn delete(p: *mut Self) {
+                unsafe {
+                    crate::detail::__crubit_operator_delete__N6crubit4test19ThreadSafeInterfaceE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fannotations_3athread_5fsafe(p);
+                }
+            }
+        }
+
+        pub mod thread_safe_interface {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
+            #[inline(always)]
+            pub fn IncrementAndGet(
+                __this: &crate::crubit::test::ThreadSafeInterface,
+            ) -> ::ffi_11::c_int {
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test19ThreadSafeInterface15IncrementAndGetEv(__this)
+                }
+            }
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
+            #[inline(always)]
+            pub fn Get(__this: &crate::crubit::test::ThreadSafeInterface) -> ::ffi_11::c_int {
+                unsafe {
+                    crate::detail::__rust_thunk___ZNK6crubit4test19ThreadSafeInterface3GetEv(__this)
+                }
+            }
+        }
+
+        /// Not Rust-movable: type is polymorphic
+        #[::ctor::recursively_pinned(PinnedDrop)]
+        #[cfi_encoding = "N6crubit4test23ThreadSafeInterfaceImplE"]
+        #[repr(C, align(8))]
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafeInterfaceImpl"
+        )]
+        pub struct ThreadSafeInterfaceImpl {
+            __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+            /// Reason for representing this field as a blob of bytes:
+            /// Types of non-public C++ fields can be elided away
+            pub(crate) x_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+        }
+        /// Cannot infer `Send` because:
+        /// * base class subobjects are not represented as Rust fields
+        /// * field `x_` is represented as opaque bytes
+        impl !Send for ThreadSafeInterfaceImpl {}
+        /// Cannot infer `Sync` because:
+        /// * base class subobjects are not represented as Rust fields
+        /// * field `x_` is represented as opaque bytes
+        impl !Sync for ThreadSafeInterfaceImpl {}
+        unsafe impl ::cxx::ExternType for ThreadSafeInterfaceImpl {
+            type Id = ::cxx::type_id!("crubit :: test :: ThreadSafeInterfaceImpl");
+            type Kind = ::cxx::kind::Opaque;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ThreadSafeInterfaceImpl"),
+            crate::crubit::test::ThreadSafeInterfaceImpl
+        );
+        impl ThreadSafeInterfaceImpl {
+            /// # Safety
+            ///
+            /// The caller must ensure that the following unsafe arguments are not misused by the function:
+            /// * `__this`: raw pointer
+            #[inline(always)]
+            pub unsafe fn IncrementAndGet(__this: *mut Self) -> ::ffi_11::c_int {
+                unsafe { self::thread_safe_interface_impl::IncrementAndGet(__this) }
+            }
+            /// # Safety
+            ///
+            /// The caller must ensure that the following unsafe arguments are not misused by the function:
+            /// * `__this`: raw pointer
+            #[inline(always)]
+            pub unsafe fn Get(__this: *const Self) -> ::ffi_11::c_int {
+                unsafe { self::thread_safe_interface_impl::Get(__this) }
+            }
+        }
+
+        impl ::ctor::CtorNew<()> for ThreadSafeInterfaceImpl {
+            type CtorType = ::ctor::Ctor![Self];
+            type Error = ::ctor::Infallible;
+            #[inline(always)]
+            fn ctor_new(args: ()) -> Self::CtorType {
+                unsafe {
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        let () = args;
+                        crate::detail::__rust_thunk___ZN6crubit4test23ThreadSafeInterfaceImplC1Ev(
+                            __crubit_dest as *mut ::core::ffi::c_void,
+                        );
+                    })
+                }
+            }
+        }
+
+        impl ::ctor::PinnedDrop for ThreadSafeInterfaceImpl {
+            #[inline(always)]
+            unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test23ThreadSafeInterfaceImplD1Ev(self)
+                }
+            }
+        }
+
+        pub mod thread_safe_interface_impl {
+            /// # Safety
+            ///
+            /// The caller must ensure that the following unsafe arguments are not misused by the function:
+            /// * `__this`: raw pointer
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
+            #[inline(always)]
+            pub unsafe fn IncrementAndGet(
+                __this: *mut crate::crubit::test::ThreadSafeInterfaceImpl,
+            ) -> ::ffi_11::c_int {
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test23ThreadSafeInterfaceImpl15IncrementAndGetEv(__this)
+                }
+            }
+            /// # Safety
+            ///
+            /// The caller must ensure that the following unsafe arguments are not misused by the function:
+            /// * `__this`: raw pointer
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
+            #[inline(always)]
+            pub unsafe fn Get(
+                __this: *const crate::crubit::test::ThreadSafeInterfaceImpl,
+            ) -> ::ffi_11::c_int {
+                unsafe {
+                    crate::detail::__rust_thunk___ZNK6crubit4test23ThreadSafeInterfaceImpl3GetEv(
+                        __this,
+                    )
+                }
+            }
+        }
+
+        #[inline(always)]
+        pub fn MakeThreadSafeInterfaceShared(
+        ) -> ::cc_std::std::shared_ptr<crate::crubit::test::ThreadSafeInterface> {
+            unsafe {
+                let mut __crubit_return = ::core::mem::MaybeUninit::<
+                    ::cc_std::std::shared_ptr<crate::crubit::test::ThreadSafeInterface>,
+                >::uninit();
+                crate::detail::__rust_thunk___ZN6crubit4test29MakeThreadSafeInterfaceSharedEv(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                );
+                __crubit_return.assume_init()
+            }
+        }
+
+        #[inline(always)]
+        pub fn MakeThreadSafeInterfaceUnique(
+        ) -> ::cc_std::std::virtual_unique_ptr<crate::crubit::test::ThreadSafeInterface> {
+            unsafe {
+                let mut __crubit_return = ::core::mem::MaybeUninit::<
+                    ::cc_std::std::virtual_unique_ptr<crate::crubit::test::ThreadSafeInterface>,
+                >::uninit();
+                crate::detail::__rust_thunk___ZN6crubit4test29MakeThreadSafeInterfaceUniqueEv(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                );
+                __crubit_return.assume_init()
+            }
+        }
     }
 }
 
 // namespace crubit::test
 
+/// Class template instantiations that aren't named by a C++ type alias.
+pub mod zz_template_instantiations {
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+    #[cfi_encoding = "__CcTemplateInstNSt3__u14default_deleteIN6crubit4test19ThreadSafeInterfaceEEE"]
+    #[repr(C)]
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: default_delete < class crubit :: test :: ThreadSafeInterface >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+    pub struct __CcTemplateInstNSt3__u14default_deleteIN6crubit4test19ThreadSafeInterfaceEEE {
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    }
+    forward_declare::unsafe_define!(forward_declare::symbol!("std :: default_delete < class crubit :: test :: ThreadSafeInterface >"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u14default_deleteIN6crubit4test19ThreadSafeInterfaceEEE);
+
+    impl Default for __CcTemplateInstNSt3__u14default_deleteIN6crubit4test19ThreadSafeInterfaceEEE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__2d1083d5__ZNSt3__u14default_deleteIN6crubit4test19ThreadSafeInterfaceEEC1Ev(&raw mut tmp as*mut _);
+                tmp.assume_init()
+            }
+        }
+    }
+
+    #[cfi_encoding = "__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE"]
+    #[repr(C, align(8))]
+    #[cfg_attr(
+        not(doc),
+        doc = "CRUBIT_ANNOTATE: cpp_type=std :: weak_ptr < class crubit :: test :: ThreadSafeInterface >"
+    )]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+    pub struct __CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE {
+        __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+        /// Reason for representing this field as a blob of bytes:
+        /// Types of non-public C++ fields can be elided away
+        pub(crate) __ptr_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+        /// Reason for representing this field as a blob of bytes:
+        /// Types of non-public C++ fields can be elided away
+        pub(crate) __cntrl_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    }
+    /// Cannot infer `Send` because:
+    /// * fields `__ptr_`, `__cntrl_` are represented as opaque bytes
+    impl !Send for __CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE {}
+    /// Cannot infer `Sync` because:
+    /// * fields `__ptr_`, `__cntrl_` are represented as opaque bytes
+    impl !Sync for __CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE {}
+    forward_declare::unsafe_define!(forward_declare::symbol!("std :: weak_ptr < class crubit :: test :: ThreadSafeInterface >"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE);
+    impl __CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE {
+        /// # Safety
+        ///
+        /// The caller must ensure that the following unsafe arguments are not misused by the function:
+        /// * `__this`: raw pointer
+        /// * `__r`: raw pointer
+        #[inline(always)]
+        pub unsafe fn swap(__this: *mut Self, __r: *mut Self) {
+            unsafe {
+                crate::detail::__rust_thunk__aa8052cf__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEE4swapERS4_(__this,__r)
+            }
+        }
+        /// # Safety
+        ///
+        /// The caller must ensure that the following unsafe arguments are not misused by the function:
+        /// * `__this`: raw pointer
+        #[inline(always)]
+        pub unsafe fn reset(__this: *mut Self) {
+            unsafe {
+                crate::detail::__rust_thunk__65d8e410__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEE5resetEv(__this)
+            }
+        }
+        /// # Safety
+        ///
+        /// The caller must ensure that the following unsafe arguments are not misused by the function:
+        /// * `__this`: raw pointer
+        #[must_use]
+        #[inline(always)]
+        pub unsafe fn use_count(__this: *const Self) -> ::ffi_11::c_long {
+            unsafe {
+                crate::detail::__rust_thunk__f0c2a540__ZNKSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEE9use_countEv(__this)
+            }
+        }
+        /// # Safety
+        ///
+        /// The caller must ensure that the following unsafe arguments are not misused by the function:
+        /// * `__this`: raw pointer
+        #[must_use]
+        #[inline(always)]
+        pub unsafe fn expired(__this: *const Self) -> bool {
+            unsafe {
+                crate::detail::__rust_thunk__3aedcb03__ZNKSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEE7expiredEv(__this)
+            }
+        }
+        /// # Safety
+        ///
+        /// The caller must ensure that the following unsafe arguments are not misused by the function:
+        /// * `__this`: raw pointer
+        #[must_use]
+        #[inline(always)]
+        pub unsafe fn lock(
+            __this: *const Self,
+        ) -> ::cc_std::std::Nullable<
+            ::cc_std::std::shared_ptr<crate::crubit::test::ThreadSafeInterface>,
+        > {
+            unsafe {
+                let mut __crubit_return = ::core::mem::MaybeUninit::<
+                    ::cc_std::std::Nullable<
+                        ::cc_std::std::shared_ptr<crate::crubit::test::ThreadSafeInterface>,
+                    >,
+                >::uninit();
+                crate::detail::__rust_thunk__716bacab__ZNKSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEE4lockEv(&raw mut __crubit_return as*mut::core::ffi::c_void,__this);
+                __crubit_return.assume_init()
+            }
+        }
+    }
+
+    impl Default for __CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__a22320d3__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEC1Ev(&raw mut tmp as*mut _);
+                tmp.assume_init()
+            }
+        }
+    }
+
+    impl Clone for __CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE {
+        #[inline(always)]
+        fn clone(&self) -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__dc4e1abb__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEC1ERKS4_(&raw mut tmp as*mut _,self);
+                tmp.assume_init()
+            }
+        }
+        fn clone_from(&mut self, other: &Self) {
+            use ::ctor::UnpinAssign;
+            self.unpin_assign(other);
+        }
+    }
+
+    impl From<::ctor::RvalueReference<'_, Self>>
+        for __CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE
+    {
+        #[inline(always)]
+        fn from(args: ::ctor::RvalueReference<'_, Self>) -> Self {
+            let mut __r = args;
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__e8a99535__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEC1EOS4_(&raw mut tmp as*mut _,__r);
+                tmp.assume_init()
+            }
+        }
+    }
+    impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>>
+        for __CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE
+    {
+        type CtorType = Self;
+        type Error = ::ctor::Infallible;
+        #[inline(always)]
+        fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+            <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+        }
+    }
+
+    impl Drop for __CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE {
+        #[inline(always)]
+        fn drop<'a>(&'a mut self) {
+            unsafe {
+                crate::detail::__rust_thunk__155cad2c__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEED1Ev(self)
+            }
+        }
+    }
+
+    impl ::ctor::UnpinAssign<&Self>
+        for __CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE
+    {
+        #[inline(always)]
+        fn unpin_assign(&mut self, __r: &Self) {
+            unsafe {
+                crate::detail::__rust_thunk__8f8902d1__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEaSERKS4_(self,__r);
+            }
+        }
+    }
+
+    impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>>
+        for __CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE
+    {
+        #[inline(always)]
+        fn unpin_assign(&mut self, __r: ::ctor::RvalueReference<'_, Self>) {
+            unsafe {
+                crate::detail::__rust_thunk__0fb39bf8__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEaSEOS4_(self,__r);
+            }
+        }
+    }
+}
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -476,6 +893,80 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test16ThreadSafePinnedD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::crubit::test::ThreadSafePinned>,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test19ThreadSafeInterfaceaSERKS1_<
+            '__return_lifetime,
+        >(
+            __this: ::core::pin::Pin<&mut crate::crubit::test::ThreadSafeInterface>,
+            __param_0: &crate::crubit::test::ThreadSafeInterface,
+        ) -> ::core::pin::Pin<&'__return_lifetime mut crate::crubit::test::ThreadSafeInterface>;
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test19ThreadSafeInterfaceD1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::crubit::test::ThreadSafeInterface>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test19ThreadSafeInterface15IncrementAndGetEv(
+            __this: &crate::crubit::test::ThreadSafeInterface,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZNK6crubit4test19ThreadSafeInterface3GetEv(
+            __this: &crate::crubit::test::ThreadSafeInterface,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __crubit_operator_delete__N6crubit4test19ThreadSafeInterfaceE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fannotations_3athread_5fsafe(
+            ptr: *mut crate::crubit::test::ThreadSafeInterface,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test23ThreadSafeInterfaceImplC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test23ThreadSafeInterfaceImplD1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::crubit::test::ThreadSafeInterfaceImpl>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test23ThreadSafeInterfaceImpl15IncrementAndGetEv(
+            __this: *mut crate::crubit::test::ThreadSafeInterfaceImpl,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZNK6crubit4test23ThreadSafeInterfaceImpl3GetEv(
+            __this: *const crate::crubit::test::ThreadSafeInterfaceImpl,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test29MakeThreadSafeInterfaceSharedEv(
+            __return: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test29MakeThreadSafeInterfaceUniqueEv(
+            __return: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk__2d1083d5__ZNSt3__u14default_deleteIN6crubit4test19ThreadSafeInterfaceEEC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk__a22320d3__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk__dc4e1abb__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEC1ERKS4_(
+            __this: *mut ::core::ffi::c_void,
+            __r: &crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,
+        );
+        pub(crate) unsafe fn __rust_thunk__e8a99535__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEC1EOS4_(
+            __this: *mut ::core::ffi::c_void,
+            __r: ::ctor::RvalueReference<'_,crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE>,
+        );
+        pub(crate) unsafe fn __rust_thunk__155cad2c__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEED1Ev<
+            'a,
+        >(
+            __this: &'a mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,
+        );
+        pub(crate)unsafe fn __rust_thunk__8f8902d1__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEaSERKS4_<'__return_lifetime>(__this: &mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,__r: &crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE)->&'__return_lifetime mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE;
+        pub(crate)unsafe fn __rust_thunk__0fb39bf8__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEaSEOS4_<'__return_lifetime>(__this: &mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,__r: ::ctor::RvalueReference<'_,crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE>)->&'__return_lifetime mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE;
+        pub(crate) unsafe fn __rust_thunk__aa8052cf__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEE4swapERS4_(
+            __this: *mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,
+            __r: *mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,
+        );
+        pub(crate) unsafe fn __rust_thunk__65d8e410__ZNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEE5resetEv(
+            __this: *mut crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,
+        );
+        pub(crate) unsafe fn __rust_thunk__f0c2a540__ZNKSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEE9use_countEv(
+            __this: *const crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,
+        ) -> ::ffi_11::c_long;
+        pub(crate) unsafe fn __rust_thunk__3aedcb03__ZNKSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEE7expiredEv(
+            __this: *const crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,
+        ) -> bool;
+        pub(crate) unsafe fn __rust_thunk__716bacab__ZNKSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEE4lockEv(
+            __return: *mut ::core::ffi::c_void,
+            __this: *const crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,
+        );
     }
 }
 
@@ -497,4 +988,24 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::crubit::test::ThreadSafePinned>() == 1);
     static_assertions::assert_impl_all!(crate::crubit::test::ThreadSafePinned: Drop,Send,Sync);
     static_assertions::assert_not_impl_any!(crate::crubit::test::ThreadSafePinned: Copy);
+    assert!(::core::mem::size_of::<crate::crubit::test::ThreadSafeInterface>() == 8);
+    assert!(::core::mem::align_of::<crate::crubit::test::ThreadSafeInterface>() == 8);
+    static_assertions::assert_impl_all!(crate::crubit::test::ThreadSafeInterface: Drop,Send,Sync);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::ThreadSafeInterface: Copy);
+    assert!(::core::mem::size_of::<crate::crubit::test::ThreadSafeInterfaceImpl>() == 16);
+    assert!(::core::mem::align_of::<crate::crubit::test::ThreadSafeInterfaceImpl>() == 8);
+    static_assertions::assert_impl_all!(crate::crubit::test::ThreadSafeInterfaceImpl: Drop);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::ThreadSafeInterfaceImpl: Copy);
+    assert!(::core::mem::offset_of!(crate::crubit::test::ThreadSafeInterfaceImpl, x_) == 8);
+    assert!(::core::mem::size_of::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u14default_deleteIN6crubit4test19ThreadSafeInterfaceEEE>()==1);
+    assert!(::core::mem::align_of::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u14default_deleteIN6crubit4test19ThreadSafeInterfaceEEE>()==1);
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u14default_deleteIN6crubit4test19ThreadSafeInterfaceEEE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u14default_deleteIN6crubit4test19ThreadSafeInterfaceEEE: Drop);
+
+    assert!(::core::mem::size_of::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE>()==16);
+    assert!(::core::mem::align_of::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE>()==8);
+    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE: Drop);
+    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE: Copy);
+    assert!(::core::mem::offset_of!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,__ptr_)==0);
+    assert!(::core::mem::offset_of!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u8weak_ptrIN6crubit4test19ThreadSafeInterfaceEEE,__cntrl_)==8);
 };
