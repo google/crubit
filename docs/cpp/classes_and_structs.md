@@ -234,6 +234,11 @@ interface in Rust, is not supported. The workaround is a C++ subclass that
 forwards to a Rust type; see
 [`examples/cpp/virtual/`](https://github.com/google/crubit/tree/main/examples/cpp/virtual/).
 
+For guidance on passing C++ interfaces ("behavior objects") via
+`std::shared_ptr` or `std::unique_ptr` and making thread-safe interfaces usable
+via `&self`, see [Behavior objects and dependency-injected
+interfaces](./cookbook.md#behavior_objects).
+
 ## Debug formatting {#debug}
 
 With the experimental `//features:record_impl_debug` feature,

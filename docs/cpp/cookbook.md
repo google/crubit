@@ -211,6 +211,16 @@ void Foo(float x);
 WARNING: Thread-safety in interop is subtle. Ensure you understand the
 implications before exposing mutating methods to Rust.
 
+In C++, `const` vs. non-`const` methods express logical mutability, whereas in
+Rust `&T` vs. `&mut T` express **shared** vs. **exclusive** aliasing:
+
+*   Calling methods concurrently from multiple threads in Rust must go through a
+    shared reference `&T` (requiring `T: Sync`), because `&mut T` requires
+    exclusive access and cannot be aliased.
+*   Mutating bytes behind `&T` in Rust is Undefined Behavior unless those bytes
+    are inside an `UnsafeCell` (or `std::cell::Cell`) and any concurrent access
+    is synchronized.
+
 SUMMARY: The preferred way to make a thread-safe C++ type available to Rust is
 to annotate it with `CRUBIT_THREAD_SAFE`. This automatically implements
 `Send + Sync` in Rust, wraps the type in `UnsafeCell`, and allows non-const
@@ -270,24 +280,30 @@ might internally mutate them through a shared reference.
 
 <section class="zippy" markdown="1">
 
-Before `CRUBIT_THREAD_SAFE` was available, or if you cannot annotate the class
-directly, making a mutating C++ method safe to call concurrently in Rust
-required a manual workaround:
+Before `CRUBIT_THREAD_SAFE` was available, or if you want the C++ compiler to
+check that `const` methods only modify `mutable` fields (or want per-field
+`std::cell::Cell` granularity instead of an opaque `UnsafeCell` struct), you can
+expose a thread-safe `const` method manually:
 
-1.  The class must be documented as thread-safe.
-2.  The field being mutated must be marked as `mutable`, even if it is only
-    mutated in non-const methods, so that internal mutation in Rust does not
-    cause UB.
-3.  The method must be manually wrapped in a C++ `const` method (or wrapped in
-    Rust with `unsafe` casts).
+1.  Ensure the class is genuinely thread-safe and mark it
+    `CRUBIT_UNSAFE_IMPL("Send", "Sync")`.
+2.  Mark the mutated fields `mutable` (even if C++ callers normally invoke a
+    non-`const` method), so that mutation behind `&self` in Rust does not cause
+    UB in either C++ or Rust.
+3.  Expose a `const` method (or wrap it in C++) so Crubit generates `&self` in
+    Rust.
 
-Public `mutable` fields and opaque bytes are safely handled by wrapping them in
-`std::cell::Cell`.
+Public `mutable` fields and opaque byte blobs on non-`Copy` types are wrapped in
+`std::cell::Cell` by Crubit.
 
-Example of manual wrapping:
+Example of manual wrapping for a thread-safe counter:
 
 ```c++
-class FakeClock {
+#include <atomic>
+
+#include "support/annotations.h"
+
+class CRUBIT_UNSAFE_IMPL("Send", "Sync") ThreadSafeFakeClock {
  public:
   CRUBIT_RUST_NAME("advance_mut")
   void Advance(int n) {
@@ -296,28 +312,99 @@ class FakeClock {
 
   CRUBIT_RUST_NAME("advance")
   void InternalDoNotUseForRustOnlyAdvance(int n) const {
-    mytime_ += n;
+    mytime_.fetch_add(n, std::memory_order_relaxed);
   }
  private:
-  // Mutable for Rust.
-  mutable int mytime_;
+  // Mutable for Rust; atomic so concurrent `&self` calls do not data-race.
+  mutable std::atomic<int> mytime_{0};
 };
 ```
-
-You can also use the `CRUBIT_THREAD_SAFE` annotation, but this is more
-dangerous, as there is no enforcement that every method only modifies `mutable`
-fields, and requires more extensive review:
-
-```c++
-class CRUBIT_THREAD_SAFE FakeClock {
-  ...
-};
-```
-
-Using `const` methods, while less idiomatic in C++, structurally forces
-soundness, so that there is no UB.
 
 </section>
+
+## Behavior objects and dependency-injected interfaces {#behavior_objects}
+
+C++ server code frequently defines an abstract interface (a "behavior object")
+and passes ownership or shared ownership via `std::shared_ptr<Interface>` or
+`std::unique_ptr<Interface>`, including across C++ -\> Rust -\> C++ boundaries:
+
+```c++
+#include <memory>
+
+#include "third_party/absl/base/nullability.h"
+#include "support/annotations.h"
+
+// Thread-safe interface: implementations must allow concurrent calls.
+class CRUBIT_THREAD_SAFE ThingDoer {
+ public:
+  virtual ~ThingDoer() = default;
+  virtual int DoThing() = 0;
+};
+```
+
+Even though Crubit infers `Send` and `Sync` for simple structs of public fields,
+classes with virtual methods contain a vtable pointer (an unrepresented
+subobject), so Crubit emits `impl !Send` and `impl !Sync` for them unless
+explicitly annotated. Choose the pattern below based on how the interface is
+synchronized and whether you control its definition:
+
+### 1\. Thread-safe interfaces you control (recommended)
+
+Annotate the interface class with `CRUBIT_THREAD_SAFE` (as in `ThingDoer`
+above). This works for abstract classes with virtual destructors and pure
+virtual methods:
+
+*   It generates `unsafe impl Send` and `unsafe impl Sync` for `ThingDoer` (so
+    `cpp_std::shared_ptr<ThingDoer>` and
+    `cpp_std::virtual_unique_ptr<ThingDoer>` are also `Send + Sync`).
+*   It wraps the Rust representation in `UnsafeCell` and binds non-`const`
+    virtual methods as taking `&self`, allowing Rust to call
+    `thing_doer.DoThing()` directly on a `cpp_std::shared_ptr<ThingDoer>` (which
+    only implements `Deref<Target = ThingDoer>`, not `DerefMut`).
+*   Remember the `CRUBIT_THREAD_SAFE` requirement: concrete subclasses must mark
+    any mutated fields `mutable` or never be created as top-level `const`
+    objects in C++.
+
+Use `absl_nonnull` (or `ABSL_POINTERS_DEFAULT_NONNULL`) on smart-pointer
+parameters and fields so C++ `absl_nonnull std::shared_ptr<ThingDoer>` maps
+directly to `cpp_std::shared_ptr<ThingDoer>` (and
+`absl_nonnull std::unique_ptr<ThingDoer>` maps to
+`cpp_std::virtual_unique_ptr<ThingDoer>`) instead of `cpp_std::Nullable<...>`.
+Both `cpp_std::shared_ptr<T>` and `cpp_std::virtual_unique_ptr<T>` also
+round-trip through `cpp_api_from_rust` (`cc_bindings_from_rs`) back to C++ as
+`std::shared_ptr<T>` and `std::unique_ptr<T>`.
+
+### 2\. Non-thread-safe, exclusively owned interfaces
+
+If the interface is **not** thread-safe (cannot safely receive concurrent
+`&self` calls), do **not** mark it `CRUBIT_THREAD_SAFE`. Instead:
+
+*   Pass exclusive ownership via `std::unique_ptr<ThingDoer>`, which binds as
+    `cpp_std::virtual_unique_ptr<ThingDoer>` because of the virtual destructor.
+*   Call non-`const` methods through `Pin<&mut ThingDoer>` (for example via
+    `ptr.as_pin()` or `into_pin_box()`).
+*   If `virtual_unique_ptr<ThingDoer>` must be sent across threads (for example,
+    across `.await` points) and implementations are not thread-hostile, annotate
+    the interface with `CRUBIT_UNSAFE_IMPL("Send")`.
+
+### 3\. Interfaces you cannot modify
+
+If you cannot add `CRUBIT_THREAD_SAFE` to the C++ interface itself (or if a
+non-thread-safe interface is synchronized externally):
+
+*   **Preferred:** Write a thin `CRUBIT_THREAD_SAFE` (or
+    `CRUBIT_UNSAFE_IMPL("Send", "Sync")`) C++ wrapper class at the interop
+    boundary that holds the `std::shared_ptr<ThingDoer>` or
+    `std::unique_ptr<ThingDoer>` and forwards the methods you need in Rust.
+*   **Alternative (`unsafe` Rust):** When synchronization is handled externally,
+    Rust code can hold `cpp_std::shared_ptr<ThingDoer>` only if `ThingDoer` (or
+    a newtype wrapper) implements `Send + Sync`, and must never retain a `&T`
+    across any C++ mutation window (see [Reference
+    Safety](../overview/reference_safety.md#interior_mutability)).
+
+To **implement** a C++ behavior interface in Rust (subclassing `ThingDoer` from
+Rust), define a C++ subclass that forwards virtual calls to a Rust type; see
+[Virtual methods](./classes_and_structs.md#virtual).
 
 ## Working around blocking bugs in Crubit {#blockers}
 

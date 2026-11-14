@@ -5,6 +5,10 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ANNOTATIONS_THREAD_SAFE_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ANNOTATIONS_THREAD_SAFE_H_
 
+#include <atomic>
+#include <memory>
+
+#include "absl/base/nullability.h"
 #include "support/annotations.h"
 
 namespace crubit::test {
@@ -54,6 +58,34 @@ struct CRUBIT_THREAD_SAFE ThreadSafePinned final {
   ThreadSafePinned& operator=(ThreadSafePinned&&) { return *this; }
   ~ThreadSafePinned() {}
 };
+
+class CRUBIT_THREAD_SAFE ThreadSafeInterface {
+ public:
+  virtual ~ThreadSafeInterface() = default;
+  virtual int IncrementAndGet() = 0;
+  virtual int Get() const = 0;
+};
+
+class ThreadSafeInterfaceImpl final : public ThreadSafeInterface {
+ public:
+  int IncrementAndGet() override {
+    return x_.fetch_add(1, std::memory_order_relaxed) + 1;
+  }
+  int Get() const override { return x_.load(std::memory_order_relaxed); }
+
+ private:
+  mutable std::atomic<int> x_{0};
+};
+
+inline absl_nonnull std::shared_ptr<ThreadSafeInterface>
+MakeThreadSafeInterfaceShared() {
+  return std::make_shared<ThreadSafeInterfaceImpl>();
+}
+
+inline absl_nonnull std::unique_ptr<ThreadSafeInterface>
+MakeThreadSafeInterfaceUnique() {
+  return std::make_unique<ThreadSafeInterfaceImpl>();
+}
 
 }  // namespace crubit::test
 
