@@ -1830,26 +1830,26 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   friend base_type;
   bool has_value_impl() const noexcept { return tag() == 0; }
   crubit::type_identity_t<void(void* crubit_nullable, void* crubit_nullable)> *
-      crubit_nonnull * ok_ptr() noexcept {
+      crubit_nonnull * crubit_nonnull ok_ptr() noexcept {
     return reinterpret_cast<crubit::type_identity_t<void(
                                 void* crubit_nullable, void* crubit_nullable)> *
                             crubit_nonnull*>(__storage + 4);
   }
   crubit::type_identity_t<void(void* crubit_nullable, void* crubit_nullable)>*
-      crubit_nonnull const*
+      crubit_nonnull const* crubit_nonnull
       ok_const_ptr() const noexcept {
     return reinterpret_cast<crubit::type_identity_t<void(
                                 void* crubit_nullable, void* crubit_nullable)> *
                             crubit_nonnull const*>(__storage + 4);
   }
   crubit::type_identity_t<void(void* crubit_nullable, void* crubit_nullable)> *
-      crubit_nonnull * err_ptr() noexcept {
+      crubit_nonnull * crubit_nonnull err_ptr() noexcept {
     return reinterpret_cast<crubit::type_identity_t<void(
                                 void* crubit_nullable, void* crubit_nullable)> *
                             crubit_nonnull*>(__storage + 4);
   }
   crubit::type_identity_t<void(void* crubit_nullable, void* crubit_nullable)>*
-      crubit_nonnull const*
+      crubit_nonnull const* crubit_nonnull
       err_const_ptr() const noexcept {
     return reinterpret_cast<crubit::type_identity_t<void(
                                 void* crubit_nullable, void* crubit_nullable)> *

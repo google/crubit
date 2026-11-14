@@ -278,11 +278,12 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   friend base_type;
   using tag_type = ::std::uint32_t;
   static constexpr tag_type kNoneVal = 0;
-  ::rs::Box<::std::int32_t> const* $static crubit_nonnull* some_ptr() noexcept {
+  ::rs::Box<::std::int32_t> const* $static crubit_nonnull* crubit_nonnull
+  some_ptr() noexcept {
     return reinterpret_cast<::rs::Box<::std::int32_t> const *
                             $static crubit_nonnull*>(storage_);
   }
-  ::rs::Box<::std::int32_t> const* $static crubit_nonnull const*
+  ::rs::Box<::std::int32_t> const* $static crubit_nonnull const* crubit_nonnull
   some_const_ptr() const noexcept {
     return reinterpret_cast<::rs::Box<::std::int32_t> const *
                             $static crubit_nonnull const*>(storage_);

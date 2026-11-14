@@ -11,6 +11,7 @@ use arc_anyhow::{anyhow, Result};
 use code_gen_utils::CcInclude;
 use crubit_abi_type::CrubitAbiType;
 use proc_macro2::{Ident, TokenStream};
+use quote::{quote, ToTokens};
 use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
 use rustc_span::Symbol;
@@ -224,6 +225,47 @@ impl<'tcx> FormattedCcType<'tcx> {
     }
 }
 
+/// C++ type tokens extracted from a [`FormattedCcType`] or [`FormattedTy`] after merging its
+/// [`CcPrerequisites`].
+///
+/// Implements [`ToTokens`] to emit the base C++ type (`T`), and provides helper methods for forming
+/// C++ pointers (`T*`, `T const*`) with outer `crubit_nonnull` annotations when `T` is itself a
+/// top-level C++ pointer type.
+#[derive(Clone, Debug)]
+pub struct CcTypeTokens {
+    pub tokens: TokenStream,
+    pub is_pointer: bool,
+}
+
+impl ToTokens for CcTypeTokens {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.tokens.to_tokens(tokens);
+    }
+}
+
+impl CcTypeTokens {
+    /// Returns `#self*`, adding `crubit_nonnull` when `self` is a top-level C++ pointer (since
+    /// `#pragma clang assume_nonnull` only covers single-level pointers).
+    pub fn nonnull_ptr(&self) -> TokenStream {
+        let ty = &self.tokens;
+        if self.is_pointer {
+            quote! { #ty* crubit_nonnull }
+        } else {
+            quote! { #ty* }
+        }
+    }
+
+    /// Returns `#self const*`, adding `crubit_nonnull` when `self` is a top-level C++ pointer.
+    pub fn nonnull_const_ptr(&self) -> TokenStream {
+        let ty = &self.tokens;
+        if self.is_pointer {
+            quote! { #ty const* crubit_nonnull }
+        } else {
+            quote! { #ty const* }
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct FormattedTy<'tcx> {
     pub ty: Ty<'tcx>,
@@ -241,6 +283,21 @@ impl<'tcx> FormattedTy<'tcx> {
             db.format_cc_type(ty, location)?.clone();
         let for_rs = db.format_ty_for_rs(ty)?.clone();
         Ok(Self { ty, for_cc, is_cc_pointer, for_rs })
+    }
+
+    /// Merges the C++ prerequisites of this type into `prereqs` (including
+    /// `annotations_internal.h` when `self` is a C++ pointer so [`CcTypeTokens::nonnull_ptr`] can
+    /// emit `crubit_nonnull`) and returns its [`CcTypeTokens`].
+    pub fn to_cc_type_tokens(
+        &self,
+        db: &BindingsGenerator<'tcx>,
+        prereqs: &mut CcPrerequisites<'tcx>,
+    ) -> CcTypeTokens {
+        let tokens = (&self.for_cc).into_tokens(prereqs).clone();
+        if self.is_cc_pointer {
+            prereqs.includes.insert(db.support_header("annotations_internal.h"));
+        }
+        CcTypeTokens { tokens, is_pointer: self.is_cc_pointer }
     }
 }
 impl PartialEq for FormattedTy<'_> {

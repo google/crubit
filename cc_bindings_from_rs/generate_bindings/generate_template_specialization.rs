@@ -18,8 +18,9 @@ use arc_anyhow::{bail, Result};
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
     AdtSpecializationArgs, AdtTemplateSpecialization, ApiSnippets, CcPrerequisites, CcSnippet,
-    CcSnippets, EnumTagInfo, FormattedTy, NegativeAutoTraitImplTemplateSpecialization,
-    StdHashTemplateSpecialization, TemplateSpecialization, TraitImplTemplateSpecialization,
+    CcSnippets, CcTypeTokens, EnumTagInfo, FormattedTy,
+    NegativeAutoTraitImplTemplateSpecialization, StdHashTemplateSpecialization,
+    TemplateSpecialization, TraitImplTemplateSpecialization,
 };
 use database::{
     AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, GenericArgs, StaticMethodMode,
@@ -304,7 +305,7 @@ fn parse_tuple_template_specialization<'tcx>(
 }
 
 struct OptionApiGenerator<'tcx> {
-    arg_ty: TokenStream,
+    arg_ty: CcTypeTokens,
     needs_drop: bool,
     // Reads our tag out of our Option<T> and defines a variable `tag` pointing at its value.
     // This is complicated by the niche optimization, so we abstract it as this reference so it's
@@ -352,6 +353,8 @@ impl<'tcx> OptionApiGenerator<'tcx> {
         };
 
         let full_self_ty = quote! { ::rs::Option<#arg_ty> };
+        let some_ptr_ty = arg_ty.nonnull_ptr();
+        let some_const_ptr_ty = arg_ty.nonnull_const_ptr();
 
         let mut main_api = tag_method.main_api.map_snippets(|tag_method_main_api| {
             quote! {
@@ -386,10 +389,10 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                 using tag_type = #tag_type_cc;
                 static constexpr tag_type kNoneVal = #none_val;
 
-                #arg_ty* some_ptr() noexcept {
+                #some_ptr_ty some_ptr() noexcept {
                     return #some_ptr_val;
                 }
-                #arg_ty const* some_const_ptr() const noexcept {
+                #some_const_ptr_ty some_const_ptr() const noexcept {
                     return #some_const_ptr_val;
                 }
                 void set_some_tag() noexcept {
@@ -460,7 +463,7 @@ impl<'tcx> OptionApiGenerator<'tcx> {
 /// Unlike `OptionApiGenerator`, there is no storage or tag to access: the state of the option is
 /// a single (nullable) pointer owned by the `rs::OptionBase<Derived, T&>` partial specialization.
 struct OptionRefApiGenerator {
-    arg_ty: TokenStream,
+    arg_ty: CcTypeTokens,
     size_in_bytes: Literal,
     alignment_in_bytes: Literal,
 }
@@ -567,8 +570,8 @@ fn get_result_variant_indices<'tcx>(tcx: TyCtxt<'tcx>, adt: AdtDef<'tcx>) -> Res
 }
 
 struct ResultApiGenerator<'tcx> {
-    ok_ty_cpp: TokenStream,
-    err_ty_cpp: TokenStream,
+    ok_ty_cpp: CcTypeTokens,
+    err_ty_cpp: CcTypeTokens,
     needs_drop: bool,
     tag_method: ApiSnippets<'tcx>,
     has_value_impl: TokenStream,
@@ -610,6 +613,11 @@ impl<'tcx> ResultApiGenerator<'tcx> {
             )
         };
 
+        let ok_ptr_ty = ok_ty_cpp.nonnull_ptr();
+        let ok_const_ptr_ty = ok_ty_cpp.nonnull_const_ptr();
+        let err_ptr_ty = err_ty_cpp.nonnull_ptr();
+        let err_const_ptr_ty = err_ty_cpp.nonnull_const_ptr();
+
         let main_api = tag_method.main_api.map_snippets(|tag_method_main_api| {
             quote! {
             public:
@@ -645,16 +653,16 @@ impl<'tcx> ResultApiGenerator<'tcx> {
                 bool has_value_impl() const noexcept {
                     return #has_value_impl;
                 }
-                #ok_ty_cpp* ok_ptr() noexcept {
+                #ok_ptr_ty ok_ptr() noexcept {
                     return reinterpret_cast<#ok_ty_cpp*>(#ok_ptr_val);
                 }
-                #ok_ty_cpp const* ok_const_ptr() const noexcept {
+                #ok_const_ptr_ty ok_const_ptr() const noexcept {
                     return reinterpret_cast<#ok_ty_cpp const*>(#ok_ptr_val);
                 }
-                #err_ty_cpp* err_ptr() noexcept {
+                #err_ptr_ty err_ptr() noexcept {
                     return reinterpret_cast<#err_ty_cpp*>(#err_ptr_val);
                 }
-                #err_ty_cpp const* err_const_ptr() const noexcept {
+                #err_const_ptr_ty err_const_ptr() const noexcept {
                     return reinterpret_cast<#err_ty_cpp const*>(#err_ptr_val);
                 }
                 void set_ok_tag() noexcept {
@@ -1300,8 +1308,8 @@ fn specialize_result<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let ok_ty_tokens = ok_ty.for_cc.clone().into_tokens(&mut prereqs);
-    let err_ty_tokens = err_ty.for_cc.clone().into_tokens(&mut prereqs);
+    let ok_ty_tokens = ok_ty.to_cc_type_tokens(db, &mut prereqs);
+    let err_ty_tokens = err_ty.to_cc_type_tokens(db, &mut prereqs);
     let layout = adt_spec.layout;
     let tag_type = tag_info.tag_type;
     let tag_type_cc_tokens: TokenStream = tag_info.tag_type_cc.clone().into_tokens(&mut prereqs);
@@ -1531,7 +1539,7 @@ fn specialize_option<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let ty_tokens = arg_ty.for_cc.clone().into_tokens(&mut prereqs);
+    let ty_tokens = arg_ty.to_cc_type_tokens(db, &mut prereqs);
     let layout = adt_spec.layout;
     // Under the `option_references` feature, `Option<&T>` is `rs::Option<T const&>`, whose only
     // state is a pointer owned by `rs::OptionBase<Derived, T&>`. This matches the layout of

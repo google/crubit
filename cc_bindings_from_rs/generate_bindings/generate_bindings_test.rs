@@ -4394,3 +4394,65 @@ fn test_generate_source_location_placeholder_and_empty_spans() {
         );
     });
 }
+
+#[gtest]
+fn test_option_and_result_multi_level_pointer_accessors_nullability() {
+    let test_src = r#"
+        pub struct Holder {
+            pub val_opt: Option<i32>,
+            pub ptr_opt: Option<*const i32>,
+            pub box_ptr_opt: Option<Box<*const i32>>,
+            pub mixed_res: Result<*const i32, i32>,
+        }
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        // Single-level value and pointer-bearing container specializations omit `crubit_nonnull`
+        // (covered by `#pragma clang assume_nonnull`), while true pointer payloads receive
+        // `crubit_nonnull` on the outer accessor pointer.
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                ::std::int32_t* some_ptr() noexcept
+                ...
+                ::std::int32_t const* some_const_ptr() const noexcept
+                ...
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                ::rs::Box<::std::int32_t const* ...>* some_ptr() noexcept
+                ...
+                ::rs::Box<::std::int32_t const* ...> const* some_const_ptr() const noexcept
+                ...
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                ::std::int32_t const* ... * crubit_nonnull some_ptr() noexcept
+                ...
+                ::std::int32_t const* ... const* crubit_nonnull some_const_ptr() const noexcept
+                ...
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                ::std::int32_t const* ... * crubit_nonnull ok_ptr() noexcept
+                ...
+                ::std::int32_t const* ... const* crubit_nonnull ok_const_ptr() const noexcept
+                ...
+                ::std::int32_t* err_ptr() noexcept
+                ...
+                ::std::int32_t const* err_const_ptr() const noexcept
+                ...
+            }
+        );
+    });
+}

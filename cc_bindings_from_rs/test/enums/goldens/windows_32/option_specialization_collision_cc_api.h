@@ -113,12 +113,13 @@ struct alignas(4)
   friend base_type;
   using tag_type = ::std::uint32_t;
   static constexpr tag_type kNoneVal = 0;
-  ::std::int32_t const* $static crubit_nonnull* some_ptr() noexcept {
+  ::std::int32_t const* $static crubit_nonnull* crubit_nonnull
+  some_ptr() noexcept {
     return reinterpret_cast<::std::int32_t const * $static crubit_nonnull*>(
         storage_);
   }
-  ::std::int32_t const* $static crubit_nonnull const* some_const_ptr()
-      const noexcept {
+  ::std::int32_t const* $static crubit_nonnull const* crubit_nonnull
+  some_const_ptr() const noexcept {
     return reinterpret_cast<::std::int32_t const *
                             $static crubit_nonnull const*>(storage_);
   }

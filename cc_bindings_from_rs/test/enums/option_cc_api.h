@@ -680,11 +680,12 @@ struct alignas(8)
   friend base_type;
   using tag_type = ::std::uint64_t;
   static constexpr tag_type kNoneVal = 0;
-  ::std::int32_t const * crubit_nullable * some_ptr() noexcept {
+  ::std::int32_t const * crubit_nullable * crubit_nonnull some_ptr() noexcept {
     return reinterpret_cast<::std::int32_t const * crubit_nullable*>(storage_ +
                                                                      8);
   }
-  ::std::int32_t const* crubit_nullable const* some_const_ptr() const noexcept {
+  ::std::int32_t const* crubit_nullable const* crubit_nonnull
+  some_const_ptr() const noexcept {
     return reinterpret_cast<::std::int32_t const * crubit_nullable const*>(
         storage_ + 8);
   }
@@ -1874,13 +1875,13 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   using tag_type = ::std::uint64_t;
   static constexpr tag_type kNoneVal = 0;
   crubit::type_identity_t<void(void* crubit_nullable, void* crubit_nullable)> *
-      crubit_nonnull * some_ptr() noexcept {
+      crubit_nonnull * crubit_nonnull some_ptr() noexcept {
     return reinterpret_cast<crubit::type_identity_t<void(
                                 void* crubit_nullable, void* crubit_nullable)> *
                             crubit_nonnull*>(storage_);
   }
   crubit::type_identity_t<void(void* crubit_nullable, void* crubit_nullable)>*
-      crubit_nonnull const*
+      crubit_nonnull const* crubit_nonnull
       some_const_ptr() const noexcept {
     return reinterpret_cast<crubit::type_identity_t<void(
                                 void* crubit_nullable, void* crubit_nullable)> *

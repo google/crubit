@@ -329,12 +329,13 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   friend base_type;
   using tag_type = ::std::uint64_t;
   static constexpr tag_type kNoneVal = 0;
-  ::option_references::Value const * crubit_nullable * some_ptr() noexcept {
+  ::option_references::Value const * crubit_nullable *
+      crubit_nonnull some_ptr() noexcept {
     return reinterpret_cast<::option_references::Value const *
                             crubit_nullable*>(storage_ + 8);
   }
-  ::option_references::Value const* crubit_nullable const* some_const_ptr()
-      const noexcept {
+  ::option_references::Value const* crubit_nullable const* crubit_nonnull
+  some_const_ptr() const noexcept {
     return reinterpret_cast<::option_references::Value const *
                             crubit_nullable const*>(storage_ + 8);
   }
