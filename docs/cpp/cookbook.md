@@ -117,7 +117,7 @@ good C++ style. When you use this trick, document why, and try to limit it to
 types close to the interop boundary. If possible, instead of boxing `T`, make
 `T` itself rust-movable. (This is not easy for standard library types, but if
 the type is under your control, it *may* be as easy as adding
-`ABSL_ATTRIBUTE_TRIVIAL_ABI`.)
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE`.)
 
 #### `unique_ptr` {#unique_ptr}
 
@@ -151,7 +151,8 @@ struct Person {
 
 BEST PRACTICE: This should only be used in codebases that do not use a
 Rust-movable `unique_ptr` or `unique_ptr` equivalent. Consider wrapping this in
-an `ABSL_ATTRIBUTE_TRIVIAL_ABI` type which resembles `unique_ptr`, instead.
+a `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` type which resembles `unique_ptr`,
+instead.
 
 <section class="zippy" markdown="1">
 
@@ -167,7 +168,7 @@ struct Person {
 ```
 
 ```c++ {.good}
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI Person {
+struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE Person {
   // Owned, boxed to make Person rust-movable: crubit.rs/cpp/cookbook#boxing
   std::string* name;
   int age;
@@ -178,8 +179,9 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI Person {
 };
 ```
 
-(Note the use of `ABSL_ATTRIBUTE_TRIVIAL_ABI`: because we added a destructor, we
-also need to add `ABSL_ATTRIBUTE_TRIVIAL_ABI` to indicate that the destructor
+(Note the use of `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` from
+`support/annotations.h`: because we added a destructor, we
+also need `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` to indicate that the destructor
 does not care about the address of `Person`.)
 
 </section>
@@ -398,7 +400,8 @@ was Rust-movable:
 
 *   Adding a virtual method.
 *   Adding a user-defined copy constructor, move constructor, or destructor,
-    without specifying `ABSL_ATTRIBUTE_TRIVIAL_ABI`.
+    without specifying `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` (or legacy
+    `ABSL_ATTRIBUTE_TRIVIAL_ABI`).
 *   Adding a non-Rust-movable field or base class (such as `std::string`).
 
 <!-- end list -->
@@ -431,7 +434,7 @@ pub fn ReturnAfter() -> Ctor![After] {...}
 Rust-movable](#rust_movable)
 
 ```c++ {.good .no-copy}
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI CompatibleAfter {
+struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE CompatibleAfter {
   ~CompatibleAfter() {}
 
   int x;

@@ -73,9 +73,8 @@ To make the example C++ function `DoSomething` callable from Rust:
 
 ```c++
 // mylib_ffi.h
-#include "third_party/absl/base/attributes.h"
 #include "support/annotations.h"
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI UnsupportedWrapper {
+struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE UnsupportedWrapper {
   Unsupported value;
 };
 

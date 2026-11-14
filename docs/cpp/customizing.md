@@ -14,6 +14,11 @@ For instance:
 *   A function or method can be given `pub(crate)` visibility in Rust, limiting
     its visibility to the generated crate (including custom `srcs` on
     `rust_api_from_cpp`), using `CRUBIT_PUB_CRATE`.
+*   A non-trivial type with a custom move constructor or destructor can be
+    marked Rust-movable (`Unpin`) without changing its C++ calling-convention
+    ABI using `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` (or `_IF_ELIGIBLE` for
+    templates, `_FIELD` for fields, and `CRUBIT_NEVER_BITWISE_RELOCATABLE` to
+    force pinning).
 
 <!-- TODO(jeanpierreda): should we fully enumerate everything, on this page? -->
 

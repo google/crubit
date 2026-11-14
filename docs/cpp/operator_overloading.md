@@ -92,7 +92,9 @@ the other operators, Crubit synthesizes `partial_cmp` from the operator together
 with `operator==`.
 
 A `PartialOrd` impl is only generated if `operator==` is also available for the
-same operand types, and if the left- and right-hand operands have the same type.
+same operand types. `operator<=>` supports operands of different record types
+(`impl PartialOrd<Rhs> for Lhs`), whereas `<`, `>`, `<=`, and `>=` require the
+left- and right-hand operands to have the same type.
 
 ### `Eq` and `Ord`
 

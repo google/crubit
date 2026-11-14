@@ -357,6 +357,10 @@ show more examples.
 ## Attributes {#attributes}
 
 Crubit does not support most attributes on structs and their fields. If a struct
-is marked using any attribute other than alignment, [packing](#packed), or
-`ABSL_ATTRIBUTE_TRIVIAL_ABI`, it will not receive bindings. If a field is marked
-using any other attribute, it will be replaced with a private opaque blob.
+is marked using any attribute other than alignment, [packing](#packed),
+`CRUBIT_*` annotations from `"support/annotations.h"` (such
+as `CRUBIT_UNSAFE_BITWISE_RELOCATABLE`, which should be preferred over
+`ABSL_ATTRIBUTE_TRIVIAL_ABI` in new code), or `ABSL_ATTRIBUTE_TRIVIAL_ABI`, it
+will not receive bindings. If a field is marked using any other attribute (aside
+from supported annotations such as `CRUBIT_*` field annotations), it will be
+replaced with a private opaque blob.

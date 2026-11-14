@@ -1,6 +1,6 @@
 # C++ bindings for Rust `enum`s
 
-A Rust `enum` is mapped to an opaque C++ type.
+A Rust `enum` is mapped to a C++ `struct` with a nested struct for each variant.
 
 If an `enum` is not [C++ movable](movable_types.md), then it will be passed
 by-value via the [`rs::Movable`](movable_types.md#movable_wrapper) wrapper type.
@@ -49,17 +49,27 @@ via the [`rs::Movable`](movable_types.md#movable_wrapper) wrapper type. See
 
 ## Enums with payload
 
-Each variant of a Rust `enum` may contain an additional payload (a tuple or a
-struct). C++ bindings for Rust `enum`s provide the following ways of working
-with an `enum` payload:
+Each variant of a Rust `enum` may be a unit variant or carry a tuple or struct
+payload. For an enum `E`, Crubit generates a nested struct `E::Variant` for each
+variant:
 
-*   Constructing an `enum` variant with the given payload by calling a `static`
-    `Make<variant name>` method (one such method is injected for each of `enum`
-    variants). The following bugs track future work in this area:
-
-    *   b/487357254: Constructing variants with a struct payload
-
-*   TODO(b/262737383): Matching `enum` variants and inspecting their payload.
+*   **Constructing variants**: Call `E::Variant::Make(...)` (or
+    `E(std::in_place_type<E::Variant>, ...)`), passing the variant's fields in
+    declaration order.
+*   **Inspecting variants and payloads**
+    (`#include "support/rs_std/enum.h"`,
+    `//support/rs_std:enum`):
+    *   `rs::holds_alternative<E::Variant>(e)` returns `true` if `e` holds
+        `Variant`.
+    *   `rs::get_if<E::Variant>(&e)` returns a pointer (`const E::Variant*` or
+        `E::Variant*`) to the variant payload if active, or `nullptr` otherwise.
+        Tuple variant fields are named `__field0`, `__field1`, etc., and struct
+        variant fields keep their Rust names.
+    *   `rs::discriminant(e)` returns `E::__crubit_variant_index`, which can be
+        compared or switched against `E::Variant::__crubit_index`.
+    *   `rs::get_unchecked<E::Variant>(e)` returns a reference to the variant
+        payload without checking the active discriminant (undefined behavior if
+        `e` holds a different variant).
 
 ### Example
 

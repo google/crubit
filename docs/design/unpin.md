@@ -1,9 +1,11 @@
 # `Unpin` for C++ Types
 
-SUMMARY: A C++ type is `Unpin` if it is Rust-movable (e.g., a trivial type, or a
-nontrivial type which is `[[clang::trivial_abi]]`). Any such type can be used by
-value or plain reference/pointer in interop, all non-`Unpin` types must instead
-be used behind pinned pointers and references.
+SUMMARY: A C++ type is `Unpin` if it is Rust-movable (a trivial type, or a
+bitwise-relocatable nontrivial type — e.g. annotated with
+`CRUBIT_UNSAFE_BITWISE_RELOCATABLE`, or legacy `[[clang::trivial_abi]]` when all
+members are bitwise-relocatable). Any such type can be used by value or plain
+reference/pointer in interop; all non-`Unpin` types must instead be used behind
+pinned pointers and references.
 
 See also: [Bitwise relocatability and
 Rust-movability](./bitwise_relocatable.md).
@@ -24,8 +26,8 @@ digraph {
     subgraph cluster_cpp {
         label="C++ Representation"; style=dashed; color="#aaaaaa"; fontname="Arial";
         c_triv [label="trivial"];
-        c_move [label="[[clang::trivial_abi]],\nnontrivial"];
-        c_pin  [label="not [[clang::trivial_abi]],\nnontrivial"];
+        c_move [label="bitwise-relocatable,\nnontrivial"];
+        c_pin  [label="not bitwise-relocatable,\nnontrivial"];
     }
 
     r_triv -> c_triv;
