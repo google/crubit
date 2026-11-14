@@ -4,10 +4,6 @@ A Rust `struct` is mapped to a C++ `class`/`struct` with the same fields. If any
 field cannot be represented in C++, the struct itself will still have bindings,
 but [the relevant field will be private](#opaque_fields).
 
-If a `struct` is not [C++ movable](movable_types.md), then it will be passed
-by-value via the [`rs::Movable`](movable_types.md#movable_wrapper) wrapper type.
-See [Movable Types](movable_types.md).
-
 ## Example
 
 Given the following Rust module:
@@ -74,7 +70,7 @@ A Rust struct is generated as a C++ aggregate if:
 3.  It does not implement `Drop`.
 4.  At most one field requires drop glue, **or** the struct is annotated with
     `#[crubit_annotate::field_drop_order_does_not_matter]`.
-5.  Any field requiring drop glue is movable in C++.
+5.  Any field requiring drop glue is [movable in C++](movable_types.md).
 6.  `Default` is not implemented manually (i.e. `Default` is either derived via
     `#[derive(Default)]` or not implemented at all).
 
@@ -128,10 +124,13 @@ initializes primitive fields to zero/false, matching C++ value initialization.
 
 ## C++ movable {#cpp_movable}
 
-If a `struct` is not [C++ movable](movable_types.md), its C++ move constructor
-and move assignment operator will be `= delete`d, and it will be passed by-value
-via the [`rs::Movable`](movable_types.md#movable_wrapper) wrapper type. See
-[Movable Types](movable_types.md).
+If a `struct` is [C++ movable](movable_types.md) (it implements `Clone`, has no
+destructor, or implements `Default`), the generated C++ class has move
+operations and is passed by value as `T`.
+
+If it is not, its C++ move constructor and move assignment operator are
+`= delete`d. It is still returned by value as `T`, but by-value parameters take
+the [`rs::Movable<T>`](movable_types.md#movable_wrapper) wrapper type instead.
 
 ## Zero-sized types (ZSTs) {#zsts}
 
