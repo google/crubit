@@ -142,24 +142,34 @@ are not supported (b/258259459)` comment instead. To expose an empty Rust struct
 to C++, add a placeholder non-zero-sized field (for example, `_unused: u8`,
 `_unused: bool`, or `_unused: Option<()>`).
 
-## `CRUBIT_INTERNAL_RUST_TYPE` annotation {#crubit_internal_rust_type}
+## `CRUBIT_RUST_LAYOUT_EQUIVALENT` and `CRUBIT_INTERNAL_RUST_TYPE` annotations {#crubit_internal_rust_type}
 
 You may notice that the generated C++ structs are annotated with the
-`CRUBIT_INTERNAL_RUST_TYPE` macro. This annotation instructs Crubit
+`CRUBIT_INTERNAL_RUST_TYPE` macro, which is the internal spelling of the public
+`CRUBIT_RUST_LAYOUT_EQUIVALENT` macro in
+`"support/annotations.h"` (and the C++ counterpart to Rust's
+`#[crubit_annotate::cpp_layout_equivalent]`). This annotation instructs Crubit
 (specifically `rs_bindings_from_cc`) to disable automated bindings for this C++
 type, and instead map all C++ uses of the type back to the existing Rust type.
 This ensures that a Rust struct passed to C++ and then back to Rust resolves to
 the original Rust type rather than a newly generated one.
 
-While Crubit generates this annotation automatically for Rust-to-C++ bindings,
-you can also apply it manually on your own C++ types if you want them to map to
-an existing Rust type:
+While Crubit generates `CRUBIT_INTERNAL_RUST_TYPE` automatically in Rust-to-C++
+bindings, you can apply `CRUBIT_RUST_LAYOUT_EQUIVALENT` manually on your own C++
+types when they have an identical memory layout to an existing Rust type:
 
 ```c++
-struct CRUBIT_INTERNAL_RUST_TYPE("char") char_ {
+#include "support/annotations.h"
+
+struct CRUBIT_RUST_LAYOUT_EQUIVALENT("char") char_ {
     std::uint32_t c;
 };
 ```
+
+When referencing a Rust type in an external crate (`"::some_crate::MyType"`)
+whose Bazel target differs from the target defining the C++ header, also attach
+`CRUBIT_RUST_LAYOUT_EQUIVALENT_LABEL_HINT("//package:some_crate")` so Crubit can
+resolve mangled crate names.
 
 ### Template Arguments and Interpolation
 
@@ -168,13 +178,13 @@ string to substitute template arguments:
 
 ```c++
 template <typename T>
-struct CRUBIT_INTERNAL_RUST_TYPE("RustType<{}>", T) CppType {
+struct CRUBIT_RUST_LAYOUT_EQUIVALENT("crate::RustType<{}>", T) CppType {
     T* value;
 };
 ```
 
 This ensures that a C++ instantiation like `CppType<int>` maps correctly to
-`RustType<i32>` in Rust.
+`crate::RustType<i32>` in Rust.
 
 Importantly, this interpolation syntax allows you to express Rust generic
 parameters that have no direct C++ equivalent, such as lifetimes or default
@@ -182,7 +192,7 @@ generic arguments. For example:
 
 ```c++
 template <typename T>
-struct CRUBIT_INTERNAL_RUST_TYPE("RustType<'static, {}>", T) CppType {
+struct CRUBIT_RUST_LAYOUT_EQUIVALENT("crate::RustType<'static, {}>", T) CppType {
     T* value;
 };
 ```
@@ -192,10 +202,10 @@ Const generics arguments can also be provided with
 
 ```c++
 template <typename T>
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    "RustType<'static, {}, {}>",
+struct CRUBIT_RUST_LAYOUT_EQUIVALENT(
+    "crate::RustType<'static, {}, {}>",
     T,
-    crubit::rust_type::Const<123>,
+    crubit::rust_type::Const<123>
 ) CppType {
     T* value;
 };
