@@ -5,6 +5,7 @@
 """`cc_bindings_from_rust` rule."""
 
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+load("@rules_cc//cc/common:cc_helper.bzl", "cc_helper")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_rust//rust:defs.bzl", "rust_common")
 load(
@@ -374,9 +375,12 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, 
         linking_contexts = [cc_info.linking_context],
     )
 
+    debug_context = cc_helper.merge_cc_debug_contexts(compilation_outputs, [cc_info])
+
     return CcInfo(
         compilation_context = compilation_context,
         linking_context = linking_context,
+        debug_context = debug_context,
     )
 
 def _compile_rs_out_file(ctx, attr, rs_out_file, crate_name, deps):
@@ -421,7 +425,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         return []
     if CcBindingsFromRustInfo in target:
         return []
-    if str(target.label) in targets_to_remove:
+    if target.label in targets_to_remove:
         return []
 
     proto_crate_renames = []

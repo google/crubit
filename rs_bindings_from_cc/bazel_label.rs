@@ -137,7 +137,9 @@ impl Hash for BazelLabel {
 
 impl<T: Into<String>> From<T> for BazelLabel {
     fn from(label: T) -> Self {
-        Self(label.into().into())
+        let s = label.into();
+        let s = if s.starts_with("@@//") { &s[2..] } else { &s };
+        Self(s.into())
     }
 }
 

@@ -2162,6 +2162,15 @@ mod tests {
     }
 
     #[gtest]
+    fn test_bazel_label_canonical_main_repo_equals_shorthand_repo() {
+        let canonical: BazelLabel = "@@//foo:bar".into();
+        let shorthand: BazelLabel = "//foo:bar".into();
+        assert_eq!(canonical, shorthand);
+        assert_eq!(canonical.as_str(), "//foo:bar");
+        assert_eq!(canonical.convert_to_cc_identifier(), shorthand.convert_to_cc_identifier());
+    }
+
+    #[gtest]
     fn test_bazel_label_dotless_slashless() {
         let label: BazelLabel = "foo".into();
         assert_eq!(label.target_name(), "foo");

@@ -6,13 +6,20 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_BAZEL_TYPES_H_
 
 #include <string>
+#include <utility>
 
 #include "common/string_type.h"
 
 namespace crubit {
 
 // Representation of a Bazel label (for example //foo/bar:baz).
-CRUBIT_DEFINE_STRING_TYPE(BazelLabel);
+class BazelLabel : public StringType<BazelLabel> {
+ public:
+  BazelLabel() = default;
+  explicit BazelLabel(std::string value)
+      : StringType(value.starts_with("@@//") ? value.substr(2)
+                                             : std::move(value)) {}
+};
 
 }  // namespace crubit
 
