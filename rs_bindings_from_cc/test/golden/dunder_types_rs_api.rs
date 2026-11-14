@@ -33,10 +33,13 @@
 //   Skipping generating bindings for '__DunderAnonTypedef' because it has a leading `__`
 
 // error: type alias `AliasToAliasToDunderType` could not be bound
-//   Unsupported type alias AliasToDunderType
+//   Unsupported type alias AliasToDunderType:
+//     Skipping generating bindings for '__DunderType' because it has a leading `__`
 
 // error: type alias `AliasToAliasToDunderTypedef` could not be bound
-//   Unsupported type alias AliasToDunderTypedef
+//   Unsupported type alias AliasToDunderTypedef:
+//     Skipping generating bindings for '__DunderTypedef' because it has a leading `__`
 
 // error: type alias `AliasToAliasToDunderAnonTypedef` could not be bound
-//   Unsupported type alias AliasToDunderAnonTypedef
+//   Unsupported type alias AliasToDunderAnonTypedef:
+//     Skipping generating bindings for '__DunderAnonTypedef' because it has a leading `__`
