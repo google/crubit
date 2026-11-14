@@ -299,11 +299,15 @@ fn rs_type_kind_with_lifetime_elision_impl(
                 // This is where a decl without bindings becomes an error in its user, so record
                 // that the error is caused by the decl. The decl's own errors are reported for
                 // the decl itself.
-                let unsupported_alias_error = || {
+                let unsupported_alias_error = |reason: Error| {
                     use ir::GenericItem;
+                    let desc = reason.to_string().replace('\n', "\n  ");
                     error_report::blocked_by(
                         db.blocker(item.id()),
-                        anyhow!("Unsupported type alias {name}", name = db.debug_name(item.id())),
+                        anyhow!(
+                            "Unsupported type alias {name}:\n  {desc}",
+                            name = db.debug_name(item.id())
+                        ),
                     )
                 };
                 // Alias fallbacks: type aliases are unique among items, in that if the item
@@ -322,19 +326,20 @@ fn rs_type_kind_with_lifetime_elision_impl(
                             *underlying_type.explicit_lifetimes_mut() =
                                 ty.explicit_lifetimes().into();
                         }
-                        if let Ok(ty) =
-                            db.rs_type_kind_with_lifetime_elision(underlying_type, lifetime_options)
+                        match db
+                            .rs_type_kind_with_lifetime_elision(underlying_type, lifetime_options)
                         {
-                            return Ok(ty);
-                        } else {
-                            // TODO(b/481368622): this fails if we fall through to comprehensive
-                            // fallbacks.
-                            return Err(unsupported_alias_error());
+                            Ok(ty) => return Ok(ty),
+                            Err(err) => {
+                                // TODO(b/481368622): this fails if we fall through to comprehensive
+                                // fallbacks.
+                                return Err(unsupported_alias_error(err));
+                            }
                         }
                     }
-                    // If it still fails, hide the error. Most users only need to know
-                    // "Alias does not exist", not "decltype(declval<T>().x()) does not exist".
-                    error = unsupported_alias_error();
+                    // Preserve the underlying reason so callers know why the alias has no bindings
+                    // (e.g., Crubit is not enabled on its defining target).
+                    error = unsupported_alias_error(no_bindings_reason.into());
                 } else {
                     error =
                         error_report::blocked_by(db.blocker(item.id()), no_bindings_reason.into());

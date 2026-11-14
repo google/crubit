@@ -3,13 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{anyhow, Result};
+use crubit_feature::CrubitFeature;
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{interpolate_spelled_rust_type, Mutability, RsTypeKind};
 use googletest::matchers::{contains_substring, not};
 use googletest::{expect_eq, expect_that, gtest};
-use ir::IR;
+use ir::{BazelLabel, IR};
 use ir_matchers::assert_ir_matches;
-use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_func};
+use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_func, DEPENDENCY_TARGET};
 use multiplatform_ir_testing::{
     ir_proto_from_assumed_lifetimes_cc, ir_proto_from_assumed_lifetimes_cc_dependency,
     ir_proto_from_cc, ir_proto_from_cc_dependency,
@@ -2846,6 +2847,79 @@ fn test_predefined_sugar_types_without_cstddef_include() -> Result<()> {
             __HASH_TOKEN__ include < cstddef >
             ...
         }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unsupported_type_alias_includes_missing_feature_reason() -> Result<()> {
+    let proto =
+        ir_proto_from_cc_dependency("void UsesDepAlias(DepAlias x);", "using DepAlias = int;")?;
+    let mut ir = make_test_ir(&proto)?;
+    let current_target = ir.current_target().clone();
+    *ir.target_crubit_features_mut(&current_target) =
+        CrubitFeature::Supported | CrubitFeature::Types;
+    *ir.target_crubit_features_mut(&BazelLabel::from(DEPENDENCY_TARGET)) = Default::default();
+
+    let rs_api =
+        rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens_for_test(ir)?.rs_api)?;
+    expect_that!(
+        rs_api,
+        contains_substring(
+            "//   Unsupported parameter type `DepAlias x`:\n\
+             //     Unsupported type alias DepAlias:\n\
+             //       Crubit is not enabled on defining target:\n\
+             //         //test:dependency"
+        )
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unsupported_type_alias_includes_underlying_type_reason() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        "using LocalAlias = DepStruct;\nvoid UsesLocalAlias(LocalAlias* x);",
+        "struct DepStruct { int x; };",
+    )?;
+    let mut ir = make_test_ir(&proto)?;
+    let current_target = ir.current_target().clone();
+    *ir.target_crubit_features_mut(&current_target) =
+        CrubitFeature::Supported | CrubitFeature::Types;
+    *ir.target_crubit_features_mut(&BazelLabel::from(DEPENDENCY_TARGET)) = Default::default();
+
+    let rs_api =
+        rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens_for_test(ir)?.rs_api)?;
+    expect_that!(
+        rs_api,
+        contains_substring(
+            "//   Unsupported parameter type `LocalAlias* x`:\n\
+             //     Unsupported type alias LocalAlias:\n\
+             //       Crubit is not enabled on defining target:\n\
+             //         //test:dependency"
+        )
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unsupported_type_alias_includes_translation_error() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct __DunderType { int x; };
+        using AliasToDunder = __DunderType;
+        void UsesAlias(AliasToDunder x);
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api =
+        rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens_for_test(ir)?.rs_api)?;
+    expect_that!(
+        rs_api,
+        contains_substring(
+            "//   Unsupported parameter type `AliasToDunder x`:\n\
+             //     Unsupported type alias AliasToDunder:\n\
+             //       Skipping generating bindings for '__DunderType' because it has a leading `__`"
+        )
     );
     Ok(())
 }
