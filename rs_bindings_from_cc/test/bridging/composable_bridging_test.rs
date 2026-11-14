@@ -119,3 +119,15 @@ fn test_composable_bridge_with_virtual_destructor() {
     let optional = composable_bridging_lib::MakeOptionalWithVirtualDestructor();
     assert!(optional.is_some());
 }
+
+#[gtest]
+fn test_never_bridged() {
+    // We can't call MakeNeverBridged() or AcceptsNeverBridged(n) because `!` cannot be constructed,
+    // but we can compile check the signatures by referencing them.
+    let _f1: fn() -> ! = MakeNeverBridged;
+    let _f2: fn(!) = AcceptsNeverBridged;
+
+    // We can call the one returning Option<!>
+    let opt: Option<!> = ReturnOptionalNeverBridged();
+    assert!(opt.is_none());
+}

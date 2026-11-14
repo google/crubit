@@ -2054,8 +2054,6 @@ fn test_format_item_fn_with_destructuring_parameter_name() {
 #[test]
 fn test_format_item_unsupported_fn_param_type_never() {
     let test_src = r#"
-            #![feature(never_type)]
-
             #[unsafe(no_mangle)]
             pub extern "C" fn fn_with_params(_param: !) {}
         "#;
