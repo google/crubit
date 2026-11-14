@@ -157,33 +157,13 @@ pub struct AdtTemplateSpecialization<'tcx> {
 
 impl<'tcx> AdtTemplateSpecialization<'tcx> {
     pub fn is_option(&self) -> bool {
-        matches!(
-            self.args,
-            AdtSpecializationArgs::Enum(AdtEnumSpecialization {
-                kind: EnumSpecializationKind::Option { .. },
-                ..
-            })
-        )
-    }
-    pub fn is_result(&self) -> bool {
-        matches!(
-            self.args,
-            AdtSpecializationArgs::Enum(AdtEnumSpecialization {
-                kind: EnumSpecializationKind::Result { .. },
-                ..
-            })
-        )
-    }
-    pub fn is_vec(&self) -> bool {
-        matches!(self.args, AdtSpecializationArgs::Vec(_))
+        matches!(self.args, AdtSpecializationArgs::Option { .. })
     }
 
     pub fn support_header(&self, db: &BindingsGenerator<'tcx>) -> Option<CcInclude> {
         match &self.args {
-            AdtSpecializationArgs::Enum(AdtEnumSpecialization { kind, .. }) => match kind {
-                EnumSpecializationKind::Option { .. } => Some(db.support_header("rs_std/option.h")),
-                EnumSpecializationKind::Result { .. } => Some(db.support_header("rs_std/result.h")),
-            },
+            AdtSpecializationArgs::Option { .. } => Some(db.support_header("rs_std/option.h")),
+            AdtSpecializationArgs::Result { .. } => Some(db.support_header("rs_std/result.h")),
             AdtSpecializationArgs::Tuple(_) => Some(db.support_header("rs_std/tuple.h")),
             AdtSpecializationArgs::Vec(_) => Some(db.support_header("rs_std/vec.h")),
             AdtSpecializationArgs::UserDefinedAdt => None,
@@ -206,26 +186,21 @@ impl Hash for AdtTemplateSpecialization<'_> {
 }
 
 #[derive(Clone, Debug)]
-#[allow(clippy::large_enum_variant)]
-pub enum AdtSpecializationArgs<'tcx> {
-    Enum(AdtEnumSpecialization<'tcx>),
-    Tuple(Vec<FormattedTy<'tcx>>),
-    Vec(FormattedTy<'tcx>),
-    UserDefinedAdt,
+pub struct EnumTagInfo<'tcx> {
+    pub tag_type: Ty<'tcx>,
+    pub tag_type_cc: CcSnippet<'tcx>,
+    pub tag_field: rustc_abi::FieldIdx,
+    pub tag_encoding: &'tcx rustc_abi::TagEncoding<rustc_abi::VariantIdx>,
 }
 
 #[derive(Clone, Debug)]
-pub struct AdtEnumSpecialization<'tcx> {
-    pub tag_type_rs: Ty<'tcx>,
-    pub tag_type_cc: CcSnippet<'tcx>,
-    pub kind: EnumSpecializationKind<'tcx>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[allow(clippy::large_enum_variant)]
-pub enum EnumSpecializationKind<'tcx> {
-    Option { some_ty: FormattedTy<'tcx> },
-    Result { ok_ty: FormattedTy<'tcx>, err_ty: FormattedTy<'tcx> },
+pub enum AdtSpecializationArgs<'tcx> {
+    Option { some_ty: FormattedTy<'tcx>, tag_info: EnumTagInfo<'tcx> },
+    Result { ok_ty: FormattedTy<'tcx>, err_ty: FormattedTy<'tcx>, tag_info: EnumTagInfo<'tcx> },
+    Tuple(Vec<FormattedTy<'tcx>>),
+    Vec(FormattedTy<'tcx>),
+    UserDefinedAdt,
 }
 
 #[derive(Clone, Debug)]

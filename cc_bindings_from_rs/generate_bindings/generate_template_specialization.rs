@@ -17,10 +17,9 @@ use ::std::rc::Rc;
 use arc_anyhow::{bail, Result};
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
-    AdtEnumSpecialization, AdtSpecializationArgs, AdtTemplateSpecialization, ApiSnippets,
-    CcPrerequisites, CcSnippet, CcSnippets, EnumSpecializationKind, FormattedTy,
-    NegativeAutoTraitImplTemplateSpecialization, StdHashTemplateSpecialization,
-    TemplateSpecialization, TraitImplTemplateSpecialization,
+    AdtSpecializationArgs, AdtTemplateSpecialization, ApiSnippets, CcPrerequisites, CcSnippet,
+    CcSnippets, EnumTagInfo, FormattedTy, NegativeAutoTraitImplTemplateSpecialization,
+    StdHashTemplateSpecialization, TemplateSpecialization, TraitImplTemplateSpecialization,
 };
 use database::{
     AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, GenericArgs, StaticMethodMode,
@@ -110,45 +109,47 @@ fn parse_unit_in_specialization<'tcx>(
     })
 }
 
+fn enum_tag_info<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    layout: rustc_abi::Layout<'tcx>,
+) -> Result<EnumTagInfo<'tcx>> {
+    let tcx = db.tcx();
+    let (tag, tag_encoding, tag_field) = match layout.variants() {
+        rustc_abi::Variants::Empty => {
+            unreachable!("Specialized enum is uninhabited, which is unsupported before queuing.")
+        }
+        rustc_abi::Variants::Single { .. } => {
+            unreachable!(
+                "Specialized enum has only a single inhabited variant, which is unsupported before queuing."
+            )
+        }
+        rustc_abi::Variants::Multiple { tag, tag_encoding, tag_field, .. } => {
+            (tag, tag_encoding, *tag_field)
+        }
+    };
+    let tag_type = tag.primitive().to_int_ty(tcx);
+    let tag_type_cc = db.format_ty_for_cc(tag_type, TypeLocation::Other)?.clone();
+    Ok(EnumTagInfo { tag_type, tag_type_cc, tag_field, tag_encoding })
+}
+
 fn parse_adt_def_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     adt: ty::AdtDef<'tcx>,
     substs: GenericArgs<'tcx>,
 ) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
-    use database::code_snippet::EnumSpecializationKind;
     use format_type::BridgedBuiltin;
     let tcx = db.tcx();
 
-    BridgedBuiltin::new(db, adt).map(|bridged_builtin| {
-        match bridged_builtin {
+    BridgedBuiltin::new(db, adt)
+        .map(|bridged_builtin| match bridged_builtin {
             BridgedBuiltin::Option => {
-                let some_ty = parse_unit_in_specialization(db, substs.type_at(0))
-                        .unwrap_or_else(|| {
-                            FormattedTy::try_from_ty(
-                                substs.type_at(0),
-                                TypeLocation::OptionArg,
-                                db,
-                            )
-                        })?;
+                let some_ty =
+                    parse_unit_in_specialization(db, substs.type_at(0)).unwrap_or_else(|| {
+                        FormattedTy::try_from_ty(substs.type_at(0), TypeLocation::OptionArg, db)
+                    })?;
                 let layout = get_layout(tcx, self_ty)?;
-
-                let tag = match layout.variants() {
-                    rustc_abi::Variants::Empty => {
-                        unreachable!("Option is never uninhabited because of the None variant.")
-                    }
-                    rustc_abi::Variants::Single { .. } => {
-                        unreachable!(
-                            "This case only occurs when our Some variant contains an uninhabited \
-                        type. This is unsupported today and we call format_ty_for_cc on our \
-                        argument type before queueing a specialization, so this case should not \
-                        occur in practice."
-                        )
-                    }
-                    rustc_abi::Variants::Multiple { tag, .. } => tag,
-                };
-                let tag_type_rs = tag.primitive().to_int_ty(tcx);
-                let tag_type_cc = db.format_ty_for_cc(tag_type_rs, TypeLocation::Other)?;
+                let tag_info = enum_tag_info(db, layout)?;
                 let self_ty_cc = {
                     let mut snippet = some_ty
                         .for_cc
@@ -161,48 +162,21 @@ fn parse_adt_def_template_specialization<'tcx>(
                     layout,
                     self_ty_rs: self_ty,
                     self_ty_cc,
-                    args: AdtSpecializationArgs::Enum(AdtEnumSpecialization {
-                        tag_type_rs,
-                        tag_type_cc: tag_type_cc.clone(),
-                        kind: EnumSpecializationKind::Option { some_ty },
-                    }),
+                    args: AdtSpecializationArgs::Option { some_ty, tag_info },
                 })
             }
             BridgedBuiltin::Result => {
-                let ok_ty = parse_unit_in_specialization(db, substs.type_at(0))
-                    .unwrap_or_else(|| FormattedTy::try_from_ty(
-                        substs.type_at(0),
-                        TypeLocation::TemplateArg,
-                        db,
-                ))?;
-                let err_ty = parse_unit_in_specialization(db, substs.type_at(1))
-                    .unwrap_or_else(|| FormattedTy::try_from_ty(
-                        substs.type_at(1),
-                        TypeLocation::TemplateArg,
-                        db,
-                ))?;
+                let ok_ty =
+                    parse_unit_in_specialization(db, substs.type_at(0)).unwrap_or_else(|| {
+                        FormattedTy::try_from_ty(substs.type_at(0), TypeLocation::TemplateArg, db)
+                    })?;
+                let err_ty =
+                    parse_unit_in_specialization(db, substs.type_at(1)).unwrap_or_else(|| {
+                        FormattedTy::try_from_ty(substs.type_at(1), TypeLocation::TemplateArg, db)
+                    })?;
 
                 let layout = get_layout(tcx, self_ty)?;
-                let tag = match layout.variants() {
-                    rustc_abi::Variants::Empty => {
-                        unreachable!(
-                            "Result is only uninhabited when both Ok and Err are uninhabited. We do \
-                    not support uninhabited types today, and we format our Ok and Err type before queueing \
-                    this specialization, so this case should not occur in practice."
-                        )
-                    }
-                    rustc_abi::Variants::Single { .. } => {
-                        unreachable!(
-                            "Result only has a single variant when either Ok or Err is uninhabited. We do \
-                    not support uninhabited types today, and we format our Ok and Err type before queueing \
-                    this specialization, so this case should not occur in practice."
-                        )
-                    }
-                    rustc_abi::Variants::Multiple { tag, .. } => tag,
-                };
-
-                let tag_type_rs = tag.primitive().to_int_ty(tcx);
-                let tag_type_cc = db.format_ty_for_cc(tag_type_rs, TypeLocation::Other)?;
+                let tag_info = enum_tag_info(db, layout)?;
                 let self_ty_cc = {
                     let mut snippet = [ok_ty.for_cc.clone(), err_ty.for_cc.clone()].map_snippets(
                         |[ok_ty_cc, err_ty_cc]| quote! { ::rs::Result<#ok_ty_cc, #err_ty_cc> },
@@ -215,19 +189,12 @@ fn parse_adt_def_template_specialization<'tcx>(
                     layout,
                     self_ty_rs: self_ty,
                     self_ty_cc,
-                    args: AdtSpecializationArgs::Enum(AdtEnumSpecialization {
-                        tag_type_rs,
-                        tag_type_cc: tag_type_cc.clone(),
-                        kind: EnumSpecializationKind::Result { ok_ty, err_ty },
-                    }),
+                    args: AdtSpecializationArgs::Result { ok_ty, err_ty, tag_info },
                 })
             }
             BridgedBuiltin::Vec => {
-                let inner_ty = FormattedTy::try_from_ty(
-                    substs.type_at(0),
-                    TypeLocation::TemplateArg,
-                    db,
-                )?;
+                let inner_ty =
+                    FormattedTy::try_from_ty(substs.type_at(0), TypeLocation::TemplateArg, db)?;
                 let layout = get_layout(tcx, self_ty)?;
                 let self_ty_cc = {
                     let mut snippet = inner_ty
@@ -244,8 +211,8 @@ fn parse_adt_def_template_specialization<'tcx>(
                     args: AdtSpecializationArgs::Vec(inner_ty),
                 })
             }
-        }
-    }).or_else(|| parse_user_defined_adt_template_specialization(db, self_ty, adt, substs))
+        })
+        .or_else(|| parse_user_defined_adt_template_specialization(db, self_ty, adt, substs))
 }
 
 fn parse_user_defined_adt_template_specialization<'tcx>(
@@ -1327,24 +1294,19 @@ fn specialize_vec<'tcx>(
 fn specialize_result<'tcx>(
     db: &BindingsGenerator<'tcx>,
     adt_spec: &AdtTemplateSpecialization<'tcx>,
-    enum_spec: &AdtEnumSpecialization<'tcx>,
     ok_ty: FormattedTy<'tcx>,
     err_ty: FormattedTy<'tcx>,
+    tag_info: &EnumTagInfo<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
     let ok_ty_tokens = ok_ty.for_cc.clone().into_tokens(&mut prereqs);
     let err_ty_tokens = err_ty.for_cc.clone().into_tokens(&mut prereqs);
     let layout = adt_spec.layout;
-    let (tag_encoding, tag_field) = match layout.variants() {
-        rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
-            unreachable!("This should have been checked in parse_adt_template_specialization")
-        }
-        rustc_abi::Variants::Multiple { tag_encoding, tag_field, .. } => (tag_encoding, tag_field),
-    };
-
-    let tag_type = enum_spec.tag_type_rs;
-    let tag_type_cc_tokens: TokenStream = enum_spec.tag_type_cc.clone().into_tokens(&mut prereqs);
+    let tag_type = tag_info.tag_type;
+    let tag_type_cc_tokens: TokenStream = tag_info.tag_type_cc.clone().into_tokens(&mut prereqs);
+    let tag_field = tag_info.tag_field;
+    let tag_encoding = tag_info.tag_encoding;
     let ok_ty_for_rs = ok_ty.for_rs;
     let err_ty_for_rs = err_ty.for_rs;
 
@@ -1564,8 +1526,8 @@ fn specialize_result<'tcx>(
 fn specialize_option<'tcx>(
     db: &BindingsGenerator<'tcx>,
     adt_spec: &AdtTemplateSpecialization<'tcx>,
-    enum_spec: &AdtEnumSpecialization<'tcx>,
     arg_ty: FormattedTy<'tcx>,
+    tag_info: &EnumTagInfo<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
@@ -1577,14 +1539,10 @@ fn specialize_option<'tcx>(
     // represented as a null pointer.
     let is_reference = format_type::is_option_arg_formatted_as_cc_ref(db, arg_ty.ty);
 
-    let (tag_encoding, tag_field) = match layout.variants() {
-        rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
-            unreachable!("This should have been checked in parse_adt_template_specialization")
-        }
-        rustc_abi::Variants::Multiple { tag_encoding, tag_field, .. } => (tag_encoding, tag_field),
-    };
-    let tag_type = enum_spec.tag_type_rs;
-    let tag_type_cc: TokenStream = enum_spec.tag_type_cc.clone().into_tokens(&mut prereqs);
+    let tag_type = tag_info.tag_type;
+    let tag_type_cc: TokenStream = tag_info.tag_type_cc.clone().into_tokens(&mut prereqs);
+    let tag_field = tag_info.tag_field;
+    let tag_encoding = tag_info.tag_encoding;
     let arg_ty_for_rs = arg_ty.for_rs;
 
     let ty::TyKind::Adt(adt, _) = adt_spec.self_ty_rs.kind() else {
@@ -1796,23 +1754,21 @@ trait TemplateSpecializationExt<'tcx> {
 impl<'tcx> TemplateSpecializationExt<'tcx> for AdtTemplateSpecialization<'tcx> {
     fn api_snippets(&self, db: &BindingsGenerator<'tcx>) -> ApiSnippets<'tcx> {
         match &self.args {
-            AdtSpecializationArgs::Enum(enum_spec) => match &enum_spec.kind {
-                EnumSpecializationKind::Option { some_ty } => {
-                    let some_ty_ty = some_ty.ty;
-                    let mut snippets = specialize_option(db, self, enum_spec, some_ty.clone());
-                    snippets.main_api.prereqs.forward_declare_type(some_ty_ty);
-                    snippets
-                }
-                EnumSpecializationKind::Result { ok_ty, err_ty } => {
-                    let ok_ty_ty = ok_ty.ty;
-                    let err_ty_ty = err_ty.ty;
-                    let mut snippets =
-                        specialize_result(db, self, enum_spec, ok_ty.clone(), err_ty.clone());
-                    snippets.main_api.prereqs.forward_declare_type(ok_ty_ty);
-                    snippets.main_api.prereqs.forward_declare_type(err_ty_ty);
-                    snippets
-                }
-            },
+            AdtSpecializationArgs::Option { some_ty, tag_info } => {
+                let some_ty_ty = some_ty.ty;
+                let mut snippets = specialize_option(db, self, some_ty.clone(), tag_info);
+                snippets.main_api.prereqs.forward_declare_type(some_ty_ty);
+                snippets
+            }
+            AdtSpecializationArgs::Result { ok_ty, err_ty, tag_info } => {
+                let ok_ty_ty = ok_ty.ty;
+                let err_ty_ty = err_ty.ty;
+                let mut snippets =
+                    specialize_result(db, self, ok_ty.clone(), err_ty.clone(), tag_info);
+                snippets.main_api.prereqs.forward_declare_type(ok_ty_ty);
+                snippets.main_api.prereqs.forward_declare_type(err_ty_ty);
+                snippets
+            }
             AdtSpecializationArgs::Tuple(element_tys) => {
                 specialize_tuple(db, self, element_tys.clone())
             }
