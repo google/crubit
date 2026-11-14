@@ -14,6 +14,8 @@ use ir::{CcType, CcTypeVariant, FfiRc, Func, GenericItem, Item, ItemId, MacroKin
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use generate_function_thunk;
+
 /// Recursively checks whether all C++ declarations (`Decl`) directly or transitively
 /// referenced by `cc_type` have bindings.
 fn cc_type_has_bindings<'a>(
