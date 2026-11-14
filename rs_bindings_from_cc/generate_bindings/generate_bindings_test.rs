@@ -2816,7 +2816,6 @@ fn test_reexported_namespaces() -> Result<()> {
     );
     Ok(())
 }
-
 #[gtest]
 fn test_predefined_sugar_types_without_cstddef_include() -> Result<()> {
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc(
@@ -2847,5 +2846,94 @@ fn test_predefined_sugar_types_without_cstddef_include() -> Result<()> {
             ...
         }
     );
+    Ok(())
+}
+
+#[gtest]
+fn test_uninstantiated_preferred_name_template_alias_owned_by_defining_target() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        void Foo(MyAlias x);
+        "#,
+        r#"
+        template <typename T>
+        struct MyTemplate;
+        using MyAlias = MyTemplate<int>;
+        template <typename T>
+        struct [[clang::preferred_name(MyAlias)]] MyTemplate {
+          int x;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn Foo(x: ::dependency::MyAlias)
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { __CcTemplateInst10MyTemplateIiE });
+    Ok(())
+}
+
+#[gtest]
+fn test_forward_declared_preferred_name_alias_with_local_template_def_stays_local() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        template <typename T>
+        struct [[clang::preferred_name(MyAlias)]] MyTemplate {
+          int x;
+        };
+        void Foo(MyAlias x);
+        "#,
+        r#"
+        template <typename T>
+        struct MyTemplate;
+        using MyAlias = MyTemplate<int>;
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn Foo(x: crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIiE)
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { ::dependency::MyAlias });
+    Ok(())
+}
+
+#[gtest]
+fn test_display_cc_type_name_for_rs_type_prefers_preferred_name_and_skips_inline_ns() -> Result<()>
+{
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace inline_outer {
+        inline namespace v1 {
+        template <typename T>
+        struct MyTemplate;
+        using MyAlias = MyTemplate<int>;
+        template <typename T>
+        struct [[clang::preferred_name(MyAlias)]] MyTemplate {
+          int x;
+        };
+        struct InInline {
+          int y;
+        };
+        }  // namespace v1
+        }  // namespace inline_outer
+        void TakeBoth(inline_outer::MyAlias a, inline_outer::InInline b);
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let func = retrieve_func(db.ir(), "TakeBoth");
+    let a_ty = db.rs_type_kind(func.params()[0].type_().clone())?;
+    let b_ty = db.rs_type_kind(func.params()[1].type_().clone())?;
+    expect_eq!(a_ty.display_cc_type_name_for_rs_type(&db).to_string(), "inline_outer::MyAlias");
+    expect_eq!(b_ty.display_cc_type_name_for_rs_type(&db).to_string(), "inline_outer::InInline");
     Ok(())
 }

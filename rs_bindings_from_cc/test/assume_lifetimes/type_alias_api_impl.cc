@@ -39,7 +39,7 @@ static_assert((struct TypeAliasCtor &
 
 extern "C" void
 __rust_thunk___ZN13TypeAliasCtorC1ENSt3__u17basic_string_viewIcNS0_11char_traitsIcEEEE(
-    struct TypeAliasCtor* __this, ::std::__u::string_view* a) {
+    struct TypeAliasCtor* __this, ::std::string_view* a) {
   crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(a));
 }
 
@@ -64,13 +64,5 @@ __rust_thunk__6ba6b233__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(
 
 static_assert((char const* (::std::reverse_iterator<const char*>::*)() const) &
               ::std::reverse_iterator<const char*>::base);
-
-static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<const wchar_t*>) == 8);
-static_assert(alignof(class std::reverse_iterator<const wchar_t*>) == 8);
-
-extern "C" void __rust_thunk__2e045c9c__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
-    class std::reverse_iterator<const wchar_t*>* __this) {
-  crubit::construct_at(__this);
-}
 
 #pragma clang diagnostic pop

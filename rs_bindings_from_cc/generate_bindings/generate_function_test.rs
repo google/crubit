@@ -5280,3 +5280,32 @@ fn test_unnameable_template_instantiation_inherited_method_with_inline_cpp() -> 
     );
     Ok(())
 }
+
+#[gtest]
+fn test_orphan_rule_skips_foreign_trait_impl() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc_dependency(
+        r#"
+        #pragma clang lifetime_elision
+        struct [[clang::annotate("crubit_internal_rust_type", "&'static str")]] StrRef final {
+            StrRef(const StrRef&) = default;
+            int x;
+        };
+        struct ForeignLocalMixed {};
+        // Both ForeignType and ExistingRustType (`&str`) cannot satisfy the orphan rule.
+        void operator<<(ForeignType& out, StrRef s);
+        // ForeignType with an uncovered local RHS satisfies the orphan rule.
+        void operator<<(ForeignType& out, const ForeignLocalMixed& v);
+        "#,
+        r#"
+        struct ForeignType {};
+        "#,
+    )?;
+    assert_rs_not_matches!(rs_api, quote! { Shl<&'static str> });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'a, 'b> ::core::ops::Shl<&'b crate::ForeignLocalMixed> for &'a mut ::dependency::ForeignType
+        }
+    );
+    Ok(())
+}

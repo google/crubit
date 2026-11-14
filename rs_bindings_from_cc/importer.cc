@@ -2596,6 +2596,31 @@ const crubit::ffi::Item* _Nullable Importer::GetImportedItem(
   return nullptr;
 }
 
+// `//support/cc_std` maps all libc++ headers in
+// `--target_args` (via `toolchain_headers.bzl`), but only compiles
+// `LIBCXX_HEADERS`. Preferred-name aliases declared in uncompiled libc++
+// headers (or their `__fwd/` declarations) do not have definitions emitted by
+// `cc_std`.
+static bool IsUncompiledCcStdPreferredName(
+    const clang::TypedefNameDecl& alias_decl, const BazelLabel& alias_target,
+    const clang::SourceManager& source_manager) {
+  if (alias_target != BazelLabel("//support/cc_std")) {
+    return false;
+  }
+  clang::PresumedLoc ploc =
+      source_manager.getPresumedLoc(alias_decl.getLocation());
+  if (!ploc.isValid()) {
+    return false;
+  }
+  std::string filename = llvm::sys::path::convert_to_slash(ploc.getFilename());
+  llvm::StringRef path(filename);
+  return path.ends_with("/__fwd/sstream.h") ||
+         path.ends_with("/__fwd/fstream.h") ||
+         path.ends_with("/__format/format_context.h") ||
+         path.ends_with("/sstream") || path.ends_with("/fstream") ||
+         path.ends_with("/regex") || path.ends_with("/format");
+}
+
 BazelLabel Importer::GetOwningTarget(const clang::Decl& decl) const {
   // Inherited friend operators are imported as if they were hidden friends of
   // the derived record, which belongs to the current target. See
@@ -2604,9 +2629,87 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl& decl) const {
     return invocation_.target_;
   }
 
+  auto is_in_current_target = [&](const clang::Decl* target_decl) {
+    return target_decl != nullptr &&
+           GetOwningTargetOfLocation(target_decl->getLocation()) ==
+               invocation_.target_;
+  };
+  auto check_arg = [&](auto& self, const clang::TemplateArgument& arg) -> bool {
+    switch (arg.getKind()) {
+      case clang::TemplateArgument::Type: {
+        clang::QualType qt = arg.getAsType();
+        while (!qt.isNull() && (qt->isPointerType() || qt->isReferenceType())) {
+          qt = qt->getPointeeType();
+        }
+        const clang::TagDecl* tag = qt.isNull() ? nullptr : qt->getAsTagDecl();
+        if (tag == nullptr) {
+          return false;
+        }
+        if (is_in_current_target(tag->getDefinition())) {
+          return true;
+        }
+        const auto* inner_spec =
+            clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(tag);
+        return inner_spec != nullptr &&
+               llvm::any_of(inner_spec->getTemplateArgs().asArray(),
+                            [&](const auto& inner_arg) {
+                              return self(self, inner_arg);
+                            });
+      }
+      case clang::TemplateArgument::Declaration:
+        return is_in_current_target(arg.getAsDecl());
+      case clang::TemplateArgument::Pack:
+        return llvm::any_of(arg.getPackAsArray(), [&](const auto& inner) {
+          return self(self, inner);
+        });
+      default:
+        return false;
+    }
+  };
+  auto has_local_template_or_arg_definition =
+      [&](const clang::ClassTemplateSpecializationDecl& spec) -> bool {
+    const auto* primary_decl =
+        spec.getSpecializedTemplate()->getTemplatedDecl();
+    const auto* partial =
+        spec.getSpecializedTemplateOrPartial()
+            .dyn_cast<clang::ClassTemplatePartialSpecializationDecl*>();
+    if (is_in_current_target(spec.getDefinition()) ||
+        is_in_current_target(primary_decl ? primary_decl->getDefinition()
+                                          : nullptr) ||
+        is_in_current_target(partial ? partial->getDefinition() : nullptr)) {
+      return true;
+    }
+    return llvm::any_of(spec.getTemplateArgs().asArray(), [&](const auto& arg) {
+      return check_arg(check_arg, arg);
+    });
+  };
+
   // Template instantiations need to be generated in the target that triggered
-  // the instantiation (not in the target where the template is defined).
-  if (IsFullClassTemplateSpecializationOrChild(&decl)) {
+  // the instantiation (not in the target where the template is defined), unless
+  // a `[[clang::preferred_name(...)]]` typedef claims canonical ownership.
+  for (const clang::Decl* d = &decl; d != nullptr;
+       d = clang::dyn_cast_or_null<clang::Decl>(d->getDeclContext())) {
+    const auto* spec =
+        clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(d);
+    if (spec == nullptr ||
+        clang::isa<clang::ClassTemplatePartialSpecializationDecl>(d)) {
+      continue;
+    }
+    if (clang::TypedefNameDecl* alias_decl =
+            GetTemplateSpecializationAlias(const_cast<clang::Decl*>(d))) {
+      // Avoid self-recursion if the preferred-name typedef is itself a member
+      // of this specialization.
+      if (clang::dyn_cast_or_null<clang::Decl>(alias_decl->getDeclContext()) !=
+          d) {
+        BazelLabel alias_target = GetOwningTarget(*alias_decl);
+        if (alias_target == invocation_.target_ ||
+            (!has_local_template_or_arg_definition(*spec) &&
+             !IsUncompiledCcStdPreferredName(*alias_decl, alias_target,
+                                             sema_.getSourceManager()))) {
+          return alias_target;
+        }
+      }
+    }
     return invocation_.target_;
   }
 
@@ -3007,6 +3110,17 @@ std::unique_ptr<crubit::ffi::Item> Importer::HardError(const clang::Decl& decl,
                                /*is_hard_error=*/true);
 }
 
+static clang::PrintingPolicy DefaultPrintingPolicy(
+    const clang::ASTContext& ctx) {
+  clang::PrintingPolicy policy = ctx.getPrintingPolicy();
+  policy.FullyQualifiedName = true;
+  policy.UsePreferredNames = true;
+  policy.SuppressTagKeyword = true;
+  policy.SuppressInlineNamespace = llvm::to_underlying(
+      clang::PrintingPolicy::SuppressInlineNamespaceMode::All);
+  return policy;
+}
+
 std::unique_ptr<crubit::ffi::Item> Importer::ImportUnsupportedItem(
     const clang::Decl& original_decl,
     std::optional<crubit::ffi::UnsupportedItem::Path> path,
@@ -3052,9 +3166,15 @@ std::unique_ptr<crubit::ffi::Item> Importer::ImportUnsupportedItem(
     kind = crubit::ffi::UnsupportedItem::TYPE_ALIAS;
   }
   std::string name = "unnamed";
-  if (const auto* named_decl =
-          clang::dyn_cast<clang::NamedDecl>(&original_decl)) {
-    name = named_decl->getQualifiedNameAsString();
+  if (const auto* tag_decl = clang::dyn_cast<clang::TagDecl>(&original_decl);
+      tag_decl != nullptr && tag_decl->getIdentifier() != nullptr) {
+    name = clang::QualType(ctx_.getCanonicalTagType(tag_decl))
+               .getAsString(DefaultPrintingPolicy(ctx_));
+  } else if (const auto* named_decl =
+                 clang::dyn_cast<clang::NamedDecl>(&original_decl)) {
+    name.clear();
+    llvm::raw_string_ostream os(name);
+    named_decl->printQualifiedName(os, DefaultPrintingPolicy(ctx_));
   }
   std::optional<std::string> inline_cpp_source_text;
   if (invocation_.allow_incomplete_migration()) {
@@ -3954,7 +4074,8 @@ llvm::Expected<CcType> Importer::ConvertUnattributedType(
     if (auto* specialization_decl =
             clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(tag_decl)) {
       return ConvertClassTemplateSpecializationDecl(
-          *specialization_decl, clang::QualType(tag_type, 0).getAsString());
+          *specialization_decl, clang::QualType(tag_type, 0)
+                                    .getAsString(DefaultPrintingPolicy(ctx_)));
     }
     return ConvertTypeDecl(tag_decl);
   } else if (const auto* typedef_type =
@@ -4048,8 +4169,7 @@ CcType Importer::ConvertQualType(
     clang::QualType qual_type,
     const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
     bool nullable, bool assume_lifetimes) {
-  clang::PrintingPolicy printing_policy = ctx_.getPrintingPolicy();
-  printing_policy.FullyQualifiedName = true;
+  clang::PrintingPolicy printing_policy = DefaultPrintingPolicy(ctx_);
   std::string type_string = qual_type.getAsString(printing_policy);
 
   llvm::Expected<CcType> type = ConvertType(*qual_type.getTypePtr(), lifetimes,
@@ -4483,17 +4603,6 @@ clang::TypedefNameDecl* _Nullable Importer::GetTemplateSpecializationAlias(
     while (true) {
       if (auto* typedef_decl =
               clang::dyn_cast<clang::TypedefType>(preferred_type)) {
-        // TODO(b/485041750): For Some Reason this doesn't work for std::pmr...
-        // un-allowlist this once we figure out why.
-        // TODO(b/485041750): This doesn't work for std::string because the
-        // wrapper type expects to use the original C++ type name, not the
-        // version produced here.
-        std::string qualified_name =
-            typedef_decl->getDecl()->getQualifiedNameAsString();
-        if (qualified_name != "std::string_view" &&
-            qualified_name != "std::wstring_view") {
-          return nullptr;
-        }
         return typedef_decl->getDecl();
       }
       clang::QualType next_preferred_type =

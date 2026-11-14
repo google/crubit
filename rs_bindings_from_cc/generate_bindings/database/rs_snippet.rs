@@ -1106,7 +1106,7 @@ impl BridgeRsTypeKind {
                     bail!(
                         "C-style array types are not supported in bridge type arguments yet: \
                         {} (b/575922365)",
-                        c_array.display_cc_type_name_for_rs_type(),
+                        c_array.display_cc_type_name_for_rs_type(db),
                     );
                 }
                 BridgeRsTypeKind::Bridge {
@@ -1192,7 +1192,7 @@ impl BridgeRsTypeKind {
                     bail!(
                         "C-style array types are not supported in callable signatures yet: \
                         {} (b/575922365)",
-                        c_array.display_cc_type_name_for_rs_type(),
+                        c_array.display_cc_type_name_for_rs_type(db),
                     );
                 }
                 BridgeRsTypeKind::Callable(Rc::new(Callable {
@@ -1351,7 +1351,7 @@ fn new_c9_co_record(
     if let Some(c_array) = arg_type_kind.contains_c_array() {
         bail!(
             "C-style array types are not supported in `c9::Co` yet: {} (b/575922365)",
-            c_array.display_cc_type_name_for_rs_type(),
+            c_array.display_cc_type_name_for_rs_type(db),
         );
     }
     let lifetime = if options.assume_lifetimes {
@@ -1650,7 +1650,7 @@ impl RsTypeKind {
             if let Some(c_array) = inner_rs_type_kind.contains_c_array() {
                 bail!(
                     "SliceRef pointee type cannot contain a C-style array: {} (b/575922365)",
-                    c_array.display_cc_type_name_for_rs_type(),
+                    c_array.display_cc_type_name_for_rs_type(db),
                 );
             }
             ensure!(
@@ -2015,7 +2015,7 @@ impl RsTypeKind {
             bail!(
                 "Type `{container_name}` uses C-style array type `{}` as \
             an argument to a generic type, which is not yet supported (b/575922365)",
-                c_array.display_cc_type_name_for_rs_type(),
+                c_array.display_cc_type_name_for_rs_type(db),
             );
         }
         Ok(())
@@ -2031,7 +2031,13 @@ impl RsTypeKind {
     /// Note: This is a simplified counterpart to [`BindingsGenerator::cc_type_debug_name`] for
     /// callers that only have an [`RsTypeKind`] rather than an [`ir::CcType`]; we may consider
     /// de-duplicating the two in the future.
-    pub fn display_cc_type_name_for_rs_type<'b>(&'b self) -> impl Display + use<'b> {
+    pub fn display_cc_type_name_for_rs_type<'a, 'b, D>(
+        &'b self,
+        db: D,
+    ) -> impl Display + use<'a, 'b, D>
+    where
+        D: Deref<Target = BindingsGenerator<'a>> + Copy + 'b,
+    {
         std::fmt::from_fn(move |f| {
             let mut cur = self;
             while let RsTypeKind::CArray { element_type, .. } = cur.unalias() {
@@ -2039,49 +2045,25 @@ impl RsTypeKind {
             }
             match cur.unalias() {
                 RsTypeKind::Primitive(p) => f.write_str(p.as_str())?,
-                RsTypeKind::Enum { enum_, crate_path } => write!(
-                    f,
-                    "{}{}",
-                    crate_path.namespace_qualifier.format_for_cc_debug(),
-                    enum_.cc_name()
-                )?,
-                RsTypeKind::Record { record, crate_path, .. } => {
-                    // The C++ name of a class template instantiation is already fully qualified,
-                    // and its Rust module is that of the alias that it is named after, or
-                    // `TEMPLATE_INSTANTIATIONS_MODULE`.
-                    if record.mangled_rs_name().is_some()
-                        || (record.enclosing_item_id().is_none() && record.is_rs_name_mangled())
-                    {
-                        write!(f, "{}", record.cc_name())?
-                    } else {
-                        write!(
-                            f,
-                            "{}{}",
-                            crate_path.namespace_qualifier.format_for_cc_debug(),
-                            record.cc_name()
-                        )?
-                    }
+                RsTypeKind::Enum { enum_, .. } => write!(f, "{}", db.debug_name(enum_.id()))?,
+                RsTypeKind::Record { record, .. } => write!(f, "{}", db.debug_name(record.id()))?,
+                RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
+                    write!(f, "{}", db.debug_name(incomplete_record.id()))?
                 }
-                RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => write!(
-                    f,
-                    "{}{}",
-                    crate_path.namespace_qualifier.format_for_cc_debug(),
-                    incomplete_record.cc_name()
-                )?,
                 RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
                     f.write_str(existing_rust_type.cc_name())?
                 }
                 RsTypeKind::BridgeType { original_type, .. } => {
-                    write!(f, "{}", original_type.cc_name())?
+                    write!(f, "{}", db.debug_name(original_type.id()))?
                 }
                 RsTypeKind::Pointer { pointee, .. } => {
-                    write!(f, "{}*", pointee.display_cc_type_name_for_rs_type())?
+                    write!(f, "{}*", pointee.display_cc_type_name_for_rs_type(db))?
                 }
                 RsTypeKind::Reference { referent, .. } => {
-                    write!(f, "{}&", referent.display_cc_type_name_for_rs_type())?
+                    write!(f, "{}&", referent.display_cc_type_name_for_rs_type(db))?
                 }
                 RsTypeKind::RvalueReference { referent, .. } => {
-                    write!(f, "{}&&", referent.display_cc_type_name_for_rs_type())?
+                    write!(f, "{}&&", referent.display_cc_type_name_for_rs_type(db))?
                 }
                 RsTypeKind::FuncPtr { .. } => f.write_str("function pointer")?,
                 RsTypeKind::Error { symbol, .. } => f.write_str(symbol)?,
@@ -2122,8 +2104,9 @@ impl RsTypeKind {
     /// for both the template definition and its instantiation, and so both
     /// would need to be passed in to rs_type_kind() in order to be able to
     /// merge these two functions.
-    pub fn missing_feature_descriptions_of_type(
+    pub fn missing_feature_descriptions_of_type<'a>(
         &self,
+        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
         target: &BazelLabel,
         enabled_features: flagset::FlagSet<CrubitFeature>,
         current_target: &BazelLabel,
@@ -2175,7 +2158,7 @@ impl RsTypeKind {
                 &|| {
                     error_report::anyhow!(
                         "C-style array types are not yet supported: {} (b/575922365)",
-                        c_array.display_cc_type_name_for_rs_type(),
+                        c_array.display_cc_type_name_for_rs_type(db),
                     )
                 },
             );
@@ -3913,6 +3896,7 @@ mod tests {
             },
         ] {
             let reasons = func_ptr.missing_feature_descriptions_of_type(
+                EmptyDatabase::new(),
                 &BazelLabel::from("//fake"),
                 CrubitFeature::Types.into(),
                 &BazelLabel::from("//fake:current"),

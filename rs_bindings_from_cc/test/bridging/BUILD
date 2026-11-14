@@ -28,6 +28,7 @@ crubit_rust_test(
     srcs = ["string_test.rs"],
     deps = [
         ":string_test_lib_rust",
+        "//support:ctor",
         "//support/cc_std",
         "@crate_index//:googletest",
     ],

@@ -22,52 +22,49 @@
 
 extern "C" void
 __rust_thunk___Z16string_view_sinkNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(
-    ::std::__u::string_view* s) {
+    ::std::string_view* s) {
   string_view_sink(crubit::UnsafeTakeValue(s));
 }
 
-static_assert((void (*)(::std::__u::string_view)) & ::string_view_sink);
+static_assert((void (*)(::std::string_view)) & ::string_view_sink);
 
 extern "C" void
 __rust_thunk___Z18string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(
-    ::std::__u::string_view* __return, ::std::__u::string_view* s) {
+    ::std::string_view* __return, ::std::string_view* s) {
   new (__return) auto(string_view_return(crubit::UnsafeTakeValue(s)));
 }
 
-static_assert((::std::__u::string_view (*)(::std::__u::string_view)) &
+static_assert((::std::string_view (*)(::std::string_view)) &
               ::string_view_return);
 
 extern "C" void
 __rust_thunk___Z28ambiguous_string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(
-    ::std::__u::string_view* __return, ::std::__u::string_view* a,
-    ::std::__u::string_view* b) {
+    ::std::string_view* __return, ::std::string_view* a,
+    ::std::string_view* b) {
   new (__return) auto(ambiguous_string_view_return(crubit::UnsafeTakeValue(a),
                                                    crubit::UnsafeTakeValue(b)));
 }
 
-static_assert((::std::__u::string_view (*)(::std::__u::string_view,
-                                           ::std::__u::string_view)) &
+static_assert((::std::string_view (*)(::std::string_view, ::std::string_view)) &
               ::ambiguous_string_view_return);
 
 extern "C" void
 __rust_thunk___Z29explicit_lifetime_string_viewNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(
-    ::std::__u::string_view* x) {
+    ::std::string_view* x) {
   explicit_lifetime_string_view(crubit::UnsafeTakeValue(x));
 }
 
-static_assert((void (*)(::std::__u::string_view)) &
-              ::explicit_lifetime_string_view);
+static_assert((void (*)(::std::string_view)) & ::explicit_lifetime_string_view);
 
 extern "C" void
 __rust_thunk___Z40unambiguous_string_view_return_annotatedNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(
-    ::std::__u::string_view* __return, ::std::__u::string_view* x,
-    ::std::__u::string_view* y) {
+    ::std::string_view* __return, ::std::string_view* x,
+    ::std::string_view* y) {
   new (__return) auto(unambiguous_string_view_return_annotated(
       crubit::UnsafeTakeValue(x), crubit::UnsafeTakeValue(y)));
 }
 
-static_assert((::std::__u::string_view (*)(::std::__u::string_view,
-                                           ::std::__u::string_view)) &
+static_assert((::std::string_view (*)(::std::string_view, ::std::string_view)) &
               ::unambiguous_string_view_return_annotated);
 
 static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<const char*>) == 8);
@@ -91,13 +88,5 @@ __rust_thunk__0c525269__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(
 
 static_assert((char const* (::std::reverse_iterator<const char*>::*)() const) &
               ::std::reverse_iterator<const char*>::base);
-
-static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<const wchar_t*>) == 8);
-static_assert(alignof(class std::reverse_iterator<const wchar_t*>) == 8);
-
-extern "C" void __rust_thunk__e38fd5b5__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
-    class std::reverse_iterator<const wchar_t*>* __this) {
-  crubit::construct_at(__this);
-}
 
 #pragma clang diagnostic pop

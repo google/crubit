@@ -77,37 +77,38 @@ __rust_thunk___ZN32test_namespace_bindings_reopened5inner1zENS0_1SE(
 static_assert((void (*)(struct test_namespace_bindings_reopened::inner::S)) &
               ::test_namespace_bindings_reopened::inner::z);
 
-static_assert(sizeof(struct test_namespace_bindings_inline::inner::
-                         StructInInlineNamespace) == 1);
-static_assert(alignof(struct test_namespace_bindings_inline::inner::
-                          StructInInlineNamespace) == 1);
+static_assert(
+    sizeof(struct test_namespace_bindings_inline::StructInInlineNamespace) ==
+    1);
+static_assert(
+    alignof(struct test_namespace_bindings_inline::StructInInlineNamespace) ==
+    1);
 
 extern "C" void
 __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(
-    struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
-        __this) {
+    struct test_namespace_bindings_inline::StructInInlineNamespace* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
 __rust_thunk___Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
-    struct test_namespace_bindings_inline::inner::StructInInlineNamespace* s) {
+    struct test_namespace_bindings_inline::StructInInlineNamespace* s) {
   useStructInInlineNamespaceWithFullQualifier(crubit::UnsafeTakeValue(s));
 }
 
-static_assert((void (*)(struct test_namespace_bindings_inline::inner::
-                            StructInInlineNamespace)) &
-              ::useStructInInlineNamespaceWithFullQualifier);
+static_assert(
+    (void (*)(struct test_namespace_bindings_inline::StructInInlineNamespace)) &
+    ::useStructInInlineNamespaceWithFullQualifier);
 
 extern "C" void
 __rust_thunk___Z45useStructInInlineNamespaceSkipInlineQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
-    struct test_namespace_bindings_inline::inner::StructInInlineNamespace* s) {
+    struct test_namespace_bindings_inline::StructInInlineNamespace* s) {
   useStructInInlineNamespaceSkipInlineQualifier(crubit::UnsafeTakeValue(s));
 }
 
-static_assert((void (*)(struct test_namespace_bindings_inline::inner::
-                            StructInInlineNamespace)) &
-              ::useStructInInlineNamespaceSkipInlineQualifier);
+static_assert(
+    (void (*)(struct test_namespace_bindings_inline::StructInInlineNamespace)) &
+    ::useStructInInlineNamespaceSkipInlineQualifier);
 
 extern "C" void __rust_thunk___ZN4impl3fooEv() { impl::foo(); }
 

@@ -8484,7 +8484,6 @@ fn test_static_data_members_of_nested_class_in_template_specialization() {
         }
     );
 }
-
 #[gtest]
 fn test_predefined_sugar_types() -> Result<()> {
     let header = r#"
@@ -8634,4 +8633,73 @@ fn test_predefined_sugar_types() -> Result<()> {
         }
     );
     Ok(())
+}
+
+#[gtest]
+fn test_absl_span_of_std_string_unsupported_uses_preferred_name() {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+        inline namespace __u {
+        template <typename T>
+        class char_traits {};
+        template <typename T>
+        class allocator {};
+        template <typename T, typename Traits = char_traits<T>,
+                  typename Alloc = allocator<T>>
+        class basic_string;
+        using string = basic_string<char>;
+        template <typename T, typename Traits, typename Alloc>
+        class [[clang::preferred_name(string)]] basic_string {};
+
+        template <typename T>
+        class basic_ostream;
+        using ostream = basic_ostream<char>;
+        template <typename T>
+        class [[clang::preferred_name(ostream)]]
+            [[clang::annotate("crubit_do_not_bind")]] basic_ostream {
+          T* ptr;
+        };
+        }  // namespace __u
+        }  // namespace std
+
+        namespace absl {
+        template <typename T>
+        class [[clang::annotate("crubit_do_not_bind")]] Span {
+          T* ptr;
+        };
+        }  // namespace absl
+
+        void TakeSpan(absl::Span<std::string> s);
+        void TakeStream(std::ostream& o);
+        "#,
+    )
+    .unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            UnsupportedItem {
+                name: "absl::Span<std::string>", ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            UnsupportedItem {
+                name: "std::ostream", ...
+            }
+        }
+    );
+    let take_span = retrieve_func(&ir, "TakeSpan");
+    let span_param_err = match take_span.params()[0].type_().variant() {
+        CcTypeVariant::Error(e) => e.message.as_ref(),
+        other => panic!("expected Error for absl::Span<std::string>, got {other:?}"),
+    };
+    assert!(
+        span_param_err.contains("Unsupported type 'absl::Span<std::string>'"),
+        "expected preferred name in error message, got: {span_param_err}"
+    );
 }

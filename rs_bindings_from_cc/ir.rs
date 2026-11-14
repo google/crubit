@@ -1082,6 +1082,11 @@ impl Record {
                     return true;
                 };
                 self.cc_name().as_str().starts_with("std::basic_string_view<")
+                    || (self.is_canonical_alias()
+                        && matches!(
+                            self.cc_name().as_str(),
+                            "u8string_view" | "u16string_view" | "u32string_view"
+                        ))
             }
             _ => false,
         }

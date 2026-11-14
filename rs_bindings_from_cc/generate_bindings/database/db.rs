@@ -378,6 +378,7 @@ impl<'db> BindingsGenerator<'db> {
         {
             let enabled_features = ir.target_crubit_features(target);
             let reasons = type_kind.missing_feature_descriptions_of_type(
+                self,
                 target,
                 enabled_features,
                 ir.current_target(),
@@ -774,7 +775,8 @@ impl<'db> BindingsGenerator<'db> {
         &self,
         item_id: ir::ItemId,
     ) -> code_gen_utils::NamespaceQualifier {
-        let mut namespace_qualifier = self.namespace_qualifier_from_id(item_id);
+        let mut namespace_qualifier =
+            self.namespace_qualifier_from_id_impl(item_id, /* skip_inline_namespaces= */ true);
         let mut id = Some(item_id);
         while let Some(current_id) = id {
             let current_item = self.find_untyped_decl(current_id);
@@ -796,6 +798,15 @@ impl<'db> BindingsGenerator<'db> {
         &self,
         item_id: ir::ItemId,
     ) -> code_gen_utils::NamespaceQualifier {
+        self.namespace_qualifier_from_id_impl(item_id, /* skip_inline_namespaces= */ false)
+    }
+
+    #[track_caller]
+    fn namespace_qualifier_from_id_impl(
+        &self,
+        item_id: ir::ItemId,
+        skip_inline_namespaces: bool,
+    ) -> code_gen_utils::NamespaceQualifier {
         let mut namespaces = vec![];
         let mut nested_records = vec![];
         let mut outermost_item = self.find_untyped_decl(item_id);
@@ -804,7 +815,9 @@ impl<'db> BindingsGenerator<'db> {
             outermost_item = self.find_untyped_decl(parent_id);
             match outermost_item {
                 ir::Item::Namespace(ns) => {
-                    namespaces.push(Rc::from(ns.rs_name().as_str()));
+                    if !skip_inline_namespaces || !ns.is_inline {
+                        namespaces.push(Rc::from(ns.rs_name().as_str()));
+                    }
                     enclosing_item_id = ns.enclosing_item_id();
                 }
                 ir::Item::Record(parent_record) => {

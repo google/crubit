@@ -135,7 +135,7 @@ forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Inc
 // error: function `CallIncompleteMapper` could not be bound
 //   Parameter #0 is not supported: Unsupported type 'absl::AnyInvocable<Incomplete (Incomplete) const>': Failed to create bindings for template specialization type absl::AnyInvocable<Incomplete (Incomplete) const>: Return type of callable is incomplete: struct Incomplete
 
-// error: class `absl::AnyInvocable` could not be bound
+// error: class `absl::AnyInvocable<Incomplete (Incomplete) const>` could not be bound
 //   Return type of callable is incomplete: struct Incomplete
 
 /// Class template instantiations that aren't named by a C++ type alias.
