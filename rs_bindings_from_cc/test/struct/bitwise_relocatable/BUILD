@@ -25,11 +25,25 @@ rust_api_from_cpp(
     cpp_target = ":bitwise_relocatable",
 )
 
+crubit_test_cc_library(
+    name = "std_string_only_on_libcxx",
+    hdrs = ["std_string_only_on_libcxx.h"],
+    deps = [
+        "//support:annotations",
+    ],
+)
+
+rust_api_from_cpp(
+    name = "std_string_only_on_libcxx_rust",
+    cpp_target = ":std_string_only_on_libcxx",
+)
+
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
     deps = [
         ":bitwise_relocatable_rust",
+        ":std_string_only_on_libcxx_rust",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
     ],

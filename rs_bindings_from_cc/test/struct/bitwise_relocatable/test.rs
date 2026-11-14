@@ -16,6 +16,7 @@ use googletest::expect_that;
 use googletest::gtest;
 use googletest::matchers::eq;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
+use std_string_only_on_libcxx::StdStringOnlyOnLibcxx;
 
 assert_impl_all!(Trivial: Unpin);
 assert_not_impl_any!(UserProvidedMoveDtor: Unpin);
@@ -50,6 +51,7 @@ assert_not_impl_any!(AnnotatedNeverBRTrivialAbi: Unpin);
 assert_not_impl_any!(ContainerOfAnnotatedNeverBR: Unpin);
 
 assert_impl_all!(StdStringOnLibcxx: Unpin);
+assert_impl_all!(StdStringOnlyOnLibcxx: Unpin);
 
 // Std table tests
 assert_impl_all!(UniquePtrInt: Unpin);
