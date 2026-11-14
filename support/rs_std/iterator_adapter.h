@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+// IWYU pragma: private, include "support/rs/iterator_adapter.h"
+
 #ifndef CRUBIT_SUPPORT_RS_STD_ITERATOR_ADAPTER_H_
 #define CRUBIT_SUPPORT_RS_STD_ITERATOR_ADAPTER_H_
 

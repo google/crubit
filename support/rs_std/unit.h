@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// IWYU pragma: private, include "support/rs_std/unit.h"
+// IWYU pragma: private, include "support/rs/unit.h"
 
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_UNIT_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_UNIT_H_

@@ -18,6 +18,11 @@ cc_library(
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:char",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -40,6 +45,11 @@ cc_library(
     hdrs = ["int.h"],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:int",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -93,6 +103,11 @@ cc_library(
     srcs = ["waker.cc"],
     hdrs = ["waker.h"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:waker",
+        "avoid_dep",
+    ],
     visibility = [
         "//:__subpackages__",
     ],
@@ -106,6 +121,11 @@ rust_library(
     srcs = ["erased_future.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     edition = "2024",
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:erased_future",
+        "avoid_dep",
+    ],
     visibility = [
         "//:__subpackages__",
     ],
@@ -126,6 +146,11 @@ rust_library(
     srcs = ["dyn_erased_future.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     edition = "2024",
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:dyn_erased_future",
+        "avoid_dep",
+    ],
     visibility = [
         "//:__subpackages__",
     ],
@@ -138,6 +163,11 @@ cc_library(
     name = "dyn_erased_future_cc",
     hdrs = ["dyn_erased_future.h"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:dyn_erased_future_cc",
+        "avoid_dep",
+    ],
     visibility = [
         "//:__subpackages__",
     ],
@@ -153,6 +183,11 @@ cc_library(
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:slice_ref",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
 
     # Try to avoid unnecessary dependencies, so that Crubit users have to pull in as little as
@@ -186,6 +221,11 @@ cc_library(
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:str_ref",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
 
     # Try to avoid unnecessary dependencies, so that Crubit users have to pull in as little as
@@ -221,6 +261,11 @@ rust_library(
     srcs = ["dyn_callable.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     edition = "2024",
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:dyn_callable_rs",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//support:bridge_rust",
@@ -234,6 +279,11 @@ cc_library(
         "//features:supported",
     ],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:dyn_callable",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//support:bridge_cpp",
@@ -262,6 +312,11 @@ cc_library(
     hdrs = ["fn_ref.h"],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:fn_ref",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -283,6 +338,11 @@ cc_library(
     hdrs = ["fn.h"],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:fn",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -305,6 +365,11 @@ cc_library(
     hdrs = ["traits.h"],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:traits",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -318,6 +383,11 @@ cc_library(
     hdrs = ["iterator_adapter.h"],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:iterator_adapter",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -345,6 +415,11 @@ cc_library(
     hdrs = ["option.h"],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:option",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -360,6 +435,11 @@ cc_library(
     hdrs = ["result.h"],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:result",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -375,6 +455,11 @@ cc_library(
     hdrs = ["vec.h"],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:vec",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -389,6 +474,11 @@ cc_library(
     hdrs = ["tuple.h"],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:tuple",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -402,6 +492,11 @@ cc_library(
     hdrs = ["unit.h"],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:unit",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -430,6 +525,11 @@ cc_library(
     name = "enum",
     hdrs = ["enum.h"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:enum",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -488,6 +588,11 @@ rust_library(
     srcs = ["lossy_formatter.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     edition = "2024",
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:lossy_formatter",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -506,6 +611,11 @@ rust_library(
     srcs = ["lossy_formatter_for_bindings.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     edition = "2024",
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:lossy_formatter_for_bindings_rs",
+        "avoid_dep",
+    ],
     visibility = [
         "//:__subpackages__",
     ],
@@ -519,10 +629,15 @@ cc_library(
     name = "lossy_formatter_for_bindings",
     hdrs = ["lossy_formatter_for_bindings.h"],
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer the re-export in //support/rs.
+    tags = [
+        "alt_dep=//support/rs:lossy_formatter_for_bindings",
+        "avoid_dep",
+    ],
     visibility = ["//:__subpackages__"],
     deps = [
         # We depend on the extern "C" symbols in lossy_formatter_for_bindings_rs.
-        ":lossy_formatter_for_bindings_rs",
+        ":lossy_formatter_for_bindings_rs",  # build_cleaner: keep
     ],
 )
 

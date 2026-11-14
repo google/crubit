@@ -14,7 +14,7 @@ namespace rs::std {}
 
 #include "support/unsafe_relocate_tag.h"
 #include "gtest/gtest.h"
-#include "support/rs_std/slice_ref.h"
+#include "support/rs/slice_ref.h"
 
 namespace rs {
 namespace {

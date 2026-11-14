@@ -17,7 +17,7 @@
 #include "support/unsafe_relocate_tag.h"
 #include "support/annotations.h"
 #include "support/annotations_internal.h"
-#include "support/rs_std/slice_ref.h"
+#include "support/rs/slice_ref.h"
 
 extern "C" {
 void* crubit_nonnull crubit_alloc(::std::size_t size,
