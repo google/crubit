@@ -2,7 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-mod absl;
 mod clang;
 mod flags;
 mod paths;
@@ -16,7 +15,7 @@ use std::path::Path;
 /// `path_to_src_root` gives the root of the repo, where paths are specified
 /// relative to.
 ///
-/// All C++ libraries can make use of ABSL, LLVM, and Clang, as they are
+/// All C++ libraries can make use of LLVM and Clang, as they are
 /// included in the include path, and are added to the link step.
 pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>>(
     path_to_src_root: P1,
@@ -35,11 +34,6 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>>(
 
     paths::print_compiler_deps();
 
-    // ===== Abseil ======
-
-    let absl_include_dirs = absl::collect_absl_includes();
-    let (absl_lib_dirs, absl_libs) = absl::collect_absl_libs();
-
     // ===== LLVM libtooling =====
 
     // TODO: Use llvm-config instead of LIBCLANG_STATIC_PATH?
@@ -48,12 +42,11 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>>(
 
     // ===== Linking directives =====
 
-    // Combine and deduplicate link search paths and libraries across dependencies.
+    // Deduplicate and sort link search paths and libraries.
     // `BTreeSet` deduplicates and sorts without an additional `itertools` dep.
-    let all_lib_dirs =
-        [absl_lib_dirs, clang_lib_dirs].into_iter().flatten().collect::<BTreeSet<_>>();
+    let all_lib_dirs = clang_lib_dirs.into_iter().collect::<BTreeSet<_>>();
     paths::print_link_searches(all_lib_dirs)?;
-    let all_libs = [absl_libs, clang_libs].into_iter().flatten().collect::<BTreeSet<_>>();
+    let all_libs = clang_libs.into_iter().collect::<BTreeSet<_>>();
     paths::print_link_libs(all_libs)?;
 
     // ===== The cc lib ======
@@ -80,7 +73,7 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>>(
         std::fs::write(&placeholder, "// Empty placeholder for header-only library\n")?;
         cc_lib.file(&placeholder);
     }
-    for p in absl_include_dirs.into_iter().chain(clang_include_dirs) {
+    for p in clang_include_dirs {
         paths::add_include_path(&mut cc_lib, p, false);
     }
     cc_lib.cpp(true);

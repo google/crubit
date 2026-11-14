@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <optional>
 
-#include "absl/base/nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -329,7 +328,7 @@ std::optional<clang::QualType> GetBuiltinType(
 //
 // Names are looked up starting from the global namespace, because macros can
 // be expanded anywhere.
-const clang::TypeDecl* absl_nullable LookUpTypeDecl(
+const clang::TypeDecl* _Nullable LookUpTypeDecl(
     const clang::ASTContext& ast_context, llvm::ArrayRef<clang::Token> tokens) {
   const clang::DeclContext* context = ast_context.getTranslationUnitDecl();
   size_t i = 0;
@@ -443,7 +442,7 @@ class MacroExpressionParser {
       : sema_(sema), tokens_(tokens) {}
 
   // Parses all the tokens as a single expression. Returns null on failure.
-  clang::Expr* absl_nullable Parse() {
+  clang::Expr* _Nullable Parse() {
     clang::Expr* expr = ParseConditional();
     if (expr == nullptr || position_ != tokens_.size()) return nullptr;
     return expr;
@@ -454,7 +453,7 @@ class MacroExpressionParser {
   bool is_typed() const { return is_typed_; }
 
  private:
-  static clang::Expr* absl_nullable Get(clang::ExprResult result) {
+  static clang::Expr* _Nullable Get(clang::ExprResult result) {
     return result.isUsable() ? result.get() : nullptr;
   }
 
@@ -475,7 +474,7 @@ class MacroExpressionParser {
            literal.isSizeT || literal.isBitInt || literal.MicrosoftInteger != 0;
   }
 
-  const clang::Token* absl_nullable Peek() const {
+  const clang::Token* _Nullable Peek() const {
     return position_ < tokens_.size() ? &tokens_[position_] : nullptr;
   }
 
@@ -508,7 +507,7 @@ class MacroExpressionParser {
   //     logical-or-expression
   //     logical-or-expression `?` conditional-expression `:`
   //         conditional-expression
-  clang::Expr* absl_nullable ParseConditional() {
+  clang::Expr* _Nullable ParseConditional() {
     clang::Expr* condition = ParseBinary(clang::prec::LogicalOr);
     if (condition == nullptr || !PeekIs(clang::tok::question)) {
       return condition;
@@ -526,7 +525,7 @@ class MacroExpressionParser {
   // Parses a sequence of binary operators with a precedence of at least
   // `min_precedence` (precedence climbing). All supported binary operators are
   // left-associative.
-  clang::Expr* absl_nullable ParseBinary(clang::prec::Level min_precedence) {
+  clang::Expr* _Nullable ParseBinary(clang::prec::Level min_precedence) {
     clang::Expr* lhs = ParseUnary();
     while (lhs != nullptr) {
       const clang::Token* token = Peek();
@@ -553,7 +552,7 @@ class MacroExpressionParser {
   //     primary-expression
   //     (`+` | `-` | `~` | `!`) unary-expression
   //     `(` type-name `)` unary-expression
-  clang::Expr* absl_nullable ParseUnary() {
+  clang::Expr* _Nullable ParseUnary() {
     const clang::Token* token = Peek();
     if (token == nullptr) return nullptr;
 
@@ -594,7 +593,7 @@ class MacroExpressionParser {
   //     `(` conditional-expression `)`
   //     `static_cast` `<` type-name `>` `(` conditional-expression `)`
   //     simple-type-name `(` conditional-expression `)`
-  clang::Expr* absl_nullable ParsePrimary() {
+  clang::Expr* _Nullable ParsePrimary() {
     const clang::Token* token = Peek();
     if (token == nullptr) return nullptr;
 

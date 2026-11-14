@@ -12,10 +12,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/nullability.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/strings/string_view.h"
 #include "common/check.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -52,7 +48,7 @@ class Importer final : public ImportContext {
   // Maps each declaration to its representative copy. See
   // `representative_copy_cache_`.
   using RepresentativeCopyCache =
-      absl::flat_hash_map<const clang::Decl*, const clang::Decl*>;
+      llvm::DenseMap<const clang::Decl*, const clang::Decl*>;
 
   explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
                     clang::Sema& sema);
@@ -94,7 +90,7 @@ class Importer final : public ImportContext {
   // GetTopLevelItemIdsInSourceOrder and GetItemIdsInSourceOrder.
   DeclItems GetDeclItems(const clang::Decl& decl);
 
-  absl::flat_hash_map<BazelLabel, std::vector<ItemId>>
+  llvm::DenseMap<BazelLabel, std::vector<ItemId>>
   GetTopLevelItemIdsInSourceOrder(
       const clang::TranslationUnitDecl& decl) override;
   std::vector<ItemId> GetItemIdsInSourceOrder(
@@ -203,7 +199,7 @@ class Importer final : public ImportContext {
   // generated for it. The mangled name is kept in `Record::mangled_rs_name`, so
   // that it can still be generated as a hidden alias of the renamed struct.
   void NameTemplateInstantiationsAfterTypeAliases(
-      const absl::flat_hash_map<ItemId, Item* absl_nonnull>& id_to_item,
+      const llvm::DenseMap<ItemId, Item*>& id_to_item,
       std::vector<ItemId>& instantiation_ids);
 
   void FindAlwaysInstantiateSpecs(const clang::DeclContext& decl_context);
@@ -219,7 +215,7 @@ class Importer final : public ImportContext {
   // from a `[[clang::lifetimebound]]` constructor parameter) are not counted.
   std::optional<size_t> CountLifetimes(clang::QualType type) const;
 
-  absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
+  llvm::DenseSet<const clang::ClassTemplateSpecializationDecl*>
       always_instantiate_specs_;
 
   const crubit::ffi::Item* _Nullable GetDeclItem(
@@ -359,7 +355,7 @@ class Importer final : public ImportContext {
 
   bool RefersToOwnedDefinitionImpl(
       const clang::CXXRecordDecl& decl,
-      absl::flat_hash_set<const clang::CXXRecordDecl*>& visited) const;
+      llvm::DenseSet<const clang::CXXRecordDecl*>& visited) const;
 
   bool IsFeatureEnabledForTarget(const BazelLabel& label,
                                  llvm::StringRef feature) const override;
@@ -379,13 +375,13 @@ class Importer final : public ImportContext {
   // This is always an Itanium mangler, even when the target platform uses
   // another C++ ABI (e.g. the Microsoft ABI).  See `GetMangledName` for why.
   std::unique_ptr<clang::MangleContext> itanium_tag_name_mangler_;
-  absl::flat_hash_map<const clang::Decl*, ItemCacheEntry> import_cache_;
+  llvm::DenseMap<const clang::Decl*, ItemCacheEntry> import_cache_;
   // The keys of `import_cache_`, in the order they were inserted. Entries are
   // never removed from `import_cache_`. Its iteration order is randomized
   // between processes, so code whose result depends on the order in which it
   // visits the cache iterates this instead.
   std::vector<const clang::Decl*> import_cache_insertion_order_;
-  absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
+  llvm::DenseSet<const clang::ClassTemplateSpecializationDecl*>
       class_template_instantiations_;
   // Memoizes the outcome of the eager instantiation attempts performed by
   // `CheckSpecializationInstantiable`, keyed by the canonical decl of the
@@ -396,14 +392,14 @@ class Importer final : public ImportContext {
   // the errors of a failed instantiation only once, and leaves behind a
   // complete but ill-formed definition, so later attempts to complete the same
   // type silently succeed.
-  absl::flat_hash_map<const clang::CXXRecordDecl*, std::optional<std::string>>
+  llvm::DenseMap<const clang::CXXRecordDecl*, std::optional<std::string>>
       instantiation_attempts_;
 
   std::vector<const clang::RawComment*> comments_;
 
   // The variables synthesized by `ImportMacroConstants`, mapped to whether
   // they are typed (see `MacroConstant::is_typed`).
-  absl::flat_hash_map<const clang::VarDecl*, bool> macro_constant_is_typed_;
+  llvm::DenseMap<const clang::VarDecl*, bool> macro_constant_is_typed_;
 
   // The comments in files loaded from precompiled header modules, which Crubit
   // collects itself by lexing the files (whose contents are embedded in the
@@ -416,16 +412,16 @@ class Importer final : public ImportContext {
   mutable llvm::DenseSet<clang::FileID> module_comment_files_;
   // With header modules, the copy of each public header that `comments_` are
   // in. Empty without header modules. See `TranslateToCommentFile`.
-  absl::flat_hash_map<const clang::FileEntry*, clang::FileID> comment_file_ids_;
+  llvm::DenseMap<const clang::FileEntry*, clang::FileID> comment_file_ids_;
 
   // Set of decls that have been successfully imported (i.e. that will be
   // present in the IR output / that will not produce dangling ItemIds in the IR
   // output).
   //
   // Note that this includes non-TypeDecls in the form of using decls.
-  absl::flat_hash_set<const clang::NamedDecl*> known_type_decls_;
+  llvm::DenseSet<const clang::NamedDecl*> known_type_decls_;
   // Memoizes `CanonicalizeUnmergedDuplicates`.
-  mutable absl::flat_hash_map<const clang::Decl*, const clang::Decl*>
+  mutable llvm::DenseMap<const clang::Decl*, const clang::Decl*>
       unmerged_duplicates_cache_;
   // Memoizes the representative copy of each declaration (with header modules,
   // the copy whose source locations are used for comments and for ordering).

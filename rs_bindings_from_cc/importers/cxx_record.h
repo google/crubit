@@ -10,8 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "absl/functional/any_invocable.h"
-#include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/importers/bitwise_relocatable.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -27,7 +25,7 @@ namespace internal {
 // corresponds to an enclosing protobuf message.
 std::string GetProto2MessageRustNameImpl(
     llvm::StringRef message_name,
-    absl::AnyInvocable<bool(llvm::StringRef)> is_parent_proto);
+    llvm::unique_function<bool(llvm::StringRef)> is_parent_proto);
 }  // namespace internal
 
 // A `DeclImporter` for `CXXRecordDecl`s.

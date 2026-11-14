@@ -24,7 +24,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/status/status.h"
 #include "common/check.h"
 #include "common/status.h"
 #include "common/strong_int.h"
@@ -38,6 +37,7 @@
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
@@ -139,8 +139,8 @@ inline std::string DebugStringFromDecl(const clang::Decl& decl) {
   auto ostream = llvm::raw_string_ostream(decl_name);
   decl.print(ostream);
   ostream.flush();
-  return (llvm::Twine("Canonical DeclID: ") + llvm::Twine(canonical_decl_id) +
-          "; DeclID: " + llvm::Twine(decl_id) + "; decl: " + decl_name)
+  return llvm::formatv("Canonical DeclID: {0}; DeclID: {1}; decl: {2}",
+                       canonical_decl_id, decl_id, decl_name)
       .str();
 }
 
@@ -179,10 +179,11 @@ class FormattedError final {
   template <size_t N, typename... Ts>
   static FormattedError PrefixedStrCat(const char (&prefix)[N],
                                        Ts&&... moreArgs) {
-    std::string result(prefix);
-    result.append(": ");
-    (internal::AppendToString(result, std::forward<Ts>(moreArgs)), ...);
-    return FormattedError(prefix, std::move(result));
+    std::string message;
+    llvm::raw_string_ostream os(message);
+    os << prefix << ": ";
+    (os << ... << std::forward<Ts>(moreArgs));
+    return FormattedError(prefix, message);
   }
 
   // Returns a FormattedError built with `internal::Substitute()`.
@@ -201,7 +202,6 @@ class FormattedError final {
   }
 
   // Extracts a format string from a status payload, if present.
-  static FormattedError FromStatus(absl::Status status);
   static FormattedError FromStatus(llvm::Error error);
 
   llvm::StringRef fmt() const { return inner_.fmt(); }

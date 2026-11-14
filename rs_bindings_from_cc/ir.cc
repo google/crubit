@@ -9,7 +9,6 @@
 #include <string>
 #include <utility>
 
-#include "absl/status/status.h"
 #include "common/status.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/SmallString.h"
@@ -186,14 +185,6 @@ Identifier& TranslatedIdentifier::rs_identifier() {
     return *crubit_rust_name;
   }
   return cc_identifier;
-}
-
-FormattedError FormattedError::FromStatus(absl::Status status) {
-  std::string fmt = (llvm::Twine("(unannotated `") +
-                     absl::StatusCodeToString(status.code()) + "` status)")
-                        .str();
-  std::string msg = std::string(status.message());
-  return FormattedError(fmt, std::move(msg));
 }
 
 FormattedError FormattedError::FromStatus(llvm::Error error) {

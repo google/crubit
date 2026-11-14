@@ -8,7 +8,6 @@
 #include <string>
 #include <utility>
 
-#include "common/string_view_conversion.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "nullability/pragma.h"
 #include "rs_bindings_from_cc/ast_consumer.h"

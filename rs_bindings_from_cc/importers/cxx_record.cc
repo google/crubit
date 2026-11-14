@@ -18,17 +18,10 @@
 #include <vector>
 
 #include "clang/Basic/SourceLocation.h"
-#include "absl/algorithm/container.h"
-#include "absl/base/nullability.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/functional/any_invocable.h"
-#include "absl/log/log.h"
-#include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "common/check.h"
 #include "common/status.h"
 #include "common/status_macros.h"
-#include "common/string_view_conversion.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "rs_bindings_from_cc/ast_util.h"
@@ -50,6 +43,9 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/FunctionExtras.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MD5.h"
@@ -296,7 +292,7 @@ crubit::ffi::AccessSpecifier TranslateAccessSpecifier(
     case clang::AS_private:
       return crubit::ffi::PRIVATE;
     case clang::AS_none:
-      LOG(FATAL)
+      CRUBIT_FATAL()
           << "We should never be encoding a 'none' access specifier in IR.";
       // We have to return something. Conservatively return private so we don't
       // inadvertently make a private member variable accessible in Rust.
@@ -330,15 +326,14 @@ llvm::Expected<crubit::ffi::RecordType> TranslateRecordType(
 // are strings. Otherwise, returns `std::nullopt`.
 template <size_t N>
 std::optional<std::array<std::string, N>> GetKeyValues(
-    const clang::RecordDecl& record_decl,
-    std::array<absl::string_view, N> keys) {
+    const clang::RecordDecl& record_decl, std::array<llvm::StringRef, N> keys) {
   std::array<std::string, N> values;
   for (size_t i = 0; i < N; ++i) {
     auto value = GetAnnotationWithStringArg(record_decl, keys[i]);
     CRUBIT_CHECK(value) << llvm::toString(value.takeError());
     if (!value->has_value()) {
       CRUBIT_CHECK(i == 0)
-          << "Missing value for key: '" << keys[i]
+          << "Missing value for key: '" << keys[i].str()
           << "'; use the provided annotation to ensure that all "
              "keys are present";
       return std::nullopt;
@@ -367,9 +362,8 @@ std::string GetProto2MessageRustName(ImportContext& ictx,
                                      const clang::RecordDecl& record_decl) {
   const clang::DeclContext* dc = record_decl.getDeclContext();
   return internal::GetProto2MessageRustNameImpl(
-      record_decl.getNameAsString(), [&ictx, dc](absl::string_view prefix) {
-        clang::IdentifierInfo& ii =
-            ictx.ctx_.Idents.get(StringRefFromStringView(prefix));
+      record_decl.getNameAsString(), [&ictx, dc](llvm::StringRef prefix) {
+        clang::IdentifierInfo& ii = ictx.ctx_.Idents.get(prefix);
         for (clang::NamedDecl* decl : dc->lookup(&ii)) {
           if (auto* outer_record =
                   clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
@@ -431,7 +425,7 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
 }
 
 std::optional<TraitImplPolarity> GetTraitPolarity(const TraitDerives& derives,
-                                                  absl::string_view trait) {
+                                                  llvm::StringRef trait) {
   // <internal link> start
   if (trait == "Clone") return derives.clone();
   if (trait == "Copy") return derives.copy();
@@ -440,7 +434,7 @@ std::optional<TraitImplPolarity> GetTraitPolarity(const TraitDerives& derives,
   return std::nullopt;
 }
 
-void SetTraitPolarity(TraitDerives& derives, absl::string_view trait,
+void SetTraitPolarity(TraitDerives& derives, llvm::StringRef trait,
                       TraitImplPolarity polarity) {
   // <internal link> start
   if (trait == "Clone") derives.set_clone(polarity);
@@ -459,11 +453,11 @@ llvm::Error AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
   if (!args.has_value()) return llvm::Error::success();
   clang::ASTContext& ast_context = decl.getASTContext();
 
-  absl::flat_hash_set<absl::string_view> custom_traits;
+  llvm::DenseSet<llvm::StringRef> custom_traits;
   for (const clang::Expr* arg : *args) {
-    CRUBIT_ASSIGN_OR_RETURN(const absl::string_view derived_trait,
+    CRUBIT_ASSIGN_OR_RETURN(const llvm::StringRef derived_trait,
                             GetExprAsStringLiteral(*arg, ast_context));
-    absl::string_view trait;
+    llvm::StringRef trait;
     TraitImplPolarity polarity;
     if (derived_trait.starts_with('!')) {
       trait = derived_trait.substr(1);
@@ -552,7 +546,7 @@ llvm::Error AddUnsafeImpls(const clang::Decl& decl, TraitDerives& result) {
   clang::ASTContext& ast_context = decl.getASTContext();
 
   for (const clang::Expr* arg : *args) {
-    CRUBIT_ASSIGN_OR_RETURN(const absl::string_view unsafe_impl,
+    CRUBIT_ASSIGN_OR_RETURN(const llvm::StringRef unsafe_impl,
                             GetExprAsStringLiteral(*arg, ast_context));
     if (unsafe_impl == "Send" || unsafe_impl == "Sync") {
       TraitImplPolarity selected =
@@ -777,7 +771,7 @@ llvm::Error PopulateTemplateSpecializationKind(
     }
   } else if (top_level_namespace == "absl") {
     if (templated_decl->getName() == "Span") {
-      LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
+      CRUBIT_CHECK(!(specialization_decl->getTemplateArgs().size() != 1))
           << "absl::Span should have one template arg";
       clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
       // TODO(b/454627672): is specialization_decl the right decl to check for
@@ -789,7 +783,7 @@ llvm::Error PopulateTemplateSpecializationKind(
                                    ictx.GetOwningTarget(*specialization_decl)));
       return llvm::Error::success();
     } else if (templated_decl->getName() == "flat_hash_map") {
-      LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() < 2)
+      CRUBIT_CHECK(!(specialization_decl->getTemplateArgs().size() < 2))
           << "absl::flat_hash_map should have at least two template args";
       clang::QualType k = specialization_decl->getTemplateArgs()[0].getAsType();
       clang::QualType v = specialization_decl->getTemplateArgs()[1].getAsType();
@@ -808,7 +802,7 @@ llvm::Error PopulateTemplateSpecializationKind(
                                    ictx.GetOwningTarget(*specialization_decl)));
       return llvm::Error::success();
     } else if (templated_decl->getName() == "flat_hash_set") {
-      LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() < 1)
+      CRUBIT_CHECK(!(specialization_decl->getTemplateArgs().size() < 1))
           << "absl::flat_hash_set should have at least one template arg";
       clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
       // TODO(b/454627672): is specialization_decl the right decl to check for
@@ -1051,7 +1045,7 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
     return nullptr;
   }
   if (ictx_.HasBeenAlreadySuccessfullyImported(*record_decl)) {
-    LOG(FATAL)
+    CRUBIT_FATAL()
         << ("THIS IS A BUG: the type was marked as imported, so we "
             "short-circuited evaluation here. However, instead of the fully "
             "imported type being used, apparently this empty stub was used "
@@ -1468,11 +1462,11 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
           FormattedError::FromStatus(lifetime_inputs_or_err.takeError()));
     } else {
       lifetime_inputs.reserve(lifetime_inputs_or_err->size());
-      absl::c_transform(*lifetime_inputs_or_err,
-                        std::back_inserter(lifetime_inputs),
-                        [](absl::string_view lifetime_view) {
-                          return std::string(lifetime_view);
-                        });
+      llvm::transform(*lifetime_inputs_or_err,
+                      std::back_inserter(lifetime_inputs),
+                      [](llvm::StringRef lifetime_view) {
+                        return std::string(lifetime_view);
+                      });
     }
     if (const auto* specialization_decl =
             clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
@@ -1978,7 +1972,7 @@ namespace internal {
 // C++ AST, and formats the resulting path as `outer::Inner` in Rust.
 std::string GetProto2MessageRustNameImpl(
     llvm::StringRef message_name,
-    absl::AnyInvocable<bool(llvm::StringRef)> is_parent_proto) {
+    llvm::unique_function<bool(llvm::StringRef)> is_parent_proto) {
   llvm::StringRef current = message_name;
   std::vector<llvm::StringRef> path;
 

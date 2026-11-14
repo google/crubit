@@ -16,8 +16,6 @@ cc_binary(
         "//common:file_io",
         "@abseil-cpp//absl/flags:flag",
         "@abseil-cpp//absl/flags:parse",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//llvm:Support",
     ],
@@ -72,11 +70,9 @@ cc_test(
     srcs = ["rs_from_cc_lib_test.cc"],
     deps = [
         ":rs_from_cc_lib",
-        "//common:status_test_matchers",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
         "@llvm-project//clang:ast",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -87,14 +83,14 @@ cc_library(
     deps = [
         ":converter",
         ":frontend_action",
+        "//common:status",
         "@abseil-cpp//absl/container:flat_hash_map",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",
         "@llvm-project//clang:tooling",
+        "@llvm-project//llvm:Support",
     ],
 )

@@ -19,6 +19,7 @@ path = "lib.rs"
 [dependencies]
 ast_util_sys = { path = "../../../cargo/rs_bindings_from_cc/ast_util_sys", package = "rs_bindings_from_cc_ast_util_sys"}
 cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys", package = "rs_bindings_from_cc_cc_ir_sys"}
+logging_sys = { path = "../../../cargo/rs_bindings_from_cc/logging_sys", package = "rs_bindings_from_cc_logging_sys"}
 recording_diagnostic_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/recording_diagnostic_consumer_sys", package = "rs_bindings_from_cc_recording_diagnostic_consumer_sys"}
 
 

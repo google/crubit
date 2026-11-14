@@ -12,7 +12,6 @@
 #include "common/check.h"
 #include "common/status.h"
 #include "common/status_test_matchers.h"
-#include "common/string_view_conversion.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -37,10 +36,9 @@ using ::testing::ResultOf;
 using ::testing::SizeIs;
 
 template <class T>
-T& LookupDecl(clang::ASTContext& context, absl::string_view name) {
+T& LookupDecl(clang::ASTContext& context, llvm::StringRef name) {
   clang::DeclContextLookupResult result =
-      context.getTranslationUnitDecl()->lookup(
-          &context.Idents.get(StringRefFromStringView(name)));
+      context.getTranslationUnitDecl()->lookup(&context.Idents.get(name));
   CRUBIT_CHECK(result.isSingleResult());
   return *cast<T>(result.front());
 }

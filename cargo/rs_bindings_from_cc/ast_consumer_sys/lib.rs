@@ -5,3 +5,4 @@
 // Automatically @generated lib.rs for the cc_library ast_consumer.
 
 extern crate importer_sys;
+extern crate logging_sys;

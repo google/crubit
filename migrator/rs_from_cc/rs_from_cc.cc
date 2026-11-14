@@ -11,8 +11,6 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "common/check.h"
 #include "common/file_io.h"
@@ -47,10 +45,10 @@ int main(int argc, char* argv[]) {
   // Skip $0.
   ++argv;
 
-  absl::StatusOr<std::string> rs_code = crubit_rs_from_cc::RsFromCc(
+  llvm::Expected<std::string> rs_code = crubit_rs_from_cc::RsFromCc(
       cc_file_content, cc_in,
       std::vector<absl::string_view>(argv, argv + argc));
-  CRUBIT_CHECK(rs_code.ok()) << rs_code.status();
+  CRUBIT_CHECK(rs_code) << llvm::toString(rs_code.takeError());
 
   llvm::Error status = crubit::SetFileContents(rs_out, *rs_code);
   CRUBIT_CHECK(!status) << llvm::toString(std::move(status));

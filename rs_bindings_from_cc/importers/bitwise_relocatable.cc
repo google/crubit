@@ -9,8 +9,6 @@
 #include <string>
 #include <vector>
 
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "clang/AST/ASTContext.h"
@@ -34,6 +32,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Error.h"
 
@@ -196,10 +195,11 @@ std::optional<std::string> CheckOwnSpecialMembers(
   auto* ctor = llvm::dyn_cast_or_null<clang::CXXConstructorDecl>(
       LookupSpecialMemberFromXValue(SemaRef, D, /*Assign=*/false));
   if (ctor && ctor->isCopyOrMoveConstructor() && ctor->isUserProvided()) {
-    return absl::StrCat(
-        "the ", (ctor->isMoveConstructor() ? "move" : "copy"),
-        " constructor is user-provided; annotate the type with "
-        "CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound");
+    return (llvm::Twine("the ") +
+            (ctor->isMoveConstructor() ? "move" : "copy") +
+            " constructor is user-provided; annotate the type with "
+            "CRUBIT_UNSAFE_BITWISE_RELOCATABLE if a memcpy move is sound")
+        .str();
   }
 
   // Under C++11 DR1402 (`Sema::AddOverloadCandidate`), a defaulted move
@@ -319,8 +319,7 @@ std::optional<BitwiseRelocatableResult> RelocatabilityAnalysis::CheckStdTable(
       if (res && res->kind != BitwiseRelocatableResult::Kind::kYes) {
         return BitwiseRelocatableResult{
             BitwiseRelocatableResult::Kind::kNo,
-            absl::StrCat("template argument D is not bitwise-relocatable: ",
-                         res->reason),
+            "template argument D is not bitwise-relocatable: " + res->reason,
             res->libcxx_only_fields};
       }
       return res;
@@ -337,8 +336,7 @@ std::optional<BitwiseRelocatableResult> RelocatabilityAnalysis::CheckStdTable(
     if (res && res->kind != BitwiseRelocatableResult::Kind::kYes) {
       return BitwiseRelocatableResult{
           BitwiseRelocatableResult::Kind::kNo,
-          absl::StrCat("template argument T is not bitwise-relocatable: ",
-                       res->reason),
+          "template argument T is not bitwise-relocatable: " + res->reason,
           res->libcxx_only_fields};
     }
     return res;
@@ -350,8 +348,9 @@ std::optional<BitwiseRelocatableResult> RelocatabilityAnalysis::CheckStdTable(
       if (res && res->kind != BitwiseRelocatableResult::Kind::kYes) {
         return BitwiseRelocatableResult{
             BitwiseRelocatableResult::Kind::kNo,
-            absl::StrCat("template argument ", i,
-                         " is not bitwise-relocatable: ", res->reason),
+            (llvm::Twine("template argument ") + llvm::Twine(i) +
+             " is not bitwise-relocatable: " + res->reason)
+                .str(),
             res->libcxx_only_fields};
       }
       if (res)
@@ -367,15 +366,13 @@ std::optional<BitwiseRelocatableResult> RelocatabilityAnalysis::CheckStdTable(
     if (res0 && res0->kind != BitwiseRelocatableResult::Kind::kYes)
       return BitwiseRelocatableResult{
           BitwiseRelocatableResult::Kind::kNo,
-          absl::StrCat("template argument T is not bitwise-relocatable: ",
-                       res0->reason),
+          "template argument T is not bitwise-relocatable: " + res0->reason,
           res0->libcxx_only_fields};
     auto res1 = check_arg(1);
     if (res1 && res1->kind != BitwiseRelocatableResult::Kind::kYes)
       return BitwiseRelocatableResult{
           BitwiseRelocatableResult::Kind::kNo,
-          absl::StrCat("template argument E is not bitwise-relocatable: ",
-                       res1->reason),
+          "template argument E is not bitwise-relocatable: " + res1->reason,
           res1->libcxx_only_fields};
     std::vector<std::string> libcxx_fields;
     if (res0)
@@ -395,8 +392,7 @@ std::optional<BitwiseRelocatableResult> RelocatabilityAnalysis::CheckStdTable(
       if (res && res->kind != BitwiseRelocatableResult::Kind::kYes) {
         return BitwiseRelocatableResult{
             BitwiseRelocatableResult::Kind::kNo,
-            absl::StrCat("template argument A is not bitwise-relocatable: ",
-                         res->reason),
+            "template argument A is not bitwise-relocatable: " + res->reason,
             res->libcxx_only_fields};
       }
       return res;
@@ -407,8 +403,7 @@ std::optional<BitwiseRelocatableResult> RelocatabilityAnalysis::CheckStdTable(
   if (name == "function" || name == "move_only_function" || name == "any") {
     return BitwiseRelocatableResult{
         BitwiseRelocatableResult::Kind::kNo,
-        absl::StrCat("std::", name,
-                     " may store its callable inline with a self-pointer"),
+        "std::" + name + " may store its callable inline with a self-pointer",
         {}};
   }
   if (name == "map" || name == "set" || name == "multimap" ||
@@ -417,7 +412,7 @@ std::optional<BitwiseRelocatableResult> RelocatabilityAnalysis::CheckStdTable(
       name == "unordered_multiset" || name == "list") {
     return BitwiseRelocatableResult{
         BitwiseRelocatableResult::Kind::kNo,
-        absl::StrCat("std::", name, " sentinel node points into the object"),
+        "std::" + name + " sentinel node points into the object",
         {}};
   }
 
@@ -432,9 +427,8 @@ BitwiseRelocatableResult RelocatabilityAnalysis::ComputeBitwiseRelocatability(
     if (state == AnnotationState::kAsserted) {
       return {
           BitwiseRelocatableResult::Kind::kError,
-          absl::StrCat(
-              NeverBRReason(never_kind),
-              " (CRUBIT_UNSAFE_BITWISE_RELOCATABLE applied to never-set type)"),
+          NeverBRReason(never_kind) +
+              " (CRUBIT_UNSAFE_BITWISE_RELOCATABLE applied to never-set type)",
           {}};
     }
     return {BitwiseRelocatableResult::Kind::kNo, NeverBRReason(never_kind), {}};
@@ -461,11 +455,11 @@ BitwiseRelocatableResult RelocatabilityAnalysis::ComputeBitwiseRelocatability(
         if (!ictx.sema_.getPreprocessor().isMacroDefined("_LIBCPP_VERSION")) {
           hard_error = true;
           members_ok = false;
-          members_reason = absl::StrCat(
-              "member `", name,
+          members_reason =
+              "member `" + name +
               "` is annotated with "
               "CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX"
-              " but TU is not compiled against libc++");
+              " but TU is not compiled against libc++";
           return;
         }
 
@@ -480,11 +474,10 @@ BitwiseRelocatableResult RelocatabilityAnalysis::ComputeBitwiseRelocatability(
         if (!is_basic_string) {
           hard_error = true;
           members_ok = false;
-          members_reason = absl::StrCat(
+          members_reason =
               "CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX may only "
-              "be "
-              "applied to std::basic_string fields; field `",
-              name, "` has type `", qt.getAsString(), "`");
+              "be applied to std::basic_string fields; field `" +
+              name + "` has type `" + qt.getAsString() + "`";
           return;
         }
 
@@ -500,12 +493,11 @@ BitwiseRelocatableResult RelocatabilityAnalysis::ComputeBitwiseRelocatability(
             hard_error = true;
             members_ok = false;
             members_reason =
-                absl::StrCat("member `", name,
-                             "` has a type that is never "
-                             "bitwise-relocatable (",
-                             NeverBRReason(k),
-                             "), which cannot be overridden by "
-                             "CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD");
+                "member `" + name +
+                "` has a type that is never bitwise-relocatable (" +
+                NeverBRReason(k) +
+                "), which cannot be overridden by "
+                "CRUBIT_UNSAFE_BITWISE_RELOCATABLE_FIELD";
           }
         }
         return;
@@ -521,8 +513,8 @@ BitwiseRelocatableResult RelocatabilityAnalysis::ComputeBitwiseRelocatability(
       auto res = GetBitwiseRelocatability(ictx, rec);
       if (res.kind != BitwiseRelocatableResult::Kind::kYes) {
         members_ok = false;
-        members_reason = absl::StrCat(
-            "member `", name, "` is not bitwise-relocatable: ", res.reason);
+        members_reason =
+            "member `" + name + "` is not bitwise-relocatable: " + res.reason;
       }
       if (!res.libcxx_only_fields.empty()) {
         libcxx_only_fields.insert(libcxx_only_fields.end(),
@@ -535,9 +527,8 @@ BitwiseRelocatableResult RelocatabilityAnalysis::ComputeBitwiseRelocatability(
   // decl_for_attr is nullptr for base classes because fields overrides only
   // apply to fields.
   for (const clang::CXXBaseSpecifier& base : record_decl->bases()) {
-    check_member(
-        base.getType(), nullptr,
-        absl::StrCat("base class `", base.getType().getAsString(), "`"));
+    check_member(base.getType(), nullptr,
+                 "base class `" + base.getType().getAsString() + "`");
     if (hard_error) break;
   }
   if (!hard_error) {

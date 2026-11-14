@@ -9,9 +9,9 @@
 #include <string>
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
+#include "llvm/ADT/DenseMap.h"
 
 namespace crubit {
 
@@ -36,8 +36,7 @@ class RelocatabilityAnalysis {
       ImportContext& ictx, const clang::CXXRecordDecl* record_decl);
 
  private:
-  absl::flat_hash_map<const clang::CXXRecordDecl*, BitwiseRelocatableResult>
-      cache_;
+  llvm::DenseMap<const clang::CXXRecordDecl*, BitwiseRelocatableResult> cache_;
 
   BitwiseRelocatableResult ComputeBitwiseRelocatability(
       ImportContext& ictx, const clang::CXXRecordDecl* record_decl);

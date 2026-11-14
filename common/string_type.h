@@ -17,14 +17,12 @@
 //
 //  if (foo == bar) { } else { }; ...
 //
-// The strongly-typed types are hashable with the Abseil hashing framework,
-// so they work out of the box with any modern hashing system. For non-Abseil
-// uses, the explicit functors absl::Hash<Foo>, absl::Hash<Bar> may be used:
+// The strongly-typed types are hashable with the LLVM hashing framework,
+// so they work out of the box with DenseMapInfo. For example:
 //
-//  std::unordered_set<Foo, absl::Hash<Foo>>
-//  __gnu_cxx::hash_map<Bar, int, absl::Hash<Bar>>
+//  llvm::DenseSet<Foo>
+//  llvm::DenseMap<Bar, int>
 //
-// (But absl::flat_hash_set<Foo> is much better!)
 
 #ifndef CRUBIT_COMMON_STRING_TYPE_H_
 #define CRUBIT_COMMON_STRING_TYPE_H_
@@ -33,8 +31,6 @@
 #include <string>
 #include <utility>
 
-#include "absl/flags/marshalling.h"
-#include "absl/strings/string_view.h"
 #include "llvm/ADT/DenseMapInfo.h"
 #include "llvm/ADT/StringRef.h"
 
@@ -47,7 +43,7 @@
 // object.  If they can provide more optimal implementations of relational
 // operators, they should define operator== and operator<; all other relational
 // operators are defined in terms of those.  If they can provide more optimal
-// implementations of AbslHashValue or operator<<, they should provide those as
+// implementations of operator<<, they should provide those as
 // well.
 #define CRUBIT_DEFINE_STRING_TYPE(string_type_name) \
   using string_type_name = ::crubit::StringType<class string_type_name##_tag_>;
@@ -98,10 +94,6 @@ class StringType {
     return !(left < right);
   }
 
-  template <typename H>
-  friend H AbslHashValue(H h, const StringType& s) {
-    return H::combine(std::move(h), s.value());
-  }
 
   friend std::ostream& operator<<(std::ostream& os, const StringType& s) {
     return os << s.value();
@@ -111,20 +103,6 @@ class StringType {
   std::string s_;
 };
 
-// Allows typed strings to be used as ABSL_FLAG values.
-//
-// This is equivalent in behavior to just using a raw std::string.
-template <typename Tag>
-bool AbslParseFlag(absl::string_view text, StringType<Tag>* out,
-                   std::string* error) {
-  *out = StringType<Tag>(std::string(text));
-  return true;
-}
-
-template <typename Tag>
-std::string AbslUnparseFlag(const StringType<Tag>& val) {
-  return absl::UnparseFlag(std::string(val.value()));
-}
 
 }  // namespace crubit
 

@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <functional>
@@ -19,16 +20,9 @@
 #include <variant>
 #include <vector>
 
-#include "absl/algorithm/container.h"
-#include "absl/base/nullability.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/log/log.h"
-#include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "common/check.h"
 #include "common/status_macros.h"
-#include "common/string_view_conversion.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "nullability/pragma.h"
 #include "rs_bindings_from_cc/annotations_consumer.h"
@@ -49,6 +43,7 @@
 #include "rs_bindings_from_cc/importers/var.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_generated.h"
+#include "rs_bindings_from_cc/logging.h"
 #include "rs_bindings_from_cc/macro_constants.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "rs_bindings_from_cc/type_map.h"
@@ -85,8 +80,10 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
 #include "clang/UnifiedSymbolResolution/USRGeneration.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FormatVariadic.h"
@@ -445,7 +442,7 @@ static std::vector<std::pair<llvm::StringRef, unsigned>> GetLoadedPositionKey(
       break;
     }
   }
-  absl::c_reverse(key);
+  std::reverse(key.begin(), key.end());
   key.push_back(GetFileNameAndOffset(sm, sm.getSpellingLoc(location)));
   return key;
 }
@@ -567,7 +564,7 @@ static const clang::Decl* _Nonnull GetRepresentativeCopy(
 
   // Group the redeclarations by position, and find the best one of each group.
   // Redeclarations without a position are their own representative.
-  absl::flat_hash_map<Position, const clang::Decl*> best_at_position;
+  llvm::DenseMap<Position, const clang::Decl*> best_at_position;
   std::vector<std::pair<const clang::Decl*, std::optional<Position>>> positions;
   for (const clang::Decl* redecl : decl->redecls()) {
     std::optional<Position> position = get_position(redecl);
@@ -838,8 +835,7 @@ std::vector<clang::Decl*> Importer::GetCanonicalChildren(
               !clang::isa<clang::CXXMethodDecl>(member))
             continue;
           clang::Decl* canonical = CanonicalizeDecl(member);
-          if (canonical != nullptr &&
-              !absl::c_linear_search(children, canonical))
+          if (canonical != nullptr && !llvm::is_contained(children, canonical))
             children.push_back(canonical);
         }
       }
@@ -1241,7 +1237,7 @@ Importer::DeclItems Importer::GetDeclItems(const clang::Decl& decl) {
     }
   };
 
-  absl::flat_hash_set<ItemId> visited_item_ids;
+  llvm::DenseSet<ItemId> visited_item_ids;
 
   const auto& decl_context = clang::cast<clang::DeclContext>(decl);
   const bool is_record = clang::isa<clang::RecordDecl>(&decl_context);
@@ -1292,13 +1288,13 @@ Importer::DeclItems Importer::GetDeclItems(const clang::Decl& decl) {
   return decl_items;
 }
 
-absl::flat_hash_map<BazelLabel, std::vector<ItemId>>
+llvm::DenseMap<BazelLabel, std::vector<ItemId>>
 Importer::GetTopLevelItemIdsInSourceOrder(
     const clang::TranslationUnitDecl& translation_unit_decl) {
   Importer::DeclItems decl_items = GetDeclItems(translation_unit_decl);
 
-  absl::flat_hash_map<BazelLabel,
-                      std::vector<SourceLocationComparator::OrderedItemId>>
+  llvm::DenseMap<BazelLabel,
+                 std::vector<SourceLocationComparator::OrderedItemId>>
       items;
 
   // Push the comments first
@@ -1325,7 +1321,7 @@ Importer::GetTopLevelItemIdsInSourceOrder(
   clang::SourceManager& sm = ctx_.getSourceManager();
   auto compare_locations = SourceLocationComparator(sm);
 
-  absl::flat_hash_map<BazelLabel, std::vector<ItemId>> ordered_items;
+  llvm::DenseMap<BazelLabel, std::vector<ItemId>> ordered_items;
   for (auto& [target, item_ids_in_target] : items) {
     llvm::stable_sort(item_ids_in_target, compare_locations);
 
@@ -1396,7 +1392,7 @@ static bool IsHiddenFriend(const clang::FunctionDecl& function_decl) {
 static void CollectInheritedFriendOperators(
     const clang::CXXRecordDecl& record_decl, clang::QualType derived_type,
     const clang::ASTContext& ctx,
-    absl::flat_hash_set<const clang::CXXRecordDecl*>& visited_bases,
+    llvm::DenseSet<const clang::CXXRecordDecl*>& visited_bases,
     std::vector<clang::FunctionDecl*>& operators) {
   for (const clang::CXXBaseSpecifier& base : record_decl.bases()) {
     const clang::CXXRecordDecl* base_decl =
@@ -1450,7 +1446,7 @@ std::vector<ItemId> Importer::ImportInheritedFriendOperators(
   if (IsFullClassTemplateSpecializationOrChild(record_decl)) return {};
 
   std::vector<clang::FunctionDecl*> operators;
-  absl::flat_hash_set<const clang::CXXRecordDecl*> visited_bases;
+  llvm::DenseSet<const clang::CXXRecordDecl*> visited_bases;
   CollectInheritedFriendOperators(*record_decl,
                                   ctx_.getCanonicalTagType(record_decl), ctx_,
                                   visited_bases, operators);
@@ -1671,8 +1667,7 @@ void Importer::ImportFreeComments() {
     }
   }
   for (const auto& header : invocation_.public_headers_) {
-    if (auto file = sm.getFileManager().getFileRef(
-            StringRefFromStringView(header.IncludePath()))) {
+    if (auto file = sm.getFileManager().getFileRef(header.IncludePath())) {
       // If the header was only loaded from precompiled header modules, use the
       // same copy of it as `GetRepresentativeCopy`.
       if (ctx_.getExternalSource() != nullptr) {
@@ -2079,7 +2074,7 @@ void Importer::Import(
     auto child_id = GenerateItemId(*decl);
     auto& parent_child_ids = invocation_.child_item_ids_[ItemId(parent_id)];
     if (!IsUnsupportedAndAlien(child_id) &&
-        !absl::c_linear_search(parent_child_ids, child_id)) {
+        !llvm::is_contained(parent_child_ids, child_id)) {
       parent_child_ids.push_back(child_id);
     }
   }
@@ -2147,7 +2142,7 @@ void Importer::Import(
   // replaces BuildTree() in ir.cc. The latter should be deleted.
   //
   // Map each ItemId to its corresponding crubit::ffi::Item pointer.
-  absl::flat_hash_map<ItemId, crubit::ffi::Item* _Nonnull> id_to_item;
+  llvm::DenseMap<ItemId, crubit::ffi::Item* _Nonnull> id_to_item;
   for (const auto& comment_item : comment_items) {
     id_to_item[ItemId(comment_item->comment().id())] = comment_item.get();
   }
@@ -2178,7 +2173,7 @@ void Importer::Import(
   // before copying them into parent items.
   std::vector<ItemId> ordered_item_ids;
   {
-    absl::flat_hash_set<ItemId> visited;
+    llvm::DenseSet<ItemId> visited;
     auto collect_in_post_order = [&](auto& self, ItemId item_id) -> void {
       if (!visited.insert(item_id).second) return;
       if (auto child_ids_it = invocation_.child_item_ids_.find(item_id);
@@ -2285,10 +2280,11 @@ const crubit::ffi::Item* _Nullable Importer::GetDeclItem(
       //
       // Alternatively, maybe it's sufficient to check that they're _equal_.
       // It's not a bug at all to import it twice if it has no effect.
-      LOG(INFO) << "Re-entrant import discovered. Trying to import a "
-                << decl->getDeclKindName()
-                << " while its import is still in progress. Returning nullptr "
-                   "to break the cycle.";
+      CRUBIT_LOG(Info)
+          << "Re-entrant import discovered. Trying to import a "
+          << decl->getDeclKindName()
+          << " while its import is still in progress. Returning nullptr "
+             "to break the cycle.";
       return nullptr;
     }
     return it->second.proto_item.get();
@@ -2446,8 +2442,8 @@ _Nullable std::unique_ptr<crubit::ffi::Item> Importer::ImportDecl(
     clang::Decl* _Nonnull decl) {
   auto must_bind = HasAnnotationWithoutArgs(*decl, "crubit_must_bind");
   if (!must_bind) {
-    return HardError(*decl, FormattedError::FromStatus(
-                                crubit::ToAbslStatus(must_bind.takeError())));
+    return HardError(*decl,
+                     FormattedError::FromStatus((must_bind.takeError())));
   }
 
   if (IsTransitivelyInPrivate(decl)) {
@@ -2461,8 +2457,8 @@ _Nullable std::unique_ptr<crubit::ffi::Item> Importer::ImportDecl(
 
   auto pub_crate = HasAnnotationWithoutArgs(*decl, "crubit_pub_crate");
   if (!pub_crate) {
-    return HardError(*decl, FormattedError::FromStatus(
-                                crubit::ToAbslStatus(pub_crate.takeError())));
+    return HardError(*decl,
+                     FormattedError::FromStatus((pub_crate.takeError())));
   }
 
   // `[[clang::annotate("crubit_do_not_bind", "reason", ...)]]` gives any number
@@ -2470,8 +2466,8 @@ _Nullable std::unique_ptr<crubit::ffi::Item> Importer::ImportDecl(
   auto do_not_bind_args =
       GetAnnotationWithStringArgs(*decl, "crubit_do_not_bind");
   if (!do_not_bind_args) {
-    return HardError(*decl, FormattedError::FromStatus(crubit::ToAbslStatus(
-                                do_not_bind_args.takeError())));
+    return HardError(*decl,
+                     FormattedError::FromStatus(do_not_bind_args.takeError()));
   }
   if (do_not_bind_args->has_value()) {
     std::vector<std::string> do_not_bind_reasons =
@@ -2489,8 +2485,8 @@ _Nullable std::unique_ptr<crubit::ffi::Item> Importer::ImportDecl(
           *decl, FormattedError::Static("Conflicting CRUBIT_PUB_CRATE and "
                                         "CRUBIT_DO_NOT_BIND annotations"));
     }
-    const std::optional<absl::flat_hash_set<std::string>>&
-        do_not_bind_allowlist = invocation_.do_not_bind_allowlist_;
+    const std::optional<llvm::StringSet<>>& do_not_bind_allowlist =
+        invocation_.do_not_bind_allowlist_;
     const clang::NamedDecl* named_decl =
         clang::dyn_cast<clang::NamedDecl>(decl);
     // Function declarations do not need to be allowlisted.
@@ -2685,13 +2681,13 @@ bool Importer::IsFromCurrentTargetAndNotUnderSpecialization(
 }
 
 bool Importer::RefersToOwnedDefinition(const clang::CXXRecordDecl& decl) const {
-  absl::flat_hash_set<const clang::CXXRecordDecl*> visited;
+  llvm::DenseSet<const clang::CXXRecordDecl*> visited;
   return RefersToOwnedDefinitionImpl(decl, visited);
 }
 
 bool Importer::RefersToOwnedDefinitionImpl(
     const clang::CXXRecordDecl& decl,
-    absl::flat_hash_set<const clang::CXXRecordDecl*>& visited) const {
+    llvm::DenseSet<const clang::CXXRecordDecl*>& visited) const {
   if (!visited.insert(&decl).second) return false;
 
   const clang::CXXRecordDecl* def = decl.getDefinition();
@@ -3065,7 +3061,7 @@ std::unique_ptr<crubit::ffi::Item> Importer::ImportUnsupportedItem(
                                               original_decl.getEndLoc()),
         sm, ctx_.getLangOpts(), &invalid);
     if (!invalid) {
-      inline_cpp_source_text = text.str();
+      inline_cpp_source_text = text;
     }
   }
 
@@ -3099,7 +3095,7 @@ static bool ShouldKeepCommentLine(llvm::StringRef line) {
       "(NOLINT|NOLINTNEXTLINE|NOLINTBEGIN|NOLINTEND)"
       "(\\([^)[:space:]]*\\)?)?"  // Optional (...)
       "[[:space:]]*$");           // Whitespace
-  return !patterns_to_ignore.match(StringRefFromStringView(line));
+  return !patterns_to_ignore.match(line);
 }
 
 std::optional<bool> Importer::IsTypedMacroConstant(
@@ -3302,12 +3298,13 @@ std::optional<std::string> Importer::CheckSpecializationInstantiable(
     // erroring out, we temporarily use our own implementation of
     // DiagnosticConsumer here.
     crubit::RecordingDiagnosticConsumer diagnostic_recorder =
-        crubit::RecordDiagnosticsAndMarkFailedInstantiations(*this, [&] {
-          // Attempt to instantiate.
-          (void)sema_.isCompleteType(
-              specialization_decl->getLocation(),
-              ctx_.getCanonicalTagType(specialization_decl));
-        });
+        crubit::RecordDiagnosticsAndMarkFailedInstantiations(
+            static_cast<crubit::ImportContext&>(*this), [&] {
+              // Attempt to instantiate.
+              (void)sema_.isCompleteType(
+                  specialization_decl->getLocation(),
+                  ctx_.getCanonicalTagType(specialization_decl));
+            });
     if (diagnostic_recorder.getNumErrors() != 0) {
       errors = diagnostic_recorder.ConcatenatedDiagnostics();
     }
@@ -3494,11 +3491,12 @@ CcType Importer::WithAsWrittenTemplateArgs(
   // bindings (e.g. which support headers its generated code includes).
   const bool has_explicit_lifetimes =
       assume_lifetimes &&
-      absl::c_any_of(args, [this](const clang::TemplateArgument& arg) {
-        return ContainsExplicitLifetimes(arg.getAsType());
-      });
-  const bool has_known_nullability =
-      absl::c_any_of(args, [this](const clang::TemplateArgument& arg) {
+      std::any_of(args.begin(), args.end(),
+                  [this](const clang::TemplateArgument& arg) {
+                    return ContainsExplicitLifetimes(arg.getAsType());
+                  });
+  const bool has_known_nullability = std::any_of(
+      args.begin(), args.end(), [this](const clang::TemplateArgument& arg) {
         return ContainsKnownNullability(arg.getAsType());
       });
   if (!has_explicit_lifetimes && !has_known_nullability) return converted;
@@ -3736,15 +3734,13 @@ llvm::Error Importer::AddTemplateArgumentLifetime(const clang::Type& type,
                "lifetimes are written both on the template argument of '") +
            type_string +
            "' and on the type itself; write them only on the "
-           "template argument")
-              .str());
+           "template argument"));
     }
     if (arg_lifetimes.size() != 1) {
       return crubit::InvalidArgumentError(
           (llvm::Twine("the template argument of '") + type_string +
            "' must have exactly one lifetime, but has " +
-           llvm::Twine(arg_lifetimes.size()))
-              .str());
+           llvm::Twine(arg_lifetimes.size())));
     }
     *cpp_type.mutable_explicit_lifetimes() = arg_lifetimes;
     return llvm::Error::success();
@@ -4008,7 +4004,7 @@ llvm::Expected<CcType> Importer::ConvertUnattributedType(
         return ConvertQualType(predefined_sugar_type->desugar(), lifetimes,
                                /*nullable=*/true, assume_lifetimes);
     }
-    LOG(FATAL) << "All PredefinedSugarType::Kind values should be handled";
+    CRUBIT_FATAL() << "All PredefinedSugarType::Kind values should be handled";
   } else if (const auto* array_type =
                  ctx_.getAsConstantArrayType(clang::QualType(&type, 0))) {
     std::optional<int64_t> num_elements = array_type->getSize().trySExtValue();
@@ -4040,8 +4036,7 @@ llvm::Expected<CcType> Importer::ConvertUnattributedType(
 
   return crubit::UnimplementedError(
       (llvm::Twine("Unsupported clang::Type class '") +
-       type.getTypeClassName() + "'")
-          .str());
+       type.getTypeClassName() + "'"));
 }
 
 CcType Importer::ConvertQualType(
@@ -4087,7 +4082,7 @@ CcType Importer::ConvertQualType(
 std::string Importer::GetUniqueName(const clang::Decl& decl) const {
   llvm::SmallString<128> usr;
   if (!clang::index::generateUSRForDecl(&decl, usr)) {
-    return std::string(usr.str());
+    return std::string(usr);
   }
 
   // Note: we shouldn't get this far for anything with a real name, and we
@@ -4271,7 +4266,7 @@ llvm::Expected<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
            name == "Self") &&
           !crubit_rust_name.has_value()) {
         return crubit::InvalidArgumentError(
-            (llvm::Twine("Unescapable identifier: ") + name).str());
+            (llvm::Twine("Unescapable identifier: ") + name));
       }
       // The string_view -> raw_string_view renaming happens centrally, so that
       // it applies to both records (if we use preferred_name renaming) and
@@ -4301,9 +4296,9 @@ llvm::Expected<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
     case clang::DeclarationName::CXXOperatorName:
       switch (named_decl.getDeclName().getCXXOverloadedOperator()) {
         case clang::OO_None:
-          LOG(FATAL) << "No OO_None expected under CXXOperatorName branch";
+          CRUBIT_FATAL() << "No OO_None expected under CXXOperatorName branch";
         case clang::NUM_OVERLOADED_OPERATORS:
-          LOG(FATAL) << "No NUM_OVERLOADED_OPERATORS expected at runtime";
+          CRUBIT_FATAL() << "No NUM_OVERLOADED_OPERATORS expected at runtime";
           // clang-format off
         #define OVERLOADED_OPERATOR(name, spelling, ...)  \
         case clang::OO_##name: {                          \
@@ -4316,7 +4311,7 @@ llvm::Expected<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
         #undef OVERLOADED_OPERATOR
           // clang-format on
       }
-      LOG(FATAL) << "The `switch` above should handle all cases";
+      CRUBIT_FATAL() << "The `switch` above should handle all cases";
     case clang::DeclarationName::CXXConversionFunctionName:
       return TranslatedUnqualifiedIdentifier{
           .cc_identifier = UnqualifiedIdentifier::ConversionOperator(),
@@ -4327,8 +4322,7 @@ llvm::Expected<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
       // we might not need to implement them at all. Full list at:
       // https://clang.llvm.org/doxygen/classclang_1_1DeclarationName.html#a9ab322d434446b43379d39e41af5cbe3
       return crubit::UnimplementedError(
-          (llvm::Twine("Unsupported name: ") + named_decl.getNameAsString())
-              .str());
+          (llvm::Twine("Unsupported name: ") + named_decl.getNameAsString()));
   }
 }
 
@@ -4385,7 +4379,7 @@ bool Importer::IsInvalidTemplateSpecialization(
 }
 
 void Importer::NameTemplateInstantiationsAfterTypeAliases(
-    const absl::flat_hash_map<ItemId, crubit::ffi::Item* _Nonnull>& id_to_item,
+    const llvm::DenseMap<ItemId, crubit::ffi::Item* _Nonnull>& id_to_item,
     std::vector<ItemId>& instantiation_ids) {
   auto get_item = [&](ItemId id)->crubit::ffi::Item* _Nullable {
     auto it = id_to_item.find(id);
@@ -4396,7 +4390,7 @@ void Importer::NameTemplateInstantiationsAfterTypeAliases(
   // treatment from Crubit keep their mangled name: those in the standard
   // library (at any depth, e.g. `std::chrono::duration`), bridge types, e.g.
   // `std::vector` or `absl::Span`, and those with lifetimes.
-  absl::flat_hash_set<ItemId> renameable;
+  llvm::DenseSet<ItemId> renameable;
   for (const clang::ClassTemplateSpecializationDecl* decl :
        class_template_instantiations_) {
     ItemId id = GenerateItemId(*decl);
@@ -4420,7 +4414,7 @@ void Importer::NameTemplateInstantiationsAfterTypeAliases(
   // Visits the namespace-scope items in source order, so that the first alias
   // for each instantiation names it, and places each renamed instantiation
   // right after its alias.
-  absl::flat_hash_set<ItemId> renamed;
+  llvm::DenseSet<ItemId> renamed;
   auto visit = [&](auto& self, std::vector<ItemId>& item_ids) -> void {
     for (size_t i = 0; i < item_ids.size(); ++i) {
       crubit::ffi::Item* item = get_item(item_ids[i]);

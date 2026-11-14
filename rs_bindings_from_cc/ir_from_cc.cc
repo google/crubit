@@ -13,8 +13,6 @@
 #include <vector>
 
 #include "llvm/ADT/DenseSet.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "common/check.h"
 #include "common/status.h"
 #include "common/status_macros.h"
@@ -317,33 +315,6 @@ llvm::Expected<IR> IrFromCc(IrFromCcOptions options) {
   command_line.push_back("-w");
   command_line.push_back(std::string(kVirtualInputPath));
 
-  absl::flat_hash_map<HeaderName, BazelLabel> header_targets_absl;
-  for (const auto& [k, v] : options.headers_to_targets) {
-    header_targets_absl[k] = v;
-  }
-
-  std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist_absl =
-      std::nullopt;
-  if (options.do_not_bind_allowlist) {
-    do_not_bind_allowlist_absl = absl::flat_hash_set<std::string>();
-    for (const auto& entry : *options.do_not_bind_allowlist) {
-      do_not_bind_allowlist_absl->insert(entry.getKey().str());
-    }
-  }
-
-  absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
-      crubit_features_absl;
-  for (const auto& [k, v] : options.crubit_features) {
-    for (const auto& feature : v) {
-      crubit_features_absl[k].insert(feature.getKey().str());
-    }
-  }
-
-  absl::flat_hash_map<BazelLabel, std::string> crate_names_absl;
-  for (const auto& [k, v] : options.crate_names) {
-    crate_names_absl[k] = v;
-  }
-
   std::vector<HeaderName> pub_headers_vec;
   pub_headers_vec.reserve(augmented_public_headers.size());
   for (const auto& h : augmented_public_headers) {
@@ -351,11 +322,13 @@ llvm::Expected<IR> IrFromCc(IrFromCcOptions options) {
   }
 
   Invocation invocation(
-      options.current_target, pub_headers_vec, std::move(header_targets_absl),
-      std::move(do_not_bind_allowlist_absl), std::move(crubit_features_absl),
-      std::move(crate_names_absl), options.kythe_annotations,
-      options.template_blocklist_path_regex, options.carcinize_mode,
-      options.lazy_import_alien_decls, options.check_importer_invariants);
+      options.current_target, pub_headers_vec,
+      std::move(options.headers_to_targets),
+      std::move(options.do_not_bind_allowlist),
+      std::move(options.crubit_features), std::move(options.crate_names),
+      options.kythe_annotations, options.template_blocklist_path_regex,
+      options.carcinize_mode, options.lazy_import_alien_decls,
+      options.check_importer_invariants);
 
   llvm::StringSet<> in_memory_files;
   for (const auto& [path, _] : file_contents) {

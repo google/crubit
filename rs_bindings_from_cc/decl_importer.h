@@ -12,12 +12,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/algorithm/container.h"
-#include "absl/base/nullability.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
 #include "common/check.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -34,8 +28,11 @@
 #include "clang/AST/Type.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Sema/Sema.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Regex.h"
 
 namespace crubit {
@@ -43,18 +40,16 @@ namespace crubit {
 // Top-level parameters as well as return value of an importer invocation.
 class Invocation {
  public:
-  Invocation(
-      BazelLabel target, absl::Span<const HeaderName> public_headers,
-      const absl::flat_hash_map<HeaderName, BazelLabel>& header_targets,
-      std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist,
-      absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
-          crubit_features,
-      absl::flat_hash_map<BazelLabel, std::string> crate_names,
-      bool kythe_annotations,
-      std::shared_ptr<const llvm::Regex> template_blocklist_path_regex,
-      CarcinizeMode carcinize_mode = CarcinizeMode::kOff,
-      bool lazy_import_alien_decls = false,
-      bool check_importer_invariants = false)
+  Invocation(BazelLabel target, llvm::ArrayRef<HeaderName> public_headers,
+             const llvm::DenseMap<HeaderName, BazelLabel>& header_targets,
+             std::optional<llvm::StringSet<>> do_not_bind_allowlist,
+             llvm::DenseMap<BazelLabel, llvm::StringSet<>> crubit_features,
+             llvm::DenseMap<BazelLabel, std::string> crate_names,
+             bool kythe_annotations,
+             std::shared_ptr<const llvm::Regex> template_blocklist_path_regex,
+             CarcinizeMode carcinize_mode = CarcinizeMode::kOff,
+             bool lazy_import_alien_decls = false,
+             bool check_importer_invariants = false)
       : target_(target),
         public_headers_(public_headers),
         lifetime_context_(std::make_shared<
@@ -77,9 +72,9 @@ class Invocation {
     ir_.set_current_target(target_.value());
     for (const auto& [target, features] : crubit_features) {
       auto& set = (*ir_.mutable_crubit_features())[target.value()];
-      std::vector<std::string> sorted_features(features.begin(),
-                                               features.end());
-      absl::c_sort(sorted_features);
+      std::vector<llvm::StringRef> sorted_features;
+      for (const auto& f : features) sorted_features.push_back(f.getKey());
+      llvm::sort(sorted_features);
       set = ffi::FfiVec<ffi::FfiString>(sorted_features.begin(),
                                         sorted_features.end());
     }
@@ -100,7 +95,7 @@ class Invocation {
 
   // The headers from which the import starts.  See the doc comment of
   // `IR::public_headers` and `HeaderName` for more details.
-  const absl::Span<const HeaderName> public_headers_;
+  const llvm::ArrayRef<HeaderName> public_headers_;
 
   const std::shared_ptr<clang::tidy::lifetimes::LifetimeAnnotationContext>
       lifetime_context_;
@@ -110,16 +105,16 @@ class Invocation {
   // the pragma. Populated by the preprocessor during parsing.
   clang::tidy::nullability::NullabilityPragmas nullability_pragmas_;
 
-  const std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist_;
+  const std::optional<llvm::StringSet<>> do_not_bind_allowlist_;
 
   // The main output of the import process
   IR ir_;
 
   // Transient map of top level items used to build the tree.
-  absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids_;
+  llvm::DenseMap<BazelLabel, std::vector<ItemId>> top_level_item_ids_;
 
   // Transient map of child items used to build the tree.
-  absl::flat_hash_map<ItemId, std::vector<ItemId>> child_item_ids_;
+  llvm::DenseMap<ItemId, std::vector<ItemId>> child_item_ids_;
 
   // Returns whether to record extra location information for Kythe annotations.
   bool kythe_annotations() const { return kythe_annotations_; }
@@ -166,7 +161,7 @@ class Invocation {
   }
 
  private:
-  const absl::flat_hash_map<HeaderName, BazelLabel>& header_targets_;
+  const llvm::DenseMap<HeaderName, BazelLabel>& header_targets_;
 
   // Whether to record extra location information for Kythe annotations.
   bool kythe_annotations_;
@@ -279,7 +274,7 @@ class ImportContext {
       clang::Decl* _Nonnull decl) = 0;
 
   // Returns a map of top level item ids in source order for each target.
-  virtual absl::flat_hash_map<BazelLabel, std::vector<ItemId>>
+  virtual llvm::DenseMap<BazelLabel, std::vector<ItemId>>
   GetTopLevelItemIdsInSourceOrder(const clang::TranslationUnitDecl& decl) = 0;
 
   // Imports children of `decl`.

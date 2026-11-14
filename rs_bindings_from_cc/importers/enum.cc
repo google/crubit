@@ -4,13 +4,13 @@
 
 #include "rs_bindings_from_cc/importers/enum.h"
 
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "absl/algorithm/container.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -85,7 +85,8 @@ std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
   }
 
   std::vector<crubit::ffi::Enumerator> enumerators;
-  enumerators.reserve(absl::c_distance(enum_decl->enumerators()));
+  enumerators.reserve(std::distance(enum_decl->enumerators().begin(),
+                                    enum_decl->enumerators().end()));
   for (clang::EnumConstantDecl* enumerator : enum_decl->enumerators()) {
     llvm::Expected<TranslatedIdentifier> enumerator_name =
         ictx_.GetTranslatedIdentifier(*enumerator);

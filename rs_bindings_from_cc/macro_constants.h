@@ -7,7 +7,6 @@
 
 #include <optional>
 
-#include "absl/base/nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Lex/MacroInfo.h"
@@ -17,7 +16,7 @@ namespace crubit {
 
 // A `constexpr` variable synthesized from an object-like macro.
 struct MacroConstant {
-  clang::VarDecl* absl_nonnull var_decl;
+  clang::VarDecl* _Nonnull var_decl;
   // Whether the macro's expansion contains a numeric literal with a suffix
   // (e.g. `42u`), a `char16_t` or `char32_t` literal (e.g. `u'x'`), or a cast
   // (e.g. `(uint32_t)1`). If so,

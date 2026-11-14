@@ -10,8 +10,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "common/status.h"
 #include "llvm/Support/Error.h"
 
@@ -25,15 +23,6 @@ struct StatusInfo {
   bool is_ok() const { return code == StatusCode::kOk; }
   std::string code_string() const { return StatusCodeToString(code).str(); }
 };
-
-inline StatusInfo GetStatusInfo(const absl::Status& s) {
-  return {static_cast<StatusCode>(s.code()), std::string(s.message())};
-}
-
-template <typename T>
-inline StatusInfo GetStatusInfo(const absl::StatusOr<T>& s) {
-  return GetStatusInfo(s.status());
-}
 
 inline StatusInfo GetStatusInfo(const llvm::Error& err) {
   // Matchers receive `const&`; inspect via the non-consuming helpers, then
@@ -88,8 +77,8 @@ MATCHER_P(IsOkAndHolds, inner_matcher,
   return ::testing::ExplainMatchResult(inner_matcher, *arg, result_listener);
 }
 
-// Matches a status whose code equals `expected_code` (`absl::StatusCode` or
-// `crubit::StatusCode`) and whose message matches `message_matcher`.
+// Matches a status whose code equals `expected_code` (`crubit::StatusCode`) and
+// whose message matches `message_matcher`.
 MATCHER_P2(
     StatusIs, expected_code, message_matcher,
     std::string(negation ? "does not have status code " : "has status code ") +

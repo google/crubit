@@ -68,7 +68,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/hash/hash.h"
 #include "llvm/ADT/DenseMapInfo.h"
 
 namespace crubit {
@@ -104,11 +103,6 @@ class StrongInt {
   }
   static constexpr StrongInt Min() {
     return StrongInt(std::numeric_limits<ValueType>::min());
-  }
-
-  template <typename H>
-  friend H AbslHashValue(H h, const StrongInt &i) {
-    return H::combine(std::move(h), i.value_);
   }
 
  private:

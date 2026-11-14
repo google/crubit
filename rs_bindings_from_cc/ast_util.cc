@@ -15,7 +15,6 @@
 #include "common/check.h"
 #include "common/status.h"
 #include "common/status_macros.h"
-#include "common/string_view_conversion.h"
 #include "rs_bindings_from_cc/clang_compat_macros.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -235,7 +234,7 @@ llvm::Expected<std::optional<std::string>> CollectUnknownAttrs(
       name_buf = attr->getNormalizedFullName();
       name = name_buf;
     } else {
-      name = StringViewFromStringRef(attr->getSpelling());
+      name = attr->getSpelling();
     }
     if (ignored_attr_names.contains(name)) {
       continue;

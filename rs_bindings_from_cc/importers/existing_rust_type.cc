@@ -10,8 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/nullability.h"
-#include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/decl_importer.h"
