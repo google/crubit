@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+extern crate rustc_middle;
 extern crate rustc_span;
 
 use crate::db::BindingsGenerator;
@@ -9,8 +10,10 @@ use arc_anyhow::{bail, Result};
 use code_gen_utils::{format_cc_type_name, make_rs_ident, NamespaceQualifier};
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
+use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::symbol::Symbol;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 /// Represents the unqualified name of a Rust item. For the fully qualified name
@@ -171,6 +174,8 @@ impl FullyQualifiedName {
 /// scope and DefId), but is always valid to spell out in syntax.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExportedPath {
+    /// The definition that this path names.
+    pub def_id: DefId,
     /// Segments of the path.
     pub path: Vec<Symbol>,
     /// If this path aliases a definition, this will be the alias. Otherwise, it will be the
@@ -279,74 +284,176 @@ impl PartialOrd for ExportedPath {
     }
 }
 
-/// The set of public paths for a definition.
+/// The ownership priority of a crate that exposes a public path for a `DefId`.
+///
+/// When an item is re-exported across multiple crates, Crubit uses this rank to choose which
+/// crate provides the canonical C++ definition (versus emitting a `using` alias).
+///
+/// Variants are listed in ascending priority of ownership.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub enum CrateOwnershipRank {
+    /// A crate re-exporting an item it did not define (e.g. `pub use std::io::Error;`).
+    TransitiveReexport = 0,
+
+    /// A standard library crate (`std` or `alloc`) stably re-exporting an item that was
+    /// defined internally/unstably in `core` or `alloc` (e.g. `std::io::Error` is a stable
+    /// re-export for the unstable `core::io::error::Error`). We attribute ownership to the
+    /// standard library re-export in this case, since it is the canonical owner.
+    StdlibStableReexport = 1,
+
+    /// The crate that actually defined the item (`def_id.krate`, e.g. `core` for
+    /// `core::option::Option`).
+    DefiningCrate = 2,
+}
+
+impl CrateOwnershipRank {
+    pub fn new(tcx: TyCtxt<'_>, def_id: DefId, krate: CrateNum) -> Self {
+        if krate == def_id.krate {
+            return Self::DefiningCrate;
+        }
+
+        if matches!(tcx.crate_name(def_id.krate).as_str(), "core" | "alloc")
+            && matches!(tcx.crate_name(krate).as_str(), "std" | "alloc")
+        {
+            return Self::StdlibStableReexport;
+        }
+
+        Self::TransitiveReexport
+    }
+}
+
+/// The paths that name one definition, as positions in the table that stores them.
 ///
 /// The canonical path is the preferred path that should be treated as the primary definition for
 /// generating bindings. Aliases are other paths the same definition is available at and should
 /// generate aliases to the canonical path in the bindings.
 ///
-/// Aliases are sorted.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PublicPaths {
-    canonical_path: ExportedPath,
-    aliases: Vec<ExportedPath>,
+/// While a table holds the paths of one crate, the aliases are sorted by the paths they refer to.
+/// Once `PublicPathTable::extend` has combined several crates, the paths of each crate stay
+/// together and keep their order, but the list as a whole is not sorted.
+#[derive(Debug)]
+struct DefinitionPaths {
+    canonical: usize,
+    aliases: Vec<usize>,
 }
-impl PublicPaths {
-    pub fn new(canonical_path: ExportedPath) -> Self {
-        Self { canonical_path, aliases: vec![] }
-    }
 
+impl DefinitionPaths {
+    /// Makes every path of `other` an alias, after the aliases that are already here.
+    fn absorb(&mut self, other: Self) {
+        self.aliases.push(other.canonical);
+        self.aliases.extend(other.aliases);
+    }
+}
+
+/// The public paths of one crate, or of several, by the definition they name.
+///
+/// Every path is stored once, and each definition refers to its paths by their position.
+#[derive(Debug, Default)]
+pub struct PublicPathTable {
+    /// The paths of every crate added to the table. `by_def` does not refer to the paths of the
+    /// definitions that `extend` was told not to keep.
+    paths: Vec<ExportedPath>,
+    /// The paths that name each definition.
+    by_def: HashMap<DefId, DefinitionPaths>,
+}
+
+impl PublicPathTable {
+    /// Adds a path of the definition `path.def_id`. The smallest path of a definition is its
+    /// canonical path.
+    ///
+    /// This builds the table of a single crate: it relies on the aliases being sorted, which is
+    /// no longer certain after [`Self::extend`].
     pub fn insert(&mut self, path: ExportedPath) {
-        let alias = if path < self.canonical_path {
-            std::mem::replace(&mut self.canonical_path, path)
-        } else {
-            path
-        };
-        if let Err(index) = self.aliases.binary_search(&alias) {
-            self.aliases.insert(index, alias);
+        use std::collections::hash_map::Entry;
+        let index = self.paths.len();
+        match self.by_def.entry(path.def_id) {
+            Entry::Vacant(vacant) => {
+                vacant.insert(DefinitionPaths { canonical: index, aliases: vec![] });
+            }
+            Entry::Occupied(mut occupied) => {
+                let paths = &self.paths;
+                let DefinitionPaths { canonical, aliases } = occupied.get_mut();
+                let position_among_aliases = |alias: &ExportedPath, aliases: &[usize]| {
+                    aliases.binary_search_by(|&other| paths[other].cmp(alias))
+                };
+                if path < paths[*canonical] {
+                    // The canonical path so far becomes an alias, unless an alias equals it.
+                    let displaced = std::mem::replace(canonical, index);
+                    if let Err(position) = position_among_aliases(&paths[displaced], aliases) {
+                        aliases.insert(position, displaced);
+                    }
+                } else {
+                    match position_among_aliases(&path, aliases) {
+                        Err(position) => aliases.insert(position, index),
+                        // A path equal to one of the aliases is not stored.
+                        Ok(_) => return,
+                    }
+                }
+            }
+        }
+        self.paths.push(path);
+    }
+
+    /// Adds the paths that `krate_paths`, the table of one crate, has for the definitions that
+    /// `keep` accepts.
+    ///
+    /// When a definition already has paths from another crate, the canonical path of the crate
+    /// with the higher [`CrateOwnershipRank`] for the definition stays canonical; if both crates
+    /// rank the same, the smaller canonical path does. The other crate's paths are appended to
+    /// the aliases.
+    pub fn extend(&mut self, tcx: TyCtxt<'_>, krate_paths: &Self, keep: impl Fn(DefId) -> bool) {
+        use std::collections::hash_map::Entry;
+        let offset = self.paths.len();
+        self.paths.extend_from_slice(&krate_paths.paths);
+        for (&def_id, paths) in &krate_paths.by_def {
+            if !keep(def_id) {
+                continue;
+            }
+            let mut paths = DefinitionPaths {
+                canonical: paths.canonical + offset,
+                aliases: paths.aliases.iter().map(|alias| alias + offset).collect(),
+            };
+            match self.by_def.entry(def_id) {
+                Entry::Vacant(vacant) => {
+                    vacant.insert(paths);
+                }
+                Entry::Occupied(mut occupied) => {
+                    let existing_paths = occupied.get_mut();
+                    let rank = |paths: &DefinitionPaths| {
+                        CrateOwnershipRank::new(tcx, def_id, self.paths[paths.canonical].krate)
+                    };
+                    let canonical = |paths: &DefinitionPaths| &self.paths[paths.canonical];
+                    // The higher rank wins, then the smaller canonical path. If those are equal
+                    // too, the crate that was added first stays canonical.
+                    let new_crate_is_canonical = rank(&paths)
+                        .cmp(&rank(existing_paths))
+                        .then_with(|| canonical(existing_paths).cmp(canonical(&paths)))
+                        .is_gt();
+                    if new_crate_is_canonical {
+                        std::mem::swap(existing_paths, &mut paths);
+                    }
+                    existing_paths.absorb(paths);
+                }
+            }
         }
     }
 
-    pub fn insert_aliases(&mut self, other: Self) {
-        let other_aliases = if other.canonical_path == self.canonical_path {
-            other.aliases
-        } else {
-            other.into_extern_aliases()
-        };
-        let self_aliases = std::mem::take(&mut self.aliases);
-        self.aliases = itertools::kmerge(vec![self_aliases, other_aliases]).collect();
+    /// The definitions that have a path, in no particular order.
+    pub fn def_ids(&self) -> impl Iterator<Item = DefId> + use<'_> {
+        self.by_def.keys().copied()
     }
 
-    pub fn merge(&mut self, mut other: Self) {
-        if self.canonical_path > other.canonical_path {
-            std::mem::swap(&mut self.canonical_path, &mut other.canonical_path);
-        }
-        self.insert_aliases(other);
+    /// The canonical path of `def_id`, if it has any path.
+    pub fn canonical(&self, def_id: DefId) -> Option<&ExportedPath> {
+        self.by_def.get(&def_id).map(|paths| &self.paths[paths.canonical])
     }
 
-    pub fn canonical(&self) -> &ExportedPath {
-        &self.canonical_path
-    }
-
-    /// Turn `self` into it's canonical path and aliases. This should only be used on a definition
-    /// defined in the source crate.
-    pub fn into_canonical_and_aliases(self) -> (ExportedPath, Vec<ExportedPath>) {
-        (self.canonical_path, self.aliases)
-    }
-
-    /// Turn `self` into a list of aliases for a definition defined in an external crate.
-    /// External crate definitions should only be aliased, not used as the canonical definition.
-    /// The returned vector is sorted.
-    pub fn aliases(&self) -> &[ExportedPath] {
-        &self.aliases
-    }
-
-    pub fn extern_aliases(&self) -> impl Iterator<Item = &ExportedPath> {
-        std::iter::once(&self.canonical_path).chain(self.aliases.iter())
-    }
-
-    pub fn into_extern_aliases(mut self) -> Vec<ExportedPath> {
-        self.aliases.insert(0, self.canonical_path);
-        self.aliases
+    /// The paths of `def_id` other than its canonical path. They are sorted in the table of a
+    /// single crate; after [`Self::extend`], only the aliases of each crate keep their order.
+    pub fn aliases(&self, def_id: DefId) -> impl Iterator<Item = &ExportedPath> {
+        self.by_def
+            .get(&def_id)
+            .into_iter()
+            .flat_map(move |paths| paths.aliases.iter().map(move |&alias| &self.paths[alias]))
     }
 }
