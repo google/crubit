@@ -267,7 +267,7 @@ llvm::Expected<std::string> CcName(
   // desugared out of an `ElaboratedType` so that their namespaces are written
   // down.
   policy.PrintAsCanonical = true;
-  policy.UsePreferredNames = false;
+  policy.UsePreferredNames = true;
   // Include tag keywords (e.g. `struct`, `class`, `union`, `enum`) for template
   // arguments so that tag types shadowed by functions or variables with the
   // same name in the same scope can still be spelled in C++.
@@ -280,9 +280,24 @@ llvm::Expected<std::string> CcName(
       clang::QualType(ast_context.getCanonicalTagType(specialization_decl))
           .getAsString(policy);
   llvm::StringRef type_ref = type_string;
-  type_ref.consume_front(
-      (llvm::Twine(std::string_view(specialization_decl->getKindName())) + " ")
-          .str());
+  if (!type_ref.consume_front(
+          (llvm::Twine(std::string_view(specialization_decl->getKindName())) +
+           " ")
+              .str())) {
+    // If Clang substituted a `preferred_name` typedef for the outermost type
+    // itself, it omits the tag keyword (`class`/`struct`). Re-print without
+    // `UsePreferredNames` on the outer type so `cc_name` stays compatible
+    // with `cc_tag_kind()`.
+    policy.UsePreferredNames = false;
+    type_string =
+        clang::QualType(ast_context.getCanonicalTagType(specialization_decl))
+            .getAsString(policy);
+    type_ref = type_string;
+    type_ref.consume_front(
+        (llvm::Twine(std::string_view(specialization_decl->getKindName())) +
+         " ")
+            .str());
+  }
   return type_ref.str();
 }
 
@@ -1242,27 +1257,29 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
     ts.set_defining_target(ictx_.GetOwningTarget(*decl).value());
     if (clang::TypedefNameDecl* alias_decl =
             ictx_.GetTemplateSpecializationAlias(specialization_decl)) {
-      llvm::Expected<TranslatedIdentifier> alias_name =
-          ictx_.GetTranslatedIdentifier(*alias_decl);
-      if (!alias_name) {
-        return ictx_.ImportUnsupportedItem(
-            *record_decl, std::nullopt,
-            {FormattedError::PrefixedStrCat(
-                "preferred_name is not supported",
-                llvm::toString(alias_name.takeError()))});
+      if (owning_target == ictx_.GetOwningTarget(*alias_decl)) {
+        llvm::Expected<TranslatedIdentifier> alias_name =
+            ictx_.GetTranslatedIdentifier(*alias_decl);
+        if (!alias_name) {
+          return ictx_.ImportUnsupportedItem(
+              *record_decl, std::nullopt,
+              {FormattedError::PrefixedStrCat(
+                  "preferred_name is not supported",
+                  llvm::toString(alias_name.takeError()))});
+        }
+        rs_name = alias_name->rs_identifier().Ident();
+        cc_name = alias_name->cc_identifier.Ident();
+        is_canonical_template_alias = true;
+        llvm::Expected<std::optional<ItemId>> alias_enclosing_item_id =
+            ictx_.GetEnclosingItemId(alias_decl);
+        if (!alias_enclosing_item_id) {
+          return ictx_.ImportUnsupportedItem(
+              *record_decl, std::nullopt,
+              {FormattedError::FromStatus(
+                  alias_enclosing_item_id.takeError())});
+        }
+        enclosing_item_id = *std::move(alias_enclosing_item_id);
       }
-      owning_target = ictx_.GetOwningTarget(*alias_decl);
-      rs_name = alias_name->rs_identifier().Ident();
-      cc_name = alias_name->cc_identifier.Ident();
-      is_canonical_template_alias = true;
-      llvm::Expected<std::optional<ItemId>> alias_enclosing_item_id =
-          ictx_.GetEnclosingItemId(alias_decl);
-      if (!alias_enclosing_item_id) {
-        return ictx_.ImportUnsupportedItem(
-            *record_decl, std::nullopt,
-            {FormattedError::FromStatus(alias_enclosing_item_id.takeError())});
-      }
-      enclosing_item_id = *std::move(alias_enclosing_item_id);
     }
 
     if (std::optional<llvm::Expected<BridgeType>> extracted_callable =

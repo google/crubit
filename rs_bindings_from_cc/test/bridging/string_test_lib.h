@@ -5,6 +5,7 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_BRIDGING_STRING_TEST_LIB_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_BRIDGING_STRING_TEST_LIB_H_
 #include <cstddef>
+#include <memory_resource>
 #include <string>
 inline int GetStringSize(std::string s) { return s.size(); }
 inline std::string CreateString(const void* ptr, size_t size) {
@@ -15,5 +16,8 @@ inline std::basic_string<char> CreateStringAsBasicString(const void* ptr,
                                                          size_t size) {
   return std::basic_string<char>(static_cast<const char*>(ptr), size);
 }
+
+inline std::pmr::string CreateEmptyPmrString() { return std::pmr::string(); }
+inline size_t GetPmrStringSize(const std::pmr::string& s) { return s.size(); }
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_BRIDGING_STRING_TEST_LIB_H_

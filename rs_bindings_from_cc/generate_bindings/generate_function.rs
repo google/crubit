@@ -1235,6 +1235,65 @@ fn api_func_shape_for_conversion_operator(
     Some(ApiFuncShape { func_name, impl_kind })
 }
 
+/// Returns whether `ty` can satisfy Rust's orphan rule as an uncovered local
+/// type in a foreign trait `impl`.
+fn is_uncovered_local_type(db: &BindingsGenerator, ty: &RsTypeKind) -> bool {
+    let is_local = |owning_target: &Option<ir::BazelLabel>| {
+        owning_target.as_ref().is_some_and(|t| db.ir().is_current_target(t))
+    };
+    match ty.unalias() {
+        RsTypeKind::Reference { referent, .. } => is_uncovered_local_type(db, referent),
+        RsTypeKind::Box {
+            kind: database::rs_snippet::BoxKind::Box | database::rs_snippet::BoxKind::PinBox,
+            pointee: Some(pointee),
+            ..
+        } => is_uncovered_local_type(db, pointee),
+        RsTypeKind::Record { record, uniform_repr_template_type: None, .. } => {
+            is_local(&record.owning_target())
+        }
+        RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
+            is_local(&incomplete_record.owning_target())
+        }
+        RsTypeKind::Enum { enum_, .. } => is_local(&enum_.owning_target()),
+        _ => false,
+    }
+}
+
+/// Returns whether an `impl TraitName<...> for ...` generated in the current
+/// crate satisfies Rust's orphan rule (E0117).
+///
+/// Assumes all traits synthesized by `TraitName` (`core::*`, `ctor::*`,
+/// `operator::*`) are foreign to the generated crate.
+fn impl_satisfies_orphan_rule(
+    db: &BindingsGenerator,
+    record: &Record,
+    derived_record: Option<&Record>,
+    trait_name: &TraitName,
+    impl_for: &ImplFor,
+) -> bool {
+    let self_is_local = match impl_for {
+        ImplFor::T | ImplFor::RefT => {
+            let target_record = derived_record.unwrap_or(record);
+            db.ir().is_current_target(target_record.owning_target())
+        }
+        ImplFor::Type(ty) => is_uncovered_local_type(db, ty),
+    };
+    if self_is_local {
+        return true;
+    }
+    match trait_name {
+        TraitName::CtorNew(params)
+        | TraitName::UnsafeCtorNew(params)
+        | TraitName::From(params)
+        | TraitName::UnsafeFrom(params) => {
+            // 1-arg `From<Arg>` / `CtorNew<Arg>` passes `Arg` directly; 0-arg `()` and
+            // multi-arg `(A, B, ...)` wrap arguments in a tuple, which covers them.
+            params.len() == 1 && is_uncovered_local_type(db, &params[0])
+        }
+        _ => trait_name.params().iter().any(|p| is_uncovered_local_type(db, p)),
+    }
+}
+
 /// Returns the shape of the generated Rust API for a given function definition.
 ///
 /// If the shape is a trait, this also mutates the parameter types to be
@@ -1248,6 +1307,7 @@ fn api_func_shape_for_conversion_operator(
 fn api_func_shape(
     db: &BindingsGenerator,
     func: &Func,
+    derived_record: Option<&Record>,
     param_types: &mut [RsTypeKind],
     return_type: &RsTypeKind,
     errors: &Errors,
@@ -1268,7 +1328,7 @@ fn api_func_shape(
         return None;
     }
 
-    match func.rs_name() {
+    let shape = match func.rs_name() {
         UnqualifiedIdentifier::Operator(op) => api_func_shape_for_operator(
             db,
             func,
@@ -1290,7 +1350,18 @@ fn api_func_shape(
         UnqualifiedIdentifier::ConversionOperator => {
             api_func_shape_for_conversion_operator(func, maybe_record, param_types, return_type)
         }
+    }?;
+
+    if let ImplKind::Trait { record, trait_name, impl_for, .. } = &shape.impl_kind
+        && !impl_satisfies_orphan_rule(db, record, derived_record, trait_name, impl_for)
+    {
+        errors.add(anyhow!(
+            "Cannot implement foreign trait `{trait_name}` when neither Self nor any uncovered trait parameter is local to the current crate"
+        ));
+        return None;
     }
+
+    Some(shape)
 }
 
 /// Returns the shape of the generated Rust API for a given function definition
@@ -1302,7 +1373,7 @@ fn api_func_shape_if_some(
     return_type: &RsTypeKind,
 ) -> Option<ApiFuncShape> {
     let errors = Errors::new();
-    let shape = api_func_shape(db, func, param_types, return_type, &errors);
+    let shape = api_func_shape(db, func, None, param_types, return_type, &errors);
     if !errors.is_empty() {
         errors.discard();
         return None;
@@ -1993,7 +2064,7 @@ fn rs_type_kinds_for_func(
                         bail!(
                             "C-style array types are not supported in function signatures yet: \
                             {} (b/575922365)",
-                            c_array.display_cc_type_name_for_rs_type(),
+                            c_array.display_cc_type_name_for_rs_type(db),
                         );
                     }
                     Ok(ty)
@@ -2047,7 +2118,7 @@ fn rs_type_kinds_for_func(
                     bail!(
                         "C-style array types are not supported in function signatures yet: \
                         {} (b/575922365)",
-                        c_array.display_cc_type_name_for_rs_type(),
+                        c_array.display_cc_type_name_for_rs_type(db),
                     );
                 }
                 Ok(ty)
@@ -2132,9 +2203,14 @@ pub fn generate_function(
     let (mut param_types, mut return_type) = rs_type_kinds_for_func(db, func.clone())?;
 
     let errors = Errors::new();
-    let Some(ApiFuncShape { func_name, impl_kind }) =
-        api_func_shape(db, &func, &mut param_types, &return_type, &errors)
-    else {
+    let Some(ApiFuncShape { func_name, impl_kind }) = api_func_shape(
+        db,
+        &func,
+        derived_record.as_deref(),
+        &mut param_types,
+        &return_type,
+        &errors,
+    ) else {
         errors.consolidate()?;
         return Ok(None);
     };
@@ -3848,7 +3924,8 @@ fn has_matching_cc_index(db: &BindingsGenerator, record: &Record, index_type: &R
             let Ok((mut param_types, return_type)) = rs_type_kinds_for_func(db, f.clone()) else {
                 return false;
             };
-            let result = api_func_shape(db, f, &mut param_types, &return_type, &Errors::new());
+            let result =
+                api_func_shape(db, f, Some(record), &mut param_types, &return_type, &Errors::new());
             if let Some(ApiFuncShape {
                 impl_kind:
                     ImplKind::Trait {

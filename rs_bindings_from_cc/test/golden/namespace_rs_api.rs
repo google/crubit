@@ -157,22 +157,18 @@ pub mod test_namespace_bindings_inline {
         #[repr(C)]
         #[cfg_attr(
             not(doc),
-            doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
+            doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_inline :: StructInInlineNamespace"
         )]
         #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct StructInInlineNamespace {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         unsafe impl ::cxx::ExternType for StructInInlineNamespace {
-            type Id = ::cxx::type_id!(
-                "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
-            );
+            type Id = ::cxx::type_id!("test_namespace_bindings_inline :: StructInInlineNamespace");
             type Kind = ::cxx::kind::Trivial;
         }
         forward_declare::unsafe_define!(
-            forward_declare::symbol!(
-                "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
-            ),
+            forward_declare::symbol!("test_namespace_bindings_inline :: StructInInlineNamespace"),
             crate::test_namespace_bindings_inline::inner::StructInInlineNamespace
         );
 
