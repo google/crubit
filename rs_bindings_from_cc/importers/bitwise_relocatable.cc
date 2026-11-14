@@ -22,6 +22,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/SourceLocation.h"
@@ -115,6 +116,17 @@ bool HasAnnotation(const clang::Decl* decl, llvm::StringRef name) {
     return false;
   }
   return args->has_value();
+}
+
+// Returns whether the translation unit is compiled against libc++.
+bool IsCompiledAgainstLibcxx(clang::Preprocessor& preprocessor) {
+  clang::IdentifierInfo* libcpp_version =
+      preprocessor.getIdentifierInfo("_LIBCPP_VERSION");
+  // With header modules, `_LIBCPP_VERSION` can come from a loaded module, whose
+  // identifiers start out of date. `isMacroDefined` doesn't bring them up to
+  // date, but `getLeafModuleMacros` does.
+  return !preprocessor.getLeafModuleMacros(libcpp_version).empty() ||
+         preprocessor.isMacroDefined(libcpp_version);
 }
 
 enum class AnnotationState { kNone, kIfEligible, kAsserted };
@@ -452,7 +464,7 @@ BitwiseRelocatableResult RelocatabilityAnalysis::ComputeBitwiseRelocatability(
       if (HasAnnotation(
               decl_for_attr,
               "crubit_bitwise_relocatable_std_string_only_on_libcxx")) {
-        if (!ictx.sema_.getPreprocessor().isMacroDefined("_LIBCPP_VERSION")) {
+        if (!IsCompiledAgainstLibcxx(ictx.sema_.getPreprocessor())) {
           hard_error = true;
           members_ok = false;
           members_reason =
