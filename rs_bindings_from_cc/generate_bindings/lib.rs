@@ -1509,8 +1509,8 @@ fn generate_rs_api_impl_includes(
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
 fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
-        RsTypeKind::Error { symbol, error, .. } => Err(error_report::because(
-            error_report::anyhow!("Type '{symbol}' has an error and cannot be bridged: {error}"),
+        RsTypeKind::Error { cc_name, error, .. } => Err(error_report::because(
+            error_report::anyhow!("Type '{cc_name}' has an error and cannot be bridged: {error}"),
             error.clone(),
         )),
         RsTypeKind::TypeAlias { underlying_type, .. } => {

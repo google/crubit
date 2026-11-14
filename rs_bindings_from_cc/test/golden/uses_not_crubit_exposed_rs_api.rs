@@ -65,7 +65,7 @@ pub mod c9 { // error: class `c9::Co` could not be bound
 // namespace c9
 
 // error: function `ReturnsCo` could not be bound
-//   Cannot use an error type `c9 :: Co < struct NotCrubitExposed >` by value:
+//   Cannot use an error type `c9::Co<struct NotCrubitExposed>` by value:
 //     `c9::Co<NotCrubitExposed>` is unsupported because `NotCrubitExposed` is unavailable:
 //     crubit.rs/errors/unknown_target: the type is defined in
 //         rs_bindings_from_cc/test/golden/not_crubit_exposed.h
