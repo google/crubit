@@ -46,7 +46,7 @@ use rustc_hir::attrs::lang_items::LangItem;
 use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::layout::IntegerExt;
-use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt, TypeVisitableExt};
+use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt, TypeSuperFoldable, TypeVisitableExt};
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::symbol::{sym, Symbol};
 use std::borrow::Cow;
@@ -2711,7 +2711,14 @@ pub fn replace_all_regions_with_static<'tcx, T>(tcx: TyCtxt<'tcx>, value: T) -> 
 where
     T: ty::TypeFoldable<TyCtxt<'tcx>>,
 {
-    replace_all_regions(tcx, value, tcx.lifetimes.re_static)
+    replace_all_regions(
+        tcx,
+        value,
+        ty::TypeFlags::HAS_FREE_LOCAL_REGIONS
+            | ty::TypeFlags::HAS_RE_ERASED
+            | ty::TypeFlags::HAS_RE_ERROR,
+        tcx.lifetimes.re_static,
+    )
 }
 
 /// Erases all non-bound regions in `value`, so that they are not printed (e.g. in error messages).
@@ -2719,16 +2726,26 @@ pub fn erase_all_regions<'tcx, T>(tcx: TyCtxt<'tcx>, value: T) -> T
 where
     T: ty::TypeFoldable<TyCtxt<'tcx>>,
 {
-    replace_all_regions(tcx, value, tcx.lifetimes.re_erased)
+    replace_all_regions(tcx, value, ty::TypeFlags::HAS_FREE_REGIONS, tcx.lifetimes.re_erased)
 }
 
 /// Replaces all non-bound regions in `value` with `region`.
-fn replace_all_regions<'tcx, T>(tcx: TyCtxt<'tcx>, value: T, region: ty::Region<'tcx>) -> T
+fn replace_all_regions<'tcx, T>(
+    tcx: TyCtxt<'tcx>,
+    value: T,
+    flags: ty::TypeFlags,
+    region: ty::Region<'tcx>,
+) -> T
 where
     T: ty::TypeFoldable<TyCtxt<'tcx>>,
 {
+    if !value.has_type_flags(flags) {
+        return value;
+    }
+
     struct RegionReplacer<'tcx> {
         tcx: TyCtxt<'tcx>,
+        flags: ty::TypeFlags,
         region: ty::Region<'tcx>,
     }
 
@@ -2743,9 +2760,21 @@ where
                 self.region
             }
         }
+        fn fold_ty(&mut self, t: Ty<'tcx>) -> Ty<'tcx> {
+            if !t.has_type_flags(self.flags) {
+                return t;
+            }
+            t.super_fold_with(self)
+        }
+        fn fold_const(&mut self, c: ty::Const<'tcx>) -> ty::Const<'tcx> {
+            if !c.has_type_flags(self.flags) {
+                return c;
+            }
+            c.super_fold_with(self)
+        }
     }
 
-    value.fold_with(&mut RegionReplacer { tcx, region })
+    value.fold_with(&mut RegionReplacer { tcx, flags, region })
 }
 
 pub fn check_feature_enabled_on_self_and_all_deps(
