@@ -61,15 +61,16 @@ namespace crubit::rust_type {
 template <typename...>
 struct Args {};
 
-// Helper for CRUBIT_INTERNAL_RUST_TYPE. Instantiations of this type can be used
-// to represent const-generic arguments in Rust.
+// Helper for CRUBIT_RUST_LAYOUT_EQUIVALENT (and CRUBIT_INTERNAL_RUST_TYPE).
+// Instantiations of this type can be used to represent const-generic arguments
+// in Rust.
 //
 // Example:
 //
 // ```cpp
 // template <typename T, int N>
-// struct CRUBIT_INTERNAL_RUST_TYPE("MyType", T, crubit::rust_type::Const<N>)
-// MyType {};
+// struct CRUBIT_RUST_LAYOUT_EQUIVALENT(
+//     "MyType<{}, {}>", T, crubit::rust_type::Const<N>) MyType {};
 // ```
 //
 // `MyType<T, 123>` in C++ will then be mapped to `MyType<T, 123>` in Rust.
@@ -77,6 +78,10 @@ template <auto>
 struct Const {};
 }  // namespace crubit::rust_type
 
+// Internal spelling of `CRUBIT_RUST_LAYOUT_EQUIVALENT` (used by Crubit's
+// generated C++ headers and legacy callers; prefer
+// `CRUBIT_RUST_LAYOUT_EQUIVALENT` from `annotations.h` in handwritten code).
+//
 // Unsafe: disables bindings, and reinterprets all uses of this type as `t`.
 //
 // This attribute completely disables automated bindings for the type which it
@@ -125,6 +130,7 @@ struct Const {};
 //   * `path::To::Type` is relative to the root of that same crate, i.e. it is
 //     equivalent to `crate::path::To::Type`. Its first path segment names a
 //     module, not a crate.
+//   * A built-in Rust primitive such as `"i8"` or `"char"` is used as written.
 //
 // SAFETY:
 //   If the type is not layout-compatible with `t`, the behavior is undefined.
@@ -145,6 +151,10 @@ struct Const {};
 #define CRUBIT_INTERNAL_SAME_ABI \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_same_abi")
 
+// Internal spelling of `CRUBIT_RUST_LAYOUT_EQUIVALENT_LABEL_HINT` (prefer
+// `CRUBIT_RUST_LAYOUT_EQUIVALENT_LABEL_HINT` from `annotations.h` in
+// handwritten code).
+//
 // (Optional) The target that owns the Rust type for CRUBIT_INTERNAL_RUST_TYPE.
 // Format: "//package:target" or a short-form like "@abseil-cpp//absl/status".
 //

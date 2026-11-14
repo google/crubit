@@ -52,3 +52,7 @@
 %enddef
 %define CRUBIT_BITWISE_RELOCATABLE_STD_STRING_ONLY_ON_LIBCXX
 %enddef
+%define CRUBIT_RUST_LAYOUT_EQUIVALENT(t, ...)
+%enddef
+%define CRUBIT_RUST_LAYOUT_EQUIVALENT_LABEL_HINT(label_hint)
+%enddef
