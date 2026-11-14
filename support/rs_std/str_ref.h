@@ -223,4 +223,67 @@ using StrRef CRUBIT_INTERNAL_RUST_TYPE("&str") = ::rs::StrRef;
 #endif
 }  // namespace rs_std
 
+// Comparisons between the generated `rs::alloc::string::String` (aka
+// `rs::String`) bindings and runtime C++ strings.
+//
+// The generated bindings only provide `operator==(StrRef)` (from
+// `PartialEq<str>`), and `StrRef` can only be implicitly constructed from
+// strings at compile time, so e.g. `string == some_string_view` or gMock's
+// `Eq("foo")` would not compile. These overloads are templates constrained on
+// `as_str()` so that this header doesn't depend on the generated `alloc`
+// bindings; they are found by ADL because they live in `String`'s namespace.
+// Taking `StringViewLike` as a template parameter gives types such as
+// `absl::string_view` (when distinct from `std::string_view`) an exact match
+// rather than falling back to the non-template member `operator==(StrRef)`.
+namespace rs::alloc::string {
+
+template <typename S>
+concept IsRsString = requires(const S& s) {
+  { s.as_str() } -> ::std::same_as<::rs::StrRef>;
+};
+
+template <IsRsString S>
+constexpr bool operator==(const S& lhs,
+                          const char* crubit_nonnull rhs) noexcept {
+  return lhs.as_str() == rhs;
+}
+
+template <IsRsString S>
+constexpr bool operator==(const char* crubit_nonnull lhs,
+                          const S& rhs) noexcept {
+  return lhs == rhs.as_str();
+}
+
+template <IsRsString S, size_t N>
+constexpr bool operator==(const S& lhs, const char (&rhs)[N]) noexcept {
+  return lhs.as_str() == rhs;
+}
+
+template <IsRsString S, size_t N>
+constexpr bool operator==(const char (&lhs)[N], const S& rhs) noexcept {
+  return lhs == rhs.as_str();
+}
+
+template <IsRsString S, typename StringViewLike>
+  requires(::std::convertible_to<const StringViewLike&, ::std::string_view> &&
+           !::std::is_pointer_v<::std::decay_t<StringViewLike>> &&
+           !::std::is_array_v<::std::remove_cvref_t<StringViewLike>> &&
+           !IsRsString<::std::decay_t<StringViewLike>> &&
+           !::std::is_same_v<::std::decay_t<StringViewLike>, ::rs::StrRef>)
+constexpr bool operator==(const S& lhs, const StringViewLike& rhs) noexcept {
+  return lhs.as_str() == ::std::string_view(rhs);
+}
+
+template <IsRsString S, typename StringViewLike>
+  requires(::std::convertible_to<const StringViewLike&, ::std::string_view> &&
+           !::std::is_pointer_v<::std::decay_t<StringViewLike>> &&
+           !::std::is_array_v<::std::remove_cvref_t<StringViewLike>> &&
+           !IsRsString<::std::decay_t<StringViewLike>> &&
+           !::std::is_same_v<::std::decay_t<StringViewLike>, ::rs::StrRef>)
+constexpr bool operator==(const StringViewLike& lhs, const S& rhs) noexcept {
+  return ::std::string_view(lhs) == rhs.as_str();
+}
+
+}  // namespace rs::alloc::string
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_STR_REF_H_

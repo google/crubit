@@ -329,4 +329,36 @@ TEST(SliceTest, RoundTripVectors) {
   }
 }
 
+TEST(SliceRefTest, ContainerMembers) {
+  int arr[] = {1, 2, 3};
+  rs::SliceRef<int> s(arr);
+  EXPECT_FALSE(s.empty());
+  EXPECT_EQ(s[0], 1);
+  EXPECT_EQ(s[1], 2);
+  EXPECT_EQ(s[2], 3);
+
+  int sum = 0;
+  for (int x : s) sum += x;
+  EXPECT_EQ(sum, 6);
+
+  rs::SliceRef<int> empty;
+  EXPECT_TRUE(empty.empty());
+  EXPECT_EQ(empty.begin(), empty.end());
+
+  rs::SliceRef<const int> cs = s;
+  EXPECT_FALSE(cs.empty());
+  EXPECT_EQ(cs[0], 1);
+
+  s[0] = 10;
+  EXPECT_EQ(arr[0], 10);
+  EXPECT_EQ(cs[0], 10);
+
+  EXPECT_DEATH_IF_SUPPORTED(s[3], "");
+  EXPECT_DEATH_IF_SUPPORTED(empty[0], "");
+}
+
+// NOLINTNEXTLINE(build/c++20); <internal link>
+static_assert(std::ranges::contiguous_range<rs::SliceRef<const int>>);
+// NOLINTNEXTLINE(build/c++20); <internal link>
+static_assert(std::ranges::contiguous_range<rs::SliceRef<int>>);
 }  // namespace

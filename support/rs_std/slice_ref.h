@@ -15,6 +15,7 @@
 #include <string_view>
 #include <type_traits>
 
+#include "support/internal/check.h"
 #include "support/internal/check_no_mutable_aliasing.h"
 #include "support/internal/cpp_config.h"
 #include "support/annotations.h"
@@ -192,6 +193,19 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
     return size_ > 0 ? ptr_ : nullptr;
   }
   constexpr size_t size() const noexcept { return size_; }
+
+  using value_type = ::std::remove_cv_t<T>;
+  using iterator = T* crubit_nullable;
+  using const_iterator = const T* crubit_nullable;
+  constexpr iterator begin() const noexcept { return data(); }
+  constexpr iterator end() const noexcept { return data() + size(); }
+  constexpr const_iterator cbegin() const noexcept { return data(); }
+  constexpr const_iterator cend() const noexcept { return data() + size(); }
+  constexpr bool empty() const noexcept { return size() == 0; }
+  constexpr T& operator[](size_t i) const noexcept {
+    CRUBIT_CHECK(i < size());
+    return data()[i];
+  }
 
   CRUBIT_DO_NOT_BIND constexpr ::std::span<T> to_span() const noexcept {
     return ::std::span<T>(data(), size());
