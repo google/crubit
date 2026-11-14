@@ -87,10 +87,8 @@ std::unique_ptr<crubit::ffi::Item> EnumConstantDeclImporter::Import(
   auto item = std::make_unique<crubit::ffi::Item>();
   auto* constant = item->mutable_constant();
   *constant->mutable_kind()->mutable_value() = *std::move(value);
-  constant->mutable_cc_name()->set_identifier(
-      enumerator_name->cc_identifier.Ident());
-  constant->mutable_rs_name()->set_identifier(
-      enumerator_name->rs_identifier().Ident());
+  *constant->mutable_cc_name() = enumerator_name->cc_identifier;
+  *constant->mutable_rs_name() = enumerator_name->rs_identifier();
   constant->set_unique_name(ictx_.GetUniqueName(*enum_constant_decl));
   constant->set_id(ictx_.GenerateItemId(*enum_constant_decl).value());
   constant->set_owning_target(

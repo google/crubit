@@ -116,8 +116,7 @@ std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
       return unsupported(FormattedError::FromStatus(value.takeError()));
     }
     crubit::ffi::Enumerator proto_enum_val;
-    proto_enum_val.mutable_identifier()->set_identifier(
-        (*enumerator_name).rs_identifier().Ident());
+    *proto_enum_val.mutable_identifier() = (*enumerator_name).rs_identifier();
     *proto_enum_val.mutable_value() = *std::move(value);
     if (unknown_attr->has_value()) {
       proto_enum_val.set_unknown_attr(std::move(**unknown_attr));
@@ -204,10 +203,8 @@ std::unique_ptr<crubit::ffi::Item> EnumDeclImporter::Import(
 
   auto item = std::make_unique<crubit::ffi::Item>();
   auto* proto_enum = item->mutable_enum_decl();
-  proto_enum->mutable_cc_name()->set_identifier(
-      (*enum_name).cc_identifier.Ident());
-  proto_enum->mutable_rs_name()->set_identifier(
-      (*enum_name).rs_identifier().Ident());
+  *proto_enum->mutable_cc_name() = (*enum_name).cc_identifier;
+  *proto_enum->mutable_rs_name() = (*enum_name).rs_identifier();
   proto_enum->set_unique_name(ictx_.GetUniqueName(*enum_decl));
   proto_enum->set_mangled_cc_name(ictx_.GetMangledName(*enum_decl));
   proto_enum->set_id(ictx_.GenerateItemId(*enum_decl).value());

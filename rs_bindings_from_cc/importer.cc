@@ -4338,7 +4338,7 @@ llvm::Expected<TranslatedIdentifier> Importer::GetTranslatedIdentifier(
                           GetTranslatedName(named_decl));
   CRUBIT_CHECK(unqualified.cc_identifier.has_ident())
       << "Incorrectly called with a special name";
-  Identifier cc_identifier(unqualified.cc_identifier.ident().identifier());
+  Identifier cc_identifier = unqualified.cc_identifier.ident();
 
   TranslatedIdentifier translated_identifiers = {
       .cc_identifier = cc_identifier,
@@ -4353,7 +4353,7 @@ llvm::Expected<TranslatedIdentifier> Importer::GetTranslatedIdentifier(
       << "Crubit rust name cannot be a special name";
 
   translated_identifiers.crubit_rust_name =
-      Identifier(unqualified.crubit_rust_name->ident().identifier());
+      unqualified.crubit_rust_name->ident();
 
   return translated_identifiers;
 }

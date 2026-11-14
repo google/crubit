@@ -217,8 +217,7 @@ std::unique_ptr<crubit::ffi::Item> crubit::TypeAliasImporter::Import(
 
   auto item = std::make_unique<crubit::ffi::Item>();
   auto* type_alias = item->mutable_type_alias();
-  type_alias->mutable_cc_name()->set_identifier(
-      identifier->cc_identifier.Ident());
+  *type_alias->mutable_cc_name() = identifier->cc_identifier;
   type_alias->mutable_rs_name()->set_identifier(rs_name);
   type_alias->set_unique_name(ictx_.GetUniqueName(*decl));
   type_alias->set_id(ictx_.GenerateItemId(*decl).value());

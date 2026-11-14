@@ -679,6 +679,59 @@ class CRUBIT_FFI_TRIVIAL_ABI FfiMap {
   FfiVec<value_type> entries_;
 };
 
+// An identifier involved in bindings.
+//
+// For example, the identifier for the C++ function `int Add(int a, int b);`
+// is `Identifier("Add")`.
+//
+// This also includes operator names, such as "operator==". Non-symbol tokens in
+// the operator name are separated by a single space. For example:
+//
+//  * `Identifier("operator==")`
+//  * `Identifier("operator new[]")`
+//  * `Identifier("operator co_await")`
+//
+// Invariants:
+//     `identifier` cannot be empty.
+class CRUBIT_FFI_TRIVIAL_ABI Identifier {
+ public:
+  Identifier() = default;
+  explicit Identifier(llvm::StringRef identifier) : identifier_(identifier) {
+    CRUBIT_CHECK(!identifier.empty());
+  }
+  explicit Identifier(std::string_view identifier)
+      : Identifier(llvm::StringRef(identifier.data(), identifier.size())) {}
+  explicit Identifier(const std::string& identifier)
+      : Identifier(llvm::StringRef(identifier)) {}
+  explicit Identifier(const char* identifier)
+      : Identifier(llvm::StringRef(identifier)) {}
+
+  llvm::StringRef Ident() const { return identifier_.AsView(); }
+  std::string_view identifier() const { return identifier_.AsView(); }
+  void set_identifier(std::string_view value) {
+    identifier_ = FfiString(value);
+  }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const Identifier& i) {
+    return H::combine(std::move(h), i.identifier());
+  }
+
+  friend bool operator==(const Identifier&, const Identifier&) = default;
+  friend bool operator!=(const Identifier&, const Identifier&) = default;
+
+  friend std::ostream& operator<<(std::ostream& o, const Identifier& id) {
+    return o << id.identifier();
+  }
+
+ private:
+  FfiString identifier_{};
+};
+
+static_assert(std::is_standard_layout_v<Identifier>);
+static_assert(sizeof(size_t) != 8 ||
+              (sizeof(Identifier) == 16 && alignof(Identifier) == 8));
+
 }  // namespace crubit::ffi
 
 namespace llvm {
@@ -699,6 +752,23 @@ struct DenseMapInfo<crubit::ffi::FfiString> {
         (RHS.len_ == 0 && RHS.dangling_ptr_ != 1)) {
       return LHS.dangling_ptr_ == RHS.dangling_ptr_ && LHS.len_ == RHS.len_;
     }
+    return LHS == RHS;
+  }
+};
+
+template <>
+struct DenseMapInfo<crubit::ffi::Identifier> {
+  static crubit::ffi::Identifier getEmptyKey() {
+    return crubit::ffi::Identifier("\x01<empty>");
+  }
+  static crubit::ffi::Identifier getTombstoneKey() {
+    return crubit::ffi::Identifier("\x01<tombstone>");
+  }
+  static unsigned getHashValue(const crubit::ffi::Identifier& Val) {
+    return static_cast<unsigned>(llvm::hash_value(Val.Ident()));
+  }
+  static bool isEqual(const crubit::ffi::Identifier& LHS,
+                      const crubit::ffi::Identifier& RHS) {
     return LHS == RHS;
   }
 };
