@@ -2827,9 +2827,13 @@ fn generate_variant_ctor<'db, 'tcx>(
             #[rustversion::since(2026-05-13)]
             let ty = normalize_ty(tcx, tcx.param_env(field_def.did), ty);
 
-            if !db.is_cpp_move_constructible(ty) {
+            if let Err(reason) = db.check_cpp_move_constructible(ty) {
                 // If one of our fields isn't movable in C++, we can't generate a C++ constructor.
-                bail!("Field `{}` is not movable in C++", field_def.name)
+                bail!(
+                    "Field `{}` of type `{ty}` is not movable in C++ because {reason}. \
+                     See crubit.rs/rust/movable_types for what types are C++ movable.",
+                    field_def.name,
+                );
             }
 
             Ok(ty)

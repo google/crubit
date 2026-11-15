@@ -135,7 +135,8 @@ DontMoveMe final {
   // Drop::drop
   ~DontMoveMe();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   DontMoveMe(DontMoveMe&&) = delete;
@@ -338,7 +339,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~TupleStructWithCloneNoDefault();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   TupleStructWithCloneNoDefault(TupleStructWithCloneNoDefault&&) = delete;
@@ -382,7 +384,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~TupleStructWithCppImmovableType();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   TupleStructWithCppImmovableType(TupleStructWithCppImmovableType&&) = delete;

@@ -2549,7 +2549,7 @@ fn test_callable_param_non_movable_type_error() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `&dyn std::ops::Fn(NonCppMovable)`: Callable parameter type `NonCppMovable` is not C++-movable. Types without C++ move constructors cannot be passed by value to a callable. See crubit.rs/rust/movable_types for what types are C++ movable."
+            "Error handling parameter #0 of type `&dyn std::ops::Fn(NonCppMovable)`: Callable parameter type `NonCppMovable` is not C++-movable (it implements `Drop` and does not implement `Default` or `Clone`). Types without C++ move constructors cannot be passed by value to a callable; consider passing by reference (`&NonCppMovable`) or making it C++-movable. See crubit.rs/rust/movable_types for what types are C++ movable."
         );
     });
 }
@@ -2567,7 +2567,7 @@ fn test_callable_param_boxed_non_movable_type_error() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `std::boxed::Box<(dyn std::ops::FnOnce(NonCppMovable) + 'static)>`: Callable parameter type `NonCppMovable` is not C++-movable. Types without C++ move constructors cannot be passed by value to a callable. See crubit.rs/rust/movable_types for what types are C++ movable."
+            "Error handling parameter #0 of type `std::boxed::Box<(dyn std::ops::FnOnce(NonCppMovable) + 'static)>`: Callable parameter type `NonCppMovable` is not C++-movable (it implements `Drop` and does not implement `Default` or `Clone`). Types without C++ move constructors cannot be passed by value to a callable; consider passing by reference (`&NonCppMovable`) or making it C++-movable. See crubit.rs/rust/movable_types for what types are C++ movable."
         );
     });
 }
@@ -2708,7 +2708,7 @@ fn test_bridged_type_with_derive_rust_movable() {
     test_format_item(test_src, "returns_status_or_cpp_unmovable", |result| {
         let err = result.unwrap_err();
         assert!(
-            err.contains("Error formatting function return type `StatusOr<CppUnmovable>`: crubit.rs/errors/unsupported_type: Bridged type `StatusOr` cannot be passed by value because `CppUnmovable` is not C++ move-constructible."),
+            err.contains("Error formatting function return type `StatusOr<CppUnmovable>`: crubit.rs/errors/unsupported_type: Bridged type `StatusOr` cannot be passed by value because `CppUnmovable` is not C++ move-constructible (the underlying C++ type `CppUnmovable` is not known to be move-constructible in C++)."),
             "Unexpected error message: {err}"
         );
     });
@@ -2738,14 +2738,14 @@ fn test_bridged_type_with_non_cpp_movable_type_arg_rejected() {
     test_format_item(test_src, "returns_status_or_unmovable", |result| {
         let err = result.unwrap_err();
         assert!(
-            err.contains("Error formatting function return type `StatusOr<Unmovable>`: crubit.rs/errors/unsupported_type: Bridged type `StatusOr` cannot be passed by value because `Unmovable` is not C++ move-constructible."),
+            err.contains("Error formatting function return type `StatusOr<Unmovable>`: crubit.rs/errors/unsupported_type: Bridged type `StatusOr` cannot be passed by value because `Unmovable` is not C++ move-constructible (it implements `Drop` and does not implement `Default` or `Clone`)."),
             "Unexpected error message: {err}"
         );
     });
     test_format_item(test_src, "returns_wrapper_unmovable", |result| {
         let err = result.unwrap_err();
         assert!(
-            err.contains("Error formatting function return type `MyWrapper<Unmovable>`: crubit.rs/errors/unsupported_type: Bridged type `MyWrapper` cannot be passed by value because `Unmovable` is not C++ move-constructible."),
+            err.contains("Error formatting function return type `MyWrapper<Unmovable>`: crubit.rs/errors/unsupported_type: Bridged type `MyWrapper` cannot be passed by value because `Unmovable` is not C++ move-constructible (it implements `Drop` and does not implement `Default` or `Clone`)."),
             "Unexpected error message: {err}"
         );
     });
@@ -2955,7 +2955,38 @@ fn test_unmovable_self_with_unsatisfied_copy_where_bound_in_method() {
             quote! {
                 struct ... Unmovable final {
                     ...
-                    __COMMENT__ "Error generating bindings for associated function `Unmovable::<'a>::consume`: Can't pass `self` by value for an unmovable type without a move constructor."
+                    __COMMENT__ "Error generating bindings for associated function `Unmovable::<'a>::consume`: Can't pass `self` by value for `Unmovable<'a>` because it implements `Drop` and does not implement `Default` or `Clone`. Consider taking `&self`/`&mut self`, taking a non-`self` parameter instead, or making `Unmovable<'a>` C++-movable. See crubit.rs/rust/movable_types for what types are C++ movable."
+                    ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_by_value_self_on_default_not_unpin_struct_error_mentions_unpin() {
+    let test_src = r#"
+        pub struct PinnedWithDefault(pub i32, std::marker::PhantomPinned);
+        impl Default for PinnedWithDefault {
+            fn default() -> Self {
+                Self(0, std::marker::PhantomPinned)
+            }
+        }
+        impl Drop for PinnedWithDefault {
+            fn drop(&mut self) {}
+        }
+        impl PinnedWithDefault {
+            pub fn consume(self) {}
+        }
+    "#;
+    test_format_item(test_src, "PinnedWithDefault", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                struct ... PinnedWithDefault final {
+                    ...
+                    __COMMENT__ "Error generating bindings for associated function `PinnedWithDefault::consume`: Can't pass `self` by value for `PinnedWithDefault` because it implements `Drop` and implements `Default`, but is `!Unpin` and not `Clone`. Consider taking `&self`/`&mut self`, taking a non-`self` parameter instead, or making `PinnedWithDefault` C++-movable. See crubit.rs/rust/movable_types for what types are C++ movable."
                     ...
                 };
             }

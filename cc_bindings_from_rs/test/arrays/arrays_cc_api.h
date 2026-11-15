@@ -54,7 +54,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~EmptyArrayDropStruct();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it implements
+  // `Drop` and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   EmptyArrayDropStruct(EmptyArrayDropStruct&&) = delete;
@@ -120,7 +121,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
   // Drop::drop
   ~HasDrop();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it implements
+  // `Drop` and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   HasDrop(HasDrop&&) = delete;

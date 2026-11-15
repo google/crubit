@@ -2002,7 +2002,7 @@ fn rs_type_kinds_for_func(
                     // Use a shared aggregation fmt key for all "parameter not supported" errors.
                     let fail = |parameter| {
                         error_report::because(
-                            anyhow!("{parameter} is not supported: {err}"),
+                            anyhow!("{parameter} is not supported: {err:#}"),
                             err.clone(),
                         )
                     };
@@ -2053,7 +2053,7 @@ fn rs_type_kinds_for_func(
                 Ok(ty)
             })
             .map_err(|err| {
-                error_report::because(anyhow!("Return type is not supported: {err}"), err)
+                error_report::because(anyhow!("Return type is not supported: {err:#}"), err)
             }),
         )
     };

@@ -350,7 +350,12 @@ fn analyze_field<'db, 'tcx>(
     );
     let cpp_type =
         db.format_ty_for_cc(ty, TypeLocation::Field).with_context(|| format!("Field `{name}`"))?;
-    ensure!(db.is_cpp_move_constructible(ty), "Field `{name}` is not movable in C++");
+    if let Err(reason) = db.check_cpp_move_constructible(ty) {
+        bail!(
+            "Field `{name}` of type `{ty}` is not movable in C++ because {reason}. \
+             See crubit.rs/rust/movable_types for what types are C++ movable."
+        );
+    }
 
     // Tuple variants' fields are named `0`, `1`, ..., which aren't C++ identifiers.
     let cc_name = if name.starts_with(|c: char| c.is_ascii_digit()) {

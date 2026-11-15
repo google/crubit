@@ -25,6 +25,9 @@ use query_compiler::{is_copy, is_std_ptr_non_null};
 use quote::quote;
 use rustc_middle::ty::{self, Ty};
 use rustc_span::symbol::sym;
+use std::rc::Rc;
+
+const PROTO_MESSAGE_NOT_MOVABLE_REASON: &str = "Rust protobuf message types are not C++-movable";
 
 pub fn has_default_ctor<'tcx>(db: &BindingsGenerator<'tcx>, self_ty: Ty<'tcx>) -> bool {
     let tcx = db.tcx();
@@ -242,34 +245,65 @@ pub fn generate_copy_ctor_and_assignment_operator<'tcx>(
 
 /// If we were to generate a C++ move constructor and assignment operator for a Rust-originating
 /// type, how would we do it?
+///
+/// Returns `Err(reason)` explaining why C++ move operations cannot be generated for `self_ty`.
 pub fn move_ctor_and_assignment_operator_codegen_style<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
-) -> Option<MoveCodegenStyle> {
+) -> std::result::Result<MoveCodegenStyle, Rc<str>> {
     if db.is_proto_message(self_ty) {
-        return None;
+        return Err(PROTO_MESSAGE_NOT_MOVABLE_REASON.into());
     }
     let tcx = db.tcx();
     let typing_env = ty::TypingEnv::fully_monomorphized();
-    MoveCodegenStyle::from_available_traits(
-        !self_ty.needs_drop(tcx, typing_env),
-        db.has_default_ctor(self_ty),
-        self_ty.is_unpin(tcx, typing_env),
-        db.copy_ctor_and_assignment_operator_codegen_style(self_ty).is_some(),
-    )
+    // If the type has no drop glue we can use the default move constructor and assignment operator.
+    if !self_ty.needs_drop(tcx, typing_env) {
+        return Ok(MoveCodegenStyle::Default);
+    }
+    let has_default_ctor = db.has_default_ctor(self_ty);
+    let is_unpin = self_ty.is_unpin(tcx, typing_env);
+    if has_default_ctor && is_unpin {
+        return Ok(MoveCodegenStyle::MemSwap);
+    }
+    if db.copy_ctor_and_assignment_operator_codegen_style(self_ty).is_some() {
+        return Ok(MoveCodegenStyle::Copy);
+    }
+    let drop_desc = if self_ty.ty_adt_def().is_some_and(|adt_def| adt_def.destructor(tcx).is_some())
+    {
+        "implements `Drop`"
+    } else {
+        "has a non-trivial destructor"
+    };
+    let reason = match (has_default_ctor, is_unpin) {
+        (true, false) => {
+            format!("it {drop_desc} and implements `Default`, but is `!Unpin` and not `Clone`")
+        }
+        (false, false) => {
+            format!("it {drop_desc}, is `!Unpin`, and does not implement `Default` or `Clone`")
+        }
+        (false, true) => format!("it {drop_desc} and does not implement `Default` or `Clone`"),
+        (true, true) => unreachable!("handled by `MoveCodegenStyle::MemSwap` above"),
+    };
+    Err(reason.into())
 }
 
-/// Returns true if the type is move-constructible in C++.
+/// Checks whether `ty` is move-constructible in C++.
+///
+/// Returns `Ok(())` if move-constructible, or `Err(reason)` explaining why it is not.
 ///
 /// For imported C++ types (types annotated with `CRUBIT_ANNOTATE: cpp_type=...`),
 /// this inspects `CRUBIT_ANNOTATE: cpp_move_constructible=` emitted by `rs_bindings_from_cc`.
 ///
 /// For Rust types, this checks if Crubit can generate move operations for it via
 /// `move_ctor_and_assignment_operator_codegen_style`.
-pub fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+pub fn check_cpp_move_constructible<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+) -> std::result::Result<(), Rc<str>> {
     if query_compiler::as_ref_or_pinned_ref(ty).is_some() {
-        return true;
+        return Ok(());
     }
+    let tcx = db.tcx();
     match *ty.kind() {
         // Primitives, references, and raw pointers are trivially movable in C++.
         ty::Bool
@@ -280,39 +314,73 @@ pub fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx
         | ty::Never
         | ty::RawPtr(..)
         | ty::Ref(..)
-        | ty::FnPtr(..) => true,
+        | ty::FnPtr(..) => Ok(()),
 
         // ADT: check CrubitAttrs if C++-originated, else check
         // move_ctor_and_assignment_operator_codegen_style.
         ty::Adt(adt_def, substs) => {
-            if query_compiler::is_owned_box_or_pinned_box(db.tcx(), ty) {
-                return false;
+            if query_compiler::is_owned_box_or_pinned_box(tcx, ty) {
+                return Err(
+                    "`Box` has no empty moved-from state in C++ (see crubit.rs/types/box)".into()
+                );
             }
-            if is_std_ptr_non_null(db.tcx(), adt_def.did()) {
-                return true;
+            if is_std_ptr_non_null(tcx, adt_def.did()) {
+                return Ok(());
             }
             if db.is_proto_message(ty) {
-                return false;
+                return Err(PROTO_MESSAGE_NOT_MOVABLE_REASON.into());
             }
-            if let Ok(attrs) = crubit_attr::get_attrs(db.tcx(), adt_def.did()) {
+            let mut cpp_type = None;
+            if let Ok(attrs) = crubit_attr::get_attrs(tcx, adt_def.did()) {
                 if attrs.cpp_move_constructible {
-                    return true;
+                    return Ok(());
                 }
                 if attrs.cpp_type.is_some() && substs.types().next().is_some() {
-                    return substs.types().all(|t| db.is_cpp_move_constructible(t));
+                    for t in substs.types() {
+                        if let Err(inner_reason) = db.check_cpp_move_constructible(t) {
+                            return Err(format!(
+                                "type argument `{t}` is not C++-movable ({inner_reason})"
+                            )
+                            .into());
+                        }
+                    }
+                    return Ok(());
                 }
+                cpp_type = attrs.cpp_type;
             }
 
-            db.move_ctor_and_assignment_operator_codegen_style(ty).is_some()
+            db.move_ctor_and_assignment_operator_codegen_style(ty).map(|_| ()).map_err(|reason| {
+                if let Some(cpp_type) = cpp_type {
+                    format!(
+                        "the underlying C++ type `{cpp_type}` is not known to be \
+                         move-constructible in C++"
+                    )
+                    .into()
+                } else {
+                    reason
+                }
+            })
         }
 
         // Tuples: all elements must be move-constructible.
-        ty::Tuple(fields) => fields.iter().all(|f| db.is_cpp_move_constructible(f)),
+        ty::Tuple(fields) => {
+            for (i, field_ty) in fields.iter().enumerate() {
+                if let Err(inner_reason) = db.check_cpp_move_constructible(field_ty) {
+                    return Err(format!(
+                        "tuple element #{i} (`{field_ty}`) is not C++-movable ({inner_reason})"
+                    )
+                    .into());
+                }
+            }
+            Ok(())
+        }
 
         // Arrays: element type must be move-constructible.
-        ty::Array(elem_ty, _) => db.is_cpp_move_constructible(elem_ty),
+        ty::Array(elem_ty, _) => db.check_cpp_move_constructible(elem_ty).map_err(|inner_reason| {
+            format!("array element type `{elem_ty}` is not C++-movable ({inner_reason})").into()
+        }),
 
-        _ => false,
+        _ => Err(format!("type `{ty}` has no C++ move constructor").into()),
     }
 }
 
@@ -329,11 +397,13 @@ pub fn generate_move_ctor_and_assignment_operator<'tcx>(
     match db.move_ctor_and_assignment_operator_codegen_style(common.self_ty) {
         // We rely on the copy constructor and assignment operator to handle the move
         // operations.
-        Some(MoveCodegenStyle::Copy) => ApiSnippets::default(),
-        None => {
-            let msg = "C++ move operations are unavailable for this type. See \
-               http://crubit.rs/rust/movable_types for an explanation of Rust types that are C++ \
-               movable.";
+        Ok(MoveCodegenStyle::Copy) => ApiSnippets::default(),
+        Err(reason) => {
+            let msg = format!(
+                "C++ move operations are unavailable for this type because {reason}. See \
+                 http://crubit.rs/rust/movable_types for an explanation of Rust types that are \
+                 C++ movable."
+            );
             ApiSnippets {
                 main_api: CcSnippet::new(quote! {
                     __NEWLINE__ __COMMENT__ #msg
@@ -343,7 +413,7 @@ pub fn generate_move_ctor_and_assignment_operator<'tcx>(
                 ..Default::default()
             }
         }
-        Some(MoveCodegenStyle::MemSwap) => {
+        Ok(MoveCodegenStyle::MemSwap) => {
             let main_api = CcSnippet::new(quote! {
                 #adt_cc_name(#adt_cc_name&&) noexcept; __NEWLINE__
                 #qualified_adt_name& operator=(#adt_cc_name&&) noexcept; __NEWLINE__
@@ -364,7 +434,7 @@ pub fn generate_move_ctor_and_assignment_operator<'tcx>(
             let cc_details = CcSnippet { tokens, prereqs };
             ApiSnippets { main_api, cc_details, ..Default::default() }
         }
-        Some(MoveCodegenStyle::Default) => {
+        Ok(MoveCodegenStyle::Default) => {
             let main_api = CcSnippet::new(quote! {
                 // The generated bindings have to follow Rust move semantics:
                 // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says

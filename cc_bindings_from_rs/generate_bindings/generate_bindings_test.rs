@@ -4456,3 +4456,115 @@ fn test_option_and_result_multi_level_pointer_accessors_nullability() {
         );
     });
 }
+
+#[gtest]
+fn test_not_cpp_move_constructible_reasons() {
+    let test_src = r#"
+        #![allow(dead_code)]
+        use std::marker::PhantomPinned;
+
+        pub struct HasDrop(pub i32);
+        impl Drop for HasDrop {
+            fn drop(&mut self) {}
+        }
+
+        pub struct HasFieldWithDrop(pub HasDrop);
+
+        pub struct HasDropDefaultNotUnpin(pub i32, PhantomPinned);
+        impl Default for HasDropDefaultNotUnpin {
+            fn default() -> Self {
+                Self(0, PhantomPinned)
+            }
+        }
+        impl Drop for HasDropDefaultNotUnpin {
+            fn drop(&mut self) {}
+        }
+
+        pub struct HasDropNotUnpin(pub i32, PhantomPinned);
+        impl Drop for HasDropNotUnpin {
+            fn drop(&mut self) {}
+        }
+
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppUnmovable"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=cpp_unmovable.h"]
+        pub struct CppUnmovable(pub i32);
+        impl Drop for CppUnmovable {
+            fn drop(&mut self) {}
+        }
+
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppTrivial"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=cpp_trivial.h"]
+        pub struct CppTrivial(pub i32);
+
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppGeneric<{T}>"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=cpp_generic.h"]
+        pub struct CppGeneric<T>(std::marker::PhantomData<T>);
+
+        pub fn probe(
+            _: HasDrop,
+            _: HasFieldWithDrop,
+            _: HasDropDefaultNotUnpin,
+            _: HasDropNotUnpin,
+            _: Box<i32>,
+            _: CppUnmovable,
+            _: CppGeneric<HasDrop>,
+            _: (i32, HasDrop),
+            _: [HasDrop; 2],
+        ) {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = bindings_db_for_tests(tcx);
+        let cpp_trivial_ty = tcx
+            .type_of(find_def_id_by_name(tcx, "CppTrivial"))
+            .instantiate_identity()
+            .skip_normalization();
+        assert!(db.check_cpp_move_constructible(cpp_trivial_ty).is_ok());
+
+        let probe_def_id = find_def_id_by_name(tcx, "probe").to_def_id();
+        let sig = tcx.fn_sig(probe_def_id).instantiate_identity().skip_binder();
+        let reasons: Vec<std::rc::Rc<str>> = sig
+            .inputs()
+            .iter()
+            .map(|&ty| {
+                db.check_cpp_move_constructible(ty)
+                    .expect_err(&format!("expected {ty} to be unmovable"))
+            })
+            .collect();
+        let reasons: Vec<&str> = reasons.iter().map(|r| r.as_ref()).collect();
+        assert_eq!(
+            reasons,
+            vec![
+                "it implements `Drop` and does not implement `Default` or `Clone`",
+                "it has a non-trivial destructor and does not implement `Default` or `Clone`",
+                "it implements `Drop` and implements `Default`, but is `!Unpin` and not `Clone`",
+                "it implements `Drop`, is `!Unpin`, and does not implement `Default` or `Clone`",
+                "`Box` has no empty moved-from state in C++ (see crubit.rs/types/box)",
+                "the underlying C++ type `CppUnmovable` is not known to be move-constructible in C++",
+                "type argument `HasDrop` is not C++-movable (it implements `Drop` and does not implement `Default` or `Clone`)",
+                "tuple element #1 (`HasDrop`) is not C++-movable (it implements `Drop` and does not implement `Default` or `Clone`)",
+                "array element type `HasDrop` is not C++-movable (it implements `Drop` and does not implement `Default` or `Clone`)",
+            ]
+        );
+    });
+}
+
+#[gtest]
+fn test_reexported_unsupported_function_preserves_error_chain() {
+    let test_src = r#"
+        pub use std::panic::resume_unwind;
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        let cc_api_str = bindings.cc_api.to_string();
+        assert!(
+            cc_api_str.contains(
+                "Unable to `use` function whose bindings failed: Error handling parameter #0"
+            ),
+            "Expected clean chained context in cc_api, got:\n{cc_api_str}"
+        );
+        assert!(
+            !cc_api_str.contains("Caused by:"),
+            "Should not leak Rust Debug error formatting into cc_api:\n{cc_api_str}"
+        );
+    });
+}

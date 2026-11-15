@@ -41,8 +41,8 @@ use format_type::{
 pub use generate_comment::generate_source_location;
 use generate_comment::{generate_deprecated_tag, generate_doc_comment};
 use generate_ctor::{
-    copy_ctor_and_assignment_operator_codegen_style, has_default_ctor, is_cpp_move_constructible,
-    move_ctor_and_assignment_operator_codegen_style,
+    check_cpp_move_constructible, copy_ctor_and_assignment_operator_codegen_style,
+    has_default_ctor, move_ctor_and_assignment_operator_codegen_style,
 };
 use generate_function::generate_function;
 use generate_struct_and_union::{
@@ -421,7 +421,7 @@ fn new_database_impl<'db>(
         has_default_ctor,
         copy_ctor_and_assignment_operator_codegen_style,
         move_ctor_and_assignment_operator_codegen_style,
-        is_cpp_move_constructible,
+        check_cpp_move_constructible,
         is_cpp_constexpr_move_constructible,
         generate_item,
         generate_function,
@@ -473,7 +473,7 @@ pub fn generate_bindings<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<BindingsT
 
     let BindingsTokens { cc_api, cc_api_impl } =
         generate_crate_without_colliding_specializations(db).unwrap_or_else(|err| {
-            let txt = format!("Failed to generate bindings for the crate: {err}");
+            let txt = format!("Failed to generate bindings for the crate: {err:#}");
             let src = quote! { __COMMENT__ #txt };
             BindingsTokens { cc_api: src.clone(), cc_api_impl: src }
         });
@@ -1035,14 +1035,10 @@ fn generate_using<'tcx>(
     let mut fn_prereqs = None;
     let mut snippet = match tcx.def_kind(def_id) {
         DefKind::Fn => {
-            match db.generate_function(def_id, None, None, StaticMethodMode::Infer) {
-                Ok(snippet) => {
-                    fn_prereqs = Some(&snippet.main_api.prereqs);
-                }
-                Err(err) => {
-                    bail!("Unable to `use` function whose bindings failed: {err:?}");
-                }
-            }
+            let snippet = db
+                .generate_function(def_id, None, None, StaticMethodMode::Infer)
+                .context("Unable to `use` function whose bindings failed")?;
+            fn_prereqs = Some(&snippet.main_api.prereqs);
             let fully_qualified_fn_name = db.symbol_canonical_name(def_id)?;
             let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc(db)?;
             let main_api_fn_name =
@@ -1488,7 +1484,7 @@ pub fn format_namespace_bound_cc_tokens(
             }
             format_with_cc_body(db, &ns, tokens, ns_attributes).unwrap_or_else(|err| {
                 let name = ns.parts().join("::");
-                let err = format!("Failed to format namespace name `{name}`: {err}");
+                let err = format!("Failed to format namespace name `{name}`: {err:#}");
                 quote! { __COMMENT__ #err }
             })
         });
@@ -2171,7 +2167,7 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
                 Node::Def(def_id) => {
                     let canonical_name = db.symbol_canonical_name(def_id).unwrap_or_else(|err| {
                         panic!(
-                            "Exported item {} should have a canonical name: {err}",
+                            "Exported item {} should have a canonical name: {err:#}",
                             tcx.def_path_str(def_id),
                         )
                     });

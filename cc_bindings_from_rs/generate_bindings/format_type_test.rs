@@ -1661,3 +1661,25 @@ fn test_format_ty_for_cc_bridged_pointer_types_get_crubit_nullable() {
         },
     );
 }
+
+#[test]
+fn test_bridged_generic_param_preserves_wrapped_error_context() {
+    let preamble = quote! {
+        #[doc = "CRUBIT_ANNOTATE: cpp_type = cpp_ns::Wrapper<{T}>"]
+        #[doc = "CRUBIT_ANNOTATE: include_path = cpp_ns/wrapper.h"]
+        #[doc = "CRUBIT_ANNOTATE: cpp_move_constructible = "]
+        pub struct Wrapper<T>(std::marker::PhantomData<T>);
+    };
+    let fn_param = TypeLocation::FnParam { is_self_param: false, elided_is_output: false };
+    test_ty(fn_param, &[("Wrapper<fn()>", ())], preamble, |desc, tcx, ty, ()| {
+        let db = bindings_db_for_tests(tcx);
+        let err = db.format_cc_type(ty, fn_param).expect_err(desc);
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains(
+                "`fn()` has no layout-compatible C++ type, but is used as a generic parameter"
+            ) && msg.contains("Function pointers can't have a thunk: "),
+            "Expected full wrapped error chain, got:\n{msg}"
+        );
+    });
+}

@@ -138,26 +138,3 @@ pub enum MoveCodegenStyle {
     // used in lieu of the move constructor and assignment operator.
     Copy,
 }
-
-impl MoveCodegenStyle {
-    /// Returns a `MoveCodegenStyle` based on what combination of Default, Unpin, Copy, and Clone
-    /// the type implements.
-    pub fn from_available_traits(
-        does_not_need_drop: bool,
-        has_default_ctor: bool,
-        is_unpin: bool,
-        has_copy_codegen_style: bool,
-    ) -> Option<Self> {
-        // If our type has no drop glue we can use the default move constructor and assignment
-        // operator.
-        if does_not_need_drop {
-            Some(MoveCodegenStyle::Default)
-        } else if has_default_ctor && is_unpin {
-            Some(MoveCodegenStyle::MemSwap)
-        } else if has_copy_codegen_style {
-            Some(MoveCodegenStyle::Copy)
-        } else {
-            None
-        }
-    }
-}

@@ -2707,8 +2707,10 @@ fn test_format_item_enum_api_v2_fallback() {
              impl Drop for NonMovable { fn drop(&mut self) {} } \
              pub enum HasNonMovableField { A, B(NonMovable) }",
             "HasNonMovableField",
-            "Not using the `enum_api_v2` bindings for this enum: Variant `B`: Field `0` is not \
-             movable in C++",
+            "Not using the `enum_api_v2` bindings for this enum: Variant `B`: Field `0` of type \
+             `NonMovable` is not movable in C++ because it implements `Drop` and does not \
+             implement `Default` or `Clone`. See crubit.rs/rust/movable_types for what types are \
+             C++ movable.",
         ),
         (
             "#[derive(Clone, Copy)] pub enum Collides { Discriminant, B(i32) }",

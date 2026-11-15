@@ -94,7 +94,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(4)
   // Drop::drop
   ~Map();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Map(Map&&) = delete;

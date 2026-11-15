@@ -69,7 +69,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: DropNoDefault") alignas(1)
   // Drop::drop
   ~DropNoDefault();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it implements
+  // `Drop` and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   DropNoDefault(DropNoDefault&&) = delete;
@@ -170,7 +171,8 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   // `core::result::Result` doesn't implement the `Clone` trait
   Result(const Result&) = delete;
   Result& operator=(const Result&) = delete;
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Result(Result&&) = delete;
@@ -571,7 +573,8 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   // `core::result::Result` doesn't implement the `Clone` trait
   Result(const Result&) = delete;
   Result& operator=(const Result&) = delete;
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Result(Result&&) = delete;
@@ -641,7 +644,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   // `core::result::Result` doesn't implement the `Clone` trait
   Result(const Result&) = delete;
   Result& operator=(const Result&) = delete;
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Result(Result&&) = delete;
@@ -709,7 +713,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   // `core::result::Result` doesn't implement the `Clone` trait
   Result(const Result&) = delete;
   Result& operator=(const Result&) = delete;
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Result(Result&&) = delete;
@@ -1339,7 +1344,8 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   // `core::result::Result` doesn't implement the `Clone` trait
   Result(const Result&) = delete;
   Result& operator=(const Result&) = delete;
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Result(Result&&) = delete;
@@ -1407,7 +1413,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   // `core::result::Result` doesn't implement the `Clone` trait
   Result(const Result&) = delete;
   Result& operator=(const Result&) = delete;
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Result(Result&&) = delete;
@@ -1477,7 +1484,8 @@ HasDefaultResult final {
   // Drop::drop
   ~HasDefaultResult();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   HasDefaultResult(HasDefaultResult&&) = delete;
@@ -1515,7 +1523,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   // `core::result::Result` doesn't implement the `Clone` trait
   Result(const Result&) = delete;
   Result& operator=(const Result&) = delete;
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Result(Result&&) = delete;
@@ -1585,7 +1594,8 @@ HasNoDefaultResult final {
   // Drop::drop
   ~HasNoDefaultResult();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   HasNoDefaultResult(HasNoDefaultResult&&) = delete;
