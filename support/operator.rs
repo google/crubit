@@ -28,7 +28,7 @@ pub trait CcIndexMut<Key> {
 /// In particular, this is used for types with virtual destructors or overloaded
 /// `operator delete`.
 ///
-/// To safely use this trait, use `cc_std::std::virtual_unique_ptr`, which represents a
+/// To safely use this trait, use `cpp_std::virtual_unique_ptr`, which represents a
 /// C++ unique_ptr for a `T` that requires `delete`.
 ///
 /// # Safety
