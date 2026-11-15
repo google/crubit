@@ -99,10 +99,16 @@ def make_additional_rust_srcs_provider(
         aliases = {},
         link_deps = [],
         compile_data = [],
+        compile_data_targets = [],
+        crate_features = [],
+        rustc_flags = [],
+        rustc_env = {},
+        rustc_env_files = [],
         crubit_target = ""):
     return AdditionalRustSrcsProviderInfo(
         srcs = srcs,
         compile_data = compile_data,
+        compile_data_targets = compile_data_targets,
         namespace_path = namespace_path,
         deps = _get_additional_rust_deps_variant_info(deps),
         link_deps = _get_additional_rust_link_deps_variant_info(link_deps),
@@ -113,6 +119,10 @@ def make_additional_rust_srcs_provider(
         ],
         cpp_srcs = cpp_srcs,
         unstable_rust_features = unstable_rust_features,
+        crate_features = crate_features,
+        rustc_flags = rustc_flags,
+        rustc_env = rustc_env,
+        rustc_env_files = rustc_env_files,
         root_namespaces = root_namespaces,
         aliases = aliases,
         crubit_target = crubit_target,
@@ -152,6 +162,9 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
                     ),
                 )
 
+    if "CRUBIT_TARGET" in ctx.attr.rustc_env:
+        fail("In {}: `rustc_env` cannot set reserved variable `CRUBIT_TARGET`.".format(ctx.label))
+
     providers = [make_additional_rust_srcs_provider(
         ctx.attr.srcs,
         ctx.attr.namespace_path,
@@ -165,6 +178,11 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         aliases = aliases,
         link_deps = ctx.attr.link_deps,
         compile_data = ctx.files.compile_data,
+        compile_data_targets = ctx.attr.compile_data,
+        crate_features = ctx.attr.crate_features,
+        rustc_flags = ctx.attr.rustc_flags,
+        rustc_env = ctx.attr.rustc_env,
+        rustc_env_files = ctx.files.rustc_env_files,
         crubit_target = ctx.attr.crubit_target,
     )]
     crubit_features = []
@@ -224,6 +242,27 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             mandatory = False,
             default = [],
         ),
+        "crate_features": attr.string_list(
+            doc = "List of features to enable for this crate (passed to `rustc` via `--cfg feature=\"...\"`).",
+            mandatory = False,
+            default = [],
+        ),
+        "rustc_flags": attr.string_list(
+            doc = "List of compiler flags passed to `rustc`.",
+            mandatory = False,
+            default = [],
+        ),
+        "rustc_env": attr.string_dict(
+            doc = "Dictionary of additional `\"key\": \"value\"` environment variables to set for `rustc`.",
+            mandatory = False,
+            default = {},
+        ),
+        "rustc_env_files": attr.label_list(
+            doc = "Files containing additional environment variables to set for `rustc`.",
+            allow_files = True,
+            mandatory = False,
+            default = [],
+        ),
         "crubit_features": attr.label_list(
             providers = [CrubitFeaturesInfo],
             mandatory = False,
@@ -266,6 +305,10 @@ def additional_rust_srcs_for_crubit_bindings(
         generated_cpp_support_deps = [],
         cc_support_deps = [],
         unstable_rust_features = [],
+        crate_features = [],
+        rustc_flags = [],
+        rustc_env = {},
+        rustc_env_files = [],
         crubit_features = ["supported"],
         root_namespaces = [],
         aliases = {},
@@ -317,6 +360,13 @@ def additional_rust_srcs_for_crubit_bindings(
         cc_support_deps: Deprecated. Use generated_cpp_support_deps instead.
         root_namespaces: List of C++ namespaces to re-export at the root of the generated Rust bindings.
         unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
+        crate_features: List of features to enable for this crate (passed to `rustc` via
+            `--cfg feature="..."`, matching `rust_library.crate_features`).
+        rustc_flags: List of compiler flags passed to `rustc` (matching `rust_library.rustc_flags`).
+        rustc_env: Dictionary of additional `"key": "value"` environment variables to set for
+            `rustc` (matching `rust_library.rustc_env`).
+        rustc_env_files: Files containing additional environment variables to set for `rustc`
+            (matching `rust_library.rustc_env_files`).
         crubit_features: List of Crubit features to enable.
         aliases: A dictionary mapping targets (C++ or Rust) to their crate names for renaming.
             The keys can be Rust libraries, or either C++ libraries (e.g. `cc_library`) or their corresponding
@@ -338,6 +388,10 @@ def additional_rust_srcs_for_crubit_bindings(
         generated_cpp_support_deps = generated_cpp_support_deps,
         cc_support_deps = cc_support_deps,
         unstable_rust_features = unstable_rust_features,
+        crate_features = crate_features,
+        rustc_flags = rustc_flags,
+        rustc_env = rustc_env,
+        rustc_env_files = rustc_env_files,
         crubit_features = [
             f if (f.startswith("//") or f.startswith(":")) else "//features:" + f
             for f in crubit_features
