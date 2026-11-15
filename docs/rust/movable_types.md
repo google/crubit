@@ -13,7 +13,7 @@ A Rust type can be made movable in C++ in one of three ways:
     [destructor](https://doc.rust-lang.org/reference/destructors.html). (It does
     not implement `Drop`, and nor do any of its fields.)
 3.  [**Non-trivially move-constructible**](#nontrivial): the Rust type has a
-    destructor, but implements `Default`.
+    destructor, but implements `Default` and `Unpin`.
 
 The easiest way to ensure your type is useful to end users, even if it is
 changed in the future, is to implement `Clone` and `Default`. This makes the
@@ -50,7 +50,7 @@ behavior of performing any other operation is undefined.
 ## Non-trivially move-constructible {#nontrivial}
 
 If the Rust type is not trivially movable and destructible, but implements
-`Default`, then the resulting C++ type will be (non-trivially) move
+`Default` and `Unpin`, then the resulting C++ type will be (non-trivially) move
 constructible:
 
 *   Move construction has the same behavior as
@@ -59,6 +59,10 @@ constructible:
     moved-from object with `Default::default()`.
 *   Move assignment copies the bytes to the new object, as if by a Rust move,
     and replaces the moved-from object with an unspecified but valid object.
+
+`Unpin` is required because swapping with `Default::default()` moves the Rust
+value out of its memory address; `!Unpin` types cannot be moved in C++ via
+`Default`.
 
 ## Why is this required? {#why}
 
@@ -85,12 +89,14 @@ could not be moved!
 
 ## The `rs::Movable` wrapper {#movable_wrapper}
 
-If a Rust type is not C++ movable (has a destructor or drop glue, but does not
-implement `Clone` or `Default`), Crubit still generates C++ bindings for it, but
-its C++ move constructor and move assignment operator will be `= delete`d:
+If a Rust type is not C++ movable (has a destructor or drop glue, and neither
+implements `Clone` nor implements both `Default` and `Unpin`), Crubit still
+generates C++ bindings for it, but its C++ move constructor and move assignment
+operator will be `= delete`d, with a comment explaining why:
 
 ```c++
-// C++ move operations are unavailable for this type.
+// C++ move operations are unavailable for this type because it implements
+// `Drop` and does not implement `Default` or `Clone`. ...
 MyType(MyType&&) = delete;
 MyType& operator=(MyType&&) = delete;
 ```
@@ -102,6 +108,13 @@ Instead, when a function accepts such a type by value as a parameter, Crubit
 wraps the parameter in the
 [`rs::Movable<T>`](https://github.com/google/crubit/blob/main/support/movable.h)
 wrapper type.
+
+NOTE: `rs::Movable<T>` is used for ordinary function parameters (and return
+values when `movable_return_values` is enabled). Methods taking `self` by value
+(`fn foo(self)`), callables taking `T` by value (`impl Fn(T)`), bridged generic
+wrappers such as `absl::StatusOr<T>`, and `enum_api_v2` variant fields still
+require `T` to be C++-movable—consider taking `&self`/`&mut self`/`&T`, using an
+associated function parameter (`fn foo(x: Self)`), or making `T` C++-movable.
 
 `rs::Movable<T>` makes the type movable in C++ by tracking whether the
 underlying value has been moved out, ensuring that the destructor is not run on

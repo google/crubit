@@ -468,13 +468,14 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
         if !result_str.contains(&placeholder) {
             continue;
         }
-        let can_pass_type_arg = is_unconditionally_cpp_movable
-            || db.is_cpp_move_constructible(ty)
-            || (is_derive_rust_movable && is_cpp_relocatable(db, ty));
-        if is_passed_by_value && !can_pass_type_arg {
+        if is_passed_by_value
+            && !is_unconditionally_cpp_movable
+            && let Err(reason) = db.check_cpp_move_constructible(ty)
+            && !(is_derive_rust_movable && is_cpp_relocatable(db, ty))
+        {
             bail!(
                 "crubit.rs/errors/unsupported_type: Bridged type `{}` cannot be passed \
-                 by value because `{ty}` is not C++ move-constructible. \
+                 by value because `{ty}` is not C++ move-constructible ({reason}). \
                  See crubit.rs/rust/movable_types for what types are C++ movable.",
                 tcx.def_path_str(adt.did())
             );
@@ -488,7 +489,7 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
             /* apply_default_nullability= */ !is_wrapper,
         )
         .map_err(|err| {
-            let err = err.to_string().replace('\n', "\n  ");
+            let err = format!("{err:#}").replace('\n', "\n  ");
             anyhow!(
                 "`{ty}` has no layout-compatible C++ type, but is used as a generic parameter\n  {err}"
             )
@@ -914,13 +915,16 @@ fn format_ty_for_cc_impl<'tcx>(
             .param_tys
             .iter()
             .map(|&param_ty| -> Result<&TokenStream> {
-                ensure!(
-                    db.is_cpp_move_constructible(param_ty),
-                    "Callable parameter type `{param_ty}` is not C++-movable. Types without C++ move constructors cannot be passed by value to a callable. See crubit.rs/rust/movable_types for what types are C++ movable."
-                );
-                Ok(db
-                    .format_ty_for_cc(param_ty, TypeLocation::Other)?
-                    .into_tokens(&mut prereqs))
+                if let Err(reason) = db.check_cpp_move_constructible(param_ty) {
+                    bail!(
+                        "Callable parameter type `{param_ty}` is not C++-movable ({reason}). \
+                         Types without C++ move constructors cannot be passed by value to a \
+                         callable; consider passing by reference (`&{param_ty}`) or making it \
+                         C++-movable. See crubit.rs/rust/movable_types for what types are C++ \
+                         movable."
+                    );
+                }
+                Ok(db.format_ty_for_cc(param_ty, TypeLocation::Other)?.into_tokens(&mut prereqs))
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -1164,10 +1168,13 @@ fn format_ty_for_cc_impl<'tcx>(
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
-            if location.is_bridgeable() && is_c_abi_compatible_by_value(db, ty) {
-                ensure!(
-                    db.is_cpp_move_constructible(ty),
-                    "Can't pass a type by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable."
+            if location.is_bridgeable()
+                && is_c_abi_compatible_by_value(db, ty)
+                && let Err(reason) = db.check_cpp_move_constructible(ty)
+            {
+                bail!(
+                    "Can't pass `{ty}` by value without a C++ move constructor because {reason}. \
+                     See crubit.rs/rust/movable_types for what types are C++ movable."
                 );
             }
 
@@ -2268,9 +2275,11 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 if let Some(spec) = db.parse_adt_template_specialization(ty) {
                     // Specifically when embedding a template specialization within an Option, we
                     // need it to be movable.
-                    if !db.is_cpp_move_constructible(ty) {
+                    if let Err(reason) = db.check_cpp_move_constructible(ty) {
                         bail!(
-                            "Failed to construct CrubitAbiType for {ty} because it is not movable."
+                            "Type `{ty}` cannot be passed by value because it is not C++-movable \
+                             ({reason}). See crubit.rs/rust/movable_types for what types are C++ \
+                             movable."
                         );
                     }
                     let spec = spec.as_ref().map_err(Clone::clone)?;
@@ -2295,11 +2304,18 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                     tcx.param_env(adt.did()),
                     tcx.type_of(adt.did()).instantiate(tcx, substs),
                 );
-                if !db.is_cpp_move_constructible(normalized_ty) {
+                if let Err(reason) = db.check_cpp_move_constructible(normalized_ty) {
                     if query_compiler::is_owned_box_or_pinned_box(tcx, ty) {
-                        bail!("Type `{ty}` is not C++-movable. Box is layout-compatible but not C++-movable, see crubit.rs/types/box.");
+                        bail!(
+                            "Type `{ty}` is not C++-movable. Box is layout-compatible but not \
+                             C++-movable, see crubit.rs/types/box."
+                        );
                     } else {
-                        bail!("Failed to construct CrubitAbiType for {ty} because it does not have a move ctor or assignment operator.");
+                        bail!(
+                            "Type `{ty}` cannot be passed by value because it is not C++-movable \
+                             ({reason}). See crubit.rs/rust/movable_types for what types are C++ \
+                             movable."
+                        );
                     }
                 }
 

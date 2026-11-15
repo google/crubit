@@ -123,7 +123,7 @@ impl std::error::Error for FormattedError {}
 /// item. Only the message of `error` is kept: its own errors are reported for `item`.
 pub fn blocked_by(item: Blocker, error: arc_anyhow::Error) -> arc_anyhow::Error {
     let error = FormattedError {
-        fmt: Cow::Owned(error.to_string()),
+        fmt: Cow::Owned(format!("{error:#}")),
         full_error: Cow::Borrowed(""),
         blocked_by: Some(item),
     };
@@ -474,7 +474,7 @@ fn reported_message(error: &arc_anyhow::Error) -> FormattedError {
         ),
         None => FormattedError::new(
             Cow::Borrowed("{}"),
-            Cow::Owned(hide_unstable_details(&format!("{error}"))),
+            Cow::Owned(hide_unstable_details(&format!("{error:#}"))),
         ),
     }
 }
@@ -1007,6 +1007,31 @@ mod tests {
         let error = anyhow!("abc{}", "def");
         expect_eq!(blocked_by(blocker("A"), error.clone()).to_string(), "abcdef");
         expect_eq!(because(error, anyhow!("cause")).to_string(), "abcdef");
+
+        let wrapped = anyhow!("inner").context("outer");
+        expect_eq!(blocked_by(blocker("A"), wrapped).to_string(), "outer: inner");
+    }
+
+    #[gtest]
+    fn error_report_preserves_context_for_unformatted_errors() {
+        let report = ErrorReport::new(SourceLanguage::Cpp);
+        let err: arc_anyhow::Error = anyhow::Error::msg("root cause").context("outer").into();
+        report.report(&err);
+        expect_eq!(
+            serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
+            serde_json::json!([
+                {
+                    "source_language": "Cpp",
+                    "name": "",
+                    "errors": [
+                        {
+                            "fmt": "{}",
+                            "full_error": "outer: root cause",
+                        },
+                    ],
+                },
+            ]),
+        );
     }
 
     #[gtest]

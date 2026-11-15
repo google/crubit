@@ -307,13 +307,17 @@ memoized::query_group! {
       /// If we were to generate a C++ move constructor and assignment operator for a Rust-originating
       /// type, how would we do it?
       ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:move_ctor_and_assignment_operator_codegen_style
+      /// Returns `Err(reason)` explaining why C++ move operations cannot be generated for `self_ty`.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/generate_ctor.rs?q=function:move_ctor_and_assignment_operator_codegen_style
       fn move_ctor_and_assignment_operator_codegen_style(
           &self,
           self_ty: Ty<'tcx>,
-      ) -> Option<MoveCodegenStyle>;
+      ) -> std::result::Result<MoveCodegenStyle, Rc<str>>;
 
-      /// Returns true if the type is move-constructible in C++.
+      /// Checks whether `ty` is move-constructible in C++.
+      ///
+      /// Returns `Ok(())` if move-constructible, or `Err(reason)` explaining why it is not.
       ///
       /// For imported C++ types (types annotated with `CRUBIT_ANNOTATE: cpp_type=...`),
       /// this inspects `CRUBIT_ANNOTATE: cpp_move_constructible=` emitted by `rs_bindings_from_cc`.
@@ -321,8 +325,8 @@ memoized::query_group! {
       /// For Rust types, this checks if Crubit can generate move operations for it via
       /// `move_ctor_and_assignment_operator_codegen_style`.
       ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:is_cpp_move_constructible
-      fn is_cpp_move_constructible(&self, ty: Ty<'tcx>) -> bool;
+      /// Implementation: cc_bindings_from_rs/generate_bindings/generate_ctor.rs?q=function:check_cpp_move_constructible
+      fn check_cpp_move_constructible(&self, ty: Ty<'tcx>) -> std::result::Result<(), Rc<str>>;
 
       /// Returns true if the type is a C++20 literal type with a `constexpr` move constructor, so
       /// a `constexpr` C++ constructor can take it by value and move-initialize a member with it.
@@ -435,6 +439,11 @@ memoized::query_group! {
 }
 
 impl<'tcx> BindingsGenerator<'tcx> {
+    /// Returns true if the type is move-constructible in C++.
+    pub fn is_cpp_move_constructible(&self, ty: Ty<'tcx>) -> bool {
+        self.check_cpp_move_constructible(ty).is_ok()
+    }
+
     /// Formats `ty` into a `CcSnippet` representing how the type is spelled in a C++ declaration.
     pub fn format_ty_for_cc(
         &self,

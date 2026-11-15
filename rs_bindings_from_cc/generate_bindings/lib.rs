@@ -242,7 +242,7 @@ fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiS
             return Ok(ApiSnippets {
                 generated_items: HashMap::from([(
                     constant.id(),
-                    GeneratedItem::Comment { message: intern!(db.interner(), "{e}") },
+                    GeneratedItem::Comment { message: intern!(db.interner(), "{e:#}") },
                 )]),
                 ..Default::default()
             })
@@ -1172,7 +1172,7 @@ fn record_template_params_safety<'a>(
         Ok(params) => template_params_safety(db, params),
         Err(err) => Some(UnsafeReason(intern!(
             db.interner(),
-            "template parameter is unsafe: Rust type is unknown: {err}"
+            "template parameter is unsafe: Rust type is unknown: {err:#}"
         ))),
     }
 }
@@ -1233,7 +1233,7 @@ fn record_field_safety(
             // If we can't get the RsTypeKind for a public field, we assume it's unsafe.
             return Some(UnsafeReason(intern!(
                 db.interner(),
-                "Rust type is unknown; safety requirements cannot be automatically generated: {err}"
+                "Rust type is unknown; safety requirements cannot be automatically generated: {err:#}"
             )));
         }
     };

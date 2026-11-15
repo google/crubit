@@ -87,7 +87,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: UnmovableFoo") alignas(4)
   // Drop::drop
   ~UnmovableFoo();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   UnmovableFoo(UnmovableFoo&&) = delete;
@@ -144,7 +145,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   // `core::result::Result` doesn't implement the `Clone` trait
   Result(const Result&) = delete;
   Result& operator=(const Result&) = delete;
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Result(Result&&) = delete;

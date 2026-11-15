@@ -138,7 +138,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
   // Drop::drop
   ~NonCppMovable();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it implements
+  // `Drop` and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   NonCppMovable(NonCppMovable&&) = delete;
@@ -850,7 +851,8 @@ struct alignas(4)
   // `(tuples_golden::HasNoDefault, u8)` doesn't implement the `Clone` trait
   Tuple(const Tuple&) = delete;
   Tuple& operator=(const Tuple&) = delete;
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Tuple(Tuple&&) = delete;
@@ -1842,7 +1844,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefaultTuple") alignas(
   // Drop::drop
   ~HasDefaultTuple();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   HasDefaultTuple(HasDefaultTuple&&) = delete;
@@ -1881,7 +1884,8 @@ struct alignas(4)
   // `(u8, tuples_golden::HasNoDefault)` doesn't implement the `Clone` trait
   Tuple(const Tuple&) = delete;
   Tuple& operator=(const Tuple&) = delete;
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   Tuple(Tuple&&) = delete;
@@ -1969,7 +1973,8 @@ HasNoDefaultTuple final {
   // Drop::drop
   ~HasNoDefaultTuple();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   HasNoDefaultTuple(HasNoDefaultTuple&&) = delete;
@@ -2471,7 +2476,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~StructWithOptionTuple();
 
-  // C++ move operations are unavailable for this type. See
+  // C++ move operations are unavailable for this type because it has a
+  // non-trivial destructor and does not implement `Default` or `Clone`. See
   // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   StructWithOptionTuple(StructWithOptionTuple&&) = delete;

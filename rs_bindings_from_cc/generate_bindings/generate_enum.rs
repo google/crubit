@@ -51,7 +51,7 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: FfiRc<Enum>) -> Result<ApiSn
             let value =
                 match integer_constant_to_token_stream(db, enumerator.value(), &underlying_type) {
                     Ok(value) => value,
-                    Err(err) => return omitting_bindings_comment(err.to_string()),
+                    Err(err) => return omitting_bindings_comment(format!("{err:#}")),
                 };
             let doc_comment = generate_doc_comment(
                 enumerator.doc_comment(),

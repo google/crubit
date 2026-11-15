@@ -734,8 +734,15 @@ pub fn generate_thunk_call<'tcx>(
         .enumerate()
         .map(|(i, Param { cc_name, ty, .. })| {
             if i == 0 && self_param.is_inherent_self_method() {
-                if !self_param.takes_self_by_copy() && !db.is_cpp_move_constructible(*ty) {
-                    bail!("Can't pass `self` by value for an unmovable type without a move constructor.");
+                if !self_param.takes_self_by_copy()
+                    && let Err(reason) = db.check_cpp_move_constructible(*ty)
+                {
+                    bail!(
+                        "Can't pass `self` by value for `{ty}` because {reason}. Consider taking \
+                         `&self`/`&mut self`, taking a non-`self` parameter instead, or making \
+                         `{ty}` C++-movable. See crubit.rs/rust/movable_types for what types are \
+                         C++ movable."
+                    );
                 }
                 if self_param.takes_self_by_copy() {
                     // Self-by-copy methods are `const` qualified. The Rust thunk does not
@@ -750,13 +757,7 @@ pub fn generate_thunk_call<'tcx>(
                     tokens.extend(quote! { auto&& #cc_name = *this; });
                 }
             }
-            cc_param_to_c_abi(
-                db,
-                cc_name.clone(),
-                *ty,
-                &mut prereqs.includes,
-                &mut tokens,
-            )
+            cc_param_to_c_abi(db, cc_name.clone(), *ty, &mut prereqs.includes, &mut tokens)
         })
         .collect::<Result<Vec<TokenStream>>>()?;
 
