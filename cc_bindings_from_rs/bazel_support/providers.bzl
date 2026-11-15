@@ -18,6 +18,7 @@ CcBindingsFromRustInfo = provider(
                                    "`SUPPORTED_FEATURE_DENYLISTS`, overriding `--default-features`. Optional."),
         "configuration": "A CcBindingsFromRustLibraryConfigInfo provider.",
         "transitive_infos": "A depset of direct and transitive CcBindingsFromRustInfo providers.",
+        "config_hint_labels": "A list of labels for the configuration aspect hints attached to this crate.",
     },
 )
 
