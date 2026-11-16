@@ -23,8 +23,8 @@ pub use operator::Delete;
 /// Unlike `Box`, `unique_ptr` may hold a `nullptr` value when moved-from (via C++ move
 /// semantics). This allows it to be ABI-compatible with C++'s `std::unique_ptr`. However,
 /// `unique_ptr` is conventionally non-null, and some operations (e.g. [`Deref`], [`DerefMut`],
-/// `as_mut`, `into_box`, `into_pin_box`, `into_inner`) will panic if the pointer is null. Use
-/// [`is_null`](Self::is_null) to check for null instead.
+/// `as_pin`, `as_mut`, `into_box`, `into_pin_box`, `into_inner`) will panic if the pointer is
+/// null. Use [`is_null`](Self::is_null) to check for null instead.
 ///
 /// ## `unique_ptr` vs `virtual_unique_ptr`
 ///
@@ -219,11 +219,18 @@ impl<T: Sized> unique_ptr<T> {
         unsafe { this.ptr.as_ref() }
     }
 
-    /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
-    pub fn as_pin(this: &mut Self) -> Option<Pin<&mut T>> {
-        // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
-        // The pointee is pinned.
-        unsafe { Some(Pin::new_unchecked((this.ptr as *mut T).as_mut()?)) }
+    /// Returns a pinned exclusive reference to the owned object.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `this` is null. Use [`unique_ptr::is_null`] to check for null instead.
+    #[track_caller]
+    pub fn as_pin(this: &mut Self) -> Pin<&mut T> {
+        // SAFETY: By `unique_ptr` invariants, `this.ptr` is either null or points to a valid,
+        // exclusively owned `T`.
+        let r = unsafe { (this.ptr as *mut T).as_mut() }.expect("dereferencing a null unique_ptr");
+        // SAFETY: By `unique_ptr` invariants, the pointee is pinned.
+        unsafe { Pin::new_unchecked(r) }
     }
 }
 
@@ -238,7 +245,7 @@ impl<T: Unpin> unique_ptr<T> {
     /// Panics if `this` is null.
     #[track_caller]
     pub fn as_mut(this: &mut Self) -> &mut T {
-        Pin::into_inner(unique_ptr::as_pin(this).expect("dereferencing a null unique_ptr"))
+        Pin::into_inner(unique_ptr::as_pin(this))
     }
 }
 
@@ -481,11 +488,19 @@ impl<T: Sized + Delete> virtual_unique_ptr<T> {
         unsafe { this.ptr.as_ref() }
     }
 
-    /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
-    pub fn as_pin(this: &mut Self) -> Option<Pin<&mut T>> {
-        // SAFETY: `this.ptr` is either null or points to a valid, exclusively owned, `T`.
-        // The pointee is pinned.
-        unsafe { Some(Pin::new_unchecked((this.ptr as *mut T).as_mut()?)) }
+    /// Returns a pinned exclusive reference to the owned object.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `this` is null. Use [`virtual_unique_ptr::is_null`] to check for null instead.
+    #[track_caller]
+    pub fn as_pin(this: &mut Self) -> Pin<&mut T> {
+        // SAFETY: By `virtual_unique_ptr` invariants, `this.ptr` is either null or points to a
+        // valid, exclusively owned `T`.
+        let r = unsafe { (this.ptr as *mut T).as_mut() }
+            .expect("dereferencing a null virtual_unique_ptr");
+        // SAFETY: By `virtual_unique_ptr` invariants, the pointee is pinned.
+        unsafe { Pin::new_unchecked(r) }
     }
 }
 
