@@ -38,3 +38,11 @@ int multiply_with_keyword_named_parameters(int self, int crate, int super) {
 
 int (*get_pointer_to_multiply_function())(int, int) { return multiply; }
 int (&get_reference_to_multiply_function())(int, int) { return multiply; }
+
+#if defined(__clang__) && !defined(__apple_build_version__) && \
+    __clang_major__ >= 16
+__attribute__((no_sanitize("cfi", "kcfi")))
+#endif
+int apply_binary_op_impl(int x, int y, int (*op)(int, int)) {
+  return op(x, y);
+}

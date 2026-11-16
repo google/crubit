@@ -19,9 +19,17 @@ using ::function_pointers::call_fn_ptr_with_repr_c_struct_ptr_containing_seven;
 using ::function_pointers::CStruct;
 using ::function_pointers::HasFnPtrField;
 
+#if defined(__clang__) && !defined(__apple_build_version__) && \
+    __clang_major__ >= 16
+__attribute__((no_sanitize("cfi", "kcfi")))
+#endif
+int32_t CallFnPtr(int32_t (*fn)(int32_t), int32_t x) {
+  return fn(x);
+}
+
 TEST(FunctionPointersTest, TestFnPtrFields) {
   HasFnPtrField has_fn_ptr_field = HasFnPtrField::with_add_ten();
-  EXPECT_EQ((has_fn_ptr_field.ptr)(5), 15);
+  EXPECT_EQ(CallFnPtr(has_fn_ptr_field.ptr, 5), 15);
 }
 
 extern "C" void DoNothing() {}

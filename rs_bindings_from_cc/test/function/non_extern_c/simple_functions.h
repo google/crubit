@@ -29,7 +29,8 @@ inline int (*inline_get_pointer_to_multiply_function())(int, int) {
 }
 
 inline int apply_binary_op(int x, int y, int (*op)(int, int)) {
-  return op(x, y);
+  extern int apply_binary_op_impl(int, int, int (*)(int, int));
+  return apply_binary_op_impl(x, y, op);
 }
 
 // TODO(b/217419782): Add testcases for pointers to functions that take or

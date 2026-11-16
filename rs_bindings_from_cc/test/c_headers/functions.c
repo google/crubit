@@ -8,8 +8,20 @@ int variadic_func(int count, ...) { return count; }
 void takes_fn_ptr(void (*cb)(int)) {}
 void (*returns_fn_ptr(void))(int) { return 0; }
 void array_of_fn_ptrs(void (*cb[2])(int)) {}
-int call_cb(int (*cb)(int), int x) { return cb ? cb(x) : 0; }
-void call_struct_fn_ptr(struct FnPtrs f, int x) { if (f.field_fn) f.field_fn(x); }
+#if defined(__clang__) && !defined(__apple_build_version__) && \
+    __clang_major__ >= 16
+__attribute__((no_sanitize("cfi", "kcfi")))
+#endif
+int call_cb(int (*cb)(int), int x) {
+  return cb ? cb(x) : 0;
+}
+#if defined(__clang__) && !defined(__apple_build_version__) && \
+    __clang_major__ >= 16
+__attribute__((no_sanitize("cfi", "kcfi")))
+#endif
+void call_struct_fn_ptr(struct FnPtrs f, int x) {
+  if (f.field_fn) f.field_fn(x);
+}
 
 #include <stddef.h>
 

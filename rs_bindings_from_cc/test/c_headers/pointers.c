@@ -18,6 +18,10 @@ struct FuncPointers get_func_pointers(void) {
     return fp;
 }
 
+#if defined(__clang__) && !defined(__apple_build_version__) && \
+    __clang_major__ >= 16
+__attribute__((no_sanitize("cfi", "kcfi")))
+#endif
 int invoke_callback(struct FuncPointers* fp) {
     if (fp->callback) {
         fp->callback(fp->callback_arg);
