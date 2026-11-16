@@ -3792,7 +3792,8 @@ llvm::Expected<CcType> Importer::ConvertUnattributedType(
     const clang::tidy::lifetimes::ValueLifetimes* _Nullable lifetimes,
     bool nullable, bool assume_lifetimes) {
   // Qualifiers are handled separately in ConvertQualType().
-  std::string type_string = clang::QualType(&type, 0).getAsString();
+  [[maybe_unused]] std::string type_string =
+      clang::QualType(&type, 0).getAsString();
 
   CRUBIT_ASSIGN_OR_RETURN(
       const clang::AnnotateTypeAttr* crubit_owned_ptr_attr,
