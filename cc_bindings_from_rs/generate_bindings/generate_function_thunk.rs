@@ -983,7 +983,7 @@ pub fn generate_trait_thunks<'tcx>(
         let sig_mid = try_normalize(tcx, TypingEnv::non_body_analysis(tcx, method.def_id), sig_mid)
             .expect("Normalization should succeed since this code typechecked");
 
-        let thunk_name_cc_ident = format_cc_ident(db, &thunk_name)?;
+        let thunk_name_cc_ident = format_cc_ident(&thunk_name)?;
         let is_async = dyn_erased_future_output_ty(tcx, sig_mid.output()).is_some();
         cc_thunk_decls += generate_thunk_decl(
             db,

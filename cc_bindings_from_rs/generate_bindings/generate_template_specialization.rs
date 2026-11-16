@@ -1803,7 +1803,7 @@ fn specialize_user_defined_adt<'tcx>(
     snippets.main_api.prereqs += spec.self_ty_cc.prereqs.clone();
     let ns = canonical_name.cpp_ns_qualifier(db);
     let main_tokens = snippets.main_api.tokens;
-    let cc_details_tokens = format_with_cc_body(db, &ns, snippets.cc_details.tokens, vec![])
+    let cc_details_tokens = format_with_cc_body(&ns, snippets.cc_details.tokens, vec![])
         .expect("Namespace formatting should have been checked in parse_user_defined_adt_template_specialization");
     let (main_tokens, cc_details_tokens) = ifdef_guard_specialization(
         db,

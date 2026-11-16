@@ -251,30 +251,24 @@ pub fn include_from_path(db: &BindingsGenerator<'_>, path: &str) -> CcInclude {
     code_gen_utils::include_from_path(db.crubit_support_path_format(), path)
 }
 
-pub fn format_cc_ident_symbol(db: &BindingsGenerator, ident: Symbol) -> Result<Ident> {
-    format_cc_ident(db, ident.as_str())
-}
-
 /// Implementation of `BindingsGenerator::format_cc_ident`.
-pub fn format_cc_ident(db: &BindingsGenerator, ident: &str) -> Result<Ident> {
-    let features = db.crate_features(db.source_crate_num());
-    code_gen_utils::format_cc_ident(
-        code_gen_utils::unkeyword_cpp_ident(ident, features).as_ref(),
-        features,
-    )
+pub fn format_cc_ident_symbol(_db: &BindingsGenerator, ident: Symbol) -> Result<Ident> {
+    format_cc_ident(ident.as_str())
 }
 
-pub fn get_cc_template_args<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    generics: &ty::Generics,
-) -> Result<Vec<Ident>> {
+/// Formats `ident` as a C++ identifier, appending `_` if it's reserved in C++.
+pub fn format_cc_ident(ident: &str) -> Result<Ident> {
+    code_gen_utils::format_cc_ident(code_gen_utils::unkeyword_cpp_ident(ident).as_ref())
+}
+
+pub fn get_cc_template_args(generics: &ty::Generics) -> Result<Vec<Ident>> {
     generics
         .own_params
         .iter()
         .enumerate()
         .filter_map(|(i, param)| match param.kind {
             ty::GenericParamDefKind::Type { .. } => {
-                let param_name = format_cc_ident(db, param.name.as_str())
+                let param_name = format_cc_ident(param.name.as_str())
                     .unwrap_or_else(|_| format_ident!("T{}", i));
                 Some(Ok(param_name))
             }
@@ -2889,7 +2883,6 @@ impl AsRef<str> for CcType {
 }
 
 pub fn format_with_cc_body(
-    db: &BindingsGenerator,
     ns: &NamespaceQualifier,
     mut tokens: TokenStream,
     attributes: Vec<TokenStream>,
@@ -2897,7 +2890,7 @@ pub fn format_with_cc_body(
     if tokens.is_empty() {
         return Ok(quote! {});
     }
-    let mut namespaces = ns.parts().map(|s| format_cc_ident(db, s)).collect::<Result<Vec<_>>>()?;
+    let mut namespaces = ns.parts().map(|s| format_cc_ident(s)).collect::<Result<Vec<_>>>()?;
 
     // Nested namespace syntax does not accept attributes (see b/445613694), so we have to split out
     // the with-attribute decl to contain only the trailing namespace.

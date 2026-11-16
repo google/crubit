@@ -256,7 +256,7 @@ pub fn analyze_enum<'db, 'tcx>(
                 !reserved_names.contains(name),
                 "Variant `{name}` would collide with another member of the enum's C++ class"
             );
-            let cc_name = format_cc_ident(db, name)?;
+            let cc_name = format_cc_ident(name)?;
 
             let tag_at = |offset| -> Result<Option<EnumTag>> {
                 let Some(value) = tcx.tag_for_variant(
@@ -361,7 +361,7 @@ fn analyze_field<'db, 'tcx>(
     let cc_name = if name.starts_with(|c: char| c.is_ascii_digit()) {
         anonymous_field_ident(field_index.as_usize())
     } else {
-        format_cc_ident(db, name)?
+        format_cc_ident(name)?
     };
 
     let mut attributes = vec![];

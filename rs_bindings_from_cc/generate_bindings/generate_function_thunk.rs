@@ -409,11 +409,10 @@ fn generate_function_assertion_thunk_impl(
     call_conv: CcCallingConv,
     unqualified_func_name: TokenStream,
 ) -> Result<ThunkImpl> {
-    let features = db.ir().target_crubit_features(func.owning_target());
     let mut namespace_qualifier = db.cc_namespace_qualifier(func);
     // Keep goldens the same.
     namespace_qualifier.use_leading_colons = true;
-    let path_to_func = namespace_qualifier.format_for_cc(features)?;
+    let path_to_func = namespace_qualifier.format_for_cc()?;
     let implementation_function = quote! { #path_to_func #unqualified_func_name };
     let method_qualification;
     let member_function_prefix;
@@ -568,9 +567,8 @@ pub fn generate_function_thunk_impl(
             quote! { operator #name }
         }
         UnqualifiedIdentifier::Identifier(id) => {
-            let features = db.ir().target_crubit_features(func.owning_target());
             let fn_ident = format_nonportable_cc_ident(id.as_str())?;
-            let namespace_qualifier = db.cc_namespace_qualifier(func).format_for_cc(features)?;
+            let namespace_qualifier = db.cc_namespace_qualifier(func).format_for_cc()?;
             if func.instance_method_metadata().is_some() || func.adl_enclosing_record().is_some() {
                 quote! {#fn_ident}
             } else {
@@ -655,7 +653,6 @@ pub fn generate_cc_thunk_parts(
     func: &Func,
     kind: ThunkCallKind,
 ) -> Result<CcThunkParts> {
-    let features = db.ir().target_crubit_features(func.owning_target());
     let mut param_idents = Vec::new();
     let mut param_types = Vec::new();
     let mut conversion_stmts = quote! {};
@@ -871,14 +868,14 @@ pub fn generate_cc_thunk_parts(
         PassingConvention::ComposablyBridged => {
             // Here, we add a `__return_abi_buffer` parameter if the return type can't be passed by
             // value across `extern "C"` ABI.
-            param_idents.insert(0, format_cc_ident("__return_abi_buffer", features)?);
+            param_idents.insert(0, format_cc_ident("__return_abi_buffer")?);
             param_types.insert(0, quote! {unsigned char *});
             db.tokens().void.clone()
         }
         PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
             // Here, we add a `__return` parameter if the return type can't be passed by
             // value across `extern "C"` ABI.
-            param_idents.insert(0, format_cc_ident("__return", features)?);
+            param_idents.insert(0, format_cc_ident("__return")?);
             param_types.insert(0, quote! {#return_type_cpp_spelling *});
             db.tokens().void.clone()
         }

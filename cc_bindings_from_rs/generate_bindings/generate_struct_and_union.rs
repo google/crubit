@@ -206,7 +206,7 @@ fn generate_cpp_enum<'tcx>(
                 // enumerator.
                 return None;
             };
-            let enumerator_name = format_cc_ident(db, name.as_str()).unwrap();
+            let enumerator_name = format_cc_ident(name.as_str()).unwrap();
             let (opt_doc_comment, bracketed_enumerator_name) = if db.kythe_annotations() {
                 (
                     generate_doc_comment(db, assoc_item.def_id),
@@ -2605,12 +2605,12 @@ pub fn get_generic_adt_header<'tcx>(
     let adt_def = tcx.adt_def(def_id);
     let keyword = adt_cc_keyword(adt_def, &attributes);
 
-    let cpp_name = format_cc_ident(db, canonical_name.unqualified.cpp_name.as_str())
+    let cpp_name = format_cc_ident(canonical_name.unqualified.cpp_name.as_str())
         .context("Error formatting item name")?;
     let fully_qualified_cc_name = canonical_name.format_for_cc(db)?;
 
     let generics = tcx.generics_of(def_id);
-    let template_args = get_cc_template_args(db, generics)?;
+    let template_args = get_cc_template_args(generics)?;
 
     ensure!(!template_args.is_empty(), "Generic ADT must have at least one type parameter");
 
@@ -2702,7 +2702,7 @@ pub fn generate_adt_core_for_ty<'tcx>(
     } else {
         fully_qualified_name.format_for_rs()
     };
-    let cpp_name = format_cc_ident(db, fully_qualified_name.unqualified.cpp_name.as_str())
+    let cpp_name = format_cc_ident(fully_qualified_name.unqualified.cpp_name.as_str())
         .context("Error formatting item name")?;
     let crubit_attrs = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
 
@@ -2975,7 +2975,7 @@ fn generate_variant_ctor<'db, 'tcx>(
                 quote! { constexpr }
             };
             let doc_comment = generate_doc_comment(db, variant.def_id);
-            let method_name = format_cc_ident(db, &method_name)?;
+            let method_name = format_cc_ident(&method_name)?;
             mark_method_name_as_used();
             Ok(Cow::Owned(ApiSnippets {
                 main_api: CcSnippet {
@@ -3347,15 +3347,14 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         };
         let size = self.field_size(ty, cpp_type.is_ok(), offset, offset_of_next_field);
         let name = field_def.ident(tcx).to_string();
-        let features = self.db.crate_features(self.db.source_crate_num());
-        let cc_name = code_gen_utils::unkeyword_cpp_ident(&name, features).to_string();
+        let cc_name = code_gen_utils::unkeyword_cpp_ident(&name).to_string();
         let cc_name = if self.member_function_names.contains(&cc_name) {
             format!("{cc_name}_")
         } else {
             cc_name
         };
-        let cc_name = format_cc_ident(self.db, cc_name.as_str())
-            .unwrap_or_else(|_err| anonymous_field_ident(index));
+        let cc_name =
+            format_cc_ident(cc_name.as_str()).unwrap_or_else(|_err| anonymous_field_ident(index));
         let rs_name = {
             let name_starts_with_digit = name
                 .as_str()
@@ -3697,7 +3696,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                             if variant.size == 0 {
                                 quote! {}
                             } else {
-                                let cc_variant_struct_name = format_cc_ident(self.db, variant_def.ident(tcx).as_str())
+                                let cc_variant_struct_name = format_cc_ident(variant_def.ident(tcx).as_str())
                                     .unwrap_or_else(|_err| format_ident!("err_field"));
                                 let tag_unsuffixed = Literal::u64_unsuffixed(tag_size_with_padding);
                                 quote! {
@@ -3775,9 +3774,8 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                         .variants()
                         .iter_enumerated()
                         .map(|(variant_index, variant_def)| {
-                            let cc_variant_name =
-                                format_cc_ident(self.db, variant_def.name.as_str())
-                                    .unwrap_or_else(|_err| format_ident!("err_field"));
+                            let cc_variant_name = format_cc_ident(variant_def.name.as_str())
+                                .unwrap_or_else(|_err| format_ident!("err_field"));
                             let (tag_size, _signed) = tag_ty.int_size_and_signed(tcx);
                             let (scalar_int, _) = ty::ScalarInt::truncate_from_uint(
                                 adt_def.discriminant_for_variant(tcx, variant_index).val,
@@ -3866,7 +3864,6 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 .zip(snippets_per_variant)
                 .map(|((variant_index, variant_def), fields_for_variant)| {
                     let cc_variant_struct_name = format_cc_ident(
-                        self.db,
                         format!("__crubit_{}_struct", variant_def.ident(tcx).as_str()).as_ref(),
                     )
                     .unwrap_or_else(|_err| format_ident!("err_struct"));
@@ -3875,7 +3872,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                         Literal::u64_unsuffixed(variant_alignments[variant_index.index()]);
 
                     if variants[variant_index.index()].size == 0 {
-                        let cc_variant_name = format_cc_ident(self.db, variant_def.name.as_str())
+                        let cc_variant_name = format_cc_ident(variant_def.name.as_str())
                             .unwrap_or_else(|_err| format_ident!("err_field"));
                         let msg = format!(
                             "Variant {} has no size, so no struct is generated.",
@@ -3900,10 +3897,9 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 .variants()
                 .iter_enumerated()
                 .map(|(variant_index, variant_def)| {
-                    let cc_variant_name = format_cc_ident(self.db, variant_def.name.as_str())
+                    let cc_variant_name = format_cc_ident(variant_def.name.as_str())
                         .unwrap_or_else(|_err| format_ident!("err_field"));
                     let cc_variant_struct_type = format_cc_ident(
-                        self.db,
                         format!("__crubit_{}_struct", variant_def.ident(tcx).as_str()).as_ref(),
                     )
                     .unwrap_or_else(|_err| format_ident!("err_struct"));
@@ -4403,15 +4399,14 @@ fn format_const_value<'tcx>(
             let mut prereqs = CcPrerequisites::default();
             let mut field_tokens = Vec::with_capacity(destructured.fields.len());
             let variant = adt_def.non_enum_variant();
-            let features = db.crate_features(db.source_crate_num());
             for (index, (field_def, &(field_const_val, field_ty))) in
                 variant.fields.iter().zip(destructured.fields.iter()).enumerate()
             {
                 let field_snippet = format_const_value(db, field_const_val, field_ty)?;
                 let field_value = field_snippet.into_tokens(&mut prereqs);
                 let name = field_def.ident(tcx).to_string();
-                let unkeyworded = code_gen_utils::unkeyword_cpp_ident(&name, features);
-                let field_ident = format_cc_ident(db, unkeyworded.as_ref())
+                let unkeyworded = code_gen_utils::unkeyword_cpp_ident(&name);
+                let field_ident = format_cc_ident(unkeyworded.as_ref())
                     .unwrap_or_else(|_err| format_ident!("__field{index}"));
                 field_tokens.push(quote! { .#field_ident = #field_value });
             }
@@ -4501,7 +4496,7 @@ pub fn generate_const<'tcx>(
     };
     let rust_type = ty;
     let cc_type = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
-    let cc_name = format_cc_ident(db, tcx.item_name(def_id).as_str())?;
+    let cc_name = format_cc_ident(tcx.item_name(def_id).as_str())?;
 
     let cc_value = format_const_value(db, const_value, ty)?;
 
@@ -4568,7 +4563,7 @@ pub fn create_type_alias_with_rs_type<'tcx>(
 ) -> Result<CcSnippet<'tcx>> {
     let doc_comment = generate_doc_comment(db, def_id);
     let cc_bindings = db.format_ty_for_cc(alias_type, type_location)?;
-    let alias_name = format_cc_ident(db, alias_name).context("Error formatting type alias name")?;
+    let alias_name = format_cc_ident(alias_name).context("Error formatting type alias name")?;
 
     let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
     if let Some(cc_deprecated_tag) = generate_deprecated_tag(db.tcx(), def_id) {

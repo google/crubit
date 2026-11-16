@@ -163,7 +163,7 @@ fn add_include_guard(db: &BindingsGenerator<'_>, cc_api: TokenStream) -> Result<
             #cc_api
         }),
         IncludeGuard::Guard(include_guard_str) => {
-            let include_guard = format_cc_ident(db, include_guard_str.as_str())?;
+            let include_guard = format_cc_ident(include_guard_str.as_str())?;
             Ok(quote! {
                 __HASH_TOKEN__ ifndef #include_guard __NEWLINE__
                 __HASH_TOKEN__ define #include_guard __NEWLINE__
@@ -897,10 +897,7 @@ fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<
         // we should _not_ implicitly change it, and should instead given them an error.
         // Hence, this unkeywording behavior only happens in the case where we implicitly
         // delegate to the Rust name.
-        Symbol::intern(
-            code_gen_utils::unkeyword_cpp_ident(rs_name.as_str(), db.crate_features(def_id.krate))
-                .as_ref(),
-        )
+        Symbol::intern(code_gen_utils::unkeyword_cpp_ident(rs_name.as_str()).as_ref())
     });
     let cpp_type = attributes.cpp_type;
     Some(UnqualifiedName { cpp_name, rs_name, cpp_type })
@@ -1047,10 +1044,10 @@ fn generate_using<'tcx>(
             let fully_qualified_fn_name = db.symbol_canonical_name(def_id)?;
             let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc(db)?;
             let main_api_fn_name =
-                format_cc_ident(db, fully_qualified_fn_name.unqualified.cpp_name.as_str())
+                format_cc_ident(fully_qualified_fn_name.unqualified.cpp_name.as_str())
                     .context("Error formatting function name")?;
             let using_name_ident =
-                format_cc_ident(db, using_name.as_str()).context("Error formatting using name")?;
+                format_cc_ident(using_name.as_str()).context("Error formatting using name")?;
 
             let mut prereqs = CcPrerequisites::default();
             prereqs.depend_on_def(db, def_id)?;
@@ -1069,8 +1066,8 @@ fn generate_using<'tcx>(
                     ..
                 } = get_generic_adt_header(db, def_id)?;
                 let doc_comment = generate_doc_comment(db, def_id);
-                let using_name_ident = format_cc_ident(db, using_name.as_str())
-                    .context("Error formatting using name")?;
+                let using_name_ident =
+                    format_cc_ident(using_name.as_str()).context("Error formatting using name")?;
                 let deprecated_tag = generate_deprecated_tag(tcx, def_id);
                 let bracketed_alias_name = if db.kythe_annotations() {
                     quote! { __CAPTURE_BEGIN__ #using_name_ident __CAPTURE_END__ }
@@ -1125,7 +1122,7 @@ fn generate_using<'tcx>(
 
             let trait_name = canonical_name.format_for_cc(db)?;
             let using_name_ident =
-                format_cc_ident(db, using_name.as_str()).context("Error formatting using name")?;
+                format_cc_ident(using_name.as_str()).context("Error formatting using name")?;
             let mut prereqs = CcPrerequisites::default();
             prereqs.depend_on_def(db, def_id)?;
             let tokens = if using_name_ident == canonical_name.unqualified.cpp_name.as_str() {
@@ -1270,7 +1267,7 @@ fn generate_trait<'tcx>(
         .expect("generate_trait was unexpectedly called on an item without a canonical name");
 
     let doc_comment = generate_doc_comment(db, trait_id);
-    let trait_name = format_cc_ident(db, canonical_name.unqualified.cpp_name.as_str())?;
+    let trait_name = format_cc_ident(canonical_name.unqualified.cpp_name.as_str())?;
     let rs_type = canonical_name.format_for_rs().to_string();
     let attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
 
@@ -1465,7 +1462,6 @@ fn generate_item_impl<'tcx>(
 ///     #tokens
 ///     ```
 pub fn format_namespace_bound_cc_tokens(
-    db: &BindingsGenerator<'_>,
     iter: impl IntoIterator<Item = (Option<DefId>, NamespaceQualifier, TokenStream)>,
     tcx: TyCtxt,
 ) -> TokenStream {
@@ -1487,7 +1483,7 @@ pub fn format_namespace_bound_cc_tokens(
             {
                 ns_attributes.push(cc_deprecated_tag);
             }
-            format_with_cc_body(db, &ns, tokens, ns_attributes).unwrap_or_else(|err| {
+            format_with_cc_body(&ns, tokens, ns_attributes).unwrap_or_else(|err| {
                 let name = ns.parts().join("::");
                 let err = format!("Failed to format namespace name `{name}`: {err}");
                 quote! { __COMMENT__ #err }
@@ -2200,7 +2196,7 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
     // Generate top-level elements of the C++ header file.
     let cc_api = {
         let includes = format_cc_includes(&includes);
-        let ordered_cc = format_namespace_bound_cc_tokens(db, ordered_cc, tcx);
+        let ordered_cc = format_namespace_bound_cc_tokens(ordered_cc, tcx);
         quote! {
             #includes
             __NEWLINE__ __NEWLINE__

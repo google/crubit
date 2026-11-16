@@ -11,9 +11,7 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::rc::Rc;
 
-use crubit_feature::CrubitFeature;
 pub use dyn_format::Format;
-use flagset::FlagSet;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum CcConstQualifier {
@@ -158,13 +156,9 @@ pub fn is_cpp_reserved_keyword(ident: &str) -> bool {
 
 /// Returns true if the given identifier is reserved in C++, either as a keyword
 /// or as a standard macro that should not be shadowed.
-pub fn is_cpp_nonportable_word(ident: &str, features: FlagSet<CrubitFeature>) -> bool {
+pub fn is_cpp_nonportable_word(ident: &str) -> bool {
     if is_cpp_reserved_keyword(ident) {
         return true;
-    }
-
-    if !features.contains(CrubitFeature::ReserveStandardMacros) {
-        return false;
     }
 
     // Keep in sync with https://en.cppreference.com/cpp/symbol_index/macro
@@ -660,8 +654,8 @@ pub fn is_cpp_nonportable_word(ident: &str, features: FlagSet<CrubitFeature>) ->
 
 /// If `ident` is reserved in C++, returns a string with an underscore appended to it.
 /// Otherwise, returns `ident`.
-pub fn unkeyword_cpp_ident(ident: &str, features: FlagSet<CrubitFeature>) -> Cow<'_, str> {
-    if is_cpp_nonportable_word(ident, features) {
+pub fn unkeyword_cpp_ident(ident: &str) -> Cow<'_, str> {
+    if is_cpp_nonportable_word(ident) {
         Cow::Owned(format!("{ident}_"))
     } else {
         Cow::Borrowed(ident)
@@ -674,7 +668,7 @@ pub fn unkeyword_cpp_ident(ident: &str, features: FlagSet<CrubitFeature>) -> Cow
 /// collide with reserved words in the standard.
 #[track_caller]
 pub fn expect_format_cc_ident(ident: &str) -> Ident {
-    format_cc_ident(ident, FlagSet::<CrubitFeature>::full())
+    format_cc_ident(ident)
         .unwrap_or_else(|err| panic!("Can't format `{ident}` as a C++ identifier: {err}"))
 }
 
@@ -689,9 +683,9 @@ fn parse_any(ident: &str) -> syn::Result<Ident> {
 
 /// Formats a C++ (qualified) identifier. Returns an error when `ident` is a C++
 /// reserved keyword or is an invalid identifier.
-pub fn format_cc_ident(ident: &str, features: FlagSet<CrubitFeature>) -> Result<Ident> {
+pub fn format_cc_ident(ident: &str) -> Result<Ident> {
     ensure!(
-        !is_cpp_nonportable_word(ident, features),
+        !is_cpp_nonportable_word(ident),
         "`{ident}` is a C++ reserved word and can't be used as a C++ identifier",
     );
     unchecked_format_cc_ident(ident)
@@ -721,8 +715,8 @@ fn unchecked_format_cc_ident(ident: &str) -> Result<Ident> {
 
 /// Formats a C++ type name. Returns an error when `name` is a C++
 /// reserved keyword or otherwise an invalid type name.
-pub fn format_cc_type_name(name: &str, features: FlagSet<CrubitFeature>) -> Result<TokenStream> {
-    check_portable_cc_name(name, features)?;
+pub fn format_cc_type_name(name: &str) -> Result<TokenStream> {
+    check_portable_cc_name(name)?;
     unchecked_format_cc_type_name(name)
 }
 
@@ -833,9 +827,9 @@ pub fn check_valid_cc_name(name: &str) -> Result<()> {
 /// Checks that `name` is a valid C++ identifier on typical platforms.
 ///
 /// This also rejects names that collide with macros defined in the C++ standard library.
-pub fn check_portable_cc_name(name: &str, features: FlagSet<CrubitFeature>) -> Result<()> {
+pub fn check_portable_cc_name(name: &str) -> Result<()> {
     ensure!(
-        !is_cpp_nonportable_word(name, features),
+        !is_cpp_nonportable_word(name),
         "`{name}` is a C++ reserved word and can't be used as a C++ identifier",
     );
     check_valid_cc_name_impl(name)
@@ -942,18 +936,18 @@ impl NamespaceQualifier {
     }
 
     /// Returns `foo::bar::baz::` (reporting errors for C++ keywords).
-    pub fn format_for_cc(&self, features: FlagSet<CrubitFeature>) -> Result<TokenStream> {
+    pub fn format_for_cc(&self) -> Result<TokenStream> {
         let mut path = if self.use_leading_colons {
             quote! { :: }
         } else {
             quote! {}
         };
         for namespace in &self.namespaces {
-            let namespace = format_cc_ident(namespace, features)?;
+            let namespace = format_cc_ident(namespace)?;
             path.extend(quote! { #namespace :: });
         }
         for (_rs_name, cc_name) in &self.nested_records {
-            let cc_name = format_cc_type_name(cc_name, features)?;
+            let cc_name = format_cc_type_name(cc_name)?;
             path.extend(quote! { #cc_name ::});
         }
         Ok(path)
@@ -1215,39 +1209,27 @@ pub mod tests {
 
     #[gtest]
     fn test_format_cc_ident_basic() {
-        assert_cc_matches!(
-            format_cc_ident("foo", FlagSet::default()).unwrap().to_token_stream(),
-            quote! { foo }
-        );
+        assert_cc_matches!(format_cc_ident("foo").unwrap().to_token_stream(), quote! { foo });
     }
 
     #[gtest]
     fn test_format_cc_ident_exotic_xid_start() {
-        assert_cc_matches!(
-            format_cc_ident("Łukasz", FlagSet::default()).unwrap().to_token_stream(),
-            quote! { Łukasz }
-        );
+        assert_cc_matches!(format_cc_ident("Łukasz").unwrap().to_token_stream(), quote! { Łukasz });
     }
 
     #[gtest]
     fn test_format_cc_ident_underscore() {
-        assert_cc_matches!(
-            format_cc_ident("_", FlagSet::default()).unwrap().to_token_stream(),
-            quote! { _ }
-        );
+        assert_cc_matches!(format_cc_ident("_").unwrap().to_token_stream(), quote! { _ });
     }
 
     #[gtest]
     fn test_format_cc_ident_reserved_rust_keyword() {
-        assert_cc_matches!(
-            format_cc_ident("impl", FlagSet::default()).unwrap().to_token_stream(),
-            quote! { impl }
-        );
+        assert_cc_matches!(format_cc_ident("impl").unwrap().to_token_stream(), quote! { impl });
     }
 
     #[gtest]
     fn test_format_cc_ident_reserved_cc_keyword() {
-        let err = format_cc_ident("reinterpret_cast", FlagSet::default()).unwrap_err();
+        let err = format_cc_ident("reinterpret_cast").unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("`reinterpret_cast`"));
         assert!(msg.contains("C++ reserved word"));
@@ -1255,13 +1237,7 @@ pub mod tests {
 
     #[gtest]
     fn test_format_cc_ident_reserved_standard_macros() {
-        assert_cc_matches!(
-            format_cc_ident("stdin", FlagSet::default()).unwrap().to_token_stream(),
-            quote! { stdin }
-        );
-
-        let err =
-            format_cc_ident("stdin", CrubitFeature::ReserveStandardMacros.into()).unwrap_err();
+        let err = format_cc_ident("stdin").unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("`stdin`"));
         assert!(msg.contains("C++ reserved word"));
@@ -1272,19 +1248,13 @@ pub mod tests {
         // https://en.cppreference.com/w/cpp/language/identifiers#Unqualified_identifiers
 
         // These may appear in `IR::Func::name`.
-        assert_cc_matches!(
-            format_cc_type_name("operator==", FlagSet::default()).unwrap(),
-            quote! { operator== }
-        );
-        assert_cc_matches!(
-            format_cc_type_name("operator new", FlagSet::default()).unwrap(),
-            quote! { operator new }
-        );
+        assert_cc_matches!(format_cc_type_name("operator==").unwrap(), quote! { operator== });
+        assert_cc_matches!(format_cc_type_name("operator new").unwrap(), quote! { operator new });
 
         // This may appear in `IR::Record::cc_name` (although in practice these will
         // be namespace-qualified most of the time).
         assert_cc_matches!(
-            format_cc_type_name("MyTemplate<int>", FlagSet::default()).unwrap(),
+            format_cc_type_name("MyTemplate<int>").unwrap(),
             quote! { MyTemplate<int> }
         );
     }
@@ -1296,18 +1266,18 @@ pub mod tests {
     #[gtest]
     fn test_format_cc_ident_qualified_identifiers() {
         assert_cc_matches!(
-            format_cc_type_name("std::vector<int>", FlagSet::default()).unwrap(),
+            format_cc_type_name("std::vector<int>").unwrap(),
             quote! { std::vector<int> }
         );
         assert_cc_matches!(
-            format_cc_type_name("::std::vector<int>", FlagSet::default()).unwrap(),
+            format_cc_type_name("::std::vector<int>").unwrap(),
             quote! { ::std::vector<int> }
         );
     }
 
     #[gtest]
     fn test_format_cc_ident_empty() {
-        let err = format_cc_ident("", FlagSet::default()).unwrap_err();
+        let err = format_cc_ident("").unwrap_err();
         let msg = err.to_string();
         assert_eq!(msg, "Empty string is not a valid C++ identifier");
     }
@@ -1329,7 +1299,7 @@ pub mod tests {
             "(foo)",
         ];
         for test in tests.into_iter() {
-            let err = format_cc_ident(test, FlagSet::default()).unwrap_err();
+            let err = format_cc_ident(test).unwrap_err();
             let actual_msg = err.to_string();
             let expected_msg = format!("Can't format `{test}` as a C++ identifier: ");
             expect_that!(actual_msg, starts_with(expected_msg));
@@ -1488,7 +1458,7 @@ pub mod tests {
         let ns = NamespaceQualifier::new::<&str>([], true);
         let actual_rs = ns.format_for_rs();
         assert!(actual_rs.is_empty());
-        let actual_cc = ns.format_for_cc(FlagSet::default()).unwrap();
+        let actual_cc = ns.format_for_cc().unwrap();
         assert_cc_matches!(actual_cc, quote! { :: });
     }
 
@@ -1497,7 +1467,7 @@ pub mod tests {
         let ns = NamespaceQualifier::new(["foo", "bar"], true);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo::bar:: });
-        let actual_cc = ns.format_for_cc(FlagSet::default()).unwrap();
+        let actual_cc = ns.format_for_cc().unwrap();
         assert_cc_matches!(actual_cc, quote! { :: foo::bar:: });
     }
 
@@ -1506,7 +1476,7 @@ pub mod tests {
         let ns = NamespaceQualifier::new(["foo", "impl", "bar"], true);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo :: r#impl :: bar :: });
-        let actual_cc = ns.format_for_cc(FlagSet::default()).unwrap();
+        let actual_cc = ns.format_for_cc().unwrap();
         assert_cc_matches!(actual_cc, quote! { :: foo::impl::bar:: });
     }
 
@@ -1515,7 +1485,7 @@ pub mod tests {
         let ns = NamespaceQualifier::new(["foo", "reinterpret_cast", "bar"], true);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo :: reinterpret_cast :: bar :: });
-        let cc_error = ns.format_for_cc(FlagSet::default()).unwrap_err();
+        let cc_error = ns.format_for_cc().unwrap_err();
         let msg = cc_error.to_string();
         assert!(msg.contains("`reinterpret_cast`"));
         assert!(msg.contains("C++ reserved word"));

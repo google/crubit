@@ -97,9 +97,7 @@ rust_library(
     edition = "2024",
     deps = [
         ":arc_anyhow",
-        ":crubit_feature",
         ":dyn_format",
-        "@crate_index//:flagset",  # v0_4
         "@crate_index//:heck",  # v0_5
         "@crate_index//:phf",  # v0_14
         "@crate_index//:proc-macro2",

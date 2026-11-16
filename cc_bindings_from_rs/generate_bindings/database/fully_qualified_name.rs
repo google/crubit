@@ -78,7 +78,6 @@ fn format_ns_path_for_cc(
 
 impl FullyQualifiedName {
     pub fn format_for_cc(&self, db: &BindingsGenerator<'_>) -> Result<TokenStream> {
-        let features = db.crate_features(self.krate_num);
         if let Some(path) = self.unqualified.cpp_type {
             if path.as_str().contains('{') {
                 bail!(
@@ -107,7 +106,7 @@ impl FullyQualifiedName {
                 | "decltype(char16_t(0))"
                 | "decltype(char32_t(0))"
                 | "decltype(wchar_t(0))"
-                | "wchar_t" => format_cc_type_name(path.as_str(), features),
+                | "wchar_t" => format_cc_type_name(path.as_str()),
                 path => {
                     let (maybe_const_prefix, path) = if let Some(path) = path.strip_prefix("const ")
                     {
@@ -117,10 +116,7 @@ impl FullyQualifiedName {
                     };
                     let (universal_qualifier, path) =
                         if path.trim_start().starts_with("::") { ("", path) } else { ("::", path) };
-                    format_cc_type_name(
-                        &format!("{maybe_const_prefix}{universal_qualifier}{path}"),
-                        features,
-                    )
+                    format_cc_type_name(&format!("{maybe_const_prefix}{universal_qualifier}{path}"))
                 }
             };
         }
@@ -133,7 +129,7 @@ impl FullyQualifiedName {
             .map(|ns| db.format_cc_ident(*ns))
             .collect::<Result<Vec<_>>>()?;
         let ns_path = format_ns_path_for_cc(db, &self.cpp_ns_path)?;
-        let name = format_cc_type_name(name.as_str(), features)?;
+        let name = format_cc_type_name(name.as_str())?;
         Ok(quote! { :: #(#cpp_top_level_ns::)* #ns_path #name })
     }
 

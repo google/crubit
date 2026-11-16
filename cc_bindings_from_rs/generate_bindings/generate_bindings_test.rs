@@ -1946,9 +1946,32 @@ fn test_format_item_generate_bindings_for_top_level_type_alias() {
 }
 
 #[gtest]
+fn test_generated_bindings_standard_macro_names_are_always_reserved() {
+    let test_src = r#"
+            pub mod stdin {
+                pub fn errno() {}
+            }
+        "#;
+    // `test_generated_bindings` doesn't enable `ReserveStandardMacros`, like open-source Crubit.
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                namespace rust_out::stdin_ {
+                    ...
+                    void errno_();
+                    ...
+                }  // namespace rust_out::stdin_
+            }
+        );
+    });
+}
+
+#[gtest]
 fn test_format_namespace_bound_cc_tokens() {
     run_compiler_for_testing("", |tcx| {
-        let db = bindings_db_for_tests(tcx);
         let top_level = NamespaceQualifier::new::<&str>([], true);
         let m1 = NamespaceQualifier::new(["m1"], true);
         let m2 = NamespaceQualifier::new(["m2"], true);
@@ -1963,7 +1986,7 @@ fn test_format_namespace_bound_cc_tokens() {
             (None, m1.clone(), quote! { void f1d(); }),
         ];
         assert_cc_matches!(
-            format_namespace_bound_cc_tokens(&db, input, tcx),
+            format_namespace_bound_cc_tokens(input, tcx),
             quote! {
                 void f0a();
 

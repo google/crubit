@@ -858,8 +858,8 @@ fn get_function_cc_name(db: &BindingsGenerator, def_id: DefId) -> Result<Ident> 
     };
     let cc_name = unqualified_fn_name.cpp_name.as_str();
     match tcx.def_kind(def_id) {
-        DefKind::Ctor { .. } => format_cc_ident(db, &format_variant_ctor_cc_name(cc_name)),
-        _ => format_cc_ident(db, cc_name),
+        DefKind::Ctor { .. } => format_cc_ident(&format_variant_ctor_cc_name(cc_name)),
+        _ => format_cc_ident(cc_name),
     }
     .context("Error formatting function name")
 }
@@ -1070,7 +1070,7 @@ pub fn generate_function<'tcx>(
                 let mut cc_name = None;
                 if let Some(ident) = name.as_ref()
                     && ident.name.as_str() != "_"
-                    && let Ok(name) = format_cc_ident(db, ident.name.as_str())
+                    && let Ok(name) = format_cc_ident(ident.name.as_str())
                 {
                     cc_name = Some(name);
                 }
@@ -1179,7 +1179,7 @@ pub fn generate_function<'tcx>(
     } else {
         quote! {}
     };
-    let thunk_name_cc = format_cc_ident(db, &thunk_name).context("Error formatting thunk name")?;
+    let thunk_name_cc = format_cc_ident(&thunk_name).context("Error formatting thunk name")?;
     let impl_body = generate_thunk_call(
         db,
         thunk_name_cc.clone(),
@@ -1305,7 +1305,7 @@ pub fn generate_function<'tcx>(
                     quote! { (#qualifier :: #bracketed_decl_name) }
                 } else if let Ok(fully_qualified_name) = struct_name.as_ref() {
                     let name = fully_qualified_name.unqualified.cpp_name;
-                    let name = format_cc_ident(db, name.as_str())?;
+                    let name = format_cc_ident(name.as_str())?;
                     quote! { (#name :: #bracketed_decl_name) }
                 } else {
                     quote! { #bracketed_decl_name }
