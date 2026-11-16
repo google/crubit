@@ -1562,8 +1562,6 @@ macro_rules! ctor {
 /// ```
 /// raw_ctor!(#[fields = Mystruct2] MyStruct { field: 42 })
 /// ```
-///
-/// NOTE: `raw_ctor` only supports `struct {}` syntax.
 #[macro_export]
 macro_rules! raw_ctor {
     ( $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? {$($body:tt)*} ) => {
@@ -1588,6 +1586,25 @@ macro_rules! raw_ctor {
             )
         }
     };
+
+    // Unit struct ctor.
+    ( $(#[fields = $($fields_ty:tt)*])? $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ) => {$crate::raw_ctor!($(#[fields = $($fields_ty)*])? $t $(:: $ts)* $(:: < $($gp),+ >)? {  })};
+
+    // Conventional tuple struct syntax (with parens, no integer names) supported for < 8 fields.
+    // Otherwise, use MyTupleStruct{0: ..., 1: ...} syntax, which works for any number of fields.
+    // Generated as so:
+    /* python3 -c 'for i in range(8):
+        ctor_ins = ", ".join(f"$ctor_{j}:expr" for j in range(i)) + (" $(,)?" if i else "")
+        ctor_outs = ", ".join(f"{j}: $ctor_{j}" for j in range(i))
+        print(f"    ( $(#[fields = $($fields_ty:tt)*])? $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ({ctor_ins}) ) => {{$crate::raw_ctor!($(#[fields = $($fields_ty)*])? $t $(:: $ts)* $(:: < $($gp),+ >)? {{ {ctor_outs} }})}};")' */
+    ( $(#[fields = $($fields_ty:tt)*])? $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? () ) => {$crate::raw_ctor!($(#[fields = $($fields_ty)*])? $t $(:: $ts)* $(:: < $($gp),+ >)? {  })};
+    ( $(#[fields = $($fields_ty:tt)*])? $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr $(,)?) ) => {$crate::raw_ctor!($(#[fields = $($fields_ty)*])? $t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0 })};
+    ( $(#[fields = $($fields_ty:tt)*])? $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr $(,)?) ) => {$crate::raw_ctor!($(#[fields = $($fields_ty)*])? $t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1 })};
+    ( $(#[fields = $($fields_ty:tt)*])? $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr $(,)?) ) => {$crate::raw_ctor!($(#[fields = $($fields_ty)*])? $t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2 })};
+    ( $(#[fields = $($fields_ty:tt)*])? $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr $(,)?) ) => {$crate::raw_ctor!($(#[fields = $($fields_ty)*])? $t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3 })};
+    ( $(#[fields = $($fields_ty:tt)*])? $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr $(,)?) ) => {$crate::raw_ctor!($(#[fields = $($fields_ty)*])? $t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4 })};
+    ( $(#[fields = $($fields_ty:tt)*])? $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr, $ctor_5:expr $(,)?) ) => {$crate::raw_ctor!($(#[fields = $($fields_ty)*])? $t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4, 5: $ctor_5 })};
+    ( $(#[fields = $($fields_ty:tt)*])? $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr, $ctor_5:expr, $ctor_6:expr $(,)?) ) => {$crate::raw_ctor!($(#[fields = $($fields_ty)*])? $t $(:: $ts)* $(:: < $($gp),+ >)? { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4, 5: $ctor_5, 6: $ctor_6 })};
 }
 
 /// Implementation of the ctor! macro.
