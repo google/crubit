@@ -251,12 +251,75 @@ pub fn move_ctor_and_assignment_operator_codegen_style<'tcx>(
     }
     let tcx = db.tcx();
     let typing_env = ty::TypingEnv::fully_monomorphized();
+    let is_bitwise_relocatable = db.is_bitwise_relocatable(self_ty);
     MoveCodegenStyle::from_available_traits(
-        !self_ty.needs_drop(tcx, typing_env),
+        !self_ty.needs_drop(tcx, typing_env) && is_bitwise_relocatable,
         db.has_default_ctor(self_ty),
-        self_ty.is_unpin(tcx, typing_env),
+        self_ty.is_unpin(tcx, typing_env) && is_bitwise_relocatable,
         db.copy_ctor_and_assignment_operator_codegen_style(self_ty).is_some(),
     )
+}
+
+/// Returns true if `ty` can be safely relocated in memory via bitwise `memcpy` in C++
+/// (i.e. it does not contain inline any non-bitwise-relocatable C++ type such as a polymorphic
+/// class or `std::string`).
+///
+/// Pure-Rust `!Unpin` types (such as structs containing `PhantomPinned`) remain bitwise-relocatable
+/// when unpinned, whereas `!Unpin` `cpp_type` types (such as `rs_bindings_from_cc` types with vptrs
+/// or self-referential `std::string`) cannot be bitwise-relocated by C++.
+pub fn is_bitwise_relocatable<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+    let tcx = db.tcx();
+    let typing_env = ty::TypingEnv::fully_monomorphized();
+    let ty = query_compiler::try_normalize(tcx, typing_env, ty).unwrap_or(ty);
+    if query_compiler::as_ref_or_pinned_ref(ty).is_some() {
+        return true;
+    }
+    match *ty.kind() {
+        ty::Bool
+        | ty::Char
+        | ty::Int(_)
+        | ty::Uint(_)
+        | ty::Float(_)
+        | ty::Never
+        | ty::RawPtr(..)
+        | ty::Ref(..)
+        | ty::FnPtr(..) => true,
+
+        ty::Tuple(fields) => fields.iter().all(|f| db.is_bitwise_relocatable(f)),
+
+        ty::Pat(underlying_ty, _) => db.is_bitwise_relocatable(underlying_ty),
+
+        ty::Array(elem_ty, _) => {
+            db.is_bitwise_relocatable(elem_ty)
+                || query_compiler::get_layout(tcx, ty).is_ok_and(|l| l.size().bytes() == 0)
+        }
+
+        ty::Adt(adt_def, substs) => {
+            if query_compiler::is_owned_box_or_pinned_box(tcx, ty)
+                || is_std_ptr_non_null(tcx, adt_def.did())
+            {
+                return true;
+            }
+            if let Ok(attrs) = crubit_attr::get_attrs(tcx, adt_def.did())
+                && attrs.cpp_type.is_some()
+            {
+                if attrs.derive_rust_movable {
+                    return substs.types().all(|t| db.is_bitwise_relocatable(t));
+                }
+                return ty.is_unpin(tcx, typing_env);
+            }
+            adt_def.all_fields().all(|field_def| {
+                let field_ty = query_compiler::normalize_ty(
+                    tcx,
+                    tcx.param_env(field_def.did),
+                    field_def.ty(tcx, substs),
+                );
+                db.is_bitwise_relocatable(field_ty)
+            })
+        }
+
+        _ => false,
+    }
 }
 
 /// Returns true if the type is move-constructible in C++.

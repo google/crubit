@@ -41,8 +41,8 @@ use format_type::{
 pub use generate_comment::generate_source_location;
 use generate_comment::{generate_deprecated_tag, generate_doc_comment};
 use generate_ctor::{
-    copy_ctor_and_assignment_operator_codegen_style, has_default_ctor, is_cpp_move_constructible,
-    move_ctor_and_assignment_operator_codegen_style,
+    copy_ctor_and_assignment_operator_codegen_style, has_default_ctor, is_bitwise_relocatable,
+    is_cpp_move_constructible, move_ctor_and_assignment_operator_codegen_style,
 };
 use generate_function::generate_function;
 use generate_struct_and_union::{
@@ -423,6 +423,7 @@ fn new_database_impl<'db>(
         move_ctor_and_assignment_operator_codegen_style,
         is_cpp_move_constructible,
         is_cpp_constexpr_move_constructible,
+        is_bitwise_relocatable,
         generate_item,
         generate_function,
         adt_needs_bindings,

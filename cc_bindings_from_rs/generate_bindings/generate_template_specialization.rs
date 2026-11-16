@@ -953,11 +953,7 @@ fn specialize_tuple<'tcx>(
 
     let copy_ctor_and_assignment_snippets = generate_copy_ctor_and_assignment_operator(db, &core);
     let move_ctor_and_assignment_snippets = generate_move_ctor_and_assignment_operator(db, &core);
-    let relocating_ctor_snippets = generate_relocating_ctor(
-        db,
-        &core.common.cc_short_name,
-        &core.common.cc_fully_qualified_name,
-    );
+    let relocating_ctor_snippets = generate_relocating_ctor(db, &core);
     let default_ctor_snippets = generate_default_ctor(db, &core);
 
     let fields_snippets = generate_fields(
@@ -1215,11 +1211,7 @@ fn specialize_vec<'tcx>(
         );
         ApiSnippets { main_api, cc_details, ..Default::default() }
     };
-    let relocating_ctor_snippets = generate_relocating_ctor(
-        db,
-        &core.common.cc_short_name,
-        &core.common.cc_fully_qualified_name,
-    );
+    let relocating_ctor_snippets = generate_relocating_ctor(db, &core);
 
     let drop_decl = quote! {
         ~Vec() noexcept;
@@ -1481,11 +1473,7 @@ fn specialize_result<'tcx>(
 
     let copy_ctor_and_assignment_snippets = generate_copy_ctor_and_assignment_operator(db, &core);
     let move_ctor_and_assignment_snippets = generate_move_ctor_and_assignment_operator(db, &core);
-    let relocating_ctor_snippets = generate_relocating_ctor(
-        db,
-        &core.common.cc_short_name,
-        &core.common.cc_fully_qualified_name,
-    );
+    let relocating_ctor_snippets = generate_relocating_ctor(db, &core);
 
     let ApiSnippets { main_api, cc_details, rs_details } = [
         copy_ctor_and_assignment_snippets,
@@ -1688,11 +1676,7 @@ fn specialize_option<'tcx>(
 
     let move_ctor_and_assignment_snippets = generate_move_ctor_and_assignment_operator(db, &core);
 
-    let relocating_ctor_snippets = generate_relocating_ctor(
-        db,
-        &core.common.cc_short_name,
-        &core.common.cc_fully_qualified_name,
-    );
+    let relocating_ctor_snippets = generate_relocating_ctor(db, &core);
 
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
