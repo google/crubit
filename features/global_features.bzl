@@ -15,7 +15,6 @@ SUPPORTED_FEATURES = [
     "forward_declare",
     "iterator_item_references",
     "nonnull_smart_pointers",
-    "reserve_standard_macros",
     "constant_arrays",
     "enum_api_v2",
     "infer_send_sync",

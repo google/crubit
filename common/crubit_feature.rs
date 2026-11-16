@@ -72,9 +72,6 @@ flagset::flags! {
         /// Converts `impl Ctor<Output=T>` parameters to plain `T` instead of `T&&` in the C++ API.
         CtorPlainValues,
 
-        /// Reserve standard macros like stdin, stdout, stderr as keywords.
-        ReserveStandardMacros,
-
         /// Directly generate (some) accessors instead of using thunks.
         ThunklessAccessors,
 
@@ -183,7 +180,6 @@ impl CrubitFeature {
             }
             Self::RecordImplDebug => "record_impl_debug",
             Self::CtorPlainValues => "ctor_plain_values",
-            Self::ReserveStandardMacros => "reserve_standard_macros",
             Self::ThunklessAccessors => "thunkless_accessors",
             Self::OoCasting => "oo_casting",
             Self::ProtoReferences => "proto_references",
@@ -236,7 +232,6 @@ impl CrubitFeature {
             }
             Self::RecordImplDebug => "//features:record_impl_debug",
             Self::CtorPlainValues => "//features:ctor_plain_values",
-            Self::ReserveStandardMacros => "//features:reserve_standard_macros",
             Self::ThunklessAccessors => "//features:thunkless_accessors",
             Self::OoCasting => "//features:oo_casting",
             Self::ProtoReferences => "//features:proto_references",
@@ -320,7 +315,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         }
         b"record_impl_debug" => CrubitFeature::RecordImplDebug.into(),
         b"ctor_plain_values" => CrubitFeature::CtorPlainValues.into(),
-        b"reserve_standard_macros" => CrubitFeature::ReserveStandardMacros.into(),
         b"thunkless_accessors" => CrubitFeature::ThunklessAccessors.into(),
         b"oo_casting" => CrubitFeature::OoCasting.into(),
         b"proto_references" => CrubitFeature::ProtoReferences.into(),
@@ -583,7 +577,6 @@ mod tests {
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
-                | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
@@ -630,7 +623,6 @@ mod tests {
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
-                | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
@@ -659,7 +651,6 @@ mod tests {
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
-                | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
@@ -689,7 +680,6 @@ mod tests {
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
-                | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
@@ -719,7 +709,6 @@ mod tests {
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
-                | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
                 | CrubitFeature::InheritedFriendOperators
@@ -750,7 +739,6 @@ mod tests {
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
-                | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::InheritedFriendOperators
                 | CrubitFeature::StrongOrderingTraits
