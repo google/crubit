@@ -1588,13 +1588,7 @@ fn generate_specializations_fixpoint<'tcx>(
             );
 
             // Collect specializations required by the main_api.
-            for new_spec in snippets
-                .main_api
-                .prereqs
-                .template_specializations
-                .iter()
-                .chain(snippets.main_api.prereqs.lazy_template_specializations.iter())
-            {
+            for new_spec in snippets.main_api.prereqs.all_template_specializations() {
                 if !seen.contains(new_spec) {
                     next_worklist.push(new_spec.clone());
                 }
@@ -1602,10 +1596,7 @@ fn generate_specializations_fixpoint<'tcx>(
 
             impls_cc_details.push(snippets.cc_details.into_tokens(cc_details_prereqs));
             // Collect any transitive specializations discovered in cc_details.
-            let transitive_specs = std::mem::take(&mut cc_details_prereqs.template_specializations)
-                .into_iter()
-                .chain(std::mem::take(&mut cc_details_prereqs.lazy_template_specializations));
-            for new_spec in transitive_specs {
+            for new_spec in cc_details_prereqs.take_all_template_specializations() {
                 if !seen.contains(&new_spec) {
                     next_worklist.push(new_spec);
                 }
@@ -2026,19 +2017,10 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
         rs_details += api_snippets.rs_details;
     }
 
-    let mut worklist: Vec<_> = std::mem::take(&mut cc_details_prereqs.template_specializations)
-        .into_iter()
-        .chain(std::mem::take(&mut cc_details_prereqs.lazy_template_specializations))
+    let mut worklist: Vec<_> = cc_details_prereqs
+        .take_all_template_specializations()
         .chain(
-            main_apis
-                .values()
-                .flat_map(|api| {
-                    api.prereqs
-                        .template_specializations
-                        .iter()
-                        .chain(api.prereqs.lazy_template_specializations.iter())
-                })
-                .cloned(),
+            main_apis.values().flat_map(|api| api.prereqs.all_template_specializations().cloned()),
         )
         .collect();
     append_trait_impls(db, &mut worklist);
