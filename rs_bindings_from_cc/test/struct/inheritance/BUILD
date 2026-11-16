@@ -31,7 +31,6 @@ crubit_rust_test(
         "//support:ctor",
         "//support:oops",
         "@crate_index//:googletest",
-        "@crate_index//:static_assertions",  # v1
     ],
 )
 
