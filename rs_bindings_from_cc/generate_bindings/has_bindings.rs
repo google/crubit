@@ -190,7 +190,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindings
     {
         return Err(NoBindingsReason::Unsupported(anyhow!(
             "constants of type `{}` are not supported",
-            rs_type.display_cc_type_name_for_rs_type()
+            rs_type.display_cc_type_name_for_rs_type(db)
         )));
     }
     // A C++ macro's name may not be a valid Rust macro name, e.g. `self` or `_`.
@@ -264,7 +264,7 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindings
                     return Err(NoBindingsReason::Unsupported(anyhow!(
                         "C-style array global variables are not yet supported: \
                         {} (b/575922365)",
-                        c_array.display_cc_type_name_for_rs_type(),
+                        c_array.display_cc_type_name_for_rs_type(db),
                     )));
                 }
                 Ok(())
@@ -345,7 +345,7 @@ fn func_has_bindings(db: &BindingsGenerator, func: FfiRc<Func>) -> Result<(), No
                     return Err(NoBindingsReason::Unsupported(anyhow!(
                         "C-style array types are not supported in function signatures yet: \
                 {} (b/575922365)",
-                        c_array.display_cc_type_name_for_rs_type(),
+                        c_array.display_cc_type_name_for_rs_type(db),
                     )));
                 }
             }

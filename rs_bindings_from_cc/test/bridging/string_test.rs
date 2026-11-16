@@ -28,3 +28,10 @@ fn test_basic_string_as_return_value() {
     let s2 = cc_std::std::string_wrapper::from("hello");
     assert_eq!(s1, s2);
 }
+
+#[gtest]
+fn test_pmr_string() {
+    let s: ::core::pin::Pin<&mut cc_std::std::pmr::string> =
+        ctor::emplace!(string_test_lib::CreateEmptyPmrString());
+    assert_eq!(string_test_lib::GetPmrStringSize(&*s), 0);
+}

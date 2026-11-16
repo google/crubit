@@ -24,17 +24,17 @@ pub mod foo {
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[cfi_encoding = "N3foo7inline18MyStructE"]
         #[repr(C)]
-        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=foo :: inline1 :: MyStruct")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=foo :: MyStruct")]
         #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
         pub struct MyStruct {
             pub value: ::ffi_11::c_int,
         }
         unsafe impl ::cxx::ExternType for MyStruct {
-            type Id = ::cxx::type_id!("foo :: inline1 :: MyStruct");
+            type Id = ::cxx::type_id!("foo :: MyStruct");
             type Kind = ::cxx::kind::Trivial;
         }
         forward_declare::unsafe_define!(
-            forward_declare::symbol!("foo :: inline1 :: MyStruct"),
+            forward_declare::symbol!("foo :: MyStruct"),
             crate::foo::inline1::MyStruct
         );
 

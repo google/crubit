@@ -146,6 +146,7 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator<'_>, item: &Item) -> 
     let missing_features_of_type = |rs_type_kind: &RsTypeKind| -> Option<Vec<Error>> {
         for TargetAndFeatures { target, features } in &defining_and_owning_target {
             let descriptions = rs_type_kind.missing_feature_descriptions_of_type(
+                db,
                 target,
                 *features,
                 ir.current_target(),
@@ -507,7 +508,7 @@ pub fn integer_constant_to_token_stream(
     let RsTypeKind::Primitive(primitive) = *underlying_type.unalias() else {
         bail!(
             "constants of type `{}` are not supported",
-            underlying_type.display_cc_type_name_for_rs_type()
+            underlying_type.display_cc_type_name_for_rs_type(db)
         )
     };
     let mut value = integer_literal_tokens(integer_constant, underlying_type.is_bool());

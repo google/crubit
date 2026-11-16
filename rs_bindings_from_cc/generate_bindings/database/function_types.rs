@@ -191,7 +191,7 @@ impl TraitName {
     }
 
     /// Returns the generic parameters in this trait name.
-    fn params(&self) -> &[RsTypeKind] {
+    pub fn params(&self) -> &[RsTypeKind] {
         match self {
             Self::Clone | Self::Default | Self::Delete => &[],
             Self::CtorNew(params)

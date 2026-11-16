@@ -172,46 +172,6 @@ pub mod zz_template_instantiations {
             unsafe { <Self as ::ctor::UnsafeFrom<*const ::ffi_11::c_char>>::unsafe_from(args) }
         }
     }
-
-    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-    #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE"]
-    #[repr(C, align(8))]
-    #[cfg_attr(
-        not(doc),
-        doc = "CRUBIT_ANNOTATE: cpp_type=std :: reverse_iterator < const wchar_t *>"
-    )]
-    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
-    pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
-        __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-        /// Reason for representing this field as a blob of bytes:
-        /// Types of non-public C++ fields can be elided away
-        pub(crate) current: [::core::mem::MaybeUninit<u8>; 8],
-    }
-    /// Cannot infer `Send` because:
-    /// * base class subobjects are not represented as Rust fields
-    /// * field `current` is represented as opaque bytes
-    impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
-    /// Cannot infer `Sync` because:
-    /// * base class subobjects are not represented as Rust fields
-    /// * field `current` is represented as opaque bytes
-    impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
-    forward_declare::unsafe_define!(
-        forward_declare::symbol!("std :: reverse_iterator < const wchar_t *>"),
-        crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE
-    );
-
-    impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
-        #[inline(always)]
-        fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-            unsafe {
-                crate::detail::__rust_thunk__2e045c9c__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
-                    &raw mut tmp as *mut _,
-                );
-                tmp.assume_init()
-            }
-        }
-    }
 }
 mod detail {
     #[allow(unused_imports)]
@@ -247,9 +207,6 @@ mod detail {
         >(
             __this: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
         ) -> *const ::ffi_11::c_char;
-        pub(crate) unsafe fn __rust_thunk__2e045c9c__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
     }
 }
 
@@ -274,24 +231,6 @@ const _: () = {
     assert!(
         ::core::mem::offset_of!(
             crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE,
-            current
-        ) == 0
-    );
-    assert!(
-        ::core::mem::size_of::<
-            crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE,
-        >() == 8
-    );
-    assert!(
-        ::core::mem::align_of::<
-            crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE,
-        >() == 8
-    );
-    static_assertions::assert_impl_all!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE: Drop);
-    assert!(
-        ::core::mem::offset_of!(
-            crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE,
             current
         ) == 0
     );

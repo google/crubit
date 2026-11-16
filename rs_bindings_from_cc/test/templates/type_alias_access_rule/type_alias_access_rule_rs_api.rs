@@ -55,7 +55,7 @@ impl Default for B {
     }
 }
 
-// error: class `A` could not be bound
+// error: class `A<B::PrivateMember>` could not be bound
 //   Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
 
 mod detail {

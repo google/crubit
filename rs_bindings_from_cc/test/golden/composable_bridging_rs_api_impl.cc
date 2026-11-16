@@ -105,7 +105,7 @@ extern "C" void __rust_thunk___Z14MakeMyI8Structv(
 
 static_assert((struct MyOption<struct MyI8Struct> (*)()) & ::MakeMyI8Struct);
 
-static_assert((void (*)(::rs::SliceRef<::std::__u::string_view>)) &
+static_assert((void (*)(::rs::SliceRef<::std::string_view>)) &
               ::InspectStringViews);
 
 extern "C" void __rust_thunk___Z12MaybeVoidPtrv(
@@ -225,49 +225,38 @@ static_assert(
     ::std::reverse_iterator<class std::__wrap_iter<const int*>>::base);
 
 static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<
-                            class std::__wrap_iter<class std::basic_string_view<
-                                char, struct std::char_traits<char>>*>>) == 8);
+                            class std::__wrap_iter<std::string_view*>>) == 8);
 static_assert(alignof(class std::reverse_iterator<
-                      class std::__wrap_iter<class std::basic_string_view<
-                          char, struct std::char_traits<char>>*>>) == 8);
+                      class std::__wrap_iter<std::string_view*>>) == 8);
 
 extern "C" void
 __rust_thunk__687579d4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEC1Ev(
-    class std::reverse_iterator<class std::__wrap_iter<
-        class std::basic_string_view<char, struct std::char_traits<char>>*>>*
+    class std::reverse_iterator<class std::__wrap_iter<std::string_view*>>*
         __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
 __rust_thunk__3d46f6bb__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEC1ES7_(
-    class std::reverse_iterator<class std::__wrap_iter<
-        class std::basic_string_view<char, struct std::char_traits<char>>*>>*
+    class std::reverse_iterator<class std::__wrap_iter<std::string_view*>>*
         __this,
-    class std::__wrap_iter<
-        class std::basic_string_view<char, struct std::char_traits<char>>*>*
-        __x) {
+    class std::__wrap_iter<std::string_view*>* __x) {
   crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(__x));
 }
 
 extern "C" void
 __rust_thunk__91e2ce8a__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEE4baseEv(
-    class std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>* __return,
+    class std::__wrap_iter<std::string_view*>* __return,
     class std::reverse_iterator<
-        class std::__wrap_iter<class std::basic_string_view<
-            char, struct std::char_traits<char>>*>> const* __this) {
+        class std::__wrap_iter<std::string_view*>> const* __this) {
   new (__return) auto(__this->base());
 }
 
 static_assert(
-    (class std::__wrap_iter<
-        class std::basic_string_view<char, struct std::char_traits<char>>*> (
-        ::std::reverse_iterator<
-            class std::__wrap_iter<class std::basic_string_view<
-                char, struct std::char_traits<char>>*>>::*)() const) &
-    ::std::reverse_iterator<class std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>>::base);
+    (class std::__wrap_iter<std::string_view*> (
+        ::std::reverse_iterator<class std::__wrap_iter<std::string_view*>>::*)()
+         const) &
+    ::std::reverse_iterator<class std::__wrap_iter<std::string_view*>>::base);
 
 static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<const char*>) == 8);
 static_assert(alignof(class std::reverse_iterator<const char*>) == 8);
@@ -290,14 +279,6 @@ __rust_thunk__91e2ce8a__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(
 
 static_assert((char const* (::std::reverse_iterator<const char*>::*)() const) &
               ::std::reverse_iterator<const char*>::base);
-
-static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<const wchar_t*>) == 8);
-static_assert(alignof(class std::reverse_iterator<const wchar_t*>) == 8);
-
-extern "C" void __rust_thunk__687579d4__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
-    class std::reverse_iterator<const wchar_t*>* __this) {
-  crubit::construct_at(__this);
-}
 
 static_assert(CRUBIT_SIZEOF(class std::__wrap_iter<const int*>) == 8);
 static_assert(alignof(class std::__wrap_iter<const int*>) == 8);
@@ -356,88 +337,56 @@ static_assert((int const& (::std::__wrap_iter<const int*>::*)(ptrdiff_t)
                    const) &
               ::std::__wrap_iter<const int*>::operator[]);
 
-static_assert(CRUBIT_SIZEOF(class std::__wrap_iter<class std::basic_string_view<
-                                char, struct std::char_traits<char>>*>) == 8);
-static_assert(alignof(class std::__wrap_iter<class std::basic_string_view<
-                          char, struct std::char_traits<char>>*>) == 8);
+static_assert(CRUBIT_SIZEOF(class std::__wrap_iter<std::string_view*>) == 8);
+static_assert(alignof(class std::__wrap_iter<std::string_view*>) == 8);
 
 extern "C" void
 __rust_thunk__eefb2482__ZNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEC1Ev(
-    class std::__wrap_iter<
-        class std::basic_string_view<char, struct std::char_traits<char>>*>*
-        __this) {
+    class std::__wrap_iter<std::string_view*>* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
 __rust_thunk__00de7d8e__ZNKSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEplEl(
-    class std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>* __return,
-    class std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*> const* __this,
-    ptrdiff_t __n) {
+    class std::__wrap_iter<std::string_view*>* __return,
+    class std::__wrap_iter<std::string_view*> const* __this, ptrdiff_t __n) {
   new (__return) auto(__this->operator+(__n));
 }
 
-static_assert(
-    (class std::__wrap_iter<
-        class std::basic_string_view<char, struct std::char_traits<char>>*> (
-        ::std::__wrap_iter<class std::basic_string_view<
-            char, struct std::char_traits<char>>*>::*)(ptrdiff_t) const) &
-    ::std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>::operator+);
+static_assert((class std::__wrap_iter<std::string_view*> (
+                  ::std::__wrap_iter<std::string_view*>::*)(ptrdiff_t) const) &
+              ::std::__wrap_iter<std::string_view*>::operator+);
 
-extern "C" class std::__wrap_iter<
-    class std::basic_string_view<char, struct std::char_traits<char>>*>*
+extern "C" class std::__wrap_iter<std::string_view*>*
 __rust_thunk__e75d0a75__ZNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEpLEl(
-    class std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>* __this,
-    ptrdiff_t __n) {
+    class std::__wrap_iter<std::string_view*>* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator+=(__n));
 }
 
-static_assert(
-    (class std::__wrap_iter<
-         class std::basic_string_view<char, struct std::char_traits<char>>*> &
-     (::std::__wrap_iter<class std::basic_string_view<
-          char, struct std::char_traits<char>>*>::*)(ptrdiff_t)) &
-    ::std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>::operator+=);
+static_assert((class std::__wrap_iter<std::string_view*> &
+               (::std::__wrap_iter<std::string_view*>::*)(ptrdiff_t)) &
+              ::std::__wrap_iter<std::string_view*>::operator+=);
 
 extern "C" void
 __rust_thunk__28ba32d4__ZNKSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEmiEl(
-    class std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>* __return,
-    class std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*> const* __this,
-    ptrdiff_t __n) {
+    class std::__wrap_iter<std::string_view*>* __return,
+    class std::__wrap_iter<std::string_view*> const* __this, ptrdiff_t __n) {
   new (__return) auto(__this->operator-(__n));
 }
 
-static_assert(
-    (class std::__wrap_iter<
-        class std::basic_string_view<char, struct std::char_traits<char>>*> (
-        ::std::__wrap_iter<class std::basic_string_view<
-            char, struct std::char_traits<char>>*>::*)(ptrdiff_t) const) &
-    ::std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>::operator-);
+static_assert((class std::__wrap_iter<std::string_view*> (
+                  ::std::__wrap_iter<std::string_view*>::*)(ptrdiff_t) const) &
+              ::std::__wrap_iter<std::string_view*>::operator-);
 
-extern "C" class std::__wrap_iter<
-    class std::basic_string_view<char, struct std::char_traits<char>>*>*
+extern "C" class std::__wrap_iter<std::string_view*>*
 __rust_thunk__5d595711__ZNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEmIEl(
-    class std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>* __this,
-    ptrdiff_t __n) {
+    class std::__wrap_iter<std::string_view*>* __this, ptrdiff_t __n) {
   return std::addressof(__this->operator-=(__n));
 }
 
-static_assert(
-    (class std::__wrap_iter<
-         class std::basic_string_view<char, struct std::char_traits<char>>*> &
-     (::std::__wrap_iter<class std::basic_string_view<
-          char, struct std::char_traits<char>>*>::*)(ptrdiff_t)) &
-    ::std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>::operator-=);
+static_assert((class std::__wrap_iter<std::string_view*> &
+               (::std::__wrap_iter<std::string_view*>::*)(ptrdiff_t)) &
+              ::std::__wrap_iter<std::string_view*>::operator-=);
 
 static_assert(
     CRUBIT_SIZEOF(class std::span<const int, 18446744073709551615UL>) == 16);
@@ -605,271 +554,169 @@ static_assert((class std::reverse_iterator<class std::__wrap_iter<const int*>> (
               ::std::span<const int, 18446744073709551615UL>::rend);
 
 static_assert(
-    CRUBIT_SIZEOF(
-        class std::span<
-            class std::basic_string_view<char, struct std::char_traits<char>>,
-            18446744073709551615UL>) == 16);
+    CRUBIT_SIZEOF(class std::span<std::string_view, 18446744073709551615UL>) ==
+    16);
 static_assert(
-    alignof(class std::span<
-            class std::basic_string_view<char, struct std::char_traits<char>>,
-            18446744073709551615UL>) == 8);
+    alignof(class std::span<std::string_view, 18446744073709551615UL>) == 8);
 
 extern "C" void
 __rust_thunk__9ef48370__ZNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEC1Ev(
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>* __this) {
+    class std::span<std::string_view, 18446744073709551615UL>* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void
 __rust_thunk__eb5fa8a1__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE5firstEm(
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>* __return,
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this,
+    class std::span<std::string_view, 18446744073709551615UL>* __return,
+    class std::span<std::string_view, 18446744073709551615UL> const* __this,
     size_t __count) {
   new (__return) auto(__this->first(__count));
 }
 
-static_assert(
-    (class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> (
-        ::std::span<
-            class std::basic_string_view<char, struct std::char_traits<char>>,
-            18446744073709551615UL>::*)(size_t) const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::first);
+static_assert((class std::span<std::string_view, 18446744073709551615UL> (
+                  ::std::span<std::string_view, 18446744073709551615UL>::*)(
+                  size_t) const) &
+              ::std::span<std::string_view, 18446744073709551615UL>::first);
 
 extern "C" void
 __rust_thunk__cb04abd4__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE4lastEm(
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>* __return,
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this,
+    class std::span<std::string_view, 18446744073709551615UL>* __return,
+    class std::span<std::string_view, 18446744073709551615UL> const* __this,
     size_t __count) {
   new (__return) auto(__this->last(__count));
 }
 
-static_assert(
-    (class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> (
-        ::std::span<
-            class std::basic_string_view<char, struct std::char_traits<char>>,
-            18446744073709551615UL>::*)(size_t) const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::last);
+static_assert((class std::span<std::string_view, 18446744073709551615UL> (
+                  ::std::span<std::string_view, 18446744073709551615UL>::*)(
+                  size_t) const) &
+              ::std::span<std::string_view, 18446744073709551615UL>::last);
 
 extern "C" void
 __rust_thunk__f8d72bf1__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE7subspanEmm(
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>* __return,
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this,
+    class std::span<std::string_view, 18446744073709551615UL>* __return,
+    class std::span<std::string_view, 18446744073709551615UL> const* __this,
     size_t __offset, size_t __count) {
   new (__return) auto(__this->subspan(__offset, __count));
 }
 
-static_assert(
-    (class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> (
-        ::std::span<
-            class std::basic_string_view<char, struct std::char_traits<char>>,
-            18446744073709551615UL>::*)(size_t, size_t) const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::subspan);
+static_assert((class std::span<std::string_view, 18446744073709551615UL> (
+                  ::std::span<std::string_view, 18446744073709551615UL>::*)(
+                  size_t, size_t) const) &
+              ::std::span<std::string_view, 18446744073709551615UL>::subspan);
 
 extern "C" size_t
 __rust_thunk__e58d956f__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE4sizeEv(
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this) {
+    class std::span<std::string_view, 18446744073709551615UL> const* __this) {
   return __this->size();
 }
 
 static_assert(
-    (size_t (::std::span<
-             class std::basic_string_view<char, struct std::char_traits<char>>,
-             18446744073709551615UL>::*)() const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::size);
+    (size_t (::std::span<std::string_view, 18446744073709551615UL>::*)()
+         const) &
+    ::std::span<std::string_view, 18446744073709551615UL>::size);
 
 extern "C" size_t
 __rust_thunk__1a2eb8d0__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE10size_bytesEv(
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this) {
+    class std::span<std::string_view, 18446744073709551615UL> const* __this) {
   return __this->size_bytes();
 }
 
 static_assert(
-    (size_t (::std::span<
-             class std::basic_string_view<char, struct std::char_traits<char>>,
-             18446744073709551615UL>::*)() const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::size_bytes);
+    (size_t (::std::span<std::string_view, 18446744073709551615UL>::*)()
+         const) &
+    ::std::span<std::string_view, 18446744073709551615UL>::size_bytes);
 
 extern "C" bool
 __rust_thunk__5eda390c__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE5emptyEv(
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this) {
+    class std::span<std::string_view, 18446744073709551615UL> const* __this) {
   return __this->empty();
 }
 
-static_assert(
-    (bool (::std::span<
-           class std::basic_string_view<char, struct std::char_traits<char>>,
-           18446744073709551615UL>::*)() const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::empty);
+static_assert((bool (::std::span<std::string_view, 18446744073709551615UL>::*)()
+                   const) &
+              ::std::span<std::string_view, 18446744073709551615UL>::empty);
 
-extern "C" ::std::__u::string_view*
+extern "C" ::std::string_view*
 __rust_thunk__02898003__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE5frontEv(
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this) {
+    class std::span<std::string_view, 18446744073709551615UL> const* __this) {
   return std::addressof(__this->front());
 }
 
-static_assert(
-    (::std::__u::string_view &
-     (::std::span<
-         class std::basic_string_view<char, struct std::char_traits<char>>,
-         18446744073709551615UL>::*)() const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::front);
+static_assert((::std::string_view &
+               (::std::span<std::string_view, 18446744073709551615UL>::*)()
+                   const) &
+              ::std::span<std::string_view, 18446744073709551615UL>::front);
 
-extern "C" ::std::__u::string_view*
+extern "C" ::std::string_view*
 __rust_thunk__f4827081__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE4backEv(
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this) {
+    class std::span<std::string_view, 18446744073709551615UL> const* __this) {
   return std::addressof(__this->back());
 }
 
-static_assert(
-    (::std::__u::string_view &
-     (::std::span<
-         class std::basic_string_view<char, struct std::char_traits<char>>,
-         18446744073709551615UL>::*)() const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::back);
+static_assert((::std::string_view &
+               (::std::span<std::string_view, 18446744073709551615UL>::*)()
+                   const) &
+              ::std::span<std::string_view, 18446744073709551615UL>::back);
 
-extern "C" ::std::__u::string_view*
+extern "C" ::std::string_view*
 __rust_thunk__e6274c04__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE4dataEv(
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this) {
+    class std::span<std::string_view, 18446744073709551615UL> const* __this) {
   return __this->data();
 }
 
-static_assert(
-    (::std::__u::string_view *
-     (::std::span<
-         class std::basic_string_view<char, struct std::char_traits<char>>,
-         18446744073709551615UL>::*)() const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::data);
+static_assert((::std::string_view *
+               (::std::span<std::string_view, 18446744073709551615UL>::*)()
+                   const) &
+              ::std::span<std::string_view, 18446744073709551615UL>::data);
 
 extern "C" void
 __rust_thunk__4d8e3070__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE5beginEv(
-    class std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>* __return,
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this) {
+    class std::__wrap_iter<std::string_view*>* __return,
+    class std::span<std::string_view, 18446744073709551615UL> const* __this) {
   new (__return) auto(__this->begin());
 }
 
-static_assert(
-    (class std::__wrap_iter<
-        class std::basic_string_view<char, struct std::char_traits<char>>*> (
-        ::std::span<
-            class std::basic_string_view<char, struct std::char_traits<char>>,
-            18446744073709551615UL>::*)() const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::begin);
+static_assert((class std::__wrap_iter<std::string_view*> (
+                  ::std::span<std::string_view, 18446744073709551615UL>::*)()
+                   const) &
+              ::std::span<std::string_view, 18446744073709551615UL>::begin);
 
 extern "C" void
 __rust_thunk__b3c9f034__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE3endEv(
-    class std::__wrap_iter<class std::basic_string_view<
-        char, struct std::char_traits<char>>*>* __return,
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this) {
+    class std::__wrap_iter<std::string_view*>* __return,
+    class std::span<std::string_view, 18446744073709551615UL> const* __this) {
   new (__return) auto(__this->end());
 }
 
-static_assert(
-    (class std::__wrap_iter<
-        class std::basic_string_view<char, struct std::char_traits<char>>*> (
-        ::std::span<
-            class std::basic_string_view<char, struct std::char_traits<char>>,
-            18446744073709551615UL>::*)() const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::end);
+static_assert((class std::__wrap_iter<std::string_view*> (
+                  ::std::span<std::string_view, 18446744073709551615UL>::*)()
+                   const) &
+              ::std::span<std::string_view, 18446744073709551615UL>::end);
 
 extern "C" void
 __rust_thunk__3e61f7cc__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE6rbeginEv(
-    class std::reverse_iterator<class std::__wrap_iter<
-        class std::basic_string_view<char, struct std::char_traits<char>>*>>*
+    class std::reverse_iterator<class std::__wrap_iter<std::string_view*>>*
         __return,
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this) {
+    class std::span<std::string_view, 18446744073709551615UL> const* __this) {
   new (__return) auto(__this->rbegin());
 }
 
 static_assert(
-    (class std::reverse_iterator<class std::__wrap_iter<
-         class std::basic_string_view<char, struct std::char_traits<char>>*>> (
-        ::std::span<
-            class std::basic_string_view<char, struct std::char_traits<char>>,
-            18446744073709551615UL>::*)() const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::rbegin);
+    (class std::reverse_iterator<class std::__wrap_iter<std::string_view*>> (
+        ::std::span<std::string_view, 18446744073709551615UL>::*)() const) &
+    ::std::span<std::string_view, 18446744073709551615UL>::rbegin);
 
 extern "C" void
 __rust_thunk__dc1b110a__ZNKSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EE4rendEv(
-    class std::reverse_iterator<class std::__wrap_iter<
-        class std::basic_string_view<char, struct std::char_traits<char>>*>>*
+    class std::reverse_iterator<class std::__wrap_iter<std::string_view*>>*
         __return,
-    class std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL> const* __this) {
+    class std::span<std::string_view, 18446744073709551615UL> const* __this) {
   new (__return) auto(__this->rend());
 }
 
 static_assert(
-    (class std::reverse_iterator<class std::__wrap_iter<
-         class std::basic_string_view<char, struct std::char_traits<char>>*>> (
-        ::std::span<
-            class std::basic_string_view<char, struct std::char_traits<char>>,
-            18446744073709551615UL>::*)() const) &
-    ::std::span<
-        class std::basic_string_view<char, struct std::char_traits<char>>,
-        18446744073709551615UL>::rend);
+    (class std::reverse_iterator<class std::__wrap_iter<std::string_view*>> (
+        ::std::span<std::string_view, 18446744073709551615UL>::*)() const) &
+    ::std::span<std::string_view, 18446744073709551615UL>::rend);
 
 #pragma clang diagnostic pop

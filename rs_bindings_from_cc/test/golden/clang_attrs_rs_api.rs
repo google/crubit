@@ -151,24 +151,25 @@ impl Default for HasCustomAlignmentWithGnuAttr {
 }
 
 pub mod template_with_preferred_name {
-    // error: class `template_with_preferred_name::SomeTemplate` could not be bound
-    //   Class templates are not yet supported
-
     /// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
-    /// definition of the `string_view` type alias.
+    /// forward declaration of `basic_string_view` class template.
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE"]
     #[repr(C)]
     #[cfg_attr(
         not(doc),
-        doc = "CRUBIT_ANNOTATE: cpp_type=template_with_preferred_name :: SomeTemplate < int >"
+        doc = "CRUBIT_ANNOTATE: cpp_type=template_with_preferred_name :: SpecializedTypeAlias"
     )]
     #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
     pub struct SpecializedTypeAlias {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
+    unsafe impl ::cxx::ExternType for SpecializedTypeAlias {
+        type Id = ::cxx::type_id!("template_with_preferred_name :: SpecializedTypeAlias");
+        type Kind = ::cxx::kind::Trivial;
+    }
     forward_declare::unsafe_define!(
-        forward_declare::symbol!("template_with_preferred_name :: SomeTemplate < int >"),
+        forward_declare::symbol!("template_with_preferred_name :: SpecializedTypeAlias"),
         crate::template_with_preferred_name::SpecializedTypeAlias
     );
 
@@ -183,6 +184,12 @@ pub mod template_with_preferred_name {
         }
     }
 
+    // error: class `template_with_preferred_name::SomeTemplate` could not be bound
+    //   Class templates are not yet supported
+
+    // Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
+    // definition of the `string_view` type alias.
+
     // Based on `llvm/include/c++/v1/string_view` - mimics definition of
     // `basic_string_view` class template (focusing on the attributes related to the
     // preferred name).
@@ -190,12 +197,6 @@ pub mod template_with_preferred_name {
 
 // namespace template_with_preferred_name
 
-/// Class template instantiations that aren't named by a C++ type alias.
-pub mod zz_template_instantiations {
-    #[doc(hidden)]
-    pub type __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE =
-        crate::template_with_preferred_name::SpecializedTypeAlias;
-}
 mod detail {
     #[allow(unused_imports)]
     use super::*;

@@ -20,5 +20,5 @@
 // error: function `RTS` could not be bound
 //   Return type is not supported: Unsupported type 'TS<int>': Failed to create bindings for template specialization type TS<int>: Class template instantiation forbidden by blocklist: TS
 
-// error: struct `TS` could not be bound
+// error: struct `TS<int>` could not be bound
 //   Class template instantiation forbidden by blocklist: TS

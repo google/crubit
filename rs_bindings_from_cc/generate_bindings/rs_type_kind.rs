@@ -125,7 +125,7 @@ fn rs_type_kind_with_lifetime_elision_impl(
                 bail!(
                     "Pointers or references to C-style arrays are not yet supported: \
                     {} (b/575922365)",
-                    c_array.display_cc_type_name_for_rs_type(),
+                    c_array.display_cc_type_name_for_rs_type(db),
                 );
             }
 
@@ -274,7 +274,7 @@ fn rs_type_kind_with_lifetime_elision_impl(
                 bail!(
                     "C-style array types are not supported in function pointers yet: \
                     {} (b/575922365)",
-                    c_array.display_cc_type_name_for_rs_type(),
+                    c_array.display_cc_type_name_for_rs_type(db),
                 );
             }
             ensure!(
