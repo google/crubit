@@ -3548,19 +3548,18 @@ fn function_signature(
                         api_params[0] = quote! { mut self };
                         if derived_record.is_some() {
                             // NOTE: the round-trip through a raw pointer is
-                            // load-bearing, not redundant. `oops::Upcast` is
-                            // only implemented for `*const T`, `*mut T`, and
-                            // `&T` -- there is no `&mut T` impl -- so `&mut
-                            // self` has to be laundered through `*mut _` to
-                            // find an applicable impl, then reborrowed.
+                            // load-bearing, not redundant. There is no
+                            // `&mut T` upcast, so `&mut self` has to be
+                            // laundered through `*mut _` and
+                            // `oops::RawUpcast`, then reborrowed.
                             //
-                            // SAFETY: Calling `upcast` on `&mut self` is safe, as `self` is a valid
-                            // reference to `Derived`, and dereferenced to a `Derived` object.
-                            // Dereferencing the returned pointer from `upcast` is safe, as it is a
-                            // valid, properly aligned, and initialized pointer to the `base`
+                            // SAFETY: Calling `raw_upcast` on `&mut self` is safe, as `self` is a
+                            // valid reference to `Derived`, and dereferenced to a `Derived` object.
+                            // Dereferencing the returned pointer from `raw_upcast` is safe, as it
+                            // is a valid, properly aligned, and initialized pointer to the `base`
                             // subobject with the same lifetime as `self`.
                             thunk_args[0] = quote! {
-                                unsafe { &mut *oops::Upcast::<_>::upcast(&mut self as *mut _) }
+                                unsafe { &mut *oops::RawUpcast::<_>::raw_upcast(&mut self as *mut _) }
                             };
                         } else {
                             thunk_args[0] = quote! { &mut self };
@@ -4051,15 +4050,15 @@ fn upcast_self_to_base(
             }
         }
         (true, false, false) => {
-            // SAFETY: Calling `get_unchecked_mut` on `self` is safe, as `upcast` does not move or
-            // copy the underlying object to a different memory address.
-            // Calling `upcast` on `self` is safe, as `self` is a valid reference to `Derived`, and
-            // dereferenced to a `Derived` object.
+            // SAFETY: Calling `get_unchecked_mut` on `self` is safe, as `raw_upcast` does not move
+            // or copy the underlying object to a different memory address.
+            // Calling `raw_upcast` on `self` is safe, as `self` is a valid reference to `Derived`,
+            // and dereferenced to a `Derived` object.
             // Dereferencing the returned pointer is safe, as it is a valid, properly aligned, and
             // initialized pointer to the `base` subobject with the same lifetime as `self`.
             // `Pin::new_unchecked` is safe because the underlying object `self` was already pinned.
             quote! {
-                unsafe { ::core::pin::Pin::new_unchecked(&mut *oops::Upcast::<_>::upcast(self.get_unchecked_mut() as *mut _)) }
+                unsafe { ::core::pin::Pin::new_unchecked(&mut *oops::RawUpcast::<_>::raw_upcast(self.get_unchecked_mut() as *mut _)) }
             }
         }
         (true, true, true) => {
@@ -4073,13 +4072,13 @@ fn upcast_self_to_base(
             }
         }
         (true, true, false) => {
-            // SAFETY: Calling `upcast` on `self` is safe, as `self` is a valid reference to
+            // SAFETY: Calling `raw_upcast` on `self` is safe, as `self` is a valid reference to
             // `Derived`, and dereferenced to a `Derived` object.
-            // Dereferencing the returned pointer from `upcast` is safe, as it is a valid, properly
-            // aligned, and initialized pointer to the `base` subobject with the same lifetime as
-            // `self`.
+            // Dereferencing the returned pointer from `raw_upcast` is safe, as it is a valid,
+            // properly aligned, and initialized pointer to the `base` subobject with the same
+            // lifetime as `self`.
             quote! {
-                unsafe { &mut *oops::Upcast::<_>::upcast(self as *mut _) }
+                unsafe { &mut *oops::RawUpcast::<_>::raw_upcast(self as *mut _) }
             }
         }
         (false, _, true) => {

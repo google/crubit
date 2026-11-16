@@ -8,14 +8,14 @@
 //!
 //! ## Upcasting
 //!
-//! To cast a reference or pointer to its base class type, use `.upcast()` when the base class is
-//! not virtual, use `.virtual_upcast()` on raw pointers when the base class is virtual.
+//! To cast a reference to its base class type, use `.upcast()`. To cast a raw pointer, use
+//! `.raw_upcast()` when the base class is not virtual, and `.virtual_upcast()` when it is.
 //!
 //! For example:
 //!
 //! ```ignore
 //! let x : *mut Derived = ...;
-//! let y : *mut Base = x.upcast();
+//! let y : *mut Base = x.raw_upcast();
 //! let z : *mut VirtualBase = x.virtual_upcast();
 //!
 //! // Upcasting a pinned mutable reference (only if `Base` is `!Unpin`):
@@ -35,6 +35,9 @@
 use core::pin::Pin;
 
 /// Trait for upcasting a Derived class to its non-virtual Base class.
+///
+/// TODO(b/216195042): Make `upcast` safe and remove the raw pointer impls, which are replaced by
+/// `RawUpcast`, once no generated or handwritten code calls `Upcast` on raw pointers.
 ///
 /// # Safety
 ///
@@ -105,6 +108,54 @@ where
         // SAFETY: By the safety contract of `Upcast::upcast`, `self` is a valid reference
         // to a `Derived` object, which satisfies the safety contract of `Derived::upcast_ptr`.
         unsafe { &*Derived::upcast_ptr(self as *const Derived) }
+    }
+}
+
+/// Trait for upcasting a raw pointer to a Derived class to a raw pointer to its non-virtual Base
+/// class.
+///
+/// # Safety
+///
+/// Implementations of `RawUpcast` must guarantee that they fulfill the safety promises of
+/// `raw_upcast`.
+pub unsafe trait RawUpcast<Target> {
+    /// Upcasts `self` to a pointer to the `Base` subobject.
+    ///
+    /// # Safety
+    ///
+    /// `self` must be a valid, dereferenceable pointer to an initialized object of the derived
+    /// class.
+    ///
+    /// # Safety promises
+    ///
+    /// The returned pointer is a valid, properly aligned, and dereferenceable pointer to the
+    /// `Base` subobject within `*self`.
+    unsafe fn raw_upcast(self) -> Target;
+}
+
+/// Upcast `*const` -> `*const`.
+unsafe impl<Derived, Base> RawUpcast<*const Base> for *const Derived
+where
+    Derived: Inherits<Base>,
+{
+    unsafe fn raw_upcast(self: *const Derived) -> *const Base {
+        // SAFETY: By the safety contract of `RawUpcast::raw_upcast`, `self` is a valid,
+        // dereferenceable pointer to a `Derived` object, which satisfies the safety contract of
+        // `Derived::upcast_ptr`.
+        unsafe { Derived::upcast_ptr(self) }
+    }
+}
+
+/// Upcast `*mut` -> `*mut`.
+unsafe impl<Derived, Base> RawUpcast<*mut Base> for *mut Derived
+where
+    Derived: Inherits<Base>,
+{
+    unsafe fn raw_upcast(self: *mut Derived) -> *mut Base {
+        // SAFETY: By the safety contract of `RawUpcast::raw_upcast`, `self` is a valid,
+        // dereferenceable pointer to a `Derived` object, which satisfies the safety contract of
+        // `Derived::upcast_ptr_mut`.
+        unsafe { Derived::upcast_ptr_mut(self) }
     }
 }
 
@@ -329,8 +380,8 @@ mod test {
         let _: *mut Base = unsafe { Derived::upcast_ptr_mut(&mut derived) };
         // SAFETY: `derived` is a valid pointer to a `Derived` value.
         unsafe {
-            let _: *const Base = (&derived as *const Derived).upcast();
-            let _: *mut Base = (&mut derived as *mut Derived).upcast();
+            let _: *const Base = (&derived as *const Derived).raw_upcast();
+            let _: *mut Base = (&mut derived as *mut Derived).raw_upcast();
             // let _: Pin<&mut Base> = Pin::new(&mut derived).upcast(); // does not compile
             // (`Base` is `Unpin`, so there is no `InheritsPinned` impl)
         }
@@ -339,7 +390,7 @@ mod test {
         // SAFETY: `derived` is a valid pointer to a `Derived` value. `base` is a
         // valid pointer to a `Base` value.
         unsafe {
-            let base: *mut Base = (&mut derived as *mut Derived).upcast();
+            let base: *mut Base = (&mut derived as *mut Derived).raw_upcast();
             (*base).0 = 42;
         }
         assert_eq!(derived.base.0, 42);

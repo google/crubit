@@ -30,7 +30,7 @@ fn test_inherited_static_methods_take_base_arguments() {
         Derived::static_two_ptr_params(&raw mut base, &raw mut base);
         assert_eq!(Derived::static_ptr_return(&raw mut base), &raw mut base);
 
-        let derived_as_base: *mut Base = oops::Upcast::<*mut Base>::upcast(&raw mut derived);
+        let derived_as_base: *mut Base = oops::RawUpcast::<*mut Base>::raw_upcast(&raw mut derived);
         Derived::static_ptr_param(derived_as_base);
     }
 
