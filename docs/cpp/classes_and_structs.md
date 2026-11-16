@@ -182,10 +182,10 @@ To get inherited methods, add `//features:oo_casting` to the
 
 *   The derived struct implements `oops::Inherits<Base>` for each public base
     class, including base classes from other `cc_library` targets. Rust code can
-    then use the `oops::Upcast` trait to convert a `&Derived`,
-    `Pin<&mut Derived>`, `*const Derived`, or `*mut Derived` to the base class
-    type. For example, to call a method of a base class in another `cc_library`,
-    upcast first:
+    then use the `oops::Upcast` trait to convert a `&Derived`, `*const Derived`,
+    or `*mut Derived` to the base class type. If the base class is not
+    Rust-movable, it can also convert a `Pin<&mut Derived>`. For example, to
+    call a method of a base class in another `cc_library`, upcast first:
 
     ```rust
     use oops::Upcast as _;
@@ -193,9 +193,13 @@ To get inherited methods, add `//features:oo_casting` to the
     // The type annotation is required.
     let base: &Base = unsafe { derived.upcast() };
 
-    // For non-const methods on a non-Rust-movable class:
+    // For non-const methods on a non-Rust-movable base class:
     let base: core::pin::Pin<&mut Base> = unsafe { derived_pin.upcast() };
     ```
+
+    There is no `Pin<&mut Derived>` conversion to a Rust-movable base class,
+    because safe code could turn the result into a `&mut Base` and overwrite
+    data that belongs to the derived class.
 
     For a `virtual` base class, use `oops::VirtualUpcast` on a raw pointer
     instead. Rust code that uses these traits depends on

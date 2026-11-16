@@ -1443,7 +1443,7 @@ fn cc_struct_upcast_impl(
         let body = if let Some(offset) = base.offset() {
             upcastable_bases
                 .push(UpcastableBase { record: base_record.clone(), needs_virtual_upcast: false });
-            UpcastImplBody::PointerOffset { offset }
+            UpcastImplBody::PointerOffset { offset, base_is_unpin: base_record.is_unpin() }
         } else {
             let cast_fn_name = make_rs_ident(&format!(
                 "__crubit_dynamic_upcast__{derived}__to__{base}_{odr_suffix}",

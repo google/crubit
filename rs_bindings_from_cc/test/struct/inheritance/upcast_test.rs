@@ -67,3 +67,14 @@ fn test_upcast_pin_mut() {
     let base: Pin<&mut NonUnpinBase> = unsafe { derived.as_mut().upcast() };
     base.non_const_method();
 }
+
+// `Pin<&mut Derived>` can only be upcast if the base is `!Unpin`: if it were `Unpin`, safe code
+// could turn the `Pin<&mut Base>` into a `&mut Base` and overwrite the base subobject.
+static_assertions::assert_impl_all!(
+    nonunpin_upcast::NonUnpinDerived: oops::InheritsPinned<nonunpin_upcast::NonUnpinBase>
+);
+static_assertions::assert_impl_all!(Derived: oops::Inherits<Base1>);
+static_assertions::assert_not_impl_any!(Derived: oops::InheritsPinned<Base1>);
+static_assertions::assert_not_impl_any!(
+    Pin<&'static mut Derived>: oops::Upcast<Pin<&'static mut Base1>>
+);

@@ -1513,6 +1513,33 @@ fn test_unambiguous_public_bases() -> Result<()> {
         rs_api,
         quote! {unsafe impl oops::Inherits<crate::AmbiguousPublicBase> for crate::Derived}
     );
+    // None of the bases are `!Unpin`, so `Pin<&mut _>` upcasts are not allowed.
+    assert_rs_not_matches!(rs_api, quote! { oops::InheritsPinned });
+    Ok(())
+}
+
+/// `oops::InheritsPinned` (which allows upcasting `Pin<&mut Derived>`) is only implemented for
+/// bases that are not Rust-movable (`!Unpin`). See b/216195042#comment14.
+#[gtest]
+fn test_inherits_pinned_only_for_nonunpin_bases() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc_dependency(
+        "
+        struct UnpinBase {};
+        struct NonUnpinBase { ~NonUnpinBase(); };
+        struct Derived : UnpinBase, NonUnpinBase { ~Derived(); };
+    ",
+        "",
+    )?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! { unsafe impl oops::InheritsPinned<crate::NonUnpinBase> for crate::Derived {} }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! { unsafe impl oops::Inherits<crate::UnpinBase> for crate::Derived }
+    );
+    assert_rs_not_matches!(rs_api, quote! { oops::InheritsPinned<crate::UnpinBase> });
     Ok(())
 }
 
