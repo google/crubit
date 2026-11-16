@@ -30,16 +30,6 @@
 
 namespace async_fn {
 
-// Error generating bindings for struct
-// `async_fn_golden::AsyncFnRustConvertible`: Type bindings for
-// async_fn_golden::AsyncFnRustConvertible suppressed due to being mapped to an
-// existing C++ type (crubit::test::AsyncFnCppConvertible)
-
-// Error generating bindings for struct
-// `async_fn_golden::AsyncFnRustLayoutEquivalent`: Type bindings for
-// async_fn_golden::AsyncFnRustLayoutEquivalent suppressed due to being mapped
-// to an existing C++ type (crubit::test::AsyncFnCppLayoutEquivalent)
-
 struct CRUBIT_INTERNAL_RUST_TYPE(":: async_fn_golden :: NotCppMovable") alignas(
     4) [[clang::trivial_abi]] NotCppMovable final {
  public:

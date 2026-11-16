@@ -80,10 +80,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for struct `rust_lib_golden::NewStatusOr`: Type
-// bindings for rust_lib_golden::NewStatusOr suppressed due to being mapped to
-// an existing C++ type (absl::StatusOr<{T}>)
-
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rust_lib_golden :: StructWithProto") alignas(4) [[clang::trivial_abi]]
