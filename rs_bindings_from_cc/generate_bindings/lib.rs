@@ -23,8 +23,8 @@ use database::db::{BindingsGenerator, CodegenFunctions, Interner};
 use database::intern;
 use database::rs_snippet::{
     resolve_bridge_rust_name, BackingType, BridgeRsTypeKind, Callable, CustomizeMethodsKind,
-    FnTrait, LifetimeOptions, Mutability, PassingConvention, PrimitiveName, RsTypeKind,
-    RustPtrKind, UniformReprTemplateType, UnsafeReason,
+    ExistingRustTypeLifetimes, FnTrait, LifetimeOptions, Mutability, PassingConvention,
+    PrimitiveName, RsTypeKind, RustPtrKind, UniformReprTemplateType, UnsafeReason,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -592,6 +592,7 @@ pub fn new_database<'db>(
         CommonTokens::new(),
         lifetime_defaults_transform::decl_lifetime_arity,
         rs_type_kind_safety,
+        unknown_lifetime_safety,
         lifetime_defaults_transform::lifetime_defaults_transform_item,
         lifetime_defaults_transform::lifetime_defaults_transform_record,
         lifetime_defaults_transform::lifetime_defaults_transform_func,
@@ -954,7 +955,10 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
             None
         }
         RsTypeKind::Enum { .. } | RsTypeKind::Primitive(..) => None,
-        RsTypeKind::ExistingRustType { type_args, .. } => {
+        RsTypeKind::ExistingRustType { existing_rust_type, type_args, lifetime_kind, .. } => {
+            if lifetime_kind != ExistingRustTypeLifetimes::Known {
+                return Some(unknown_existing_rust_type_lifetimes_reason(db, &existing_rust_type));
+            }
             template_params_safety(db, type_args.iter().cloned())
         }
         RsTypeKind::Box { pointee, .. } => {
@@ -1053,24 +1057,114 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
     }
 }
 
+/// Returns the `UnsafeReason` for a use of `existing_rust_type` whose lifetime arguments are
+/// unknown.
+fn unknown_existing_rust_type_lifetimes_reason(
+    db: &BindingsGenerator<'_>,
+    existing_rust_type: &ExistingRustType,
+) -> UnsafeReason {
+    let arity = existing_rust_type.lifetime_inputs().len();
+    UnsafeReason(intern!(
+        db.interner(),
+        "type {} has {} lifetime parameter{}, but 0 were provided; callers must ensure that arguments have the appropriate lifetime",
+        existing_rust_type.rs_name(),
+        arity,
+        if arity == 1 { "" } else { "s" },
+    ))
+}
+
+/// Implementation of `BindingsGenerator::unknown_lifetime_safety`.
+///
+/// Returns an `UnsafeReason` if `rs_type_kind` contains an `ExistingRustType` with unknown
+/// lifetimes (which is either wrapped in `::crubit_support::Unsafe<T<'static>>` or lowered to
+/// `T<'_>`). This applies unconditionally even when `CrubitFeature::UnsafeTemplateParams` is not
+/// enabled, so container parameters such as `absl::StatusOr<DynFuture>` cannot accept a
+/// potentially dangling `Unsafe<T<'static>>` from safe Rust. It also makes a function whose
+/// return type contains such a type `unsafe` (see `api_func_shape_for_identifier`).
+fn unknown_lifetime_safety(
+    db: &BindingsGenerator<'_>,
+    rs_type_kind: RsTypeKind,
+) -> Option<UnsafeReason> {
+    match &rs_type_kind {
+        RsTypeKind::ExistingRustType { existing_rust_type, type_args, lifetime_kind, .. } => {
+            if *lifetime_kind != ExistingRustTypeLifetimes::Known {
+                return Some(unknown_existing_rust_type_lifetimes_reason(db, existing_rust_type));
+            }
+            type_args.iter().find_map(|arg| db.unknown_lifetime_safety(arg.clone()))
+        }
+        RsTypeKind::TypeAlias { underlying_type: t, .. }
+        | RsTypeKind::Reference { referent: t, .. }
+        | RsTypeKind::RvalueReference { referent: t, .. }
+        | RsTypeKind::Pointer { pointee: t, .. }
+        | RsTypeKind::CArray { element_type: t, .. } => {
+            db.unknown_lifetime_safety(t.as_ref().clone())
+        }
+        RsTypeKind::Box { pointee, .. } => {
+            pointee.as_deref().and_then(|p| db.unknown_lifetime_safety(p.clone()))
+        }
+        RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
+            BridgeRsTypeKind::Bridge { generic_types, .. } => {
+                generic_types.iter().find_map(|arg| db.unknown_lifetime_safety(arg.clone()))
+            }
+            BridgeRsTypeKind::StdOptional(t) | BridgeRsTypeKind::C9Co { result_type: t, .. } => {
+                db.unknown_lifetime_safety(t.as_ref().clone())
+            }
+            BridgeRsTypeKind::StdPair(t1, t2) => db
+                .unknown_lifetime_safety(t1.as_ref().clone())
+                .or_else(|| db.unknown_lifetime_safety(t2.as_ref().clone())),
+            BridgeRsTypeKind::Callable(callable) => callable
+                .param_types
+                .iter()
+                .chain(std::iter::once(callable.return_type.as_ref()))
+                .find_map(|ty| db.unknown_lifetime_safety(ty.clone())),
+            BridgeRsTypeKind::StdString { .. } | BridgeRsTypeKind::ProtoMessageBridge { .. } => {
+                None
+            }
+        },
+        RsTypeKind::Record { record, uniform_repr_template_type, customize_methods, .. } => {
+            if record.safety_annotation() == SafetyAnnotation::DisableUnsafe {
+                return None;
+            }
+            record_template_params(
+                db,
+                record.as_ref(),
+                uniform_repr_template_type.as_deref(),
+                customize_methods.as_deref(),
+            )
+            .ok()?
+            .iter()
+            .find_map(|param| db.unknown_lifetime_safety(param.clone()))
+        }
+        RsTypeKind::FuncPtr { return_type, param_types, .. } => param_types
+            .iter()
+            .chain(std::iter::once(return_type.as_ref()))
+            .find_map(|ty| db.unknown_lifetime_safety(ty.clone())),
+        RsTypeKind::Error { .. }
+        | RsTypeKind::IncompleteRecord { .. }
+        | RsTypeKind::Enum { .. }
+        | RsTypeKind::Primitive(..) => None,
+    }
+}
+
 /// Helper function for `rs_type_kind_safety`.
 /// Returns whether any template parameter is unsafe.
 fn template_params_safety<'a>(
     db: &BindingsGenerator<'a>,
     template_params: impl IntoIterator<Item = RsTypeKind>,
 ) -> Option<UnsafeReason> {
-    if !db
+    let check_all_template_params = db
         .ir()
         .target_crubit_features(db.ir().current_target())
-        .contains(crubit_feature::CrubitFeature::UnsafeTemplateParams)
-    {
-        return None;
-    }
+        .contains(crubit_feature::CrubitFeature::UnsafeTemplateParams);
 
     let reasons: Vec<String> = template_params
         .into_iter()
         .filter_map(|param| {
-            let reason = db.rs_type_kind_safety(param)?;
+            let reason = if check_all_template_params {
+                db.rs_type_kind_safety(param)?
+            } else {
+                db.unknown_lifetime_safety(param.clone())?
+            };
             Some(format!("template parameter is unsafe: {reason}"))
         })
         .collect();
@@ -1169,20 +1263,18 @@ fn record_template_params_safety<'a>(
     uniform_repr_template_type: Option<&UniformReprTemplateType>,
     customize_methods: Option<&CustomizeMethodsKind>,
 ) -> Option<UnsafeReason> {
-    if !db
+    let check_all_template_params = db
         .ir()
         .target_crubit_features(db.ir().current_target())
-        .contains(crubit_feature::CrubitFeature::UnsafeTemplateParams)
-    {
-        return None;
-    }
+        .contains(crubit_feature::CrubitFeature::UnsafeTemplateParams);
 
     match record_template_params(db, record, uniform_repr_template_type, customize_methods) {
         Ok(params) => template_params_safety(db, params),
-        Err(err) => Some(UnsafeReason(intern!(
+        Err(err) if check_all_template_params => Some(UnsafeReason(intern!(
             db.interner(),
             "template parameter is unsafe: Rust type is unknown: {err}"
         ))),
+        Err(_) => None,
     }
 }
 

@@ -301,6 +301,7 @@ rust_library(
         "crubit_support/src/erased_future.rs",
         "crubit_support/src/hash.rs",
         "crubit_support/src/lib.rs",
+        "crubit_support/src/unsafe_wrapper.rs",
     ],
     compatible_with = ["//buildenv/target:non_prod"],
     edition = "2024",
@@ -318,6 +319,16 @@ rust_test(
     crate = ":crubit_support",
     deps = [
         "@crate_index//:googletest",
+    ],
+)
+
+rust_test(
+    name = "unsafe_wrapper_test",
+    srcs = ["crubit_support/tests/unsafe_wrapper_test.rs"],
+    deps = [
+        ":crubit_support",
+        "@crate_index//:googletest",
+        "@crate_index//:static_assertions",  # v1
     ],
 )
 

@@ -146,6 +146,16 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:rs_type_kind_safety
         fn rs_type_kind_safety(&self, rs_type_kind: RsTypeKind) -> Option<UnsafeReason>;
 
+        #[break_cycles_with = None]
+        /// Returns whether the given Rust type contains an `ExistingRustType` whose lifetimes are
+        /// unknown (lowered to `::crubit_support::Unsafe<T<'static>>` or `T<'_>`), looking through
+        /// pointers, references, aliases, and template and bridge arguments.
+        ///
+        /// Returns `None` if all lifetimes are known.
+        ///
+        /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:unknown_existing_rust_type_lifetime_safety
+        fn unknown_lifetime_safety(&self, rs_type_kind: RsTypeKind) -> Option<UnsafeReason>;
+
         #[break_cycles_with = Err(anyhow!("Cycle detected: lifetime_defaults_transform_item"))]
         fn lifetime_defaults_transform_item(&self, item: ir::Item) -> Result<ir::Item>;
         #[break_cycles_with = Err(anyhow!("Cycle detected: lifetime_defaults_transform_record"))]
