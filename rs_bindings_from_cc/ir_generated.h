@@ -34,7 +34,6 @@ namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI FuncPointer; }
 namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI ConstantArrayType; }
 namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI Variant; }
 struct CRUBIT_FFI_TRIVIAL_ABI CcType;
-struct CRUBIT_FFI_TRIVIAL_ABI Identifier;
 struct CRUBIT_FFI_TRIVIAL_ABI IntegerConstant;
 struct CRUBIT_FFI_TRIVIAL_ABI Operator;
 struct CRUBIT_FFI_TRIVIAL_ABI UnqualifiedIdentifier;
@@ -562,15 +561,6 @@ struct CRUBIT_FFI_TRIVIAL_ABI CcType {
   FfiString unknown_attr_{};
   FfiVec<FfiString> explicit_lifetimes_{};
   FfiVec<::crubit::ffi::CcType> template_args_{};
-};
-
-struct CRUBIT_FFI_TRIVIAL_ABI Identifier {
-  Identifier() = default;
-  explicit Identifier(std::string_view identifier) { set_identifier(identifier); }
-  std::string_view identifier() const { return identifier_.AsView(); }
-  void set_identifier(std::string_view value) { identifier_ = FfiString(value); }
-  friend bool operator==(const Identifier&, const Identifier&) = default;
-  FfiString identifier_{};
 };
 
 struct CRUBIT_FFI_TRIVIAL_ABI IntegerConstant {
@@ -3478,15 +3468,6 @@ static_assert(
   sizeof(size_t) != 8 ||
   offsetof(CcType, template_args_) ==
     112);
-static_assert(std::is_standard_layout_v<Identifier>);
-static_assert(
-  sizeof(size_t) != 8 ||
-  (sizeof(Identifier) == 16 &&
-    alignof(Identifier) == 8));
-static_assert(
-  sizeof(size_t) != 8 ||
-  offsetof(Identifier, identifier_) ==
-    0);
 static_assert(std::is_standard_layout_v<IntegerConstant>);
 static_assert(
   sizeof(size_t) != 8 ||
