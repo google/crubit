@@ -17,10 +17,6 @@ set(_crubit_sha256_LLVM-23.1.3-Linux-X64.tar.xz
   ca9fe385a5d9e2d88132dc0e23a00e9f87f38fa75f67207b5e457d208e71d013)
 set(_crubit_sha256_LLVM-23.1.3-macOS-ARM64.tar.xz
   3dcfd88aec10be204a24037bcb0dc0ad777882e9dbe8ac60e2639060d8a794b1)
-set(_crubit_sha256_abseil-cpp-20260526.0.tar.gz
-  6e1aee535473414164bf83e4ebc40240dec71a4701f8a642d906e95bea1aea0c)
-set(_crubit_sha256_protobuf-36.1.tar.gz
-  7a7baff8207a57f3fe5c233d432a09eba67bdfb55a3145839d0817cae8e807a4)
 
 # The date (YYYYMMDD) that each LLVM major version's release branch was
 # created, which is when its code last matched LLVM's main branch. Releases

@@ -6,7 +6,7 @@ name: 'Setup Crubit CI'
 description: >
   Shared CI setup for every Crubit workflow: a single Google Cloud
   authentication, plus opt-in Bazel Remote Build Execution (RBE), sccache (for
-  C++ and/or Rust) and protoc. Replaces the former setup_bazel and
+  C++ and/or Rust). Replaces the former setup_bazel and
   setup_sccache actions, which each authenticated separately and each carried
   their own copy of the unauthenticated-fork fallback logic.
 
@@ -43,15 +43,6 @@ inputs:
       silently caching one language and not the other.
     required: false
     default: 'false'
-  protoc:
-    description: 'Install a prebuilt protoc and add it to PATH.'
-    required: false
-    default: 'false'
-  protoc_version:
-    description: 'protoc release to install when protoc is enabled.'
-    required: false
-    default: '36.1'
-
 outputs:
   authenticated:
     description: "'true' if Google Cloud credentials were available."
@@ -317,26 +308,3 @@ runs:
         } >> "$GITHUB_ENV"
 
         echo "enabled=true" >> "$GITHUB_OUTPUT"
-
-    - name: Cache protoc
-      if: ${{ inputs.protoc == 'true' }}
-      id: cache_protoc
-      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
-      with:
-        path: ${{ runner.temp }}/proto
-        key: ${{ runner.os }}-protoc-${{ inputs.protoc_version }}
-
-    - name: Install protoc
-      if: ${{ inputs.protoc == 'true' }}
-      shell: bash
-      env:
-        CACHE_HIT: ${{ steps.cache_protoc.outputs.cache-hit }}
-        PROTOC_VER: ${{ inputs.protoc_version }}
-        DEST: ${{ runner.temp }}/proto
-      run: |
-        if [[ "$CACHE_HIT" != "true" ]]; then
-          curl -sSLO "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-x86_64.zip"
-          unzip -o "protoc-${PROTOC_VER}-linux-x86_64.zip" -d "${DEST}"
-          rm "protoc-${PROTOC_VER}-linux-x86_64.zip"
-        fi
-        echo "${DEST}/bin" >> "$GITHUB_PATH"

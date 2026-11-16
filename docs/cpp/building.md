@@ -49,8 +49,8 @@ toolchains, and it builds LLVM from source at the commit pinned in
 Because it builds LLVM, the first build takes a long time.
 
 Prerequisites: `bazelisk`, `python3`, and the development headers for zlib,
-libxml2, and zstd in `/usr/include`. On Debian or Ubuntu, install them with `apt
-install zlib1g-dev libxml2-dev libzstd-dev`.
+libxml2, and zstd in `/usr/include`. On Debian or Ubuntu, install them with
+`apt install zlib1g-dev libxml2-dev libzstd-dev`.
 
 ```sh
 git clone https://github.com/google/crubit.git
@@ -72,7 +72,6 @@ Chromium. CI doesn't test it.
     pinned in `MODULE.bazel` (or one close to it).
     *   They must be built with compression support (zlib), which is the default
         build config.
-*   Abseil libraries, built and installed.
 *   zlib (for example, `libz.so`) in the system include and lib paths.
 *   A recent Rust toolchain. In a Crubit checkout, `rustup` automatically
     selects the nightly toolchain from `rust-toolchain.toml`.
@@ -132,8 +131,8 @@ export RUSTFLAGS="$RUSTFLAGS -Clink-arg=/LIBPATH:/path/to/zlib"
 # Avoid deprecation warnings.
 export CXXFLAGS="$CXXFLAGS /D_CRT_SECURE_NO_DEPRECATE"
 
-# If LLVM (-DCMAKE_MSVC_RUNTIME_LIBRARY) and Abseil (-DABSL_MSVC_STATIC_RUNTIME)
-# are built against static CRT, then Rust needs to match, or vice-versa.
+# If LLVM (-DCMAKE_MSVC_RUNTIME_LIBRARY) is built against static CRT,
+# then Rust needs to match, or vice-versa.
 # export RUSTFLAGS="$RUSTFLAGS -Ctarget-feature=+crt-static"
 ```
 
@@ -147,10 +146,6 @@ export CLANG_INCLUDE_PATH=/path/to/llvm/and/clang/headers
 ## import libraries of LLVM's DLLs (LLVM-C.lib and friends); those are recognised by
 ## their contents and skipped, so the whole `lib` dir can be given as-is.
 export CLANG_LIB_STATIC_PATH=/path/to/llvm/and/clang/libs
-## This path contains absl/ dir with all the includes.
-export ABSL_INCLUDE_PATH=/path/to/absl/include/dir
-## This path contains libabsl_*
-export ABSL_LIB_STATIC_PATH=/path/to/absl/libs
 
 # Tell Crubit which LLVM it is compiled against, as the dev date (YYYYMMDD) of
 # your llvm-project commit: its own date on main, else its release branch's fork

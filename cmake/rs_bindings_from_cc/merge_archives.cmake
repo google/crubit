@@ -39,10 +39,6 @@ endfunction()
 #             skips libraries with a main() function, the code generators for
 #             specific processors (Crubit doesn't generate code), and the
 #             clangd and clang-tidy tools.
-#   absl:     every Abseil library (named libabsl_*.a).
-#   protobuf: libprotobuf and the libutf8_validity it needs, as in
-#             cargo/build/protobuf.rs. The other libraries in a Protobuf
-#             install would clash with these, or aren't needed.
 function(_crubit_wanted_library out_wanted mode library)
   # The library's name, without directory, "lib" prefix and ".a" suffix.
   get_filename_component(name "${library}" NAME_WE)
@@ -54,14 +50,6 @@ function(_crubit_wanted_library out_wanted mode library)
        OR name MATCHES "Main$"
        OR name MATCHES "^LLVM(X86|WebAssem|RISCV|Mips|LoongArch|ARM|AArch)"
        OR name MATCHES "clangd|clangTidy")
-      set(wanted FALSE)
-    endif()
-  elseif(mode STREQUAL "protobuf")
-    if(NOT name MATCHES "^(protobuf|utf8_validity)$")
-      set(wanted FALSE)
-    endif()
-  elseif(mode STREQUAL "absl")
-    if(NOT name MATCHES "^absl_")
       set(wanted FALSE)
     endif()
   else()

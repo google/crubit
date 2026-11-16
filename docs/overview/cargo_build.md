@@ -205,12 +205,6 @@ gets one itself:
     official LLVM 23.1.3 release for your platform. On platforms that LLVM
     doesn't publish releases for (such as x86_64 macOS), you must provide LLVM
     explicitly.
-*   **Abseil and Protobuf**: uses the installed packages that
-    `find_package(protobuf)` finds, if they are static libraries and the
-    Protobuf version matches the `protobuf` crate dependency in `Cargo.toml`.
-    Otherwise, it builds both from source, at the versions that the Bazel build
-    uses. Most system packages are shared libraries or a different Protobuf
-    version, so expect it to build them.
 
 Every download is checked against a pinned SHA-256 hash. If you change
 `CRUBIT_LLVM_VERSION` or `CRUBIT_LLVM_URL`, set `CRUBIT_LLVM_URL_HASH` too;
@@ -243,8 +237,6 @@ Useful cache variables:
 *   `CRUBIT_LLVM_DEV_DATE`: the date (`YYYYMMDD`) of the LLVM commit. It is
     detected for LLVM 23 releases (23.1.0 and later); set it for any other LLVM,
     including builds of LLVM's main branch.
-*   `CRUBIT_FIND_DEPENDENCIES`: whether to look for installed Abseil and
-    Protobuf packages (default `ON`). Set it to `OFF` to always build them.
 *   `CRUBIT_CARGO_PROFILE`: the Cargo profile to build with (default `release`).
 
 To use the tool from another CMake project, add this project with
@@ -281,11 +273,6 @@ C++ dependencies before invoking `cargo`:
 1.  **Configure Environment Variables**: Before invoking `cargo`, configure the
     following environment variables:
 
-    *   **Abseil**:
-        *   `ABSL_INCLUDE_PATH`: Comma-separated list of Abseil header include
-            roots (containing `absl/...`).
-        *   `ABSL_LIB_STATIC_PATH`: Comma-separated list of directories
-            containing Abseil static archives (`.a` on Unix, `.lib` on Windows).
     *   **LLVM / Clang**:
         *   `CLANG_INCLUDE_PATH`: Comma-separated list of include directories
             for LLVM and Clang headers (`clang/...`, `llvm/...`, and

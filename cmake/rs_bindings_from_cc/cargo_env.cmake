@@ -11,7 +11,7 @@
 # _crubit_system_library_flags(<out_flags>)
 #
 # Sets <out_flags> to rustc flags that link the system libraries that LLVM
-# and Abseil need.
+# needs.
 #
 # Reads: llvm_system_libs.
 function(_crubit_system_library_flags out_flags)
@@ -27,11 +27,6 @@ function(_crubit_system_library_flags out_flags)
     endif()
     list(APPEND flags "-C" "link-arg=${lib}")
   endforeach()
-
-  if(APPLE)
-    # Abseil's time zone support uses CoreFoundation.
-    list(APPEND flags "-C" "link-arg=-framework" "-C" "link-arg=CoreFoundation")
-  endif()
   set(${out_flags} "${flags}" PARENT_SCOPE)
 endfunction()
 
@@ -128,16 +123,13 @@ endfunction()
 # headers and static libraries are (see cargo/build/paths.rs). Include paths
 # are comma-separated lists.
 #
-# Reads: the variables set by _crubit_describe_llvm() and
-#   _crubit_use_installed_abseil_protobuf() or _crubit_build_abseil_protobuf(),
-#   and cargo_lib_dir, proto_gen_dir and cargo_target_dir.
+# Reads: the variables set by _crubit_describe_llvm(),
+#   and cargo_lib_dir and cargo_target_dir.
 function(_crubit_cargo_env out_env)
   _crubit_system_library_flags(system_library_flags)
   _crubit_cargo_toolchain(toolchain_env toolchain_flags)
   _crubit_encode_rustflags(rustflags ${system_library_flags} ${toolchain_flags})
   _crubit_cargo_lockfile(lockfile)
-  list(JOIN absl_include_dirs "," absl_include_path)
-  list(JOIN protobuf_include_dirs "," protobuf_include_path)
 
   set(env
     ${toolchain_env}
@@ -146,11 +138,6 @@ function(_crubit_cargo_env out_env)
     "CARGO_ENCODED_RUSTFLAGS=${rustflags}"
     "CLANG_INCLUDE_PATH=${llvm_include_dir}"
     "CLANG_LIB_STATIC_PATH=${cargo_lib_dir}"
-    "ABSL_INCLUDE_PATH=${absl_include_path}"
-    "ABSL_LIB_STATIC_PATH=${cargo_lib_dir}"
-    "PROTOBUF_INCLUDE_PATH=${proto_gen_dir},${protobuf_include_path}"
-    "PROTOBUF_LIB_STATIC_PATH=${cargo_lib_dir}"
-    "PROTOC=${protoc}"
     "CARGO_TARGET_DIR=${cargo_target_dir}"
     "CARGO_RESOLVER_LOCKFILE_PATH=${lockfile}"
   )
