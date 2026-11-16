@@ -116,6 +116,7 @@ crubit_test_cc_library(
     aspect_hints = [
         "//features:param_name_insensitive_operator_lookup",
         "//features:strong_ordering_traits",
+        "//features:weak_ordering_traits",
     ],
 )
 

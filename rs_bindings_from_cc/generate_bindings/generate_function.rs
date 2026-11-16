@@ -1542,19 +1542,32 @@ fn thunkless_impl(
     }
 }
 
-/// Returns whether `func` returns `std::strong_ordering`.
+/// Returns the C++ total ordering type name (e.g. `"std::strong_ordering"`) if `func` returns a
+/// total ordering whose `Eq` and `Ord` impls are enabled on `func`'s target.
 ///
 /// This only checks the name of the returned record. This is sufficient for `operator<=>`, because
 /// the C++ importer only imports `operator<=>` if it returns a comparison category type from the
 /// `std` namespace.
-fn returns_strong_ordering(db: &BindingsGenerator<'_>, func: &Func) -> bool {
-    let Ok(return_type) = db.rs_type_kind(func.return_type().clone()) else {
-        return false;
+fn enabled_total_ordering_type_name(
+    db: &BindingsGenerator<'_>,
+    func: &Func,
+) -> Option<&'static str> {
+    let return_type = db.rs_type_kind(func.return_type().clone()).ok()?;
+    let RsTypeKind::Record { record, .. } = return_type.unalias() else {
+        return None;
     };
-    matches!(
-        return_type.unalias(),
-        RsTypeKind::Record { record, .. } if record.cc_name().as_str() == "strong_ordering"
-    )
+    let features = db.ir().target_crubit_features(func.owning_target());
+    match record.cc_name().as_str() {
+        "strong_ordering"
+            if features.contains(crubit_feature::CrubitFeature::StrongOrderingTraits) =>
+        {
+            Some("std::strong_ordering")
+        }
+        "weak_ordering" if features.contains(crubit_feature::CrubitFeature::WeakOrderingTraits) => {
+            Some("std::weak_ordering")
+        }
+        _ => None,
+    }
 }
 
 /// Adjusts `thunk_result` (an expression that calls the C++ function, either through a thunk or
@@ -2918,29 +2931,29 @@ pub fn generate_function(
                         trait_name,
                     )?
                 }
-                // `std::strong_ordering` implies that equal values are substitutable, so the
-                // type also gets `Eq` and `Ord`.
+                // `std::strong_ordering` and `std::weak_ordering` both guarantee a total order
+                // (never `unordered`), and Rust's `Eq` and `Ord` do not require substitutability,
+                // so the type also gets `Eq` and `Ord`.
                 TraitName::PartialOrd { op: PartialOrdOp::Spaceship, param }
-                    if reportable_status.is_ok()
-                        && **param == self_type_for_extra
-                        && db
-                            .ir()
-                            .target_crubit_features(func.as_ref().owning_target())
-                            .contains(crubit_feature::CrubitFeature::StrongOrderingTraits)
-                        && returns_strong_ordering(db, &func) =>
+                    if reportable_status.is_ok() && **param == self_type_for_extra =>
                 {
-                    quote! {
-                        impl #formatted_trait_generic_params Eq for #formatted_impl_for {}
+                    if let Some(ordering_type) = enabled_total_ordering_type_name(db, &func) {
+                        let unreachable_msg = format!("`{ordering_type}` is never unordered");
+                        quote! {
+                            impl #formatted_trait_generic_params Eq for #formatted_impl_for {}
 
-                        impl #formatted_trait_generic_params Ord for #formatted_impl_for {
-                            #[inline(always)]
-                            fn cmp(&self, other: &Self) -> core::cmp::Ordering {
-                                match self.partial_cmp(other) {
-                                    Some(ordering) => ordering,
-                                    None => unreachable!("`std::strong_ordering` is never unordered"),
+                            impl #formatted_trait_generic_params Ord for #formatted_impl_for {
+                                #[inline(always)]
+                                fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+                                    match self.partial_cmp(other) {
+                                        Some(ordering) => ordering,
+                                        None => unreachable!(#unreachable_msg),
+                                    }
                                 }
                             }
                         }
+                    } else {
+                        quote! {}
                     }
                 }
                 _ => quote! {},

@@ -1967,6 +1967,7 @@ const FAKE_COMPARE_HEADER: &str = r#"
     namespace std {
     struct strong_ordering { signed char value; };
     struct weak_ordering { signed char value; };
+    struct partial_ordering { signed char value; };
     }  // namespace std
 "#;
 
@@ -1980,6 +1981,7 @@ fn generate_spaceship_operator_bindings(
         r#"#pragma clang lifetime_elision
         {FAKE_COMPARE_HEADER}
         using StrongOrderingAlias = std::strong_ordering;
+        using WeakOrderingAlias = std::weak_ordering;
         struct SomeStruct final {{
             bool operator==(const SomeStruct& other) const;
             {ordering_type} operator<=>(const SomeStruct& other) const;
@@ -2042,12 +2044,62 @@ fn test_impl_spaceship_operator_strong_ordering_without_feature() -> Result<()> 
     Ok(())
 }
 
-/// `operator<=>` returning `std::weak_ordering` doesn't implement `Eq` nor `Ord`.
+/// With the `weak_ordering_traits` feature, `operator<=>` returning `std::weak_ordering` also
+/// implements `Eq` and `Ord`.
 #[gtest]
-fn test_impl_spaceship_operator_weak_ordering_does_not_implement_eq_nor_ord() -> Result<()> {
+fn test_impl_spaceship_operator_weak_ordering_implements_eq_and_ord() -> Result<()> {
     let rs_api =
-        generate_spaceship_operator_bindings("std::weak_ordering", Some("strong_ordering_traits"))?
+        generate_spaceship_operator_bindings("std::weak_ordering", Some("weak_ordering_traits"))?
             .rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
+    assert_rs_matches!(rs_api, quote! { impl Eq for SomeStruct {} });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl Ord for SomeStruct {
+                #[inline(always)]
+                fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+                    match self.partial_cmp(other) {
+                        Some(ordering) => ordering,
+                        None => unreachable!(...),
+                    }
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+/// An alias of `std::weak_ordering` also implements `Eq` and `Ord`.
+#[gtest]
+fn test_impl_spaceship_operator_weak_ordering_alias_implements_eq_and_ord() -> Result<()> {
+    let rs_api =
+        generate_spaceship_operator_bindings("WeakOrderingAlias", Some("weak_ordering_traits"))?
+            .rs_api;
+    assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
+    assert_rs_matches!(rs_api, quote! { impl Eq for SomeStruct {} });
+    assert_rs_matches!(rs_api, quote! { impl Ord for SomeStruct });
+    Ok(())
+}
+
+/// Without the `weak_ordering_traits` feature, `operator<=>` returning `std::weak_ordering` only
+/// implements `PartialOrd` (even when `strong_ordering_traits` is enabled).
+#[gtest]
+fn test_impl_spaceship_operator_weak_ordering_without_feature() -> Result<()> {
+    for extra_feature in [None, Some("strong_ordering_traits")] {
+        let rs_api =
+            generate_spaceship_operator_bindings("std::weak_ordering", extra_feature)?.rs_api;
+        assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
+        assert_rs_not_matches!(rs_api, quote! { impl Eq });
+        assert_rs_not_matches!(rs_api, quote! { impl Ord });
+    }
+    Ok(())
+}
+
+/// `operator<=>` returning `std::partial_ordering` doesn't implement `Eq` nor `Ord`.
+#[gtest]
+fn test_impl_spaceship_operator_partial_ordering_does_not_implement_eq_nor_ord() -> Result<()> {
+    let rs_api = generate_spaceship_operator_bindings("std::partial_ordering", Some("all"))?.rs_api;
     assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
     assert_rs_not_matches!(rs_api, quote! { impl Eq });
     assert_rs_not_matches!(rs_api, quote! { impl Ord });
@@ -2481,26 +2533,29 @@ fn test_impl_spaceship_operator_with_rhs_of_different_type_with_ne_only() -> Res
 }
 
 /// `Eq` and `Ord` only describe comparisons with `Self`, so an `operator<=>` comparing with a
-/// different type doesn't implement them, even if it returns `std::strong_ordering`.
+/// different type doesn't implement them, even if it returns `std::strong_ordering` or
+/// `std::weak_ordering`.
 #[gtest]
 fn test_impl_spaceship_operator_with_rhs_of_different_type_does_not_implement_eq_nor_ord(
 ) -> Result<()> {
-    let proto = ir_proto_from_cc(&format!(
-        r#"#pragma clang lifetime_elision
-        {FAKE_COMPARE_HEADER}
-        struct Other final {{ int i; }};
-        struct SomeStruct final {{
-            bool operator==(const Other& other) const;
-            std::strong_ordering operator<=>(const Other& other) const;
-            int i;
-        }};"#
-    ))?;
+    for ordering_type in ["std::strong_ordering", "std::weak_ordering"] {
+        let proto = ir_proto_from_cc(&format!(
+            r#"#pragma clang lifetime_elision
+            {FAKE_COMPARE_HEADER}
+            struct Other final {{ int i; }};
+            struct SomeStruct final {{
+                bool operator==(const Other& other) const;
+                {ordering_type} operator<=>(const Other& other) const;
+                int i;
+            }};"#
+        ))?;
 
-    let ir = make_test_ir_dependency(&proto, Some("strong_ordering_traits"))?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
-    assert_rs_matches!(rs_api, quote! { impl PartialOrd<crate::Other> for SomeStruct });
-    assert_rs_not_matches!(rs_api, quote! { impl Eq });
-    assert_rs_not_matches!(rs_api, quote! { impl Ord });
+        let ir = make_test_ir_dependency(&proto, Some("all"))?;
+        let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+        assert_rs_matches!(rs_api, quote! { impl PartialOrd<crate::Other> for SomeStruct });
+        assert_rs_not_matches!(rs_api, quote! { impl Eq });
+        assert_rs_not_matches!(rs_api, quote! { impl Ord });
+    }
     Ok(())
 }
 

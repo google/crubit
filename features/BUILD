@@ -384,6 +384,18 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set under which C++ types whose `operator<=>` returns `std::weak_ordering` also
+# implement `Eq` and `Ord` (in addition to `PartialOrd`). This flag only impacts rust_api_from_cpp
+# users.
+#
+# See crubit.rs/cpp/operator_overloading
+crubit_feature_hint(
+    name = "weak_ordering_traits",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["weak_ordering_traits"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set enabling generating Rust bindings for constant-size C-style arrays (`T[N]`).
 #
 # See b/575922365
