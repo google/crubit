@@ -93,10 +93,10 @@ fn test_spaceship_returning_not_an_ordering() {
 }
 
 #[gtest]
-fn test_eq_and_ord_only_for_strong_ordering() {
+fn test_eq_and_ord_for_total_orderings() {
     static_assertions::assert_impl_all!(DefaultedStrongOrdering: Eq, Ord);
     static_assertions::assert_impl_all!(FriendStrongOrdering: Eq, Ord);
-    static_assertions::assert_not_impl_any!(CustomWeakOrdering: Eq, Ord);
+    static_assertions::assert_impl_all!(CustomWeakOrdering: Eq, Ord);
     static_assertions::assert_not_impl_any!(DefaultedPartialOrdering: Eq, Ord);
 }
 
@@ -121,6 +121,19 @@ fn test_strong_ordering_in_collections() {
     let set: std::collections::BTreeSet<FriendStrongOrdering> =
         [3, 1, 2, 1].into_iter().map(|i| FriendStrongOrdering { i }).collect();
     expect_eq!(set.iter().map(|s| s.i).collect::<Vec<_>>(), [1, 2, 3]);
+}
+
+#[gtest]
+fn test_weak_ordering_in_collections() {
+    let mut v: Vec<CustomWeakOrdering> =
+        [13, 21, 2, 1].into_iter().map(|i| CustomWeakOrdering { i }).collect();
+    v.sort();
+    expect_eq!(v.iter().map(|s| s.i).collect::<Vec<_>>(), [21, 1, 2, 13]);
+
+    let mut set: std::collections::BTreeSet<CustomWeakOrdering> =
+        [13, 1, 2].into_iter().map(|i| CustomWeakOrdering { i }).collect();
+    expect_false!(set.insert(CustomWeakOrdering { i: 11 }));
+    expect_eq!(set.iter().map(|s| s.i).collect::<Vec<_>>(), [1, 2, 13]);
 }
 
 #[gtest]

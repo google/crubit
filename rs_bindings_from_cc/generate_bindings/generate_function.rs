@@ -1542,19 +1542,25 @@ fn thunkless_impl(
     }
 }
 
-/// Returns whether `func` returns `std::strong_ordering`.
+/// Returns whether `func` returns a `std::strong_ordering` or `std::weak_ordering` value whose
+/// corresponding `Eq`/`Ord` Crubit feature is enabled.
 ///
 /// This only checks the name of the returned record. This is sufficient for `operator<=>`, because
 /// the C++ importer only imports `operator<=>` if it returns a comparison category type from the
 /// `std` namespace.
-fn returns_strong_ordering(db: &BindingsGenerator<'_>, func: &Func) -> bool {
+fn spaceship_implements_eq_and_ord(db: &BindingsGenerator<'_>, func: &Func) -> bool {
+    let features = db.ir().target_crubit_features(func.owning_target());
     let Ok(return_type) = db.rs_type_kind(func.return_type().clone()) else {
         return false;
     };
-    matches!(
-        return_type.unalias(),
-        RsTypeKind::Record { record, .. } if record.cc_name().as_str() == "strong_ordering"
-    )
+    let RsTypeKind::Record { record, .. } = return_type.unalias() else {
+        return false;
+    };
+    match record.cc_name().as_str() {
+        "strong_ordering" => features.contains(crubit_feature::CrubitFeature::StrongOrderingTraits),
+        "weak_ordering" => features.contains(crubit_feature::CrubitFeature::WeakOrderingTraits),
+        _ => false,
+    }
 }
 
 /// Adjusts `thunk_result` (an expression that calls the C++ function, either through a thunk or
@@ -2918,16 +2924,12 @@ pub fn generate_function(
                         trait_name,
                     )?
                 }
-                // `std::strong_ordering` implies that equal values are substitutable, so the
-                // type also gets `Eq` and `Ord`.
+                // `std::strong_ordering` and `std::weak_ordering` both define a total ordering, so
+                // the type also gets `Eq` and `Ord` when the corresponding feature is enabled.
                 TraitName::PartialOrd { op: PartialOrdOp::Spaceship, param }
                     if reportable_status.is_ok()
                         && **param == self_type_for_extra
-                        && db
-                            .ir()
-                            .target_crubit_features(func.as_ref().owning_target())
-                            .contains(crubit_feature::CrubitFeature::StrongOrderingTraits)
-                        && returns_strong_ordering(db, &func) =>
+                        && spaceship_implements_eq_and_ord(db, &func) =>
                 {
                     quote! {
                         impl #formatted_trait_generic_params Eq for #formatted_impl_for {}
@@ -2937,7 +2939,7 @@ pub fn generate_function(
                             fn cmp(&self, other: &Self) -> core::cmp::Ordering {
                                 match self.partial_cmp(other) {
                                     Some(ordering) => ordering,
-                                    None => unreachable!("`std::strong_ordering` is never unordered"),
+                                    None => unreachable!("total ordering is never unordered"),
                                 }
                             }
                         }
