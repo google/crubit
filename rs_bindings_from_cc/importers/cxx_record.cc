@@ -1068,25 +1068,11 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
     return nullptr;
   }
 
-  std::unique_ptr<crubit::ffi::Item> attr_error_item;
   std::optional<std::string> nodiscard;
   std::optional<std::string> deprecated;
   auto unknown_attr =
       CollectUnknownAttrs(*record_decl, [&](const clang::Attr& attr) {
-        if (IsKnownAttr(attr)) {
-          return true;
-        } else if (auto* visibility =
-                       clang::dyn_cast<clang::VisibilityAttr>(&attr);
-                   visibility && record_decl->isInStdNamespace() &&
-                   visibility->getVisibility() ==
-                       clang::VisibilityAttr::VisibilityType::Hidden) {
-          // TODO(lukasza): Remove this special case (see cl/1016025998).
-          attr_error_item = ictx_.ImportUnsupportedItem(
-              *record_decl, std::nullopt,
-              {FormattedError::Static("Records from the standard library with "
-                                      "hidden visibility are not supported")});
-          return true;
-        } else if (IsIgnoredVisibilityAttr(attr)) {
+        if (IsKnownAttr(attr) || IsIgnoredVisibilityAttr(attr)) {
           return true;
         } else if (auto* unused_attr =
                        clang::dyn_cast<clang::WarnUnusedResultAttr>(&attr)) {
@@ -1103,9 +1089,6 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
     return ictx_.ImportUnsupportedItem(
         *record_decl, std::nullopt,
         {FormattedError::FromStatus(unknown_attr.takeError())});
-  }
-  if (attr_error_item != nullptr) {
-    return attr_error_item;
   }
 
   std::string rs_name, cc_name;
