@@ -719,9 +719,7 @@ fn generate_into_impls<'tcx>(
             }
             // We know that our type will always appear in FnReturn position for the `into` method.
             // If our type isn't C++-compatible, we can't generate an `into` impl.
-            let cc_ty = db
-                .format_ty_for_cc(from_middle_ty, TypeLocation::FnReturn { is_constructor: false })
-                .ok()?;
+            let cc_ty = db.format_ty_for_cc(from_middle_ty, TypeLocation::FnReturn).ok()?;
             Some((from_middle_ty, cc_ty, *from_impl_id, impl_args))
         });
     let into_impls = non_blanket_impls_for_ty(db, into_trait, core.common.self_ty).filter_map(
@@ -740,9 +738,7 @@ fn generate_into_impls<'tcx>(
             }
 
             // If our type isn't C++ compatible, we can't generate an `into` impl.
-            let cc_ty = db
-                .format_ty_for_cc(into_middle_ty, TypeLocation::FnReturn { is_constructor: false })
-                .ok()?;
+            let cc_ty = db.format_ty_for_cc(into_middle_ty, TypeLocation::FnReturn).ok()?;
 
             Some((into_middle_ty, cc_ty, into_impl_id, impl_args))
         },

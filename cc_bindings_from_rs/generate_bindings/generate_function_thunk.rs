@@ -233,7 +233,7 @@ pub fn generate_thunk_decl<'tcx>(
                 )
             })?;
         let cc_ret_ty = db
-            .format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })?
+            .format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn)?
             .into_tokens(&mut prereqs);
         prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
         thunk_params.push(quote! { ::crubit::DynErasedFuture<#cc_ret_ty>* __ret_ptr });
@@ -250,7 +250,7 @@ pub fn generate_thunk_decl<'tcx>(
                 let location = if matches!(abi, ValueAbi::ByPointer) {
                     TypeLocation::Other
                 } else {
-                    TypeLocation::FnReturn { is_constructor }
+                    TypeLocation::FnReturn
                 };
                 let formatted = format_ret_ty(location)?;
                 let pointee = formatted.into_tokens(&mut prereqs);
@@ -262,9 +262,14 @@ pub fn generate_thunk_decl<'tcx>(
                 thunk_params.push(quote! { unsigned char * __ret_ptr });
                 db.tokens().void.clone()
             }
-            ValueAbi::ByValue => format_ret_ty(TypeLocation::FnReturn { is_constructor })?
-                .into_tokens(&mut prereqs)
-                .clone(),
+            ValueAbi::ByValue => {
+                let location = if is_constructor && !ret_ty.is_unit() {
+                    TypeLocation::Other
+                } else {
+                    TypeLocation::FnReturn
+                };
+                format_ret_ty(location)?.into_tokens(&mut prereqs).clone()
+            }
             ValueAbi::LegacyTuple(_) => {
                 prereqs.includes.insert(db.support_header("annotations_internal.h"));
                 thunk_params.push(quote! { void* crubit_nonnull* crubit_nonnull __ret_ptr });

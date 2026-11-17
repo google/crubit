@@ -12,11 +12,7 @@ pub enum TypeLocation {
     /// foo() -> *const T`:
     /// - The top-level return type `*const T` is in the `FnReturn` location
     /// - The nested pointee type `T` is in the `Other` location
-    FnReturn {
-        /// Whether the function is used in a constructor and our return type will be `this` in
-        /// C++. In such cases, we do not want the type to be bridged.
-        is_constructor: bool,
-    },
+    FnReturn,
 
     /// The top-level parameter type.
     ///
@@ -85,13 +81,11 @@ impl TypeLocation {
     pub fn check_bridgeable(self) -> Result<()> {
         // This match is exhaustive to force us to think about new variants when adding them.
         match self {
-            TypeLocation::FnReturn { is_constructor: false } => Ok(()),
+            TypeLocation::FnReturn => Ok(()),
             TypeLocation::FnParam { .. } => Ok(()),
             TypeLocation::Const => Ok(()),
             TypeLocation::NestedBridgeable => Ok(()),
             TypeLocation::TemplateArg | TypeLocation::OptionArg => bail!("Template arguments do not support bridgeable types"),
-            // TODO(jeanpierreda): Why?
-            TypeLocation::FnReturn { is_constructor: true } => bail!("Constructor functions cannot return bridge types"),
             TypeLocation::ClosureReturn | TypeLocation::IteratorItem | TypeLocation::Other => bail!("crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"),
             TypeLocation::Field => bail!("crubit.rs/errors/bridge_field: Fields containing bridge types cannot receive bindings"),
         }
@@ -109,7 +103,7 @@ impl TypeLocation {
     pub fn admits_movable(self) -> bool {
         match self {
             TypeLocation::FnParam { .. } | TypeLocation::NestedBridgeable => true,
-            TypeLocation::FnReturn { .. }
+            TypeLocation::FnReturn
             | TypeLocation::Const
             | TypeLocation::TemplateArg
             | TypeLocation::OptionArg
@@ -134,8 +128,7 @@ mod tests {
         );
         assert!(TypeLocation::NestedBridgeable.admits_movable());
 
-        assert!(!TypeLocation::FnReturn { is_constructor: false }.admits_movable());
-        assert!(!TypeLocation::FnReturn { is_constructor: true }.admits_movable());
+        assert!(!TypeLocation::FnReturn.admits_movable());
         assert!(!TypeLocation::Const.admits_movable());
         assert!(!TypeLocation::TemplateArg.admits_movable());
         assert!(!TypeLocation::OptionArg.admits_movable());

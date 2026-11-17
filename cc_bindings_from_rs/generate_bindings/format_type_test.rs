@@ -47,7 +47,7 @@ fn test_single_ty(
     let desc = format!("test #{index}: test input: `{input}`");
     let ty_tokens: TokenStream = input.parse().unwrap();
     let input = match type_location {
-        TypeLocation::FnReturn { .. } => quote! {
+        TypeLocation::FnReturn => quote! {
             #preamble
             pub fn test_function() -> #ty_tokens { unimplemented!() }
         },
@@ -67,7 +67,7 @@ fn test_single_ty(
             )
         };
         let ty = match type_location {
-            TypeLocation::FnReturn { .. } => sig_mid.output(),
+            TypeLocation::FnReturn => sig_mid.output(),
             TypeLocation::FnParam { .. } => sig_mid.inputs()[0],
             _ => unimplemented!(),
         };
@@ -95,22 +95,15 @@ fn test_format_ret_ty_for_cc_successes() {
         ("core::pin::Pin<&'static i32>", "::std::int32_t const & $static"),
         ("core::pin::Pin<&'static mut i32>", "::std::int32_t & $static"),
     ];
-    test_ty(
-        TypeLocation::FnReturn { is_constructor: false },
-        &testcases,
-        quote! {},
-        |desc, tcx, ty, expected| {
-            let actual = {
-                let db = bindings_db_for_tests(tcx);
-                let cc_snippet = db
-                    .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })
-                    .unwrap();
-                cc_snippet.tokens.to_string()
-            };
-            let expected = expected.parse::<TokenStream>().unwrap().to_string();
-            assert_eq!(actual, expected, "{desc}");
-        },
-    );
+    test_ty(TypeLocation::FnReturn, &testcases, quote! {}, |desc, tcx, ty, expected| {
+        let actual = {
+            let db = bindings_db_for_tests(tcx);
+            let cc_snippet = db.format_ty_for_cc(ty, TypeLocation::FnReturn).unwrap();
+            cc_snippet.tokens.to_string()
+        };
+        let expected = expected.parse::<TokenStream>().unwrap().to_string();
+        assert_eq!(actual, expected, "{desc}");
+    });
 }
 
 #[test]
@@ -118,13 +111,13 @@ fn test_format_ret_ty_for_cc_failures() {
     let testcases =
         [("impl Eq", "The following Rust type is not supported yet: impl std::cmp::Eq")];
     test_ty(
-        TypeLocation::FnReturn { is_constructor: false },
+        TypeLocation::FnReturn,
         &testcases,
         quote! { #![feature(never_type)] },
         |desc, tcx, ty, expected_msg| {
             let db = bindings_db_for_tests(tcx);
             let anyhow_err = db
-                .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })
+                .format_ty_for_cc(ty, TypeLocation::FnReturn)
                 .expect_err(&format!("Expecting error for: {desc}"));
             let actual_msg = format!("{anyhow_err:#}");
             assert_eq!(&actual_msg, *expected_msg, "{desc}");
@@ -847,13 +840,12 @@ fn test_format_ty_for_cc_rvalue_reference_param() {
 #[test]
 fn test_format_ty_for_cc_rvalue_reference_return() {
     test_ty(
-        TypeLocation::FnReturn { is_constructor: false },
+        TypeLocation::FnReturn,
         &[("ctor::RvalueReference<'static, SomeStruct>", "::rust_out::SomeStruct &&")],
         rvalue_reference_preamble(),
         |desc, tcx, ty, expected| {
             let db = bindings_db_for_tests(tcx);
-            let cc_snippet =
-                db.format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false }).unwrap();
+            let cc_snippet = db.format_ty_for_cc(ty, TypeLocation::FnReturn).unwrap();
             let parsed_expected = expected.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(cc_snippet.tokens.to_string(), parsed_expected, "{desc}");
         },
@@ -1188,7 +1180,7 @@ fn test_format_ty_for_cc_smart_pointers_under_nonnull_smart_pointers() {
 fn test_format_ty_for_cc_option_box() {
     // `Box<T>` is not C++-movable, so `Option<Box<T>>` is not bridged to `std::optional` even in
     // a bridgeable location; it is spelled with the layout-compatible `::rs::Option` instead.
-    let location = TypeLocation::FnReturn { is_constructor: false };
+    let location = TypeLocation::FnReturn;
     test_ty(
         location,
         &[("Option<Box<i32>>", ":: rs :: Option < :: rs :: Box < :: std :: int32_t > >")],
@@ -1456,7 +1448,7 @@ fn test_format_ty_for_rs_cpp_specialization_alias() {
         pub type ReexportedStatusOnly = private_mod::UnexportedStatusOr<()>;
     };
     test_ty(
-        TypeLocation::FnReturn { is_constructor: false },
+        TypeLocation::FnReturn,
         &[
             ("MyStatus", ":: rust_out :: internal :: MyStatusOr < () >"),
             ("internal::MyStatusOr<i32>", ":: rust_out :: internal :: MyStatusOr < i32 >"),
@@ -1550,7 +1542,7 @@ fn test_format_cc_type_is_pointer() {
     };
 
     let fn_param = TypeLocation::FnParam { is_self_param: false, elided_is_output: false };
-    let fn_return = TypeLocation::FnReturn { is_constructor: false };
+    let fn_return = TypeLocation::FnReturn;
     let cases: &[(&str, &[(TypeLocation, bool)])] = &[
         ("i32", &[(TypeLocation::Other, false)]),
         ("*const i32", &[(fn_param, true)]),
@@ -1681,7 +1673,7 @@ fn test_format_ty_for_cc_rejects_non_bitwise_relocatable_by_value() {
     };
     for location in [
         TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-        TypeLocation::FnReturn { is_constructor: false },
+        TypeLocation::FnReturn,
     ] {
         test_ty(
             location,

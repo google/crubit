@@ -403,7 +403,7 @@ fn requires_relocatable_in_cc(location: TypeLocation) -> bool {
     matches!(
         location,
         TypeLocation::FnParam { .. }
-            | TypeLocation::FnReturn { .. }
+            | TypeLocation::FnReturn
             | TypeLocation::NestedBridgeable
             | TypeLocation::ClosureReturn
             | TypeLocation::IteratorItem
@@ -474,9 +474,7 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
     let is_derive_rust_movable = attrs.as_ref().is_some_and(|attrs| attrs.derive_rust_movable);
     let is_passed_by_value = matches!(
         location,
-        TypeLocation::FnReturn { is_constructor: false }
-            | TypeLocation::FnParam { .. }
-            | TypeLocation::NestedBridgeable
+        TypeLocation::FnReturn | TypeLocation::FnParam { .. } | TypeLocation::NestedBridgeable
     );
     let is_wrapper = is_nullability_wrapper(db, adt.did());
     let mut wrapper_inner_is_pointer = false;
@@ -973,7 +971,7 @@ fn format_ty_for_cc_impl<'tcx>(
 
     Ok(match *ty.kind() {
         ty::TyKind::Never => match location {
-            TypeLocation::FnReturn { .. } | TypeLocation::ClosureReturn => {
+            TypeLocation::FnReturn | TypeLocation::ClosureReturn => {
                 keyword(db.tokens().void.clone())
             }
             _ => {
@@ -983,7 +981,7 @@ fn format_ty_for_cc_impl<'tcx>(
         },
         ty::TyKind::Tuple(types) => {
             if types.is_empty()
-                && matches!(location, TypeLocation::FnReturn { .. } | TypeLocation::ClosureReturn)
+                && matches!(location, TypeLocation::FnReturn | TypeLocation::ClosureReturn)
             {
                 keyword(db.tokens().void.clone())
             } else if !location.is_bridgeable()
@@ -1115,7 +1113,7 @@ fn format_ty_for_cc_impl<'tcx>(
             let mut prereqs = CcPrerequisites::default();
             let is_ref = matches!(
                 location,
-                TypeLocation::FnParam { .. } | TypeLocation::FnReturn { .. }
+                TypeLocation::FnParam { .. } | TypeLocation::FnReturn
             );
             let sigil = if is_ref {
                 quote! { && }
@@ -1474,7 +1472,7 @@ fn format_ty_for_cc_impl<'tcx>(
             // top-level return types and parameter types (and pointers are used
             // in other locations).
             let (ptr_or_ref_sigil, is_pointer) = match location {
-                TypeLocation::FnReturn { .. }
+                TypeLocation::FnReturn
                 | TypeLocation::FnParam { .. }
                 | TypeLocation::Const => (quote! { & }, false),
                 TypeLocation::NestedBridgeable
@@ -1640,7 +1638,7 @@ fn treat_ref_as_ptr<'tcx>(
             }
             RefConvert::ToRef
         }
-        TypeLocation::FnReturn { .. } | TypeLocation::Const => RefConvert::ToRef,
+        TypeLocation::FnReturn | TypeLocation::Const => RefConvert::ToRef,
 
         TypeLocation::IteratorItem => {
             if db
@@ -1718,7 +1716,7 @@ pub fn format_ret_ty_for_cc<'db, 'tcx>(
 ) -> Result<Cow<'db, CcSnippet<'tcx>>> {
     let output_ty = sig_mid.output();
     let snippet = db
-        .format_ty_for_cc(output_ty, TypeLocation::FnReturn { is_constructor: false })
+        .format_ty_for_cc(output_ty, TypeLocation::FnReturn)
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))?;
     if is_movable_wrapped_return_ty(db, output_ty)? {
         let mut snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });

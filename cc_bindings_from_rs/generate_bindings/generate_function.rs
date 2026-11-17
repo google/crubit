@@ -434,9 +434,8 @@ fn cc_return_value_from_c_abi<'tcx>(
     match classify_value_abi(db, ty, /* is_constructor= */ false)? {
         ValueAbi::Bridged(bridged_type) => match bridged_type {
             BridgedType::ExternCFuncConverters { .. } => {
-                let cpp_type = db
-                    .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })?
-                    .into_tokens(prereqs);
+                let cpp_type =
+                    db.format_ty_for_cc(ty, TypeLocation::FnReturn)?.into_tokens(prereqs);
                 prereqs.includes.insert(CcInclude::utility()); // for `std::move`
                 prereqs.includes.insert(db.support_header("internal/slot.h"));
                 let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
@@ -798,9 +797,8 @@ pub fn generate_thunk_call<'tcx>(
     };
 
     let return_body = if is_async {
-        let cc_ret_ty = db
-            .format_ty_for_cc(rs_return_type, TypeLocation::FnReturn { is_constructor: false })?
-            .into_tokens(&mut prereqs);
+        let cc_ret_ty =
+            db.format_ty_for_cc(rs_return_type, TypeLocation::FnReturn)?.into_tokens(&mut prereqs);
         let local_name = expect_format_cc_ident("__return_value_ret_val_holder");
         prereqs.includes.insert(CcInclude::utility()); // for `std::move`
         prereqs.includes.insert(db.support_header("internal/slot.h"));
@@ -1044,10 +1042,7 @@ pub fn generate_function<'tcx>(
     let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_ret_type = if is_async {
         let cc_ret_ty = db
-            .format_ty_for_cc(
-                actual_rs_return_type,
-                TypeLocation::FnReturn { is_constructor: false },
-            )?
+            .format_ty_for_cc(actual_rs_return_type, TypeLocation::FnReturn)?
             .into_tokens(&mut main_api_prereqs);
         main_api_prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
         quote! { ::crubit::DynErasedFuture<#cc_ret_ty> }
