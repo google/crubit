@@ -168,31 +168,6 @@ pub fn generate_thunk_decl<'tcx>(
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let actual_output_ty = if is_async {
-        dyn_erased_future_output_ty(tcx, sig_mid.output()).ok_or_else(|| {
-            anyhow!(
-                "crubit.rs-bug: expected `impl Future`, `async`, or `Pin<Box<dyn Future>>`, \
-                 found `{}`",
-                sig_mid.output()
-            )
-        })?
-    } else {
-        sig_mid.output()
-    };
-    let (main_api_ret_type, ret_is_pointer) = if is_async {
-        let cc_ret_ty = db
-            .format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })?
-            .into_tokens(&mut prereqs);
-        prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
-        (quote! { ::crubit::DynErasedFuture<#cc_ret_ty> }, false)
-    } else {
-        let formatted_ret = db
-            .format_cc_type(actual_output_ty, TypeLocation::FnReturn { is_constructor })
-            .with_context(|| {
-                format!("Error formatting function return type `{actual_output_ty}`")
-            })?;
-        (formatted_ret.into_tokens(&mut prereqs).clone(), formatted_ret.is_pointer)
-    };
 
     let mut thunk_params = {
         let cpp_types = format_param_types_for_cc_thunk(db, sig_mid, has_self_param)?;
@@ -249,16 +224,37 @@ pub fn generate_thunk_decl<'tcx>(
 
     // Types which are not C-ABI compatible by-value are returned via out-pointer parameters.
     let thunk_ret_type = if is_async {
-        let cc_ret_ty = &db
+        let actual_output_ty =
+            dyn_erased_future_output_ty(tcx, sig_mid.output()).ok_or_else(|| {
+                anyhow!(
+                    "crubit.rs-bug: expected `impl Future`, `async`, or `Pin<Box<dyn Future>>`, \
+                     found `{}`",
+                    sig_mid.output()
+                )
+            })?;
+        let cc_ret_ty = db
             .format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })?
-            .tokens;
+            .into_tokens(&mut prereqs);
+        prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
         thunk_params.push(quote! { ::crubit::DynErasedFuture<#cc_ret_ty>* __ret_ptr });
         db.tokens().void.clone()
     } else {
-        match classify_value_abi(db, sig_mid.output(), is_constructor)? {
+        let ret_ty = sig_mid.output();
+        let format_ret_ty = |location| {
+            db.format_cc_type(ret_ty, location)
+                .with_context(|| format!("Error formatting function return type `{ret_ty}`"))
+        };
+        let abi = classify_value_abi(db, ret_ty, is_constructor)?;
+        match abi {
             ValueAbi::Bridged(BridgedType::ExternCFuncConverters { .. }) | ValueAbi::ByPointer => {
-                let ret_ptr_ty =
-                    format_thunk_ptr(db, &mut prereqs, &main_api_ret_type, ret_is_pointer);
+                let location = if matches!(abi, ValueAbi::ByPointer) {
+                    TypeLocation::Other
+                } else {
+                    TypeLocation::FnReturn { is_constructor }
+                };
+                let formatted = format_ret_ty(location)?;
+                let pointee = formatted.into_tokens(&mut prereqs);
+                let ret_ptr_ty = format_thunk_ptr(db, &mut prereqs, pointee, formatted.is_pointer);
                 thunk_params.push(quote! { #ret_ptr_ty __ret_ptr });
                 db.tokens().void.clone()
             }
@@ -266,7 +262,9 @@ pub fn generate_thunk_decl<'tcx>(
                 thunk_params.push(quote! { unsigned char * __ret_ptr });
                 db.tokens().void.clone()
             }
-            ValueAbi::ByValue => main_api_ret_type,
+            ValueAbi::ByValue => format_ret_ty(TypeLocation::FnReturn { is_constructor })?
+                .into_tokens(&mut prereqs)
+                .clone(),
             ValueAbi::LegacyTuple(_) => {
                 prereqs.includes.insert(db.support_header("annotations_internal.h"));
                 thunk_params.push(quote! { void* crubit_nonnull* crubit_nonnull __ret_ptr });
