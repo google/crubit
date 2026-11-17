@@ -22,6 +22,8 @@
 
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace example_crate {
 
 // CRUBIT_ANNOTATE: cpp_enum=enum class
@@ -40,6 +42,8 @@ template <>
 struct ::rs::impl<::example_crate::Color, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // EXAMPLES_RUST_CPP_ENUM_EXAMPLE_CRATE_GOLDEN

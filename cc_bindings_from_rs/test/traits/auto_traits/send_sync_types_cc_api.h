@@ -23,6 +23,8 @@
 #include <cstring>
 #include <type_traits>
 
+#pragma clang assume_nonnull begin
+
 namespace send_sync_types {
 
 //  4. Implements neither Send nor Sync (via raw pointer).
@@ -205,6 +207,8 @@ inline void ::send_sync_types::SyncButNotSend::
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 }  // namespace send_sync_types
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_TRAITS_AUTO_TRAITS_SEND_SYNC_TYPES_GOLDEN

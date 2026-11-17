@@ -21,6 +21,8 @@
 #include <cstdint>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace cpp_enums::forward_declared_enum {
 enum class B : ::std::uint8_t;
 }
@@ -87,6 +89,8 @@ inline ::cpp_enums::forward_declared_enum::B AFunction() {
 }
 
 }  // namespace cpp_enums::forward_declared_enum
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN

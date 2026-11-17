@@ -25,6 +25,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace example_crate {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
@@ -172,6 +174,8 @@ inline void ::example_crate::Color::__crubit_field_offset_assertions() {
   }
 }
 }  // namespace example_crate
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // EXAMPLES_RUST_ENUM_WITH_PAYLOAD_EXAMPLE_CRATE_GOLDEN

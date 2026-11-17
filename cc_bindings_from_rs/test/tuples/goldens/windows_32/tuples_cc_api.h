@@ -38,6 +38,8 @@
 
 #include "support/rs_std/rs_alloc.h"
 
+#pragma clang assume_nonnull begin
+
 namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -4875,6 +4877,8 @@ inline constexpr ::rs::Result<::std::int32_t, ::rs::alloc::string::String>::
     : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_TUPLES_TUPLES_GOLDEN

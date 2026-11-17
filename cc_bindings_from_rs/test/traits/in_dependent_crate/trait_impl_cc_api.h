@@ -27,6 +27,8 @@
 #include "cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.h"
 #include "support/rs_std/rs_alloc.h"
 
+#pragma clang assume_nonnull begin
+
 namespace trait_impl {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct")
@@ -109,6 +111,8 @@ inline ::std::int32_t(::rs::impl<::trait_impl::MyStruct,
       __crubit_thunk_MyTrait_udo_usomething_utrait_uimpl_ugolden_x0000003a_x0000003aMyStruct(
           self);
 }
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_TRAITS_IN_DEPENDENT_CRATE_TRAIT_IMPL_GOLDEN

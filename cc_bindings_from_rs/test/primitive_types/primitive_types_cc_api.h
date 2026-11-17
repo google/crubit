@@ -29,6 +29,8 @@
 
 #include "support/ffi_11/ffi_11.h"
 
+#pragma clang assume_nonnull begin
+
 namespace primitive_types::argument_types {
 
 void c_char_mut_ptr_arg(decltype(char(0))* crubit_nullable __param_0);
@@ -660,6 +662,8 @@ maybe_uninit_ref_mut(::std::int32_t* $static crubit_nonnull maybe_uninit) {
 }
 
 }  // namespace primitive_types::test_maybe_uninit
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_PRIMITIVE_TYPES_PRIMITIVE_TYPES_GOLDEN

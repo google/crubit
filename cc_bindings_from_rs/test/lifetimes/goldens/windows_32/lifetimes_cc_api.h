@@ -30,6 +30,8 @@
 #include "support/rs_std/rs_alloc.h"
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace lifetimes {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -359,6 +361,8 @@ inline void function_with_trivial_unnamed_lifetime_param(
 }
 
 }  // namespace lifetimes
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN

@@ -26,6 +26,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace leaf_rs_lib {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
@@ -259,6 +261,8 @@ inline ::leaf_rs_lib::LeafRsEnum wrap_enum(::std::uint8_t x) {
 }
 
 }  // namespace leaf_rs_lib
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN

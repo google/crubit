@@ -2202,10 +2202,12 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
         quote! {
             #includes
             __NEWLINE__ __NEWLINE__
+            __HASH_TOKEN__ pragma clang assume_nonnull begin __NEWLINE__ __NEWLINE__
             #ordered_cc
             __NEWLINE__
             #(#impls_cc_details)__NEWLINE__*
             __NEWLINE__
+            __HASH_TOKEN__ pragma clang assume_nonnull end __NEWLINE__ __NEWLINE__
         }
     };
 

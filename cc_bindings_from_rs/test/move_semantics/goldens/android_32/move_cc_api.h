@@ -29,6 +29,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace move {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable")
@@ -474,6 +476,8 @@ inline constexpr ::rs::Result<::move::UnmovableFoo, ::std::uint8_t>::Result(
     : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN

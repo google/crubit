@@ -25,6 +25,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace unions::repr_c {
 
 union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
@@ -689,6 +691,8 @@ inline ::unions::repr_rust_packed::U create() {
 }
 
 }  // namespace unions::repr_rust_packed
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_UNIONS_UNIONS_GOLDEN

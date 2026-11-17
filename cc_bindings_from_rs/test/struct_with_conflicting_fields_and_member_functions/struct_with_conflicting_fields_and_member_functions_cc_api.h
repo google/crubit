@@ -24,6 +24,8 @@
 #include <cstring>
 #include <type_traits>
 
+#pragma clang assume_nonnull begin
+
 namespace struct_with_conflicting_fields_and_member_functions {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -108,6 +110,8 @@ inline void ::struct_with_conflicting_fields_and_member_functions::X::
   static_assert(8 == offsetof(__crubit_assert_type, c));
 }
 }  // namespace struct_with_conflicting_fields_and_member_functions
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_GOLDEN

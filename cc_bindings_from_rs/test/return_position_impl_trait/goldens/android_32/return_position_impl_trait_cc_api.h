@@ -27,6 +27,8 @@
 #include <cstring>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace return_position_impl_trait {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -194,6 +196,8 @@ inline ::crubit::DynErasedFuture<void> return_impl_future_with_drop(
 }
 
 }  // namespace return_position_impl_trait
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_RETURN_POSITION_IMPL_TRAIT_RETURN_POSITION_IMPL_TRAIT_GOLDEN

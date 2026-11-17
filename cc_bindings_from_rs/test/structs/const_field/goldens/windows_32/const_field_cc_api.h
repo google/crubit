@@ -28,6 +28,8 @@
 
 #include "cc_bindings_from_rs/test/structs/const_field/cc_struct.h"
 
+#pragma clang assume_nonnull begin
+
 namespace const_field {
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -355,6 +357,8 @@ inline constexpr ::rs::Result<::struct_with_const_field,
     : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_STRUCTS_CONST_FIELD_CONST_FIELD_GOLDEN

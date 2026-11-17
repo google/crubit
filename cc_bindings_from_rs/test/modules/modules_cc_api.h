@@ -23,6 +23,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace modules::basic_module {
 
 ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y);
@@ -152,6 +154,8 @@ inline void ::modules::impl_in_separate_private_module::Foo::
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 }  // namespace modules::impl_in_separate_private_module
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_MODULES_MODULES_GOLDEN

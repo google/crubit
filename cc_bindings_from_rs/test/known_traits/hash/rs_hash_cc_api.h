@@ -29,6 +29,8 @@
 
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace rs_hash::derived_enum {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -606,6 +608,8 @@ inline ::rs_hash::explicit_struct::CustomHashStruct create_custom(
 }
 
 }  // namespace rs_hash::explicit_struct
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_HASH_RS_HASH_GOLDEN

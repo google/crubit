@@ -22,6 +22,8 @@
 
 #include "cpp_ns/cpp_type.h"
 
+#pragma clang assume_nonnull begin
+
 namespace bridged_types::test_format_bridged_func_arg_by_pointer {
 
 void test_format_bridged_func_arg_by_pointer(
@@ -107,6 +109,8 @@ inline cpp_ns::CppType test_format_bridged_return_type_by_value() {
 }
 
 }  // namespace bridged_types::test_format_bridged_return_type_by_value
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_BRIDGING_BRIDGED_TYPES_GOLDEN

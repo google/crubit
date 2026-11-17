@@ -22,6 +22,8 @@
 #include <cstdint>
 #include <type_traits>
 
+#pragma clang assume_nonnull begin
+
 namespace do_not_bind {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: do_not_bind_golden :: Struct")
@@ -97,6 +99,8 @@ inline ::std::int32_t(::rs::impl<::do_not_bind::Struct,
       __crubit_thunk_Trait_ubound_utrait_umethod_udo_unot_ubind_ugolden_x0000003a_x0000003aStruct(
           self);
 }
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_DO_NOT_BIND_DO_NOT_BIND_GOLDEN

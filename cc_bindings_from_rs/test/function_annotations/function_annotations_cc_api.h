@@ -20,6 +20,8 @@
 #pragma clang diagnostic ignored "-Wshadow"
 #include <cstdint>
 
+#pragma clang assume_nonnull begin
+
 namespace function_annotations {
 
 // Generated from:
@@ -36,7 +38,9 @@ inline ::std::int32_t add_two_integers(::std::int32_t x, ::std::int32_t y) {
 
 }  // namespace function_annotations
 
+#pragma clang assume_nonnull end
+
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_FUNCTION_ANNOTATIONS_FUNCTION_ANNOTATIONS_GOLDEN
 
-// This file contains Kythe metadata. eyJ0eXBlIjoia3l0aGUwIiwibWV0YSI6W3sidHlwZSI6ImFuY2hvcl9hbmNob3IiLCJzb3VyY2VfYmVnaW4iOjE5MSwic291cmNlX2VuZCI6MjA3LCJ0YXJnZXRfYmVnaW4iOjExODYsInRhcmdldF9lbmQiOjEyMDIsImVkZ2UiOiIva3l0aGUvZWRnZS9pbXB1dGVzIiwic291cmNlX3ZuYW1lIjp7ImNvcnB1cyI6ImNvcnB1cyIsInBhdGgiOiJ0aGlyZF9wYXJ0eS9jcnViaXQvY2NfYmluZGluZ3NfZnJvbV9ycy90ZXN0L2Z1bmN0aW9uX2Fubm90YXRpb25zL2Z1bmN0aW9uX2Fubm90YXRpb25zLnJzIiwibGFuZ3VhZ2UiOiJydXN0In19XX0=
+// This file contains Kythe metadata. eyJ0eXBlIjoia3l0aGUwIiwibWV0YSI6W3sidHlwZSI6ImFuY2hvcl9hbmNob3IiLCJzb3VyY2VfYmVnaW4iOjE5MSwic291cmNlX2VuZCI6MjA3LCJ0YXJnZXRfYmVnaW4iOjEyMjIsInRhcmdldF9lbmQiOjEyMzgsImVkZ2UiOiIva3l0aGUvZWRnZS9pbXB1dGVzIiwic291cmNlX3ZuYW1lIjp7ImNvcnB1cyI6ImNvcnB1cyIsInBhdGgiOiJ0aGlyZF9wYXJ0eS9jcnViaXQvY2NfYmluZGluZ3NfZnJvbV9ycy90ZXN0L2Z1bmN0aW9uX2Fubm90YXRpb25zL2Z1bmN0aW9uX2Fubm90YXRpb25zLnJzIiwibGFuZ3VhZ2UiOiJydXN0In19XX0=

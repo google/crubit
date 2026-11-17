@@ -25,6 +25,8 @@
 
 #include "cc_bindings_from_rs/test/uses/extern_crate.h"  // IWYU pragma: export
 
+#pragma clang assume_nonnull begin
+
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -264,6 +266,8 @@ extern "C" ::std::int32_t __crubit_thunk_f();
 inline ::std::int32_t f() { return __crubit_internal::__crubit_thunk_f(); }
 
 }  // namespace uses
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN

@@ -23,6 +23,8 @@
 
 #include "cc_bindings_from_rs/test/bridging/cc_generics.h"
 
+#pragma clang assume_nonnull begin
+
 namespace layout_equivalent_generics {
 
 using MyStatusAlias CRUBIT_INTERNAL_RUST_TYPE(
@@ -417,6 +419,8 @@ inline crubit::test::MyStatus return_status_or_unit_alias() {
 }
 
 }  // namespace layout_equivalent_generics
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_BRIDGING_LAYOUT_EQUIVALENT_GENERICS_GOLDEN

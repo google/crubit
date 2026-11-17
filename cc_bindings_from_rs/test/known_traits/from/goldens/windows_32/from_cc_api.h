@@ -29,6 +29,8 @@
 
 #include "support/rs_std/rs_alloc.h"
 
+#pragma clang assume_nonnull begin
+
 namespace from {
 struct CloneAllocType;
 struct CloneCopyType;
@@ -891,6 +893,8 @@ inline void ::from::OpaqueRef::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 }  // namespace from
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_FROM_FROM_GOLDEN

@@ -25,6 +25,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace str {
 static constexpr ::rs::StrRef CONST_STR_FOO = ::rs::StrRef("foo");
 
@@ -140,6 +142,8 @@ inline void str_checked_as_potentially_aliasing(::rs::StrRef __param_0,
 }
 
 }  // namespace str
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_STR_STR_GOLDEN

@@ -24,6 +24,8 @@
 #include <cstring>
 #include <type_traits>
 
+#pragma clang assume_nonnull begin
+
 namespace rs_default::derived_impl {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -429,6 +431,8 @@ inline void ::rs_default::transparent_struct::SomeStruct::
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 }  // namespace rs_default::transparent_struct
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_DEFAULT_RS_DEFAULT_GOLDEN

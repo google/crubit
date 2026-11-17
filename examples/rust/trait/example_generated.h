@@ -27,6 +27,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace example_crate {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
@@ -151,6 +153,8 @@ inline ::rs::StrRef(
           self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // EXAMPLES_RUST_TRAIT_EXAMPLE_CRATE_GOLDEN

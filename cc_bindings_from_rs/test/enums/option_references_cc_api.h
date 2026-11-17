@@ -33,6 +33,8 @@
 
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace option_references {
 struct ValuesIter;
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_references_golden :: Value")
@@ -836,6 +838,8 @@ inline ::rs::Option<::option_references::Value const * crubit_nullable>::Option(
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ENUMS_OPTION_REFERENCES_GOLDEN

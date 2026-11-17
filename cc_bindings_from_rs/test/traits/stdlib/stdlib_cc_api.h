@@ -35,6 +35,8 @@
 #include "support/rs_std/rs_alloc.h"
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace stdlib {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
@@ -821,6 +823,8 @@ inline ::rs::Option<::stdlib::NonCloneableValue>::Option(
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_TRAITS_STDLIB_STDLIB_GOLDEN

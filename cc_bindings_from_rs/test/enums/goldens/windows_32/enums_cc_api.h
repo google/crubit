@@ -31,6 +31,8 @@
 #include "support/rs_std/rs_alloc.h"
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace enums::param_name_collisions {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -3815,6 +3817,8 @@ inline void ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant::
   }
 }
 }  // namespace enums::repr_rust
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ENUMS_ENUMS_GOLDEN

@@ -22,6 +22,8 @@
 
 #include "cc_bindings_from_rs/test/traits/for_cc_type/cc_type.h"
 
+#pragma clang assume_nonnull begin
+
 namespace trait {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_golden :: Trait") Trait {
@@ -51,6 +53,8 @@ inline ::std::int32_t(::rs::impl<::CcType, ::trait::Trait>::get_value)(
       __crubit_thunk_Trait_uget_uvalue_ucc_utype_x0000003a_x0000003aCcType(
           self);
 }
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_TRAITS_FOR_CC_TYPE_TRAIT_GOLDEN

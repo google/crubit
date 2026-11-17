@@ -424,6 +424,8 @@ r#"// Automatically @generated C++ bindings for the following Rust crate:
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wshadow"
 
+#pragma clang assume_nonnull begin
+
 namespace test_crate::public_module {
 "#,
 format!("// Generated from: {temp_dir_str}/test_crate.rs;l=2"),
@@ -439,6 +441,8 @@ inline void public_function() {
 }
 
 }  // namespace test_crate::public_module
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CRUBIT_GENERATED_HEADER_FOR_test_crate_
@@ -475,6 +479,8 @@ r#"// Automatically @generated C++ bindings for the following Rust crate:
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wshadow"
 
+#pragma clang assume_nonnull begin
+
 namespace test_crate::public_module {
 "#,
 format!("// Generated from: {temp_dir_str}/test_crate.rs;l=2"),
@@ -490,6 +496,8 @@ inline void public_function() {
 }
 
 }  // namespace test_crate::public_module
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 "#

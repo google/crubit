@@ -33,6 +33,8 @@
 
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace into_iterator_rust {
 struct MyContainer;
 struct MyIterator;
@@ -1501,6 +1503,8 @@ inline ::rs::Option<::into_iterator_rust::MoveOnlyPayload>::Option(
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INTO_ITERATOR_INTO_ITERATOR_RUST_GOLDEN

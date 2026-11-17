@@ -38,6 +38,8 @@
 
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace boxes {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Holder") alignas(8)
@@ -1508,6 +1510,8 @@ inline ::rs::Option<::rs::PinBox<::boxes::NotUnpin>>::Option(
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_BOX_BOXES_GOLDEN

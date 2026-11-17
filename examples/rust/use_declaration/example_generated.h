@@ -21,6 +21,8 @@
 #include <cstdint>
 #include <type_traits>
 
+#pragma clang assume_nonnull begin
+
 namespace example_crate {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type")
@@ -71,6 +73,8 @@ extern "C" void __crubit_thunk_function();
 inline void function() { return __crubit_internal::__crubit_thunk_function(); }
 
 }  // namespace example_crate
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // EXAMPLES_RUST_USE_DECLARATION_EXAMPLE_CRATE_GOLDEN

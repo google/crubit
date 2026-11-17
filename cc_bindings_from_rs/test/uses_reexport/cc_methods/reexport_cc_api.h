@@ -23,6 +23,8 @@
 
 #include "cc_bindings_from_rs/test/uses_reexport/cc_methods/cc_type.h"  // IWYU pragma: export
 
+#pragma clang assume_nonnull begin
+
 namespace reexport {
 
 //  Calls the free function that rs_bindings_from_cc generates for
@@ -63,6 +65,8 @@ inline ::cc_ns::CcType make_value(::std::int32_t value) {
 }
 
 }  // namespace reexport
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_USES_REEXPORT_CC_METHODS_REEXPORT_GOLDEN

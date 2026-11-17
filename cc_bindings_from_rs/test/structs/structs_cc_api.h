@@ -33,6 +33,8 @@
 #include "support/rs_std/rs_alloc.h"
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace structs::abi_classification {
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -1883,6 +1885,8 @@ inline ::std::int32_t get_value(::structs::zst_fields::ZstFields x) {
 }
 
 }  // namespace structs::zst_fields
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_STRUCTS_STRUCTS_GOLDEN

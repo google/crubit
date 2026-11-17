@@ -25,6 +25,8 @@
 #include <cstring>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace pass_by_value_unmovable {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -193,6 +195,8 @@ inline void takes_val_unmovable(
 }
 
 }  // namespace pass_by_value_unmovable
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_PASS_BY_VALUE_UNMOVABLE_PASS_BY_VALUE_UNMOVABLE_GOLDEN

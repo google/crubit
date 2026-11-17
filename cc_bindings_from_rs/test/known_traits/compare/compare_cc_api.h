@@ -31,6 +31,8 @@
 
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace compare {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyOrd")
@@ -380,6 +382,8 @@ inline ::rs::Option<::std::int32_t>::Option(::std::in_place_t ip,
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_COMPARE_COMPARE_GOLDEN

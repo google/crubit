@@ -28,6 +28,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace option_specialization_collision {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -271,6 +273,8 @@ inline ::rs::Option<::std::int32_t const * $static crubit_nonnull>::Option(
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ENUMS_OPTION_SPECIALIZATION_COLLISION_GOLDEN

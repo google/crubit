@@ -22,6 +22,8 @@
 
 #include "support/ffi_11/ffi_11.h"
 
+#pragma clang assume_nonnull begin
+
 namespace rust_api {
 static constexpr ::std::int64_t C_LONG_CONST = INT64_C(-42);
 static constexpr ::std::uint64_t C_ULONG_CONST = 42;
@@ -204,6 +206,8 @@ inline ::std::uint16_t c_ushort() {
 }
 
 }  // namespace rust_api
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // SUPPORT_FFI_11_TESTS_TYPE_IDENTITY_RUST_API_GOLDEN

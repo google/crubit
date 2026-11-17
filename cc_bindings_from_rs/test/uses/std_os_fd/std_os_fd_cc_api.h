@@ -16,6 +16,8 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wshadow"
 
+#pragma clang assume_nonnull begin
+
 namespace std_os_fd {
 
 // Error generating bindings for function
@@ -29,6 +31,8 @@ namespace std_os_fd {
 // (b/262052635).
 
 }  // namespace std_os_fd
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_USES_STD_OS_FD_STD_OS_FD_GOLDEN

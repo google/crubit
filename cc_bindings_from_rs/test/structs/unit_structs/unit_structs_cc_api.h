@@ -16,12 +16,16 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wshadow"
 
+#pragma clang assume_nonnull begin
+
 namespace unit_structs {
 
 // Error generating bindings for struct `unit_structs_golden::UnitStruct`:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 }
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_STRUCTS_UNIT_STRUCTS_UNIT_STRUCTS_GOLDEN

@@ -28,6 +28,8 @@
 #include <cstring>
 #include <type_traits>
 
+#pragma clang assume_nonnull begin
+
 namespace aliasing_references {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -293,6 +295,8 @@ inline void mut_refs(::std::int32_t& __param_0, ::std::int32_t& __param_1) {
 }
 
 }  // namespace aliasing_references
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ALIASING_REFERENCES_ALIASING_REFERENCES_GOLDEN

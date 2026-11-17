@@ -26,6 +26,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace dep_crate {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: dep_crate_golden :: ExpectedName")
@@ -212,6 +214,8 @@ inline constexpr ::rs::Result<::dep_crate::ExpectedName,
     : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_SPECIALIZATION_DEDUPLICATION_DEP_CRATE_GOLDEN

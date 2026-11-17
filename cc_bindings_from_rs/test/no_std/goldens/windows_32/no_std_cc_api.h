@@ -26,6 +26,8 @@
 
 #include "support/rs_std/rs_alloc.h"
 
+#pragma clang assume_nonnull begin
+
 namespace no_std {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct")
@@ -76,6 +78,8 @@ inline void ::no_std::NoStdStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(__crubit_assert_type, test));
 }
 }  // namespace no_std
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_NO_STD_NO_STD_GOLDEN

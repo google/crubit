@@ -39,6 +39,8 @@
 
 #include "support/rs_std/rs_alloc.h"
 
+#pragma clang assume_nonnull begin
+
 namespace generics {
 template <typename T>
 struct GenericStruct;
@@ -3811,6 +3813,8 @@ inline ::rs::Vec<::std::uint32_t>::Vec(::crubit::UnsafeRelocateTag,
 inline ::rs::Vec<::std::uint32_t>::Vec() noexcept : storage_{} { init_empty(); }
 inline ::rs::Vec<::std::uint32_t>::~Vec() noexcept { destroy(); }
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_GENERICS_GENERICS_GOLDEN

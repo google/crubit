@@ -28,6 +28,8 @@
 
 #include "cc_bindings_from_rs/test/async_fn/async_fn_existing_cpp_types.h"
 
+#pragma clang assume_nonnull begin
+
 namespace async_fn {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: async_fn_golden :: NotCppMovable") alignas(
@@ -334,6 +336,8 @@ inline ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
 }
 
 }  // namespace async_fn
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ASYNC_FN_ASYNC_FN_GOLDEN

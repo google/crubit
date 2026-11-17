@@ -26,6 +26,8 @@
 
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace rs_ops {
 
 //  Exercises operator impls whose `Self` type is a *reference* to the ADT.
@@ -566,6 +568,8 @@ inline void ::rs_ops::MyInt::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 }  // namespace rs_ops
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_OPS_RS_OPS_GOLDEN

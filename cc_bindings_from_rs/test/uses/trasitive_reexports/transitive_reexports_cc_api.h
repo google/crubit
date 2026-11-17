@@ -24,6 +24,8 @@
 
 #include "cc_bindings_from_rs/test/uses/trasitive_reexports/direct.h"  // IWYU pragma: export
 
+#pragma clang assume_nonnull begin
+
 namespace transitive_reexports {
 
 ::direct::Transitive direct_to_transitive(::direct::Direct const& direct);
@@ -122,6 +124,8 @@ inline ::direct::Transitive direct_to_transittive_type_alias(
 }
 
 }  // namespace transitive_reexports
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_USES_TRASITIVE_REEXPORTS_TRANSITIVE_REEXPORTS_GOLDEN

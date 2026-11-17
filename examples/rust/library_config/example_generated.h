@@ -17,6 +17,8 @@
 #pragma clang diagnostic ignored "-Wshadow"
 #include <cstdint>
 
+#pragma clang assume_nonnull begin
+
 namespace example_crate {
 
 ::std::int32_t add_two_integers(::std::int32_t x, ::std::int32_t y);
@@ -30,6 +32,8 @@ inline ::std::int32_t add_two_integers(::std::int32_t x, ::std::int32_t y) {
 }
 
 }  // namespace example_crate
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // EXAMPLES_RUST_LIBRARY_CONFIG_EXAMPLE_CRATE_GOLDEN

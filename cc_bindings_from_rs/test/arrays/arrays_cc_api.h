@@ -30,6 +30,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace arrays {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct")
@@ -705,6 +707,8 @@ inline void ::rs::Tuple<::std::int32_t,
   static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ARRAYS_ARRAYS_GOLDEN

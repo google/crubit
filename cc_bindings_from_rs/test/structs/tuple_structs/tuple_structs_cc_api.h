@@ -34,6 +34,8 @@
 
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace tuple_structs {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -1413,6 +1415,8 @@ inline void ::rs::Tuple<::std::int32_t,
   static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_STRUCTS_TUPLE_STRUCTS_TUPLE_STRUCTS_GOLDEN

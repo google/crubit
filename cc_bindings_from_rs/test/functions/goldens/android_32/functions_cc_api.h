@@ -35,6 +35,8 @@
 #include "support/ctor.h"
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace functions::fn_abi_tests {
 
 //  Testing `#[unsafe(export_name = ...)]` - the generated bindings need to
@@ -1228,6 +1230,8 @@ inline ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& $(
       __crubit_thunk_AsRef_uas_uref_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct_ufunctions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
           self);
 }
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN

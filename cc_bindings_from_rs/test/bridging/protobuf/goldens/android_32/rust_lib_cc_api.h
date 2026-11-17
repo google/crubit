@@ -35,6 +35,8 @@
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo.pb.h"
 #include "support/protobuf/rust.h"
 
+#pragma clang assume_nonnull begin
+
 namespace rust_lib {
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -447,6 +449,8 @@ inline ::rs::Vec<
   destroy();
 }
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN

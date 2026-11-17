@@ -31,6 +31,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace vec {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: RustVecOwner") alignas(4)
@@ -426,6 +428,8 @@ inline ::rs::Vec<::std::uint8_t>::Vec(::crubit::UnsafeRelocateTag,
 inline ::rs::Vec<::std::uint8_t>::Vec() noexcept : storage_{} { init_empty(); }
 inline ::rs::Vec<::std::uint8_t>::~Vec() noexcept { destroy(); }
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_VEC_VEC_GOLDEN

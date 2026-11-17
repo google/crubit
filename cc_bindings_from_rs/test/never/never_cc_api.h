@@ -23,6 +23,8 @@
 #include <cstring>
 #include <type_traits>
 
+#pragma clang assume_nonnull begin
+
 namespace never {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
@@ -108,6 +110,8 @@ inline void never_return() {
 }
 
 }  // namespace never
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_NEVER_NEVER_GOLDEN

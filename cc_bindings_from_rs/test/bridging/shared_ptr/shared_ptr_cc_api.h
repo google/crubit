@@ -22,6 +22,8 @@
 #include <memory>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace shared_ptr {
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -131,6 +133,8 @@ roundtrip_shared_ptr(::std::shared_ptr<::std::int32_t> crubit_nonnull val) {
 }
 
 }  // namespace shared_ptr
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_BRIDGING_SHARED_PTR_SHARED_PTR_GOLDEN

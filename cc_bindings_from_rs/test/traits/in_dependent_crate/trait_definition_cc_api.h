@@ -25,6 +25,8 @@
 #include <cstring>
 #include <type_traits>
 
+#pragma clang assume_nonnull begin
+
 namespace trait_definition {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -104,6 +106,8 @@ inline ::std::int32_t(::rs::impl<::trait_definition::MyStruct,
       __crubit_thunk_MyTrait_udo_usomething_utrait_udefinition_ugolden_x0000003a_x0000003aMyStruct(
           self);
 }
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_TRAITS_IN_DEPENDENT_CRATE_TRAIT_DEFINITION_GOLDEN

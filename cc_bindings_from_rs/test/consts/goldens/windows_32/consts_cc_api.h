@@ -29,6 +29,8 @@
 #include "support/ffi_11/ffi_11.h"
 #include "support/rs_std/rs_core.h"
 
+#pragma clang assume_nonnull begin
+
 namespace consts {
 static constexpr ::std::array<::std::int32_t, 3> ARRAY_CONST =
     ::std::array<::std::int32_t, 3>{INT32_C(10), INT32_C(20), INT32_C(30)};
@@ -623,6 +625,8 @@ inline double roundtrip_f64(double x) {
 }
 
 }  // namespace consts
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_CONSTS_CONSTS_GOLDEN

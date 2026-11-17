@@ -38,6 +38,8 @@
 
 #include "support/rs_std/rs_alloc.h"
 
+#pragma clang assume_nonnull begin
+
 namespace option {
 struct HasOptions;
 // CRUBIT_ANNOTATE: must_bind=
@@ -4949,6 +4951,8 @@ inline constexpr ::rs::Result<
     : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ENUMS_OPTION_GOLDEN

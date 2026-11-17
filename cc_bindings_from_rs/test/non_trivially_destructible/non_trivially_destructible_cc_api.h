@@ -24,6 +24,8 @@
 #include <cstring>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace non_trivially_destructible {
 
 struct
@@ -168,6 +170,8 @@ inline void take_by_value(
 }
 
 }  // namespace non_trivially_destructible
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_NON_TRIVIALLY_DESTRUCTIBLE_NON_TRIVIALLY_DESTRUCTIBLE_GOLDEN

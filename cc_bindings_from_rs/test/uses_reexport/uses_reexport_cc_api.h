@@ -25,6 +25,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace uses_reexport {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX")
@@ -309,6 +311,8 @@ extern "C" ::std::int32_t __crubit_thunk_f2();
 inline ::std::int32_t f2() { return __crubit_internal::__crubit_thunk_f2(); }
 
 }  // namespace uses_reexport
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_USES_REEXPORT_USES_REEXPORT_GOLDEN

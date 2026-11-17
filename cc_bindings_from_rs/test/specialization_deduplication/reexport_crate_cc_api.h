@@ -27,6 +27,8 @@
 
 #include "cc_bindings_from_rs/test/specialization_deduplication/dep_crate.h"  // IWYU pragma: export
 
+#pragma clang assume_nonnull begin
+
 namespace reexport_crate {
 
 ::rs::Result<::dep_crate::ExpectedName, ::std::int32_t> use_s();
@@ -212,6 +214,8 @@ inline constexpr ::rs::Result<::dep_crate::ExpectedName,
     : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_SPECIALIZATION_DEDUPLICATION_REEXPORT_CRATE_GOLDEN

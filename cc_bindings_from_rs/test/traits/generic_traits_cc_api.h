@@ -24,6 +24,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace generic_traits {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: generic_traits_golden :: AnotherStruct")
@@ -178,6 +180,8 @@ inline ::std::int32_t(::rs::impl<::generic_traits::StructGeneric,
       __crubit_thunk_TraitWithTwoGenerics_ubar_ugeneric_utraits_ugolden_x0000003a_x0000003aStructGeneric_ui32_ui32(
           self, t, u);
 }
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_TRAITS_GENERIC_TRAITS_GOLDEN

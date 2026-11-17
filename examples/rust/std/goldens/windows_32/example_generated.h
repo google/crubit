@@ -29,6 +29,8 @@
 
 #include "support/rs_std/rs_alloc.h"
 
+#pragma clang assume_nonnull begin
+
 namespace example_crate {
 
 ::rs::Result<::rs::Option<::rs::StrRef>, ::rs::alloc::string::String>
@@ -364,6 +366,8 @@ inline constexpr ::rs::
     : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // EXAMPLES_RUST_STD_EXAMPLE_CRATE_GOLDEN

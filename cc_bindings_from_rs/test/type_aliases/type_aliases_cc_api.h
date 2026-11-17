@@ -25,6 +25,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace type_aliases::test_deprecated_type_alias {
 
 using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
@@ -398,6 +400,8 @@ inline constexpr ::rs::Result<::std::uint32_t, ::std::int8_t>::Result(
     : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_TYPE_ALIASES_TYPE_ALIASES_GOLDEN

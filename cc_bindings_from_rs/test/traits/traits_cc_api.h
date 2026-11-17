@@ -31,6 +31,8 @@
 
 #include "support/rs_std/rs_alloc.h"
 
+#pragma clang assume_nonnull begin
+
 namespace traits {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -770,6 +772,8 @@ inline ::std::tuple<::std::int32_t, ::std::int32_t>(
   return ::std::make_tuple(*__return_value_0_storage,
                            *__return_value_1_storage);
 }
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_TRAITS_TRAITS_GOLDEN

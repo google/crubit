@@ -34,6 +34,8 @@
 
 #include "support/rs_std/rs_alloc.h"
 
+#pragma clang assume_nonnull begin
+
 namespace result {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault")
@@ -4294,6 +4296,8 @@ inline constexpr ::rs::Result<::std::uint32_t, ::std::uint8_t>::Result(
     : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ENUMS_RESULT_GOLDEN

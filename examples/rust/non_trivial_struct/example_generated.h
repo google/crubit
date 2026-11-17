@@ -24,6 +24,8 @@
 #include <cstring>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace example_crate {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -101,6 +103,8 @@ inline void ::example_crate::NonTrivialStruct::
   static_assert(0 == offsetof(__crubit_assert_type, a));
 }
 }  // namespace example_crate
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // EXAMPLES_RUST_NON_TRIVIAL_STRUCT_EXAMPLE_CRATE_GOLDEN

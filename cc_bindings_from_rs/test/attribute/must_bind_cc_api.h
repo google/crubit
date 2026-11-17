@@ -23,6 +23,8 @@
 #include <type_traits>
 #include <utility>
 
+#pragma clang assume_nonnull begin
+
 namespace must_bind {
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -69,6 +71,8 @@ extern "C" void __crubit_thunk_bar();
 inline void bar() { return __crubit_internal::__crubit_thunk_bar(); }
 
 }  // namespace must_bind
+
+#pragma clang assume_nonnull end
 
 #pragma clang diagnostic pop
 #endif  // CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_MUST_BIND_GOLDEN
