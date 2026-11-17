@@ -20,7 +20,7 @@ load(
 )
 load(
     "//common/bazel_support:cc_info_util.bzl",
-    "get_static_libraries_from_cc_info",
+    "get_static_library_files",
 )
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:compile_cc.bzl", "compile_cc")
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:compile_rust.bzl", "compile_rust")
@@ -361,7 +361,7 @@ def generate_and_compile_bindings(
     crate_name = escape_cpp_target_name(ctx.label.package, ctx.label.name)
 
     # Compile the "_rust_api_impl.cc" file
-    cc_info = compile_cc(
+    cc_info, impl_library_to_link = compile_cc(
         ctx,
         attr,
         cc_toolchain,
@@ -454,7 +454,7 @@ def generate_and_compile_bindings(
             ] if x != None]),
             out_compiled = depset(
                 [dep_variant_info.crate_info.output] +
-                get_static_libraries_from_cc_info(cc_info),
+                get_static_library_files(impl_library_to_link),
             ),
         ),
         # The C++ bindings of the generated Rust bindings are the original C++ file.

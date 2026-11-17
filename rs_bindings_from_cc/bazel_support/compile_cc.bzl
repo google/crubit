@@ -34,7 +34,9 @@ def compile_cc(
       extra_hdrs: A list of headers owned by this compilation action (passed as `public_hdrs`).
 
     Returns:
-      A CcInfo provider.
+      A tuple `(cc_info, library_to_link)`: the `CcInfo` provider for `src` and its dependencies,
+      and the `LibraryToLink` holding only the result of compiling `src` (`None` if there is
+      none).
     """
 
     # Use `direct_cc_infos` (exported deps) rather than `cc_infos` (non-exported deps) so that
@@ -80,7 +82,7 @@ def compile_cc(
         # `{target}-{hash}.indexing.o` during LTO indexing) rather than as an rlib.
         backrefs_flag.append("-Wl,--warn-backrefs-exclude=*/{package}/{target}-*".format(package = ctx.label.package, target = target))
 
-    (linking_context, _) = cc_common.create_linking_context_from_compilation_outputs(
+    (linking_context, linking_outputs) = cc_common.create_linking_context_from_compilation_outputs(
         name = src.basename,
         actions = ctx.actions,
         feature_configuration = feature_configuration,
@@ -95,8 +97,9 @@ def compile_cc(
     # `compilation_context` already carries the headers and header modules of `cc_infos` as
     # non-exported deps. Don't re-export `cc_infos` here: the caller decides which module maps
     # dependents may use (see `RustBindingsFromCcInfo.cc_info`).
-    return CcInfo(
+    cc_info = CcInfo(
         compilation_context = compilation_context,
         linking_context = linking_context,
         debug_context = debug_context,
     )
+    return cc_info, linking_outputs.library_to_link

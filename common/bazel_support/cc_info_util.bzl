@@ -2,23 +2,28 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-"""Utility functions for working with CcInfo objects."""
+"""Utility functions for working with C++ linking objects."""
 
-def get_static_libraries_from_cc_info(cc_info):
-    """Returns a list of all static library files in a CcInfo.
+def get_static_library_files(library_to_link):
+    """Returns the static library file of a single `LibraryToLink`, if it has one.
+
+    This deliberately takes one `LibraryToLink` rather than a `CcInfo`. A `CcInfo`'s linking
+    context also lists the libraries of every transitive dependency, and requesting the archives
+    of all of those libraries can add thousands of actions that the build would not otherwise
+    run.
 
     Args:
-      cc_info: A `CcInfo` object.
+      library_to_link: A `LibraryToLink` object, or `None`.
 
     Returns:
-      A list containing all of the static library `File`s found in `cc_info`.
+      A list containing the static library `File` of `library_to_link`, falling back to the PIC
+      static library. The list is empty if `library_to_link` is `None` or has neither.
     """
 
-    result = []
-    for linker_input in cc_info.linking_context.linker_inputs.to_list():
-        for library_to_link in linker_input.libraries:
-            if library_to_link.static_library != None:
-                result.append(library_to_link.static_library)
-            elif library_to_link.pic_static_library != None:
-                result.append(library_to_link.pic_static_library)
-    return result
+    if library_to_link == None:
+        return []
+    if library_to_link.static_library != None:
+        return [library_to_link.static_library]
+    if library_to_link.pic_static_library != None:
+        return [library_to_link.pic_static_library]
+    return []

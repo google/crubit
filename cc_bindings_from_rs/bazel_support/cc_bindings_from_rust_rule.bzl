@@ -54,7 +54,7 @@ load(
 )
 load(
     "//common/bazel_support:cc_info_util.bzl",
-    "get_static_libraries_from_cc_info",
+    "get_static_library_files",
 )
 load(
     "//features:crubit_feature_hint.bzl",
@@ -345,7 +345,9 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, 
           2) the compiled Rust glue crate (`..._cc_api_impl.rs` file).
 
     Returns:
-      A CcInfo provider.
+      A tuple `(cc_info, library_to_link)`: the `CcInfo` provider for the header and its
+      dependencies, and the `LibraryToLink` holding only the result of compiling `extra_cc_srcs`
+      (`None` if there is none).
     """
     cc_info = cc_common.merge_cc_infos(cc_infos = [
         dep[CcInfo]
@@ -366,7 +368,7 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, 
         public_hdrs = [h_out_file] + extra_cc_hdrs,
         compilation_contexts = [cc_info.compilation_context],
     )
-    (linking_context, _) = cc_common.create_linking_context_from_compilation_outputs(
+    (linking_context, linking_outputs) = cc_common.create_linking_context_from_compilation_outputs(
         name = ctx.label.name,
         actions = ctx.actions,
         feature_configuration = feature_configuration,
@@ -377,11 +379,12 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, 
 
     debug_context = cc_helper.merge_cc_debug_contexts(compilation_outputs, [cc_info])
 
-    return CcInfo(
+    cc_info = CcInfo(
         compilation_context = compilation_context,
         linking_context = linking_context,
         debug_context = debug_context,
     )
+    return cc_info, linking_outputs.library_to_link
 
 def _compile_rs_out_file(ctx, attr, rs_out_file, crate_name, deps):
     """Compiles the generated "..._cc_api_impl.rs" file.
@@ -546,7 +549,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
 
     dep_variant_info = _compile_rs_out_file(ctx, ctx.rule.attr, bindings_info.rust_file, target[CrateInfo].name, [target])
 
-    cc_info = _make_cc_info_for_h_out_file(
+    cc_info, extra_cc_library_to_link = _make_cc_info_for_h_out_file(
         ctx,
         bindings_info.h_file,
         extra_cc_hdrs,
@@ -559,7 +562,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
 
     out_compiled = depset(
         [dep_variant_info.crate_info.output] +
-        get_static_libraries_from_cc_info(cc_info),
+        get_static_library_files(extra_cc_library_to_link),
     )
 
     return [
@@ -840,7 +843,7 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
 
     (extra_cc_hdrs, extra_cc_srcs) = get_additional_cc_hdrs_and_srcs([])
 
-    cc_info = _make_cc_info_for_h_out_file(
+    cc_info, extra_cc_library_to_link = _make_cc_info_for_h_out_file(
         ctx,
         bindings_info.h_file,
         extra_cc_hdrs,
@@ -853,7 +856,7 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
 
     out_compiled = depset(
         [dep_variant_info.crate_info.output] +
-        get_static_libraries_from_cc_info(cc_info),
+        get_static_library_files(extra_cc_library_to_link),
     )
 
     self_info = CcBindingsFromRustInfo(
