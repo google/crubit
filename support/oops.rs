@@ -34,80 +34,46 @@
 
 use core::pin::Pin;
 
-/// Trait for upcasting a Derived class to its non-virtual Base class.
+/// Trait for upcasting a reference to a Derived class to a reference to its non-virtual Base
+/// class.
 ///
-/// TODO(b/216195042): Make `upcast` safe and remove the raw pointer impls, which are replaced by
-/// `RawUpcast`, once no generated or handwritten code calls `Upcast` on raw pointers.
-///
-/// # Safety
-///
-/// Implementations of `Upcast` must guarantee that they fulfill the safety promises of `upcast`.
-pub unsafe trait Upcast<Target> {
-    /// Upcasts `self` to the target `Base` type.
-    ///
-    /// # Safety
-    ///
-    /// If `self` is a raw pointer, `self` must be a valid, dereferenceable pointer to an
-    /// initialized object of the derived class.
-    ///
-    /// # Safety promises
-    ///
-    /// If `self` is a valid pointer or reference, the returned target will be a valid, properly
-    /// aligned, and dereferenceable pointer or reference to the `Target` base subobject within
-    /// `self`, with the same lifetime as of `self`.
-    unsafe fn upcast(self) -> Target;
-}
-
-/// Upcast `*const` -> `*const`.
-///
-/// # Safety
-///
-/// Implementing upcast for converting `Derived` ptr to `Base` ptr is safe, because for a valid
-/// Derived pointer, Inherits promises to return a valid base object inside Derived.
-unsafe impl<Derived, Base> Upcast<*const Base> for *const Derived
-where
-    Derived: Inherits<Base>,
-{
-    unsafe fn upcast(self: *const Derived) -> *const Base {
-        // SAFETY: By the safety contract of `Upcast::upcast`, `self` is a valid,
-        // dereferenceable pointer to a `Derived` object, which satisfies the safety
-        // contract of `Derived::upcast_ptr`.
-        unsafe { Derived::upcast_ptr(self) }
-    }
-}
-
-/// Upcast `*mut` -> `*mut`.
-///
-/// # Safety
-///
-/// Implementing upcast for converting `Derived` ptr to `Base` ptr is safe, because for a valid
-/// Derived pointer, Inherits promises to return a valid base object inside Derived.
-unsafe impl<Derived, Base> Upcast<*mut Base> for *mut Derived
-where
-    Derived: Inherits<Base>,
-{
-    unsafe fn upcast(self: *mut Derived) -> *mut Base {
-        // SAFETY: By the safety contract of `Upcast::upcast`, `self` is a valid,
-        // dereferenceable pointer to a `Derived` object, which satisfies the safety
-        // contract of `Derived::upcast_ptr_mut`.
-        unsafe { Derived::upcast_ptr_mut(self) }
-    }
+/// To upcast a raw pointer, use `RawUpcast`.
+pub trait Upcast<Target> {
+    /// Upcasts `self` to a reference to the `Base` subobject within `*self`.
+    fn upcast(self) -> Target;
 }
 
 /// Upcast `&` -> `&`.
-///
-/// # Safety
-///
-/// Implementing upcast for converting `Derived` ptr to `Base` ptr is safe, because for a valid
-/// Derived reference, Inherits promises to return a valid base object inside Derived.
-unsafe impl<'a, Derived, Base> Upcast<&'a Base> for &'a Derived
+impl<'a, Derived, Base> Upcast<&'a Base> for &'a Derived
 where
     Derived: Inherits<Base>,
 {
-    unsafe fn upcast(self: &'a Derived) -> &'a Base {
-        // SAFETY: By the safety contract of `Upcast::upcast`, `self` is a valid reference
-        // to a `Derived` object, which satisfies the safety contract of `Derived::upcast_ptr`.
+    fn upcast(self: &'a Derived) -> &'a Base {
+        // SAFETY: `self` is a valid reference to a `Derived` object, which satisfies the safety
+        // contract of `Derived::upcast_ptr`. By its safety promises, the result is a valid pointer
+        // to the `Base` subobject within `*self`, which lives as long as `*self`.
         unsafe { &*Derived::upcast_ptr(self as *const Derived) }
+    }
+}
+
+/// Upcast `Pin<&mut>` -> `Pin<&mut>`.
+///
+/// Safe code cannot then overwrite the whole base subobject; see `InheritsPinned`.
+impl<'a, Derived, Base> Upcast<Pin<&'a mut Base>> for Pin<&'a mut Derived>
+where
+    Derived: InheritsPinned<Base>,
+{
+    fn upcast(self: Pin<&'a mut Derived>) -> Pin<&'a mut Base> {
+        // SAFETY: `get_unchecked_mut` is only used to compute the address of the `Base` subobject,
+        // which is not moved. `self` is a valid reference to a `Derived` object, which satisfies
+        // the safety contract of `Derived::upcast_ptr_mut`; by its safety promises, the result is a
+        // valid pointer to the `Base` subobject within `*self`. That subobject lives inside the
+        // pinned `Derived` object, so it is pinned for `'a` too.
+        unsafe {
+            Pin::new_unchecked(&mut *Derived::upcast_ptr_mut(
+                self.get_unchecked_mut() as *mut Derived
+            ))
+        }
     }
 }
 
@@ -156,32 +122,6 @@ where
         // dereferenceable pointer to a `Derived` object, which satisfies the safety contract of
         // `Derived::upcast_ptr_mut`.
         unsafe { Derived::upcast_ptr_mut(self) }
-    }
-}
-
-/// Upcast `Pin<&mut>` -> `Pin<&mut>`.
-///
-/// # Safety
-///
-/// Implementing upcast for converting `Pin<&mut Derived>` to `Pin<&mut Base>` is safe,
-/// because for a valid pinned Derived reference, Inherits promises to return a valid base
-/// object inside Derived. Since the base subobject lives inside the pinned derived object,
-/// the pointer to the base object remains valid and pinned for the same lifetime.
-///
-/// Safe code cannot then overwrite the whole base subobject; see `InheritsPinned`.
-unsafe impl<'a, Derived, Base> Upcast<Pin<&'a mut Base>> for Pin<&'a mut Derived>
-where
-    Derived: InheritsPinned<Base>,
-{
-    unsafe fn upcast(self: Pin<&'a mut Derived>) -> Pin<&'a mut Base> {
-        // SAFETY: By the safety contract of `Upcast::upcast`, `self` is a valid pinned reference
-        // to a `Derived` object. `Derived::upcast_ptr_mut` returns a valid pointer to the `Base`
-        // subobject, which remains pinned because the `Derived` object is pinned.
-        unsafe {
-            Pin::new_unchecked(&mut *Derived::upcast_ptr_mut(
-                self.get_unchecked_mut() as *mut Derived
-            ))
-        }
     }
 }
 
@@ -371,10 +311,7 @@ mod test {
             }
         }
         let mut derived = Derived::default();
-        // SAFETY: `derived` is a valid pointer to a `Derived` value.
-        assert_eq!(ptr_location(&derived.base), unsafe {
-            ptr_location::<&Base>((&derived).upcast())
-        });
+        assert_eq!(ptr_location(&derived.base), ptr_location::<&Base>((&derived).upcast()));
 
         let _: *const Base = unsafe { Derived::upcast_ptr(&derived) };
         let _: *mut Base = unsafe { Derived::upcast_ptr_mut(&mut derived) };
@@ -418,19 +355,14 @@ mod test {
         // SAFETY: `Base` is `!Unpin`.
         unsafe impl InheritsPinned<Base> for Derived {}
         let mut derived = Derived::default();
-        // SAFETY: `derived` is a valid pointer to a `Derived` value.
-        assert_eq!(ptr_location(&derived.base), unsafe {
-            ptr_location::<&Base>((&derived).upcast())
-        });
+        assert_eq!(ptr_location(&derived.base), ptr_location::<&Base>((&derived).upcast()));
 
         let _: *const Base = unsafe { Derived::upcast_ptr(&derived) };
         let _: *mut Base = unsafe { Derived::upcast_ptr_mut(&mut derived) };
         // let _: &mut Base = (&mut derived).upcast(); // does not compile (no `&mut` impl)
         // let _: Pin<&mut Base> = (&mut derived).upcast(); // does not compile (needs Pin<&mut
         // Derived>)
-        unsafe {
-            let _: Pin<&mut Base> = Pin::new(&mut derived).upcast();
-        }
+        let _: Pin<&mut Base> = Pin::new(&mut derived).upcast();
 
         // This write must not be UB:
         {

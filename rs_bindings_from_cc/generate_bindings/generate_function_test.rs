@@ -5250,7 +5250,7 @@ fn test_derived_class_from_unnameable_template_preserves_mod() -> Result<()> {
                 ...
                 #[inline(always)]
                 pub fn Method<'a>(&'a self) {
-                    unsafe { self::derived::Method(unsafe { oops::Upcast::<_>::upcast(self) }) }
+                    unsafe { self::derived::Method(oops::Upcast::<_>::upcast(self)) }
                 }
             }
             ...

@@ -963,9 +963,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
                         }
                     } else {
                         quote! {
-                            // SAFETY: Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
-                            // `Derived` object.
-                            unsafe { ::oops::Upcast::<&#base_name>::upcast(self) }
+                            ::oops::Upcast::<&#base_name>::upcast(self)
                         }
                     },
                 });
