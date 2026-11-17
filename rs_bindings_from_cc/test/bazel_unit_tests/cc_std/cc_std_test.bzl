@@ -4,6 +4,7 @@
 
 """This module contains unit tests for rust_bindings_from_cc_aspect."""
 
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_flavor_transition",
@@ -22,7 +23,7 @@ load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 OutputsInfo = provider(
     doc = """A helper provider for determining the command line. """,
     fields = {
-        "args": "Args object",
+        "args": "List of Args objects",
         "empty_header_file": "Empty header file that Crubit creates if no public headers exist.",
     },
 )
@@ -30,9 +31,9 @@ OutputsInfo = provider(
 def _get_args_aspect_impl(target, ctx):
     bindings_action = None
 
-    # Find CppHeaderAnalysis action
+    # Find bindings generation action
     for action in target.actions:
-        if action.mnemonic == "CppHeaderAnalysis":
+        if action.mnemonic in ("CppHeaderAnalysis", "RustBindingsFromCc"):
             bindings_action = action
             break
 
@@ -46,7 +47,7 @@ def _get_args_aspect_impl(target, ctx):
         "// File intentionally left empty, its purpose is to satisfy rules_rust APIs.",
     )
 
-    args = bindings_action.args[0]
+    args = list(bindings_action.argv)
     return [OutputsInfo(args = args, empty_header_file = empty_header_file)]
 
 get_args_aspect = aspect(
@@ -61,6 +62,10 @@ def _cc_std_test_impl(ctx):
 
     cc_toolchain = find_cpp_toolchain(ctx)
 
+    args = ctx.actions.args()
+    args.add(out.path)
+    args.add_all(dep[OutputsInfo].args)
+
     ctx.actions.run(
         mnemonic = "CcStdTest",
         inputs = depset(
@@ -72,9 +77,10 @@ def _cc_std_test_impl(ctx):
                 # For the `clang` binary.
                 cc_toolchain.all_files,
                 ctx.attr._std[RustToolchainHeadersInfo].headers,
+                dep[CcInfo].compilation_context.headers,
             ],
         ),
-        arguments = [out.path, dep[OutputsInfo].args],
+        arguments = [args],
         executable = ctx.executable._include_directives_checker,
         env = {
             "CC": ctx.var["CC"],
