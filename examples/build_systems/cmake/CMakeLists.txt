@@ -26,8 +26,8 @@ FetchContent_declare(
 
 FetchContent_Declare(
   Corrosion
-  GIT_REPOSITORY https://github.com/thunderseethe/corrosion
-  GIT_TAG main
+  GIT_REPOSITORY https://github.com/corrosion-rs/corrosion
+  GIT_TAG master  # RESPECTFUL_TERMS_EXCEPTION: upstream Corrosion branch name.
 )
 
 FetchContent_MakeAvailable(Corrosion)

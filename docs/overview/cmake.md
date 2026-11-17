@@ -7,15 +7,10 @@ combine CMake and Cargo. Corrosion builds your crate with Cargo, runs Crubit on
 it, and gives you a CMake target that contains the generated header and a static
 library with the Rust code.
 
-Crubit's Corrosion support is in
-[a fork of Corrosion](https://github.com/thunderseethe/corrosion) while the
-[upstream pull request](https://github.com/corrosion-rs/corrosion/pull/666) is
-reviewed. <!-- TODO(b/574505417): Point at upstream Corrosion once merged. -->
-
 Rust bindings for C++ libraries (`rust_api_from_cpp`) aren't available in CMake
 yet. <!-- TODO(b/539627008) --> You can build the `rs_bindings_from_cc` tool
-itself with CMake, though; see
-[Building with CMake](cargo_build.md#building-with-cmake).
+itself with CMake, though; see [Building with
+CMake](cargo_build.md#building-with-cmake).
 
 There are two example projects, and CI builds both on every change to Crubit:
 
@@ -38,26 +33,25 @@ cmake --build build
 ## Build configuration
 
 Crubit uses Cargo to build your Rust library. Changes to your `Cargo.toml` are
-respected when the Crubit CMake targets are built. Your project needs to
-provide a library package, because Crubit needs it to produce an `.rlib` or
-`.rmeta` file.
+respected when the Crubit CMake targets are built. Your project needs to provide
+a library package, because Crubit needs it to produce an `.rlib` or `.rmeta`
+file.
 
 On the CMake side, Corrosion has many options for tuning the Cargo build. See
-the [Corrosion usage
-docs](https://corrosion-rs.github.io/corrosion/usage.html) for details. Most of
-these options are passed through to the underlying Cargo build, with a few
-exceptions:
+the [Corrosion usage docs](https://corrosion-rs.github.io/corrosion/usage.html)
+for details. Most of these options are passed through to the underlying Cargo
+build, with a few exceptions:
 
 *   `CRATES` doesn't work, because `cargo cpp_api_from_rust` generates bindings
-    for the single library package in the root manifest. Cargo workspaces
-    aren't supported yet. <!-- TODO(b/574506047) -->
+    for the single library package in the root manifest. Cargo workspaces aren't
+    supported yet. <!-- TODO(b/574506047) -->
 *   `CRATE_TYPES` has no effect, because Crubit always imports a lib/rlib.
 *   `OVERRIDE_CRATE_TYPE` has no effect, because Crubit must use
     `--crate-type=lib`.
 
-The CMake target that Corrosion creates is an interface library. It contains
-the generated header and a static library with the Rust code and the generated
-FFI bindings.
+The CMake target that Corrosion creates is an interface library. It contains the
+generated header and a static library with the Rust code and the generated FFI
+bindings.
 
 ## Example setup
 
@@ -104,9 +98,8 @@ FetchContent_Declare(
 
 FetchContent_Declare(
   Corrosion
-  # NB: We temporarily require a fork of Corrosion while we upstream our changes.
-  GIT_REPOSITORY https://github.com/thunderseethe/corrosion
-  GIT_TAG main
+  GIT_REPOSITORY https://github.com/corrosion-rs/corrosion
+  GIT_TAG master  # RESPECTFUL_TERMS_EXCEPTION: upstream Corrosion branch name.
 )
 
 FetchContent_MakeAvailable(Corrosion)
@@ -129,14 +122,14 @@ add_executable(main main.cpp)
 target_link_libraries(main PRIVATE rust_lib)
 ```
 
-Crubit names the generated C++ header after the library package. In
-`main.cpp`, include `crubit/rust_lib.h`:
+Crubit names the generated C++ header after the library package. In `main.cpp`,
+include `crubit/rust_lib.h`:
 
 ```live-snippet
 cs/file:examples/build_systems/cmake/main.cpp
 ```
 
-Now C++ can call the Rust code. See
-[C++ bindings for Rust libraries](../rust/index.md) for what the generated API
-looks like. The CMake integration has the same [limitations](limits.md) as
-Crubit's other build integrations.
+Now C++ can call the Rust code. See [C++ bindings for Rust
+libraries](../rust/index.md) for what the generated API looks like. The CMake
+integration has the same [limitations](limits.md) as Crubit's other build
+integrations.
