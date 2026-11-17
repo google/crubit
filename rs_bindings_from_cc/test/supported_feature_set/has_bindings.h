@@ -58,12 +58,12 @@ inline Union crubit_union_function(Union x) { return x; }
 // Note the use of references, rather than pointers. A C++ function reference
 // corresponds to a Rust function pointer, more or less.
 typedef void (&Callback)(int* x);
-inline void crubit_invoke_callback(void (&f)(int* x), int* x) { f(x); }
+void crubit_invoke_callback(void (&f)(int* x), int* x);
 
 // Whereas a C++ function pointer, being nullable, corresponds to a Rust
 // Option<function pointer>.
 typedef void (*NullableCallback)(int* x);
-inline void crubit_invoke_nullable_callback(void (*f)(int* x), int* x) { f(x); }
+void crubit_invoke_nullable_callback(void (*f)(int* x), int* x);
 
 void crubit_extern_c_directly_function();
 
