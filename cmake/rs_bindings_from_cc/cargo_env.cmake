@@ -131,10 +131,15 @@ function(_crubit_cargo_env out_env)
   _crubit_encode_rustflags(rustflags ${system_library_flags} ${toolchain_flags})
   _crubit_cargo_lockfile(lockfile)
 
+  set(cxxflags "-DCRUBIT_LLVM_DEV_DATE=${llvm_dev_date}")
+  if(llvm_stdlib_flag)
+    set(cxxflags "${llvm_stdlib_flag} ${cxxflags}")
+  endif()
+
   set(env
     ${toolchain_env}
     "CXX=${CMAKE_CXX_COMPILER}"
-    "CXXFLAGS=-DCRUBIT_LLVM_DEV_DATE=${llvm_dev_date}"
+    "CXXFLAGS=${cxxflags}"
     "CARGO_ENCODED_RUSTFLAGS=${rustflags}"
     "CLANG_INCLUDE_PATH=${llvm_include_dir}"
     "CLANG_LIB_STATIC_PATH=${cargo_lib_dir}"

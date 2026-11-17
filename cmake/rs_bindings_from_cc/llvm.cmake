@@ -216,12 +216,14 @@ endfunction()
 #
 # Sets these variables in the caller:
 #   llvm_version, llvm_include_dir, llvm_lib_dir, llvm_dev_date
+#   llvm_stdlib_flag: the `-stdlib=...` flag from `llvm-config --cxxflags`, or
+#     empty if LLVM was built with the compiler's default C++ standard library.
 #   llvm_libraries: the static libraries in llvm_lib_dir.
 #   llvm_system_libs: the system libraries that LLVM needs, as a list.
-#   llvm_ar: llvm-ar, from <root> if it has one, or else from the PATH. It must
-#     be the same LLVM version as <root>.
-#   llvm_clang, llvm_lld: clang and lld from <root>, or a NOTFOUND value if
-#     <root> doesn't have them.
+#   llvm_ar: llvm-ar, from llvm-config --bindir (or <root>/bin), or else from
+#     the PATH. It must be the same LLVM version as <root>.
+#   llvm_clang, llvm_lld: clang and lld from llvm-config --bindir (or
+#     <root>/bin), or a NOTFOUND value if it doesn't have them.
 function(_crubit_describe_llvm root)
   # NO_CACHE makes find_program search again on every configure, so changing
   # CRUBIT_LLVM_ROOT takes effect. Without it, find_program saves the paths in
@@ -240,25 +242,34 @@ function(_crubit_describe_llvm root)
   endif()
   _crubit_check_llvm_config("${found_llvm_config}")
   _crubit_llvm_config("${found_llvm_config}" version --version)
+  _crubit_llvm_config("${found_llvm_config}" bin_dir --bindir)
 
-  find_program(found_llvm_ar llvm-ar PATHS "${root}/bin" NO_DEFAULT_PATH NO_CACHE)
+  find_program(found_llvm_ar llvm-ar
+    PATHS "${bin_dir}" "${root}/bin" NO_DEFAULT_PATH NO_CACHE)
   if(NOT found_llvm_ar)
     find_program(found_llvm_ar llvm-ar NO_CACHE)
   endif()
   if(NOT found_llvm_ar)
     message(FATAL_ERROR
-      "Found no llvm-ar in ${root}/bin or on the PATH. Crubit needs the "
-      "llvm-ar of LLVM ${version}.")
+      "Found no llvm-ar in ${bin_dir}, ${root}/bin, or on the PATH. Crubit "
+      "needs the llvm-ar of LLVM ${version}.")
   endif()
   _crubit_check_llvm_ar("${found_llvm_ar}" "${version}" "${root}")
 
-  find_program(found_llvm_clang clang PATHS "${root}/bin" NO_DEFAULT_PATH NO_CACHE)
-  find_program(found_llvm_lld lld PATHS "${root}/bin" NO_DEFAULT_PATH NO_CACHE)
+  find_program(found_llvm_clang clang
+    PATHS "${bin_dir}" "${root}/bin" NO_DEFAULT_PATH NO_CACHE)
+  find_program(found_llvm_lld NAMES lld ld.lld
+    PATHS "${bin_dir}" "${root}/bin" NO_DEFAULT_PATH NO_CACHE)
   _crubit_llvm_config("${found_llvm_config}" include_dir --includedir)
   _crubit_llvm_config("${found_llvm_config}" lib_dir --libdir)
   _crubit_llvm_config("${found_llvm_config}" has_rtti --has-rtti)
+  _crubit_llvm_config("${found_llvm_config}" cxxflags --cxxflags)
   _crubit_llvm_config("${found_llvm_config}" system_libs --system-libs --link-static)
   separate_arguments(system_libs NATIVE_COMMAND "${system_libs}")
+  set(stdlib_flag "")
+  if(cxxflags MATCHES "(^|[ \t])-stdlib=([^ \t\r\n]+)")
+    set(stdlib_flag "-stdlib=${CMAKE_MATCH_2}")
+  endif()
   message(STATUS "Using LLVM ${version} at ${root}")
   if(NOT has_rtti STREQUAL "NO")
     message(STATUS "LLVM was built with RTTI; Crubit's C++ code is still built with -fno-rtti")
@@ -272,6 +283,7 @@ function(_crubit_describe_llvm root)
   set(llvm_lib_dir "${lib_dir}" PARENT_SCOPE)
   set(llvm_libraries "${libraries}" PARENT_SCOPE)
   set(llvm_system_libs "${system_libs}" PARENT_SCOPE)
+  set(llvm_stdlib_flag "${stdlib_flag}" PARENT_SCOPE)
   set(llvm_dev_date "${dev_date}" PARENT_SCOPE)
   set(llvm_ar "${found_llvm_ar}" PARENT_SCOPE)
   set(llvm_clang "${found_llvm_clang}" PARENT_SCOPE)
