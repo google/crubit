@@ -192,8 +192,7 @@ std::unique_ptr<crubit::ffi::Item> crubit::TypeAliasImporter::Import(
     if (auto* deprecated_attr = clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
       deprecated.emplace(deprecated_attr->getMessage());
       return true;
-    } else if (IsIgnoredVisibilityAttr(attr,
-                                       /*allow_non_default_visibility=*/true)) {
+    } else if (IsIgnoredVisibilityAttr(attr)) {
       return true;
     }
     return false;

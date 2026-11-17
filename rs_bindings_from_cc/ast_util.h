@@ -64,9 +64,8 @@ llvm::Expected<clang::QualType> ParameterizedByTAndStdTraitT(
 // Returns true if `attr` is a visibility-related attribute that doesn't affect
 // Rust bindings, so importers can ignore it:
 //
-// * `visibility(...)` or `type_visibility(...)` with the "default" value (or
-//   with any value, e.g. "hidden" or "protected", if
-//   `allow_non_default_visibility` is true).
+// * `visibility(...)` or `type_visibility(...)` with any value (e.g. "default",
+//   "hidden", or "protected").
 // * `__declspec(dllimport)` or `__declspec(dllexport)`: the Windows spelling of
 //   default visibility (e.g. in export macros like Chromium's
 //   `COMPONENT_EXPORT`).  Clang adds an inherited copy of a class-level
@@ -75,15 +74,15 @@ llvm::Expected<clang::QualType> ParameterizedByTAndStdTraitT(
 //   methods).  On explicit class template instantiation declarations, Clang
 //   replaces `dllexport` with `DLLExportOnDeclAttr`.
 //
-// Non-default visibility may affect whether the bindings link (e.g. it works
-// if the bindings are linked statically, but not if they are in a separate
-// shared object / dynamic library).
+// Non-default visibility may affect whether the bindings link (e.g. linking may
+// work if the bindings are linked statically, but not if they are in a separate
+// shared object / dynamic library).  OTOH this depends on how the build is set
+// up, which is outside of Crubit's control.
 //
 // Note that a `dllimport` variable is only available as
 // `__imp_<mangled name>`, so `var.cc` doesn't let Rust refer to its symbol
 // directly.
-bool IsIgnoredVisibilityAttr(const clang::Attr& attr,
-                             bool allow_non_default_visibility);
+bool IsIgnoredVisibilityAttr(const clang::Attr& attr);
 
 // Returns the set of ignored attribute names.
 llvm::DenseSet<llvm::StringRef> GetIgnoredAttrs(const clang::Decl* decl);
