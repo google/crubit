@@ -153,7 +153,9 @@ class Importer final : public ImportContext {
   bool EnsureSuccessfullyImported(clang::NamedDecl* _Nonnull decl) override {
     // First, return early so that we avoid re-entrant imports.
     if (HasBeenAlreadySuccessfullyImported(*decl)) return true;
-    (void)GetDeclItem(CanonicalizeDecl(decl));
+    clang::Decl* canonical = CanonicalizeDecl(decl);
+    CRUBIT_CHECK(canonical != nullptr);
+    (void)GetDeclItem(canonical);
     return HasBeenAlreadySuccessfullyImported(*decl);
   }
 
@@ -202,7 +204,7 @@ class Importer final : public ImportContext {
   // generated for it. The mangled name is kept in `Record::mangled_rs_name`, so
   // that it can still be generated as a hidden alias of the renamed struct.
   void NameTemplateInstantiationsAfterTypeAliases(
-      const llvm::DenseMap<ItemId, Item*>& id_to_item,
+      const llvm::DenseMap<ItemId, Item* _Nonnull>& id_to_item,
       std::vector<ItemId>& instantiation_ids);
 
   void FindAlwaysInstantiateSpecs(const clang::DeclContext& decl_context);

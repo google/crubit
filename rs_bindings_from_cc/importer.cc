@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
-#include <functional>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -17,11 +16,11 @@
 #include <string>
 #include <tuple>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "common/annotation_reader.h"
 #include "common/check.h"
+#include "common/status.h"
 #include "common/status_macros.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "nullability/pragma.h"
@@ -29,6 +28,7 @@
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/clang_compat_macros.h"
+#include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/importers/class_template.h"
 #include "rs_bindings_from_cc/importers/cxx_record.h"
@@ -83,6 +83,7 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Error.h"
@@ -95,9 +96,6 @@
 namespace crubit {
 
 namespace {
-
-constexpr llvm::StringRef kTypeStatusPayloadUrl =
-    "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
 
 // Prefix of the synthetic label that `Importer::GetOwningTarget` returns when
 // no Bazel target visible to Crubit claims ownership of a header. The rest of
@@ -3096,7 +3094,7 @@ std::unique_ptr<crubit::ffi::Item> Importer::ImportUnsupportedItem(
     *unsupported->mutable_path() = std::move(*path);
   }
   for (const auto& err : errors) {
-    *unsupported->add_errors() = err.AsFfi();
+    *unsupported->add_errors() = err;
   }
   *unsupported->mutable_decl_loc() =
       ConvertDeclLocation(original_decl.getBeginLoc(), nullptr);
@@ -3514,7 +3512,7 @@ CcType Importer::WithAsWrittenTemplateArgs(
   const bool has_explicit_lifetimes =
       assume_lifetimes &&
       std::any_of(args.begin(), args.end(),
-                  [this](const clang::TemplateArgument& arg) {
+                  [](const clang::TemplateArgument& arg) {
                     return ContainsExplicitLifetimes(arg.getAsType());
                   });
   const bool has_known_nullability = std::any_of(
@@ -4474,7 +4472,7 @@ void Importer::NameTemplateInstantiationsAfterTypeAliases(
       }
       alias.set_names_template_instantiation(true);
       ++i;
-      item_ids.insert(item_ids.begin() + i, id);
+      item_ids.insert(item_ids.begin() + static_cast<std::ptrdiff_t>(i), id);
     }
   };
   visit(visit, invocation_.top_level_item_ids_[invocation_.target_]);

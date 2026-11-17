@@ -20,7 +20,6 @@
 #include <ostream>
 #include <string>
 #include <string_view>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -41,52 +40,6 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
-
-namespace internal {
-inline std::string Substitute(llvm::StringRef format,
-                              llvm::ArrayRef<std::string> args) {
-  std::string result;
-  for (size_t i = 0; i < format.size(); ++i) {
-    if (format[i] == '$' && i + 1 < format.size()) {
-      if (format[i + 1] >= '0' && format[i + 1] <= '9') {
-        size_t idx = format[i + 1] - '0';
-        if (idx < args.size()) {
-          result += args[idx];
-        }
-        ++i;
-        continue;
-      } else if (format[i + 1] == '$') {
-        result += '$';
-        ++i;
-        continue;
-      }
-    }
-    result += format[i];
-  }
-  return result;
-}
-
-template <typename T>
-std::string ToStringForSubstitute(const T& t) {
-  return (llvm::Twine(t)).str();
-}
-inline std::string ToStringForSubstitute(llvm::StringRef t) { return t.str(); }
-inline std::string ToStringForSubstitute(const char* _Nonnull t) {
-  return std::string(t);
-}
-inline std::string ToStringForSubstitute(const std::string& t) { return t; }
-
-template <typename T>
-inline void AppendToString(std::string& s, const T& t) {
-  s += (llvm::Twine(t)).str();
-}
-
-inline void AppendToString(std::string& s, llvm::StringRef ref) {
-  s += ref.str();
-}
-inline void AppendToString(std::string& s, const std::string& ref) { s += ref; }
-inline void AppendToString(std::string& s, const char* ref) { s += ref; }
-}  // namespace internal
 
 namespace internal {
 inline constexpr int kJsonIndent = 2;
@@ -147,87 +100,6 @@ inline std::string DebugStringFromDecl(const clang::Decl& decl) {
 // A numerical ID that uniquely identifies a lifetime.
 CRUBIT_DEFINE_STRONG_INT_TYPE(LifetimeId, int);
 
-// An error that stores its format string as well as the formatted message.
-class FormattedError final {
- public:
-  auto operator<=>(const FormattedError& other) const {
-    return std::make_tuple(fmt(), message()) <=>
-           std::make_tuple(other.fmt(), other.message());
-  }
-  bool operator==(const FormattedError& other) const {
-    return fmt() == other.fmt() && message() == other.message();
-  }
-
-  template <typename H>
-  friend H AbslHashValue(H h, const FormattedError& e) {
-    return H::combine(std::move(h), std::string_view(e.fmt()),
-                      std::string_view(e.message()));
-  }
-
-  // Returns a FormattedError for a static string. The string is used as both
-  // the format string and the formatted message. Intended to be used only with
-  // string literals.
-  template <size_t N>
-  static FormattedError Static(const char (&array)[N]) {
-    return FormattedError(array, array);
-  }
-
-  // Returns a FormattedError built with `internal::AppendToString()`. The first
-  // argument is taken as the format string. All arguments are concatenated to
-  // form the formatted message, with an extra `": "` inserted after the first
-  // argument.
-  template <size_t N, typename... Ts>
-  static FormattedError PrefixedStrCat(const char (&prefix)[N],
-                                       Ts&&... moreArgs) {
-    std::string message;
-    llvm::raw_string_ostream os(message);
-    os << prefix << ": ";
-    (os << ... << std::forward<Ts>(moreArgs));
-    return FormattedError(prefix, message);
-  }
-
-  // Returns a FormattedError built with `internal::Substitute()`.
-  template <size_t N, typename... Ts>
-  static FormattedError Substitute(const char (&format)[N], Ts&&... args) {
-    if constexpr (sizeof...(args) == 0) {
-      return FormattedError(format, crubit::internal::Substitute(format, {}));
-    } else {
-      std::string str_args[] = {
-          crubit::internal::ToStringForSubstitute(std::forward<Ts>(args))...};
-      return FormattedError(
-          format,
-          crubit::internal::Substitute(
-              format, llvm::ArrayRef<std::string>(str_args, sizeof...(args))));
-    }
-  }
-
-  // Extracts a format string from a status payload, if present.
-  static FormattedError FromStatus(llvm::Error error);
-
-  llvm::StringRef fmt() const { return inner_.fmt(); }
-  llvm::StringRef message() const { return inner_.message(); }
-
-  const ffi::FormattedError& AsFfi() const { return inner_; }
-  // NOLINTNEXTLINE(google-explicit-constructor)
-  operator const ffi::FormattedError&() const { return inner_; }
-  // NOLINTNEXTLINE(google-explicit-constructor)
-  operator ffi::cc_type::Variant() const {
-    return ffi::cc_type::Variant(inner_);
-  }
-
-  // Type URL for use as an `absl::Status` payload.
-  static constexpr llvm::StringRef kFmtPayloadTypeUrl =
-      "type.googleapis.com/crubit.FormattedError.fmt";
-
- private:
-  FormattedError(llvm::StringRef fmt, llvm::StringRef message) {
-    inner_.set_fmt(fmt);
-    inner_.set_message(message);
-  }
-
-  ffi::FormattedError inner_;
-};
-
 using ffi::AccessSpecifier;
 using ffi::ArrayValue;
 using ffi::BaseClass;
@@ -241,6 +113,7 @@ using ffi::Enum;
 using ffi::Enumerator;
 using ffi::ExistingRustType;
 using ffi::Field;
+using ffi::FormattedError;
 using ffi::Func;
 using ffi::FuncParam;
 using ffi::GenerateBindingsRequest;
@@ -433,23 +306,6 @@ struct DenseMapInfo<crubit::HeaderName> {
   }
   static bool isEqual(const crubit::HeaderName& LHS,
                       const crubit::HeaderName& RHS) {
-    return LHS == RHS;
-  }
-};
-
-template <>
-struct DenseMapInfo<crubit::FormattedError> {
-  static crubit::FormattedError getEmptyKey() {
-    return crubit::FormattedError::Static("\x01<empty>");
-  }
-  static crubit::FormattedError getTombstoneKey() {
-    return crubit::FormattedError::Static("\x01<tombstone>");
-  }
-  static unsigned getHashValue(const crubit::FormattedError& Val) {
-    return llvm::hash_combine(Val.fmt(), Val.message());
-  }
-  static bool isEqual(const crubit::FormattedError& LHS,
-                      const crubit::FormattedError& RHS) {
     return LHS == RHS;
   }
 };

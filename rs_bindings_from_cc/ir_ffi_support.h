@@ -14,6 +14,7 @@
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -30,6 +31,8 @@
 #include "llvm/ADT/DenseMapInfo.h"
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace crubit::ffi {
 
@@ -732,6 +735,88 @@ static_assert(std::is_standard_layout_v<Identifier>);
 static_assert(sizeof(size_t) != 8 ||
               (sizeof(Identifier) == 16 && alignof(Identifier) == 8));
 
+// An error that stores its format string as well as the formatted message.
+class CRUBIT_FFI_TRIVIAL_ABI FormattedError final {
+ public:
+  FormattedError() = default;
+
+  auto operator<=>(const FormattedError& other) const {
+    return std::make_tuple(fmt(), message()) <=>
+           std::make_tuple(other.fmt(), other.message());
+  }
+  bool operator==(const FormattedError& other) const {
+    return fmt() == other.fmt() && message() == other.message();
+  }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const FormattedError& e) {
+    return H::combine(std::move(h), e.fmt(), e.message());
+  }
+
+  // Returns a FormattedError for a static string. The string is used as both
+  // the format string and the formatted message. Intended to be used only with
+  // string literals.
+  template <size_t N>
+  static FormattedError Static(const char (&array)[N]) {
+    return FormattedError(array, array);
+  }
+
+  // Returns a FormattedError built by streaming all arguments into an
+  // `llvm::raw_string_ostream`. The first argument is taken as the format
+  // string. All arguments are concatenated to form the formatted message, with
+  // an extra `": "` inserted after the first argument.
+  template <size_t N, typename... Ts>
+  static FormattedError PrefixedStrCat(const char (&prefix)[N],
+                                       Ts&&... moreArgs) {
+    std::string message;
+    llvm::raw_string_ostream os(message);
+    os << prefix << ": ";
+    (os << ... << std::forward<Ts>(moreArgs));
+    return FormattedError(prefix, message);
+  }
+
+  // Returns a FormattedError with `$0`..`$9` placeholders replaced by `args`.
+  template <size_t N, typename... Ts>
+  static FormattedError Substitute(const char (&format)[N], Ts&&... args) {
+    if constexpr (sizeof...(args) == 0) {
+      return FormattedError(format, SubstituteImpl(format, {}));
+    } else {
+      auto to_string = [](const auto& arg) {
+        std::string s;
+        llvm::raw_string_ostream os(s);
+        os << arg;
+        return s;
+      };
+      std::string str_args[] = {to_string(args)...};
+      return FormattedError(
+          format, SubstituteImpl(format, llvm::ArrayRef<std::string>(
+                                             str_args, sizeof...(args))));
+    }
+  }
+
+  // Extracts a format string from a status payload, if present.
+  static FormattedError FromStatus(llvm::Error error);
+
+  std::string_view fmt() const { return fmt_.AsView(); }
+  void set_fmt(std::string_view value) { fmt_ = FfiString(value); }
+  std::string_view message() const { return message_.AsView(); }
+  void set_message(std::string_view value) { message_ = FfiString(value); }
+
+ private:
+  FormattedError(llvm::StringRef fmt, llvm::StringRef message)
+      : fmt_(fmt), message_(message) {}
+
+  static std::string SubstituteImpl(llvm::StringRef format,
+                                    llvm::ArrayRef<std::string> args);
+
+  FfiString fmt_{};
+  FfiString message_{};
+};
+
+static_assert(std::is_standard_layout_v<FormattedError>);
+static_assert(sizeof(size_t) != 8 ||
+              (sizeof(FormattedError) == 32 && alignof(FormattedError) == 8));
+
 }  // namespace crubit::ffi
 
 namespace llvm {
@@ -769,6 +854,24 @@ struct DenseMapInfo<crubit::ffi::Identifier> {
   }
   static bool isEqual(const crubit::ffi::Identifier& LHS,
                       const crubit::ffi::Identifier& RHS) {
+    return LHS == RHS;
+  }
+};
+
+template <>
+struct DenseMapInfo<crubit::ffi::FormattedError> {
+  static crubit::ffi::FormattedError getEmptyKey() {
+    return crubit::ffi::FormattedError::Static("\x01<empty>");
+  }
+  static crubit::ffi::FormattedError getTombstoneKey() {
+    return crubit::ffi::FormattedError::Static("\x01<tombstone>");
+  }
+  static unsigned getHashValue(const crubit::ffi::FormattedError& Val) {
+    return static_cast<unsigned>(llvm::hash_combine(
+        llvm::StringRef(Val.fmt()), llvm::StringRef(Val.message())));
+  }
+  static bool isEqual(const crubit::ffi::FormattedError& LHS,
+                      const crubit::ffi::FormattedError& RHS) {
     return LHS == RHS;
   }
 };

@@ -28,7 +28,6 @@ struct CRUBIT_FFI_TRIVIAL_ABI LifetimeName;
 struct CRUBIT_FFI_TRIVIAL_ABI SourceLocation;
 namespace decl_location { struct CRUBIT_FFI_TRIVIAL_ABI ByteRange; }
 struct CRUBIT_FFI_TRIVIAL_ABI DeclLocation;
-struct CRUBIT_FFI_TRIVIAL_ABI FormattedError;
 namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI PointerType; }
 namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI FuncPointer; }
 namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI ConstantArrayType; }
@@ -290,16 +289,6 @@ struct CRUBIT_FFI_TRIVIAL_ABI DeclLocation {
   ::crubit::ffi::SourceLocation spelling_{};
   ::crubit::ffi::SourceLocation expansion_{};
   ::crubit::ffi::decl_location::ByteRange name_range_{};
-};
-
-struct CRUBIT_FFI_TRIVIAL_ABI FormattedError {
-  std::string_view fmt() const { return fmt_.AsView(); }
-  void set_fmt(std::string_view value) { fmt_ = FfiString(value); }
-  std::string_view message() const { return message_.AsView(); }
-  void set_message(std::string_view value) { message_ = FfiString(value); }
-  friend bool operator==(const FormattedError&, const FormattedError&) = default;
-  FfiString fmt_{};
-  FfiString message_{};
 };
 
 namespace cc_type {
@@ -3340,19 +3329,6 @@ static_assert(
   sizeof(size_t) != 8 ||
   offsetof(DeclLocation, name_range_) ==
     56);
-static_assert(std::is_standard_layout_v<FormattedError>);
-static_assert(
-  sizeof(size_t) != 8 ||
-  (sizeof(FormattedError) == 32 &&
-    alignof(FormattedError) == 8));
-static_assert(
-  sizeof(size_t) != 8 ||
-  offsetof(FormattedError, fmt_) ==
-    0);
-static_assert(
-  sizeof(size_t) != 8 ||
-  offsetof(FormattedError, message_) ==
-    16);
 inline cc_type::PointerType::PointerType() = default;
 inline cc_type::PointerType::PointerType(const PointerType&) = default;
 inline cc_type::PointerType::PointerType(PointerType&&) noexcept = default;
