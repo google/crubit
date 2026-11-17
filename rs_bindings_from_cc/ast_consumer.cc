@@ -20,7 +20,8 @@ void AstConsumer::HandleTranslationUnit(clang::ASTContext& ast_context) {
     return;
   }
   CRUBIT_CHECK(instance_.hasSema());
-  Importer importer(invocation_, ast_context, instance_.getSema());
+  CRUBIT_CHECK(parser_ != nullptr);
+  Importer importer(invocation_, ast_context, instance_.getSema(), *parser_);
   importer.Import(ast_context.getTranslationUnitDecl());
 }
 

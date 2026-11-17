@@ -25,6 +25,7 @@
 #include "clang/AST/Type.h"
 #include "clang/Basic/FileEntry.h"
 #include "clang/Basic/SourceLocation.h"
+#include "clang/Parse/Parser.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/Support/Allocator.h"
@@ -50,8 +51,10 @@ class Importer final : public ImportContext {
   using RepresentativeCopyCache =
       llvm::DenseMap<const clang::Decl*, const clang::Decl*>;
 
+  // `parser` is the parser that parsed the translation unit, which is used to
+  // parse macro constants (see `ImportMacroConstants`).
   explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
-                    clang::Sema& sema);
+                    clang::Sema& sema, clang::Parser& parser);
 
   // Import all visible declarations from a translation unit.
   void Import(clang::TranslationUnitDecl* _Nonnull decl);
@@ -400,6 +403,15 @@ class Importer final : public ImportContext {
   // The variables synthesized by `ImportMacroConstants`, mapped to whether
   // they are typed (see `MacroConstant::is_typed`).
   llvm::DenseMap<const clang::VarDecl*, bool> macro_constant_is_typed_;
+
+  // The parser that parsed the translation unit (see `ImportMacroConstants`).
+  clang::Parser& parser_;
+
+  // The declarations that were added to the translation unit while parsing
+  // macro constants, e.g. `struct S` for `#define FOO sizeof(struct S)`, or
+  // lazily declared builtins. They aren't declared by the C++ headers, so they
+  // are never imported (see `GetCanonicalChildren`).
+  llvm::DenseSet<const clang::Decl*> decls_from_macro_parsing_;
 
   // The comments in files loaded from precompiled header modules, which Crubit
   // collects itself by lexing the files (whose contents are embedded in the
