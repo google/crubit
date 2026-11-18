@@ -113,7 +113,7 @@ fn test_format_ret_ty_for_cc_failures() {
     test_ty(
         TypeLocation::FnReturn,
         &testcases,
-        quote! { #![feature(never_type)] },
+        quote! {},
         |desc, tcx, ty, expected_msg| {
             let db = bindings_db_for_tests(tcx);
             let anyhow_err = db
@@ -628,8 +628,6 @@ fn test_format_ty_for_cc_failures() {
         ),
     ];
     let preamble = quote! {
-        #![feature(never_type)]
-
         #[repr(C)]
         pub struct SomeStruct {
             pub x: i32,
@@ -728,8 +726,6 @@ fn test_format_ty_for_rs_successes() {
         ("LifetimeGenericStruct<'static>", "::rust_out::LifetimeGenericStruct< 'static >"),
     ];
     let preamble = quote! {
-        #![feature(never_type)]
-
         pub struct SomeStruct {
             pub x: i32,
         }

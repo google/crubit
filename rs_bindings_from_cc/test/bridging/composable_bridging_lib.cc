@@ -103,3 +103,9 @@ std::optional<std::unique_ptr<StructWithVirtualDestructor>>
 MakeOptionalWithVirtualDestructor() {
   return std::make_unique<StructWithVirtualDestructor>();
 }
+
+NeverBridged MakeNeverBridged() { __builtin_unreachable(); }
+void AcceptsNeverBridged(NeverBridged n) { __builtin_unreachable(); }
+std::optional<NeverBridged> ReturnOptionalNeverBridged() {
+  return std::nullopt;
+}

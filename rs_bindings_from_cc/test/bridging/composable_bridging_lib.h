@@ -120,4 +120,20 @@ CRUBIT_MUST_BIND
 std::optional<std::unique_ptr<StructWithVirtualDestructor>>
 MakeOptionalWithVirtualDestructor();
 
+struct CRUBIT_BRIDGE("!", "::crubit_support::bridge::NeverAbi",
+                     "NeverBridgedAbi") NeverBridged {
+  NeverBridged() = delete;
+};
+
+struct NeverBridgedAbi {
+  using Value = NeverBridged;
+  static constexpr size_t kSize = 0;
+  void Encode(Value value, crubit::Encoder& encoder) && {}
+  Value Decode(crubit::Decoder& decoder) && { __builtin_unreachable(); }
+};
+
+NeverBridged MakeNeverBridged();
+void AcceptsNeverBridged(NeverBridged n);
+std::optional<NeverBridged> ReturnOptionalNeverBridged();
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_COMPOSABLE_BRIDGING_LIB_H_
