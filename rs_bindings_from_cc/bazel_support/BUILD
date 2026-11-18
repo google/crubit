@@ -14,7 +14,7 @@ package(default_applicable_licenses = ["//:license"])
 bzl_library(
     name = "encode_raw_string_as_crate_name_bzl",
     srcs = ["encode_raw_string_as_crate_name.bzl"],
-    visibility = ["//:__subpackages__"],
+    visibility = ["//visibility:private"],
 )
 
 bzl_library(
