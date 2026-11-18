@@ -632,10 +632,11 @@ pub mod zz_template_instantiations {
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: reverse_iterator < class std :: __wrap_iter < const struct test :: NonTrivial *>>"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE);
     impl __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE {
         #[must_use]
-        #[inline(always)]        pub fn base<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE{
+        #[inline(always)]
+        pub fn base<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
@@ -654,8 +655,26 @@ pub mod zz_template_instantiations {
         }
     }
 
-    impl From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE{ #[inline(always)]fn from(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE)->Self{ let mut __x=args;let mut __x=::core::mem::MaybeUninit::new(__x);let mut tmp=::core::mem::MaybeUninit::<Self>::zeroed();unsafe{ crate::detail::__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1ES6_(&raw mut tmp as*mut _,__x.as_mut_ptr());tmp.assume_init() } } }
-    impl::ctor::CtorNew<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE{ type CtorType=Self;type Error=::ctor::Infallible;#[inline(always)]fn ctor_new(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE)->Self::CtorType{ <Self as From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>>::from(args) } }
+    impl From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE> for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE {
+        #[inline(always)]
+        fn from(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE) -> Self {
+            let mut __x = args;
+            let mut __x = ::core::mem::MaybeUninit::new(__x);
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEC1ES6_(&raw mut tmp as *mut _, __x.as_mut_ptr());
+                tmp.assume_init()
+            }
+        }
+    }
+    impl ::ctor::CtorNew<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE> for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE {
+        type CtorType = Self;
+        type Error = ::ctor::Infallible;
+        #[inline(always)]
+        fn ctor_new(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE) -> Self::CtorType {
+            <Self as From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>>::from(args)
+        }
+    }
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE"]
@@ -765,10 +784,11 @@ pub mod zz_template_instantiations {
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: reverse_iterator < class std :: __wrap_iter < struct test :: NonTrivial *>>"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE);
     impl __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE {
         #[must_use]
-        #[inline(always)]        pub fn base<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE{
+        #[inline(always)]
+        pub fn base<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__14cc89ab__ZNKSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEE4baseEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
@@ -787,8 +807,26 @@ pub mod zz_template_instantiations {
         }
     }
 
-    impl From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE{ #[inline(always)]fn from(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE)->Self{ let mut __x=args;let mut __x=::core::mem::MaybeUninit::new(__x);let mut tmp=::core::mem::MaybeUninit::<Self>::zeroed();unsafe{ crate::detail::__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1ES5_(&raw mut tmp as*mut _,__x.as_mut_ptr());tmp.assume_init() } } }
-    impl::ctor::CtorNew<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE{ type CtorType=Self;type Error=::ctor::Infallible;#[inline(always)]fn ctor_new(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE)->Self::CtorType{ <Self as From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>>::from(args) } }
+    impl From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE> for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE {
+        #[inline(always)]
+        fn from(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE) -> Self {
+            let mut __x = args;
+            let mut __x = ::core::mem::MaybeUninit::new(__x);
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk__ed14f0b4__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEC1ES5_(&raw mut tmp as *mut _, __x.as_mut_ptr());
+                tmp.assume_init()
+            }
+        }
+    }
+    impl ::ctor::CtorNew<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE> for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE {
+        type CtorType = Self;
+        type Error = ::ctor::Infallible;
+        #[inline(always)]
+        fn ctor_new(args: crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE) -> Self::CtorType {
+            <Self as From<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>>::from(args)
+        }
+    }
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[cfi_encoding = "__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE"]
@@ -906,7 +944,21 @@ pub mod zz_template_instantiations {
         }
     }
 
-    impl<'__this>::core::ops::Add<isize>for&'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE{ type Output=crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE;#[inline(always)]fn add(self,__n: isize)->Self::Output{ unsafe{ let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();crate::detail::__rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEplEl(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__n);__crubit_return.assume_init() } } }
+    impl<'__this> ::core::ops::Add<isize> for &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE {
+        type Output = crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE;
+        #[inline(always)]
+        fn add(self, __n: isize) -> Self::Output {
+            unsafe {
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEplEl(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __n,
+                );
+                __crubit_return.assume_init()
+            }
+        }
+    }
 
     impl ::core::ops::AddAssign<isize>
         for __CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE
@@ -919,7 +971,21 @@ pub mod zz_template_instantiations {
         }
     }
 
-    impl<'__this>::core::ops::Sub<isize>for&'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE{ type Output=crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE;#[inline(always)]fn sub(self,__n: isize)->Self::Output{ unsafe{ let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();crate::detail::__rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEmiEl(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__n);__crubit_return.assume_init() } } }
+    impl<'__this> ::core::ops::Sub<isize> for &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE {
+        type Output = crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE;
+        #[inline(always)]
+        fn sub(self, __n: isize) -> Self::Output {
+            unsafe {
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPKN4test10NonTrivialEEmiEl(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __n,
+                );
+                __crubit_return.assume_init()
+            }
+        }
+    }
 
     impl ::core::ops::SubAssign<isize>
         for __CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE
@@ -1092,7 +1158,21 @@ pub mod zz_template_instantiations {
         }
     }
 
-    impl<'__this>::core::ops::Add<isize>for&'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE{ type Output=crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE;#[inline(always)]fn add(self,__n: isize)->Self::Output{ unsafe{ let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();crate::detail::__rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEplEl(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__n);__crubit_return.assume_init() } } }
+    impl<'__this> ::core::ops::Add<isize> for &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE {
+        type Output = crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE;
+        #[inline(always)]
+        fn add(self, __n: isize) -> Self::Output {
+            unsafe {
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__861878ad__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEplEl(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __n,
+                );
+                __crubit_return.assume_init()
+            }
+        }
+    }
 
     impl ::core::ops::AddAssign<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE {
         #[inline(always)]
@@ -1103,7 +1183,21 @@ pub mod zz_template_instantiations {
         }
     }
 
-    impl<'__this>::core::ops::Sub<isize>for&'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE{ type Output=crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE;#[inline(always)]fn sub(self,__n: isize)->Self::Output{ unsafe{ let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();crate::detail::__rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEmiEl(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__n);__crubit_return.assume_init() } } }
+    impl<'__this> ::core::ops::Sub<isize> for &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE {
+        type Output = crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE;
+        #[inline(always)]
+        fn sub(self, __n: isize) -> Self::Output {
+            unsafe {
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__7fe5657a__ZNKSt3__u11__wrap_iterIPN4test10NonTrivialEEmiEl(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __n,
+                );
+                __crubit_return.assume_init()
+            }
+        }
+    }
 
     impl ::core::ops::SubAssign<isize> for __CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE {
         #[inline(always)]
@@ -1232,26 +1326,42 @@ pub mod zz_template_instantiations {
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: span < const struct test :: NonTrivial , 18446744073709551615UL >"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE);
     impl __CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE {
         #[must_use]
-        #[inline(always)]        pub fn first<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn first<'__this>(&'__this self, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5firstEm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn last<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn last<'__this>(&'__this self, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4lastEm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn subspan<'__this>(&'__this self,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn subspan<'__this>(&'__this self, __offset: usize, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__offset,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE7subspanEmm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __offset,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
@@ -1298,34 +1408,38 @@ pub mod zz_template_instantiations {
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn begin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE{
+        #[inline(always)]
+        pub fn begin<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5beginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE5beginEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn end<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE{
+        #[inline(always)]
+        pub fn end<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE3endEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPKN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE3endEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn rbegin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE{
+        #[inline(always)]
+        pub fn rbegin<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE>::uninit();
-                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE>::uninit();
+                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn rend<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE{
+        #[inline(always)]
+        pub fn rend<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE>::uninit();
-                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKN4test10NonTrivialEEEEE>::uninit();
+                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIKN4test10NonTrivialELm18446744073709551615EE4rendEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
@@ -1391,26 +1505,42 @@ pub mod zz_template_instantiations {
     );
     impl __CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {
         #[must_use]
-        #[inline(always)]        pub fn first<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn first<'__this>(&'__this self, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIKiLm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIKiLm18446744073709551615EE5firstEm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn last<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn last<'__this>(&'__this self, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIKiLm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIKiLm18446744073709551615EE4lastEm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn subspan<'__this>(&'__this self,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn subspan<'__this>(&'__this self, __offset: usize, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIKiLm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__offset,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIKiLm18446744073709551615EE7subspanEmm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __offset,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
@@ -1483,18 +1613,20 @@ pub mod zz_template_instantiations {
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn rbegin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE{
+        #[inline(always)]
+        pub fn rbegin<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE>::uninit();
-                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIKiLm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE>::uninit();
+                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIKiLm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn rend<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE{
+        #[inline(always)]
+        pub fn rend<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE>::uninit();
-                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIKiLm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE>::uninit();
+                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIKiLm18446744073709551615EE4rendEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
@@ -1557,26 +1689,42 @@ pub mod zz_template_instantiations {
     forward_declare::unsafe_define!(forward_declare::symbol!("std :: span < struct test :: NonTrivial , 18446744073709551615UL >"),crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE);
     impl __CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE {
         #[must_use]
-        #[inline(always)]        pub fn first<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn first<'__this>(&'__this self, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5firstEm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn last<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn last<'__this>(&'__this self, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4lastEm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn subspan<'__this>(&'__this self,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn subspan<'__this>(&'__this self, __offset: usize, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__offset,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIN4test10NonTrivialELm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE7subspanEmm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __offset,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
@@ -1623,34 +1771,38 @@ pub mod zz_template_instantiations {
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn begin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE{
+        #[inline(always)]
+        pub fn begin<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5beginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__c3b9de9e__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE5beginEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn end<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE{
+        #[inline(always)]
+        pub fn end<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
-                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE3endEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u11__wrap_iterIPN4test10NonTrivialEEE>::uninit();
+                crate::detail::__rust_thunk__c0096ae4__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE3endEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn rbegin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE{
+        #[inline(always)]
+        pub fn rbegin<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE>::uninit();
-                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE>::uninit();
+                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn rend<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE{
+        #[inline(always)]
+        pub fn rend<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE>::uninit();
-                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPN4test10NonTrivialEEEEE>::uninit();
+                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIN4test10NonTrivialELm18446744073709551615EE4rendEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
@@ -1695,26 +1847,42 @@ pub mod zz_template_instantiations {
     );
     impl __CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {
         #[must_use]
-        #[inline(always)]        pub fn first<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn first<'__this>(&'__this self, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIiLm18446744073709551615EE5firstEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__6ddb9499__ZNKSt3__u4spanIiLm18446744073709551615EE5firstEm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn last<'__this>(&'__this self,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn last<'__this>(&'__this self, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIiLm18446744073709551615EE4lastEm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__70f2e79a__ZNKSt3__u4spanIiLm18446744073709551615EE4lastEm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn subspan<'__this>(&'__this self,__offset: usize,__count: usize)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE{
+        #[inline(always)]
+        pub fn subspan<'__this>(&'__this self, __offset: usize, __count: usize) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
-                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIiLm18446744073709551615EE7subspanEmm(&raw mut __crubit_return as*mut::core::ffi::c_void,self,__offset,__count);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE>::uninit();
+                crate::detail::__rust_thunk__0b402a5e__ZNKSt3__u4spanIiLm18446744073709551615EE7subspanEmm(
+                    &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                    self,
+                    __offset,
+                    __count,
+                );
                 __crubit_return.assume_init()
             }
         }
@@ -1787,18 +1955,20 @@ pub mod zz_template_instantiations {
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn rbegin<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE{
+        #[inline(always)]
+        pub fn rbegin<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE>::uninit();
-                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIiLm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE>::uninit();
+                crate::detail::__rust_thunk__30ed2d1f__ZNKSt3__u4spanIiLm18446744073709551615EE6rbeginEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }
         #[must_use]
-        #[inline(always)]        pub fn rend<'__this>(&'__this self)->crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE{
+        #[inline(always)]
+        pub fn rend<'__this>(&'__this self) -> crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {
             unsafe {
-                let mut __crubit_return=::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE>::uninit();
-                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIiLm18446744073709551615EE4rendEv(&raw mut __crubit_return as*mut::core::ffi::c_void,self);
+                let mut __crubit_return = ::core::mem::MaybeUninit::<crate::zz_template_instantiations::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE>::uninit();
+                crate::detail::__rust_thunk__bd3e0276__ZNKSt3__u4spanIiLm18446744073709551615EE4rendEv(&raw mut __crubit_return as *mut ::core::ffi::c_void, self);
                 __crubit_return.assume_init()
             }
         }

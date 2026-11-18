@@ -297,7 +297,13 @@ pub mod zz_template_instantiations {
         }
     }
 
-    impl<'__this>From<&'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE>for bool{ #[inline(always)]fn from(args: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE)->Self{ let mut __this=args;unsafe{ crate::detail::__rust_thunk__db7d8013__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEEcvbEv(__this) } } }
+    impl<'__this> From<&'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE> for bool {
+        #[inline(always)]
+        fn from(args: &'__this crate::zz_template_instantiations::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE) -> Self {
+            let mut __this = args;
+            unsafe { crate::detail::__rust_thunk__db7d8013__ZNKSt3__u8functionIFiRKN9shared_ns4InfoEEEcvbEv(__this) }
+        }
+    }
 }
 mod detail {
     #[allow(unused_imports)]

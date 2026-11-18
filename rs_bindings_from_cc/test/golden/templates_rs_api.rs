@@ -224,7 +224,10 @@ pub mod test_namespace_bindings {
         doc = "CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < struct test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"
     )]
     #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
-    pub struct AliasToTemplateOfATemplate{ pub value1: crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,pub value2: ::ffi_11::c_int, }
+    pub struct AliasToTemplateOfATemplate {
+        pub value1: crate::zz_template_instantiations::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+        pub value2: ::ffi_11::c_int,
+    }
     forward_declare::unsafe_define!(forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < struct test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"),crate::test_namespace_bindings::AliasToTemplateOfATemplate);
 
     impl Default for AliasToTemplateOfATemplate {
