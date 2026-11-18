@@ -3699,6 +3699,83 @@ fn test_into_constructor_and_operator_share_single_thunk() {
 }
 
 #[gtest]
+fn test_into_operator_wraps_unmovable_target_under_movable_return_values() {
+    let test_src = r#"
+        #![allow(dead_code)]
+        pub struct Src(pub i32);
+
+        pub struct UnmovableDst {
+            val: i32,
+        }
+        impl Drop for UnmovableDst {
+            fn drop(&mut self) {}
+        }
+
+        impl Into<UnmovableDst> for Src {
+            fn into(self) -> UnmovableDst {
+                UnmovableDst { val: self.0 }
+            }
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db_default = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Supported.into(),
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let default_bindings = generate_bindings::generate_bindings(&db_default).unwrap();
+        assert_cc_matches!(
+            default_bindings.cc_api,
+            quote! {
+                ...
+                struct ... Src final {
+                    public:
+                        ...
+                        explicit operator ::rust_out::UnmovableDst();
+                        ...
+                };
+                ...
+                inline ::rust_out::Src::operator ::rust_out::UnmovableDst() {
+                    ...
+                    return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+                }
+                ...
+            }
+        );
+
+        let db_movable_ret = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::MovableReturnValues,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let movable_bindings = generate_bindings::generate_bindings(&db_movable_ret).unwrap();
+        assert_cc_matches!(
+            movable_bindings.cc_api,
+            quote! {
+                ...
+                struct ... Src final {
+                    public:
+                        ...
+                        explicit operator ::rs::Movable<::rust_out::UnmovableDst>();
+                        ...
+                };
+                ...
+                inline ::rust_out::Src::operator ::rs::Movable<::rust_out::UnmovableDst>() {
+                    ...
+                    return ::rs::Movable<::rust_out::UnmovableDst>::TakeFromSlot(
+                        ::std::move(__return_value_ret_val_holder)
+                    );
+                }
+                ...
+            }
+        );
+    });
+}
+
+#[gtest]
 fn test_iterator_item_references() {
     let test_src = r#"
         pub type MyRefAlias<'a> = &'a i32;

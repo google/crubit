@@ -21,15 +21,15 @@ use error_report::{anyhow, bail};
 use format_type::CcType;
 use format_type::{
     check_fn_sig, cpp_layout_equivalent_type, format_cc_ident, format_param_types_for_cc_api,
-    format_region_as_cc_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
-    has_elided_region, is_bridged_type, is_movable_wrapped_return_ty, is_thunk_required,
-    region_is_elided, BridgedType, CallableInfo, CallableKind, CcParamTy,
+    format_region_as_cc_lifetime, format_top_level_ns_for_crate, has_elided_region,
+    is_bridged_type, is_thunk_required, region_is_elided, should_wrap_in_movable, BridgedType,
+    CallableInfo, CallableKind, CcParamTy,
 };
 use generate_comment::{generate_deprecated_tag, generate_doc_comment, must_use_attr_of};
 use generate_function_thunk::{
     classify_param_abi, classify_value_abi, dyn_erased_future_output_ty, fn_arg_idents,
-    function_symbol_name, generate_thunk_decl, generate_thunk_impl, make_thunk_name, ParamAbi,
-    ThunkKind, ValueAbi,
+    format_dyn_erased_future_ty, function_symbol_name, generate_thunk_decl, generate_thunk_impl,
+    make_thunk_name, ParamAbi, ThunkKind, ValueAbi,
 };
 use get_generic_args::GenericClausesExt;
 use itertools::Itertools;
@@ -428,7 +428,7 @@ fn cc_return_value_from_c_abi<'tcx>(
     ty: Ty<'tcx>,
     prereqs: &mut CcPrerequisites<'tcx>,
     storage_statements: &mut TokenStream,
-    recursive: bool,
+    location: TypeLocation,
 ) -> Result<ReturnConversion> {
     let storage_name = &expect_format_cc_ident(&format!("__{ident}_storage"));
     match classify_value_abi(db, ty, /* is_constructor= */ false)? {
@@ -494,7 +494,7 @@ fn cc_return_value_from_c_abi<'tcx>(
                     tuple_tys[i],
                     prereqs,
                     storage_statements,
-                    /* recursive= */ true,
+                    TypeLocation::NestedBridgeable,
                 )?;
                 storage_names.push(element_storage_name);
                 unpack_exprs.push(element_unpack_expr);
@@ -520,14 +520,10 @@ fn cc_return_value_from_c_abi<'tcx>(
             });
             prereqs.includes.insert(CcInclude::utility()); // for `std::move`
             prereqs.includes.insert(db.support_header("internal/slot.h"));
-            // Non-C++-movable types nested in a compound return value (e.g. a `std::tuple`
-            // element) are always wrapped in `::rs::Movable`; top-level ones only under the
-            // `movable_return_values` feature.
-            let wrap_in_movable = if recursive {
-                !db.is_cpp_move_constructible(ty)
-            } else {
-                is_movable_wrapped_return_ty(db, ty)?
-            };
+            // Non-C++-movable ADTs (including `rs_std` template specializations) nested in a
+            // compound return value (e.g. a `std::tuple` element) are always wrapped in
+            // `::rs::Movable`; top-level ones only under the `movable_return_values` feature.
+            let wrap_in_movable = should_wrap_in_movable(db, ty, location);
             let unpack_expr = if wrap_in_movable {
                 prereqs.includes.insert(db.support_header("movable.h"));
                 quote! {
@@ -797,15 +793,13 @@ pub fn generate_thunk_call<'tcx>(
     };
 
     let return_body = if is_async {
-        let cc_ret_ty =
-            db.format_ty_for_cc(rs_return_type, TypeLocation::FnReturn)?.into_tokens(&mut prereqs);
+        let future_ty = format_dyn_erased_future_ty(db, rs_return_type, &mut prereqs)?;
         let local_name = expect_format_cc_ident("__return_value_ret_val_holder");
         prereqs.includes.insert(CcInclude::utility()); // for `std::move`
         prereqs.includes.insert(db.support_header("internal/slot.h"));
-        prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
         thunk_args.push(quote! { #local_name.Get() });
         quote! {
-            ::crubit::Slot<::crubit::DynErasedFuture<#cc_ret_ty>> #local_name;
+            ::crubit::Slot<#future_ty> #local_name;
             #qualifier::#thunk_name(#( #thunk_args ),*);
             return ::std::move(#local_name).AssumeInitAndTakeValue();
         }
@@ -830,7 +824,7 @@ pub fn generate_thunk_call<'tcx>(
             rs_return_type,
             &mut prereqs,
             &mut tokens,
-            /* recursive= */ false,
+            TypeLocation::FnReturn,
         )?;
         thunk_args.push(quote! { #storage_name });
         // We don't have to worry about the [[noreturn]] situation described above because all
@@ -1041,13 +1035,13 @@ pub fn generate_function<'tcx>(
 
     let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_ret_type = if is_async {
-        let cc_ret_ty = db
-            .format_ty_for_cc(actual_rs_return_type, TypeLocation::FnReturn)?
-            .into_tokens(&mut main_api_prereqs);
-        main_api_prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
-        quote! { ::crubit::DynErasedFuture<#cc_ret_ty> }
+        format_dyn_erased_future_ty(db, actual_rs_return_type, &mut main_api_prereqs)?
     } else {
-        format_ret_ty_for_cc(db, &sig_mid)?.into_tokens(&mut main_api_prereqs)
+        let output_ty = sig_mid.output();
+        db.format_ty_for_cc(output_ty, TypeLocation::FnReturn)
+            .with_context(|| format!("Error formatting function return type `{output_ty}`"))?
+            .into_tokens(&mut main_api_prereqs)
+            .clone()
     };
 
     let has_self_param = function_kind.has_self_param();

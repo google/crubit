@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 use arc_anyhow::{bail, Result};
+use crubit_feature::CrubitFeature;
+use flagset::FlagSet;
 
 /// Location where a type is used.
 #[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
@@ -66,10 +68,13 @@ pub enum TypeLocation {
     /// Other location (e.g. pointee type, etc.).
     Other,
 
-    /// The return type of a closure / callable argument.
+    /// The return type of a closure / callable argument, or the output type `T` of a
+    /// `::crubit::DynErasedFuture<T>` returned by an async function.
     ///
-    /// In this context, unit `()` and never `!` are formatted as `void`, but bridging is not
-    /// supported (types must be layout-compatible or unbridged).
+    /// In this context, unit `()` and never `!` are formatted as `void`, references and function
+    /// pointers are formatted as pointers (so `DynErasedFuture::Poll` can take `T*`), and neither
+    /// bridging nor `::rs::Movable` wrapping is applied (types must be layout-compatible or
+    /// unbridged).
     ClosureReturn,
 
     /// The type of a field of a struct or union.
@@ -97,14 +102,12 @@ impl TypeLocation {
 
     /// Returns whether a type in this location can be wrapped in `::rs::Movable`.
     ///
-    /// Top-level return values are not wrapped by `format_ty_for_cc` itself: under the
-    /// `movable_return_values` feature, `format_ret_ty_for_cc` wraps them instead, so that the
-    /// unwrapped type remains available for the thunk's out-pointer and return slot.
-    pub fn admits_movable(self) -> bool {
+    /// Top-level return values are only wrapped under the `movable_return_values` feature.
+    pub fn admits_movable(self, crate_features: FlagSet<CrubitFeature>) -> bool {
         match self {
             TypeLocation::FnParam { .. } | TypeLocation::NestedBridgeable => true,
-            TypeLocation::FnReturn
-            | TypeLocation::Const
+            TypeLocation::FnReturn => crate_features.contains(CrubitFeature::MovableReturnValues),
+            TypeLocation::Const
             | TypeLocation::TemplateArg
             | TypeLocation::OptionArg
             | TypeLocation::IteratorItem
@@ -112,29 +115,5 @@ impl TypeLocation {
             | TypeLocation::Other
             | TypeLocation::Field => false,
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_admits_movable() {
-        assert!(TypeLocation::FnParam { is_self_param: false, elided_is_output: false }
-            .admits_movable());
-        assert!(
-            TypeLocation::FnParam { is_self_param: true, elided_is_output: true }.admits_movable()
-        );
-        assert!(TypeLocation::NestedBridgeable.admits_movable());
-
-        assert!(!TypeLocation::FnReturn.admits_movable());
-        assert!(!TypeLocation::Const.admits_movable());
-        assert!(!TypeLocation::TemplateArg.admits_movable());
-        assert!(!TypeLocation::OptionArg.admits_movable());
-        assert!(!TypeLocation::IteratorItem.admits_movable());
-        assert!(!TypeLocation::ClosureReturn.admits_movable());
-        assert!(!TypeLocation::Other.admits_movable());
-        assert!(!TypeLocation::Field.admits_movable());
     }
 }

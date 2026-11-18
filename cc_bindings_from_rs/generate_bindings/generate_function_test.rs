@@ -1671,6 +1671,89 @@ fn test_format_item_fn_async_with_slice() {
 }
 
 #[test]
+fn test_format_item_fn_async_unmovable_not_wrapped_under_movable_return_values() {
+    let test_src = r#"
+            pub struct Unmovable {
+                pub x: i32,
+            }
+
+            impl Drop for Unmovable {
+                fn drop(&mut self) {}
+            }
+
+            pub async fn async_unmovable() -> Unmovable {
+                Unmovable { x: 1 }
+            }
+        "#;
+    test_format_item_with_features(
+        test_src,
+        "async_unmovable",
+        crubit_feature::CrubitFeature::Supported
+            | crubit_feature::CrubitFeature::MovableReturnValues,
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    ::crubit::DynErasedFuture<::rust_out::Unmovable> async_unmovable();
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                        extern "C" void ...(::crubit::DynErasedFuture<::rust_out::Unmovable>* __ret_ptr);
+                    }
+                    ...
+                    inline ::crubit::DynErasedFuture<::rust_out::Unmovable> async_unmovable() {
+                        ::crubit::Slot<::crubit::DynErasedFuture<::rust_out::Unmovable>> __return_value_ret_val_holder;
+                        __crubit_internal::...(__return_value_ret_val_holder.Get());
+                        return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+                    }
+                }
+            );
+        },
+    );
+}
+
+#[test]
+fn test_format_item_fn_async_returning_ref_uses_pointer() {
+    let test_src = r#"
+            pub async fn async_ref() -> &'static i32 {
+                &42
+            }
+        "#;
+    test_format_item(test_src, "async_ref", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::crubit::DynErasedFuture<::std::int32_t const* $static crubit_nonnull> async_ref();
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_async_returning_tuple_uses_layout_compatible_tuple() {
+    let test_src = r#"
+            pub async fn async_tuple() -> (i32, i32) {
+                (1, 2)
+            }
+        "#;
+    test_format_item(test_src, "async_tuple", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::crubit::DynErasedFuture<::rs::Tuple<::std::int32_t, ::std::int32_t>> async_tuple();
+            }
+        );
+    });
+}
+
+#[test]
 fn test_format_item_fn_rust_abi() {
     let test_src = r#"
             pub fn add(x: f64, y: f64) -> f64 { x * y }
@@ -2506,6 +2589,115 @@ fn test_unmovable_result_in_tuple_return() {
             }
         );
     });
+}
+
+#[test]
+fn test_imported_cpp_type_unmovable_in_tuple() {
+    let test_src = r#"
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SomeCppType")]
+            pub struct ImportedCppType {
+                pub x: i32,
+            }
+
+            impl Drop for ImportedCppType {
+                fn drop(&mut self) {}
+            }
+
+            pub fn pass_tuple(_x: (ImportedCppType,)) {}
+            pub fn return_tuple() -> (ImportedCppType,) {
+                loop {}
+            }
+        "#;
+    test_format_item(test_src, "pass_tuple", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void pass_tuple(::std::tuple<::rs::Movable<::SomeCppType>> _x);
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                inline void pass_tuple(::std::tuple<::rs::Movable<::SomeCppType>> _x) {
+                    ...
+                    ::std::move(...).MoveToSlot(...);
+                    ...
+                }
+            }
+        );
+    });
+    test_format_item(test_src, "return_tuple", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::std::tuple<::rs::Movable<::SomeCppType>> return_tuple();
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                inline ::std::tuple<::rs::Movable<::SomeCppType>> return_tuple() {
+                    crubit::Slot<::SomeCppType> __return_value_0_ret_val_holder;
+                    auto* __return_value_0_storage = __return_value_0_ret_val_holder.Get();
+                    void* __return_value_storage[] = { __return_value_0_storage };
+                    __crubit_internal::__crubit_thunk_return_utuple(__return_value_storage);
+                    return ::std::make_tuple(::rs::Movable<::SomeCppType>::TakeFromSlot(::std::move(__return_value_0_ret_val_holder)));
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_unmovable_array_in_tuple_return_not_wrapped_in_movable() {
+    let test_src = r#"
+            pub struct Unmovable {
+                pub x: i32,
+            }
+
+            impl Drop for Unmovable {
+                fn drop(&mut self) {}
+            }
+
+            pub fn return_array_tuple() -> ([Unmovable; 2],) {
+                loop {}
+            }
+        "#;
+    for features in [
+        crubit_feature::CrubitFeature::Supported.into(),
+        crubit_feature::CrubitFeature::Supported
+            | crubit_feature::CrubitFeature::MovableReturnValues,
+    ] {
+        test_format_item_with_features(
+            test_src,
+            "return_array_tuple",
+            features,
+            /* with_kythe_annotations= */ false,
+            |result| {
+                let result = result.unwrap().unwrap();
+                assert_cc_matches!(
+                    result.main_api.tokens,
+                    quote! {
+                        ::std::tuple<::std::array<::rust_out::Unmovable, 2>> return_array_tuple();
+                    }
+                );
+                assert_cc_matches!(
+                    result.cc_details.tokens,
+                    quote! {
+                        inline ::std::tuple<::std::array<::rust_out::Unmovable, 2>> return_array_tuple() {
+                            crubit::Slot<::std::array<::rust_out::Unmovable, 2>> __return_value_0_ret_val_holder;
+                            auto* __return_value_0_storage = __return_value_0_ret_val_holder.Get();
+                            void* __return_value_storage[] = { __return_value_0_storage };
+                            __crubit_internal::__crubit_thunk_return_uarray_utuple(__return_value_storage);
+                            return ::std::make_tuple(::std::move(__return_value_0_ret_val_holder).AssumeInitAndTakeValue());
+                        }
+                    }
+                );
+            },
+        );
+    }
 }
 
 #[test]

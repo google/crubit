@@ -1414,6 +1414,31 @@ fn test_format_ty_for_cc_iterator_item_references() {
 }
 
 #[test]
+fn test_admits_movable() {
+    let default_features = crubit_feature::CrubitFeature::Supported.into();
+    let movable_ret_features = crubit_feature::CrubitFeature::Supported
+        | crubit_feature::CrubitFeature::MovableReturnValues;
+
+    for features in [default_features, movable_ret_features] {
+        assert!(TypeLocation::FnParam { is_self_param: false, elided_is_output: false }
+            .admits_movable(features));
+        assert!(TypeLocation::FnParam { is_self_param: true, elided_is_output: true }
+            .admits_movable(features));
+        assert!(TypeLocation::NestedBridgeable.admits_movable(features));
+        assert!(!TypeLocation::Const.admits_movable(features));
+        assert!(!TypeLocation::TemplateArg.admits_movable(features));
+        assert!(!TypeLocation::OptionArg.admits_movable(features));
+        assert!(!TypeLocation::IteratorItem.admits_movable(features));
+        assert!(!TypeLocation::ClosureReturn.admits_movable(features));
+        assert!(!TypeLocation::Other.admits_movable(features));
+        assert!(!TypeLocation::Field.admits_movable(features));
+    }
+
+    assert!(!TypeLocation::FnReturn.admits_movable(default_features));
+    assert!(TypeLocation::FnReturn.admits_movable(movable_ret_features));
+}
+
+#[test]
 fn test_format_ty_for_rs_cpp_specialization_alias() {
     let preamble = quote! {
         pub mod internal {
@@ -1705,11 +1730,12 @@ fn test_format_ty_for_cc_rejects_non_bitwise_relocatable_by_value() {
         } else {
             ":: rust_out :: StructWithDynamic const & $ static"
         };
-        let expected_box = if location.admits_movable() {
-            ":: rs :: Movable < :: rs :: Box < :: rust_out :: StructWithDynamic > >"
-        } else {
-            ":: rs :: Box < :: rust_out :: StructWithDynamic >"
-        };
+        let expected_box =
+            if location.admits_movable(crubit_feature::CrubitFeature::Supported.into()) {
+                ":: rs :: Movable < :: rs :: Box < :: rust_out :: StructWithDynamic > >"
+            } else {
+                ":: rs :: Box < :: rust_out :: StructWithDynamic >"
+            };
         test_ty(
             location,
             &[

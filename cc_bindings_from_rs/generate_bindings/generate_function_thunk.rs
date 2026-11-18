@@ -232,11 +232,8 @@ pub fn generate_thunk_decl<'tcx>(
                     sig_mid.output()
                 )
             })?;
-        let cc_ret_ty = db
-            .format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn)?
-            .into_tokens(&mut prereqs);
-        prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
-        thunk_params.push(quote! { ::crubit::DynErasedFuture<#cc_ret_ty>* __ret_ptr });
+        let future_ty = format_dyn_erased_future_ty(db, actual_output_ty, &mut prereqs)?;
+        thunk_params.push(quote! { #future_ty* __ret_ptr });
         db.tokens().void.clone()
     } else {
         let ret_ty = sig_mid.output();
@@ -1200,6 +1197,18 @@ pub fn fn_arg_idents(tcx: TyCtxt, def_id: DefId) -> Vec<Option<rustc_span::Ident
         }
         _ => tcx.fn_arg_idents(def_id).iter().cloned().collect_vec(),
     }
+}
+
+/// Formats `::crubit::DynErasedFuture<T>` for an async function whose future yields `output_ty`.
+pub fn format_dyn_erased_future_ty<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    output_ty: Ty<'tcx>,
+    prereqs: &mut CcPrerequisites<'tcx>,
+) -> Result<TokenStream> {
+    let cc_ret_ty =
+        db.format_ty_for_cc(output_ty, TypeLocation::ClosureReturn)?.into_tokens(prereqs);
+    prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
+    Ok(quote! { ::crubit::DynErasedFuture<#cc_ret_ty> })
 }
 
 /// Returns `T` if Crubit binds `ty` as `crubit::DynErasedFuture<T>` in C++, i.e. if `ty` is

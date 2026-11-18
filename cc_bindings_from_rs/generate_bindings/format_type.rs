@@ -835,7 +835,7 @@ fn format_box_for_cc<'tcx>(
         BoxKind::StrBox => quote! { ::rs::StrBox },
     };
 
-    let mut snippet = match kind {
+    let snippet = match kind {
         BoxKind::StrBox => {
             check_slice_layout(tcx, ty);
             CcSnippet { tokens: template_name, prereqs }
@@ -867,11 +867,34 @@ fn format_box_for_cc<'tcx>(
         }
     };
 
-    if !db.is_cpp_move_constructible(ty) && location.admits_movable() {
-        snippet.prereqs.includes.insert(db.support_header("movable.h"));
-        snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
+    Ok(maybe_wrap_in_movable(db, ty, location, FormattedCcType::non_pointer(snippet)))
+}
+
+/// Returns whether an unbridged value of type `ty` at `location` should be wrapped in
+/// `::rs::Movable`.
+pub fn should_wrap_in_movable<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+    location: TypeLocation,
+) -> bool {
+    matches!(ty.kind(), ty::TyKind::Adt(..))
+        && !db.is_cpp_move_constructible(ty)
+        && location.admits_movable(db.crate_features(db.source_crate_num()))
+}
+
+fn maybe_wrap_in_movable<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+    location: TypeLocation,
+    formatted: FormattedCcType<'tcx>,
+) -> FormattedCcType<'tcx> {
+    if !should_wrap_in_movable(db, ty, location) {
+        return formatted;
     }
-    Ok(FormattedCcType::non_pointer(snippet))
+    let mut snippet = formatted.snippet;
+    snippet.prereqs.includes.insert(db.support_header("movable.h"));
+    snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
+    FormattedCcType::non_pointer(snippet)
 }
 
 /// Formats `ty` as a C++ type.
@@ -1171,7 +1194,6 @@ fn format_ty_for_cc_impl<'tcx>(
                 return format_ref_for_cc(db, ty, region, referent, mutability, location);
             }
 
-
             if db.tcx().is_lang_item(adt.did(), LangItem::OwnedBox) {
                 let inner_ty = substs.type_at(0);
                 if let ty::TyKind::Slice(element_ty) = inner_ty.kind() {
@@ -1240,11 +1262,12 @@ fn format_ty_for_cc_impl<'tcx>(
                 ensure_cpp_relocatable_if_by_value(db, ty, location)?;
                 let mut snippet = adt_spec.self_ty_cc.clone();
                 snippet.prereqs.depend_on_spec(db, location, adt_spec);
-                if !db.is_cpp_move_constructible(ty) && location.admits_movable() {
-                    snippet.prereqs.includes.insert(db.support_header("movable.h"));
-                    snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
-                }
-                return Ok(FormattedCcType::non_pointer(snippet));
+                return Ok(maybe_wrap_in_movable(
+                    db,
+                    ty,
+                    location,
+                    FormattedCcType::non_pointer(snippet),
+                ));
             } else if let Some((cpp_type, include_paths)) =
                 cpp_layout_equivalent_type(db, ty)?
             {
@@ -1300,17 +1323,12 @@ fn format_ty_for_cc_impl<'tcx>(
                 }
 
                 ensure_cpp_relocatable_if_by_value(db, ty, location)?;
-                if !db.is_cpp_move_constructible(ty)
-                    && matches!(location, TypeLocation::FnParam { .. })
-                {
-                    prereqs.includes.insert(db.support_header("movable.h"));
-                    tokens = quote! { ::rs::Movable< #tokens > };
-                    is_pointer = false;
-                }
-                return Ok(FormattedCcType {
-                    snippet: CcSnippet { tokens, prereqs },
-                    is_pointer,
-                });
+                return Ok(maybe_wrap_in_movable(
+                    db,
+                    ty,
+                    location,
+                    FormattedCcType { snippet: CcSnippet { tokens, prereqs }, is_pointer },
+                ));
             } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
                 match bridged_type {
                     BridgedType::ExternCFuncConverters { include_paths, cpp_type, .. } => {
@@ -1374,17 +1392,16 @@ fn format_ty_for_cc_impl<'tcx>(
 
             let canonical_name = db.symbol_canonical_name(def_id)?;
 
-            let mut tokens = canonical_name.format_for_cc(db)?;
+            let tokens = canonical_name.format_for_cc(db)?;
 
             ensure_cpp_relocatable_if_by_value(db, ty, location)?;
 
-            // Wrap in ::rs::Movable if the type is not C++ movable.
-            if !db.is_cpp_move_constructible(ty) && location.admits_movable() {
-                prereqs.includes.insert(db.support_header("movable.h"));
-                tokens = quote! { ::rs::Movable< #tokens > };
-            }
-
-            FormattedCcType::non_pointer(CcSnippet { tokens, prereqs })
+            maybe_wrap_in_movable(
+                db,
+                ty,
+                location,
+                FormattedCcType::non_pointer(CcSnippet { tokens, prereqs }),
+            )
         }
 
         ty::TyKind::RawPtr(pointee_ty, mutbl) => {
@@ -1487,7 +1504,11 @@ fn format_ty_for_cc_impl<'tcx>(
                 }
             };
 
-            let ret_type = format_ret_ty_for_cc(db, &sig)?.into_tokens(&mut prereqs);
+            let output_ty = sig.output();
+            let ret_type = db
+                .format_ty_for_cc(output_ty, TypeLocation::FnReturn)
+                .with_context(|| format!("Error formatting function return type `{output_ty}`"))?
+                .into_tokens(&mut prereqs);
             let param_types =
                 format_param_types_for_cc_api(db, &sig, /*has_self_param=*/ false)?
                     .into_iter()
@@ -1686,45 +1707,6 @@ pub fn is_option_arg_formatted_as_cc_ref<'tcx>(db: &BindingsGenerator<'tcx>, ty:
     db.crate_features(db.source_crate_num()).contains(CrubitFeature::OptionReferences)
         && referent.is_sized(tcx, ty::TypingEnv::fully_monomorphized())
         && !referent.is_c_void(tcx)
-}
-
-/// Returns whether a value of type `ty` returned by value (at the top level) is wrapped in
-/// `::rs::Movable`.
-///
-/// Under the `movable_return_values` feature, a non-C++-movable type is returned as
-/// `::rs::Movable<T>` (mirroring how by-value parameters are passed), instead of as a bare `T`
-/// which can only be received through guaranteed copy elision. The types wrapped here are the same
-/// types that `format_ty_for_cc` wraps in a `TypeLocation::FnParam` location: ADTs (including
-/// `rs_std` template specializations) and layout-compatible legacy bridged types.
-pub fn is_movable_wrapped_return_ty<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    ty: Ty<'tcx>,
-) -> Result<bool> {
-    if !db.crate_features(db.source_crate_num()).contains(CrubitFeature::MovableReturnValues) {
-        return Ok(false);
-    }
-    if !matches!(ty.kind(), ty::TyKind::Adt(..)) || db.is_cpp_move_constructible(ty) {
-        return Ok(false);
-    }
-    Ok(is_bridged_type(db, ty)?.is_none())
-}
-
-/// Returns the C++ return type.
-pub fn format_ret_ty_for_cc<'db, 'tcx>(
-    db: &'db BindingsGenerator<'tcx>,
-    sig_mid: &ty::FnSig<'tcx>,
-) -> Result<Cow<'db, CcSnippet<'tcx>>> {
-    let output_ty = sig_mid.output();
-    let snippet = db
-        .format_ty_for_cc(output_ty, TypeLocation::FnReturn)
-        .with_context(|| format!("Error formatting function return type `{output_ty}`"))?;
-    if is_movable_wrapped_return_ty(db, output_ty)? {
-        let mut snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
-        snippet.prereqs.includes.insert(db.support_header("movable.h"));
-        Ok(Cow::Owned(snippet))
-    } else {
-        Ok(Cow::Borrowed(snippet))
-    }
 }
 
 pub fn has_elided_region<'tcx>(tcx: TyCtxt<'tcx>, search_ty: ty::Ty<'tcx>) -> bool {
