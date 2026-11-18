@@ -34,6 +34,7 @@ namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI ConstantArrayType; }
 namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI Variant; }
 struct CRUBIT_FFI_TRIVIAL_ABI CcType;
 struct CRUBIT_FFI_TRIVIAL_ABI IntegerConstant;
+struct CRUBIT_FFI_TRIVIAL_ABI FloatConstant;
 struct CRUBIT_FFI_TRIVIAL_ABI Operator;
 struct CRUBIT_FFI_TRIVIAL_ABI UnqualifiedIdentifier;
 struct CRUBIT_FFI_TRIVIAL_ABI FuncParam;
@@ -54,6 +55,7 @@ namespace bridge_type { struct CRUBIT_FFI_TRIVIAL_ABI ProtoMessageBridge; }
 namespace bridge_type { struct CRUBIT_FFI_TRIVIAL_ABI Callable; }
 struct CRUBIT_FFI_TRIVIAL_ABI BridgeType;
 namespace array_value { struct CRUBIT_FFI_TRIVIAL_ABI IntegerElements; }
+namespace array_value { struct CRUBIT_FFI_TRIVIAL_ABI FloatElements; }
 namespace array_value { struct CRUBIT_FFI_TRIVIAL_ABI ArrayElements; }
 namespace array_value { struct CRUBIT_FFI_TRIVIAL_ABI Kind; }
 struct CRUBIT_FFI_TRIVIAL_ABI ArrayValue;
@@ -560,6 +562,15 @@ struct CRUBIT_FFI_TRIVIAL_ABI IntegerConstant {
   friend bool operator==(const IntegerConstant&, const IntegerConstant&) = default;
   bool is_negative_{};
   uint64_t wrapped_value_{};
+};
+
+struct CRUBIT_FFI_TRIVIAL_ABI FloatConstant {
+  FloatConstant() = default;
+  explicit FloatConstant(uint64_t bits) { set_bits(bits); }
+  uint64_t bits() const { return bits_; }
+  void set_bits(uint64_t value) { bits_ = value; }
+  friend bool operator==(const FloatConstant&, const FloatConstant&) = default;
+  uint64_t bits_{};
 };
 
 struct CRUBIT_FFI_TRIVIAL_ABI Operator {
@@ -1522,6 +1533,23 @@ struct CRUBIT_FFI_TRIVIAL_ABI IntegerElements {
 }  // namespace array_value
 
 namespace array_value {
+struct CRUBIT_FFI_TRIVIAL_ABI FloatElements {
+  const FfiVec<::crubit::ffi::FloatConstant>& elements() const { return elements_; }
+  FfiVec<::crubit::ffi::FloatConstant>* mutable_elements() { return &elements_; }
+  void clear_elements() { elements_.clear(); }
+  ::crubit::ffi::FloatConstant* add_elements() { return &elements_.emplace_back(); }
+  bool has_filler() const { return (has_bits_ & 0x1ULL) != 0; }
+  void clear_filler() { has_bits_ &= ~0x1ULL; filler_ = {}; }
+  const ::crubit::ffi::FloatConstant& filler() const { return filler_; }
+  ::crubit::ffi::FloatConstant* mutable_filler() { has_bits_ |= 0x1ULL; return &filler_; }
+  friend bool operator==(const FloatElements&, const FloatElements&) = default;
+  uint64_t has_bits_ = 0;
+  FfiVec<::crubit::ffi::FloatConstant> elements_{};
+  ::crubit::ffi::FloatConstant filler_{};
+};
+}  // namespace array_value
+
+namespace array_value {
 struct CRUBIT_FFI_TRIVIAL_ABI ArrayElements {
   ArrayElements();
   ArrayElements(const ArrayElements&);
@@ -1548,8 +1576,9 @@ namespace array_value {
 struct CRUBIT_FFI_TRIVIAL_ABI Kind {
   enum Case : uint32_t {
     kIntegers = 0,
-    kArrays = 1,
-    kStringLiteral = 2,
+    kFloats = 1,
+    kArrays = 2,
+    kStringLiteral = 3,
   };
   Kind() : tag_(kIntegers), payload_() {}
   Kind(const Kind& other) : tag_(kIntegers), payload_() { CopyFrom(other); }
@@ -1565,6 +1594,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
   ~Kind() { Destroy(); }
   // NOLINTNEXTLINE(google-explicit-constructor)
   Kind(::crubit::ffi::array_value::IntegerElements value) : tag_(kIntegers), payload_(kIntegers) { new (&payload_.integer_elements_) ::crubit::ffi::array_value::IntegerElements(std::move(value)); }
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  Kind(::crubit::ffi::array_value::FloatElements value) : tag_(kFloats), payload_(kFloats) { new (&payload_.float_elements_) ::crubit::ffi::array_value::FloatElements(std::move(value)); }
   // NOLINTNEXTLINE(google-explicit-constructor)
   Kind(::crubit::ffi::array_value::ArrayElements value) : tag_(kArrays), payload_(kArrays) { new (&payload_.array_elements_) ::crubit::ffi::array_value::ArrayElements(std::move(value)); }
   void Clear() {
@@ -1582,6 +1613,16 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
       new (&payload_.integer_elements_) ::crubit::ffi::array_value::IntegerElements();
     }
     return &payload_.integer_elements_;
+  }
+  bool has_float_elements() const { return tag_ == kFloats; }
+  const ::crubit::ffi::array_value::FloatElements& float_elements() const { return has_float_elements() ? payload_.float_elements_ : DefaultValue<::crubit::ffi::array_value::FloatElements>(); }
+  ::crubit::ffi::array_value::FloatElements* mutable_float_elements() {
+    if (!has_float_elements()) {
+      Destroy();
+      tag_ = kFloats;
+      new (&payload_.float_elements_) ::crubit::ffi::array_value::FloatElements();
+    }
+    return &payload_.float_elements_;
   }
   bool has_array_elements() const { return tag_ == kArrays; }
   const ::crubit::ffi::array_value::ArrayElements& array_elements() const { return has_array_elements() ? payload_.array_elements_ : DefaultValue<::crubit::ffi::array_value::ArrayElements>(); }
@@ -1605,6 +1646,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
     if (lhs.tag_ != rhs.tag_) return false;
     switch (lhs.tag_) {
       case kIntegers: return lhs.payload_.integer_elements_ == rhs.payload_.integer_elements_;
+      case kFloats: return lhs.payload_.float_elements_ == rhs.payload_.float_elements_;
       case kArrays: return lhs.payload_.array_elements_ == rhs.payload_.array_elements_;
       case kStringLiteral: return lhs.payload_.string_literal_ == rhs.payload_.string_literal_;
       default: CRUBIT_CHECK(false);
@@ -1615,6 +1657,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
   void Destroy() {
     switch (tag_) {
       case kIntegers: std::destroy_at(&payload_.integer_elements_); break;
+      case kFloats: std::destroy_at(&payload_.float_elements_); break;
       case kArrays: std::destroy_at(&payload_.array_elements_); break;
       case kStringLiteral: std::destroy_at(&payload_.string_literal_); break;
       default: CRUBIT_CHECK(false);
@@ -1625,6 +1668,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
     tag_ = other.tag_;
     switch (tag_) {
       case kIntegers: new (&payload_.integer_elements_) ::crubit::ffi::array_value::IntegerElements(other.payload_.integer_elements_); break;
+      case kFloats: new (&payload_.float_elements_) ::crubit::ffi::array_value::FloatElements(other.payload_.float_elements_); break;
       case kArrays: new (&payload_.array_elements_) ::crubit::ffi::array_value::ArrayElements(other.payload_.array_elements_); break;
       case kStringLiteral: new (&payload_.string_literal_) FfiVec<uint8_t>(other.payload_.string_literal_); break;
       default: CRUBIT_CHECK(false);
@@ -1635,6 +1679,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
     tag_ = other.tag_;
     switch (tag_) {
       case kIntegers: new (&payload_.integer_elements_) ::crubit::ffi::array_value::IntegerElements(std::move(other.payload_.integer_elements_)); break;
+      case kFloats: new (&payload_.float_elements_) ::crubit::ffi::array_value::FloatElements(std::move(other.payload_.float_elements_)); break;
       case kArrays: new (&payload_.array_elements_) ::crubit::ffi::array_value::ArrayElements(std::move(other.payload_.array_elements_)); break;
       case kStringLiteral: new (&payload_.string_literal_) FfiVec<uint8_t>(std::move(other.payload_.string_literal_)); break;
       default: CRUBIT_CHECK(false);
@@ -1650,6 +1695,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
     ~Payload() {}
     char empty_;
     ::crubit::ffi::array_value::IntegerElements integer_elements_;
+    ::crubit::ffi::array_value::FloatElements float_elements_;
     ::crubit::ffi::array_value::ArrayElements array_elements_;
     FfiVec<uint8_t> string_literal_;
   } payload_;
@@ -1658,6 +1704,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
 
 struct CRUBIT_FFI_TRIVIAL_ABI ArrayValue {
   using IntegerElements = ::crubit::ffi::array_value::IntegerElements;
+  using FloatElements = ::crubit::ffi::array_value::FloatElements;
   using ArrayElements = ::crubit::ffi::array_value::ArrayElements;
   using Kind = ::crubit::ffi::array_value::Kind;
   ArrayValue() = default;
@@ -1675,8 +1722,9 @@ namespace constant {
 struct CRUBIT_FFI_TRIVIAL_ABI Kind {
   enum Case : uint32_t {
     kInteger = 0,
-    kArray = 1,
-    kStringView = 2,
+    kFloat = 1,
+    kArray = 2,
+    kStringView = 3,
   };
   Kind() : tag_(kInteger), payload_() {}
   Kind(const Kind& other) : tag_(kInteger), payload_() { CopyFrom(other); }
@@ -1692,6 +1740,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
   ~Kind() { Destroy(); }
   // NOLINTNEXTLINE(google-explicit-constructor)
   Kind(::crubit::ffi::IntegerConstant value) : tag_(kInteger), payload_(kInteger) { new (&payload_.value_) ::crubit::ffi::IntegerConstant(std::move(value)); }
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  Kind(::crubit::ffi::FloatConstant value) : tag_(kFloat), payload_(kFloat) { new (&payload_.float_value_) ::crubit::ffi::FloatConstant(std::move(value)); }
   // NOLINTNEXTLINE(google-explicit-constructor)
   Kind(::crubit::ffi::ArrayValue value) : tag_(kArray), payload_(kArray) { new (&payload_.array_value_) ::crubit::ffi::ArrayValue(std::move(value)); }
   void Clear() {
@@ -1709,6 +1759,16 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
       new (&payload_.value_) ::crubit::ffi::IntegerConstant();
     }
     return &payload_.value_;
+  }
+  bool has_float_value() const { return tag_ == kFloat; }
+  const ::crubit::ffi::FloatConstant& float_value() const { return has_float_value() ? payload_.float_value_ : DefaultValue<::crubit::ffi::FloatConstant>(); }
+  ::crubit::ffi::FloatConstant* mutable_float_value() {
+    if (!has_float_value()) {
+      Destroy();
+      tag_ = kFloat;
+      new (&payload_.float_value_) ::crubit::ffi::FloatConstant();
+    }
+    return &payload_.float_value_;
   }
   bool has_array_value() const { return tag_ == kArray; }
   const ::crubit::ffi::ArrayValue& array_value() const { return has_array_value() ? payload_.array_value_ : DefaultValue<::crubit::ffi::ArrayValue>(); }
@@ -1732,6 +1792,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
     if (lhs.tag_ != rhs.tag_) return false;
     switch (lhs.tag_) {
       case kInteger: return lhs.payload_.value_ == rhs.payload_.value_;
+      case kFloat: return lhs.payload_.float_value_ == rhs.payload_.float_value_;
       case kArray: return lhs.payload_.array_value_ == rhs.payload_.array_value_;
       case kStringView: return lhs.payload_.string_view_value_ == rhs.payload_.string_view_value_;
       default: CRUBIT_CHECK(false);
@@ -1742,6 +1803,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
   void Destroy() {
     switch (tag_) {
       case kInteger: std::destroy_at(&payload_.value_); break;
+      case kFloat: std::destroy_at(&payload_.float_value_); break;
       case kArray: std::destroy_at(&payload_.array_value_); break;
       case kStringView: std::destroy_at(&payload_.string_view_value_); break;
       default: CRUBIT_CHECK(false);
@@ -1752,6 +1814,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
     tag_ = other.tag_;
     switch (tag_) {
       case kInteger: new (&payload_.value_) ::crubit::ffi::IntegerConstant(other.payload_.value_); break;
+      case kFloat: new (&payload_.float_value_) ::crubit::ffi::FloatConstant(other.payload_.float_value_); break;
       case kArray: new (&payload_.array_value_) ::crubit::ffi::ArrayValue(other.payload_.array_value_); break;
       case kStringView: new (&payload_.string_view_value_) FfiVec<uint8_t>(other.payload_.string_view_value_); break;
       default: CRUBIT_CHECK(false);
@@ -1762,6 +1825,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
     tag_ = other.tag_;
     switch (tag_) {
       case kInteger: new (&payload_.value_) ::crubit::ffi::IntegerConstant(std::move(other.payload_.value_)); break;
+      case kFloat: new (&payload_.float_value_) ::crubit::ffi::FloatConstant(std::move(other.payload_.float_value_)); break;
       case kArray: new (&payload_.array_value_) ::crubit::ffi::ArrayValue(std::move(other.payload_.array_value_)); break;
       case kStringView: new (&payload_.string_view_value_) FfiVec<uint8_t>(std::move(other.payload_.string_view_value_)); break;
       default: CRUBIT_CHECK(false);
@@ -1777,6 +1841,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
     ~Payload() {}
     char empty_;
     ::crubit::ffi::IntegerConstant value_;
+    ::crubit::ffi::FloatConstant float_value_;
     ::crubit::ffi::ArrayValue array_value_;
     FfiVec<uint8_t> string_view_value_;
   } payload_;
@@ -3457,6 +3522,15 @@ static_assert(
   sizeof(size_t) != 8 ||
   offsetof(IntegerConstant, wrapped_value_) ==
     8);
+static_assert(std::is_standard_layout_v<FloatConstant>);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(FloatConstant) == 8 &&
+    alignof(FloatConstant) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(FloatConstant, bits_) ==
+    0);
 static_assert(std::is_standard_layout_v<Operator>);
 static_assert(
   sizeof(size_t) != 8 ||
@@ -3860,6 +3934,19 @@ static_assert(
 static_assert(
   sizeof(size_t) != 8 ||
   offsetof(array_value::IntegerElements, filler_) ==
+    32);
+static_assert(std::is_standard_layout_v<array_value::FloatElements>);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(array_value::FloatElements) == 40 &&
+    alignof(array_value::FloatElements) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(array_value::FloatElements, elements_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(array_value::FloatElements, filler_) ==
     32);
 inline array_value::ArrayElements::ArrayElements() = default;
 inline array_value::ArrayElements::ArrayElements(const ArrayElements&) = default;

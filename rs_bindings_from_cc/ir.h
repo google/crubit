@@ -30,6 +30,7 @@
 #include "rs_bindings_from_cc/ir_generated.h"  // IWYU pragma: export
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/RawCommentList.h"
+#include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMapInfo.h"
@@ -113,6 +114,7 @@ using ffi::Enum;
 using ffi::Enumerator;
 using ffi::ExistingRustType;
 using ffi::Field;
+using ffi::FloatConstant;
 using ffi::FormattedError;
 using ffi::Func;
 using ffi::FuncParam;
@@ -160,6 +162,9 @@ CcType RValueReferenceTo(CcType pointee_type,
 
 llvm::Expected<IntegerConstant> IntegerConstantFromAPValue(
     const llvm::APSInt& value);
+
+llvm::Expected<FloatConstant> FloatConstantFromAPValue(
+    const llvm::APFloat& value);
 
 struct TranslatedUnqualifiedIdentifier {
   UnqualifiedIdentifier cc_identifier;

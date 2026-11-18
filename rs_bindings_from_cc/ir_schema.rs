@@ -196,6 +196,9 @@ pub(crate) fn schema() -> Schema {
             is_negative: Bool,
             wrapped_value: U64,
         }
+        struct FloatConstant {
+            bits: U64,
+        }
         struct Operator {
             name: Str,
         }
@@ -360,6 +363,12 @@ pub(crate) fn schema() -> Schema {
             filler: IntegerConstant,
         }
         #[scope("ArrayValue")]
+        struct FloatElements {
+            elements: Vec(FloatConstant),
+            #[optional]
+            filler: FloatConstant,
+        }
+        #[scope("ArrayValue")]
         struct ArrayElements {
             elements: Vec(ArrayValue),
             #[optional]
@@ -368,6 +377,7 @@ pub(crate) fn schema() -> Schema {
         #[scope("ArrayValue")]
         enum Kind {
             Integers(integer_elements: array_value::IntegerElements),
+            Floats(float_elements: array_value::FloatElements),
             Arrays(array_elements: array_value::ArrayElements),
             StringLiteral(Bytes),
         }
@@ -378,6 +388,7 @@ pub(crate) fn schema() -> Schema {
         #[scope("Constant")]
         enum Kind {
             Integer(value: IntegerConstant),
+            Float(float_value: FloatConstant),
             Array(array_value: ArrayValue),
             StringView(string_view_value: Bytes),
         }
