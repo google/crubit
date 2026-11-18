@@ -13,7 +13,7 @@ A Rust type can be made movable in C++ in one of three ways:
     [destructor](https://doc.rust-lang.org/reference/destructors.html). (It does
     not implement `Drop`, and nor do any of its fields.)
 3.  [**Non-trivially move-constructible**](#nontrivial): the Rust type has a
-    destructor, but implements `Default`.
+    destructor, but implements `Default` and is `Unpin`.
 
 The easiest way to ensure your type is useful to end users, even if it is
 changed in the future, is to implement `Clone` and `Default`. This makes the
@@ -27,7 +27,14 @@ If the Rust type implements `Clone`, then the C++ type will be copyable:
 *   Copy construction has the same behavior as `Clone::clone`.
 *   Copy assignment has the same behavior as `Clone::clone_from`.
 
-Because the type is copyable, it is also movable, at worst by a copy operation.
+A copyable type is also movable: when Crubit cannot generate a dedicated move
+operation, C++ move construction and assignment fall back to the copy
+operations, leaving the moved-from object unchanged.
+
+NOTE: This fallback only applies to types that have a destructor but do not
+implement `Default`. Types without a destructor are [trivially
+movable](#trivial), and types with `Default` are [moved by
+swapping](#nontrivial).
 
 ## Trivially move-constructible and destructible {#trivial}
 
@@ -50,8 +57,8 @@ behavior of performing any other operation is undefined.
 ## Non-trivially move-constructible {#nontrivial}
 
 If the Rust type is not trivially movable and destructible, but implements
-`Default`, then the resulting C++ type will be (non-trivially) move
-constructible:
+`Default` and is `Unpin`, then the resulting C++ type will be (non-trivially)
+move constructible:
 
 *   Move construction has the same behavior as
     [`std::mem::take()`](https://doc.rust-lang.org/std/mem/fn.take.html): it
