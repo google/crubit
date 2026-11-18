@@ -293,15 +293,6 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-# No longer has any effect: `Send` and `Sync` are always inferred from the fields of C++ records.
-# Kept until it's deleted along with the `infer_send_sync` feature.
-crubit_feature_hint(
-    name = "infer_send_sync",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = SUPPORTED_FEATURES + ["infer_send_sync"],
-    visibility = ["//visibility:public"],
-)
-
 # A feature set enabling C++ references (`T const&` / `T&`) instead of pointers (`T const*` / `T*`)
 # for `Iterator::Item` and `IntoIterator::Item` associated types. This flag only impacts
 # cpp_api_from_rust users.

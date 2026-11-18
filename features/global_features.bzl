@@ -18,7 +18,6 @@ SUPPORTED_FEATURES = [
     "reserve_standard_macros",
     "constant_arrays",
     "enum_api_v2",
-    "infer_send_sync",
     "param_name_insensitive_operator_lookup",
     "strong_ordering_traits",
 ]

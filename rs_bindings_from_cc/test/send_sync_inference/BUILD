@@ -11,9 +11,6 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "send_sync_inference",
     hdrs = ["send_sync_inference.h"],
-    aspect_hints = [
-        "//features:infer_send_sync",
-    ],
     deps = [
         "//support:annotations",
     ],
