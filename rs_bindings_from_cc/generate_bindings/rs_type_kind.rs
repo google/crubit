@@ -162,6 +162,7 @@ fn rs_type_kind_with_lifetime_elision_impl(
                         "{}",
                         cpp_type_name::cpp_tagless_type_name_for_record(original_type, db)?
                     ),
+                    cc_name: db.debug_name(original_type.id()),
                     error: anyhow!("Bridging types are not supported as pointee/referent types."),
                     visibility_override,
                 };
@@ -343,6 +344,7 @@ fn rs_type_kind_with_lifetime_elision_impl(
                 if let Ok(symbol) = cpp_type_name::tagless_cpp_type_name_for_item(item, db) {
                     return Ok(RsTypeKind::Error {
                         symbol: intern!(db.interner(), "{symbol}"),
+                        cc_name: db.debug_name(item.id()),
                         error,
                         visibility_override: None,
                     });

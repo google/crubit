@@ -5,7 +5,7 @@
 use arc_anyhow::{anyhow, Result};
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{interpolate_spelled_rust_type, Mutability, RsTypeKind};
-use googletest::matchers::{contains_substring, not};
+use googletest::matchers::{contains_substring, eq, not};
 use googletest::{expect_eq, expect_that, gtest};
 use ir::IR;
 use ir_matchers::assert_ir_matches;
@@ -1730,6 +1730,43 @@ fn test_existing_rust_type_with_incomplete_template_arg_fails() -> Result<()> {
             expect_that!(
                 error.to_string(),
                 contains_substring("Type `Container<ForwardDeclared>` uses forward-declared type `crate::ForwardDeclared` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.")
+            );
+        }
+        other => panic!("Expected RsTypeKind::Error, got {other:?}"),
+    }
+    Ok(())
+}
+
+#[gtest]
+fn test_std_vector_with_incomplete_type_without_forward_declarations() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+            template <typename T> class allocator {};
+            template <typename T, typename Alloc = std::allocator<T>>
+            class vector {};
+        }
+        struct Incomplete;
+        void TestVector(std::vector<Incomplete> v);
+        "#,
+    )?;
+    let mut ir = make_test_ir(&proto)?;
+    *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+        crubit_feature::CrubitFeature::Types.into();
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let func = retrieve_func(db.ir(), "TestVector");
+    let rs_type = db.rs_type_kind(func.params()[0].type_().clone())?;
+    match rs_type {
+        RsTypeKind::Error { error, cc_name, .. } => {
+            expect_that!(
+                error.to_string(),
+                contains_substring("Type `std::vector<struct Incomplete, class std::allocator<struct Incomplete>>` has an unsupported template argument `Incomplete`:
+  incomplete type")
+            );
+            expect_that!(
+                &*cc_name,
+                eq("std::vector<struct Incomplete, class std::allocator<struct Incomplete>>")
             );
         }
         other => panic!("Expected RsTypeKind::Error, got {other:?}"),
