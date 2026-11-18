@@ -481,6 +481,16 @@ pub(crate) fn schema() -> Schema {
         }
         struct Record {
             rs_name: Identifier,
+            // The C++ name of the record.
+            //
+            // For unaliased class template specializations (and template specializations renamed
+            // via target-local type aliases in `NameTemplateInstantiationsAfterTypeAliases`), this
+            // stores the fully qualified canonical name including template arguments (for example,
+            // `absl::Span<const int>`), and `cc_namespace_qualifier` returns empty.
+            //
+            // For non-template records and `[[clang::preferred_name]]` canonical template aliases
+            // (`is_canonical_alias`), this stores only the unqualified identifier (for example,
+            // `string_view`), and the enclosing namespace or record must be obtained separately.
             cc_name: Identifier,
             unique_name: Str,
             mangled_cc_name: Str,
@@ -546,6 +556,7 @@ pub(crate) fn schema() -> Schema {
             children: Vec(Item),
         }
         struct IncompleteRecord {
+            // See `Record::cc_name` for qualification semantics.
             cc_name: Identifier,
             rs_name: Identifier,
             unique_name: Str,
