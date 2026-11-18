@@ -86,10 +86,6 @@ impl DiscriminantTy {
         }
     }
 
-    fn size(self) -> rustc_abi::Size {
-        self.integer.size()
-    }
-
     fn cc_type(self) -> TokenStream {
         match (self.integer, self.signed) {
             (Integer::I8, true) => quote! { ::std::int8_t },
@@ -106,17 +102,34 @@ impl DiscriminantTy {
 
     /// Formats `value` as a C++ literal of this type, truncating it to this type's width.
     fn literal_from_uint(self, tcx: TyCtxt, value: u128) -> Result<TokenStream> {
-        let (scalar, _truncated) = ty::ScalarInt::truncate_from_uint(value, self.size());
-        self.literal(tcx, scalar)
+        int_literal_of_ty(tcx, value, self.integer.to_ty(tcx, self.signed))
     }
 
     /// Formats `value` as a C++ literal of this type.
     fn literal(self, tcx: TyCtxt, value: ty::ScalarInt) -> Result<TokenStream> {
         let ty = self.integer.to_ty(tcx, self.signed);
-        scalar_value_to_string(tcx, Scalar::Int(value), *ty.kind())?
-            .parse::<TokenStream>()
+        scalar_value_to_tokens(tcx, Scalar::Int(value), *ty.kind())
             .map_err(|err| anyhow!("Invalid discriminant literal: {err}"))
     }
+}
+
+/// Formats `val`, truncated to integer type `ty`, as a C++ literal token stream.
+pub fn int_literal_of_ty<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    val: u128,
+    ty: ty::Ty<'tcx>,
+) -> Result<TokenStream> {
+    let (size, _) = ty.int_size_and_signed(tcx);
+    let (scalar_int, _) = ty::ScalarInt::truncate_from_uint(val, size);
+    scalar_value_to_tokens(tcx, Scalar::Int(scalar_int), *ty.kind())
+        .map_err(|err| anyhow!("Invalid discriminant literal: {err}"))
+}
+
+/// Formats a scalar value of `kind` as a C++ literal token stream.
+pub fn scalar_value_to_tokens(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Result<TokenStream> {
+    scalar_value_to_string(tcx, scalar, kind)?
+        .parse::<TokenStream>()
+        .map_err(|err| anyhow!("Invalid scalar literal: {err}"))
 }
 
 /// Mirrors the policies in `crubit::internal::tag_encoding` (support/rs_std/internal/enum.h).
