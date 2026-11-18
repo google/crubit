@@ -1518,6 +1518,44 @@ fn test_unambiguous_public_bases() -> Result<()> {
     Ok(())
 }
 
+/// Upcasting a packed derived class could create a misaligned reference to the base class.
+#[gtest]
+fn test_no_upcast_from_packed_derived_class() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc_dependency(
+        "
+        struct Base { int x; int Get() const; };
+        struct __attribute__((packed)) Derived : Base { char c; };
+    ",
+        "",
+    )?
+    .rs_api;
+    assert_rs_not_matches!(rs_api, quote! { oops::Inherits<crate::Base> for crate::Derived });
+    // Inherited methods are forwarded by upcasting, so they aren't forwarded either.
+    assert_rs_not_matches!(rs_api, quote! { oops::Upcast });
+    Ok(())
+}
+
+/// A `Copy` derived class represents its base class subobjects as plain bytes, so it can't be
+/// upcast to a base class with interior mutability (b/481405536).
+#[gtest]
+fn test_no_upcast_from_copy_derived_class_to_interior_mutable_base() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc_dependency(
+        "
+        struct Base { mutable int x; int Get() const; };
+        struct Derived : Base { int y; };
+    ",
+        "",
+    )?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! { #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)] ... pub struct Derived }
+    );
+    assert_rs_not_matches!(rs_api, quote! { oops::Inherits<crate::Base> for crate::Derived });
+    assert_rs_not_matches!(rs_api, quote! { oops::Upcast });
+    Ok(())
+}
+
 /// `oops::InheritsPinned` (which allows upcasting `Pin<&mut Derived>`) is only implemented for
 /// bases that are not Rust-movable (`!Unpin`). See b/216195042#comment14.
 #[gtest]

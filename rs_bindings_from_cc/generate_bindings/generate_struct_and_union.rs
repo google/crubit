@@ -207,12 +207,44 @@ fn collect_unqualified_member_functions_from_all_bases(
 
             match item {
                 Item::Record(base_record) => {
+                    // Inherited methods are forwarded by upcasting `self`.
+                    if upcast_blocker(record, base_record).is_some() {
+                        return vec![];
+                    }
                     db.collect_unqualified_member_functions(base_record.clone()).to_vec()
                 }
                 _ => vec![],
             }
         })
         .collect()
+}
+
+/// Returns why a reference to `record` can't be upcast to a reference to its base class
+/// `base_record`, or `None` if it can.
+fn upcast_blocker(record: &Record, base_record: &Record) -> Option<String> {
+    if record.is_packed() {
+        return Some(format!(
+            "'{}' cannot be upcasted to '{}' because '{}' is packed, so its base class subobjects \
+             may be misaligned.",
+            record.cc_name(),
+            base_record.cc_name(),
+            record.cc_name(),
+        ));
+    }
+    // A `Copy` record represents its base class subobjects as plain bytes, not `Cell`s
+    // (b/481405536), so mutating a base class subobject through a `&Base` created from a `&Derived`
+    // is UB. That is only possible if `Base` has interior mutability, which a `Copy` type can't.
+    if record.should_derive_copy() && !base_record.should_derive_copy() {
+        return Some(format!(
+            "'{}' cannot be upcasted to '{}' because '{}' may have interior mutability, but '{}' \
+             represents it as immutable bytes (b/481405536).",
+            record.cc_name(),
+            base_record.cc_name(),
+            base_record.cc_name(),
+            record.cc_name(),
+        ));
+    }
+    None
 }
 
 /// Implementation of `BindingsGenerator::collect_unqualified_member_functions`.
@@ -1434,6 +1466,10 @@ fn cc_struct_upcast_impl(
         }
         if base_type.is_bridge_type() {
             // The base class isn't directly represented in Rust, so we can't upcast to it.
+            continue;
+        }
+        if let Some(reason) = upcast_blocker(record, base_record) {
+            upcast_impls.push(Err(reason));
             continue;
         }
         let base_name = base_type.to_token_stream(db);
