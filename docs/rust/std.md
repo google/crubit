@@ -106,6 +106,11 @@ std::optional<int32_t> converted = std::move(myoption);
 std::optional<int32_t> direct = rust_crate::find_index(name);
 ```
 
+When the opt-in `//features:option_references` feature is
+enabled, `Option<&T>` and `Option<&mut T>` (for sized `T`) bind as
+`rs::Option<const T&>` and `rs::Option<T&>` (modeled after C++26
+`std::optional<T&>`), rather than `rs::Option<const T*>` and `rs::Option<T*>`.
+
 A more complete description of the API is in the common `OptionBase` public base
 class: support/rs_std/option.h
 
