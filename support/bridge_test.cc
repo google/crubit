@@ -75,6 +75,15 @@ TEST(BridgeTest, RoundtripDynamicTrivialAbi) {
   internal::Encode<Abi>(Abi(), buf, DynamicTrivialAbi(123));
   DynamicTrivialAbi value = internal::Decode<Abi>(Abi(), buf);
   EXPECT_EQ(value.value, 123);
+
+  using MoveOnlyTupleAbi = TupleAbi<Abi, TransmuteAbi<int>>;
+  unsigned char tuple_buf[MoveOnlyTupleAbi::kSize];
+  internal::Encode<MoveOnlyTupleAbi>(MoveOnlyTupleAbi(), tuple_buf,
+                                     {DynamicTrivialAbi(123), 456});
+  auto [first, second] =
+      internal::Decode<MoveOnlyTupleAbi>(MoveOnlyTupleAbi(), tuple_buf);
+  EXPECT_EQ(first.value, 123);
+  EXPECT_EQ(second, 456);
 }
 
 }  // namespace
