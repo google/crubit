@@ -67,3 +67,35 @@ fn test_thread_safe_pinned_assign() {
     let mut s3 = emplace!(ThreadSafePinned::ctor_new(()));
     s1.as_mut().assign(::ctor::mov!(s3));
 }
+
+#[gtest]
+fn test_thread_safe_interface_is_send_sync() {
+    fn assert_send<T: Send>() {}
+    fn assert_sync<T: Sync>() {}
+    assert_send::<thread_safe::crubit::test::ThreadSafeInterface>();
+    assert_sync::<thread_safe::crubit::test::ThreadSafeInterface>();
+
+    // Test shared_ptr Send/Sync
+    assert_send::<cpp_std::shared_ptr<thread_safe::crubit::test::ThreadSafeInterface>>();
+    assert_sync::<cpp_std::shared_ptr<thread_safe::crubit::test::ThreadSafeInterface>>();
+
+    // Test virtual_unique_ptr Send/Sync
+    assert_send::<cpp_std::virtual_unique_ptr<thread_safe::crubit::test::ThreadSafeInterface>>();
+    assert_sync::<cpp_std::virtual_unique_ptr<thread_safe::crubit::test::ThreadSafeInterface>>();
+}
+
+#[gtest]
+fn test_thread_safe_interface_methods() {
+    use thread_safe::crubit::test::MakeThreadSafeInterfaceShared;
+    use thread_safe::crubit::test::MakeThreadSafeInterfaceUnique;
+
+    let shared = MakeThreadSafeInterfaceShared();
+    assert_eq!(shared.Get(), 0);
+    assert_eq!(shared.IncrementAndGet(), 1);
+    assert_eq!(shared.Get(), 1);
+
+    let unique = MakeThreadSafeInterfaceUnique();
+    assert_eq!(unique.Get(), 0);
+    assert_eq!(unique.IncrementAndGet(), 1);
+    assert_eq!(unique.Get(), 1);
+}
