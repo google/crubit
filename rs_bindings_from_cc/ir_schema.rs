@@ -112,6 +112,15 @@ pub(crate) fn schema() -> Schema {
             Negative,
             Positive,
         }
+        // How a C++ type can be hashed.
+        //
+        // TODO(b/585677394): Add `StdHash` (`DETECTED_HASHER_STD_HASH` in C++) for types with a
+        // `std::hash` specialization.
+        enum DetectedHasher {
+            None = DETECTED_HASHER_NONE,
+            // The type provides `AbslHashValue` (found via argument-dependent lookup).
+            AbslHashValue = DETECTED_HASHER_ABSL_HASH_VALUE,
+        }
         #[scope("UnsupportedItem")]
         enum Kind {
             Other,
@@ -539,6 +548,7 @@ pub(crate) fn schema() -> Schema {
             has_private_pointer_or_reference_fields: Bool,
             has_template_argument_lifetime: Bool,
             detected_formatter: Bool,
+            detected_hasher: DetectedHasher,
             #[optional]
             deprecated: Str,
             is_thread_safe: Bool,

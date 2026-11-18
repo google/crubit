@@ -6987,6 +6987,71 @@ fn test_detects_formatter() {
 }
 
 #[gtest]
+fn test_detects_absl_hash_value() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct HashedByFriend {
+          template <typename H>
+          friend H AbslHashValue(H h, const HashedByFriend&) { return h; }
+        };
+
+        struct HashedByFreeFunction {};
+        template <typename H>
+        H AbslHashValue(H h, HashedByFreeFunction) { return h; }
+
+        struct NotHashable {};
+
+        struct HashedByConstrainedFriend {
+          template <typename H>
+            requires requires(H h) { H::combine(h); }
+          friend H AbslHashValue(H h, const HashedByConstrainedFriend&) { return h; }
+        };
+
+        struct HashesOtherType {
+          template <typename H>
+          friend H AbslHashValue(H h, const NotHashable&) { return h; }
+        };
+
+        struct HashedByDeletedFriend {
+          template <typename H>
+          friend H AbslHashValue(H h, const HashedByDeletedFriend&) = delete;
+        };
+
+        struct HashedBySfinaeFriend {
+          template <typename H, typename = typename H::NoSuchType>
+          friend H AbslHashValue(H h, const HashedBySfinaeFriend&) { return h; }
+        };"#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    for (cc_name, expected) in [
+        ("HashedByFriend", quote! { AbslHashValue }),
+        ("HashedByFreeFunction", quote! { AbslHashValue }),
+        ("NotHashable", quote! { None }),
+        ("HashedByConstrainedFriend", quote! { None }),
+        ("HashesOtherType", quote! { None }),
+        ("HashedByDeletedFriend", quote! { None }),
+        ("HashedBySfinaeFriend", quote! { None }),
+    ] {
+        assert_ir_matches!(
+            ir,
+            quote! {
+              ...
+              Record {
+                ...
+                cc_name: #cc_name,
+                ...
+                detected_hasher: #expected,
+                ...
+              }
+              ...
+            }
+        );
+    }
+}
+
+#[gtest]
 fn test_assumed_lifetimes_struct_with_explicit_binding() {
     let proto = ir_proto_from_assumed_lifetimes_cc("struct LIFETIME_PARAMS(\"a\") S { };").unwrap();
 

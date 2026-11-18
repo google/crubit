@@ -206,6 +206,11 @@ enum TraitImplPolarity : int32_t {
   POSITIVE = 2,
 };
 
+enum DetectedHasher : int32_t {
+  DETECTED_HASHER_NONE = 0,
+  DETECTED_HASHER_ABSL_HASH_VALUE = 1,
+};
+
 namespace unsupported_item {
 enum Kind : int32_t {
   OTHER = 0,
@@ -2377,6 +2382,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   void set_has_template_argument_lifetime(bool value) { has_template_argument_lifetime_ = value; }
   bool detected_formatter() const { return detected_formatter_; }
   void set_detected_formatter(bool value) { detected_formatter_ = value; }
+  ::crubit::ffi::DetectedHasher detected_hasher() const { return detected_hasher_; }
+  void set_detected_hasher(::crubit::ffi::DetectedHasher value) { detected_hasher_ = value; }
   bool has_deprecated() const { return (has_bits_ & 0x800ULL) != 0; }
   void clear_deprecated() { has_bits_ &= ~0x800ULL; deprecated_ = {}; }
   std::string_view deprecated() const { return deprecated_.AsView(); }
@@ -2435,6 +2442,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   bool has_private_pointer_or_reference_fields_{};
   bool has_template_argument_lifetime_{};
   bool detected_formatter_{};
+  ::crubit::ffi::DetectedHasher detected_hasher_{};
   FfiString deprecated_{};
   bool is_thread_safe_{};
   bool is_explicit_class_template_instantiation_definition_{};
@@ -4301,6 +4309,10 @@ static_assert(
   sizeof(size_t) != 8 ||
   offsetof(Record, detected_formatter_) ==
     1107);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, detected_hasher_) ==
+    1108);
 static_assert(
   sizeof(size_t) != 8 ||
   offsetof(Record, deprecated_) ==

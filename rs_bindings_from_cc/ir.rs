@@ -35,12 +35,13 @@ pub use ir_generated::unsupported_item::{
 };
 pub use ir_generated::{
     AccessSpecifier, ArrayValue, BaseClass, BridgeType, CallingConv as CcCallingConv, CcType,
-    Comment, Constant, DeclLocation, Enum, Enumerator, ExistingRustType, Field, FormattedError,
-    Func, FuncParam, GlobalVar, HeaderName, Identifier, IncompleteRecord, InstanceMethodMetadata,
-    IntegerConstant, Item, LifetimeName, MemberFuncSemantic, Namespace, Operator, OwnedPtrConfig,
-    PointerTypeKind, Primitive, Record, RecordType, SafetyAnnotation, SizeAlign, SourceLocation,
-    SpecialMemberFunc, StatusOrOptionalString, TemplateArg, TemplateSpecialization, TraitDerives,
-    TraitImplPolarity, TypeAlias, UnqualifiedIdentifier, UnsupportedItem, UseMod,
+    Comment, Constant, DeclLocation, DetectedHasher, Enum, Enumerator, ExistingRustType, Field,
+    FormattedError, Func, FuncParam, GlobalVar, HeaderName, Identifier, IncompleteRecord,
+    InstanceMethodMetadata, IntegerConstant, Item, LifetimeName, MemberFuncSemantic, Namespace,
+    Operator, OwnedPtrConfig, PointerTypeKind, Primitive, Record, RecordType, SafetyAnnotation,
+    SizeAlign, SourceLocation, SpecialMemberFunc, StatusOrOptionalString, TemplateArg,
+    TemplateSpecialization, TraitDerives, TraitImplPolarity, TypeAlias, UnqualifiedIdentifier,
+    UnsupportedItem, UseMod,
 };
 
 /// Common data about all items.

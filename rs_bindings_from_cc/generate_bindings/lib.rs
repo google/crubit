@@ -1485,6 +1485,14 @@ fn generate_rs_api_impl_includes(
         ));
     }
 
+    // `absl_hash.h` depends on Abseil, so it is only included when a hash thunk needs it.
+    if cc_details.iter().any(|thunk_impl| matches!(thunk_impl, ThunkImpl::Hash { .. })) {
+        internal_includes.insert(CcInclude::SupportLibHeader(
+            crubit_support_path_format.clone(),
+            intern!(db.interner(), "absl_hash.h"),
+        ));
+    }
+
     for crubit_header in ["cxx20_backports.h", "offsetof.h"] {
         internal_includes.insert(CcInclude::SupportLibHeader(
             crubit_support_versioned_path_format.clone(),
