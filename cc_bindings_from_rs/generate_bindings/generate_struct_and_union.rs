@@ -35,7 +35,9 @@ use generate_function::{
 use generate_function_thunk::{
     generate_ctor_thunk_call, generate_trait_thunks, trait_method_thunk_name, TraitThunks,
 };
-use generate_unsupported::{generate_unsupported_def_with_args, report_must_bind_error};
+use generate_unsupported::{
+    generate_unsupported_def_with_args, has_must_bind, report_must_bind_error,
+};
 
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, CcInclude};
@@ -194,7 +196,15 @@ fn generate_cpp_enum<'tcx>(
         .sorted_by_def(tcx)
         .flat_map(|impl_id| tcx.associated_items(impl_id).in_definition_order())
         .filter_map(|assoc_item| {
-            if !is_supported_associated_item(tcx, assoc_item.def_id) {
+            if let Some(err) = unsupported_associated_item_error(db, assoc_item) {
+                if has_must_bind(tcx, assoc_item.def_id) {
+                    report_must_bind_error(
+                        db,
+                        assoc_item.def_id,
+                        database::empty_generic_args(),
+                        &err,
+                    );
+                }
                 return None;
             }
             let ty::AssocKind::Const { .. } = assoc_item.kind else {
@@ -204,11 +214,9 @@ fn generate_cpp_enum<'tcx>(
                 ));
                 return None;
             };
-            let Some(name) = assoc_item.opt_name() else {
-                // Anonymous associated constants (`pub const _: ...`) do not define a named
-                // enumerator.
-                return None;
-            };
+            let name = assoc_item.opt_name().expect(
+                "Anonymous associated constants are rejected by unsupported_associated_item_error",
+            );
             let enumerator_name = format_cc_ident(name.as_str()).unwrap();
             let opt_doc_comment = if db.kythe_annotations() {
                 generate_doc_comment(db, assoc_item.def_id)
@@ -290,6 +298,33 @@ fn is_trait_method_of_impl_lookup_stable<'tcx>(tcx: TyCtxt<'tcx>, impl_assoc_id:
         .expect("Associated trait item should be defined on it's trait")
 }
 
+/// If `assoc_item` cannot receive bindings due to item-level visibility, stability,
+/// `should_receive_bindings`, or being an anonymous `const _`, returns the corresponding error.
+pub fn unsupported_associated_item_error<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    assoc_item: &ty::AssocItem,
+) -> Option<arc_anyhow::Error> {
+    let tcx = db.tcx();
+    let def_id = assoc_item.def_id;
+    if !is_supported_associated_item(tcx, def_id) {
+        if !tcx.visibility(def_id).is_public() {
+            return Some(anyhow!(
+                "Associated item is not `pub`; C++ bindings are only generated for public items"
+            ));
+        }
+        return Some(anyhow!("Unstable associated items do not receive C++ bindings"));
+    }
+    // Associated items resolve names via `symbol_unqualified_name`, which - unlike
+    // `symbol_canonical_name` - does not consult `should_receive_bindings`.
+    if let Err(err) = should_receive_bindings(db, def_id) {
+        return Some(err);
+    }
+    if matches!(assoc_item.kind, ty::AssocKind::Const { .. }) && assoc_item.opt_name().is_none() {
+        return Some(anyhow!("Anonymous associated constants cannot be bound to C++"));
+    }
+    None
+}
+
 pub fn generate_associated_item<'db, 'tcx>(
     db: &'db BindingsGenerator<'tcx>,
     assoc_item: &ty::AssocItem,
@@ -300,15 +335,16 @@ pub fn generate_associated_item<'db, 'tcx>(
 ) -> Option<Cow<'db, ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
     let def_id = assoc_item.def_id;
-    if !is_supported_associated_item(tcx, def_id) {
-        return None;
-    }
-    // Associated items resolve names via `symbol_unqualified_name`, which - unlike
-    // `symbol_canonical_name` - does not consult `should_receive_bindings`.
-    if should_receive_bindings(db, def_id).is_err() {
-        return None;
-    }
     let args = generic_args.unwrap_or_else(database::empty_generic_args);
+    if let Some(err) = unsupported_associated_item_error(db, assoc_item) {
+        // For generic ADTs (`generic_args.is_some()`), item-level visibility/ignore errors are
+        // reported once by `check_unvisited_must_bind_items` regardless of how many (possibly
+        // zero) specializations are instantiated.
+        if generic_args.is_none() && has_must_bind(tcx, def_id) {
+            report_must_bind_error(db, def_id, args, &err);
+        }
+        return None;
+    }
     generate_unsupported::error_scope!(db, def_id, args);
     let result = match assoc_item.kind {
         ty::AssocKind::Fn { .. } => {
@@ -325,11 +361,7 @@ pub fn generate_associated_item<'db, 'tcx>(
             );
             })
         }
-        ty::AssocKind::Const { .. } => {
-            // Anonymous associated constants (`pub const _: ...`) cannot be named or referenced.
-            let _ = assoc_item.opt_name()?;
-            generate_const(db, def_id, generic_args).map(Cow::Owned)
-        }
+        ty::AssocKind::Const { .. } => generate_const(db, def_id, generic_args).map(Cow::Owned),
         // TODO: b/405132277 - Rust does not support inherent associated types, but should support
         // associated types when adding traits.
         ty::AssocKind::Type { .. } => {
@@ -374,7 +406,7 @@ pub fn generate_associated_item<'db, 'tcx>(
     };
     match result {
         Err(err) => {
-            if crubit_attr::get_attrs(tcx, def_id).unwrap().must_bind {
+            if has_must_bind(tcx, def_id) {
                 report_must_bind_error(db, def_id, args, &err);
             }
             Some(Cow::Owned(

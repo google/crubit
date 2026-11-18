@@ -53,7 +53,7 @@ use generate_struct_and_union::{
     is_cpp_constexpr_move_constructible, GenericAdtHeader,
 };
 use generate_template_specialization::append_trait_impls;
-use generate_unsupported::generate_unsupported_def;
+use generate_unsupported::{generate_unsupported_def, has_must_bind};
 pub use generate_unsupported::{
     generate_unsupported_def_with_args, item_name_for_error_report, report_must_bind_error,
 };
@@ -103,6 +103,31 @@ fn check_unbindable_type(db: &BindingsGenerator, def_id: DefId) {
     }
 }
 
+/// Returns all `DefId`s defined in `source_crate` reachable via `module_children` from the crate
+/// root (including private modules and items, excluding tuple-struct/variant constructors).
+fn source_crate_module_def_ids(tcx: TyCtxt<'_>, source_crate: CrateNum) -> HashSet<DefId> {
+    let root_def_id = source_crate.as_def_id();
+    let mut modules_to_visit = vec![root_def_id];
+    let mut visited_modules = HashSet::from([root_def_id]);
+    let mut def_ids = HashSet::new();
+
+    while let Some(mod_def_id) = modules_to_visit.pop() {
+        for child in module_children(tcx, mod_def_id) {
+            let Res::Def(def_kind, child_def_id) = child.res else {
+                continue;
+            };
+            if child_def_id.krate != source_crate || matches!(def_kind, DefKind::Ctor(_, _)) {
+                continue;
+            }
+            def_ids.insert(child_def_id);
+            if child.res.mod_def_id().is_some() && visited_modules.insert(child_def_id) {
+                modules_to_visit.push(child_def_id);
+            }
+        }
+    }
+    def_ids
+}
+
 fn warn_unbindable_types(db: &BindingsGenerator) {
     if db.ignore_symbols_from_files().is_empty() {
         return;
@@ -117,22 +142,250 @@ fn warn_unbindable_types(db: &BindingsGenerator) {
     }
 
     // Traverse all items in the source crate (including private ones) starting from the crate root.
-    let root_def_id = db.source_crate_num().as_def_id();
-    let mut modules_to_visit = vec![root_def_id];
-    let mut visited_modules = HashSet::new();
-    visited_modules.insert(root_def_id);
+    for child_def_id in source_crate_module_def_ids(tcx, db.source_crate_num()) {
+        if checked_def_ids.insert(child_def_id) {
+            check_unbindable_type(db, child_def_id);
+        }
+    }
+}
 
-    while let Some(mod_def_id) = modules_to_visit.pop() {
-        for child in module_children(tcx, mod_def_id) {
-            if let Some(child_def_id) =
-                child.res.opt_def_id().filter(|id| id.krate == db.source_crate_num())
+#[derive(Default)]
+struct ProcessedCrateDefs {
+    /// Source-crate `DefId`s already handled by codegen (bound, intentionally skipped such as
+    /// `cpp_type` / `specializes_cpp_type` / `mod`, or already reported via
+    /// `report_must_bind_error`).
+    handled_defs: HashSet<DefId>,
+    /// Source-crate `DefId`s for which `generate_item` emitted bindings (`Ok(Some(_))`).
+    bound_defs: HashSet<DefId>,
+    /// Source-crate `DefId`s whose codegen or alias generation failed, mapped to the error.
+    failed_defs: HashMap<DefId, arc_anyhow::Error>,
+}
+
+impl ProcessedCrateDefs {
+    fn record_dropped_type_aliases(
+        &mut self,
+        paths: &PublicPaths,
+        source_crate: CrateNum,
+        err: &arc_anyhow::Error,
+    ) {
+        for alias in paths.extern_aliases() {
+            if let Some(alias_def_id) = alias.type_alias_def_id
+                && alias_def_id.krate == source_crate
             {
-                if checked_def_ids.insert(child_def_id) {
-                    check_unbindable_type(db, child_def_id);
+                self.failed_defs.entry(alias_def_id).or_insert_with(|| err.clone());
+            }
+        }
+    }
+}
+
+/// Explains why a trait impl in `source_crate` that was not queued for
+/// `generate_trait_impl_specialization` failed to receive C++ bindings, if applicable.
+fn explain_unhandled_trait_impl<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    source_crate: CrateNum,
+    trait_ref: ty::TraitRef<'tcx>,
+    processed: &ProcessedCrateDefs,
+    explain_unbound_def: &impl Fn(DefId) -> arc_anyhow::Error,
+) -> Option<arc_anyhow::Error> {
+    let tcx = db.tcx();
+    if trait_ref.def_id.krate == source_crate && !processed.bound_defs.contains(&trait_ref.def_id) {
+        let trait_err = explain_unbound_def(trait_ref.def_id);
+        return Some(anyhow!(
+            "Trait `{}` does not receive C++ bindings: {trait_err}",
+            tcx.def_path_str(trait_ref.def_id)
+        ));
+    }
+    for ty in trait_ref.args.iter().flat_map(|arg| arg.walk()).filter_map(|arg| arg.as_type()) {
+        if let ty::TyKind::Adt(adt_def, _) = ty.kind() {
+            let adt_did = adt_def.did();
+            if adt_did.krate == source_crate
+                && (!processed.handled_defs.contains(&adt_did)
+                    || processed.failed_defs.contains_key(&adt_did))
+            {
+                let err = explain_unbound_def(adt_did);
+                return Some(anyhow!(
+                    "Type `{}` does not receive C++ bindings: {err}",
+                    tcx.def_path_str(adt_did)
+                ));
+            }
+        }
+    }
+    if !db.supported_traits().contains(&trait_ref.def_id) {
+        return None;
+    }
+    let ty::TyKind::Adt(self_adt, _) = trait_ref.self_ty().kind() else {
+        return Some(anyhow!("Trait implementations for non-ADT types are not supported yet."));
+    };
+    let adt_did = self_adt.did();
+    if query_compiler::has_non_lifetime_generics(tcx, adt_did) {
+        return Some(anyhow!("Trait implementations for generic types are not supported yet."));
+    }
+    let err = db
+        .symbol_canonical_name(adt_did)
+        .and_then(|cn| {
+            if cn.unqualified.cpp_type.is_none() {
+                db.generate_adt_core(adt_did).map(|_| ())?;
+            }
+            cn.format_for_cc(db).map(|_| ())
+        })
+        .err()
+        .unwrap_or_else(|| anyhow!("Trait implementation did not receive C++ bindings"));
+    Some(anyhow!("Type `{}` does not receive C++ bindings: {err}", tcx.def_path_str(adt_did)))
+}
+
+/// Reports fatal `must_bind` errors for `#[crubit_annotate::must_bind]` items in the source crate
+/// that were not visited by item or associated-item codegen (for example, private or unexported
+/// items, items on unbindable/generic ADTs, or unhandled trait impls).
+fn check_unvisited_must_bind_items(
+    db: &BindingsGenerator<'_>,
+    processed: &ProcessedCrateDefs,
+    handled_trait_impls: &HashSet<DefId>,
+) {
+    let tcx = db.tcx();
+    let source_crate = db.source_crate_num();
+
+    let explain_unbound_def = |def_id: DefId| -> arc_anyhow::Error {
+        if let Some(err) = processed.failed_defs.get(&def_id) {
+            return err.clone();
+        }
+        if let Err(err) = should_receive_bindings(db, def_id) {
+            return err;
+        }
+        use rustc_hir::definitions::DefPathData;
+        if tcx.def_path(def_id).data.iter().any(|seg| seg.data == DefPathData::ForeignMod) {
+            return anyhow!("Foreign items in `extern` blocks do not receive C++ bindings");
+        }
+        if !tcx.visibility(def_id).is_public() {
+            return anyhow!("Item is not `pub`; C++ bindings are only generated for public items");
+        }
+        if tcx.opt_item_name(def_id) == Some(rustc_span::symbol::kw::Underscore) {
+            return anyhow!("Anonymous items cannot be bound to C++");
+        }
+        if tcx.lookup_stability(def_id).is_some_and(|s| s.is_unstable()) {
+            return anyhow!("Unstable items do not receive C++ bindings");
+        }
+        if processed.handled_defs.contains(&def_id)
+            && crubit_attr::get_attrs(tcx, def_id).is_ok_and(|attrs| attrs.cpp_type.is_some())
+        {
+            return anyhow!(
+                "Type is mapped via `cpp_type` and does not receive generated C++ bindings"
+            );
+        }
+        if tcx.def_kind(def_id) == DefKind::TyAlias
+            && try_normalize_ty(
+                tcx,
+                tcx.param_env(def_id),
+                tcx.type_of(def_id).instantiate_identity(),
+            )
+            .is_err()
+        {
+            return anyhow!("Generic type aliases that cannot be normalized are not supported");
+        }
+        anyhow!("Item is not publicly reachable from the crate root")
+    };
+
+    for def_id in source_crate_module_def_ids(tcx, source_crate).into_iter().sorted_by_def(tcx) {
+        if has_must_bind(tcx, def_id) && !processed.handled_defs.contains(&def_id) {
+            let err = explain_unbound_def(def_id);
+            report_must_bind_error(db, def_id, database::empty_generic_args(), &err);
+        }
+
+        match tcx.def_kind(def_id) {
+            DefKind::Struct | DefKind::Enum | DefKind::Union => {
+                let adt_bound = processed.bound_defs.contains(&def_id);
+                let is_generic = query_compiler::has_non_lifetime_generics(tcx, def_id);
+                if adt_bound && !is_generic {
+                    // Non-generic bound ADT: `generate_adt`/`generate_cpp_enum` already checked
+                    // every inherent associated item.
+                    continue;
                 }
-                if child.res.mod_def_id().is_some() && visited_modules.insert(child_def_id) {
-                    modules_to_visit.push(child_def_id);
+                let mut adt_err = None;
+                for impl_id in tcx.inherent_impls(def_id).iter().copied().sorted_by_def(tcx) {
+                    for assoc_item in tcx.associated_items(impl_id).in_definition_order() {
+                        if !has_must_bind(tcx, assoc_item.def_id) {
+                            continue;
+                        }
+                        let err = generate_struct_and_union::unsupported_associated_item_error(
+                            db, assoc_item,
+                        )
+                        .or_else(|| {
+                            (!adt_bound).then(|| {
+                                let reason =
+                                    adt_err.get_or_insert_with(|| explain_unbound_def(def_id));
+                                anyhow!(
+                                    "Enclosing type `{}` does not receive C++ bindings: \
+                                         {reason}",
+                                    tcx.def_path_str(def_id)
+                                )
+                            })
+                        });
+                        if let Some(err) = err {
+                            report_must_bind_error(
+                                db,
+                                assoc_item.def_id,
+                                database::empty_generic_args(),
+                                &err,
+                            );
+                        }
+                    }
                 }
+            }
+            DefKind::Trait if !processed.bound_defs.contains(&def_id) => {
+                let mut trait_err = None;
+                for assoc_item in tcx.associated_items(def_id).in_definition_order() {
+                    if has_must_bind(tcx, assoc_item.def_id) {
+                        let reason = trait_err.get_or_insert_with(|| explain_unbound_def(def_id));
+                        let err = anyhow!(
+                            "Enclosing trait `{}` does not receive C++ bindings: {reason}",
+                            tcx.def_path_str(def_id)
+                        );
+                        report_must_bind_error(
+                            db,
+                            assoc_item.def_id,
+                            database::empty_generic_args(),
+                            &err,
+                        );
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    for impl_id in tcx.trait_impls_in_crate(source_crate).iter().copied().sorted_by_def(tcx) {
+        if handled_trait_impls.contains(&impl_id) {
+            continue;
+        }
+        let must_bind_items: Vec<_> = tcx
+            .associated_items(impl_id)
+            .in_definition_order()
+            .filter(|item| has_must_bind(tcx, item.def_id))
+            .collect();
+        if must_bind_items.is_empty() {
+            continue;
+        }
+        let trait_header = tcx.impl_trait_header(impl_id);
+        let Ok(trait_ref) = try_normalize_ty(
+            tcx,
+            tcx.param_env(impl_id),
+            trait_header.trait_ref.instantiate_identity(),
+        ) else {
+            continue;
+        };
+
+        let impl_err = explain_unhandled_trait_impl(
+            db,
+            source_crate,
+            trait_ref,
+            processed,
+            &explain_unbound_def,
+        );
+        for assoc_item in must_bind_items {
+            let err = impl_err.clone().or_else(|| {
+                generate_struct_and_union::unsupported_associated_item_error(db, assoc_item)
+            });
+            if let Some(err) = err {
+                report_must_bind_error(db, assoc_item.def_id, database::empty_generic_args(), &err);
             }
         }
     }
@@ -1379,9 +1632,8 @@ fn generate_item<'tcx>(
 ) -> Result<Option<ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
     let generated = generate_item_impl(db, def_id);
-    let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
-    if attributes.must_bind
-        && let Err(e) = &generated
+    if let Err(e) = &generated
+        && has_must_bind(tcx, def_id)
     {
         report_must_bind_error(db, def_id, database::empty_generic_args(), e);
     }
@@ -1608,32 +1860,64 @@ fn generate_specializations_fixpoint<'tcx>(
 
 fn formatted_items_in_crate<'db, 'tcx>(
     db: &'db BindingsGenerator<'tcx>,
-) -> impl Iterator<Item = FormattedItem<'db, 'tcx>> {
+    processed: &mut ProcessedCrateDefs,
+) -> std::vec::IntoIter<FormattedItem<'db, 'tcx>> {
     let tcx = db.tcx();
-    let defs_in_crate = db.public_paths_by_def_id(db.source_crate_num());
+    let source_crate = db.source_crate_num();
+    let defs_in_crate = db.public_paths_by_def_id(source_crate);
     defs_in_crate
         .iter()
         .filter_map(|(def_id, paths)| {
             if crubit_attr::get_attrs(tcx, *def_id).unwrap().specializes_cpp_type {
+                processed.handled_defs.insert(*def_id);
                 return None;
             }
             let mut snippets = None;
-            let canonical_name = db.symbol_canonical_name(*def_id).ok()?;
-            let aliases = if canonical_name.krate_num == db.source_crate_num() {
+            let canonical_name = match db.symbol_canonical_name(*def_id) {
+                Ok(canonical_name) => canonical_name,
+                Err(err) => {
+                    if def_id.krate == source_crate {
+                        processed.failed_defs.insert(*def_id, err.clone());
+                    }
+                    processed.record_dropped_type_aliases(paths, source_crate, &err);
+                    return None;
+                }
+            };
+            let aliases = if canonical_name.krate_num == source_crate {
                 // We only want to call `generate_item` on DefIds from our source crate. External
                 // crate DefIds might appear in this map if our crate re-exports them, but we don't
                 // want to regenerate those definitions.
                 generate_unsupported::error_scope!(db, *def_id);
                 let (api_snippets, aliases) = match db.generate_item(*def_id) {
-                    Ok(None) => return None,
+                    Ok(None) => {
+                        processed.handled_defs.insert(*def_id);
+                        if paths.extern_aliases().any(|alias| alias.type_alias_def_id.is_some()) {
+                            let err = anyhow!(
+                                "Underlying type `{}` does not receive generated C++ bindings",
+                                tcx.def_path_str(*def_id)
+                            );
+                            processed.record_dropped_type_aliases(paths, source_crate, &err);
+                        }
+                        return None;
+                    }
                     Ok(Some(api_snippets)) => {
+                        processed.handled_defs.insert(*def_id);
+                        processed.bound_defs.insert(*def_id);
+                        if let Some(alias_def_id) = paths.canonical().type_alias_def_id {
+                            processed.handled_defs.insert(alias_def_id);
+                        }
                         // Only generate aliases if we generate a definition.
                         (api_snippets.clone(), FormattedAliases::Local(paths.aliases()))
                     }
-                    Err(err) => (
-                        generate_unsupported_def(db, *def_id, err.clone()).into_main_api(),
-                        FormattedAliases::None,
-                    ),
+                    Err(err) => {
+                        processed.handled_defs.insert(*def_id);
+                        processed.failed_defs.insert(*def_id, err.clone());
+                        processed.record_dropped_type_aliases(paths, source_crate, &err);
+                        (
+                            generate_unsupported_def(db, *def_id, err.clone()).into_main_api(),
+                            FormattedAliases::None,
+                        )
+                    }
                 };
                 snippets = Some(api_snippets);
                 aliases
@@ -1958,15 +2242,28 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
         .collect();
     let mut rs_details = RsSnippet::default();
     let mut main_apis = HashMap::<DefId, CcSnippet<'tcx>>::new();
-    for item in formatted_items_in_crate(db) {
+    let mut processed = ProcessedCrateDefs::default();
+    for item in formatted_items_in_crate(db, &mut processed) {
         let def_id = item.def_id;
         generate_unsupported::error_scope!(db, def_id);
         // We delay handling aliases until after sorting by def id to ensure they are emitted in a
         // deterministic order, same as the main api definitions. This is important for caching and
         // testing.
         item.aliases.for_each(|alias| {
-            let using_snippets = generate_using(db, &alias.name, def_id)
-                .unwrap_or_else(|err| generate_unsupported_def(db, def_id, err));
+            let using_snippets = match generate_using(db, &alias.name, def_id) {
+                Ok(snippets) => {
+                    if let Some(alias_def_id) = alias.type_alias_def_id {
+                        processed.handled_defs.insert(alias_def_id);
+                    }
+                    snippets
+                }
+                Err(err) => {
+                    if let Some(alias_def_id) = alias.type_alias_def_id {
+                        processed.failed_defs.entry(alias_def_id).or_insert_with(|| err.clone());
+                    }
+                    generate_unsupported_def(db, def_id, err)
+                }
+            };
             cc_details.push(CcDetails::new(
                 // `def_id` gets used for coalescing namespaces in
                 // `format_namespace_bound_cc_tokens`, so we want to carry it alongside our alias
@@ -2022,6 +2319,15 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
 
     let GeneratedSpecializations { mut specializations, impls_cc_details } =
         generate_specializations_fixpoint(db, worklist, &mut cc_details_prereqs, &mut rs_details);
+
+    let handled_trait_impls: HashSet<DefId> = specializations
+        .keys()
+        .filter_map(|spec| match spec {
+            TemplateSpecialization::TraitImpl(t) => Some(t.trait_impl),
+            _ => None,
+        })
+        .collect();
+    check_unvisited_must_bind_items(db, &processed, &handled_trait_impls);
 
     let collisions = find_colliding_specializations(db, specializations.keys());
     if !collisions.is_empty() {
