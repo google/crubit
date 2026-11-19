@@ -12,7 +12,7 @@ use arc_anyhow::{bail, Result};
 use cmdline::Cmdline;
 use cpp_api_from_rust_lib::run_with_cmdline_args;
 use external_binaries::{CLANG_FORMAT_EXE_PATH, RUSTFMT_EXE_PATH};
-use googletest::matchers::{contains_substring, eq, starts_with};
+use googletest::matchers::{contains_substring, eq, not, starts_with};
 use googletest::{expect_that, gtest};
 use regex::{Regex, RegexBuilder};
 use run_compiler_test_support::{setup_rustc_target_for_testing, sysroot_path};
@@ -675,5 +675,46 @@ fn test_rustc_with_unstable_target_modifier_flags() -> Result<()> {
         test_args.run().expect("Unstable target modifier flags with '-' should not cause an error");
     let cc_api = std::fs::read_to_string(&test_result.h_path)?;
     expect_that!(cc_api, contains_substring("public_function"));
+    Ok(())
+}
+
+#[gtest]
+fn test_rustfmt_config_path() -> Result<()> {
+    let rs_input = "pub fn f(a: f32, b: f32) -> f32 { a + b }\n";
+
+    // Default `rustfmt` config (`max_width = 100`, 4-space indentation): the long mangled thunk
+    // signature wraps onto 4-space-indented lines.
+    let default_args = TestArgs::default_args()?.with_rs_input(rs_input);
+    let default_result = default_args.run()?;
+    let default_rs_api_impl = std::fs::read_to_string(&default_result.rs_path)?;
+    expect_that!(
+        default_rs_api_impl,
+        contains_substring(
+            "(\n    a: f32,\n    b: f32,\n) -> f32 {\n    unsafe { ::test_crate::f(a, b) }\n}"
+        )
+    );
+    expect_that!(default_rs_api_impl, not(contains_substring("(a: f32, b: f32) -> f32")));
+    expect_that!(default_rs_api_impl, not(contains_substring("\t")));
+
+    // Custom `rustfmt.toml` via `--rustfmt-config-path` (`max_width = 200`, `hard_tabs = true`):
+    // the thunk signature stays on a single line and the body is tab-indented.
+    let custom_dir = tempdir()?;
+    let rustfmt_config_path = custom_dir.path().join("rustfmt.toml");
+    std::fs::write(
+        &rustfmt_config_path,
+        "edition = \"2021\"\nmax_width = 200\nhard_tabs = true\n",
+    )?;
+    let custom_args =
+        TestArgs::default_args()?.with_rs_input(rs_input).with_extra_crubit_args(&[&format!(
+            "--rustfmt-config-path={}",
+            rustfmt_config_path.display()
+        )]);
+    let custom_result = custom_args.run()?;
+    let custom_rs_api_impl = std::fs::read_to_string(&custom_result.rs_path)?;
+    expect_that!(
+        custom_rs_api_impl,
+        contains_substring("(a: f32, b: f32) -> f32 {\n\tunsafe { ::test_crate::f(a, b) }\n}")
+    );
+    expect_that!(custom_rs_api_impl, not(contains_substring("\n    ")));
     Ok(())
 }
