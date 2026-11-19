@@ -39,7 +39,7 @@ use format_type::{
     format_top_level_ns_for_crate, format_with_cc_body,
 };
 pub use generate_comment::generate_source_location;
-use generate_comment::{generate_deprecated_tag, generate_doc_comment};
+use generate_comment::{capture_for_kythe, generate_deprecated_tag, generate_doc_comment};
 use generate_ctor::{
     copy_ctor_and_assignment_operator_codegen_style, has_default_ctor, is_bitwise_relocatable,
     is_cpp_move_constructible, move_ctor_and_assignment_operator_codegen_style,
@@ -1068,11 +1068,7 @@ fn generate_using<'tcx>(
                 let using_name_ident =
                     format_cc_ident(using_name.as_str()).context("Error formatting using name")?;
                 let deprecated_tag = generate_deprecated_tag(tcx, def_id);
-                let bracketed_alias_name = if db.kythe_annotations() {
-                    quote! { __CAPTURE_BEGIN__ #using_name_ident __CAPTURE_END__ }
-                } else {
-                    quote! { #using_name_ident }
-                };
+                let bracketed_alias_name = capture_for_kythe(db, &using_name_ident);
 
                 let mut prereqs = CcPrerequisites::default();
                 prereqs.depend_on_def(db, def_id)?;

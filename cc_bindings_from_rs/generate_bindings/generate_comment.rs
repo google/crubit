@@ -15,7 +15,7 @@ extern crate rustc_span;
 use database::BindingsGenerator;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 #[rustversion::since(2026-09-27)]
 use rustc_attr_ir::{find_attr, Attribute, AttributeKind};
 #[rustversion::before(2026-09-27)]
@@ -24,6 +24,15 @@ use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use std::borrow::Cow;
+
+/// Wraps `tokens` in Kythe capture markers when Kythe annotations are enabled.
+pub fn capture_for_kythe(db: &BindingsGenerator<'_>, tokens: impl ToTokens) -> TokenStream {
+    if db.kythe_annotations() {
+        quote! { __CAPTURE_BEGIN__ #tokens __CAPTURE_END__ }
+    } else {
+        tokens.into_token_stream()
+    }
+}
 
 pub struct MustUseAttr {
     pub reason: Option<Symbol>,

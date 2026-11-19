@@ -18,7 +18,9 @@ use format_type::{
     can_be_made_layout_compatible, format_cc_ident, get_cc_template_args,
     replace_all_regions_with_static, BridgedBuiltin, CcParamTy,
 };
-use generate_comment::{generate_deprecated_tag, generate_doc_comment, generate_must_use_tag};
+use generate_comment::{
+    capture_for_kythe, generate_deprecated_tag, generate_doc_comment, generate_must_use_tag,
+};
 use generate_ctor::{
     generate_copy_ctor_and_assignment_operator, generate_default_ctor,
     generate_move_ctor_and_assignment_operator,
@@ -46,7 +48,7 @@ use database::{
     TypeLocation,
 };
 use error_report::{anyhow, bail, ensure};
-use itertools::Itertools;
+use itertools::{Either, Itertools};
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
     as_ref_or_pinned_ref, field_def_is_pub_and_stable, get_layout, get_tag_size_with_padding,
@@ -208,14 +210,12 @@ fn generate_cpp_enum<'tcx>(
                 return None;
             };
             let enumerator_name = format_cc_ident(name.as_str()).unwrap();
-            let (opt_doc_comment, bracketed_enumerator_name) = if db.kythe_annotations() {
-                (
-                    generate_doc_comment(db, assoc_item.def_id),
-                    quote! { __CAPTURE_BEGIN__ #enumerator_name __CAPTURE_END__ },
-                )
+            let opt_doc_comment = if db.kythe_annotations() {
+                generate_doc_comment(db, assoc_item.def_id)
             } else {
-                (TokenStream::new(), quote! { #enumerator_name })
+                TokenStream::new()
             };
+            let bracketed_enumerator_name = capture_for_kythe(db, &enumerator_name);
             let value_kind = *cpp_enum_rust_underlying_type(tcx, def_id).unwrap().kind();
             let scalar = match tcx.const_eval_poly(assoc_item.def_id).unwrap() {
                 ConstValue::Scalar(scalar) => scalar,
@@ -232,11 +232,7 @@ fn generate_cpp_enum<'tcx>(
     let doc_comment = generate_doc_comment(db, def_id);
     let keyword = &core.common.keyword;
     let underlying_cc_type_snippet = cpp_enum_cpp_underlying_type(db, def_id).unwrap();
-    let bracketed_enumeration_cc_name = if db.kythe_annotations() {
-        quote! { __CAPTURE_BEGIN__ #enumeration_cc_name __CAPTURE_END__ }
-    } else {
-        quote! { #enumeration_cc_name }
-    };
+    let bracketed_enumeration_cc_name = capture_for_kythe(db, enumeration_cc_name);
 
     let mut main_api = underlying_cc_type_snippet.map_snippets(|underlying_cc_type| {
         quote! {
@@ -684,6 +680,57 @@ pub fn into_trait_impls_by_destination<'tcx>(
     trait_impls_by_argument_adt(tcx, crate_num, into_trait)
 }
 
+enum ConversionSource<'db> {
+    SelfTrait(DefId),
+    TargetAdtMap(&'db HashMap<DefId, Vec<DefId>>),
+}
+
+struct ConversionImpl<'db, 'tcx> {
+    ty: Ty<'tcx>,
+    cc_ty: &'db CcSnippet<'tcx>,
+    impl_id: DefId,
+    impl_args: GenericArgs<'tcx>,
+}
+
+fn conversion_impls<'db, 'tcx>(
+    db: &'db BindingsGenerator<'tcx>,
+    self_ty: Ty<'tcx>,
+    def_id: DefId,
+    source: ConversionSource<'db>,
+    cc_location: TypeLocation,
+    extra_filter: impl Fn(Ty<'tcx>) -> bool + 'db,
+) -> impl Iterator<Item = ConversionImpl<'db, 'tcx>> + 'db {
+    let tcx = db.tcx();
+    let has_non_lifetime_generics = query_compiler::has_non_lifetime_generics(tcx, def_id);
+    let (ty_arg_index, candidates) = match source {
+        ConversionSource::SelfTrait(trait_id) => {
+            (1, Either::Left(non_blanket_impls_for_ty(db, trait_id, self_ty)))
+        }
+        ConversionSource::TargetAdtMap(map) => (
+            0,
+            Either::Right(map.get(&def_id).into_iter().flatten().filter_map(move |&impl_id| {
+                let impl_args = does_trait_impl_apply_by_first_arg(db, impl_id, self_ty)?;
+                Some((impl_id, impl_args))
+            })),
+        ),
+    };
+    candidates.filter_map(move |(impl_id, impl_args)| {
+        let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
+        let other_ty = trait_ref.args.type_at(ty_arg_index);
+        if other_ty.flags().intersects(has_type_or_const_vars()) {
+            return None;
+        }
+        if has_non_lifetime_generics && is_recursive_specialization(tcx, self_ty, other_ty) {
+            return None;
+        }
+        if !extra_filter(other_ty) {
+            return None;
+        }
+        let cc_ty = db.format_ty_for_cc(other_ty, cc_location).ok()?;
+        Some(ConversionImpl { ty: other_ty, cc_ty, impl_id, impl_args })
+    })
+}
+
 fn generate_into_impls<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
@@ -696,79 +743,52 @@ fn generate_into_impls<'tcx>(
         // If we don't have a def_id, we can't generate Into impls.
         return ApiSnippets::default();
     };
+    let is_copy = is_copy(tcx, core.common.self_ty);
+    if !is_copy && !db.is_cpp_move_constructible(core.common.self_ty) {
+        return ApiSnippets::default();
+    }
 
     let from_map = db.from_trait_impls_by_argument(def_id.krate);
-    let from_impls =
-        from_map.get(&def_id).into_iter().flat_map(|vec| vec.iter()).filter_map(|from_impl_id| {
-            let impl_args =
-                does_trait_impl_apply_by_first_arg(db, *from_impl_id, core.common.self_ty)?;
-            let trait_ref = get_instantiated_trait_ref(tcx, *from_impl_id, impl_args);
-            let from_middle_ty = trait_ref.args.type_at(0);
-
-            // If our type contains type variables or constant variables (but not region variables),
-            // we can't generate an `into` impl.
-            if from_middle_ty.flags().intersects(has_type_or_const_vars()) {
-                return None;
-            }
-            if query_compiler::has_non_lifetime_generics(tcx, def_id)
-                && is_recursive_specialization(tcx, core.common.self_ty, from_middle_ty)
-            {
-                return None;
-            }
-            // We know that our type will always appear in FnReturn position for the `into` method.
-            // If our type isn't C++-compatible, we can't generate an `into` impl.
-            let cc_ty = db.format_ty_for_cc(from_middle_ty, TypeLocation::FnReturn).ok()?;
-            Some((from_middle_ty, cc_ty, *from_impl_id, impl_args))
-        });
-    let into_impls = non_blanket_impls_for_ty(db, into_trait, core.common.self_ty).filter_map(
-        |(into_impl_id, impl_args)| {
-            let trait_ref = get_instantiated_trait_ref(tcx, into_impl_id, impl_args);
-            // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
-            // into.
-            let into_middle_ty = trait_ref.args.type_at(1);
-            if into_middle_ty.flags().intersects(has_type_or_const_vars()) {
-                return None;
-            }
-            if query_compiler::has_non_lifetime_generics(tcx, def_id)
-                && is_recursive_specialization(tcx, core.common.self_ty, into_middle_ty)
-            {
-                return None;
-            }
-
-            // If our type isn't C++ compatible, we can't generate an `into` impl.
-            let cc_ty = db.format_ty_for_cc(into_middle_ty, TypeLocation::FnReturn).ok()?;
-
-            Some((into_middle_ty, cc_ty, into_impl_id, impl_args))
-        },
+    let from_impls = conversion_impls(
+        db,
+        core.common.self_ty,
+        def_id,
+        ConversionSource::TargetAdtMap(from_map),
+        TypeLocation::FnReturn,
+        |_| true,
+    );
+    let into_impls = conversion_impls(
+        db,
+        core.common.self_ty,
+        def_id,
+        ConversionSource::SelfTrait(into_trait),
+        TypeLocation::FnReturn,
+        |_| true,
     );
 
     from_impls
         .chain(into_impls)
-        .avoid_colliding_types(tcx, |(middle_ty, _, _, _)| *middle_ty)
+        .avoid_colliding_types(tcx, |item| item.ty)
         .into_iter()
         .filter_map(|res| {
-            let (middle_ty, cc_ty, def_id, _) = match res {
+            let ConversionImpl { ty: middle_ty, cc_ty, impl_id, .. } = match res {
                 Ok(item) => item,
                 Err(TypeCollisionRisk {
-                    item: (_, _, def_id, impl_args),
+                    item: ConversionImpl { impl_id, impl_args, .. },
                     key_type,
                     preferred_type,
                 }) => {
-                    generate_unsupported::error_scope!(db, def_id, impl_args);
+                    generate_unsupported::error_scope!(db, impl_id, impl_args);
                     let err = anyhow!(
                         "Conversion to `{key_type}` is not supported when conversion to \
                          `{preferred_type}` is implemented as they may overlap in C++."
                     );
                     return Some(
-                        generate_unsupported_def_with_args(db, def_id, impl_args, err)
+                        generate_unsupported_def_with_args(db, impl_id, impl_args, err)
                             .into_main_api(),
                     );
                 }
             };
-            let is_copy = is_copy(tcx, core.common.self_ty);
-            if !is_copy && !db.is_cpp_move_constructible(core.common.self_ty) {
-                return None;
-            }
             let mut prereqs = CcPrerequisites::default();
             let cc_ty = cc_ty.into_tokens(&mut prereqs);
 
@@ -784,7 +804,7 @@ fn generate_into_impls<'tcx>(
             .ok()?;
 
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
-            let doc_comment = generate_doc_comment(db, def_id);
+            let doc_comment = generate_doc_comment(db, impl_id);
 
             let self_cpp_ty = db
                 .format_ty_for_cc(
@@ -916,90 +936,58 @@ fn generate_constructor_impls<'tcx>(
     // We need there to be a `def_id` to generate a constructor from.
     let def_id = core.def_id.expect("ADT must have a def_id");
 
+    let self_ty = core.common.self_ty;
+    let fn_param_location = TypeLocation::FnParam { is_self_param: false, elided_is_output: false };
+    let is_not_self = move |src_ty: Ty<'tcx>| {
+        // Skip if source type is Self or a reference to Self (e.g. &Self)
+        let src_referent_ty = match src_ty.kind() {
+            ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
+            _ => src_ty,
+        };
+        erase_regions(tcx, src_referent_ty) != self_ty
+    };
+
     // Find From impls from the selected ADT
     let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
-    let from_impls = non_blanket_impls_for_ty(db, from_trait, core.common.self_ty).filter_map(
-        |(impl_id, impl_args)| {
-            let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
-            let src_ty = trait_ref.args.type_at(1);
-            if src_ty.flags().intersects(has_type_or_const_vars()) {
-                return None;
-            }
-            if query_compiler::has_non_lifetime_generics(tcx, def_id)
-                && is_recursive_specialization(tcx, core.common.self_ty, src_ty)
-            {
-                return None;
-            }
+    let from_impls = conversion_impls(
+        db,
+        self_ty,
+        def_id,
+        ConversionSource::SelfTrait(from_trait),
+        fn_param_location,
+        move |src_ty| {
             // Skip generating a constructor for the `From` impl if the target type is a
             // newtype with a public field of the same type. In this case, we already
             // synthesize a tuple constructor with the same signature, and generating
             // another one would cause duplicate definition conflicts in C++.
-            if !is_aggregate && is_newtype_relationship(tcx, core.common.self_ty, src_ty) {
-                return None;
-            }
-            // Skip if source type is Self or a reference to Self (e.g. &Self)
-            let src_referent_ty = match src_ty.kind() {
-                ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
-                _ => src_ty,
-            };
-            if erase_regions(tcx, src_referent_ty) == core.common.self_ty {
-                return None;
-            }
-            let cc_ty = db
-                .format_ty_for_cc(
-                    src_ty,
-                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-                )
-                .ok()?;
-
-            Some((src_ty, cc_ty, impl_id, impl_args, /* is_from= */ true))
+            (is_aggregate || !is_newtype_relationship(tcx, self_ty, src_ty)) && is_not_self(src_ty)
         },
-    );
+    )
+    .map(|item| (item, /* is_from= */ true));
 
     // Find Into impls to the selected ADT
     let into_map = db.into_trait_impls_by_destination(def_id.krate);
-    let into_impls =
-        into_map.get(&def_id).into_iter().flat_map(|vec| vec.iter()).filter_map(|impl_id| {
-            let impl_args = does_trait_impl_apply_by_first_arg(db, *impl_id, core.common.self_ty)?;
-            let trait_ref = get_instantiated_trait_ref(tcx, *impl_id, impl_args);
-            let src_ty = trait_ref.args.type_at(0);
-            if src_ty.flags().intersects(has_type_or_const_vars()) {
-                return None;
-            }
-            if query_compiler::has_non_lifetime_generics(tcx, def_id)
-                && is_recursive_specialization(tcx, core.common.self_ty, src_ty)
-            {
-                return None;
-            }
-            // Skip if source type is Self or a reference to Self (e.g. &Self)
-            let src_referent_ty = match src_ty.kind() {
-                ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
-                _ => src_ty,
-            };
-            if erase_regions(tcx, src_referent_ty) == core.common.self_ty {
-                return None;
-            }
-            let cc_ty = db
-                .format_ty_for_cc(
-                    src_ty,
-                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-                )
-                .ok()?;
-
-            Some((src_ty, cc_ty, *impl_id, impl_args, /* is_from= */ false))
-        });
+    let into_impls = conversion_impls(
+        db,
+        self_ty,
+        def_id,
+        ConversionSource::TargetAdtMap(into_map),
+        fn_param_location,
+        is_not_self,
+    )
+    .map(|item| (item, /* is_from= */ false));
 
     // Avoid collisions in cases where types may map to the same underlying C++ type.
     from_impls
         .chain(into_impls)
-        .avoid_colliding_types(tcx, |(src_ty, _, _, _, _)| *src_ty)
+        .avoid_colliding_types(tcx, |(item, _)| item.ty)
         .into_iter()
         .filter_map(|res| {
-            let (src_ty, cc_ty, impl_id, _, is_from) = match res {
+            let (ConversionImpl { ty: src_ty, cc_ty, impl_id, .. }, is_from) = match res {
                 Ok(item) => item,
                 Err(TypeCollisionRisk { item, .. }) if is_aggregate => item,
                 Err(TypeCollisionRisk {
-                    item: (_, _, impl_id, impl_args, is_from),
+                    item: (ConversionImpl { impl_id, impl_args, .. }, is_from),
                     key_type,
                     preferred_type,
                 }) => {
@@ -2459,11 +2447,7 @@ pub fn generate_adt<'tcx>(
         } else {
             (&core.common.cc_short_name, quote! {})
         };
-        let bracketed_adt_cc_name = if db.kythe_annotations() {
-            quote! { __CAPTURE_BEGIN__ #full_cc_name __CAPTURE_END__ }
-        } else {
-            quote! { #full_cc_name }
-        };
+        let bracketed_adt_cc_name = capture_for_kythe(db, full_cc_name);
 
         let mut snippet = [public_functions_main_api, fields_main_api].map_snippets(
             |[public_functions_main_api, fields_main_api]| {
@@ -2622,11 +2606,7 @@ pub fn generate_generic_adt_declaration<'tcx>(
         get_generic_adt_header(db, def_id)?;
 
     let doc_comment = generate_doc_comment(db, def_id);
-    let bracketed_cpp_name = if db.kythe_annotations() {
-        quote! { __CAPTURE_BEGIN__ #cpp_name __CAPTURE_END__ }
-    } else {
-        quote! { #cpp_name }
-    };
+    let bracketed_cpp_name = capture_for_kythe(db, &cpp_name);
 
     Ok(quote! {
         __NEWLINE__ #doc_comment
@@ -3460,11 +3440,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         is_aggregate: bool,
     ) -> CcSnippet<'tcx> {
         let cc_name = &field.cc_name;
-        let bracketed_cc_name = if self.db.kythe_annotations() {
-            quote! { __CAPTURE_BEGIN__ #cc_name __CAPTURE_END__ }
-        } else {
-            quote! { #cc_name }
-        };
+        let bracketed_cc_name = capture_for_kythe(self.db, cc_name);
 
         let size = field.size.bytes();
         let cpp_type = match field.cpp_type {
@@ -3534,11 +3510,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         is_repr_c: bool,
     ) -> CcSnippet<'tcx> {
         let cc_name = &field.cc_name;
-        let bracketed_cc_name = if self.db.kythe_annotations() {
-            quote! { __CAPTURE_BEGIN__ #cc_name __CAPTURE_END__ }
-        } else {
-            quote! { #cc_name }
-        };
+        let bracketed_cc_name = capture_for_kythe(self.db, cc_name);
 
         let cpp_type = match field.cpp_type {
             Err(ref err) => return self.emit_field_err(&field, err, current_visibility),
@@ -4368,9 +4340,8 @@ fn format_const_value<'tcx>(
                 let field_snippet = format_const_value(db, field_const_val, field_ty)?;
                 let field_value = field_snippet.into_tokens(&mut prereqs);
                 let name = field_def.ident(tcx).to_string();
-                let unkeyworded = code_gen_utils::unkeyword_cpp_ident(&name);
-                let field_ident = format_cc_ident(unkeyworded.as_ref())
-                    .unwrap_or_else(|_err| format_ident!("__field{index}"));
+                let field_ident =
+                    format_cc_ident(&name).unwrap_or_else(|_err| format_ident!("__field{index}"));
                 field_tokens.push(quote! { .#field_ident = #field_value });
             }
 
@@ -4533,11 +4504,7 @@ pub fn create_type_alias_with_rs_type<'tcx>(
         attributes.push(cc_deprecated_tag);
     }
 
-    let bracketed_alias_name = if db.kythe_annotations() {
-        quote! { __CAPTURE_BEGIN__ #alias_name __CAPTURE_END__ }
-    } else {
-        quote! { #alias_name }
-    };
+    let bracketed_alias_name = capture_for_kythe(db, &alias_name);
 
     let mut snippet = cc_bindings.map_snippets(|actual_type_name| {
         quote! { __NEWLINE__ #doc_comment using #bracketed_alias_name #(#attributes)* = #actual_type_name; }

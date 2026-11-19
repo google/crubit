@@ -25,7 +25,9 @@ use format_type::{
     is_bridged_type, is_thunk_required, region_is_elided, should_wrap_in_movable, BridgedType,
     CallableInfo, CallableKind, CcParamTy,
 };
-use generate_comment::{generate_deprecated_tag, generate_doc_comment, must_use_attr_of};
+use generate_comment::{
+    capture_for_kythe, generate_deprecated_tag, generate_doc_comment, must_use_attr_of,
+};
 use generate_function_thunk::{
     classify_param_abi, classify_value_abi, dyn_erased_future_output_ty, fn_arg_idents,
     format_dyn_erased_future_ty, function_symbol_name, generate_thunk_decl, generate_thunk_impl,
@@ -1027,11 +1029,7 @@ pub fn generate_function<'tcx>(
             quote! { #cc_name }
         }
     };
-    let bracketed_decl_name = if db.kythe_annotations() {
-        quote! { __CAPTURE_BEGIN__ #main_api_fn_name __CAPTURE_END__ }
-    } else {
-        quote! { #main_api_fn_name }
-    };
+    let bracketed_decl_name = capture_for_kythe(db, &main_api_fn_name);
 
     let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_ret_type = if is_async {
