@@ -9,7 +9,10 @@ cc_library(
     name = "ast_helpers",
     hdrs = ["ast_helpers.h"],
     visibility = ["//nullability/inference:__pkg__"],
-    deps = ["@llvm-project//clang:ast"],
+    deps = [
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+    ],
 )
 
 cc_library(
@@ -115,7 +118,6 @@ cc_test(
     deps = [
         ":pointer_nullability",
         ":pointer_nullability_analysis",
-        ":pointer_nullability_lattice",
         ":pragma",
         ":type_nullability",
         "@abseil-cpp//absl/base:nullability",
@@ -215,7 +217,6 @@ cc_test(
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",
-        "@llvm-project//clang:lex",
         "@llvm-project//clang:testing",
         "@llvm-project//clang:transformer",
         "@llvm-project//llvm:Support",
@@ -282,7 +283,6 @@ cc_library(
     hdrs = ["loc_filter.h"],
     visibility = ["//nullability/inference:__pkg__"],
     deps = [
-        "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
