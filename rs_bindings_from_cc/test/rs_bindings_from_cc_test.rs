@@ -329,3 +329,32 @@ fn test_clang_depfile_args() {
         "Verify that the depfile includes transitive dependencies"
     );
 }
+
+#[gtest]
+fn test_flagfile_hidden_and_deprecated() {
+    let help_out = rs_bindings_from_cc_cmd().arg("--help").output().unwrap();
+    expect_true!(help_out.status.success());
+    expect_that!(String::from_utf8_lossy(&help_out.stdout), not(contains_substring("--flagfile")));
+
+    let hidden_out = rs_bindings_from_cc_cmd().arg("--help-hidden").output().unwrap();
+    expect_true!(hidden_out.status.success());
+    let hidden_stdout = String::from_utf8_lossy(&hidden_out.stdout);
+    expect_that!(hidden_stdout, contains_substring("--flagfile"));
+    expect_that!(hidden_stdout, contains_substring("Deprecated"));
+
+    let mut inv = TestInvocation::new();
+    inv.public_headers.push(PathBuf::from("no_such_file.h"));
+    let flagfile = inv.tempdir.path().join("flags.txt");
+    fs::write(&flagfile, "--do_nothing\n--stderrthreshold=1\n").unwrap();
+    inv.extra_crubit_args.push(format!("--flagfile={}", flagfile.display()));
+
+    let out = inv.run_and_expect_success();
+    expect_that!(
+        String::from_utf8_lossy(&out.stderr),
+        contains_substring("`--flagfile` is deprecated")
+    );
+    expect_that!(
+        fs::read_to_string(&inv.rs_out).unwrap(),
+        contains_substring("// intentionally left empty because --do_nothing was passed.")
+    );
+}

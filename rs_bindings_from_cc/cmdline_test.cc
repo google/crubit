@@ -136,7 +136,7 @@ TEST(CmdlineTest, BasicCorrectInput) {
 }
 
 // Parses `extra_args` together with the minimal set of required flags.
-llvm::Expected<CmdlineArgs> ParseArgv(std::vector<const char*> extra_args) {
+llvm::Expected<CmdlineArgs> ParseArgv(std::vector<std::string> extra_args) {
   std::vector<const char*> argv = {
       "rs_bindings_from_cc",
       "--rs_out=rs_out",
@@ -146,7 +146,9 @@ llvm::Expected<CmdlineArgs> ParseArgv(std::vector<const char*> extra_args) {
       "--target=//:t1",
       R"(--target_args=[{"t": "//:t1", "h": ["h1"]}])",
   };
-  argv.insert(argv.end(), extra_args.begin(), extra_args.end());
+  for (const std::string& arg : extra_args) {
+    argv.push_back(arg.c_str());
+  }
   CRUBIT_ASSIGN_OR_RETURN(Cmdline cmdline,
                           Cmdline::FromArgv(argv.size(), argv.data()));
   return std::move(cmdline).args();
@@ -253,15 +255,20 @@ TEST(CmdlineTest, MissingArgumentsAreReportedTogether) {
                      HasSubstr("please specify --target_args"))));
 }
 
-// Writes `contents` to a paramfile and returns the `@path` argument for it.
-std::string Paramfile(llvm::StringRef contents) {
+// Writes `contents` to a test-scoped temp file and returns its path.
+std::string WriteTempFile(llvm::StringRef suffix, llvm::StringRef contents) {
   std::string path =
       testing::TempDir() + "/" +
-      testing::UnitTest::GetInstance()->current_test_info()->name() + ".param";
+      testing::UnitTest::GetInstance()->current_test_info()->name() +
+      suffix.str();
   std::ofstream f(path);
-  f << contents.str();
-  f.close();
-  return "@" + path;
+  f.write(contents.data(), contents.size());
+  return path;
+}
+
+// Writes `contents` to a paramfile and returns the `@path` argument for it.
+std::string Paramfile(llvm::StringRef contents) {
+  return "@" + WriteTempFile(".param", contents);
 }
 
 TEST(CmdlineTest, ParamfileExpand) {
@@ -297,6 +304,125 @@ TEST(CmdlineTest, ParamfileBackslashEscape) {
   std::string paramfile = Paramfile(R"(--ir_out=\\\')");
   ASSERT_OK_AND_ASSIGN(CmdlineArgs args, ParseArgv({paramfile.c_str()}));
   EXPECT_EQ(args.ir_out, R"(\')");
+}
+
+// Writes `contents` to a flagfile and returns its path.
+std::string WriteFlagfile(llvm::StringRef suffix, llvm::StringRef contents) {
+  return WriteTempFile(suffix.str() + ".flags", contents);
+}
+
+TEST(CmdlineTest, FlagfileExpand) {
+  std::string path = WriteFlagfile(
+      "",
+      "# leading comment\n"
+      "   # indented comment\n"
+      "\n"
+      "   \t  \n"
+      "  --ir_out=ir_out\r\n"
+      "--is_golden_test\n"
+      "--crubit_support_path_format=\"support/{header}\"\n"
+      "--template_blocklist_path_regex=foo\\bar#baz\n"
+      "--target_args=[{\"t\": \"//:t1\", \"h\": [\"h1\", \"h2\"]}]\n");
+  ASSERT_OK_AND_ASSIGN(CmdlineArgs args, ParseArgv({"--flagfile=" + path}));
+  EXPECT_EQ(args.ir_out, "ir_out");
+  EXPECT_EQ(args.is_golden_test, true);
+  EXPECT_EQ(args.crubit_support_path_format,
+            "\"support/{header}\"");
+  EXPECT_EQ(args.template_blocklist_path_regex, R"(foo\bar#baz)");
+  EXPECT_EQ(args.headers_to_targets.lookup(HeaderName("h2")),
+            BazelLabel("//:t1"));
+}
+
+TEST(CmdlineTest, FlagfileSyntaxVariations) {
+  std::string f1 = WriteFlagfile("_1", "--ir_out=from_f1\n");
+  std::string f2 = WriteFlagfile("_2", "--namespaces_out=from_f2\n");
+  std::string f3 = WriteFlagfile("_3", "--error_report_out=from_f3\n");
+  ASSERT_OK_AND_ASSIGN(CmdlineArgs args,
+                       ParseArgv({"--flagfile=", "-flagfile=" + f1,
+                                  "--flagfile", f2, "-flagfile", f3}));
+  EXPECT_EQ(args.ir_out, "from_f1");
+  EXPECT_EQ(args.namespaces_out, "from_f2");
+  EXPECT_EQ(args.error_report_out, "from_f3");
+}
+
+TEST(CmdlineTest, FlagfileCommaSeparatedAndPrecedence) {
+  std::string f1 =
+      WriteFlagfile("_1", "--ir_out=from_f1\n--namespaces_out=from_f1\n");
+  std::string f2 = WriteFlagfile("_2", "--ir_out=from_f2\n");
+  std::string arg = "--flagfile=" + f1 + "," + f2;
+  ASSERT_OK_AND_ASSIGN(CmdlineArgs args,
+                       ParseArgv({"--namespaces_out=before_cli", arg,
+                                  "--error_report_out=after_cli"}));
+  EXPECT_EQ(args.ir_out, "from_f2");
+  EXPECT_EQ(args.namespaces_out, "from_f1");
+  EXPECT_EQ(args.error_report_out, "after_cli");
+
+  ASSERT_OK_AND_ASSIGN(CmdlineArgs overridden,
+                       ParseArgv({arg, "--ir_out=after_cli"}));
+  EXPECT_EQ(overridden.ir_out, "after_cli");
+}
+
+TEST(CmdlineTest, FlagfileNestedAndSequentialReuse) {
+  std::string inner = WriteFlagfile("_inner", "--ir_out=from_inner\n");
+  std::string outer =
+      WriteFlagfile("_outer", "--ir_out=before\n--flagfile=" + inner +
+                                  "\n--namespaces_out=from_outer\n"
+                                  "--flagfile=" +
+                                  inner + "\n");
+  ASSERT_OK_AND_ASSIGN(CmdlineArgs args, ParseArgv({"--flagfile=" + outer}));
+  EXPECT_EQ(args.ir_out, "from_inner");
+  EXPECT_EQ(args.namespaces_out, "from_outer");
+}
+
+TEST(CmdlineTest, FlagfileRecursiveCycleErrors) {
+  std::string f1 = WriteFlagfile("_1", "");
+  std::string f2 = WriteFlagfile("_2", "--flagfile=" + f1 + "\n");
+  WriteFlagfile("_1", "--flagfile=" + f2 + "\n");
+  EXPECT_THAT(ParseArgv({"--flagfile=" + f1}),
+              StatusIs(StatusCode::kInvalidArgument,
+                       HasSubstr("Recursive --flagfile expansion")));
+}
+
+TEST(CmdlineTest, FlagfileInsideParamfile) {
+  std::string flagfile = WriteFlagfile("", "--ir_out=from_flagfile\n");
+  ASSERT_OK_AND_ASSIGN(CmdlineArgs args,
+                       ParseArgv({Paramfile("--flagfile=" + flagfile + "\n")}));
+  EXPECT_EQ(args.ir_out, "from_flagfile");
+}
+
+TEST(CmdlineTest, FlagfileAfterDashDashIsPassedToClang) {
+  ASSERT_OK_AND_ASSIGN(
+      CmdlineArgs args,
+      ParseArgv({"--", "--flagfile=nonexistent.flags", "-x", "c++"}));
+  EXPECT_THAT(args.clang_args,
+              ElementsAre("--flagfile=nonexistent.flags", "-x", "c++"));
+}
+
+TEST(CmdlineTest, FlagfileUnknownFlagErrors) {
+  EXPECT_THAT(
+      ParseArgv({"--flagfile=" + WriteFlagfile("", "--unknown_flag=123\n")}),
+      StatusIs(StatusCode::kInvalidArgument,
+               HasSubstr("Unknown command line argument")));
+}
+
+TEST(CmdlineTest, FlagfileInvalidInputs) {
+  EXPECT_THAT(ParseArgv({"--flagfile"}),
+              StatusIs(StatusCode::kInvalidArgument,
+                       HasSubstr("Missing the value for the flag 'flagfile'")));
+
+  EXPECT_THAT(
+      ParseArgv({"--flagfile=" + testing::TempDir() + "/does_not_exist.flags"}),
+      StatusIs(StatusCode::kInvalidArgument, HasSubstr("Can't open flagfile")));
+
+  EXPECT_THAT(ParseArgv({"--flagfile=" +
+                         WriteFlagfile("_positional", "# ok\nnot_a_flag\n")}),
+              StatusIs(StatusCode::kInvalidArgument,
+                       HasSubstr("Unexpected line 2 in the flagfile")));
+
+  EXPECT_THAT(
+      ParseArgv({"--flagfile=" + WriteFlagfile("_dashdash", "--\n-x\n")}),
+      StatusIs(StatusCode::kInvalidArgument,
+               HasSubstr("Flagfile can't contain positional arguments or --")));
 }
 
 TEST(CmdlineTest, TargetArgsEmpty) {
