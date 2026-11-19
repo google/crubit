@@ -83,7 +83,7 @@ if (myresult.has_value()) {
 ```
 
 A more complete description of the API is in the common `ResultBase` public base
-class: support/rs_std/result.h
+class: support/rs/result.h
 
 ## `Option`
 
@@ -107,7 +107,7 @@ std::optional<int32_t> direct = rust_crate::find_index(name);
 ```
 
 A more complete description of the API is in the common `OptionBase` public base
-class: support/rs_std/option.h
+class: support/rs/option.h
 
 ## `Tuple`
 
@@ -122,14 +122,14 @@ rs::Tuple<int32_t, int32_t> pair = {1, 2};
 auto [first, second] = pair;
 ```
 
-The support header is support/rs_std/tuple.h.
+The support header is support/rs/tuple.h.
 
 ## `Vec`
 
 The Rust `Vec<T>` generic receives C++ bindings as `rs::Vec<T>`, so long as `T`
 is a type supported by Crubit. Each `rs::Vec<T>` is a generated specialization
 that inherits its public API from the common `VecBase<T>` base class in
-support/rs_std/vec.h. The API is modeled on
+support/rs/vec.h. The API is modeled on
 [`std::vector`](https://en.cppreference.com/cpp/container/vector), with a few
 differences noted below.
 
@@ -202,7 +202,7 @@ Differences from `std::vector` worth knowing about:
     there is no `erase`, `resize`, or range `insert`. For other operations,
     write a small Rust helper function and call it through its Crubit bindings.
 
-## Availability of generic `rs_std` specializations
+## Availability of generic `rs` specializations
 
 Generic standard library types such as `rs::Option<T>`, `rs::Result<T, E>`,
 `rs::Tuple<Ts...>`, and `rs::Vec<T>` are only defined for type arguments that
@@ -219,18 +219,16 @@ do not appear in any of the Rust APIs you depend on is a compile-time error.
 Rust function traits and callable parameters receive bindings through
 `rs::FnRef` and `rs::Fn`:
 
-*   **`rs::FnRef<Sig>`** (`support/rs_std/fn_ref.h`):
-    Non-owning, borrowed view of a callable corresponding to `&dyn Fn` or
-    `&mut dyn FnMut` (or generic `impl Fn` / `impl FnMut`). Does not allocate on
-    the heap.
-*   **`rs::Fn<Sig>`** (`support/rs_std/fn.h`): Owning,
+*   **`rs::FnRef<Sig>`** (`support/rs/fn_ref.h`): Non-owning,
+    borrowed view of a callable corresponding to `&dyn Fn` or `&mut dyn FnMut`
+    (or generic `impl Fn` / `impl FnMut`). Does not allocate on the heap.
+*   **`rs::Fn<Sig>`** (`support/rs/fn.h`): Owning,
     heap-allocated callable corresponding to `Box<dyn Fn>`, `Box<dyn FnMut>`, or
     `Box<dyn FnOnce>` (or generic `impl FnOnce + 'static`). `rs::Fn<Sig &&>`
     corresponds to `FnOnce` and must be invoked via `std::move(f)(...)`.
-*   **`rs::DynCallable<Sig>`**
-    (`support/rs_std/dyn_callable.h`): Move-only wrapper for
-    Rust `Box<dyn Trait>` objects received in C++, implicitly convertible to
-    `absl::AnyInvocable<Sig>`.
+*   **`rs::DynCallable<Sig>`** (`support/rs/dyn_callable.h`):
+    Move-only wrapper for Rust `Box<dyn Trait>` objects received in C++,
+    implicitly convertible to `absl::AnyInvocable<Sig>`.
 
 See [Callbacks](http://crubit.rs/types/callbacks) for the complete guide and
 examples.

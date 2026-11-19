@@ -17,8 +17,8 @@ below.
 [Rust documentation
 says](https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#char)
 that “Rust char is 32-bit wide” and
-[that](https://doc.rust-lang.org/reference/type-layout.html) `size_of::<char>()
-== 4` . Additionally, [Rust documentation
+[that](https://doc.rust-lang.org/reference/type-layout.html)
+`size_of::<char>() == 4` . Additionally, [Rust documentation
 describes](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)
 some invalid bit patterns that may result in undefined behavior: “a value in a
 `char` which is a surrogate or above `char::MAX`”.
@@ -30,7 +30,7 @@ guarantee a particular ABI (e.g. whether `char` value can be passed in a
 general-purpose register VS in a vector register VS has to be passed by
 pointer). `cc_bindings_from_rs` assumes that Rust `char` has the same alignment
 and ABI as `uint32_t` (and therefore the same ABI as `rs::char_` from
-`crubit/support/rs_std/char.h`).
+`crubit/support/rs/char.h`).
 
 The assumptions are verified by assertions that verify the properties of the
 target architecture when `cc_bindings_from_rs` runs (`layout.align()`,
@@ -41,8 +41,8 @@ just be tweaked to wrap another of the C++ integer types.
 
 ## Rust built-in `[T]` slice type
 
-`extern “C”` thunks generated in `..._cc_api_impl.rs` can take `&[T]`, `&mut
-[T]`, `*const [T]` and similar arguments (or return them).
+`extern “C”` thunks generated in `..._cc_api_impl.rs` can take `&[T]`,
+`&mut [T]`, `*const [T]` and similar arguments (or return them).
 
 [Rust documentation
 describes](https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html)

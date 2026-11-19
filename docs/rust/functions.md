@@ -100,15 +100,14 @@ fn process_mut_bytes(_: &mut [u8]) {}  // Cannot pass string literals or const s
 ```
 
 *   **`&[T]`**: Maps to `rs::SliceRef<const T>`
-    (`crubit/support/rs_std/slice_ref.h`). Converts implicitly from
+    (`crubit/support/rs/slice_ref.h`). Converts implicitly from
     `absl::Span<const T>`, `absl::Span<T>`, `std::span<const T>`,
     `std::span<T>`, `std::vector<T>`, and `std::array<T, N>`.
-*   **`&mut [T]`**: Maps to `rs::SliceRef<T>`
-    (`crubit/support/rs_std/slice_ref.h`). Converts implicitly from mutable
-    `std::span<T>` and `absl::Span<T>`, or construct via
-    `rs::SliceRef(ptr, size)`.
-*   **`&str`**: Maps to `rs::StrRef` (`crubit/support/rs_std/str_ref.h`).
-    Converts from string literals and `std::string_view`.
+*   **`&mut [T]`**: Maps to `rs::SliceRef<T>` (`crubit/support/rs/slice_ref.h`).
+    Converts implicitly from mutable `std::span<T>` and `absl::Span<T>`, or
+    construct via `rs::SliceRef(ptr, size)`.
+*   **`&str`**: Maps to `rs::StrRef` (`crubit/support/rs/str_ref.h`). Converts
+    from string literals and `std::string_view`.
 *   **`&[u8]`**: Maps to `rs::SliceRef<const uint8_t>`. In addition to
     `absl::Span` and `std::span`, also converts from string literals and
     `std::string_view`.

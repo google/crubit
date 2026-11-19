@@ -87,7 +87,7 @@ use inline_cpp_macro::{global_cpp, inline_cpp};
 
 global_cpp! {
     #include "path/to/widget.h"
-    #include "support/rs_std/str_ref.h"
+    #include "support/rs/str_ref.h"
 }
 
 impl Widget {

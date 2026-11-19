@@ -58,8 +58,8 @@ or generic `impl Trait` parameters:
 
 The generated headers include the necessary support headers automatically:
 
-*   `rs::FnRef`: `#include "support/rs_std/fn_ref.h"`
-*   `rs::Fn`: `#include "support/rs_std/fn.h"`
+*   `rs::FnRef`: `#include "support/rs/fn_ref.h"`
+*   `rs::Fn`: `#include "support/rs/fn.h"`
 
 ## Passing callbacks from C++ to Rust
 
@@ -132,10 +132,10 @@ int32_t res3 = rust_api::apply_fn_once(
 
 When C++ code receives an owned Rust callback (for example, stored in a Rust
 struct field exposed to C++), the C++ type is `rs::DynCallable<Sig>`
-(`support/rs_std/dyn_callable.h`).
+(`support/rs/dyn_callable.h`).
 
-`rs::DynCallable` is a move-only functional wrapper around Rust's `Box<dyn
-Trait>`. It is **implicitly convertible** to `absl::AnyInvocable`:
+`rs::DynCallable` is a move-only functional wrapper around Rust's
+`Box<dyn Trait>`. It is **implicitly convertible** to `absl::AnyInvocable`:
 
 ```c++
 rs::DynCallable<void() &&> rust_callback = ...;

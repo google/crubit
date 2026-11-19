@@ -57,8 +57,8 @@ variant:
     `E(std::in_place_type<E::Variant>, ...)`), passing the variant's fields in
     declaration order.
 *   **Inspecting variants and payloads**
-    (`#include "support/rs_std/enum.h"`,
-    `//support/rs_std:enum`):
+    (`#include "support/rs/enum.h"`,
+    `//support/rs:enum`):
     *   `rs::holds_alternative<E::Variant>(e)` returns `true` if `e` holds
         `Variant`.
     *   `rs::get_if<E::Variant>(&e)` returns a pointer (`const E::Variant*` or

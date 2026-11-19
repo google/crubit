@@ -36,15 +36,15 @@ convert from the C++ message type to the Rust message type.)
 
 ## Calling Rust APIs using Protobuf message types {#rust}
 
-| Rust                          | C++                                 |
-| :---------------------------- | :---------------------------------- |
-| `Message`                     | `Message`                           |
-| `MessageView`                 | `const Message*`                    |
-| `MessageMut`                  | `Message*`                          |
-| `&Message`                    | `const proto::Rust<Message>&`       |
-| `*const Message`              | `const proto::Rust<Message>*`       |
-| `Message` (as a struct field) | `proto::Rust<Message>`              |
-| `Vec<Message>`                | `rs_std::Vec<proto::Rust<Message>>` |
+| Rust                          | C++                             |
+| :---------------------------- | :------------------------------ |
+| `Message`                     | `Message`                       |
+| `MessageView`                 | `const Message*`                |
+| `MessageMut`                  | `Message*`                      |
+| `&Message`                    | `const proto::Rust<Message>&`   |
+| `*const Message`              | `const proto::Rust<Message>*`   |
+| `Message` (as a struct field) | `proto::Rust<Message>`          |
+| `Vec<Message>`                | `rs::Vec<proto::Rust<Message>>` |
 
 Protocol buffers are supported by value, and using the `View` and `Mut` view
 types, where they are mapped to C++ pointers.
