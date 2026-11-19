@@ -17,9 +17,9 @@
 
 #include "absl/base/nullability.h"
 #include "nullability/type_nullability.h"
-#include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTDumper.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/TypeBase.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
