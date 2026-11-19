@@ -161,10 +161,27 @@ jobs:
         --remote_download_outputs=minimal
         --remote_download_regex='.*\.(a|h|inc|def)$'
         rs_bindings_from_cc:rs_bindings_from_cc_main
-    - name: "Set up Bazel environment for Cargo"
-      run: python3 cargo/build/setup_bazel_env.py 
+    # Stage both CMake (bin/llvm-config + cmake-vars.sh) and Cargo
+    # (bazel-env.sh) setups in one pass without modifying GITHUB_ENV, so each
+    # step explicitly sources only its own environment variables.
+    - name: "Set up Bazel LLVM outputs for CMake and Cargo"
+      run: python3 cargo/build/setup_bazel_env.py --cmake-llvm-root target/bazel_llvm_root
+    - name: "Build rs_bindings_from_cc using CMake"
+      run: |
+        source target/bazel_llvm_root/cmake-vars.sh
+        cmake -S cmake/rs_bindings_from_cc -B cmake_build -G Ninja \
+          $LAUNCHER_FLAGS \
+          -DCMAKE_C_COMPILER="$CRUBIT_CMAKE_C_COMPILER" \
+          -DCMAKE_CXX_COMPILER="$CRUBIT_CMAKE_CXX_COMPILER" \
+          -DCRUBIT_LLVM_ROOT="$CRUBIT_LLVM_ROOT" \
+          -DCRUBIT_LLVM_DEV_DATE="$CRUBIT_LLVM_DEV_DATE" \
+          -DCRUBIT_CARGO_PROFILE=dev
+        cmake --build cmake_build
+        ./cmake_build/bin/rs_bindings_from_cc --help
     - name: "Build rs_bindings_from_cc using Cargo"
-      run: cargo build --verbose --locked -p rs_bindings_from_cc
+      run: |
+        source target/bazel_outputs/bazel-env.sh
+        cargo build --verbose --locked -p rs_bindings_from_cc
     - name: Show sccache stats
       if: steps.setup.outputs.sccache_enabled == 'true' && always()
       run: sccache --show-stats
