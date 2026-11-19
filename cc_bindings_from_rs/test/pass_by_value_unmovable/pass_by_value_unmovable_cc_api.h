@@ -194,7 +194,7 @@ inline void takes_val_unmovable(
       _val_slot.Get());
 }
 
-}  // namespace pass_by_value_unmovable
+}
 
 #pragma clang assume_nonnull end
 

@@ -169,7 +169,7 @@ inline void take_by_value(
   return __crubit_internal::__crubit_thunk_take_uby_uvalue(_x_slot.Get());
 }
 
-}  // namespace non_trivially_destructible
+}
 
 #pragma clang assume_nonnull end
 

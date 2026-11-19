@@ -33,7 +33,7 @@ namespace reexport {
 
 ::cc_ns::CcType make_value(::std::int32_t value);
 
-}  // namespace reexport
+}
 
 namespace reexport {
 
@@ -41,7 +41,7 @@ namespace reexport {
 // CRUBIT_ANNOTATE: cpp_move_constructible=
 using CcType CRUBIT_INTERNAL_RUST_TYPE(":: cc_type :: cc_ns :: CcType") =
     ::cc_ns::CcType;
-}  // namespace reexport
+}
 
 namespace reexport {
 
@@ -64,7 +64,7 @@ inline ::cc_ns::CcType make_value(::std::int32_t value) {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace reexport
+}
 
 #pragma clang assume_nonnull end
 

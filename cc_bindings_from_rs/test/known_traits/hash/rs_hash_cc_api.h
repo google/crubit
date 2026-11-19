@@ -139,7 +139,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 ::rs_hash::derived_enum::Color create_red();
 
-}  // namespace rs_hash::derived_enum
+}
 
 namespace rs_hash::derived_struct {
 
@@ -162,7 +162,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_hash_golden :: derived_struct :: Point")
 ::rs_hash::derived_struct::Point create_point(::std::int32_t x,
                                               ::std::int32_t y);
 
-}  // namespace rs_hash::derived_struct
+}
 
 namespace rs_hash::derived_tuple_struct {
 
@@ -188,7 +188,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 ::rs_hash::derived_tuple_struct::TupleStruct create_tuple(::std::int32_t x,
                                                           ::std::int32_t y);
 
-}  // namespace rs_hash::derived_tuple_struct
+}
 
 namespace rs_hash::explicit_struct {
 
@@ -213,7 +213,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 ::rs_hash::explicit_struct::CustomHashStruct create_custom(
     ::std::int32_t value);
 
-}  // namespace rs_hash::explicit_struct
+}
 
 template <>
 struct ::rs::impl<::rs_hash::derived_enum::Color, ::rs::core::cmp::Eq> {
@@ -253,7 +253,7 @@ struct hash<::rs_hash::derived_enum::Color> {
                 self));
   }
 };
-}  // namespace std
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020derived_ustruct_x00000020_x0000003a_x0000003a_x00000020Point_x00000020_x0000003e
@@ -273,7 +273,7 @@ struct hash<::rs_hash::derived_struct::Point> {
                 self));
   }
 };
-}  // namespace std
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020derived_utuple_ustruct_x00000020_x0000003a_x0000003a_x00000020TupleStruct_x00000020_x0000003e
@@ -294,7 +294,7 @@ struct hash<::rs_hash::derived_tuple_struct::TupleStruct> {
                 self));
   }
 };
-}  // namespace std
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020explicit_ustruct_x00000020_x0000003a_x0000003a_x00000020CustomHashStruct_x00000020_x0000003e
@@ -315,7 +315,7 @@ struct hash<::rs_hash::explicit_struct::CustomHashStruct> {
                 self));
   }
 };
-}  // namespace std
+}
 #endif
 
 namespace rs_hash::derived_enum {
@@ -421,7 +421,7 @@ inline ::rs_hash::derived_enum::Color create_red() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace rs_hash::derived_enum
+}
 
 namespace rs_hash::derived_struct {
 
@@ -482,7 +482,7 @@ inline ::rs_hash::derived_struct::Point create_point(::std::int32_t x,
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace rs_hash::derived_struct
+}
 
 namespace rs_hash::derived_tuple_struct {
 
@@ -545,7 +545,7 @@ inline ::rs_hash::derived_tuple_struct::TupleStruct create_tuple(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace rs_hash::derived_tuple_struct
+}
 
 namespace rs_hash::explicit_struct {
 
@@ -607,7 +607,7 @@ inline ::rs_hash::explicit_struct::CustomHashStruct create_custom(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace rs_hash::explicit_struct
+}
 
 #pragma clang assume_nonnull end
 

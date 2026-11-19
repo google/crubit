@@ -639,10 +639,14 @@ fn clang_format(input: String, clang_format_exe_path: &Path) -> Result<String> {
         "clang-format",
         clang_format_exe_path,
         [
-            // Skip `UsingDeclarationsSorter` and `ObjCHeaderStyleGuesser` (which runs when stdin's
-            // `<stdin>` filename has no extension or `.h`), avoiding two full-file lex +
-            // `TokenAnnotator` passes on generated C++ files.
-            OsStr::new("--style={BasedOnStyle: Google, SortUsingDeclarations: Never}"),
+            // Skip `NamespaceEndCommentsFixer` (which is very slow on large files with many
+            // namespaces—every comment it inserts rebuilds the whole file—and noticeably increases
+            // header size), `UsingDeclarationsSorter`, and `ObjCHeaderStyleGuesser` (which runs
+            // when stdin's `<stdin>` filename has no extension or `.h`), avoiding extra full-file
+            // passes on generated C++ files.
+            OsStr::new(
+                "--style={BasedOnStyle: Google, FixNamespaceComments: false, SortUsingDeclarations: Never}",
+            ),
             OsStr::new("--sort-includes=false"),
             OsStr::new("--assume-filename=input.cc"),
         ],
@@ -994,7 +998,7 @@ using b::B;
 using a::A;
 void foo() {}
 void bar() {}
-}  // namespace ns"#
+}"#
         );
     }
 

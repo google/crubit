@@ -75,7 +75,7 @@ inline void ::tag_decl_annotations::SomeStruct::
   using __crubit_assert_type = ::tag_decl_annotations::SomeStruct;
   static_assert(0 == offsetof(__crubit_assert_type, f));
 }
-}  // namespace tag_decl_annotations
+}
 
 #pragma clang assume_nonnull end
 

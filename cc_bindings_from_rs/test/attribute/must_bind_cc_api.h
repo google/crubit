@@ -70,7 +70,7 @@ extern "C" void __crubit_thunk_bar();
 }
 inline void bar() { return __crubit_internal::__crubit_thunk_bar(); }
 
-}  // namespace must_bind
+}
 
 #pragma clang assume_nonnull end
 

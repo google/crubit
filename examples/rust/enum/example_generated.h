@@ -142,7 +142,7 @@ inline ::example_crate::Color::Color(::crubit::UnsafeRelocateTag,
   ::std::memcpy(this, &value, sizeof(value));
 }
 
-}  // namespace example_crate
+}
 
 #pragma clang assume_nonnull end
 

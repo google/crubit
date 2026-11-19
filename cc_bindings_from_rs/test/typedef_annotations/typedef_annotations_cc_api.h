@@ -30,7 +30,7 @@ namespace typedef_annotations {
 // cc_bindings_from_rs/test/typedef_annotations/typedef_annotations.rs;l=5
 using Alias CRUBIT_INTERNAL_RUST_TYPE(
     ":: typedef_annotations_golden :: Alias") = ::std::int32_t;
-}  // namespace typedef_annotations
+}
 
 #pragma clang assume_nonnull end
 

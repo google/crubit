@@ -210,7 +210,7 @@ inline ::std::int32_t call_fn_ptr_with_repr_c_struct_ptr_containing_seven(
           fn_ptr);
 }
 
-}  // namespace function_pointers
+}
 
 #pragma clang assume_nonnull end
 

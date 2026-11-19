@@ -760,7 +760,7 @@ inline void ::into::NotFfiSafe::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::into::NotFfiSafe;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace into
+}
 
 #pragma clang assume_nonnull end
 

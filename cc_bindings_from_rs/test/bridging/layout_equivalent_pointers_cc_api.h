@@ -46,7 +46,7 @@ inline void test_format_func_arg_pointer_like(
       __crubit_thunk_test_uformat_ufunc_uarg_upointer_ulike(__param_0);
 }
 
-}  // namespace layout_equivalent_pointers::test_format_func_arg_pointer_like
+}
 
 namespace layout_equivalent_pointers::test_format_return_type_pointer_like {
 
@@ -59,7 +59,7 @@ inline CppType* crubit_nullable test_format_return_type_pointer_like() {
       __crubit_thunk_test_uformat_ureturn_utype_upointer_ulike();
 }
 
-}  // namespace layout_equivalent_pointers::test_format_return_type_pointer_like
+}
 
 #pragma clang assume_nonnull end
 

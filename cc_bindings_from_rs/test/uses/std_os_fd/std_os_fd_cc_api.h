@@ -30,7 +30,7 @@ namespace std_os_fd {
 // reachable through a transitive re-export of the standard library
 // (b/262052635).
 
-}  // namespace std_os_fd
+}
 
 #pragma clang assume_nonnull end
 

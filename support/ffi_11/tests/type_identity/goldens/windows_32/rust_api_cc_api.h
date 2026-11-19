@@ -205,7 +205,7 @@ inline ::std::uint16_t c_ushort() {
   return __crubit_internal::__crubit_thunk_c_uushort();
 }
 
-}  // namespace rust_api
+}
 
 #pragma clang assume_nonnull end
 

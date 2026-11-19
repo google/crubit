@@ -109,7 +109,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyInt")
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace rs_ops
+}
 
 template <>
 struct ::rs::impl<::rs_ops::MyBorrowedInt, ::rs::core::cmp::Eq> {
@@ -567,7 +567,7 @@ inline void ::rs_ops::MyInt::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::rs_ops::MyInt;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace rs_ops
+}
 
 #pragma clang assume_nonnull end
 

@@ -45,7 +45,7 @@ namespace generics {
 template <typename T>
 struct GenericStruct;
 struct SelfReferentialViaPhantom;
-}  // namespace generics
+}
 
 namespace generics {
 template <typename T>
@@ -218,7 +218,7 @@ instantiate_with_array();
 // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
 // supported (b/258259459)
 
-}  // namespace generics
+}
 
 namespace generics {
 
@@ -227,7 +227,7 @@ struct RenamedSubGeneric {
   static_assert(false, "This template can only be used via a specialization");
 };
 
-}  // namespace generics
+}
 
 namespace generics {
 
@@ -297,7 +297,7 @@ struct hash<::generics::DerivedGeneric<::std::int32_t>> {
                 self));
   }
 };
-}  // namespace std
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020GenericEnum_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
@@ -852,7 +852,7 @@ OuterWithNestedGenericField final {
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace generics
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020GenericUnion_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020GenericUnion_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
@@ -1072,7 +1072,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace generics
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020Ping_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020Ping_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
@@ -1771,7 +1771,7 @@ instantiate_with_array() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace generics
+}
 
 namespace generics {
 
@@ -1802,7 +1802,7 @@ inline ::generics::GenericStruct<::std::int64_t> use_aliased_generic(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace generics
+}
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020DerivedGeneric_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020NotPartialEqOrDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020DerivedGeneric_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020generics_x00000020_x0000003a_x0000003a_x00000020NotPartialEqOrDefault_x00000020_x0000003e
@@ -1827,7 +1827,7 @@ inline void ::generics::DerivedGeneric<
       ::generics::DerivedGeneric<::generics::NotPartialEqOrDefault>;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -1907,7 +1907,7 @@ inline void ::generics::DerivedGeneric<
   using __crubit_assert_type = ::generics::DerivedGeneric<::std::int32_t>;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -1965,7 +1965,7 @@ inline void ::generics::GenericEnum<
     static_assert(0 == offsetof(__crubit_assert_variant_type, __field0));
   }
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -2114,7 +2114,7 @@ inline void ::generics::GenericStruct<
       ::generics::GenericStruct<::std::array<::std::int32_t, 4>>;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -2269,7 +2269,7 @@ inline void ::generics::GenericStruct<::generics::GenericStruct<
       ::generics::GenericStruct<::generics::GenericStruct<::std::uint32_t>>;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -2383,7 +2383,7 @@ inline void ::generics::GenericStruct<
       ::generics::GenericStruct<::generics::NotPartialEqOrDefault>;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -2525,7 +2525,7 @@ inline void ::generics::GenericStruct<
       ::generics::GenericStruct<::generics::PartialEqAndDefault>;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -2684,7 +2684,7 @@ inline void ::generics::GenericStruct<
   using __crubit_assert_type = ::generics::GenericStruct<::std::int32_t>;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -2831,7 +2831,7 @@ inline void ::generics::GenericStruct<
   using __crubit_assert_type = ::generics::GenericStruct<::std::int64_t>;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -2971,7 +2971,7 @@ inline void ::generics::GenericStruct<
   using __crubit_assert_type = ::generics::GenericStruct<::std::uint32_t>;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3002,7 +3002,7 @@ inline void ::generics::GenericUnion<
   static_assert(0 == offsetof(__crubit_assert_type, val));
   static_assert(0 == offsetof(__crubit_assert_type, raw));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3052,7 +3052,7 @@ inline void ::generics::GenericWithDrop<
       ::generics::GenericWithDrop<::generics::NotPartialEqOrDefault>;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3136,7 +3136,7 @@ inline void ::generics::GenericWithDrop<
   using __crubit_assert_type = ::generics::GenericWithDrop<::std::int32_t>;
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3168,7 +3168,7 @@ inline void ::generics::LifetimeAndTypeGeneric<
       ::generics::LifetimeAndTypeGeneric<::std::int32_t>;
   static_assert(0 == offsetof(__crubit_assert_type, reference));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3189,7 +3189,7 @@ inline void ::generics::MultiGenericStruct<
   static_assert(0 == offsetof(__crubit_assert_type, seconds));
   static_assert(12 == offsetof(__crubit_assert_type, first));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3232,7 +3232,7 @@ inline void ::generics::MultiGenericStruct<
   static_assert(0 == offsetof(__crubit_assert_type, seconds));
   static_assert(12 == offsetof(__crubit_assert_type, first));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3268,7 +3268,7 @@ inline void ::generics::PhantomGeneric<
       ::generics::PhantomGeneric<::generics::SelfReferentialViaPhantom>;
   static_assert(0 == offsetof(__crubit_assert_type, id));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3308,7 +3308,7 @@ inline void ::generics::Ping<
   using __crubit_assert_type = ::generics::Ping<::std::int32_t>;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3334,7 +3334,7 @@ inline void ::generics::RenamedSubGeneric<
   using __crubit_assert_type = ::generics::RenamedSubGeneric<::std::int32_t>;
   static_assert(0 == offsetof(__crubit_assert_type, item));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3362,7 +3362,7 @@ inline void ::generics::MultiGenericStruct<
   static_assert(0 == offsetof(__crubit_assert_type, seconds));
   static_assert(12 == offsetof(__crubit_assert_type, first));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3407,7 +3407,7 @@ inline void ::generics::MultiGenericStruct<
   static_assert(0 == offsetof(__crubit_assert_type, seconds));
   static_assert(12 == offsetof(__crubit_assert_type, first));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3431,7 +3431,7 @@ inline void ::generics::MultiGenericStruct<
   static_assert(0 == offsetof(__crubit_assert_type, seconds));
   static_assert(12 == offsetof(__crubit_assert_type, first));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3455,7 +3455,7 @@ inline void ::generics::MultiGenericStruct<
   static_assert(0 == offsetof(__crubit_assert_type, seconds));
   static_assert(12 == offsetof(__crubit_assert_type, first));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3482,7 +3482,7 @@ inline void ::generics::Pong<
       ::generics::Pong<::generics::Wrapper<::std::int32_t>>;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3526,7 +3526,7 @@ inline void ::generics::Wrapper<
       ::generics::Wrapper<::generics::NotPartialEqOrDefault>;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace generics
+}
 
 #endif
 
@@ -3569,7 +3569,7 @@ inline void ::generics::Wrapper<
   using __crubit_assert_type = ::generics::Wrapper<::std::int32_t>;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace generics
+}
 
 #endif
 

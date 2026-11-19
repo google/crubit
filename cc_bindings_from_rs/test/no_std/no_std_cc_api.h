@@ -77,7 +77,7 @@ inline void ::no_std::NoStdStruct::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::no_std::NoStdStruct;
   static_assert(0 == offsetof(__crubit_assert_type, test));
 }
-}  // namespace no_std
+}
 
 #pragma clang assume_nonnull end
 

@@ -61,7 +61,7 @@ inline void test_format_bridged_func_arg_by_pointer(
       __crubit_thunk_test_uformat_ubridged_ufunc_uarg_uby_upointer(__param_0);
 }
 
-}  // namespace bridged_types::test_format_bridged_func_arg_by_pointer
+}
 
 namespace bridged_types::test_format_bridged_func_arg_by_value {
 
@@ -74,7 +74,7 @@ inline void test_format_bridged_func_arg_by_value(cpp_ns::CppType _a) {
       __crubit_thunk_test_uformat_ubridged_ufunc_uarg_uby_uvalue(&_a);
 }
 
-}  // namespace bridged_types::test_format_bridged_func_arg_by_value
+}
 
 namespace bridged_types::test_format_bridged_return_type_by_pointer {
 
@@ -91,7 +91,7 @@ inline CppType* crubit_nullable test_format_bridged_return_type_by_pointer() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace bridged_types::test_format_bridged_return_type_by_pointer
+}
 
 namespace bridged_types::test_format_bridged_return_type_by_value {
 
@@ -108,7 +108,7 @@ inline cpp_ns::CppType test_format_bridged_return_type_by_value() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace bridged_types::test_format_bridged_return_type_by_value
+}
 
 #pragma clang assume_nonnull end
 

@@ -294,7 +294,7 @@ inline void mut_refs(::std::int32_t& __param_0, ::std::int32_t& __param_1) {
   return __crubit_internal::__crubit_thunk_mut_urefs(__param_0, __param_1);
 }
 
-}  // namespace aliasing_references
+}
 
 #pragma clang assume_nonnull end
 

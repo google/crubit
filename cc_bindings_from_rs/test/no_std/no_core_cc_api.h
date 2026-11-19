@@ -74,7 +74,7 @@ inline void ::no_core::Test::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::no_core::Test;
   static_assert(0 == offsetof(__crubit_assert_type, s_));
 }
-}  // namespace no_core
+}
 
 #pragma clang assume_nonnull end
 

@@ -440,7 +440,7 @@ inline void public_function() {
       __crubit_thunk_ANY_IDENTIFIER_CHARACTERS();
 }
 
-}  // namespace test_crate::public_module
+}
 
 #pragma clang assume_nonnull end
 
@@ -495,7 +495,7 @@ inline void public_function() {
       __crubit_thunk_ANY_IDENTIFIER_CHARACTERS();
 }
 
-}  // namespace test_crate::public_module
+}
 
 #pragma clang assume_nonnull end
 

@@ -206,7 +206,7 @@ inline void ::send_sync_types::SyncButNotSend::
   using __crubit_assert_type = ::send_sync_types::SyncButNotSend;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace send_sync_types
+}
 
 #pragma clang assume_nonnull end
 

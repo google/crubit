@@ -36,7 +36,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type")
 
 void function();
 
-}  // namespace example_crate
+}
 
 namespace example_crate::module {
 
@@ -59,7 +59,7 @@ inline void ::example_crate::Type::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::example_crate::Type;
   static_assert(0 == offsetof(__crubit_assert_type, x));
 }
-}  // namespace example_crate
+}
 
 namespace example_crate::module {
 using ::example_crate::function;
@@ -72,7 +72,7 @@ extern "C" void __crubit_thunk_function();
 }
 inline void function() { return __crubit_internal::__crubit_thunk_function(); }
 
-}  // namespace example_crate
+}
 
 #pragma clang assume_nonnull end
 

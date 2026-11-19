@@ -109,7 +109,7 @@ inline void ::struct_with_conflicting_fields_and_member_functions::X::
   static_assert(4 == offsetof(__crubit_assert_type, b_));
   static_assert(8 == offsetof(__crubit_assert_type, c));
 }
-}  // namespace struct_with_conflicting_fields_and_member_functions
+}
 
 #pragma clang assume_nonnull end
 

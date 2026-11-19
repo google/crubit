@@ -109,7 +109,7 @@ inline void never_return() {
   __crubit_internal::__crubit_thunk_never_ureturn();
 }
 
-}  // namespace never
+}
 
 #pragma clang assume_nonnull end
 

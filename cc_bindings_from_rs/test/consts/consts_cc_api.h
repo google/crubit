@@ -273,7 +273,7 @@ float roundtrip_f32(float x);
 // CRUBIT_ANNOTATE: must_bind=
 double roundtrip_f64(double x);
 
-}  // namespace consts
+}
 
 template <>
 struct ::rs::impl<::consts::FloatStruct, ::rs::core::fmt::Debug> {
@@ -624,7 +624,7 @@ inline double roundtrip_f64(double x) {
   return __crubit_internal::__crubit_thunk_roundtrip_uf64(x);
 }
 
-}  // namespace consts
+}
 
 #pragma clang assume_nonnull end
 

@@ -54,7 +54,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
 
 ::unions::repr_c::U create();
 
-}  // namespace unions::repr_c
+}
 
 namespace unions::repr_c_clone {
 
@@ -86,7 +86,7 @@ U final {
 
 ::unions::repr_c_clone::U create();
 
-}  // namespace unions::repr_c_clone
+}
 
 namespace unions::repr_c_drop {
 
@@ -113,7 +113,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace unions::repr_c_drop
+}
 
 namespace unions::repr_c_packed {
 
@@ -143,7 +143,7 @@ __attribute__((packed)) U final {
 
 ::unions::repr_c_packed::U create();
 
-}  // namespace unions::repr_c_packed
+}
 
 namespace unions::repr_rust {
 
@@ -184,7 +184,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
 
 ::unions::repr_rust::U create();
 
-}  // namespace unions::repr_rust
+}
 
 namespace unions::repr_rust_clone {
 
@@ -222,7 +222,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
 
 ::unions::repr_rust_clone::U create();
 
-}  // namespace unions::repr_rust_clone
+}
 
 namespace unions::repr_rust_drop {
 
@@ -256,7 +256,7 @@ U final {
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace unions::repr_rust_drop
+}
 
 namespace unions::repr_rust_packed {
 
@@ -290,7 +290,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
 
 ::unions::repr_rust_packed::U create();
 
-}  // namespace unions::repr_rust_packed
+}
 
 namespace unions::repr_c {
 
@@ -321,7 +321,7 @@ inline ::unions::repr_c::U create() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace unions::repr_c
+}
 
 namespace unions::repr_c_clone {
 
@@ -376,7 +376,7 @@ inline ::unions::repr_c_clone::U create() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace unions::repr_c_clone
+}
 
 namespace unions::repr_c_drop {
 
@@ -421,7 +421,7 @@ inline void ::unions::repr_c_drop::U::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::unions::repr_c_drop::U;
   static_assert(0 == offsetof(__crubit_assert_type, x));
 }
-}  // namespace unions::repr_c_drop
+}
 
 namespace unions::repr_c_packed {
 
@@ -454,7 +454,7 @@ inline ::unions::repr_c_packed::U create() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace unions::repr_c_packed
+}
 
 namespace unions::repr_rust {
 
@@ -517,7 +517,7 @@ inline ::unions::repr_rust::U create() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace unions::repr_rust
+}
 
 namespace unions::repr_rust_clone {
 
@@ -592,7 +592,7 @@ inline ::unions::repr_rust_clone::U create() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace unions::repr_rust_clone
+}
 
 namespace unions::repr_rust_drop {
 
@@ -655,7 +655,7 @@ inline void ::unions::repr_rust_drop::U::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::unions::repr_rust_drop::U;
   static_assert(0 == offsetof(__crubit_assert_type, x));
 }
-}  // namespace unions::repr_rust_drop
+}
 
 namespace unions::repr_rust_packed {
 
@@ -690,7 +690,7 @@ inline ::unions::repr_rust_packed::U create() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace unions::repr_rust_packed
+}
 
 #pragma clang assume_nonnull end
 

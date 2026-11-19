@@ -42,7 +42,7 @@ namespace transitive_reexports {
 ::direct::Transitive direct_to_transittive_type_alias(
     ::direct::Direct const& direct);
 
-}  // namespace transitive_reexports
+}
 
 namespace transitive_reexports {
 
@@ -123,7 +123,7 @@ inline ::direct::Transitive direct_to_transittive_type_alias(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace transitive_reexports
+}
 
 #pragma clang assume_nonnull end
 

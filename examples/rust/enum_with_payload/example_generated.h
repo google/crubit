@@ -173,7 +173,7 @@ inline void ::example_crate::Color::__crubit_field_offset_assertions() {
     static_assert(3 == offsetof(__crubit_assert_type, __field2));
   }
 }
-}  // namespace example_crate
+}
 
 #pragma clang assume_nonnull end
 

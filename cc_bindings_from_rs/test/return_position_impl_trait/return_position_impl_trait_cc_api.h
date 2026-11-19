@@ -195,7 +195,7 @@ inline ::crubit::DynErasedFuture<void> return_impl_future_with_drop(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace return_position_impl_trait
+}
 
 #pragma clang assume_nonnull end
 

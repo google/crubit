@@ -38,7 +38,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX")
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace uses_reexport
+}
 
 namespace uses_reexport {
 
@@ -105,7 +105,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Foo") alignas(4)
 
 ::std::int32_t g2();
 
-}  // namespace uses_reexport
+}
 
 namespace uses_reexport {
 
@@ -118,7 +118,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G")
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace uses_reexport
+}
 
 namespace uses_reexport {
 
@@ -150,7 +150,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: X1") alignas(4)
 
 ::std::int32_t f2();
 
-}  // namespace uses_reexport
+}
 
 namespace uses_reexport {
 
@@ -168,7 +168,7 @@ inline void ::uses_reexport::InnerX::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::uses_reexport::InnerX;
   static_assert(0 == offsetof(__crubit_assert_type, field));
 }
-}  // namespace uses_reexport
+}
 
 namespace uses_reexport {
 
@@ -235,7 +235,7 @@ extern "C" ::std::int32_t __crubit_thunk_g2();
 }
 inline ::std::int32_t g2() { return __crubit_internal::__crubit_thunk_g2(); }
 
-}  // namespace uses_reexport
+}
 
 namespace uses_reexport::test_mod {
 
@@ -258,7 +258,7 @@ inline void ::uses_reexport::G::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::uses_reexport::G;
   static_assert(0 == offsetof(__crubit_assert_type, field));
 }
-}  // namespace uses_reexport
+}
 
 namespace uses_reexport::test_use_glob {
 
@@ -284,7 +284,7 @@ inline void ::uses_reexport::X1::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::uses_reexport::X1;
   static_assert(0 == offsetof(__crubit_assert_type, x));
 }
-}  // namespace uses_reexport
+}
 
 namespace uses_reexport::test_use_glob {
 using ::uses_reexport::f1;
@@ -297,7 +297,7 @@ extern "C" ::std::int32_t __crubit_thunk_f1();
 }
 inline ::std::int32_t f1() { return __crubit_internal::__crubit_thunk_f1(); }
 
-}  // namespace uses_reexport
+}
 
 namespace uses_reexport::test_use_glob {
 using ::uses_reexport::f2;
@@ -310,7 +310,7 @@ extern "C" ::std::int32_t __crubit_thunk_f2();
 }
 inline ::std::int32_t f2() { return __crubit_internal::__crubit_thunk_f2(); }
 
-}  // namespace uses_reexport
+}
 
 #pragma clang assume_nonnull end
 

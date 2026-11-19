@@ -39,7 +39,7 @@ namespace [[deprecated]] deprecated_module {
 
 }
 
-}  // namespace modules
+}
 
 namespace modules::impl_in_separate_private_module {
 
@@ -59,7 +59,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace modules::impl_in_separate_private_module
+}
 
 namespace modules::outer {
 
@@ -71,7 +71,7 @@ namespace [[deprecated]] inner_deprecated {
 
 }
 
-}  // namespace modules::outer
+}
 
 namespace modules::outer::middle {
 
@@ -83,7 +83,7 @@ namespace [[deprecated]] innermost_deprecated {
 
 }
 
-}  // namespace modules::outer::middle
+}
 
 namespace modules::basic_module {
 
@@ -95,7 +95,7 @@ inline ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_ui32(x, y);
 }
 
-}  // namespace modules::basic_module
+}
 
 namespace modules {
 
@@ -109,9 +109,9 @@ inline ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_ui32(x, y);
 }
 
-}  // namespace deprecated_module
+}
 
-}  // namespace modules
+}
 
 namespace modules::impl_in_separate_private_module {
 
@@ -153,7 +153,7 @@ inline void ::modules::impl_in_separate_private_module::Foo::
   using __crubit_assert_type = ::modules::impl_in_separate_private_module::Foo;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
-}  // namespace modules::impl_in_separate_private_module
+}
 
 #pragma clang assume_nonnull end
 

@@ -418,7 +418,7 @@ inline crubit::test::MyStatus return_status_or_unit_alias() {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace layout_equivalent_generics
+}
 
 #pragma clang assume_nonnull end
 

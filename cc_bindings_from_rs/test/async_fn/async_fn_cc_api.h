@@ -335,7 +335,7 @@ inline ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace async_fn
+}
 
 #pragma clang assume_nonnull end
 
