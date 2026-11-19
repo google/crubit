@@ -87,13 +87,34 @@ jobs:
               '.include += [{version: $floor, id: "llvm-floor", label: ("llvm-" + $floor[:8])}]' <<< "$VERSIONS")
           fi
 
+          # Releases are filtered against the floor, so they also need it.
+          if [[ -n "${FLOOR-}" ]]; then
+            # The newest point release of each of the MAJORS newest major
+            # releases, in numbered slots like Rust's stables.
+            MAJORS=2
+            TAGS=$(git ls-remote --tags https://github.com/llvm/llvm-project.git 'llvmorg-*')
+            # A release that fails to resolve goes undated, so it is skipped
+            # below. The counter stops a skipped release from shifting later
+            # slots.
+            SLOT=0
+            for MAJOR in $(sed -nE 's|.*refs/tags/llvmorg-([0-9]+)\.[0-9]+\.[0-9]+\^\{\}$|\1|p' <<< "$TAGS" | sort -rnu | head -n "$MAJORS"); do
+              LATEST=$(grep -E "refs/tags/llvmorg-${MAJOR}\.[0-9]+\.[0-9]+\^\{\}$" <<< "$TAGS" | sort -t$'\t' -k2,2V | tail -n 1)
+              COMMIT=$(cut -f1 <<< "$LATEST")
+              TAG=$(sed -E 's|.*refs/tags/llvmorg-(.*)\^\{\}$|\1|' <<< "$LATEST")
+              VERSIONS=$(jq -c --arg c "$COMMIT" --arg t "$TAG" --arg id "llvm-release-$SLOT" \
+                '.include += [{version: $c, id: $id, label: ("llvm-" + $t)}]' <<< "$VERSIONS")
+              SLOT=$((SLOT + 1))
+            done
+          fi
+
           # Dated once here, so Bazel in each llvm-build job stays offline and
           # we can display that date in the badge.
           DATES='{}'
           for COMMIT in $(jq -r '.include[].version' <<< "$VERSIONS"); do
-            # An empty date leaves the lookup to that entry's Bazel.
+            # An empty date leaves the lookup to that entry's Bazel, which
+            # dates a main commit offline from its archive.
             if ! DEV_DATE=$(python3 -I crubit/cargo/build/get_llvm_commit_date.py "$COMMIT"); then
-              echo "::warning::Could not date LLVM ${COMMIT}; its llvm-build job will look the date up itself."
+              echo "::warning::Could not date LLVM ${COMMIT}."
               DEV_DATE=""
             fi
             DATES=$(jq -c --arg c "$COMMIT" --arg d "$DEV_DATE" '.[$c] = $d' <<< "$DATES")
@@ -105,6 +126,13 @@ jobs:
             if (.id == "llvm-head" or .id == "llvm-floor") and .dev_date != ""
             then .label = "llvm-\(.dev_date[:4])-\(.dev_date[4:6])-\(.dev_date[6:]) (\(.version[:8]))"
             else . end)' <<< "$VERSIONS")
+
+          # Skip releases that forked before the floor.
+          #
+          # Also skip undated releases, which Bazel would date online, and
+          # every release when the floor itself is undated.
+          VERSIONS=$(jq -c --arg f "$(jq -r --arg c "$FLOOR" '.[$c]' <<< "$DATES")" \
+            '.include |= map(select((.id | startswith("llvm-release-") | not) or ($f != "" and .dev_date >= $f)))' <<< "$VERSIONS")
 
           # Set output for downstream jobs
           echo "matrix=$VERSIONS" >> $GITHUB_OUTPUT
@@ -277,7 +305,7 @@ jobs:
     needs: update-and-generate
     runs-on: ubuntu-latest
     # An uncached commit builds LLVM from source. Head pays that once per day,
-    # and the floor once each time it moves.
+    # releases once per point release, and the floor once each time it moves.
     timeout-minutes: 180
     strategy:
       fail-fast: false
@@ -340,6 +368,7 @@ jobs:
           BODY="Attention $TEAM_HANDLE: building Crubit against one or more LLVM commits failed.
 
           - **Head:** already published to \`llvm_commit.txt\` on \`test-matrix\`, so PR CI is using it. If this is an upstream breakage, roll back by editing that file to the previous SHA and pushing.
+          - **A release:** Crubit no longer builds against that LLVM. Fix Crubit, or raise the floor to exclude that release if dropping that LLVM is deliberate.
           - **The floor:** Crubit no longer builds against the oldest LLVM that \`bazel/llvm_floor.txt\` claims. Fix Crubit, or raise the floor there if dropping that LLVM is deliberate.
 
           **Run Details:** [View Workflow Run](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)"
