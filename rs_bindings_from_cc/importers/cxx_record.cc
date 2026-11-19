@@ -713,6 +713,50 @@ llvm::Error PopulateTemplateSpecializationKind(
                                ictx.AreAssumedLifetimesEnabledForTarget(
                                    ictx.GetOwningTarget(*specialization_decl)));
       return llvm::Error::success();
+    } else if (templated_decl->getName() == "variant") {
+      if (specialization_decl->getTemplateArgs().size() != 1) {
+        return crubit::InvalidArgumentError(
+            "std::variant must have exactly one template argument (the pack)");
+      }
+      const clang::TemplateArgument& pack_arg =
+          specialization_decl->getTemplateArgs()[0];
+      if (pack_arg.getKind() != clang::TemplateArgument::Pack) {
+        return crubit::InvalidArgumentError(
+            "std::variant template argument must be a pack");
+      }
+      llvm::ArrayRef<clang::TemplateArgument> pack = pack_arg.getPackAsArray();
+      if (pack.size() == 0 || pack.size() >= 255) {
+        return crubit::InvalidArgumentError(
+            "std::variant must have between 1 and 254 types");
+      }
+      // Under the Itanium C++ ABI, if alternative 0 starts with an empty base
+      // class at offset 0 of the same type as one of libc++ std::variant's
+      // internal empty bases (such as std::optional<T> inheriting from
+      // __optional_sfinae_ctor_base_t), the Itanium non-virtual union EBO
+      // exclusion rule places the union at offset 1 instead of 0. In that case,
+      // we fall back to normal opaque record bindings instead of StdVariant.
+      // We also check field_empty() to allow empty mock std::variant
+      // declarations in unit tests.
+      if (!specialization_decl->isDependentContext() &&
+          specialization_decl->isCompleteDefinition() &&
+          !specialization_decl->field_empty() &&
+          ictx.ctx_.getASTRecordLayout(specialization_decl).getFieldOffset(0) !=
+              0) {
+        return crubit::InvalidArgumentError(
+            "std::variant fails Itanium ABI empty base optimization");
+      }
+      auto* std_variant = kind.mutable_std_variant();
+      for (const clang::TemplateArgument& arg : pack) {
+        if (arg.getKind() != clang::TemplateArgument::Type) {
+          return crubit::InvalidArgumentError(
+              "std::variant pack arguments must be types");
+        }
+        *std_variant->add_element_types() = ictx.ConvertQualType(
+            arg.getAsType(), /*lifetimes=*/nullptr, /*nullable=*/true,
+            ictx.AreAssumedLifetimesEnabledForTarget(
+                ictx.GetOwningTarget(*specialization_decl)));
+      }
+      return llvm::Error::success();
     } else if (templated_decl->getName() == "vector") {
       CRUBIT_ASSIGN_OR_RETURN(clang::QualType t,
                               ParameterizedByTAndStdTraitT(

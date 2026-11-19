@@ -8,3 +8,4 @@
 //! in `deps` (not `cc_deps`) and use types such as `cpp_std::unique_ptr<T>`.
 
 pub use cc_std::std::*;
+pub use cc_std::{trivial_variant, variant};

@@ -1752,3 +1752,154 @@ fn test_format_ty_for_cc_rejects_non_bitwise_relocatable_by_value() {
         );
     }
 }
+
+#[test]
+fn test_cpp_layout_equivalent_variant() {
+    let test_src = r#"
+        #![feature(custom_inner_attributes, register_tool)]
+        #![register_tool(crubit_annotate)]
+        #![recursion_limit = "512"]
+        pub mod cc_std {
+            pub mod std {
+                pub mod coproduct {
+                    pub enum CNil {}
+                    pub enum Coproduct<H, T> {
+                        Inl(H),
+                        Inr(T),
+                    }
+                }
+
+                #[doc="CRUBIT_ANNOTATE: cpp_type = ::std::variant<{Ts...}>"]
+                #[doc="CRUBIT_ANNOTATE: include_path = <variant>"]
+                #[repr(C)]
+                pub struct variant<Ts> {
+                    pub raw: Ts,
+                    pub index: u8,
+                }
+
+                #[doc="CRUBIT_ANNOTATE: cpp_type = ::std::variant<{Ts...}>"]
+                #[doc="CRUBIT_ANNOTATE: include_path = <variant>"]
+                #[repr(C)]
+                pub struct trivial_variant<Ts> {
+                    pub raw: Ts,
+                    pub index: u8,
+                }
+            }
+        }
+
+        use cc_std::std::coproduct::{CNil, Coproduct};
+
+        type C1<Tail> = Coproduct<i32, Tail>;
+        type C4<Tail> = C1<C1<C1<C1<Tail>>>>;
+        type C16<Tail> = C4<C4<C4<C4<Tail>>>>;
+        type C64<Tail> = C16<C16<C16<C16<Tail>>>>;
+        type Coproduct254 = C64<C64<C64<C16<C16<C16<C4<C4<C4<C1<C1<CNil>>>>>>>>>>>;
+        type Coproduct255 = C1<Coproduct254>;
+
+        pub mod user_types {
+            pub struct NonMovable {
+                _field: i32,
+            }
+            impl Drop for NonMovable {
+                fn drop(&mut self) {}
+            }
+
+            pub struct CNil(pub NonMovable);
+            pub struct Coproduct<const N: usize>(pub [NonMovable; N]);
+        }
+
+        pub struct SomeStruct {
+            pub v: cc_std::std::variant<(i32, f64)>,
+            pub t: cc_std::std::trivial_variant<(i32, f64)>,
+            pub coproduct_v: cc_std::std::variant<Coproduct<i32, Coproduct<f64, CNil>>>,
+            pub non_list: cc_std::std::variant<i32>,
+            pub bad_tail: cc_std::std::variant<Coproduct<i32, u32>>,
+            pub empty_tuple: cc_std::std::variant<()>,
+            pub empty_cnil: cc_std::std::variant<CNil>,
+            pub max_arity: cc_std::std::variant<Coproduct254>,
+            pub too_many: cc_std::std::variant<Coproduct255>,
+            pub user_cnil_variant: cc_std::std::variant<user_types::CNil>,
+            pub user_cnil: user_types::CNil,
+            pub user_coproduct: user_types::Coproduct<1>,
+            pub non_movable_coproduct: Coproduct<user_types::NonMovable, CNil>,
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = bindings_db_for_tests(tcx);
+        let struct_def_id = find_def_id_by_name(tcx, "SomeStruct");
+        let adt_def = tcx.adt_def(struct_def_id);
+        let fields = &adt_def.non_enum_variant().fields;
+        let field_ty = |idx: usize| {
+            tcx.type_of(fields.iter().nth(idx).unwrap().did)
+                .instantiate_identity()
+                .skip_normalization()
+        };
+
+        let formatted_v = db.format_cc_type(field_ty(0), TypeLocation::Other).unwrap();
+        assert_eq!(
+            formatted_v.snippet.tokens.to_string(),
+            ":: std :: variant <:: std :: int32_t , double >"
+        );
+
+        let formatted_t = db.format_cc_type(field_ty(1), TypeLocation::Other).unwrap();
+        assert_eq!(
+            formatted_t.snippet.tokens.to_string(),
+            ":: std :: variant <:: std :: int32_t , double >"
+        );
+
+        let formatted_coproduct = db.format_cc_type(field_ty(2), TypeLocation::Other).unwrap();
+        assert_eq!(
+            formatted_coproduct.snippet.tokens.to_string(),
+            ":: std :: variant <:: std :: int32_t , double >"
+        );
+        assert!(db.is_cpp_move_constructible(field_ty(2)));
+
+        let non_list_err = db.format_cc_type(field_ty(3), TypeLocation::Other).unwrap_err();
+        assert!(
+            non_list_err.to_string().contains("Unable to splat"),
+            "unexpected error for non-list type: {non_list_err:#}"
+        );
+
+        let bad_tail_err = db.format_cc_type(field_ty(4), TypeLocation::Other).unwrap_err();
+        assert!(
+            bad_tail_err.to_string().contains("Unable to splat"),
+            "unexpected error for invalid Coproduct tail: {bad_tail_err:#}"
+        );
+
+        let empty_tuple_err = db.format_cc_type(field_ty(5), TypeLocation::Other).unwrap_err();
+        assert!(
+            empty_tuple_err
+                .to_string()
+                .contains("std::variant must have between 1 and 254 types, got 0"),
+            "unexpected error for empty tuple variant: {empty_tuple_err:#}"
+        );
+
+        let empty_cnil_err = db.format_cc_type(field_ty(6), TypeLocation::Other).unwrap_err();
+        assert!(
+            empty_cnil_err
+                .to_string()
+                .contains("std::variant must have between 1 and 254 types, got 0"),
+            "unexpected error for CNil variant: {empty_cnil_err:#}"
+        );
+
+        assert!(db.format_cc_type(field_ty(7), TypeLocation::Other).is_ok());
+
+        let too_many_err = db.format_cc_type(field_ty(8), TypeLocation::Other).unwrap_err();
+        assert!(
+            too_many_err
+                .to_string()
+                .contains("std::variant must have between 1 and 254 types, got 255"),
+            "unexpected error for 255-element variant: {too_many_err:#}"
+        );
+
+        let user_cnil_err = db.format_cc_type(field_ty(9), TypeLocation::Other).unwrap_err();
+        assert!(
+            user_cnil_err.to_string().contains("expected a tuple or `Coproduct<..., CNil>`"),
+            "unexpected error for user-defined CNil: {user_cnil_err:#}"
+        );
+
+        assert!(!db.is_cpp_move_constructible(field_ty(10)));
+        assert!(!db.is_cpp_move_constructible(field_ty(11)));
+        assert!(!db.is_cpp_move_constructible(field_ty(12)));
+    });
+}

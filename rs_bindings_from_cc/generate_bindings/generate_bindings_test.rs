@@ -2693,7 +2693,6 @@ fn test_box_rejects_non_unpin_and_incomplete_pointees() -> Result<()> {
     );
     Ok(())
 }
-
 #[gtest]
 fn test_unnameable_template_instantiation_with_nested_static_var_has_doc_hidden_mod() -> Result<()>
 {
@@ -2847,5 +2846,222 @@ fn test_predefined_sugar_types_without_cstddef_include() -> Result<()> {
             ...
         }
     );
+    Ok(())
+}
+
+#[gtest]
+fn test_std_variant_trivial() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        namespace std { template <typename... Ts> class variant { char c; }; }
+        std::variant<int, float> v;
+    "#,
+    )?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub static mut v: ::cc_std::trivial_variant![::ffi_11::c_int, f32];
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_std_variant_one_element() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        namespace std { template <typename... Ts> class variant { char c; }; }
+        std::variant<int> v;
+    "#,
+    )?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub static mut v: ::cc_std::trivial_variant![::ffi_11::c_int];
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_std_variant_non_trivial() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        namespace std { template <typename... Ts> class variant { char c; }; }
+        struct NonTrivial {
+            ~NonTrivial();
+        };
+        std::variant<int, NonTrivial> v;
+    "#,
+    )?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub static mut v: ::cc_std::variant![::ffi_11::c_int, crate::NonTrivial];
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_std_variant_of_non_trivial_existing_rust_type_is_not_trivial() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        void takes_variant_by_value(std::variant<int, NonTrivial> v);
+        "#,
+        r#"
+        class [[clang::annotate("crubit_internal_rust_type", "RustNonTrivial")]] NonTrivial final {
+          public:
+            NonTrivial(const NonTrivial&);
+            ~NonTrivial();
+          private:
+            void* rep_;
+        };
+        namespace std {
+            template <typename... Ts> class variant { char c; };
+        }
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_variant_by_value(
+                v: ::cc_std::variant![::ffi_11::c_int, ::dependency::RustNonTrivial]
+            )
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { trivial_variant });
+    Ok(())
+}
+
+#[gtest]
+fn test_std_variant_seventeen_elements() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        namespace std { template <typename... Ts> class variant { char c; }; }
+        std::variant<
+            int, int, int, int,
+            int, int, int, int,
+            int, int, int, int,
+            int, int, int, int,
+            int> v;
+    "#,
+    )?
+    .rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+                    pub static mut v: ::cc_std::trivial_variant![
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int,
+        ::ffi_11::c_int
+        ];
+                }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_std_variant_of_non_unpin_type() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc_dependency(
+        r#"
+        namespace std { template <typename... Ts> class variant { char c; }; }
+        void takes_variant_by_value(std::variant<int, dependency::NonUnpin> v);
+    "#,
+        r#"
+        namespace dependency {
+            struct NonUnpin {
+                NonUnpin();
+                NonUnpin(const NonUnpin&);
+                ~NonUnpin();
+            };
+        }
+        "#,
+    )?
+    .rs_api;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_variant_by_value(
+               v: ::ctor::Ctor![::cc_std::variant![::ffi_11::c_int, ::dependency::dependency::NonUnpin]]
+            )
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_std_variant_with_incomplete_type_fails() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        namespace std { template <typename... Ts> class variant { char c; }; }
+        struct Incomplete;
+        void f(std::variant<int, Incomplete> v);
+    "#,
+    )?
+    .rs_api;
+    assert_rs_not_matches!(rs_api, quote! { pub fn f });
+    assert!(rs_api.to_string().contains("uses forward-declared type"));
+    Ok(())
+}
+
+#[gtest]
+fn test_std_variant_ebo_failure() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        namespace std {
+        struct EmptyBase {};
+        template <typename... Ts>
+        struct VariantImpl;
+        template <typename T, typename... Rest>
+        struct VariantImpl<T, Rest...> {
+          T head;
+        };
+        template <typename... Ts>
+        class variant : private EmptyBase {
+          VariantImpl<Ts...> impl;
+          unsigned char index;
+        };
+        }
+        struct CollidesWithEmptyBase : std::EmptyBase {
+          int x;
+        };
+        void f(std::variant<CollidesWithEmptyBase, double> v);
+    "#,
+    )?
+    .rs_api;
+    if test_platform().uses_msvc_cxx_abi() {
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub fn f(v: ::cc_std::trivial_variant![crate::CollidesWithEmptyBase, f64])
+            }
+        );
+    } else {
+        assert_rs_not_matches!(rs_api, quote! { pub fn f });
+        assert!(rs_api
+            .to_string()
+            .contains("std::variant fails Itanium ABI empty base optimization"));
+    }
     Ok(())
 }

@@ -498,6 +498,27 @@ pub fn should_receive_bindings<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId
     Ok(())
 }
 
+/// Names of the Crubit support crate that defines `SupportsNullable`, `Nullable`, `Coproduct`,
+/// `CNil`, and the smart pointers.
+pub const SUPPORT_CRATE_NAMES: &[&str] = &["cc_std", "cpp_std"];
+
+/// Returns true if `did` is the item called `name` in the Crubit support crate.
+///
+/// This checks the crate and the item name rather than the full path because the support crate's
+/// hand-written sources are mounted under generated module names (`cc_std::std::__crubit_mod_N`),
+/// where `N` depends on the order of the sources. Crubit owns the support crate, so the names
+/// looked up here are unambiguous in it.
+pub fn is_support_crate_item(db: &BindingsGenerator<'_>, did: DefId, name: &str) -> bool {
+    let tcx = db.tcx();
+    if tcx.item_name(did).as_str() != name {
+        return false;
+    }
+    SUPPORT_CRATE_NAMES.contains(&tcx.crate_name(did.krate).as_str())
+        // The unit tests mock the support crate as `rust_out::cc_std::std`.
+        || matches_qualified_name(db, did, &["rust_out", "cc_std", "std", name])
+        || matches_qualified_name(db, did, &["rust_out", "cc_std", "std", "coproduct", name])
+}
+
 /// Checks whether a definition matches a specific qualified name by matching its definition path
 /// against `name`. Name must include the crate in its path.
 pub fn matches_qualified_name(db: &BindingsGenerator<'_>, item_did: DefId, name: &[&str]) -> bool {

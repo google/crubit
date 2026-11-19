@@ -104,6 +104,35 @@ to and from a Rust `Option<T>` with `.into_option()` or `From`/`Into`, e.g.
 
 API: support/cc_std_impl/optional.rs
 
+## `std::variant<Ts...>` {#variant}
+
+C++'s `std::variant<T0, ..., Tn>` is bound as `cpp_std::variant![T0, ..., Tn]`
+when at least one of its alternatives is not trivially destructible, or
+`cpp_std::trivial_variant![T0, ..., Tn]` when all alternatives are trivially
+destructible (`Copy` in Rust). The `variant!` macro expands to a
+tuple-parameterized `variant<(T0, ..., Tn)>` for up to 8 alternatives and
+automatically falls back to nested `cpp_std::coproduct::Coproduct` types for \>8
+alternatives. Both `variant` and `trivial_variant` are annotated with
+`#[crubit_annotate::cpp_layout_equivalent]` so they map exactly back to
+`std::variant<...>` when passed between Rust and C++.
+
+Pattern match on the active alternative via `.as_ref()`, `.as_mut()`,
+`.as_pin_mut()`, and `.into_enum()`, which directly return the corresponding
+`VariantN<...>` enum (or `Coproduct`). These methods will panic if the variant
+is in a valueless state. Alternatively, directly access an alternative via
+`.get::<T, _>()`, `.get_at::<I>()`, or check the active type with
+`.holds_alternative::<T, _>()`.
+
+Construct variants via `variant::new(val)` (where the alternative is inferred),
+`variant::new_at::<I>(val)`, or `VariantN::V0(val).into()`. For `!Unpin` types
+(such as `cpp_std::string`), use in-place construction via
+`variant::ctor_new(...)` or `variant::ctor_new_at::<I>(...)`, and mutate them in
+place using `.emplace(...)` or `.try_emplace(...)`.
+
+API: support/cc_std_impl/variant.rs,
+support/cc_std_impl/variant_enums.rs,
+support/cc_std_impl/variant_coproduct.rs
+
 ## Unsupported `std` templates
 
 Concrete instantiations of unsupported `std` templates still receive opaque

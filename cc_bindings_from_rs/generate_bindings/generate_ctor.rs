@@ -21,7 +21,7 @@ use generate_function_thunk::{
 };
 use itertools::Itertools;
 use proc_macro2::TokenStream;
-use query_compiler::{is_copy, is_std_ptr_non_null};
+use query_compiler::{is_copy, is_std_ptr_non_null, is_support_crate_item};
 use quote::quote;
 use rustc_middle::ty::{self, Ty};
 use rustc_span::symbol::sym;
@@ -364,6 +364,19 @@ pub fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx
                 if attrs.cpp_type.is_some() && substs.types().next().is_some() {
                     return substs.types().all(|t| db.is_cpp_move_constructible(t));
                 }
+            }
+
+            if is_support_crate_item(db, adt_def.did(), "Coproduct") {
+                return substs.len() == 2
+                    && matches!(
+                        (substs[0].kind(), substs[1].kind()),
+                        (ty::GenericArgKind::Type(head), ty::GenericArgKind::Type(tail))
+                            if db.is_cpp_move_constructible(head)
+                                && db.is_cpp_move_constructible(tail)
+                    );
+            }
+            if is_support_crate_item(db, adt_def.did(), "CNil") {
+                return substs.is_empty();
             }
 
             db.move_ctor_and_assignment_operator_codegen_style(ty).is_some()

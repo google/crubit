@@ -65,6 +65,7 @@ namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI StdVector; }
 namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI StdOptional; }
 namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI StdSharedPtr; }
 namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI StdUniquePtr; }
+namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI StdVariant; }
 namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI AbslSpan; }
 namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI C9Co; }
 namespace template_specialization { struct CRUBIT_FFI_TRIVIAL_ABI StdAtomic; }
@@ -1959,6 +1960,17 @@ struct CRUBIT_FFI_TRIVIAL_ABI StdUniquePtr {
 }  // namespace template_specialization
 
 namespace template_specialization {
+struct CRUBIT_FFI_TRIVIAL_ABI StdVariant {
+  const FfiVec<::crubit::ffi::CcType>& element_types() const { return element_types_; }
+  FfiVec<::crubit::ffi::CcType>* mutable_element_types() { return &element_types_; }
+  void clear_element_types() { element_types_.clear(); }
+  ::crubit::ffi::CcType* add_element_types() { return &element_types_.emplace_back(); }
+  friend bool operator==(const StdVariant&, const StdVariant&) = default;
+  FfiVec<::crubit::ffi::CcType> element_types_{};
+};
+}  // namespace template_specialization
+
+namespace template_specialization {
 struct CRUBIT_FFI_TRIVIAL_ABI AbslSpan {
   AbslSpan() = default;
   explicit AbslSpan(::crubit::ffi::CcType element_type) { *mutable_element_type() = std::move(element_type); }
@@ -2023,12 +2035,13 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
     kStdOptional = 3,
     kStdSharedPtr = 4,
     kStdUniquePtr = 5,
-    kAbslSpan = 6,
-    kAbslFlatHashMap = 7,
-    kAbslFlatHashSet = 8,
-    kC9Co = 9,
-    kStdAtomic = 10,
-    kNonSpecial = 11,
+    kStdVariant = 6,
+    kAbslSpan = 7,
+    kAbslFlatHashMap = 8,
+    kAbslFlatHashSet = 9,
+    kC9Co = 10,
+    kStdAtomic = 11,
+    kNonSpecial = 12,
   };
   Kind() : tag_(kStdStringView), payload_() {}
   Kind(const Kind& other) : tag_(kStdStringView), payload_() { CopyFrom(other); }
@@ -2052,6 +2065,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
   Kind(::crubit::ffi::template_specialization::StdSharedPtr value) : tag_(kStdSharedPtr), payload_(kStdSharedPtr) { new (&payload_.std_shared_ptr_) ::crubit::ffi::template_specialization::StdSharedPtr(std::move(value)); }
   // NOLINTNEXTLINE(google-explicit-constructor)
   Kind(::crubit::ffi::template_specialization::StdUniquePtr value) : tag_(kStdUniquePtr), payload_(kStdUniquePtr) { new (&payload_.std_unique_ptr_) ::crubit::ffi::template_specialization::StdUniquePtr(std::move(value)); }
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  Kind(::crubit::ffi::template_specialization::StdVariant value) : tag_(kStdVariant), payload_(kStdVariant) { new (&payload_.std_variant_) ::crubit::ffi::template_specialization::StdVariant(std::move(value)); }
   // NOLINTNEXTLINE(google-explicit-constructor)
   Kind(::crubit::ffi::template_specialization::AbslSpan value) : tag_(kAbslSpan), payload_(kAbslSpan) { new (&payload_.absl_span_) ::crubit::ffi::template_specialization::AbslSpan(std::move(value)); }
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -2111,6 +2126,16 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
       new (&payload_.std_unique_ptr_) ::crubit::ffi::template_specialization::StdUniquePtr();
     }
     return &payload_.std_unique_ptr_;
+  }
+  bool has_std_variant() const { return tag_ == kStdVariant; }
+  const ::crubit::ffi::template_specialization::StdVariant& std_variant() const { return has_std_variant() ? payload_.std_variant_ : DefaultValue<::crubit::ffi::template_specialization::StdVariant>(); }
+  ::crubit::ffi::template_specialization::StdVariant* mutable_std_variant() {
+    if (!has_std_variant()) {
+      Destroy();
+      tag_ = kStdVariant;
+      new (&payload_.std_variant_) ::crubit::ffi::template_specialization::StdVariant();
+    }
+    return &payload_.std_variant_;
   }
   bool has_absl_span() const { return tag_ == kAbslSpan; }
   const ::crubit::ffi::template_specialization::AbslSpan& absl_span() const { return has_absl_span() ? payload_.absl_span_ : DefaultValue<::crubit::ffi::template_specialization::AbslSpan>(); }
@@ -2173,6 +2198,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
       case kStdOptional: return lhs.payload_.std_optional_ == rhs.payload_.std_optional_;
       case kStdSharedPtr: return lhs.payload_.std_shared_ptr_ == rhs.payload_.std_shared_ptr_;
       case kStdUniquePtr: return lhs.payload_.std_unique_ptr_ == rhs.payload_.std_unique_ptr_;
+      case kStdVariant: return lhs.payload_.std_variant_ == rhs.payload_.std_variant_;
       case kAbslSpan: return lhs.payload_.absl_span_ == rhs.payload_.absl_span_;
       case kAbslFlatHashMap: return lhs.payload_.absl_flat_hash_map_ == rhs.payload_.absl_flat_hash_map_;
       case kAbslFlatHashSet: return lhs.payload_.absl_flat_hash_set_ == rhs.payload_.absl_flat_hash_set_;
@@ -2192,6 +2218,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
       case kStdOptional: std::destroy_at(&payload_.std_optional_); break;
       case kStdSharedPtr: std::destroy_at(&payload_.std_shared_ptr_); break;
       case kStdUniquePtr: std::destroy_at(&payload_.std_unique_ptr_); break;
+      case kStdVariant: std::destroy_at(&payload_.std_variant_); break;
       case kAbslSpan: std::destroy_at(&payload_.absl_span_); break;
       case kAbslFlatHashMap: std::destroy_at(&payload_.absl_flat_hash_map_); break;
       case kAbslFlatHashSet: std::destroy_at(&payload_.absl_flat_hash_set_); break;
@@ -2211,6 +2238,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
       case kStdOptional: new (&payload_.std_optional_) ::crubit::ffi::template_specialization::StdOptional(other.payload_.std_optional_); break;
       case kStdSharedPtr: new (&payload_.std_shared_ptr_) ::crubit::ffi::template_specialization::StdSharedPtr(other.payload_.std_shared_ptr_); break;
       case kStdUniquePtr: new (&payload_.std_unique_ptr_) ::crubit::ffi::template_specialization::StdUniquePtr(other.payload_.std_unique_ptr_); break;
+      case kStdVariant: new (&payload_.std_variant_) ::crubit::ffi::template_specialization::StdVariant(other.payload_.std_variant_); break;
       case kAbslSpan: new (&payload_.absl_span_) ::crubit::ffi::template_specialization::AbslSpan(other.payload_.absl_span_); break;
       case kAbslFlatHashMap: new (&payload_.absl_flat_hash_map_) ::crubit::ffi::template_specialization::AbslFlatHashMap(other.payload_.absl_flat_hash_map_); break;
       case kAbslFlatHashSet: new (&payload_.absl_flat_hash_set_) ::crubit::ffi::template_specialization::AbslFlatHashSet(other.payload_.absl_flat_hash_set_); break;
@@ -2230,6 +2258,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
       case kStdOptional: new (&payload_.std_optional_) ::crubit::ffi::template_specialization::StdOptional(std::move(other.payload_.std_optional_)); break;
       case kStdSharedPtr: new (&payload_.std_shared_ptr_) ::crubit::ffi::template_specialization::StdSharedPtr(std::move(other.payload_.std_shared_ptr_)); break;
       case kStdUniquePtr: new (&payload_.std_unique_ptr_) ::crubit::ffi::template_specialization::StdUniquePtr(std::move(other.payload_.std_unique_ptr_)); break;
+      case kStdVariant: new (&payload_.std_variant_) ::crubit::ffi::template_specialization::StdVariant(std::move(other.payload_.std_variant_)); break;
       case kAbslSpan: new (&payload_.absl_span_) ::crubit::ffi::template_specialization::AbslSpan(std::move(other.payload_.absl_span_)); break;
       case kAbslFlatHashMap: new (&payload_.absl_flat_hash_map_) ::crubit::ffi::template_specialization::AbslFlatHashMap(std::move(other.payload_.absl_flat_hash_map_)); break;
       case kAbslFlatHashSet: new (&payload_.absl_flat_hash_set_) ::crubit::ffi::template_specialization::AbslFlatHashSet(std::move(other.payload_.absl_flat_hash_set_)); break;
@@ -2252,6 +2281,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Kind {
     ::crubit::ffi::template_specialization::StdOptional std_optional_;
     ::crubit::ffi::template_specialization::StdSharedPtr std_shared_ptr_;
     ::crubit::ffi::template_specialization::StdUniquePtr std_unique_ptr_;
+    ::crubit::ffi::template_specialization::StdVariant std_variant_;
     ::crubit::ffi::template_specialization::AbslSpan absl_span_;
     ::crubit::ffi::template_specialization::AbslFlatHashMap absl_flat_hash_map_;
     ::crubit::ffi::template_specialization::AbslFlatHashSet absl_flat_hash_set_;
@@ -2266,6 +2296,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI TemplateSpecialization {
   using StdOptional = ::crubit::ffi::template_specialization::StdOptional;
   using StdSharedPtr = ::crubit::ffi::template_specialization::StdSharedPtr;
   using StdUniquePtr = ::crubit::ffi::template_specialization::StdUniquePtr;
+  using StdVariant = ::crubit::ffi::template_specialization::StdVariant;
   using AbslSpan = ::crubit::ffi::template_specialization::AbslSpan;
   using C9Co = ::crubit::ffi::template_specialization::C9Co;
   using StdAtomic = ::crubit::ffi::template_specialization::StdAtomic;
@@ -4090,6 +4121,15 @@ static_assert(
 static_assert(
   sizeof(size_t) != 8 ||
   offsetof(template_specialization::StdUniquePtr, element_type_) ==
+    0);
+static_assert(std::is_standard_layout_v<template_specialization::StdVariant>);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(template_specialization::StdVariant) == 24 &&
+    alignof(template_specialization::StdVariant) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(template_specialization::StdVariant, element_types_) ==
     0);
 static_assert(std::is_standard_layout_v<template_specialization::AbslSpan>);
 static_assert(

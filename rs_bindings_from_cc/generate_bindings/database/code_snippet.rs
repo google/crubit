@@ -500,7 +500,7 @@ pub fn integer_literal_tokens(integer_constant: IntegerConstant, is_bool: bool) 
 }
 
 pub fn integer_constant_to_token_stream(
-    db: &crate::BindingsGenerator<'_>,
+    _db: &crate::BindingsGenerator<'_>,
     integer_constant: IntegerConstant,
     underlying_type: &RsTypeKind,
 ) -> Result<TokenStream> {

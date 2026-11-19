@@ -439,6 +439,10 @@ pub(crate) fn schema() -> Schema {
             element_type: CcType,
         }
         #[scope("TemplateSpecialization")]
+        struct StdVariant {
+            element_types: Vec(CcType),
+        }
+        #[scope("TemplateSpecialization")]
         struct AbslSpan {
             element_type: CcType,
         }
@@ -467,6 +471,7 @@ pub(crate) fn schema() -> Schema {
             StdOptional(template_specialization::StdOptional),
             StdSharedPtr(template_specialization::StdSharedPtr),
             StdUniquePtr(template_specialization::StdUniquePtr),
+            StdVariant(template_specialization::StdVariant),
             AbslSpan(template_specialization::AbslSpan),
             AbslFlatHashMap(template_specialization::AbslFlatHashMap),
             AbslFlatHashSet(template_specialization::AbslFlatHashSet),

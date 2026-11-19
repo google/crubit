@@ -325,6 +325,8 @@ pub enum UniformReprTemplateType {
         /// `Nullable<unique_ptr<T>>` rather than `unique_ptr<T>`.
         is_nullable: bool,
     },
+    /// std::variant<Ts...>
+    StdVariant { element_types: Rc<[RsTypeKind]> },
     /// std::atomic<T>
     StdAtomic {
         in_cc_std: bool,
@@ -482,6 +484,23 @@ impl UniformReprTemplateType {
                     element_type.display(db));
                 Ok(Some(Rc::new(UniformReprTemplateType::StdOptional { element_type })))
             }
+            Some(TemplateSpecializationKind::StdVariant(v)) => {
+                let element_types: Result<Vec<_>> = template_args
+                    .as_deref()
+                    .unwrap_or(&v.element_types[..])
+                    .iter()
+                    .map(|t| {
+                        let t = type_arg(t)?;
+                        ensure!(t.is_destructible(),
+                            "`{}` can't be used in a Rust std::variant<Ts...> because it has a deleted or non-public destructor",
+                            t.display(db));
+                        Ok(t)
+                    })
+                    .collect();
+                Ok(Some(Rc::new(UniformReprTemplateType::StdVariant {
+                    element_types: element_types?.into(),
+                })))
+            }
             Some(TemplateSpecializationKind::AbslSpan(s)) => {
                 let element_type = choose_one_type(&s.element_type, template_args)?;
                 let element_type_kind = type_arg(&element_type)?;
@@ -551,6 +570,14 @@ impl UniformReprTemplateType {
             if !(element_type.implements_copy() && element_type.is_unpin()))
     }
 
+    pub fn is_non_trivial_variant(&self) -> bool {
+        matches!(
+            self,
+            UniformReprTemplateType::StdVariant { element_types }
+                if element_types.iter().any(|t| !(t.implements_copy() && t.is_unpin()))
+        )
+    }
+
     fn std_atomic_type(
         element_type: &RsTypeKind,
         db: &BindingsGenerator<'_>,
@@ -613,6 +640,14 @@ impl UniformReprTemplateType {
                     quote! { ::cc_std::std::optional::<#element_type_tokens> }
                 } else {
                     quote! { ::cc_std::std::trivial_optional::<#element_type_tokens> }
+                }
+            }
+            Self::StdVariant { element_types } => {
+                let iter = element_types.iter().map(|t| t.to_token_stream(db)).collect::<Vec<_>>();
+                if self.is_non_trivial_variant() {
+                    quote! { ::cc_std::variant![ #(#iter),* ] }
+                } else {
+                    quote! { ::cc_std::trivial_variant![ #(#iter),* ] }
                 }
             }
             Self::StdUniquePtr { element_type, is_nullable } => {
@@ -682,6 +717,7 @@ impl UniformReprTemplateType {
             Self::StdVector { .. } => None,
             Self::StdOptional { .. } => None,
             Self::StdUniquePtr { .. } => None,
+            Self::StdVariant { .. } => None,
             Self::StdAtomic { .. } => None,
             Self::StdSharedPtr { .. } => None,
             Self::AbslSpan { lifetime: Some(lifetime), .. } => Some(lifetime.clone()),
@@ -873,6 +909,7 @@ impl CustomizeMethodsKind {
                 | TemplateSpecializationKind::StdOptional(_)
                 | TemplateSpecializationKind::StdSharedPtr(_)
                 | TemplateSpecializationKind::StdUniquePtr(_)
+                | TemplateSpecializationKind::StdVariant(_)
                 | TemplateSpecializationKind::StdAtomic(_)
                 | TemplateSpecializationKind::C9Co(_)
                 | TemplateSpecializationKind::AbslFlatHashSet(_)
@@ -1851,6 +1888,9 @@ impl RsTypeKind {
                     Some(UniformReprTemplateType::StdOptional { element_type }) => {
                         element_type.is_unpin()
                     }
+                    Some(UniformReprTemplateType::StdVariant { element_types }) => {
+                        element_types.iter().all(RsTypeKind::is_unpin)
+                    }
                     Some(_) => true,
                     None => record.is_unpin(),
                 }
@@ -1971,7 +2011,7 @@ impl RsTypeKind {
                 // `cc_std::std::trivial_optional<T>` does not.
                 if uniform_repr_template_type
                     .as_deref()
-                    .is_some_and(UniformReprTemplateType::is_non_trivial_optional)
+                    .is_some_and(|t| t.is_non_trivial_optional() || t.is_non_trivial_variant())
                 {
                     return true;
                 }
@@ -2474,7 +2514,7 @@ impl RsTypeKind {
                 // has no `Drop` impl, so it is `Copy` exactly when the C++ type is.
                 if uniform_repr_template_type
                     .as_deref()
-                    .is_some_and(UniformReprTemplateType::is_non_trivial_optional)
+                    .is_some_and(|t| t.is_non_trivial_optional() || t.is_non_trivial_variant())
                 {
                     return false;
                 }
@@ -2660,6 +2700,9 @@ impl RsTypeKind {
                                 | UniformReprTemplateType::StdSharedPtr { element_type, .. }
                                 | UniformReprTemplateType::AbslSpan { element_type, .. } => {
                                     element_type.has_elided_lifetime()
+                                }
+                                UniformReprTemplateType::StdVariant { element_types } => {
+                                    element_types.iter().any(Self::has_elided_lifetime)
                                 }
                                 UniformReprTemplateType::StdStringView { .. } => false,
                             }
@@ -2994,6 +3037,14 @@ fn all_static_lifetimes_internal(
                     UniformReprTemplateType::StdOptional { element_type } => {
                         UniformReprTemplateType::StdOptional {
                             element_type: recurse(element_type).as_ref().clone(),
+                        }
+                    }
+                    UniformReprTemplateType::StdVariant { element_types } => {
+                        UniformReprTemplateType::StdVariant {
+                            element_types: element_types
+                                .iter()
+                                .map(|t| recurse(t).as_ref().clone())
+                                .collect::<Rc<[_]>>(),
                         }
                     }
                     UniformReprTemplateType::StdSharedPtr { element_type, is_nullable } => {

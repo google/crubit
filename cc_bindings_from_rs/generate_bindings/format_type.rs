@@ -33,7 +33,8 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
     get_layout, has_pointer_abi, is_c_abi_compatible_by_value, is_std_ptr_non_null,
-    matches_qualified_name, normalize_ty, should_receive_bindings,
+    is_support_crate_item, matches_qualified_name, normalize_ty, should_receive_bindings,
+    SUPPORT_CRATE_NAMES,
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
@@ -89,26 +90,6 @@ fn is_unique_ptr(db: &BindingsGenerator<'_>, did: DefId) -> bool {
             .ok()
             .and_then(|attrs| attrs.cpp_type)
             .is_some_and(|cpp_type| cpp_type.as_str().contains("unique_ptr"))
-}
-
-/// Names of the Crubit support crate that defines `SupportsNullable`, `Nullable`, and the smart
-/// pointers.
-const SUPPORT_CRATE_NAMES: &[&str] = &["cc_std", "cpp_std"];
-
-/// Returns true if `did` is the item called `name` in the Crubit support crate.
-///
-/// This checks the crate and the item name rather than the full path because the support crate's
-/// hand-written sources are mounted under generated module names (`cc_std::std::__crubit_mod_N`),
-/// where `N` depends on the order of the sources. Crubit owns the support crate, so the names
-/// looked up here are unambiguous in it.
-fn is_support_crate_item(db: &BindingsGenerator<'_>, did: DefId, name: &str) -> bool {
-    let tcx = db.tcx();
-    if tcx.item_name(did).as_str() != name {
-        return false;
-    }
-    SUPPORT_CRATE_NAMES.contains(&tcx.crate_name(did.krate).as_str())
-        // The unit tests mock the support crate as `rust_out::cc_std::std`.
-        || matches_qualified_name(db, did, &["rust_out", "cc_std", "std", name])
 }
 
 /// Implementation of `BindingsGenerator::supports_nullable_trait_id`.
@@ -455,7 +436,8 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
             break;
         };
         let placeholder_name = &cpp_type_str[absolute_start + 1..absolute_start + end];
-        if !generics.own_params.iter().any(|p| p.name.as_str() == placeholder_name) {
+        let param_name = placeholder_name.strip_suffix("...").unwrap_or(placeholder_name);
+        if !generics.own_params.iter().any(|p| p.name.as_str() == param_name) {
             db.fatal_errors().report(&format!(
                 "`cpp_type` `{cpp_type_str}` is missing a generic parameter for `{{{placeholder_name}}}`",
             ));
@@ -484,7 +466,35 @@ fn format_existing_cpp_type_with_placeholders<'tcx>(
             continue;
         };
         let name = param.name.as_str();
+        let splat_placeholder = format!("{{{name}...}}");
         let placeholder = format!("{{{name}}}");
+
+        if result_str.contains(&splat_placeholder) {
+            let elem_tys = unpack_variant_type_list(db, ty, &splat_placeholder)?;
+            let mut formatted_elems = Vec::new();
+            for elem_ty in elem_tys {
+                let can_pass_type_arg = is_unconditionally_cpp_movable
+                    || db.is_cpp_move_constructible(elem_ty)
+                    || (is_derive_rust_movable && is_cpp_relocatable(db, elem_ty));
+                if is_passed_by_value && !can_pass_type_arg {
+                    bail!("crubit.rs/errors/unsupported_type: Bridged type `{}` cannot be passed by value because `{elem_ty}` is not C++ move-constructible.", tcx.def_path_str(adt.did()));
+                }
+                let formatted = format_ty_for_cc_impl(
+                    db,
+                    elem_ty,
+                    TypeLocation::Other,
+                    /* apply_default_nullability= */ true,
+                )
+                .map_err(|err| {
+                    let err = err.to_string().replace('\n', "\n  ");
+                    anyhow!("`{elem_ty}` has no layout-compatible C++ type, but is used as a generic parameter\n  {err}")
+                })?;
+                formatted_elems.push(formatted.into_tokens(prereqs).to_string());
+            }
+            result_str = result_str.replace(&splat_placeholder, &formatted_elems.join(", "));
+            continue;
+        }
+
         if !result_str.contains(&placeholder) {
             continue;
         }
@@ -2034,7 +2044,8 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
                     .transpose()?
                     .is_some()
                 || db.tcx().is_lang_item(adt.did(), LangItem::OwnedBox)
-                || adt.is_pin();
+                || adt.is_pin()
+                || is_support_crate_item(db, adt.did(), "Coproduct");
             ensure!(
                 has_cpp_type || is_supported_generic_type,
                 "Generic types without composable bridging are not supported yet (b/259749095)"
@@ -2889,4 +2900,57 @@ pub fn format_with_cc_body(
         };
     }
     Ok(tokens)
+}
+
+/// Unpacks a `{Param...}` splat type argument into its constituent element types.
+///
+/// Accepts either a flat tuple `(T0, ..., TN)` or a right-nested
+/// `Coproduct<T0, Coproduct<..., CNil>>` type list with between 1 and 254 elements,
+/// and returns an error otherwise.
+fn unpack_variant_type_list<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: ty::Ty<'tcx>,
+    splat_placeholder: &str,
+) -> Result<Vec<ty::Ty<'tcx>>> {
+    let elements: Vec<ty::Ty<'tcx>> = if let ty::Tuple(tys) = ty.kind() {
+        tys.iter().collect()
+    } else {
+        let mut elements = Vec::new();
+        let mut cur = ty;
+        let mut terminated = false;
+        while let ty::Adt(adt, substs) = cur.kind() {
+            if is_support_crate_item(db, adt.did(), "Coproduct") && substs.len() == 2 {
+                let (ty::GenericArgKind::Type(head), ty::GenericArgKind::Type(tail)) =
+                    (substs[0].kind(), substs[1].kind())
+                else {
+                    break;
+                };
+                elements.push(head);
+                cur = tail;
+            } else if is_support_crate_item(db, adt.did(), "CNil") && substs.is_empty() {
+                terminated = true;
+                break;
+            } else {
+                break;
+            }
+        }
+        if !terminated {
+            if cur == ty {
+                bail!(
+                    "Unable to splat `{splat_placeholder}`: expected a tuple or `Coproduct<..., CNil>` type list, got `{ty}`"
+                );
+            }
+            bail!(
+                "Unable to splat `{splat_placeholder}` in `{ty}`: expected `Coproduct<..., CNil>` tail, got `{cur}`"
+            );
+        }
+        elements
+    };
+    if elements.is_empty() || elements.len() >= 255 {
+        bail!(
+            "Unable to splat `{splat_placeholder}` in `{ty}`: std::variant must have between 1 and 254 types, got {}",
+            elements.len()
+        );
+    }
+    Ok(elements)
 }

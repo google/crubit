@@ -72,6 +72,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, doc_comment, $($arg:tt)*) => { $msg.set_doc_comment($($arg)*) };
     ($msg:ident, drop_impl, $($arg:tt)*) => { $msg.set_drop_impl($($arg)*) };
     ($msg:ident, element_type, $($arg:tt)*) => { $msg.set_element_type($($arg)*) };
+    ($msg:ident, element_types, $($arg:tt)*) => { $msg.set_element_types($($arg)*) };
     ($msg:ident, elements, $($arg:tt)*) => { $msg.set_elements($($arg)*) };
     ($msg:ident, enclosing_item_id, $($arg:tt)*) => { $msg.set_enclosing_item_id($($arg)*) };
     ($msg:ident, end, $($arg:tt)*) => { $msg.set_end($($arg)*) };
@@ -213,6 +214,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, std_string, $($arg:tt)*) => { $msg.set_std_string($($arg)*) };
     ($msg:ident, std_string_view, $($arg:tt)*) => { $msg.set_std_string_view($($arg)*) };
     ($msg:ident, std_unique_ptr, $($arg:tt)*) => { $msg.set_std_unique_ptr($($arg)*) };
+    ($msg:ident, std_variant, $($arg:tt)*) => { $msg.set_std_variant($($arg)*) };
     ($msg:ident, std_vector, $($arg:tt)*) => { $msg.set_std_vector($($arg)*) };
     ($msg:ident, std_w_string_view, $($arg:tt)*) => { $msg.set_std_w_string_view($($arg)*) };
     ($msg:ident, string_literal, $($arg:tt)*) => { $msg.set_string_literal($($arg)*) };
@@ -6996,6 +6998,39 @@ mod __defs {
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
+        pub struct StdVariant {
+            pub element_types: FfiVec<super::CcType>,
+        }
+
+        impl super::FfiDefault for StdVariant {
+            const EMPTY_REF: &'static Self = &Self::EMPTY;
+        }
+        impl Default for StdVariant {
+            fn default() -> Self {
+                Self::EMPTY
+            }
+        }
+
+        impl StdVariant {
+            pub const EMPTY: Self = Self {
+                element_types: FfiVec::EMPTY,
+            };
+            pub fn element_types(&self) -> &[super::CcType] {
+                self.element_types.as_slice()
+            }
+            pub fn set_element_types(&mut self, val: FfiVec<super::CcType>) {
+                self.element_types = val;
+            }
+        }
+        #[cfg(target_pointer_width = "64")]
+        const _: () = {
+            assert!(core::mem::size_of::<StdVariant>() == 24);
+            assert!(core::mem::align_of::<StdVariant>() == 8);
+            assert!(core::mem::offset_of!(StdVariant, element_types) == 0);
+        };
+
+        #[repr(C)]
+        #[derive(Debug,Clone, PartialEq, Eq, Hash)]
         pub struct AbslSpan {
             pub element_type: super::CcType,
         }
@@ -7183,12 +7218,13 @@ mod __defs {
             StdOptional(super::template_specialization::StdOptional) = 3,
             StdSharedPtr(super::template_specialization::StdSharedPtr) = 4,
             StdUniquePtr(super::template_specialization::StdUniquePtr) = 5,
-            AbslSpan(super::template_specialization::AbslSpan) = 6,
-            AbslFlatHashMap(super::template_specialization::AbslFlatHashMap) = 7,
-            AbslFlatHashSet(super::template_specialization::AbslFlatHashSet) = 8,
-            C9Co(super::template_specialization::C9Co) = 9,
-            StdAtomic(super::template_specialization::StdAtomic) = 10,
-            NonSpecial = 11,
+            StdVariant(super::template_specialization::StdVariant) = 6,
+            AbslSpan(super::template_specialization::AbslSpan) = 7,
+            AbslFlatHashMap(super::template_specialization::AbslFlatHashMap) = 8,
+            AbslFlatHashSet(super::template_specialization::AbslFlatHashSet) = 9,
+            C9Co(super::template_specialization::C9Co) = 10,
+            StdAtomic(super::template_specialization::StdAtomic) = 11,
+            NonSpecial = 12,
         }
 
         impl Default for Kind {
@@ -7232,6 +7268,13 @@ mod __defs {
             pub fn set_std_unique_ptr(&mut self, val: super::template_specialization::StdUniquePtr) -> &mut super::template_specialization::StdUniquePtr {
                 *self = Self::StdUniquePtr(val);
                 let Self::StdUniquePtr(ref mut inner) = *self else {
+                    unreachable!()
+                };
+                inner
+            }
+            pub fn set_std_variant(&mut self, val: super::template_specialization::StdVariant) -> &mut super::template_specialization::StdVariant {
+                *self = Self::StdVariant(val);
+                let Self::StdVariant(ref mut inner) = *self else {
                     unreachable!()
                 };
                 inner

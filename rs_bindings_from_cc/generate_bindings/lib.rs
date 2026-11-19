@@ -1108,6 +1108,7 @@ fn record_template_params<'a>(
             | UniformReprTemplateType::AbslSpan { element_type, .. } => {
                 vec![element_type.clone()]
             }
+            UniformReprTemplateType::StdVariant { element_types } => element_types.to_vec(),
             UniformReprTemplateType::StdStringView { .. } => vec![],
         });
     }
@@ -1149,6 +1150,9 @@ fn record_template_params<'a>(
             TemplateSpecializationKind::AbslSpan(s) => {
                 let ty = db.rs_type_kind(s.element_type().clone())?;
                 Ok(vec![ty])
+            }
+            TemplateSpecializationKind::StdVariant(v) => {
+                v.element_types().iter().map(|elem| db.rs_type_kind(elem.clone())).collect()
             }
             TemplateSpecializationKind::AbslFlatHashSet(s) => {
                 let ty = db.rs_type_kind(s.element_type().clone())?;
