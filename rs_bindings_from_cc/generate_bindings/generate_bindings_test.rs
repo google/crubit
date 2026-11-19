@@ -79,10 +79,53 @@ fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
     // TODO(b/217419782): Add another test for more exotic calling conventions /
     // abis.
 
-    // TODO(b/276461979): Add another test for pointer to a function that requires
-    // thunks - e.g. because it takes/returns structs value. See also
-    // b/276461979 and <internal link>
+    Ok(())
+}
 
+#[gtest]
+fn test_func_ptr_requiring_thunk_is_rejected() -> Result<()> {
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_from_cc(
+        r#"
+        struct SomeStruct {
+          int field;
+        };
+        SomeStruct (*get_ptr_to_func_returning_struct())();
+        void (*get_ptr_to_func_taking_struct())(SomeStruct);
+        void accept_ptr_to_func_taking_struct(void (*)(SomeStruct));
+        "#,
+    )?;
+    assert_rs_matches!(rs_api, quote! { pub struct SomeStruct { ... } });
+    assert_rs_not_matches!(rs_api, quote! { pub fn get_ptr_to_func_returning_struct });
+    assert_rs_not_matches!(rs_api, quote! { pub fn get_ptr_to_func_taking_struct });
+    assert_rs_not_matches!(rs_api, quote! { pub fn accept_ptr_to_func_taking_struct });
+    assert_cc_not_matches!(rs_api_impl, quote! { get_ptr_to_func_returning_struct });
+    assert_cc_not_matches!(rs_api_impl, quote! { get_ptr_to_func_taking_struct });
+    assert_cc_not_matches!(rs_api_impl, quote! { accept_ptr_to_func_taking_struct });
+
+    let rs_api_str = rs_tokens_to_formatted_string_for_tests(rs_api)?;
+    let expected_reason = "Either the return type or some of the parameter types require \
+        an FFI thunk (and function pointers don't have a thunk)";
+    expect_that!(
+        rs_api_str,
+        contains_substring(format!(
+            "// error: function `get_ptr_to_func_returning_struct` could not be bound\n\
+            //   Return type is not supported: {expected_reason}"
+        ))
+    );
+    expect_that!(
+        rs_api_str,
+        contains_substring(format!(
+            "// error: function `get_ptr_to_func_taking_struct` could not be bound\n\
+            //   Return type is not supported: {expected_reason}"
+        ))
+    );
+    expect_that!(
+        rs_api_str,
+        contains_substring(format!(
+            "// error: function `accept_ptr_to_func_taking_struct` could not be bound\n\
+            //   Parameter #0 is not supported: {expected_reason}"
+        ))
+    );
     Ok(())
 }
 
