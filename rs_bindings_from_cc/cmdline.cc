@@ -5,7 +5,9 @@
 #include "rs_bindings_from_cc/cmdline.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -15,13 +17,18 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/logging.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Allocator.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/ErrorOr.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/JSON.h"
+#include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/StringSaver.h"
 #include "llvm/Support/raw_ostream.h"
 namespace crubit {
@@ -60,6 +67,111 @@ bool ParseCarcinizeMode(llvm::StringRef text, CarcinizeMode* mode,
   }
   *error = "CarcinizeMode must be one of: off, strict, incomplete";
   return false;
+}
+
+llvm::Expected<llvm::SmallVector<const char*>> ReadFlagfile(
+    llvm::StringRef path, llvm::StringSaver& saver) {
+  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> buffer_or_err =
+      llvm::MemoryBuffer::getFile(path);
+  if (!buffer_or_err) {
+    return InvalidArgumentError("Can't open flagfile '" + path.str() +
+                                "': " + buffer_or_err.getError().message());
+  }
+
+  llvm::SmallVector<const char*> file_args;
+  int line_number = 0;
+  for (llvm::StringRef line :
+       llvm::split((*buffer_or_err)->getBuffer(), '\n')) {
+    ++line_number;
+    line.consume_back("\r");
+    line = line.ltrim();
+    if (line.empty() || line.starts_with('#')) {
+      continue;
+    }
+    if (!line.starts_with('-')) {
+      return InvalidArgumentError("Unexpected line " +
+                                  std::to_string(line_number) +
+                                  " in the flagfile " + path.str());
+    }
+    if (line == "--") {
+      return InvalidArgumentError(
+          "Flagfile can't contain positional arguments or --");
+    }
+    file_args.push_back(saver.save(line).data());
+  }
+  return file_args;
+}
+
+llvm::Expected<bool> ExpandFlagfiles(llvm::SmallVectorImpl<const char*>& argv,
+                                     llvm::StringSaver& saver) {
+  if (argv.empty()) return false;
+  struct Expander {
+    llvm::StringSaver& saver;
+    llvm::SmallVector<const char*> out;
+    llvm::SmallVector<llvm::StringRef> active_files;
+    bool used_flagfile = false;
+
+    llvm::Error Expand(llvm::ArrayRef<const char*> args) {
+      for (size_t i = 0; i < args.size(); ++i) {
+        llvm::StringRef arg(args[i]);
+        if (arg == "--") {
+          out.append(args.begin() + i, args.end());
+          break;
+        }
+
+        std::optional<llvm::StringRef> paths_arg;
+        llvm::StringRef stripped = arg;
+        if (stripped.consume_front("--") || stripped.consume_front("-")) {
+          if (stripped == "flagfile") {
+            if (i + 1 >= args.size()) {
+              return InvalidArgumentError(
+                  "Missing the value for the flag 'flagfile'");
+            }
+            paths_arg = args[++i];
+          } else if (stripped.consume_front("flagfile=")) {
+            paths_arg = stripped;
+          }
+        }
+        if (!paths_arg) {
+          out.push_back(args[i]);
+          continue;
+        }
+
+        used_flagfile = true;
+        if (paths_arg->empty()) {
+          continue;
+        }
+        for (llvm::StringRef path : llvm::split(*paths_arg, ',')) {
+          for (llvm::StringRef active : active_files) {
+            if (active == path || llvm::sys::fs::equivalent(active, path)) {
+              return InvalidArgumentError(
+                  "Recursive --flagfile expansion of '" + path.str() + "'");
+            }
+          }
+          llvm::Expected<llvm::SmallVector<const char*>> file_args =
+              ReadFlagfile(path, saver);
+          if (!file_args) {
+            return file_args.takeError();
+          }
+          active_files.push_back(path);
+          auto pop_active = llvm::scope_exit([&] { active_files.pop_back(); });
+          if (llvm::Error err = Expand(*file_args)) {
+            return err;
+          }
+        }
+      }
+      return llvm::Error::success();
+    }
+  };
+
+  Expander expander{saver};
+  expander.out.reserve(argv.size());
+  expander.out.push_back(argv[0]);
+  if (llvm::Error err = expander.Expand(llvm::ArrayRef(argv).drop_front())) {
+    return std::move(err);
+  }
+  argv = std::move(expander.out);
+  return expander.used_flagfile;
 }
 
 }  // namespace
@@ -391,6 +503,15 @@ struct CmdlineFlags {
           "Log messages at or above this severity (0=INFO, 1=WARNING, "
           "2=ERROR, 3=FATAL) are written to stderr."),
       llvm::cl::cat(rs_bindings_from_cc_category)};
+
+  // Deprecated compatibility shim for Abseil's `--flagfile`, expanded before
+  // `llvm::cl::ParseCommandLineOptions`. Registered as hidden so it appears in
+  // `--help-hidden` without cluttering `--help`.
+  llvm::cl::list<std::string> flagfile{
+      "flagfile", llvm::cl::Hidden,
+      llvm::cl::desc("Deprecated: comma-separated list of Abseil-style flag "
+                     "files to load flags from. Use `@paramfile` instead."),
+      llvm::cl::cat(rs_bindings_from_cc_category)};
 };
 
 llvm::Expected<Cmdline> Cmdline::FromArgv(int argc, const char* const* argv) {
@@ -404,6 +525,10 @@ llvm::Expected<Cmdline> Cmdline::FromArgv(int argc, const char* const* argv) {
   llvm::SmallVector<const char*> expanded_argv(argv, argv + argc);
   llvm::cl::ExpandResponseFiles(saver, llvm::cl::TokenizeGNUCommandLine,
                                 expanded_argv);
+  llvm::Expected<bool> used_flagfile = ExpandFlagfiles(expanded_argv, saver);
+  if (!used_flagfile) {
+    return used_flagfile.takeError();
+  }
 
   // Errors about unknown options are reported through `parse_error`; errors
   // about invalid option values are printed to stderr by the option parsers.
@@ -421,6 +546,10 @@ llvm::Expected<Cmdline> Cmdline::FromArgv(int argc, const char* const* argv) {
   SetStderrThreshold(static_cast<LogSeverity>(std::clamp<int>(
       flags.stderrthreshold, static_cast<int>(LogSeverity::kInfo),
       static_cast<int>(LogSeverity::kFatal))));
+  if (*used_flagfile) {
+    CRUBIT_LOG(Warning)
+        << "`--flagfile` is deprecated; use `@paramfile` instead.";
+  }
 
   CmdlineArgs args = {
       .current_target = BazelLabel(flags.target),
