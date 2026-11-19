@@ -55,21 +55,49 @@ variant:
 
 *   **Constructing variants**: Call `E::Variant::Make(...)` (or
     `E(std::in_place_type<E::Variant>, ...)`), passing the variant's fields in
-    declaration order.
+    declaration order. Variants are built directly in `E`'s storage and cannot
+    be constructed, copied, or moved standalone (`E::Variant(...)` does not
+    compile).
 *   **Inspecting variants and payloads**
     (`#include "support/rs/enum.h"`,
     `//support/rs:enum`):
     *   `rs::holds_alternative<E::Variant>(e)` returns `true` if `e` holds
         `Variant`.
-    *   `rs::get_if<E::Variant>(&e)` returns a pointer (`const E::Variant*` or
-        `E::Variant*`) to the variant payload if active, or `nullptr` otherwise.
-        Tuple variant fields are named `__field0`, `__field1`, etc., and struct
-        variant fields keep their Rust names.
-    *   `rs::discriminant(e)` returns `E::__crubit_variant_index`, which can be
-        compared or switched against `E::Variant::__crubit_index`.
-    *   `rs::get_unchecked<E::Variant>(e)` returns a reference to the variant
-        payload without checking the active discriminant (undefined behavior if
-        `e` holds a different variant).
+    *   `rs::get_if<E::Variant>(&e)` takes a nullable pointer (`const E*` or
+        `E*`) and returns a pointer (`const E::Variant*` or `E::Variant*`) to
+        the active variant if the pointer is non-null and `e` holds `Variant`,
+        or `nullptr` otherwise. Tuple variant fields are named `__field0`,
+        `__field1`, etc., and struct variant fields keep their Rust names.
+    *   `rs::discriminant(e)` returns an opaque, trivially copyable
+        `rs::Discriminant<E>` (analogous to Rust's `std::mem::Discriminant<E>`)
+        that identifies which variant is active, but not the payload: two values
+        holding the same variant compare equal. It supports equality comparison
+        (`==`/`!=`) only: it does not expose the underlying integer, is not
+        ordered, and cannot be used in a `switch` statement.
+    *   `rs::get_unchecked<E::Variant>(&e)` takes a non-null pointer (`const E*`
+        or `E*`) and returns a non-null pointer (`const E::Variant*` or
+        `E::Variant*`) to the active variant. It does not check the tag when
+        `NDEBUG` is defined; otherwise it checks it at runtime with
+        `CRUBIT_DCHECK`. Passing `nullptr`, or calling it when `e` holds a
+        different variant, is undefined behavior.
+*   **`constexpr` support**:
+    *   `E::Variant::Make(...)`, `E(std::in_place_type<E::Variant>, ...)`, and
+        `rs::get_unchecked<E::Variant>(&e)` are `constexpr`. Constructing a
+        variant in a constant expression requires `E` to have no `Drop` impl of
+        its own (drop glue from other variants' fields is fine), the constructed
+        variant to be trivially destructible (no drop glue on any of its field
+        types), and each field's Rust type to be one Crubit recognizes as
+        `constexpr`-movable: primitives, references, raw/function pointers,
+        `NonNull`, `Pin`, `#[cpp_enum]` enums, arrays and C++-aggregate structs
+        whose elements/fields recursively qualify, and non-`#[repr(C)]` enums
+        with at least one qualifying variant. Imported C++ types, tuples,
+        non-aggregate structs, `#[repr(C)]` enums, and unions are excluded even
+        when their C++ types are literal types.
+    *   `rs::discriminant`, `rs::holds_alternative`, and `rs::get_if` are
+        runtime-only (not `constexpr`): they decode the tag from the object
+        representation, which is not allowed in constant expressions. Making
+        them `constexpr` needs C++26 `std::is_within_lifetime`, which not every
+        supported compiler provides.
 
 ### Example
 
