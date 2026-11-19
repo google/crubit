@@ -22,15 +22,26 @@ class CRUBIT_THREAD_SAFE ThreadSafeStruct final {
   // matter for what we are testing, here.
   int NonConstGet() { return x_; }
 
+  int MethodTakingThreadSafe(ThreadSafeStruct& other) const {
+    return x_ + other.NonConstGet();
+  }
+
  private:
   int x_ = 0;
 };
+
+inline int FreeFuncTakingThreadSafe(ThreadSafeStruct& s) {
+  return s.NonConstGet();
+}
 
 // A regular (non-thread-safe) struct for comparison.
 class RegularStruct final {
  public:
   int ConstGet() const { return x_; }
   int NonConstGet() { return x_; }
+  int MethodTakingThreadSafe(ThreadSafeStruct& s) const {
+    return x_ + s.NonConstGet();
+  }
 
  private:
   int x_ = 0;

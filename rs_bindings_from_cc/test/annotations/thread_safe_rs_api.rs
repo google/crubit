@@ -49,6 +49,10 @@ pub mod crubit {
             pub fn NonConstGet(&self) -> ::ffi_11::c_int {
                 unsafe { self::thread_safe_struct::NonConstGet(self) }
             }
+            #[inline(always)]
+            pub fn MethodTakingThreadSafe(&self, other: &Self) -> ::ffi_11::c_int {
+                unsafe { self::thread_safe_struct::MethodTakingThreadSafe(self, other) }
+            }
         }
 
         impl ::ctor::CtorNew<()> for ThreadSafeStruct {
@@ -88,6 +92,25 @@ pub mod crubit {
                         __this,
                     )
                 }
+            }
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
+            #[inline(always)]
+            pub fn MethodTakingThreadSafe(
+                __this: &crate::crubit::test::ThreadSafeStruct,
+                other: &crate::crubit::test::ThreadSafeStruct,
+            ) -> ::ffi_11::c_int {
+                unsafe {
+                    crate::detail::__rust_thunk___ZNK6crubit4test16ThreadSafeStruct22MethodTakingThreadSafeERS1_(__this,other)
+                }
+            }
+        }
+
+        #[inline(always)]
+        pub fn FreeFuncTakingThreadSafe(
+            s: &crate::crubit::test::ThreadSafeStruct,
+        ) -> ::ffi_11::c_int {
+            unsafe {
+                crate::detail::__rust_thunk___ZN6crubit4test24FreeFuncTakingThreadSafeERNS0_16ThreadSafeStructE(s)
             }
         }
 
@@ -134,6 +157,17 @@ pub mod crubit {
             pub unsafe fn NonConstGet(__this: *mut Self) -> ::ffi_11::c_int {
                 unsafe { self::regular_struct::NonConstGet(__this) }
             }
+            /// # Safety
+            ///
+            /// The caller must ensure that the following unsafe arguments are not misused by the function:
+            /// * `__this`: raw pointer
+            #[inline(always)]
+            pub unsafe fn MethodTakingThreadSafe(
+                __this: *const Self,
+                s: &crate::crubit::test::ThreadSafeStruct,
+            ) -> ::ffi_11::c_int {
+                unsafe { self::regular_struct::MethodTakingThreadSafe(__this, s) }
+            }
         }
 
         impl Default for RegularStruct {
@@ -176,6 +210,20 @@ pub mod crubit {
                     crate::detail::__rust_thunk___ZN6crubit4test13RegularStruct11NonConstGetEv(
                         __this,
                     )
+                }
+            }
+            /// # Safety
+            ///
+            /// The caller must ensure that the following unsafe arguments are not misused by the function:
+            /// * `__this`: raw pointer
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
+            #[inline(always)]
+            pub unsafe fn MethodTakingThreadSafe(
+                __this: *const crate::crubit::test::RegularStruct,
+                s: &crate::crubit::test::ThreadSafeStruct,
+            ) -> ::ffi_11::c_int {
+                unsafe {
+                    crate::detail::__rust_thunk___ZNK6crubit4test13RegularStruct22MethodTakingThreadSafeERNS0_16ThreadSafeStructE(__this,s)
                 }
             }
         }
@@ -418,6 +466,13 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test16ThreadSafeStruct11NonConstGetEv(
             __this: &crate::crubit::test::ThreadSafeStruct,
         ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZNK6crubit4test16ThreadSafeStruct22MethodTakingThreadSafeERS1_(
+            __this: &crate::crubit::test::ThreadSafeStruct,
+            other: &crate::crubit::test::ThreadSafeStruct,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test24FreeFuncTakingThreadSafeERNS0_16ThreadSafeStructE(
+            s: &crate::crubit::test::ThreadSafeStruct,
+        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test13RegularStructC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -426,6 +481,10 @@ mod detail {
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test13RegularStruct11NonConstGetEv(
             __this: *mut crate::crubit::test::RegularStruct,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZNK6crubit4test13RegularStruct22MethodTakingThreadSafeERNS0_16ThreadSafeStructE(
+            __this: *const crate::crubit::test::RegularStruct,
+            s: &crate::crubit::test::ThreadSafeStruct,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test15ThreadSafeUnpinC1Ev(
             __this: *mut ::core::ffi::c_void,
