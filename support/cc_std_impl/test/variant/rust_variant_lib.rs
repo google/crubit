@@ -14,6 +14,16 @@ pub extern "C" fn check_trivial_variant(v: trivial_variant![i32, f32, bool]) -> 
     v.holds_alternative::<f32, _>() && *v.get::<f32, _>().unwrap() == 3.5
 }
 
+#[unsafe(no_mangle)]
+pub extern "C" fn get_small_variant() -> trivial_variant![u8, bool] {
+    trivial_variant::new_at::<1>(true)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn check_small_variant(v: trivial_variant![u8, bool]) -> bool {
+    v.holds_alternative::<bool, _>() && *v.get::<bool, _>().unwrap()
+}
+
 // We pass by reference for non-trivial to avoid move constructibility issues for now.
 #[unsafe(no_mangle)]
 pub extern "C" fn check_non_trivial_variant(v: &variant![i32, string]) -> bool {

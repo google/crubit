@@ -17,22 +17,24 @@ pub mod variant_internal {
     use core::pin::Pin;
 
     pub const VARIANT_NPOS: usize = usize::MAX;
-    pub(crate) const RAW_VARIANT_NPOS: u8 = u8::MAX;
+    pub type RawVariantIndex =
+        crate::crubit_cc_std_internal::conversion_function_helpers::VariantIndex;
+    pub(crate) const RAW_VARIANT_NPOS: RawVariantIndex = RawVariantIndex::MAX;
 
     pub trait RawUnionOps {
         fn new_raw_uninit() -> Self;
-        unsafe fn drop_active(&mut self, index: u8);
+        unsafe fn drop_active(&mut self, index: RawVariantIndex);
     }
 
     pub trait RawUnionClone: RawUnionOps {
-        unsafe fn clone_active(&self, index: u8) -> Self;
+        unsafe fn clone_active(&self, index: RawVariantIndex) -> Self;
     }
     pub trait RawUnionPartialEq {
-        unsafe fn eq_active(&self, other: &Self, index: u8) -> bool;
+        unsafe fn eq_active(&self, other: &Self, index: RawVariantIndex) -> bool;
     }
     pub trait RawUnionEq: RawUnionPartialEq {}
     pub trait RawUnionDebug {
-        unsafe fn fmt_active(&self, index: u8, f: &mut Formatter<'_>) -> fmt::Result;
+        unsafe fn fmt_active(&self, index: RawVariantIndex, f: &mut Formatter<'_>) -> fmt::Result;
     }
 
     #[repr(C)]
@@ -57,13 +59,13 @@ pub mod variant_internal {
         fn new_raw_uninit() -> Self {
             Self { __uninit: [] }
         }
-        unsafe fn drop_active(&mut self, _index: u8) {}
+        unsafe fn drop_active(&mut self, _index: RawVariantIndex) {}
     }
     impl<H, Tail: RawUnionOps> RawUnionOps for RawVariantUnion<H, Tail> {
         fn new_raw_uninit() -> Self {
             Self { __uninit: 0 }
         }
-        unsafe fn drop_active(&mut self, index: u8) {
+        unsafe fn drop_active(&mut self, index: RawVariantIndex) {
             unsafe {
                 if index == 0 {
                     ManuallyDrop::drop(&mut self.__head);
@@ -75,12 +77,12 @@ pub mod variant_internal {
     }
 
     impl RawUnionClone for RawVariantNil {
-        unsafe fn clone_active(&self, _index: u8) -> Self {
+        unsafe fn clone_active(&self, _index: RawVariantIndex) -> Self {
             Self { __uninit: [] }
         }
     }
     impl<H: Clone, Tail: RawUnionClone> RawUnionClone for RawVariantUnion<H, Tail> {
-        unsafe fn clone_active(&self, index: u8) -> Self {
+        unsafe fn clone_active(&self, index: RawVariantIndex) -> Self {
             unsafe {
                 if index == 0 {
                     Self { __head: ManuallyDrop::new((*self.__head).clone()) }
@@ -92,12 +94,12 @@ pub mod variant_internal {
     }
 
     impl RawUnionPartialEq for RawVariantNil {
-        unsafe fn eq_active(&self, _other: &Self, _index: u8) -> bool {
+        unsafe fn eq_active(&self, _other: &Self, _index: RawVariantIndex) -> bool {
             true
         }
     }
     impl<H: PartialEq, Tail: RawUnionPartialEq> RawUnionPartialEq for RawVariantUnion<H, Tail> {
-        unsafe fn eq_active(&self, other: &Self, index: u8) -> bool {
+        unsafe fn eq_active(&self, other: &Self, index: RawVariantIndex) -> bool {
             unsafe {
                 if index == 0 {
                     *self.__head == *other.__head
@@ -111,12 +113,12 @@ pub mod variant_internal {
     impl<H: Eq, Tail: RawUnionEq> RawUnionEq for RawVariantUnion<H, Tail> {}
 
     impl RawUnionDebug for RawVariantNil {
-        unsafe fn fmt_active(&self, _index: u8, f: &mut Formatter<'_>) -> fmt::Result {
+        unsafe fn fmt_active(&self, _index: RawVariantIndex, f: &mut Formatter<'_>) -> fmt::Result {
             write!(f, "CNil")
         }
     }
     impl<H: Debug, Tail: RawUnionDebug> RawUnionDebug for RawVariantUnion<H, Tail> {
-        unsafe fn fmt_active(&self, index: u8, f: &mut Formatter<'_>) -> fmt::Result {
+        unsafe fn fmt_active(&self, index: RawVariantIndex, f: &mut Formatter<'_>) -> fmt::Result {
             unsafe {
                 if index == 0 {
                     Debug::fmt(&*self.__head, f)
@@ -142,12 +144,15 @@ pub mod variant_internal {
         const LEN: usize;
 
         fn new_raw_uninit() -> Self::RawUnion;
-        unsafe fn drop_active(raw: &mut Self::RawUnion, index: u8);
-        unsafe fn as_ref<'a>(raw: &'a Self::RawUnion, index: u8) -> Self::Ref<'a>;
-        unsafe fn as_mut<'a>(raw: &'a mut Self::RawUnion, index: u8) -> Self::Mut<'a>;
-        unsafe fn as_pin_mut<'a>(raw: &'a mut Self::RawUnion, index: u8) -> Self::PinMut<'a>;
-        unsafe fn into_owned(raw: Self::RawUnion, index: u8) -> Self::Owned;
-        fn from_owned(owned: Self::Owned) -> (Self::RawUnion, u8);
+        unsafe fn drop_active(raw: &mut Self::RawUnion, index: RawVariantIndex);
+        unsafe fn as_ref<'a>(raw: &'a Self::RawUnion, index: RawVariantIndex) -> Self::Ref<'a>;
+        unsafe fn as_mut<'a>(raw: &'a mut Self::RawUnion, index: RawVariantIndex) -> Self::Mut<'a>;
+        unsafe fn as_pin_mut<'a>(
+            raw: &'a mut Self::RawUnion,
+            index: RawVariantIndex,
+        ) -> Self::PinMut<'a>;
+        unsafe fn into_owned(raw: Self::RawUnion, index: RawVariantIndex) -> Self::Owned;
+        fn from_owned(owned: Self::Owned) -> (Self::RawUnion, RawVariantIndex);
     }
 
     pub trait TrivialVariantTypes: VariantTypes<RawUnion: Copy> {}
@@ -231,7 +236,7 @@ pub mod variant_internal {
     );
 
     pub trait VariantAlternative<T, I>: Sized {
-        const INDEX: u8;
+        const INDEX: RawVariantIndex;
         unsafe fn raw_ptr(this: *const Self) -> *const T;
         unsafe fn raw_ptr_mut(this: *mut Self) -> *mut T;
         unsafe fn get_unchecked(this: &Self) -> &T;
@@ -240,7 +245,7 @@ pub mod variant_internal {
     }
 
     impl<H, Tail> VariantAlternative<H, Here> for RawVariantUnion<H, Tail> {
-        const INDEX: u8 = 0;
+        const INDEX: RawVariantIndex = 0;
         #[inline]
         unsafe fn raw_ptr(this: *const Self) -> *const H {
             this.cast::<H>()
@@ -271,7 +276,7 @@ pub mod variant_internal {
     where
         Tail: VariantAlternative<T, Idx>,
     {
-        const INDEX: u8 = 1 + Tail::INDEX;
+        const INDEX: RawVariantIndex = 1 + Tail::INDEX;
         #[inline]
         unsafe fn raw_ptr(this: *const Self) -> *const T {
             // SAFETY: `RawVariantUnion` is `#[repr(C)]` and `ManuallyDrop<Tail>` is
@@ -315,7 +320,7 @@ pub mod variant_internal {
                 <Self::RawUnion as RawUnionOps>::new_raw_uninit()
             }
             #[inline]
-            unsafe fn drop_active(raw: &mut Self::RawUnion, index: u8) {
+            unsafe fn drop_active(raw: &mut Self::RawUnion, index: RawVariantIndex) {
                 unsafe { raw.drop_active(index) }
             }
             // SAFETY for the pointer casts below: `Self::RawUnion` is a nested `#[repr(C)]` union
@@ -323,35 +328,41 @@ pub mod variant_internal {
             // at byte offset 0 within `Self::RawUnion`. Casting the union pointer directly avoids
             // recursive `RawUnionIndex` trait solving and MIR inlining across every match arm.
             #[inline]
-            unsafe fn as_ref<'a>(raw: &'a Self::RawUnion, index: u8) -> Self::Ref<'a> {
+            unsafe fn as_ref<'a>(raw: &'a Self::RawUnion, index: RawVariantIndex) -> Self::Ref<'a> {
                 match index {
                     $($i => $tuple::$V(unsafe { &*(raw as *const Self::RawUnion as *const $T) }),)*
                     _ => unsafe { core::hint::unreachable_unchecked() }
                 }
             }
             #[inline]
-            unsafe fn as_mut<'a>(raw: &'a mut Self::RawUnion, index: u8) -> Self::Mut<'a> {
+            unsafe fn as_mut<'a>(
+                raw: &'a mut Self::RawUnion,
+                index: RawVariantIndex,
+            ) -> Self::Mut<'a> {
                 match index {
                     $($i => $tuple::$V(unsafe { &mut *(raw as *mut Self::RawUnion as *mut $T) }),)*
                     _ => unsafe { core::hint::unreachable_unchecked() }
                 }
             }
             #[inline]
-            unsafe fn as_pin_mut<'a>(raw: &'a mut Self::RawUnion, index: u8) -> Self::PinMut<'a> {
+            unsafe fn as_pin_mut<'a>(
+                raw: &'a mut Self::RawUnion,
+                index: RawVariantIndex,
+            ) -> Self::PinMut<'a> {
                 match index {
                     $($i => $tuple::$V(unsafe { Pin::new_unchecked(&mut *(raw as *mut Self::RawUnion as *mut $T)) }),)*
                     _ => unsafe { core::hint::unreachable_unchecked() }
                 }
             }
             #[inline]
-            unsafe fn into_owned(raw: Self::RawUnion, index: u8) -> Self::Owned {
+            unsafe fn into_owned(raw: Self::RawUnion, index: RawVariantIndex) -> Self::Owned {
                 match index {
                     $($i => $tuple::$V(unsafe { core::ptr::read(&raw as *const Self::RawUnion as *const $T) }),)*
                     _ => unsafe { core::hint::unreachable_unchecked() }
                 }
             }
             #[inline]
-            fn from_owned(owned: Self::Owned) -> (Self::RawUnion, u8) {
+            fn from_owned(owned: Self::Owned) -> (Self::RawUnion, RawVariantIndex) {
                 match owned {
                     $($tuple::$V(val) => {
                         let mut raw = Self::new_raw_uninit();
@@ -406,25 +417,31 @@ pub mod variant_internal {
             <Self::RawUnion as RawUnionOps>::new_raw_uninit()
         }
         #[inline]
-        unsafe fn drop_active(_raw: &mut Self::RawUnion, _index: u8) {}
+        unsafe fn drop_active(_raw: &mut Self::RawUnion, _index: RawVariantIndex) {}
         #[inline]
-        unsafe fn as_ref<'a>(_raw: &'a Self::RawUnion, _index: u8) -> Self::Ref<'a> {
+        unsafe fn as_ref<'a>(_raw: &'a Self::RawUnion, _index: RawVariantIndex) -> Self::Ref<'a> {
             unsafe { core::hint::unreachable_unchecked() }
         }
         #[inline]
-        unsafe fn as_mut<'a>(_raw: &'a mut Self::RawUnion, _index: u8) -> Self::Mut<'a> {
+        unsafe fn as_mut<'a>(
+            _raw: &'a mut Self::RawUnion,
+            _index: RawVariantIndex,
+        ) -> Self::Mut<'a> {
             unsafe { core::hint::unreachable_unchecked() }
         }
         #[inline]
-        unsafe fn as_pin_mut<'a>(_raw: &'a mut Self::RawUnion, _index: u8) -> Self::PinMut<'a> {
+        unsafe fn as_pin_mut<'a>(
+            _raw: &'a mut Self::RawUnion,
+            _index: RawVariantIndex,
+        ) -> Self::PinMut<'a> {
             unsafe { core::hint::unreachable_unchecked() }
         }
         #[inline]
-        unsafe fn into_owned(_raw: Self::RawUnion, _index: u8) -> Self::Owned {
+        unsafe fn into_owned(_raw: Self::RawUnion, _index: RawVariantIndex) -> Self::Owned {
             unsafe { core::hint::unreachable_unchecked() }
         }
         #[inline]
-        fn from_owned(owned: Self::Owned) -> (Self::RawUnion, u8) {
+        fn from_owned(owned: Self::Owned) -> (Self::RawUnion, RawVariantIndex) {
             match owned {}
         }
     }
@@ -454,7 +471,7 @@ pub mod variant_internal {
             <Self::RawUnion as RawUnionOps>::new_raw_uninit()
         }
         #[inline]
-        unsafe fn drop_active(raw: &mut Self::RawUnion, index: u8) {
+        unsafe fn drop_active(raw: &mut Self::RawUnion, index: RawVariantIndex) {
             unsafe {
                 if index < 1 {
                     core::ptr::drop_in_place(&mut raw.__head as *mut ManuallyDrop<H> as *mut H)
@@ -464,7 +481,7 @@ pub mod variant_internal {
             }
         }
         #[inline]
-        unsafe fn as_ref<'a>(raw: &'a Self::RawUnion, index: u8) -> Self::Ref<'a> {
+        unsafe fn as_ref<'a>(raw: &'a Self::RawUnion, index: RawVariantIndex) -> Self::Ref<'a> {
             unsafe {
                 if index < 1 {
                     Coproduct::Inl(&*(&raw.__head as *const ManuallyDrop<H> as *const H))
@@ -474,7 +491,7 @@ pub mod variant_internal {
             }
         }
         #[inline]
-        unsafe fn as_mut<'a>(raw: &'a mut Self::RawUnion, index: u8) -> Self::Mut<'a> {
+        unsafe fn as_mut<'a>(raw: &'a mut Self::RawUnion, index: RawVariantIndex) -> Self::Mut<'a> {
             unsafe {
                 if index < 1 {
                     Coproduct::Inl(&mut *(&mut raw.__head as *mut ManuallyDrop<H> as *mut H))
@@ -484,7 +501,10 @@ pub mod variant_internal {
             }
         }
         #[inline]
-        unsafe fn as_pin_mut<'a>(raw: &'a mut Self::RawUnion, index: u8) -> Self::PinMut<'a> {
+        unsafe fn as_pin_mut<'a>(
+            raw: &'a mut Self::RawUnion,
+            index: RawVariantIndex,
+        ) -> Self::PinMut<'a> {
             unsafe {
                 if index < 1 {
                     Coproduct::Inl(core::pin::Pin::new_unchecked(
@@ -496,7 +516,7 @@ pub mod variant_internal {
             }
         }
         #[inline]
-        unsafe fn into_owned(raw: Self::RawUnion, index: u8) -> Self::Owned {
+        unsafe fn into_owned(raw: Self::RawUnion, index: RawVariantIndex) -> Self::Owned {
             unsafe {
                 if index < 1 {
                     Coproduct::Inl(core::ptr::read((&raw const raw.__head).cast::<H>()))
@@ -509,7 +529,7 @@ pub mod variant_internal {
             }
         }
         #[inline]
-        fn from_owned(owned: Self::Owned) -> (Self::RawUnion, u8) {
+        fn from_owned(owned: Self::Owned) -> (Self::RawUnion, RawVariantIndex) {
             match owned {
                 Coproduct::Inl(h) => (RawVariantUnion { __head: ManuallyDrop::new(h) }, 0),
                 Coproduct::Inr(t) => {

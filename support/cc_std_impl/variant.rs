@@ -5,7 +5,7 @@
 //! `std::variant` C++ interoperability.
 
 use crate::std::variant_internal::{
-    RawUnionClone, RawUnionDebug, RawUnionEq, RawUnionIndex, RawUnionPartialEq,
+    RawUnionClone, RawUnionDebug, RawUnionEq, RawUnionIndex, RawUnionPartialEq, RawVariantIndex,
     TrivialVariantTypes, VariantAlternative, VariantAtCtor, VariantCtor, VariantTypes,
     RAW_VARIANT_NPOS, VARIANT_NPOS,
 };
@@ -41,7 +41,7 @@ use ctor::Ctor;
 #[repr(C)]
 pub struct variant<Ts: VariantTypes> {
     pub(crate) raw: Ts::RawUnion,
-    pub(crate) index: u8,
+    pub(crate) index: RawVariantIndex,
 }
 
 impl<Ts: VariantTypes> Drop for variant<Ts> {
@@ -159,7 +159,7 @@ impl<Ts: VariantTypes> variant<Ts> {
     where
         Ts::RawUnion: RawUnionIndex<I>,
     {
-        if self.index != I as u8 {
+        if self.index != I as RawVariantIndex {
             return None;
         }
         Some(unsafe { <Ts::RawUnion as RawUnionIndex<I>>::get_unchecked(&self.raw) })
@@ -174,7 +174,7 @@ impl<Ts: VariantTypes> variant<Ts> {
     where
         Ts::RawUnion: RawUnionIndex<I>,
     {
-        if self.index != I as u8 {
+        if self.index != I as RawVariantIndex {
             return None;
         }
         Some(unsafe { <Ts::RawUnion as RawUnionIndex<I>>::get_unchecked_mut(&mut self.raw) })
@@ -189,7 +189,7 @@ impl<Ts: VariantTypes> variant<Ts> {
     where
         Ts::RawUnion: RawUnionIndex<I>,
     {
-        if self.index != I as u8 {
+        if self.index != I as RawVariantIndex {
             return None;
         }
         unsafe {
@@ -205,7 +205,7 @@ impl<Ts: VariantTypes> variant<Ts> {
     where
         Ts::RawUnion: RawUnionIndex<I>,
     {
-        self.index == I as u8
+        self.index == I as RawVariantIndex
     }
 
     /// Creates a new `variant` holding `val` as the alternative at zero-based index `I`
@@ -229,7 +229,7 @@ impl<Ts: VariantTypes> variant<Ts> {
                 }
                 raw
             },
-            index: I as u8,
+            index: I as RawVariantIndex,
         }
     }
 
@@ -285,7 +285,7 @@ impl<Ts: VariantTypes> variant<Ts> {
             }
             let ptr = <Ts::RawUnion as RawUnionIndex<I>>::raw_ptr_mut(&raw mut this.raw);
             value.ctor(ptr)?;
-            this.index = I as u8;
+            this.index = I as RawVariantIndex;
             Ok(Pin::new_unchecked(&mut *ptr))
         }
     }
@@ -514,7 +514,7 @@ where
     Ts::RawUnion: Copy,
 {
     pub(crate) raw: Ts::RawUnion,
-    pub(crate) index: u8,
+    pub(crate) index: RawVariantIndex,
 }
 
 impl<Ts: TrivialVariantTypes> Copy for trivial_variant<Ts> {}
@@ -596,7 +596,7 @@ impl<Ts: TrivialVariantTypes> trivial_variant<Ts> {
     where
         Ts::RawUnion: RawUnionIndex<I>,
     {
-        if self.index != I as u8 {
+        if self.index != I as RawVariantIndex {
             return None;
         }
         Some(unsafe { <Ts::RawUnion as RawUnionIndex<I>>::get_unchecked(&self.raw) })
@@ -611,7 +611,7 @@ impl<Ts: TrivialVariantTypes> trivial_variant<Ts> {
     where
         Ts::RawUnion: RawUnionIndex<I>,
     {
-        if self.index != I as u8 {
+        if self.index != I as RawVariantIndex {
             return None;
         }
         Some(unsafe { <Ts::RawUnion as RawUnionIndex<I>>::get_unchecked_mut(&mut self.raw) })
@@ -623,7 +623,7 @@ impl<Ts: TrivialVariantTypes> trivial_variant<Ts> {
     where
         Ts::RawUnion: RawUnionIndex<I>,
     {
-        self.index == I as u8
+        self.index == I as RawVariantIndex
     }
 
     /// Creates a new `trivial_variant` holding `val` as the alternative at zero-based index `I`.
@@ -646,7 +646,7 @@ impl<Ts: TrivialVariantTypes> trivial_variant<Ts> {
                 }
                 raw
             },
-            index: I as u8,
+            index: I as RawVariantIndex,
         }
     }
 
@@ -818,7 +818,7 @@ where
             (&raw mut (*dest).index).write(RAW_VARIANT_NPOS);
             let val_ptr = <Ts::RawUnion as RawUnionIndex<I>>::raw_ptr_mut(&raw mut (*dest).raw);
             self.0.ctor(val_ptr)?;
-            (&raw mut (*dest).index).write(I as u8);
+            (&raw mut (*dest).index).write(I as RawVariantIndex);
             Ok(())
         }
     }
