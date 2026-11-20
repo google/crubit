@@ -216,6 +216,36 @@ crubit_cc_test(
 )
 
 cc_library(
+    name = "slice_ref_header_modules_virtual_include",
+    testonly = True,
+    hdrs = ["slice_ref_header_modules_virtual_include.h"],
+    features = ["header_modules"],
+    deps = [":slice_ref"],
+)
+
+cc_library(
+    name = "slice_ref_header_modules_depot_path",
+    testonly = True,
+    hdrs = ["slice_ref_header_modules_depot_path.h"],
+    features = ["header_modules"],
+    deps = [":slice_ref"],
+)
+
+crubit_cc_test(
+    name = "slice_ref_header_modules_odr_test",
+    srcs = ["slice_ref_header_modules_odr_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
+    deps = [
+        ":slice_ref_header_modules_depot_path",
+        ":slice_ref_header_modules_virtual_include",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "str_ref",
     hdrs = ["str_ref.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
