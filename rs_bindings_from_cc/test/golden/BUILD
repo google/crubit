@@ -98,7 +98,7 @@ REQUIRES_HEADER_MODULES = [
 config_setting(
     name = "header_modules_off",
     flag_values = {
-        "//google_internal/build_flavors:force_header_modules_in_crubit_macros": "False",
+        "//rs_bindings_from_cc/bazel_support:use_header_modules": "False",
     },
     visibility = ["//:__subpackages__"],
 )

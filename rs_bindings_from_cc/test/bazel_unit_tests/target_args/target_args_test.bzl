@@ -263,7 +263,7 @@ def _test_toolchain_headers_in_header_analysis_action():
 def _extra_cpp_srcs_in_header_analysis_action_test_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
-    analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "CppHeaderAnalysis"][0]
+    analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic in ("CppHeaderAnalysis", "RustBindingsFromCc")][0]
     inputs = analysis_action.inputs.to_list()
     argv = analysis_action.argv
 
@@ -446,7 +446,7 @@ def _virtual_include_headers_in_target_args_impl(ctx):
     asserts.equals(
         env,
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:mylib_with_include_prefix",
-        target_args[1]["t"],
+        target_args[1]["t"].lstrip("@"),
     )
     headers = target_args[1]["h"]
 
