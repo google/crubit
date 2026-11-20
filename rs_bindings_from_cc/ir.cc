@@ -4,7 +4,6 @@
 
 #include "rs_bindings_from_cc/ir.h"
 
-#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -13,7 +12,6 @@
 #include "common/status.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APSInt.h"
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
@@ -212,29 +210,6 @@ FormattedError FormattedError::FromStatus(llvm::Error error) {
   std::string msg = GetStatusMessage(error);
   llvm::consumeError(std::move(error));
   return FormattedError(fmt, std::move(msg));
-}
-
-std::string FormattedError::SubstituteImpl(llvm::StringRef format,
-                                           llvm::ArrayRef<std::string> args) {
-  std::string result;
-  for (size_t i = 0; i < format.size(); ++i) {
-    if (format[i] == '$' && i + 1 < format.size()) {
-      if (format[i + 1] >= '0' && format[i + 1] <= '9') {
-        size_t idx = format[i + 1] - '0';
-        if (idx < args.size()) {
-          result += args[idx];
-        }
-        ++i;
-        continue;
-      } else if (format[i + 1] == '$') {
-        result += '$';
-        ++i;
-        continue;
-      }
-    }
-    result += format[i];
-  }
-  return result;
 }
 
 }  // namespace crubit

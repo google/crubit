@@ -2018,7 +2018,7 @@ void Importer::ImportMacroConstants() {
           continue;
         }
         error = FormattedError::Substitute(
-            "the type of the macro, `$0`, doesn't have bindings",
+            "the type of the macro, `{0}`, doesn't have bindings",
             type.getUnqualifiedType().getAsString());
       } else {
         error = std::get<FormattedError>(std::move(result));
@@ -2556,7 +2556,7 @@ _Nullable std::unique_ptr<crubit::ffi::Item> Importer::ImportDecl(
     std::unique_ptr<crubit::ffi::Item> item = ImportUnsupportedItem(
         *decl, std::nullopt,
         {FormattedError::Substitute(
-            "Not bound because of CRUBIT_DO_NOT_BIND:$0", reason_bullets)},
+            "Not bound because of CRUBIT_DO_NOT_BIND:{0}", reason_bullets)},
         /*is_hard_error=*/false);
     item->mutable_unsupported_item()->set_must_bind(false);
     for (const std::string& reason : do_not_bind_reasons) {
@@ -3395,11 +3395,11 @@ std::optional<CcType> Importer::CheckTemplateCrubitEnabled(
       header.has_value()) {
     return CcType(FormattedError::Substitute(
         "crubit.rs/errors/unknown_target: Failed to complete template "
-        "specialization type $0:\n"
+        "specialization type {0}:\n"
         "the template is defined in\n"
-        "  $1\n"
+        "  {1}\n"
         "which is not a public header of any Crubit-enabled target that\n"
-        "  $2\n"
+        "  {2}\n"
         "depends on directly. Either enable Crubit on the library that "
         "provides the header,\n"
         "add that library as a direct dependency (and `#include` the "
@@ -3408,8 +3408,8 @@ std::optional<CcType> Importer::CheckTemplateCrubitEnabled(
         type_string, *header, invocation_.target_.value()));
   }
   return CcType(FormattedError::Substitute(
-      "Failed to complete template specialization type $0: template "
-      "belongs to target $1, which does not support Crubit.",
+      "Failed to complete template specialization type {0}: template "
+      "belongs to target {1}, which does not support Crubit.",
       type_string, target.value()));
 }
 
@@ -3432,8 +3432,8 @@ CcType Importer::ConvertClassTemplateSpecializationDecl(
           CheckSpecializationInstantiable(&specialization_decl);
       instantiation_errors.has_value()) {
     return CcType(FormattedError::Substitute(
-        "Failed to complete template specialization type $0: Diagnostics "
-        "emitted:\n$1",
+        "Failed to complete template specialization type {0}: Diagnostics "
+        "emitted:\n{1}",
         type_string, *instantiation_errors));
   }
 
@@ -3470,7 +3470,7 @@ CcType Importer::ConvertClassTemplateSpecializationDecl(
       CheckImportStatus(GetDeclItem(&specialization_decl));
   if (import_status) {
     return CcType(FormattedError::Substitute(
-        "Failed to create bindings for template specialization type $0: $1",
+        "Failed to create bindings for template specialization type {0}: {1}",
         type_string, llvm::toString(std::move(import_status))));
   }
 
@@ -3487,7 +3487,7 @@ CcType Importer::ConvertTemplateSpecializationType(
           type.getAsCXXRecordDecl());
   if (!specialization_decl) {
     return CcType(FormattedError::Substitute(
-        "Template specialization '$0' without an associated record decl "
+        "Template specialization '{0}' without an associated record decl "
         "is not supported.",
         type_string));
   }
@@ -3570,8 +3570,8 @@ CcType Importer::WithAsWrittenTemplateArgs(
       // header.
       if (has_explicit_lifetimes) {
         return CcType(FormattedError::Substitute(
-            "Failed to convert a template argument of '$0', which carries "
-            "an explicit lifetime: $1",
+            "Failed to convert a template argument of '{0}', which carries "
+            "an explicit lifetime: {1}",
             clang::QualType(&type, 0).getAsString(),
             converted_arg.variant().error().message()));
       }
@@ -3591,7 +3591,7 @@ CcType Importer::WithAsWrittenTemplateArgs(
 CcType Importer::ConvertTypeDecl(clang::NamedDecl* _Nonnull decl) {
   if (!EnsureSuccessfullyImported(decl)) {
     return CcType(FormattedError::Substitute(
-        "No generated bindings found for '$0'", decl->getNameAsString()));
+        "No generated bindings found for '{0}'", decl->getNameAsString()));
   }
 
   return CcTypeDecl(GenerateItemId(*decl));
@@ -4113,7 +4113,7 @@ CcType Importer::ConvertQualType(
   // FormattedError variant". That's a bit ridiculous! But the remaining uses
   // of Status are a bit tricky and don't fit in a first draft.
   if (!type) {
-    return CcType(FormattedError::Substitute("Unsupported type '$0': $1",
+    return CcType(FormattedError::Substitute("Unsupported type '{0}': {1}",
                                              type_string,
                                              llvm::toString(type.takeError())));
   }
@@ -4122,7 +4122,7 @@ CcType Importer::ConvertQualType(
     // be something we can aggregate by somehow.
     // TODO(jeanpierreda): This produces pretty verbose errors.
     return CcType(
-        FormattedError::Substitute("Unsupported type '$0': $1", type_string,
+        FormattedError::Substitute("Unsupported type '{0}': {1}", type_string,
                                    type->variant().error().message()));
   }
 
