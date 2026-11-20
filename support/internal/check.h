@@ -27,9 +27,20 @@ struct CheckFail {
 
 }  // namespace crubit::internal
 
+// Use `__FILE_NAME__` (basename only) when available so that headers reachable
+// via multiple include paths (for example `_virtual_includes` from
+// `strip_include_prefix` vs. the source-tree path) produce identical token
+// expansions in inline/template functions and avoid Clang header-module ODR
+// violations.
+#ifdef __FILE_NAME__
+#define CRUBIT_CHECK(condition)  \
+  if (!(condition)) [[unlikely]] \
+  ::crubit::internal::CheckFail(__FILE_NAME__, __LINE__, #condition)
+#else
 #define CRUBIT_CHECK(condition)  \
   if (!(condition)) [[unlikely]] \
   ::crubit::internal::CheckFail(__FILE__, __LINE__, #condition)
+#endif
 
 // Like `CRUBIT_CHECK`, but only checked when `NDEBUG` is not defined. With
 // `NDEBUG`, the condition and any streamed message are still compiled (so they
