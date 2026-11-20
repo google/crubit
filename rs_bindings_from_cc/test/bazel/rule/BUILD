@@ -154,8 +154,8 @@ rust_api_from_cpp(
     name = "features_lib_multi_rust",
     cpp_target = ":features_lib_multi",
     crubit_features = [
+        "inherited_friend_operators",
         "record_impl_debug",
-        "strong_ordering_traits",
     ],
 )
 
