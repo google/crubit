@@ -7,7 +7,9 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
+#include <cstddef>
 #include <memory>
 
 // Public headers of the C++ library being wrapped.
@@ -59,5 +61,13 @@ extern "C" int __rust_thunk___Z15apply_binary_opiiPFiiiE(
 
 static_assert((int (*)(int, int, crubit::type_identity_t<int(int, int)>*)) &
               ::apply_binary_op);
+
+static_assert((int (*)(int, int)) & ::noinline_multiply);
+
+static_assert(CRUBIT_SIZEOF(class NonMovableWithNoInline) == 4);
+static_assert(alignof(class NonMovableWithNoInline) == 4);
+
+static_assert((int (::NonMovableWithNoInline::*)() const) &
+              ::NonMovableWithNoInline::value);
 
 #pragma clang diagnostic pop
