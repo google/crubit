@@ -2269,9 +2269,7 @@ fn test_typedef_duplicate() -> Result<()> {
     )?;
 
     let ir = ir_testing::make_test_ir(&proto)?;
-    // TODO(b/200064504): Figure out if we can (and want to) merge the doc
-    // comments from both C++ declarations above. (Currently only the first doc
-    // comment makes it through - maybe this is also okay in the long term?)
+    // Only the doc comment from the first C++ declaration is preserved.
     assert_ir_matches!(
         ir,
         quote! {
