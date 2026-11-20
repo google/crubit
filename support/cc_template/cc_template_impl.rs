@@ -10,15 +10,8 @@ use std::fs::File;
 use std::io::BufReader;
 
 pub fn to_private_struct_path(input: TokenStream) -> Result<TokenStream, syn::Error> {
-    validate_user_input(&input)?;
     let instantiations = read_instantiations_map()?;
     get_instantiation_struct_name(input, instantiations)
-}
-
-fn validate_user_input(_input: &TokenStream) -> Result<(), syn::Error> {
-    // TODO(b/228299446): actually validate the user input and show useful error
-    // messages
-    Ok(())
 }
 
 fn read_instantiations_map() -> Result<HashMap<String, String>, syn::Error> {
@@ -158,21 +151,5 @@ mod tests {
             expanded.to_string(),
             quote! {__cc_template_instantiations_rs_api::zz_template_instantiations::__std_vector__bool__}.to_string()
         );
-    }
-
-    #[gtest]
-    fn test_parsing_valid_cc_instantiations() {
-        validate_user_input(&quote! {vector<bool>}).unwrap();
-        validate_user_input(&quote! {std::vector<bool>}).unwrap();
-        validate_user_input(&quote! {::std::vector<bool>}).unwrap();
-        validate_user_input(&quote! { vector<42> }).unwrap();
-        validate_user_input(&quote! { vector<"a"> }).unwrap();
-        validate_user_input(&quote! { vector<'a'> }).unwrap();
-        validate_user_input(&quote! { vector<3.14> }).unwrap();
-        validate_user_input(&quote! { vector<int*> }).unwrap();
-        validate_user_input(&quote! { vector<42, "a", 'a', 3.14, int*> }).unwrap();
-        validate_user_input(&quote! { Pair<int, Pair<int,int> > }).unwrap();
-        validate_user_input(&quote! { A<B<C<int>>> }).unwrap();
-        validate_user_input(&quote! { zip<short, int>::with<unsigned short, unsigned> }).unwrap();
     }
 }
