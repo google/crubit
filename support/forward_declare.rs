@@ -222,6 +222,13 @@ macro_rules! symbol {
 pub mod internal {
     pub struct Symbol<const SYMBOL: &'static str>;
 
+    /// The `CppType::Name` of a slice `[T]` is `SliceName<T::Name>`.
+    ///
+    /// Slices need a `Name` that no sized type can have. Otherwise `&[T]` (a
+    /// fat pointer) would be in the same transmutability equivalence class as
+    /// `&U` for some sized `U` (a thin pointer).
+    pub struct SliceName<Name>(std::marker::PhantomData<Name>);
+
     /// Types that implement the `CppType` trait with the same `Name` can be
     /// safely transmuted between each other, because they either provide
     /// bindings for the same C++ type, or point/refer to the same C++ type,
@@ -370,11 +377,11 @@ where
 /// size, and stride.  Based on "Unsafe Code Guidelines Reference" [1], this
 /// means that the arrays `[T; N]` and `[U, N]` have the same memory layout.
 ///
-/// Note that `T` below has an implicit `T: Sized` constraint.  This means that
-/// it is *not* possible to transmute into or out-of an array of
-/// forward-declared types.  OTOH, it *is* possible to transmute between arrays
-/// of transmutable, completely-defined/sized types (e.g. between arrays of
-/// template instantiations).
+/// Note that `Incomplete` is zero-sized, so `T` below may be a forward-declared
+/// type (e.g. `[Incomplete<Name, _>; usize::MAX]` is a valid type). This is why
+/// slices `[T]` don't reuse the array `Name` (see `SliceName`). It is also
+/// possible to transmute between arrays of transmutable, completely-defined
+/// types (e.g. between arrays of template instantiations).
 ///
 /// [1]
 /// https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html#layout-of-rust-array-types
@@ -423,9 +430,10 @@ unsafe impl<T> CppType for [T]
 where
     T: CppType,
 {
-    // Using somewhat icky `usize::MAX` to work around the fact that [()] is
-    // unsized.
-    type Name = ([(); usize::MAX], T::Name);
+    // Not `([(); usize::MAX], T::Name)`: that is also the `Name` of the array
+    // `[Incomplete<T::Name, _>; usize::MAX]`, which is a valid type because
+    // `Incomplete` is zero-sized.
+    type Name = SliceName<T::Name>;
 }
 
 /// If `T` can be transmuted into `U`, then one can also transmute between `&'a
@@ -611,7 +619,14 @@ where
     T: CppType,
     U: CppType<Name = T::Name>,
 {
+    #[track_caller]
     fn cpp_coerce(self) -> Vec<&'a U> {
+        // `&T` and `&U` may still differ in size if one is a thin pointer and
+        // the other is a fat pointer. Reinterpreting the buffer would then
+        // read pointers as slice lengths, so check like the blanket impl above.
+        if std::mem::size_of::<&'a T>() != std::mem::size_of::<&'a U>() {
+            cpp_coerce_size_mismatch(std::mem::size_of::<&'a T>(), std::mem::size_of::<&'a U>());
+        }
         let (p, len, capacity) = self.into_raw_parts();
         unsafe { Vec::from_raw_parts(p as *mut &'a U, len, capacity) }
     }
