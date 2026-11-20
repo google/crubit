@@ -305,7 +305,7 @@ rust_library(
     compatible_with = ["//buildenv/target:non_prod"],
     edition = "2024",
     link_deps = [
-        "//support/rs_std:waker",
+        "//support/rs:waker",
     ],
     visibility = [
         "//visibility:public",

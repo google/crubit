@@ -25,7 +25,6 @@ group("cpp_api_from_rust_bindings_cpp_deps") {
   public_deps = [
     "$crubit_src_dir/support:support_cpp",
     "$crubit_src_dir/support/rs:rs_cpp",
-    "$crubit_src_dir/support/rs_std:rs_std_cpp",
     "$crubit_src_dir/support/internal:internal_cpp",
   ]
 }
@@ -35,7 +34,6 @@ group("rust_api_from_cpp_bindings_cpp_deps") {
   public_deps = [
     "$crubit_src_dir/support:support_cpp",
     "$crubit_src_dir/support/rs:rs_cpp",
-    "$crubit_src_dir/support/rs_std:rs_std_cpp",
     "$crubit_src_dir/support/internal:internal_cpp",
   ]
 }

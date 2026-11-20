@@ -1,6 +1,5 @@
 """C++ libraries that help work with Rust types."""
 
-load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
@@ -11,14 +10,37 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_te
 
 package(default_applicable_licenses = ["//:license"])
 
-cc_library(
+exports_files(
+    [
+        "char.cc",
+        "char.h",
+        "dyn_callable.h",
+        "dyn_erased_future.h",
+        "enum.h",
+        "fn.h",
+        "fn_ref.h",
+        "int.h",
+        "iterator_adapter.h",
+        "lossy_formatter_for_bindings.h",
+        "option.h",
+        "result.h",
+        "slice_ref.h",
+        "str_ref.h",
+        "traits.h",
+        "tuple.h",
+        "unit.h",
+        "vec.h",
+        "waker.cc",
+        "waker.h",
+    ],
+    visibility = ["//support/rs:__pkg__"],
+)
+
+alias(
     name = "char",
-    srcs = ["char.cc"],
-    hdrs = ["char.h"],
-    # Enable bidirectional bindings (via crubit_internal_rust_type).
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:char",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:char.
     tags = [
         "alt_dep=//support/rs:char",
         "avoid_dep",
@@ -26,36 +48,19 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-
-    # It is important to be thoughtful when adding new dependencies for `char`
-    # (and possibly other targets in this BUILD file).  Using mature Abseil APIs
-    # seems okay - we should be able to assume that Crubit users have a version
-    # of Abseil that is relatively recent (although we can't rely on an
-    # exact version and/or exact absl/base/options.h).
-    deps = [
-        ":str_ref",
-        "//support:annotations",
-        "//support/internal:bindings_support",
-        "//support/internal:cpp_config",
-    ],
 )
 
-cc_library(
+alias(
     name = "int",
-    hdrs = ["int.h"],
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:int",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:int.
     tags = [
         "alt_dep=//support/rs:int",
         "avoid_dep",
     ],
     visibility = [
         "//visibility:public",
-    ],
-    deps = [
-        "//support:annotations",
-        "//support/internal:cpp_config",
     ],
 )
 
@@ -67,15 +72,20 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":int",
+        "//support/rs:int",
         "@googletest//:gtest_main",
     ],
 )
 
 alias(
     name = "rs_char",
-    actual = "//support/rs_std:char",
+    actual = "//support/rs:char",
     compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer //support/rs:char.
+    tags = [
+        "alt_dep=//support/rs:char",
+        "avoid_dep",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -89,8 +99,8 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":char",
-        ":str_ref",
+        "//support/rs:char",
+        "//support/rs:str_ref",
         "//support/rs_std/internal:is_utf8",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",
@@ -98,21 +108,17 @@ crubit_cc_test(
     ],
 )
 
-cc_library(
+alias(
     name = "waker",
-    srcs = ["waker.cc"],
-    hdrs = ["waker.h"],
+    actual = "//support/rs:waker",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:waker.
     tags = [
         "alt_dep=//support/rs:waker",
         "avoid_dep",
     ],
     visibility = [
         "//:__subpackages__",
-    ],
-    deps = [
-        "//support/internal:cpp_config",
     ],
 )
 
@@ -136,7 +142,7 @@ crubit_rust_test(
     size = "small",
     srcs = ["erased_future_test.rs"],
     deps = [
-        ":erased_future",
+        "//support/rs:erased_future",
         "@crate_index//:googletest",
     ],
 )
@@ -159,11 +165,11 @@ rust_library(
     ],
 )
 
-cc_library(
+alias(
     name = "dyn_erased_future_cc",
-    hdrs = ["dyn_erased_future.h"],
+    actual = "//support/rs:dyn_erased_future_cc",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:dyn_erased_future_cc.
     tags = [
         "alt_dep=//support/rs:dyn_erased_future_cc",
         "avoid_dep",
@@ -171,34 +177,18 @@ cc_library(
     visibility = [
         "//:__subpackages__",
     ],
-    deps = [
-        ":waker",
-        "//support:crubit_support",  # build_cleaner: keep, defines extern "C" functions we declare.
-    ],
 )
 
-cc_library(
+alias(
     name = "slice_ref",
-    hdrs = ["slice_ref.h"],
-    # Enable bidirectional bindings (via crubit_internal_rust_type).
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:slice_ref",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:slice_ref.
     tags = [
         "alt_dep=//support/rs:slice_ref",
         "avoid_dep",
     ],
     visibility = ["//visibility:public"],
-
-    # Try to avoid unnecessary dependencies, so that Crubit users have to pull in as little as
-    # possible. Using mature Abseil APIs seems okay - we should be able to assume that Crubit users
-    # have a version of Abseil that is relatively recent (although we can't rely on an exact version
-    # and/or exact absl/base/options.h).
-    deps = [
-        "//support:annotations",
-        "//support/internal:bindings_support",
-        "//support/internal:cpp_config",
-    ],
 )
 
 crubit_cc_test(
@@ -209,36 +199,22 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":slice_ref",
+        "//support/rs:slice_ref",
         "@abseil-cpp//absl/types:span",
         "@googletest//:gtest_main",
     ],
 )
 
-cc_library(
+alias(
     name = "str_ref",
-    hdrs = ["str_ref.h"],
-    # Enable bidirectional bindings (via crubit_internal_rust_type).
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:str_ref",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:str_ref.
     tags = [
         "alt_dep=//support/rs:str_ref",
         "avoid_dep",
     ],
     visibility = ["//visibility:public"],
-
-    # Try to avoid unnecessary dependencies, so that Crubit users have to pull in as little as
-    # possible. Using mature Abseil APIs seems okay - we should be able to assume that Crubit users
-    # have a version of Abseil that is relatively recent (although we can't rely on an exact version
-    # and/or exact absl/base/options.h).
-    deps = [
-        ":slice_ref",
-        "//support:annotations_internal",
-        "//support/internal:bindings_support",
-        "//support/internal:cpp_config",
-        "//support/rs_std/internal:is_utf8",
-    ],
 )
 
 crubit_cc_test(
@@ -249,7 +225,7 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":str_ref",
+        "//support/rs:str_ref",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
@@ -272,25 +248,16 @@ rust_library(
     ],
 )
 
-cc_library(
+alias(
     name = "dyn_callable",
-    hdrs = ["dyn_callable.h"],
-    aspect_hints = [
-        "//features:supported",
-    ],
+    actual = "//support/rs:dyn_callable",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:dyn_callable.
     tags = [
         "alt_dep=//support/rs:dyn_callable",
         "avoid_dep",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "//support:bridge_cpp",
-        "//support/internal:cpp_config",
-        "@abseil-cpp//absl/base:nullability",
-        "@abseil-cpp//absl/functional:any_invocable",
-    ],
 )
 
 crubit_cc_test(
@@ -301,18 +268,17 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":dyn_callable",
+        "//support/rs:dyn_callable",
         "@abseil-cpp//absl/functional:any_invocable",
         "@googletest//:gtest_main",
     ],
 )
 
-cc_library(
+alias(
     name = "fn_ref",
-    hdrs = ["fn_ref.h"],
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:fn_ref",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:fn_ref.
     tags = [
         "alt_dep=//support/rs:fn_ref",
         "avoid_dep",
@@ -328,17 +294,16 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":fn_ref",
+        "//support/rs:fn_ref",
         "@googletest//:gtest_main",
     ],
 )
 
-cc_library(
+alias(
     name = "fn",
-    hdrs = ["fn.h"],
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:fn",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:fn.
     tags = [
         "alt_dep=//support/rs:fn",
         "avoid_dep",
@@ -354,18 +319,17 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":fn",
         "//support:movable",
+        "//support/rs:fn",
         "@googletest//:gtest_main",
     ],
 )
 
-cc_library(
+alias(
     name = "traits",
-    hdrs = ["traits.h"],
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:traits",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:traits.
     tags = [
         "alt_dep=//support/rs:traits",
         "avoid_dep",
@@ -373,27 +337,19 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [
-        "//support/internal:cpp_config",
-    ],
 )
 
-cc_library(
+alias(
     name = "iterator_adapter",
-    hdrs = ["iterator_adapter.h"],
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:iterator_adapter",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:iterator_adapter.
     tags = [
         "alt_dep=//support/rs:iterator_adapter",
         "avoid_dep",
     ],
     visibility = [
         "//visibility:public",
-    ],
-    deps = [
-        ":traits",
-        "//support/internal:cpp_config",
     ],
 )
 
@@ -405,17 +361,16 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":iterator_adapter",
+        "//support/rs:iterator_adapter",
         "@googletest//:gtest_main",
     ],
 )
 
-cc_library(
+alias(
     name = "option",
-    hdrs = ["option.h"],
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:option",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:option.
     tags = [
         "alt_dep=//support/rs:option",
         "avoid_dep",
@@ -423,19 +378,13 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [
-        ":unit",
-        "//support/internal:bindings_support",
-        "//support/internal:cpp_config",
-    ],
 )
 
-cc_library(
+alias(
     name = "result",
-    hdrs = ["result.h"],
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:result",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:result.
     tags = [
         "alt_dep=//support/rs:result",
         "avoid_dep",
@@ -443,19 +392,13 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [
-        ":unit",
-        "//support/internal:bindings_support",
-        "//support/internal:cpp_config",
-    ],
 )
 
-cc_library(
+alias(
     name = "vec",
-    hdrs = ["vec.h"],
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:vec",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:vec.
     tags = [
         "alt_dep=//support/rs:vec",
         "avoid_dep",
@@ -463,18 +406,13 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [
-        "//support/internal:bindings_support",
-        "//support/internal:cpp_config",
-    ],
 )
 
-cc_library(
+alias(
     name = "tuple",
-    hdrs = ["tuple.h"],
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:tuple",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:tuple.
     tags = [
         "alt_dep=//support/rs:tuple",
         "avoid_dep",
@@ -482,26 +420,19 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [
-        "//support/internal:cpp_config",
-    ],
 )
 
-cc_library(
+alias(
     name = "unit",
-    hdrs = ["unit.h"],
-    aspect_hints = ["//features:supported"],
+    actual = "//support/rs:unit",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:unit.
     tags = [
         "alt_dep=//support/rs:unit",
         "avoid_dep",
     ],
     visibility = [
         "//visibility:public",
-    ],
-    deps = [
-        "//support/internal:cpp_config",
     ],
 )
 
@@ -513,30 +444,22 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":unit",
+        "//support/rs:unit",
         "@googletest//:gtest_main",
     ],
 )
 
-# Support for the C++ bindings of Rust enums: the `rs::` free functions
-# (`get_if`, `get_unchecked`, `holds_alternative`, `discriminant`) and the
-# `crubit::internal` machinery generated enum classes are built from.
-cc_library(
+alias(
     name = "enum",
-    hdrs = ["enum.h"],
+    actual = "//support/rs:enum",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:enum.
     tags = [
         "alt_dep=//support/rs:enum",
         "avoid_dep",
     ],
     visibility = [
         "//visibility:public",
-    ],
-    deps = [
-        "//support:annotations",
-        "//support/internal:bindings_support",
-        "//support/rs_std/internal:enum",
     ],
 )
 
@@ -548,7 +471,7 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":enum",
+        "//support/rs:enum",
         "@googletest//:gtest_main",
     ],
 )
@@ -561,7 +484,7 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":enum",
+        "//support/rs:enum",
         "@googletest//:gtest_main",
     ],
 )
@@ -577,7 +500,7 @@ crubit_cc_test(
         "no_ios",
     ],
     deps = [
-        ":enum",
+        "//support/rs:enum",
         "@abseil-cpp//absl/base:core_headers",
         "@googletest//:gtest_main",
     ],
@@ -620,31 +543,32 @@ rust_library(
         "//:__subpackages__",
     ],
     deps = [
-        ":lossy_formatter",
+        ":lossy_formatter",  # build_cleaner: keep
         "//support/ffi_11",
     ],
 )
 
-cc_library(
+alias(
     name = "lossy_formatter_for_bindings",
-    hdrs = ["lossy_formatter_for_bindings.h"],
+    actual = "//support/rs:lossy_formatter_for_bindings",
     compatible_with = ["//buildenv/target:non_prod"],
-    # Prefer the re-export in //support/rs.
+    # Prefer //support/rs:lossy_formatter_for_bindings.
     tags = [
         "alt_dep=//support/rs:lossy_formatter_for_bindings",
         "avoid_dep",
     ],
     visibility = ["//:__subpackages__"],
-    deps = [
-        # We depend on the extern "C" symbols in lossy_formatter_for_bindings_rs.
-        ":lossy_formatter_for_bindings_rs",  # build_cleaner: keep
-    ],
 )
 
 cpp_api_from_rust_toolchain_bindings(
     name = "rs_core",
     cpp_namespace = "rs::core",
     crate_name = "core",
+    # Prefer //support/rs:rs_core.
+    tags = [
+        "alt_dep=//support/rs:rs_core",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -652,6 +576,11 @@ cpp_api_from_rust_toolchain_bindings(
     name = "rs_alloc",
     cpp_namespace = "rs::alloc",
     crate_name = "alloc",
+    # Prefer //support/rs:rs_alloc.
+    tags = [
+        "alt_dep=//support/rs:rs_alloc",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
     deps = [":rs_core"],
 )
@@ -660,6 +589,11 @@ cpp_api_from_rust_toolchain_bindings(
     name = "rs_std",
     cpp_namespace = "rs::std",
     crate_name = "std",
+    # Prefer //support/rs:rs_std.
+    tags = [
+        "alt_dep=//support/rs:rs_std",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":rs_alloc",
@@ -674,6 +608,11 @@ alias(
         "@rules_rust//:is_no_std": ":rs_alloc",
         "//conditions:default": ":rs_std",
     }),
+    # Prefer //support/rs:default_stdlib.
+    tags = [
+        "alt_dep=//support/rs:default_stdlib",
+        "avoid_dep",
+    ],
     visibility = ["//visibility:public"],
 )
 

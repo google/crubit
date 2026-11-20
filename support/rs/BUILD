@@ -119,30 +119,54 @@ crubit_cc_test(
     ],
 )
 
-# Re-exports of the targets in //support/rs_std.
-
 cc_library(
     name = "char",
-    hdrs = ["char.h"],
+    srcs = ["//support/rs_std:char.cc"],
+    hdrs = [
+        "char.h",
+        "//support/rs_std:char.h",
+    ],
+    # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:char"],
+
+    # It is important to be thoughtful when adding new dependencies for `char`
+    # (and possibly other targets in this BUILD file).  Using mature Abseil APIs
+    # seems okay - we should be able to assume that Crubit users have a version
+    # of Abseil that is relatively recent (although we can't rely on an
+    # exact version and/or exact absl/base/options.h).
+    deps = [
+        ":str_ref",
+        "//support:annotations",
+        "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
+    ],
 )
 
 alias(
     name = "default_stdlib",
     actual = "//support/rs_std:default_stdlib",
+    # Prevent build_cleaner from prompting between :default_stdlib and :rs_std/:rs_alloc/:rs_core.
+    tags = ["avoid_dep"],
     visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "dyn_callable",
-    hdrs = ["dyn_callable.h"],
+    hdrs = [
+        "dyn_callable.h",
+        "//support/rs_std:dyn_callable.h",
+    ],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:dyn_callable"],
+    deps = [
+        "//support:bridge_cpp",
+        "//support/internal:cpp_config",
+        "@abseil-cpp//absl/base:nullability",
+        "@abseil-cpp//absl/functional:any_invocable",
+    ],
 )
 
 alias(
@@ -163,20 +187,36 @@ alias(
 
 cc_library(
     name = "dyn_erased_future_cc",
-    hdrs = ["dyn_erased_future.h"],
+    hdrs = [
+        "dyn_erased_future.h",
+        "//support/rs_std:dyn_erased_future.h",
+    ],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
     ],
-    deps = ["//support/rs_std:dyn_erased_future_cc"],
+    deps = [
+        ":waker",
+        "//support:crubit_support",  # build_cleaner: keep, defines extern "C" functions we declare.
+    ],
 )
 
+# Support for the C++ bindings of Rust enums: the `rs::` free functions
+# (`get_if`, `get_unchecked`, `holds_alternative`, `discriminant`) and the
+# `crubit::internal` machinery generated enum classes are built from.
 cc_library(
     name = "enum",
-    hdrs = ["enum.h"],
+    hdrs = [
+        "enum.h",
+        "//support/rs_std:enum.h",
+    ],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:enum"],
+    deps = [
+        "//support:annotations",
+        "//support/internal:bindings_support",
+        "//support/rs_std/internal:enum",
+    ],
 )
 
 alias(
@@ -190,38 +230,54 @@ alias(
 
 cc_library(
     name = "fn",
-    hdrs = ["fn.h"],
+    hdrs = [
+        "fn.h",
+        "//support/rs_std:fn.h",
+    ],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:fn"],
 )
 
 cc_library(
     name = "fn_ref",
-    hdrs = ["fn_ref.h"],
+    hdrs = [
+        "fn_ref.h",
+        "//support/rs_std:fn_ref.h",
+    ],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:fn_ref"],
 )
 
 cc_library(
     name = "int",
-    hdrs = ["int.h"],
+    hdrs = [
+        "int.h",
+        "//support/rs_std:int.h",
+    ],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:int"],
+    deps = [
+        "//support:annotations",
+        "//support/internal:cpp_config",
+    ],
 )
 
 cc_library(
     name = "iterator_adapter",
-    hdrs = ["iterator_adapter.h"],
+    hdrs = [
+        "iterator_adapter.h",
+        "//support/rs_std:iterator_adapter.h",
+    ],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:iterator_adapter"],
+    deps = [
+        ":traits",
+        "//support/internal:cpp_config",
+    ],
 )
 
 alias(
@@ -233,10 +289,16 @@ alias(
 
 cc_library(
     name = "lossy_formatter_for_bindings",
-    hdrs = ["lossy_formatter_for_bindings.h"],
+    hdrs = [
+        "lossy_formatter_for_bindings.h",
+        "//support/rs_std:lossy_formatter_for_bindings.h",
+    ],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//:__subpackages__"],
-    deps = ["//support/rs_std:lossy_formatter_for_bindings"],
+    deps = [
+        # We depend on the extern "C" symbols in lossy_formatter_for_bindings_rs.
+        ":lossy_formatter_for_bindings_rs",  # build_cleaner: keep
+    ],
 )
 
 alias(
@@ -248,20 +310,34 @@ alias(
 
 cc_library(
     name = "option",
-    hdrs = ["option.h"],
+    hdrs = [
+        "option.h",
+        "//support/rs_std:option.h",
+    ],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:option"],
+    deps = [
+        ":unit",
+        "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
+    ],
 )
 
 cc_library(
     name = "result",
-    hdrs = ["result.h"],
+    hdrs = [
+        "result.h",
+        "//support/rs_std:result.h",
+    ],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:result"],
+    deps = [
+        ":unit",
+        "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
+    ],
 )
 
 alias(
@@ -284,64 +360,119 @@ alias(
 
 cc_library(
     name = "slice_ref",
-    hdrs = ["slice_ref.h"],
+    hdrs = [
+        "slice_ref.h",
+        "//support/rs_std:slice_ref.h",
+    ],
+    # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:slice_ref"],
+
+    # Try to avoid unnecessary dependencies, so that Crubit users have to pull in as little as
+    # possible. Using mature Abseil APIs seems okay - we should be able to assume that Crubit users
+    # have a version of Abseil that is relatively recent (although we can't rely on an exact version
+    # and/or exact absl/base/options.h).
+    deps = [
+        "//support:annotations",
+        "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
+    ],
 )
 
 cc_library(
     name = "str_ref",
-    hdrs = ["str_ref.h"],
+    hdrs = [
+        "str_ref.h",
+        "//support/rs_std:str_ref.h",
+    ],
+    # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:str_ref"],
+
+    # Try to avoid unnecessary dependencies, so that Crubit users have to pull in as little as
+    # possible. Using mature Abseil APIs seems okay - we should be able to assume that Crubit users
+    # have a version of Abseil that is relatively recent (although we can't rely on an exact version
+    # and/or exact absl/base/options.h).
+    deps = [
+        ":slice_ref",
+        "//support:annotations_internal",
+        "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
+        "//support/rs_std/internal:is_utf8",
+    ],
 )
 
 cc_library(
     name = "traits",
-    hdrs = ["traits.h"],
+    hdrs = [
+        "traits.h",
+        "//support/rs_std:traits.h",
+    ],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:traits"],
+    deps = [
+        "//support/internal:cpp_config",
+    ],
 )
 
 cc_library(
     name = "tuple",
-    hdrs = ["tuple.h"],
+    hdrs = [
+        "tuple.h",
+        "//support/rs_std:tuple.h",
+    ],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:tuple"],
+    deps = [
+        "//support/internal:cpp_config",
+    ],
 )
 
 cc_library(
     name = "unit",
-    hdrs = ["unit.h"],
+    hdrs = [
+        "unit.h",
+        "//support/rs_std:unit.h",
+    ],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:unit"],
+    deps = [
+        "//support/internal:cpp_config",
+    ],
 )
 
 cc_library(
     name = "vec",
-    hdrs = ["vec.h"],
+    hdrs = [
+        "vec.h",
+        "//support/rs_std:vec.h",
+    ],
     aspect_hints = ["//features:supported"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
-    deps = ["//support/rs_std:vec"],
+    deps = [
+        "//support/internal:bindings_support",
+        "//support/internal:cpp_config",
+    ],
 )
 
 cc_library(
     name = "waker",
-    hdrs = ["waker.h"],
+    srcs = ["//support/rs_std:waker.cc"],
+    hdrs = [
+        "waker.h",
+        "//support/rs_std:waker.h",
+    ],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
     ],
-    deps = ["//support/rs_std:waker"],
+    deps = [
+        "//support/internal:cpp_config",
+    ],
 )

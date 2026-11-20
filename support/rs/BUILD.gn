@@ -41,9 +41,16 @@ source_set("char") {
 
   public = [
     "char.h",
+    "../rs_std/char.h",
+  ]
+  sources = [
+    "../rs_std/char.cc",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:char",
+    "$crubit_src_dir/support/rs:str_ref",
+    "$crubit_src_dir/support:annotations",
+    "$crubit_src_dir/support/internal:bindings_support",
+    "$crubit_src_dir/support/internal:cpp_config",
   ]
 }
 
@@ -58,9 +65,12 @@ source_set("dyn_callable") {
 
   public = [
     "dyn_callable.h",
+    "../rs_std/dyn_callable.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:dyn_callable",
+    "$crubit_src_dir/support:bridge_cpp",
+    "$crubit_src_dir/support/internal:cpp_config",
+    "$crubit_absl_dep_target",
   ]
 }
 
@@ -75,9 +85,11 @@ source_set("dyn_erased_future_cc") {
 
   public = [
     "dyn_erased_future.h",
+    "../rs_std/dyn_erased_future.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:dyn_erased_future_cc",
+    "$crubit_src_dir/support/rs:waker",
+    "$crubit_src_dir/support:crubit_support",
   ]
 }
 
@@ -92,9 +104,12 @@ source_set("enum") {
 
   public = [
     "enum.h",
+    "../rs_std/enum.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:enum",
+    "$crubit_src_dir/support:annotations",
+    "$crubit_src_dir/support/internal:bindings_support",
+    "$crubit_src_dir/support/rs_std/internal:enum",
   ]
 }
 
@@ -109,9 +124,11 @@ source_set("int") {
 
   public = [
     "int.h",
+    "../rs_std/int.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:int",
+    "$crubit_src_dir/support:annotations",
+    "$crubit_src_dir/support/internal:cpp_config",
   ]
 }
 
@@ -126,9 +143,11 @@ source_set("iterator_adapter") {
 
   public = [
     "iterator_adapter.h",
+    "../rs_std/iterator_adapter.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:iterator_adapter",
+    "$crubit_src_dir/support/rs:traits",
+    "$crubit_src_dir/support/internal:cpp_config",
   ]
 }
 
@@ -143,9 +162,10 @@ source_set("lossy_formatter_for_bindings") {
 
   public = [
     "lossy_formatter_for_bindings.h",
+    "../rs_std/lossy_formatter_for_bindings.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:lossy_formatter_for_bindings",
+    "$crubit_src_dir/support/rs_std:lossy_formatter_for_bindings_rs",
   ]
 }
 
@@ -160,9 +180,12 @@ source_set("option") {
 
   public = [
     "option.h",
+    "../rs_std/option.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:option",
+    "$crubit_src_dir/support/rs:unit",
+    "$crubit_src_dir/support/internal:bindings_support",
+    "$crubit_src_dir/support/internal:cpp_config",
   ]
 }
 
@@ -199,9 +222,12 @@ source_set("result") {
 
   public = [
     "result.h",
+    "../rs_std/result.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:result",
+    "$crubit_src_dir/support/rs:unit",
+    "$crubit_src_dir/support/internal:bindings_support",
+    "$crubit_src_dir/support/internal:cpp_config",
   ]
 }
 
@@ -238,9 +264,12 @@ source_set("slice_ref") {
 
   public = [
     "slice_ref.h",
+    "../rs_std/slice_ref.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:slice_ref",
+    "$crubit_src_dir/support:annotations",
+    "$crubit_src_dir/support/internal:bindings_support",
+    "$crubit_src_dir/support/internal:cpp_config",
   ]
 }
 
@@ -279,9 +308,14 @@ source_set("str_ref") {
 
   public = [
     "str_ref.h",
+    "../rs_std/str_ref.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:str_ref",
+    "$crubit_src_dir/support/rs:slice_ref",
+    "$crubit_src_dir/support:annotations_internal",
+    "$crubit_src_dir/support/internal:bindings_support",
+    "$crubit_src_dir/support/internal:cpp_config",
+    "$crubit_src_dir/support/rs_std/internal:is_utf8",
   ]
 }
 
@@ -296,9 +330,10 @@ source_set("traits") {
 
   public = [
     "traits.h",
+    "../rs_std/traits.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:traits",
+    "$crubit_src_dir/support/internal:cpp_config",
   ]
 }
 
@@ -313,9 +348,10 @@ source_set("tuple") {
 
   public = [
     "tuple.h",
+    "../rs_std/tuple.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:tuple",
+    "$crubit_src_dir/support/internal:cpp_config",
   ]
 }
 
@@ -330,9 +366,10 @@ source_set("unit") {
 
   public = [
     "unit.h",
+    "../rs_std/unit.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:unit",
+    "$crubit_src_dir/support/internal:cpp_config",
   ]
 }
 
@@ -347,9 +384,11 @@ source_set("vec") {
 
   public = [
     "vec.h",
+    "../rs_std/vec.h",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:vec",
+    "$crubit_src_dir/support/internal:bindings_support",
+    "$crubit_src_dir/support/internal:cpp_config",
   ]
 }
 
@@ -364,9 +403,13 @@ source_set("waker") {
 
   public = [
     "waker.h",
+    "../rs_std/waker.h",
+  ]
+  sources = [
+    "../rs_std/waker.cc",
   ]
   deps = [
-    "$crubit_src_dir/support/rs_std:waker",
+    "$crubit_src_dir/support/internal:cpp_config",
   ]
 }
 
