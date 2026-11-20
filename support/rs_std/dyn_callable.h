@@ -227,7 +227,6 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
   // DynCallableAbi<Sig> is a friend so it can access the DynCallable
   // constructor below.
   friend struct internal_dyn_callable::DynCallableAbi<Sig>;
-  friend class ::rs_std::DynCallable<Sig>;
 
   // Private constructor, only intended to be called by DynCallableAbi<Sig>.
   //
@@ -329,17 +328,6 @@ class [[deprecated("Use rs::DynCallable instead")]] DynCallable
   // NOLINTNEXTLINE(google-explicit-constructor)
   DynCallable(::rs::DynCallable<Sig>&& other) noexcept
       : ::rs::DynCallable<Sig>(::std::move(other)) {}
-
- private:
-  friend class ::rs::DynCallable<Sig>;
-  static absl::AnyInvocable<Sig> ToAnyInvocable(
-      ::rs::DynCallable<Sig>&& callable) {
-    auto* manager = callable.manager_;
-    auto* invoker = callable.invoker_;
-    callable.manager_ = ::rs::internal_dyn_callable::EmptyManager;
-    callable.invoker_ = nullptr;
-    return absl::AnyInvocable<Sig>(&callable.storage_, manager, invoker);
-  }
 };
 #endif
 }  // namespace rs_std
