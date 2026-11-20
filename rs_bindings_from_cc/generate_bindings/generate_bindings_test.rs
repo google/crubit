@@ -696,6 +696,30 @@ fn test_find_decl_error_names_item_instead_of_address() -> Result<()> {
 }
 
 #[gtest]
+fn test_find_untyped_decl_panic_does_not_dump_ir() -> Result<()> {
+    let proto = ir_proto_from_cc("struct SomeStruct {};")?;
+    let ir = make_test_ir(&proto)?;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let missing_id = ir::ItemId::new_for_testing(999_999);
+
+    let err = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        db.find_untyped_decl(missing_id);
+    }))
+    .expect_err("expected find_untyped_decl to panic on missing ItemId");
+
+    let message = err
+        .downcast_ref::<String>()
+        .map(String::as_str)
+        .or_else(|| err.downcast_ref::<&'static str>().copied())
+        .expect("panic payload should be a string");
+    expect_that!(message, contains_substring("Couldn't find decl_id"));
+    expect_that!(message, not(contains_substring("SomeStruct")));
+    expect_that!(message, not(contains_substring("TreeIR")));
+    Ok(())
+}
+
+#[gtest]
 fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
     let cc_input = "#pragma clang lifetime_elision
         struct SomeStruct {};
