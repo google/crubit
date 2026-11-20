@@ -82,9 +82,8 @@ fn test_function_pointer() {
 
 #[gtest]
 fn test_function_reference() {
-    // TODO(b/217419782): Replicate `test_function_pointer`, but for C++
-    // references. (e.g. no `expect` / `Option` unwrapping should be
-    // needed).
+    let mul_fn = simple::get_reference_to_multiply_function();
+    expect_eq!(mul_fn(123, 456), 123 * 456);
 }
 
 #[gtest]
