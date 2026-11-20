@@ -150,11 +150,10 @@ def _header_generation_test_impl(ctx):
 
     [rustc_action] = [action for action in _find_actions_by_mnemonic(env, "Rustc") if generated_impl.path in [input.path for input in action.inputs.to_list()]]
 
-    # Extract `rustc_rlib` output (and verify it has `rlib` extension).
-    rustc_outputs = rustc_action.outputs.to_list()
-    asserts.equals(env, 1, len(rustc_outputs))
-    rustc_rlib = rustc_outputs[0]
-    asserts.equals(env, "rlib", rustc_rlib.extension)
+    # Extract `rustc_rlib` output.
+    rustc_rlibs = [o for o in rustc_action.outputs.to_list() if o.extension == "rlib"]
+    asserts.equals(env, 1, len(rustc_rlibs))
+    rustc_rlib = rustc_rlibs[0]
 
     # Verify that `cc_info.compilation_context.direct_headers` contains `generated_header`.
     target_under_test = analysistest.target_under_test(env)
