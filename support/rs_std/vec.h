@@ -8,6 +8,7 @@
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_VEC_H_
 
 #include <bit>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -93,6 +94,32 @@ class VecBase {
     reserve(init.size());
     for (const T& elem : init) {
       emplace_back(elem);
+    }
+  }
+
+  // Constructs a vector with the elements of the range `[first, last)`, like
+  // the iterator-pair constructor of `std::vector`. Each element is
+  // constructed from `*it`, so pass `std::move_iterator`s to move elements.
+  //
+  // Reserves capacity up front when `last - first` is defined.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors do not throw
+  // (terminating if they do).
+  template <::std::input_iterator InputIt,
+            ::std::sentinel_for<InputIt> Sentinel>
+    requires(::std::constructible_from<T, ::std::iter_reference_t<InputIt>>)
+  explicit VecBase(InputIt first, Sentinel last) noexcept : VecBase() {
+    init_empty();
+    if constexpr (::std::sized_sentinel_for<Sentinel, InputIt>) {
+      const auto dist = last - first;
+      CRUBIT_CHECK(dist >= 0);
+      constexpr ::std::ptrdiff_t kMaxCount =
+          static_cast<::std::ptrdiff_t>(PTRDIFF_MAX / sizeof(T));
+      CRUBIT_CHECK(dist <= kMaxCount);
+      reserve(static_cast<::std::size_t>(dist));
+    }
+    for (; first != last; ++first) {
+      emplace_back(*first);
     }
   }
 

@@ -7,8 +7,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
+#include <iterator>
+#include <list>
 #include <numeric>
 #include <span>
+#include <sstream>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -326,6 +329,73 @@ TEST(VecTest, ConstructFromInitializerList) {
   EXPECT_EQ(vec::take_vec(std::move(empty_init_list)), 0);
 
   EXPECT_EQ(vec::take_vec({10, 20, 30}), 60);
+}
+
+TEST(VecTest, ConstructFromIteratorPair) {
+  using ConstIt = std::vector<int32_t>::const_iterator;
+  static_assert(
+      std::is_nothrow_constructible_v<rs::Vec<int32_t>, ConstIt, ConstIt>);
+  static_assert(!std::is_constructible_v<rs::Vec<int32_t>, int32_t, int32_t>);
+
+  const std::vector<int32_t> src = {1, 2, 3, 4, 5};
+  rs::Vec<int32_t> v(src.begin(), src.end());
+  EXPECT_EQ(v.size(), 5);
+  // Exactly 5 shows the capacity was reserved up front; growing one element at
+  // a time would leave a capacity of 8.
+  EXPECT_EQ(v.capacity(), 5);
+  EXPECT_EQ(vec::take_vec(std::move(v)), 15);
+
+  rs::Vec<int32_t> sub(src.begin() + 1, src.end() - 1);
+  EXPECT_EQ(sub.size(), 3);
+  EXPECT_EQ(sub[0], 2);
+  EXPECT_EQ(sub[2], 4);
+
+  const absl::Span<const int32_t> span = src;
+  rs::Vec<int32_t> from_span(span.begin(), span.end());
+  EXPECT_EQ(vec::take_vec(std::move(from_span)), 15);
+
+  rs::Vec<int32_t> brace_init{span.begin(), span.end()};
+  EXPECT_EQ(vec::take_vec(std::move(brace_init)), 15);
+
+  rs::Vec<int32_t> empty_v(src.end(), src.end());
+  EXPECT_TRUE(empty_v.empty());
+  EXPECT_EQ(empty_v.capacity(), 0);
+  EXPECT_EQ(vec::take_vec(std::move(empty_v)), 0);
+
+  EXPECT_DEATH_IF_SUPPORTED((rs::Vec<int32_t>(src.end(), src.begin())), "");
+}
+
+TEST(VecTest, ConstructFromIteratorPairConvertsElements) {
+  const std::vector<int16_t> src = {10, 20, 30};
+  rs::Vec<int32_t> v(src.begin(), src.end());
+  EXPECT_EQ(v.size(), 3);
+  EXPECT_EQ(vec::take_vec(std::move(v)), 60);
+}
+
+TEST(VecTest, ConstructFromIteratorPairWithoutSize) {
+  // `std::list` iterators can't be subtracted, so no capacity is reserved up
+  // front.
+  const std::list<int32_t> list = {1, 2, 3};
+  rs::Vec<int32_t> from_list(list.begin(), list.end());
+  EXPECT_EQ(from_list.size(), 3);
+  EXPECT_EQ(vec::take_vec(std::move(from_list)), 6);
+
+  // A single-pass input range.
+  std::istringstream stream("4 5 6");
+  std::istream_iterator<int32_t> first(stream);
+  std::istream_iterator<int32_t> last;
+  rs::Vec<int32_t> from_stream(first, last);
+  EXPECT_EQ(from_stream.size(), 3);
+  EXPECT_EQ(vec::take_vec(std::move(from_stream)), 15);
+}
+
+TEST(VecTest, ConstructFromIteratorAndSentinel) {
+  const std::vector<int32_t> src = {1, 2, 3, 4, 5};
+  rs::Vec<int32_t> v(std::counted_iterator(src.begin(), 2),
+                     std::default_sentinel);
+  EXPECT_EQ(v.size(), 2);
+  EXPECT_EQ(v[1], 2);
+  EXPECT_EQ(vec::take_vec(std::move(v)), 3);
 }
 
 }  // namespace
