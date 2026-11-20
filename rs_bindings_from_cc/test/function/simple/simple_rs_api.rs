@@ -120,12 +120,6 @@ pub fn apply_binary_op(
     unsafe { crate::detail::__rust_thunk___Z15apply_binary_opiiPFiiiE(x, y, op) }
 }
 
-// TODO(b/217419782): Add testcases for pointers to functions that take or
-// return takes/returns non-trivially-movable types by value. In particular,
-// some function signatures might require going through a C++ thunk - such
-// function pointers can't work without a thunk. See also
-// <internal link>
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
