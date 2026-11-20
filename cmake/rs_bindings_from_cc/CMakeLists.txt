@@ -77,8 +77,26 @@ if(NOT llvm_root)
 endif()
 _crubit_describe_llvm("${llvm_root}")
 
+# rs_bindings_from_cc should parse with the builtin headers of the Clang it's
+# built from. _crubit_init_toolchain reads this as the default
+# CRUBIT_CLANG_RESOURCE_DIR.
+if(llvm_clang)
+  execute_process(
+    COMMAND "${llvm_clang}" -print-resource-dir
+    OUTPUT_VARIABLE llvm_resource_dir
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY)
+else()
+  string(REGEX MATCH "^[0-9]+" llvm_major "${llvm_version}")
+  set(llvm_resource_dir "${llvm_lib_dir}/clang/${llvm_major}")
+endif()
+if(IS_DIRECTORY "${llvm_resource_dir}/include")
+  set_property(GLOBAL PROPERTY _CRUBIT_LLVM_RESOURCE_DIR "${llvm_resource_dir}")
+endif()
+
 # ===== Step 2: Files for Cargo =====
-# Merge LLVM's and Clang's static libraries into one library.
+# Merge each dependency's static libraries into one library, and generate the
+# C++ Protobuf sources.
 
 _crubit_merge_archives(libclang_monolithic.a
   MODE llvm INPUT_DIR "${llvm_lib_dir}" DEPENDS ${llvm_libraries})
