@@ -588,6 +588,18 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         support_cc_infos = generated_cpp_support_deps + _get_support_cc_infos(binding_infos),
     )
 
+def _propagation_predicate(ctx):
+    # `rust_upb_proto_library` attaches `rust_upb_proto_library_aspect` to its `proto_library`
+    # `deps`, which provides `RustProtoInfo`. Because `rust_bindings_from_cc_aspect` requires
+    # `rust_cc_proto_library_aspect` (which also provides `RustProtoInfo`), propagating onto a
+    # `rust_upb_proto_library` causes both aspects to run on the underlying `proto_library` and
+    # fail with "Provider RustProtoInfo provided twice". Neither `rust_upb_proto_library` nor
+    # `rust_cc_proto_library` is a C++ target, so skip `rust_bindings_from_cc_aspect` on both.
+    return ctx.rule.qualified_kind.rule_name not in (
+        "rust_upb_proto_library",
+        "rust_cc_proto_library",
+    )
+
 def _attr_predicate(ctx):
     if ctx.rule.qualified_kind.rule_name == "cc_library":
         # A cc_library only generates Crubit bindings if it has Crubit aspect_hints. Only propagate
@@ -611,6 +623,7 @@ def _attr_predicate(ctx):
 
 rust_bindings_from_cc_aspect = aspect(
     implementation = _rust_bindings_from_cc_aspect_impl,
+    propagation_predicate = _propagation_predicate,
     attr_aspects = _attr_predicate,
     required_aspect_providers = [CcInfo],
     attrs = bindings_attrs | {
