@@ -107,3 +107,19 @@ fn test_apply_binary_op() {
     expect_eq!(100 * 200, simple::apply_binary_op(100, 200, Some(multiply)),);
     expect_eq!(300 + 400, simple::apply_binary_op(300, 400, Some(add)),);
 }
+
+#[gtest]
+fn test_noinline_free_function() {
+    expect_eq!(simple::noinline_multiply(6, 7), 42);
+}
+
+#[gtest]
+fn test_noinline_non_movable_struct() {
+    use ctor::CtorNew as _;
+    let s = ctor::emplace!(simple::NonMovableWithNoInline::ctor_new(42));
+    // SAFETY: `s` is a `Pin<&mut NonMovableWithNoInline>` initialized in place by `ctor::emplace!`,
+    // so `&raw const *s` is non-null, aligned, and points to a live `NonMovableWithNoInline` for
+    // the duration of the `const` C++ method call `NonMovableWithNoInline::value() const`, which
+    // only reads `value_` without mutating or aliasing `&mut *s`.
+    expect_eq!(unsafe { simple::NonMovableWithNoInline::value(&raw const *s) }, 42);
+}
