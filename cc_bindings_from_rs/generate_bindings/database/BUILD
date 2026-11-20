@@ -36,7 +36,6 @@ rust_library(
         "//common:error_report",
         "//common:memoized",
         "@crate_index//:flagset",  # v0_4
-        "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
     ],
@@ -47,5 +46,6 @@ crubit_rust_test(
     srcs = ["fully_qualified_name_test.rs"],
     deps = [
         ":database",
+        "//cc_bindings_from_rs:run_compiler_test_support",
     ],
 )

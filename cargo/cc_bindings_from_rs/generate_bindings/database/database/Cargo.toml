@@ -28,6 +28,5 @@ crubit_feature = { path = "../../../../../cargo/common/crubit_feature"}
 error_report = { path = "../../../../../cargo/common/error_report"}
 memoized = { path = "../../../../../cargo/common/memoized"}
 flagset.workspace = true
-itertools.workspace = true
 proc-macro2.workspace = true
 quote.workspace = true
