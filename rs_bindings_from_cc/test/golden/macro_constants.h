@@ -36,11 +36,6 @@
 #define UNDEFINED_CONSTANT 1
 #undef UNDEFINED_CONSTANT
 
-// A macro whose name is already declared is skipped: the constant would
-// conflict with the declaration.
-constexpr int kAlreadyDeclared = 1;
-#define kAlreadyDeclared 2
-
 // Parentheses.
 #define PARENTHESIZED_CONSTANT ((4))
 
@@ -113,6 +108,9 @@ namespace macro_constants_alias = macro_constants_ns;
 #define CONST_CAST_TO_KEYWORDS ((unsigned const int)1)
 #define CONST_VOLATILE_CAST_TO_TYPEDEF ((const MacroUint32 volatile)1)
 #define STATIC_CAST_TO_CONST static_cast<const short>(1)
+// Typedefs whose names start with `__` are supported, too.
+typedef unsigned int __LeadingDunderInt;
+#define CAST_TO_LEADING_DUNDER_TYPEDEF ((__LeadingDunderInt)1)
 
 // Macros can use any C++ constant expression, e.g. calls to `constexpr`
 // functions and references to `constexpr` variables.
@@ -135,6 +133,19 @@ constexpr int kMacroConstantsInt = 6;
 #define SUBSCRIPT ("abc"[0])
 #define BRACED_FUNCTIONAL_CAST int{3}
 
+// `sizeof` expressions, which have type `size_t` (spelled `__size_t` by Clang).
+#define SIZEOF_CONSTANT sizeof(int)
+struct SizeofDeclaredStruct {
+  int field;
+};
+#define SIZEOF_DECLARED_STRUCT sizeof(struct SizeofDeclaredStruct)
+// Macros are parsed at the end of the header, so a struct that is declared
+// after the macro is complete there, and refers to the same struct.
+#define SIZEOF_LATER_DECLARED_STRUCT sizeof(struct SizeofLaterDeclaredStruct)
+struct SizeofLaterDeclaredStruct {
+  int field;
+};
+
 // String constants.
 #define STRING_CONSTANT "hello"
 #define CONCATENATED_STRING_CONSTANT \
@@ -151,6 +162,16 @@ constexpr int kMacroConstantsInt = 6;
   u8"b"
 #define STRING_WITH_EMBEDDED_NUL "a\0b"
 
+// The following declarations are used by the macros below, to check that they
+// are not supported.
+
+constexpr int kAlreadyDeclared = 1;
+typedef NotCrubitExposedInt LocalAliasToNonCrubitTypedef;
+using UnknownAttrInt [[gnu::aligned(4)]] = int;
+namespace crate {
+typedef int UnescapableNamespaceInt;
+}  // namespace crate
+
 // The following macros are not supported, and are silently ignored.
 #define EMPTY_MACRO
 #define FUNCTION_LIKE_MACRO(x) ((x) + 1)
@@ -166,6 +187,9 @@ constexpr int kMacroConstantsInt = 6;
 #define DIVISION_BY_ZERO (1 / 0)
 #define OVERFLOW_CONSTANT (2147483647 + 1)
 #define SELF_REFERENTIAL (SELF_REFERENTIAL + 1)
+// A macro whose name is already declared: the constant would conflict with the
+// declaration.
+#define kAlreadyDeclared 2
 // Incomplete conditionals, which fail partway through parsing.
 #define CONDITIONAL_WITHOUT_BRANCHES 1 ?
 #define CONDITIONAL_WITHOUT_COLON 1 ? 2
@@ -192,22 +216,8 @@ constexpr int kMacroConstantsInt = 6;
 #define CAST_TO_POINTER ((void*)0)
 // Clang can fold this as an extension, but it isn't a C++ constant expression.
 #define FOLDED_POINTER_TO_INT64 ((macro_constants_ns::Int64)(void*)0)
-// The type of `sizeof` is `size_t` (spelled `__size_t` by Clang).
-#define SIZEOF_CONSTANT sizeof(int)
 // Parsing this declares `struct MacroDeclaredStruct`, which isn't imported.
 #define SIZEOF_UNDECLARED_STRUCT sizeof(struct MacroDeclaredStruct)
-struct SizeofDeclaredStruct {
-  int field;
-};
-// Unlike `MacroDeclaredStruct`, this struct is declared by the header (and
-// imported).
-#define SIZEOF_DECLARED_STRUCT sizeof(struct SizeofDeclaredStruct)
-// Macros are parsed at the end of the header, so a struct that is declared
-// after the macro is complete there, and refers to the same struct.
-#define SIZEOF_LATER_DECLARED_STRUCT sizeof(struct SizeofLaterDeclaredStruct)
-struct SizeofLaterDeclaredStruct {
-  int field;
-};
 // Constructs that aren't allowed outside a function, or in a constant
 // expression.
 #define STATEMENT_EXPRESSION ({ 1; })
@@ -235,15 +245,8 @@ struct SizeofLaterDeclaredStruct {
 // Typedefs that don't receive bindings, e.g. because their target doesn't
 // enable Crubit.
 #define CAST_TO_NON_CRUBIT_TYPEDEF ((NotCrubitExposedInt)1)
-typedef NotCrubitExposedInt LocalAliasToNonCrubitTypedef;
 #define CAST_TO_CHAINED_NON_CRUBIT_TYPEDEF ((LocalAliasToNonCrubitTypedef)1)
-typedef unsigned int __LeadingDunderInt;
-#define CAST_TO_LEADING_DUNDER_TYPEDEF ((__LeadingDunderInt)1)
-using UnknownAttrInt [[gnu::aligned(4)]] = int;
 #define CAST_TO_UNKNOWN_ATTR_TYPEDEF ((UnknownAttrInt)1)
-namespace crate {
-typedef int UnescapableNamespaceInt;
-}  // namespace crate
 #define CAST_TO_UNESCAPABLE_NAMESPACE_TYPEDEF \
   ((crate::UnescapableNamespaceInt)1)
 #define INVALID_KEYWORD_COMBINATION_CAST ((long short)1)  // NOLINT(runtime/int)

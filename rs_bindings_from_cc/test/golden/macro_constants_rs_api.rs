@@ -133,8 +133,6 @@ macro_rules! REDEFINED_CONSTANT {
     };
 }
 
-pub const kAlreadyDeclared: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
-
 // Parentheses.
 
 #[macro_export]
@@ -491,6 +489,16 @@ macro_rules! STATIC_CAST_TO_CONST {
     };
 }
 
+// error: type alias `__LeadingDunderInt` could not be bound
+//   Skipping generating bindings for '__LeadingDunderInt' because it has a leading `__`
+
+#[macro_export]
+macro_rules! CAST_TO_LEADING_DUNDER_TYPEDEF {
+    () => {
+        ::ffi_11::new_c_uint(1)
+    };
+}
+
 /// Macros can use any C++ constant expression, e.g. calls to `constexpr`
 /// functions and references to `constexpr` variables.
 #[inline(always)]
@@ -574,6 +582,88 @@ macro_rules! BRACED_FUNCTIONAL_CAST {
     };
 }
 
+// `sizeof` expressions, which have type `size_t` (spelled `__size_t` by Clang).
+
+#[macro_export]
+macro_rules! SIZEOF_CONSTANT {
+    () => {
+        4
+    };
+}
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "20SizeofDeclaredStruct"]
+#[repr(C)]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SizeofDeclaredStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+pub struct SizeofDeclaredStruct {
+    pub field: ::ffi_11::c_int,
+}
+unsafe impl ::cxx::ExternType for SizeofDeclaredStruct {
+    type Id = ::cxx::type_id!("SizeofDeclaredStruct");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("SizeofDeclaredStruct"),
+    crate::SizeofDeclaredStruct
+);
+
+impl Default for SizeofDeclaredStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN20SizeofDeclaredStructC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! SIZEOF_DECLARED_STRUCT {
+    () => {
+        4
+    };
+}
+
+// Macros are parsed at the end of the header, so a struct that is declared
+// after the macro is complete there, and refers to the same struct.
+
+#[macro_export]
+macro_rules! SIZEOF_LATER_DECLARED_STRUCT {
+    () => {
+        4
+    };
+}
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "25SizeofLaterDeclaredStruct"]
+#[repr(C)]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SizeofLaterDeclaredStruct")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+pub struct SizeofLaterDeclaredStruct {
+    pub field: ::ffi_11::c_int,
+}
+unsafe impl ::cxx::ExternType for SizeofLaterDeclaredStruct {
+    type Id = ::cxx::type_id!("SizeofLaterDeclaredStruct");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("SizeofLaterDeclaredStruct"),
+    crate::SizeofLaterDeclaredStruct
+);
+
+impl Default for SizeofLaterDeclaredStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN25SizeofLaterDeclaredStructC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
 // String constants.
 
 #[macro_export]
@@ -635,98 +725,29 @@ macro_rules! STRING_WITH_EMBEDDED_NUL {
     };
 }
 
+pub const kAlreadyDeclared: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
+
+// error: type alias `LocalAliasToNonCrubitTypedef` could not be bound
+//   Unsupported type alias NotCrubitExposedInt
+
+// error: type alias `UnknownAttrInt` could not be bound
+//   crubit.rs/errors/unknown_attribute: unknown attribute(s): gnu::aligned
+
+// error: namespace `crate` could not be bound
+//   Namespace name is not supported: Unescapable identifier: crate
+
+// namespace crate
+
 // The following macros are not supported, and are silently ignored.
+
+// A macro whose name is already declared: the constant would conflict with the
+// declaration.
 
 // Incomplete conditionals, which fail partway through parsing.
 
 // Clang can fold this as an extension, but it isn't a C++ constant expression.
 
-// The type of `sizeof` is `size_t` (spelled `__size_t` by Clang).
-
-#[macro_export]
-macro_rules! SIZEOF_CONSTANT {
-    () => {
-        4
-    };
-}
-
 // Parsing this declares `struct MacroDeclaredStruct`, which isn't imported.
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "20SizeofDeclaredStruct"]
-#[repr(C)]
-#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SizeofDeclaredStruct")]
-#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
-pub struct SizeofDeclaredStruct {
-    pub field: ::ffi_11::c_int,
-}
-unsafe impl ::cxx::ExternType for SizeofDeclaredStruct {
-    type Id = ::cxx::type_id!("SizeofDeclaredStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("SizeofDeclaredStruct"),
-    crate::SizeofDeclaredStruct
-);
-
-impl Default for SizeofDeclaredStruct {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20SizeofDeclaredStructC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
-// Unlike `MacroDeclaredStruct`, this struct is declared by the header (and
-// imported).
-
-#[macro_export]
-macro_rules! SIZEOF_DECLARED_STRUCT {
-    () => {
-        4
-    };
-}
-
-// Macros are parsed at the end of the header, so a struct that is declared
-// after the macro is complete there, and refers to the same struct.
-
-#[macro_export]
-macro_rules! SIZEOF_LATER_DECLARED_STRUCT {
-    () => {
-        4
-    };
-}
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[cfi_encoding = "25SizeofLaterDeclaredStruct"]
-#[repr(C)]
-#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SizeofLaterDeclaredStruct")]
-#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
-pub struct SizeofLaterDeclaredStruct {
-    pub field: ::ffi_11::c_int,
-}
-unsafe impl ::cxx::ExternType for SizeofLaterDeclaredStruct {
-    type Id = ::cxx::type_id!("SizeofLaterDeclaredStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("SizeofLaterDeclaredStruct"),
-    crate::SizeofLaterDeclaredStruct
-);
-
-impl Default for SizeofLaterDeclaredStruct {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN25SizeofLaterDeclaredStructC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
 
 // Constructs that aren't allowed outside a function, or in a constant
 // expression.
@@ -739,32 +760,11 @@ impl Default for SizeofLaterDeclaredStruct {
 // error: global variable `CAST_TO_NON_CRUBIT_TYPEDEF` could not be bound
 //   constants of type `NotCrubitExposedInt` are not supported
 
-// error: type alias `LocalAliasToNonCrubitTypedef` could not be bound
-//   Unsupported type alias NotCrubitExposedInt
-
 // error: global variable `CAST_TO_CHAINED_NON_CRUBIT_TYPEDEF` could not be bound
 //   constants of type `LocalAliasToNonCrubitTypedef` are not supported
 
-// error: type alias `__LeadingDunderInt` could not be bound
-//   Skipping generating bindings for '__LeadingDunderInt' because it has a leading `__`
-
-#[macro_export]
-macro_rules! CAST_TO_LEADING_DUNDER_TYPEDEF {
-    () => {
-        ::ffi_11::new_c_uint(1)
-    };
-}
-
-// error: type alias `UnknownAttrInt` could not be bound
-//   crubit.rs/errors/unknown_attribute: unknown attribute(s): gnu::aligned
-
 // error: global variable `CAST_TO_UNKNOWN_ATTR_TYPEDEF` could not be bound
 //   constants of type `UnknownAttrInt` are not supported
-
-// error: namespace `crate` could not be bound
-//   Namespace name is not supported: Unescapable identifier: crate
-
-// namespace crate
 
 // NOLINT(runtime/int)
 
