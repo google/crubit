@@ -182,3 +182,43 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+cc_library(
+    name = "rust_options_lib",
+    hdrs = ["rust_options_lib.h"],
+    aspect_hints = [":rust_options_lib_rust.hint"],
+)
+
+genrule(
+    name = "generated_rust_options_env",
+    outs = ["generated_rust_options.env"],
+    cmd = "echo 'MY_ENV_FILE_VAR=hello_from_env_file' > $@",
+)
+
+rust_api_from_cpp(
+    name = "rust_options_lib_rust",
+    srcs = ["rust_options_srcs.rs"],
+    compile_data = ["testdata/compile_data.yaml"],
+    cpp_target = ":rust_options_lib",
+    crate_features = ["enable_bonus"],
+    rustc_env = {
+        "MY_RUSTC_ENV_VAR": "hello_from_rustc_env",
+        "MY_COMPILE_DATA_PATH": "$(execpath testdata/compile_data.yaml)",
+    },
+    rustc_env_files = [":generated_rust_options_env"],
+    rustc_flags = [
+        "--cfg",
+        "custom_flag_a",
+        "--cfg",
+        "custom_flag_b",
+    ],
+)
+
+crubit_rust_test(
+    name = "rust_options_test",
+    srcs = ["rust_options_test.rs"],
+    deps = [
+        ":rust_options_lib_rust",
+        "@crate_index//:googletest",
+    ],
+)
