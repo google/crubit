@@ -43,22 +43,24 @@ impl Default for SomeClass {
 #[inline(always)]
 pub fn visible_val(__param_0: crate::SomeClass) {
     let mut __param_0 = ::core::mem::MaybeUninit::new(__param_0);
-    unsafe { crate::detail::__rust_thunk___Z11visible_val9SomeClass(__param_0.as_mut_ptr()) }
+    unsafe {
+        crate::detail::__rust_thunk__648197ad__Z11visible_val9SomeClass(__param_0.as_mut_ptr())
+    }
 }
 
 #[inline(always)]
 pub fn visible_ref<'__param_0>(__param_0: &'__param_0 mut crate::SomeClass) {
-    unsafe { crate::detail::__rust_thunk___Z11visible_refR9SomeClass(__param_0) }
+    unsafe { crate::detail::__rust_thunk__789bebf4__Z11visible_refR9SomeClass(__param_0) }
 }
 
 #[inline(always)]
 pub fn visible_cref<'__param_0>(__param_0: &'__param_0 crate::SomeClass) {
-    unsafe { crate::detail::__rust_thunk___Z12visible_crefRK9SomeClass(__param_0) }
+    unsafe { crate::detail::__rust_thunk__caba22ee__Z12visible_crefRK9SomeClass(__param_0) }
 }
 
 #[inline(always)]
 pub fn visible_rref(__param_0: ::ctor::RvalueReference<'_, crate::SomeClass>) {
-    unsafe { crate::detail::__rust_thunk___Z12visible_rrefO9SomeClass(__param_0) }
+    unsafe { crate::detail::__rust_thunk__1ad384af__Z12visible_rrefO9SomeClass(__param_0) }
 }
 
 #[inline(always)]
@@ -73,19 +75,19 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___Z11visible_val9SomeClass(
+        pub(crate) unsafe fn __rust_thunk__648197ad__Z11visible_val9SomeClass(
             __param_0: *mut crate::SomeClass,
         );
         #[link_name = "_Z11visible_refR9SomeClass"]
-        pub(crate) unsafe fn __rust_thunk___Z11visible_refR9SomeClass<'__param_0>(
+        pub(crate) unsafe fn __rust_thunk__789bebf4__Z11visible_refR9SomeClass<'__param_0>(
             __param_0: &'__param_0 mut crate::SomeClass,
         );
         #[link_name = "_Z12visible_crefRK9SomeClass"]
-        pub(crate) unsafe fn __rust_thunk___Z12visible_crefRK9SomeClass<'__param_0>(
+        pub(crate) unsafe fn __rust_thunk__caba22ee__Z12visible_crefRK9SomeClass<'__param_0>(
             __param_0: &'__param_0 crate::SomeClass,
         );
         #[link_name = "_Z12visible_rrefO9SomeClass"]
-        pub(crate) unsafe fn __rust_thunk___Z12visible_rrefO9SomeClass(
+        pub(crate) unsafe fn __rust_thunk__1ad384af__Z12visible_rrefO9SomeClass(
             __param_0: ::ctor::RvalueReference<'_, crate::SomeClass>,
         );
         pub(crate) unsafe fn __rust_thunk___Z21multiple_declarationsRK9SomeClass<'__param_0>(

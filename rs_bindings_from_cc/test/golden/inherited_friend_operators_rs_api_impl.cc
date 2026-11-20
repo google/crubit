@@ -27,7 +27,7 @@ extern "C" void __rust_thunk___ZN9EquatableC1Ev(struct Equatable* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" bool __rust_thunk___ZN6mixinseqERK9EquatableS2_(
+extern "C" bool __rust_thunk__0717bbc8__ZN6mixinseqERK9EquatableS2_(
     struct Equatable const* lhs, struct Equatable const* rhs) {
   return operator==(*lhs, *rhs);
 }
@@ -48,12 +48,12 @@ extern "C" void __rust_thunk___ZN10ComparableC1Ev(struct Comparable* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" bool __rust_thunk___ZN6mixinseqERK10ComparableS2_(
+extern "C" bool __rust_thunk__0717bbc8__ZN6mixinseqERK10ComparableS2_(
     struct Comparable const* lhs, struct Comparable const* rhs) {
   return operator==(*lhs, *rhs);
 }
 
-extern "C" bool __rust_thunk___ZN6mixinsltERK10ComparableS2_(
+extern "C" bool __rust_thunk__9cfb84ad__ZN6mixinsltERK10ComparableS2_(
     struct Comparable const* lhs, struct Comparable const* rhs) {
   return operator<(*lhs, *rhs);
 }
@@ -67,7 +67,8 @@ extern "C" void __rust_thunk___ZN2ns19NamespacedEquatableC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" bool __rust_thunk___ZN6mixinseqERKN2ns19NamespacedEquatableES3_(
+extern "C" bool
+__rust_thunk__0717bbc8__ZN6mixinseqERKN2ns19NamespacedEquatableES3_(
     struct ns::NamespacedEquatable const* lhs,
     struct ns::NamespacedEquatable const* rhs) {
   return operator==(*lhs, *rhs);
@@ -89,7 +90,8 @@ extern "C" void __rust_thunk___ZN5Outer15NestedEquatableC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" bool __rust_thunk___ZN6mixinseqERKN5Outer15NestedEquatableES3_(
+extern "C" bool
+__rust_thunk__0717bbc8__ZN6mixinseqERKN5Outer15NestedEquatableES3_(
     struct Outer::NestedEquatable const* lhs,
     struct Outer::NestedEquatable const* rhs) {
   return operator==(*lhs, *rhs);
@@ -126,7 +128,7 @@ extern "C" void __rust_thunk___ZN19NonTrivialEquatableD1Ev(
   std::destroy_at(__this);
 }
 
-extern "C" bool __rust_thunk___ZN6mixinseqERK19NonTrivialEquatableS2_(
+extern "C" bool __rust_thunk__0717bbc8__ZN6mixinseqERK19NonTrivialEquatableS2_(
     struct NonTrivialEquatable const* lhs,
     struct NonTrivialEquatable const* rhs) {
   return operator==(*lhs, *rhs);

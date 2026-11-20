@@ -27,7 +27,7 @@ extern "C" void __rust_thunk___ZN9SomeClassC1Ev(class SomeClass* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___Z11visible_val9SomeClass(
+extern "C" void __rust_thunk__648197ad__Z11visible_val9SomeClass(
     class SomeClass* __param_0) {
   visible_val(crubit::UnsafeTakeValue(__param_0));
 }
