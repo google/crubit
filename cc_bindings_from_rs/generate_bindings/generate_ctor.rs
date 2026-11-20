@@ -465,11 +465,8 @@ pub fn generate_move_ctor_and_assignment_operator<'tcx>(
                 // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
                 //   `let x = y;`
                 //
-                // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop
-                // glue, then extra care should be taken to ensure the C++ destructor can handle
-                // the moved-from object in a way that meets Rust move semantics.  For example, the
-                // generated C++ move constructor might need to assign `Default::default()` to the
-                // moved-from object.
+                // `MoveCodegenStyle::Default` only applies to types without drop glue; types
+                // with `Drop` or drop glue take the `MemSwap`, `Copy`, or `None` arms above.
                 #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
                 #adt_cc_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
                 __NEWLINE__
