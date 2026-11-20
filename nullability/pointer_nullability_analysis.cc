@@ -242,13 +242,33 @@ std::optional<WidenResult> PointerNullabilityAnalysis::widen(
   assert(&PrevEnv.getDataflowAnalysisContext() == &DACtx);
 
   bool LocUnchanged = &PrevPtr->getPointeeLoc() == &CurPtr.getPointeeLoc();
+  StorageLocation& WidenedLoc =
+      LocUnchanged
+          ? CurPtr.getPointeeLoc()
+          : getTopStorageLocation(DACtx, CurPtr.getPointeeLoc().getType());
+  // Whether `PrevPtr` already points to the widened location. The result can
+  // only be equivalent to `PrevPtr` if this is true.
+  bool WidenedLocIsPrevLoc = &WidenedLoc == &PrevPtr->getPointeeLoc();
+  bool PrevHasNullState = hasPointerNullState(*PrevPtr);
+  bool CurHasNullState = hasPointerNullState(CurPtr);
 
-  // If either `PrevPtr` or `CurPtr` lack null state, we consider the modeled
-  // value to be outside the scope. TODO: we should consider all pointers in
-  // scope and handle this case accordingly. We will widen the pointer location,
-  // but (always) return a pointer value with no null state.
-  if (!hasPointerNullState(*PrevPtr) || !hasPointerNullState(CurPtr))
-    return std::nullopt;
+  // It can happen that we widen pointers without null state. A pointer lacks
+  // null state if no expression has read its current value yet, e.g. a pointer
+  // field of a record parameter. If either `PrevPtr` or `CurPtr` lacks null
+  // state, widen to a pointer that points to a widened location and is without
+  // null state. The null state is then initialized when the pointer is next
+  // read in an expression.
+  if (!PrevHasNullState || !CurHasNullState) {
+    LatticeEffect Effect = !PrevHasNullState && WidenedLocIsPrevLoc
+                               ? LatticeEffect::Unchanged
+                               : LatticeEffect::Changed;
+    // Reuse `CurPtr` if it already has the right shape. Otherwise, create a
+    // new pointer.
+    if (!CurHasNullState && &WidenedLoc == &CurPtr.getPointeeLoc())
+      return WidenResult{&CurPtr, Effect};
+    PointerValue& WidenedPtr = CurrentEnv.create<PointerValue>(WidenedLoc);
+    return WidenResult{&WidenedPtr, Effect};
+  }
 
   auto [FromNullablePrev, NullPrev] = getPointerNullState(*PrevPtr);
   auto [FromNullableCur, NullCur] = getPointerNullState(CurPtr);
@@ -262,22 +282,16 @@ std::optional<WidenResult> PointerNullabilityAnalysis::widen(
       NWEffect == LatticeEffect::Unchanged)
     return WidenResult{&CurPtr, LatticeEffect::Unchanged};
 
-  // Widen the loc if needed.
-  StorageLocation* WidenedLoc =
-      LocUnchanged
-          ? &CurPtr.getPointeeLoc()
-          : &getTopStorageLocation(DACtx, CurPtr.getPointeeLoc().getType());
-
   // Construct the new, widened value.
-  PointerValue& WidenedPtr = CurrentEnv.create<PointerValue>(*WidenedLoc);
+  PointerValue& WidenedPtr = CurrentEnv.create<PointerValue>(WidenedLoc);
   initPointerNullState(WidenedPtr, CurrentEnv.getDataflowAnalysisContext(),
                        {FromNullableWidened, NullWidened});
 
-  LatticeEffect Effect = (WidenedLoc == &PrevPtr->getPointeeLoc() &&
-                          FNWEffect == LatticeEffect::Unchanged &&
-                          NWEffect == LatticeEffect::Unchanged)
-                             ? LatticeEffect::Unchanged
-                             : LatticeEffect::Changed;
+  LatticeEffect Effect =
+      (WidenedLocIsPrevLoc && FNWEffect == LatticeEffect::Unchanged &&
+       NWEffect == LatticeEffect::Unchanged)
+          ? LatticeEffect::Unchanged
+          : LatticeEffect::Changed;
   return WidenResult{&WidenedPtr, Effect};
 }
 
