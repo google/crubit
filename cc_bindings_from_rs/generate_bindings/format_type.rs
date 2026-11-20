@@ -2689,8 +2689,8 @@ pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
     #[rustversion::since(2026-04-19)]
     let is_c_variadic = sig.c_variadic();
     if is_c_variadic {
-        // TODO(b/254097223): Add support for variadic functions.
-        bail!("C variadic functions are not supported (b/254097223)");
+        // TODO(b/254097940): Add support for variadic functions.
+        bail!("C variadic functions are not supported (b/254097940)");
     }
 
     Ok(())
