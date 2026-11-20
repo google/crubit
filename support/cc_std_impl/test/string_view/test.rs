@@ -153,12 +153,33 @@ fn exercise_as_static_live() {
 #[gtest]
 fn test_invalid_utf8() {
     let rsv = GetInvalidUTF();
-    let sv = unsafe { rsv.to_str() };
+    // SAFETY: `GetInvalidUTF()` returns a `raw_string_view` pointing to static data.
+    let sv: Result<&str, _> = unsafe { rsv.to_str() };
     assert_eq!(sv.is_err(), true);
     assert_that!(
         sv.err().unwrap().to_string(),
         contains_substring("utf-8").ignoring_unicode_case()
     );
+}
+
+#[gtest]
+fn test_raw_string_view_to_str() {
+    // Valid static UTF-8 returned directly as `&'static str` from a temporary `raw_string_view`.
+    // SAFETY: `GetHelloWorld()` returns a `raw_string_view` pointing to static immutable bytes.
+    let s: &'static str = unsafe { GetHelloWorld().to_str() }.unwrap();
+    assert_eq!(s, "Hello, world!");
+
+    // Default (empty, null-pointer) `raw_string_view`.
+    // SAFETY: An empty `raw_string_view` has length 0 and valid null-to-dangling conversion.
+    let empty: &'static str = unsafe { GetDefault().to_str() }.unwrap();
+    assert_eq!(empty, "");
+
+    // Local buffer borrowed for a local lifetime.
+    let local = String::from("local utf-8");
+    let rsv = raw_string_view::from(local.as_str());
+    // SAFETY: `local` is live, initialized, and not mutated while `s` is used.
+    let s: &str = unsafe { rsv.to_str() }.unwrap();
+    assert_eq!(s, "local utf-8");
 }
 
 #[gtest]
