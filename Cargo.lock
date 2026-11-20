@@ -1899,7 +1899,6 @@ dependencies = [
  "rs_bindings_from_cc_cc_ir_sys",
  "rs_bindings_from_cc_cmdline_sys",
  "rs_bindings_from_cc_ir_from_cc_sys",
- "status_sys",
 ]
 
 [[package]]

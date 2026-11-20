@@ -480,7 +480,7 @@ impl RecordDef {
         self.item().cc_qual_name()
     }
     fn is_cc_handwritten(&self) -> bool {
-        matches!(self.name(), "FormattedError" | "Identifier")
+        matches!(self.name(), "FormattedError" | "Identifier" | "HeaderName")
     }
 }
 
