@@ -133,21 +133,21 @@ constexpr bool IsUtf8Char(::std::string_view str) {
       // `signed char`.)
 
     case 4: {
-      unsigned char fourth = str[3];
+      unsigned char fourth = static_cast<unsigned char>(str[3]);
       if (fourth < 0x80 || fourth > 0xBF) {
         return false;
       }
       [[fallthrough]];
     }
     case 3: {
-      unsigned char third = str[2];
+      unsigned char third = static_cast<unsigned char>(str[2]);
       if (third < 0x80 || third > 0xBF) {
         return false;
       }
       [[fallthrough]];
     }
     case 2: {
-      unsigned char second = str[1];
+      unsigned char second = static_cast<unsigned char>(str[1]);
       if (second < 0x80 || second > 0xBF) {
         return false;
       }
@@ -185,7 +185,7 @@ constexpr bool IsUtf8Char(::std::string_view str) {
       [[fallthrough]];
     }
     case 1: {
-      unsigned char first = str[0];
+      unsigned char first = static_cast<unsigned char>(str[0]);
       if (first >= 0x80 && first < 0xC2) {
         return false;
       }
