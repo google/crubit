@@ -16,7 +16,7 @@
 //! possible using [`OptionLike`], which both `Ptr` and `Nullable<Ptr>` implement:
 //!
 //! ```ignore
-//! use cc_std::std::OptionLike;
+//! use cpp_std::OptionLike;
 //! // Compiles whether `make_foo` returns `Nullable<unique_ptr<Foo>>` or `unique_ptr<Foo>`.
 //! let foo: Option<unique_ptr<Foo>> = make_foo().into_option();
 //! ```
