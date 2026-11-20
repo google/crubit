@@ -616,15 +616,14 @@ TEST_F(LifetimeAnalysisTest,
 }
 
 TEST_F(LifetimeAnalysisTest, DISABLED_ReturnPointerToTemplate) {
-  EXPECT_THAT(
-      GetLifetimes(R"(
+  EXPECT_THAT(GetLifetimes(R"(
     template <class T> struct S { T t; };
     S<int*>* target(S<int*>* s) {
       return s;
     }
   )"),
-      // TODO(b/230456778): This currently erroneously returns (a, b) -> (c, b)
-      LifetimesAre({{"f", "(a, b) -> (a, b)"}}));
+              // Known limitation: this currently returns (a, b) -> (c, b).
+              LifetimesAre({{"f", "(a, b) -> (a, b)"}}));
 }
 
 }  // namespace
