@@ -44,7 +44,6 @@
 namespace clang::tidy::nullability {
 
 using dataflow::Arena;
-using dataflow::Atom;
 using dataflow::ComparisonResult;
 using dataflow::DataflowAnalysisContext;
 using dataflow::Environment;
@@ -125,10 +124,10 @@ static const Formula* absl_nullable mergeFormulas(
   if (Bool1 == nullptr) Bool1 = &A.makeAtomRef(A.makeAtom());
   if (Bool2 == nullptr) Bool2 = &A.makeAtomRef(A.makeAtom());
 
-  // If `Bool1` and `Bool2` is constrained to the same true / false value, that
-  // can serve as the return value - this simplifies the flow condition tracked
-  // in `MergedEnv`.  Otherwise, information about which path was taken is used
-  // to associate the return value with `Bool1` and `Bool2`.
+  // If `Bool1` and `Bool2` are constrained to the same true / false value,
+  // return that literal directly rather than delegating to `joinBoolValues`.
+  // Otherwise, in the SAT bool model, the framework will allocate a fresh atom
+  // and flow-condition constraint).
   if (Env1.proves(*Bool1)) {
     if (Env2.proves(*Bool2)) {
       return &A.makeLiteral(true);
@@ -137,13 +136,13 @@ static const Formula* absl_nullable mergeFormulas(
     return &A.makeLiteral(false);
   }
 
-  const Formula& MergedBool = A.makeAtomRef(A.makeAtom());
-  const Atom FC1 = Env1.getFlowConditionToken();
-  const Atom FC2 = Env2.getFlowConditionToken();
-  MergedEnv.assume(A.makeOr(
-      A.makeAnd(A.makeAtomRef(FC1), A.makeEquals(MergedBool, *Bool1)),
-      A.makeAnd(A.makeAtomRef(FC2), A.makeEquals(MergedBool, *Bool2))));
-  return &MergedBool;
+  // Otherwise, let the boolean model decide how to join the two values (e.g.,
+  // the SAT model uses information about which path was taken to associate the
+  // result with `Bool1` and `Bool2`).
+  return &MergedEnv
+              .joinBoolValues(A.makeBoolValue(*Bool1), Env1,
+                              A.makeBoolValue(*Bool2), Env2)
+              .formula();
 }
 
 void PointerNullabilityAnalysis::join(QualType Type, const Value& Val1,
