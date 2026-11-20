@@ -49,7 +49,7 @@ inline constexpr bool OptionRefBindable =
                                                ::std::remove_reference_t<R>*>>;
 
 template <typename Derived, typename T>
-class OptionBase {
+class [[clang::analyze_as_class("std::optional")]] OptionBase {
  private:
   // Sets `option` to `None` when destroyed. This lets a `return` statement
   // relocate the value out of `option` before `option` is marked empty.
