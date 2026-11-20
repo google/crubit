@@ -179,7 +179,7 @@ impl<T> vector<T> {
     ///   outstanding references to this memory are still present by the time `self` is next used.
     ///
     /// These requirements are always upheld by any `begin` that has been
-    /// allocated via Vec<T, cc_std::std::Allocator> and the corresponding Vec is
+    /// allocated via Vec<T, cpp_std::Allocator> and the corresponding Vec is
     /// forgotten after the call of this function. It follows by the properties
     /// of the `Vec`.
     unsafe fn set_begin_len_capacity(&mut self, mut begin: *mut T, len: usize, capacity: usize) {
@@ -670,7 +670,7 @@ impl<T: Ord> Ord for vector<T> {
 /// - `T` needs to have the same alignment as what `begin` was allocated with.
 ///
 /// These requirements are always upheld by any `begin` that has been
-/// allocated via Vec<T, cc_std::std::Allocator>.
+/// allocated via Vec<T, cpp_std::Allocator>.
 unsafe fn create_vec_from_raw_parts<T>(
     begin: *mut T,
     len: usize,

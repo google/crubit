@@ -250,7 +250,7 @@ impl core::fmt::Debug for string_wrapper {
     }
 }
 
-// Allow converting a cc_std::std::string_wrapper reference to a "real" C++ string pointer.
+// Allow converting a cpp_std::string_wrapper reference to a "real" C++ string pointer.
 
 type StringSymbol = forward_declare::symbol!(
     "std :: basic_string < char , std :: char_traits < char >, std :: allocator < char >>"
