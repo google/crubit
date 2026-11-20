@@ -33,7 +33,7 @@ use alloc::rc::Rc;
 use alloc::sync::Arc;
 use core::fmt::Debug;
 use core::marker::{PhantomData, Unpin};
-use core::mem::{ManuallyDrop, MaybeUninit};
+use core::mem::{DropGuard, ManuallyDrop, MaybeUninit};
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 
@@ -319,15 +319,6 @@ unsafe impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> Cto
     type Output = C::Output;
     type Error = C::Error;
     unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
-        /// Drops the pointee when dropped.
-        struct DropGuard<T: ?Sized>(*mut T);
-        impl<T: ?Sized> Drop for DropGuard<T> {
-            fn drop(&mut self) {
-                // SAFETY: the pointee is initialized, and is not used again after this.
-                unsafe { core::ptr::drop_in_place(self.0) }
-            }
-        }
-
         // SAFETY: the caller guarantees that `dest` is valid for writes, uninitialized, and pinned.
         unsafe {
             self.ctor.ctor(dest)?;
@@ -335,12 +326,17 @@ unsafe impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> Cto
         // `*dest` is now initialized and pinned. If `f` returns an error or panics, our caller
         // treats `dest` as uninitialized and will not drop it, so we must drop it here to uphold
         // the `Pin` drop guarantee.
-        let guard = DropGuard(dest);
+        let guard = DropGuard::new(dest, |dest| {
+            // SAFETY: `*dest` was initialized above, the borrow in `pinned` has ended before
+            // `guard` is dropped, and our caller treats `*dest` as uninitialized on error or
+            // unwind so it is not used or dropped again after this.
+            unsafe { core::ptr::drop_in_place(dest) }
+        });
         // SAFETY: `*dest` was initialized above, and the caller guarantees it is pinned.
         let pinned = unsafe { Pin::new_unchecked(&mut *dest) };
         let result = (self.f)(pinned);
         if result.is_ok() {
-            core::mem::forget(guard);
+            DropGuard::dismiss(guard);
         }
         result
     }
@@ -1352,37 +1348,34 @@ pub mod macro_internal {
     #[allow(drop_bounds)]
     impl<T: Drop> DoNotImplDrop for T {}
 
-    /// Drops a pointer when dropped.
-    ///
-    /// Safety: this will drop the pointer, so this is only safe if no other
-    /// code will access the pointer afterwards. This includes drop: the
-    /// pointer must itself be in a ManuallyDrop.
-    pub struct UnsafeDropGuard<T>(*mut T);
-    impl<T> Drop for UnsafeDropGuard<T> {
-        fn drop(&mut self) {
-            unsafe { core::ptr::drop_in_place(self.0) };
-        }
-    }
-
     /// Initializes a field, and returns a drop guard which will drop that
-    /// field.
+    /// field when dropped.
     ///
     /// Intended use: when initializing a struct field-by-field, each
     /// initialized field should be guarded in case of panic. Once the
     /// struct is completely initialized, the drop guards can be forgotten
-    /// with `std::mem::forget()`. See the `ctor!` macro, where this is used.
+    /// with `core::mem::forget()`. See the `ctor!` macro, where this is used.
     ///
-    /// Safety: the field must satisfy the Pin guarantee.
+    /// # Safety
+    ///
+    /// * `field` must be valid for writes, properly aligned, and uninitialized, and must satisfy
+    ///   the `Pin` guarantee.
+    /// * If the returned guard is dropped (rather than forgotten), no other code may access or drop
+    ///   `*field` afterwards.
     pub unsafe fn init_field<T>(
         field: *mut T,
         ctor: impl Ctor<Output = T, Error = Infallible>,
     ) -> impl Drop {
-        // safety: the field is not yet initialized, the caller guarantees it's
+        // SAFETY: the caller guarantees that `field` is valid for writes, uninitialized, and
         // pinned.
         unsafe {
             Ctor::ctor(ctor, field).unwrap();
         }
-        UnsafeDropGuard(field)
+        DropGuard::new(field, |field| {
+            // SAFETY: `*field` was initialized by `Ctor::ctor` above, and the caller guarantees
+            // that if this guard is dropped, no other code will access or drop `*field` afterwards.
+            unsafe { core::ptr::drop_in_place(field) }
+        })
     }
 
     pub fn require_recursively_pinned<_T: RecursivelyPinned>() {}
@@ -1742,31 +1735,6 @@ fn abort_on_unwind_failed() -> ! {
     panic!("Unwinding occurred when no safe recovery is possible.");
 }
 
-/// A safety guard which panics if dropped, converting unwinds into aborts.
-///
-/// In general, you can't, as the *author* of drop(), assume that it will be
-/// called: callers can just call std::mem::forget(), among other
-/// things. However, as the *user*, you can know that drop is called for
-/// unmoved values at the end of a drop scope. Drop is a defined behavior.
-/// So while there is ordinarily a prohibition on relying on drop for
-/// safety, that only occurs for API owners that are allowing values to
-/// be used in arbitrary ways (including forget). Here, we are API
-/// *users* as well, and specifically using the Bomb in a way that
-/// guarantees its drop will be called in a particular circumstance.
-///
-/// See https://doc.rust-lang.org/reference/destructors.html, specifically this: "When control
-/// flow leaves a drop scope all variables associated to that scope are
-/// dropped in reverse order of declaration (for variables) or creation
-/// (for temporaries)."
-struct Bomb;
-impl Drop for Bomb {
-    #[cold]
-    #[inline(never)]
-    fn drop(&mut self) {
-        abort_on_unwind_failed();
-    }
-}
-
 /// Run f, aborting if it unwinds.
 ///
 /// Because this aborts on unwind, f is not required to be unwind-safe.
@@ -1784,9 +1752,25 @@ fn abort_on_unwind<T, F: FnOnce() -> T>(f: F) -> T {
     // always the case. See https://doc.rust-lang.org/std/panic/fn.catch_unwind.html#notes
     // and compare with https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html
 
-    let bomb = Bomb;
+    // A safety guard which panics if dropped, converting unwinds into aborts.
+    //
+    // In general, you can't, as the *author* of drop(), assume that it will be
+    // called: callers can just call std::mem::forget(), among other
+    // things. However, as the *user*, you can know that drop is called for
+    // unmoved values at the end of a drop scope. Drop is a defined behavior.
+    // So while there is ordinarily a prohibition on relying on drop for
+    // safety, that only occurs for API owners that are allowing values to
+    // be used in arbitrary ways (including forget). Here, we are API
+    // *users* as well, and specifically using `DropGuard` in a way that
+    // guarantees its drop will be called if `f()` unwinds.
+    //
+    // See https://doc.rust-lang.org/reference/destructors.html, specifically this: "When control
+    // flow leaves a drop scope all variables associated to that scope are
+    // dropped in reverse order of declaration (for variables) or creation
+    // (for temporaries)."
+    let bomb = DropGuard::new((), |()| abort_on_unwind_failed());
     let rv = f();
-    core::mem::forget(bomb);
+    DropGuard::dismiss(bomb);
     rv
 }
 

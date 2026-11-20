@@ -12,7 +12,7 @@ use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::ffi::c_void;
 use core::fmt::{Debug, Formatter, Result};
-use core::mem::{ManuallyDrop, MaybeUninit};
+use core::mem::{DropGuard, ManuallyDrop, MaybeUninit};
 use core::ops::Deref;
 use core::pin::Pin;
 use ctor::{Ctor, Infallible};
@@ -270,32 +270,14 @@ impl<T: Sized> shared_ptr<T> {
         ptr: *mut T,
         deleter: impl FnOnce(*mut T) + Send + 'static,
     ) -> Self {
-        struct DeleteOnDrop<T, F: FnOnce(*mut T) + Send + 'static> {
-            ptr: *mut T,
-            // Safety: `deleter` is always initialized, and is only wrapped in `MaybeUninit` so
-            // it can be taken and consumed during `Drop::drop`.
-            deleter: MaybeUninit<F>,
-        }
-
-        impl<T, F: FnOnce(*mut T) + Send + 'static> Drop for DeleteOnDrop<T, F> {
-            fn drop(&mut self) {
-                // SAFETY: `deleter` is always initialized, and is only wrapped in `MaybeUninit` so
-                // it can be taken and consumed during `Drop::drop` (right now). Invoking it also
-                // runs its drop implementation, so nothing is leaked.
-                let deleter = unsafe { self.deleter.assume_init_read() };
-                deleter(self.ptr);
-            }
-        }
-
-        let delete_on_drop =
-            shared_ptr::new(DeleteOnDrop { ptr, deleter: MaybeUninit::new(deleter) });
+        let delete_on_drop = shared_ptr::new(DropGuard::new(ptr, deleter));
 
         // Don't use `project_unchecked` here: it would have to turn `ptr` into a `&T`, which is
         // undefined behavior when `ptr` is null. Like C++ `std::shared_ptr<T>(nullptr, deleter)`,
         // a null `ptr` still gets a control block that calls `deleter(ptr)`.
         let (_, cntrl) = shared_ptr::into_raw_parts(delete_on_drop);
         // SAFETY: `ptr` is valid or null per the caller's precondition, and `cntrl` holds one
-        // strong reference to the `DeleteOnDrop` that calls `deleter(ptr)` when it is dropped. The
+        // strong reference to the `DropGuard` that calls `deleter(ptr)` when it is dropped. The
         // deleter is `'static`, so no lifetimes are erased.
         unsafe { shared_ptr::from_raw_parts(ptr, cntrl) }
     }
