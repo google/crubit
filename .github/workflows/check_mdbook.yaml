@@ -6,19 +6,36 @@ name: Check mdBook
 # Validates that the documentation builds and that all internal links resolve
 # (via mdbook-linkcheck2, configured in `book.toml`). Deployment to GitHub Pages
 # happens separately in `deploy_mdbook.yaml`.
+#
+# Do not add a `paths:` filter here: Copybara's `github_check_runs` requires
+# `check_mdbook` to complete on every PR, and a skipped run will hang the
+# presubmit until timeout.
 on:
   push:
     branches: ["main"]
   pull_request:
+    branches: ["main"]
   workflow_dispatch:
+
+# Supersede in-flight runs for the same PR instead of running both to
+# completion. Pushes to main are left alone: a cancelled run reports as a
+# failed check, which would confuse the Copybara export gating on it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
+# LINT.IfChange
 jobs:
-  check:
+  check_mdbook:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
+      CARGO_INCREMENTAL: 0
+      CARGO_NET_RETRY: 10
+      RUSTUP_MAX_RETRIES: 10
       MDBOOK_VERSION: 0.5.2
       MDBOOK_TABS_VERSION: 0.3.4
       MDBOOK_LINKCHECK2_VERSION: 0.13.0
@@ -26,12 +43,37 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - name: Cache mdBook binaries
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.local/mdbook/bin
+          key: ${{ runner.os }}-mdbook-${{ env.MDBOOK_VERSION }}-${{ env.MDBOOK_TABS_VERSION }}-${{ env.MDBOOK_LINKCHECK2_VERSION }}
       - name: Install mdBook
         run: |
-          curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf -y | sh
-          rustup update
-          cargo install --version ${MDBOOK_VERSION} mdbook
-          cargo install --version ${MDBOOK_TABS_VERSION} mdbook-tabs
-          cargo install --version ${MDBOOK_LINKCHECK2_VERSION} mdbook-linkcheck2
+          mkdir -p "$HOME/.local/mdbook/bin"
+          echo "$HOME/.local/mdbook/bin" >> "$GITHUB_PATH"
+          if [ ! -x "$HOME/.local/mdbook/bin/mdbook" ]; then
+            cargo install --root "$HOME/.local/mdbook" --version "${MDBOOK_VERSION}" mdbook
+          fi
+          if [ ! -x "$HOME/.local/mdbook/bin/mdbook-tabs" ]; then
+            cargo install --root "$HOME/.local/mdbook" --version "${MDBOOK_TABS_VERSION}" mdbook-tabs
+          fi
+          if [ ! -x "$HOME/.local/mdbook/bin/mdbook-linkcheck2" ]; then
+            cargo install --root "$HOME/.local/mdbook" --version "${MDBOOK_LINKCHECK2_VERSION}" mdbook-linkcheck2
+          fi
       - name: Build and check links with mdBook
-        run: mdbook build
+        run: |
+          mdbook build
+          book_html="./book/html"
+          if [ ! -d "$book_html" ]; then
+            book_html="./book"
+          fi
+          if [ ! -d "$book_html" ]; then
+            echo "::error::Expected mdBook HTML output directory at ./book/html or ./book."
+            exit 1
+          fi
+          if grep -rn --include='*.html' 'language-live-snippet' "$book_html"; then
+            echo "::error::Unexpanded live-snippet block found in generated HTML; check [preprocessor.live-snippet] in book.toml."
+            exit 1
+          fi
+# LINT.ThenChange(//depot/copy.bara.sky)
