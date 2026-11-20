@@ -10,7 +10,10 @@ crubit_test_cc_library(
     name = "packed",
     hdrs = ["packed.h"],
     aspect_hints = ["//features:record_impl_debug"],
-    deps = ["@abseil-cpp//absl/base:core_headers"],
+    deps = [
+        "//support:annotations",
+        "@abseil-cpp//absl/base:core_headers",
+    ],
 )
 
 rust_api_from_cpp(
