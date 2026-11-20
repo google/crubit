@@ -11,11 +11,8 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+# Sets minimal default permissions; each job declares only what it needs.
+permissions: {}
 
 # Allow only one concurrent deployment, cancelling any older in-progress or
 # waiting run so a wedged environment gate cannot deadlock subsequent runs.
@@ -27,6 +24,8 @@ jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       MDBOOK_VERSION: 0.5.2
       MDBOOK_TABS_VERSION: 0.3.4
@@ -64,7 +63,77 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      pages: write
+      id-token: write
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+
+  # File a single deduplicated P3 tracking issue when deployment on main fails
+  # (and auto-close it once a subsequent deployment succeeds).
+  notify:
+    needs: [build, deploy]
+    if: >-
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      (contains(needs.*.result, 'failure') ||
+       (needs.build.result == 'success' && needs.deploy.result == 'success'))
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create or close failure issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # No checkout here, so gh cannot infer the repository.
+          GH_REPO: ${{ github.repository }}
+          TEAM_HANDLE: "@google/crubit-readers"
+          BUILD_RESULT: ${{ needs.build.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TITLE="🚨 crubit.rs mdBook Deployment Failure"
+
+          # Query the REST Issues endpoint directly (no search index lag)
+          # and match the exact title, excluding PRs.
+          EXISTING_ISSUES=$(gh api --paginate \
+            "repos/${GH_REPO}/issues?state=open&labels=automated-report&per_page=100" \
+            | jq -r --arg title "$TITLE" \
+              '.[] | select(.pull_request == null and .title == $title) | .number')
+
+          if [ "$BUILD_RESULT" = "success" ] && [ "$DEPLOY_RESULT" = "success" ]; then
+            for ISSUE_NUM in $EXISTING_ISSUES; do
+              gh issue close "$ISSUE_NUM" \
+                --repo "$GH_REPO" \
+                --comment "✅ crubit.rs mdBook deployment succeeded ([View Workflow Run](${RUN_URL})). Closing tracking issue."
+            done
+            exit 0
+          fi
+
+          EXISTING_ISSUE=$(printf '%s\n' "$EXISTING_ISSUES" | head -n 1)
+          if [ -n "$EXISTING_ISSUE" ]; then
+            echo "Tracking issue #${EXISTING_ISSUE} is already open; skipping duplicate report."
+            exit 0
+          fi
+
+          for label in p3 bug automated-report; do
+            gh label create "$label" --repo "$GH_REPO" 2>/dev/null || true
+          done
+
+          BODY=$(cat <<EOF
+          Attention ${TEAM_HANDLE}: The crubit.rs mdBook deployment to GitHub Pages has failed.
+
+          - **Build job:** \`${BUILD_RESULT}\`
+          - **Deploy job:** \`${DEPLOY_RESULT}\`
+          - **Run Details:** [View Workflow Run](${RUN_URL})
+
+          EOF
+          )
+
+          gh issue create \
+            --repo "$GH_REPO" \
+            --title "$TITLE" \
+            --body "$BODY" \
+            --label "p3,bug,automated-report"
