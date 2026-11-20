@@ -1542,8 +1542,8 @@ fn thunkless_impl(
     }
 }
 
-/// Returns whether `func` returns a `std::strong_ordering` or `std::weak_ordering` value whose
-/// corresponding `Eq`/`Ord` Crubit feature is enabled.
+/// Returns whether `func` returns a `std::strong_ordering` value, or a `std::weak_ordering` value
+/// with the `weak_ordering_traits` Crubit feature enabled.
 ///
 /// This only checks the name of the returned record. This is sufficient for `operator<=>`, because
 /// the C++ importer only imports `operator<=>` if it returns a comparison category type from the
@@ -1557,7 +1557,7 @@ fn spaceship_implements_eq_and_ord(db: &BindingsGenerator<'_>, func: &Func) -> b
         return false;
     };
     match record.cc_name().as_str() {
-        "strong_ordering" => features.contains(crubit_feature::CrubitFeature::StrongOrderingTraits),
+        "strong_ordering" => true,
         "weak_ordering" => features.contains(crubit_feature::CrubitFeature::WeakOrderingTraits),
         _ => false,
     }
@@ -2954,7 +2954,8 @@ pub fn generate_function(
                     )?
                 }
                 // `std::strong_ordering` and `std::weak_ordering` both define a total ordering, so
-                // the type also gets `Eq` and `Ord` when the corresponding feature is enabled.
+                // the type also gets `Eq` and `Ord` (for `std::weak_ordering`, only when the
+                // `weak_ordering_traits` feature is enabled).
                 TraitName::PartialOrd { op: PartialOrdOp::Spaceship, param }
                     if reportable_status.is_ok()
                         && **param == self_type_for_extra

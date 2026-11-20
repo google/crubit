@@ -123,8 +123,9 @@ flagset::flags! {
         /// Only affects cpp_api_from_rust.
         MovableReturnValues,
 
-        /// Implement `Eq` and `Ord` for C++ types whose `operator<=>` returns
-        /// `std::strong_ordering`. Only affects rust_api_from_cpp.
+        /// No-op: Crubit always implements `Eq` and `Ord` for C++ types whose `operator<=>`
+        /// returns `std::strong_ordering`.
+        // TODO(b/447338748): Remove once Bazel and GN files no longer use this feature name.
         StrongOrderingTraits,
 
         /// Implement `Eq` and `Ord` for C++ types whose `operator<=>` returns
