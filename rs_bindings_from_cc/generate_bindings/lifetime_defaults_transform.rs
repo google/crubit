@@ -543,6 +543,27 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         }
     }
 
+    /// Returns whether a function returning `ty` is subject to `[[clang::coro_lifetimebound]]`:
+    /// clang then treats all of its parameters, including the implicit object parameter, as
+    /// `[[clang::lifetimebound]]` (`CheckCoroCall` in clang's `CheckExprLifetime.cpp`).
+    ///
+    /// The only coroutine return type Crubit binds is `c9::Co`, which is declared
+    /// `[[clang::coro_return_type]] [[clang::coro_lifetimebound]]`. The importer does not record
+    /// `[[clang::coro_disable_lifetimebound]]` on the function; ignoring it is conservative, since
+    /// it only ties the result to more inputs than the function needs.
+    fn is_coro_lifetimebound(&self, ty: &CcType) -> bool {
+        let CcTypeVariant::Decl(id) = ty.variant() else {
+            return false;
+        };
+        let Item::Record(record) = self.db.find_untyped_decl(*id) else {
+            return false;
+        };
+        matches!(
+            record.template_specialization().map(|ts| ts.kind()),
+            Some(ir::TemplateSpecializationKind::C9Co(_))
+        )
+    }
+
     /// Returns the (raw) type argument applied to the decl `id`.
     fn type_arg_from_decl_id(&mut self, id: ItemId) -> Option<CcType> {
         match self.db.find_untyped_decl(id) {
@@ -706,11 +727,23 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         let mut return_lifetime: Vec<FfiString> = func.return_type().explicit_lifetimes().to_vec();
         let mut has_lifetimebound = false;
         let is_constructor = *func.cc_name() == ir::UnqualifiedIdentifier::Constructor;
+        // `c9::Co` is `[[clang::coro_lifetimebound]]`: every parameter of a function returning it
+        // that can carry a lifetime, including the implicit object parameter, is lifetimebound.
+        let coro_lifetimebound = !is_constructor && self.is_coro_lifetimebound(func.return_type());
+        let lifetimebound: Vec<bool> = func
+            .params()
+            .iter()
+            .map(|param| {
+                param.clang_lifetimebound()
+                    || (coro_lifetimebound
+                        && lifetime_arity(self.db, param.type_()).unwrap_or(1) > 0)
+            })
+            .collect();
         // First, check to see if there are any existing lifetime annotations that we need to
         // respect.
         for (ix, param) in func.params().iter().enumerate() {
-            if param.clang_lifetimebound() || (is_constructor && ix == 0) {
-                has_lifetimebound |= param.clang_lifetimebound();
+            if lifetimebound[ix] || (is_constructor && ix == 0) {
+                has_lifetimebound |= lifetimebound[ix];
                 if return_lifetime.is_empty() {
                     // If a [[lifetimebound]] parameter already has a lifetime annotation and we
                     // don't have a lifetime for the return value yet, use the parameter's
@@ -747,7 +780,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 // Forall lifetimebound parameters P, L(P) : L(*this).
                 return_lifetime =
                     this_lifetimebound_names.iter().cloned().map(FfiString::from).collect();
-            } else if is_member_function && func.params()[0].clang_lifetimebound() {
+            } else if is_member_function && lifetimebound[0] && !coro_lifetimebound {
                 // Here, the implicit object parameter was annotated with [[lifetimebound]].
                 if !this_lifetimebound_names.is_empty() {
                     // For view types, forall lifetimebound parameters P, L(*this) : L(P)
@@ -767,6 +800,8 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 }
             } else {
                 // Otherwise, for return value R and forall lifetimebound parameters P, L(P) : L(R).
+                // This includes a coroutine's implicit object parameter: the coroutine frame
+                // keeps the pointer `this`, so R borrows from the object itself, not from `*this`.
                 for _ in 0..self.get_lifetime_arity(func.return_type())? {
                     return_lifetime
                         .push(FfiString::from(self.bindings.fresh_name_for(&Rc::from("__rv"))))
@@ -774,8 +809,12 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             }
         }
         for (ix, param) in func.params_mut().iter_mut().enumerate() {
-            if param.clang_lifetimebound() || (is_constructor && ix == 0) {
-                if is_member_function && ix == 0 && !this_lifetimebound_names.is_empty() {
+            if lifetimebound[ix] || (is_constructor && ix == 0) {
+                if is_member_function
+                    && ix == 0
+                    && !this_lifetimebound_names.is_empty()
+                    && !coro_lifetimebound
+                {
                     self.inject_lifetimes_into_this(param, &return_lifetime)?;
                 } else {
                     *param.type_mut().explicit_lifetimes_mut() = return_lifetime.as_slice().into();

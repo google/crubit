@@ -1656,6 +1656,89 @@ fn test_as_written_template_arg_lifetime_kept_for_output() -> Result<()> {
     Ok(())
 }
 
+/// Declares a stand-in for `c9::Co` (recognized by name), which is `[[clang::coro_lifetimebound]]`.
+const C9_CO_PRELUDE: &str = r#"
+      namespace c9 {
+      template <typename T> class Co {};
+      }  // namespace c9
+      "#;
+
+/// Every parameter of a function returning `c9::Co` that can carry a lifetime is lifetimebound, as
+/// with `[[clang::coro_lifetimebound]]`, so the result shares one lifetime with all of them.
+/// Otherwise `a` and `b` would get distinct lifetimes, and the result none (that is, `'static`).
+#[gtest]
+fn test_c9_co_params_are_lifetimebound() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(&format!(
+        "{C9_CO_PRELUDE}\nc9::Co<int> f(int& a, const int& b, int c);\n"
+    ))?;
+
+    let dir = transform_from_proto(&proto)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["__rv"] ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["__rv"] ... },
+                        identifier: "a", ...
+                    },
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["__rv"] ... },
+                        identifier: "b", ...
+                    },
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: [] ... },
+                        identifier: "c", ...
+                    },
+                ],
+                ...
+                lifetime_inputs: ["__rv"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+/// In a member function returning `c9::Co`, the implicit object parameter is lifetimebound too.
+/// The coroutine frame keeps the pointer `this`, so the result shares the lifetime of the
+/// reference to the object, as well as that of `a`. Otherwise it would not be tied to `a`.
+#[gtest]
+fn test_c9_co_member_function_params_are_lifetimebound() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(&format!(
+        "{C9_CO_PRELUDE}\nstruct S {{ c9::Co<int> f(const int& a); }};\n"
+    ))?;
+
+    let dir = transform_from_proto(&proto)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["__rv"] ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["__rv"] ... },
+                        identifier: "__this", ...
+                    },
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["__rv"] ... },
+                        identifier: "a", ...
+                    },
+                ],
+                ...
+                lifetime_inputs: ["__rv"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
 /// Correct behaviour; control for `test_lifetime_on_class_template_argument_is_bound`. With the
 /// borrow spelled out on a non-template record, the returned view is tied to
 /// `x` and the function binds `'a`.
