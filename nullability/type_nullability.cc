@@ -5,6 +5,7 @@
 #include "nullability/type_nullability.h"
 
 #include <cassert>
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <utility>
@@ -298,7 +299,7 @@ bool isTransparentAlias(QualType T) {
     return false;
 
   // Now verify Foo is exactly forwarding its params to Bar.
-  for (int I = 0; I < BarUse->template_arguments().size(); ++I) {
+  for (size_t I = 0; I < BarUse->template_arguments().size(); ++I) {
     auto &Arg = BarUse->template_arguments()[I];
     switch (Arg.getKind()) {
       case TemplateArgument::Type:
@@ -628,17 +629,13 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
           NNS = NNS.getAsType()->getPrefix();
           if (NNSLoc) NNSLoc = NNSLoc->getAsTypeLoc().getPrefix();
           break;
-        default:
-          NNS = std::nullopt;
-          if (NNSLoc) NNSLoc = clang::NestedNameSpecifierLoc();
-          llvm_unreachable("unexpected NestedNameSpecifier kind");
       }
     }
 
     if (!BoundTemplateArgs.empty()) {
       // Wire up the inheritance chain so all the contexts are visible.
       BoundTemplateArgs.back().Extends = CurrentTemplateContext;
-      for (int I = 0; I < BoundTemplateArgs.size() - 1; ++I)
+      for (size_t I = 0; I + 1 < BoundTemplateArgs.size(); ++I)
         BoundTemplateArgs[I].Extends = &BoundTemplateArgs[I + 1];
     }
     return BoundTemplateArgs;
@@ -820,6 +817,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
           /*ArgsFile=*/File,
           /*Extends=*/CurrentTemplateContext,
           /*ArgContext=*/CurrentTemplateContext,
+          /*ArgLocs=*/std::nullopt,
       };
       if (L) {
         Ctx.ArgLocs = std::vector<TemplateArgumentLoc>();

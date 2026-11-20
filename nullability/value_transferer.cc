@@ -1389,15 +1389,15 @@ static void transferStatusOrValueOrCall(
     }
   } else if (ArgExpr->getType()->isNullPtrType() &&
              isReachableNullptrLiteral(State.Env)) {
-    ArgState = PointerNullState{.FromNullable = &A.makeLiteral(true),
-                                .IsNull = &A.makeLiteral(true)};
+    ArgState = PointerNullState{/*FromNullable=*/&A.makeLiteral(true),
+                                /*IsNull=*/&A.makeLiteral(true)};
   } else {
     // There are cases where a non-pointer argument type is convertible to the
     // pointer type held by the StatusOr. We can't track the nullability of the
     // converted pointer in these cases (without perhaps digging up the
     // conversion operator or similar), so assume it is unknown.
-    ArgState = PointerNullState{.FromNullable = &A.makeLiteral(false),
-                                .IsNull = &A.makeAtomRef(A.makeAtom())};
+    ArgState = PointerNullState{/*FromNullable=*/&A.makeLiteral(false),
+                                /*IsNull=*/&A.makeAtomRef(A.makeAtom())};
   }
 
   // The null state corresponding to the StatusOr's template argument type is

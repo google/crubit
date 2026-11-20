@@ -70,8 +70,8 @@ struct PointerNullabilityDiagnostic {
   /// known.
   const clang::IdentifierInfo *absl_nullable ParamName = nullptr;
   /// Source range and message of a note to be emitted alongside the diagnostic.
-  CharSourceRange NoteRange;
-  std::string NoteMessage;
+  CharSourceRange NoteRange = {};
+  std::string NoteMessage = {};
 };
 
 /// Creates a solver with default parameters that is suitable for passing to

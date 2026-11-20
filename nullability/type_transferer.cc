@@ -5,6 +5,7 @@
 #include "nullability/type_transferer.h"
 
 #include <cassert>
+#include <cstddef>
 #include <deque>
 #include <functional>
 #include <optional>
@@ -344,7 +345,7 @@ static void transferCastExpr(const CastExpr* absl_nonnull CE,
     // template arguments.
     auto PreserveAndResugarFromBaseOrDerived = [&](TypeNullability V) {
       V = PreserveOuterRawPointers(V);
-      if (auto* ECE = dyn_cast<ExplicitCastExpr>(CE)) {
+      if (isa<ExplicitCastExpr>(CE)) {
         // TODO: b/396242014 - Apply the nullability annotations from the target
         // type rather than preserving the argument's nullability. Do this both
         // for outer pointers and for template arguments.
@@ -362,7 +363,7 @@ static void transferCastExpr(const CastExpr* absl_nonnull CE,
         return V;
       }
 
-      int NumOuterRawPointers = 0;
+      size_t NumOuterRawPointers = 0;
       const Type* UnderPointers =
           CE->getSubExpr()->getType().getCanonicalType().getTypePtr();
       while (auto* PT = dyn_cast<PointerType>(UnderPointers)) {
@@ -377,7 +378,7 @@ static void transferCastExpr(const CastExpr* absl_nonnull CE,
             getNullabilityForChild(CE->getSubExpr(), State);
         const Type* CurrentType = UnderPointers;
         TypeNullability CurrentNullability;
-        for (int J = NumOuterRawPointers; J < ArgNullability.size(); ++J) {
+        for (size_t J = NumOuterRawPointers; J < ArgNullability.size(); ++J) {
           CurrentNullability.push_back(ArgNullability[J]);
         }
         // Resugar from class template arguments, if any, along the
@@ -408,7 +409,7 @@ static void transferCastExpr(const CastExpr* absl_nonnull CE,
               << V.size() << "\n";
           assert(false);
         }
-        for (int I = 0;
+        for (size_t I = 0;
              I + NumOuterRawPointers < V.size() && I < CastNullability.size();
              ++I) {
           V[I + NumOuterRawPointers] = CastNullability[I];
@@ -440,7 +441,7 @@ static void transferCastExpr(const CastExpr* absl_nonnull CE,
       case CK_UserDefinedConversion:
         return unspecifiedNullability(CE);
       case CK_ConstructorConversion:
-        if (auto* CCE = llvm::dyn_cast<CXXConstructExpr>(CE->getSubExpr())) {
+        if (llvm::isa<CXXConstructExpr>(CE->getSubExpr())) {
           // This node is syntactic only.
           return getNullabilityForChild(CE->getSubExpr(), State);
         }
