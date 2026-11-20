@@ -1,0 +1,84 @@
+name: Report Matrix Result
+
+# Keeps one open issue per failing matrix: files it on the first red night,
+# comments on it while the matrix stays red, and closes it once the matrix
+# passes.
+on:
+  workflow_call:
+    inputs:
+      result:
+        description: Result of the matrix job being reported, as in needs.<job>.result.
+        required: true
+        type: string
+      title_prefix:
+        description: >-
+          Start of the issue title, which the date follows. Open issues whose
+          title starts with it belong to this report, so one report's prefix
+          must not be the start of another's.
+        required: true
+        type: string
+      failure_body:
+        description: >-
+          Markdown that opens a newly filed issue, completing the sentence
+          "Attention <team>: ". A link to the run follows it.
+        required: true
+        type: string
+      passed_comment:
+        description: >-
+          Start of the comment posted when closing an issue. A link to the run
+          follows it.
+        required: true
+        type: string
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: File, update or close the failure issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # No checkout here, so gh cannot infer the repository.
+          GH_REPO: ${{ github.repository }}
+          TEAM_HANDLE: "@google/crubit-readers"
+          RESULT: ${{ inputs.result }}
+          TITLE_PREFIX: ${{ inputs.title_prefix }}
+          FAILURE_BODY: ${{ inputs.failure_body }}
+          PASSED_COMMENT: ${{ inputs.passed_comment }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          # Without pipefail a failed lookup reads as "no open issue" and
+          # files a duplicate.
+          set -euo pipefail
+
+          # Open issues this report filed earlier, oldest first.
+          OPEN=$(gh issue list --state open --label automated-report --limit 200 \
+              --json number,title |
+            jq -r --arg prefix "$TITLE_PREFIX" \
+              '[.[] | select(.title | startswith($prefix)) | .number] | sort | .[]')
+
+          if [[ "$RESULT" == "success" ]]; then
+            for ISSUE in $OPEN; do
+              gh issue close "$ISSUE" \
+                --comment "$PASSED_COMMENT: [workflow run](<$RUN_URL>)."
+            done
+            exit 0
+          fi
+
+          # Anything but success counts as a failure, including a matrix that
+          # was skipped because generating it failed.
+          if [[ -n "$OPEN" ]]; then
+            gh issue comment "$(head -n 1 <<< "$OPEN")" \
+              --body "Still failing: [workflow run](<$RUN_URL>)."
+            exit 0
+          fi
+
+          BODY="Attention $TEAM_HANDLE: $FAILURE_BODY
+
+          **Run Details:** [View Workflow Run](<$RUN_URL>)"
+
+          gh issue create \
+            --title "$TITLE_PREFIX: $(date +'%Y-%m-%d')" \
+            --body "$BODY" \
+            --label "p2,bug,automated-report"

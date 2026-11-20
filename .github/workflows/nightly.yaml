@@ -276,30 +276,16 @@ jobs:
           || gh api -X POST "/repos/${{ github.repository }}/git/refs" \
             --field ref="refs/tags/latest" --field sha="$CRUBIT_COMMIT"
 
-  notify-failures:
+  notify-rustc-failure:
     needs: build
-    if: failure()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout main branch
-        uses: actions/checkout@v6
-        with:
-          ref: test-matrix
-      - name: Report failure in issue
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TEAM_HANDLE: "@google/crubit-readers"
-        run: |
-          TITLE="🚨 Nightly Test Matrix Failure: $(date +'%Y-%m-%d')"
-          
-          BODY="Attention $TEAM_HANDLE: The nightly test matrix has failed.
-
-          **Run Details:** [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-
-          gh issue create \
-            --title "$TITLE" \
-            --body "$BODY" \
-            --label "p2,bug,automated-report"
+    # Runs on green nights too, so a passing matrix can close the open issue.
+    if: ${{ !cancelled() }}
+    uses: ./.github/workflows/report_matrix_result.yaml
+    with:
+      result: ${{ needs.build.result }}
+      title_prefix: "🚨 Nightly Test Matrix Failure"
+      passed_comment: The nightly test matrix passed
+      failure_body: The nightly test matrix has failed.
 
   llvm-build:
     needs: update-and-generate
@@ -354,25 +340,16 @@ jobs:
 
   notify-llvm-failure:
     needs: llvm-build
-    if: failure()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Report failure in issue
-        env:
-          GH_TOKEN: ${{ github.token }}
-          # No checkout here, so gh cannot infer the repository.
-          GH_REPO: ${{ github.repository }}
-          TEAM_HANDLE: "@google/crubit-readers"
-        run: |
-          TITLE="🚨 LLVM build failure: $(date +'%Y-%m-%d')"
-          BODY="Attention $TEAM_HANDLE: building Crubit against one or more LLVM commits failed.
+    # Runs on green nights too, so a passing build can close the open issue.
+    if: ${{ !cancelled() }}
+    uses: ./.github/workflows/report_matrix_result.yaml
+    with:
+      result: ${{ needs.llvm-build.result }}
+      title_prefix: "🚨 LLVM build failure"
+      passed_comment: Crubit built against every LLVM commit in the matrix
+      failure_body: |-
+        building Crubit against one or more LLVM commits failed.
 
-          - **Head:** already published to \`llvm_commit.txt\` on \`test-matrix\`, so PR CI is using it. If this is an upstream breakage, roll back by editing that file to the previous SHA and pushing.
-          - **A release:** Crubit no longer builds against that LLVM. Fix Crubit, or raise the floor to exclude that release if dropping that LLVM is deliberate.
-          - **The floor:** Crubit no longer builds against the oldest LLVM that \`bazel/llvm_floor.txt\` claims. Fix Crubit, or raise the floor there if dropping that LLVM is deliberate.
-
-          **Run Details:** [View Workflow Run](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)"
-          gh issue create \
-            --title "$TITLE" \
-            --body "$BODY" \
-            --label "p2,bug,automated-report"
+        - **Head:** already published to `llvm_commit.txt` on `test-matrix`, so PR CI is using it. If this is an upstream breakage, roll back by editing that file to the previous SHA and pushing.
+        - **A release:** Crubit no longer builds against that LLVM. Fix Crubit, or raise the floor to exclude that release if dropping that LLVM is deliberate.
+        - **The floor:** Crubit no longer builds against the oldest LLVM that `bazel/llvm_floor.txt` claims. Fix Crubit, or raise the floor there if dropping that LLVM is deliberate.
