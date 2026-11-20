@@ -518,6 +518,9 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
                 TypeAlias => {
                     db.errors().add_category(error_report::Category::Alias);
                 }
+                Macro => {
+                    db.errors().add_category(error_report::Category::Constant);
+                }
                 Namespace | Other => {}
             }
             generate_unsupported(db, unsupported.clone())

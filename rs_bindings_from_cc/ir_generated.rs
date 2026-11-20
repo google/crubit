@@ -7342,6 +7342,7 @@ mod __defs {
             TypeAlias = 7,
             Namespace = 8,
             Constructor = 9,
+            Macro = 10,
         }
         impl Kind {
             pub const EMPTY: Self = Self::Other;
@@ -7357,6 +7358,7 @@ mod __defs {
                     7 => Some(Self::TypeAlias),
                     8 => Some(Self::Namespace),
                     9 => Some(Self::Constructor),
+                    10 => Some(Self::Macro),
                     _ => None,
                 }
             }

@@ -430,6 +430,12 @@ class ImportContext {
   virtual std::optional<bool> IsTypedMacroConstant(
       const clang::VarDecl& var_decl) const = 0;
 
+  // If `var_decl` is a placeholder for a macro that has no bindings (see
+  // `CreateUnsupportedMacroPlaceholder`), returns the reason. Otherwise,
+  // returns null.
+  virtual const FormattedError* _Nullable GetUnsupportedMacroError(
+      const clang::VarDecl& var_decl) const = 0;
+
   // Converts a Clang source location to a structured `DeclLocation`.
   // `name_info` may be null.
   virtual crubit::ffi::DeclLocation ConvertDeclLocation(

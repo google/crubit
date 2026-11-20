@@ -349,6 +349,10 @@ llvm::Expected<std::string> EvaluateStringViewContents(
 
 std::unique_ptr<crubit::ffi::Item> VarDeclImporter::Import(
     clang::VarDecl* var_decl) {
+  if (const FormattedError* error = ictx_.GetUnsupportedMacroError(*var_decl)) {
+    return ictx_.ImportUnsupportedItem(*var_decl, std::nullopt, {*error});
+  }
+
   // Most vars are not globals – fail fast if this is the case.
   clang::DeclContext* decl_context = var_decl->getDeclContext();
   if (!decl_context) {

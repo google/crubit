@@ -124,6 +124,7 @@ pub(crate) fn schema() -> Schema {
             TypeAlias,
             Namespace,
             Constructor,
+            Macro,
         }
         struct HeaderName {
             name: Str,

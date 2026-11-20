@@ -132,6 +132,8 @@ class Importer final : public ImportContext {
   std::optional<std::string> GetComment(const clang::Decl& decl) const override;
   std::optional<bool> IsTypedMacroConstant(
       const clang::VarDecl& var_decl) const override;
+  const FormattedError* _Nullable GetUnsupportedMacroError(
+      const clang::VarDecl& var_decl) const override;
   crubit::ffi::DeclLocation ConvertDeclLocation(
       clang::SourceLocation loc,
       clang::DeclarationNameInfo* _Nullable name_info) const override;
@@ -414,6 +416,11 @@ class Importer final : public ImportContext {
   // lazily declared builtins. They aren't declared by the C++ headers, so they
   // are never imported (see `GetCanonicalChildren`).
   llvm::DenseSet<const clang::Decl*> decls_from_macro_parsing_;
+
+  // The placeholders for the macros of this target that have no bindings (see
+  // `CreateUnsupportedMacroPlaceholder`), mapped to the reason.
+  llvm::DenseMap<const clang::VarDecl*, FormattedError>
+      unsupported_macro_errors_;
 
   // The comments in files loaded from precompiled header modules, which Crubit
   // collects itself by lexing the files (whose contents are embedded in the

@@ -221,6 +221,7 @@ enum Kind : int32_t {
   TYPE_ALIAS = 7,
   NAMESPACE = 8,
   CONSTRUCTOR = 9,
+  MACRO = 10,
 };
 }  // namespace unsupported_item
 
@@ -2810,6 +2811,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI UnsupportedItem {
   static constexpr Kind TYPE_ALIAS = ::crubit::ffi::unsupported_item::TYPE_ALIAS;
   static constexpr Kind NAMESPACE = ::crubit::ffi::unsupported_item::NAMESPACE;
   static constexpr Kind CONSTRUCTOR = ::crubit::ffi::unsupported_item::CONSTRUCTOR;
+  static constexpr Kind MACRO = ::crubit::ffi::unsupported_item::MACRO;
   std::string_view name() const { return name_.AsView(); }
   void set_name(std::string_view value) { name_ = FfiString(value); }
   bool has_unique_name() const { return (has_bits_ & 0x1ULL) != 0; }

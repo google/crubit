@@ -738,55 +738,226 @@ pub const kAlreadyDeclared: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
 
 // namespace crate
 
-// The following macros are not supported, and are silently ignored.
+// The following macros are not supported, and are reported as errors. (The
+// include guard of this header isn't reported.)
+
+// error: macro `EMPTY_MACRO` could not be bound
+//   the macro is empty
+
+// error: macro `FUNCTION_LIKE_MACRO` could not be bound
+//   function-like macros are not supported
+
+// error: macro `FLOAT_CONSTANT` could not be bound
+//   macro constants of type `double` are not supported
+
+// error: macro `WIDE_STRING_CONSTANT` could not be bound
+//   only ordinary and UTF-8 string literals are supported in macro constants
+
+// error: macro `UTF16_STRING_CONSTANT` could not be bound
+//   only ordinary and UTF-8 string literals are supported in macro constants
+
+// error: macro `UTF32_STRING_CONSTANT` could not be bound
+//   only ordinary and UTF-8 string literals are supported in macro constants
+
+// error: macro `CONCATENATED_WIDE_STRING_CONSTANT` could not be bound
+//   only ordinary and UTF-8 string literals are supported in macro constants
+
+// error: macro `USER_DEFINED_STRING_LITERAL` could not be bound
+//   the macro is not a valid C++ expression: no matching literal operator for call to 'operator""_s' with arguments of types 'const char *' and '__size_t' (aka 'unsigned long'), and no matching literal operator template
+
+// error: macro `NOT_A_NUMBER` could not be bound
+//   the macro is not a valid C++ expression: invalid suffix '.3' on floating constant
+
+// error: macro `DIVISION_BY_ZERO` could not be bound
+//   the macro is not a C++ constant expression: division by zero
+
+// error: macro `OVERFLOW_CONSTANT` could not be bound
+//   the macro is not a C++ constant expression: value 2147483648 is outside the range of representable values of type 'int'
+
+// error: macro `SELF_REFERENTIAL` could not be bound
+//   the macro is not a valid C++ expression: use of undeclared identifier 'SELF_REFERENTIAL'
 
 // A macro whose name is already declared: the constant would conflict with the
 // declaration.
 
+// error: macro `kAlreadyDeclared` could not be bound
+//   a C++ declaration has the same name as the macro
+
 // Incomplete conditionals, which fail partway through parsing.
+
+// error: macro `CONDITIONAL_WITHOUT_BRANCHES` could not be bound
+//   the macro is not a valid C++ expression: expected expression
+
+// error: macro `CONDITIONAL_WITHOUT_COLON` could not be bound
+//   the macro is not a valid C++ expression: expected ':'
+
+// error: macro `CONDITIONAL_WITHOUT_FALSE_BRANCH` could not be bound
+//   the macro is not a valid C++ expression: expected expression
+
+// error: macro `CONDITIONAL_WITHOUT_CONDITION` could not be bound
+//   the macro is not a valid C++ expression: expected expression
+
+// error: macro `WIDE_CHAR_CONSTANT` could not be bound
+//   macro constants of type `wchar_t` are not supported
+
+// error: macro `UTF8_CHAR_CONSTANT` could not be bound
+//   macro constants of type `char8_t` are not supported
+
+// error: macro `UNKNOWN_IDENTIFIER` could not be bound
+//   the macro is not a valid C++ expression: use of undeclared identifier 'not_a_macro'
+
+// error: macro `TOKEN_PASTING` could not be bound
+//   the `#` and `##` preprocessor operators are not supported
+
+// error: macro `EMPTY_DAG_0` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_1` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_2` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_3` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_4` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_5` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_6` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_7` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_8` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_9` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_10` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_11` could not be bound
+//   the macro is empty
+
+// error: macro `EMPTY_DAG_12` could not be bound
+//   the macro's expansion expands too many other macros
+
+// error: macro `EXPANSION_STEP_LIMIT` could not be bound
+//   the macro's expansion expands too many other macros
+
+// error: macro `CAST_TO_POINTER` could not be bound
+//   macro constants of type `void *` are not supported
+
+// error: macro `BUILTIN_FUNCTION_NOT_CALLED` could not be bound
+//   the macro is not a valid C++ expression: builtin functions must be directly called
 
 // Clang can fold this as an extension, but it isn't a C++ constant expression.
 
+// error: macro `FOLDED_POINTER_TO_INT64` could not be bound
+//   the macro is not a C++ constant expression: cast that performs the conversions of a reinterpret_cast is not allowed in a constant expression
+
 // Parsing this declares `struct MacroDeclaredStruct`, which isn't imported.
+
+// error: macro `SIZEOF_UNDECLARED_STRUCT` could not be bound
+//   the macro is not a valid C++ expression: invalid application of 'sizeof' to an incomplete type 'struct MacroDeclaredStruct'
 
 // Constructs that aren't allowed outside a function, or in a constant
 // expression.
 
+// error: macro `STATEMENT_EXPRESSION` could not be bound
+//   the macro is not a valid C++ expression: statement expression not allowed at file scope
+
+// error: macro `STATEMENT_EXPRESSION_WITH_DECLARATION` could not be bound
+//   the macro is not a valid C++ expression: statement expression not allowed at file scope
+
+// error: macro `TRAILING_SEMICOLON` could not be bound
+//   the macro is not a single C++ expression
+
+// error: macro `ASM_STATEMENT` could not be bound
+//   the macro is not a valid C++ expression: expected expression
+
+// error: macro `ATTRIBUTE` could not be bound
+//   the macro is not a valid C++ expression: expected variable name or 'this' in lambda capture list
+
+// error: macro `COMPOUND_LITERAL` could not be bound
+//   the macro is not a C++ constant expression: subexpression not valid in a constant expression
+
+// error: macro `LAMBDA_WITH_STATIC_LOCAL` could not be bound
+//   the macro is not a C++ constant expression: non-constexpr function 'operator()' cannot be used in a constant expression
+
+// error: macro `LAMBDA_WITH_CAPTURE_DEFAULT` could not be bound
+//   the macro is not a valid C++ expression: non-local lambda expression cannot have a capture-default
+
+// error: macro `CAST_TO_UNKNOWN_TYPE` could not be bound
+//   the macro is not a valid C++ expression: use of undeclared identifier 'not_a_type'
+
+// error: macro `CAST_TO_WCHAR` could not be bound
+//   macro constants of type `wchar_t` are not supported
+
 // Casts to class types are rejected, because of their type.
+
+// error: macro `CAST_TO_CLASS` could not be bound
+//   macro constants of type `ClassForCast` are not supported
+
+// error: macro `C_STYLE_CAST_TO_CLASS` could not be bound
+//   macro constants of type `ClassForCast` are not supported
+
+// error: macro `CAST_TO_CLASS_TEMPLATE` could not be bound
+//   macro constants of type `ClassTemplateForCastInt` are not supported
 
 // Typedefs that don't receive bindings, e.g. because their target doesn't
 // enable Crubit.
 
-// error: global variable `CAST_TO_NON_CRUBIT_TYPEDEF` could not be bound
+// error: macro `CAST_TO_NON_CRUBIT_TYPEDEF` could not be bound
 //   constants of type `NotCrubitExposedInt` are not supported
 
-// error: global variable `CAST_TO_CHAINED_NON_CRUBIT_TYPEDEF` could not be bound
+// error: macro `CAST_TO_CHAINED_NON_CRUBIT_TYPEDEF` could not be bound
 //   constants of type `LocalAliasToNonCrubitTypedef` are not supported
 
-// error: global variable `CAST_TO_UNKNOWN_ATTR_TYPEDEF` could not be bound
+// error: macro `CAST_TO_UNKNOWN_ATTR_TYPEDEF` could not be bound
 //   constants of type `UnknownAttrInt` are not supported
 
-// NOLINT(runtime/int)
+// error: macro `CAST_TO_UNESCAPABLE_NAMESPACE_TYPEDEF` could not be bound
+//   the type of the macro, `crate::UnescapableNamespaceInt`, doesn't have bindings
+
+// error: macro `INVALID_KEYWORD_COMBINATION_CAST` could not be bound
+//   the macro is not a valid C++ expression: cannot combine with previous 'long' declaration specifier
+
+// error: macro `CONFLICTING_SIGNEDNESS_CAST` could not be bound
+//   the macro is not a valid C++ expression: cannot combine with previous 'signed' declaration specifier
+
+// error: macro `MULTI_KEYWORD_FUNCTIONAL_CAST` could not be bound
+//   the macro is not a valid C++ expression: expected '(' for function-style cast or type construction
 
 // NOLINT(readability/casting)
 
 // Invalid cv-qualifiers, as in C++.
 
-// NOLINT(readability/casting)
+// error: macro `CONST_INSIDE_QUALIFIED_NAME_CAST` could not be bound
+//   the macro is not a valid C++ expression: expected unqualified-id
+
+// error: macro `CONST_FUNCTIONAL_CAST` could not be bound
+//   the macro is not a valid C++ expression: expected expression
 
 // The following macros have names that can't be bound, and are reported as
 // errors.
 
-// error: global variable `__LEADING_DUNDER_CONSTANT` could not be bound
+// error: macro `__LEADING_DUNDER_CONSTANT` could not be bound
 //   Skipping generating bindings for '__LEADING_DUNDER_CONSTANT' because it has a leading `__`
 
-// error: global variable `self` could not be bound
+// error: macro `self` could not be bound
 //   variable name is not supported: Unescapable identifier: self
 
-// error: global variable `_` could not be bound
+// error: macro `_` could not be bound
 //   `_` is not a valid Rust macro name
 
-// error: global variable `DOLLAR$CONSTANT` could not be bound
+// error: macro `DOLLAR$CONSTANT` could not be bound
 //   `DOLLAR$CONSTANT` is not a valid Rust macro name
 
 mod detail {

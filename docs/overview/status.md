@@ -90,6 +90,10 @@ Crubit generates Rust bindings for everyday C++ APIs:
         `ffi_11` type which isn't a primitive type (e.g. `c_char`, or
         `c_longlong` on Linux), convert it, e.g. with
         `ffi_11::new_c_longlong(FOO!())`.
+    *   Other macros of the target (e.g. function-like macros, or macros that
+        aren't constant expressions) are reported in the generated bindings,
+        e.g. as ``error: macro `FOO` could not be bound``, followed by the
+        reason. Include guards aren't reported.
 
 Unreleased: non-virtual inheritance (upcasting, downcasting, inherited methods).
 

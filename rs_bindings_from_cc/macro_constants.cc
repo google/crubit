@@ -7,7 +7,13 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <string>
+#include <utility>
+#include <variant>
 
+#include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
+#include "clang/AST/APValue.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -16,7 +22,9 @@
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeBase.h"
 #include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/DiagnosticIDs.h"
 #include "clang/Basic/IdentifierTable.h"
+#include "clang/Basic/PartialDiagnostic.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Basic/TokenKinds.h"
@@ -48,38 +56,6 @@ constexpr size_t kMaxExpansionDepth = 64;
 // The maximum total number of nested macro expansions performed for a single
 // macro, bounding exponential expansion of empty or small macro DAGs.
 constexpr size_t kMaxExpansionSteps = 4096;
-
-// Silences all diagnostics while it is alive (unsupported macros are skipped
-// silently), but records whether any errors occurred.
-class ScopedDiagnosticSuppression {
- public:
-  explicit ScopedDiagnosticSuppression(clang::DiagnosticsEngine& diags)
-      : diags_(diags),
-        old_suppress_all_(diags.getSuppressAllDiagnostics()),
-        // `DiagnosticErrorTrap` counts errors even if they are suppressed.
-        error_trap_(diags) {
-    diags_.setSuppressAllDiagnostics(true);
-  }
-  ~ScopedDiagnosticSuppression() {
-    diags_.setSuppressAllDiagnostics(old_suppress_all_);
-  }
-
-  ScopedDiagnosticSuppression(const ScopedDiagnosticSuppression&) = delete;
-  ScopedDiagnosticSuppression& operator=(const ScopedDiagnosticSuppression&) =
-      delete;
-
-  // Returns true if an actual error (as opposed to a warning that was promoted
-  // to an error, e.g. by `-Werror`) occurred. Otherwise, whether a macro is
-  // supported would depend on the warning flags of the target.
-  bool HasErrorOccurred() const {
-    return error_trap_.hasUnrecoverableErrorOccurred();
-  }
-
- private:
-  clang::DiagnosticsEngine& diags_;
-  bool old_suppress_all_;
-  clang::DiagnosticErrorTrap error_trap_;
-};
 
 // Returns true if `type` is an integral type that Crubit can bind (e.g. not
 // `wchar_t` or `char8_t`, which have no Rust equivalent in Crubit).
@@ -118,19 +94,32 @@ bool IsSupportedIntegralType(clang::QualType type) {
 // preprocessor, they are not expanded again (but they will make parsing fail,
 // because they are left as identifiers).
 //
-// Returns false if the macro can't be expanded, e.g. because it uses token
+// Returns an error if the macro can't be expanded, e.g. because it uses token
 // pasting or exceeds the expansion limits.
-bool ExpandObjectLikeMacro(
+std::optional<FormattedError> ExpandObjectLikeMacro(
     clang::Preprocessor& preprocessor, const clang::IdentifierInfo& name,
     const clang::MacroInfo& macro_info,
     llvm::SmallVectorImpl<const clang::IdentifierInfo*>& expanding,
     size_t& expansion_steps, llvm::SmallVectorImpl<clang::Token>& out) {
-  if (macro_info.isFunctionLike() || macro_info.isBuiltinMacro()) {
-    return false;
+  if (macro_info.isFunctionLike()) {
+    if (expanding.empty()) {
+      return FormattedError::Static("function-like macros are not supported");
+    }
+    return FormattedError::Substitute(
+        "`$0` is a function-like macro, which is not supported",
+        name.getName().str());
   }
-  if (expanding.size() >= kMaxExpansionDepth ||
-      ++expansion_steps > kMaxExpansionSteps) {
-    return false;
+  if (macro_info.isBuiltinMacro()) {
+    return FormattedError::Substitute(
+        "`$0` is a builtin macro, which is not supported",
+        name.getName().str());
+  }
+  if (expanding.size() >= kMaxExpansionDepth) {
+    return FormattedError::Static("the macro's expansion is nested too deeply");
+  }
+  if (++expansion_steps > kMaxExpansionSteps) {
+    return FormattedError::Static(
+        "the macro's expansion expands too many other macros");
   }
   expanding.push_back(&name);
   for (const clang::Token& token : macro_info.tokens()) {
@@ -139,7 +128,8 @@ bool ExpandObjectLikeMacro(
     // expression either.)
     if (token.isOneOf(clang::tok::hash, clang::tok::hashhash,
                       clang::tok::hashat)) {
-      return false;
+      return FormattedError::Static(
+          "the `#` and `##` preprocessor operators are not supported");
     }
     if (const clang::IdentifierInfo* identifier = token.getIdentifierInfo()) {
       // Tokens deserialized from a precompiled header module may not have
@@ -161,21 +151,23 @@ bool ExpandObjectLikeMacro(
             // `(`, which can't be part of a supported expression. Since they
             // are never supported, `ExpandObjectLikeMacro` fails for them in
             // either case.
-            if (!ExpandObjectLikeMacro(preprocessor, *identifier,
-                                       *nested_macro_info, expanding,
-                                       expansion_steps, out)) {
-              return false;
+            if (std::optional<FormattedError> error = ExpandObjectLikeMacro(
+                    preprocessor, *identifier, *nested_macro_info, expanding,
+                    expansion_steps, out)) {
+              return error;
             }
             continue;
           }
         }
       }
     }
-    if (out.size() >= kMaxExpandedTokens) return false;
+    if (out.size() >= kMaxExpandedTokens) {
+      return FormattedError::Static("the macro expands to too many tokens");
+    }
     out.push_back(token);
   }
   expanding.pop_back();
-  return true;
+  return std::nullopt;
 }
 
 // Returns true if the numeric literal `token` has a suffix (e.g. `42u`), or
@@ -274,40 +266,77 @@ clang::Expr* _Nullable ParseConstantExpression(
   return expr;
 }
 
+// Returns Clang's explanation of why `expr` is not a C++ constant expression
+// (the first note it produces when evaluating `expr`), e.g. "division by
+// zero".
+std::string ExplainNonConstantExpression(clang::Sema& sema,
+                                         const clang::Expr& expr) {
+  llvm::SmallVector<clang::PartialDiagnosticAt, 4> notes;
+  clang::Expr::EvalResult eval_result;
+  eval_result.Diag = &notes;
+  (void)expr.EvaluateAsRValue(eval_result, sema.getASTContext(),
+                              /*InConstantContext=*/true);
+  if (notes.empty()) return "it can't be evaluated";
+  llvm::SmallString<64> explanation;
+  notes.front().second.EmitToString(sema.getDiagnostics(), explanation);
+  return explanation.str().str();
+}
+
 }  // namespace
 
-std::optional<MacroConstant> SynthesizeMacroConstant(
+std::variant<MacroConstant, FormattedError> SynthesizeMacroConstant(
     clang::Sema& sema, clang::Parser& parser, const clang::IdentifierInfo& name,
     const clang::MacroInfo& macro_info) {
   clang::SourceLocation name_loc = macro_info.getDefinitionLoc();
   clang::SourceLocation end_loc = macro_info.getDefinitionEndLoc();
   if (name_loc.isInvalid() || !name_loc.isFileID() || end_loc.isInvalid() ||
       !end_loc.isFileID()) {
-    return std::nullopt;
+    return FormattedError::Static("the macro isn't defined in a source file");
   }
 
   llvm::SmallVector<clang::Token, 16> tokens;
   llvm::SmallVector<const clang::IdentifierInfo*, 4> expanding;
   size_t expansion_steps = 0;
-  if (!ExpandObjectLikeMacro(sema.getPreprocessor(), name, macro_info,
-                             expanding, expansion_steps, tokens)) {
-    return std::nullopt;
+  if (std::optional<FormattedError> error =
+          ExpandObjectLikeMacro(sema.getPreprocessor(), name, macro_info,
+                                expanding, expansion_steps, tokens)) {
+    return *std::move(error);
   }
-  if (tokens.empty()) return std::nullopt;
+  if (tokens.empty()) return FormattedError::Static("the macro is empty");
 
   clang::ASTContext& ast_context = sema.getASTContext();
-  ScopedDiagnosticSuppression diagnostic_suppression(sema.getDiagnostics());
-  clang::Expr* expr = ParseConstantExpression(sema, parser, tokens, end_loc);
-  if (expr == nullptr || diagnostic_suppression.HasErrorOccurred() ||
-      expr->containsErrors()) {
-    return std::nullopt;
+  // Records the diagnostics (instead of reporting them), so that they can
+  // explain why the macro isn't supported.
+  clang::Expr* expr = nullptr;
+  RecordingDiagnosticConsumer diagnostics =
+      RecordDiagnostics(sema.getDiagnostics(), [&] {
+        expr = ParseConstantExpression(sema, parser, tokens, end_loc);
+        if (expr == nullptr || expr->containsErrors()) return;
+        // E.g. a reference to a `constexpr` variable is an lvalue, but the
+        // variable is initialized with its value. (String literals stay
+        // lvalues, since lvalue-to-rvalue conversions don't apply to arrays.)
+        // This also reports placeholder expressions, e.g. a builtin function
+        // that isn't called.
+        clang::ExprResult rvalue = sema.DefaultLvalueConversion(expr);
+        expr = rvalue.isUsable() ? rvalue.get() : nullptr;
+      });
+  // Only actual errors count, not warnings that are promoted to errors (e.g. by
+  // `-Werror`): otherwise, whether a macro is supported would depend on the
+  // warning flags of the target.
+  const clang::DiagnosticIDs& diagnostic_ids =
+      *sema.getDiagnostics().getDiagnosticIDs();
+  for (const RecordingDiagnosticConsumer::Diagnostic& diagnostic :
+       diagnostics.GetDiagnostics()) {
+    if (diagnostic.diagnostic_level >= clang::DiagnosticsEngine::Error &&
+        !diagnostic_ids.isWarningOrExtension(diagnostic.diagnostic_id)) {
+      return FormattedError::Substitute(
+          "the macro is not a valid C++ expression: $0",
+          diagnostic.diagnostic.str().str());
+    }
   }
-  // E.g. a reference to a `constexpr` variable is an lvalue, but the variable
-  // is initialized with its value. (String literals stay lvalues, since
-  // lvalue-to-rvalue conversions don't apply to arrays.)
-  clang::ExprResult rvalue = sema.DefaultLvalueConversion(expr);
-  if (!rvalue.isUsable()) return std::nullopt;
-  expr = rvalue.get();
+  if (expr == nullptr || expr->containsErrors()) {
+    return FormattedError::Static("the macro is not a single C++ expression");
+  }
 
   // Only integral (including boolean and character) and (narrow or UTF-8)
   // string constants are supported.
@@ -315,18 +344,28 @@ std::optional<MacroConstant> SynthesizeMacroConstant(
   if (const auto* string_literal =
           llvm::dyn_cast<clang::StringLiteral>(expr->IgnoreParens())) {
     if (!string_literal->isOrdinary() && !string_literal->isUTF8()) {
-      return std::nullopt;
+      return FormattedError::Static(
+          "only ordinary and UTF-8 string literals are supported in macro "
+          "constants");
     }
-  } else if (!IsSupportedIntegralType(type) ||
-             !expr->getIntegerConstantExpr(ast_context).has_value()) {
-    return std::nullopt;
+  } else if (IsSupportedIntegralType(type)) {
+    if (!expr->getIntegerConstantExpr(ast_context).has_value()) {
+      return FormattedError::Substitute(
+          "the macro is not a C++ constant expression: $0",
+          ExplainNonConstantExpression(sema, *expr));
+    }
+  } else {
+    return FormattedError::Substitute(
+        "macro constants of type `$0` are not supported", type.getAsString());
   }
 
   // Make the initializer span the whole macro definition (rather than, say,
   // the definition of a nested macro), so that the source range of the
   // variable is the macro definition.
   clang::ExprResult wrapped_expr = sema.ActOnParenExpr(name_loc, end_loc, expr);
-  if (!wrapped_expr.isUsable()) return std::nullopt;
+  if (!wrapped_expr.isUsable()) {
+    return FormattedError::Static("the macro is not a valid C++ expression");
+  }
   expr = wrapped_expr.get();
 
   clang::QualType var_type = ast_context.getConstType(type);
@@ -340,6 +379,18 @@ std::optional<MacroConstant> SynthesizeMacroConstant(
   var_decl->setInit(expr);
   return MacroConstant{.var_decl = var_decl,
                        .is_typed = IsTyped(sema, tokens, *expr)};
+}
+
+clang::VarDecl* _Nonnull CreateUnsupportedMacroPlaceholder(
+    clang::ASTContext& ast_context, const clang::IdentifierInfo& name,
+    const clang::MacroInfo& macro_info) {
+  clang::SourceLocation name_loc = macro_info.getDefinitionLoc();
+  return clang::VarDecl::Create(
+      ast_context, ast_context.getTranslationUnitDecl(), /*StartLoc=*/name_loc,
+      /*IdLoc=*/name_loc, &const_cast<clang::IdentifierInfo&>(name),
+      ast_context.IntTy,
+      ast_context.getTrivialTypeSourceInfo(ast_context.IntTy, name_loc),
+      clang::SC_None);
 }
 
 }  // namespace crubit

@@ -16,6 +16,7 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "common/annotation_reader.h"
@@ -1954,9 +1955,8 @@ void Importer::ImportMacroConstants() {
             invocation_.target_) {
       continue;
     }
-    // A declaration with the same name (that was declared before the macro was
-    // defined) would conflict with the synthesized constant.
-    if (!translation_unit->lookup(identifier).empty()) continue;
+    // Include guards aren't meant to be used, so they aren't reported.
+    if (macro_info->isUsedForHeaderGuard()) continue;
     macros.push_back({identifier, macro_info});
   }
 
@@ -1990,25 +1990,46 @@ void Importer::ImportMacroConstants() {
   };
 
   for (const auto& [identifier, macro_info] : macros) {
-    std::optional<MacroConstant> macro_constant =
-        SynthesizeMacroConstant(sema_, parser_, *identifier, *macro_info);
-    exclude_decls_from_parsing();
-    if (!macro_constant.has_value()) continue;
-    // The type of the constant may be a typedef (e.g. due to a cast like
-    // `(Foo)1`). Unlike the type of a real variable, it isn't imported with
-    // the variable, so skip the macro if the typedef (or an alias it refers to)
-    // isn't in the IR, e.g. because its namespace can't be bound. Whether an
-    // imported typedef has bindings is checked by `has_bindings`, like for
-    // other constants.
-    if (!IsTypeDeclImported(macro_constant->var_decl->getType())) {
-      continue;
+    std::optional<FormattedError> error;
+    if (!translation_unit->lookup(identifier).empty()) {
+      // A declaration with the same name (that was declared before the macro
+      // was defined) would conflict with the synthesized constant.
+      error = FormattedError::Static(
+          "a C++ declaration has the same name as the macro");
+    } else {
+      std::variant<MacroConstant, FormattedError> result =
+          SynthesizeMacroConstant(sema_, parser_, *identifier, *macro_info);
+      exclude_decls_from_parsing();
+      if (auto* macro_constant = std::get_if<MacroConstant>(&result)) {
+        // The type of the constant may be a typedef (e.g. due to a cast like
+        // `(Foo)1`). Unlike the type of a real variable, it isn't imported with
+        // the variable, so the macro is unsupported if the typedef (or an alias
+        // it refers to) isn't in the IR, e.g. because its namespace can't be
+        // bound. Whether an imported typedef has bindings is checked by
+        // `has_bindings`, like for other constants.
+        clang::QualType type = macro_constant->var_decl->getType();
+        if (IsTypeDeclImported(type)) {
+          // The variable must not be found by name lookup: it is not a real
+          // C++ declaration.
+          translation_unit->addHiddenDecl(macro_constant->var_decl);
+          last_decl = macro_constant->var_decl;
+          macro_constant_is_typed_.insert(
+              {macro_constant->var_decl, macro_constant->is_typed});
+          continue;
+        }
+        error = FormattedError::Substitute(
+            "the type of the macro, `$0`, doesn't have bindings",
+            type.getUnqualifiedType().getAsString());
+      } else {
+        error = std::get<FormattedError>(std::move(result));
+      }
     }
-    // The variable must not be found by name lookup: it is not a real C++
-    // declaration.
-    translation_unit->addHiddenDecl(macro_constant->var_decl);
-    last_decl = macro_constant->var_decl;
-    macro_constant_is_typed_.insert(
-        {macro_constant->var_decl, macro_constant->is_typed});
+    // Reports the macro as an unsupported item, at the macro's definition.
+    clang::VarDecl* placeholder =
+        CreateUnsupportedMacroPlaceholder(ctx_, *identifier, *macro_info);
+    translation_unit->addHiddenDecl(placeholder);
+    last_decl = placeholder;
+    unsupported_macro_errors_.insert({placeholder, *std::move(error)});
   }
 }
 
@@ -3057,8 +3078,11 @@ std::unique_ptr<crubit::ffi::Item> Importer::ImportUnsupportedItem(
                : crubit::ffi::UnsupportedItem::FUNC;
   } else if (clang::isa<clang::NamespaceDecl>(decl)) {
     kind = crubit::ffi::UnsupportedItem::NAMESPACE;
-  } else if (clang::isa<clang::VarDecl>(decl)) {
-    kind = crubit::ffi::UnsupportedItem::GLOBAL_VAR;
+  } else if (const auto* var_decl = clang::dyn_cast<clang::VarDecl>(decl)) {
+    kind = macro_constant_is_typed_.contains(var_decl) ||
+                   unsupported_macro_errors_.contains(var_decl)
+               ? crubit::ffi::UnsupportedItem::MACRO
+               : crubit::ffi::UnsupportedItem::GLOBAL_VAR;
   } else if (clang::isa<clang::FunctionTemplateDecl>(decl)) {
     kind = crubit::ffi::UnsupportedItem::FUNC;
   } else if (clang::isa<clang::ClassTemplateDecl>(decl)) {
@@ -3072,8 +3096,12 @@ std::unique_ptr<crubit::ffi::Item> Importer::ImportUnsupportedItem(
           clang::dyn_cast<clang::NamedDecl>(&original_decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
+  // Macros are already defined by the C++ header, so their source text isn't
+  // emitted again. They also don't fail the build in strict mode: many kinds
+  // of macros (e.g. function-like macros) can never be bound.
+  const bool is_macro = kind == crubit::ffi::UnsupportedItem::MACRO;
   std::optional<std::string> inline_cpp_source_text;
-  if (invocation_.allow_incomplete_migration()) {
+  if (invocation_.allow_incomplete_migration() && !is_macro) {
     clang::SourceManager& sm = ctx_.getSourceManager();
     bool invalid = false;
     llvm::StringRef text = clang::Lexer::getSourceText(
@@ -3100,8 +3128,9 @@ std::unique_ptr<crubit::ffi::Item> Importer::ImportUnsupportedItem(
       ConvertDeclLocation(original_decl.getBeginLoc(), nullptr);
   unsupported->set_id(GenerateItemId(original_decl).value());
   unsupported->set_defining_target(GetOwningTarget(original_decl).value());
-  unsupported->set_must_bind(is_hard_error || invocation_.carcinize_mode() ==
-                                                  CarcinizeMode::kStrict);
+  unsupported->set_must_bind(
+      is_hard_error ||
+      (invocation_.carcinize_mode() == CarcinizeMode::kStrict && !is_macro));
   if (inline_cpp_source_text.has_value()) {
     unsupported->set_inline_cpp_source_text(*inline_cpp_source_text);
   }
@@ -3123,6 +3152,13 @@ std::optional<bool> Importer::IsTypedMacroConstant(
   auto it = macro_constant_is_typed_.find(&var_decl);
   if (it == macro_constant_is_typed_.end()) return std::nullopt;
   return it->second;
+}
+
+const FormattedError* _Nullable Importer::GetUnsupportedMacroError(
+    const clang::VarDecl& var_decl) const {
+  auto it = unsupported_macro_errors_.find(&var_decl);
+  if (it == unsupported_macro_errors_.end()) return nullptr;
+  return &it->second;
 }
 
 std::optional<std::string> Importer::GetComment(const clang::Decl& decl) const {

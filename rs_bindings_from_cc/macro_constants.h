@@ -5,8 +5,10 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_MACRO_CONSTANTS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_MACRO_CONSTANTS_H_
 
-#include <optional>
+#include <variant>
 
+#include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Lex/MacroInfo.h"
@@ -28,15 +30,24 @@ struct MacroConstant {
 
 // Returns a `constexpr` variable equivalent to the object-like macro `name`
 // (defined by `macro_info`), e.g. `constexpr int FOO = 4;` for
-// `#define FOO 4`, or nullopt if the macro isn't supported. The macro is
-// supported if its expansion is a single C++ constant expression of a supported
-// type, parsed by `parser` (the parser of the translation unit) after the end
-// of the translation unit. Reports no diagnostics.
+// `#define FOO 4`, or an error explaining why the macro isn't supported. The
+// macro is supported if its expansion is a single C++ constant expression of a
+// supported type, parsed by `parser` (the parser of the translation unit) after
+// the end of the translation unit. Reports no diagnostics.
 //
 // The variable belongs to the translation unit, but isn't added to it: callers
 // can add it with `addHiddenDecl`, so that name lookup doesn't find it.
-std::optional<MacroConstant> SynthesizeMacroConstant(
+std::variant<MacroConstant, FormattedError> SynthesizeMacroConstant(
     clang::Sema& sema, clang::Parser& parser, const clang::IdentifierInfo& name,
+    const clang::MacroInfo& macro_info);
+
+// Returns a placeholder variable for the macro `name` (defined by
+// `macro_info`), which has no bindings, so that it can be reported as an
+// unsupported item at the macro's definition. Like the variables returned by
+// `SynthesizeMacroConstant`, it belongs to the translation unit, but isn't
+// added to it.
+clang::VarDecl* _Nonnull CreateUnsupportedMacroPlaceholder(
+    clang::ASTContext& ast_context, const clang::IdentifierInfo& name,
     const clang::MacroInfo& macro_info);
 
 }  // namespace crubit

@@ -1235,7 +1235,11 @@ impl GenericItem for Constant {
         Some(self.owning_target.clone())
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::GlobalVar
+        if self.macro_kind() == MacroKind::NotMacro {
+            UnsupportedItemKind::GlobalVar
+        } else {
+            UnsupportedItemKind::Macro
+        }
     }
     fn decl_loc(&self) -> Option<&DeclLocation> {
         Self::decl_loc(self)
@@ -1372,6 +1376,7 @@ impl UnsupportedItemKind {
             UnsupportedItemKind::TypeAlias => "type alias",
             UnsupportedItemKind::Namespace => "namespace",
             UnsupportedItemKind::Constructor => "constructor",
+            UnsupportedItemKind::Macro => "macro",
             UnsupportedItemKind::Other => "item",
         }
     }

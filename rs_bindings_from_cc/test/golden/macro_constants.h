@@ -172,7 +172,8 @@ namespace crate {
 typedef int UnescapableNamespaceInt;
 }  // namespace crate
 
-// The following macros are not supported, and are silently ignored.
+// The following macros are not supported, and are reported as errors. (The
+// include guard of this header isn't reported.)
 #define EMPTY_MACRO
 #define FUNCTION_LIKE_MACRO(x) ((x) + 1)
 #define FLOAT_CONSTANT 1.5
@@ -214,6 +215,7 @@ typedef int UnescapableNamespaceInt;
 #define EMPTY_DAG_12 EMPTY_DAG_11 EMPTY_DAG_11
 #define EXPANSION_STEP_LIMIT (EMPTY_DAG_12 1)
 #define CAST_TO_POINTER ((void*)0)
+#define BUILTIN_FUNCTION_NOT_CALLED __builtin_bswap16
 // Clang can fold this as an extension, but it isn't a C++ constant expression.
 #define FOLDED_POINTER_TO_INT64 ((macro_constants_ns::Int64)(void*)0)
 // Parsing this declares `struct MacroDeclaredStruct`, which isn't imported.
