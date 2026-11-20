@@ -599,8 +599,8 @@ std::unique_ptr<crubit::ffi::Item> VarDeclImporter::ImportConstant(
       return ictx_.ImportUnsupportedItem(
           *var_decl, std::nullopt,
           {FormattedError::Substitute(
-              "C-style array constants can have at most $0 explicitly "
-              "initialized elements, but this one has $1. Each one is emitted "
+              "C-style array constants can have at most {0} explicitly "
+              "initialized elements, but this one has {1}. Each one is emitted "
               "in the generated bindings, which would make them slow to "
               "compile. To use this array from Rust, expose it through a "
               "function instead, e.g. one that returns an `absl::Span` or a "

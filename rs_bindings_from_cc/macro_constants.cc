@@ -106,12 +106,12 @@ std::optional<FormattedError> ExpandObjectLikeMacro(
       return FormattedError::Static("function-like macros are not supported");
     }
     return FormattedError::Substitute(
-        "`$0` is a function-like macro, which is not supported",
+        "`{0}` is a function-like macro, which is not supported",
         name.getName().str());
   }
   if (macro_info.isBuiltinMacro()) {
     return FormattedError::Substitute(
-        "`$0` is a builtin macro, which is not supported",
+        "`{0}` is a builtin macro, which is not supported",
         name.getName().str());
   }
   if (expanding.size() >= kMaxExpansionDepth) {
@@ -330,7 +330,7 @@ std::variant<MacroConstant, FormattedError> SynthesizeMacroConstant(
     if (diagnostic.diagnostic_level >= clang::DiagnosticsEngine::Error &&
         !diagnostic_ids.isWarningOrExtension(diagnostic.diagnostic_id)) {
       return FormattedError::Substitute(
-          "the macro is not a valid C++ expression: $0",
+          "the macro is not a valid C++ expression: {0}",
           diagnostic.diagnostic.str().str());
     }
   }
@@ -351,12 +351,12 @@ std::variant<MacroConstant, FormattedError> SynthesizeMacroConstant(
   } else if (IsSupportedIntegralType(type)) {
     if (!expr->getIntegerConstantExpr(ast_context).has_value()) {
       return FormattedError::Substitute(
-          "the macro is not a C++ constant expression: $0",
+          "the macro is not a C++ constant expression: {0}",
           ExplainNonConstantExpression(sema, *expr));
     }
   } else {
     return FormattedError::Substitute(
-        "macro constants of type `$0` are not supported", type.getAsString());
+        "macro constants of type `{0}` are not supported", type.getAsString());
   }
 
   // Make the initializer span the whole macro definition (rather than, say,

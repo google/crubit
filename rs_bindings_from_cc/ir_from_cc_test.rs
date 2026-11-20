@@ -2083,7 +2083,7 @@ fn test_do_not_bind_is_reported_as_unsupported_item() -> googletest::Result<()> 
         (
             vec!["no reason given"],
             vec![(
-                "Not bound because of CRUBIT_DO_NOT_BIND:$0",
+                "Not bound because of CRUBIT_DO_NOT_BIND:{0}",
                 "Not bound because of CRUBIT_DO_NOT_BIND:\n* no reason given"
             )]
         )
@@ -2109,7 +2109,7 @@ fn test_do_not_bind_with_reason_is_reported_as_unsupported_item() -> googletest:
         (
             vec!["some reason"],
             vec![(
-                "Not bound because of CRUBIT_DO_NOT_BIND:$0",
+                "Not bound because of CRUBIT_DO_NOT_BIND:{0}",
                 "Not bound because of CRUBIT_DO_NOT_BIND:\n* some reason"
             )]
         )
@@ -2133,7 +2133,7 @@ fn test_do_not_bind_with_two_reasons_is_reported_as_unsupported_item() -> google
         (
             vec!["reason one", "reason two"],
             vec![(
-                "Not bound because of CRUBIT_DO_NOT_BIND:$0",
+                "Not bound because of CRUBIT_DO_NOT_BIND:{0}",
                 "Not bound because of CRUBIT_DO_NOT_BIND:\n* reason one\n* reason two"
             )]
         )
@@ -3961,7 +3961,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
                   doc_comment: Some("Doc comment for `my_field`."),
                   type_: CcType {
                       variant: Error(FormattedError {
-                          fmt: "Unsupported type '$0': $1",
+                          fmt: "Unsupported type '{0}': {1}",
                           message: "Unsupported type 'Self': No generated bindings found for 'Self'",
                       }), ... },
                   access: Public,
