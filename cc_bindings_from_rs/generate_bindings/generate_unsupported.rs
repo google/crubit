@@ -78,6 +78,10 @@ pub fn item_name_for_error_report<'tcx>(
     error_report::ItemName { name, id, unique_name: None, defining_target, source_loc: None }
 }
 
+pub fn has_must_bind(tcx: ty::TyCtxt<'_>, def_id: DefId) -> bool {
+    crubit_attr::get_attrs(tcx, def_id).is_ok_and(|attrs| attrs.must_bind)
+}
+
 #[doc(hidden)]
 pub fn report_must_bind_error<'tcx>(
     db: &BindingsGenerator<'tcx>,
