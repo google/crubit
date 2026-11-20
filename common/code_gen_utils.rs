@@ -899,11 +899,8 @@ impl NamespaceQualifier {
         iter: impl IntoIterator<Item = T>,
         use_leading_colons: bool,
     ) -> Self {
-        // TODO(b/258265044): Catch most (all if possible) error conditions early.  For
-        // example:
-        // - Panic early if any strings are empty, or are not Rust identifiers
-        // - Report an error early if any strings are C++ reserved keywords
-        // This may make `format_for_cc` and `format_namespace_bound_cc_tokens` infallible.
+        // Identifier and C++ keyword validation is performed lazily in
+        // `format_for_cc` and `format_namespace_bound_cc_tokens`.
         Self {
             namespaces: iter.into_iter().map(Into::into).collect(),
             nested_records: vec![],
