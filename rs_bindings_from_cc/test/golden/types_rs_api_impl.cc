@@ -26,7 +26,7 @@ extern "C" void __rust_thunk___ZN10SomeStructC1Ev(struct SomeStruct* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert(CRUBIT_SIZEOF(struct FieldTypeTestStruct) == 208);
+static_assert(CRUBIT_SIZEOF(struct FieldTypeTestStruct) == 224);
 static_assert(alignof(struct FieldTypeTestStruct) == 8);
 static_assert(CRUBIT_OFFSET_OF(bool_field, struct FieldTypeTestStruct) == 0);
 static_assert(CRUBIT_OFFSET_OF(char_field, struct FieldTypeTestStruct) == 1);
@@ -84,10 +84,19 @@ static_assert(CRUBIT_OFFSET_OF(struct_ref_field, struct FieldTypeTestStruct) ==
               176);
 static_assert(CRUBIT_OFFSET_OF(const_struct_ref_field,
                                struct FieldTypeTestStruct) == 184);
-static_assert(CRUBIT_OFFSET_OF(forward_declared_ptr_field,
+static_assert(CRUBIT_OFFSET_OF(struct_rvalue_ref_field,
                                struct FieldTypeTestStruct) == 192);
+static_assert(CRUBIT_OFFSET_OF(const_struct_rvalue_ref_field,
+                               struct FieldTypeTestStruct) == 200);
+static_assert(CRUBIT_OFFSET_OF(forward_declared_ptr_field,
+                               struct FieldTypeTestStruct) == 208);
 static_assert(CRUBIT_OFFSET_OF(cyclic_ptr_field, struct FieldTypeTestStruct) ==
-              200);
+              216);
+
+extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1EOS_(
+    struct FieldTypeTestStruct* __this, struct FieldTypeTestStruct* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
 
 static_assert((void (*)(int const&, int&, int const*, int*)) &
               ::FunctionTakingPointersAndReferences);
