@@ -236,7 +236,6 @@ function_return_type_is!(types_inferred_lifetimes,
     ConstIntRef => CRef<'_, i32>,
     VoidP => *mut c_void,
     ConstVoidP => *const c_void,
-    // TODO: b/436971180 - Why is this a pointer?
     VoidPP => *mut *mut c_void,
 
     StructPtr => *mut types_inferred_lifetimes::ExampleStruct,
@@ -252,7 +251,6 @@ function_parameter_type_is!(types_inferred_lifetimes,
     ConstIntRef => &i32,
     VoidP => *mut c_void,
     ConstVoidP => *const c_void,
-    // TODO: b/436971180 - Why is this a pointer?
     VoidPP => *mut *mut c_void,
 
     StructPtr => *mut types_inferred_lifetimes::ExampleStruct,
