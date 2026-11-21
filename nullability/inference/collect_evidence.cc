@@ -1080,8 +1080,9 @@ class EvidenceCollector : public CollectorFromNullabilityBehavior {
       // only DCHECK. This has so far only been observed in the case of the SAT
       // solver reaching its iteration limit before or during this check, in
       // which case we won't be able to collect accurate evidence anyway, so we
-      // simply return early.
-      DCHECK(Env.allows(IS.getSymbolicNullability().isNullable(A)));
+      // allow it in the DCHECK and simply return early.
+      DCHECK(Env.allows(IS.getSymbolicNullability().isNullable(A)) ||
+             Solver.reachedLimit());
       if (Solver.reachedLimit()) return;
       if (Env.proves(Implication)) {
         Evidence::Kind EvidenceKind;
