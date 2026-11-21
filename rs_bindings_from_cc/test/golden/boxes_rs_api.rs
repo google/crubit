@@ -488,7 +488,7 @@ pub mod test {
     }
 
     // error: function `test::Rejected` could not be bound
-    //   Cannot use an error type `rs :: Box < test :: NonTrivial >` by value:
+    //   Cannot use an error type `rs::Box<test::NonTrivial>` by value:
     //     `rs::Box<T>` cannot be used with `T` = `crate::test::NonTrivial` because `T` is not Rust-movable (`!Unpin`): Rust could move the pointee out of the box, which would relocate a C++ object whose move constructor is non-trivial or deleted. Use `rs::PinBox<T>` (`Pin<Box<T>>`) instead. See crubit.rs/types/box#pinbox.
 
     // error: function `test::TakesRejected` could not be bound
@@ -496,7 +496,7 @@ pub mod test {
     //     `rs::Box<T>` cannot be used with `T` = `crate::test::NonTrivial` because `T` is not Rust-movable (`!Unpin`): Rust could move the pointee out of the box, which would relocate a C++ object whose move constructor is non-trivial or deleted. Use `rs::PinBox<T>` (`Pin<Box<T>>`) instead. See crubit.rs/types/box#pinbox.
 
     // error: function `test::RejectedSlice` could not be bound
-    //   Cannot use an error type `rs :: SliceBox < test :: NonTrivial >` by value:
+    //   Cannot use an error type `rs::SliceBox<test::NonTrivial>` by value:
     //     `rs::SliceBox<T>` cannot be used with `T` = `crate::test::NonTrivial` because `T` is not Rust-movable (`!Unpin`): Rust could move the pointee out of the box, which would relocate a C++ object whose move constructor is non-trivial or deleted. See crubit.rs/types/box#pinbox.
 }
 

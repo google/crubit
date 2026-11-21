@@ -759,6 +759,10 @@ pub enum RsTypeKind {
     /// Error types are only exposed where a visibility override is specified.
     Error {
         symbol: Rc<str>,
+        /// A human-readable C++ name for diagnostics (e.g. `std::vector<int>`).
+        /// This is distinct from `symbol`, which represents formatted C++ tokens
+        /// for macro generation (e.g. `std :: vector < int >`).
+        cc_name: Rc<str>,
         error: arc_anyhow::Error,
         visibility_override: Option<Visibility>,
     },
@@ -2043,8 +2047,12 @@ impl RsTypeKind {
         db: &BindingsGenerator<'_>,
         container_name: impl Display,
     ) -> Result<()> {
-        if let RsTypeKind::Error { error, .. } = self.unalias() {
-            return Err(error.clone());
+        if let RsTypeKind::Error { error, cc_name, .. } = self.unalias() {
+            let desc = error.to_string().replace("\n", "\n  ");
+            return Err(error_report::because(
+                error_report::anyhow!("Type `{container_name}` has an unsupported template argument `{cc_name}`:\n  {desc}"),
+                error.clone()
+            ));
         }
         let type_name = self.display(db);
         ensure!(
@@ -2124,7 +2132,7 @@ impl RsTypeKind {
                     write!(f, "{}&&", referent.display_cc_type_name_for_rs_type())?
                 }
                 RsTypeKind::FuncPtr { .. } => f.write_str("function pointer")?,
-                RsTypeKind::Error { symbol, .. } => f.write_str(symbol)?,
+                RsTypeKind::Error { cc_name, .. } => f.write_str(cc_name)?,
                 RsTypeKind::TypeAlias { .. } | RsTypeKind::CArray { .. } => unreachable!(),
                 RsTypeKind::Box { .. } => unreachable!(),
             }
@@ -2369,11 +2377,11 @@ impl RsTypeKind {
     /// it can't.
     pub fn check_by_value(&self) -> Result<()> {
         match self.unalias() {
-            RsTypeKind::Error { error, symbol, .. } => {
+            RsTypeKind::Error { error, cc_name, .. } => {
                 let desc = error.to_string().replace("\n", "\n  ");
                 Err(error_report::because(
                     error_report::anyhow!(
-                        "Cannot use an error type `{symbol}` by value:\n  {desc}"
+                        "Cannot use an error type `{cc_name}` by value:\n  {desc}"
                     ),
                     error.clone(),
                 ))
@@ -4058,6 +4066,7 @@ mod tests {
     fn test_simple_types_allowed_behind_single_and_multi_element_ptr() {
         let error = RsTypeKind::Error {
             symbol: "some error".into(),
+            cc_name: "some error".into(),
             error: anyhow!("some error happened!"),
             visibility_override: None,
         };
