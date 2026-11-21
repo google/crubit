@@ -317,7 +317,7 @@ fn rs_type_kind_with_lifetime_elision_impl(
                     // not on targets that intend to support Rust users of those type aliases.
                     // (If we did, then a C++ library owner could break Rust callers, which is a
                     // maintenance responsibility that they did not sign up for!)
-                    if !matches!(
+                    error = if !matches!(
                         no_bindings_reason,
                         NoBindingsReason::MissingRequiredFeatures { .. }
                     ) {
@@ -330,16 +330,13 @@ fn rs_type_kind_with_lifetime_elision_impl(
                             .rs_type_kind_with_lifetime_elision(underlying_type, lifetime_options)
                         {
                             Ok(ty) => return Ok(ty),
-                            Err(err) => {
-                                // TODO(b/481368622): this fails if we fall through to comprehensive
-                                // fallbacks.
-                                return Err(unsupported_alias_error(err));
-                            }
+                            Err(err) => unsupported_alias_error(err),
                         }
-                    }
-                    // Preserve the underlying reason so callers know why the alias has no bindings
-                    // (e.g., Crubit is not enabled on its defining target).
-                    error = unsupported_alias_error(no_bindings_reason.into());
+                    } else {
+                        // Preserve the underlying reason so callers know why the alias has no
+                        // bindings (e.g., Crubit is not enabled on its defining target).
+                        unsupported_alias_error(no_bindings_reason.into())
+                    };
                 } else {
                     error =
                         error_report::blocked_by(db.blocker(item.id()), no_bindings_reason.into());

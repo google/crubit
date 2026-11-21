@@ -399,3 +399,18 @@ fn test_enumerator_doc_comment() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_generate_enum_with_unsupported_underlying_type() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        enum Legacy { kLegacyA = 0 };
+        using __bad = __underlying_type(Legacy);
+        enum MyEnum : __bad { kA = 1 };
+        "#,
+    )?
+    .rs_api;
+    assert_rs_not_matches!(rs_api, quote! { pub struct MyEnum });
+    assert_rs_not_matches!(rs_api, quote! { Incomplete });
+    Ok(())
+}
