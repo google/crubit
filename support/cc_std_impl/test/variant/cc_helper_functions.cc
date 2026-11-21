@@ -103,4 +103,12 @@ DuplicateVariant return_duplicate_variant_1(int i) {
   return DuplicateVariant(std::in_place_index<1>, i);
 }
 
+SmallVariant return_small_variant_bool(bool b) {
+  return SmallVariant(std::in_place_index<1>, b);
+}
+
+bool take_small_variant_by_value(SmallVariant v) {
+  return std::holds_alternative<bool>(v) && std::get<bool>(v);
+}
+
 }  // namespace test_variant

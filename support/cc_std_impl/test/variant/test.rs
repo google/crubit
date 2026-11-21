@@ -9,11 +9,12 @@ use cc_helper_functions::test_variant::{
     modify_trivial_variant, pass_trivial_variant_by_value, return_coproduct17_double,
     return_destructor_variant, return_duplicate_variant_0, return_duplicate_variant_1,
     return_non_trivial_not_unpin_variant_string, return_non_trivial_unpin_variant_int,
-    return_trivial_variant_bool, return_trivial_variant_float, return_trivial_variant_int,
-    take_coproduct17_by_value, take_non_trivial_not_unpin_variant_by_const_ref,
-    take_non_trivial_unpin_variant_by_const_ref, take_non_trivial_unpin_variant_by_value,
+    return_small_variant_bool, return_trivial_variant_bool, return_trivial_variant_float,
+    return_trivial_variant_int, take_coproduct17_by_value,
+    take_non_trivial_not_unpin_variant_by_const_ref, take_non_trivial_unpin_variant_by_const_ref,
+    take_non_trivial_unpin_variant_by_value, take_small_variant_by_value,
     take_trivial_variant_by_const_ref, take_trivial_variant_by_value, DuplicateVariant,
-    NonTrivialNotUnpinVariant, NonTrivialUnpinVariant, TrivialVariant,
+    NonTrivialNotUnpinVariant, NonTrivialUnpinVariant, SmallVariant, TrivialVariant,
 };
 use cpp_std::variant_enums::{Variant2, Variant3};
 use ctor::CtorNew;
@@ -292,4 +293,13 @@ fn test_unpin() {
     let mut v: cpp_std::variant![i32, cpp_std::vector<i32>] = cpp_std::variant::new_at::<0>(10);
     *v.get_at_mut::<0>().unwrap() = 20;
     expect_eq!(*v.get_at::<0>().unwrap(), 20);
+}
+
+#[gtest]
+fn test_small_alignment_variant() {
+    let v = return_small_variant_bool(true);
+    expect_eq!(v.get::<bool, _>().copied(), Some(true));
+    expect_true!(take_small_variant_by_value(v));
+    let v2 = SmallVariant::new_at::<1>(true);
+    expect_true!(take_small_variant_by_value(v2));
 }

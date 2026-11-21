@@ -19,6 +19,13 @@ TEST(VariantTest, TrivialVariant) {
   EXPECT_TRUE(rust_variant_lib::check_trivial_variant(v));
 }
 
+TEST(VariantTest, SmallAlignmentVariant) {
+  std::variant<uint8_t, bool> v = rust_variant_lib::get_small_variant();
+  EXPECT_TRUE(std::holds_alternative<bool>(v));
+  EXPECT_TRUE(std::get<bool>(v));
+  EXPECT_TRUE(rust_variant_lib::check_small_variant(v));
+}
+
 TEST(VariantTest, NonTrivialVariant) {
   std::variant<int, std::string> v = std::string("hello");
   EXPECT_TRUE(rust_variant_lib::check_non_trivial_variant(v));

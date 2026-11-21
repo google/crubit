@@ -5,7 +5,9 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_CONVERSION_FUNCTION_HELPERS_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_CONVERSION_FUNCTION_HELPERS_H_
 
+#include <cstdint>
 #include <string>
+#include <variant>
 
 namespace crubit_cc_std_internal::conversion_function_helpers {
 
@@ -75,6 +77,26 @@ inline void StringDestroyInPlace(void* s) {
   reinterpret_cast<std::string*>(s)->~basic_string();
 }
 // std::string helpers end
+
+// std::variant helpers start
+// libc++ uses `unsigned char` for variants with < 255 alternatives when
+// `_LIBCPP_ABI_VARIANT_INDEX_TYPE_OPTIMIZATION` is defined (ABI v2 / unstable,
+// e.g. Linux and Windows), and `unsigned int` otherwise (ABI v1, e.g.
+// Android NDK, Apple SDKs, and default upstream libc++).
+#if defined(_LIBCPP_VERSION) && \
+    !defined(_LIBCPP_ABI_VARIANT_INDEX_TYPE_OPTIMIZATION)
+using VariantIndex = std::uint32_t;
+#else
+using VariantIndex = std::uint8_t;
+#endif
+
+// Verify that `VariantIndex` matches the active C++ toolchain's `std::variant`
+// index type (`struct { char data; VariantIndex index; }` has size
+// `2 * sizeof(VariantIndex)` and alignment `alignof(VariantIndex)`).
+static_assert(sizeof(std::variant<char>) == 2 * sizeof(VariantIndex) &&
+                  alignof(std::variant<char>) == alignof(VariantIndex),
+              "VariantIndex does not match std::variant<char> layout");
+// std::variant helpers end
 
 }  // namespace crubit_cc_std_internal::conversion_function_helpers
 

@@ -5,6 +5,7 @@
 #ifndef CRUBIT_SUPPORT_CC_STD_IMPL_TEST_VARIANT_CC_HELPER_FUNCTIONS_H_
 #define CRUBIT_SUPPORT_CC_STD_IMPL_TEST_VARIANT_CC_HELPER_FUNCTIONS_H_
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -67,6 +68,10 @@ double take_coproduct17_by_value(Coproduct17 v);
 using DuplicateVariant = std::variant<int, int>;
 DuplicateVariant return_duplicate_variant_0(int i);
 DuplicateVariant return_duplicate_variant_1(int i);
+
+using SmallVariant = std::variant<uint8_t, bool>;
+SmallVariant return_small_variant_bool(bool b);
+bool take_small_variant_by_value(SmallVariant v);
 
 }  // namespace test_variant
 
