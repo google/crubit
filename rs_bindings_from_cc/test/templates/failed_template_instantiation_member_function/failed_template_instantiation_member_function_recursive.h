@@ -5,12 +5,14 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_FAILED_TEMPLATE_INSTANTIATION_MEMBER_FUNCTION_FAILED_TEMPLATE_INSTANTIATION_MEMBER_FUNCTION_RECURSIVE_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_FAILED_TEMPLATE_INSTANTIATION_MEMBER_FUNCTION_FAILED_TEMPLATE_INSTANTIATION_MEMBER_FUNCTION_RECURSIVE_H_
 
+#include "support/annotations.h"
 
 template <typename T>
-struct A final {
-  // TODO:(b/248542210): Currently, Crubit still imports the following method,
-  // since `FailMethod` passes type checking (but would fail instantiation), and
-  // Crubit doesn't check function templates recursively.
+struct CRUBIT_ALWAYS_INSTANTIATE A final {
+  void NoOp() {}
+
+  // `FailMethod` passes initial type checking, so Crubit must check function
+  // template bodies recursively to avoid importing `Call_FailMethod`.
   void Call_FailMethod(T t) {
     FailMethod();  // Similarly, this also fails for `FailStaticMethod();`.
   }
