@@ -92,6 +92,10 @@ using DeprecatedAlias [[deprecated]] = int;
 // Note to humans: please figure out a good way to control the robots.
 [[deprecated]] inline void crubit_deprecated() {}
 
+// `no_sanitize` only changes how the function's own body is instrumented, so
+// it doesn't affect the bindings.
+ABSL_ATTRIBUTE_NO_SANITIZE_CFI inline void crubit_no_sanitize_cfi() {}
+
 template <typename T>
 struct TemplatedStruct {
   T x;

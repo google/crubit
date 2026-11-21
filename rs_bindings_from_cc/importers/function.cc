@@ -1302,6 +1302,7 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
                    clang::isa<clang::TryAcquireCapabilityAttr>(attr) ||
                    clang::isa<clang::ReleaseCapabilityAttr>(attr) ||
                    clang::isa<clang::NoThreadSafetyAnalysisAttr>(attr) ||
+                   clang::isa<clang::NoSanitizeAttr>(attr) ||
                    clang::isa<clang::LockReturnedAttr>(attr) ||
                    clang::isa<clang::AbiTagAttr>(attr) ||
                    clang::isa<clang::LocksExcludedAttr>(attr) ||

@@ -210,6 +210,11 @@ fn test_deprecated() {
 }
 
 #[gtest]
+fn test_no_sanitize_cfi() {
+    assert!(value_exists!(has_bindings::crubit_no_sanitize_cfi));
+}
+
+#[gtest]
 fn test_instantiated_template_struct() {
     assert!(type_exists!(has_bindings::InstantiatedTemplatedStruct));
 }
