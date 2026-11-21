@@ -723,7 +723,7 @@ pub fn generate_bindings_tokens(
 
                 internal_includes.insert(CcInclude::SupportLibHeader(
                     crubit_support_path_format.clone(),
-                    intern!(db.interner(), "rs_std/dyn_callable.h"),
+                    intern!(db.interner(), "rs/dyn_callable.h"),
                 ));
 
                 Some((cpp_api, rust_api))
@@ -1457,7 +1457,7 @@ fn generate_rs_api_impl_includes(
         if record.detected_formatter() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
-                intern!(db.interner(), "rs_std/lossy_formatter_for_bindings.h"),
+                intern!(db.interner(), "rs/lossy_formatter_for_bindings.h"),
             ));
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_versioned_path_format.clone(),
@@ -1470,7 +1470,7 @@ fn generate_rs_api_impl_includes(
         if e.detected_formatter() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
-                intern!(db.interner(), "rs_std/lossy_formatter_for_bindings.h"),
+                intern!(db.interner(), "rs/lossy_formatter_for_bindings.h"),
             ));
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_versioned_path_format.clone(),

@@ -163,10 +163,10 @@ impl<'tcx> AdtTemplateSpecialization<'tcx> {
 
     pub fn support_header(&self, db: &BindingsGenerator<'tcx>) -> Option<CcInclude> {
         match &self.args {
-            AdtSpecializationArgs::Option { .. } => Some(db.support_header("rs_std/option.h")),
-            AdtSpecializationArgs::Result { .. } => Some(db.support_header("rs_std/result.h")),
-            AdtSpecializationArgs::Tuple(_) => Some(db.support_header("rs_std/tuple.h")),
-            AdtSpecializationArgs::Vec(_) => Some(db.support_header("rs_std/vec.h")),
+            AdtSpecializationArgs::Option { .. } => Some(db.support_header("rs/option.h")),
+            AdtSpecializationArgs::Result { .. } => Some(db.support_header("rs/result.h")),
+            AdtSpecializationArgs::Tuple(_) => Some(db.support_header("rs/tuple.h")),
+            AdtSpecializationArgs::Vec(_) => Some(db.support_header("rs/vec.h")),
             AdtSpecializationArgs::UserDefinedAdt => None,
         }
     }

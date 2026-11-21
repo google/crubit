@@ -19,7 +19,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/movable.h"
-#include "support/rs_std/result.h"
+#include "support/rs/result.h"
 
 #include <array>
 #include <bit>

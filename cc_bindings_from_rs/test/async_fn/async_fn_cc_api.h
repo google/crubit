@@ -18,8 +18,8 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
-#include "support/rs_std/dyn_erased_future.h"
-#include "support/rs_std/slice_ref.h"
+#include "support/rs/dyn_erased_future.h"
+#include "support/rs/slice_ref.h"
 
 #include <cstddef>
 #include <cstdint>

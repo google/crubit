@@ -17,8 +17,8 @@
 #pragma clang diagnostic ignored "-Wshadow"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
-#include "support/rs_std/str_ref.h"
-#include "support/rs_std/tuple.h"
+#include "support/rs/str_ref.h"
+#include "support/rs/tuple.h"
 
 #include <array>
 #include <cstddef>

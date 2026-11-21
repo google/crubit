@@ -10,7 +10,7 @@
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
 #include "support/internal/slot.h"
-#include "support/rs_std/dyn_callable.h"
+#include "support/rs/dyn_callable.h"
 
 #include <cstddef>
 #include <memory>

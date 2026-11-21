@@ -101,7 +101,7 @@ fn parse_unit_in_specialization<'tcx>(
         Ok(FormattedTy {
             for_cc: CcSnippet::with_include(
                 db.tokens().rs_unit_t.clone(),
-                db.support_header("rs_std/unit.h"),
+                db.support_header("rs/unit.h"),
             ),
             is_cc_pointer: false,
             for_rs,
@@ -2086,7 +2086,7 @@ fn generate_trait_impl_specialization<'tcx>(
         .collect();
 
     let main_api = assoc_items.main_api.into_tokens(&mut prereqs);
-    prereqs.includes.insert(db.support_header("rs_std/traits.h"));
+    prereqs.includes.insert(db.support_header("rs/traits.h"));
 
     let self_ty_cc_name = &trait_impl.self_ty_cc_name;
     Ok(ApiSnippets {
@@ -2125,7 +2125,7 @@ fn generate_negative_auto_trait_impl_specialization<'tcx>(
 
     add_specialization_prereqs(db, &mut prereqs, def_id)?;
 
-    prereqs.includes.insert(db.support_header("rs_std/traits.h"));
+    prereqs.includes.insert(db.support_header("rs/traits.h"));
 
     let self_ty_cc_name = &negative_auto_trait_impl.self_ty_cc_name;
     Ok(ApiSnippets {

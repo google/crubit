@@ -464,7 +464,7 @@ pub fn generate_enum<'tcx>(
     let cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
 
     let mut prereqs = CcPrerequisites::default();
-    prereqs.includes.insert(db.support_header("rs_std/enum.h"));
+    prereqs.includes.insert(db.support_header("rs/enum.h"));
     prereqs.includes.insert(CcInclude::utility());
     prereqs.includes.insert(CcInclude::cstdint());
     let discriminant_ty = layout.discriminant_ty.cc_type();

@@ -20,9 +20,9 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
-#include "support/rs_std/char.h"
-#include "support/rs_std/slice_ref.h"
-#include "support/rs_std/traits.h"
+#include "support/rs/char.h"
+#include "support/rs/slice_ref.h"
+#include "support/rs/traits.h"
 
 #include <array>
 #include <cstddef>

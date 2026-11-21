@@ -18,8 +18,8 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
-#include "support/rs_std/enum.h"
-#include "support/rs_std/traits.h"
+#include "support/rs/enum.h"
+#include "support/rs/traits.h"
 
 #include <array>
 #include <cstddef>

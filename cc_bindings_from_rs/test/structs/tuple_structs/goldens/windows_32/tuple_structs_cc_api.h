@@ -20,8 +20,8 @@
 #include "support/lifetime_annotations.h"
 #include "support/movable.h"
 #include "support/rs/box.h"
-#include "support/rs_std/traits.h"
-#include "support/rs_std/tuple.h"
+#include "support/rs/traits.h"
+#include "support/rs/tuple.h"
 
 #include <array>
 #include <cstddef>

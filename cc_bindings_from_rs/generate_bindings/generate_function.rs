@@ -303,11 +303,11 @@ fn cc_callable_param_to_c_abi<'tcx>(
 
     if !needs_trampoline {
         return Ok(if info.kind.is_owning() {
-            includes.insert(db.support_header("rs_std/fn.h"));
+            includes.insert(db.support_header("rs/fn.h"));
             includes.insert(code_gen_utils::CcInclude::utility());
             quote! { ::std::move(#cc_ident).release_payload() }
         } else {
-            includes.insert(db.support_header("rs_std/fn_ref.h"));
+            includes.insert(db.support_header("rs/fn_ref.h"));
             quote! { #cc_ident.payload() }
         });
     }
@@ -381,7 +381,7 @@ fn cc_callable_param_to_c_abi<'tcx>(
     let payload_name = expect_format_cc_ident(&format!("__{cc_ident}_payload"));
 
     if info.kind.is_owning() {
-        includes.insert(db.support_header("rs_std/fn.h"));
+        includes.insert(db.support_header("rs/fn.h"));
         let heap_fn_name = expect_format_cc_ident(&format!("__{cc_ident}_heap_fn"));
         let destroyer_name = expect_format_cc_ident(&format!("__{cc_ident}_destroyer"));
 
@@ -400,7 +400,7 @@ fn cc_callable_param_to_c_abi<'tcx>(
             };
         });
     } else {
-        includes.insert(db.support_header("rs_std/fn_ref.h"));
+        includes.insert(db.support_header("rs/fn_ref.h"));
 
         statements.extend(quote! {
             auto #invoker_name = [](#( #invoker_params ),*) -> #trampoline_ret_ty {

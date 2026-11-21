@@ -18,9 +18,9 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
-#include "support/rs_std/iterator_adapter.h"
-#include "support/rs_std/option.h"
-#include "support/rs_std/traits.h"
+#include "support/rs/iterator_adapter.h"
+#include "support/rs/option.h"
+#include "support/rs/traits.h"
 
 #include <array>
 #include <bit>

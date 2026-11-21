@@ -189,7 +189,7 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "char",
             cc: "::rs::char_",
-            includes: ["<crubit/support/for/tests/rs_std/char.h>"]
+            includes: ["<crubit/support/for/tests/rs/char.h>"]
         ),
         case!(rs: "SomeStruct", cc: "::rust_out::SomeStruct", includes: [],  prereq_def: "SomeStruct"),
         case!(rs: "SomeEnum", cc: "::rust_out::SomeEnum", includes: [], prereq_def: "SomeEnum"),
@@ -265,104 +265,104 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "*const [i8]",
             cc: "::rs::SliceRef< const ::std::int8_t>",
-            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
+            includes: ["<crubit/support/for/tests/rs/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*mut [i64]",
             cc: "::rs::SliceRef< ::std::int64_t>",
-            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
+            includes: ["<crubit/support/for/tests/rs/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*mut [SomeStruct]",
             cc: "::rs::SliceRef< ::rust_out::SomeStruct>",
-            includes: [ "<crubit/support/for/tests/rs_std/slice_ref.h>"],
+            includes: [ "<crubit/support/for/tests/rs/slice_ref.h>"],
             // Like a pointer, `SliceRef<T>` only needs `T` to be forward-declared.
             prereq_fwd_decl: "SomeStruct"
         ),
         case!(
             rs: "&'static [i32]",
             cc: "::rs::SliceRef< const ::std::int32_t>",
-            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
+            includes: ["<crubit/support/for/tests/rs/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static mut [i32]",
             cc: "::rs::SliceRef< ::std::int32_t>",
-            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
+            includes: ["<crubit/support/for/tests/rs/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*const [*const core::ffi::c_void]",
             cc: "::rs::SliceRef< const void * crubit_nullable const >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>"]
         ),
         case!(
             rs: "*const [*mut core::ffi::c_void]",
             cc: "::rs::SliceRef< void * crubit_nullable const >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>"]
         ),
         case!(
             rs: "*mut [*const core::ffi::c_void]",
             cc: "::rs::SliceRef< const void * crubit_nullable >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>"]
         ),
         case!(
             rs: "*mut [*mut core::ffi::c_void]",
             cc: "::rs::SliceRef< void * crubit_nullable >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>"]
         ),
         case!(
             rs: "&'static [*const core::ffi::c_void]",
             cc: "::rs::SliceRef< const void * crubit_nullable const >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>"]
         ),
         case!(
             rs: "&'static [*mut core::ffi::c_void]",
             cc: "::rs::SliceRef< void * crubit_nullable const >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>"]
         ),
         case!(
             rs: "&'static mut [*const core::ffi::c_void]",
             cc: "::rs::SliceRef< const void * crubit_nullable >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>"]
         ),
         case!(
             rs: "&'static mut [*mut core::ffi::c_void]",
             cc: "::rs::SliceRef< void * crubit_nullable >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>"]
         ),
         case!(
             rs: "&'static [*const i32]",
             cc: "::rs::SliceRef< ::std::int32_t const * crubit_nullable const >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static [*mut i32]",
             cc: "::rs::SliceRef< ::std::int32_t * crubit_nullable const >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static mut [*const i32]",
             cc: "::rs::SliceRef< ::std::int32_t const * crubit_nullable >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static mut [*mut i32]",
             cc: "::rs::SliceRef< ::std::int32_t * crubit_nullable >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*const [ConstVoidPtr]",
             cc: "::rs::SliceRef< const void * crubit_nullable const >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>"]
         ),
         case!(
             rs: "&'static [ConstVoidPtr]",
             cc: "::rs::SliceRef< const void * crubit_nullable const >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>"]
         ),
         case!(
             rs: "&'static [Identity<*const i32>]",
             cc: "::rs::SliceRef< ::std::int32_t const * crubit_nullable const >",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/rs/slice_ref.h>", "<cstdint>"]
         ),
         // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
         case!(

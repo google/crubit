@@ -4055,7 +4055,7 @@ fn generate_begin_and_end_for_type<'tcx>(
                     return ::rs::IteratorEnd();
                 }
             },
-            db.support_header("rs_std/iterator_adapter.h"),
+            db.support_header("rs/iterator_adapter.h"),
         );
 
         return Ok(Some(ApiSnippets { main_api, ..Default::default() }));
@@ -4171,7 +4171,7 @@ fn generate_begin_and_end_for_type<'tcx>(
                 }
             }
         });
-    main_api.prereqs.includes.insert(db.support_header("rs_std/iterator_adapter.h"));
+    main_api.prereqs.includes.insert(db.support_header("rs/iterator_adapter.h"));
     main_api.prereqs.move_defs_to_fwd_decls();
     main_api.prereqs.template_specializations.insert(specialization);
 
@@ -4223,7 +4223,7 @@ fn generate_begin_and_end_for_type<'tcx>(
             }
         },
     );
-    cc_details.prereqs.includes.insert(db.support_header("rs_std/iterator_adapter.h"));
+    cc_details.prereqs.includes.insert(db.support_header("rs/iterator_adapter.h"));
     cc_details.prereqs.move_defs_to_fwd_decls();
 
     Ok(Some(ApiSnippets { main_api, cc_details, rs_details: rs_thunk_impls }))
@@ -4306,7 +4306,7 @@ fn format_const_value<'tcx>(
             let str_data = std::str::from_utf8(slice)
                 .map_err(|e| anyhow!("Invalid UTF-8 in &str constant: {e}"))?;
             let tokens = quote! { ::rs::StrRef(#str_data) };
-            Ok(CcSnippet::with_include(tokens, db.support_header("rs_std/str_ref.h")))
+            Ok(CcSnippet::with_include(tokens, db.support_header("rs/str_ref.h")))
         }
         ty::TyKind::Adt(adt_def, _) if adt_def.is_struct() => {
             if tcx.crate_name(adt_def.did().krate).as_str() == "ffi_11"

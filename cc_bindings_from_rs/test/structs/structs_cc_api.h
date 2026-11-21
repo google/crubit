@@ -18,8 +18,8 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/movable.h"
-#include "support/rs_std/char.h"
-#include "support/rs_std/traits.h"
+#include "support/rs/char.h"
+#include "support/rs/traits.h"
 
 #include <array>
 #include <cstddef>

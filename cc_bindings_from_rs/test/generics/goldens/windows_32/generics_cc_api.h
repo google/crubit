@@ -21,7 +21,7 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/movable.h"
-#include "support/rs_std/vec.h"
+#include "support/rs/vec.h"
 
 #include <array>
 #include <compare>

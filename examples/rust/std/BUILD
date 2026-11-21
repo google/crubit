@@ -34,8 +34,8 @@ cc_binary(
     srcs = ["main.cc"],
     deps = [
         ":example_crate_cc_api",
+        "//support/rs:str_ref",
         "//support/rs_std:rs_alloc",
-        "//support/rs_std:str_ref",
     ],
 )
 

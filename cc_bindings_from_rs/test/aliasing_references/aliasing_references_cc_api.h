@@ -19,8 +19,8 @@
 #include "support/internal/check_no_mutable_aliasing.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
-#include "support/rs_std/slice_ref.h"
-#include "support/rs_std/str_ref.h"
+#include "support/rs/slice_ref.h"
+#include "support/rs/str_ref.h"
 
 #include <array>
 #include <cstddef>

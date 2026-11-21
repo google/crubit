@@ -19,7 +19,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/movable.h"
-#include "support/rs_std/tuple.h"
+#include "support/rs/tuple.h"
 
 #include <array>
 #include <cstddef>

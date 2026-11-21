@@ -12,7 +12,7 @@ crubit_test_cc_library(
     hdrs = ["types_nonptr.h"],
     deps = [
         "//support:annotations_internal",
-        "//support/rs_std:slice_ref",
+        "//support/rs:slice_ref",
     ],
     # TODO(b/356479163): use aspect_hints = ["//features:supported"],
     # This is blocked on static methods, or else redesigning the test.

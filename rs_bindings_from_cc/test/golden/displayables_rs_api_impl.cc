@@ -9,7 +9,7 @@
 #include "support/internal/fmt.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
-#include "support/rs_std/lossy_formatter_for_bindings.h"
+#include "support/rs/lossy_formatter_for_bindings.h"
 
 #include <cstddef>
 #include <memory>

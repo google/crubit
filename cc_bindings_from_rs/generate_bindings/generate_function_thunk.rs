@@ -178,10 +178,10 @@ pub fn generate_thunk_decl<'tcx>(
             .map(|(&ty, cpp_type)| -> Result<TokenStream> {
                 match classify_param_abi(db, ty)? {
                     ParamAbi::Callable(info) => Ok(if info.kind.is_owning() {
-                        prereqs.includes.insert(db.support_header("rs_std/fn.h"));
+                        prereqs.includes.insert(db.support_header("rs/fn.h"));
                         quote! { ::rs::internal::FnPayload }
                     } else {
-                        prereqs.includes.insert(db.support_header("rs_std/fn_ref.h"));
+                        prereqs.includes.insert(db.support_header("rs/fn_ref.h"));
                         quote! { ::rs::internal::FnRefPayload }
                     }),
                     ParamAbi::Value(ValueAbi::Bridged(bridged_type)) => match bridged_type {
@@ -1207,7 +1207,7 @@ pub fn format_dyn_erased_future_ty<'tcx>(
 ) -> Result<TokenStream> {
     let cc_ret_ty =
         db.format_ty_for_cc(output_ty, TypeLocation::ClosureReturn)?.into_tokens(prereqs);
-    prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
+    prereqs.includes.insert(db.support_header("rs/dyn_erased_future.h"));
     Ok(quote! { ::crubit::DynErasedFuture<#cc_ret_ty> })
 }
 

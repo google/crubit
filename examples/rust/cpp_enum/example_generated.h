@@ -16,7 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wshadow"
 #include "support/annotations_internal.h"
-#include "support/rs_std/traits.h"
+#include "support/rs/traits.h"
 
 #include <cstdint>
 

@@ -1296,7 +1296,7 @@ fn generate_trait<'tcx>(
             };
             __NEWLINE__
         },
-        db.support_header("rs_std/traits.h"),
+        db.support_header("rs/traits.h"),
     );
     main_api.prereqs.includes.insert(db.support_header("annotations_internal.h"));
     Ok(ApiSnippets { main_api, ..Default::default() })

@@ -328,7 +328,7 @@ fn format_slice_ref_for_cc<'tcx>(
                 }
             }
         });
-    snippet.prereqs.includes.insert(db.support_header("rs_std/slice_ref.h"));
+    snippet.prereqs.includes.insert(db.support_header("rs/slice_ref.h"));
     // Like a pointer, `rs::SliceRef<T>` only stores a `T*`, so `T` only needs to be
     // forward-declared. Requiring its definition can create a cycle when `T` refers back to the
     // type containing the slice, e.g. `enum Value { Dict(Dict) }` and
@@ -339,7 +339,7 @@ fn format_slice_ref_for_cc<'tcx>(
 
 /// Returns a CcSnippet referencing `::rs::StrRef` and its include path.
 fn format_str_ref_for_cc<'tcx>(db: &BindingsGenerator<'tcx>) -> CcSnippet<'tcx> {
-    CcSnippet::with_include(quote! { ::rs::StrRef }, db.support_header("rs_std/str_ref.h"))
+    CcSnippet::with_include(quote! { ::rs::StrRef }, db.support_header("rs/str_ref.h"))
 }
 
 fn format_transparent_pointee_or_reference_for_cc<'tcx>(
@@ -983,23 +983,23 @@ fn format_ty_for_cc_impl<'tcx>(
 
         let tokens = match info.kind {
             CallableKind::FnRef => {
-                prereqs.includes.insert(db.support_header("rs_std/fn_ref.h"));
+                prereqs.includes.insert(db.support_header("rs/fn_ref.h"));
                 quote! { ::rs::FnRef<#ret_snippet(#(#param_snippets),*) const> }
             }
             CallableKind::FnMutRef => {
-                prereqs.includes.insert(db.support_header("rs_std/fn_ref.h"));
+                prereqs.includes.insert(db.support_header("rs/fn_ref.h"));
                 quote! { ::rs::FnRef<#ret_snippet(#(#param_snippets),*)> }
             }
             CallableKind::FnBox => {
-                prereqs.includes.insert(db.support_header("rs_std/fn.h"));
+                prereqs.includes.insert(db.support_header("rs/fn.h"));
                 quote! { ::rs::Fn<#ret_snippet(#(#param_snippets),*) const> }
             }
             CallableKind::FnMutBox => {
-                prereqs.includes.insert(db.support_header("rs_std/fn.h"));
+                prereqs.includes.insert(db.support_header("rs/fn.h"));
                 quote! { ::rs::Fn<#ret_snippet(#(#param_snippets),*)> }
             }
             CallableKind::FnOnceBox => {
-                prereqs.includes.insert(db.support_header("rs_std/fn.h"));
+                prereqs.includes.insert(db.support_header("rs/fn.h"));
                 quote! { ::rs::Fn<#ret_snippet(#(#param_snippets),*) &&> }
             }
         };
@@ -1120,7 +1120,7 @@ fn format_ty_for_cc_impl<'tcx>(
 
             FormattedCcType::non_pointer(CcSnippet::with_include(
                 quote! { ::rs::char_ },
-                db.support_header("rs_std/char.h"),
+                db.support_header("rs/char.h"),
             ))
         }
 

@@ -21,11 +21,11 @@
 #include "support/lifetime_annotations.h"
 #include "support/movable.h"
 #include "support/rs/box.h"
+#include "support/rs/option.h"
 #include "support/rs/pin_box.h"
 #include "support/rs/slice_box.h"
 #include "support/rs/str_box.h"
-#include "support/rs_std/option.h"
-#include "support/rs_std/traits.h"
+#include "support/rs/traits.h"
 
 #include <array>
 #include <bit>

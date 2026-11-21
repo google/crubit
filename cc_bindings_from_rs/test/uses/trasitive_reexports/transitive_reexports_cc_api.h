@@ -17,7 +17,7 @@
 #pragma clang diagnostic ignored "-Wshadow"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
-#include "support/rs_std/option.h"
+#include "support/rs/option.h"
 
 #include <cstdint>
 #include <utility>

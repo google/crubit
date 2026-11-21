@@ -18,7 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/check_no_mutable_aliasing.h"
 #include "support/internal/slot.h"
-#include "support/rs_std/str_ref.h"
+#include "support/rs/str_ref.h"
 
 #include <cstddef>
 #include <cstdint>

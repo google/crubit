@@ -20,10 +20,10 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/movable.h"
-#include "support/rs_std/option.h"
-#include "support/rs_std/result.h"
-#include "support/rs_std/str_ref.h"
-#include "support/rs_std/tuple.h"
+#include "support/rs/option.h"
+#include "support/rs/result.h"
+#include "support/rs/str_ref.h"
+#include "support/rs/tuple.h"
 
 #include <array>
 #include <bit>
