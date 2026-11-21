@@ -156,8 +156,8 @@ runs:
           exit 0
         fi
 
-        GCS_HTTPS_URL="https://storage.googleapis.com/crubit-ci-bazel/llvm-project/${COMMIT}.tar.zst"
-        GCS_URI="gs://crubit-ci-bazel/llvm-project/${COMMIT}.tar.zst"
+        GCS_HTTPS_URL="https://storage.googleapis.com/crubit-ci-bazel/llvm-project/v2/${COMMIT}.tar.zst"
+        GCS_URI="gs://crubit-ci-bazel/llvm-project/v2/${COMMIT}.tar.zst"
 
         if curl -fsSI --max-time 10 "$GCS_HTTPS_URL" >/dev/null 2>&1; then
           echo "LLVM archive already cached at $GCS_URI"
@@ -173,7 +173,10 @@ runs:
           | tar -xzpf - -C "$TMP_DIR" \
               --exclude='*/test' \
               --exclude='*/tests' \
-              --exclude='*/unittests' \
+              --exclude="${PREFIX}/llvm/unittests" \
+              --exclude="${PREFIX}/clang-tools-extra/unittests" \
+              --exclude="${PREFIX}/clang-tools-extra/*/unittests" \
+              --exclude="${PREFIX}/libc/unittests" \
               --exclude='*/docs' \
               --exclude='*/examples' \
               --exclude='*/benchmarks' \
