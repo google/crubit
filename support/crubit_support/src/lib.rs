@@ -15,3 +15,6 @@ pub mod bridge;
 pub mod dyn_erased_future;
 pub mod erased_future;
 pub mod hash;
+mod unsafe_wrapper;
+
+pub use unsafe_wrapper::Unsafe;

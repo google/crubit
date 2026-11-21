@@ -319,6 +319,124 @@ fn test_lifetimebound_param_with_decl_type() -> Result<()> {
 }
 
 #[gtest]
+fn test_lifetimebound_param_with_existing_rust_type_return() -> Result<()> {
+    // Regression test for b/572982724: an existing Rust type (such as
+    // `absl::StatusOr<absl::string_view>` under `CRUBIT_NEW_STATUS`) returned from a function with
+    // `[[clang::lifetimebound]]` parameters used to fail with "Existing Rust types unhandled for
+    // lifetimes".
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      namespace std {
+        template<typename T> struct char_traits {};
+        template<typename T, typename Traits> struct basic_string_view {};
+        using string_view = basic_string_view<char, char_traits<char>>;
+      }
+      namespace crubit::rust_type {
+        template <typename...> struct Args {};
+      }
+      template <typename T>
+      struct [[clang::annotate("crubit_internal_rust_type", "::status::absl::NewStatusOr<{}>",
+                               crubit::rust_type::Args<T>())]] StatusOr final {
+        T value;
+      };
+      StatusOr<std::string_view> f(std::string_view sv1 [[clang::lifetimebound]],
+                                   std::string_view sv2 [[clang::lifetimebound]],
+                                   std::string_view other);
+      "#,
+    )?;
+
+    let dir = transform_from_proto(&proto)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: [] ... }, ...
+                ...
+                params: [
+                    FuncParam {
+                       type_: CcType { ... explicit_lifetimes: ["sv1"] ... },
+                       identifier: "sv1", ...
+                       ...
+                       clang_lifetimebound: true,
+                       ...
+                    },
+                    FuncParam {
+                       type_: CcType { ... explicit_lifetimes: ["sv2"] ... },
+                       identifier: "sv2", ...
+                       ...
+                       clang_lifetimebound: true,
+                       ...
+                    },
+                    FuncParam {
+                       type_: CcType { ... explicit_lifetimes: ["other"] ... },
+                       identifier: "other", ...
+                       ...
+                       clang_lifetimebound: false,
+                       ...
+                    },
+                ],
+                ...
+                lifetime_inputs: ["sv1", "sv2", "other"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_lifetimebound_param_with_existing_rust_type_with_lifetime_params() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      struct [[clang::annotate("crubit_internal_rust_type", "::my_crate::RustView")]]
+      LIFETIME_PARAMS("a") RustView final {};
+
+      RustView f(const int& x [[clang::lifetimebound]], const int& other);
+      "#,
+    )?;
+
+    let dir = transform_from_proto(&proto)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            ExistingRustType {
+                rs_name: "::my_crate::RustView",
+                cc_name: "RustView", ...
+                lifetime_inputs: ["a"], ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["__rv"] ... }, ...
+                params: [
+                    FuncParam {
+                       type_: CcType { ... explicit_lifetimes: ["__rv"] ... },
+                       identifier: "x", ...
+                       clang_lifetimebound: true, ...
+                    },
+                    FuncParam {
+                       type_: CcType { ... explicit_lifetimes: ["other"] ... },
+                       identifier: "other", ...
+                       clang_lifetimebound: false, ...
+                    },
+                ],
+                ...
+                lifetime_inputs: ["__rv", "other"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_lifetimebound_param_with_fnptr_type() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"

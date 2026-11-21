@@ -180,6 +180,7 @@ cc_library(
     deps = [
         "//common:annotation_reader",
         "//common:status_macros",
+        "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",

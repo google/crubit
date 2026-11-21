@@ -19,3 +19,4 @@ ffi_11 = { path = "../ffi_11" }
 
 [dev-dependencies]
 googletest.workspace = true
+static_assertions.workspace = true

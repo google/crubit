@@ -314,8 +314,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque")
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
-    [[clang::trivial_abi]] OpaqueRef final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef < { 'a } >")
+    $lifetime_params("a") alignas(8) [[clang::trivial_abi]] OpaqueRef final {
  public:
   // `from_golden::OpaqueRef` doesn't implement the `Default` trait
   OpaqueRef() = delete;
@@ -328,7 +328,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   // `from_golden::OpaqueRef` doesn't implement the `Clone` trait
   OpaqueRef(const OpaqueRef&) = delete;
   OpaqueRef& operator=(const OpaqueRef&) = delete;
-  OpaqueRef(::crubit::UnsafeRelocateTag, OpaqueRef&& value);
+  OpaqueRef(::crubit::UnsafeRelocateTag, OpaqueRef && value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::from::OpaqueRef create(::rs::StrRef s);

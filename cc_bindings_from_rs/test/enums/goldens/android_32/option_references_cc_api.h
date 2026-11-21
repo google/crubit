@@ -85,8 +85,8 @@ Values final {
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_references_golden :: ValuesIter") alignas(4)
-    [[clang::trivial_abi]] ValuesIter final {
+    ":: option_references_golden :: ValuesIter < { 'a } >")
+    $lifetime_params("a") alignas(4) [[clang::trivial_abi]] ValuesIter final {
  public:
   // `option_references_golden::ValuesIter` doesn't implement the `Default`
   // trait
@@ -100,7 +100,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `option_references_golden::ValuesIter` doesn't implement the `Clone` trait
   ValuesIter(const ValuesIter&) = delete;
   ValuesIter& operator=(const ValuesIter&) = delete;
-  ValuesIter(::crubit::UnsafeRelocateTag, ValuesIter&& value);
+  ValuesIter(::crubit::UnsafeRelocateTag, ValuesIter && value);
   template <typename TAdaptedSelf_ = ValuesIter>
   inline ::rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return ::rs::IteratorAdapter<TAdaptedSelf_*>(this);
