@@ -61,10 +61,7 @@ cc_library(
 
 crubit_cc_test(
     name = "annotation_reader_test",
-    srcs = [
-        "annotation_reader_test.cc",
-        "status_test_matchers.h",
-    ],
+    srcs = ["annotation_reader_test.cc"],
     # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
     tags = [
         "no_test_android_arm",
@@ -74,12 +71,13 @@ crubit_cc_test(
         ":annotation_reader",
         ":check",
         ":status",
+        ":status_test_matchers",
+        "@googletest//:gtest_main",
         "@llvm-project//clang:ast",
-        "@llvm-project//clang:testing",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:tooling",
         "@llvm-project//llvm:Support",
-        "@llvm-project//third-party/unittest:gmock",
-        "@llvm-project//third-party/unittest:gtest",
-        "@llvm-project//third-party/unittest:gtest_main",
     ],
 )
 
