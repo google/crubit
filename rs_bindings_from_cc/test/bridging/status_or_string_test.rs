@@ -6,7 +6,8 @@ use ctor::{emplace, CtorNew};
 use googletest::matchers::{anything, err as is_err, ok as is_ok};
 use googletest::{expect_eq, expect_that, gtest};
 use status_or_string_lib::{
-    MakeOptionalOrError, MakeOptionalStringOrError, MakeStringOrError, NonTrivialToken, TokenHelper,
+    MakeOptionalOrError, MakeOptionalStringOrError, MakeStringOrError, NonTrivialToken,
+    SelectStringViewOrError, TokenHelper,
 };
 
 #[gtest]
@@ -57,4 +58,20 @@ fn test_method_with_ctor_param_returning_status_or_string() {
 
     let err = emplace!(helper.GetStringWithToken(NonTrivialToken::ctor_new(-1)));
     expect_that!(&*err, is_err(anything()));
+}
+
+#[gtest]
+fn test_status_or_string_view_with_lifetimebound_params() {
+    let ok = SelectStringViewOrError(true, "first".into(), "second".into(), "ignored".into());
+    expect_that!(&ok, is_ok(anything()));
+    let sv = ok.unwrap();
+    expect_eq!(unsafe { &*sv.to_str().unwrap() }, "first");
+
+    let fallback = SelectStringViewOrError(true, "".into(), "second".into(), "ignored".into());
+    expect_that!(&fallback, is_ok(anything()));
+    let sv = fallback.unwrap();
+    expect_eq!(unsafe { &*sv.to_str().unwrap() }, "second");
+
+    let err = SelectStringViewOrError(false, "first".into(), "second".into(), "ignored".into());
+    expect_that!(&err, is_err(anything()));
 }

@@ -47,7 +47,9 @@ inline void StrRefArgumentMustBeUtf8() {}
 // `StrRef` can only contain valid UTF8.
 //
 // See <internal link> for history on the design and rationale of this API.
-class CRUBIT_INTERNAL_RUST_TYPE("&str") CRUBIT_TRIVIAL_ABI StrRef final {
+class CRUBIT_INTERNAL_RUST_TYPE("&{'a} str")
+    CRUBIT_INTERNAL_ANNOTATE("lifetime_params", "a") CRUBIT_TRIVIAL_ABI
+    StrRef final {
  public:
   // Returns a `StrRef` containing the given `string_view`, or nullopt if the
   // `string_view` is not valid UTF8.
@@ -216,10 +218,12 @@ struct PtrLike<::rs::StrRef> {
 
 namespace rs_std {
 #ifdef CRUBIT_INTERNAL_RS_NAMESPACE
-using StrRef CRUBIT_INTERNAL_RUST_TYPE("&str")
-    [[deprecated("Use rs::StrRef instead")]] = ::rs::StrRef;
+using StrRef CRUBIT_INTERNAL_RUST_TYPE("&{'a} str")
+    CRUBIT_INTERNAL_ANNOTATE("lifetime_params", "a")
+        [[deprecated("Use rs::StrRef instead")]] = ::rs::StrRef;
 #else
-using StrRef CRUBIT_INTERNAL_RUST_TYPE("&str") = ::rs::StrRef;
+using StrRef CRUBIT_INTERNAL_RUST_TYPE("&{'a} str")
+    CRUBIT_INTERNAL_ANNOTATE("lifetime_params", "a") = ::rs::StrRef;
 #endif
 }  // namespace rs_std
 

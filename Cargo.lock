@@ -773,6 +773,7 @@ version = "0.1.0"
 dependencies = [
  "ffi_11",
  "googletest",
+ "static_assertions",
 ]
 
 [[package]]
@@ -1580,6 +1581,7 @@ version = "0.0.0"
 dependencies = [
  "annotation_reader_sys",
  "crubit_build",
+ "rs_bindings_from_cc_ast_util_sys",
  "rs_bindings_from_cc_cc_ir_sys",
 ]
 

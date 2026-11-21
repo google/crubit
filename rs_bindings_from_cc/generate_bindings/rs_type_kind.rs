@@ -65,7 +65,11 @@ fn rs_type_kind_with_lifetime_elision_impl(
         CcTypeVariant::ConstantArray(array) => {
             let mut element_type = db.rs_type_kind_with_lifetime_elision(
                 array.element_type().clone(),
-                LifetimeOptions { requires_layout_compatible: true, ..lifetime_options },
+                LifetimeOptions {
+                    is_param: false,
+                    requires_layout_compatible: true,
+                    ..lifetime_options
+                },
             )?;
             element_type.force_layout_compatible();
             if let RsTypeKind::Error { error, .. } = element_type.unalias() {
@@ -116,6 +120,7 @@ fn rs_type_kind_with_lifetime_elision_impl(
                     // to determine whether lifetimes should be provided.
                     is_return_type: lifetime_options.is_return_type
                         && lifetime_options.assume_lifetimes,
+                    is_param: false,
                     is_operator: lifetime_options.is_operator,
                     requires_layout_compatible: true,
                     ..LifetimeOptions::default()

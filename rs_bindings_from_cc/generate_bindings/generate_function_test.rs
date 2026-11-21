@@ -4826,6 +4826,264 @@ fn test_function_with_unsafe_template_param_existing_rust_type() -> Result<()> {
 }
 
 #[gtest]
+fn test_existing_rust_type_with_lifetime_and_type_args() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        namespace crubit::rust_type {
+        template <typename...>
+        struct Args {};
+        }
+        template <typename T>
+        struct [[clang::annotate("crubit_internal_rust_type", "MyType<{'a}, {}>", crubit::rust_type::Args<T>())]]
+               LIFETIME_PARAMS("a")
+               MyType final {};
+
+        MyType<int> $static ReturnStatic();
+        MyType<int> $a BorrowFrom(const int& $a x);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub fn ReturnStatic() -> crate::MyType<'static, ::ffi_11::c_int> {
+                ...
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub fn BorrowFrom<'a>(x: &'a ::ffi_11::c_int) -> crate::MyType<'a, ::ffi_11::c_int> {
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_existing_rust_type_lifetimes_assumed_lifetimes() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_rust_type", "::dyn_future::DynFuture<{'a}>")]]
+               LIFETIME_PARAMS("a")
+               DynFuture final {};
+        using StaticDynFuture [[clang::annotate("crubit_internal_rust_type", "::dyn_future::StaticDynFuture")]] = DynFuture;
+        using DynFutureAlias [[clang::annotate("crubit_internal_rust_type", "::dyn_future::DynFuture<{'a}>")]]
+                             LIFETIME_PARAMS("a") = DynFuture;
+        using PlainAssumeAlias = DynFuture;
+
+        struct [[clang::annotate("crubit_internal_rust_type", "::my_crate::Pair<{'a}, {'b}>")]]
+               LIFETIME_PARAMS("a", "b")
+               Pair final {};
+
+        struct [[clang::annotate("crubit_internal_rust_type", "::my_crate::View")]]
+               LIFETIME_PARAMS("a")
+               View final {};
+
+        DynFuture $static ReturnStatic();
+        DynFuture ReturnUnannotated();
+        DynFuture ReturnAmbiguous(const int& x, const int& y);
+        PlainAssumeAlias ReturnAmbiguousPlainAlias(const int& x, const int& y);
+        PlainAssumeAlias $a ReturnAliasedPlainAlias(const int& $a x);
+        DynFuture ReturnElided(const int& x);
+        DynFutureAlias $a ReturnAlias(const int& $a x);
+        StaticDynFuture ReturnStaticAlias();
+        void TakeElided(DynFuture f);
+        void TakeUnknown(DynFuture [[clang::annotate_type("lifetime", "unknown")]] f);
+        Pair $a $b MakePair(const int& $a x, const int& $b y);
+        View $a MakeView(const int& $a x);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub type PlainAssumeAlias<'__alias0> = ::dyn_future::DynFuture<'__alias0>;
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ReturnStatic() -> ::dyn_future::DynFuture<'static>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ReturnUnannotated<'lt>() -> ::dyn_future::DynFuture<'lt>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn ReturnAmbiguous<'x, 'y>(
+                x: &'x ::ffi_11::c_int,
+                y: &'y ::ffi_11::c_int
+            ) -> ::crubit_support::Unsafe<::dyn_future::DynFuture<'static>>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn ReturnAmbiguousPlainAlias<'x, 'y>(
+                x: &'x ::ffi_11::c_int,
+                y: &'y ::ffi_11::c_int
+            ) -> ::crubit_support::Unsafe<crate::PlainAssumeAlias<'static>>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ReturnAliasedPlainAlias<'a>(x: &'a ::ffi_11::c_int) -> crate::PlainAssumeAlias<'a>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ReturnElided<'x>(x: &'x ::ffi_11::c_int) -> ::dyn_future::DynFuture<'x>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ReturnAlias<'a>(x: &'a ::ffi_11::c_int) -> ::dyn_future::DynFuture<'a>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ReturnStaticAlias() -> ::dyn_future::StaticDynFuture
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn TakeElided<'f>(f: ::dyn_future::DynFuture<'f>)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn TakeUnknown(f: ::crubit_support::Unsafe<::dyn_future::DynFuture<'static>>)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn MakePair<'a, 'b>(x: &'a ::ffi_11::c_int, y: &'b ::ffi_11::c_int) -> ::my_crate::Pair<'a, 'b>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn MakeView<'a>(x: &'a ::ffi_11::c_int) -> ::my_crate::View<'a>
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_existing_rust_type_lifetimes_no_assumed_lifetimes() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_cc(
+        r#"
+        namespace crubit::rust_type {
+        template <typename...>
+        struct Args {};
+        }
+        struct [[clang::annotate("crubit_internal_rust_type", "::dyn_future::DynFuture<{'a}>")]]
+               [[clang::annotate("lifetime_params", "a")]]
+               DynFuture final {};
+        template <typename T>
+        struct [[clang::annotate("crubit_internal_rust_type", "::status::absl::NewStatusOr<{}>",
+                                 crubit::rust_type::Args<T>())]]
+               StatusOr final {
+          T value;
+        };
+        using PlainAlias = DynFuture;
+
+        struct Holder {
+          DynFuture f;
+        };
+
+        DynFuture ReturnFuture();
+        void TakeFuture(DynFuture f);
+        PlainAlias ReturnPlainAlias();
+        void TakePlainAlias(PlainAlias f);
+        void TakeFuturePtr(DynFuture* f);
+        StatusOr<DynFuture> ReturnStatusOr();
+        void TakeStatusOr(StatusOr<DynFuture> s);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub type PlainAlias = ::crubit_support::Unsafe<::dyn_future::DynFuture<'static>>;
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct Holder {
+                pub f: ::crubit_support::Unsafe<::dyn_future::DynFuture<'static>>,
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn ReturnFuture() -> ::crubit_support::Unsafe<::dyn_future::DynFuture<'static>>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn TakeFuture(f: ::dyn_future::DynFuture<'_>)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn ReturnPlainAlias() -> crate::PlainAlias
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn TakePlainAlias(f: crate::PlainAlias)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn TakeFuturePtr(f: *mut ::crubit_support::Unsafe<::dyn_future::DynFuture<'static>>)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn ReturnStatusOr() -> ::status::absl::NewStatusOr<::crubit_support::Unsafe<::dyn_future::DynFuture<'static>>>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn TakeStatusOr(s: ::status::absl::NewStatusOr<::crubit_support::Unsafe<::dyn_future::DynFuture<'static>>>)
+        }
+    );
+    // A function is `unsafe` only because of its result: the safety doc says what the caller
+    // must ensure about the result.
+    let doc = rs_api.to_string();
+    assert!(doc.contains(
+        "The return value borrows data whose lifetime Crubit does not know. The caller must ensure \
+         that the borrowed data outlives the return value: unwrap it \
+         (`::crubit_support::Unsafe::into_inner`) or drop it while that data is still alive."
+    ));
+    Ok(())
+}
+
+#[gtest]
 fn test_std_pair_preserves_explicit_lifetime_on_element() -> Result<()> {
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
         r#"

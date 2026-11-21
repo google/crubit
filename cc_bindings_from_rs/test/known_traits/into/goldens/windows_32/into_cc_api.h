@@ -148,8 +148,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule")
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(4)
-    [[clang::trivial_abi]] ConvertRef final {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef < { 'a } >")
+    $lifetime_params("a") alignas(4) [[clang::trivial_abi]] ConvertRef final {
  public:
   // `into_golden::ConvertRef` doesn't implement the `Default` trait
   ConvertRef() = delete;
@@ -162,7 +162,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(4)
   // `into_golden::ConvertRef` doesn't implement the `Clone` trait
   ConvertRef(const ConvertRef&) = delete;
   ConvertRef& operator=(const ConvertRef&) = delete;
-  ConvertRef(::crubit::UnsafeRelocateTag, ConvertRef&& value);
+  ConvertRef(::crubit::UnsafeRelocateTag, ConvertRef && value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::into::ConvertRef create(::rs::StrRef s);
