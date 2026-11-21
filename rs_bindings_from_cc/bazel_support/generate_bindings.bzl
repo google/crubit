@@ -230,7 +230,7 @@ def generate_bindings(
     # Run the `rs_bindings_from_cc` to generate the _rust_api_impl.cc and _rust_api.rs files.
     args = ctx.actions.args()
     args.use_param_file("@%s", use_always = True)
-    args.set_param_file_format("multiline")
+    args.set_param_file_format("shell")
     args.add("--driver_path=" + cc_toolchain.compiler_executable)
     args.add_all(target_args, before_each = "--target_to_arg")
     args.add_all(rs_bindings_from_cc_flags + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs) + _get_unstable_rust_features_command_line(unstable_rust_features) + _get_extra_cpp_srcs_command_line(extra_cpp_srcs))
@@ -243,16 +243,17 @@ def generate_bindings(
     ctx.actions.run(
         outputs = [x for x in [cc_output, rs_output, namespaces_output, error_report_output] if x != None],
         inputs = depset(
-            direct = [
-                ctx.executable._clang_format,
-                ctx.executable._rustfmt,
-            ] + ctx.files._rustfmt_cfg + extra_cpp_srcs + public_hdrs,
+            direct = ctx.files._rustfmt_cfg + extra_cpp_srcs + public_hdrs,
             transitive = [
                 action_inputs,
                 compilation_context.headers,
                 cc_toolchain.all_files,
             ],
         ),
+        tools = [
+            ctx.attr._clang_format[DefaultInfo].files_to_run,
+            ctx.attr._rustfmt[DefaultInfo].files_to_run,
+        ],
         executable = rs_bindings_from_cc_tool,
         arguments = [args],
         mnemonic = "RustBindingsFromCc",

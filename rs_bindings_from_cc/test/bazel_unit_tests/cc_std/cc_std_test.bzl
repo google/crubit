@@ -62,9 +62,13 @@ def _cc_std_test_impl(ctx):
 
     cc_toolchain = find_cpp_toolchain(ctx)
 
-    args = ctx.actions.args()
-    args.add(out.path)
-    args.add_all(dep[OutputsInfo].args)
+    out_arg = ctx.actions.args()
+    out_arg.add(out.path)
+
+    crubit_args = ctx.actions.args()
+    crubit_args.use_param_file("@%s", use_always = True)
+    crubit_args.set_param_file_format("multiline")
+    crubit_args.add_all(dep[OutputsInfo].args)
 
     ctx.actions.run(
         mnemonic = "CcStdTest",
@@ -80,7 +84,7 @@ def _cc_std_test_impl(ctx):
                 dep[CcInfo].compilation_context.headers,
             ],
         ),
-        arguments = [args],
+        arguments = [out_arg, crubit_args],
         executable = ctx.executable._include_directives_checker,
         env = {
             "CC": ctx.var["CC"],

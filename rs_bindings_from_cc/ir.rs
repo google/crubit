@@ -466,8 +466,11 @@ impl Display for DeclLocation {
             let Some(location) = location else {
                 return f.write_str("<unknown location>");
             };
-            let _ = name_range;
-            write!(f, "{label}: {location}")
+            write!(f, "{label}: {location}")?;
+            if let Some((begin, end)) = name_range {
+                write!(f, "[{begin},{end}]")?;
+            }
+            Ok(())
         }
 
         write_line(f, "Generated from", self.spelling(), self.name_range())?;
