@@ -1,21 +1,12 @@
 # Debugging Crubit
 
-crubit.rs/overview/debugging
-
-<!--*
-# Document freshness: For more information, see <internal link>.
-freshness: { owner: 'mvanbem' reviewed: '2026-10-23' }
-*-->
-
 Crubit is trying to solve a hard problem and is under rapid development. Things
 go wrong, and it's nice to have tools and methods to diagnose those problems.
-
-[TOC]
 
 ## Verbose Logging
 
 NOTE: This feature is under development. There might not be much in the logs
-yet. See b/449749452 for status, and the design doc crubit.rs-logging.
+yet.
 
 Crubit tool invocations only log at the error level or higher to keep spam out
 of build logs, but the stderr logging verbosity level is configurable.

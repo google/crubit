@@ -360,7 +360,7 @@ differences:
 
 For example, with the struct above, `format!("{s:?}")` is
 `PackedStruct { a: 10, b: 200, c: 3000 }`. The tests in
-[`rs_bindings_from_cc/test/struct/packed/`](/rs_bindings_from_cc/test/struct/packed/test.rs)
+[`rs_bindings_from_cc/test/struct/packed/`](https://github.com/google/crubit/blob/main/rs_bindings_from_cc/test/struct/packed/test.rs)
 show more examples.
 
 ## Attributes {#attributes}

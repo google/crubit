@@ -60,30 +60,30 @@ will be output to the terminal.
 If possible follow these recommendations:
 
 *   Unit tests for
-    [`src_code_gen`](rs_bindings_from_cc/src_code_gen.rs)
+    [`src_code_gen`](https://github.com/google/crubit/blob/main/rs_bindings_from_cc/src_code_gen.rs)
     should:
     *   be written in Rust
     *   have snippets of C++ as input
     *   use
-        [`assert_cc_matches!/assert_rs_matches!/assert_cc_not_matches!/assert_rs_not_matches!`](rs_bindings_from_cc/token_stream_matchers.rs)
+        [`assert_cc_matches!/assert_rs_matches!/assert_cc_not_matches!/assert_rs_not_matches!`](https://github.com/google/crubit/blob/main/rs_bindings_from_cc/token_stream_matchers.rs)
         macros
 *   Unit tests for the
-    [`importer`](rs_bindings_from_cc/importer.h)
+    [`importer`](https://github.com/google/crubit/blob/main/rs_bindings_from_cc/importer.h)
     should:
     *   be written in Rust
-        ([`ir_from_cc_test.rs`](rs_bindings_from_cc/ir_from_cc_test.rs))
+        ([`ir_from_cc_test.rs`](https://github.com/google/crubit/blob/main/rs_bindings_from_cc/ir_from_cc_test.rs))
         so they cover both AST logic and IR serialization/deserialization, but
         C++ tests (thanks to its nice matchers) are also OK at the moment
-        ([`importer_test.cc`](rs_bindings_from_cc/importer_test.cc))
+        ([`importer_test.cc`](https://github.com/google/crubit/blob/main/rs_bindings_from_cc/importer_test.cc))
     *   have snippets of C++ as input
     *   make assertions on the content of the IR
 *   Write tests for the command line interface of interop tools in
-    [`rs_bindings_from_cc_test.rs`](rs_bindings_from_cc/test/rs_bindings_from_cc_test.rs).
+    [`rs_bindings_from_cc_test.rs`](https://github.com/google/crubit/blob/main/rs_bindings_from_cc/test/rs_bindings_from_cc_test.rs).
 *   Write golden file tests (comparing both the C++ and Rust generated source
     code against the checked-in files) in
-    [`test/golden`](rs_bindings_from_cc/test/golden/).
+    [`test/golden`](https://github.com/google/crubit/blob/main/rs_bindings_from_cc/test/golden/).
     *   Run
-        [`common/golden_update.sh`](common/golden_update.sh)
+        [`common/golden_update.sh`](https://github.com/google/crubit/blob/main/common/golden_update.sh)
         to regenerate checked-in files.
 *   Write full executable end-to-end tests (verifying that interop tools and
     Bazel rules generate outputs that can be built and executed) as small

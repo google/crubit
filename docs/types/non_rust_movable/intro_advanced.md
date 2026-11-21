@@ -675,7 +675,7 @@ can see every move, and wish it were elided. Well, why not elide it?
 Instead of using `operator=`, we could use a `reconstruct` function, which
 destroys the existing object, and constructs a new one in its place. This is
 implemented
-[here](support/ctor.rs?q=%22pub%20unsafe%20fn%20reconstruct%22).
+[here](https://github.com/google/crubit/blob/main/support/ctor.rs).
 
 ```rust
 let mut x = emplace!(MyType::ctor_new(0));

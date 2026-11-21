@@ -68,6 +68,7 @@
 -   [Bridge types as struct fields](./errors/bridge_field.md)
 -   [Compound types containing bridge types](./errors/bridge_compound_type.md)
 -   [The `Delete` trait](./errors/delete.md)
+-   [Visibility errors](./errors/visibility.md)
 
 # Integration notes
 
