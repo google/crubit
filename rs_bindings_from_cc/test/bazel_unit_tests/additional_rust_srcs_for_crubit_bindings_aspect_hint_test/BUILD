@@ -104,3 +104,46 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+additional_rust_srcs_for_crubit_bindings(
+    name = "implicit_cpp_std_stub",
+    srcs = ["cpp_std_implicit.rs"],
+)
+
+crubit_test_cc_library(
+    name = "empty_cc_lib_with_implicit_cpp_std",
+    hdrs = ["empty.h"],
+    aspect_hints = [":implicit_cpp_std_stub"],
+)
+
+rust_api_from_cpp(
+    name = "empty_cc_lib_with_implicit_cpp_std_rust",
+    cpp_target = ":empty_cc_lib_with_implicit_cpp_std",
+)
+
+additional_rust_srcs_for_crubit_bindings(
+    name = "explicit_cpp_std_stub",
+    srcs = ["cpp_std_explicit.rs"],
+    deps = ["//support:cpp_std"],
+)
+
+crubit_test_cc_library(
+    name = "empty_cc_lib_with_explicit_cpp_std",
+    hdrs = ["empty.h"],
+    aspect_hints = [":explicit_cpp_std_stub"],
+)
+
+rust_api_from_cpp(
+    name = "empty_cc_lib_with_explicit_cpp_std_rust",
+    cpp_target = ":empty_cc_lib_with_explicit_cpp_std",
+)
+
+crubit_rust_test(
+    name = "cpp_std_test",
+    srcs = ["cpp_std_test.rs"],
+    deps = [
+        ":empty_cc_lib_with_explicit_cpp_std_rust",
+        ":empty_cc_lib_with_implicit_cpp_std_rust",
+        "@crate_index//:googletest",
+    ],
+)
