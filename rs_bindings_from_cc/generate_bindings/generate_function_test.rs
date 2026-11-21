@@ -4530,7 +4530,7 @@ fn test_template_argument_lifetime_is_bound() -> Result<()> {
         quote! {
             pub struct __CcTemplateInst4ViewIRiE<'T> {
                 ...
-                __marker_T: ::core::marker::PhantomData<&'T ()>
+                __marker_T: ::core::marker::PhantomData<&'T ()>,
             }
         }
     );

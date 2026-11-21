@@ -20,7 +20,7 @@ use test_generators::{
 use token_stream_matchers::{
     assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
 };
-use token_stream_printer::tokens_to_string;
+use token_stream_printer::{rs_tokens_to_formatted_string_for_tests, tokens_to_string};
 
 #[gtest]
 fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
@@ -524,6 +524,41 @@ fn test_nontrivial_abstract_by_value() -> Result<()> {
     assert_rs_matches!(rs_api, quote! {fn Foo<'__this>(&'__this self)});
     assert_rs_matches!(rs_api, quote! {fn Nonvirtual<'__this>(&'__this self)});
     assert_rs_matches!(rs_api, quote! {fn TakesAbstract<'a>(a: &'a crate::Abstract)});
+    Ok(())
+}
+
+#[gtest]
+fn test_struct_with_multiple_unused_lifetime_params() -> Result<()> {
+    let cc_src = with_lifetime_macros(
+        r#"
+        struct LIFETIME_PARAMS("a", "b") EmptyPairView {};
+        struct LIFETIME_PARAMS("a", "b") PairView {
+          int count;
+        };
+    "#,
+    );
+    let rs_api = generate_bindings_tokens_from_assumed_lifetimes_cc(&cc_src)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct EmptyPairView<'a, 'b> {
+                __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+                __marker_a: ::core::marker::PhantomData<&'a ()>,
+                __marker_b: ::core::marker::PhantomData<&'b ()>,
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct PairView<'a, 'b> {
+                pub count: ::ffi_11::c_int,
+                __marker_a: ::core::marker::PhantomData<&'a ()>,
+                __marker_b: ::core::marker::PhantomData<&'b ()>,
+            }
+        }
+    );
+    rs_tokens_to_formatted_string_for_tests(rs_api)?;
     Ok(())
 }
 

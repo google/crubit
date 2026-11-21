@@ -686,7 +686,7 @@ pub fn generated_items_to_tokens<'db>(
                         })
                         .map(|lt| {
                             let field_name = format_ident!("__marker_{}", lt.ident);
-                            quote! { #field_name: ::core::marker::PhantomData<& #lt ()> }
+                            quote! { #field_name: ::core::marker::PhantomData<& #lt ()>, }
                         })
                         .collect();
                     quote! {
