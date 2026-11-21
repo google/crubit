@@ -8,8 +8,10 @@
 #include <optional>
 #include <string>
 
+#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 
 // Note: This target does NOT enable `layout_compat_string`.
 // `absl::StatusOr<std::string>`, `absl::StatusOr<std::optional<int>>`, etc.
@@ -45,5 +47,14 @@ struct TokenHelper {
     return absl::InvalidArgumentError("negative token");
   }
 };
+
+inline absl::StatusOr<absl::string_view> SelectStringViewOrError(
+    bool is_ok, absl::string_view first ABSL_ATTRIBUTE_LIFETIME_BOUND,
+    absl::string_view second ABSL_ATTRIBUTE_LIFETIME_BOUND,
+    absl::string_view ignored) {
+  (void)ignored;
+  if (is_ok) return first.empty() ? second : first;
+  return absl::InvalidArgumentError("requested an error");
+}
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_BRIDGING_STATUS_OR_STRING_LIB_H_

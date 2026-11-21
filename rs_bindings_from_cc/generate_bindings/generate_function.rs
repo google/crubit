@@ -877,6 +877,7 @@ fn api_func_shape_for_identifier(
     func: &Func,
     maybe_record: Option<&FfiRc<Record>>,
     param_types: &mut [RsTypeKind],
+    return_type: &RsTypeKind,
     id: &Identifier,
 ) -> ApiFuncShape {
     let is_unsafe = match func.safety_annotation() {
@@ -891,6 +892,7 @@ fn api_func_shape_for_identifier(
                 let _ = param_type_iter.next();
             }
             param_type_iter.any(|p| db.rs_type_kind_safety(p.clone()).is_some())
+                || db.unknown_lifetime_safety(return_type.clone()).is_some()
         }
         SafetyAnnotation::Unsafe => true,
         SafetyAnnotation::DisableUnsafe => false,
@@ -1047,11 +1049,35 @@ fn api_func_shape_for_constructor(
         // TODO(b/331685208): instead, return `impl Ctor` from `ctor_new`. It's infeasible (and
         // expensive) to deep-copy the RsTypeKind and mutate all sublifetimes.
         for param in &mut params[..] {
-            if let RsTypeKind::Reference { lifetime, .. }
-            | RsTypeKind::RvalueReference { lifetime, .. } = param
-                && lifetime.is_elided()
-            {
-                *lifetime = Lifetime::new("__unelided");
+            match param {
+                RsTypeKind::Reference { lifetime, .. }
+                | RsTypeKind::RvalueReference { lifetime, .. }
+                    if lifetime.is_elided() =>
+                {
+                    *lifetime = Lifetime::new("__unelided");
+                }
+                RsTypeKind::ExistingRustType { lifetimes, .. }
+                | RsTypeKind::TypeAlias { lifetimes, .. }
+                    if lifetimes.iter().any(Lifetime::is_elided) =>
+                {
+                    let new_lifetimes: Rc<[Lifetime]> = lifetimes
+                        .iter()
+                        .enumerate()
+                        .map(|(i, lt)| {
+                            if lt.is_elided() {
+                                if lifetimes.len() == 1 {
+                                    Lifetime::new("__unelided")
+                                } else {
+                                    Lifetime::new(&format!("__unelided_{i}"))
+                                }
+                            } else {
+                                lt.clone()
+                            }
+                        })
+                        .collect();
+                    *lifetimes = new_lifetimes;
+                }
+                _ => {}
             }
         }
         // Check if there's still any elided lifetimes after the minimal transform above:
@@ -1278,9 +1304,14 @@ fn api_func_shape(
             op,
             errors,
         ),
-        UnqualifiedIdentifier::Identifier(id) => {
-            Some(api_func_shape_for_identifier(db, func, maybe_record, param_types, id))
-        }
+        UnqualifiedIdentifier::Identifier(id) => Some(api_func_shape_for_identifier(
+            db,
+            func,
+            maybe_record,
+            param_types,
+            return_type,
+            id,
+        )),
         UnqualifiedIdentifier::Destructor => {
             api_func_shape_for_destructor(db, func, maybe_record, param_types)
         }
@@ -1992,6 +2023,8 @@ fn rs_type_kinds_for_func(
                     LifetimeOptions {
                         infer_lifetimes: infer_param_lifetimes,
                         is_return_type: false,
+                        is_param: true,
+                        is_callable_param: false,
 
                         // Only interesting for the return type.
                         have_reference_param: false,
@@ -2062,6 +2095,8 @@ fn rs_type_kinds_for_func(
                 LifetimeOptions {
                     infer_lifetimes,
                     is_return_type: true,
+                    is_param: false,
+                    is_callable_param: false,
 
                     have_reference_param: param_types.iter().any(|pt| {
                         matches!(
@@ -2106,6 +2141,7 @@ fn generate_func_safety_doc(
     impl_kind: &ImplKind,
     mut param_idents: &[Ident],
     param_types: &[RsTypeKind],
+    return_type: &RsTypeKind,
 ) -> Option<String> {
     // The first param may have been removed from `param_types` due to
     // being a `this` pointer. Update `param_idents` to match.
@@ -2133,6 +2169,12 @@ fn generate_func_safety_doc(
         }
         if !param_unsafe_reasons.is_empty() {
             write!(doc, "The caller must ensure that the following unsafe arguments are not misused by the function:\n{param_unsafe_reasons}").unwrap();
+        }
+        if db.unknown_lifetime_safety(return_type.clone()).is_some() {
+            if !doc.is_empty() {
+                doc += "\n";
+            }
+            doc += "The return value borrows data whose lifetime Crubit does not know. The caller must ensure that the borrowed data outlives the return value: unwrap it (`::crubit_support::Unsafe::into_inner`) or drop it while that data is still alive.\n";
         }
         // Verify that we didn't generate an empty safety doc.
         assert!(!doc.is_empty());
@@ -2361,7 +2403,8 @@ pub fn generate_function(
 
     let doc_comment = generate_doc_comment(
         func.doc_comment(),
-        generate_func_safety_doc(db, &func, &impl_kind, &param_idents, &param_types).as_deref(),
+        generate_func_safety_doc(db, &func, &impl_kind, &param_idents, &param_types, &return_type)
+            .as_deref(),
         func.as_ref().decl_loc(),
         db.is_golden_test(),
         db.kythe_annotations(),

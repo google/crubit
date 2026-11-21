@@ -87,11 +87,10 @@ namespace functions::fn_must_use_tests {
 
 namespace functions::fn_param_ty_tests {
 
-struct
-    CRUBIT_INTERNAL_RUST_TYPE(
-        ":: functions_golden :: fn_param_ty_tests :: "
-        "StructWithPinnedRefs") alignas(8) [[clang::trivial_abi]]
-    StructWithPinnedRefs final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: functions_golden :: fn_param_ty_tests :: StructWithPinnedRefs < { 'a } "
+    ">") $lifetime_params("a") alignas(8)
+    [[clang::trivial_abi]] StructWithPinnedRefs final {
  public:
   // Type is not a C++ aggregate: Field `pinned_ref` is not
   // default-constructible in C++
@@ -110,7 +109,7 @@ struct
   StructWithPinnedRefs(const StructWithPinnedRefs&) = delete;
   StructWithPinnedRefs& operator=(const StructWithPinnedRefs&) = delete;
   StructWithPinnedRefs(::crubit::UnsafeRelocateTag,
-                       StructWithPinnedRefs&& value);
+                       StructWithPinnedRefs && value);
 
   union {
     ::std::int32_t const* crubit_nonnull pinned_ref;
