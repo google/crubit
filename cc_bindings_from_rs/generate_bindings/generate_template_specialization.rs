@@ -1954,6 +1954,12 @@ fn ifdef_guard_specialization_with_location<'tcx>(
     let formatted_tys = tys
         .into_iter()
         .map(|ty| {
+            #[rustversion::before(2026-04-22)]
+            let ty_norm = tcx.normalize_erasing_regions(
+                TypingEnv::fully_monomorphized(),
+                ty,
+            );
+            #[rustversion::since(2026-04-22)]
             let ty_norm = tcx.normalize_erasing_regions(
                 TypingEnv::fully_monomorphized(),
                 Unnormalized::new(ty),
