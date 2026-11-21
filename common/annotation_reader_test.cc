@@ -4,21 +4,27 @@
 
 #include "common/annotation_reader.h"
 
+#include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "common/check.h"
 #include "common/status.h"
 #include "common/status_test_matchers.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/TypeBase.h"
-#include "clang/Testing/TestAST.h"
+#include "clang/Basic/Diagnostic.h"
+#include "clang/Frontend/ASTUnit.h"
+#include "clang/Tooling/Tooling.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 namespace {
@@ -34,6 +40,17 @@ using ::testing::Pointee;
 using ::testing::Property;
 using ::testing::ResultOf;
 using ::testing::SizeIs;
+
+// Parses `code` as C++20 and returns the resulting `ASTUnit`, crashing if
+// parsing fails or emits errors.
+std::unique_ptr<clang::ASTUnit> BuildAst(llvm::StringRef code) {
+  std::unique_ptr<clang::ASTUnit> ast =
+      clang::tooling::buildASTFromCodeWithArgs(
+          code, {"-std=c++20", "-target", "x86_64-unknown-linux-gnu"});
+  CRUBIT_CHECK(ast != nullptr);
+  CRUBIT_CHECK(!ast->getDiagnostics().hasErrorOccurred());
+  return ast;
+}
 
 template <class T>
 T& LookupDecl(clang::ASTContext& context, llvm::StringRef name) {
@@ -56,11 +73,11 @@ inline auto MakeExprAsBoolMatcher(const clang::ASTContext& ast_context) {
 }
 
 TEST(AnnotationReaderTest, GetAnnotateAttrArgsSuccess) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo")]] int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   EXPECT_THAT(GetAnnotateAttrArgs(var, "foo"),
               IsOkAndHolds(Optional(ElementsAre())));
@@ -68,11 +85,11 @@ TEST(AnnotationReaderTest, GetAnnotateAttrArgsSuccess) {
 }
 
 TEST(AnnotationReaderTest, GetAnnotateAttrArgsFailureDoubleAnnotation) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo")]] [[clang::annotate("foo")]] int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   EXPECT_THAT(
       GetAnnotateAttrArgs(var, "foo"),
@@ -83,11 +100,11 @@ TEST(AnnotationReaderTest, GetAnnotateAttrArgsFailureDoubleAnnotation) {
 }
 
 TEST(AnnotationReaderTest, GetAnnotateAttrFailureArgNotIntegralOrString) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo", 1.0)]] extern int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   ASSERT_THAT(
       GetAnnotateAttrArgs(var, "foo"),
@@ -97,24 +114,24 @@ TEST(AnnotationReaderTest, GetAnnotateAttrFailureArgNotIntegralOrString) {
 }
 
 TEST(AnnotationReaderTest, GetAnnotateAttrSuccessConsistentAnnotations) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo", "arg1", 1)]] extern int i;
     [[clang::annotate("foo", "arg1", 1)]] extern int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   ASSERT_THAT(GetAnnotateAttrArgs(var, "foo"),
               IsOkAndHolds(Optional(ElementsAre(NotNull(), NotNull()))));
 }
 
 TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingIntArgs) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo", 1)]] extern int i;
     [[clang::annotate("foo", 2)]] extern int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   ASSERT_THAT(
       GetAnnotateAttrArgs(var, "foo"),
@@ -125,12 +142,12 @@ TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingIntArgs) {
 }
 
 TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingStringArgs) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo", "1")]] extern int i;
     [[clang::annotate("foo", "2")]] extern int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   ASSERT_THAT(
       GetAnnotateAttrArgs(var, "foo"),
@@ -141,12 +158,12 @@ TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingStringArgs) {
 }
 
 TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingArgCounts) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo")]] extern int i;
     [[clang::annotate("foo", 1)]] extern int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   ASSERT_THAT(
       GetAnnotateAttrArgs(var, "foo"),
@@ -158,12 +175,12 @@ TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingArgCounts) {
 
 TEST(AnnotationReaderTest,
      GetAnnotateAttrSuccessAnnotationMissingFromDefinition) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo")]] extern int i;
     int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   ASSERT_THAT(GetAnnotateAttrArgs(var, "foo"),
               IsOkAndHolds(Optional(ElementsAre())));
@@ -171,45 +188,45 @@ TEST(AnnotationReaderTest,
 
 TEST(AnnotationReaderTest,
      GetAnnotateAttrSuccessAnnotationMissingFromForwardDeclaration) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     extern int i;
     [[clang::annotate("foo")]] int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   ASSERT_THAT(GetAnnotateAttrArgs(var, "foo"),
               IsOkAndHolds(Optional(ElementsAre())));
 }
 
 TEST(AnnotationReaderTest, GetAnnotationWithStringArgsSuccess) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo", "arg1", "arg2")]] int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   EXPECT_THAT(GetAnnotationWithStringArgs(var, "foo"),
               IsOkAndHolds(Optional(ElementsAre("arg1", "arg2"))));
 }
 
 TEST(AnnotationReaderTest, GetAnnotationWithStringArgsNone) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   EXPECT_THAT(GetAnnotationWithStringArgs(var, "foo"),
               IsOkAndHolds(std::nullopt));
 }
 
 TEST(AnnotationReaderTest, GetAnnotationWithStringArgsFailureNonString) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo", "arg1", 42)]] int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   EXPECT_THAT(
       GetAnnotationWithStringArgs(var, "foo"),
@@ -218,11 +235,11 @@ TEST(AnnotationReaderTest, GetAnnotationWithStringArgsFailureNonString) {
 }
 
 TEST(AnnotationReaderTest, GetAnnotationWithStringArgSuccess) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo", "bar")]] int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   EXPECT_THAT(GetAnnotationWithStringArg(var, "foo"),
               IsOkAndHolds(Optional(Eq("bar"))));
@@ -231,11 +248,11 @@ TEST(AnnotationReaderTest, GetAnnotationWithStringArgSuccess) {
 }
 
 TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureNoArgs) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo")]] int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   EXPECT_THAT(
       GetAnnotationWithStringArg(var, "foo"),
@@ -245,11 +262,11 @@ TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureNoArgs) {
 }
 
 TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureMultipleArgs) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo", "a", "b")]] int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   EXPECT_THAT(
       GetAnnotationWithStringArg(var, "foo"),
@@ -259,11 +276,11 @@ TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureMultipleArgs) {
 }
 
 TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureNonStringArg) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo", 123)]] int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
 
   EXPECT_THAT(
       GetAnnotationWithStringArg(var, "foo"),
@@ -272,13 +289,13 @@ TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureNonStringArg) {
 }
 
 TEST(AnnotationReaderTest, HasAnnotationWithoutArgsCases) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("no_args")]] [[clang::annotate("with_args", 1)]] int i;
     int j;
   )cc");
 
-  auto& var_i = LookupDecl<clang::VarDecl>(ast.context(), "i");
-  auto& var_j = LookupDecl<clang::VarDecl>(ast.context(), "j");
+  auto& var_i = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
+  auto& var_j = LookupDecl<clang::VarDecl>(ast->getASTContext(), "j");
 
   EXPECT_THAT(HasAnnotationWithoutArgs(var_i, "no_args"), IsOkAndHolds(true));
   EXPECT_THAT(HasAnnotationWithoutArgs(var_j, "no_args"), IsOkAndHolds(false));
@@ -289,12 +306,12 @@ TEST(AnnotationReaderTest, HasAnnotationWithoutArgsCases) {
 }
 
 TEST(AnnotationReaderTest, GetExprAsBoolSuccess) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo", true, false)]] int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
-  auto expr_as_bool = MakeExprAsBoolMatcher(ast.context());
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
+  auto expr_as_bool = MakeExprAsBoolMatcher(ast->getASTContext());
 
   EXPECT_THAT(GetAnnotateAttrArgs(var, "foo"),
               IsOkAndHolds(Optional(
@@ -303,15 +320,15 @@ TEST(AnnotationReaderTest, GetExprAsBoolSuccess) {
 }
 
 TEST(AnnotationReaderTest, GetExprAsBoolRejectsNonBooleanTypes) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("foo", 1, 0, 'a', 1.5)]] int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
   auto* attr = var.getAttr<clang::AnnotateAttr>();
   ASSERT_THAT(attr, NotNull());
 
-  auto expr_as_bool = MakeExprAsBoolMatcher(ast.context());
+  auto expr_as_bool = MakeExprAsBoolMatcher(ast->getASTContext());
 
   EXPECT_THAT(
       llvm::ArrayRef(attr->args_begin(), attr->args_end()),
@@ -323,23 +340,23 @@ TEST(AnnotationReaderTest, GetExprAsBoolRejectsNonBooleanTypes) {
 }
 
 TEST(AnnotationReaderTest, ConsistentAnnotationsWithTypedefType) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     using MyInt = int;
     [[clang::annotate("foo", (MyInt)1)]] extern int i;
     [[clang::annotate("foo", (int)1)]] extern int i;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "i");
   EXPECT_THAT(GetAnnotateAttrArgs(var, "foo"),
               IsOkAndHolds(Optional(ElementsAre(NotNull()))));
 }
 
 TEST(AnnotationReaderTest, GetTypeAnnotationSingleDeclBasic) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     int [[clang::annotate_type("my_type_annot")]] x;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "x");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "x");
   const clang::Type* type = var.getType().getTypePtr();
 
   EXPECT_THAT(GetTypeAnnotationSingleDecl(type, "my_type_annot"),
@@ -351,11 +368,11 @@ TEST(AnnotationReaderTest, GetTypeAnnotationSingleDeclBasic) {
 
 TEST(AnnotationReaderTest,
      GetTypeAnnotationSingleDeclMultipleAnnotationsOnType) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     int [[clang::annotate_type("inner")]] [[clang::annotate_type("outer")]] x;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "x");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "x");
   const clang::Type* type = var.getType().getTypePtr();
 
   EXPECT_THAT(GetTypeAnnotationSingleDecl(type, "outer"),
@@ -368,12 +385,12 @@ TEST(AnnotationReaderTest,
 
 TEST(AnnotationReaderTest,
      GetTypeAnnotationSingleDeclDuplicateAnnotationError) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     int [[clang::annotate_type("duplicate")]] [[clang::annotate_type(
         "duplicate")]] x;
   )cc");
 
-  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "x");
+  auto& var = LookupDecl<clang::VarDecl>(ast->getASTContext(), "x");
   const clang::Type* type = var.getType().getTypePtr();
 
   EXPECT_THAT(
@@ -385,10 +402,10 @@ TEST(AnnotationReaderTest,
 }
 
 TEST(AnnotationReaderTest, AnnotationWithNonStringLiteralArg) {
-  clang::TestAST ast(R"cc(
+  std::unique_ptr<clang::ASTUnit> ast = BuildAst(R"cc(
     [[clang::annotate("my_annot", 123)]] void foo();
   )cc");
-  auto& decl = LookupDecl<clang::FunctionDecl>(ast.context(), "foo");
+  auto& decl = LookupDecl<clang::FunctionDecl>(ast->getASTContext(), "foo");
 
   llvm::Expected<std::optional<std::vector<std::string>>> result =
       GetAnnotationWithStringArgs(decl, "my_annot");
