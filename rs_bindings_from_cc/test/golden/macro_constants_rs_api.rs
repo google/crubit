@@ -728,7 +728,14 @@ macro_rules! STRING_WITH_EMBEDDED_NUL {
 pub const kAlreadyDeclared: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
 
 // error: type alias `LocalAliasToNonCrubitTypedef` could not be bound
-//   Unsupported type alias NotCrubitExposedInt
+//   Unsupported type alias NotCrubitExposedInt:
+//     crubit.rs/errors/unknown_target: the type is defined in
+//       rs_bindings_from_cc/test/golden/not_crubit_exposed.h
+//     which is not a public header of any Crubit-enabled target that
+//       //rs_bindings_from_cc/test/golden:macro_constants_cc
+//     depends on directly. Either enable Crubit on the library that provides the header,
+//     add that library as a direct dependency (and `#include` the header directly),
+//     or move the type to a public header.
 
 // error: type alias `UnknownAttrInt` could not be bound
 //   crubit.rs/errors/unknown_attribute: unknown attribute(s): gnu::aligned
