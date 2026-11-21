@@ -11,13 +11,16 @@ load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
     rust_golden_test = "golden_test",
 )
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_cc_test",
+    "crubit_rust_test",
+)
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
-# TODO(jeanpierreda): Uncomment this, see below.
-# load(
-#     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
-#     cc_golden_test = "golden_test",
-# )
+load(
+    "//rs_bindings_from_cc/test/golden:golden_test.bzl",
+    cc_golden_test = "golden_test",
+)
 
 licenses(["notice"])
 
@@ -46,6 +49,8 @@ crubit_test_cc_library(
     aspect_hints = ["//features:supported"],
     deps = [
         ":leaf_rs_lib_cc_api",
+        "//support:lifetime_annotations",
+        "@abseil-cpp//absl/functional:any_invocable",
     ],
 )
 
@@ -54,22 +59,68 @@ rust_api_from_cpp(
     cpp_target = ":middle_cc_lib",
 )
 
-# TODO(jeanpierreda): Currently puts bindings from deps in, causing leeks, and exposes temporary
-# output paths.
-#
-# cc_golden_test(
-#     name = "middle_cc_lib_golden_test",
-#     basename = "middle_cc_lib",
-#     cc_library = "middle_cc_lib",
-#     golden_rs = "middle_cc_lib_rs_api.rs",
-# )
+crubit_test_cc_library(
+    name = "middle_cc_lib_no_assume_lifetimes",
+    hdrs = ["middle_cc_lib_no_assume_lifetimes.h"],
+    aspect_hints = ["//features:no_assume_lifetimes"],
+    deps = [
+        ":leaf_rs_lib_cc_api",
+    ],
+)
+
+rust_api_from_cpp(
+    name = "middle_cc_lib_no_assume_lifetimes_rust",
+    cpp_target = ":middle_cc_lib_no_assume_lifetimes",
+)
+
+cc_golden_test(
+    name = "middle_cc_lib_golden_test",
+    basename = "middle_cc_lib",
+    cc_library = "middle_cc_lib",
+    golden_rs = "middle_cc_lib_rs_api.rs",
+)
 
 crubit_rust_test(
     name = "rs_test",
     srcs = ["rs_test.rs"],
     deps = [
         ":leaf_rs_lib",
+        ":middle_cc_lib_no_assume_lifetimes_rust",
         ":middle_cc_lib_rust",
+        "//support:crubit_support",
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
+    name = "str_ref_cc_lib",
+    hdrs = ["str_ref_cc_lib.h"],
+    aspect_hints = ["//features:supported"],
+    deps = [
+        ":leaf_rs_lib_cc_api",
+        "//support/rs_std:str_ref",
+        "@abseil-cpp//absl/functional:any_invocable",
+    ],
+)
+
+rust_api_from_cpp(
+    name = "str_ref_cc_lib_rust",
+    cpp_target = ":str_ref_cc_lib",
+)
+
+cc_golden_test(
+    name = "str_ref_cc_lib_golden_test",
+    basename = "str_ref_cc_lib",
+    cc_library = "str_ref_cc_lib",
+    golden_rs = "str_ref_cc_lib_rs_api.rs",
+)
+
+crubit_rust_test(
+    name = "str_ref_test",
+    srcs = ["str_ref_test.rs"],
+    deps = [
+        ":leaf_rs_lib",
+        ":str_ref_cc_lib_rust",
         "@crate_index//:googletest",
     ],
 )

@@ -13,9 +13,9 @@ use crubit_feature::CrubitFeature;
 use error_report::{bail, ensure};
 use flagset::FlagSet;
 use ir::*;
-use proc_macro2::{Delimiter, Group, Ident, Literal, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Group, Ident, Literal, Spacing, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt::{Display, Formatter};
 use std::rc::Rc;
 use token_stream_printer::write_unformatted_tokens;
@@ -286,6 +286,17 @@ pub struct LifetimeOptions {
     /// Is the type we're lowering part of a type in return position?
     pub is_return_type: bool,
 
+    /// Is the type we're lowering directly a top-level function parameter type (not a nested
+    /// pointee, array element, or template argument)?
+    pub is_param: bool,
+
+    /// Is the type we're lowering a parameter type of a callable (e.g. `absl::AnyInvocable`)?
+    ///
+    /// An existing Rust type whose lifetimes are not known then gets elided lifetimes:
+    /// `dyn Fn(&str)` means `for<'a> dyn Fn(&'a str)`, which is right because the argument only
+    /// needs to live for the duration of the call.
+    pub is_callable_param: bool,
+
     /// If true, assumed lifetimes are used. The item in question is expected to have undergone
     /// lifetime_defaults_transform.
     pub assume_lifetimes: bool,
@@ -410,11 +421,12 @@ impl UniformReprTemplateType {
         in_cc_std: bool,
     ) -> Result<Option<Rc<Self>>> {
         let type_arg = |template_arg: &CcType| -> Result<RsTypeKind> {
-            // Importantly, `is_return_type` is not propagated through inner types.
+            // Importantly, `is_return_type` and `is_param` are not propagated through inner types.
             let mut arg_type_kind = db.rs_type_kind_with_lifetime_elision(
                 template_arg.clone(),
                 LifetimeOptions {
                     is_return_type: false,
+                    is_param: false,
                     requires_layout_compatible: true,
                     ..*options
                 },
@@ -752,6 +764,28 @@ pub enum BoxKind {
     StrBox,
 }
 
+/// How lifetime arguments on an [`RsTypeKind::ExistingRustType`] were resolved.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum ExistingRustTypeLifetimes {
+    /// The type either has no lifetime parameters, or every lifetime parameter was resolved from
+    /// explicit or inferred C++ lifetime annotations.
+    Known,
+    /// The type has lifetime parameters whose C++ lifetimes are unknown, used directly as a
+    /// top-level function parameter in a target without `assume_lifetimes`.
+    ///
+    /// Lowered to `T<'_>` (or named `__unelided` lifetimes in `CtorNew`) while marking the
+    /// enclosing function `unsafe`, so callers can pass borrowed values directly without having
+    /// to transmute to `'static` or wrap in `Unsafe`.
+    UnknownElided,
+    /// The type has lifetime parameters whose C++ lifetimes are unknown in any other position
+    /// (return values, fields, type aliases, nested template arguments, pointees, or targets with
+    /// `assume_lifetimes` missing an annotation / annotated `$unknown`).
+    ///
+    /// Lowered to `::crubit_support::Unsafe<T<'static>>` so Rust callers must explicitly claim
+    /// knowledge of the lifetime via `unsafe` before accessing the inner value.
+    UnknownWrapped,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum RsTypeKind {
     /// An error occurred while generating the type.
@@ -837,15 +871,22 @@ pub enum RsTypeKind {
     /// types by cc_bindings_from_rs.
     ExistingRustType {
         existing_rust_type: FfiRc<ExistingRustType>,
-        /// How the Rust type should be spelled, after interpolating template arguments.
+        /// How the Rust type is spelled *before* interpolating `{}` type arguments and `{'a}`
+        /// lifetime arguments (after resolving crate paths and label hints).
         /// This is the stringified TokenStream because TokenStream is not PartialEq + Eq + Hash.
-        rust_type: Rc<str>,
+        uninterpolated_rust_type: Rc<str>,
         /// The type arguments, for a generic such as `NewStatusOr<T>`.
         ///
         /// These are retained, rather than only being interpolated into `rust_type`, because a
         /// generic of this kind stores its payload in place and therefore inherits the payload's
         /// movability and destructor behavior. See [`RsTypeKind::inline_payloads`].
         type_args: Rc<[RsTypeKind]>,
+        /// The use-site lifetime arguments for `$lifetime_params(...)` declared on this type.
+        /// Empty when the type has no lifetime parameters, or when `lifetime_kind` is
+        /// [`ExistingRustTypeLifetimes::UnknownWrapped`] (in which case
+        /// `::crubit_support::Unsafe<T<'static>>` is emitted at codegen).
+        lifetimes: Rc<[Lifetime]>,
+        lifetime_kind: ExistingRustTypeLifetimes,
         is_complete: bool,
     },
 }
@@ -869,10 +910,10 @@ impl CustomizeMethodsKind {
         template_args: &Option<Rc<[CcType]>>,
     ) -> Result<Option<Rc<Self>>> {
         let type_arg = |template_arg: &CcType| -> Result<RsTypeKind> {
-            // Importantly, `is_return_type` is not propagated through inner types.
+            // Importantly, `is_return_type` and `is_param` are not propagated through inner types.
             let arg_type_kind = db.rs_type_kind_with_lifetime_elision(
                 template_arg.clone(),
-                LifetimeOptions { is_return_type: false, ..*options },
+                LifetimeOptions { is_return_type: false, is_param: false, ..*options },
             )?;
             ensure!(
                 !arg_type_kind.pass_by_value_bridges(),
@@ -1220,7 +1261,12 @@ impl BridgeRsTypeKind {
                 let param_types: Rc<[RsTypeKind]> = c
                     .param_types()
                     .iter()
-                    .map(|param_type| db.rs_type_kind(param_type.clone()))
+                    .map(|param_type| {
+                        db.rs_type_kind_with_lifetime_elision(
+                            param_type.clone(),
+                            LifetimeOptions { is_callable_param: true, ..Default::default() },
+                        )
+                    })
                     .collect::<Result<_>>()?;
                 if let Some(c_array) = std::iter::once(return_type.as_ref())
                     .chain(param_types.iter())
@@ -1372,7 +1418,7 @@ fn new_c9_co_record(
     let element_type = choose_one_type(&c.element_type, template_args)?;
     let arg_type_kind = db.rs_type_kind_with_lifetime_elision(
         element_type.clone(),
-        LifetimeOptions { have_reference_param: false, ..*options },
+        LifetimeOptions { have_reference_param: false, is_param: false, ..*options },
     )?;
     if let RsTypeKind::Error { error, .. } = arg_type_kind {
         let element_name = db.cc_type_debug_name(&element_type);
@@ -1436,9 +1482,13 @@ impl RsTypeKind {
             Item::TypeAlias(type_alias) => {
                 RsTypeKind::new_type_alias(db, type_alias, options, lifetimes)
             }
-            Item::ExistingRustType(existing_rust_type) => {
-                RsTypeKind::new_existing_rust_type(db, existing_rust_type, options, template_args)
-            }
+            Item::ExistingRustType(existing_rust_type) => RsTypeKind::new_existing_rust_type(
+                db,
+                existing_rust_type,
+                options,
+                template_args,
+                lifetimes,
+            ),
             other_item => bail!("`{}` does not define a type", db.debug_name(other_item.id())),
         }
     }
@@ -1471,7 +1521,17 @@ impl RsTypeKind {
         lifetimes: &[Lifetime],
     ) -> Result<Self> {
         let ir = db.ir();
+        let alias_assumes_lifetimes = ir
+            .target_crubit_features(type_alias.as_ref().owning_target())
+            .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+        let alias_arity =
+            if alias_assumes_lifetimes || type_alias.rs_name().as_str() == "raw_string_view" {
+                db.decl_lifetime_arity(type_alias.id()).unwrap_or(0)
+            } else {
+                0
+            };
         let mut underlying_cc_type = type_alias.underlying_type().clone();
+        let formal_lifetimes = type_alias.lifetime_inputs();
         if underlying_cc_type.explicit_lifetimes().is_empty() {
             underlying_cc_type.set_explicit_lifetimes(
                 lifetimes
@@ -1479,9 +1539,37 @@ impl RsTypeKind {
                     .map(|lt| ir_ffi_support::FfiString::from(lt.0.as_ref()))
                     .collect::<ir_ffi_support::FfiVec<_>>(),
             );
+        } else if !formal_lifetimes.is_empty() {
+            // Substitute formal alias lifetime parameters (such as `__alias0` synthesized by
+            // `lifetime_defaults_transform`) with the actual lifetimes at this use site. If the
+            // use site omits them, clear `explicit_lifetimes` so the underlying type resolves as
+            // unknown rather than leaking formal alias lifetime names into callers.
+            let substituted: Option<ir_ffi_support::FfiVec<ir_ffi_support::FfiString>> =
+                underlying_cc_type
+                    .explicit_lifetimes()
+                    .iter()
+                    .map(|lt| {
+                        if let Some(idx) = formal_lifetimes.iter().position(|formal| formal == lt) {
+                            lifetimes
+                                .get(idx)
+                                .map(|actual| ir_ffi_support::FfiString::from(actual.0.as_ref()))
+                        } else {
+                            Some(lt.clone())
+                        }
+                    })
+                    .collect();
+            underlying_cc_type.set_explicit_lifetimes(substituted.unwrap_or_default());
         }
+        // If the generated Rust type alias declaration takes no lifetime parameters, its RHS was
+        // lowered with `is_param: false` (e.g., `pub type Alias = Unsafe<Foo<'static>>;`), so
+        // evaluate `underlying_type` with `is_param: false` to stay consistent with that spelling.
+        let underlying_options = if alias_arity == 0 {
+            LifetimeOptions { is_param: false, ..*options }
+        } else {
+            *options
+        };
         let underlying_type =
-            db.rs_type_kind_with_lifetime_elision(underlying_cc_type, *options)?;
+            db.rs_type_kind_with_lifetime_elision(underlying_cc_type, underlying_options)?;
         // Note: we don't need to call `.unalias()` for these checks, because we already checked
         // this, recursively.
 
@@ -1505,11 +1593,27 @@ impl RsTypeKind {
             db.namespace_qualifier(&*type_alias),
             rs_imported_crate_name(type_alias.as_ref().owning_target(), ir),
         ));
+        let alias_lifetimes: Rc<[Lifetime]> = if alias_arity > 0
+            && lifetimes.len() != alias_arity
+            && !options.assume_lifetimes
+            && options.is_param
+            && !options.is_return_type
+            && matches!(
+                underlying_type.unalias(),
+                RsTypeKind::ExistingRustType {
+                    lifetime_kind: ExistingRustTypeLifetimes::UnknownElided,
+                    ..
+                }
+            ) {
+            vec![Lifetime::elided(); alias_arity].into()
+        } else {
+            lifetimes.into()
+        };
         Ok(RsTypeKind::TypeAlias {
             type_alias,
             crate_path,
             underlying_type: Rc::new(underlying_type),
-            lifetimes: lifetimes.into(),
+            lifetimes: alias_lifetimes,
         })
     }
 
@@ -1610,7 +1714,12 @@ impl RsTypeKind {
 
         let mut inner_rs_type_kind = db.rs_type_kind_with_lifetime_elision(
             inner_cc_type.clone(),
-            LifetimeOptions { is_return_type: false, requires_layout_compatible: true, ..*options },
+            LifetimeOptions {
+                is_return_type: false,
+                is_param: false,
+                requires_layout_compatible: true,
+                ..*options
+            },
         )?;
         inner_rs_type_kind.force_layout_compatible();
         Ok((inner_rs_type_kind, inner_cc_type.clone()))
@@ -1670,6 +1779,7 @@ impl RsTypeKind {
         existing_rust_type: FfiRc<ExistingRustType>,
         options: &LifetimeOptions,
         template_args: &Option<Rc<[CcType]>>,
+        lifetimes: &[Lifetime],
     ) -> Result<Self> {
         let box_kind = match existing_rust_type.rs_name() {
             BOX_NAME_RS => Some(BoxKind::Box),
@@ -1799,6 +1909,7 @@ impl RsTypeKind {
                             type_param.clone(),
                             LifetimeOptions {
                                 is_return_type: false,
+                                is_param: false,
                                 requires_layout_compatible: true,
                                 ..*options
                             },
@@ -1832,23 +1943,46 @@ impl RsTypeKind {
 
         let is_complete = args.iter().all(|(_, complete, _)| *complete);
         let type_args: Rc<[RsTypeKind]> =
-            args.iter().filter_map(|(_, _, kind)| kind.clone()).collect();
-        let mut iter = args.into_iter().map(|(tokens, _, _)| Ok(tokens));
+            args.into_iter().filter_map(|(_, _, kind)| kind).collect();
+        let uninterpolated_rust_type: Rc<str> = uninterpolated_rust_type.to_string().into();
 
-        let rust_type = interpolate_spelled_rust_type(uninterpolated_rust_type, &mut iter)
-            .map_err(|e| {
-                anyhow!("Failed to interpolate rust type {}: {e}", existing_rust_type.rs_name())
-            })?;
+        let arity = existing_rust_type.lifetime_inputs().len();
+        let (resolved_lifetimes, lifetime_kind): (Rc<[Lifetime]>, ExistingRustTypeLifetimes) =
+            if arity == 0 {
+                (Rc::from([]), ExistingRustTypeLifetimes::Known)
+            } else if lifetimes.len() == arity {
+                (Rc::from(lifetimes), ExistingRustTypeLifetimes::Known)
+            } else if options.is_callable_param {
+                // A callable's parameter only needs to live for the duration of the call, which
+                // elided lifetimes in `dyn Fn(..)` express (they are higher-ranked).
+                (vec![Lifetime::elided(); arity].into(), ExistingRustTypeLifetimes::Known)
+            } else if !options.assume_lifetimes && options.is_param && !options.is_return_type {
+                // In targets without `assume_lifetimes`, top-level function parameters accept any
+                // lifetime via `'_` (with the enclosing function marked `unsafe`), while return
+                // types, fields, aliases, and nested positions wrap in
+                // `::crubit_support::Unsafe<T<'static>>`.
+                (vec![Lifetime::elided(); arity].into(), ExistingRustTypeLifetimes::UnknownElided)
+            } else {
+                (Rc::from([]), ExistingRustTypeLifetimes::UnknownWrapped)
+            };
 
-        let remaining_template_args = iter.collect::<Vec<_>>();
-        if !remaining_template_args.is_empty() {
-            bail!("Unexpected template args: {:?}", remaining_template_args);
-        }
+        // Validate interpolation eagerly so invalid `CRUBIT_INTERNAL_RUST_TYPE` annotations fail
+        // during `rs_type_kind` / `has_bindings` rather than panicking in `to_token_stream`.
+        let _ = interpolate_existing_rust_type(
+            db,
+            &existing_rust_type,
+            &uninterpolated_rust_type,
+            &type_args,
+            &resolved_lifetimes,
+            lifetime_kind,
+        )?;
 
         Ok(RsTypeKind::ExistingRustType {
             existing_rust_type,
-            rust_type: rust_type.to_string().into(),
+            uninterpolated_rust_type,
             type_args,
+            lifetimes: resolved_lifetimes,
+            lifetime_kind,
             is_complete,
         })
     }
@@ -2662,11 +2796,23 @@ impl RsTypeKind {
         RsTypeKindIter::new(self, false)
     }
 
-    /// Iterates over all `LifetimeId`s in `self` and in all the nested types.
-    /// Note that the results might contain duplicate LifetimeId values (e.g.
-    /// if the same LifetimeId is used in two `type_args`).
+    /// Iterates over all `Lifetime`s in `self` and in all the nested types.
+    /// Note that the results might contain duplicate Lifetime values (e.g.
+    /// if the same Lifetime is used in two `type_args`).
     pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + use<'_> {
-        RsTypeKindIter::new(self, true).filter_map(Self::lifetime)
+        RsTypeKindIter::new(self, true).flat_map(|ty| -> Vec<Lifetime> {
+            match ty {
+                Self::ExistingRustType { lifetimes, type_args, .. } => lifetimes
+                    .iter()
+                    .cloned()
+                    .chain(type_args.iter().flat_map(Self::lifetimes))
+                    .collect(),
+                Self::Record { uniform_repr_template_type: None, lifetimes, .. } => {
+                    lifetimes.iter().cloned().collect()
+                }
+                _ => ty.lifetime().into_iter().collect(),
+            }
+        })
     }
 
     /// Returns true if formatting `self` as a field type emits an unbound elided lifetime (`'_`).
@@ -2755,7 +2901,7 @@ impl RsTypeKind {
             }
             Self::Record { uniform_repr_template_type: Some(template), .. } => template.lifetime(),
             // TODO(zarko): Extend to allow multiple lifetimes.
-            Self::Record { lifetimes, .. } => {
+            Self::Record { lifetimes, .. } | Self::ExistingRustType { lifetimes, .. } => {
                 if lifetimes.len() == 1 {
                     Some(lifetimes[0].clone())
                 } else {
@@ -3185,7 +3331,21 @@ fn all_static_lifetimes_internal(
             },
             original_type: original_type.clone(),
         }),
-        RsTypeKind::ExistingRustType { .. } => Rc::new(t.clone()),
+        RsTypeKind::ExistingRustType {
+            existing_rust_type,
+            uninterpolated_rust_type,
+            type_args,
+            lifetimes,
+            lifetime_kind,
+            is_complete,
+        } => Rc::new(RsTypeKind::ExistingRustType {
+            existing_rust_type: existing_rust_type.clone(),
+            uninterpolated_rust_type: uninterpolated_rust_type.clone(),
+            type_args: type_args.iter().map(|arg| recurse(arg).as_ref().clone()).collect(),
+            lifetimes: lifetimes.iter().map(|_| Lifetime::new("static")).collect(),
+            lifetime_kind: *lifetime_kind,
+            is_complete: *is_complete,
+        }),
         RsTypeKind::Box { kind, pointee, existing_rust_type } => Rc::new(RsTypeKind::Box {
             kind: *kind,
             pointee: pointee.as_ref().map(|p| recurse(p)),
@@ -3196,11 +3356,13 @@ fn all_static_lifetimes_internal(
 
 /// Recursively interpolates a token stream that contains a spelled out Rust type.
 ///
-/// Interpolation variables are spalled with braces, e.g. `MyType<{T}>`. They must contain a single
-/// ident, otherwise an error is returned.
-pub fn interpolate_spelled_rust_type(
+/// Positional type/const interpolation placeholders are spelled `{}` and lifetime interpolation
+/// placeholders are spelled `{'name}`.
+pub fn interpolate_spelled_rust_type_with_lifetimes(
     rust_type: TokenStream,
-    substs: &mut impl Iterator<Item = Result<TokenStream>>,
+    substs: &mut dyn Iterator<Item = Result<TokenStream>>,
+    lifetime_substs: &HashMap<&str, TokenStream>,
+    used_lifetime_placeholders: &mut bool,
 ) -> Result<TokenStream> {
     rust_type
         .into_iter()
@@ -3210,20 +3372,134 @@ pub fn interpolate_spelled_rust_type(
             if group.delimiter() != Delimiter::Brace {
                 return Ok(TokenStream::from(TokenTree::Group(Group::new(
                     group.delimiter(),
-                    interpolate_spelled_rust_type(group.stream(), substs)?,
+                    interpolate_spelled_rust_type_with_lifetimes(
+                        group.stream(),
+                        substs,
+                        lifetime_substs,
+                        used_lifetime_placeholders,
+                    )?,
                 ))));
             }
 
-            ensure!(
-                group.stream().is_empty(),
-                "Interpolated arguments cannot be provided inline, found `{:?}`",
-                group.stream()
-            );
-            substs.next().unwrap_or_else(|| {
-                bail!("Not enough interpolated arguments");
-            })
+            let tokens: Vec<TokenTree> = group.stream().into_iter().collect();
+            if tokens.is_empty() {
+                return substs.next().unwrap_or_else(|| {
+                    bail!("Not enough interpolated arguments");
+                });
+            }
+            if let [TokenTree::Punct(punct), TokenTree::Ident(ident)] = tokens.as_slice()
+                && punct.as_char() == '\''
+                && punct.spacing() == Spacing::Joint
+            {
+                let name = ident.to_string();
+                let Some(lifetime_tokens) = lifetime_substs.get(name.as_str()) else {
+                    bail!("Lifetime `'{name}` is not declared in `$lifetime_params(...)`");
+                };
+                *used_lifetime_placeholders = true;
+                return Ok(lifetime_tokens.clone());
+            }
+            bail!("Interpolated arguments cannot be provided inline, found `{:?}`", group.stream());
         })
         .collect()
+}
+
+/// Recursively interpolates a token stream that contains a spelled out Rust type.
+///
+/// Interpolation variables are spelled `{}`.
+pub fn interpolate_spelled_rust_type(
+    rust_type: TokenStream,
+    substs: &mut dyn Iterator<Item = Result<TokenStream>>,
+) -> Result<TokenStream> {
+    let mut used_lifetime_placeholders = false;
+    interpolate_spelled_rust_type_with_lifetimes(
+        rust_type,
+        substs,
+        &HashMap::new(),
+        &mut used_lifetime_placeholders,
+    )
+}
+
+fn interpolate_existing_rust_type<'a>(
+    db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+    existing_rust_type: &ExistingRustType,
+    uninterpolated_rust_type: &str,
+    type_args: &[RsTypeKind],
+    lifetimes: &[Lifetime],
+    lifetime_kind: ExistingRustTypeLifetimes,
+) -> Result<TokenStream> {
+    let uninterpolated_tokens: TokenStream = uninterpolated_rust_type
+        .parse()
+        .map_err(|e| anyhow!("Failed to parse rust type `{uninterpolated_rust_type}`: {e}"))?;
+    let mut type_arg_iter = type_args.iter();
+    let mut substs =
+        existing_rust_type.template_args().iter().map(|subst| -> Result<TokenStream> {
+            match subst {
+                TemplateArg::Type(_) => Ok(type_arg_iter
+                    .next()
+                    .expect("ExistingRustType::type_args should match TemplateArg::Type count")
+                    .to_token_stream(db)),
+                TemplateArg::Int(i) => {
+                    if *i < 0 {
+                        let abs = Literal::u64_unsuffixed(i.unsigned_abs());
+                        Ok(quote! { -#abs })
+                    } else {
+                        Ok(Literal::u64_unsuffixed(*i as u64).into_token_stream())
+                    }
+                }
+                TemplateArg::Bool(b) => Ok(b.to_token_stream()),
+            }
+        });
+
+    let lifetime_inputs = existing_rust_type.lifetime_inputs();
+    let fallback_static: Vec<Lifetime>;
+    let effective_lifetimes: &[Lifetime] = if lifetimes.len() == lifetime_inputs.len() {
+        lifetimes
+    } else {
+        fallback_static = vec![Lifetime::new("static"); lifetime_inputs.len()];
+        &fallback_static
+    };
+    let lifetime_substs: HashMap<&str, TokenStream> = lifetime_inputs
+        .iter()
+        .zip(effective_lifetimes.iter())
+        .map(|(name, lt)| (name.as_str(), lt.to_token_stream()))
+        .collect();
+
+    let mut used_lifetime_placeholders = false;
+    let mut rust_type = interpolate_spelled_rust_type_with_lifetimes(
+        uninterpolated_tokens,
+        &mut substs,
+        &lifetime_substs,
+        &mut used_lifetime_placeholders,
+    )
+    .map_err(|e| {
+        anyhow!("Failed to interpolate rust type {}: {e}", existing_rust_type.rs_name())
+    })?;
+
+    let remaining_template_args = substs.collect::<Vec<_>>();
+    if !remaining_template_args.is_empty() {
+        bail!("Unexpected template args: {:?}", remaining_template_args);
+    }
+
+    if !effective_lifetimes.is_empty() && !used_lifetime_placeholders {
+        let ends_with_angle = matches!(
+            rust_type.clone().into_iter().last(),
+            Some(TokenTree::Punct(p)) if p.as_char() == '>'
+        );
+        ensure!(
+            !ends_with_angle,
+            "Failed to interpolate rust type {}: `$lifetime_params(...)` was provided on a \
+             generic Rust type without `{{'name}}` lifetime placeholders in \
+             `CRUBIT_INTERNAL_RUST_TYPE`",
+            existing_rust_type.rs_name(),
+        );
+        rust_type = quote! { #rust_type < #(#effective_lifetimes),* > };
+    }
+
+    if lifetime_kind == ExistingRustTypeLifetimes::UnknownWrapped {
+        rust_type = quote! { ::crubit_support::Unsafe<#rust_type> };
+    }
+
+    Ok(rust_type)
 }
 
 /// The classification of how a type should cross the FFI boundary.
@@ -3413,7 +3689,9 @@ impl RsTypeKind {
                 if let Some(generic_monomorphization) = uniform_repr_template_type {
                     return generic_monomorphization.to_token_stream(&db);
                 }
-                let arity = db.decl_lifetime_arity(record.id()).expect("RsTypeKind::to_token_stream: can't determine lifetime arity");
+                let arity = db
+                    .decl_lifetime_arity(record.id())
+                    .expect("RsTypeKind::to_token_stream: can't determine lifetime arity");
                 if arity == 0 || lifetimes.len() == arity || record.is_raw_string_view() {
                     // Use the safe projection.
                     let lts = if lifetimes.is_empty() {
@@ -3436,7 +3714,11 @@ impl RsTypeKind {
                 quote! { #crate_path #ident }
             }
             RsTypeKind::TypeAlias { type_alias, crate_path, lifetimes, .. } => {
-                if let RsTypeKind::BridgeType { bridge_type: BridgeRsTypeKind::StdString { layout_compatible: true, .. }, .. } = self.unalias() {
+                if let RsTypeKind::BridgeType {
+                    bridge_type: BridgeRsTypeKind::StdString { layout_compatible: true, .. },
+                    ..
+                } = self.unalias()
+                {
                     return self.unalias().to_token_stream(db);
                 }
                 let mut ident = make_rs_ident(type_alias.rs_name().as_str());
@@ -3456,16 +3738,39 @@ impl RsTypeKind {
                     new_crate_path.namespace_qualifier.namespaces.pop();
                     crate_path = Rc::new(new_crate_path);
                 };
-                let arity = db.decl_lifetime_arity(type_alias.id()).unwrap_or(0);
-                let lts = if lifetimes.is_empty() && arity > 0 {
+                let assume_lifetimes = db
+                    .ir()
+                    .target_crubit_features(type_alias.as_ref().owning_target())
+                    .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+                let arity =
+                    if assume_lifetimes || type_alias.rs_name().as_str() == "raw_string_view" {
+                        db.decl_lifetime_arity(type_alias.id()).unwrap_or(0)
+                    } else {
+                        0
+                    };
+                let lts = if arity == 0 {
+                    quote! {}
+                } else if lifetimes.is_empty() {
                     let statics = std::iter::repeat_n(make_rs_lifetime_ident("static"), arity);
                     quote! { <#( #statics ),* > }
-                } else if lifetimes.is_empty() {
-                    quote! {}
                 } else {
                     quote! { <#( #lifetimes ),* > }
                 };
-                quote! { #crate_path #ident #lts }
+                let alias_tokens = quote! { #crate_path #ident #lts };
+                if arity > 0
+                    && lifetimes.len() != arity
+                    && matches!(
+                        self.unalias(),
+                        RsTypeKind::ExistingRustType {
+                            lifetime_kind: ExistingRustTypeLifetimes::UnknownWrapped,
+                            ..
+                        }
+                    )
+                {
+                    quote! { ::crubit_support::Unsafe<#alias_tokens> }
+                } else {
+                    alias_tokens
+                }
             }
             RsTypeKind::Primitive(primitive) => {
                 PrimitiveName::from_primitive(*primitive).to_token_stream()
@@ -3478,15 +3783,15 @@ impl RsTypeKind {
             RsTypeKind::BridgeType { bridge_type, original_type } => {
                 match bridge_type {
                     BridgeRsTypeKind::Bridge { rust_name, generic_types, label_hint, .. } => {
-                        let resolved_name = resolve_bridge_rust_name(rust_name, label_hint, db.ir());
+                        let resolved_name =
+                            resolve_bridge_rust_name(rust_name, label_hint, db.ir());
                         let path = fully_qualify_type(
                             db,
                             ir::Item::Record(original_type.clone()),
                             &resolved_name,
                         );
 
-                        let arity = db.decl_lifetime_arity(original_type.id())
-                        .unwrap_or(0);
+                        let arity = db.decl_lifetime_arity(original_type.id()).unwrap_or(0);
                         if generic_types.is_empty() && arity == 0 {
                             return path;
                         } else if generic_types.is_empty() && arity > 0 {
@@ -3500,9 +3805,11 @@ impl RsTypeKind {
                         quote! { #path<#(#generic_types_tokens),*> }
                     }
                     BridgeRsTypeKind::ProtoMessageBridge { rust_name, kind } => match kind {
-                        ProtoBridgeKind::Owned => {
-                            fully_qualify_type(db, ir::Item::Record(original_type.clone()), rust_name)
-                        }
+                        ProtoBridgeKind::Owned => fully_qualify_type(
+                            db,
+                            ir::Item::Record(original_type.clone()),
+                            rust_name,
+                        ),
                         ProtoBridgeKind::View(lifetime) => {
                             let view_name = format!("{rust_name}View");
                             let type_tokens = fully_qualify_type(
@@ -3552,7 +3859,9 @@ impl RsTypeKind {
                         let callable_spelling = callable.dyn_fn_spelling(&db);
                         quote! { ::alloc::boxed::Box<#callable_spelling> }
                     }
-                    BridgeRsTypeKind::C9Co { has_reference_param, result_type, lifetime, .. } => {
+                    BridgeRsTypeKind::C9Co {
+                        has_reference_param, result_type, lifetime, ..
+                    } => {
                         let co_crate = db
                             .ir()
                             .crate_name(&BazelLabel::from("//util/c9:co"))
@@ -3563,8 +3872,8 @@ impl RsTypeKind {
                         } else {
                             result_type.to_token_stream(db)
                         };
-                        // When there are reference parameters, the coroutine must finish before they are
-                        // invalidated (http://shortn/_XPma06AwZh).
+                        // When there are reference parameters, the coroutine must finish before
+                        // they are invalidated (http://shortn/_XPma06AwZh).
                         match (lifetime, has_reference_param) {
                             (Some(lt), _) => quote! { #co_crate::Co<#lt, #result_type_tokens> },
                             (_, false) => quote! { #co_crate::Co<'static, #result_type_tokens> },
@@ -3573,35 +3882,48 @@ impl RsTypeKind {
                     }
                 }
             }
-            RsTypeKind::ExistingRustType { rust_type, .. } => rust_type.parse().expect("ExistingRustType.rust_type should parse as a TokenStream because it was constructed from one."),
-            RsTypeKind::Box { kind, pointee, existing_rust_type: _ } => {
-                match kind {
-                    BoxKind::Box => {
-                        let p = pointee
-                            .as_ref()
-                            .expect("non-StrBox box type must have a pointee")
-                            .to_token_stream(db);
-                        quote! { ::alloc::boxed::Box<#p> }
-                    }
-                    BoxKind::PinBox => {
-                        let p = pointee
-                            .as_ref()
-                            .expect("non-StrBox box type must have a pointee")
-                            .to_token_stream(db);
-                        quote! { ::core::pin::Pin<::alloc::boxed::Box<#p>> }
-                    }
-                    BoxKind::SliceBox => {
-                        let p = pointee
-                            .as_ref()
-                            .expect("non-StrBox box type must have a pointee")
-                            .to_token_stream(db);
-                        quote! { ::alloc::boxed::Box<[#p]> }
-                    }
-                    BoxKind::StrBox => {
-                        quote! { ::alloc::boxed::Box<str> }
-                    }
+            RsTypeKind::ExistingRustType {
+                existing_rust_type,
+                uninterpolated_rust_type,
+                type_args,
+                lifetimes,
+                lifetime_kind,
+                ..
+            } => interpolate_existing_rust_type(
+                db,
+                existing_rust_type,
+                uninterpolated_rust_type,
+                type_args,
+                lifetimes,
+                *lifetime_kind,
+            )
+            .expect("ExistingRustType interpolation was validated in new_existing_rust_type"),
+            RsTypeKind::Box { kind, pointee, existing_rust_type: _ } => match kind {
+                BoxKind::Box => {
+                    let p = pointee
+                        .as_ref()
+                        .expect("non-StrBox box type must have a pointee")
+                        .to_token_stream(db);
+                    quote! { ::alloc::boxed::Box<#p> }
                 }
-            }
+                BoxKind::PinBox => {
+                    let p = pointee
+                        .as_ref()
+                        .expect("non-StrBox box type must have a pointee")
+                        .to_token_stream(db);
+                    quote! { ::core::pin::Pin<::alloc::boxed::Box<#p>> }
+                }
+                BoxKind::SliceBox => {
+                    let p = pointee
+                        .as_ref()
+                        .expect("non-StrBox box type must have a pointee")
+                        .to_token_stream(db);
+                    quote! { ::alloc::boxed::Box<[#p]> }
+                }
+                BoxKind::StrBox => {
+                    quote! { ::alloc::boxed::Box<str> }
+                }
+            },
         }
     }
 
@@ -3701,6 +4023,11 @@ fn fully_qualify_type_impl(
                 continue 'fix;
             }
         }
+        // A lifetime placeholder after `&`, as in `&{'a} str`.
+        if let Some(suffix) = strip_lifetime_placeholder(type_expression_suffix) {
+            type_expression_suffix = suffix;
+            continue 'fix;
+        }
         break;
     }
 
@@ -3751,6 +4078,17 @@ fn fully_qualify_type_impl(
         let top_level_crate = root_crate();
         quote! { #prefix #top_level_crate::#type_expression }
     }
+}
+
+/// Strips a leading lifetime interpolation placeholder (`{'a}`) from `type_expression`, if present.
+fn strip_lifetime_placeholder(type_expression: &str) -> Option<&str> {
+    let rest = type_expression.strip_prefix('{')?.trim_start().strip_prefix('\'')?;
+    let end = rest.find('}')?;
+    let name = rest[..end].trim_end();
+    if name.is_empty() || !name.chars().all(|c| c == '_' || c.is_ascii_alphanumeric()) {
+        return None;
+    }
+    Some(&rest[end + 1..])
 }
 
 /// Strips a leading `crate::` from `type_expression`, if present.
@@ -3902,6 +4240,7 @@ mod tests {
             FfiRc::new(proto.clone()),
             &LifetimeOptions::default(),
             &None,
+            &[],
         )
         .expect("Should succeed because all fallible operations come from BindingsGenerated, which EmptyDatabase cannot successfully deref to (it panics).")
     }
@@ -4249,6 +4588,24 @@ mod tests {
                 quote! {crate}
             }),
             quote! {crate::crate_like::A},
+        );
+    }
+
+    /// A lifetime placeholder after `&` is part of the prefix, so `&{'a} str` stays a reference
+    /// to the primitive `str` and `&{'a} Foo` a reference to a crate-relative path.
+    #[gtest]
+    fn test_fully_qualify_reference_with_lifetime_placeholder() {
+        assert_rs_matches!(
+            fully_qualify_type_impl("&{'a} str", || {
+                quote! {crate}
+            }),
+            quote! {&{'a} str},
+        );
+        assert_rs_matches!(
+            fully_qualify_type_impl("& { 'a } mut Foo", || {
+                quote! {crate}
+            }),
+            quote! {&{'a} mut crate::Foo},
         );
     }
 
