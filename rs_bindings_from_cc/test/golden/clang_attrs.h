@@ -40,4 +40,8 @@ struct __attribute__((__preferred_name__(SpecializedTypeAlias))) SomeTemplate {
 
 }  // namespace template_with_preferred_name
 
+struct [[gnu::warn_unused]] HasWarnUnusedAttr {
+  int x;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CLANG_ATTRS_H_

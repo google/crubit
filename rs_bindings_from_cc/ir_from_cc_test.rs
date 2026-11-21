@@ -8247,6 +8247,45 @@ fn test_maybe_unused_on_record_and_field() -> Result<()> {
     Ok(())
 }
 
+// `[[gnu::warn_unused]]` only enables `-Wunused-variable` diagnostics for
+// unused objects of the record type (used by libc++ via `_LIBCPP_WARN_UNUSED`
+// on containers such as `std::basic_string`) and does not affect ABI or layout.
+#[gtest]
+fn test_warn_unused_on_record() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct [[gnu::warn_unused]] WarnUnusedStruct {
+          int x;
+        };
+        struct [[__gnu__::__warn_unused__]] LibcppWarnUnusedStruct {
+          int x;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "WarnUnusedStruct",
+                cc_name: "WarnUnusedStruct", ...
+                unknown_attr: None, ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "LibcppWarnUnusedStruct",
+                cc_name: "LibcppWarnUnusedStruct", ...
+                unknown_attr: None, ...
+            }
+        }
+    );
+    Ok(())
+}
+
 #[gtest]
 fn test_constant_array_fields_and_bounds() {
     let proto = ir_proto_from_cc(

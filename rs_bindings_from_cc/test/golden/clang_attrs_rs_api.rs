@@ -190,6 +190,34 @@ pub mod template_with_preferred_name {
 
 // namespace template_with_preferred_name
 
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "17HasWarnUnusedAttr"]
+#[repr(C)]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=HasWarnUnusedAttr")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+pub struct HasWarnUnusedAttr {
+    pub x: ::ffi_11::c_int,
+}
+unsafe impl ::cxx::ExternType for HasWarnUnusedAttr {
+    type Id = ::cxx::type_id!("HasWarnUnusedAttr");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("HasWarnUnusedAttr"),
+    crate::HasWarnUnusedAttr
+);
+
+impl Default for HasWarnUnusedAttr {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN17HasWarnUnusedAttrC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
 /// Class template instantiations that aren't named by a C++ type alias.
 pub mod zz_template_instantiations {
     #[doc(hidden)]
@@ -213,6 +241,9 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk__90355363__ZN28template_with_preferred_name12SomeTemplateIiEC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN17HasWarnUnusedAttrC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
     }
@@ -247,4 +278,10 @@ const _: () = {
     );
     static_assertions::assert_impl_all!(crate::template_with_preferred_name::SpecializedTypeAlias: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::template_with_preferred_name::SpecializedTypeAlias: Drop);
+
+    assert!(::core::mem::size_of::<crate::HasWarnUnusedAttr>() == 4);
+    assert!(::core::mem::align_of::<crate::HasWarnUnusedAttr>() == 4);
+    static_assertions::assert_impl_all!(crate::HasWarnUnusedAttr: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::HasWarnUnusedAttr: Drop);
+    assert!(::core::mem::offset_of!(crate::HasWarnUnusedAttr, x) == 0);
 };

@@ -63,4 +63,13 @@ __rust_thunk__90355363__ZN28template_with_preferred_name12SomeTemplateIiEC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(CRUBIT_SIZEOF(struct HasWarnUnusedAttr) == 4);
+static_assert(alignof(struct HasWarnUnusedAttr) == 4);
+static_assert(CRUBIT_OFFSET_OF(x, struct HasWarnUnusedAttr) == 0);
+
+extern "C" void __rust_thunk___ZN17HasWarnUnusedAttrC1Ev(
+    struct HasWarnUnusedAttr* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop
