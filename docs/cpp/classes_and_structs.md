@@ -147,6 +147,121 @@ Some examples of types that are **not** Rust-movable:
     types used throughout the C++ ecosystem, even outside the standard library.
 *   `absl::Mutex`, `absl::Notification`, and other non-movable types.
 
+## Constructors {#constructors}
+
+Crubit maps C++ constructors to Rust trait implementations rather than
+associated functions like `Type::new(...)`. Which traits are generated depends
+on whether the class is [Rust-movable](#rust_movable) (`Unpin`) or
+non-Rust-movable (`!Unpin`):
+
+*   **Overloaded constructors** with distinct parameter lists receive separate
+    trait implementations without needing `CRUBIT_RUST_NAME`.
+*   **`explicit` and non-`explicit` constructors** receive the same bindings.
+*   **`private`, `protected`, `= delete`d, and abstract-class constructors** do
+    not receive bindings.
+
+NOTE: If you prefer a named associated function in Rust (such as
+`MyClass::Create(...)`), expose a C++ `static` member function; see
+[Functions](functions.md).
+
+### Rust-movable classes (`Unpin`) {#constructors_unpin}
+
+For a Rust-movable class `T`:
+
+*   **Default constructor (`T()`)**: Implements `Default`, called as
+    `T::default()`. (`CtorNew<()>` is not generated for `Unpin` types.)
+*   **Copy constructor (`T(const T&)`)**: Derives `Clone` and `Copy` when
+    possible, or implements `Clone` (`x.clone()`).
+*   **Move constructor (`T(T&&)`)**: Derives `ctor::MoveAndAssignViaCopy` for
+    `Copy` types, or implements `From<ctor::RvalueReference<'_, Self>>` and
+    `ctor::CtorNew<ctor::RvalueReference<'_, Self>>`. (Rust code normally moves
+    `Unpin` values directly.)
+*   **Single-argument constructor (`T(A)`)**: Implements both `From<A>` and
+    `ctor::CtorNew<A>` (with `type CtorType = Self`, so `T::ctor_new(a)` returns
+    `T` directly without `emplace!`).
+*   **Multi-argument constructor (`T(A, B, ...)`)**: Packs the arguments into a
+    tuple and implements both `From<(A, B, ...)>` and
+    `ctor::CtorNew<(A, B, ...)>` (again returning `T` directly).
+
+For example, given:
+
+```c++
+class CRUBIT_MUST_BIND Widget {
+ public:
+  Widget();
+  explicit Widget(int id);
+  Widget(int width, int height);
+};
+```
+
+In Rust, construct `Widget` using `Default`, `From`/`Into`, or `ctor::CtorNew`:
+
+```rust
+use ctor::CtorNew as _;
+
+let w0 = Widget::default();
+let w1 = Widget::from(42);
+let w2: Widget = 42.into();
+let w3 = Widget::from((100, 200));
+let w4 = Widget::ctor_new((100, 200));
+```
+
+### Non-Rust-movable classes (`!Unpin`) {#constructors_non_unpin}
+
+Non-Rust-movable classes do not implement `Default`, `Clone`, or `From`.
+Instead, every supported constructor implements `ctor::CtorNew<Args>` with
+`type CtorType = Ctor![Self]`, returning a lazy in-place constructor to pass to
+`ctor::emplace!` (stack) or `Box::emplace` (heap):
+
+*   **Default constructor (`T()`)**: `CtorNew<()>` (`emplace!(T::ctor_new(()))`)
+*   **Single-argument constructor (`T(A)`)**: `CtorNew<A>` and `CtorNew<(A,)>`
+    (`emplace!(T::ctor_new(a))`)
+*   **Multi-argument constructor (`T(A, B, ...)`)**: `CtorNew<(A, B, ...)>`
+    (`emplace!(T::ctor_new((a, b)))`)
+*   **Copy (`T(const T&)`) and move (`T(T&&)`) constructors**: `CtorNew<&T>`
+    (also via `ctor::copy(&*x)`) and `CtorNew<ctor::RvalueReference<'_, T>>`
+    (also via `ctor::mov!(x)`).
+
+For example:
+
+```rust
+use ctor::{emplace, CtorNew as _, Emplace as _};
+
+let on_stack = emplace!(NonTrivial::ctor_new((100, 200)));
+let on_heap = Box::emplace(NonTrivial::ctor_new(()));
+```
+
+See [Non-Rust-Movable Types](../types/non_rust_movable/intro_short.md) and the
+[Advanced
+Introduction](../types/non_rust_movable/intro_advanced.md#constructors-and-assignment-operators)
+for more on `Ctor` and `emplace!`.
+
+### Unsafe constructors {#constructors_unsafe}
+
+If a constructor takes an unsafe parameter (such as a raw pointer) or is
+annotated with `CRUBIT_UNSAFE`, Crubit implements `ctor::UnsafeCtorNew` (and
+`ctor::UnsafeFrom` for Rust-movable classes, including `UnsafeFrom<()>` for an
+unsafe 0-argument constructor) instead of `Default`, `From`, or `CtorNew`:
+
+```rust
+use ctor::UnsafeFrom as _;
+
+// SAFETY: `ptr` is valid for the requirements of `WithPtr`.
+let s = unsafe { WithPtr::unsafe_from(ptr) };
+```
+
+### `CRUBIT_MUST_BIND` on constructors {#constructors_must_bind}
+
+Annotating a constructor with `CRUBIT_MUST_BIND` ensures that Crubit either
+generates bindings for it or fails the build with an error if it cannot be
+bound. Because constructor bindings are emitted as trait implementations
+(`Default`, `Clone`, `From`, `CtorNew`, `UnsafeFrom`, `UnsafeCtorNew`) rather
+than named methods, check the generated bindings for those trait `impl`s when
+verifying constructor bindings.
+
+More examples of generated constructor bindings are tested in
+[`rs_bindings_from_cc/test/struct/constructors/`](http://rs_bindings_from_cc/test/struct/constructors/).
+
 ## Base classes {#inheritance}
 
 Rust has no inheritance, so a derived class and its base classes become
