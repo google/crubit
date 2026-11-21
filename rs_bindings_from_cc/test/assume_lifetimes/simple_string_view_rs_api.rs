@@ -126,6 +126,33 @@ pub fn sva_lb<'__rv>(s: crate::SVA<'__rv>) -> crate::SVA<'__rv> {
     }
 }
 
+#[derive(Clone, Copy)]
+#[cfi_encoding = "6SVPair"]
+#[repr(C)]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=SVPair")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+pub struct SVPair<'a, 'b> {
+    pub count: ::ffi_11::c_int,
+    __marker_a: ::core::marker::PhantomData<&'a ()>,
+    __marker_b: ::core::marker::PhantomData<&'b ()>,
+}
+unsafe impl<'a, 'b> ::cxx::ExternType for SVPair<'a, 'b> {
+    type Id = ::cxx::type_id!("SVPair");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("SVPair"), crate::SVPair<'_, '_>);
+
+impl<'a, 'b> Default for SVPair<'a, 'b> {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN6SVPairC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -154,6 +181,7 @@ mod detail {
             __return: *mut ::core::ffi::c_void,
             s: *mut crate::SVA<'__rv>,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN6SVPairC1Ev(__this: *mut ::core::ffi::c_void);
     }
 }
 
@@ -162,4 +190,10 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::SV>() == 1);
     static_assertions::assert_impl_all!(crate::SV<'static>: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SV<'static>: Drop);
+
+    assert!(::core::mem::size_of::<crate::SVPair>() == 4);
+    assert!(::core::mem::align_of::<crate::SVPair>() == 4);
+    static_assertions::assert_impl_all!(crate::SVPair<'static,'static>: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::SVPair<'static,'static>: Drop);
+    assert!(::core::mem::offset_of!(crate::SVPair, count) == 0);
 };
