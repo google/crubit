@@ -38,7 +38,10 @@ use generate_struct_and_union::{
     generate_fields, generate_relocating_ctor, get_generic_adt_header, has_type_or_const_vars,
     GenericAdtHeader,
 };
-use generate_unsupported::{generate_unsupported_def, generate_unsupported_def_with_args};
+use generate_unsupported::{
+    generate_unsupported_def, generate_unsupported_def_with_args, has_must_bind,
+    report_must_bind_error,
+};
 use itertools::Itertools;
 use proc_macro2::Literal;
 use proc_macro2::TokenStream;
@@ -2195,6 +2198,18 @@ pub fn generate_template_specialization<'tcx>(
         TemplateSpecialization::TraitImpl(trait_impl) => {
             generate_unsupported::error_scope!(db, trait_impl.trait_impl);
             generate_trait_impl_specialization(db, trait_impl).unwrap_or_else(|err| {
+                let tcx = db.tcx();
+                for assoc_item in tcx.associated_items(trait_impl.trait_impl).in_definition_order()
+                {
+                    if has_must_bind(tcx, assoc_item.def_id) {
+                        report_must_bind_error(
+                            db,
+                            assoc_item.def_id,
+                            database::empty_generic_args(),
+                            &err,
+                        );
+                    }
+                }
                 generate_unsupported_def(db, trait_impl.trait_impl, err).into_main_api()
             })
         }

@@ -4560,3 +4560,541 @@ fn test_option_and_result_multi_level_pointer_accessors_nullability() {
         );
     });
 }
+
+#[gtest]
+fn test_must_bind_on_private_fn_reports_fatal_error() {
+    let test_src = r#"
+        #![allow(dead_code)]
+
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+        fn private_fn() {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, _error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let _ = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        assert!(
+            fatal_msg
+                .contains("Item is not `pub`; C++ bindings are only generated for public items"),
+            "Expected non-pub error message, got:\n{fatal_msg}"
+        );
+        assert_eq!(
+            fatal_msg
+                .matches(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to `private_fn`"
+                )
+                .count(),
+            1,
+            "Expected exactly one must_bind fatal error for private_fn, got:\n{fatal_msg}"
+        );
+    });
+}
+
+#[gtest]
+fn test_must_bind_on_pub_item_in_private_mod_without_reexport_reports_fatal_error() {
+    let test_src = r#"
+        #![allow(dead_code)]
+
+        mod priv_mod {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            pub fn unexported() {}
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, _error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let _ = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        assert!(
+            fatal_msg.contains("Item is not publicly reachable from the crate root"),
+            "Expected unreachable error message, got:\n{fatal_msg}"
+        );
+        assert_eq!(
+            fatal_msg
+                .matches(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `priv_mod::unexported`"
+                )
+                .count(),
+            1,
+            "Expected exactly one must_bind fatal error for priv_mod::unexported, got:\n{fatal_msg}"
+        );
+    });
+}
+
+#[gtest]
+fn test_must_bind_on_pub_item_in_private_mod_reexported_succeeds() {
+    let test_src = r#"
+        mod priv_mod {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            pub fn exported() {}
+
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            pub struct ExportedStruct(pub i32);
+        }
+        pub use priv_mod::{exported, ExportedStruct};
+
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+        pub type ExportedAlias = ExportedStruct;
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace rust_out {
+                    ...
+                    struct ... ExportedStruct final { ... };
+                    ...
+                    void exported();
+                    ...
+                }
+            }
+        );
+    });
+}
+
+#[gtest]
+fn test_must_bind_on_private_inherent_method_reports_fatal_error() {
+    let test_src = r#"
+        #![allow(dead_code)]
+
+        pub struct S(pub i32);
+
+        impl S {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            fn priv_method(&self) {}
+        }
+
+        struct PrivStruct(pub i32);
+
+        impl PrivStruct {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            pub fn method_on_priv_struct(&self) {}
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, _error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let _ = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        assert!(
+            fatal_msg.contains(
+                "Associated item is not `pub`; C++ bindings are only generated for public items"
+            ),
+            "Expected non-pub associated item error message, got:\n{fatal_msg}"
+        );
+        assert_eq!(
+            fatal_msg
+                .matches(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `S::priv_method`"
+                )
+                .count(),
+            1,
+            "Expected exactly one must_bind fatal error for S::priv_method, got:\n{fatal_msg}"
+        );
+        assert_eq!(
+            fatal_msg
+                .matches(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `PrivStruct::method_on_priv_struct`"
+                )
+                .count(),
+            1,
+            "Expected must_bind fatal error for PrivStruct::method_on_priv_struct, got:\n{fatal_msg}"
+        );
+    });
+}
+
+#[gtest]
+fn test_must_bind_on_public_trait_impl_method_succeeds_and_private_trait_impl_fails() {
+    let valid_src = r#"
+        pub trait T {
+            fn m(&self) -> i32;
+        }
+        pub struct S(pub i32);
+        impl T for S {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            fn m(&self) -> i32 {
+                self.0
+            }
+        }
+    "#;
+    test_generated_bindings(valid_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                template <>
+                struct ::rs::impl<::rust_out::S, ::rust_out::T> {
+                    static constexpr bool kIsImplemented = true;
+                    ...
+                    static ::std::int32_t m(::rust_out::S const& self);
+                };
+                ...
+            }
+        );
+    });
+
+    let invalid_src = r#"
+        #![allow(dead_code)]
+
+        trait PrivTrait {
+            fn m(&self);
+        }
+        pub trait PubTrait {
+            fn m(&self);
+        }
+        pub struct PubStruct(pub i32);
+        struct PrivStruct(pub i32);
+
+        impl PrivTrait for PubStruct {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            fn m(&self) {}
+        }
+
+        impl PubTrait for PrivStruct {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            fn m(&self) {}
+        }
+    "#;
+    run_compiler_for_testing(invalid_src, |tcx| {
+        let (db, _error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let _ = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        for expected_item in ["<PubStruct as PrivTrait>::m", "<PrivStruct as PubTrait>::m"] {
+            assert_eq!(
+                fatal_msg
+                    .matches(&format!(
+                        "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                         `{expected_item}`"
+                    ))
+                    .count(),
+                1,
+                "Expected exactly one must_bind fatal error for {expected_item}, got:\n{fatal_msg}"
+            );
+        }
+    });
+}
+
+#[gtest]
+fn test_must_bind_on_generic_adt_methods() {
+    let uninstantiated_src = r#"
+        #![allow(dead_code)]
+
+        pub struct Gen<T>(pub T);
+
+        impl<T> Gen<T> {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            pub fn pub_m(&self) {}
+
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            fn priv_m(&self) {}
+        }
+    "#;
+    // Without the `Generics` feature, `Gen` itself fails to bind so both methods must error.
+    run_compiler_for_testing(uninstantiated_src, |tcx| {
+        let (db, _error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let _ = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        assert_eq!(
+            fatal_msg
+                .matches(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `Gen::<T>::pub_m`"
+                )
+                .count(),
+            1,
+            "Expected must_bind fatal error for Gen::<T>::pub_m without Generics, got:\n{fatal_msg}"
+        );
+        assert!(
+            fatal_msg.contains("Generic types are not supported yet"),
+            "Expected unsupported generic type error, got:\n{fatal_msg}"
+        );
+        assert_eq!(
+            fatal_msg
+                .matches(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `Gen::<T>::priv_m`"
+                )
+                .count(),
+            1,
+            "Expected must_bind fatal error for Gen::<T>::priv_m, got:\n{fatal_msg}"
+        );
+    });
+
+    // With `Generics` enabled and 0 instantiations, only `priv_m` fails (once).
+    run_compiler_for_testing(uninstantiated_src, |tcx| {
+        let (db, _error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
+            );
+        let _ = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        assert!(
+            !fatal_msg.contains("pub_m"),
+            "Did not expect fatal error for pub_m with Generics enabled, got:\n{fatal_msg}"
+        );
+        assert_eq!(
+            fatal_msg
+                .matches(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `Gen::<T>::priv_m`"
+                )
+                .count(),
+            1,
+            "Expected exactly one must_bind fatal error for Gen::<T>::priv_m, got:\n{fatal_msg}"
+        );
+    });
+
+    // With `Generics` enabled and 2 instantiations, `priv_m` still reports exactly once.
+    let instantiated_src = format!(
+        "{uninstantiated_src}\n\
+         pub fn make_i32() -> Gen<i32> {{ Gen(1) }}\n\
+         pub fn make_u32() -> Gen<u32> {{ Gen(1) }}\n"
+    );
+    run_compiler_for_testing(&instantiated_src, |tcx| {
+        let (db, _error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
+            );
+        let _ = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        assert!(
+            !fatal_msg.contains("pub_m"),
+            "Did not expect fatal error for instantiated pub_m, got:\n{fatal_msg}"
+        );
+        assert_eq!(
+            fatal_msg.matches("priv_m").count(),
+            2, // Once in the error header (`...Gen::<T>::priv_m`), once in the `note:` line.
+            "Expected exactly one fatal error for priv_m across 2 specializations, got:\n{fatal_msg}"
+        );
+    });
+}
+
+#[gtest]
+fn test_must_bind_on_cpp_enum_private_and_suppressed_items_reports_fatal_error() {
+    let test_src = r#"
+        #![allow(dead_code)]
+
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_enum=enum class")]
+        #[repr(transparent)]
+        pub struct MyEnum(i32);
+
+        impl MyEnum {
+            pub const OK: MyEnum = MyEnum(0);
+
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            const PRIV: MyEnum = MyEnum(1);
+
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
+            pub fn suppressed_method(&self) {}
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, _error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let _ = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        assert!(
+            fatal_msg.contains(
+                "Associated item is not `pub`; C++ bindings are only generated for public items"
+            ),
+            "Expected non-pub error for MyEnum::PRIV, got:\n{fatal_msg}"
+        );
+        assert_eq!(
+            fatal_msg
+                .matches(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `MyEnum::PRIV`"
+                )
+                .count(),
+            1,
+            "Expected exactly one must_bind fatal error for MyEnum::PRIV, got:\n{fatal_msg}"
+        );
+        assert!(
+            fatal_msg.contains("marked `#[do_not_bind]`"),
+            "Expected do_not_bind error for MyEnum::suppressed_method, got:\n{fatal_msg}"
+        );
+        assert_eq!(
+            fatal_msg
+                .matches(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `MyEnum::suppressed_method`"
+                )
+                .count(),
+            1,
+            "Expected exactly one must_bind fatal error for MyEnum::suppressed_method, got:\n{fatal_msg}"
+        );
+    });
+}
+
+#[gtest]
+fn test_must_bind_with_do_not_bind_and_anonymous_top_level_const_reports_fatal_error() {
+    let test_src = r#"
+        #![allow(warnings)]
+
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
+        pub fn suppressed_fn() {}
+
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+        pub const _: i32 = 0;
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, _error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let _ = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        assert!(
+            fatal_msg.contains("marked `#[do_not_bind]`"),
+            "Expected do_not_bind error for suppressed_fn, got:\n{fatal_msg}"
+        );
+        assert_eq!(
+            fatal_msg
+                .matches(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `suppressed_fn`"
+                )
+                .count(),
+            1,
+            "Expected exactly one must_bind fatal error for suppressed_fn, got:\n{fatal_msg}"
+        );
+        assert!(
+            fatal_msg.contains("Anonymous items cannot be bound to C++"),
+            "Expected anonymous item error for top-level `pub const _`, got:\n{fatal_msg}"
+        );
+    });
+}
+
+#[gtest]
+fn test_must_bind_on_folded_type_alias_failures_reports_fatal_error() {
+    let test_src = r#"
+        #![allow(dead_code)]
+
+        pub struct Zst;
+
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+        pub type ZstAlias = Zst;
+
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=::my::Mapped")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: include_path=my/mapped.h")]
+        #[repr(C)]
+        pub struct Mapped(pub i32);
+
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+        pub type MappedAlias = Mapped;
+
+        pub struct Gen<T>(pub T);
+
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+        pub type GenAlias<T> = Gen<T>;
+
+        mod priv_mod {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            pub type HiddenZstAlias = super::Zst;
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, _error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let _ = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        for expected_item in ["ZstAlias", "MappedAlias", "GenAlias", "priv_mod::HiddenZstAlias"] {
+            assert_eq!(
+                fatal_msg
+                    .matches(&format!(
+                        "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                         `{expected_item}`"
+                    ))
+                    .count(),
+                1,
+                "Expected exactly one must_bind fatal error for {expected_item}, got:\n{fatal_msg}"
+            );
+        }
+        assert!(
+            fatal_msg.contains("Generic types are not supported yet"),
+            "Expected unsupported generic type error for GenAlias, got:\n{fatal_msg}"
+        );
+        assert!(
+            fatal_msg.contains("Item is not publicly reachable from the crate root"),
+            "Expected unreachable error for priv_mod::HiddenZstAlias, got:\n{fatal_msg}"
+        );
+    });
+}
+
+#[gtest]
+fn test_must_bind_on_failing_trait_impl_specialization_reports_fatal_error() {
+    let test_src = r#"
+        #![allow(dead_code)]
+
+        pub trait T<A> {
+            fn m(&self);
+        }
+        pub struct S(pub i32);
+        pub struct Zst;
+
+        impl T<usize> for S {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            fn m(&self) {}
+        }
+
+        impl T<Zst> for S {
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: must_bind=")]
+            fn m(&self) {}
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, _error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let _ = generate_bindings::generate_bindings(&db).unwrap();
+        let fatal_msg = fatal_errors.take_string();
+        for expected_item in ["<S as T<usize>>::m", "<S as T<Zst>>::m"] {
+            assert_eq!(
+                fatal_msg
+                    .matches(&format!(
+                        "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                         `{expected_item}`"
+                    ))
+                    .count(),
+                1,
+                "Expected exactly one must_bind fatal error for {expected_item}, got:\n{fatal_msg}"
+            );
+        }
+    });
+}
