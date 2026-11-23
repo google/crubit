@@ -780,22 +780,6 @@ fn module_children(tcx: TyCtxt<'_>, parent: DefId) -> &[ModChild] {
     }
 }
 
-fn resolve_if_use(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<DefId> {
-    let tcx = db.tcx();
-    let DefKind::Use = tcx.def_kind(def_id) else {
-        return None;
-    };
-
-    let parent = tcx.opt_parent(def_id).expect("Expected use to have a parent");
-    let module_children = module_children(tcx, parent);
-    for child in module_children.iter() {
-        if child.reexport_chain.first().and_then(|reexport| reexport.id()) == Some(def_id) {
-            return child.res.opt_def_id();
-        }
-    }
-    None
-}
-
 fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<UnqualifiedName> {
     let tcx = db.tcx();
     let item_name = db
@@ -823,11 +807,7 @@ fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<
 /// Implementation of `BindingsGenerator::symbol_canonical_name`.
 fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<FullyQualifiedName> {
     let tcx = db.tcx();
-
-    // TODO: b/433286909 - We shouldn't pass DefKind::Use to this method and instead should keep
-    // what our use is pointing at alongside the use as we generate_items and pass that when we
-    // want to determine canonical name.
-    let def_id = resolve_if_use(db, def_id).unwrap_or(def_id);
+    assert!(!matches!(tcx.def_kind(def_id), DefKind::Use));
 
     // Symbols that should not receive bindings should not have a canonical name, so that we do not
     // attempt to bind other items that depend on them (functions that use them in their signature
