@@ -174,3 +174,38 @@ fn test_blocked_by_type_alias() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_func_ptr_requiring_thunk_uses_static_fmt() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct SomeStruct { int x; };
+        SomeStruct (*ReturnsStruct())();
+        void TakesFuncPtr(void (*cb)(int, SomeStruct));
+        "#,
+    )?;
+    let entries = parse_report(&generate_error_report_json_for_test(make_test_ir(&proto)?)?);
+
+    let ret_entry = find_entry(&entries, "ReturnsStruct");
+    assert_eq!(ret_entry.errors.len(), 1);
+    expect_eq!(
+        ret_entry.errors[0].fmt(),
+        "Function pointer return type `{}` requires an FFI thunk (and function pointers don't have a thunk)"
+    );
+    expect_eq!(
+        ret_entry.errors[0].full_error(),
+        "Function pointer return type `SomeStruct` requires an FFI thunk (and function pointers don't have a thunk)"
+    );
+
+    let param_entry = find_entry(&entries, "TakesFuncPtr");
+    assert_eq!(param_entry.errors.len(), 1);
+    expect_eq!(
+        param_entry.errors[0].fmt(),
+        "Function pointer parameter #{i} of type `{}` requires an FFI thunk (and function pointers don't have a thunk)"
+    );
+    expect_eq!(
+        param_entry.errors[0].full_error(),
+        "Function pointer parameter #1 of type `SomeStruct` requires an FFI thunk (and function pointers don't have a thunk)"
+    );
+    Ok(())
+}

@@ -94,42 +94,60 @@ fn test_func_ptr_requiring_thunk_is_rejected() -> Result<()> {
         struct SomeStruct {
           int field;
         };
+        namespace ns {
+        struct OtherStruct {
+          int field;
+        };
+        }  // namespace ns
+        using CallbackFn = void(int, ns::OtherStruct);
         SomeStruct (*get_ptr_to_func_returning_struct())();
         void (*get_ptr_to_func_taking_struct())(SomeStruct);
         void accept_ptr_to_func_taking_struct(void (*)(SomeStruct));
+        void accept_ref_to_func_taking_second_param_struct(CallbackFn&);
         "#,
     )?;
     assert_rs_matches!(rs_api, quote! { pub struct SomeStruct { ... } });
     assert_rs_not_matches!(rs_api, quote! { pub fn get_ptr_to_func_returning_struct });
     assert_rs_not_matches!(rs_api, quote! { pub fn get_ptr_to_func_taking_struct });
     assert_rs_not_matches!(rs_api, quote! { pub fn accept_ptr_to_func_taking_struct });
+    assert_rs_not_matches!(rs_api, quote! { pub fn accept_ref_to_func_taking_second_param_struct });
     assert_cc_not_matches!(rs_api_impl, quote! { get_ptr_to_func_returning_struct });
     assert_cc_not_matches!(rs_api_impl, quote! { get_ptr_to_func_taking_struct });
     assert_cc_not_matches!(rs_api_impl, quote! { accept_ptr_to_func_taking_struct });
+    assert_cc_not_matches!(rs_api_impl, quote! { accept_ref_to_func_taking_second_param_struct });
 
     let rs_api_str = rs_tokens_to_formatted_string_for_tests(rs_api)?;
-    let expected_reason = "Either the return type or some of the parameter types require \
-        an FFI thunk (and function pointers don't have a thunk)";
     expect_that!(
         rs_api_str,
-        contains_substring(format!(
+        contains_substring(
             "// error: function `get_ptr_to_func_returning_struct` could not be bound\n\
-            //   Return type is not supported: {expected_reason}"
-        ))
+            //   Return type is not supported: Function pointer return type `SomeStruct` \
+            requires an FFI thunk (and function pointers don't have a thunk)"
+        )
     );
     expect_that!(
         rs_api_str,
-        contains_substring(format!(
+        contains_substring(
             "// error: function `get_ptr_to_func_taking_struct` could not be bound\n\
-            //   Return type is not supported: {expected_reason}"
-        ))
+            //   Return type is not supported: Function pointer parameter #0 of type `SomeStruct` \
+            requires an FFI thunk (and function pointers don't have a thunk)"
+        )
     );
     expect_that!(
         rs_api_str,
-        contains_substring(format!(
+        contains_substring(
             "// error: function `accept_ptr_to_func_taking_struct` could not be bound\n\
-            //   Parameter #0 is not supported: {expected_reason}"
-        ))
+            //   Parameter #0 is not supported: Function pointer parameter #0 of type `SomeStruct` \
+            requires an FFI thunk (and function pointers don't have a thunk)"
+        )
+    );
+    expect_that!(
+        rs_api_str,
+        contains_substring(
+            "// error: function `accept_ref_to_func_taking_second_param_struct` could not be bound\n\
+            //   Parameter #0 is not supported: Function pointer parameter #1 of type \
+            `ns::OtherStruct` requires an FFI thunk (and function pointers don't have a thunk)"
+        )
     );
     Ok(())
 }
@@ -835,7 +853,7 @@ fn test_rs_type_kind_rejects_func_ptr_that_returns_struct_by_value() -> Result<(
     let msg = err.to_string();
     assert_eq!(
         msg,
-        "Either the return type or some of the parameter types require \
+        "Function pointer return type `SomeStruct` requires \
                 an FFI thunk (and function pointers don't have a thunk)",
     );
     Ok(())
@@ -864,7 +882,7 @@ fn test_rs_type_kind_rejects_func_ptr_that_takes_struct_by_value() -> Result<()>
     let msg = err.to_string();
     assert_eq!(
         msg,
-        "Either the return type or some of the parameter types require \
+        "Function pointer parameter #0 of type `SomeStruct` requires \
                 an FFI thunk (and function pointers don't have a thunk)",
     );
     Ok(())
