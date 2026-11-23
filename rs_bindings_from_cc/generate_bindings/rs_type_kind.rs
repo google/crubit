@@ -121,7 +121,7 @@ fn rs_type_kind_with_lifetime_elision_impl(
                     is_return_type: lifetime_options.is_return_type
                         && lifetime_options.assume_lifetimes,
                     is_param: false,
-                    is_operator: lifetime_options.is_operator,
+                    native_reference_operator: lifetime_options.native_reference_operator,
                     requires_layout_compatible: true,
                     ..LifetimeOptions::default()
                 },
@@ -219,9 +219,14 @@ fn rs_type_kind_with_lifetime_elision_impl(
             }
             Ok(match pointer.kind() {
                 PointerTypeKind::LValueRef => {
+                    // Under `assume_lifetimes`, a returned lvalue reference becomes `CRef`/`CMut`:
+                    // its lifetime is assumed, not checked, so it must not claim uniqueness. Only
+                    // operators whose Rust trait needs a native reference are exempt (see
+                    // `LifetimeOptions::native_reference_operator`).
                     let is_cref = lifetime_options.assume_lifetimes
                         && (!pointee.is_complete()
-                            || (lifetime_options.is_return_type && !lifetime_options.is_operator));
+                            || (lifetime_options.is_return_type
+                                && !lifetime_options.native_reference_operator));
                     RsTypeKind::Reference {
                         referent: pointee,
                         mutability,

@@ -4530,7 +4530,7 @@ fn test_template_argument_lifetime_is_bound() -> Result<()> {
         quote! {
             pub struct __CcTemplateInst4ViewIRiE<'T> {
                 ...
-                __marker_T: ::core::marker::PhantomData<&'T ()>,
+                __marker_T: ::core::marker::PhantomData<fn(&'T ()) -> &'T ()>,
             }
         }
     );
@@ -5678,5 +5678,271 @@ fn test_thread_safe_references_in_functions_and_methods() -> Result<()> {
             }
         }
     );
+    Ok(())
+}
+
+/// b/589394789: a lifetime written only on the result, that nothing binds, is ignored with a
+/// warning: the function binds exactly as its unannotated twin `g` does.
+#[gtest]
+fn test_unbound_result_lifetime_on_record_binds_as_unannotated() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        LIFETIME_PARAMS("a") View $a f(int& x);
+        View g(int& x);
+        "#,
+    )?;
+    let warning =
+        "warning: lifetime 'a is not bound by any parameter; ignored, as if the result were unannotated";
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __COMMENT__ #warning
+            #[doc = ...]
+            #[inline(always)]
+            pub fn f<'x>(x: &'x mut ::ffi_11::c_int) -> crate::View<'x> { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn g<'x>(x: &'x mut ::ffi_11::c_int) -> crate::View<'x> { ... }
+        }
+    );
+    Ok(())
+}
+
+/// b/589394789: with several input lifetimes, elision gives an unannotated record result no
+/// lifetime, so a name that nothing binds is unknown: `T<'static>` from an `unsafe fn`, with a
+/// warning. (Until `k2-record-default` lands, the unannotated twin is a safe fn returning
+/// `T<'static>`.)
+#[gtest]
+fn test_unbound_result_lifetime_on_record_with_several_inputs_makes_function_unsafe() -> Result<()>
+{
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        LIFETIME_PARAMS("a") View $a f(int& x, int& y);
+        "#,
+    )?;
+    let warning = "warning: lifetime 'a is not bound by any parameter; treated as unknown, as for an unannotated result with several input lifetimes";
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __COMMENT__ #warning
+            #[doc = ...]
+            #[inline(always)]
+            pub unsafe fn f<'x, 'y>(
+                x: &'x mut ::ffi_11::c_int, y: &'y mut ::ffi_11::c_int
+            ) -> crate::View<'static> { ... }
+        }
+    );
+    assert_that!(
+        rs_api.to_string(),
+        contains_substring("The C++ function does not say what the return value borrows from")
+    );
+    Ok(())
+}
+
+/// b/589394789: an explicit `$unknown` on a record result also makes the function unsafe, but
+/// isn't warned about: the C++ says what it means.
+#[gtest]
+fn test_explicit_unknown_result_on_record_makes_function_unsafe() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        View $unknown f(int& x);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn f<'x>(x: &'x mut ::ffi_11::c_int) -> crate::View<'static> { ... }
+        }
+    );
+    assert_that!(rs_api.to_string(), not(contains_substring("is not bound by any parameter")));
+    Ok(())
+}
+
+/// b/589394789: with several input lifetimes, a reference or pointer result to a record whose name
+/// nothing binds is a raw pointer, as for the unannotated twins `fu`/`gu`. The pointee record gets
+/// no lifetime (`View<'static>`), but only behind the raw pointer, so the function stays safe:
+/// reaching the `View` needs `unsafe`.
+#[gtest]
+fn test_unbound_result_lifetime_on_pointee_record_with_several_inputs() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        LIFETIME_PARAMS("a") const View $a& f(const int& x, const int& y);
+        LIFETIME_PARAMS("a") View $a* g(const int& x, const int& y);
+        const View& fu(const int& x, const int& y);
+        View* gu(const int& x, const int& y);
+        "#,
+    )?;
+    for (name, pointer) in [
+        ("f", quote! { *const }),
+        ("fu", quote! { *const }),
+        ("g", quote! { *mut }),
+        ("gu", quote! { *mut }),
+    ] {
+        let name = make_rs_ident(name);
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub fn #name<'x, 'y>(
+                    x: &'x ::ffi_11::c_int, y: &'y ::ffi_11::c_int
+                ) -> #pointer crate::View<'static> { ... }
+            }
+        );
+    }
+    Ok(())
+}
+
+/// b/589394789: a reference result whose name nothing binds binds as its unannotated twin `h`
+/// does; an explicit `$unknown` reference result is a raw pointer, so the function stays safe.
+#[gtest]
+fn test_unbound_result_lifetime_on_reference_binds_as_unannotated() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        LIFETIME_PARAMS("a") int& $a f(int& x);
+        int& $unknown g(int& x);
+        int& h(int& x);
+        "#,
+    )?;
+    let warning =
+        "warning: lifetime 'a is not bound by any parameter; ignored, as if the result were unannotated";
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __COMMENT__ #warning
+            #[doc = ...]
+            #[inline(always)]
+            pub fn f<'x>(x: &'x mut ::ffi_11::c_int) -> ::cref::CMut<'x, ::ffi_11::c_int> { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn g<'x>(x: &'x mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn h<'x>(x: &'x mut ::ffi_11::c_int) -> ::cref::CMut<'x, ::ffi_11::c_int> { ... }
+        }
+    );
+    Ok(())
+}
+
+/// b/589391064: under `assume_lifetimes`, an operator's lvalue reference result follows the
+/// ordinary function rule (`T&` -> `CMut`, `const T&` -> `CRef`). Otherwise
+/// `Owner& operator+(int) const` hands out a native `&mut Owner` from a shared `&Owner`, and
+/// `a + 1` and `a + 2` are two live `&mut` to the same object in safe Rust.
+#[gtest]
+fn test_member_operator_reference_result_is_cref_or_cmut() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct Owner final {
+            Owner& operator+(int) const;
+            const Owner& operator-(int) const;
+        };
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'__this> ::core::ops::Add<::ffi_11::c_int> for &'__this crate::Owner {
+                type Output = ::cref::CMut<'__this, crate::Owner>;
+                ...
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'__this> ::core::ops::Sub<::ffi_11::c_int> for &'__this crate::Owner {
+                type Output = ::cref::CRef<'__this, crate::Owner>;
+                ...
+            }
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { type Output = &'__this mut crate::Owner; });
+    Ok(())
+}
+
+/// b/589391064: the same for free operators. `Owner& operator+(const Owner&, int)` gives a
+/// `CMut` result from a `&Owner`, not a native `&mut`; `const Owner& operator*(const Owner&, int)`
+/// gives a `CRef`. An `Owner&` parameter also gives a `CMut` result rather than a native `&mut`:
+/// that is the cost of the rule.
+#[gtest]
+fn test_free_operator_reference_result_is_cref_or_cmut() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct Owner final { int x; };
+        Owner& operator+(const Owner& o, int i);
+        Owner& operator-(Owner& o, int i);
+        const Owner& operator*(const Owner& o, int i);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'o> ::core::ops::Add<::ffi_11::c_int> for &'o crate::Owner {
+                type Output = ::cref::CMut<'o, crate::Owner>;
+                ...
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'o> ::core::ops::Mul<::ffi_11::c_int> for &'o crate::Owner {
+                type Output = ::cref::CRef<'o, crate::Owner>;
+                ...
+            }
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { type Output = &'o mut crate::Owner; });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'o> ::core::ops::Sub<::ffi_11::c_int> for &'o mut crate::Owner {
+                type Output = ::cref::CMut<'o, crate::Owner>;
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+/// b/589391064: `operator[]`, `operator=` and compound assignment keep native references.
+/// `CcIndex`/`CcIndexMut` return `&`/`&mut`, and the assignment results are dropped.
+#[gtest]
+fn test_index_and_assign_operator_reference_results_stay_native() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct Owner final {
+            int& operator[](int i);
+            const int& operator[](int i) const;
+            Owner& operator+=(int i);
+        };
+        "#,
+    )?;
+    assert_rs_matches!(rs_api, quote! { -> &'__this ::ffi_11::c_int });
+    assert_rs_matches!(rs_api, quote! { -> &'__this mut ::ffi_11::c_int });
+    assert_rs_matches!(
+        rs_api,
+        quote! { impl ::core::ops::AddAssign<::ffi_11::c_int> for Owner { ... } }
+    );
+    // The dropped `+=` result keeps its native type in the thunk.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (__this: &'__this mut crate::Owner, i: ::ffi_11::c_int) -> &'__this mut crate::Owner;
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { ::cref::CRef<'__this, ::ffi_11::c_int> });
+    assert_rs_not_matches!(rs_api, quote! { ::cref::CMut<'__this, ::ffi_11::c_int> });
     Ok(())
 }

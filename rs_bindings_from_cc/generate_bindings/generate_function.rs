@@ -893,6 +893,7 @@ fn api_func_shape_for_identifier(
             }
             param_type_iter.any(|p| db.rs_type_kind_safety(p.clone()).is_some())
                 || db.unknown_lifetime_safety(return_type.clone()).is_some()
+                || result_has_unknown_lifetime(db, func, return_type)
         }
         SafetyAnnotation::Unsafe => true,
         SafetyAnnotation::DisableUnsafe => false,
@@ -1943,6 +1944,28 @@ fn has_mutable_receiver(func: &Func) -> bool {
         })
 }
 
+/// Whether `func` is an operator whose Rust trait needs a native reference result, so that a
+/// returned lvalue reference is not lowered to `CRef`/`CMut` under `assume_lifetimes`:
+///
+/// - `operator[]`: `CcIndex`/`CcIndexMut` return `&`/`&mut`. Only a const `[]` returning a const
+///   reference and a non-const `[]` returning a non-const reference are bound.
+/// - `operator=` and the compound assignment operators: their result is dropped, so it never
+///   reaches Rust.
+///
+/// Every other operator (e.g. `Owner& operator+(const Owner&, int)`, bound as `Add` with
+/// `type Output = <return type>`) follows the ordinary function rule. Exempting it would let a
+/// `const` receiver or parameter hand out a native `&mut` (b/589391064).
+fn is_native_reference_operator(func: &Func) -> bool {
+    func.cc_name().as_operator().is_some_and(|op| {
+        op.name() == "[]"
+            || op.name() == "="
+            || OPERATOR_METADATA
+                .by_cc_name_and_params
+                .get(&(op.name(), func.params().len()))
+                .is_some_and(|m| m.is_compound_assignment)
+    })
+}
+
 fn rs_type_kinds_for_func(
     db: &BindingsGenerator,
     func: ir::FfiRc<ir::Func>,
@@ -1960,7 +1983,7 @@ fn rs_type_kinds_for_func(
     // lifetimes of `this`.
     let run_lifetime_transform =
         assume_lifetimes || matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator);
-    let is_operator = matches!(func.cc_name(), ir::UnqualifiedIdentifier::Operator(_));
+    let native_reference_operator = is_native_reference_operator(&func);
 
     let func =
         if run_lifetime_transform { db.lifetime_defaults_transform_func(func)? } else { func };
@@ -2029,7 +2052,7 @@ fn rs_type_kinds_for_func(
                         // Only interesting for the return type.
                         have_reference_param: false,
                         assume_lifetimes: run_lifetime_transform,
-                        is_operator,
+                        native_reference_operator,
 
                         // A by-value parameter can hold a bridged type; whether it does is
                         // up to the target's features.
@@ -2105,7 +2128,7 @@ fn rs_type_kinds_for_func(
                         )
                     }),
                     assume_lifetimes: run_lifetime_transform,
-                    is_operator,
+                    native_reference_operator,
 
                     // A by-value return type can hold a bridged type; whether it does is up to
                     // the target's features.
@@ -2130,6 +2153,60 @@ fn rs_type_kinds_for_func(
 
     errors.consolidate()?;
     Ok((param_types, return_type.unwrap()))
+}
+
+/// Returns whether the result of `func` carries lifetimes that Crubit does not know, so that the
+/// generated function must be `unsafe` (b/589394789).
+///
+/// Under `assume_lifetimes`, a result lifetime written `$(unknown)` is unknown, and so is one that
+/// nothing binds when an unannotated record result would not get a lifetime either (see
+/// `lifetime_defaults_transform::unbound_result_lifetimes`). A reference or pointer result is then
+/// bound as a raw pointer, which is safe to return. A record result with lifetime parameters can't
+/// be: it is bound as `T<'static>`, and the caller must ensure that the borrowed data outlives it.
+fn result_has_unknown_lifetime(
+    db: &BindingsGenerator,
+    func: &Func,
+    return_type: &RsTypeKind,
+) -> bool {
+    let assume_lifetimes = db
+        .ir()
+        .target_crubit_features(func.owning_target())
+        .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+    if !assume_lifetimes {
+        return false;
+    }
+    // A record that takes lifetimes but was given none is formatted as `T<'static>`. Behind a
+    // raw pointer, it is harmless: dereferencing the pointer is already unsafe.
+    if matches!(return_type.unalias(), RsTypeKind::Pointer { .. }) {
+        return false;
+    }
+    let has_static_projection = return_type.dfs_iter().any(|ty| match ty {
+        RsTypeKind::Record { record, uniform_repr_template_type: None, lifetimes, .. } => {
+            !record.is_raw_string_view()
+                && db
+                    .decl_lifetime_arity(record.id())
+                    .is_ok_and(|arity| arity > 0 && lifetimes.len() != arity)
+        }
+        _ => false,
+    });
+    has_static_projection
+        && lifetime_defaults_transform::result_has_unknown_lifetime(db, func).unwrap_or(false)
+}
+
+/// Returns the lifetime names written on the result of `func` that nothing binds, and what the
+/// lifetime transform does with them (b/589394789). Empty unless `assume_lifetimes` is on.
+fn unbound_result_lifetimes(
+    db: &BindingsGenerator,
+    func: &Func,
+) -> lifetime_defaults_transform::UnboundResultLifetimes {
+    let assume_lifetimes = db
+        .ir()
+        .target_crubit_features(func.owning_target())
+        .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+    if !assume_lifetimes {
+        return Default::default();
+    }
+    lifetime_defaults_transform::unbound_result_lifetimes(db, func).unwrap_or_default()
 }
 
 /// Generate the safety documentation for an unsafe function.
@@ -2175,6 +2252,11 @@ fn generate_func_safety_doc(
                 doc += "\n";
             }
             doc += "The return value borrows data whose lifetime Crubit does not know. The caller must ensure that the borrowed data outlives the return value: unwrap it (`::crubit_support::Unsafe::into_inner`) or drop it while that data is still alive.\n";
+        } else if result_has_unknown_lifetime(db, func, return_type) {
+            if !doc.is_empty() {
+                doc += "\n";
+            }
+            doc += "The C++ function does not say what the return value borrows from (its lifetime is unknown), so it is bound as `'static`. The caller must ensure that the data it borrows outlives it.\n";
         }
         // Verify that we didn't generate an empty safety doc.
         assert!(!doc.is_empty());
@@ -2409,6 +2491,27 @@ pub fn generate_function(
         db.is_golden_test(),
         db.kythe_annotations(),
     );
+    // A lifetime written on the result that nothing binds is ignored, as if the result were
+    // unannotated, or treated as unknown (b/589394789). This is not an error: warn in the
+    // generated code, and record it so it can be counted.
+    let unbound_result_lifetimes = unbound_result_lifetimes(db, &func);
+    let doc_comment = if unbound_result_lifetimes.names.is_empty() {
+        quote! { #doc_comment }
+    } else {
+        db.errors().add_category(error_report::Category::UnknownLifetime);
+        let treatment = if unbound_result_lifetimes.treated_as_unknown {
+            "treated as unknown, as for an unannotated result with several input lifetimes"
+        } else {
+            "ignored, as if the result were unannotated"
+        };
+        let warnings = unbound_result_lifetimes.names.iter().map(|name| {
+            format!("warning: lifetime '{name} is not bound by any parameter; {treatment}")
+        });
+        quote! {
+            #( __COMMENT__ #warnings )*
+            #doc_comment
+        }
+    };
 
     let deprecated_attr = func.deprecated().map(|s| DeprecatedAttr(Rc::from(s)));
     let must_use_attr = func.nodiscard().map(|s| MustUseAttr(Rc::from(s)));

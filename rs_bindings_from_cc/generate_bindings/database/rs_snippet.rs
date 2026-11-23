@@ -301,8 +301,15 @@ pub struct LifetimeOptions {
     /// lifetime_defaults_transform.
     pub assume_lifetimes: bool,
 
-    /// Is the type we're lowering part of the type of an operator function?
-    pub is_operator: bool,
+    /// Is the type we're lowering part of the type of an operator whose Rust trait needs a native
+    /// reference result: `operator[]` (`CcIndex`/`CcIndexMut`), `operator=` and the compound
+    /// assignment operators (whose results are dropped)?
+    ///
+    /// Under `assume_lifetimes`, a returned lvalue reference is otherwise lowered to
+    /// `CRef`/`CMut`. Other operators (e.g. `Owner& operator+(const Owner&, int)`) must not be
+    /// exempt: a native `&mut` result derived from a `&` parameter would let safe Rust alias
+    /// (b/589391064).
+    pub native_reference_operator: bool,
 
     /// Is the type we're lowering in a position which cannot accept a bridged representation,
     /// such as a struct field, a pointee, or a template argument?
