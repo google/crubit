@@ -21,4 +21,8 @@ SV sv_make_raw();
 using SVA = SV;
 SVA sva_lb(SVA s [[clang::lifetimebound]]);
 
+struct LIFETIME_PARAMS("a", "b") SVPair {
+  int count = 0;
+};
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ASSUME_LIFETIMES_SIMPLE_STRING_VIEW_H_

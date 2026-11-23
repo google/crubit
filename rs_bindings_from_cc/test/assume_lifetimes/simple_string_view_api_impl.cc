@@ -68,4 +68,12 @@ extern "C" void __rust_thunk___Z6sva_lb2SV(SVA* __return, SVA* s) {
 
 static_assert((SVA (*)(SVA)) & ::sva_lb);
 
+static_assert(CRUBIT_SIZEOF(struct SVPair) == 4);
+static_assert(alignof(struct SVPair) == 4);
+static_assert(CRUBIT_OFFSET_OF(count, struct SVPair) == 0);
+
+extern "C" void __rust_thunk___ZN6SVPairC1Ev(struct SVPair* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

@@ -15,4 +15,7 @@ fn my_test() {
 
     let sv_alias = simple_string_view::SVA::default();
     let _sv_alias_id = simple_string_view::sva_lb(sv_alias);
+
+    let sv_pair: simple_string_view::SVPair<'_, '_> = simple_string_view::SVPair::default();
+    expect_eq!(sv_pair.count, 0);
 }
