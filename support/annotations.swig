@@ -32,6 +32,10 @@
 %enddef
 %define CRUBIT_OWNED_POINTER
 %enddef
+%define CRUBIT_VIEW
+%enddef
+%define CRUBIT_OWNER
+%enddef
 %define CRUBIT_OVERRIDE_DISPLAY(should_bind)
 %enddef
 %define CRUBIT_THREAD_SAFE
