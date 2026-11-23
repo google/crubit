@@ -267,6 +267,13 @@ pub enum Category {
 
     /// This item is a constant
     Constant = 1 << 10,
+
+    /// This item got bindings, with a warning: its result names a lifetime that nothing binds
+    /// (no parameter, enclosing record or `'static`), which Crubit ignores, binding the result as
+    /// if it were unannotated (b/589394789). A record result with several input lifetimes, which
+    /// elision does not give a lifetime, is bound as unknown instead (`T<'static>` from an
+    /// `unsafe fn`).
+    UnknownLifetime = 1 << 11,
     // TODO(b/468093766): Abstract? base classes, public inheritance
 }
 
