@@ -917,9 +917,15 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         record
     };
     let mut lifetime_params = vec![];
+    let mut invariant_lifetime_params = vec![];
     if assume_lifetimes {
         lifetime_params =
             record.lifetime_inputs().iter().map(|id| make_rs_lifetime_ident(id)).collect();
+        invariant_lifetime_params =
+            lifetime_defaults_transform::invariant_record_lifetimes(&record)
+                .iter()
+                .map(|id| make_rs_lifetime_ident(id))
+                .collect();
     }
     let mut upcastable_bases = vec![];
     if crubit_features.contains(crubit_feature::CrubitFeature::OoCasting) {
@@ -1197,6 +1203,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         free_functions,
         delete: operator_delete_impl,
         lifetime_params,
+        invariant_lifetime_params,
         is_thread_safe: record.is_thread_safe(),
         needs_explicit_unpin_impl,
         size: record.size_align().size(),

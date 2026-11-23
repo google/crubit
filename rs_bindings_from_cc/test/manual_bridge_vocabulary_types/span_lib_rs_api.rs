@@ -228,6 +228,7 @@ impl Default for StructWithSpanField {
 pub struct StructWithLifetimeAnnotatedSpanField<'a> {
     pub span: ::_y__y_third_party_y_absl_y_types_x_span::absl::Span<'a, ::ffi_11::c_int>,
     pub other: ::ffi_11::c_int,
+    __marker_a: ::core::marker::PhantomData<fn(&'a ()) -> &'a ()>,
 }
 unsafe impl<'a> ::cxx::ExternType for StructWithLifetimeAnnotatedSpanField<'a> {
     type Id = ::cxx::type_id!("StructWithLifetimeAnnotatedSpanField");

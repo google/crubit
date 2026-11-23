@@ -623,6 +623,7 @@ pub fn generated_items_to_tokens<'db>(
                     member_methods,
                     free_functions,
                     lifetime_params,
+                    invariant_lifetime_params,
                     is_thread_safe,
                     needs_explicit_unpin_impl,
                     size,
@@ -671,10 +672,19 @@ pub fn generated_items_to_tokens<'db>(
                             quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n_literal], }
                         }
                     });
+                    // An invariant lifetime (b/589368736; every record lifetime, see
+                    // `invariant_record_lifetimes`) gets an invariant marker, even if a field
+                    // mentions it. Any other lifetime that no field mentions gets a covariant one.
                     let lifetime_markers: Vec<TokenStream> = lifetime_params
                         .iter()
-                        .filter(|lt| {
-                            !field_definitions.iter().any(|field_def| {
+                        .filter_map(|lt| {
+                            let field_name = format_ident!("__marker_{}", lt.ident);
+                            if invariant_lifetime_params.contains(lt) {
+                                return Some(quote! {
+                                    #field_name: ::core::marker::PhantomData<fn(& #lt ()) -> & #lt ()>,
+                                });
+                            }
+                            let mentioned = field_definitions.iter().any(|field_def| {
                                 matches!(
                                     field_def,
                                     FieldDefinition::Field {
@@ -682,11 +692,10 @@ pub fn generated_items_to_tokens<'db>(
                                         ..
                                     } if token_stream_contains_lifetime(ty, lt)
                                 )
+                            });
+                            (!mentioned).then(|| {
+                                quote! { #field_name: ::core::marker::PhantomData<& #lt ()>, }
                             })
-                        })
-                        .map(|lt| {
-                            let field_name = format_ident!("__marker_{}", lt.ident);
-                            quote! { #field_name: ::core::marker::PhantomData<& #lt ()>, }
                         })
                         .collect();
                     quote! {
@@ -1238,6 +1247,10 @@ pub struct Record {
     pub member_methods: Vec<TokenStream>,
     pub free_functions: Vec<TokenStream>,
     pub lifetime_params: Vec<syn::Lifetime>,
+    /// The lifetime parameters that must be invariant (b/589368736): C++ can write a value that
+    /// carries them through a shared reference to the record. Each gets an invariant marker,
+    /// `PhantomData<fn(&'a ()) -> &'a ()>`, even if a field mentions it.
+    pub invariant_lifetime_params: Vec<syn::Lifetime>,
     /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
     pub is_thread_safe: bool,
     /// Whether this type needs an explicit `impl Unpin` because it has a `!Unpin` field.
