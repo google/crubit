@@ -111,7 +111,7 @@ pub struct StructWithLifetimeboundRefMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::mem::MaybeUninit<u8>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes
@@ -282,7 +282,7 @@ pub struct DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes
@@ -358,15 +358,11 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-impl<'__implicit, '__param_0, '__param_0_0>
-    ::ctor::Assign<&'__param_0_0 crate::DropClassWithLifetimeboundRefMemberFunction<'__param_0>>
+impl<'__implicit, '__param_0> ::ctor::Assign<&'__param_0 Self>
     for DropClassWithLifetimeboundRefMemberFunction<'__implicit>
 {
     #[inline(always)]
-    fn assign<'__this>(
-        self: ::core::pin::Pin<&'__this mut Self>,
-        __param_0: &'__param_0_0 crate::DropClassWithLifetimeboundRefMemberFunction<'__param_0>,
-    ) {
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionaSERKS_(
                 self, __param_0,
@@ -458,7 +454,7 @@ pub struct StructWithLifetimeboundRefCtor<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::mem::MaybeUninit<u8>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes
@@ -611,7 +607,7 @@ pub struct DropStructWithLifetimeboundRefCtor<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes
@@ -666,15 +662,11 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-impl<'__implicit, '__param_0, '__param_0_0>
-    ::ctor::Assign<&'__param_0_0 crate::DropStructWithLifetimeboundRefCtor<'__param_0>>
+impl<'__implicit, '__param_0> ::ctor::Assign<&'__param_0 Self>
     for DropStructWithLifetimeboundRefCtor<'__implicit>
 {
     #[inline(always)]
-    fn assign<'__this>(
-        self: ::core::pin::Pin<&'__this mut Self>,
-        __param_0: &'__param_0_0 crate::DropStructWithLifetimeboundRefCtor<'__param_0>,
-    ) {
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN34DropStructWithLifetimeboundRefCtoraSERKS_(
                 self, __param_0,
@@ -731,7 +723,7 @@ pub struct DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes
@@ -794,15 +786,11 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-impl<'__implicit, '__param_0, '__param_0_0>
-    ::ctor::Assign<&'__param_0_0 crate::DropStructWithRefCtorAndRefMemberFunction<'__param_0>>
+impl<'__implicit, '__param_0> ::ctor::Assign<&'__param_0 Self>
     for DropStructWithRefCtorAndRefMemberFunction<'__implicit>
 {
     #[inline(always)]
-    fn assign<'__this>(
-        self: ::core::pin::Pin<&'__this mut Self>,
-        __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndRefMemberFunction<'__param_0>,
-    ) {
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionaSERKS_(
                 self, __param_0,
@@ -1104,7 +1092,7 @@ pub struct DropStructWithRefCtorAndMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes
@@ -1166,15 +1154,11 @@ impl<'__implicit, '__param_0, '__param_0_0>
     }
 }
 
-impl<'__implicit, '__param_0, '__param_0_0>
-    ::ctor::Assign<&'__param_0_0 crate::DropStructWithRefCtorAndMemberFunction<'__param_0>>
+impl<'__implicit, '__param_0> ::ctor::Assign<&'__param_0 Self>
     for DropStructWithRefCtorAndMemberFunction<'__implicit>
 {
     #[inline(always)]
-    fn assign<'__this>(
-        self: ::core::pin::Pin<&'__this mut Self>,
-        __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndMemberFunction<'__param_0>,
-    ) {
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionaSERKS_(
                 self, __param_0,
@@ -1309,13 +1293,12 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionaSERKS_<
             '__implicit,
             '__param_0,
-            '__param_0_0,
             '__this,
         >(
             __this: ::core::pin::Pin<
                 &'__this mut crate::DropClassWithLifetimeboundRefMemberFunction<'__implicit>,
             >,
-            __param_0: &'__param_0_0 crate::DropClassWithLifetimeboundRefMemberFunction<'__param_0>,
+            __param_0: &'__param_0 crate::DropClassWithLifetimeboundRefMemberFunction<'__implicit>,
         ) -> ::core::pin::Pin<
             &'__this mut crate::DropClassWithLifetimeboundRefMemberFunction<'__this>,
         >;
@@ -1374,13 +1357,12 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN34DropStructWithLifetimeboundRefCtoraSERKS_<
             '__implicit,
             '__param_0,
-            '__param_0_0,
             '__this,
         >(
             __this: ::core::pin::Pin<
                 &'__this mut crate::DropStructWithLifetimeboundRefCtor<'__implicit>,
             >,
-            __param_0: &'__param_0_0 crate::DropStructWithLifetimeboundRefCtor<'__param_0>,
+            __param_0: &'__param_0 crate::DropStructWithLifetimeboundRefCtor<'__implicit>,
         ) -> ::core::pin::Pin<&'__this mut crate::DropStructWithLifetimeboundRefCtor<'__this>>;
         pub(crate) unsafe fn __rust_thunk___ZN34DropStructWithLifetimeboundRefCtorC1ERK11PlainStruct<
             '__implicit,
@@ -1407,13 +1389,12 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionaSERKS_<
             '__implicit,
             '__param_0,
-            '__param_0_0,
             '__this,
         >(
             __this: ::core::pin::Pin<
                 &'__this mut crate::DropStructWithRefCtorAndRefMemberFunction<'__implicit>,
             >,
-            __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndRefMemberFunction<'__param_0>,
+            __param_0: &'__param_0 crate::DropStructWithRefCtorAndRefMemberFunction<'__implicit>,
         ) -> ::core::pin::Pin<&'__this mut crate::DropStructWithRefCtorAndRefMemberFunction<'__this>>;
         pub(crate) unsafe fn __rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionC1ERK11PlainStruct<
             '__implicit,
@@ -1501,13 +1482,12 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionaSERKS_<
             '__implicit,
             '__param_0,
-            '__param_0_0,
             '__this,
         >(
             __this: ::core::pin::Pin<
                 &'__this mut crate::DropStructWithRefCtorAndMemberFunction<'__implicit>,
             >,
-            __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndMemberFunction<'__param_0>,
+            __param_0: &'__param_0 crate::DropStructWithRefCtorAndMemberFunction<'__implicit>,
         ) -> ::core::pin::Pin<&'__this mut crate::DropStructWithRefCtorAndMemberFunction<'__this>>;
         pub(crate) unsafe fn __rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionC1ERK11PlainStruct<
             '__implicit,
