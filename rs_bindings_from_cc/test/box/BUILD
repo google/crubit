@@ -30,7 +30,6 @@ rust_api_from_cpp(
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [":boxes"],
     deps = [
         ":boxes_rust_api",
         "@crate_index//:googletest",

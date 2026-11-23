@@ -9,6 +9,7 @@
 #include <cstdint>
 
 #include "absl/base/attributes.h"
+#include "support/annotations.h"
 
 // Struct with __attribute__((packed))
 struct __attribute__((packed)) PackedStruct {
@@ -173,7 +174,7 @@ struct __attribute__((packed)) PackedOuter {
 
 // Struct with a user-defined copy constructor, so it is not trivially copyable
 // (and not `Copy` in Rust).
-struct ABSL_ATTRIBUTE_TRIVIAL_ABI NonTriviallyCopyable {
+struct CRUBIT_UNSAFE_BITWISE_RELOCATABLE NonTriviallyCopyable {
   NonTriviallyCopyable() = default;
   // Intentionally have a copy constructor so the struct is not considered
   // trivially copyable.
@@ -202,7 +203,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI NonTriviallyCopyable {
 // padding after `a`), which the Rust bindings would not account for.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpacked-non-pod"
-struct ABSL_ATTRIBUTE_PACKED ABSL_ATTRIBUTE_TRIVIAL_ABI
+struct ABSL_ATTRIBUTE_PACKED CRUBIT_UNSAFE_BITWISE_RELOCATABLE
     PackedWithNonTriviallyCopyableField {
   uint8_t a;
   NonTriviallyCopyable b;
