@@ -5,7 +5,6 @@
 // Tests for pointers-to-pointers.
 
 #include "nullability/test/check_diagnostics.h"
-#include "clang/Basic/LLVM.h"
 #include "gtest/gtest.h"
 
 namespace clang::tidy::nullability {

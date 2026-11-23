@@ -7,7 +7,6 @@
 
 #include <memory>
 
-#include "clang/AST/DeclBase.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 

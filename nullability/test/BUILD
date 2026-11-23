@@ -17,13 +17,11 @@ cc_library(
         ":mock_headers",
         "//nullability:pointer_nullability_diagnosis",
         "//nullability:pragma",
-        "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",
         "@llvm-project//clang:testing",
-        "@llvm-project//clang:tooling",
         "@llvm-project//clang/unittests:dataflow_testing_support",
         "@llvm-project//llvm:Support",
         "@llvm-project//llvm:TestingAnnotations",
@@ -271,7 +269,6 @@ cc_test(
     srcs = ["join_diagnosis.cc"],
     deps = [
         ":check_diagnostics",
-        "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
@@ -282,7 +279,6 @@ cc_test(
     srcs = ["nested.cc"],
     deps = [
         ":check_diagnostics",
-        "@llvm-project//clang:basic",
         "@llvm-project//third-party/unittest:gtest",
     ],
 )

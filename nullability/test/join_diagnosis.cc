@@ -5,7 +5,6 @@
 // Tests for joining different nullability types.
 
 #include "nullability/test/check_diagnostics.h"
-#include "llvm/ADT/StringRef.h"
 #include "gtest/gtest.h"
 
 // TODO: The tests in this file test two different things that should be tested
