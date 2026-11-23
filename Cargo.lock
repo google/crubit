@@ -257,7 +257,6 @@ dependencies = [
  "dyn_format",
  "error_report",
  "flagset",
- "itertools",
  "memoized",
  "proc-macro2",
  "quote",
