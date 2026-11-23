@@ -68,9 +68,13 @@ pub fn generate_top_level_comment(ir: &IR, is_golden_test: bool) -> String {
 /// For a declaration produced by a macro expansion, this is the expansion location with offsets
 /// `0, 0`.
 pub fn kythe_name_location(decl_loc: Option<&DeclLocation>) -> Option<(&str, u32, u32)> {
-    // Open-source builds don't emit Kythe byte offsets.
-    let _ = decl_loc;
-    None
+    let decl_loc = decl_loc?;
+    let (begin, end) = decl_loc.name_range()?;
+    let spelling = decl_loc.spelling()?;
+    if let Some(expansion) = decl_loc.expansion() {
+        return Some((expansion.path(), 0, 0));
+    }
+    Some((spelling.path(), begin, end))
 }
 
 pub fn generate_doc_comment(
