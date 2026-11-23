@@ -1,0 +1,33 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+#ifndef THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_MACOS_SDK_WORKAROUNDS_H_
+#define THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_MACOS_SDK_WORKAROUNDS_H_
+
+#if defined(__APPLE__) && \
+    (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
+
+#include <netinet/in.h>
+#include <stdint.h>
+#include <sys/socket.h>
+
+// The macOS SDK declares these RFC 3678 socket filter functions outside of
+// `__BEGIN_DECLS`/`__END_DECLS`, so in C++ they have C++ linkage and calls to
+// them fail to link against libSystem's C symbols. Don't generate bindings (and
+// thunks) for them.
+__attribute__((annotate("crubit_do_not_bind"))) int setipv4sourcefilter(
+    int, struct in_addr, struct in_addr, uint32_t, uint32_t, struct in_addr*);
+__attribute__((annotate("crubit_do_not_bind"))) int getipv4sourcefilter(
+    int, struct in_addr, struct in_addr, uint32_t*, uint32_t*, struct in_addr*);
+__attribute__((annotate("crubit_do_not_bind"))) int setsourcefilter(
+    int, uint32_t, struct sockaddr*, socklen_t, uint32_t, uint32_t,
+    struct sockaddr_storage*);
+__attribute__((annotate("crubit_do_not_bind"))) int getsourcefilter(
+    int, uint32_t, struct sockaddr*, socklen_t, uint32_t*, uint32_t*,
+    struct sockaddr_storage*);
+
+#endif  // defined(__APPLE__) &&
+        // (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
+
+#endif  // THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_MACOS_SDK_WORKAROUNDS_H_

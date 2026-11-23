@@ -1,0 +1,23 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#
+# Automatically @generated from support/cc_std_impl/BUILD
+# by common/golden_update.sh. Do not edit.
+
+lossy_utf8.rs
+slice_ptr.rs
+allocator.rs=std
+non_null.rs=std
+nullable.rs=std
+optional.rs=std
+shared_ptr.rs=std
+string.rs=std
+string_view.rs=std
+unique_ptr.rs=std
+variant.rs=std
+variant_coproduct.rs=std
+variant_enums.rs=std
+variant_internal.rs=std
+vector.rs=std
+vector_partial_eq.rs=std

@@ -7,7 +7,8 @@
 # `ctest --build-and-test`.
 #
 #   cmake -S cmake/test -B build-cmake-test \
-#     -DCRUBIT_RS_BINDINGS_FROM_CC=$PWD/bazel-bin/rs_bindings_from_cc/rs_bindings_from_cc
+#     -DCRUBIT_RS_BINDINGS_FROM_CC=$PWD/bazel-bin/rs_bindings_from_cc/rs_bindings_from_cc \
+#     -DCRUBIT_CLANG_RESOURCE_DIR=<resource dir of the LLVM it was built with>
 #   ctest --test-dir build-cmake-test --output-on-failure
 
 cmake_minimum_required(VERSION 3.22)
@@ -38,6 +39,10 @@ set(_crubit_fixture_options
 if(DEFINED CRUBIT_RS_BINDINGS_FROM_CC)
   list(APPEND _crubit_fixture_options
     "-DCRUBIT_RS_BINDINGS_FROM_CC=${CRUBIT_RS_BINDINGS_FROM_CC}")
+endif()
+if(CRUBIT_CLANG_RESOURCE_DIR)
+  list(APPEND _crubit_fixture_options
+    "-DCRUBIT_CLANG_RESOURCE_DIR=${CRUBIT_CLANG_RESOURCE_DIR}")
 endif()
 foreach(var CMAKE_CXX_COMPILER CMAKE_CXX_FLAGS CMAKE_BUILD_TYPE)
   if(DEFINED ${var})
@@ -74,3 +79,8 @@ endfunction()
 crubit_add_fixture(configure_ok)
 crubit_add_fixture(not_libcxx LINUX_ONLY FAIL_REGEX "Crubit requires libc\\+\\+")
 crubit_add_fixture(clang_args)
+crubit_add_fixture(std_only)
+crubit_add_fixture(std_target)
+crubit_add_fixture(std_target_and_arch)
+crubit_add_fixture(std_mismatch FAIL_REGEX "Only the build reads:.*i386/_types\\.h.*Only rs_bindings_from_cc would read:.*arm/_types\\.h")
+crubit_add_fixture(old_cxx_standard FAIL_REGEX "Crubit requires C\\+\\+20 or later")
