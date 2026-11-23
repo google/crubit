@@ -218,11 +218,11 @@ bool_flag(
 # from source. (The compile of the generated `*_rust_api_impl.cc` uses header
 # modules regardless of this flag.)
 #
-# TODO(b/573160048): Remove this flag once header modules have been on by
-# default for a while.
+# TODO(b/573160048): Turn this on by default once a crosstool release contains
+# the corresponding changes to `rs_bindings_from_cc`.
 bool_flag(
     name = "use_header_modules",
-    build_setting_default = True,
+    build_setting_default = False,
     visibility = ["//visibility:public"],
 )
 
