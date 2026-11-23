@@ -21,9 +21,6 @@ rust_library(
     name = "functions",
     testonly = 1,
     srcs = ["functions.rs"],
-    aspect_hints = [
-        "//features:ctor_plain_values",
-    ],
     edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",

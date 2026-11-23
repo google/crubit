@@ -21,6 +21,7 @@ SUPPORTED_FEATURES = [
     "param_name_insensitive_operator_lookup",
     "strong_ordering_traits",
     "weak_ordering_traits",
+    "ctor_plain_values",
 ]
 
 # Per-feature denylists live in features/denylists/supported_feature_denylists.bzl, not here, so
