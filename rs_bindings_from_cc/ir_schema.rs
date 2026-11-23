@@ -559,6 +559,14 @@ pub(crate) fn schema() -> Schema {
             #[optional]
             deprecated: Str,
             is_thread_safe: Bool,
+            // Whether the record carries a `[[gsl::Pointer]]` (`CRUBIT_VIEW`) /
+            // `[[gsl::Owner]]` (`CRUBIT_OWNER`) attribute WRITTEN in the source.
+            // Attributes that clang infers for standard library types (e.g.
+            // `std::optional`, `std::string_view`) and attributes listed in
+            // `CRUBIT_UNSAFE_IGNORE_ATTR` do not count. Not read yet: groundwork
+            // for classifying records as views or owners (annotations.h).
+            has_written_view_attr: Bool,
+            has_written_owner_attr: Bool,
             is_explicit_class_template_instantiation_definition: Bool,
             children: Vec(Item),
         }

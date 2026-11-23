@@ -102,6 +102,8 @@ macro_rules! __proto_call_setter {
     ($msg:ident, has_private_pointer_or_reference_fields, $($arg:tt)*) => { $msg.set_has_private_pointer_or_reference_fields($($arg)*) };
     ($msg:ident, has_template_argument_lifetime, $($arg:tt)*) => { $msg.set_has_template_argument_lifetime($($arg)*) };
     ($msg:ident, has_virtual_bases, $($arg:tt)*) => { $msg.set_has_virtual_bases($($arg)*) };
+    ($msg:ident, has_written_owner_attr, $($arg:tt)*) => { $msg.set_has_written_owner_attr($($arg)*) };
+    ($msg:ident, has_written_view_attr, $($arg:tt)*) => { $msg.set_has_written_view_attr($($arg)*) };
     ($msg:ident, id, $($arg:tt)*) => { $msg.set_id($($arg)*) };
     ($msg:ident, ident, $($arg:tt)*) => { $msg.set_ident($($arg)*) };
     ($msg:ident, identifier, $($arg:tt)*) => { $msg.set_identifier($($arg)*) };
@@ -2852,6 +2854,8 @@ mod __defs {
         pub detected_formatter: bool,
         pub deprecated: FfiString,
         pub is_thread_safe: bool,
+        pub has_written_view_attr: bool,
+        pub has_written_owner_attr: bool,
         pub is_explicit_class_template_instantiation_definition: bool,
         pub children: FfiVec<Item>,
     }
@@ -2906,6 +2910,8 @@ mod __defs {
                     && self.detected_formatter == other.detected_formatter
                     && self.deprecated == other.deprecated
                     && self.is_thread_safe == other.is_thread_safe
+                    && self.has_written_view_attr == other.has_written_view_attr
+                    && self.has_written_owner_attr == other.has_written_owner_attr
                     && self.is_explicit_class_template_instantiation_definition == other.is_explicit_class_template_instantiation_definition
                     && self.children == other.children)
         }
@@ -2965,6 +2971,8 @@ mod __defs {
                 .field("detected_formatter", &self.detected_formatter)
                 .field("deprecated", &self.deprecated())
                 .field("is_thread_safe", &self.is_thread_safe)
+                .field("has_written_view_attr", &self.has_written_view_attr)
+                .field("has_written_owner_attr", &self.has_written_owner_attr)
                 .field("is_explicit_class_template_instantiation_definition", &self.is_explicit_class_template_instantiation_definition)
                 .field("children", &self.children)
                 .finish()
@@ -3029,6 +3037,8 @@ mod __defs {
             detected_formatter: false,
             deprecated: FfiString::EMPTY,
             is_thread_safe: false,
+            has_written_view_attr: false,
+            has_written_owner_attr: false,
             is_explicit_class_template_instantiation_definition: false,
             children: FfiVec::EMPTY,
         };
@@ -3254,6 +3264,12 @@ mod __defs {
         pub fn is_thread_safe(&self) -> bool {
             self.is_thread_safe
         }
+        pub fn has_written_view_attr(&self) -> bool {
+            self.has_written_view_attr
+        }
+        pub fn has_written_owner_attr(&self) -> bool {
+            self.has_written_owner_attr
+        }
         pub fn is_explicit_class_template_instantiation_definition(&self) -> bool {
             self.is_explicit_class_template_instantiation_definition
         }
@@ -3446,6 +3462,14 @@ mod __defs {
             self.is_thread_safe = val;
             &mut self.is_thread_safe
         }
+        pub fn set_has_written_view_attr(&mut self, val: bool) -> &mut bool {
+            self.has_written_view_attr = val;
+            &mut self.has_written_view_attr
+        }
+        pub fn set_has_written_owner_attr(&mut self, val: bool) -> &mut bool {
+            self.has_written_owner_attr = val;
+            &mut self.has_written_owner_attr
+        }
         pub fn set_is_explicit_class_template_instantiation_definition(&mut self, val: bool) -> &mut bool {
             self.is_explicit_class_template_instantiation_definition = val;
             &mut self.is_explicit_class_template_instantiation_definition
@@ -3504,7 +3528,9 @@ mod __defs {
         assert!(core::mem::offset_of!(Record, detected_formatter) == 1107);
         assert!(core::mem::offset_of!(Record, deprecated) == 1112);
         assert!(core::mem::offset_of!(Record, is_thread_safe) == 1128);
-        assert!(core::mem::offset_of!(Record, is_explicit_class_template_instantiation_definition) == 1129);
+        assert!(core::mem::offset_of!(Record, has_written_view_attr) == 1129);
+        assert!(core::mem::offset_of!(Record, has_written_owner_attr) == 1130);
+        assert!(core::mem::offset_of!(Record, is_explicit_class_template_instantiation_definition) == 1131);
         assert!(core::mem::offset_of!(Record, children) == 1136);
     };
 

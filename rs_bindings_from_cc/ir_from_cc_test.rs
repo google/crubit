@@ -5164,6 +5164,8 @@ fn test_record_with_pointer_attribute() {
       Record {
         ... rs_name: "Struct" ...
         ... unknown_attr: None ...
+        ... has_written_view_attr: true,
+        has_written_owner_attr: false, ...
       }
     }
     };
@@ -5183,6 +5185,88 @@ fn test_record_with_owner_attribute() {
       Record {
         ... rs_name: "Struct" ...
         ... unknown_attr: None ...
+        ... has_written_view_attr: false,
+        has_written_owner_attr: true, ...
+      }
+    }
+    };
+}
+
+#[gtest]
+fn test_record_without_view_or_owner_attribute() {
+    let proto = ir_proto_from_cc("class Struct {};").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches! {ir, quote! {
+      Record {
+        ... rs_name: "Struct" ...
+        ... has_written_view_attr: false,
+        has_written_owner_attr: false, ...
+      }
+    }
+    };
+}
+
+/// Sema infers `[[gsl::Owner]]` / `[[gsl::Pointer]]` for some standard library
+/// types. Only attributes written in the source count.
+#[gtest]
+fn test_record_with_inferred_owner_attribute() {
+    let proto = ir_proto_from_cc(
+        r#"
+      namespace std {
+      class any { int x; };
+      }
+      "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches! {ir, quote! {
+      Record {
+        ... unique_name: "c:@N@std@S@any" ...
+        ... has_written_view_attr: false,
+        has_written_owner_attr: false, ...
+      }
+    }
+    };
+}
+
+#[gtest]
+fn test_record_with_inferred_pointer_attribute() {
+    let proto = ir_proto_from_cc(&format!(
+        r#"
+        {MOCK_STD_STRING_VIEW}
+        inline std::string_view Get() {{ return std::string_view(); }}
+        "#
+    ))
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches! {ir, quote! {
+      Record {
+        ... cc_name: "std::basic_string_view<char, struct std::char_traits<char>>" ...
+        ... has_written_view_attr: false,
+        has_written_owner_attr: false, ...
+      }
+    }
+    };
+}
+
+#[gtest]
+fn test_record_with_ignored_view_attribute() {
+    let proto = ir_proto_from_cc(
+        r#"
+      struct [[clang::annotate("crubit_unsafe_ignore_attr", "gsl::Pointer")]]
+          [[gsl::Pointer]] Struct {};
+      "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches! {ir, quote! {
+      Record {
+        ... rs_name: "Struct" ...
+        ... has_written_view_attr: false, ...
       }
     }
     };

@@ -10,6 +10,7 @@
 #if defined(__clang__)
 #define CRUBIT_TRIVIAL_ABI [[clang::trivial_abi]]
 #define CRUBIT_VIEW [[gsl::Pointer]]
+#define CRUBIT_OWNER [[gsl::Owner]]
 #if __has_cpp_attribute(clang::lifetimebound)
 #define CRUBIT_LIFETIME_BOUND [[clang::lifetimebound]]
 #elif __has_attribute(lifetimebound)
@@ -29,6 +30,7 @@
 #else
 #define CRUBIT_TRIVIAL_ABI
 #define CRUBIT_VIEW
+#define CRUBIT_OWNER
 #define CRUBIT_LIFETIME_BOUND
 #define crubit_nonnull
 #define crubit_nullable
