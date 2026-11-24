@@ -1971,11 +1971,8 @@ const FAKE_COMPARE_HEADER: &str = r#"
 "#;
 
 /// Generates bindings for a struct whose `operator<=>` returns `ordering_type` (e.g.
-/// `std::strong_ordering`, or `StrongOrderingAlias`), with the given extra Crubit feature enabled.
-fn generate_spaceship_operator_bindings(
-    ordering_type: &str,
-    extra_feature: Option<&str>,
-) -> Result<BindingsTokens> {
+/// `std::strong_ordering`, or `StrongOrderingAlias`).
+fn generate_spaceship_operator_bindings(ordering_type: &str) -> Result<BindingsTokens> {
     let proto = ir_proto_from_cc(&format!(
         r#"#pragma clang lifetime_elision
         {FAKE_COMPARE_HEADER}
@@ -1987,19 +1984,14 @@ fn generate_spaceship_operator_bindings(
             int i;
         }};"#
     ))?;
-    let ir = make_test_ir_dependency(&proto, extra_feature)?;
+    let ir = make_test_ir(&proto)?;
     generate_bindings_tokens_for_test(ir)
 }
 
-/// With the (now inert) `strong_ordering_traits` feature, `operator<=>` returning
-/// `std::strong_ordering` also implements `Eq` and `Ord`.
+/// `operator<=>` returning `std::strong_ordering` also implements `Eq` and `Ord`.
 #[gtest]
 fn test_impl_spaceship_operator_strong_ordering_implements_eq_and_ord() -> Result<()> {
-    let rs_api = generate_spaceship_operator_bindings(
-        "std::strong_ordering",
-        Some("strong_ordering_traits"),
-    )?
-    .rs_api;
+    let rs_api = generate_spaceship_operator_bindings("std::strong_ordering")?.rs_api;
     assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
     assert_rs_matches!(rs_api, quote! { impl Eq for SomeStruct {} });
     assert_rs_matches!(
@@ -2022,22 +2014,7 @@ fn test_impl_spaceship_operator_strong_ordering_implements_eq_and_ord() -> Resul
 /// An alias of `std::strong_ordering` also implements `Eq` and `Ord`.
 #[gtest]
 fn test_impl_spaceship_operator_strong_ordering_alias_implements_eq_and_ord() -> Result<()> {
-    let rs_api = generate_spaceship_operator_bindings(
-        "StrongOrderingAlias",
-        Some("strong_ordering_traits"),
-    )?
-    .rs_api;
-    assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
-    assert_rs_matches!(rs_api, quote! { impl Eq for SomeStruct {} });
-    assert_rs_matches!(rs_api, quote! { impl Ord for SomeStruct });
-    Ok(())
-}
-
-/// Without the (now inert) `strong_ordering_traits` feature, `operator<=>` returning
-/// `std::strong_ordering` still implements `Eq` and `Ord`.
-#[gtest]
-fn test_impl_spaceship_operator_strong_ordering_without_feature() -> Result<()> {
-    let rs_api = generate_spaceship_operator_bindings("std::strong_ordering", None)?.rs_api;
+    let rs_api = generate_spaceship_operator_bindings("StrongOrderingAlias")?.rs_api;
     assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
     assert_rs_matches!(rs_api, quote! { impl Eq for SomeStruct {} });
     assert_rs_matches!(rs_api, quote! { impl Ord for SomeStruct });
@@ -2047,7 +2024,7 @@ fn test_impl_spaceship_operator_strong_ordering_without_feature() -> Result<()> 
 /// `operator<=>` returning `std::weak_ordering` also implements `Eq` and `Ord`.
 #[gtest]
 fn test_impl_spaceship_operator_weak_ordering_implements_eq_and_ord() -> Result<()> {
-    let rs_api = generate_spaceship_operator_bindings("std::weak_ordering", None)?.rs_api;
+    let rs_api = generate_spaceship_operator_bindings("std::weak_ordering")?.rs_api;
     assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
     assert_rs_matches!(rs_api, quote! { impl Eq for SomeStruct {} });
     assert_rs_matches!(
@@ -2070,7 +2047,7 @@ fn test_impl_spaceship_operator_weak_ordering_implements_eq_and_ord() -> Result<
 /// An alias of `std::weak_ordering` also implements `Eq` and `Ord`.
 #[gtest]
 fn test_impl_spaceship_operator_weak_ordering_alias_implements_eq_and_ord() -> Result<()> {
-    let rs_api = generate_spaceship_operator_bindings("WeakOrderingAlias", None)?.rs_api;
+    let rs_api = generate_spaceship_operator_bindings("WeakOrderingAlias")?.rs_api;
     assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
     assert_rs_matches!(rs_api, quote! { impl Eq for SomeStruct {} });
     assert_rs_matches!(rs_api, quote! { impl Ord for SomeStruct });
