@@ -597,6 +597,7 @@ dependencies = [
 name = "cc_bindings_from_rs_rustversion_impl"
 version = "0.0.0"
 dependencies = [
+ "googletest",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
