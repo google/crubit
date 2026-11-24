@@ -248,18 +248,18 @@ fn rs_type_kind_with_lifetime_elision_impl(
             })
         }
         CcTypeVariant::FuncPointer(fp) => {
-            let (return_type, param_types) = fp
+            let (return_cc_type, param_cc_types) = fp
                 .param_and_return_types()
                 .split_last()
                 .expect("In well-formed IR function pointers include at least the return type");
             let return_type = Rc::new(db.rs_type_kind_with_lifetime_elision(
-                return_type.clone(),
+                return_cc_type.clone(),
                 LifetimeOptions {
                     assume_lifetimes: lifetime_options.assume_lifetimes,
                     ..LifetimeOptions::default()
                 },
             )?);
-            let param_types = param_types
+            let param_types = param_cc_types
                 .iter()
                 .map(|param_type| {
                     db.rs_type_kind_with_lifetime_elision(
@@ -282,13 +282,20 @@ fn rs_type_kind_with_lifetime_elision_impl(
                     c_array.display_cc_type_name_for_rs_type(),
                 );
             }
-            ensure!(
-                param_types
-                    .iter()
-                    .chain(Some(return_type.as_ref()))
-                    .all(|t| t.is_c_abi_compatible_by_value()),
-                "Either the return type or some of the parameter types require an FFI thunk (and function pointers don't have a thunk)",
+            error_report::ensure!(
+                return_type.is_c_abi_compatible_by_value(),
+                "Function pointer return type `{}` requires an FFI thunk (and function pointers don't have a thunk)",
+                db.cc_type_debug_name(return_cc_type),
             );
+            for (i, (param_type, param_cc_type)) in
+                param_types.iter().zip(param_cc_types).enumerate()
+            {
+                error_report::ensure!(
+                    param_type.is_c_abi_compatible_by_value(),
+                    "Function pointer parameter #{i} of type `{}` requires an FFI thunk (and function pointers don't have a thunk)",
+                    db.cc_type_debug_name(param_cc_type),
+                );
+            }
             Ok(RsTypeKind::FuncPtr {
                 option: !fp.non_null(),
                 cc_calling_conv: fp.call_conv(),
