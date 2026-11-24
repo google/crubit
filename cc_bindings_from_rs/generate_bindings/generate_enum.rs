@@ -67,8 +67,12 @@ impl DiscriminantTy {
     }
 
     /// The type of the tag `tag`. Pointer tags (as in `Option<&T>`) are mapped to the
-    /// pointer-sized unsigned integer, matching rustc's `Primitive::to_int_ty`.
+    /// pointer-sized unsigned integer, and boolean tags (e.g. `Primitive::Bool` for two-variant
+    /// enums) to `u8`, matching rustc's `Primitive::to_int_ty`.
     fn of_tag(tcx: TyCtxt, tag: rustc_abi::Scalar) -> Result<Self> {
+        if tag.is_bool() {
+            return Self::new(Integer::I8, /* signed= */ false);
+        }
         match tag.primitive() {
             Primitive::Int(integer, signed) => Self::new(integer, signed),
             Primitive::Pointer(_) => {

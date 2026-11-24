@@ -19,7 +19,11 @@ use arc_anyhow::{anyhow, bail, Result};
 use either::Either;
 use rustc_interface::interface::Compiler;
 use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
-use rustc_session::config::{ErrorOutputType, Input};
+#[rustversion::before(2026-11-23)]
+use rustc_session::config::ErrorOutputType;
+use rustc_session::config::Input;
+#[rustversion::since(2026-11-23)]
+use rustc_session::output::ErrorOutputType;
 use rustc_session::EarlyDiagCtxt;
 
 /// Returns the names (in `-C`/`-Z` command-line spelling, e.g. `llvm-target-feature`) of all

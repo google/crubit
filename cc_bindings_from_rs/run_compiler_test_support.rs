@@ -22,7 +22,11 @@ use itertools::Itertools;
 use rustc_middle::ty::TyCtxt;
 #[rustversion::before(2026-08-22)]
 use rustc_session::config::CrateType;
-use rustc_session::config::{Input, Options, OutputType, OutputTypes, Sysroot};
+use rustc_session::config::{Input, Options, Sysroot};
+#[rustversion::before(2026-11-23)]
+use rustc_session::config::{OutputType, OutputTypes};
+#[rustversion::since(2026-11-23)]
+use rustc_session::output::{OutputType, OutputTypes};
 use rustc_span::def_id::LocalDefId;
 #[rustversion::since(2026-08-22)]
 use rustc_structures::CrateType;
@@ -142,6 +146,16 @@ fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::int
     }
 }
 
+#[rustversion::before(2026-11-23)]
+fn run_full_analysis(tcx: TyCtxt<'_>) {
+    tcx.ensure_ok().analysis(());
+}
+
+#[rustversion::since(2026-11-23)]
+fn run_full_analysis(tcx: TyCtxt<'_>) {
+    rustc_interface::passes::full_analysis(tcx);
+}
+
 /// A non-generic implementation of `run_compiler_for_testing`.
 ///
 /// This is used to ensure that the body of `run_compiler_for_testing` is not recompiled for every
@@ -207,7 +221,7 @@ fn run_compiler_for_testing_impl(
             // errors that the earlier stages might miss.  This helps ensure that the
             // test inputs are valid Rust (even if `callback` wouldn't
             // have triggered full analysis).
-            catch_unwind(AssertUnwindSafe(|| tcx.ensure_ok().analysis(())))
+            catch_unwind(AssertUnwindSafe(|| run_full_analysis(tcx)))
                 .expect("Test input compilation failed while analyzing");
             callback(tcx)
         });

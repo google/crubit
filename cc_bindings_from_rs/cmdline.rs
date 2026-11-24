@@ -10,7 +10,10 @@ extern crate rustc_session;
 
 use anyhow::{bail, ensure, Result};
 use clap::Parser;
+#[rustversion::before(2026-11-23)]
 use rustc_session::config::ErrorOutputType;
+#[rustversion::since(2026-11-23)]
+use rustc_session::output::ErrorOutputType;
 use rustc_session::EarlyDiagCtxt;
 use std::path::PathBuf;
 

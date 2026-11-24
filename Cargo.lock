@@ -201,6 +201,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "cc_bindings_from_rs_run_compiler_test_support",
+ "cc_bindings_from_rs_rustversion",
  "clap",
  "crubit_feature",
  "dyn_format",
@@ -569,6 +570,7 @@ version = "0.0.0"
 dependencies = [
  "arc_anyhow",
  "cc_bindings_from_rs_run_compiler_test_support",
+ "cc_bindings_from_rs_rustversion",
  "either",
  "tempfile",
 ]

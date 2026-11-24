@@ -115,6 +115,7 @@ rust_library(
     ],
     edition = "2024",
     deps = [
+        ":rustversion",
         "//common:crubit_feature",
         "//common:dyn_format",
         "@crate_index//:anyhow",  # v1
@@ -165,6 +166,7 @@ rust_library(
     ],
     edition = "2024",
     deps = [
+        ":rustversion",
         "//common:arc_anyhow",
         "@crate_index//:either",  # v1
     ],
