@@ -111,7 +111,7 @@ pub struct StructWithLifetimeboundRefMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::mem::MaybeUninit<u8>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes
@@ -282,7 +282,7 @@ pub struct DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes
@@ -458,7 +458,7 @@ pub struct StructWithLifetimeboundRefCtor<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::mem::MaybeUninit<u8>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes
@@ -611,7 +611,7 @@ pub struct DropStructWithLifetimeboundRefCtor<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes
@@ -731,7 +731,7 @@ pub struct DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes
@@ -1104,7 +1104,7 @@ pub struct DropStructWithRefCtorAndMemberFunction<'__implicit> {
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
     pub(crate) p: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
-    __marker___implicit: ::core::marker::PhantomData<&'__implicit ()>,
+    __marker___implicit: ::core::marker::PhantomData<fn(&'__implicit ()) -> &'__implicit ()>,
 }
 /// Cannot infer `Send` because:
 /// * field `p` is represented as opaque bytes

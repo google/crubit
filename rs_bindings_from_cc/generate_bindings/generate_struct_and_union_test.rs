@@ -543,8 +543,8 @@ fn test_struct_with_multiple_unused_lifetime_params() -> Result<()> {
         quote! {
             pub struct EmptyPairView<'a, 'b> {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-                __marker_a: ::core::marker::PhantomData<&'a ()>,
-                __marker_b: ::core::marker::PhantomData<&'b ()>,
+                __marker_a: ::core::marker::PhantomData<fn(&'a ()) -> &'a ()>,
+                __marker_b: ::core::marker::PhantomData<fn(&'b ()) -> &'b ()>,
             }
         }
     );
@@ -553,8 +553,8 @@ fn test_struct_with_multiple_unused_lifetime_params() -> Result<()> {
         quote! {
             pub struct PairView<'a, 'b> {
                 pub count: ::ffi_11::c_int,
-                __marker_a: ::core::marker::PhantomData<&'a ()>,
-                __marker_b: ::core::marker::PhantomData<&'b ()>,
+                __marker_a: ::core::marker::PhantomData<fn(&'a ()) -> &'a ()>,
+                __marker_b: ::core::marker::PhantomData<fn(&'b ()) -> &'b ()>,
             }
         }
     );
@@ -3375,5 +3375,51 @@ fn test_c_array_feature_gating() -> Result<()> {
         }
     );
 
+    Ok(())
+}
+
+/// b/589368736: a record lifetime is invariant even with no `mutable` field and no `const` method
+/// that takes it, because C++ can write through `const V&` from code that this header doesn't
+/// show (a friend, another record, a helper over the public API).
+#[gtest]
+fn test_record_lifetime_marker_is_invariant() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        class LIFETIME_PARAMS("a") V final {
+         public:
+          int Get() const;
+          void Set(int& $a x);
+         private:
+          int* $a p_;
+        };
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! { __marker_a: ::core::marker::PhantomData<fn(&'a ()) -> &'a ()> }
+    );
+    assert_rs_not_matches!(rs_api, quote! { PhantomData<&'a ()> });
+    Ok(())
+}
+
+/// b/589368736: each of several record lifetimes gets an invariant marker, also one that a public
+/// field mentions.
+#[gtest]
+fn test_every_record_lifetime_gets_invariant_marker() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("a", "b") V final {
+          int* $a p;
+          const int* $b q;
+        };
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __marker_a: ::core::marker::PhantomData<fn(&'a ()) -> &'a ()>,
+            __marker_b: ::core::marker::PhantomData<fn(&'b ()) -> &'b ()>,
+        }
+    );
     Ok(())
 }

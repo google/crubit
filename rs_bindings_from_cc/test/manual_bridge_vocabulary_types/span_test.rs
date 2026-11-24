@@ -72,7 +72,11 @@ fn test_struct_with_unannotated_span_field_compiles_as_opaque_blob() {
 #[gtest]
 fn test_struct_with_lifetime_annotated_span_field() {
     let array: [i32; 3] = [10, 20, 30];
-    let s = StructWithLifetimeAnnotatedSpanField { span: Span::from(&array[..]), other: 99 };
+    // The invariant lifetime marker (b/589368736) is a private field, so the struct has no literal
+    // syntax.
+    let mut s = StructWithLifetimeAnnotatedSpanField::default();
+    s.span = Span::from(&array[..]);
+    s.other = 99;
     let slice: &[i32] = unsafe { &*s.span.as_raw().as_slice() };
     expect_eq!(slice, &[10, 20, 30]);
     expect_eq!(s.other, 99);

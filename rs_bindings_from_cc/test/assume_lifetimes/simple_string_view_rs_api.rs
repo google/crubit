@@ -21,7 +21,7 @@
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct SV<'a> {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-    __marker_a: ::core::marker::PhantomData<&'a ()>,
+    __marker_a: ::core::marker::PhantomData<fn(&'a ()) -> &'a ()>,
 }
 unsafe impl<'a> ::cxx::ExternType for SV<'a> {
     type Id = ::cxx::type_id!("SV");
@@ -70,6 +70,8 @@ pub fn sv_ident<'s>(s: crate::SV<'s>) -> crate::SV<'s> {
 ///
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `s`: type SV has 1 lifetime parameter, but 0 were provided; callers must ensure that arguments have the appropriate lifetime
+///
+/// The C++ function does not say what the return value borrows from (its lifetime is unknown), so it is bound as `'static`. The caller must ensure that the data it borrows outlives it.
 #[inline(always)]
 pub unsafe fn sv_ident_unknown(s: crate::SV<'static>) -> crate::SV<'static> {
     let mut s = ::core::mem::MaybeUninit::new(s);
@@ -133,8 +135,8 @@ pub fn sva_lb<'__rv>(s: crate::SVA<'__rv>) -> crate::SVA<'__rv> {
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
 pub struct SVPair<'a, 'b> {
     pub count: ::ffi_11::c_int,
-    __marker_a: ::core::marker::PhantomData<&'a ()>,
-    __marker_b: ::core::marker::PhantomData<&'b ()>,
+    __marker_a: ::core::marker::PhantomData<fn(&'a ()) -> &'a ()>,
+    __marker_b: ::core::marker::PhantomData<fn(&'b ()) -> &'b ()>,
 }
 unsafe impl<'a, 'b> ::cxx::ExternType for SVPair<'a, 'b> {
     type Id = ::cxx::type_id!("SVPair");

@@ -4491,7 +4491,7 @@ fn test_template_argument_lifetime_is_bound() -> Result<()> {
         quote! {
             pub struct __CcTemplateInst4ViewIRiE<'T> {
                 ...
-                __marker_T: ::core::marker::PhantomData<&'T ()>,
+                __marker_T: ::core::marker::PhantomData<fn(&'T ()) -> &'T ()>,
             }
         }
     );
@@ -5637,6 +5637,160 @@ fn test_thread_safe_references_in_functions_and_methods() -> Result<()> {
             pub fn Identity<'s>(s: &'s crate::ThreadSafe) -> ::cref::CRef<'s, crate::ThreadSafe> {
                 unsafe { crate::detail::...(s) }
             }
+        }
+    );
+    Ok(())
+}
+
+/// b/589394789: a lifetime written only on the result, that nothing binds, is ignored with a
+/// warning: the function binds exactly as its unannotated twin `g` does.
+#[gtest]
+fn test_unbound_result_lifetime_on_record_binds_as_unannotated() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        LIFETIME_PARAMS("a") View $a f(int& x);
+        View g(int& x);
+        "#,
+    )?;
+    let warning =
+        "warning: lifetime 'a is not bound by any parameter; ignored, as if the result were unannotated";
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __COMMENT__ #warning
+            #[doc = ...]
+            #[inline(always)]
+            pub fn f<'x>(x: &'x mut ::ffi_11::c_int) -> crate::View<'x> { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn g<'x>(x: &'x mut ::ffi_11::c_int) -> crate::View<'x> { ... }
+        }
+    );
+    Ok(())
+}
+
+/// b/589394789: with several input lifetimes, elision gives an unannotated record result no
+/// lifetime, so a name that nothing binds is unknown: `T<'static>` from an `unsafe fn`, with a
+/// warning. (Until `k2-record-default` lands, the unannotated twin is a safe fn returning
+/// `T<'static>`.)
+#[gtest]
+fn test_unbound_result_lifetime_on_record_with_several_inputs_makes_function_unsafe() -> Result<()>
+{
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        LIFETIME_PARAMS("a") View $a f(int& x, int& y);
+        "#,
+    )?;
+    let warning = "warning: lifetime 'a is not bound by any parameter; treated as unknown, as for an unannotated result with several input lifetimes";
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __COMMENT__ #warning
+            #[doc = ...]
+            #[inline(always)]
+            pub unsafe fn f<'x, 'y>(
+                x: &'x mut ::ffi_11::c_int, y: &'y mut ::ffi_11::c_int
+            ) -> crate::View<'static> { ... }
+        }
+    );
+    assert_that!(
+        rs_api.to_string(),
+        contains_substring("The C++ function does not say what the return value borrows from")
+    );
+    Ok(())
+}
+
+/// b/589394789: an explicit `$unknown` on a record result also makes the function unsafe, but
+/// isn't warned about: the C++ says what it means.
+#[gtest]
+fn test_explicit_unknown_result_on_record_makes_function_unsafe() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        View $unknown f(int& x);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn f<'x>(x: &'x mut ::ffi_11::c_int) -> crate::View<'static> { ... }
+        }
+    );
+    assert_that!(rs_api.to_string(), not(contains_substring("is not bound by any parameter")));
+    Ok(())
+}
+
+/// b/589394789: with several input lifetimes, a reference or pointer result to a record whose name
+/// nothing binds is a raw pointer, as for the unannotated twins `fu`/`gu`. The pointee record gets
+/// no lifetime (`View<'static>`), but only behind the raw pointer, so the function stays safe:
+/// reaching the `View` needs `unsafe`.
+#[gtest]
+fn test_unbound_result_lifetime_on_pointee_record_with_several_inputs() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        LIFETIME_PARAMS("a") const View $a& f(const int& x, const int& y);
+        LIFETIME_PARAMS("a") View $a* g(const int& x, const int& y);
+        const View& fu(const int& x, const int& y);
+        View* gu(const int& x, const int& y);
+        "#,
+    )?;
+    for (name, pointer) in [
+        ("f", quote! { *const }),
+        ("fu", quote! { *const }),
+        ("g", quote! { *mut }),
+        ("gu", quote! { *mut }),
+    ] {
+        let name = make_rs_ident(name);
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub fn #name<'x, 'y>(
+                    x: &'x ::ffi_11::c_int, y: &'y ::ffi_11::c_int
+                ) -> #pointer crate::View<'static> { ... }
+            }
+        );
+    }
+    Ok(())
+}
+
+/// b/589394789: a reference result whose name nothing binds binds as its unannotated twin `h`
+/// does; an explicit `$unknown` reference result is a raw pointer, so the function stays safe.
+#[gtest]
+fn test_unbound_result_lifetime_on_reference_binds_as_unannotated() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        LIFETIME_PARAMS("a") int& $a f(int& x);
+        int& $unknown g(int& x);
+        int& h(int& x);
+        "#,
+    )?;
+    let warning =
+        "warning: lifetime 'a is not bound by any parameter; ignored, as if the result were unannotated";
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __COMMENT__ #warning
+            #[doc = ...]
+            #[inline(always)]
+            pub fn f<'x>(x: &'x mut ::ffi_11::c_int) -> ::cref::CMut<'x, ::ffi_11::c_int> { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn g<'x>(x: &'x mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn h<'x>(x: &'x mut ::ffi_11::c_int) -> ::cref::CMut<'x, ::ffi_11::c_int> { ... }
         }
     );
     Ok(())
