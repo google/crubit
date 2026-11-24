@@ -496,8 +496,9 @@ rust_library(
 
 crubit_rust_test(
     name = "rs_ir_test",
-    crate = ":ir",
+    srcs = ["ir_test.rs"],
     deps = [
+        ":ir",
         "@crate_index//:googletest",
     ],
 )
