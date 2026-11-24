@@ -138,13 +138,21 @@ fn test_distinct_lifetime_returned_for_annotated_ref() -> Result<()> {
     )?;
 
     let dir = transform_from_proto(&proto)?;
+    // Nothing binds `b`, so it is ignored, as if the result were unannotated (b/589394789): the
+    // result gets the single input lifetime.
     assert_ir_matches!(
         dir,
         quote! {
             Func {
                 cc_name: "f",
                 rs_name: "f", ...
-                return_type: CcType { ... explicit_lifetimes: ["b"] ... }, ...
+                return_type: CcType {
+                    variant: Pointer(PointerType {
+                        kind: LValueRef, ...
+                    }),
+                    ...,
+                    explicit_lifetimes: ["a"], ...
+                }, ...
                 params: [
                     FuncParam {
                         type_: CcType { ... explicit_lifetimes: ["a"] ... },
@@ -152,7 +160,7 @@ fn test_distinct_lifetime_returned_for_annotated_ref() -> Result<()> {
                     }
                 ],
                 ...
-                lifetime_inputs: ["a", "b"],
+                lifetime_inputs: ["a"],
                 ...
             }
         }
@@ -1183,10 +1191,18 @@ fn test_struct_does_not_shadow_unrelated_lifetime_param() -> Result<()> {
             Func {
                 cc_name: "f",
                 rs_name: "f", ...
-                return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
+                // Nothing binds `a`, so it is ignored, as if the result were unannotated
+                // (b/589394789): the result gets the lifetime of `this`.
+                return_type: CcType {
+                    variant: Pointer(PointerType {
+                        kind: LValueRef, ...
+                    }),
+                    ...,
+                    explicit_lifetimes: ["__this"], ...
+                }, ...
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["__this", "a"],
+                lifetime_inputs: ["__this"],
                 ...
             }
         }
@@ -2159,6 +2175,256 @@ fn test_self_types_of_class_template_with_argument_lifetime_are_tied() -> Result
                     },
                 ], ...
                 lifetime_inputs: ["T", ...], ...
+            }
+        }
+    );
+    Ok(())
+}
+
+// b/589394789: a lifetime written only on the result, that no parameter, enclosing record or
+// `'static` binds, would let the caller pick any lifetime for the result. It is ignored: the
+// result binds as if it were unannotated. Only an explicit `$unknown` is unknown, and so is an
+// ignored name on a record result when elision gives no lifetime (several input lifetimes).
+
+#[gtest]
+fn test_unbound_result_lifetime_on_reference_binds_as_unannotated() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      LIFETIME_PARAMS("a")
+      int& $a f(int& i1);
+      int& g(int& i1);
+      "#,
+    )?;
+
+    let dir = transform_from_proto(&proto)?;
+    for name in ["f", "g"] {
+        assert_ir_matches!(
+            dir,
+            quote! {
+                Func {
+                    cc_name: #name,
+                    rs_name: #name, ...
+                    return_type: CcType {
+                        variant: Pointer(PointerType {
+                            kind: LValueRef, ...
+                        }),
+                        ...,
+                        explicit_lifetimes: ["i1"], ...
+                    }, ...
+                    lifetime_inputs: ["i1"],
+                    ...
+                }
+            }
+        );
+    }
+    Ok(())
+}
+
+#[gtest]
+fn test_explicit_unknown_result_reference_becomes_non_null_pointer() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      int& $unknown f(int& i1);
+      "#,
+    )?;
+
+    let dir = transform_from_proto(&proto)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType {
+                    variant: Pointer(PointerType {
+                        kind: NonNull, ...
+                    }),
+                    ...,
+                    explicit_lifetimes: [], ...
+                }, ...
+                lifetime_inputs: ["i1"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unbound_result_lifetime_on_record_binds_as_unannotated() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      struct LIFETIME_PARAMS("p") View { int* $p p; };
+      LIFETIME_PARAMS("a")
+      View $a f(int& i1);
+      View g(int& i1);
+      "#,
+    )?;
+
+    let dir = transform_from_proto(&proto)?;
+    for name in ["f", "g"] {
+        assert_ir_matches!(
+            dir,
+            quote! {
+                Func {
+                    cc_name: #name,
+                    rs_name: #name, ...
+                    return_type: CcType { ... explicit_lifetimes: ["i1"] ... }, ...
+                    lifetime_inputs: ["i1"],
+                    ...
+                }
+            }
+        );
+    }
+    Ok(())
+}
+
+#[gtest]
+fn test_result_lifetime_bound_by_parameter_is_kept() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      struct LIFETIME_PARAMS("p") View { int* $p p; };
+      LIFETIME_PARAMS("a")
+      View $a f(int& $a i1);
+      "#,
+    )?;
+
+    let dir = transform_from_proto(&proto)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unbound_result_lifetime_on_method_binds_as_unannotated() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      struct LIFETIME_PARAMS("p") View { int* $p p; };
+      struct S {
+        LIFETIME_PARAMS("a") View $a f() const;
+        View g() const;
+      };
+      "#,
+    )?;
+
+    let dir = transform_from_proto(&proto)?;
+    for name in ["f", "g"] {
+        assert_ir_matches!(
+            dir,
+            quote! {
+                Func {
+                    cc_name: #name,
+                    rs_name: #name, ...
+                    return_type: CcType { ... explicit_lifetimes: ["__this"] ... }, ...
+                    lifetime_inputs: ["__this"],
+                    ...
+                }
+            }
+        );
+    }
+    Ok(())
+}
+
+#[gtest]
+fn test_unbound_result_lifetime_without_inputs_binds_as_unannotated() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      struct LIFETIME_PARAMS("p") View { int* $p p; };
+      LIFETIME_PARAMS("a") View $a f();
+      View g();
+      LIFETIME_PARAMS("a") int& $a h();
+      "#,
+    )?;
+
+    let dir = transform_from_proto(&proto)?;
+    // As unannotated: a record result gets a fresh lifetime (which the caller picks), and a
+    // reference result is a raw pointer.
+    for name in ["f", "g"] {
+        assert_ir_matches!(
+            dir,
+            quote! {
+                Func {
+                    cc_name: #name,
+                    rs_name: #name, ...
+                    return_type: CcType { ... explicit_lifetimes: ["lt"] ... }, ...
+                    lifetime_inputs: ["lt"],
+                    ...
+                }
+            }
+        );
+    }
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "h",
+                rs_name: "h", ...
+                return_type: CcType {
+                    variant: Pointer(PointerType {
+                        kind: NonNull, ...
+                    }),
+                    ...,
+                    explicit_lifetimes: [], ...
+                }, ...
+                lifetime_inputs: [],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unbound_result_lifetime_with_several_inputs() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      struct LIFETIME_PARAMS("p") View { int* $p p; };
+      LIFETIME_PARAMS("a") View $a f(int& i1, int& i2);
+      LIFETIME_PARAMS("a") int& $a g(int& i1, int& i2);
+      "#,
+    )?;
+
+    let dir = transform_from_proto(&proto)?;
+    // Elision gives no lifetime. A record result is unknown: no lifetimes, which Rust formats as
+    // `View<'static>`, and `generate_function` makes the function `unsafe`.
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: [] ... }, ...
+                lifetime_inputs: ["i1", "i2"],
+                ...
+            }
+        }
+    );
+    // A reference result is a raw pointer, as if it were unannotated.
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "g",
+                rs_name: "g", ...
+                return_type: CcType {
+                    variant: Pointer(PointerType {
+                        kind: NonNull, ...
+                    }),
+                    ...,
+                    explicit_lifetimes: [], ...
+                }, ...
+                lifetime_inputs: ["i1", "i2"],
+                ...
             }
         }
     );
