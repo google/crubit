@@ -1461,8 +1461,6 @@ buildValueTransferer() {
              TransferState<PointerNullabilityLattice>>()
       // Handles initialization of the null states of pointers.
       .CaseOfCFGStmt<Expr>(isAddrOf(), transferNotNullPointer)
-      // TODO(mboehme): I believe we should be able to move handling of null
-      // pointers to the non-flow-sensitive part of the analysis.
       .CaseOfCFGStmt<Expr>(isNullPointerLiteral(), transferNullPointer)
       .CaseOfCFGStmt<CXXScalarValueInitExpr>(isRawPointerValueInit(),
                                              transferNullPointer)
