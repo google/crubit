@@ -208,13 +208,16 @@ rust_library(
 
 crubit_rust_test(
     name = "run_compiler_test_support_test",
-    crate = ":run_compiler_test_support",
+    srcs = ["run_compiler_test_support_test.rs"],
     rustc_flags = [
         "--cfg=bazel",
         "--cfg=oss",
     ],
     # We don't yet support running rustc itself on macOS (we only target macOS).
     tags = ["not_run:mac"],
+    deps = [
+        ":run_compiler_test_support",
+    ],
 )
 
 rust_library(
