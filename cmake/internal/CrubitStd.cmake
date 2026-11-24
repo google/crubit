@@ -4,36 +4,6 @@
 
 include_guard(GLOBAL)
 
-# _crubit_std_read_list(<out_var> <name>)
-#
-# Sets `out_var` to the entries listed in support/cc_std_impl/<name>.txt,
-# generated from the Bazel definitions: one per line, with `#` starting a
-# comment line.
-function(_crubit_std_read_list out_var name)
-  _crubit_source_dir(crubit_dir)
-  set(file "${crubit_dir}/support/cc_std_impl/${name}.txt")
-  # Reconfigure when the list changes.
-  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${file}")
-  # Skip comments and blank lines here: list operations would split a comment
-  # that contains `;`.
-  file(STRINGS "${file}" entries REGEX "^[ \t]*[^# \t]")
-  list(TRANSFORM entries STRIP)
-  set(${out_var} ${entries} PARENT_SCOPE)
-endfunction()
-
-# Sets `libcxx_var` and `libc_var` to the names (as written in `#include <...>`)
-# of the C++ and C standard library headers to generate bindings for.
-function(_crubit_std_header_names libcxx_var libc_var)
-  _crubit_std_read_list(libcxx_headers libcxx_headers)
-  _crubit_std_read_list(libc_headers libc_headers)
-  if(NOT APPLE)
-    _crubit_std_read_list(non_apple_libc_headers non_apple_libc_headers)
-    list(APPEND libc_headers ${non_apple_libc_headers})
-  endif()
-  set(${libcxx_var} ${libcxx_headers} PARENT_SCOPE)
-  set(${libc_var} ${libc_headers} PARENT_SCOPE)
-endfunction()
-
 # _crubit_std_write_tu(<tu> <header>...)
 #
 # Writes the translation unit `<tu>`, which includes each `<header>`.
@@ -193,10 +163,18 @@ function(_crubit_ensure_std)
   separate_arguments(cxx_flags UNIX_COMMAND "${CMAKE_CXX_FLAGS}")
   set(compile_args -x c++ -std=c++${std} ${cxx_flags} ${system_args})
 
+  _crubit_source_dir(crubit_dir)
+  set(impl "${crubit_dir}/support/cc_std_impl")
+  include("${impl}/cc_std_lists.cmake")
+
   # Find the standard library headers that the build reads, exactly as Clang
   # spells them, from a file that includes all of them. Check that
   # rs_bindings_from_cc's args find the same ones.
-  _crubit_std_header_names(libcxx_headers libc_headers)
+  set(libcxx_headers ${_CRUBIT_STD_LIBCXX_HEADERS})
+  set(libc_headers ${_CRUBIT_STD_LIBC_HEADERS})
+  if(NOT APPLE)
+    list(APPEND libc_headers ${_CRUBIT_STD_NON_APPLE_LIBC_HEADERS})
+  endif()
   set(tu "${CRUBIT_CRATES_DIR}/cc_std/all_std_headers.cc")
   _crubit_std_write_tu("${tu}" ${libcxx_headers} ${libc_headers})
   _crubit_std_build_headers(build_headers "${tu}" ${std})
@@ -213,15 +191,11 @@ function(_crubit_ensure_std)
     LIBC_HEADERS ${libc_headers}
     DEPS ${all_headers})
 
-  _crubit_source_dir(crubit_dir)
-  set(impl "${crubit_dir}/support/cc_std_impl")
-  _crubit_std_read_list(helpers helper_headers)
-  list(TRANSFORM helpers PREPEND "${impl}/")
+  list(TRANSFORM _CRUBIT_STD_HELPER_HEADERS PREPEND "${impl}/" OUTPUT_VARIABLE helpers)
   list(APPEND public_headers ${helpers})
   list(APPEND all_headers ${helpers})
 
-  _crubit_std_read_list(extra_rs_srcs extra_rs_srcs)
-  list(TRANSFORM extra_rs_srcs PREPEND "${impl}/")
+  list(TRANSFORM _CRUBIT_STD_EXTRA_RS_SRCS PREPEND "${impl}/" OUTPUT_VARIABLE extra_rs_srcs)
 
   list(JOIN all_headers "\",\"" json_headers)
   set(label "//support/cc_std:cc_std")
