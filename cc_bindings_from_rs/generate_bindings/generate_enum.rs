@@ -416,26 +416,6 @@ fn check_no_overlap(variant_name: &str, tag: Option<&EnumTag>, fields: &[EnumFie
 
 /// Returns the offsets of the fields of the variant `variant_index` of an enum with `layout`,
 /// relative to the start of the enum, or `None` if the variant is uninhabited.
-#[rustversion::before(2026-05-18)]
-fn inhabited_variant_field_shape(
-    layout: Layout<'_>,
-    variant_index: VariantIdx,
-) -> Option<FieldsShape<FieldIdx>> {
-    match layout.variants() {
-        Variants::Multiple { variants, .. } => {
-            let variant = &variants[variant_index];
-            (!variant.is_uninhabited()).then(|| variant.fields.clone())
-        }
-        Variants::Single { index } => {
-            (*index == variant_index && !layout.is_uninhabited()).then(|| layout.fields().clone())
-        }
-        Variants::Empty => None,
-    }
-}
-
-/// Returns the offsets of the fields of the variant `variant_index` of an enum with `layout`,
-/// relative to the start of the enum, or `None` if the variant is uninhabited.
-#[rustversion::since(2026-05-18)]
 fn inhabited_variant_field_shape(
     layout: Layout<'_>,
     variant_index: VariantIdx,
@@ -443,8 +423,15 @@ fn inhabited_variant_field_shape(
     // Note: `LayoutData::is_variant_uninhabited` would be simpler, but it was only added on
     // 2026-08-06 (rust-lang/rust#160398), so it is unavailable in Rust 1.98.
     match layout.variants() {
-        Variants::Multiple { variants, .. } => (!variants[variant_index].is_uninhabited())
-            .then(|| LayoutData::for_variant(&layout, variant_index).fields),
+        Variants::Multiple { variants, .. } => {
+            let variant = &variants[variant_index];
+            (!variant.is_uninhabited()).then(|| {
+                rustversion::select! {
+                    before(2026-05-18) => variant.fields.clone(),
+                    _ => LayoutData::for_variant(&layout, variant_index).fields,
+                }
+            })
+        }
         Variants::Single { index } => {
             (*index == variant_index && !layout.is_uninhabited()).then(|| layout.fields().clone())
         }

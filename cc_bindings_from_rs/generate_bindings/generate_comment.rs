@@ -16,14 +16,19 @@ use database::BindingsGenerator;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::{find_attr, Attribute, AttributeKind};
-#[rustversion::before(2026-09-27)]
-use rustc_hir::{attrs::AttributeKind, find_attr, Attribute};
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use std::borrow::Cow;
+
+rustversion::select! {
+    since(2026-09-27) => {
+        use rustc_attr_ir::{find_attr, Attribute, AttributeKind};
+    }
+    _ => {
+        use rustc_hir::{attrs::AttributeKind, find_attr, Attribute};
+    }
+}
 
 /// Wraps `tokens` in Kythe capture markers when Kythe annotations are enabled.
 pub fn capture_for_kythe(db: &BindingsGenerator<'_>, tokens: impl ToTokens) -> TokenStream {
@@ -68,10 +73,14 @@ pub fn generate_must_use_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> 
 /// Returns the C++ deprecated tag for the item identified by `def_id`, if it is
 /// deprecated. Otherwise, returns None.
 pub fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
-    #[rustversion::since(2026-09-27)]
-    use rustc_attr_ir::{find_attr, AttributeKind};
-    #[rustversion::before(2026-09-27)]
-    use rustc_hir::{attrs::AttributeKind, find_attr};
+    rustversion::select! {
+        since(2026-09-27) => {
+            use rustc_attr_ir::{find_attr, AttributeKind};
+        }
+        _ => {
+            use rustc_hir::{attrs::AttributeKind, find_attr};
+        }
+    }
 
     // If our definition does not support attributes, get_all_attrs will panic, so we check
     // beforehand and return None.

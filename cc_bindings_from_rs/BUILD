@@ -239,6 +239,9 @@ rust_proc_macro(
 crubit_rust_test(
     name = "rustversion_impl_test",
     crate = ":rustversion_impl",
+    deps = [
+        "@crate_index//:googletest",
+    ],
 )
 
 rust_library(
@@ -248,5 +251,14 @@ rust_library(
     proc_macro_deps = [
         ":rustversion_impl",
         "@crate_index//:rustversion",  # v1
+    ],
+)
+
+crubit_rust_test(
+    name = "rustversion_test",
+    srcs = ["rustversion_test.rs"],
+    deps = [
+        ":rustversion",
+        "@crate_index//:googletest",
     ],
 )

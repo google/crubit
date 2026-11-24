@@ -38,13 +38,6 @@ use query_compiler::{
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::lang_items::LangItem;
-#[rustversion::since(2026-08-09)]
-#[rustversion::before(2026-09-27)]
-use rustc_hir::attrs::lang_items::LangItem;
-#[rustversion::before(2026-08-09)]
-use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::layout::IntegerExt;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt, TypeSuperFoldable, TypeVisitableExt};
@@ -53,6 +46,18 @@ use rustc_span::symbol::{sym, Symbol};
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::rc::Rc;
+
+rustversion::select! {
+    since(2026-09-27) => {
+        use rustc_attr_ir::lang_items::LangItem;
+    }
+    since(2026-08-09) => {
+        use rustc_hir::attrs::lang_items::LangItem;
+    }
+    _ => {
+        use rustc_hir::lang_items::LangItem;
+    }
+}
 
 #[rustversion::since(2026-07-31)]
 #[rustversion::before(2026-09-05)]
@@ -1456,25 +1461,25 @@ fn format_ty_for_cc_impl<'tcx>(
                     None => bail!("Generic function pointers are not supported yet (b/259749023)"),
                     Some(sig_tys) => sig_tys,
                 };
-                #[rustversion::before(2026-04-19)]
-                let sig = rustc_middle::ty::FnSig {
-                    inputs_and_output: sig_tys.inputs_and_output,
-                    c_variadic: fn_header.c_variadic,
-                    safety: fn_header.safety,
-                    abi: fn_header.abi,
-                };
-                #[rustversion::since(2026-04-19)]
-                let sig = {
-                    // Trait was replaced with inherent methods in nightly-2026-05-01.
-                    #[cfg_accessible(rustc_type_ir::inherent::FSigKind)]
-                    use rustc_type_ir::inherent::FSigKind;
-                    rustc_middle::ty::FnSig {
+                let sig = rustversion::select! {
+                    before(2026-04-19) => rustc_middle::ty::FnSig {
                         inputs_and_output: sig_tys.inputs_and_output,
-                        // We do not support #[splat], so we do not set it here.
-                        fn_sig_kind: ty::FnSigKind::default()
-                            .set_abi(fn_header.abi())
-                            .set_safety(fn_header.safety())
-                            .set_c_variadic(fn_header.c_variadic()),
+                        c_variadic: fn_header.c_variadic,
+                        safety: fn_header.safety,
+                        abi: fn_header.abi,
+                    },
+                    _ => {
+                        // Trait was replaced with inherent methods in nightly-2026-05-01.
+                        #[cfg_accessible(rustc_type_ir::inherent::FSigKind)]
+                        use rustc_type_ir::inherent::FSigKind;
+                        rustc_middle::ty::FnSig {
+                            inputs_and_output: sig_tys.inputs_and_output,
+                            // We do not support #[splat], so we do not set it here.
+                            fn_sig_kind: ty::FnSigKind::default()
+                                .set_abi(fn_header.abi())
+                                .set_safety(fn_header.safety())
+                                .set_c_variadic(fn_header.c_variadic()),
+                        }
                     }
                 };
                 sig
@@ -1486,10 +1491,10 @@ fn format_ty_for_cc_impl<'tcx>(
             // `is_thunk_required` check above implies `extern "C"` (or `"C-unwind"`).
             // This assertion reinforces that the generated C++ code doesn't need
             // to use calling convention attributes like `_stdcall`, etc.
-            #[rustversion::before(2026-04-19)]
-            let abi = sig.abi;
-            #[rustversion::since(2026-04-19)]
-            let abi = sig.abi();
+            let abi = rustversion::select! {
+                before(2026-04-19) => sig.abi,
+                _ => sig.abi(),
+            };
             assert!(matches!(abi, rustc_abi::ExternAbi::C { .. }));
 
             let mut prereqs = CcPrerequisites::default();
@@ -1544,16 +1549,16 @@ fn format_ty_for_cc_impl<'tcx>(
 
 /// Returns the `AliasTy` if `ty` is a type alias, or `None` otherwise.
 pub fn ty_as_alias_ty<'tcx>(ty: Ty<'tcx>) -> Option<&'tcx ty::AliasTy<'tcx>> {
-    #[rustversion::since(2026-06-25)]
-    let ty::TyKind::Alias(_, alias_ty) = ty.kind() else {
-        return None;
-    };
-    #[rustversion::before(2026-06-25)]
-    let ty::TyKind::Alias(alias_ty) = ty.kind() else {
-        return None;
-    };
-
-    Some(alias_ty)
+    rustversion::select! {
+        since(2026-06-25) => match ty.kind() {
+            ty::TyKind::Alias(_, alias_ty) => Some(alias_ty),
+            _ => None,
+        },
+        _ => match ty.kind() {
+            ty::TyKind::Alias(alias_ty) => Some(alias_ty),
+            _ => None,
+        },
+    }
 }
 
 /// Formats a Protobuf message as `::proto::Rust<CppType>` for layout-compatible locations.
@@ -1589,10 +1594,10 @@ pub fn alias_ty_as_opaque_def_id<'tcx>(
     tcx: TyCtxt<'tcx>,
     alias_ty: &ty::AliasTy<'tcx>,
 ) -> Option<DefId> {
-    #[rustversion::before(2026-06-23)]
-    let def_id = alias_ty.kind.def_id();
-    #[rustversion::since(2026-06-23)]
-    let def_id: DefId = alias_ty.kind.try_to_opaque()?;
+    let def_id: DefId = rustversion::select! {
+        before(2026-06-23) => alias_ty.kind.def_id(),
+        _ => alias_ty.kind.try_to_opaque()?,
+    };
 
     (tcx.def_kind(def_id) == rustc_hir::def::DefKind::OpaqueTy).then_some(def_id)
 }
@@ -1872,10 +1877,10 @@ fn format_fn_ptr_for_rs<'tcx>(
     lifetime_mode: RsLifetimeMode,
 ) -> Result<TokenStream> {
     let tcx = db.tcx();
-    #[rustversion::before(2026-04-19)]
-    let (c_variadic, safety, abi) = (fn_header.c_variadic, fn_header.safety, fn_header.abi);
-    #[rustversion::since(2026-04-19)]
-    let (c_variadic, safety, abi) = (fn_header.c_variadic(), fn_header.safety(), fn_header.abi());
+    let (c_variadic, safety, abi) = rustversion::select! {
+        before(2026-04-19) => (fn_header.c_variadic, fn_header.safety, fn_header.abi),
+        _ => (fn_header.c_variadic(), fn_header.safety(), fn_header.abi()),
+    };
     if c_variadic {
         bail!("Variadic functions are not yet supported.");
     }
@@ -2667,10 +2672,10 @@ pub fn is_bridged_type<'db, 'tcx>(
 // Evaluates a constant (such as the length of an array type).
 pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) -> Result<u64> {
     // It would be nice if we knew that these types were already fully normalized.
-    #[rustversion::before(2026-04-11)]
-    let unnorm_cst = cst;
-    #[rustversion::since(2026-04-11)]
-    let unnorm_cst = ty::Unnormalized::new_wip(cst);
+    let unnorm_cst = rustversion::select! {
+        before(2026-04-11) => cst,
+        _ => ty::Unnormalized::new_wip(cst),
+    };
     let normalized = tcx
         .try_normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_cst)
         .unwrap_or_else(|_| panic!("Unable to normalize type constant {{cst}}."));
@@ -2684,10 +2689,10 @@ pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) 
 }
 
 pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
-    #[rustversion::before(2026-04-19)]
-    let is_c_variadic = sig.c_variadic;
-    #[rustversion::since(2026-04-19)]
-    let is_c_variadic = sig.c_variadic();
+    let is_c_variadic = rustversion::select! {
+        before(2026-04-19) => sig.c_variadic,
+        _ => sig.c_variadic(),
+    };
     if is_c_variadic {
         // TODO(b/254097223): Add support for variadic functions.
         bail!("C variadic functions are not supported (b/254097223)");
@@ -2699,10 +2704,10 @@ pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
 /// Returns `Ok(())` if no thunk is required.
 /// Otherwise returns an error the describes why the thunk is needed.
 pub fn is_thunk_required<'tcx>(db: &BindingsGenerator<'tcx>, sig: &ty::FnSig<'tcx>) -> Result<()> {
-    #[rustversion::before(2026-04-19)]
-    let abi = sig.abi;
-    #[rustversion::since(2026-04-19)]
-    let abi = sig.abi();
+    let abi = rustversion::select! {
+        before(2026-04-19) => sig.abi,
+        _ => sig.abi(),
+    };
     match abi {
         // "C" ABI is okay: since https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html has been
         // accepted, a Rust panic that "escapes" a "C" ABI function is a defined crash. See
@@ -2808,33 +2813,30 @@ pub fn check_feature_enabled_on_self_and_all_deps(
     db.crate_name_to_features().values().all(|crate_features| crate_features.contains(feature))
 }
 
-#[rustversion::before(2026-07-09)]
 fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
-    matches!(
-        backend_repr,
-        BackendRepr::ScalarPair(
-            Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
-            Scalar::Initialized {
-                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
+    rustversion::select! {
+        before(2026-07-09) => matches!(
+            backend_repr,
+            BackendRepr::ScalarPair(
+                Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
+                Scalar::Initialized {
+                    value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
+                    ..
+                }
+            )
+        ),
+        _ => matches!(
+            backend_repr,
+            BackendRepr::ScalarPair {
+                a: Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
+                b: Scalar::Initialized {
+                    value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
+                    ..
+                },
                 ..
             }
-        )
-    )
-}
-
-#[rustversion::since(2026-07-09)]
-fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
-    matches!(
-        backend_repr,
-        BackendRepr::ScalarPair {
-            a: Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
-            b: Scalar::Initialized {
-                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
-                ..
-            },
-            ..
-        }
-    )
+        ),
+    }
 }
 
 /// Checks that `ty` has the same ABI as `::rs::SliceRef`.

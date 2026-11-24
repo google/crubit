@@ -24,13 +24,6 @@ use itertools::Itertools;
 #[rustversion::before(2026-05-18)]
 use rustc_abi::FieldsShape;
 use rustc_abi::{BackendRepr, FieldIdx, HasDataLayout, Layout, Scalar, TargetDataLayout, Variants};
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::lang_items::LangItem;
-#[rustversion::since(2026-08-09)]
-#[rustversion::before(2026-09-27)]
-use rustc_hir::attrs::lang_items::LangItem;
-#[rustversion::before(2026-08-09)]
-use rustc_hir::lang_items::LangItem;
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::ty::solve::NoSolution;
 use rustc_middle::ty::{self, GenericArg, GenericArgKind, GenericParamDefKind, Ty, TyCtxt};
@@ -44,15 +37,24 @@ use std::path::Path;
 
 use database::BindingsGenerator;
 
-/// Returns true if `did` is `core::ptr::NonNull`.
-#[rustversion::since(2026-08-18)]
-pub fn is_std_ptr_non_null(tcx: TyCtxt<'_>, did: DefId) -> bool {
-    tcx.is_lang_item(did, LangItem::NonNull)
+rustversion::select! {
+    since(2026-09-27) => {
+        use rustc_attr_ir::lang_items::LangItem;
+    }
+    since(2026-08-09) => {
+        use rustc_hir::attrs::lang_items::LangItem;
+    }
+    _ => {
+        use rustc_hir::lang_items::LangItem;
+    }
 }
 
-#[rustversion::before(2026-08-18)]
+/// Returns true if `did` is `core::ptr::NonNull`.
 pub fn is_std_ptr_non_null(tcx: TyCtxt<'_>, did: DefId) -> bool {
-    tcx.get_diagnostic_item(rustc_span::symbol::sym::NonNull) == Some(did)
+    rustversion::select! {
+        since(2026-08-18) => tcx.is_lang_item(did, LangItem::NonNull),
+        _ => tcx.get_diagnostic_item(rustc_span::symbol::sym::NonNull) == Some(did),
+    }
 }
 
 /// Whether the layout is from a type that implements [`std::marker::PointerLike`].
@@ -180,10 +182,10 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
                 // TODO: b/258259459 - Support zero sized types.
                 return false;
             };
-            #[rustversion::before(2026-04-19)]
-            let mut ty = tcx.type_of(field.did).instantiate(tcx, substs);
-            #[rustversion::since(2026-04-19)]
-            let mut ty = tcx.type_of(field.did).instantiate(tcx, substs).skip_normalization();
+            let mut ty = rustversion::select! {
+                before(2026-04-19) => tcx.type_of(field.did).instantiate(tcx, substs),
+                _ => tcx.type_of(field.did).instantiate(tcx, substs).skip_normalization(),
+            };
 
             // Pattern types can be considered by value when they're embedded within an ADT.
             // We dont' want to do that for pattern types at large because they might mean they're
@@ -211,11 +213,14 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
 /// The prefix for deanonymized region names.
 pub const ANON_REGION_PREFIX: &str = "'__anon";
 
-#[rustversion::before(2026-04-19)]
-pub type PolyFnSig<'tcx> = ty::PolyFnSig<'tcx>;
-
-#[rustversion::since(2026-04-19)]
-pub type PolyFnSig<'tcx> = ty::Unnormalized<'tcx, ty::PolyFnSig<'tcx>>;
+rustversion::select! {
+    before(2026-04-19) => {
+        pub type PolyFnSig<'tcx> = ty::PolyFnSig<'tcx>;
+    }
+    _ => {
+        pub type PolyFnSig<'tcx> = ty::Unnormalized<'tcx, ty::PolyFnSig<'tcx>>;
+    }
+}
 
 /// Similar to `TyCtxt::liberate_and_name_late_bound_regions` but also replaces
 /// anonymous regions with new names.
@@ -325,10 +330,10 @@ fn has_unrevealed_opaque_type<'tcx>(
                 }
                 for variant in adt_def.variants() {
                     for field in &variant.fields {
-                        #[rustversion::before(2026-04-19)]
-                        let field_ty = field.ty(tcx, substs);
-                        #[rustversion::since(2026-04-19)]
-                        let field_ty = field.ty(tcx, substs).skip_norm_wip();
+                        let field_ty = rustversion::select! {
+                            before(2026-04-19) => field.ty(tcx, substs),
+                            _ => field.ty(tcx, substs).skip_norm_wip(),
+                        };
                         if has_unrevealed_opaque_type(tcx, field_ty, seen) {
                             return true;
                         }
@@ -369,17 +374,19 @@ pub fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
     match layout.variants() {
         Variants::Single { .. } | Variants::Empty => 0,
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
-            #[rustversion::before(2026-05-18)]
-            let mut variant_offsets = variants.iter().filter_map(|variant| match &variant.fields {
-                FieldsShape::Arbitrary { offsets, .. } => {
-                    offsets.get(FieldIdx::from_usize(0)).map(|offset| offset.bytes())
-                }
-                _ => panic!("Internal Error - Detected an enum with non-arbitrary field"),
-            });
-
-            #[rustversion::since(2026-05-18)]
             let mut variant_offsets = variants.iter().filter_map(|variant| {
-                variant.field_offsets.get(FieldIdx::from_usize(0)).map(|offset| offset.bytes())
+                rustversion::select! {
+                    before(2026-05-18) => match &variant.fields {
+                        FieldsShape::Arbitrary { offsets, .. } => {
+                            offsets.get(FieldIdx::from_usize(0)).map(|offset| offset.bytes())
+                        }
+                        _ => panic!("Internal Error - Detected an enum with non-arbitrary field"),
+                    },
+                    _ => variant
+                        .field_offsets
+                        .get(FieldIdx::from_usize(0))
+                        .map(|offset| offset.bytes()),
+                }
             });
 
             // There are two equivalent ways to express a rust enum:
@@ -623,36 +630,39 @@ pub trait SortedByDef: Iterator + Sized {
 }
 impl<T: Iterator + Sized> SortedByDef for T {}
 
-#[rustversion::before(2026-04-19)]
-pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, _param_env: ty::ParamEnv<'tcx>, val: T) -> T {
-    val
-}
+rustversion::select! {
+    before(2026-04-19) => {
+        pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, _param_env: ty::ParamEnv<'tcx>, val: T) -> T {
+            val
+        }
+    }
+    _ => {
+        pub fn try_normalize_ty<'tcx, T>(
+            tcx: TyCtxt<'tcx>,
+            param_env: ty::ParamEnv<'tcx>,
+            val: ty::Unnormalized<'tcx, T>,
+        ) -> Result<T>
+        where
+            T: ty::TypeFoldable<TyCtxt<'tcx>>,
+        {
+            try_normalize_non_body(tcx, param_env, val.skip_normalization()).map_err(|_| {
+                anyhow!("val contained unresolved type variables and could not be normalized")
+            })
+        }
 
-#[rustversion::since(2026-04-19)]
-pub fn try_normalize_ty<'tcx, T>(
-    tcx: TyCtxt<'tcx>,
-    param_env: ty::ParamEnv<'tcx>,
-    val: ty::Unnormalized<'tcx, T>,
-) -> Result<T>
-where
-    T: ty::TypeFoldable<TyCtxt<'tcx>>,
-{
-    try_normalize_non_body(tcx, param_env, val.skip_normalization())
-        .map_err(|_| anyhow!("val contained unresolved type variables and could not be normalized"))
-}
-
-#[rustversion::since(2026-04-19)]
-pub fn normalize_ty<'tcx, T>(
-    tcx: TyCtxt<'tcx>,
-    param_env: ty::ParamEnv<'tcx>,
-    val: ty::Unnormalized<'tcx, T>,
-) -> T
-where
-    T: ty::TypeFoldable<TyCtxt<'tcx>> + std::fmt::Debug,
-{
-    try_normalize_ty(tcx, param_env, val).expect(
-        "normalize_ty called on a type that could not be normalized. Consider try_normalize_ty",
-    )
+        pub fn normalize_ty<'tcx, T>(
+            tcx: TyCtxt<'tcx>,
+            param_env: ty::ParamEnv<'tcx>,
+            val: ty::Unnormalized<'tcx, T>,
+        ) -> T
+        where
+            T: ty::TypeFoldable<TyCtxt<'tcx>> + std::fmt::Debug,
+        {
+            try_normalize_ty(tcx, param_env, val).expect(
+                "normalize_ty called on a type that could not be normalized. Consider try_normalize_ty",
+            )
+        }
+    }
 }
 
 /// Returns true if the field is public and stable.

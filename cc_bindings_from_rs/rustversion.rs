@@ -21,6 +21,26 @@
 //! my_code_that_only_works_on_old_rustc();
 //! ```
 //!
+//! To select between multiple branches at compile-time (like `std::cfg_select!`), use [`select`]:
+//!
+//! ```
+//! rustversion::select! {
+//!     since(2026-09-27) => { use new_module::Item; }
+//!     since(2026-08-09) => { use mid_module::Item; }
+//!     _ => { use old_module::Item; }
+//! }
+//! ```
+//!
+//! [`select`] can also be used in expression position, with or without braces on the right-hand
+//! side:
+//!
+//! ```
+//! let x = rustversion::select! {
+//!     before(2026-04-19) => old_expr(),
+//!     _ => new_expr(),
+//! };
+//! ```
+//!
 //! ## Why is there no `rustversion::nightly`?
 //!
 //! Code doesn't work on _all_ nightlies, it works on nightlies after a certain date. Typically,
@@ -30,9 +50,11 @@
 //! the recent nightlies, as well as the next stable release, and all stable releases after that.
 
 pub use rustversion_impl::before;
+pub use rustversion_impl::select;
 pub use rustversion_impl::since;
 
 #[doc(hidden)]
 pub mod macro_internal {
+    pub use ::rustversion::all;
     pub use ::rustversion::any;
 }
