@@ -498,6 +498,69 @@ def _test_virtual_include_headers_in_target_args():
         target_under_test = ":mylib_with_include_prefix_with_aspect",
     )
 
+def _cpp_deps_target_args_are_local_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+
+    # `cpp_deps` mappings must be passed to this target's own bindings action...
+    analysis_action = [
+        a
+        for a in target_under_test[ActionsInfo].actions
+        if a.mnemonic in ("CppHeaderAnalysis", "RustBindingsFromCc")
+    ][0]
+    argv = analysis_action.argv
+    action_targets = [
+        json.decode(argv[i + 1])["t"].lstrip("@")
+        for i in range(len(argv) - 1)
+        if argv[i] == "--target_to_arg"
+    ]
+    asserts.true(
+        env,
+        "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:mylib" in action_targets,
+        "Expected :mylib in action --target_to_arg: %s" % action_targets,
+    )
+
+    # ...but must not leak into the `RustBindingsFromCcInfo.target_args` exported to dependents.
+    exported_targets = [x["t"].lstrip("@") for x in _get_target_args(target_under_test)]
+    asserts.equals(
+        env,
+        [
+            "//:_nothing_should_depend_on_private_builtin_hdrs",
+            "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:somelib_with_cpp_deps",
+        ],
+        exported_targets,
+    )
+
+    return analysistest.end(env)
+
+cpp_deps_target_args_are_local_test = crubit_make_analysis_test(
+    _cpp_deps_target_args_are_local_test_impl,
+)
+
+def _test_cpp_deps_target_args_are_local():
+    cc_library(
+        name = "somelib_with_cpp_deps",
+        hdrs = ["someheader.h"],
+        aspect_hints = [":somelib_with_cpp_deps_rust.hint"],
+        tags = ["manual"],
+    )
+    rust_api_from_cpp(
+        name = "somelib_with_cpp_deps_rust",
+        cpp_target = ":somelib_with_cpp_deps",
+        cpp_srcs = ["extra_cpp_src.cc"],
+        cpp_deps = [":mylib"],
+        tags = ["manual"],
+    )
+    attach_aspect(
+        name = "somelib_with_cpp_deps_with_aspect",
+        dep = ":somelib_with_cpp_deps",
+    )
+
+    cpp_deps_target_args_are_local_test(
+        name = "cpp_deps_target_args_are_local_test",
+        target_under_test = ":somelib_with_cpp_deps_with_aspect",
+    )
+
 def target_args_test(name):
     """Sets up rust_bindings_from_cc_aspect test suite.
 
@@ -513,6 +576,7 @@ def target_args_test(name):
     _test_target_features_empty()
     _test_target_features_nonempty()
     _test_virtual_include_headers_in_target_args()
+    _test_cpp_deps_target_args_are_local()
 
     native.test_suite(
         name = name,
@@ -527,5 +591,6 @@ def target_args_test(name):
             ":target_features_empty_test",
             ":target_features_nonempty_test",
             ":virtual_include_headers_in_target_args_test",
+            ":cpp_deps_target_args_are_local_test",
         ],
     )

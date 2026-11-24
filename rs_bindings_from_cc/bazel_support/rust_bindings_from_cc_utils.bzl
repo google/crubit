@@ -159,6 +159,7 @@ def generate_and_compile_bindings(
         action_inputs,
         target_args,
         extra_rs_srcs,
+        local_target_args = None,
         unstable_rust_features = [],
         deps_for_cc_file = [],
         deps_for_rs_file = depset(),
@@ -188,6 +189,9 @@ def generate_and_compile_bindings(
       target_args: A depset of strings, each one representing mapping of target to
                         its per-target arguments (headers, features, crate name) in json format.
       extra_rs_srcs: list[tuple[file, str]]: Additional source file and module path pairs for the Rust crate.
+      local_target_args: An optional depset of per-target argument JSON strings passed only to this
+        target's `rs_bindings_from_cc` invocation (e.g. from `cpp_deps`), and not exported in
+        `RustBindingsFromCcInfo.target_args` to dependents.
       unstable_rust_features: list[str]: List of unstable rustc features to enable via `#![feature(...)]`.
       deps_for_cc_file: list[CcInfo]: CcInfos needed by the generated C++ source file.
       deps_for_rs_file: depset[DepVariantInfo]: DepVariantInfos needed by the generated Rust source file.
@@ -281,7 +285,9 @@ def generate_and_compile_bindings(
         public_hdrs = public_hdrs,
         header_includes = header_includes,
         action_inputs = action_inputs,
-        target_args = target_args,
+        target_args = target_args if local_target_args == None else depset(
+            transitive = [target_args, local_target_args],
+        ),
         extra_rs_srcs = extra_rs_srcs,
         extra_cpp_srcs = extra_cpp_srcs,
         unstable_rust_features = unstable_rust_features,

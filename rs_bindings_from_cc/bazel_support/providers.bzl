@@ -22,6 +22,11 @@ generated Rust bindings of this C++ target.
                    "will be linked to this library target.",
         "cpp_deps": "List of CcInfo of C++ dependencies of the generated C++ implementation " +
                     "(which also compiles `cpp_srcs`).",
+        "cpp_deps_bindings": "List of DepVariantInfo of Crubit-enabled `cpp_deps` bindings. " +
+                             "Only populated when `cpp_srcs` is non-empty.",
+        "cpp_deps_target_args": "Depset of local target_args from Crubit-enabled `cpp_deps`, " +
+                                "passed only to this target's `rs_bindings_from_cc` invocation " +
+                                "(or None). Only populated when `cpp_srcs` is non-empty.",
         "unstable_rust_features": "List of unstable rustc features to enable via `#![feature(...)]`.",
         "cpp_srcs": "List of C++ source files to be concatenated to the Crubit-generated C++ source.",
         "root_namespaces": "List of C++ namespaces to re-export at the root of the generated Rust bindings.",
