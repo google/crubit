@@ -140,8 +140,11 @@ fn warn_unbindable_types(db: &BindingsGenerator) {
     }
 }
 
+/// Source code for generated bindings, as tokens.
 pub struct BindingsTokens {
+    /// C++ source code.
     pub cc_api: TokenStream,
+    /// Rust source code.
     pub cc_api_impl: TokenStream,
 }
 
