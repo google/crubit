@@ -37,13 +37,6 @@ use query_compiler::{
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::lang_items::LangItem;
-#[rustversion::since(2026-08-09)]
-#[rustversion::before(2026-09-27)]
-use rustc_hir::attrs::lang_items::LangItem;
-#[rustversion::before(2026-08-09)]
-use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::layout::IntegerExt;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt, TypeSuperFoldable, TypeVisitableExt};
@@ -52,6 +45,18 @@ use rustc_span::symbol::{sym, Symbol};
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::rc::Rc;
+
+rustversion::select! {
+    before(2026-08-09) => {
+        use rustc_hir::lang_items::LangItem;
+    }
+    before(2026-09-27) => {
+        use rustc_hir::attrs::lang_items::LangItem;
+    }
+    _ => {
+        use rustc_attr_ir::lang_items::LangItem;
+    }
+}
 
 #[rustversion::since(2026-07-31)]
 #[rustversion::before(2026-09-05)]
@@ -2768,33 +2773,30 @@ pub fn check_feature_enabled_on_self_and_all_deps(
     db.crate_name_to_features().values().all(|crate_features| crate_features.contains(feature))
 }
 
-#[rustversion::before(2026-07-09)]
 fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
-    matches!(
-        backend_repr,
-        BackendRepr::ScalarPair(
-            Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
-            Scalar::Initialized {
-                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
+    rustversion::select! {
+        before(2026-07-09) => matches!(
+            backend_repr,
+            BackendRepr::ScalarPair(
+                Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
+                Scalar::Initialized {
+                    value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
+                    ..
+                }
+            )
+        ),
+        _ => matches!(
+            backend_repr,
+            BackendRepr::ScalarPair {
+                a: Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
+                b: Scalar::Initialized {
+                    value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
+                    ..
+                },
                 ..
             }
-        )
-    )
-}
-
-#[rustversion::since(2026-07-09)]
-fn has_slice_layout_representation(backend_repr: BackendRepr) -> bool {
-    matches!(
-        backend_repr,
-        BackendRepr::ScalarPair {
-            a: Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
-            b: Scalar::Initialized {
-                value: Primitive::Int(Integer::I32 | Integer::I64, /* signedness = */ false),
-                ..
-            },
-            ..
-        }
-    )
+        ),
+    }
 }
 
 /// Checks that `ty` has the same ABI as `::rs::SliceRef`.

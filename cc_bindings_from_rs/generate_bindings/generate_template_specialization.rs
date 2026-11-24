@@ -44,18 +44,23 @@ use proc_macro2::TokenStream;
 use query_compiler::{self, get_layout, get_validated_layout, normalize_ty};
 use quote::{format_ident, quote};
 use rustc_abi::{Layout, LayoutData, VariantIdx};
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::lang_items::LangItem;
-#[rustversion::since(2026-08-09)]
-#[rustversion::before(2026-09-27)]
-use rustc_hir::attrs::lang_items::LangItem;
 use rustc_hir::def::DefKind;
-#[rustversion::before(2026-08-09)]
-use rustc_hir::LangItem;
 use rustc_middle::ty::fast_reject::SimplifiedType;
 use rustc_middle::ty::layout::PrimitiveExt;
 use rustc_middle::ty::{self, AdtDef, Flags, Ty, TyCtxt, TypingEnv, Unnormalized};
 use rustc_span::def_id::DefId;
+
+rustversion::select! {
+    before(2026-08-09) => {
+        use rustc_hir::LangItem;
+    }
+    before(2026-09-27) => {
+        use rustc_hir::attrs::lang_items::LangItem;
+    }
+    _ => {
+        use rustc_attr_ir::lang_items::LangItem;
+    }
+}
 
 pub fn parse_adt_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,

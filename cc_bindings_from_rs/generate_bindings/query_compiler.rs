@@ -21,13 +21,6 @@ use arc_anyhow::Result;
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use rustc_abi::{BackendRepr, FieldIdx, HasDataLayout, Layout, Scalar, TargetDataLayout, Variants};
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::lang_items::LangItem;
-#[rustversion::since(2026-08-09)]
-#[rustversion::before(2026-09-27)]
-use rustc_hir::attrs::lang_items::LangItem;
-#[rustversion::before(2026-08-09)]
-use rustc_hir::lang_items::LangItem;
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::ty::solve::NoSolution;
 use rustc_middle::ty::{self, GenericArg, GenericArgKind, GenericParamDefKind, Ty, TyCtxt};
@@ -41,15 +34,24 @@ use std::path::Path;
 
 use database::BindingsGenerator;
 
-/// Returns true if `did` is `core::ptr::NonNull`.
-#[rustversion::since(2026-08-18)]
-pub fn is_std_ptr_non_null(tcx: TyCtxt<'_>, did: DefId) -> bool {
-    tcx.is_lang_item(did, LangItem::NonNull)
+rustversion::select! {
+    before(2026-08-09) => {
+        use rustc_hir::lang_items::LangItem;
+    }
+    before(2026-09-27) => {
+        use rustc_hir::attrs::lang_items::LangItem;
+    }
+    _ => {
+        use rustc_attr_ir::lang_items::LangItem;
+    }
 }
 
-#[rustversion::before(2026-08-18)]
+/// Returns true if `did` is `core::ptr::NonNull`.
 pub fn is_std_ptr_non_null(tcx: TyCtxt<'_>, did: DefId) -> bool {
-    tcx.get_diagnostic_item(rustc_span::symbol::sym::NonNull) == Some(did)
+    rustversion::select! {
+        before(2026-08-18) => tcx.get_diagnostic_item(rustc_span::symbol::sym::NonNull) == Some(did),
+        _ => tcx.is_lang_item(did, LangItem::NonNull),
+    }
 }
 
 /// Whether the layout is from a type that implements [`std::marker::PointerLike`].

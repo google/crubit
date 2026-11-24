@@ -19,14 +19,20 @@ extern crate rustc_span;
 
 use anyhow::{bail, ensure, Result};
 use code_gen_utils::{include_from_path, CcInclude, Format};
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::{Attribute, AttributeKind};
 use rustc_hir::def::DefKind;
-#[rustversion::before(2026-09-27)]
-use rustc_hir::{attrs::AttributeKind, Attribute};
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
+
+rustversion::select! {
+    before(2026-09-27) => {
+        use rustc_hir::Attribute;
+        use rustc_hir::attrs::AttributeKind;
+    }
+    _ => {
+        use rustc_attr_ir::{Attribute, AttributeKind};
+    }
+}
 
 /// A collection of attributes applied via `#[crubit_annotate::...]`.
 ///

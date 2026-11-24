@@ -41,16 +41,22 @@ use query_compiler::{
     liberate_and_deanonymize_late_bound_regions, matches_qualified_name, normalize_ty,
 };
 use quote::quote;
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::{Attribute, AttributeKind};
 use rustc_hir::def::DefKind;
-#[rustversion::before(2026-09-27)]
-use rustc_hir::{attrs::AttributeKind, Attribute};
 use rustc_middle::mir::{self, Mutability};
 use rustc_middle::ty::{self, TraitRef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::{sym, Symbol};
 use std::collections::BTreeSet;
+
+rustversion::select! {
+    before(2026-09-27) => {
+        use rustc_hir::Attribute;
+        use rustc_hir::attrs::AttributeKind;
+    }
+    _ => {
+        use rustc_attr_ir::{Attribute, AttributeKind};
+    }
+}
 
 #[derive(Debug, Eq, PartialEq)]
 enum FunctionKind<'tcx> {
@@ -1427,27 +1433,20 @@ fn check_callable_params_not_borrowed_in_return<'tcx>(
     Ok(())
 }
 
-#[rustversion::before(2026-09-19)]
-fn def_id_from_const_alias<'tcx>(_: TyCtxt<'tcx>, con: ty::Const<'tcx>) -> Option<DefId> {
-    match con.kind() {
-        ty::ConstKind::Alias(_, anon_const) => anon_const.kind.opt_def_id(),
-        _ => None,
-    }
-}
-
-#[rustversion::since(2026-09-19)]
 fn def_id_from_const_alias<'tcx>(_: TyCtxt<'tcx>, con: ty::Const<'tcx>) -> Option<DefId> {
     let ty::ConstKind::Alias(_, alias_const) = con.kind() else {
         return None;
     };
-    let def_id = match alias_const.kind {
-        ty::AliasConstKind::Projection { def_id } => def_id,
-        ty::AliasConstKind::InherentSelf { def_id } => def_id,
-        ty::AliasConstKind::InherentImpl { def_id } => def_id,
-        ty::AliasConstKind::Free { def_id } => def_id,
-        ty::AliasConstKind::Anon { def_id } => def_id,
-    };
-    Some(def_id)
+    rustversion::select! {
+        before(2026-09-19) => alias_const.kind.opt_def_id(),
+        _ => Some(match alias_const.kind {
+            ty::AliasConstKind::Projection { def_id } => def_id,
+            ty::AliasConstKind::InherentSelf { def_id } => def_id,
+            ty::AliasConstKind::InherentImpl { def_id } => def_id,
+            ty::AliasConstKind::Free { def_id } => def_id,
+            ty::AliasConstKind::Anon { def_id } => def_id,
+        }),
+    }
 }
 
 fn fn_has_unreturnable_const<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
@@ -1459,10 +1458,14 @@ fn fn_has_unreturnable_const<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
     let Some(req_consts) = &body.required_consts else {
         return false;
     };
-    #[rustversion::before(2026-07-04)]
-    use ty::AnonConstKind::NonTypeSystem as NonTypeSystemInline;
-    #[rustversion::since(2026-07-04)]
-    use ty::AnonConstKind::NonTypeSystemInline;
+    rustversion::select! {
+        before(2026-07-04) => {
+            use ty::AnonConstKind::NonTypeSystem as NonTypeSystemInline;
+        }
+        _ => {
+            use ty::AnonConstKind::NonTypeSystemInline;
+        }
+    }
     req_consts
         .iter()
         .filter_map(|req_const| match req_const.const_ {

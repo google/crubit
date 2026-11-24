@@ -20,20 +20,29 @@ extern crate rustc_target;
 use itertools::Itertools;
 
 use rustc_middle::ty::TyCtxt;
-#[rustversion::before(2026-08-22)]
-use rustc_session::config::CrateType;
 use rustc_session::config::{Input, Options, Sysroot};
-#[rustversion::before(2026-11-23)]
-use rustc_session::config::{OutputType, OutputTypes};
-#[rustversion::since(2026-11-23)]
-use rustc_session::output::{OutputType, OutputTypes};
 use rustc_span::def_id::LocalDefId;
-#[rustversion::since(2026-08-22)]
-use rustc_structures::CrateType;
 use rustc_target::spec::TargetTuple;
-
 use std::path::Path;
 use std::path::PathBuf;
+
+rustversion::select! {
+    before(2026-08-22) => {
+        use rustc_session::config::CrateType;
+    }
+    _ => {
+        use rustc_structures::CrateType;
+    }
+}
+
+rustversion::select! {
+    before(2026-11-23) => {
+        use rustc_session::config::{OutputType, OutputTypes};
+    }
+    _ => {
+        use rustc_session::output::{OutputType, OutputTypes};
+    }
+}
 
 /// Returns the `rustc` sysroot that is suitable for the environment where
 /// unit tests run.
