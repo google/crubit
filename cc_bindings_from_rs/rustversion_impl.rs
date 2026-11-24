@@ -56,8 +56,6 @@ impl quote::ToTokens for Date {
 /// branch point), so it cannot be used for this purpose.
 static RELEASES: &[(Date, &str)] = &[
     // <internal link> start numeric=yes
-    (Date { year: 2026, month: 4, day: 10 }, "1.96"),
-    (Date { year: 2026, month: 5, day: 22 }, "1.97"),
     (Date { year: 2026, month: 7, day: 3 }, "1.98"),
     (Date { year: 2026, month: 8, day: 14 }, "1.99"),
     (Date { year: 2026, month: 9, day: 25 }, "1.100"),

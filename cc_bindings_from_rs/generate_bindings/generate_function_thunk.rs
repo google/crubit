@@ -30,9 +30,7 @@ use query_compiler::{
 use quote::format_ident;
 use quote::quote;
 use rustc_hir::def::DefKind;
-#[rustversion::since(2026-04-22)]
-use rustc_middle::ty::Flags;
-use rustc_middle::ty::{self, Mutability, Ty, TyCtxt, TypingEnv};
+use rustc_middle::ty::{self, Flags, Mutability, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::{kw, sym, Symbol};
 use std::collections::{BTreeSet, HashMap};

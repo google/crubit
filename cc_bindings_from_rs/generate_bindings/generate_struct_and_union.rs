@@ -58,16 +58,12 @@ use query_compiler::{
     SortedByDef,
 };
 use quote::{format_ident, quote};
-#[rustversion::since(2026-05-18)]
-use rustc_abi::VariantLayout;
 use rustc_abi::{Endian, FieldIdx, FieldsShape, LayoutData, VariantIdx, Variants};
 
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::fast_reject::DeepRejectCtxt;
 use rustc_middle::ty::layout::PrimitiveExt;
-#[rustversion::since(2026-04-22)]
-use rustc_middle::ty::Flags;
-use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags};
+use rustc_middle::ty::{self, AssocKind, Flags, Ty, TyCtxt, TyKind, TypeFlags};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use std::borrow::Cow;
@@ -1904,7 +1900,6 @@ pub fn is_struct_aggregate<'tcx>(
             return Err(NotAggregateReason::NonPublicField(field_def.name));
         }
         let ty = field_def.ty(tcx, adt_generic_args);
-        #[rustversion::since(2026-05-13)]
         let ty = normalize_ty(tcx, tcx.param_env(field_def.did), ty);
         if get_layout(tcx, ty).is_err() {
             return Err(NotAggregateReason::FieldLayoutError(field_def.name));
@@ -2682,9 +2677,6 @@ pub fn generate_adt_core<'tcx>(
     // Note: we erase regions in order to get bindings regardless of what lifetime parameters are
     // present. We want to generate bindings for functions regardless of their lifetime bounds, as
     // C++ cannot special-case the availability of a function based on lifetimes.
-    #[rustversion::before(2026-04-19)]
-    let self_ty = erase_regions(tcx, tcx.type_of(def_id).instantiate_identity());
-    #[rustversion::since(2026-04-19)]
     let self_ty = erase_regions(
         tcx,
         normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity()),
@@ -2833,7 +2825,6 @@ fn generate_variant_ctor<'db, 'tcx>(
                 bail!("Field `{}` is {private_or_unstable}", field_def.name)
             }
             let ty = field_def.ty(tcx, adt_generic_args);
-            #[rustversion::since(2026-05-13)]
             let ty = normalize_ty(tcx, tcx.param_env(field_def.did), ty);
 
             if !db.is_cpp_move_constructible(ty) {
@@ -3147,14 +3138,6 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             let layout = &self.layout;
             let layout_variants = layout.variants();
 
-            #[rustversion::before(2026-05-18)]
-            let get_fields = |(_, variant): (VariantIdx, &LayoutData<FieldIdx, VariantIdx>)| {
-                variant.fields.clone()
-            };
-            #[rustversion::since(2026-05-18)]
-            let get_fields = |(i, _): (VariantIdx, &VariantLayout<FieldIdx>)| {
-                LayoutData::for_variant(layout, i).fields
-            };
             let variant_layout_field_sizes = match layout_variants {
                 Variants::Single { .. } | Variants::Empty => {
                     vec![(layout.fields.clone(), layout.size.bytes())]
@@ -3168,7 +3151,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                             } else {
                                 0
                             };
-                        (get_fields((variant_index, variant)), size)
+                        (LayoutData::for_variant(layout, variant_index).fields, size)
                     })
                     .collect_vec(),
             };
@@ -3336,7 +3319,6 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         let tcx = self.db.tcx();
         let ty =
             field_def.ty(tcx, self.adt_generic_args.expect("generic args present for ADT field"));
-        #[rustversion::since(2026-05-13)]
         let ty = normalize_ty(tcx, tcx.param_env(field_def.did), ty);
         let pub_and_stable = field_def_is_pub_and_stable(tcx, field_def);
         // Without `--portable-abi-compatible`, `#[repr(transparent)]` types may be passed by
@@ -3832,16 +3814,12 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                     } else {
                         1u64 << tag_size_with_padding.trailing_zeros()
                     };
-                    #[rustversion::before(2026-05-18)]
-                    let get_align =
-                        |(_, layout): (VariantIdx, &LayoutData<FieldIdx, VariantIdx>)| {
-                            layout.align.bytes().min(max_alignment)
-                        };
-                    #[rustversion::since(2026-05-18)]
-                    let get_align = |(i, _): (VariantIdx, &VariantLayout<FieldIdx>)| {
-                        LayoutData::for_variant(layout, i).align.bytes().min(max_alignment)
-                    };
-                    layout_vars.iter_enumerated().map(get_align).collect_vec()
+                    layout_vars
+                        .iter_enumerated()
+                        .map(|(i, _)| {
+                            LayoutData::for_variant(layout, i).align.bytes().min(max_alignment)
+                        })
+                        .collect_vec()
                 }
                 Variants::Single { .. } | Variants::Empty => {
                     vec![self.layout.align.bytes()]
@@ -4063,9 +4041,6 @@ fn get_into_iterator_assoc_ty<'tcx>(
         .find(|item| item.name() == assoc_sym && matches!(item.kind, ty::AssocKind::Type { .. }))
         .unwrap_or_else(|| panic!("{assoc_name} to be a required associated item of IntoIterator"));
 
-    #[rustversion::before(2026-06-25)]
-    let projection_ty = Ty::new_projection(tcx, assoc_item.def_id, [self_ty]);
-    #[rustversion::since(2026-06-25)]
     let projection_ty = Ty::new_projection(tcx, ty::IsRigid::No, assoc_item.def_id, [self_ty]);
 
     query_compiler::try_normalize(
@@ -4453,9 +4428,6 @@ pub fn generate_const<'tcx>(
     let (ty, const_value) = match generic_args {
         Some(args) => {
             let typing_env = ty::TypingEnv::fully_monomorphized();
-            #[rustversion::before(2026-04-19)]
-            let raw_ty = tcx.type_of(def_id).instantiate(tcx, args);
-            #[rustversion::since(2026-04-19)]
             let raw_ty = tcx.type_of(def_id).instantiate(tcx, args).skip_normalization();
             let ty = query_compiler::try_normalize(tcx, typing_env, raw_ty).map_err(|_| {
                 anyhow!("Failed to normalize const type for {}", tcx.def_path_str(def_id))
@@ -4492,9 +4464,6 @@ pub fn generate_const<'tcx>(
     let is_self_referential = tcx.inherent_impl_of_assoc(def_id).is_some_and(|impl_id| {
         let impl_ty = match generic_args {
             Some(args) => {
-                #[rustversion::before(2026-04-19)]
-                let raw_impl_ty = tcx.type_of(impl_id).instantiate(tcx, args);
-                #[rustversion::since(2026-04-19)]
                 let raw_impl_ty = tcx.type_of(impl_id).instantiate(tcx, args).skip_normalization();
                 query_compiler::try_normalize(
                     tcx,

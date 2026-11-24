@@ -4,7 +4,6 @@
 #![feature(cfg_accessible)]
 #![feature(rustc_private)]
 #![feature(stmt_expr_attributes)]
-#![feature(proc_macro_hygiene)]
 
 //! Query the rust compiler.
 
@@ -21,8 +20,6 @@ extern crate rustc_trait_selection;
 use arc_anyhow::Result;
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
-#[rustversion::before(2026-05-18)]
-use rustc_abi::FieldsShape;
 use rustc_abi::{BackendRepr, FieldIdx, HasDataLayout, Layout, Scalar, TargetDataLayout, Variants};
 #[rustversion::since(2026-09-27)]
 use rustc_attr_ir::lang_items::LangItem;
@@ -180,9 +177,6 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
                 // TODO: b/258259459 - Support zero sized types.
                 return false;
             };
-            #[rustversion::before(2026-04-19)]
-            let mut ty = tcx.type_of(field.did).instantiate(tcx, substs);
-            #[rustversion::since(2026-04-19)]
             let mut ty = tcx.type_of(field.did).instantiate(tcx, substs).skip_normalization();
 
             // Pattern types can be considered by value when they're embedded within an ADT.
@@ -211,20 +205,13 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
 /// The prefix for deanonymized region names.
 pub const ANON_REGION_PREFIX: &str = "'__anon";
 
-#[rustversion::before(2026-04-19)]
-pub type PolyFnSig<'tcx> = ty::PolyFnSig<'tcx>;
-
-#[rustversion::since(2026-04-19)]
-pub type PolyFnSig<'tcx> = ty::Unnormalized<'tcx, ty::PolyFnSig<'tcx>>;
-
 /// Similar to `TyCtxt::liberate_and_name_late_bound_regions` but also replaces
 /// anonymous regions with new names.
 pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
     tcx: TyCtxt<'tcx>,
-    sig: PolyFnSig<'tcx>,
+    sig: ty::Unnormalized<'tcx, ty::PolyFnSig<'tcx>>,
     fn_def_id: DefId,
 ) -> ty::FnSig<'tcx> {
-    #[rustversion::since(2026-04-19)]
     let sig = sig.skip_normalization();
     let mut anon_count: u32 = 0;
     let mut translated_kinds: HashMap<ty::BoundVar, ty::BoundRegionKind> = HashMap::new();
@@ -325,9 +312,6 @@ fn has_unrevealed_opaque_type<'tcx>(
                 }
                 for variant in adt_def.variants() {
                     for field in &variant.fields {
-                        #[rustversion::before(2026-04-19)]
-                        let field_ty = field.ty(tcx, substs);
-                        #[rustversion::since(2026-04-19)]
                         let field_ty = field.ty(tcx, substs).skip_norm_wip();
                         if has_unrevealed_opaque_type(tcx, field_ty, seen) {
                             return true;
@@ -369,15 +353,6 @@ pub fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
     match layout.variants() {
         Variants::Single { .. } | Variants::Empty => 0,
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
-            #[rustversion::before(2026-05-18)]
-            let mut variant_offsets = variants.iter().filter_map(|variant| match &variant.fields {
-                FieldsShape::Arbitrary { offsets, .. } => {
-                    offsets.get(FieldIdx::from_usize(0)).map(|offset| offset.bytes())
-                }
-                _ => panic!("Internal Error - Detected an enum with non-arbitrary field"),
-            });
-
-            #[rustversion::since(2026-05-18)]
             let mut variant_offsets = variants.iter().filter_map(|variant| {
                 variant.field_offsets.get(FieldIdx::from_usize(0)).map(|offset| offset.bytes())
             });
@@ -623,12 +598,6 @@ pub trait SortedByDef: Iterator + Sized {
 }
 impl<T: Iterator + Sized> SortedByDef for T {}
 
-#[rustversion::before(2026-04-19)]
-pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, _param_env: ty::ParamEnv<'tcx>, val: T) -> T {
-    val
-}
-
-#[rustversion::since(2026-04-19)]
 pub fn try_normalize_ty<'tcx, T>(
     tcx: TyCtxt<'tcx>,
     param_env: ty::ParamEnv<'tcx>,
@@ -641,7 +610,6 @@ where
         .map_err(|_| anyhow!("val contained unresolved type variables and could not be normalized"))
 }
 
-#[rustversion::since(2026-04-19)]
 pub fn normalize_ty<'tcx, T>(
     tcx: TyCtxt<'tcx>,
     param_env: ty::ParamEnv<'tcx>,

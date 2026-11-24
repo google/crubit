@@ -1427,16 +1427,7 @@ fn check_callable_params_not_borrowed_in_return<'tcx>(
     Ok(())
 }
 
-#[rustversion::before(2026-07-03)]
-fn def_id_from_const_alias<'tcx>(_: TyCtxt<'tcx>, con: ty::Const<'tcx>) -> Option<DefId> {
-    match con.kind() {
-        ty::ConstKind::Unevaluated(uneval) => Some(uneval.def),
-        _ => None,
-    }
-}
-
 #[rustversion::before(2026-09-19)]
-#[rustversion::since(2026-07-03)]
 fn def_id_from_const_alias<'tcx>(_: TyCtxt<'tcx>, con: ty::Const<'tcx>) -> Option<DefId> {
     match con.kind() {
         ty::ConstKind::Alias(_, anon_const) => anon_const.kind.opt_def_id(),

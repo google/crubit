@@ -28,11 +28,9 @@ use generate_comment::{generate_deprecated_tag, generate_doc_comment};
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{field_def_is_pub_and_stable, get_layout, normalize_ty};
 use quote::{format_ident, quote};
-#[rustversion::since(2026-05-18)]
-use rustc_abi::LayoutData;
 use rustc_abi::{
-    FieldIdx, FieldsShape, Integer, IntegerType, Layout, Primitive, TagEncoding, VariantIdx,
-    Variants,
+    FieldIdx, FieldsShape, Integer, IntegerType, Layout, LayoutData, Primitive, TagEncoding,
+    VariantIdx, Variants,
 };
 use rustc_apfloat::{ieee, Category, Float};
 use rustc_middle::mir::interpret::Scalar;
@@ -420,26 +418,6 @@ fn check_no_overlap(variant_name: &str, tag: Option<&EnumTag>, fields: &[EnumFie
 
 /// Returns the offsets of the fields of the variant `variant_index` of an enum with `layout`,
 /// relative to the start of the enum, or `None` if the variant is uninhabited.
-#[rustversion::before(2026-05-18)]
-fn inhabited_variant_field_shape(
-    layout: Layout<'_>,
-    variant_index: VariantIdx,
-) -> Option<FieldsShape<FieldIdx>> {
-    match layout.variants() {
-        Variants::Multiple { variants, .. } => {
-            let variant = &variants[variant_index];
-            (!variant.is_uninhabited()).then(|| variant.fields.clone())
-        }
-        Variants::Single { index } => {
-            (*index == variant_index && !layout.is_uninhabited()).then(|| layout.fields().clone())
-        }
-        Variants::Empty => None,
-    }
-}
-
-/// Returns the offsets of the fields of the variant `variant_index` of an enum with `layout`,
-/// relative to the start of the enum, or `None` if the variant is uninhabited.
-#[rustversion::since(2026-05-18)]
 fn inhabited_variant_field_shape(
     layout: Layout<'_>,
     variant_index: VariantIdx,

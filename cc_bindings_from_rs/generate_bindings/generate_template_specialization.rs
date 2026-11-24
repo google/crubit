@@ -4,7 +4,6 @@
 
 #![feature(rustc_private)]
 #![feature(stmt_expr_attributes)]
-#![feature(proc_macro_hygiene)]
 
 extern crate rustc_abi;
 #[rustversion::since(2026-09-27)]
@@ -44,9 +43,7 @@ use proc_macro2::Literal;
 use proc_macro2::TokenStream;
 use query_compiler::{self, get_layout, get_validated_layout, normalize_ty};
 use quote::{format_ident, quote};
-#[rustversion::since(2026-04-22)]
-use rustc_abi::LayoutData;
-use rustc_abi::{Layout, VariantIdx};
+use rustc_abi::{Layout, LayoutData, VariantIdx};
 #[rustversion::since(2026-09-27)]
 use rustc_attr_ir::lang_items::LangItem;
 #[rustversion::since(2026-08-09)]
@@ -57,11 +54,7 @@ use rustc_hir::def::DefKind;
 use rustc_hir::LangItem;
 use rustc_middle::ty::fast_reject::SimplifiedType;
 use rustc_middle::ty::layout::PrimitiveExt;
-#[rustversion::since(2026-04-22)]
-use rustc_middle::ty::Flags;
-#[rustversion::since(2026-04-22)]
-use rustc_middle::ty::Unnormalized;
-use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt, TypingEnv};
+use rustc_middle::ty::{self, AdtDef, Flags, Ty, TyCtxt, TypingEnv, Unnormalized};
 use rustc_span::def_id::DefId;
 
 pub fn parse_adt_template_specialization<'tcx>(
@@ -69,13 +62,12 @@ pub fn parse_adt_template_specialization<'tcx>(
     self_ty: Ty<'tcx>,
 ) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
     let tcx = db.tcx();
-    #[rustversion::before(2026-04-22)]
-    let unnorm_ty = self_ty;
-    #[rustversion::since(2026-04-22)]
-    let unnorm_ty = Unnormalized::new(self_ty);
     let self_ty = replace_all_regions_with_static(
         tcx,
-        tcx.normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_ty),
+        tcx.normalize_erasing_regions(
+            ty::TypingEnv::fully_monomorphized(),
+            Unnormalized::new(self_ty),
+        ),
     );
     if let Some(err) = db.rejected_template_specializations().get(&self_ty) {
         return Some(Err(err.clone()));
@@ -1366,19 +1358,6 @@ fn specialize_result<'tcx>(
     let err_discr_val =
         int_literal_of_ty(tcx, discr_for_err.val, tag_type).expect("tag to be valid scalar tokens");
 
-    #[rustversion::before(2026-05-18)]
-    let (ok_offset, err_offset) = {
-        let variants = match layout.variants() {
-            rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
-                unreachable!("This should have been checked in parse_adt_template_specialization")
-            }
-            rustc_abi::Variants::Multiple { variants, .. } => variants,
-        };
-        let (ok_b, err_b) =
-            (variants[ok_idx].fields.offset(0).bytes(), variants[err_idx].fields.offset(0).bytes());
-        (Literal::u64_unsuffixed(ok_b), Literal::u64_unsuffixed(err_b))
-    };
-    #[rustversion::since(2026-05-18)]
     let (ok_offset, err_offset) = (
         Literal::u64_unsuffixed(LayoutData::for_variant(&layout, ok_idx).fields.offset(0).bytes()),
         Literal::u64_unsuffixed(LayoutData::for_variant(&layout, err_idx).fields.offset(0).bytes()),
@@ -1407,10 +1386,6 @@ fn specialize_result<'tcx>(
                 // Our tag is implicitly ok when it is not the err discriminant value.
                 (quote! {}, quote! { __storage })
             } else {
-                #[rustversion::before(2026-05-30)]
-                let ok_relative_idx =
-                    ok_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-                #[rustversion::since(2026-05-30)]
                 let ok_relative_idx =
                     ok_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
                 let ok_relative_val =
@@ -1427,10 +1402,6 @@ fn specialize_result<'tcx>(
             let (write_err_to_tag, err_ptr_val) = if *untagged_variant == err_idx {
                 (quote! {}, quote! { __storage })
             } else {
-                #[rustversion::before(2026-05-30)]
-                let err_relative_idx =
-                    err_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-                #[rustversion::since(2026-05-30)]
                 let err_relative_idx =
                     err_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
                 let err_relative_val =
@@ -1570,20 +1541,6 @@ fn specialize_option<'tcx>(
     let option_api = match tag_encoding {
         rustc_abi::TagEncoding::Direct => {
             // Option::None is variant 0. Option::Some is variant 1.
-            #[rustversion::before(2026-05-18)]
-            let payload_offset = {
-                let variants = match layout.variants() {
-                    rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
-                        unreachable!(
-                            "This should have been checked in parse_adt_template_specialization"
-                        )
-                    }
-                    rustc_abi::Variants::Multiple { variants, .. } => variants,
-                };
-                let bytes = variants[some_idx].fields.offset(0).bytes();
-                Literal::u64_unsuffixed(bytes)
-            };
-            #[rustversion::since(2026-05-18)]
             let payload_offset = Literal::u64_unsuffixed(
                 LayoutData::for_variant(&layout, some_idx).fields.offset(0).bytes(),
             );
@@ -1608,10 +1565,6 @@ fn specialize_option<'tcx>(
             }
         }
         rustc_abi::TagEncoding::Niche { niche_start, niche_variants, .. } => {
-            #[rustversion::before(2026-05-30)]
-            let none_relative_idx =
-                none_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
-            #[rustversion::since(2026-05-30)]
             let none_relative_idx =
                 none_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
             let none_relative_val =
