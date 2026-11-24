@@ -1083,17 +1083,67 @@ fn test_impl_eq_for_free_function_with_lifetime_params() -> Result<()> {
         "#,
     )?
     .rs_api;
+    // `k3-clone-from` (O1): both parameters are the same record, so they share one set of
+    // lifetimes (`Rhs = Self`), as for a record without lifetimes; no K3 bounds are needed.
     assert_rs_matches!(
         rs_api,
         quote! {
-            impl<'a, 'rhs> PartialEq<crate::ns::SomeView<'rhs>> for crate::ns::SomeView<'a> {
-                #[inline(always)]
-                fn eq<'lhs>(&self, rhs: &crate::ns::SomeView<'rhs>) -> bool {
-                    unsafe { crate::detail::...(&mut self.clone(), &mut rhs.clone()) }
-                }
-            }
+            impl<'a> PartialEq for crate::ns::SomeView<'a> { ... }
         }
     );
+    assert_rs_not_matches!(rs_api, quote! { BindingFailedFor });
+    Ok(())
+}
+
+/// `k3-clone-from` (O1): the copy assignment and `==` of a record with a lifetime take `&Self`
+/// (anchored to the record's own lifetimes), so they bind without K3 bounds; and since the copy
+/// assignment binds, `Clone` gets `clone_from` (G).
+#[gtest]
+fn test_copy_assign_and_eq_of_record_with_lifetime_take_self() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct [[clang::trivial_abi]] LIFETIME_PARAMS("a") V final {
+          V(const V&);
+          V& operator=(const V&);
+          ~V();
+          bool operator==(const V& other) const;
+          int* $a p;
+        };
+        "#,
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { ::ctor::UnpinAssign<&'__param_0 Self> for V<'a> });
+    assert_rs_matches!(rs_api, quote! { impl<'a> PartialEq for V<'a> { ... } });
+    assert_rs_matches!(rs_api, quote! { fn clone_from(&mut self, other: &Self) { ... } });
+    assert_rs_not_matches!(rs_api, quote! { BindingFailedFor });
+    assert_rs_not_matches!(rs_api, quote! { where });
+    Ok(())
+}
+
+/// `k3-clone-from` (G): when the copy assignment does not bind, `Clone` keeps Rust's default
+/// `clone_from` instead of calling an assignment that does not exist, which would break the whole
+/// crate. Here the parameter is `[[clang::lifetimebound]]`, so O1 leaves it alone, its record
+/// lifetime stays elided, and k3-const's bound (`'__this: ...`) can't go on the trait
+/// implementation: the copy assignment is a stub.
+#[gtest]
+fn test_clone_from_omitted_when_copy_assign_does_not_bind() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct [[clang::trivial_abi]] LIFETIME_PARAMS("a") V final {
+          V(const V&);
+          V& operator=(const V& other [[clang::lifetimebound]]);
+          ~V();
+          int* $a p;
+        };
+        "#,
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { impl<'a> Clone for V<'a> { ... } });
+    assert_rs_matches!(
+        rs_api,
+        quote! { ::ctor::UnpinAssign<...> for V<'a> where for<'error> &'error (): ... }
+    );
+    assert_rs_not_matches!(rs_api, quote! { fn clone_from });
     Ok(())
 }
 
@@ -4491,7 +4541,7 @@ fn test_template_argument_lifetime_is_bound() -> Result<()> {
         quote! {
             pub struct __CcTemplateInst4ViewIRiE<'T> {
                 ...
-                __marker_T: ::core::marker::PhantomData<&'T ()>,
+                __marker_T: ::core::marker::PhantomData<fn(&'T ()) -> &'T ()>,
             }
         }
     );
@@ -5637,6 +5687,333 @@ fn test_thread_safe_references_in_functions_and_methods() -> Result<()> {
             pub fn Identity<'s>(s: &'s crate::ThreadSafe) -> ::cref::CRef<'s, crate::ThreadSafe> {
                 unsafe { crate::detail::...(s) }
             }
+        }
+    );
+    Ok(())
+}
+
+/// b/589394789: a lifetime written only on the result, that nothing binds, is ignored with a
+/// warning: the function binds exactly as its unannotated twin `g` does.
+#[gtest]
+fn test_unbound_result_lifetime_on_record_binds_as_unannotated() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        LIFETIME_PARAMS("a") View $a f(int& x);
+        View g(int& x);
+        "#,
+    )?;
+    let warning =
+        "warning: lifetime 'a is not bound by any parameter; ignored, as if the result were unannotated";
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __COMMENT__ #warning
+            #[doc = ...]
+            #[inline(always)]
+            pub fn f<'x>(x: &'x mut ::ffi_11::c_int) -> crate::View<'x> { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn g<'x>(x: &'x mut ::ffi_11::c_int) -> crate::View<'x> { ... }
+        }
+    );
+    Ok(())
+}
+
+/// b/589394789: with several input lifetimes, elision gives an unannotated record result no
+/// lifetime, so a name that nothing binds is unknown: `T<'static>` from an `unsafe fn`, with a
+/// warning. (Until `k2-record-default` lands, the unannotated twin is a safe fn returning
+/// `T<'static>`.)
+#[gtest]
+fn test_unbound_result_lifetime_on_record_with_several_inputs_makes_function_unsafe() -> Result<()>
+{
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        LIFETIME_PARAMS("a") View $a f(int& x, int& y);
+        "#,
+    )?;
+    let warning = "warning: lifetime 'a is not bound by any parameter; treated as unknown, as for an unannotated result with several input lifetimes";
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __COMMENT__ #warning
+            #[doc = ...]
+            #[inline(always)]
+            pub unsafe fn f<'x, 'y>(
+                x: &'x mut ::ffi_11::c_int, y: &'y mut ::ffi_11::c_int
+            ) -> crate::View<'static> { ... }
+        }
+    );
+    assert_that!(
+        rs_api.to_string(),
+        contains_substring("The C++ function does not say what the return value borrows from")
+    );
+    Ok(())
+}
+
+/// b/589394789: an explicit `$unknown` on a record result also makes the function unsafe, but
+/// isn't warned about: the C++ says what it means.
+#[gtest]
+fn test_explicit_unknown_result_on_record_makes_function_unsafe() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        View $unknown f(int& x);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn f<'x>(x: &'x mut ::ffi_11::c_int) -> crate::View<'static> { ... }
+        }
+    );
+    assert_that!(rs_api.to_string(), not(contains_substring("is not bound by any parameter")));
+    Ok(())
+}
+
+/// b/589394789: with several input lifetimes, a reference or pointer result to a record whose name
+/// nothing binds is a raw pointer, as for the unannotated twins `fu`/`gu`. The pointee record gets
+/// no lifetime (`View<'static>`), but only behind the raw pointer, so the function stays safe:
+/// reaching the `View` needs `unsafe`.
+#[gtest]
+fn test_unbound_result_lifetime_on_pointee_record_with_several_inputs() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("p") View final { int* $p p; };
+        LIFETIME_PARAMS("a") const View $a& f(const int& x, const int& y);
+        LIFETIME_PARAMS("a") View $a* g(const int& x, const int& y);
+        const View& fu(const int& x, const int& y);
+        View* gu(const int& x, const int& y);
+        "#,
+    )?;
+    for (name, pointer) in [
+        ("f", quote! { *const }),
+        ("fu", quote! { *const }),
+        ("g", quote! { *mut }),
+        ("gu", quote! { *mut }),
+    ] {
+        let name = make_rs_ident(name);
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub fn #name<'x, 'y>(
+                    x: &'x ::ffi_11::c_int, y: &'y ::ffi_11::c_int
+                ) -> #pointer crate::View<'static> { ... }
+            }
+        );
+    }
+    Ok(())
+}
+
+/// b/589394789: a reference result whose name nothing binds binds as its unannotated twin `h`
+/// does; an explicit `$unknown` reference result is a raw pointer, so the function stays safe.
+#[gtest]
+fn test_unbound_result_lifetime_on_reference_binds_as_unannotated() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        LIFETIME_PARAMS("a") int& $a f(int& x);
+        int& $unknown g(int& x);
+        int& h(int& x);
+        "#,
+    )?;
+    let warning =
+        "warning: lifetime 'a is not bound by any parameter; ignored, as if the result were unannotated";
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __COMMENT__ #warning
+            #[doc = ...]
+            #[inline(always)]
+            pub fn f<'x>(x: &'x mut ::ffi_11::c_int) -> ::cref::CMut<'x, ::ffi_11::c_int> { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn g<'x>(x: &'x mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn h<'x>(x: &'x mut ::ffi_11::c_int) -> ::cref::CMut<'x, ::ffi_11::c_int> { ... }
+        }
+    );
+    Ok(())
+}
+
+/// b/587074038 (K3): a mutable reference to a record written without its lifetimes gets fresh
+/// ones, which the caller could pick as `'static` while the function stores `x` into the record.
+/// Every lifetime of the other inputs must outlive them.
+#[gtest]
+fn test_untied_record_lifetime_gets_outlives_bounds() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        class LIFETIME_PARAMS("p") V final {
+         public:
+          void Set(int& $p x);
+         private:
+          int* $p p_;
+        };
+        void Reset(V& v, int& x);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn Reset<'v, 'v_0, 'x>(v: &'v_0 mut crate::V<'v>, x: &'x mut ::ffi_11::c_int)
+            where 'x: 'v
+            { ... }
+        }
+    );
+    Ok(())
+}
+
+/// b/587074038 (K3): two such parameters are tied both ways (`swap`).
+#[gtest]
+fn test_untied_record_lifetimes_are_tied_both_ways() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        class LIFETIME_PARAMS("p") V final {
+         private:
+          int* $p p_;
+        };
+        void Swap(V& a, V& b);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn Swap<'a, 'a_0, 'b, 'b_0>(a: &'a_0 mut crate::V<'a>, b: &'b_0 mut crate::V<'b>)
+            where 'b_0: 'a, 'b: 'a, 'a_0: 'b, 'a: 'b
+            { ... }
+        }
+    );
+    Ok(())
+}
+
+/// b/587074038 (K3): no bound when the record's lifetime is declared (the caller sees the tie,
+/// or its absence, in the signature), or when there is no other input with a lifetime. (Behind
+/// `const V&` the lifetime is invariant too, K16, so that position gets a bound: see
+/// `test_record_lifetime_without_visible_writer_by_const_ref_and_value_gets_bounds`.)
+#[gtest]
+fn test_tied_record_lifetime_gets_no_bounds() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        class LIFETIME_PARAMS("p") V final {
+         public:
+          int Get() const;
+         private:
+          int* $p p_;
+        };
+        LIFETIME_PARAMS("a") void Declared(V $a& v, int& $a x);
+        void Alone(V& v, int x);
+        "#,
+    )?;
+    assert_rs_not_matches!(rs_api, quote! { where });
+    Ok(())
+}
+
+/// b/587074038 (K3, `k3-const`): a record lifetime that C++ can write through a shared path (here
+/// a `const` setter) is invariant, so `const V&` and `V` by value are tied like
+/// `V&`.
+#[gtest]
+fn test_invariant_record_lifetime_by_const_ref_and_value_gets_bounds() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        struct VData;
+        class LIFETIME_PARAMS("p") V final {
+         public:
+          void Set(int& $p x) const;
+         private:
+          VData* impl_;
+        };
+        void ByRef(const V& v, int& x);
+        void ByVal(V v, int& x);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ByRef<'v, 'v_0, 'x>(v: &'v_0 crate::V<'v>, x: &'x mut ::ffi_11::c_int)
+            where 'x: 'v
+            { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ByVal<'v, 'x>(v: crate::V<'v>, x: &'x mut ::ffi_11::c_int)
+            where 'x: 'v
+            { ... }
+        }
+    );
+    Ok(())
+}
+
+/// b/587074038 (K3, `k3-const`): a record lifetime with no `mutable` field and no `const` method
+/// that takes it is still invariant (K16: every generated record lifetime), so `const V&` and `V`
+/// by value get the bound too: a writer can live outside this header.
+#[gtest]
+fn test_record_lifetime_without_visible_writer_by_const_ref_and_value_gets_bounds() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        class LIFETIME_PARAMS("p") V final {
+         public:
+          int Get() const;
+          void Set(int& $p x);
+         private:
+          int* $p p_;
+        };
+        int ByRef(const V& v, int& x);
+        int ByVal(V v, int& x);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ByRef<'v, 'v_0, 'x>(v: &'v_0 crate::V<'v>, x: &'x mut ::ffi_11::c_int)
+                -> ::ffi_11::c_int
+            where 'x: 'v
+            { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ByVal<'v, 'x>(v: crate::V<'v>, x: &'x mut ::ffi_11::c_int) -> ::ffi_11::c_int
+            where 'x: 'v
+            { ... }
+        }
+    );
+    Ok(())
+}
+
+/// b/587074038 (K3, `k3-const`): in an operator's trait implementation the bounds go on the
+/// `impl` header when it binds every lifetime they name.
+#[gtest]
+fn test_invariant_record_lifetime_bounds_on_operator_impl_header() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"
+        class LIFETIME_PARAMS("p") V final {
+         public:
+          void Set(int& $p x) const;
+         private:
+          mutable int* $p p_;
+        };
+        int operator+(const V& v, int& x);
+        "#,
+    )?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'p, 'v, 'v_0, 'x> ::core::ops::Add<&'x mut ::ffi_11::c_int> for &'v_0 crate::V<'v>
+            where 'x: 'v
+            { ... }
         }
     );
     Ok(())
