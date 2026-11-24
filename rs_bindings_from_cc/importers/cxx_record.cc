@@ -53,6 +53,19 @@ namespace crubit {
 
 namespace {
 
+// Returns true if `decl` carries an attribute `T` written in the source.
+// Implicit attributes, e.g. the `[[gsl::Owner]]`/`[[gsl::Pointer]]` that Sema
+// infers for standard library types (`inferGslOwnerPointerAttribute`), do not
+// count, nor do attributes listed in `CRUBIT_UNSAFE_IGNORE_ATTR`.
+template <typename T>
+bool HasWrittenAttr(const clang::Decl& decl) {
+  if (!crubit::HasAttr<T>(&decl)) return false;
+  for (const T* attr : decl.specific_attrs<T>()) {
+    if (!attr->isImplicit()) return true;
+  }
+  return false;
+}
+
 // Returns true if `#pragma pack(N)` reduces the alignment of any field or base
 // of `record_decl` below its natural alignment.
 //
@@ -1635,6 +1648,10 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
       has_private_pointer_or_reference_fields);
   record->set_has_template_argument_lifetime(has_template_argument_lifetime);
   record->set_is_thread_safe(*is_thread_safe);
+  record->set_has_written_view_attr(
+      HasWrittenAttr<clang::PointerAttr>(*record_decl));
+  record->set_has_written_owner_attr(
+      HasWrittenAttr<clang::OwnerAttr>(*record_decl));
   for (const auto& lifetime_input : lifetime_inputs) {
     record->add_lifetime_inputs(lifetime_input);
   }

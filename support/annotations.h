@@ -297,6 +297,89 @@
   CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_ignore_attr" __VA_OPT__(, ) \
                                __VA_ARGS__)
 
+// CRUBIT_VIEW and CRUBIT_OWNER declare the KIND of a record: whether it
+// borrows or owns what its pointer-like members point to. Lifetime analyses
+// read the kind to decide which lifetimes a record carries.
+//
+// Both are defined in `annotations_internal.h` so that nothing depends on
+// absl. Under clang they expand to `[[gsl::Pointer]]` and `[[gsl::Owner]]`,
+// and to nothing otherwise.
+//
+// ```c++
+// class CRUBIT_VIEW StrRef { const char* data_; size_t size_; };
+// class CRUBIT_OWNER Buffer { char* data_; public: ~Buffer(); };
+// ```
+//
+// Below, `LIFETIME_PARAMS` means the `lifetime_params` record annotation,
+// `[[clang::annotate("lifetime_params", ...)]]`. It has no public macro yet;
+// Crubit's tests define one locally.
+//
+// CRUBIT_VIEW: the record borrows what its pointer-like members point to.
+//
+//   * A view without `LIFETIME_PARAMS` has exactly one implicit lifetime
+//     (`'__implicit`), which covers all of its undeclared pointers.
+//   * Copies of a view share its borrow.
+//   * A view is covariant in that lifetime, unless a `mutable` field or a
+//     const method that stores a parameter makes it invariant.
+//   * Results derived from a view (for example its `begin()`) are tied to that
+//     lifetime, not to `this`.
+//
+// CRUBIT_OWNER: the record owns what its *undeclared* pointer members point to,
+// that is, heap blocks that its destructor releases.
+//
+//   * Those pointees are owned, not borrowed, and carry no lifetime.
+//   * Interior results (`data()`, `operator[]`, iterators) borrow from `this`.
+//     Mutating or destroying the owner invalidates them.
+//   * An owner can still carry lifetimes. Declared `LIFETIME_PARAMS` and
+//     lifetimes in template arguments still count: `std::vector<
+//     std::string_view>` is an owner whose elements borrow.
+//
+// Rules:
+//
+//   * Only attributes written in the source count. Clang infers
+//     `[[gsl::Owner]]` / `[[gsl::Pointer]]` for some standard library types
+//     (for example `std::optional`, `std::array`, `std::string_view`). Tools
+//     must not read that inference as an annotation.
+//   * A record with neither annotation is classified from its contents:
+//     `LIFETIME_PARAMS` makes it declared, no pointer-like member makes it an
+//     owner, and a public lifetime-carrying field or base makes it a view.
+//     Otherwise its kind is unknown.
+//   * On the Rust side, a wrong annotation (for example CRUBIT_VIEW on a
+//     record whose destructor frees what it points to) gives a warning plus a
+//     conservative binding: the record's kind is then unknown. It never fails
+//     bindings generation.
+//   * On the C++ side, clang does not check the annotation against the record,
+//     but its dangling diagnostics (see below) may fire as errors in builds
+//     that use `-Werror` (for example with `-Wdangling-gsl`,
+//     `-Wreturn-stack-address` or `-Wlifetime-safety-*`). There, a wrong
+//     annotation that makes one of them fire breaks the C++ build.
+//   * Clang rejects with a hard error both annotations on one record, and
+//     re-annotating a record that already carries `[[gsl::Owner(T)]]` /
+//     `[[gsl::Pointer(T)]]` with a different argument (CRUBIT_OWNER and
+//     CRUBIT_VIEW pass none, so they conflict with any explicit `T`).
+//   * Specializations of an annotated class template inherit the attribute
+//     from the primary template.
+//
+// Status: Crubit does not implement this classification yet; it waits on the
+// policy for records of unknown kind. Today the only effect on Crubit's
+// bindings is that, in targets with the `unsafe_view` feature, a CRUBIT_VIEW
+// record is an unsafe type: its Rust struct documents a safety requirement, and
+// functions that take it by value become `unsafe fn`. CRUBIT_OWNER has no
+// effect on Crubit's bindings. See
+// `rs_bindings_from_cc/test/annotations/view_owner*.h`.
+//
+// Both annotations do affect clang's diagnostics today:
+// `-Wdangling`, `-Wdangling-gsl` and `-Wlifetime-safety` key several rules on
+// `[[gsl::Owner]]` / `[[gsl::Pointer]]`. For example, a view constructed from
+// a temporary owner is diagnosed as dangling, and in builds where that
+// diagnostic is an error, adding either annotation can therefore break the C++
+// build of code that misuses the record (or, if the annotation is wrong, of
+// correct code).
+//
+// This is not CRUBIT_OWNED_POINTER (below). That annotation makes Crubit
+// generate an owning Rust wrapper type for one pointer. CRUBIT_OWNER classifies
+// a whole record.
+
 // The CRUBIT_OWNED_POINTER AND CRUBIT_OWNED_POINTEE annotations work together
 // to map conventionally "owned" C++ pointer usages to a Rust type that provides
 // Rust-style ownership wrapping a raw pointer.

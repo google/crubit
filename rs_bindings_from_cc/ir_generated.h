@@ -2480,6 +2480,10 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   void set_deprecated(std::string_view value) { has_bits_ |= 0x800ULL; deprecated_ = FfiString(value); }
   bool is_thread_safe() const { return is_thread_safe_; }
   void set_is_thread_safe(bool value) { is_thread_safe_ = value; }
+  bool has_written_view_attr() const { return has_written_view_attr_; }
+  void set_has_written_view_attr(bool value) { has_written_view_attr_ = value; }
+  bool has_written_owner_attr() const { return has_written_owner_attr_; }
+  void set_has_written_owner_attr(bool value) { has_written_owner_attr_ = value; }
   bool is_explicit_class_template_instantiation_definition() const { return is_explicit_class_template_instantiation_definition_; }
   void set_is_explicit_class_template_instantiation_definition(bool value) { is_explicit_class_template_instantiation_definition_ = value; }
   const FfiVec<::crubit::ffi::Item>& children() const { return children_; }
@@ -2534,6 +2538,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Record {
   bool detected_formatter_{};
   FfiString deprecated_{};
   bool is_thread_safe_{};
+  bool has_written_view_attr_{};
+  bool has_written_owner_attr_{};
   bool is_explicit_class_template_instantiation_definition_{};
   FfiVec<::crubit::ffi::Item> children_{};
 };
@@ -4445,8 +4451,16 @@ static_assert(
     1128);
 static_assert(
   sizeof(size_t) != 8 ||
-  offsetof(Record, is_explicit_class_template_instantiation_definition_) ==
+  offsetof(Record, has_written_view_attr_) ==
     1129);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, has_written_owner_attr_) ==
+    1130);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Record, is_explicit_class_template_instantiation_definition_) ==
+    1131);
 static_assert(
   sizeof(size_t) != 8 ||
   offsetof(Record, children_) ==
