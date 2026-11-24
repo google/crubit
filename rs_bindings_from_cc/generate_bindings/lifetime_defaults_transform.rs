@@ -89,6 +89,124 @@ fn mentions_lifetime(ty: &CcType, name: &str) -> bool {
     }
 }
 
+/// Appends every lifetime name written anywhere in `ty` to `out`, in order, without duplicates.
+fn collect_lifetimes(ty: &CcType, out: &mut Vec<Rc<str>>) {
+    for l in ty.explicit_lifetimes() {
+        if !out.iter().any(|o| o.as_ref() == l.as_str()) {
+            out.push(Rc::from(l.as_str()));
+        }
+    }
+    match ty.variant() {
+        CcTypeVariant::Pointer(pty) => collect_lifetimes(pty.pointee_type(), out),
+        CcTypeVariant::ConstantArray(arr) => collect_lifetimes(arr.element_type(), out),
+        CcTypeVariant::Decl(_) => {
+            ty.template_args().iter().for_each(|arg| collect_lifetimes(arg, out))
+        }
+        _ => {}
+    }
+}
+
+/// Replaces the lifetime `name` with `unknown` everywhere in `ty`.
+fn replace_lifetime_with_unknown(ty: &mut CcType, name: &str) {
+    for l in ty.explicit_lifetimes_mut().iter_mut() {
+        if l.as_str() == name {
+            *l = FfiString::from(UNKNOWN);
+        }
+    }
+    match ty.variant_mut() {
+        CcTypeVariant::Pointer(pty) => {
+            let mut pointee = pty.pointee_type().clone();
+            replace_lifetime_with_unknown(&mut pointee, name);
+            pty.set_pointee_type(pointee);
+        }
+        CcTypeVariant::ConstantArray(arr) => {
+            let mut element = arr.element_type().clone();
+            replace_lifetime_with_unknown(&mut element, name);
+            arr.set_element_type(element);
+        }
+        _ => {}
+    }
+    for arg in ty.template_args_mut().iter_mut() {
+        replace_lifetime_with_unknown(arg, name);
+    }
+}
+
+/// Clears the lifetimes of every level of `ty` that names `name`, so that the level is filled in
+/// as if it had not been annotated.
+fn clear_levels_naming_lifetime(ty: &mut CcType, name: &str) {
+    if ty.explicit_lifetimes().iter().any(|l| l.as_str() == name) {
+        ty.explicit_lifetimes_mut().clear();
+    }
+    match ty.variant_mut() {
+        CcTypeVariant::Pointer(pty) => {
+            let mut pointee = pty.pointee_type().clone();
+            clear_levels_naming_lifetime(&mut pointee, name);
+            pty.set_pointee_type(pointee);
+        }
+        CcTypeVariant::ConstantArray(arr) => {
+            let mut element = arr.element_type().clone();
+            clear_levels_naming_lifetime(&mut element, name);
+            arr.set_element_type(element);
+        }
+        _ => {}
+    }
+    for arg in ty.template_args_mut().iter_mut() {
+        clear_levels_naming_lifetime(arg, name);
+    }
+}
+
+/// The name of the lifetime that Crubit does not know (`$(unknown)` in C++).
+const UNKNOWN: &str = "unknown";
+
+/// What `lifetime_defaults_transform_func` did with the lifetime names written on a function's
+/// result that nothing binds (b/589394789).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct UnboundResultLifetimes {
+    /// The names, in the order in which they appear in the result (see `unbound_result_names`).
+    pub names: Vec<Rc<str>>,
+    /// Whether the names were treated as unknown (see `keeps_unbound_result_names_unknown`).
+    /// Otherwise, they were ignored, and the result was bound as if it were unannotated.
+    pub treated_as_unknown: bool,
+}
+
+/// Returns whether the lifetime names on `result` that nothing binds are treated as unknown,
+/// instead of being ignored as if the result were unannotated. `elided` is the lifetime that
+/// elision gives an unannotated result, and `inputs` describes the input lifetimes.
+///
+/// A malformed annotation binds as its unannotated twin would. With several input lifetimes and
+/// no `this`, elision gives no lifetime. An unannotated reference result is then a raw pointer,
+/// and so is an unknown one. But an unannotated record result with lifetime parameters is
+/// `T<'static>` from a safe function, which is unsound; unannotated code should be bound as an
+/// `unsafe fn` instead, which is what an unknown record result gets.
+///
+/// TODO(b/589394789): `k2-record-default`: once an unannotated record result with several input
+/// lifetimes gets a fresh lifetime that every input outlives, ignore the names here too.
+fn keeps_unbound_result_names_unknown(
+    result: &CcType,
+    elided: &[Rc<str>],
+    inputs: &LifetimeState,
+) -> bool {
+    elided.is_empty()
+        && *inputs != LifetimeState::Unseen
+        && matches!(result.variant(), CcTypeVariant::Decl(_))
+}
+
+/// Returns the lifetime names written on the result of `func` that nothing binds: not `'static`
+/// or `'unknown`, not a lifetime of the enclosing record (`enclosing_names`), and not written on
+/// any parameter (including `__this`). Such a name would otherwise become a generic lifetime
+/// that the caller is free to pick (b/589394789).
+pub fn unbound_result_names(func: &Func, enclosing_names: &HashSet<Rc<str>>) -> Vec<Rc<str>> {
+    let mut names = vec![];
+    collect_lifetimes(func.return_type(), &mut names);
+    names.retain(|name| {
+        name.as_ref() != "static"
+            && name.as_ref() != UNKNOWN
+            && !enclosing_names.contains(name)
+            && !func.params().iter().any(|param| mentions_lifetime(param.type_(), name))
+    });
+    names
+}
+
 /// If `ty` is the record `record_id` (or a reference to it) without explicit lifetimes, gives it
 /// `lifetimes` and returns true.
 fn tie_record_type_to_lifetimes(
@@ -367,6 +485,8 @@ impl Default for BindingContext {
 struct LifetimeDefaults<'a, 'db> {
     db: &'a BindingsGenerator<'db>,
     bindings: BindingContext,
+    /// Set by `add_lifetime_to_func`.
+    unbound_result_lifetimes: UnboundResultLifetimes,
 }
 
 /// Used to keep track of the state we're in when ascribing lifetimes.
@@ -403,7 +523,11 @@ struct LifetimeResult {
 
 impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     fn new(db: &'a BindingsGenerator<'db>) -> Self {
-        LifetimeDefaults { db, bindings: BindingContext::new() }
+        LifetimeDefaults {
+            db,
+            bindings: BindingContext::new(),
+            unbound_result_lifetimes: UnboundResultLifetimes::default(),
+        }
     }
 
     /// Returns a state representing the given `lifetime`.
@@ -689,6 +813,31 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             }
             CcTypeVariant::Pointer(pty) if pty.kind() == PointerTypeKind::LValueRef => {
                 let mut new_ty = ty.clone();
+                // A reference whose lifetime Crubit does not know can't be a Rust reference: the
+                // caller could pick any lifetime for it (b/589394789). Bind it conservatively as
+                // a non-null raw pointer.
+                if ty.explicit_lifetimes().iter().any(|l| {
+                    self.bindings
+                        .bindings
+                        .get(l.as_str())
+                        .and_then(|b| b.renamed.last())
+                        .map(|renamed| renamed.as_ref() == UNKNOWN)
+                        == Some(true)
+                }) {
+                    let pointee_type = self.add_lifetime_to_output_type(
+                        &vec![],
+                        false,
+                        new_bindings,
+                        pty.pointee_type(),
+                    )?;
+                    *new_ty.variant_mut() = CcTypeVariant::Pointer(PointerType::new(
+                        PointerTypeKind::NonNull,
+                        pty.lifetime(),
+                        FfiRc::new(pointee_type),
+                    ));
+                    new_ty.explicit_lifetimes_mut().clear();
+                    return Ok(new_ty);
+                }
                 // If there's a previously-annotated lifetime, use that.
                 if !ty.explicit_lifetimes().is_empty() {
                     *new_ty.explicit_lifetimes_mut() = ty
@@ -996,6 +1145,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         // need to pop these bindings. (We *do* need to worry about unbinding names for internal
         // binders, like function types.)
         let this_lifetimebound_names = self.bind_lifetime_inputs(func.enclosing_item_id())?;
+        let enclosing_names: HashSet<Rc<str>> = self.bindings.bindings.keys().cloned().collect();
         // Rename local bindings (and remember how we've renamed them).
         func.lifetime_inputs().iter().for_each(|name| {
             new_func
@@ -1003,6 +1153,24 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 .push(FfiString::from(self.bindings.push_new_binding(&Rc::from(name.as_str()))));
         });
         self.lower_clang_annotations(&mut new_func, &this_lifetimebound_names)?;
+        // A lifetime written on the result that nothing binds would become a generic lifetime
+        // that the caller picks, as permissive as 'static (b/589394789). It is not a lifetime
+        // input; below, it is ignored as if the result were unannotated, or treated as unknown
+        // (see `keeps_unbound_result_names_unknown`). `generate_function` warns about it.
+        let unbound_names = unbound_result_names(&new_func, &enclosing_names);
+        for name in &unbound_names {
+            if let Some(renamed) =
+                self.bindings.bindings.get(name).and_then(|b| b.renamed.last()).cloned()
+            {
+                let kept = new_func
+                    .lifetime_inputs()
+                    .iter()
+                    .filter(|l| l.as_str() != renamed.as_ref())
+                    .cloned()
+                    .collect();
+                *new_func.lifetime_inputs_mut() = kept;
+            }
+        }
         if let Some(record) = &template_argument_record {
             tie_self_types_to_template_argument_lifetime(
                 &mut new_func,
@@ -1055,7 +1223,21 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             LifetimeState::Unseen => self.get_lifetime_for_state(&state),
             _ => self.get_lifetime_for_state(&this_state),
         };
-        let return_type_val = new_func.return_type().clone();
+        let mut return_type_val = new_func.return_type().clone();
+        if !unbound_names.is_empty() {
+            let treated_as_unknown =
+                keeps_unbound_result_names_unknown(&return_type_val, &lifetime, &state);
+            for name in &unbound_names {
+                if treated_as_unknown {
+                    // The result is then bound conservatively; see `add_lifetime_to_output_type`.
+                    replace_lifetime_with_unknown(&mut return_type_val, name);
+                } else {
+                    clear_levels_naming_lifetime(&mut return_type_val, name);
+                }
+            }
+            self.unbound_result_lifetimes =
+                UnboundResultLifetimes { names: unbound_names, treated_as_unknown };
+        }
         let return_type = self.add_lifetime_to_output_type(
             &lifetime,
             state == LifetimeState::Unseen,
@@ -1153,6 +1335,145 @@ pub fn lifetime_defaults_transform_func(
     func: FfiRc<Func>,
 ) -> Result<FfiRc<Func>> {
     Ok(FfiRc::new(LifetimeDefaults::new(db).add_lifetime_to_func(&func)?))
+}
+
+/// Returns the lifetime names written on the result of `func` that nothing binds, and what
+/// `lifetime_defaults_transform_func` does with them (b/589394789). See `unbound_result_names`.
+pub fn unbound_result_lifetimes(
+    db: &BindingsGenerator<'_>,
+    func: &Func,
+) -> Result<UnboundResultLifetimes> {
+    let mut defaults = LifetimeDefaults::new(db);
+    defaults.add_lifetime_to_func(func)?;
+    Ok(defaults.unbound_result_lifetimes)
+}
+
+/// Returns whether `lifetime_defaults_transform_func` treats a lifetime on the result of `func`
+/// as unknown: it is written `$(unknown)`, or nothing binds it and
+/// `keeps_unbound_result_names_unknown` holds (see `unbound_result_lifetimes`).
+pub fn result_has_unknown_lifetime(db: &BindingsGenerator<'_>, func: &Func) -> Result<bool> {
+    Ok(mentions_lifetime(func.return_type(), UNKNOWN)
+        || unbound_result_lifetimes(db, func)?.treated_as_unknown)
+}
+
+/// The outlives bounds `(longer, shorter)`, meaning `'longer: 'shorter`, that tie the lifetimes of
+/// a record written without them behind a mutable reference to the other inputs (K3,
+/// b/587074038).
+///
+/// For a parameter `R& r` (non-const; bound as `&mut R<'l>`, or `Pin<&mut R<'l>>` if `R` is not
+/// Rust-movable) whose record lifetimes are elided, or written with names that nothing binds,
+/// the transform gives `R` fresh lifetimes that the caller may pick freely, as long as `'static`.
+/// The C++ function can store a borrow from another parameter into `r`:
+///
+/// ```c++
+/// void Reset(Holder& h, int& x) { h.Set(x); }  // `Holder` has one lifetime.
+/// ```
+///
+/// would bind as `fn Reset<'h, 'h_0, 'x>(h: &'h_0 mut Holder<'h>, x: &'x mut c_int)`, and safe
+/// Rust could keep `x` in a `Holder<'static>` after it is freed. With the bounds, every lifetime
+/// `'x` of every other input (including `__this`) must outlive each such record lifetime `'l`:
+/// `where 'x: 'l`. Bounds, not equality, so that a caller can still pass a longer-lived borrow.
+/// No bound is needed for `'static` (or `'unknown`, which the transform binds as a raw pointer),
+/// nor for a record lifetime that another input or the enclosing record also has (the transform
+/// already tied it, e.g. `Box& other` in a member of `Box<T&>`).
+///
+/// Inputs that may carry a borrow but have no lifetime in Rust (raw pointers, `raw_string_view`,
+/// records with public pointer fields) already make the function `unsafe`, so they need no bound.
+///
+/// TODO(b/587074038): exempt other parameters marked `[[clang::noescape]]` once the IR has the
+/// attribute (`FuncParam::clang_noescape`).
+///
+/// Returns no bounds unless the function has an untied record lifetime and another input with a
+/// lifetime. `func` is the function before the transform. The bounds name lifetimes of the
+/// transformed C++ types; the caller drops those that the Rust types don't have (e.g. a
+/// `raw_string_view`'s).
+pub fn untied_record_lifetime_bounds(
+    db: &BindingsGenerator<'_>,
+    func: &FfiRc<Func>,
+) -> Result<Vec<(Rc<str>, Rc<str>)>> {
+    let transformed = db.lifetime_defaults_transform_func(func.clone())?;
+    // The names the C++ declaration binds: the function's own, and its enclosing record's.
+    let mut declared: HashSet<&str> = func.lifetime_inputs().iter().map(|l| l.as_str()).collect();
+    // The enclosing record's lifetimes after the transform, which the transform may also give to
+    // other uses of the record (`tie_self_types_to_template_argument_lifetime`): they are tied.
+    let mut enclosing: Vec<Rc<str>> = vec![];
+    if let Some(Item::Record(record)) = func.enclosing_item_id().map(|id| db.find_untyped_decl(id))
+    {
+        declared.extend(record.lifetime_inputs().iter().map(|l| l.as_str()));
+        let new_record = db.lifetime_defaults_transform_record(record.clone())?;
+        enclosing.extend(new_record.lifetime_inputs().iter().map(|l| Rc::from(l.as_str())));
+    }
+    let is_constructor = *func.cc_name() == ir::UnqualifiedIdentifier::Constructor;
+    let mut bounds = vec![];
+    for (ix, (param, new_param)) in
+        func.params().iter().zip(transformed.params().iter()).enumerate()
+    {
+        if ix == 0 && param.identifier().as_str() == "__this" && !is_constructor {
+            continue;
+        }
+        let Some(pty) = param.type_().variant().as_pointer() else { continue };
+        if pty.kind() != PointerTypeKind::LValueRef || pty.pointee_type().is_const() {
+            continue;
+        }
+        let CcTypeVariant::Decl(id) = pty.pointee_type().variant() else { continue };
+        if db.decl_lifetime_arity(*id).unwrap_or(0) == 0 {
+            continue;
+        }
+        let written = pty.pointee_type().explicit_lifetimes();
+        let untied = written.is_empty()
+            || written.iter().any(|l| {
+                l.as_str() != "static" && l.as_str() != UNKNOWN && !declared.contains(l.as_str())
+            });
+        if !untied {
+            continue;
+        }
+        let Some(new_pty) = new_param.type_().variant().as_pointer() else { continue };
+        let mut longer = vec![];
+        for (other_ix, other) in transformed.params().iter().enumerate() {
+            if other_ix != ix {
+                collect_lifetimes(other.type_(), &mut longer);
+            }
+        }
+        // A record lifetime that another input or the enclosing record also has is tied already.
+        let shorter: Vec<Rc<str>> = new_pty
+            .pointee_type()
+            .explicit_lifetimes()
+            .iter()
+            .map(|l| Rc::from(l.as_str()))
+            .filter(|l: &Rc<str>| {
+                l.as_ref() != "static"
+                    && l.as_ref() != UNKNOWN
+                    && !longer.contains(l)
+                    && !enclosing.contains(l)
+            })
+            .collect();
+        for l in &shorter {
+            for x in &longer {
+                if x.as_ref() != "static"
+                    && x.as_ref() != UNKNOWN
+                    && !bounds.iter().any(|(bx, bl): &(Rc<str>, Rc<str>)| bx == x && bl == l)
+                {
+                    bounds.push((x.clone(), l.clone()));
+                }
+            }
+        }
+    }
+    Ok(bounds)
+}
+
+/// Returns the lifetime parameters of the transformed `record` that must be invariant
+/// (b/589368736): all of them, in the order of `record.lifetime_inputs()`.
+///
+/// A record lifetime that C++ can store into through a shared reference to the record, or
+/// through a copy of it, must not shrink, or safe Rust could store a short-lived value into a
+/// long-lived record. C++ can do that through a `mutable` field, a `const` method, a friend, a
+/// static member, another record's method, or any helper written against the public API, and
+/// such a writer can live in any target that sees the record. No rule over the record's
+/// declaration can prove a lifetime covariant, so every generated record lifetime is invariant.
+/// Hand-written views such as `cc_std::std::string_view` are not generated here and keep their
+/// own variance.
+pub fn invariant_record_lifetimes(record: &Record) -> Vec<Rc<str>> {
+    record.lifetime_inputs().iter().map(|l| Rc::from(l.as_str())).collect()
 }
 
 /// Creates a copy of `record` with default lifetimes filled in.

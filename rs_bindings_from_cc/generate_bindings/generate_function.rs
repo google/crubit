@@ -893,6 +893,7 @@ fn api_func_shape_for_identifier(
             }
             param_type_iter.any(|p| db.rs_type_kind_safety(p.clone()).is_some())
                 || db.unknown_lifetime_safety(return_type.clone()).is_some()
+                || result_has_unknown_lifetime(db, func, return_type)
         }
         SafetyAnnotation::Unsafe => true,
         SafetyAnnotation::DisableUnsafe => false,
@@ -2126,6 +2127,60 @@ fn rs_type_kinds_for_func(
     Ok((param_types, return_type.unwrap()))
 }
 
+/// Returns whether the result of `func` carries lifetimes that Crubit does not know, so that the
+/// generated function must be `unsafe` (b/589394789).
+///
+/// Under `assume_lifetimes`, a result lifetime written `$(unknown)` is unknown, and so is one that
+/// nothing binds when an unannotated record result would not get a lifetime either (see
+/// `lifetime_defaults_transform::unbound_result_lifetimes`). A reference or pointer result is then
+/// bound as a raw pointer, which is safe to return. A record result with lifetime parameters can't
+/// be: it is bound as `T<'static>`, and the caller must ensure that the borrowed data outlives it.
+fn result_has_unknown_lifetime(
+    db: &BindingsGenerator,
+    func: &Func,
+    return_type: &RsTypeKind,
+) -> bool {
+    let assume_lifetimes = db
+        .ir()
+        .target_crubit_features(func.owning_target())
+        .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+    if !assume_lifetimes {
+        return false;
+    }
+    // A record that takes lifetimes but was given none is formatted as `T<'static>`. Behind a
+    // raw pointer, it is harmless: dereferencing the pointer is already unsafe.
+    if matches!(return_type.unalias(), RsTypeKind::Pointer { .. }) {
+        return false;
+    }
+    let has_static_projection = return_type.dfs_iter().any(|ty| match ty {
+        RsTypeKind::Record { record, uniform_repr_template_type: None, lifetimes, .. } => {
+            !record.is_raw_string_view()
+                && db
+                    .decl_lifetime_arity(record.id())
+                    .is_ok_and(|arity| arity > 0 && lifetimes.len() != arity)
+        }
+        _ => false,
+    });
+    has_static_projection
+        && lifetime_defaults_transform::result_has_unknown_lifetime(db, func).unwrap_or(false)
+}
+
+/// Returns the lifetime names written on the result of `func` that nothing binds, and what the
+/// lifetime transform does with them (b/589394789). Empty unless `assume_lifetimes` is on.
+fn unbound_result_lifetimes(
+    db: &BindingsGenerator,
+    func: &Func,
+) -> lifetime_defaults_transform::UnboundResultLifetimes {
+    let assume_lifetimes = db
+        .ir()
+        .target_crubit_features(func.owning_target())
+        .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+    if !assume_lifetimes {
+        return Default::default();
+    }
+    lifetime_defaults_transform::unbound_result_lifetimes(db, func).unwrap_or_default()
+}
+
 /// Generate the safety documentation for an unsafe function.
 ///
 /// Returns `None` if the function is not unsafe.
@@ -2169,6 +2224,11 @@ fn generate_func_safety_doc(
                 doc += "\n";
             }
             doc += "The return value borrows data whose lifetime Crubit does not know. The caller must ensure that the borrowed data outlives the return value: unwrap it (`::crubit_support::Unsafe::into_inner`) or drop it while that data is still alive.\n";
+        } else if result_has_unknown_lifetime(db, func, return_type) {
+            if !doc.is_empty() {
+                doc += "\n";
+            }
+            doc += "The C++ function does not say what the return value borrows from (its lifetime is unknown), so it is bound as `'static`. The caller must ensure that the data it borrows outlives it.\n";
         }
         // Verify that we didn't generate an empty safety doc.
         assert!(!doc.is_empty());
@@ -2201,6 +2261,9 @@ pub fn generate_function(
     let crate_root_path = ir.crate_root_path_tokens();
 
     let (mut param_types, mut return_type) = rs_type_kinds_for_func(db, func.clone())?;
+    // The lifetimes the Rust parameter types have, before they are adjusted to the API's shape.
+    let rust_param_lifetimes: HashSet<Rc<str>> =
+        param_types.iter().flat_map(|p| p.lifetimes()).map(|l| l.0).collect();
 
     let errors = Errors::new();
     let Some(ApiFuncShape { func_name, impl_kind }) =
@@ -2211,6 +2274,27 @@ pub fn generate_function(
     };
     if impl_kind.is_unsafe() {
         db.errors().add_category(error_report::Category::Unsafe);
+    }
+    // K3 (b/587074038): a safe function that could store a borrow from one input into a record
+    // whose lifetimes it does not tie must say that the borrow outlives the record.
+    let untied_record_bounds = if !impl_kind.is_unsafe()
+        && enabled_features.contains(crubit_feature::CrubitFeature::AssumeLifetimes)
+    {
+        lifetime_defaults_transform::untied_record_lifetime_bounds(db, &func)?
+            .into_iter()
+            .filter(|(longer, shorter)| {
+                rust_param_lifetimes.contains(longer) && rust_param_lifetimes.contains(shorter)
+            })
+            .collect()
+    } else {
+        vec![]
+    };
+    if !untied_record_bounds.is_empty() && matches!(impl_kind, ImplKind::Trait { .. }) {
+        // A trait method can't add bounds that the trait does not have (E0276).
+        errors.add(anyhow!(
+            "a parameter is a mutable reference to a record whose lifetimes are not tied to the \
+             other inputs (b/587074038), which a trait implementation can't express"
+        ));
     }
     let namespace_qualifier = db.namespace_qualifier(&*func).format_for_rs();
 
@@ -2337,6 +2421,25 @@ pub fn generate_function(
                 ident_fragment_from_mangled_name(func.mangled_name())
             ),
         );
+    // The bounds of `untied_record_bounds` (K3). A function that failed is a stub whose
+    // `unsatisfied_where_clause` keeps it from being called, so it needs none.
+    let untied_record_where_clause =
+        if reportable_status.is_ok() && !untied_record_bounds.is_empty() {
+            let bounds = untied_record_bounds.iter().map(|(longer, shorter)| {
+                let longer = Lifetime::new(longer);
+                let shorter = Lifetime::new(shorter);
+                quote! { #longer: #shorter }
+            });
+            // `__SPACE__`: the printer would otherwise write `where'x`, a reserved prefix.
+            quote! { where __SPACE__ #( #bounds ),* }
+        } else {
+            quote! {}
+        };
+    let unsatisfied_where_clause = if untied_record_where_clause.is_empty() {
+        unsatisfied_where_clause
+    } else {
+        untied_record_where_clause.clone()
+    };
 
     let create_func_body = || -> Result<TokenStream> {
         if reportable_status.is_ok() {
@@ -2403,6 +2506,27 @@ pub fn generate_function(
         db.is_golden_test(),
         db.kythe_annotations(),
     );
+    // A lifetime written on the result that nothing binds is ignored, as if the result were
+    // unannotated, or treated as unknown (b/589394789). This is not an error: warn in the
+    // generated code, and record it so it can be counted.
+    let unbound_result_lifetimes = unbound_result_lifetimes(db, &func);
+    let doc_comment = if unbound_result_lifetimes.names.is_empty() {
+        quote! { #doc_comment }
+    } else {
+        db.errors().add_category(error_report::Category::UnknownLifetime);
+        let treatment = if unbound_result_lifetimes.treated_as_unknown {
+            "treated as unknown, as for an unannotated result with several input lifetimes"
+        } else {
+            "ignored, as if the result were unannotated"
+        };
+        let warnings = unbound_result_lifetimes.names.iter().map(|name| {
+            format!("warning: lifetime '{name} is not bound by any parameter; {treatment}")
+        });
+        quote! {
+            #( __COMMENT__ #warnings )*
+            #doc_comment
+        }
+    };
 
     let deprecated_attr = func.deprecated().map(|s| DeprecatedAttr(Rc::from(s)));
     let must_use_attr = func.nodiscard().map(|s| MustUseAttr(Rc::from(s)));
@@ -2595,7 +2719,7 @@ pub fn generate_function(
                         #unsafety
                         fn #bracketed_func_name #free_fn_generic_params(
                             #( #free_api_params ),*
-                        ) #arrow #free_return_type_fragment {
+                        ) #arrow #free_return_type_fragment #untied_record_where_clause {
                             #free_func_body
                         }
                     }],
