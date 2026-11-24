@@ -59,9 +59,10 @@ forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::s
 ///   * `const_struct_ptr_field`: raw pointer
 ///   * `struct_ref_field`: raw pointer
 ///   * `const_struct_ref_field`: raw pointer
+///   * `struct_rvalue_ref_field`: raw pointer
+///   * `const_struct_rvalue_ref_field`: raw pointer
 ///   * `forward_declared_ptr_field`: raw pointer
 ///   * `cyclic_ptr_field`: raw pointer
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "19FieldTypeTestStruct"]
 #[repr(C, align(8))]
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=FieldTypeTestStruct")]
@@ -75,7 +76,7 @@ pub struct FieldTypeTestStruct {
     pub char32_t_field: u32,
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'wchar_t': Unsupported builtin type
-    pub(crate) wchar_t_field: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) wchar_t_field: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
     pub short_field: ::ffi_11::c_short,
     pub int_field: ::ffi_11::c_int,
     pub long_field: ::ffi_11::c_long,
@@ -101,9 +102,8 @@ pub struct FieldTypeTestStruct {
     pub const_struct_ptr_field: *const crate::SomeStruct,
     pub struct_ref_field: *mut crate::SomeStruct,
     pub const_struct_ref_field: *const crate::SomeStruct,
-    /// TODO(b/226580208): Uncomment when these don't cause struct import to fail.
-    /// SomeStruct&& struct_rvalue_ref_field;
-    /// const SomeStruct&& const_struct_rvalue_ref_field;
+    pub struct_rvalue_ref_field: *mut crate::SomeStruct,
+    pub const_struct_rvalue_ref_field: *const crate::SomeStruct,
     pub forward_declared_ptr_field: *mut crate::ForwardDeclaredStruct,
     pub cyclic_ptr_field: *mut crate::FieldTypeTestStruct,
 }
@@ -121,6 +121,29 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("FieldTypeTestStruct"),
     crate::FieldTypeTestStruct
 );
+
+impl From<::ctor::RvalueReference<'_, Self>> for FieldTypeTestStruct {
+    #[inline(always)]
+    fn from(args: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut __param_0 = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(
+                &raw mut tmp as *mut _,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for FieldTypeTestStruct {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
 /// # Safety
 ///
@@ -177,6 +200,10 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::FieldTypeTestStruct>,
+        );
         #[link_name = "_Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi"]
         pub(crate) unsafe fn __rust_thunk___Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi<
             'const_ref_param,
@@ -204,10 +231,9 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::SomeStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
 
-    assert!(::core::mem::size_of::<crate::FieldTypeTestStruct>() == 208);
+    assert!(::core::mem::size_of::<crate::FieldTypeTestStruct>() == 224);
     assert!(::core::mem::align_of::<crate::FieldTypeTestStruct>() == 8);
-    static_assertions::assert_impl_all!(crate::FieldTypeTestStruct: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::FieldTypeTestStruct: Drop);
+    static_assertions::assert_not_impl_any!(crate::FieldTypeTestStruct: Copy,Drop);
     assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, bool_field) == 0);
     assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, char_field) == 1);
     assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, unsigned_char_field) == 2);
@@ -240,6 +266,10 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, const_struct_ptr_field) == 168);
     assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, struct_ref_field) == 176);
     assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, const_struct_ref_field) == 184);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, forward_declared_ptr_field) == 192);
-    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, cyclic_ptr_field) == 200);
+    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, struct_rvalue_ref_field) == 192);
+    assert!(
+        ::core::mem::offset_of!(crate::FieldTypeTestStruct, const_struct_rvalue_ref_field) == 200
+    );
+    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, forward_declared_ptr_field) == 208);
+    assert!(::core::mem::offset_of!(crate::FieldTypeTestStruct, cyclic_ptr_field) == 216);
 };
