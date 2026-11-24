@@ -20,7 +20,8 @@ generated Rust bindings of this C++ target.
         "link_deps": "List of DepVariantInfo of native libraries to be linked to this library target.",
         "cc_deps": "List of DepVariantInfo of cc_library targets whose crubit-generated bindings " +
                    "will be linked to this library target.",
-        "generated_cpp_support_deps": "List of CcInfo of support libraries for generated C++ code.",
+        "cpp_deps": "List of CcInfo of C++ dependencies of the generated C++ implementation " +
+                    "(which also compiles `cpp_srcs`).",
         "unstable_rust_features": "List of unstable rustc features to enable via `#![feature(...)]`.",
         "cpp_srcs": "List of C++ source files to be concatenated to the Crubit-generated C++ source.",
         "root_namespaces": "List of C++ namespaces to re-export at the root of the generated Rust bindings.",
@@ -41,7 +42,7 @@ RustBindingsFromCcInfo = provider(
                     "`support_cc_info`, so that a dependent's `_rust_api_impl.cc` can include " +
                     "them under `layering_check`."),
         "support_cc_info": ("An optional CcInfo whose compilation context exports the module " +
-                            "maps of the `generated_cpp_support_deps` of this target and of its " +
+                            "maps of the `cpp_deps` of this target and of its " +
                             "transitive dependencies. Generated code can include these support " +
                             "headers (for example `co_crubit_abi.h`) in any target that uses " +
                             "the corresponding bridged type, even through a type alias."),
