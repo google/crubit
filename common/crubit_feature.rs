@@ -128,8 +128,9 @@ flagset::flags! {
         // TODO(b/447338748): Remove once Bazel and GN files no longer use this feature name.
         StrongOrderingTraits,
 
-        /// Implement `Eq` and `Ord` for C++ types whose `operator<=>` returns
-        /// `std::weak_ordering`. Only affects rust_api_from_cpp.
+        /// No-op: Crubit always implements `Eq` and `Ord` for C++ types whose `operator<=>`
+        /// returns `std::weak_ordering`.
+        // TODO(b/581381548): Delete this feature once the toolchain merges.
         WeakOrderingTraits,
 
         /// Generate Rust bindings for constant-size C-style arrays (`T[N]`) as `[T; N]` when

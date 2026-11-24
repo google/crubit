@@ -40,34 +40,34 @@ follows:
 The C++ binary operators below are mapped one-way into the corresponding Rust
 traits as follows:
 
-| C++ API       | Rust bindings                                                                                        |
-| :------------ | :--------------------------------------------------------------------------------------------------- |
-| `operator==`  | `PartialEq`                                                                                          |
-| `operator<=>` | `PartialOrd` (and `Eq` + `Ord` for `std::strong_ordering` and, if enabled, for `std::weak_ordering`) |
-| `operator<`   | `PartialOrd`                                                                                         |
-| `operator>`   | `PartialOrd`                                                                                         |
-| `operator<=`  | `PartialOrd`                                                                                         |
-| `operator>=`  | `PartialOrd`                                                                                         |
-| `operator+`   | `Add`                                                                                                |
-| `operator-`   | `Sub`                                                                                                |
-| `operator*`   | `Mul`                                                                                                |
-| `operator/`   | `Div`                                                                                                |
-| `operator%`   | `Rem`                                                                                                |
-| `operator&`   | `BitAnd`                                                                                             |
-| `operator\|`  | `BitOr`                                                                                              |
-| `operator^`   | `BitXor`                                                                                             |
-| `operator<<`  | `Shl`                                                                                                |
-| `operator>>`  | `Shr`                                                                                                |
-| `operator+=`  | `AddAssign`                                                                                          |
-| `operator-=`  | `SubAssign`                                                                                          |
-| `operator*=`  | `MulAssign`                                                                                          |
-| `operator/=`  | `DivAssign`                                                                                          |
-| `operator%=`  | `RemAssign`                                                                                          |
-| `operator&=`  | `BitAndAssign`                                                                                       |
-| `operator\|=` | `BitOrAssign`                                                                                        |
-| `operator^=`  | `BitXorAssign`                                                                                       |
-| `operator<<=` | `ShlAssign`                                                                                          |
-| `operator>>=` | `ShrAssign`                                                                                          |
+| C++ API       | Rust bindings                                                                       |
+| :------------ | :---------------------------------------------------------------------------------- |
+| `operator==`  | `PartialEq`                                                                         |
+| `operator<=>` | `PartialOrd` (and `Eq` + `Ord` for `std::strong_ordering` and `std::weak_ordering`) |
+| `operator<`   | `PartialOrd`                                                                        |
+| `operator>`   | `PartialOrd`                                                                        |
+| `operator<=`  | `PartialOrd`                                                                        |
+| `operator>=`  | `PartialOrd`                                                                        |
+| `operator+`   | `Add`                                                                               |
+| `operator-`   | `Sub`                                                                               |
+| `operator*`   | `Mul`                                                                               |
+| `operator/`   | `Div`                                                                               |
+| `operator%`   | `Rem`                                                                               |
+| `operator&`   | `BitAnd`                                                                            |
+| `operator\|`  | `BitOr`                                                                             |
+| `operator^`   | `BitXor`                                                                            |
+| `operator<<`  | `Shl`                                                                               |
+| `operator>>`  | `Shr`                                                                               |
+| `operator+=`  | `AddAssign`                                                                         |
+| `operator-=`  | `SubAssign`                                                                         |
+| `operator*=`  | `MulAssign`                                                                         |
+| `operator/=`  | `DivAssign`                                                                         |
+| `operator%=`  | `RemAssign`                                                                         |
+| `operator&=`  | `BitAndAssign`                                                                      |
+| `operator\|=` | `BitOrAssign`                                                                       |
+| `operator^=`  | `BitXorAssign`                                                                      |
+| `operator<<=` | `ShlAssign`                                                                         |
+| `operator>>=` | `ShrAssign`                                                                         |
 
 The C++ unary operators below are mapped one-way into the corresponding Rust
 traits as follows:
@@ -102,10 +102,6 @@ If `operator<=>` returns `std::strong_ordering` or `std::weak_ordering` (and
 Crubit implements `PartialOrd<Self>` with it), then Crubit also implements `Eq`
 and `Ord`. This lets you use the type in a `BTreeMap` or `BTreeSet`, and sort it
 with `sort()`.
-
-*   For `std::strong_ordering`, this is enabled by default.
-*   For `std::weak_ordering`, this requires the `weak_ordering_traits` Crubit
-    feature .
 
 Crubit doesn't implement `Eq` and `Ord` for `std::partial_ordering`, because it
 allows unordered values.

@@ -375,10 +375,9 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-# A feature set under which C++ types whose `operator<=>` returns `std::weak_ordering` also
-# implement `Eq` and `Ord`. Only impacts rust_api_from_cpp.
-#
-# See crubit.rs/cpp/operator_overloading
+# No-op: Crubit always implements `Eq` and `Ord` for C++ types whose `operator<=>` returns
+# `std::weak_ordering`.
+# TODO(b/581381548): Delete this feature once the toolchain merges.
 crubit_feature_hint(
     name = "weak_ordering_traits",
     compatible_with = ["//buildenv/target:non_prod"],

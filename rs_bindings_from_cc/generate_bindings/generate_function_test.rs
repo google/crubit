@@ -2044,24 +2044,10 @@ fn test_impl_spaceship_operator_strong_ordering_without_feature() -> Result<()> 
     Ok(())
 }
 
-/// Without `weak_ordering_traits`, `operator<=>` returning `std::weak_ordering` doesn't implement
-/// `Eq` nor `Ord`.
-#[gtest]
-fn test_impl_spaceship_operator_weak_ordering_does_not_implement_eq_nor_ord() -> Result<()> {
-    let rs_api = generate_spaceship_operator_bindings("std::weak_ordering", None)?.rs_api;
-    assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
-    assert_rs_not_matches!(rs_api, quote! { impl Eq });
-    assert_rs_not_matches!(rs_api, quote! { impl Ord });
-    Ok(())
-}
-
-/// With the `weak_ordering_traits` feature, `operator<=>` returning `std::weak_ordering` also
-/// implements `Eq` and `Ord`.
+/// `operator<=>` returning `std::weak_ordering` also implements `Eq` and `Ord`.
 #[gtest]
 fn test_impl_spaceship_operator_weak_ordering_implements_eq_and_ord() -> Result<()> {
-    let rs_api =
-        generate_spaceship_operator_bindings("std::weak_ordering", Some("weak_ordering_traits"))?
-            .rs_api;
+    let rs_api = generate_spaceship_operator_bindings("std::weak_ordering", None)?.rs_api;
     assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
     assert_rs_matches!(rs_api, quote! { impl Eq for SomeStruct {} });
     assert_rs_matches!(
@@ -2081,12 +2067,10 @@ fn test_impl_spaceship_operator_weak_ordering_implements_eq_and_ord() -> Result<
     Ok(())
 }
 
-/// With `weak_ordering_traits`, an alias of `std::weak_ordering` also implements `Eq` and `Ord`.
+/// An alias of `std::weak_ordering` also implements `Eq` and `Ord`.
 #[gtest]
 fn test_impl_spaceship_operator_weak_ordering_alias_implements_eq_and_ord() -> Result<()> {
-    let rs_api =
-        generate_spaceship_operator_bindings("WeakOrderingAlias", Some("weak_ordering_traits"))?
-            .rs_api;
+    let rs_api = generate_spaceship_operator_bindings("WeakOrderingAlias", None)?.rs_api;
     assert_rs_matches!(rs_api, quote! { impl PartialOrd for SomeStruct });
     assert_rs_matches!(rs_api, quote! { impl Eq for SomeStruct {} });
     assert_rs_matches!(rs_api, quote! { impl Ord for SomeStruct });
