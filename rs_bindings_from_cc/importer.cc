@@ -2208,9 +2208,6 @@ void Importer::Import(
   invocation_.top_level_item_ids_ =
       GetTopLevelItemIdsInSourceOrder(*translation_unit_decl);
 
-  // TODO(b/530340081): This logic to build a representative tree IR
-  // replaces BuildTree() in ir.cc. The latter should be deleted.
-  //
   // Map each ItemId to its corresponding crubit::ffi::Item pointer.
   llvm::DenseMap<ItemId, crubit::ffi::Item* _Nonnull> id_to_item;
   for (const auto& comment_item : comment_items) {
