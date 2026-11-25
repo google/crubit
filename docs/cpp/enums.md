@@ -7,6 +7,11 @@ A C++ `enum` is mapped to a Rust `struct` with a similar API to a Rust `enum`.
 *   The enum can be converted to and from its underlying type using `From` and
     `Into`. For example, `static_cast<int32_t>(x)` is `i32::from(x)` in Rust,
     and vice versa `static_cast<MyEnum>(x)` is `MyEnum::from(x)`.
+*   Anonymous enums named by a `typedef` (such as
+    `typedef enum { kFoo } MyEnum;` in C headers) also receive a named Rust
+    `struct MyEnum` with associated constants while keeping top-level constants
+    for the enumerators; truly unnamed `enum { kFoo };` declarations emit
+    top-level constants only.
 
 However, **a C++ enum is not a Rust enum**. Some features of Rust enums are not
 supported:
