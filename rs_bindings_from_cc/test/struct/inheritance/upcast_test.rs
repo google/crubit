@@ -13,16 +13,16 @@ use upcast::*;
 fn test_upcast() {
     let derived = Derived::default();
     let derived = &derived;
-    let base0: &Base0 = unsafe { derived.upcast() };
+    let base0: &Base0 = derived.upcast();
     assert_eq!(base0 as *const _ as usize, derived.base0_address());
     assert_eq!(base0 as *const _ as usize, derived as *const _ as usize);
-    let base1: &Base1 = unsafe { derived.upcast() };
+    let base1: &Base1 = derived.upcast();
     assert_eq!(base1 as *const _ as usize, derived.base1_address());
-    let base2: &Base2 = unsafe { derived.upcast() };
+    let base2: &Base2 = derived.upcast();
     assert_eq!(base2 as *const _ as usize, derived.base2_address());
-    let base3: &Base3 = unsafe { derived.upcast() };
+    let base3: &Base3 = derived.upcast();
     assert_eq!(base3 as *const _ as usize, derived.base3_address());
-    let base4: &Base4 = unsafe { derived.upcast() };
+    let base4: &Base4 = derived.upcast();
     assert_eq!(base4 as *const _ as usize, derived.base4_address());
 }
 
@@ -64,7 +64,7 @@ fn test_upcast_pin_mut() {
     use upcast::nonunpin_upcast::{NonUnpinBase, NonUnpinDerived};
     let mut derived = emplace!(NonUnpinDerived::ctor_new(()));
     // Call the non-const method via upcast:
-    let base: Pin<&mut NonUnpinBase> = unsafe { derived.as_mut().upcast() };
+    let base: Pin<&mut NonUnpinBase> = derived.as_mut().upcast();
     base.non_const_method();
 }
 

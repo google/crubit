@@ -307,10 +307,10 @@ To get inherited methods, add `//features:oo_casting` to the
     use oops::Upcast as _;
 
     // The type annotation is required.
-    let base: &Base = unsafe { derived.upcast() };
+    let base: &Base = derived.upcast();
 
     // For non-const methods on a non-Rust-movable base class:
-    let base: core::pin::Pin<&mut Base> = unsafe { derived_pin.upcast() };
+    let base: core::pin::Pin<&mut Base> = derived_pin.upcast();
 
     // For raw pointers:
     use oops::RawUpcast as _;

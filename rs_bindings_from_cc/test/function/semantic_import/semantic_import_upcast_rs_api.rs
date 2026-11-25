@@ -130,7 +130,7 @@ impl T {
     }
     #[inline(always)]
     pub fn x<'__this>(&'__this self) -> ::ffi_11::c_int {
-        unsafe { self::t::x(unsafe { oops::Upcast::<_>::upcast(self) }) }
+        unsafe { self::t::x(oops::Upcast::<_>::upcast(self)) }
     }
 }
 
@@ -730,7 +730,7 @@ impl DerivedPointers {
     }
     #[inline(always)]
     pub fn base_p<'__this>(&'__this self) -> *const ::ffi_11::c_int {
-        unsafe { self::derived_pointers::base_p(unsafe { oops::Upcast::<_>::upcast(self) }) }
+        unsafe { self::derived_pointers::base_p(oops::Upcast::<_>::upcast(self)) }
     }
     /// # Safety
     ///

@@ -3667,10 +3667,8 @@ fn function_signature(
                 // has that type and can be passed to a thunk via the expression `self`.
                 api_params[0] = quote! { self };
                 if derived_record.is_some() {
-                    // SAFETY: Calling `upcast` on `self` is safe, as `self` is a valid reference to
-                    // `Derived`, and dereferenced to a `Derived` object.
                     thunk_args[0] = quote! {
-                        unsafe { oops::Upcast::<_>::upcast(self) }
+                        oops::Upcast::<_>::upcast(self)
                     };
                 } else {
                     thunk_args[0] = quote! { self };
@@ -3683,10 +3681,12 @@ fn function_signature(
         && thunk_args[0].to_string() == "__this"
     {
         let arg_this = thunk_args[0].clone();
-        // SAFETY: Calling `upcast` on `arg_this` is safe, as `self` is a valid reference to
-        // `Derived`, and dereferenced to a `Derived` object.
-        thunk_args[0] = quote! {
-            unsafe { oops::Upcast::<_>::upcast(#arg_this) }
+        thunk_args[0] = if param_types.first().is_some_and(|t| t.is_pointer()) {
+            // SAFETY: `arg_this` is a valid pointer to `Derived`, which satisfies the safety
+            // contract of `raw_upcast`.
+            quote! { unsafe { oops::RawUpcast::<_>::raw_upcast(#arg_this) } }
+        } else {
+            quote! { oops::Upcast::<_>::upcast(#arg_this) }
         };
     } else if matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator)
         && !thunk_args.is_empty()
@@ -4181,10 +4181,8 @@ fn upcast_self_to_base(
             }
         }
         (false, _, false) => {
-            // SAFETY: Calling `upcast` on `self` is safe, as `self` is a valid reference to
-            // `Derived`, and dereferenced to a `Derived` object.
             quote! {
-                unsafe { oops::Upcast::<_>::upcast(self) }
+                oops::Upcast::<_>::upcast(self)
             }
         }
     })
